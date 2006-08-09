@@ -6,6 +6,7 @@
  */
 
 #include "vislib/assert.h"
+#include "vislib/error.h"
 #include "vislib/Mutex.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/UnsupportedOperationException.h"
