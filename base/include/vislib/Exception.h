@@ -12,6 +12,9 @@
 #endif /* (_MSC_VER > 1000) */
 
 
+#include "vislib/tchar.h"
+
+
 namespace vislib {
 
     /**
@@ -33,7 +36,7 @@ namespace vislib {
          * @param file The file the exception was thrown in.
          * @param line The line the exception was thrown in.
          */
-        Exception(const char *msg, const char *file, const int line);
+        Exception(const TCHAR *msg, const char *file, const int line);
 
         /**
          * Create a new exception. The ownership of the memory designated by
@@ -79,7 +82,7 @@ namespace vislib {
          *
          * @return The exception message.
          */
-        inline const char *GetMsg(void) const {
+        inline const TCHAR *GetMsg(void) const {
             return this->msg;
         }
 
@@ -100,7 +103,7 @@ namespace vislib {
          * @param fmt The format string like in printf.
 		 * @param ... Additional parameters.
          */
-        void formatMsg(const char *fmt, ...);
+        void formatMsg(const TCHAR *fmt, ...);
 
         /**
          * Set a new file.
@@ -114,7 +117,7 @@ namespace vislib {
          *
          * @param msg The new exception detail message.
          */
-        void setMsg(const char *msg);
+        void setMsg(const TCHAR *msg);
 
     private:
 
@@ -125,7 +128,7 @@ namespace vislib {
         int line;
 
         /** The exception message. */
-        char *msg;
+        TCHAR *msg;
     };
 }
 

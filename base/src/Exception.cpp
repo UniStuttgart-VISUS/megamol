@@ -16,7 +16,8 @@
 /*
  * vislib::Exception::Exception
  */
-vislib::Exception::Exception(const char *msg, const char *file, const int line)
+vislib::Exception::Exception(const TCHAR *msg, const char *file, 
+        const int line)
         : file(NULL), line(line), msg(NULL) {
     this->setFile(file);
     this->setMsg(msg);
@@ -29,7 +30,7 @@ vislib::Exception::Exception(const char *msg, const char *file, const int line)
 vislib::Exception::Exception(const char *file, const int line) 
         : file(NULL), line(line), msg(NULL) {
     this->setFile(file);
-    this->setMsg("Exception");
+    this->setMsg(_T("Exception"));
 }
 
 
@@ -70,26 +71,24 @@ vislib::Exception& vislib::Exception::operator =(const Exception& rhs) {
 /*
  * vislib::Exception::formatMsg
  */
-void vislib::Exception::formatMsg(const char *fmt, ...) {
+void vislib::Exception::formatMsg(const TCHAR *fmt, ...) {
 	const float bufGrowFactor = 1.5f;
 
 	va_list arglist;
 	va_start(arglist, fmt);
 
 	if (fmt != NULL) {
-		int bufLen = static_cast<int>(::strlen(fmt) + 1);
+		int bufLen = static_cast<int>(::_tcslen(fmt) + 1);
 
 		do {
 			ARY_SAFE_DELETE(this->msg);
 			bufLen = static_cast<int>(bufGrowFactor * bufLen);
-			this->msg = new char[bufLen];
-#if (_MSC_VER >= 1400)
-		} while (::vsnprintf_s(this->msg, bufLen, _TRUNCATE, fmt, arglist) < 0);
-#elif _WIN32 /* (_MSC_VER >= 1400) */
-		} while (::_vsnprintf(this->msg, bufLen, fmt, arglist) < 0);
-#else /* (_MSC_VER >= 1400) */
-		} while (::vsnprintf(this->msg, bufLen, fmt, arglist) < 0);
-#endif /* (_MSC_VER >= 1400) */
+			this->msg = new TCHAR[bufLen];
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+		} while (::_vsntprintf_s(this->msg, bufLen, _TRUNCATE, fmt, arglist) < 0);
+#else /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
+		} while (::_vsntprintf(this->msg, bufLen, fmt, arglist) < 0);
+#endif /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
 
 	} else {
 		/* Delete old message and set pointer NULL. */
@@ -107,11 +106,11 @@ void vislib::Exception::setFile(const char *file) {
     if (file != NULL) {
 		size_t bufLen = ::strlen(file) + 1;
         this->file = new char[bufLen];
-#if (_MSC_VER >= 1400)
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
 		::_snprintf_s(this->file, bufLen, bufLen, file);
-#else /* (_MSC_VER >= 1400) */
+#else /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
 		::strcpy(this->file, file);
-#endif /* (_MSC_VER >= 1400) */
+#endif /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
     }
 }
 
@@ -119,16 +118,16 @@ void vislib::Exception::setFile(const char *file) {
 /*
  * vislib::Exception::setMsg
  */
-void vislib::Exception::setMsg(const char *msg) {
+void vislib::Exception::setMsg(const TCHAR *msg) {
     ARY_SAFE_DELETE(this->msg);
 
     if (msg != NULL) {
-		size_t bufLen = ::strlen(msg) + 1;
-        this->msg = new char[bufLen];
-#if (_MSC_VER >= 1400)
-		::_snprintf_s(this->msg, bufLen, bufLen, msg);
-#else /* (_MSC_VER >= 1400) */
-		::strcpy(this->msg, msg);
-#endif /* (_MSC_VER >= 1400) */
+		size_t bufLen = ::_tcslen(msg) + 1;
+        this->msg = new TCHAR[bufLen];
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+		::_sntprintf_s(this->msg, bufLen, bufLen, msg);
+#else /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
+		::_tcscpy(this->msg, msg);
+#endif /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
     }
 }

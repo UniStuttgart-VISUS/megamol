@@ -82,12 +82,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\Win32\$(ConfigurationName)"
-			IntermediateDirectory="Win32\$(ConfigurationName)"
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)\Win64\$(ConfigurationName)"
+			IntermediateDirectory="Win64\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -103,12 +102,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -143,11 +146,12 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)\Win64\$(ConfigurationName)"
-			IntermediateDirectory="Win64\$(ConfigurationName)"
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)\Win32\$(ConfigurationName)"
+			IntermediateDirectory="Win32\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -163,16 +167,12 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -281,6 +281,22 @@
 				RelativePath=".\src\Exception.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\IllegalParamException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\OutOfRangeException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Trace.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\UnsupportedOperationException.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -288,11 +304,39 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\assert.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\Exception.h"
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\IllegalParamException.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\memutils.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\OutOfRangeException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\tchar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Trace.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\types.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\UnsupportedOperationException.h"
 				>
 			</File>
 		</Filter>
