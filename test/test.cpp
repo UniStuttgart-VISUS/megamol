@@ -7,7 +7,7 @@
 #include "stdafx.h"
 
 #include <cstdio>
-#include <process.h>
+#include <cstdlib>
 
 #include "vislib/File.h"
 #include "vislib/SystemException.h"

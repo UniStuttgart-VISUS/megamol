@@ -20,11 +20,13 @@ typedef wchar_t TCHAR;
 
 #define _T(x) L##x
 
+#define _tprintf wprintf
 #define _ftprintf fwprintf
 #define _vftprintf vfwprintf
 #define _tcslen wcslen
 #define _vsntprintf vswprintf
 #define _tcscpy wcscpy
+#define _tsystem wsystem
 
 #else /* defined(UNICODE) || defined(_UNICODE) */
 
@@ -32,11 +34,13 @@ typedef char TCHAR;
 
 #define _T(x) x
 
+#define _tprintf printf
 #define _ftprintf fprintf
 #define _vftprintf vfprintf
 #define _tcslen strlen
 #define _vsntprintf vsnprintf
 #define _tcscpy strcpy
+#define _tsystem system
 
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 
