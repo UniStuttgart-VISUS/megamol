@@ -286,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\error.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\File.cpp"
 				>
 			</File>
@@ -320,6 +324,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\error.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\File.h"
 				>
 			</File>
@@ -350,6 +358,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\Makefile"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
