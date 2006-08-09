@@ -13,12 +13,19 @@
 #include "vislib/SystemException.h"
 
 
+#ifdef _WIN32
 int _tmain(int argc, TCHAR **argv) {
+#else
+int main(int argc, char **argv) {
+#endif
+
     vislib::sys::SystemException e(2, __FILE__, __LINE__);
 
     ::_tprintf(e.GetMsg());
     
+#ifdef _WIN32
     ::_tsystem(_T("pause"));
+#endif
     return 0;
 }
 

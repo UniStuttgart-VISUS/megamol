@@ -4,6 +4,8 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
+#include <cstring>
+
 #include "vislib/SystemException.h"
 
 
@@ -47,7 +49,10 @@ const TCHAR *vislib::sys::SystemException::GetMsg(void) const {
         this->setMsg(reinterpret_cast<TCHAR *>(msgBuf));
 	    ::LocalFree(msgBuf);
 #else /* _WIN32 */
-        Exception::formatMsg(_T("%i"), this->GetErrorCode());        
+#if defined(UNICODE) || defined (_UNICODE)
+#error TODO Implementation missing
+#endif
+        this->setMsg(strerror(this->GetErrorCode()));
 #endif /* _WIN32 */
     }
 
