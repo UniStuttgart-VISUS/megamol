@@ -16,7 +16,7 @@
 
 #if defined(UNICODE) || defined(_UNICODE)
 
-typedef wchar_t TCHAR
+typedef wchar_t TCHAR;
 
 #define _T(x) L##x
 
@@ -28,7 +28,7 @@ typedef wchar_t TCHAR
 
 #else /* defined(UNICODE) || defined(_UNICODE) */
 
-typedef char TCHAR
+typedef char TCHAR;
 
 #define _T(x) x
 
