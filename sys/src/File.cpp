@@ -4,25 +4,45 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <Shlwapi.h>
+#else /* _WIN32 */
+/* tell linux runtime to do 64bit seek/tell */
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE64_SOURCE  
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
+#include <stdio.h> 
 #endif /* _WIN32 */
 
 #include "vislib/File.h"
+#include "vislib/error.h"
+#include "vislib/assert.h"
 #include "vislib/IOException.h"
 #include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/IllegalParamException.h"
 
 
 /*
  * vislib::sys::File::Delete
  */
-bool vislib::sys::File::Delete(const char *filename) {
+bool vislib::sys::File::Delete(const TCHAR *filename) {
 #ifdef _WIN32
-	return (::DeleteFileA(filename) == TRUE); 
+	return (::DeleteFile(filename) == TRUE); 
+
 #else /* _WIN32 */
+#if defined(UNICODE) || defined(_UNICODE)
+	assert(false); // TODO: Working with unicode under linux
+
+#else /* defined(UNICODE) || defined(_UNICODE) */
 	return (::remove(filename) == 0);
+
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+
 #endif /* _WIN32 */
 }
 
@@ -30,29 +50,21 @@ bool vislib::sys::File::Delete(const char *filename) {
 /*
  * vislib::sys::File::Exists
  */
-bool vislib::sys::File::Exists(const char *filename) {
+bool vislib::sys::File::Exists(const TCHAR *filename) {
 #ifdef _WIN32
-    WIN32_FIND_DATAA fd;
-    HANDLE fh = INVALID_HANDLE_VALUE;
-
-    if ((fh = ::FindFirstFileA(filename, &fd)) != INVALID_HANDLE_VALUE) {
-        ::CloseHandle(fh);
-        return true;
-
-    } else {
-        return false;
-    }
+	return (PathFileExists(filename) == 1); // GetLastError() holds more information in case of problem. who cares
 
 #else /* _WIN32 */
-    int fh = ::open(filename, O_RDONLY, S_IREAD);
-    
-    if (fh != -1) {
-        ::close(fh);
-        return true;
+#if defined(UNICODE) || defined(_UNICODE)
+	assert(false); // TODO: Working with unicode under linux
 
-    } else {
-        return false;
-    }
+#else /* defined(UNICODE) || defined(_UNICODE) */
+	struct stat buf;
+	int i = stat(filename, &buf); // errno holds additional information (ENOENT and EBADF etc.). who cares
+	return (i == 0);
+
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+
 #endif /* _WIN32 */
 }
 
@@ -75,20 +87,8 @@ vislib::sys::File::File(void) {
  * vislib::sys::File::File
  */
 vislib::sys::File::File(const File& rhs) {
-	// TODO: Consider forbidden copy ctor and assignment instead.
-#ifdef _WIN32
-	this->handle = ::CreateFile;
-	if (::DuplicateHandle(::GetCurrentProcess(), rhs.handle, 
-			::GetCurrentProcess(), &this->handle, 0, TRUE, 
-			DUPLICATE_SAME_ACCESS) == FALSE) {
-		TRACE(_T("DuplicateHandle failed in File copy ctor.\n"));
-		this->handle = NULL;
-	}
-
-#else /* _WIN32 */
-	this->handle = ::dup(rhs.handle);
-
-#endif /* _WIN32 */
+    throw UnsupportedOperationException(_T("vislib::sys::Mutex::Mutex"), 
+		__FILE__, __LINE__);
 }
 
 
@@ -156,6 +156,19 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(void) {
 
 
 /*
+ * vislib::sys::File::IsEoF
+ */
+bool vislib::sys::File::IsEoF(void) const {
+	return false; // TODO: Implement
+//#ifdef _WIN32
+//	return false;
+//#else /* _WIN32 */
+//	return false;
+//#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::File::IsOpen
  */
 bool vislib::sys::File::IsOpen(void) const {
@@ -170,23 +183,74 @@ bool vislib::sys::File::IsOpen(void) const {
 /*
  * vislib::sys::File::Open
  */
-bool vislib::sys::File::Open(const char *filename, const DWORD flags) {
-	TRACE(_T("TODO: Specify mode for File::Open in a system idependent manner.\n"));
-#ifdef _WIN32 // TODO
-	DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
-	DWORD shareMode = FILE_SHARE_READ;
-	DWORD creationDisposition = OPEN_ALWAYS;
-	DWORD flagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
+bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode, 
+		const ShareMode shareMode, const CreationMode creationMode) {
+	this->Close();
+#ifdef _WIN32
+	DWORD access;
+	DWORD share;
+	DWORD create;
 
-	return ((this->handle = ::CreateFileA(filename, desiredAccess, shareMode,
-		NULL, creationDisposition, flagsAndAttributes, NULL)) != NULL);
+	switch (accessMode) {
+		case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
+		case READ_ONLY: access = GENERIC_READ; break;
+		case WRITE_ONLY: access = GENERIC_WRITE; break;
+		default: throw IllegalParamException(_T("accessMode"), __FILE__, __LINE__);
+	}
 
+	switch (shareMode) {
+		case SHARE_READ: share = FILE_SHARE_READ; break;
+		case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
+		case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
+		default: throw IllegalParamException(_T("shareMode"), __FILE__, __LINE__);
+	}
+
+	switch (creationMode) {
+		case CREATE_ONLY: create = CREATE_NEW; break;
+		case CREATE_OVERWRITE: create = CREATE_ALWAYS; break;
+		case OPEN_ONLY: create = OPEN_EXISTING; break;
+		case OPEN_CREATE: create = OPEN_ALWAYS; break;
+		default: throw IllegalParamException(_T("creationMode"), __FILE__, __LINE__);
+	}
+
+	this->handle = ::CreateFile(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
+	return (this->handle != INVALID_HANDLE_VALUE);
 #else /* _WIN32 */
-	int oflag = O_RDWR;	// TODO
-	int pmode = S_IREAD | S_IWRITE;
+	int oflag = O_LARGEFILE | O_SYNC;
+	bool fileExists = vislib::sys::File::Exists(filename);
+	// ToDo: consider O_DIRECT for disabling OS-Caching
 
-	return ((this->handle = ::open(filename, oflag, pmode)) != -1);
+	switch (accessMode) {
+		case READ_WRITE: oflag |= O_RDWR; break;
+		case READ_ONLY: oflag |= O_RDONLY; break;
+		case WRITE_ONLY: oflag |= O_WRONLY; break;
+		default: throw IllegalParamException(_T("accessMode"), __FILE__, __LINE__);
+	}
 
+	switch (creationMode) {
+		case CREATE_ONLY: 
+			if (fileExists) return false;
+			oflag |= O_CREAT;
+			break;
+		case CREATE_OVERWRITE: 
+			oflag |= (fileExists) ? O_TRUNC : O_CREAT;
+			break;
+		case OPEN_ONLY: 
+			if (!fileExists) return false;
+			break;
+		case OPEN_CREATE: 
+			if (!fileExists) oflag |= O_CREAT;
+			break;
+		default: throw IllegalParamException(_T("creationMode"), __FILE__, __LINE__);
+	}
+
+#if defined(UNICODE) || defined(_UNICODE)
+	assert(false); // TODO: Working with unicode under linux
+#else /* defined(UNICODE) || defined(_UNICODE) */
+	this->handle = ::open(filename, oflag);
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+
+	return (this->handle != -1);
 #endif /* _WIN32 */
 }
 

@@ -11,7 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include "vislib/types.h"
-
+#include "vislib/tchar.h"
 
 namespace vislib {
 namespace sys {
@@ -36,6 +36,17 @@ namespace sys {
         /** Possible values for the access mode. */
         enum AccessMode { READ_WRITE = 0, READ_ONLY, WRITE_ONLY };
 
+		/** Possible values for the share mode. */
+		enum ShareMode { SHARE_READ = 1, SHARE_WRITE = 2, SHARE_READWRITE = 3};
+
+		/** Possible values for the CreationMode. */
+		enum CreationMode { 
+			CREATE_ONLY = 0, // fails if file already exist
+			CREATE_OVERWRITE, // overwrites existing files
+			OPEN_ONLY, // fails if file does not exist
+			OPEN_CREATE // opens existing or creates new file if needed
+		};
+
 		/** Possible starting points for seek operations. */
 		enum SeekStartPoint { 
 #ifdef _WIN32
@@ -56,7 +67,7 @@ namespace sys {
          *
          * @return
 		 */
-		static bool Delete(const char *filename);
+		static bool Delete(const TCHAR *filename);
 
         /**
          * Answer whether a file with the specified name exists.
@@ -65,12 +76,10 @@ namespace sys {
          *
          * @return true, if the specified file exists, false otherwise.
          */
-        static bool Exists(const char *filename);
+        static bool Exists(const TCHAR *filename);
 
 		/** Ctor. */
 		File(void);
-
-		File(const File& rhs);
 
 		/**
 		 * Dtor. If the file is still open, it is closed.
@@ -98,17 +107,37 @@ namespace sys {
 		FileSize GetSize(void);
 
 		/**
+		 * Answer whether the eof flag is set
+		 *
+		 * @return true, if the eof flag is set, false otherwise.
+		 */
+		bool IsEoF(void) const;
+
+		/**
 		 * Answer whether this file is open.
 		 *
 		 * @return true, if the file is open, false otherwise.
 		 */
 		bool IsOpen(void) const;
 
-        //inline bool IsEOF(void) const {
-        //    
-        //}
-
-		bool Open(const char *filename, const DWORD flags);
+		/**
+		 * Opens a file.
+		 *
+		 * If this object already holds an open file, this file is closed (like 
+		 * calling Close) and the new file is opened.
+		 *
+		 * @param filename	   Path to the file to be opened
+		 * @param accessMode   The access mode for the file to be opened
+		 * @param shareMode    The share mode
+		 *					   (Parameter is ignored on linux systems.)
+		 * @param creationMode Use your imagination on this one
+		 *
+		 * @return true, if the file has been successfully opened, false otherwise.
+		 *
+		 * @throws IllegalParamException
+		 */
+		bool Open(const TCHAR *filename, const AccessMode accessMode, 
+			const ShareMode shareMode, const CreationMode creationMode);
 
 		/**
 		 * Read at most 'bufSize' bytes from the file into 'outBuf'.
@@ -175,6 +204,9 @@ namespace sys {
 		FileSize Write(const void *buf, const FileSize bufSize);
 
 	private:
+
+		/** forbidden copy-ctor */
+		File(const File& rhs);
 
 		/** The file handle. */
 #ifdef _WIN32
