@@ -16,7 +16,8 @@
  */ 
 vislib::sys::Mutex::Mutex(void) {
 #ifdef _WIN32
-    VERIFY((this->handle = ::CreateMutex(NULL, FALSE, NULL)) != NULL);
+    this->handle = ::CreateMutex(NULL, FALSE, NULL);
+    ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     ::pthread_mutexattr_init(&attr);
