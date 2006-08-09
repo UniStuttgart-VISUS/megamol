@@ -82,9 +82,7 @@ namespace vislib {
          *
          * @return The exception message.
          */
-        inline const TCHAR *GetMsg(void) const {
-            return this->msg;
-        }
+        virtual const TCHAR *GetMsg(void) const;
 
         /**
          * Assignment operator.
@@ -117,7 +115,7 @@ namespace vislib {
          *
          * @param msg The new exception detail message.
          */
-        void setMsg(const TCHAR *msg);
+        void setMsg(const TCHAR *msg) const;
 
     private:
 
@@ -128,7 +126,7 @@ namespace vislib {
         int line;
 
         /** The exception message. */
-        TCHAR *msg;
+        mutable TCHAR *msg;
     };
 }
 

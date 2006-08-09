@@ -5,8 +5,8 @@
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). Alle Rechte vorbehalten.
  */
 
-#ifndef ILLEGALPARAMEXCEPTION_H_INCLUDED
-#define ILLEGALPARAMEXCEPTION_H_INCLUDED
+#ifndef VISLIB_ILLEGALPARAMEXCEPTION_H_INCLUDED
+#define VISLIB_ILLEGALPARAMEXCEPTION_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -58,4 +58,4 @@ namespace vislib {
     };
 }
 
-#endif /* ILLEGALPARAMEXCEPTION_H_INCLUDED */
+#endif /* VISLIB_ILLEGALPARAMEXCEPTION_H_INCLUDED */

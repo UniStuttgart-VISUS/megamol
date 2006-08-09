@@ -1,0 +1,114 @@
+/*
+ * Mutex.h
+ *
+ * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). Alle Rechte vorbehalten.
+ */
+
+#ifndef VISLIB_MUTEX_H_INCLUDED
+#define VISLIB_MUTEX_H_INCLUDED
+#if (_MSC_VER > 1000)
+#pragma once
+#endif /* (_MSC_VER > 1000) */
+
+
+#ifdef _WIN32
+#include <windows.h>
+#else /* _WIN32 */
+#include <pthread.h>
+#endif /* _WIN32 */
+
+#include "SyncObject.h"
+
+
+namespace vislib {
+namespace sys {
+
+    /**
+     * A platform independent mutex wrapper.
+	 *
+	 * Implementation notes: On Windows systems, this mutex can be used for
+	 * inter-process synchronisation tasks. If you just need to synchronise 
+	 * threads of a single process, consider using the critical section as it
+	 * is faster.
+     *
+     * @author Christoph Mueller
+     */
+	class Mutex : public SyncObject {
+
+    public:
+
+        /**
+         * Create a new mutex, which is initially not locked.
+         */
+        Mutex(void);
+
+        /** Dtor. */
+        ~Mutex(void);
+
+        /**
+         * Acquire a lock on the mutex for the calling thread. The method blocks
+         * until the lock is acquired. 
+         *
+         * @return true, if the lock was acquired, false, if an error occured.
+         */
+        virtual bool Lock(void);
+
+        /**
+         * Try to acquire a lock on the mutex for the calling thread. If the 
+         * mutex is already locked by another thread, the method will return
+         * immediately and the return value is false. The method is therefore 
+         * non-blocking.
+         *
+         * @return true, if the lock was acquired, false, if not.
+         */
+        bool TryLock(void);
+
+        /**
+         * Release the mutex.
+         *
+         * @return true in case of success, false otherwise.
+         */
+        virtual bool Unlock(void);
+
+    private:
+
+		/**
+		 * Forbidden copy ctor.
+		 *
+		 * @param rhs The object to be cloned.
+		 *
+		 * @throws UnsupportedOperationException Unconditionally.
+		 */
+		Mutex(const Mutex& rhs);
+
+		/**
+		 * Forbidden assignment.
+		 *
+		 * @param rhs The right hand side operand.
+		 *
+		 * @return *this.
+		 *
+		 * @throws IllegalParamException If (this != &rhs).
+		 */
+		Mutex& operator =(const Mutex& rhs);
+
+#ifdef _WIN32
+
+        /** The handle for the OS mutex. */
+        HANDLE handle;
+
+#else /* _WIN32 */
+        /** The mutex attributes. */
+        pthread_mutexattr_t attr;
+
+        /** The mutex object. */
+        pthread_mutex_t mutex;
+
+#endif /* _WIN32 */
+	};
+
+} /* end namespace sys */
+} /* end namespace vislib */
+
+#endif /* VISLIB_MUTEX_H_INCLUDED */

@@ -54,6 +54,14 @@ vislib::Exception::~Exception(void) {
 
 
 /*
+ * vislib::Exception::GetMsg
+ */
+const TCHAR *vislib::Exception::GetMsg(void) const {
+    return this->msg;
+}
+
+
+/*
  * vislib::Exception::operator =
  */
 vislib::Exception& vislib::Exception::operator =(const Exception& rhs) {
@@ -118,7 +126,7 @@ void vislib::Exception::setFile(const char *file) {
 /*
  * vislib::Exception::setMsg
  */
-void vislib::Exception::setMsg(const TCHAR *msg) {
+void vislib::Exception::setMsg(const TCHAR *msg) const {
     ARY_SAFE_DELETE(this->msg);
 
     if (msg != NULL) {

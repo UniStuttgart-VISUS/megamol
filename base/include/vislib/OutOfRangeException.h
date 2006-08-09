@@ -5,8 +5,8 @@
  * Copyright (C) 2005 by Christoph Mueller. All rights reserved.
  */
 
-#ifndef OUTOFRANGEEXCEPTION_H_INCLUDED
-#define OUTOFRANGEEXCEPTION_H_INCLUDED
+#ifndef VISLIB_OUTOFRANGEEXCEPTION_H_INCLUDED
+#define VISLIB_OUTOFRANGEEXCEPTION_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -59,4 +59,4 @@ namespace vislib {
     };
 }
 
-#endif /* OUTOFRANGEEXCEPTION_H_INCLUDED */
+#endif /* VISLIB_OUTOFRANGEEXCEPTION_H_INCLUDED */

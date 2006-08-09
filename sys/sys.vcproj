@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;;..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;;..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -170,7 +170,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;;..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -232,7 +232,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;;..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -278,7 +278,31 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\Exception.cpp"
+				RelativePath=".\src\CriticalSection.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\File.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\IOException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Mutex.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Semaphore.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SyncObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SystemException.cpp"
 				>
 			</File>
 		</Filter>
@@ -288,11 +312,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\include\vislib\Exception.h"
+				RelativePath=".\include\vislib\CriticalSection.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\memutils.h"
+				RelativePath=".\include\vislib\File.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\IOException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Mutex.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Semaphore.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SyncObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SystemException.h"
 				>
 			</File>
 		</Filter>
