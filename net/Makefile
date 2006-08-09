@@ -4,7 +4,7 @@ CPP = g++
 LINK = g++
 
 # Name of the ouput file:
-OutName := libVLBase.a
+OutName := libVLNet.a
 
 # This directory contains the source files:
 InputDir := ./src

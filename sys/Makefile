@@ -4,13 +4,13 @@ CPP = g++
 LINK = g++
 
 # Name of the ouput file:
-OutName := libVLBase.a
+OutName := libVLSys.a
 
 # This directory contains the source files:
 InputDir := ./src
 
 # List of include directories:
-IncludeDir := ./include
+IncludeDir := ./include ../base/include
 
 # List of system include directories:
 SystemIncludeDir := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext

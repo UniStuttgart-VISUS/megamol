@@ -4,13 +4,13 @@ CPP = g++
 LINK = g++
 
 # Name of the ouput file:
-OutName := libVLBase.a
+OutName := vislibtest
 
 # This directory contains the source files:
-InputDir := ./src
+InputDir := ./
 
 # List of include directories:
-IncludeDir := ./include
+IncludeDir := ./include ../base/include ../sys/include
 
 # List of system include directories:
 SystemIncludeDir := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
@@ -28,7 +28,7 @@ ExcludeFromBuild :=
 CPPFLAGS := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -lm -lpthread
+LDFLAGS := -L/usr/X11R6/lib -lm -lpthread -lVLBase -lVLSys
 
 ###############################################################################
 
@@ -42,6 +42,9 @@ else
 	IntDir := Lin32
 	OutDir := ../Lin32
 endif
+
+# Append library directories to flags:
+LDFLAGS += -L../base/$(IntDir) -L../sys/$(IntDir)
 
 # Append the include directories to the flags:
 CPPFLAGS += $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
@@ -61,7 +64,7 @@ $(OutDir)/$(OutName): $(IntDir)/$(OutName)
 	@cp $(IntDir)/$(OutName) $(OutDir)/
 	
 $(IntDir)/$(OutName): $(CPP_OBJS) 
-	$(AR) -cvq $(IntDir)/$(OutName) $(CPP_OBJS)
+	$(LINK) -o $@ $^ $(LDFLAGS)
 
 $(IntDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(IntDir)
