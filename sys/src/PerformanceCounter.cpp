@@ -12,6 +12,7 @@
 #endif /* _WIN32 */
 
 #include "vislib/assert.h"
+#include "vislib/error.h"
 #include "vislib/memutils.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/SystemException.h"
@@ -41,7 +42,10 @@ UINT64 vislib::sys::PerformanceCounter::Query(void) {
 
 #else /* _WIN32 */
     struct timeval t;
-    ::gettimeofday(&t, NULL);
+    if (::gettimeofday(&t, NULL) == -1) {
+        throw SystemException(::GetLastError(), __FILE__, __LINE__);
+    }
+
     return static_cast<UINT64>((t.tv_sec * 1e6 + t.tv_usec) / 1000.0);
 
 #endif /* _WIN32 */
