@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PerformanceCounter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Semaphore.cpp"
 				>
 			</File>
@@ -337,6 +341,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Mutex.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\PerformanceCounter.h"
 				>
 			</File>
 			<File
