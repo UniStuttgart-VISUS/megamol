@@ -27,3 +27,7 @@ clean:
 		$(MAKE)	$@ || exit 1;			\
 		popd;							\
 	done
+	
+rebuild: clean all
+
+.PHONY: clean sweep rebuild
