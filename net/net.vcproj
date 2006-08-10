@@ -172,7 +172,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -235,7 +235,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"

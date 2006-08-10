@@ -87,7 +87,7 @@ bool vislib::sys::File::Rename(const TCHAR *oldName, const TCHAR *newName) {
 /*
  * vislib::sys::File::File
  */
-vislib::sys::File::File(void) : isEOF(false) {
+vislib::sys::File::File(void) {
 #ifdef _WIN32
     this->handle = INVALID_HANDLE_VALUE;
 
@@ -158,6 +158,22 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(void) {
 	} else {
 		throw IOException(::GetLastError(), __FILE__, __LINE__);
 	}
+}
+
+
+/*
+ * vislib::sys::File::IsEOF
+ */
+bool vislib::sys::File::IsEOF(void) {
+    FileSize here = this->Seek(0, CURRENT);
+    FileSize end = this->Seek(0, END);
+
+    if (here == end) {
+        return true;
+    } else {
+        this->Seek(here, BEGIN);
+        return false;
+    }
 }
 
 
@@ -257,7 +273,6 @@ vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf,
 	DWORD readBytes;
 	if (::ReadFile(this->handle, outBuf, static_cast<DWORD>(bufSize), 
 			&readBytes, NULL)) {
-        this->isEOF = (readBytes < bufSize);
 		return readBytes;
 
 #else /* _WIN32 */

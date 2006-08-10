@@ -34,17 +34,17 @@ namespace sys {
 		typedef UINT64 FileSize;
 
         /** Possible values for the access mode. */
-        enum AccessMode { READ_WRITE = 0, READ_ONLY, WRITE_ONLY };
+        enum AccessMode { READ_WRITE = 1, READ_ONLY, WRITE_ONLY };
 
 		/** Possible values for the share mode. */
 		enum ShareMode { SHARE_READ = 1, SHARE_WRITE = 2, SHARE_READWRITE = 3};
 
 		/** Possible values for the CreationMode. */
 		enum CreationMode { 
-			CREATE_ONLY = 0, // fails if file already exist
-			CREATE_OVERWRITE, // overwrites existing files
-			OPEN_ONLY, // fails if file does not exist
-			OPEN_CREATE // opens existing or creates new file if needed
+			CREATE_ONLY = 0,    // Fails, if file already exists.
+			CREATE_OVERWRITE,   // Overwrites existing files.
+			OPEN_ONLY,          // Fails, if file does not exist.
+			OPEN_CREATE         // Opens existing or creates new file as needed.
 		};
 
 		/** Possible starting points for seek operations. */
@@ -119,13 +119,15 @@ namespace sys {
 		FileSize GetSize(void);
 
 		/**
-		 * Answer whether a read operation attempted to read past the end of the file.
+		 * Answer whether the file pointer is at the end of the file.
 		 *
 		 * @return true, if the eof flag is set, false otherwise.
+         *
+         * @throws IOException If the file is not open or the file pointer is at an
+         *                     invalid position at the moment.
 		 */
-        inline bool IsEOF(void) const {
-            return this->isEOF;
-        }
+        // TODO: Would be nice, if IsEOF could be const (some mutable-hack).
+        bool IsEOF(void);
 
 		/**
 		 * Answer whether this file is open.
@@ -245,9 +247,6 @@ namespace sys {
 #else /* _WIN32 */
 		int handle;
 #endif /* _WIN32 */
-
-        /** Remember whether the end of the file was reached. */
-        bool isEOF;
 	};
 
 } /* end namespace sys */
