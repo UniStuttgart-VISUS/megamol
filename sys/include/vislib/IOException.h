@@ -44,7 +44,7 @@ namespace sys {
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
-        IOException(const DWORD errorCode, const char *msg, const char *file,
+        IOException(const DWORD errorCode, const TCHAR *msg, const char *file,
             const int line);
 
         /**

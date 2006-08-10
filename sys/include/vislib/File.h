@@ -67,6 +67,7 @@ namespace sys {
          *
          * @return
 		 */
+        // TODO: Consider throwing exception with GetLastError()
 		static bool Delete(const TCHAR *filename);
 
         /**
@@ -77,6 +78,17 @@ namespace sys {
          * @return true, if the specified file exists, false otherwise.
          */
         static bool Exists(const TCHAR *filename);
+
+        /**
+         * Rename the file 'oldName' to 'newName'.
+         *
+         * @param oldName The name of the file to be renamed.
+         * @param newName The new name of the file.
+         *
+         * @return true, if the file was found and renamed, false otherwise.
+         */
+        // TODO: Consider throwing exception with GetLastError()
+        static bool Rename(const TCHAR *oldName, const TCHAR *newName);
 
 		/** Ctor. */
 		File(void);
@@ -215,6 +227,8 @@ namespace sys {
 		int handle;
 #endif /* _WIN32 */
 
+        ///** Remember whether the end of the file was reached. */
+        //bool isEOF;
 	};
 
 } /* end namespace sys */

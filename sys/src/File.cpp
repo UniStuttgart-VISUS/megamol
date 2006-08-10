@@ -70,6 +70,21 @@ bool vislib::sys::File::Exists(const TCHAR *filename) {
 
 
 /*
+ * vislib::sys::File::Rename
+ */
+bool vislib::sys::File::Rename(const TCHAR *oldName, const TCHAR *newName) {
+#ifdef _WIN32
+    return (::MoveFile(oldName, newName) == TRUE);
+#else /* _WIN32 */
+#if defined(UNICODE) || defined(_UNICODE)
+#error "Unicode implementation for File::Rename missing"
+#endif 
+    return ::rename(oldName, newName);
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::File::File
  */
 vislib::sys::File::File(void) {

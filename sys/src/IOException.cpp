@@ -19,11 +19,10 @@ vislib::sys::IOException::IOException(const DWORD errorCode, const char *file,
 /*
  * vislib::sys::IOException::IOException
  */
-vislib::sys::IOException::IOException(const DWORD errorCode, const char *msg, 
+vislib::sys::IOException::IOException(const DWORD errorCode, const TCHAR *msg, 
 		const char *file, const int line) 
 		: SystemException(errorCode, file, line) {
-    Exception::formatMsg(_T("IOException with error code %i."), 
-        this->GetErrorCode());
+    Exception::setMsg(msg);
 }
 
 
