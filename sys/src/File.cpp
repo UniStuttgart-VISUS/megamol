@@ -87,7 +87,7 @@ bool vislib::sys::File::Rename(const TCHAR *oldName, const TCHAR *newName) {
 /*
  * vislib::sys::File::File
  */
-vislib::sys::File::File(void) {
+vislib::sys::File::File(void) : isEOF(false) {
 #ifdef _WIN32
     this->handle = INVALID_HANDLE_VALUE;
 
@@ -95,15 +95,6 @@ vislib::sys::File::File(void) {
 	this->handle = -1;
 
 #endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::File::File
- */
-vislib::sys::File::File(const File& rhs) {
-    throw UnsupportedOperationException(_T("vislib::sys::Mutex::Mutex"), 
-		__FILE__, __LINE__);
 }
 
 
@@ -167,19 +158,6 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(void) {
 	} else {
 		throw IOException(::GetLastError(), __FILE__, __LINE__);
 	}
-}
-
-
-/*
- * vislib::sys::File::IsEoF
- */
-bool vislib::sys::File::IsEoF(void) const {
-	return false; // TODO: Implement
-//#ifdef _WIN32
-//	return false;
-//#else /* _WIN32 */
-//	return false;
-//#endif /* _WIN32 */
 }
 
 
@@ -273,11 +251,13 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
 /*
  * vislib::sys::File::Read
  */
-vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf, const FileSize bufSize) {
+vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf, 
+                                                    const FileSize bufSize) {
 #ifdef _WIN32
 	DWORD readBytes;
 	if (::ReadFile(this->handle, outBuf, static_cast<DWORD>(bufSize), 
 			&readBytes, NULL)) {
+        this->isEOF = (readBytes < bufSize);
 		return readBytes;
 
 #else /* _WIN32 */
@@ -342,4 +322,25 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
 	} else {
 		throw IOException(::GetLastError(), __FILE__, __LINE__);
 	}
+}
+
+
+/*
+ * vislib::sys::File::File
+ */
+vislib::sys::File::File(const File& rhs) {
+    throw UnsupportedOperationException(_T("vislib::sys::File::File"), 
+		__FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::sys::File::operator =
+ */
+vislib::sys::File& vislib::sys::File::operator =(const File& rhs) {
+    if (this != &rhs) {
+        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+    }
+
+    return *this;
 }

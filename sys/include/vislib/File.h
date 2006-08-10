@@ -119,11 +119,13 @@ namespace sys {
 		FileSize GetSize(void);
 
 		/**
-		 * Answer whether the eof flag is set
+		 * Answer whether a read operation attempted to read past the end of the file.
 		 *
 		 * @return true, if the eof flag is set, false otherwise.
 		 */
-		bool IsEoF(void) const;
+        inline bool IsEOF(void) const {
+            return this->isEOF;
+        }
 
 		/**
 		 * Answer whether this file is open.
@@ -217,8 +219,25 @@ namespace sys {
 
 	private:
 
-		/** forbidden copy-ctor */
+		/**
+         * Forbidden copy-ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
 		File(const File& rhs);
+
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If &'rhs' != this.
+         */
+        File& operator =(const File& rhs);
 
 		/** The file handle. */
 #ifdef _WIN32
@@ -227,8 +246,8 @@ namespace sys {
 		int handle;
 #endif /* _WIN32 */
 
-        ///** Remember whether the end of the file was reached. */
-        //bool isEOF;
+        /** Remember whether the end of the file was reached. */
+        bool isEOF;
 	};
 
 } /* end namespace sys */
