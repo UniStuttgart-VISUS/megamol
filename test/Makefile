@@ -28,7 +28,7 @@ ExcludeFromBuild :=
 CPPFLAGS := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -lm -lpthread -lVLBase -lVLSys
+LDFLAGS := -L/usr/X11R6/lib -lm -lpthread -lVLSys -lVLBase
 
 ###############################################################################
 
