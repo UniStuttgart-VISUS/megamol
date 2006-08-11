@@ -294,11 +294,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Readable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Trace.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\UnsupportedOperationException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Writable.cpp"
 				>
 			</File>
 		</Filter>
@@ -328,6 +336,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\Readable.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\tchar.h"
 				>
 			</File>
@@ -341,6 +353,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\UnsupportedOperationException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Writable.h"
 				>
 			</File>
 		</Filter>

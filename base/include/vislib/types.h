@@ -53,4 +53,6 @@ typedef double DOUBLE;
 
 #endif /* _WIN32 */
 
+typedef UINT64 EXTENT;
+
 #endif /* VISLIB_TYPES_H_INCLUDED */

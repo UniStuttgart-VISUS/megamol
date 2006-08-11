@@ -10,8 +10,11 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#include "vislib/Readable.h"
 #include "vislib/types.h"
 #include "vislib/tchar.h"
+#include "vislib/Writable.h"
+
 
 namespace vislib {
 namespace sys {
@@ -23,15 +26,12 @@ namespace sys {
      *
      * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
      */
-    class File {
+    class File : public Readable, public Writable {
 
     public:
 		
 		/** This type is used for offsets when seeking in files. */
 		typedef INT64 FileOffset;
-
-		/** This type is used for the file size. */
-		typedef UINT64 FileSize;
 
         /** Possible values for the access mode. */
         enum AccessMode { READ_WRITE = 1, READ_ONLY, WRITE_ONLY };
@@ -116,7 +116,7 @@ namespace sys {
 		 * @throws IOException If the file size cannot be retrieve, e. g. 
 		 *                     because the file has not been opened.
 		 */
-		FileSize GetSize(void);
+		EXTENT GetSize(void);
 
 		/**
 		 * Answer whether the file pointer is at the end of the file.
@@ -165,7 +165,7 @@ namespace sys {
 		 *
 		 * @throws IOException
 		 */
-		FileSize Read(void *outBuf, const FileSize bufSize);
+		virtual EXTENT Read(void *outBuf, const EXTENT bufSize);
 
 		/**
 		 * Move the file pointer.
@@ -184,7 +184,7 @@ namespace sys {
 		 *                     because the file was not open or the offset was
 		 *                     invalid.
 		 */
-		FileSize Seek(const FileOffset offset, const SeekStartPoint from);
+		EXTENT Seek(const FileOffset offset, const SeekStartPoint from);
 
 		/**
 		 * Move the file pointer to the begin of the file.
@@ -194,7 +194,7 @@ namespace sys {
 		 *
 		 * @throws IOException If the file pointer could not be moved.
 		 */
-		inline FileSize SeekToBegin(void) {
+		inline EXTENT SeekToBegin(void) {
 			return this->Seek(0, BEGIN);
 		}
 
@@ -206,7 +206,7 @@ namespace sys {
 		 *
 		 * @throws IOException If the file pointer could not be moved.
 		 */
-		inline FileSize SeekToEnd(void) {
+		inline EXTENT SeekToEnd(void) {
 			return this->Seek(0, END);
 		}
 
@@ -218,7 +218,7 @@ namespace sys {
 		 *
 		 * @throws IOException
 		 */
-		inline FileSize Tell(void) {
+		inline EXTENT Tell(void) {
 			return this->Seek(0, vislib::sys::File::CURRENT);
 		}
 
@@ -232,7 +232,7 @@ namespace sys {
 		 *
 	     * @throws IOException
 		 */
-		FileSize Write(const void *buf, const FileSize bufSize);
+		virtual EXTENT Write(const void *buf, const EXTENT bufSize);
 
 	private:
 
