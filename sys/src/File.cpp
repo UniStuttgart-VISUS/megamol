@@ -36,8 +36,7 @@ bool vislib::sys::File::Delete(const TCHAR *filename) {
 
 #else /* _WIN32 */
 #if defined(UNICODE) || defined(_UNICODE)
-	assert(false); // TODO: Working with unicode under linux
-
+#error "Unicode implementation for File::Delete missing"
 #else /* defined(UNICODE) || defined(_UNICODE) */
 	return (::remove(filename) == 0);
 
@@ -56,8 +55,7 @@ bool vislib::sys::File::Exists(const TCHAR *filename) {
 
 #else /* _WIN32 */
 #if defined(UNICODE) || defined(_UNICODE)
-	assert(false); // TODO: Working with unicode under linux
-
+#error "Unicode implementation for File::Exists missing"
 #else /* defined(UNICODE) || defined(_UNICODE) */
 	struct stat buf;
 	int i = stat(filename, &buf); // errno holds additional information (ENOENT and EBADF etc.). who cares

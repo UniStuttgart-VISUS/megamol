@@ -170,6 +170,9 @@ namespace sys {
 		/**
 		 * Move the file pointer.
 		 *
+		 * If the file pointer is seeked beyond the end of file, the behaviour is 
+		 * undefined for Read, Write, Tell and isEoF
+		 *
 		 * @param offset The offset in bytes.
 		 * @param from   The begin of the seek operation, which can be one of
 		 *               BEGIN, CURRENT, or END.
@@ -205,6 +208,18 @@ namespace sys {
 		 */
 		inline FileSize SeekToEnd(void) {
 			return this->Seek(0, END);
+		}
+
+		/**
+		 * Returns the position of the current file pointer
+		 *
+		 * @return Position of the file pointer in bytes from the beginning
+		 *         of the file.
+		 *
+		 * @throws IOException
+		 */
+		inline FileSize Tell(void) {
+			return this->Seek(0, vislib::sys::File::CURRENT);
 		}
 
 		/**
