@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "testhelper.h"
+#include "teststring.h"
 
 #include "vislib/File.h"
 #include "vislib/SystemException.h"
@@ -24,11 +24,13 @@ int main(int argc, char **argv) {
     using namespace vislib;
     using namespace vislib::sys;
 
-    SystemException e1(2, __FILE__, __LINE__);
-    ::_tprintf(_T("%s\n"), e1.GetMsg());
+    TestString();
 
-    Exception e2(__FILE__, __LINE__);
-    ::_tprintf(_T("%s\n"), e2.GetMsg());
+    //SystemException e1(2, __FILE__, __LINE__);
+    //::_tprintf(_T("%s\n"), e1.GetMsg());
+
+    //Exception e2(__FILE__, __LINE__);
+    //::_tprintf(_T("%s\n"), e2.GetMsg());
     
     //for (int i = 0; i < 100; i++) {
     //    ::_tprintf(_T("%lu\n"), PerformanceCounter::Query());

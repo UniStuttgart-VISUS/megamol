@@ -12,9 +12,9 @@
 
 bool AssertTrue(const char *desc, const bool cond) {
     if (cond) {
-        std::cout << desc << " succeeded." << std::endl;
+        std::cout << "\"" << desc << "\" succeeded." << std::endl;
     } else {
-        std::cout << desc << " FAILED." << std::endl;
+        std::cout << "\n\"" << desc << "\" FAILED.\n" << std::endl;
     }
 
     return cond;

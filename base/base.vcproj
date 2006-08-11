@@ -282,6 +282,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\CharTraits.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Exception.cpp"
 				>
 			</File>
@@ -295,6 +299,10 @@
 			</File>
 			<File
 				RelativePath=".\src\Readable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\String.cpp"
 				>
 			</File>
 			<File
@@ -320,6 +328,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\CharTraits.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\Exception.h"
 				>
 			</File>
@@ -337,6 +349,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Readable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\String.h"
 				>
 			</File>
 			<File
