@@ -16,8 +16,6 @@
 
 #else /* _WIN32 */
 
-// TODO: INT_PTR, UINT_PTR
-
 #include <inttypes.h>
 
 typedef int8_t CHAR;
@@ -50,6 +48,14 @@ typedef uint64_t UINT64;
 
 typedef float FLOAT;
 typedef double DOUBLE;
+
+#ifdef _LIN64
+typedef INT64 INT_PTR;
+typedef UINT64 UINT_PTR;
+#else /* _LIN64 */
+typedef INT32 INT_PTR;
+typedef UINT32 UINT_PTR;
+#endif /* _LIN64 */
 
 #endif /* _WIN32 */
 

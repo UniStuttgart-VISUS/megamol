@@ -38,6 +38,7 @@ PLATFORM := $(shell uname -p)
 ifeq ($(PLATFORM), x86_64)
 	IntDir := Lin64
 	OutDir := ../Lin64
+	CPPFLAGS += -D_LIN64
 else
 	IntDir := Lin32
 	OutDir := ../Lin32
