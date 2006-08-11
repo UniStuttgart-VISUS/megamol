@@ -6,6 +6,7 @@
 
 #include <cstring>
 
+#include "vislib/error.h"
 #include "vislib/SystemException.h"
 
 
@@ -15,6 +16,14 @@
 vislib::sys::SystemException::SystemException(const DWORD errorCode, 
         const char *file, const int line) 
 		: Exception(NULL, file, line), errorCode(errorCode) {
+}
+
+
+/*
+ * vislib::sys::SystemException::SystemException
+ */
+vislib::sys::SystemException::SystemException(const char *file, const int line)
+: Exception(NULL, file, line), errorCode(::GetLastError()) {
 }
 
 

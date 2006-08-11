@@ -61,9 +61,9 @@ namespace sys {
          * successfully acquired, the counter is decremented by one and if the
          * counter reaches zero, the state of the semaphore becomes nonsignaled.
          *
-         * @return true, if the lock was acquired, false, if an error occured.
+         * @throws SystemException If the lock could not be acquired.
          */
-        virtual bool Lock(void);
+        virtual void Lock(void);
 
         /**
          * Release the semaphore.
@@ -72,9 +72,9 @@ namespace sys {
          * signaled, as the counter becomes greater than zero, if the semaphore
          * was successfully released.
          *
-         * @return true in case of success, false otherwise.
+         * @throw SystemException If the lock could not be released.
          */
-        virtual bool Unlock(void);
+        virtual void Unlock(void);
 
     private:
 

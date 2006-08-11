@@ -9,6 +9,7 @@
 #include "vislib/error.h"
 #include "vislib/Mutex.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -52,23 +53,30 @@ vislib::sys::Mutex::~Mutex(void) {
 /*
  * vislib::sys::Mutex::Lock
  */
-bool vislib::sys::Mutex::Lock(void) {
+void vislib::sys::Mutex::Lock(void) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, INFINITE)) {
 
         case WAIT_OBJECT_0:
-            return true;
-
-        case WAIT_TIMEOUT:
             /* falls through. */
         case WAIT_ABANDONED:
-            /* falls through. */
+            /* Does nothing. */
+            break;
+
+        case WAIT_TIMEOUT:
+            /* Waiting infinitely should not timeout. */
+            ASSERT(false);
+            break;
+
         default:
-            return false;
+            throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
-    return (::pthread_mutex_lock(&this->mutex) != 0);
+    int returncode = ::pthread_mutex_lock(&this->mutex);
+    if (returncode != 0) {
+        throw SystemException(returncode, __FILE__, __LINE__);
+    }
 
 #endif /* _WIN32 */
 }
@@ -82,18 +90,30 @@ bool vislib::sys::Mutex::TryLock(void) {
     switch (::WaitForSingleObject(this->handle, 0)) {
 
         case WAIT_OBJECT_0:
+            /* falls through. */
+        case WAIT_ABANDONED:
             return true;
 
         case WAIT_TIMEOUT:
-            /* falls through. */
-        case WAIT_ABANDONED:
-            /* falls through. */
-        default:
             return false;
+
+        default:
+            throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
-    return (::pthread_mutex_trylock(&this->mutex) != 0);
+    int returncode = ::pthread_mutex_trylock(&this->mutex);
+
+    switch (returncode) {
+        case 0:
+            return true;
+
+        case EBUSY:
+            return false;
+
+        default:
+            throw SystemException(returncode, __FILE__, __LINE__);
+    }
 
 #endif /* _WIN32 */
 }
@@ -102,12 +122,17 @@ bool vislib::sys::Mutex::TryLock(void) {
 /*
  * vislib::sys::Mutex::Unlock
  */
-bool vislib::sys::Mutex::Unlock(void) {
+void vislib::sys::Mutex::Unlock(void) {
 #ifdef _WIN32
-    return (::ReleaseMutex(this->handle) == TRUE);
+    if (::ReleaseMutex(this->handle) != TRUE) {
+        throw SystemException(__FILE__, __LINE__);
+    }
 
 #else /* _WIN32 */
-    return (::pthread_mutex_unlock(&this->mutex) != 0);
+    int returncode = ::pthread_mutex_unlock(&this->mutex);
+    if (returncode != 0) {
+        throw SystemException(returncode, __FILE__, __LINE__);
+    }
 
 #endif /* _WIN32 */
 }

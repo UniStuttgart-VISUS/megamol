@@ -50,9 +50,9 @@ namespace sys {
          * Acquire a lock on the mutex for the calling thread. The method blocks
          * until the lock is acquired. 
          *
-         * @return true, if the lock was acquired, false, if an error occured.
+         * @throws SystemException If the lock could not be acquired.
          */
-        virtual bool Lock(void);
+        virtual void Lock(void);
 
         /**
          * Try to acquire a lock on the mutex for the calling thread. If the 
@@ -61,15 +61,18 @@ namespace sys {
          * non-blocking.
          *
          * @return true, if the lock was acquired, false, if not.
+         *
+         * @throws SystemException If an error occurred when trying to acquire
+         *                         the lock.
          */
         bool TryLock(void);
 
         /**
          * Release the mutex.
          *
-         * @return true in case of success, false otherwise.
+         * @throw SystemException If the lock could not be released.
          */
-        virtual bool Unlock(void);
+        virtual void Unlock(void);
 
     private:
 

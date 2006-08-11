@@ -7,6 +7,7 @@
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/Semaphore.h"
+#include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -54,19 +55,23 @@ vislib::sys::Semaphore::~Semaphore(void) {
 /*
  * vislib::sys::Semaphore::Lock
  */
-bool vislib::sys::Semaphore::Lock(void) {
+void vislib::sys::Semaphore::Lock(void) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, INFINITE)) {
 
         case WAIT_OBJECT_0:
-            return true;
-
-        case WAIT_TIMEOUT:
             /* falls through. */
         case WAIT_ABANDONED:
-            /* falls through. */
+            /* Does nothing. */
+            break;
+
+        case WAIT_TIMEOUT:
+            /* Waiting infinitely should not timeout. */
+            ASSERT(false);
+            break;
+
         default:
-            return false;
+            throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -80,7 +85,6 @@ bool vislib::sys::Semaphore::Lock(void) {
 	}
 
 	this->mutex.Unlock();			// Allow other calls to Lock()/Unlock().
-	return true;
 #endif /* _WIN32 */
 }
 
@@ -88,9 +92,11 @@ bool vislib::sys::Semaphore::Lock(void) {
 /*
  * vislib::sys::Semaphore::Unlock
  */
-bool vislib::sys::Semaphore::Unlock(void) {
+void vislib::sys::Semaphore::Unlock(void) {
 #ifdef _WIN32
-    return (::ReleaseSemaphore(this->handle, 1, NULL) == TRUE);
+    if (::ReleaseSemaphore(this->handle, 1, NULL) != TRUE) {
+        throw SystemException(__FILE__, __LINE__);
+    }
 
 #else /* _WIN32 */
     this->mutex.Lock();				// Prevent other calls to Lock()/Unlock().
@@ -104,7 +110,6 @@ bool vislib::sys::Semaphore::Unlock(void) {
 	}
 
 	this->mutex.Unlock();			// Allow other calls to Lock()/Unlock().
-	return true;
 #endif /* _WIN32 */
 }
 

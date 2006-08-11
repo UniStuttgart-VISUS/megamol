@@ -58,29 +58,35 @@ namespace sys {
          * Enter the crititcal section for the calling thread. The method blocks
 		 * until the lock is acquired. 
          *
-         * @return true, if the lock was acquired, false, if an error occured.
+         * @throws SystemException If the lock could not be acquired.
          */
-        virtual bool Lock(void);
+        virtual void Lock(void);
 
         /**
          * Try to enter the critical section. If another thread is already in 
 		 * the critical section, the method will return immediately and the r
 		 * eturn value is false. The method is therefore non-blocking.
 		 *
-		 * NOTE: This method will always return false on Windows systems prior
+		 * NOTE: This method will always return fail on Windows systems prior
 		 * to Windows NT 4. Only programs that are compiled with _WIN32_WINNT 
 		 * defined as 0x0400 support this method.
          *
          * @return true, if the lock was acquired, false, if not.
+         *
+         * @throws UnsupportedOperationException On system prior to Windows 
+         *                                       NT 4.
+         * @throws SystemException If an error occurred when trying to acquire
+         *                         the lock.
+         *
          */
         bool TryLock(void);
 
         /**
          * Leave the critical section.
          *
-         * @return true in case of success, false otherwise.
+         * @throw SystemException If the lock could not be released.
          */
-        virtual bool Unlock(void);
+        virtual void Unlock(void);
 
     private:
 

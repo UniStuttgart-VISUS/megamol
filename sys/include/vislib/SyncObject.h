@@ -31,16 +31,16 @@ namespace sys {
         /**
          * Acquire the lock.
          *
-         * @return true, if the lock was acquired, false, if an error occured.
+         * @throws SystemException If the lock could not be acquired.
          */
-        virtual bool Lock(void) = 0;
+        virtual void Lock(void) = 0;
 
         /**
          * Release the lock.
          *
-         * @return true in case of success, false otherwise.
+         * @throw SystemException If the lock could not be released.
          */
-        virtual bool Unlock(void) = 0;
+        virtual void Unlock(void) = 0;
 
     protected:
 

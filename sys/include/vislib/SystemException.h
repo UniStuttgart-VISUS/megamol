@@ -39,6 +39,15 @@ namespace sys {
             const int line);
 
         /**
+         * Create a SystemException with the current error code retrieved using
+         * ::GetLastError().
+         *
+         * @param file The file the exception was thrown in.
+         * @param line The line the exception was thrown in.
+         */
+        SystemException(const char *file, const int line);
+
+        /**
          * Create a clone of 'rhs'.
          *
          * @param rhs The object to be cloned.
