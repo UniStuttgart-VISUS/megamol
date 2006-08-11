@@ -306,6 +306,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\StringConverter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Trace.cpp"
 				>
 			</File>
@@ -353,6 +357,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\String.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\StringConverter.h"
 				>
 			</File>
 			<File

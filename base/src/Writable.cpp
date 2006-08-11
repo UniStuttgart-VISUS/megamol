@@ -5,3 +5,8 @@
  */
 
 #include "vislib/Writable.h"
+
+
+/*
+ * This file is intentionally empty.
+ */

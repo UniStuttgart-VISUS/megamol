@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "vislib/error.h"
+#include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
 
 
@@ -57,11 +58,9 @@ const TCHAR *vislib::sys::SystemException::GetMsg(void) const {
 		    reinterpret_cast<TCHAR *>(&msgBuf), 0, NULL);
         this->setMsg(reinterpret_cast<TCHAR *>(msgBuf));
 	    ::LocalFree(msgBuf);
+
 #else /* _WIN32 */
-#if defined(UNICODE) || defined (_UNICODE)
-#error TODO Implementation missing
-#endif
-        this->setMsg(strerror(this->GetErrorCode()));
+        this->setMsg(A2T(strerror(this->GetErrorCode())));
 #endif /* _WIN32 */
     }
 

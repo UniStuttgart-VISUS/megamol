@@ -5,3 +5,8 @@
  */
 
 #include "vislib/Readable.h"
+
+
+/*
+ * This file is intentionally empty.
+ */

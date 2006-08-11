@@ -5,3 +5,8 @@
  */
 
 #include "vislib/CharTraits.h"
+
+
+/*
+ * This file is intentionally empty.
+ */

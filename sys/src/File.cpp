@@ -18,13 +18,14 @@
 #include <stdio.h> 
 #endif /* _WIN32 */
 
-#include "vislib/File.h"
-#include "vislib/error.h"
 #include "vislib/assert.h"
+#include "vislib/error.h"
+#include "vislib/File.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"
+#include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/IllegalParamException.h"
 
 
 /*
@@ -35,12 +36,7 @@ bool vislib::sys::File::Delete(const TCHAR *filename) {
 	return (::DeleteFile(filename) == TRUE); 
 
 #else /* _WIN32 */
-#if defined(UNICODE) || defined(_UNICODE)
-#error "Unicode implementation for File::Delete missing"
-#else /* defined(UNICODE) || defined(_UNICODE) */
-	return (::remove(filename) == 0);
-
-#endif /* defined(UNICODE) || defined(_UNICODE) */
+    return (::remove(T2A(filename)) == 0);
 
 #endif /* _WIN32 */
 }
@@ -51,17 +47,14 @@ bool vislib::sys::File::Delete(const TCHAR *filename) {
  */
 bool vislib::sys::File::Exists(const TCHAR *filename) {
 #ifdef _WIN32
-	return (PathFileExists(filename) == 1); // GetLastError() holds more information in case of problem. who cares
+    return (::PathFileExists(filename) == TRUE);
+    // GetLastError() holds more information in case of problem. who cares
 
 #else /* _WIN32 */
-#if defined(UNICODE) || defined(_UNICODE)
-#error "Unicode implementation for File::Exists missing"
-#else /* defined(UNICODE) || defined(_UNICODE) */
 	struct stat buf;
-	int i = stat(filename, &buf); // errno holds additional information (ENOENT and EBADF etc.). who cares
+	int i = stat(T2A(filename), &buf); 
+    // errno holds additional information (ENOENT and EBADF etc.). who cares
 	return (i == 0);
-
-#endif /* defined(UNICODE) || defined(_UNICODE) */
 
 #endif /* _WIN32 */
 }
@@ -74,10 +67,7 @@ bool vislib::sys::File::Rename(const TCHAR *oldName, const TCHAR *newName) {
 #ifdef _WIN32
     return (::MoveFile(oldName, newName) == TRUE);
 #else /* _WIN32 */
-#if defined(UNICODE) || defined(_UNICODE)
-#error "Unicode implementation for File::Rename missing"
-#endif 
-    return ::rename(oldName, newName);
+    return ::rename(T2A(oldName), T2A(newName));
 #endif /* _WIN32 */
 }
 
@@ -253,12 +243,7 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
 		default: throw IllegalParamException(_T("creationMode"), __FILE__, __LINE__);
 	}
 
-#if defined(UNICODE) || defined(_UNICODE)
-#error "Unicode implementation for File::Open missing"
-#else /* defined(UNICODE) || defined(_UNICODE) */
-	this->handle = ::open(filename, oflag);
-#endif /* defined(UNICODE) || defined(_UNICODE) */
-
+	this->handle = ::open(T2A(filename), oflag);
 	return (this->handle != -1);
 
 #endif /* _WIN32 */

@@ -14,6 +14,7 @@
 #include "vislib/File.h"
 #include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"
+#include "vislib/StringConverter.h"
 
 
 #ifdef _WIN32
@@ -25,6 +26,8 @@ int main(int argc, char **argv) {
     using namespace vislib::sys;
 
     TestString();
+
+    ::printf("%s", W2A(L"Hugo"));
 
     //SystemException e1(2, __FILE__, __LINE__);
     //::_tprintf(_T("%s\n"), e1.GetMsg());
