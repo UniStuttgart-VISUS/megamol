@@ -26,10 +26,10 @@ namespace sys {
     /**
      * A platform independent semaphore.
 	 *
-	 * Implementation notes: On Windows systems, this mutex can be used for
-	 * inter-process synchronisation tasks. The implementation uses the semaphore
-	 * that Windows provides. On Linux systems, the semaphore is emulated using
-	 * mutexes.
+	 * Implementation notes: On Windows systems, this synchronisation object can
+     * be used for inter-process synchronisation tasks. The implementation uses 
+     * the semaphore that Windows provides. On Linux systems, the semaphore is 
+     * emulated using mutexes.
      *
      * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
      */
@@ -54,7 +54,12 @@ namespace sys {
 
         /**
          * Acquire a lock on the semaphore. This method blocks until the lock is
-		 * acquired
+		 * acquired.
+         *
+         * The lock can be acquired, if the state of the semaphore is signaled, 
+         * i. e. the counter is greater than zero. If a lock has been 
+         * successfully acquired, the counter is decremented by one and if the
+         * counter reaches zero, the state of the semaphore becomes nonsignaled.
          *
          * @return true, if the lock was acquired, false, if an error occured.
          */
@@ -62,6 +67,10 @@ namespace sys {
 
         /**
          * Release the semaphore.
+         *
+         * The counter is incremented by one. The state of the semaphore becomes 
+         * signaled, as the counter becomes greater than zero, if the semaphore
+         * was successfully released.
          *
          * @return true in case of success, false otherwise.
          */

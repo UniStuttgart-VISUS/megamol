@@ -17,8 +17,9 @@ namespace vislib {
 namespace sys {
 
     /**
-     * This class provides a system independent high-resolution performance
-     * counter.
+     * This class provides a system independent performance counter. The 
+     * resolution is milliseconds. However, the zero point of the counter
+     * is undefined.
      *
      * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
      */
