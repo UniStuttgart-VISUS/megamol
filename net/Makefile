@@ -10,7 +10,7 @@ OutName := libVLNet.a
 InputDir := ./src
 
 # List of include directories:
-IncludeDir := ./include ../base/include
+IncludeDir := ./include ../base/include ../sys/include
 
 # List of system include directories:
 SystemIncludeDir := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
