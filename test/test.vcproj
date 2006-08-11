@@ -345,6 +345,10 @@
 				RelativePath=".\test.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\testhelper.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -353,6 +357,10 @@
 			>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testhelper.h"
 				>
 			</File>
 		</Filter>

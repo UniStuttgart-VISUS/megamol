@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "testhelper.h"
+
 #include "vislib/File.h"
 #include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"

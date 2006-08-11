@@ -2,7 +2,6 @@
  * Readable.h
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
- * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_READABLE_H_INCLUDED
