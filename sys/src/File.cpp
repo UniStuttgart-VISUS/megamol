@@ -303,7 +303,7 @@ vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset,
 #else /* _WIN32 */
 	off64_t n = ::lseek64(this->handle, offset, from);
 
-	if (n != ((off64_t) - 1)) {
+	if (n != static_cast<off64_t>(-1)) {
 		return n;
 
 #endif /* _WIN32 */
