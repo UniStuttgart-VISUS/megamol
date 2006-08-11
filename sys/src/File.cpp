@@ -193,6 +193,7 @@ bool vislib::sys::File::IsOpen(void) const {
 bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode, 
 		const ShareMode shareMode, const CreationMode creationMode) {
 	this->Close();
+
 #ifdef _WIN32
 	DWORD access;
 	DWORD share;
@@ -222,6 +223,7 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
 
 	this->handle = ::CreateFile(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
 	return (this->handle != INVALID_HANDLE_VALUE);
+
 #else /* _WIN32 */
 	int oflag = O_LARGEFILE | O_SYNC;
 	bool fileExists = vislib::sys::File::Exists(filename);
@@ -252,12 +254,13 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
 	}
 
 #if defined(UNICODE) || defined(_UNICODE)
-	assert(false); // TODO: Working with unicode under linux
+#error "Unicode implementation for File::Open missing"
 #else /* defined(UNICODE) || defined(_UNICODE) */
 	this->handle = ::open(filename, oflag);
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 
 	return (this->handle != -1);
+
 #endif /* _WIN32 */
 }
 
