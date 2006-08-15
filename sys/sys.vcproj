@@ -286,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DynamicLinkLibrary.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\error.cpp"
 				>
 			</File>
@@ -317,6 +321,10 @@
 				RelativePath=".\src\SystemException.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\SystemMessage.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -325,6 +333,10 @@
 			>
 			<File
 				RelativePath=".\include\vislib\CriticalSection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\DynamicLinkLibrary.h"
 				>
 			</File>
 			<File
@@ -357,6 +369,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SystemException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SystemMessage.h"
 				>
 			</File>
 		</Filter>

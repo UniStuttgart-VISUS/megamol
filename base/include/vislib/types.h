@@ -18,11 +18,13 @@
 
 #include <inttypes.h>
 
-typedef int8_t CHAR;
-typedef int8_t INT8;
-typedef uint8_t UCHAR;
-typedef uint8_t UINT8;
-typedef uint8_t BYTE;
+typedef char CHAR;
+typedef char INT8;
+typedef unsigned char UCHAR;
+typedef unsigned char UINT8;
+typedef unsigned char BYTE;
+
+typedef wchar_t WCHAR;
 
 typedef int16_t SHORT;
 typedef int16_t INT16;

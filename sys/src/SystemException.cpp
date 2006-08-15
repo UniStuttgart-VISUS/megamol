@@ -60,6 +60,7 @@ const TCHAR *vislib::sys::SystemException::GetMsg(void) const {
 	    ::LocalFree(msgBuf);
 
 #else /* _WIN32 */
+        // TODO: Possible hazard as not thread-safe.
         this->setMsg(A2T(strerror(this->GetErrorCode())));
 #endif /* _WIN32 */
     }

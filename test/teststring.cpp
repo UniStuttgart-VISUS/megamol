@@ -76,7 +76,7 @@ void TestStringA(void) {
     AssertFalse("\"Horst\" does not ends with \"go\"", s1.EndsWith("go"));
 
     AssertEqual("First 'o' in \"Horst\"", s1.IndexOf('o'), 1);
-    AssertEqual("First 'o' in \"Horst\" after 2", s1.IndexOf('o', 2), StringA::NOT_FOUND);
+    AssertEqual("First 'o' in \"Horst\" after 2", s1.IndexOf('o', 2), StringA::INVALID_POS);
     AssertEqual("Last 'o' in \"Horst\"", s1.LastIndexOf('o'), 1);
 
     s4 = s2 + " und Hugo";
@@ -141,7 +141,7 @@ void TestStringW(void) {
     AssertFalse("\"Horst\" does not ends with \"go\"", s1.EndsWith(L"go"));
 
     AssertEqual("First 'o' in \"Horst\"", s1.IndexOf(L'o'), 1);
-    AssertEqual("First 'o' in \"Horst\" after 2", s1.IndexOf(L'o', 2), StringA::NOT_FOUND);
+    AssertEqual("First 'o' in \"Horst\" after 2", s1.IndexOf(L'o', 2), StringA::INVALID_POS);
     AssertEqual("Last 'o' in \"Horst\"", s1.LastIndexOf(L'o'), 1);
 
     s4 = s2 + L" und Hugo";

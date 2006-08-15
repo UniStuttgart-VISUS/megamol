@@ -37,7 +37,7 @@ namespace vislib {
         typedef typename T::Size Size;
 
         /** Index of not found substrings. */
-        static const Size NOT_FOUND;
+        static const Size INVALID_POS;
 
         /** Create a new and empty string. */
         String(void);
@@ -96,13 +96,13 @@ namespace vislib {
         /**
          * Answer the index of the first occurrence of 'c' in the string. The 
          * search begins with the 'beginningAt'th character. If the character
-         * was not found, NOT_FOUND is returned.
+         * was not found, INVALID_POS is returned.
          *
          * @param c		      The character to be searched.
          * @param beginningAt The index of the first character to be tested.
          *
          * @return The first occurrence of 'c' after or at 'beginningAt' in the
-         *         string or NOT_FOUND, if the character is not in the string.
+         *         string or INVALID_POS, if the character is not in the string.
          */
         Size IndexOf(const Char c, const Size beginningAt = 0) const;
 
@@ -120,7 +120,7 @@ namespace vislib {
          *
          * @param c The character to be searched.
          *
-         * @return The last occurrence of 'c' in the string or NOT_FOUND, if the
+         * @return The last occurrence of 'c' in the string or INVALID_POS, if the
          *         character is not in the string.
          */
         Size LastIndexOf(const Char c) const;
@@ -308,9 +308,9 @@ namespace vislib {
 
 
     /*
-     * String<T>::NOT_FOUND
+     * String<T>::INVALID_POS
      */
-    template<class T> const typename String<T>::Size String<T>::NOT_FOUND = -1;
+    template<class T> const typename String<T>::Size String<T>::INVALID_POS = -1;
 
     /*
      * String<T>::String
@@ -436,7 +436,7 @@ namespace vislib {
         }
         /* Nothing found. */
 
-        return NOT_FOUND;
+        return INVALID_POS;
     }
 
 
@@ -452,7 +452,7 @@ namespace vislib {
         }
         /* Nothing found. */
 
-        return NOT_FOUND;
+        return INVALID_POS;
     }
 
 	/*

@@ -30,4 +30,4 @@ clean:
 	
 rebuild: clean all
 
-.PHONY: clean sweep rebuild
+.PHONY: all clean sweep rebuild

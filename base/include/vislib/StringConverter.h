@@ -15,6 +15,7 @@
 #include "vislib/CharTraits.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
+#include "vislib/types.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -24,10 +25,11 @@
  * next sequence point. Note, that the conversion is possibly very slow.
  */
 
-#define A2W(str) vislib::StringConverter<vislib::CharTraitsA,\
-    vislib::CharTraitsW>(str)
-#define W2A(str) vislib::StringConverter<vislib::CharTraitsW,\
-    vislib::CharTraitsA>(str)
+// Note: Explicits casts are required for Linux.
+#define A2W(str) static_cast<const WCHAR *>(vislib::StringConverter<\
+    vislib::CharTraitsA, vislib::CharTraitsW>(str))
+#define W2A(str) static_cast<const CHAR *>(vislib::StringConverter<\
+    vislib::CharTraitsW, vislib::CharTraitsA>(str))
 
 #if defined(UNICODE) || defined(_UNICODE)
 #define A2T(str) A2W(str)
@@ -63,7 +65,7 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    template<class S, class T, DWORD B = 64> class StringConverter {
+    template<class S, class T, INT32 B = 64> class StringConverter {
 
     public:
 
@@ -131,7 +133,7 @@ namespace vislib {
     /*
      * StringConverter<S, T, B>::StringConverter
      */
-    template<class S, class T, DWORD B>
+    template<class S, class T, INT32 B>
     StringConverter<S, T, B>::StringConverter(const SrcChar *str) 
             : buffer(NULL) {
         typename S::Size bufLen = S::SafeStringLength(str) + 1;
@@ -143,7 +145,7 @@ namespace vislib {
     /*
      * StringConverter<S, T, B>::~StringConverter
      */
-    template<class S, class T, DWORD B>
+    template<class S, class T, INT32 B>
     StringConverter<S, T, B>::~StringConverter(void) {
         if (this->buffer != this->staticBuffer) {
             ARY_SAFE_DELETE(this->buffer);
@@ -154,7 +156,7 @@ namespace vislib {
     /*
      * StringConverter<S, T, B>::operator =
      */
-    template<class S, class T, DWORD B>
+    template<class S, class T, INT32 B>
     StringConverter<S, T, B>& StringConverter<S, T, B>::operator =(
             const StringConverter& rhs) {
         if (this != &rhs) {

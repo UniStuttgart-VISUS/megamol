@@ -96,7 +96,7 @@ namespace sys {
 		/**
 		 * Dtor. If the file is still open, it is closed.
 		 */
-		~File(void);
+		virtual ~File(void);
 
 		/** Close the file, if open. */
 		void Close(void);

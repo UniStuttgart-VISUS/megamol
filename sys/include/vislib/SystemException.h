@@ -82,7 +82,7 @@ namespace sys {
          *
          * @return *this.
          */
-        virtual SystemException& operator =(const SystemException& rhs);
+        SystemException& operator =(const SystemException& rhs);
 
 	private:
 

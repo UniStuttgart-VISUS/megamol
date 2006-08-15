@@ -20,6 +20,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/types.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 namespace vislib {
@@ -27,12 +28,20 @@ namespace vislib {
 	/**
 	 * This class is the basis class for character trait descriptor classes. The
 	 * character trait classes are used to instantiate the string template.
+     *    
+     * Usage notes: Creating instances of this class is not allowed. There are
+     * static methods that provide the required functionality. These methods are
+     * either implemented in this superclass or in the specialisations for wide
+     * and ANSI characters. All methods are protected and can only be accessed
+     * by friend classes like the StringConverter and the String class itself.
+     * Other classes should not be allowed to access these method as it may be
+     * unsafe.
 	 *
 	 * @author Christoph Mueller
 	 */
 	template<class T> class CharTraits {
 	
-	public:
+    protected:
 
 		/** Define an type-independent name for the char traits. */
 		typedef T Char;
@@ -187,10 +196,11 @@ namespace vislib {
             
 		}
 
-	protected:
-	
 		/** Forbidden Ctor. */
-		inline CharTraits(void) {}
+		inline CharTraits(void) {
+            throw UnsupportedOperationException(
+                _T("vislib::CharTraits<T>::CharTraits"), __FILE__, __LINE__);
+        }
 
 	}; /* end class CharTraits */
 
@@ -200,9 +210,9 @@ namespace vislib {
 	 *
 	 * @author Christoph Mueller
 	 */
-	class CharTraitsA : public CharTraits<char> {
+	class CharTraitsA : public CharTraits<CHAR> {
 
-	public:
+    protected:
 
 		/**
 		 * Convert 'src' to an ANSI string and store it to 'dst'. If the 
@@ -323,6 +333,16 @@ namespace vislib {
 //#endif /* _WIN32 */
 //		}
 
+		/** Forbidden Ctor. */
+		inline CharTraitsA(void) {
+            throw UnsupportedOperationException(
+                _T("vislib::CharTraitsA::CharTraitsA"), __FILE__, __LINE__);
+        }
+
+        /* Declare our friends. */
+        template<class T> friend class String;
+        template<class S, class T, INT32 B> friend class StringConverter;
+
 	}; /* end class CharTraitsA */
 
 
@@ -331,9 +351,9 @@ namespace vislib {
 	 *
 	 * @author Christoph Mueller
 	 */
-	class CharTraitsW : public CharTraits<wchar_t> {
+	class CharTraitsW : public CharTraits<WCHAR> {
 
-	public:
+	protected:
 
 		/**
 		 * Convert 'src' to an ANSI string and store it to 'dst'. If the 
@@ -453,6 +473,16 @@ namespace vislib {
 //			assert(false);
 //#endif /* _WIN32 */
 //		}
+
+		/** Forbidden Ctor. */
+		inline CharTraitsW(void) {
+            throw UnsupportedOperationException(
+                _T("vislib::CharTraitsW::CharTraitsW"), __FILE__, __LINE__);
+        }
+
+        /* Declare our friends. */
+        template<class T> friend class String;
+        template<class S, class T, INT32 B> friend class StringConverter;
 
 	}; /* end class CharTraitsW */
 

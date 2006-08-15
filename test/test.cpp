@@ -15,6 +15,7 @@
 #include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
+#include "vislib/SystemMessage.h"
 
 
 #ifdef _WIN32
@@ -27,7 +28,7 @@ int main(int argc, char **argv) {
 
     TestString();
 
-    ::printf("%s", W2A(L"Hugo"));
+    //::printf("%s", W2A(L"Hugo"));
 
     //SystemException e1(2, __FILE__, __LINE__);
     //::_tprintf(_T("%s\n"), e1.GetMsg());
@@ -39,6 +40,8 @@ int main(int argc, char **argv) {
     //    ::_tprintf(_T("%lu\n"), PerformanceCounter::Query());
     //}
     
+    SystemMessage sysMsg(4);
+    ::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
     
 #ifdef _WIN32
     ::_tsystem(_T("pause"));
