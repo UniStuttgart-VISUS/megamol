@@ -63,6 +63,7 @@ FARPROC vislib::sys::DynamicLinkLibrary::GetProcAddress(
 #else /* _WIN32 */
 void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
         const CHAR *procName) const {
+    // TODO: Error handling using dlerror
     return ::dlsym(this->hModule, procName);
 }
 #endif /* _WIN32 */
@@ -77,6 +78,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const TCHAR *moduleName) {
 #ifdef _WIN32
     return ((this->hModule = ::LoadLibrary(moduleName)) != NULL);
 #else /* _WIN32 */
+    // TODO: Error handling using dlerror
     return ((this->hModule = ::dlopen(T2A(moduleName), RTLD_LAZY)) != NULL);
 #endif /* _WIN32 */
 }

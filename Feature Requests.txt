@@ -1,5 +1,0 @@
-Guido: Möglichkeit, plattformunabhängig Fensterbotschaften zu versenden.
-Christoph: SystemMessage-Klasse als Wrapper für FormatMessage/strerror String. Thread-Safety!
-Christoph: Thread-Abstraktion
-Christoph: Thread-Pool
-Christoph: Abstraktion des expliziten Ladens von DLLs/SOs.
