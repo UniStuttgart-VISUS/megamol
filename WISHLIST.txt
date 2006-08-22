@@ -1,3 +1,5 @@
 Guido: Möglichkeit, plattformunabhängig Fensterbotschaften zu versenden.
 Christoph: Thread-Abstraktion
 Christoph: Thread-Pool
+Thomas: Float16
+Christoph: Format-Methode für String

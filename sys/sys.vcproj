@@ -310,6 +310,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Runnable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Semaphore.cpp"
 				>
 			</File>
@@ -323,6 +327,10 @@
 			</File>
 			<File
 				RelativePath=".\src\SystemMessage.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Thread.cpp"
 				>
 			</File>
 		</Filter>
@@ -360,6 +368,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\Runnable.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\Semaphore.h"
 				>
 			</File>
@@ -373,6 +385,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SystemMessage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Thread.h"
 				>
 			</File>
 		</Filter>

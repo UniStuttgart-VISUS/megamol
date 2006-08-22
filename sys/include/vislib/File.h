@@ -26,7 +26,7 @@ namespace sys {
      *
      * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
      */
-    class File : public Readable, public Writable {
+    class File {
 
     public:
 		
@@ -99,7 +99,7 @@ namespace sys {
 		virtual ~File(void);
 
 		/** Close the file, if open. */
-		void Close(void);
+		virtual void Close(void);
 
 		/**
 		 * Forces all buffered data to be written. 
@@ -127,7 +127,7 @@ namespace sys {
          *                     invalid position at the moment.
 		 */
         // TODO: Would be nice, if IsEOF could be const (some mutable-hack).
-        bool IsEOF(void);
+        virtual bool IsEOF(void);
 
 		/**
 		 * Answer whether this file is open.
@@ -152,7 +152,7 @@ namespace sys {
 		 *
 		 * @throws IllegalParamException
 		 */
-		bool Open(const TCHAR *filename, const AccessMode accessMode, 
+		virtual bool Open(const TCHAR *filename, const AccessMode accessMode, 
 			const ShareMode shareMode, const CreationMode creationMode);
 
 		/**
@@ -184,7 +184,7 @@ namespace sys {
 		 *                     because the file was not open or the offset was
 		 *                     invalid.
 		 */
-		EXTENT Seek(const FileOffset offset, const SeekStartPoint from);
+		virtual EXTENT Seek(const FileOffset offset, const SeekStartPoint from);
 
 		/**
 		 * Move the file pointer to the begin of the file.
