@@ -129,7 +129,7 @@ void vislib::sys::File::Flush(void) {
 /*
  * vislib::sys::File::GetSize
  */
-EXTENT vislib::sys::File::GetSize(void) {
+vislib::sys::File::FileSize vislib::sys::File::GetSize(void) {
 #ifdef _WIN32
 	LARGE_INTEGER size;
 
@@ -153,8 +153,8 @@ EXTENT vislib::sys::File::GetSize(void) {
  * vislib::sys::File::IsEOF
  */
 bool vislib::sys::File::IsEOF(void) {
-    EXTENT here = this->Seek(0, CURRENT);
-    EXTENT end = this->Seek(0, END);
+    FileSize here = this->Seek(0, CURRENT);
+    FileSize end = this->Seek(0, END);
 
     if (here == end) {
         return true;
@@ -253,7 +253,7 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
 /*
  * vislib::sys::File::Read
  */
-EXTENT vislib::sys::File::Read(void *outBuf, const EXTENT bufSize) {
+vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf, const vislib::sys::File::FileSize bufSize) {
 #ifdef _WIN32
 	DWORD readBytes;
 	if (::ReadFile(this->handle, outBuf, static_cast<DWORD>(bufSize), 
@@ -277,8 +277,7 @@ EXTENT vislib::sys::File::Read(void *outBuf, const EXTENT bufSize) {
 /*
  * vislib::sys::File::Seek
  */
-EXTENT vislib::sys::File::Seek(const FileOffset offset, 
-													const SeekStartPoint from) {
+vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset, const SeekStartPoint from) {
 #ifdef _WIN32
 	LARGE_INTEGER o;
 	LARGE_INTEGER n;
@@ -301,9 +300,17 @@ EXTENT vislib::sys::File::Seek(const FileOffset offset,
 
 
 /*
+ * vislib::sys::File::Tell
+ */
+vislib::sys::File::FileSize vislib::sys::File::Tell(void) {
+	return this->Seek(0, vislib::sys::File::CURRENT);
+}
+
+
+/*
  * vislib::sys::File::Write
  */
-EXTENT vislib::sys::File::Write(const void *buf, const EXTENT bufSize) {
+vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf, const vislib::sys::File::FileSize bufSize) {
 #ifdef _WIN32
 	DWORD writtenBytes;
 	if (::WriteFile(this->handle, buf, static_cast<DWORD>(bufSize), 
