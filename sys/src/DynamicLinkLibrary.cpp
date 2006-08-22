@@ -12,6 +12,7 @@
 
 #include "vislib/DynamicLinkLibrary.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -73,7 +74,10 @@ void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
  * vislib::sys::DynamicLinkLibrary::Load
  */
 bool vislib::sys::DynamicLinkLibrary::Load(const TCHAR *moduleName) {
-    this->Free();
+    if (this->IsLoaded()) {
+        throw IllegalStateException(_T("Call to DynamicLinLibrary::Load() when")
+            _T("a library was already loaded."), __FILE__, __LINE__);
+    }
 
 #ifdef _WIN32
     return ((this->hModule = ::LoadLibrary(moduleName)) != NULL);

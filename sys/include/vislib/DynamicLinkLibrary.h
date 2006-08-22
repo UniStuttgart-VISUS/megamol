@@ -68,9 +68,10 @@ namespace sys {
          * @return true in case of success, false, if the library could not be 
          *         loaded.
          *
-         * @throws
+         *
+         * @throws IllegalStateException If a library was already loaded and not
+         *                               freed before this call to Load().
          */
-        // TODO: Behaviour: Throw exception? Do not free automatically? Might leave dangling references.
         bool Load(const TCHAR *moduleName);
 
     private:

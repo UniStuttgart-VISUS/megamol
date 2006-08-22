@@ -9,6 +9,10 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#ifndef _WIN32
+#include <pthread.h>
+#endif /* !_WIN32 */
+
 
 #include "vislib/Runnable.h"
 #include "vislib/types.h"

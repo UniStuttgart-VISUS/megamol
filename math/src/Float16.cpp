@@ -35,7 +35,7 @@
 //    interpret half data.
 
 
-/** Abosoluto of bias of half exponent (-15). */
+/** Absolute of bias of half exponent (-15). */
 static const UINT16 FLT16_BIAS = 0x0070;
 
 /** Bitmask for the exponent bits of half. */
@@ -49,6 +49,9 @@ static const UINT16 FLT16_SIGN_MASK = 0x8000;
 
 /** Distance between half and float sign bit. */
 static const UINT32 FLT1632_SIGN_OFFSET = 0x00000010;
+
+/** Bias of float exponent. */
+static const UINT32 FLT32_BIAS = 127;
 
 /** Bitmask for the exponent bits of float. */
 static const UINT32 FLT32_EXPONENT_MASK = 0x7F800000;

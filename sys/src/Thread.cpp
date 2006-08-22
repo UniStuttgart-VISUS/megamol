@@ -9,6 +9,7 @@
 #endif /* !_WIN32 */
 
 #include "vislib/assert.h"
+#include "vislib/error.h"
 #include "vislib/Thread.h"
 #include "vislib/Trace.h"
 
@@ -37,6 +38,8 @@ void vislib::sys::Thread::Sleep(const DWORD millis) {
  */
 vislib::sys::Thread::Thread(Runnable& runnable) 
         : exitCode(static_cast<DWORD>(-1)), id(0), state(NEW) {
+    ASSERT(false);
+    // TODO THIS CLASS IS A STUB!!!
 #ifdef _WIN32
 	this->handle = NULL;
 
@@ -105,9 +108,7 @@ bool vislib::sys::Thread::Start(void) {
 #else /* _WIN32 */
 	if (::pthread_create(&this->id, &this->attribs, Thread::ThreadFunc, 
             static_cast<void *>(this)) == 0) {
-        this->threadMutex.Lock();
 		this->state = RUNNING;
-		this->threadMutex.Unlock();
         return true;
 
     } else {

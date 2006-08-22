@@ -294,6 +294,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\IllegalStateException.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\OutOfRangeException.cpp"
 				>
 			</File>
@@ -333,6 +337,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\IllegalParamException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\IllegalStateException.h"
 				>
 			</File>
 			<File
