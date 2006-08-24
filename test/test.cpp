@@ -30,8 +30,8 @@ int main(int argc, char **argv) {
 
     //::printf("%s", W2A(L"Hugo"));
 
-    //SystemException e1(2, __FILE__, __LINE__);
-    //::_tprintf(_T("%s\n"), e1.GetMsg());
+    SystemException e1(2, __FILE__, __LINE__);
+    ::_tprintf(_T("%s\n"), e1.GetMsg());
 
     //Exception e2(__FILE__, __LINE__);
     //::_tprintf(_T("%s\n"), e2.GetMsg());

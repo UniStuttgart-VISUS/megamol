@@ -245,6 +245,8 @@ namespace vislib {
 		 */
 		inline static bool Convert(wchar_t *dst, const Size cnt,
 				const Char *src) {
+            // TODO: Could work without test, if we assume that String and
+            // String convert always pass a buffer that is large enough.
 			Size srcLen = SafeStringLength(src);
 
 			if ((dst != NULL) && (cnt > srcLen) && (src != NULL)) {
@@ -253,7 +255,7 @@ namespace vislib {
 #elif defined(_WIN32)
                 ::_snwprintf(dst, cnt, L"%hs", src);
 #else  /*(_MSC_VER >= 1400) */
-				::swprintf(dst, srcLen + 1, L"%hs", src);
+				::swprintf(dst, cnt, L"%hs", src);
 #endif /*(_MSC_VER >= 1400) */
 				return true;
 			} else {
@@ -369,6 +371,8 @@ namespace vislib {
 		 */
 		inline static bool Convert(char *dst, const Size cnt,
 				const Char *src) {
+            // TODO: Could work without test, if we assume that String and
+            // String convert always pass a buffer that is large enough.
 			Size srcLen = SafeStringLength(src);
 
 			if ((dst != NULL) && (cnt > srcLen) && (src != NULL)) {
@@ -377,7 +381,7 @@ namespace vislib {
 #elif defined(_WIN32)
                 ::_snprintf(dst, cnt, "%ls", src);
 #else  /*(_MSC_VER >= 1400) */
-				::snprintf(dst, srcLen + 1, "%ls", src);
+				::snprintf(dst, cnt, "%ls", src);
 #endif /*(_MSC_VER >= 1400) */
 				return true;
 			} else {

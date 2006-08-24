@@ -6,9 +6,11 @@
 
 #include <cstring>
 
-#include "vislib/error.h"
-#include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
+
+#include "vislib/error.h"
+#include "vislib/SystemMessage.h"
+
 
 
 /*
@@ -49,20 +51,8 @@ vislib::sys::SystemException::~SystemException(void) {
 const TCHAR *vislib::sys::SystemException::GetMsg(void) const {
 
     if (Exception::GetMsg() == NULL) {
-#ifdef _WIN32
-        LPVOID msgBuf = NULL;
-
-        ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER 
-            | FORMAT_MESSAGE_FROM_SYSTEM, NULL, this->GetErrorCode(),
-		    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		    reinterpret_cast<TCHAR *>(&msgBuf), 0, NULL);
-        this->setMsg(reinterpret_cast<TCHAR *>(msgBuf));
-	    ::LocalFree(msgBuf);
-
-#else /* _WIN32 */
-        // TODO: Possible hazard as not thread-safe.
-        this->setMsg(A2T(strerror(this->GetErrorCode())));
-#endif /* _WIN32 */
+        this->setMsg(static_cast<const TCHAR *>(
+            SystemMessage(this->GetErrorCode())));
     }
 
     return Exception::GetMsg();
