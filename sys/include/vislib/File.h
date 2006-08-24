@@ -119,7 +119,7 @@ namespace sys {
          * @throws IOException If the file size cannot be retrieve, e. g. 
          *                     because the file has not been opened.
          */
-        FileSize GetSize(void) const;
+        virtual FileSize GetSize(void) const;
 
         /**
          * Answer whether the file pointer is at the end of the file.
@@ -130,7 +130,9 @@ namespace sys {
          *                     invalid position at the moment.
          */
         // TODO: Would be nice, if IsEOF could be const (some mutable-hack).
-        virtual bool IsEOF(void);
+        inline bool IsEOF(void) {
+            return this->Tell() == this->GetSize();
+        }
 
         /**
          * Answer whether this file is open.

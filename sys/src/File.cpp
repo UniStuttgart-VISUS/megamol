@@ -149,21 +149,6 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(void) const {
 }
 
 
-/*
- * vislib::sys::File::IsEOF
- */
-bool vislib::sys::File::IsEOF(void) {
-    FileSize here = this->Seek(0, CURRENT);
-    FileSize end = this->Seek(0, END);
-
-    if (here == end) {
-        return true;
-    } else {
-        this->Seek(here, BEGIN);
-        return false;
-    }
-}
-
 
 /*
  * vislib::sys::File::IsOpen
