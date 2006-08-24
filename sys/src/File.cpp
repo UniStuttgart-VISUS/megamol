@@ -18,9 +18,10 @@
 #include <stdio.h> 
 #endif /* _WIN32 */
 
+#include "vislib/File.h"
+
 #include "vislib/assert.h"
 #include "vislib/error.h"
-#include "vislib/File.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"
 #include "vislib/StringConverter.h"
@@ -289,8 +290,25 @@ vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset,
 /*
  * vislib::sys::File::Tell
  */
-vislib::sys::File::FileSize vislib::sys::File::Tell(void) {
-    return this->Seek(0, vislib::sys::File::CURRENT);
+vislib::sys::File::FileSize vislib::sys::File::Tell(void) const {
+#ifdef _WIN32
+    LARGE_INTEGER o;
+    LARGE_INTEGER n;
+    o.QuadPart = 0; 
+
+    if (::SetFilePointerEx(this->handle, o, &n, FILE_CURRENT)) {
+        return n.QuadPart;		
+
+#else /* _WIN32 */
+    off64_t n = ::lseek64(this->handle, 0, SEEK_CUR);
+
+    if (n != static_cast<off64_t>(-1)) {
+        return n;
+
+#endif /* _WIN32 */
+    } else {
+        throw IOException(::GetLastError(), __FILE__, __LINE__);
+    }
 }
 
 

@@ -1,0 +1,3 @@
+String: Advanced manipulation
+Float16: Whole implementation, is only stub at the moment.
+Thread: Whole implementation, is only stub at the moment. 

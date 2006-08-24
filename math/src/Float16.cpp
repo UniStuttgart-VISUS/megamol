@@ -4,9 +4,9 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
+#include "vislib/Float16.h"
 
 #include "vislib/assert.h"
-#include "vislib/Float16.h"
 
 
 // The half data type is a floating-point data type encoded in an unsigned 

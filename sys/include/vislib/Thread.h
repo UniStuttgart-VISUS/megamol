@@ -42,7 +42,7 @@ namespace sys {
         enum State { NEW = 1, RUNNING, SUSPENDED, FINISHED };
 
         /** Functions with this signature can be run as threads. */
-        typedef DWORD (* RunnableFunc)(void); 
+        typedef DWORD (* RunnableFunc)(const void *userData); 
 
 		/**
 		 * Makes the calling thread sleep for 'millis' milliseconds.
@@ -103,10 +103,13 @@ namespace sys {
          * A thread can only be started, if it is in the state NEW or
          * FINISHED.
          *
+         * @param userData The user data that are passed to the new thread's
+         *                 thread function or Run() method.
+         *
          * @return true, if the thread was successfully started, false 
          *         otherwise.
          */
-		bool Start(void);
+		bool Start(const void *userData = NULL);
 
         /**
          * Terminate the thread.

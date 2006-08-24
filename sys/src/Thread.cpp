@@ -8,9 +8,10 @@
 #include <unistd.h>
 #endif /* !_WIN32 */
 
+#include "vislib/Thread.h"
+
 #include "vislib/assert.h"
 #include "vislib/error.h"
-#include "vislib/Thread.h"
 #include "vislib/Trace.h"
 
 
@@ -88,7 +89,7 @@ vislib::sys::Thread::~Thread(void) {
 /*
  * vislib::sys::Thread::Start
  */
-bool vislib::sys::Thread::Start(void) {
+bool vislib::sys::Thread::Start(const void *userData) {
     State state = this->GetState();
     if ((state != NEW) && (state != FINISHED)) {
         return false;

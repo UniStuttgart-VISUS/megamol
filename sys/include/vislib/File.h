@@ -129,9 +129,8 @@ namespace sys {
          * @throws IOException If the file is not open or the file pointer is at an
          *                     invalid position at the moment.
          */
-        // TODO: Would be nice, if IsEOF could be const (some mutable-hack).
-        inline bool IsEOF(void) {
-            return this->Tell() == this->GetSize();
+        inline bool IsEOF(void) const {
+            return (this->Tell() == this->GetSize());
         }
 
         /**
@@ -223,8 +222,7 @@ namespace sys {
          *
          * @throws IOException
          */
-        // TODO: Would be nice, if IsEOF could be const (some mutable-hack).
-        virtual FileSize Tell(void);
+        virtual FileSize Tell(void) const;
 
         /**
          * Write 'bufSize' bytes from 'buf' to the file.

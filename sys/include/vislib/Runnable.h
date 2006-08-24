@@ -22,14 +22,17 @@ namespace sys {
      */
     class Runnable {
 
-    protected:
+    public:
 
         /**
          * Perform the work of a thread.
          *
+         * @param userData A pointer to user data that are passed to the thread,
+         *                 if it started.
+         *
          * @return The application dependent return code of the thread.
          */
-        virtual DWORD run(void) = 0;
+        virtual DWORD Run(const void *userData) = 0;
 
 	};
 
