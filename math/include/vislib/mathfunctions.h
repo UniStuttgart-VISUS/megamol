@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <limits>
+#include "vislib/assert.h"
 
 // TODO
 
@@ -159,6 +160,26 @@ namespace math {
      */
     inline double Sqrt(const double n) {
         return ::sqrt(n);
+    }
+
+
+    /**
+     * Calculates the unsigned modulo value.
+     * Only signed interger types can be used to instanciate this function.
+     * Example:
+     *   -3 % 5 = -3
+     *   UMod(-3, 5) = 2
+     *
+     * @param n The signed dividend.
+     * @param d The unsigned divisor. must not be negative.
+     *
+     * @return The unsigned modulo value.
+     */
+    template<class T> inline T UMod(const T n, const T d) {
+        ASSERT(std::numeric_limits<T>::is_integer);
+        ASSERT(std::numeric_limits<T>::is_signed);
+        ASSERT(d >= 0);
+        return (left >= 0) ? (left % right) : ((1 - ((left + 1) / right)) * right + left);
     }
 
 } /* end namespace math */
