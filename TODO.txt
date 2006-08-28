@@ -1,3 +1,4 @@
 String: Advanced manipulation
 Float16: Whole implementation, is only stub at the moment.
 Thread: Whole implementation, is only stub at the moment. 
+File: I think, IsEOF is inherently unsafe on Linux.
