@@ -10,6 +10,10 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#include <iostream>
+
+#include "vislib/types.h"
+
 
 bool AssertTrue(const char *desc, const bool cond);
 

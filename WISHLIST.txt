@@ -1,5 +1,7 @@
 Guido: Möglichkeit, plattformunabhängig Fensterbotschaften zu versenden.
 Christoph: Thread-Abstraktion
 Christoph: Thread-Pool
-Thomas: Float16
+//Thomas: Float16
 Christoph: Format-Methode für String
+Guido: Öffnen von Remote-Dateien in File-Wrappern vorsehen.
+Christoph: Arithmetik für Float16

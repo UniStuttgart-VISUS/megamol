@@ -51,6 +51,18 @@ namespace sys {
 		 */
 		static void Sleep(const DWORD millis);
 
+#pragma push_macro("Yield")
+#undef Yield
+        /**
+         * Causes the calling thread to yield execution to another thread that 
+         * is ready to run on the current processor.
+         *
+         * @throws SystemException If the operation could not be completed 
+         *                         successfully (Linux only).
+         */
+        static void Yield(void);
+#pragma pop_macro("Yield")
+
 		/** 
          * Create a thread that executes the given Runnable.
          *

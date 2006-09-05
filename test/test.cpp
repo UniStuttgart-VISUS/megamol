@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 #include "teststring.h"
+#include "testfloat16.h"
 
 #include "vislib/File.h"
 #include "vislib/SystemException.h"
@@ -26,12 +27,13 @@ int main(int argc, char **argv) {
     using namespace vislib;
     using namespace vislib::sys;
 
-    TestString();
+    //::TestString();
+    ::TestFloat16();
 
     //::printf("%s", W2A(L"Hugo"));
 
-    SystemException e1(2, __FILE__, __LINE__);
-    ::_tprintf(_T("%s\n"), e1.GetMsg());
+    //SystemException e1(2, __FILE__, __LINE__);
+    //::_tprintf(_T("%s\n"), e1.GetMsg());
 
     //Exception e2(__FILE__, __LINE__);
     //::_tprintf(_T("%s\n"), e2.GetMsg());
@@ -40,9 +42,9 @@ int main(int argc, char **argv) {
     //    ::_tprintf(_T("%lu\n"), PerformanceCounter::Query());
     //}
     
-    SystemMessage sysMsg(4);
-    ::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
-    
+    //SystemMessage sysMsg(4);
+    //::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
+
 #ifdef _WIN32
     ::_tsystem(_T("pause"));
 #endif

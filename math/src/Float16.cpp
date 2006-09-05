@@ -6,37 +6,13 @@
 
 #include "vislib/Float16.h"
 
+#include <cfloat>
+
 #include "vislib/assert.h"
 
 
-// The half data type is a floating-point data type encoded in an unsigned 
-// scalar data type.  If the unsigned scalar holding a half has a value of N,
-// the corresponding floating point number is
-//
-//      (-1)^S * 0.0,                        if E == 0 and M == 0,
-//      (-1)^S * 2^-14 * (M / 2^10),         if E == 0 and M != 0,
-//      (-1)^S * 2^(E-15) * (1 + M/2^10),    if 0 < E < 31,
-//      (-1)^S * INF,                        if E == 31 and M == 0, or
-//      NaN,                                 if E == 31 and M != 0,
-//
-//    where
-//
-//      S = floor((N mod 65536) / 32768),
-//      E = floor((N mod 32768) / 1024), and
-//      M = N mod 1024.
-//
-//    INF (Infinity) is a special representation indicating numerical overflow.
-//    NaN (Not a Number) is a special representation indicating the result of
-//    illegal arithmetic operations, such as computing the square root or
-//    logarithm of a negative number.  Note that all normal values, zero, and
-//    INF have an associated sign.  -0.0 and +0.0 are considered equivalent for
-//    the purposes of comparisons.  Note also that half is not a native type in
-//    most CPUs, so some special processing may be required to generate or
-//    interpret half data.
-
-
 /** Absolute of bias of half exponent (-15). */
-static const UINT16 FLT16_BIAS = 0x0070;
+static const INT32 FLT16_BIAS = 15;
 
 /** Bitmask for the exponent bits of half. */
 static const UINT16 FLT16_EXPONENT_MASK = 0x7C00;
@@ -47,17 +23,18 @@ static const UINT16 FLT16_MANTISSA_MASK = 0x03FF;
 /** Bitmask for the sign bit of half. */
 static const UINT16 FLT16_SIGN_MASK = 0x8000;
 
+/** Size difference between half and float mantissa. */
+static const UINT32 FLT1632_MANTISSA_OFFSET 
+    = (FLT_MANT_DIG - vislib::math::Float16::MANT_DIG) - 1;
+
 /** Distance between half and float sign bit. */
-static const UINT32 FLT1632_SIGN_OFFSET = 0x00000010;
+static const UINT32 FLT1632_SIGN_OFFSET = (32 - 16);
 
 /** Bias of float exponent. */
-static const UINT32 FLT32_BIAS = 127;
+static const INT32 FLT32_BIAS = 127;
 
 /** Bitmask for the exponent bits of float. */
 static const UINT32 FLT32_EXPONENT_MASK = 0x7F800000;
-
-/** Offset of the exponent bits of float. */
-static const UINT32 FLT32_EXPONENT_OFFSET = 0x00000017;
 
 /** Bitmask for the mantissa bits of half */
 static const UINT32 FLT32_MANTISSA_MASK = 0x007FFFFF;
@@ -67,126 +44,172 @@ static const UINT32 FLT32_SIGN_MASK = 0x80000000;
 
 
 /*
- * vislib::math::Float16::Float32To16
+ * vislib::math::Float16::FromFloat32
  */
-UINT16 vislib::math::Float16::Float32To16(const float flt) {
-    // Bitwise reinterpretation of input.
-    const UINT32 input = *(reinterpret_cast<const UINT32 *>(&flt));
+void vislib::math::Float16::FromFloat32(UINT16 *outHalf, SIZE_T cnt,
+        const float *flt) {
+    INT32 exponent = 0;         // Value of exponent of 'flt'.
+    UINT32 input = 0;           // Bitwise reinterpretation of 'flt'.
+    UINT32 mantissa = 0;        // Value of mantissa, biased for half.
+    UINT32 sign = 0;            // The sign bit.
 
-    /* Retrieve value of exponent and mantissa of the input number. */
-    const register UINT32 exponent = ((input & FLT32_EXPONENT_MASK) 
-        >> FLT32_EXPONENT_OFFSET);
-    const register UINT32 mantissa = (input & FLT32_MANTISSA_MASK);
+    for (SIZE_T i = 0; i < cnt; i++) {
 
-    /* Just move the sign bit directly to its final position. */
-    UINT32 result = (input & FLT32_SIGN_MASK) >> FLT1632_SIGN_OFFSET;
+        /* Bitwise reinterpretation of input */
+        input = *(reinterpret_cast<const UINT32 *>(flt + i));
 
+        /* Just move the sign bit directly to its final position. */
+        sign = (input & FLT32_SIGN_MASK) >> FLT1632_SIGN_OFFSET;
 
+        /* Retrieve value of exponent. */
+        exponent = static_cast<INT32>((input & FLT32_EXPONENT_MASK) 
+            >> (FLT_MANT_DIG - 1)) - FLT32_BIAS + FLT16_BIAS;
 
-    //register int s =  (i >> 16) & 0x00008000;
-    //register int e = ((i >> 23) & 0x000000ff) - (127 - 15);
-    //register int m =   i        & 0x007fffff;
-    //     
-    // if (e <= 0) {
-    //     if (e < -10){
-    //         return 0;
-    //     }
-    //     m = (m | 0x00800000) >> (1 - e);
- 
-    //     return s | (m >> 13);
-    // } else if (e == 0xff - (127 - 15)) {
-    //     if (m == 0) { // Inf 
-    //         return s | 0x7c00;
-    //     } else {   // NAN
-    //         m >>= 13;
-    //         return s | 0x7c00 | m | (m == 0);
-    //     }
-    // } else {
-    //     if (e > 30) { // Overflow
-    //         return s | 0x7c00;
-    //     }
- 
-    //     return s | (e << 10) | (m >> 13);
-    // }
+        /* Retrieve value of mantissa. */
+        mantissa = (input & FLT32_MANTISSA_MASK);
 
+        if (exponent < -Float16::MANT_DIG) {
+            /* Underflow, result is zero. */
+            outHalf[i] = 0;
 
-    // TODO: Implementation missing.
-    ASSERT(false);
+        } else if (exponent <= 0) {
+            /* Negative exponent. */
 
-    return static_cast<UINT16>(result);
+            /* Normalise the number. */
+            mantissa = (mantissa | (1 << (FLT_MANT_DIG - 1))) >> (1 - exponent);
+                
+            outHalf[i] = static_cast<UINT16>(sign 
+                | (mantissa >> FLT1632_MANTISSA_OFFSET));
+
+        } else if (exponent == (FLT32_EXPONENT_MASK >> (FLT_MANT_DIG - 1)) 
+                - FLT32_BIAS + FLT16_BIAS) {
+            /* 
+             * If all exponent bits are set, the input float is either infinity 
+             * ('mantissa' == 0) or NaN ('mantissa' != 0). If all mantissa bits
+             * are set, NaN is quiet, otherwise, it is signaling. Truncating the
+             * mantissa should preserve this.
+             */
+            
+            if (mantissa != 0) {
+                /* 
+                 * Truncate mantissa, if it contains data (i. e. is NaN), but 
+                 * make sure that the mantissa does not become zero by shifting
+                 * out all relevant bits as this would make the NaN infinity.
+                 */
+                mantissa >>= FLT1632_MANTISSA_OFFSET;
+                mantissa |= (mantissa == 0);
+            }
+
+            outHalf[i] = static_cast<UINT16>(sign | FLT16_EXPONENT_MASK
+                | mantissa);
+
+        } else if (exponent > Float16::MAX_EXP + FLT16_BIAS) {
+            /* Overflow, result becomes infinity. */
+            outHalf[i] = static_cast<UINT16>(sign | FLT16_EXPONENT_MASK);
+
+        } else {
+            /* 
+             * Normal, valid number, truncate mantissa and move exponent to its
+             * final position.  
+             */
+            outHalf[i] = sign | (exponent << Float16::MANT_DIG)
+                | (mantissa >> FLT1632_MANTISSA_OFFSET);
+        } /* end if (exponent <= 0) */
+    } /* end for (SIZE_T i = 0; i < cnt; i++) */
 }
 
 
 /*
- * vislib::math::Float16:Float16To32
+ * vislib::math::Float16::ToFloat32
  */
-float vislib::math::Float16::Float16To32(const UINT16 half) {
-    UINT32 result = 0;
+void vislib::math::Float16::ToFloat32(float *outFloat, const SIZE_T cnt,
+        const UINT16 *half) {
+    INT32 exponent = 0;         // Value of exponent of 'half'.
+    UINT32 mantissa = 0;        // Value of mantissa.
+    UINT32 result = 0;          // The result
+    UINT32 sign = 0;            // The sign bit.
 
-    // TODO: Implementation missing.
-    ASSERT(false);
+    for (SIZE_T i = 0; i < cnt; i++) {
 
-             //register int s = (y >> 15) & 0x00000001;
-             //register int e = (y >> 10) & 0x0000001f;
-             //register int m =  y        & 0x000003ff;
-         
-             //if (e == 0)
-             //{
-             //    if (m == 0) // Plus or minus zero
-             //    {
-             //        return s << 31;
-             //    }
-             //    else // Denormalized number -- renormalize it
-             //    {
-             //        while (!(m & 0x00000400))
-             //        {
-             //            m <<= 1;
-             //            e -=  1;
-             //        }
-         
-             //        e += 1;
-             //        m &= ~0x00000400;
-             //    }
-             //}
-             //else if (e == 31)
-             //{
-             //    if (m == 0) // Inf
-             //    {
-             //        return (s << 31) | 0x7f800000;
-             //    }
-             //    else // NaN
-             //    {
-             //        return (s << 31) | 0x7f800000 | (m << 13);
-             //    }
-             //}
-         
-             //e = e + (127 - 15);
-             //m = m << 13;
-         
-             //return (s << 31) | (e << 23) | m;
+        /* Just move the sign bit directly to its final position. */
+        sign = static_cast<UINT32>(half[i] & FLT16_SIGN_MASK) 
+            << FLT1632_SIGN_OFFSET;
 
+        /* Retrieve value of exponent. */
+        exponent = static_cast<INT32>((half[i] & FLT16_EXPONENT_MASK) 
+            >> Float16::MANT_DIG);
 
-    // Bitwise reinterpret of result as floating point number.
-    return *(reinterpret_cast<float *>(&result));
+        /* Retrieve value of mantissa. */
+        mantissa = static_cast<UINT32>(half[i] & FLT16_MANTISSA_MASK);
+
+        if (exponent == 0) {
+            if (mantissa == 0) {
+                /* Value is zero, preserve sign. */
+                result = sign;
+
+            } else {
+                /* Denormalised. */
+
+                /* 
+                 * Shift left until the first 1 occurs left of the mantissa. 
+                 * This is the implicit 1 which must be deleted afterwards.
+                 */
+                while ((mantissa & (1 << Float16::MANT_DIG)) == 0) {
+                    mantissa <<= 1;
+                    exponent -= 1;
+                }
+                exponent += FLT32_BIAS - FLT16_BIAS + 1;
+                mantissa &= ~(1 << Float16::MANT_DIG);
+
+                result = sign | (exponent << (FLT_MANT_DIG - 1))
+                    | (mantissa << FLT1632_MANTISSA_OFFSET);
+            }
+
+        } else if (exponent == (FLT16_EXPONENT_MASK >> Float16::MANT_DIG)) {
+            /*
+             * All exponent bits are set, the number is infinity, if the 
+             * mantissa is zero, or NaN otherwise. If all mantissa bits are
+             * set, the number is a quiet NaN, if only some are set, it is
+             * a signaling NaN.
+             */
+
+            if (mantissa == 0) {
+                /* Infinity. */
+                result = (sign | FLT32_EXPONENT_MASK);
+
+            } else if (mantissa == FLT16_MANTISSA_MASK) {
+                /* Quiet NaN. */
+                result = sign | FLT32_EXPONENT_MASK | FLT32_MANTISSA_MASK;
+
+            } else {
+                /* Signaling NaN. */
+                result = sign | FLT32_EXPONENT_MASK 
+                    | (mantissa << FLT1632_MANTISSA_OFFSET);
+            }
+
+        } else {
+            result = sign
+                | ((exponent - FLT16_BIAS + FLT32_BIAS) << (FLT_MANT_DIG - 1)) 
+                | (mantissa << FLT1632_MANTISSA_OFFSET);
+        }
+
+        /* Bitwise reinterpret the result as float. */
+        outFloat[i] = *reinterpret_cast<float *>(&result);
+
+    } /* end for (SIZE_T i = 0; i < cnt; i++) */
 }
-
-
-/*
- * vislib::math::Float16::DIG
- */
-const INT vislib::math::Float16::DIG = 3;
 
 
 /*
  * vislib::math::Float16::MANT_DIG
  */
-const INT vislib::math::Float16::MANT_DIG = 11;
+const INT vislib::math::Float16::MANT_DIG = 10;
 
 
 /*
  * vislib::math::Float16::MAX_EXP
  */
-const INT vislib::math::Float16::MAX_EXP = 15;
+const INT vislib::math::Float16::MAX_EXP = (16 - 1);
 
 
 /*
@@ -199,12 +222,6 @@ const INT vislib::math::Float16::MIN_EXP = -12;
  * vislib::math::Float16::RADIX
  */
 const INT vislib::math::Float16::RADIX = 2;
-
-
-/*
- * vislib::math::Float16::ROUNDS
- */
-const INT vislib::math::Float16::ROUNDS = 1;
 
 
 /*
@@ -226,12 +243,17 @@ const double vislib::math::Float16::MIN = 6.1035156e-5;
 
 
 /*
+ * vislib::math::Float16::~Float16
+ */
+vislib::math::Float16::~Float16(void) {
+}
+
+
+/*
  * vislib::math::Float16::IsInfinity
  */
 bool vislib::math::Float16::IsInfinity(void) const {
-    // Infinity, if all exponent bits set and no mantissa bit set.
-    // TODO: Sign bit?
-    // TODO: Performance?
+    // All exponents and no mantissa bits set.
     return (((this->value & FLT16_EXPONENT_MASK) == FLT16_EXPONENT_MASK)
         && ((this->value & FLT16_MANTISSA_MASK) == 0));
 }
@@ -241,11 +263,30 @@ bool vislib::math::Float16::IsInfinity(void) const {
  * vislib::math::Float16::IsNaN
  */
 bool vislib::math::Float16::IsNaN(void) const {
-    // Not a number, if all exponent bits set and mantissa not 0.
-    // TODO: Sign bit?
-    // TODO: Performance?
+    // All exponent and some mantissa bits set.
     return (((this->value & FLT16_EXPONENT_MASK) == FLT16_EXPONENT_MASK)
         && ((this->value & FLT16_MANTISSA_MASK) != 0));
+}
+
+
+/*
+ *  vislib::math::Float16::IsQuietNaN
+ */
+bool vislib::math::Float16::IsQuietNaN(void) const {
+    // All exponent and all mantissa bits set.
+    return (((this->value & FLT16_EXPONENT_MASK) == FLT16_EXPONENT_MASK)
+        && ((this->value & FLT16_MANTISSA_MASK) == FLT16_MANTISSA_MASK));
+}
+
+
+/*
+ * vislib::math::Float16::IsSignalingNaN
+ */
+bool vislib::math::Float16::IsSignalingNaN(void) const {
+    // All exponent bits set, some, but not all, mantissa bits set.
+    return (((this->value & FLT16_EXPONENT_MASK) == FLT16_EXPONENT_MASK)
+        && ((this->value & FLT16_MANTISSA_MASK) != 0)
+        && ((this->value & FLT16_MANTISSA_MASK) != FLT16_MANTISSA_MASK));
 }
 
 

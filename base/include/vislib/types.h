@@ -59,6 +59,8 @@ typedef INT32 INT_PTR;
 typedef UINT32 UINT_PTR;
 #endif /* _LIN64 */
 
+typedef SIZE_T UINT_PTR;
+
 #endif /* _WIN32 */
 
 typedef UINT64 EXTENT;

@@ -346,6 +346,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testfloat16.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testhelper.cpp"
 				>
 			</File>
@@ -361,6 +365,10 @@
 			>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testfloat16.h"
 				>
 			</File>
 			<File
