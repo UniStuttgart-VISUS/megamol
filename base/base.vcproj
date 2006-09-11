@@ -317,6 +317,10 @@
 				RelativePath=".\src\UnsupportedOperationException.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\utils.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -373,6 +377,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\UnsupportedOperationException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\utils.h"
 				>
 			</File>
 		</Filter>
