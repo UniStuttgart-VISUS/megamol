@@ -8,5 +8,8 @@
 
 
 /*
- * This file is intentionally empty.
+ * vislib::sys::Runnable::Terminate
  */
+bool vislib::sys::Runnable::Terminate(void) {
+    return false;
+}

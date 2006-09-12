@@ -27,22 +27,36 @@ namespace sys {
      * @author Christoph Mueller
      */
     class Thread {
+        // TODO: Exit code handling/IsRunning impl is at least hugly.
 
     public:
 
         /**
-		 * The possible states of a thread:
-		 *
-		 * NEW:       The thread object has been created, but the thread has
-		 *            not been started.
-		 * RUNNING:   The thread is currently running.
-		 * SUSPENDED: The thread was started, but is currently suspended.
-		 * FINISHED:  The thread was started and has finished its work.
-		 */
-        enum State { NEW = 1, RUNNING, SUSPENDED, FINISHED };
+         * Answer the ID of the calling thread.
+         *
+         * @eturn The ID of the calling thread.
+         */
+        static inline DWORD CurrentID(void) {
+#ifdef _WIN32
+            return ::GetCurrentThreadId();
+#else /* _WIN32 */
+            return static_cast<DWORD>(::pthread_self());
+#endif /* _WIN32 */
+        }
 
-        /** Functions with this signature can be run as threads. */
-        typedef DWORD (* RunnableFunc)(const void *userData); 
+        // TODO: How to get exit code under Linux when using pthread_exit??
+//        /**
+//         * Exits the calling thread with the specified exit code.
+//         *
+//         * @param exitCode Exit code for the calling thread.
+//         */
+//        static inline void Exit(const DWORD exitCode) {
+//#ifdef _WIN32
+//            ::ExitThread(exitCode);
+//#else /* _WIN32 */
+//            ::pthread_exit(reinterpret_cast<void *>(exitCode));
+//#endif /* _WIN32 */
+//        }
 
 		/**
 		 * Makes the calling thread sleep for 'millis' milliseconds.
@@ -51,8 +65,6 @@ namespace sys {
 		 */
 		static void Sleep(const DWORD millis);
 
-#pragma push_macro("Yield")
-#undef Yield
         /**
          * Causes the calling thread to yield execution to another thread that 
          * is ready to run on the current processor.
@@ -60,54 +72,43 @@ namespace sys {
          * @throws SystemException If the operation could not be completed 
          *                         successfully (Linux only).
          */
-        static void Yield(void);
-#pragma pop_macro("Yield")
+        static void Reschedule(void);
+        // Implementation note: Cannot be named Yield() because of macro with 
+        // the same name in Windows API.
 
 		/** 
          * Create a thread that executes the given Runnable.
          *
          * @param runnable The Runnable to run in a thread.
          */
-		Thread(Runnable& runnable);
+		explicit Thread(Runnable& runnable);
 
         /**
          * Create a thread that executes the function designated by 
-         * 'threadFunc'.
+         * 'runnableFunc'.
          *
-         * @param threadFunc The function to run in a thread.
+         * @param runnableFunc The function to run in a thread.
          */
-        Thread(RunnableFunc threadFunc);
+        explicit Thread(Runnable::Function runnableFunc);
 
 		/** Dtor. */
 		~Thread(void);
 
 		/**
-		 * Answer the exit code of the thread. Note, that this value is only
-		 * meaningful, if the thread is in the state FINISHED.
+		 * Answer the exit code of the thread. 
 		 *
 		 * @return The thread exit code.
+         * 
+         * @throws SystemException If the exit code could not be determined.
 		 */
-        inline DWORD GetExitCode(void) const {
-            return this->exitCode;
-        }
-
-		/**
-		 * Answer the current state of the thread.
-		 *
-		 * @return The current state of the thread.
-		 */
-        State GetState(void) const {
-            return this->state;
-        }
+        DWORD GetExitCode(void) const;
 
 		/**
 		 * Answer whether the thread is currently running.
 		 *
 		 * @return true, if the thread is currently running, false otherwise.
 		 */
-		inline bool IsRunning(void) const {
-			return (this->GetState() == RUNNING);
-		}
+		bool IsRunning(void) const;
 
         /**
          * Start the thread.
@@ -118,69 +119,91 @@ namespace sys {
          * @param userData The user data that are passed to the new thread's
          *                 thread function or Run() method.
          *
-         * @return true, if the thread was successfully started, false 
-         *         otherwise.
+         * @return true, if the thread was started, false, if it could not be
+         *         started, because it is already running.
+         *
+         * @throws SystemException If the creation of the new thread failed.
          */
 		bool Start(const void *userData = NULL);
 
         /**
-         * Terminate the thread.
+         * Terminate the thread. 
          *
-         * If the thread is currently not running, this method has no effect and
-         * returns true.
-		 *
-		 * Note, that using this method is inherently unsafe as a thread might have
-		 * allocated resources that it cannot free savely, if it is being terminated.
-		 * You might wish to override this method to allow for a save shutdown, if
-		 * your thread allocates resources that must be freed.
+         * If the thread has been constructed using a RunnableFunc, the 
+         * behaviour is as follows: If 'forceTerminate' is true, the thread is
+         * forcefully terminated and the method returns true. 'forceTerminate'
+         * cannot be false when using a RunnableFunc. The method will throw
+         * an IllegalParamException.
          *
-         * @param exitCode The exit code of the thread.
+         * If the thread has been constructed using a Runnable object, the
+         * behaviour is as follows: If 'forceTerminate' is true, the thread
+         * is forcefully terminated and the method returns true. Otherwise,
+         * the method will ask the Runnable to finish as soon as possible. If
+         * the Runnable acknowledges the request, the method will wait for the
+         * thread to finish and return true afterwards. If the Runnable does
+         * not acknowledge the request, the method returns false immediately.
+         * Note, that Terminate can possibly cause a deadlock, if the Runnable
+         * acknowledges the request and does not return.
          *
-         * @return true, if the thread was terminated successfully, false 
-         *         otherwise.
+         * @param forceTerminate If true, the thread is terminated immediately,
+         *                       if false, the thread has the possibility to do
+         *                       some cleanup and finish in a controllend 
+         *                       manner. 'forceTerminate' must be true, if the
+         *                       thread has been constructed using a 
+         *                       RunnableFunc.
+         * @param exitCode       If 'forceTerminate' is true, this value will be
+         *                       used as exit code of the thread. If 
+         *                       'forceTerminate' is false, this value will be
+         *                       ignored.
+         * 
+         * @returns true, if the thread has been terminated, false, otherwise.
+         *
+         * @throws IllegalParamException If 'forceTerminate' is false and the
+         *                               thread has been constructed using a 
+         *                               RunnableFunc.
+         * @throws SystemException       If terminating the thread forcefully
+         *                               failed.
          */
-        virtual bool Terminate(const int exitCode);
+        bool Terminate(const bool forceTerminate, const int exitCode = 0);
 
         /**
          * Waits for the thread to finish. If the thread was not started, the
-         * method just falls through returning true.
+         * method just returns.
          *
-         * The method returns false, iff the thread was started and the wait
-         * operation failed.
-         *
-         * @return true, if the thread is not running any more, false, if the
-         *         wait operation failed.
+         * @throws SystemException If waiting for the thread failed.
          */
-        bool Wait(void);
-
-        /**
-         * Execute the thread's run() method synchronously in the calling 
-         * thread.
-         *
-         * The thread can only be executed synchronously, if it is currently not
-         * running asynchronously, i. e. if it is in the state NEW or FINISHED.
-         *
-         * @return true, if the thread was run, false, if it was in an illegal
-         *         state.
-         */
-		bool operator ()(void);
-
-	protected:
-
-		/**
-		 * This is the worker method of the thread. The default implementation
-		 * does nothing. Subclasses should overwrite this method with their own
-		 * job.
-		 *
-		 * @return The return code of the thread.
-		 */
-		virtual int run(void);
+        void Join(void);
 
 	private:
+
+        /**
+         * A pointer to this structure is passed to ThreadFunc. This consists of
+         * a pointer to the Thread object and of the user data for the thread.
+         */
+        typedef struct ThreadFuncParam_t {
+            Thread *thread;             // The thread to execute.
+            void *userData;             // The user parameters.
+        } ThreadFuncParam;
+
+
+#ifndef _WIN32
+        /**
+         * A cleanup handler for posix threads. We use this to determine whether a
+         * thread is still running and for storing the exit code.
+         *
+         * @param param A pointer to this Thread.
+         */
+        static void CleanupFunc(void *param);
+#endif /* !_WIN32 */
 
 		/**
 		 * The thread function that is passed to the system API when starting a
 		 * new thread.
+         *
+         * @param param The parameters for the thread which must be a pointer 
+         *              to a ThreadFuncParam structure.
+         * 
+         * @return The thread's exit code.
 		 */
 #ifdef _WIN32
         static DWORD WINAPI ThreadFunc(void *param);
@@ -208,15 +231,7 @@ namespace sys {
 		 */
 		Thread& operator =(const Thread& rhs);
 
-#ifndef _WIN32
-        /** The thread attributes. */
-        pthread_attr_t attribs;
-#endif /* !_WIN32 */
-
-		/** The exit code of the thread. */
-		DWORD exitCode;
-
-#ifdef _WIN32
+#ifdef _WIN32 
         /** Handle of the thread. */
         HANDLE handle;
 
@@ -224,14 +239,25 @@ namespace sys {
         DWORD id;
 
 #else /* _WIN32 */
+        /** The thread attributes. */
+        pthread_attr_t attribs;
+
+		/** The exit code of the thread. */
+		DWORD exitCode;
+
         /** The thread ID. */
         pthread_t id;
 
 #endif /* _WIN32 */
 
-		/** The state of the thread. */
-		State state;
+        /** The Runnable to execute, or NULL, if 'threadFunc' should be used. */
+        Runnable *runnable;
 
+        /** The function to execute, or NULL, if 'runnable' should be used. */
+        Runnable::Function runnableFunc;
+
+        /** This is the parameter for the actual system thread function. */
+        ThreadFuncParam threadFuncParam;
 	};
 
 } /* end namespace sys */
