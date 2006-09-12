@@ -1,4 +1,5 @@
 String: Advanced manipulation
-Float16: Whole implementation, is only stub at the moment.
-Thread: Whole implementation, is only stub at the moment. 
+Float16: Comparison.
+Thread: Exit code handling.
 File: I think, IsEOF is inherently unsafe on Linux.
+DynamicLinkLibrary: Error handling for Linux is probably to working.

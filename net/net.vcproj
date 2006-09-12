@@ -286,6 +286,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Socket.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SocketAddress.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SocketException.cpp"
 				>
 			</File>
@@ -297,6 +305,14 @@
 			>
 			<File
 				RelativePath=".\include\vislib\IPAddress.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Socket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SocketAddress.h"
 				>
 			</File>
 			<File

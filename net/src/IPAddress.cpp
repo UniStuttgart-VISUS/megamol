@@ -10,8 +10,11 @@
 #include <netdb.h>
 #endif /* !_WIN32 */
 
-#include "vislib/assert.h"
 #include "vislib/IPAddress.h"
+
+#include "vislib/assert.h"
+#include "vislib/StringConverter.h"
+
 
 
 /*
@@ -33,26 +36,24 @@ vislib::net::IPAddress::~IPAddress(void) {
  * vislib::net::IPAddress::Lookup
  */
 bool vislib::net::IPAddress::Lookup(const TCHAR *hostname) {
-    ASSERT(false);  // TCHAR implementation!
-    return false;
 
-    ///* Try to find the host by its name first. */
-    //hostent *host = ::gethostbyname(hostname);
+    /* Try to find the host by its name first. */
+    hostent *host = ::gethostbyname(T2A(hostname));
 
-    //if (host != NULL) {
-    //    /* Host found. */
-    //    ::memcpy(&this->address.s_addr, host->h_addr_list[0], host->h_length);
+    if (host != NULL) {
+        /* Host found. */
+        ::memcpy(&this->address.s_addr, host->h_addr_list[0], host->h_length);
 
-    //} else {
-    //    /* Host not found, assume IP address. */
+    } else {
+        /* Host not found, assume IP address. */
 
-    //    if ((this->address.s_addr = ::inet_addr(hostname)) == INADDR_NONE) {
-    //        /* IP address is invalid, return error. */
-    //        return false;
-    //    }
-    //}
+        if ((this->address.s_addr = ::inet_addr(T2A(hostname))) == INADDR_NONE) {
+            /* IP address is invalid, return error. */
+            return false;
+        }
+    }
 
-    //return true;
+    return true;
 }
 
 

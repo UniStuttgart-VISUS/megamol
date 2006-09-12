@@ -4,8 +4,8 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef IOEXCEPTION_H_INCLUDED
-#define IOEXCEPTION_H_INCLUDED
+#ifndef SOCKETEXCEPTION_H_INCLUDED
+#define SOCKETEXCEPTION_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -15,12 +15,12 @@
 
 
 namespace vislib {
-namespace sys {
+namespace net {
 
     /**
      * This exception indicates a socket error.
      */
-    class SocketException : public SystemException {
+    class SocketException : public sys::SystemException {
 
     public:
 
@@ -64,7 +64,7 @@ namespace sys {
 
     };
 
-} /* end namespace sys */
+} /* end namespace net */
 } /* end namespace vislib */
 
-#endif /* IOEXCEPTION_H_INCLUDED */
+#endif /* SOCKETEXCEPTION_H_INCLUDED */

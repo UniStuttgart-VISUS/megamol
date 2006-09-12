@@ -9,18 +9,18 @@
 
 
 /*
- * vislib::sys::SocketException::SocketException
+ * vislib::net::SocketException::SocketException
  */
-vislib::sys::SocketException::SocketException(const DWORD errorCode, 
+vislib::net::SocketException::SocketException(const DWORD errorCode, 
         const char *file, const int line) 
 		: SystemException(errorCode, file, line) {
 }
 
 
 /*
- * vislib::sys::SocketException::SocketException
+ * vislib::net::SocketException::SocketException
  */
-vislib::sys::SocketException::SocketException(const char *file, const int line)
+vislib::net::SocketException::SocketException(const char *file, const int line)
 #ifdef _WIN32
         : SystemException(::WSAGetLastError(), file, line) {
 #else /* _WIN32 */
@@ -30,24 +30,24 @@ vislib::sys::SocketException::SocketException(const char *file, const int line)
 
 
 /*
- * vislib::sys::SocketException::SocketException
+ * vislib::net::SocketException::SocketException
  */
-vislib::sys::SocketException::SocketException(const SocketException& rhs) 
+vislib::net::SocketException::SocketException(const SocketException& rhs) 
         : SystemException(rhs) {
 }
 
 
 /*
- * vislib::sys::SocketException::~SocketException
+ * vislib::net::SocketException::~SocketException
  */
-vislib::sys::SocketException::~SocketException(void) {
+vislib::net::SocketException::~SocketException(void) {
 }
 
 
 /*
- * vislib::sys::SocketException::operator =
+ * vislib::net::SocketException::operator =
  */
-vislib::sys::SocketException& vislib::sys::SocketException::operator =(
+vislib::net::SocketException& vislib::net::SocketException::operator =(
 		const SocketException& rhs) {
     SystemException::operator =(rhs);
     return *this;
