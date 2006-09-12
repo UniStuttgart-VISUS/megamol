@@ -109,7 +109,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;;..\"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_WIN32_WINVER=0x0400"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_WIN32_WINNT=0x0400"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -173,7 +173,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;;..\"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINVER=0x0400"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0400"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -236,7 +236,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;;..\"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINVER=0x0400"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0400"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
