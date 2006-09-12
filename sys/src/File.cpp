@@ -12,7 +12,6 @@
 #define _LARGEFILE64_SOURCE  
 
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdio.h> 

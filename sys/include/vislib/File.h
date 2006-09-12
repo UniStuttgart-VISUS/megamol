@@ -10,6 +10,10 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif /* !_WIN32 */
+
 #include "vislib/types.h"
 #include "vislib/tchar.h"
 

@@ -5,12 +5,15 @@
  */
 
 #include "vislib/BufferedFile.h"
-//#include "vislib/IllegalStateException.h"
+
+#include "vislib/assert.h"
+#include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
+//#include "vislib/IllegalStateException.h"
 #include "vislib/IOException.h"
 #include "vislib/memutils.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/assert.h"
+
 
 
 /*
