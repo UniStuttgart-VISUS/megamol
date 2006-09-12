@@ -10,7 +10,7 @@ OutName := vislibtest
 InputDir := ./
 
 # List of include directories:
-IncludeDir := ./include ../base/include ../sys/include
+IncludeDir := ./include ../base/include ../sys/include ../math/include
 
 # List of system include directories:
 SystemIncludeDir := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
@@ -28,7 +28,7 @@ ExcludeFromBuild :=
 CPPFLAGS := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -lm -lpthread -lVLSys -lVLBase
+LDFLAGS := -L/usr/X11R6/lib -lm -lpthread -lVLSys -lVLMath -lVLBase
 
 ###############################################################################
 
@@ -45,7 +45,7 @@ else
 endif
 
 # Append library directories to flags:
-LDFLAGS += -L../base/$(IntDir) -L../sys/$(IntDir)
+LDFLAGS += -L../base/$(IntDir) -L../sys/$(IntDir) -L../math/$(IntDir)
 
 # Append the include directories to the flags:
 CPPFLAGS += $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))

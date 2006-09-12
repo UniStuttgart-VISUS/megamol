@@ -357,6 +357,10 @@
 				RelativePath=".\teststring.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\testthread.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -377,6 +381,10 @@
 			</File>
 			<File
 				RelativePath=".\teststring.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testthread.h"
 				>
 			</File>
 		</Filter>
