@@ -11,6 +11,7 @@
 
 #include "teststring.h"
 #include "testfloat16.h"
+#include "testthread.h"
 
 #include "vislib/File.h"
 #include "vislib/SystemException.h"
@@ -28,7 +29,8 @@ int main(int argc, char **argv) {
     using namespace vislib::sys;
 
     //::TestString();
-    ::TestFloat16();
+    //::TestFloat16();
+    ::TestThread();
 
     //::printf("%s", W2A(L"Hugo"));
 

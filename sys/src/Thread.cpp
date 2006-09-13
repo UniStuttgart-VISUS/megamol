@@ -63,8 +63,8 @@ void vislib::sys::Thread::Reschedule(void) {
 /*
  * vislib::sys::Thread::Thread
  */
-vislib::sys::Thread::Thread(Runnable& runnable) 
-        : id(0), runnable(&runnable), runnableFunc(NULL) {
+vislib::sys::Thread::Thread(Runnable *runnable) 
+        : id(0), runnable(runnable), runnableFunc(NULL) {
 #ifdef _WIN32
     this->handle = NULL;
 
@@ -144,7 +144,7 @@ DWORD vislib::sys::Thread::GetExitCode(void) const {
  */
 bool vislib::sys::Thread::IsRunning(void) const {
     try {
-        return (this->GetExitCode() != STILL_ACTIVE);
+        return (this->GetExitCode() == STILL_ACTIVE);
     } catch (SystemException) {
         return false;
     }
@@ -156,8 +156,15 @@ bool vislib::sys::Thread::IsRunning(void) const {
  */
 bool vislib::sys::Thread::Start(const void *userData) {
     if (this->IsRunning()) {
+        /*
+         * The thread must not be started twice at the same time as this would
+         * leave unclosed handles.
+         */
         return false;
     }
+
+    /* Set the user data. */
+    this->threadFuncParam.userData = userData;
 
 #ifdef _WIN32
     /* Close possible old handle. */
@@ -165,8 +172,8 @@ bool vislib::sys::Thread::Start(const void *userData) {
         ::CloseHandle(this->handle);
     }
 
-	if ((this->handle = ::CreateThread(NULL, 0, Thread::ThreadFunc, this, 0,
-            &this->id)) != NULL) {
+    if ((this->handle = ::CreateThread(NULL, 0, Thread::ThreadFunc, 
+            &this->threadFuncParam, 0, &this->id)) != NULL) {
         return true;
 
     } else {
@@ -176,7 +183,7 @@ bool vislib::sys::Thread::Start(const void *userData) {
 
 #else /* _WIN32 */
 	if (::pthread_create(&this->id, &this->attribs, Thread::ThreadFunc, 
-            static_cast<void *>(this)) == 0) {
+            static_cast<void *>(&this->threadFuncParam)) == 0) {
         this->exitCode = STILL_ACTIVE;  // Mark thread as running.
         return true;
 
@@ -265,7 +272,6 @@ void vislib::sys::Thread::Join(void) {
  */
 void vislib::sys::Thread::CleanupFunc(void *param) {
     ASSERT(param != NULL);
-    ASSERT(dynamic_cast<Thread *>(static_cast<Thread *>(param)) != NULL);
 
     Thread *t = static_cast<Thread *>(param);
 
@@ -290,8 +296,6 @@ DWORD WINAPI vislib::sys::Thread::ThreadFunc(void *param) {
 void *vislib::sys::Thread::ThreadFunc(void *param) {
 #endif /* _WIN32 */
 	ASSERT(param != NULL);
-    ASSERT(dynamic_cast<ThreadFuncParam *>(static_cast<ThreadFuncParam *>(param))
-        != NULL);
 
 	int retval = 0;
 	ThreadFuncParam *tfp = static_cast<ThreadFuncParam *>(param);
@@ -315,7 +319,7 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
     pthread_cleanup_pop(1);
 #endif /* !_WIN32 */
 
-	TRACE(_T("Thread [%u] has exited with code %d (%x).\n"), t->id, retval, 
+	TRACE(_T("Thread [%u] has exited with code %d (0x%x).\n"), t->id, retval, 
         retval);
 
 #ifdef _WIN32

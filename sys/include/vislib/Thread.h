@@ -79,9 +79,11 @@ namespace sys {
 		/** 
          * Create a thread that executes the given Runnable.
          *
-         * @param runnable The Runnable to run in a thread.
+         * @param runnable The Runnable to run in a thread. The caller must
+         *                 guarantee that the object designated by 'runnable'
+         *                 exists at least as long as the thread is running.
          */
-		explicit Thread(Runnable& runnable);
+		explicit Thread(Runnable *runnable);
 
         /**
          * Create a thread that executes the function designated by 
@@ -182,7 +184,7 @@ namespace sys {
          */
         typedef struct ThreadFuncParam_t {
             Thread *thread;             // The thread to execute.
-            void *userData;             // The user parameters.
+            const void *userData;       // The user parameters.
         } ThreadFuncParam;
 
 
