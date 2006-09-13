@@ -157,12 +157,18 @@ namespace net {
         /**
          * Permit incoming connection attempt on the socket.
          *
-         * @param outSocket The socket object that receives the socket 
-         *                  representing the newly established connection.
+         * @param outConnAddr Optional pointer to a SocketAddress that receives 
+         *                    the address of the connecting entity, as known to 
+         *                    the communications layer. The exact format of the 
+         *                    address is determined by the address family 
+         *                    established when the socket was created. This 
+         *                    parameter can be NULL.
          *
-         * @throws
+         * @return The accepted socket.
+         *
+         * @throws SocketException If the operation fails
          */
-        virtual void Accept(Socket& outSocket);
+        virtual Socket Accept(SocketAddress *outConnAddr = NULL);
 
         /**
          * Bind the socket to the specified address.

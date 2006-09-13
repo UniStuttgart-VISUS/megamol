@@ -57,29 +57,33 @@ vislib::net::Socket::~Socket(void) {
 /*
  * vislib::net::Socket::Accept
  */
-void vislib::net::Socket::Accept(Socket& outSocket) {
-    struct sockaddr connectingAddr;
+vislib::net::Socket vislib::net::Socket::Accept(SocketAddress *outConnAddr) {
+    struct sockaddr connAddr;
     SOCKET newSocket;
 
 #ifdef _WIN32
-    INT addrLen = static_cast<int>(sizeof(connectingAddr));
+    INT addrLen = static_cast<int>(sizeof(connAddr));
 
-    if ((newSocket = ::WSAAccept(this->handle, &connectingAddr, &addrLen, NULL, 
+    if ((newSocket = ::WSAAccept(this->handle, &connAddr, &addrLen, NULL, 
             0)) == INVALID_SOCKET) {
         throw SocketException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
-    unsigned int addrLen = static_cast<unsigned int>(sizeof(connectingAddr));
+    unsigned int addrLen = static_cast<unsigned int>(sizeof(connAddr));
 
-    if ((newSocket = ::accept(this->handle, &connectingAddr, &addrLen))
+    if ((newSocket = ::accept(this->handle, &connAddr, &addrLen))
             == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
 
 #endif /* _WIN32 */
 
-    outSocket = Socket(newSocket);
+    if (outConnAddr != NULL) {
+        *outConnAddr = SocketAddress(connAddr);
+    }
+
+    return Socket(newSocket);
 }
 
 
