@@ -16,7 +16,7 @@
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
-
+#include <cstdio>
 
 #ifndef _WIN32
 /**
@@ -114,7 +114,8 @@ vislib::sys::Thread::~Thread(void) {
     }
 
 #else /* _WIIN32 */
-    ::pthread_detach(this->id);
+    // TODO: Must detach, iff not joined? How should we know this here?
+    //::pthread_detach(this->id);
     ::pthread_attr_destroy(&this->attribs);
 
 #endif /* _WIN32 */
@@ -275,6 +276,10 @@ void vislib::sys::Thread::CleanupFunc(void *param) {
 
     Thread *t = static_cast<Thread *>(param);
 
+    FILE *fp = ::fopen("horst.txt", "wt");
+    ::fprintf(fp, "In CleanupFunc, calling thread is %u", Thread::CurrentID());
+    ::fclose(fp);
+
     /* 
      * In case the thread has still an exit code of STILL_ACTIVE, set a new one
      * to mark the thread as finished.
@@ -302,6 +307,10 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
     Thread *t = tfp->thread;
     ASSERT(t != NULL);
 
+    FILE *fp = ::fopen("horst.txt", "wt");
+    ::fprintf(fp, "In ThreadFunc, calling thread is %u", Thread::CurrentID());
+    ::fclose(fp);
+
 #ifndef _WIN32
     pthread_cleanup_push(Thread::CleanupFunc, t);
 #endif /* !_WIN32 */
@@ -319,7 +328,7 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
     pthread_cleanup_pop(1);
 #endif /* !_WIN32 */
 
-	TRACE(_T("Thread [%u] has exited with code %d (0x%x).\n"), t->id, retval, 
+    TRACE(_T("Thread [%u] has exited with code %d (0x%x).\n"), t->id, retval, 
         retval);
 
 #ifdef _WIN32

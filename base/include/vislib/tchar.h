@@ -16,6 +16,8 @@
 
 #if defined(UNICODE) || defined(_UNICODE)
 
+#include <wchar.h>
+
 typedef wchar_t TCHAR;
 
 #define _T(x) L##x
