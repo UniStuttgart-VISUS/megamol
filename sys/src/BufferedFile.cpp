@@ -227,7 +227,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Seek(const vislib::sys::F
         retVal = File::Seek(offset, from);
     }
 
-    this->bufferStart = 0;
+    this->bufferStart = retVal;
     this->validBufferSize = 0;
     this->bufferOffset = 0;
 
