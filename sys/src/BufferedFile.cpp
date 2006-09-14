@@ -80,11 +80,10 @@ void vislib::sys::BufferedFile::Flush(void) {
                 this->validBufferSize = 0; // invalidate buffer
                 this->bufferStart = File::Tell();
                 this->bufferOffset = 0;
+                File::Flush();
             } break;
             default: assert(false); // should never be called!
         }
-
-        File::Flush();
     }
 }
 
@@ -175,6 +174,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void *outBuf,
                 // a really big block. Read it unbuffered
                 s = File::Read(target, size);
                 read += s;
+                size -= s;
 
                 this->bufferStart += this->validBufferSize + s;
                 this->bufferOffset = 0;
