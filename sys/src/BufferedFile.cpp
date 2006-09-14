@@ -45,6 +45,12 @@ vislib::sys::BufferedFile::~BufferedFile(void) {
 void vislib::sys::BufferedFile::Close(void) {
     this->Flush();
     File::Close();
+
+    ARY_SAFE_DELETE(this->buffer);
+    this->bufferMode = VOID_BUFFER;
+    this->bufferStart = 0;
+    this->validBufferSize = 0;
+    this->bufferOffset = 0;
 }
 
 
@@ -52,32 +58,32 @@ void vislib::sys::BufferedFile::Close(void) {
  * vislib::sys::BufferedFile::Flush
  */
 void vislib::sys::BufferedFile::Flush(void) {
-    switch (this->bufferMode) {
-        case VOID_BUFFER: /* no action needed */ break;
-        case READ_BUFFER: {
-            File::Seek(this->Tell(), vislib::sys::File::BEGIN); // move real file ptr to virtual pos
-            this->validBufferSize = 0; // invalidate buffer
-            this->bufferStart = File::Tell();
-            this->bufferOffset = 0;
-        } break;
-        case WRITE_BUFFER: {
-            vislib::sys::File::FileSize s = File::Write(this->buffer, this->bufferOffset); // flush write buffer; also corrects real file ptr pos
-            if (s != this->bufferOffset) {
-#ifdef _WIN32
-                throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
-#else /* _WIN32 */
-                throw IOException(EIO, __FILE__, __LINE__);                
-#endif /* _WIN32 */
-            }
-            this->validBufferSize = 0; // invalidate buffer
-            this->bufferStart = File::Tell();
-            this->bufferOffset = 0;
-        } break;
-        default: assert(false); // should never be called!
-    }
-
     if (this->IsOpen()) {
         /* only flush opened files to avoid IOExceptions */
+        switch (this->bufferMode) {
+            case VOID_BUFFER: /* no action needed */ break;
+            case READ_BUFFER: {
+                File::Seek(this->Tell(), vislib::sys::File::BEGIN); // move real file ptr to virtual pos
+                this->validBufferSize = 0; // invalidate buffer
+                this->bufferStart = File::Tell();
+                this->bufferOffset = 0;
+            } break;
+            case WRITE_BUFFER: {
+                vislib::sys::File::FileSize s = File::Write(this->buffer, this->bufferOffset); // flush write buffer; also corrects real file ptr pos
+                if (s != this->bufferOffset) {
+#ifdef _WIN32
+                    throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
+#else /* _WIN32 */
+                    throw IOException(EIO, __FILE__, __LINE__);                
+#endif /* _WIN32 */
+                }
+                this->validBufferSize = 0; // invalidate buffer
+                this->bufferStart = File::Tell();
+                this->bufferOffset = 0;
+            } break;
+            default: assert(false); // should never be called!
+        }
+
         File::Flush();
     }
 }
@@ -205,16 +211,27 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void *outBuf,
  */
 vislib::sys::File::FileSize vislib::sys::BufferedFile::Seek(const vislib::sys::File::FileOffset offset, 
         const vislib::sys::File::SeekStartPoint from) {
+
+    vislib::sys::File::FileSize retVal;
+
     // TODO: Consider only modifying bufferOffset when targeted possition is inside the buffer.
     //  Also consider rewriting Read and Write to minimize real flushes
+
     if (this->bufferMode == WRITE_BUFFER) {
         this->Flush();
     }
+
     if ((from == vislib::sys::File::CURRENT) && (this->bufferMode != VOID_BUFFER)) {
-        return File::Seek(offset + this->Tell(), vislib::sys::File::BEGIN);
+        retVal = File::Seek(offset + this->Tell(), vislib::sys::File::BEGIN);
     } else {
-        return File::Seek(offset, from);
+        retVal = File::Seek(offset, from);
     }
+
+    this->bufferStart = 0;
+    this->validBufferSize = 0;
+    this->bufferOffset = 0;
+
+    return retVal;
 }
 
 
