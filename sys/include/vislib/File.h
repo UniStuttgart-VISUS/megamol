@@ -41,7 +41,12 @@ namespace sys {
         enum AccessMode { READ_WRITE = 1, READ_ONLY, WRITE_ONLY };
 
         /** Possible values for the share mode. */
-        enum ShareMode { SHARE_READ = 1, SHARE_WRITE = 2, SHARE_READWRITE = 3};
+        enum ShareMode { 
+            SHARE_EXCLUSIVE = 1, 
+            SHARE_READ, 
+            SHARE_WRITE, 
+            SHARE_READWRITE
+        };
 
         /** Possible values for the CreationMode. */
         enum CreationMode { 

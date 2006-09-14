@@ -229,6 +229,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
     }
 
     switch (shareMode) {
+        case SHARE_EXCLUSIVE: share = 0; break;
         case SHARE_READ: share = FILE_SHARE_READ; break;
         case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
         case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
@@ -303,6 +304,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
     }
 
     switch (shareMode) {
+        case SHARE_EXCLUSIVE: share = 0; break;
         case SHARE_READ: share = FILE_SHARE_READ; break;
         case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
         case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
