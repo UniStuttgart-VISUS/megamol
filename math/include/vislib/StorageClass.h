@@ -72,32 +72,6 @@ namespace math {
         ShallowStorageClass& operator =(T *rhs);
 
         /**
-         * Access the 'i'th element in the vector. No range check is performed 
-         * for 'i'.
-         *
-         * @param i The index of the element to be accessed, which must be 
-         *          within [0, D - 1].
-         *
-         * @return The 'i'th element.
-         */
-        inline T& operator [](const int i) {
-            return this->data[i];
-        }
-
-        /**
-         * Access the 'i'th element in the vector. No range check is performed 
-         * for 'i'.
-         *
-         * @param i The index of the element to be accessed, which must be 
-         *          within [0, D - 1].
-         *
-         * @return The 'i'th element.
-         */
-        inline const T& operator [](const int i) const {
-            return this->data[i];
-        }
-
-        /**
          * Provide direct access to the memory wrapped by the object.
          *
          * @return A pointer to the memory.
@@ -203,32 +177,6 @@ namespace math {
          * @return *this.
          */
         DeepStorageClass& operator =(const T *rhs);
-
-        /**
-         * Access the 'i'th element in the vector. No range check is performed 
-         * for 'i'.
-         *
-         * @param i The index of the element to be accessed, which must be 
-         *          within [0, D - 1].
-         *
-         * @return The 'i'th element.
-         */
-        inline T& operator [](const int i) {
-            return this->data[i];
-        }
-
-        /**
-         * Access the 'i'th element in the vector. No range check is performed 
-         * for 'i'.
-         *
-         * @param i The index of the element to be accessed, which must be 
-         *          within [0, D - 1].
-         *
-         * @return The 'i'th element.
-         */
-        inline const T& operator [](const int i) const {
-            return this->data[i];
-        }
 
         /**
          * Provide direct access to the memory wrapped by the object.

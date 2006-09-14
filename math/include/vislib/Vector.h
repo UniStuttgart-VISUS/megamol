@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#include <limits>
 
 #include "vislib/EqualFunc.h"
 #include "vislib/OutOfRangeException.h"
@@ -26,9 +27,9 @@ namespace math {
      * The template parameters are:
      * T is the type of the elements that the vector consists of.
      * D is the dimension of the vector.
+     * E is the equal functor for determining the equality of two scalars of 
+     *   type T
      * S is the storage class used for storing the elements of the vector.
-     *
-     * @author Christoph Mueller
      */
     template<class T, unsigned int D, class E = EqualFunc<T>, 
             template<class, unsigned int> class S = DeepStorageClass> 
@@ -39,7 +40,7 @@ namespace math {
         /**
          * Create a new vector. 
          * 
-         * This operation is not supported for ShallowStorageClassT as template 
+         * This operation is not supported for ShallowStorageClass as template 
          * parameter S as it is inherently unsafe and dangerous to public 
          * safety.
          */
@@ -49,7 +50,7 @@ namespace math {
          * Create a new vector initialised with 'components'. 'components' must
          * not be a NULL pointer. 
          *
-         * If the template parameter S is ShallowStorageClassT, the new object 
+         * If the template parameter S is ShallowStorageClass, the new object 
          * will alias the memory designated by 'components'.
          *
          * @param components The initial vector components.
@@ -57,20 +58,9 @@ namespace math {
         explicit inline Vector(const T *components) : components(components) {}
 
         /**
-         * Create a new vector initialised with 'components'. 'components' must
-         * not be a NULL pointer. 
-         *
-         * If the template parameter S is ShallowStorageClassT, the new object 
-         * will alias the memory designated by 'components'.
-         *
-         * @param components The initial vector components.
-         */
-        explicit inline Vector(T *components) : components(components) {}
-
-        /**
          * Clone 'rhs'.
          *
-         * If the template parameter S is ShallowStorageClassT, the new object
+         * If the template parameter S is ShallowStorageClass, the new object
          * will alias the vector memory of 'rhs'.
          *
          * @param rhs The object to be cloned.
@@ -81,7 +71,7 @@ namespace math {
          * Create a copy of 'vector'. This ctor allows for arbitrary vector to
          * vector conversions.
          *
-         * This operation is not supported for ShallowStorageClassT as template 
+         * This operation is not supported for ShallowStorageClass as template 
          * parameter S as it is inherently unsafe and dangerous to public 
          * safety.
          *
@@ -102,6 +92,13 @@ namespace math {
          * @return The dot product of this vector and 'rhs'.
          */
         T Dot(const Vector& rhs) const;
+
+        /**
+         * Answer whether the vector is a null vector.
+         *
+         * @return true, if the vector is a null vector, false otherwise.
+         */
+        bool IsNull(void) const;
 
         /**
          * Answer the length of the vector.
@@ -147,7 +144,7 @@ namespace math {
          * is a precondition for instantiating this template.
          *
          * This operation does <b>not</b> create aliases, even for 
-         * ShallowStorageClassT as storage class template parameter. For shallow
+         * ShallowStorageClass as storage class template parameter. For shallow
          * vectors, the components of 'rhs' are copied to the shallow storage
          * of the object.
          *
@@ -376,6 +373,23 @@ namespace math {
 
 
     /*
+     * Vector<T, D, E, S>::IsNull
+     */
+    template<class T, unsigned int D, class E,
+        template<class, unsigned int> class S>
+    bool Vector<T, D, E, S>::IsNull(void) const {
+        for (unsigned int d = 0; d < D; d++) {
+            if (!E()(this->components[d], static_cast<T>(0))) {
+                return false;
+            }
+        }
+        /* No non-null value found. */
+
+        return true;
+    }
+
+
+    /*
      * Vector<T, D, E, S>::Length
      */
     template<class T, unsigned int D, class E,
@@ -397,7 +411,20 @@ namespace math {
     template<class T, unsigned int D, class E,
         template<class, unsigned int> class S>
     T Vector<T, D, E, S>::MaxNorm(void) const {
-        T retval = std::numeric_limits<T>::min();       // TODO
+#ifdef _MSC_VER
+#pragma push_macro("min")
+#pragma push_macro("max")
+#undef min
+#undef max
+#endif /* _MSC_VER */
+        T retval = std::numeric_limits<T>::is_integer 
+            ? std::numeric_limits<T>::min() : -std::numeric_limits<T>::max();
+#ifdef _MSC_VER
+#define min
+#define max
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#endif /* _MSC_VER */
 
         for (unsigned int d = 0; d < D; d++) {
             if (this->components[d] > retval) {
@@ -476,7 +503,7 @@ namespace math {
         template<class, unsigned int> class S>
     bool Vector<T, D, E, S>::operator ==(const Vector& rhs) const {
         for (unsigned int d = 0; d < D; d++) {
-            if (!E(this->components[d], rhs.components[d])) {
+            if (!E()(this->components[d], rhs.components[d])) {
                 return false;
             }
         }
@@ -660,7 +687,7 @@ namespace math {
     template<class T, unsigned int D, class E,
         template<class, unsigned int> class S>
     T& Vector<T, D, E, S>::operator [](const int i) {
-        if ((i >= 0) && (i < D)) {
+        if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];
         } else {
             throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
@@ -674,7 +701,7 @@ namespace math {
     template<class T, unsigned int D, class E,
         template<class, unsigned int> class S>
     const T& Vector<T, D, E, S>::operator [](const int i) const {
-        if ((i >= 0) && (i < D)) {
+        if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];
         } else {
             throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);

@@ -52,7 +52,7 @@ ReleaseDir := Release
 
 
 # Common compiler flags
-CompilerFlags := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic
+CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic
 
 # Additional compiler flags for special configurations
 DebugCompilerFlags := -DDEBUG -D_DEBUG -ggdb

@@ -13,6 +13,7 @@
 #include "testfloat16.h"
 #include "testthread.h"
 #include "testfile.h"
+#include "testvector.h"
 
 #include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"
@@ -30,6 +31,7 @@ int main(int argc, char **argv) {
 
     ::TestFile();
     ::TestString();
+    ::TestVector();
     //::TestFloat16();
     //::TestThread();
     

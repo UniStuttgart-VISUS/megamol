@@ -44,7 +44,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -110,7 +110,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;&quot;$(SolutionDir)\base\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -305,6 +305,14 @@
 				RelativePath=".\src\Vector.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\Vector2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Vector3D.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -329,6 +337,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Vector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Vector2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Vector3D.h"
 				>
 			</File>
 		</Filter>

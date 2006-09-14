@@ -373,6 +373,10 @@
 				RelativePath=".\testthread.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\testvector.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -401,6 +405,10 @@
 			</File>
 			<File
 				RelativePath=".\testthread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testvector.h"
 				>
 			</File>
 		</Filter>
