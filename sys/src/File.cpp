@@ -102,7 +102,7 @@ bool vislib::sys::File::Rename(const char *oldName, const char *newName) {
 #ifdef _WIN32
     return (::MoveFileA(oldName, newName) == TRUE);
 #else /* _WIN32 */
-    return ::rename(oldName, newName);
+    return (::rename(oldName, newName) != -1);
 #endif /* _WIN32 */
 }
 
@@ -275,7 +275,8 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
     }
 
-    this->handle = ::open(filename, oflag);
+    this->handle = ::open(filename, oflag, 
+        S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     return (this->handle != -1);
 
 #endif /* _WIN32 */

@@ -293,6 +293,10 @@
 				RelativePath=".\src\mathfunctions.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\StorageClass.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -305,6 +309,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\mathfunctions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\StorageClass.h"
 				>
 			</File>
 		</Filter>
