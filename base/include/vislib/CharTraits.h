@@ -199,7 +199,7 @@ namespace vislib {
 		/** Forbidden Ctor. */
 		inline CharTraits(void) {
             throw UnsupportedOperationException(
-                _T("vislib::CharTraits<T>::CharTraits"), __FILE__, __LINE__);
+                "vislib::CharTraits<T>::CharTraits", __FILE__, __LINE__);
         }
 
 	}; /* end class CharTraits */
@@ -338,7 +338,7 @@ namespace vislib {
 		/** Forbidden Ctor. */
 		inline CharTraitsA(void) {
             throw UnsupportedOperationException(
-                _T("vislib::CharTraitsA::CharTraitsA"), __FILE__, __LINE__);
+                "vislib::CharTraitsA::CharTraitsA", __FILE__, __LINE__);
         }
 
         /* Declare our friends. */
@@ -481,7 +481,7 @@ namespace vislib {
 		/** Forbidden Ctor. */
 		inline CharTraitsW(void) {
             throw UnsupportedOperationException(
-                _T("vislib::CharTraitsW::CharTraitsW"), __FILE__, __LINE__);
+                "vislib::CharTraitsW::CharTraitsW", __FILE__, __LINE__);
         }
 
         /* Declare our friends. */
@@ -496,7 +496,6 @@ namespace vislib {
 #else /* defined(UNICODE) || defined(_UNICODE) */
     typedef CharTraitsA TCharTraits;
 #endif /* defined(UNICODE) || defined(_UNICODE) */
-
 }
 
 #endif /* VISLIB_CHARTRAITS_H_INCLUDED */

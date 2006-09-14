@@ -5,9 +5,10 @@
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). Alle Rechte vorbehalten.
  */
 
+#include "vislib/Mutex.h"
+
 #include "vislib/assert.h"
 #include "vislib/error.h"
-#include "vislib/Mutex.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -142,7 +143,7 @@ void vislib::sys::Mutex::Unlock(void) {
  * vislib::sys::Mutex::Mutex
  */
 vislib::sys::Mutex::Mutex(const Mutex& rhs) {
-    throw UnsupportedOperationException(_T("vislib::sys::Mutex::Mutex"), 
+    throw UnsupportedOperationException("vislib::sys::Mutex::Mutex", 
         __FILE__, __LINE__);
 }
 
@@ -152,7 +153,7 @@ vislib::sys::Mutex::Mutex(const Mutex& rhs) {
  */
 vislib::sys::Mutex& vislib::sys::Mutex::operator =(const Mutex& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

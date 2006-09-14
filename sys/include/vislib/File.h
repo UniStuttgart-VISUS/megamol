@@ -15,7 +15,6 @@
 #endif /* !_WIN32 */
 
 #include "vislib/types.h"
-#include "vislib/tchar.h"
 
 
 namespace vislib {
@@ -70,11 +69,22 @@ namespace sys {
          *
          * @param filename The name of the file to be deleted.
          *
-         * @return
+         * @return true in case of success, false otherwise. Use 
+         *         ::GetLastError() to retrieve further information on 
+         *         failure.
          */
-        // TODO: Consider throwing exception with GetLastError(). Would allow 
-        // user to know error reason without call to GetLastError().
-        static bool Delete(const TCHAR *filename);
+        static bool Delete(const char *filename);
+
+        /**
+         * Delete the file with the specified name.
+         *
+         * @param filename The name of the file to be deleted.
+         *
+         * @return true in case of success, false otherwise. Use 
+         *         ::GetLastError() to retrieve further information on 
+         *         failure.
+         */
+        static bool Delete(const wchar_t *filename);
 
         /**
          * Answer whether a file with the specified name exists.
@@ -83,7 +93,16 @@ namespace sys {
          *
          * @return true, if the specified file exists, false otherwise.
          */
-        static bool Exists(const TCHAR *filename);
+        static bool Exists(const char *filename);
+
+        /**
+         * Answer whether a file with the specified name exists.
+         *
+         * @param filename Path to the file to be tested.
+         *
+         * @return true, if the specified file exists, false otherwise.
+         */
+        static bool Exists(const wchar_t *filename);
 
         /**
          * Rename the file 'oldName' to 'newName'.
@@ -91,11 +110,23 @@ namespace sys {
          * @param oldName The name of the file to be renamed.
          * @param newName The new name of the file.
          *
-         * @return true, if the file was found and renamed, false otherwise.
+         * @return true in case of success, false otherwise. Use 
+         *         ::GetLastError() to retrieve further information on 
+         *         failure.
          */
-        // TODO: Consider throwing exception with GetLastError(). Would allow 
-        // user to know error reason without call to GetLastError().
-        static bool Rename(const TCHAR *oldName, const TCHAR *newName);
+        static bool Rename(const char *oldName, const char *newName);
+
+        /**
+         * Rename the file 'oldName' to 'newName'.
+         *
+         * @param oldName The name of the file to be renamed.
+         * @param newName The new name of the file.
+         *
+         * @return true in case of success, false otherwise. Use 
+         *         ::GetLastError() to retrieve further information on 
+         *         failure.
+         */
+        static bool Rename(const wchar_t *oldName, const wchar_t *newName);
 
         /** Ctor. */
         File(void);
@@ -160,7 +191,26 @@ namespace sys {
          *
          * @throws IllegalParamException
          */
-        virtual bool Open(const TCHAR *filename, const AccessMode accessMode, 
+        virtual bool Open(const char *filename, const AccessMode accessMode, 
+            const ShareMode shareMode, const CreationMode creationMode);
+
+        /**
+         * Opens a file.
+         *
+         * If this object already holds an open file, this file is closed (like 
+         * calling Close) and the new file is opened.
+         *
+         * @param filename	   Path to the file to be opened
+         * @param accessMode   The access mode for the file to be opened
+         * @param shareMode    The share mode
+         *					   (Parameter is ignored on linux systems.)
+         * @param creationMode Use your imagination on this one
+         *
+         * @return true, if the file has been successfully opened, false otherwise.
+         *
+         * @throws IllegalParamException
+         */
+        virtual bool Open(const wchar_t *filename, const AccessMode accessMode, 
             const ShareMode shareMode, const CreationMode creationMode);
 
         /**

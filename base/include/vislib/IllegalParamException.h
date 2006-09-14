@@ -33,7 +33,17 @@ namespace vislib {
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
-        IllegalParamException(const TCHAR *paramName, const char *file, 
+        IllegalParamException(const char *paramName, const char *file, 
+            const int line);
+
+        /**
+         * Ctor.
+         *
+         * @param paramName Name of the illegal parameter.
+         * @param file      The file the exception was thrown in.
+         * @param line      The line the exception was thrown in.
+         */
+        IllegalParamException(const wchar_t *paramName, const char *file, 
             const int line);
 
         /**

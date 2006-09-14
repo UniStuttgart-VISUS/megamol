@@ -15,7 +15,7 @@
 vislib::OutOfRangeException::OutOfRangeException(const int val, 
         const int minVal, const int maxVal, const char *file, const int line)
         : Exception(file, line) {
-	Exception::formatMsg(_T("%d is not within [%d, %d]."), val, minVal, maxVal);
+	Exception::formatMsg("%d is not within [%d, %d].", val, minVal, maxVal);
 }
 
 

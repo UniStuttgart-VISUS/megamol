@@ -263,7 +263,7 @@ void vislib::net::Socket::Shutdown(const ShutdownManifest how) {
  * vislib::net::Socket::Socket
  */
 vislib::net::Socket::Socket(const Socket& rhs) {
-    throw UnsupportedOperationException(_T("vislib::net::Socket::Socket"),
+    throw UnsupportedOperationException("vislib::net::Socket::Socket",
         __FILE__, __LINE__);
 }
 
@@ -273,7 +273,7 @@ vislib::net::Socket::Socket(const Socket& rhs) {
  */
 vislib::net::Socket& vislib::net::Socket::operator =(const Socket& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

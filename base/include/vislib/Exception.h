@@ -36,7 +36,18 @@ namespace vislib {
          * @param file The file the exception was thrown in.
          * @param line The line the exception was thrown in.
          */
-        Exception(const TCHAR *msg, const char *file, const int line);
+        Exception(const char *msg, const char *file, const int line);
+
+        /**
+         * Create a new exception. The ownership of the memory designated by
+         * 'msg' and 'file' remains at the caller, the class creates a deep
+         * copy.
+         *
+         * @param msg  A description of the exception.
+         * @param file The file the exception was thrown in.
+         * @param line The line the exception was thrown in.
+         */
+        Exception(const wchar_t *msg, const char *file, const int line);
 
         /**
          * Create a new exception. The ownership of the memory designated by
@@ -77,12 +88,37 @@ namespace vislib {
         }
 
         /**
-         * Answer the file the exception description text. The onwnership of the
+         * Answer the file the exception description text. The pointer returned
+         * is valid until the next call to a GetMsg* method. The ownership of the
          * memory remains at the object.
          *
          * @return The exception message.
          */
-        virtual const TCHAR *GetMsg(void) const;
+        inline const TCHAR *GetMsg(void) const {
+#if defined(UNICODE) || defined(_UNICODE)
+            return this->GetMsgW();
+#else /* defined(UNICODE) || defined(_UNICODE) */
+            return this->GetMsgA();
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+        }
+
+        /**
+         * Answer the file the exception description text. The pointer returned
+         * is valid until the next call to a GetMsg* method. The ownership of the
+         * memory remains at the object.
+         *
+         * @return The exception message.
+         */
+        virtual const char *GetMsgA(void) const;
+
+        /**
+         * Answer the file the exception description text. The pointer returned
+         * is valid until the next call to a GetMsg* method. The ownership of the
+         * memory remains at the object.
+         *
+         * @return The exception message.
+         */
+        virtual const wchar_t *GetMsgW(void) const;
 
         /**
          * Assignment operator.
@@ -101,7 +137,15 @@ namespace vislib {
          * @param fmt The format string like in printf.
 		 * @param ... Additional parameters.
          */
-        void formatMsg(const TCHAR *fmt, ...);
+        void formatMsg(const char *fmt, ...);
+
+        /**
+         * Set a new detail message.
+         *
+         * @param fmt The format string like in printf.
+		 * @param ... Additional parameters.
+         */
+        void formatMsg(const wchar_t *fmt, ...);
 
         /**
          * Set a new file.
@@ -115,7 +159,14 @@ namespace vislib {
          *
          * @param msg The new exception detail message.
          */
-        void setMsg(const TCHAR *msg) const;
+        void setMsg(const char *msg) const;
+
+        /**
+         * Set a new detail message.
+         *
+         * @param msg The new exception detail message.
+         */
+        void setMsg(const wchar_t *msg) const;
 
     private:
 
@@ -125,8 +176,12 @@ namespace vislib {
         /** The line number the exception was thrown in. */
         int line;
 
+        /** Remember whether 'msg' points to a Unicode or ANSI string. */
+        mutable bool isMsgUnicode;
+
         /** The exception message. */
-        mutable TCHAR *msg;
+        mutable void *msg;
+
     };
 }
 

@@ -109,7 +109,7 @@ namespace vislib {
          */
         inline StringConverter(const StringConverter& rhs) {
             throw UnsupportedOperationException(
-                _T("vislib::StringConverter::StringConverter"), __FILE__, 
+                "vislib::StringConverter::StringConverter", __FILE__, 
                 __LINE__);
         }
 
@@ -160,7 +160,7 @@ namespace vislib {
     StringConverter<S, T, B>& StringConverter<S, T, B>::operator =(
             const StringConverter& rhs) {
         if (this != &rhs) {
-            throw IllegalParamException(_T("vislib::StringConverT::operator ="),
+            throw IllegalParamException("vislib::StringConverT::operator =",
                 __FILE__, __LINE__);
         }
         return *this;

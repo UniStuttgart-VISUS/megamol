@@ -26,6 +26,24 @@ vislib::Trace& vislib::Trace::GetInstance(void) {
 
 
 /*
+ * vislib::Trace::LEVEL_ERROR
+ */
+const UINT vislib::Trace::LEVEL_ERROR = 0;
+
+
+/*
+ * vislib::Trace::LEVEL_INFO
+ */
+const UINT vislib::Trace::LEVEL_INFO = 200;
+
+
+/*
+ * vislib::Trace::LEVEL_WARN
+ */
+const UINT vislib::Trace::LEVEL_WARN = 100;
+
+
+/*
  * vislib::Trace::~Trace
  */
 vislib::Trace::~Trace(void) {
@@ -35,7 +53,7 @@ vislib::Trace::~Trace(void) {
 /*
  * vislib::Trace::operator ()
  */
-void vislib::Trace::operator ()(const UINT level, const TCHAR *fmt, ...) {
+void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) {
 	va_list list;
 	va_start(list, fmt);
 	this->trace(level, fmt, list);
@@ -43,15 +61,15 @@ void vislib::Trace::operator ()(const UINT level, const TCHAR *fmt, ...) {
 }
 
 
-/*
- * vislib::Trace::operator ()
- */
-void vislib::Trace::operator ()(const TCHAR *fmt, ...) {
-	va_list list;
-	va_start(list, fmt);
-	this->trace(0, fmt, list);
-	va_end(list);
-}
+///*
+// * vislib::Trace::operator ()
+// */
+//void vislib::Trace::operator ()(const char *fmt, ...) {
+//	va_list list;
+//	va_start(list, fmt);
+//	this->trace(0, fmt, list);
+//	va_end(list);
+//}
 
 
 /*
@@ -63,7 +81,7 @@ vislib::Trace *vislib::Trace::instance = NULL;
 /*
  * vislib::Trace::Trace
  */
-vislib::Trace::Trace(void) : level(0) {
+vislib::Trace::Trace(void) : level(LEVEL_ERROR) {
 }
 
 
@@ -71,7 +89,7 @@ vislib::Trace::Trace(void) : level(0) {
  * vislib::Trace::Trace
  */
 vislib::Trace::Trace(const Trace& rhs) {
-    throw UnsupportedOperationException(_T("vislib::Trace::Trace"), __FILE__, 
+    throw UnsupportedOperationException("vislib::Trace::Trace", __FILE__, 
         __LINE__);
 }
 
@@ -79,12 +97,10 @@ vislib::Trace::Trace(const Trace& rhs) {
 /*
  * vislib::Trace::trace
  */
-void vislib::Trace::trace(const UINT level, 
-								const TCHAR *fmt, 
-								va_list list) {
+void vislib::Trace::trace(const UINT level, const char *fmt, va_list list) {
 	if ((level <= this->level) && (fmt != NULL)) {
-		::_ftprintf(stderr, _T("TRACE: "));
-        ::_vftprintf(stderr, fmt, list);
+		::fprintf(stderr, "TRACE: ");
+        ::vfprintf(stderr, fmt, list);
 		::fflush(stderr);
 	}
 }
@@ -95,7 +111,7 @@ void vislib::Trace::trace(const UINT level,
  */
 vislib::Trace& vislib::Trace::operator =(const vislib::Trace &rhs) {
     if (this != &rhs) {
-        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

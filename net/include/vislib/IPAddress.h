@@ -17,8 +17,6 @@
 #include <arpa/inet.h>
 #endif /* _WIN32 */
 
-#include "vislib/tchar.h"
-
 
 namespace vislib {
 namespace net {
@@ -41,7 +39,7 @@ namespace net {
          *
          * @param address The IP address in the dotted string format.
          */
-        explicit IPAddress(const TCHAR *address = _T("127.0.0.1"));
+        explicit IPAddress(const char *address = "127.0.0.1");
 
         /**
          * Cast constructor from struct in_addr.
@@ -73,7 +71,7 @@ namespace net {
          * @return true, if the hostname could be resolved or the IP address was
          *         valid, false otherwise.
          */
-        virtual bool Lookup(const TCHAR *hostname);
+        virtual bool Lookup(const char *hostname);
 
         /**
          * Assignment operator.

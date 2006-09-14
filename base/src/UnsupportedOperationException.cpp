@@ -13,9 +13,19 @@
  * vislib::UnsupportedOperationException::UnsupportedOperationException
  */
 vislib::UnsupportedOperationException::UnsupportedOperationException(
-		const TCHAR *funcName, const char *file, const int line) 
+		const char *funcName, const char *file, const int line) 
         : Exception(file, line) {
-    Exception::formatMsg(_T("'%s' is an unsupported operation."), funcName);
+    Exception::formatMsg("'%s' is an unsupported operation.", funcName);
+}
+
+
+/*
+ * vislib::UnsupportedOperationException::UnsupportedOperationException
+ */
+vislib::UnsupportedOperationException::UnsupportedOperationException(
+		const wchar_t *funcName, const char *file, const int line) 
+        : Exception(file, line) {
+    Exception::formatMsg(L"'%s' is an unsupported operation.", funcName);
 }
 
 

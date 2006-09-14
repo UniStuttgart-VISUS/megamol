@@ -96,7 +96,25 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::GetSize(void) const {
 /*
  * vislib::sys::BufferedFile::Open
  */
-bool vislib::sys::BufferedFile::Open(const TCHAR *filename, const vislib::sys::File::AccessMode accessMode, 
+bool vislib::sys::BufferedFile::Open(const char *filename, const vislib::sys::File::AccessMode accessMode, 
+        const vislib::sys::File::ShareMode shareMode, const vislib::sys::File::CreationMode creationMode) {
+    if (File::Open(filename, accessMode, shareMode, creationMode)) {
+        ARY_SAFE_DELETE(this->buffer);
+        this->bufferMode = VOID_BUFFER;
+        this->bufferStart = 0;
+        this->validBufferSize = 0;
+        this->bufferOffset = 0;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+/*
+ * vislib::sys::BufferedFile::Open
+ */
+bool vislib::sys::BufferedFile::Open(const wchar_t *filename, const vislib::sys::File::AccessMode accessMode, 
         const vislib::sys::File::ShareMode shareMode, const vislib::sys::File::CreationMode creationMode) {
     if (File::Open(filename, accessMode, shareMode, creationMode)) {
         ARY_SAFE_DELETE(this->buffer);
@@ -292,7 +310,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
  * vislib::sys::BufferedFile::BufferedFile copy ctor
  */
 vislib::sys::BufferedFile::BufferedFile(const vislib::sys::BufferedFile& rhs) {
-    throw UnsupportedOperationException(_T("vislib::sys::File::File"), __FILE__, __LINE__);
+    throw UnsupportedOperationException("vislib::sys::File::File", __FILE__, __LINE__);
 }
 
 
@@ -301,7 +319,7 @@ vislib::sys::BufferedFile::BufferedFile(const vislib::sys::BufferedFile& rhs) {
  */
 vislib::sys::BufferedFile& vislib::sys::BufferedFile::operator =(const vislib::sys::BufferedFile& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
     return *this;
 }

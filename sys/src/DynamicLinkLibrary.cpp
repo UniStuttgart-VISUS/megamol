@@ -73,17 +73,35 @@ void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
 /*
  * vislib::sys::DynamicLinkLibrary::Load
  */
-bool vislib::sys::DynamicLinkLibrary::Load(const TCHAR *moduleName) {
+bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName) {
     if (this->IsLoaded()) {
-        throw IllegalStateException(_T("Call to DynamicLinLibrary::Load() when")
-            _T("a library was already loaded."), __FILE__, __LINE__);
+        throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
+            "a library was already loaded.", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    return ((this->hModule = ::LoadLibrary(moduleName)) != NULL);
+    return ((this->hModule = ::LoadLibraryA(moduleName)) != NULL);
 #else /* _WIN32 */
     // TODO: Error handling using dlerror
-    return ((this->hModule = ::dlopen(T2A(moduleName), RTLD_LAZY)) != NULL);
+    return ((this->hModule = ::dlopen(moduleName, RTLD_LAZY)) != NULL);
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::DynamicLinkLibrary::Load
+ */
+bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName) {
+    if (this->IsLoaded()) {
+        throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
+            "a library was already loaded.", __FILE__, __LINE__);
+    }
+
+#ifdef _WIN32
+    return ((this->hModule = ::LoadLibraryW(moduleName)) != NULL);
+#else /* _WIN32 */
+    // Because we know, that Linux does not support a chefmäßige Unicode-API.
+    return this->Load(W2A(moduleName));
 #endif /* _WIN32 */
 }
 
@@ -94,7 +112,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const TCHAR *moduleName) {
 vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(
         const DynamicLinkLibrary& rhs) {
     throw UnsupportedOperationException(
-        _T("vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary"), __FILE__, 
+        "vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary", __FILE__, 
         __LINE__);
 }
 
@@ -105,7 +123,7 @@ vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(
 vislib::sys::DynamicLinkLibrary& vislib::sys::DynamicLinkLibrary::operator =(
         const DynamicLinkLibrary& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

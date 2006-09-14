@@ -33,7 +33,17 @@ namespace vislib {
          * @param file The file the exception was thrown in.
          * @param line The line the exception was thrown in.
          */
-        IllegalStateException(const TCHAR *msg, const char *file, 
+        IllegalStateException(const char *msg, const char *file, 
+            const int line);
+
+        /**
+         * Ctor.
+         *
+         * @param msg  The exception detail message.
+         * @param file The file the exception was thrown in.
+         * @param line The line the exception was thrown in.
+         */
+        IllegalStateException(const wchar_t *msg, const char *file, 
             const int line);
 
         /**

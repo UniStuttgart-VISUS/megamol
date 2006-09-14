@@ -20,7 +20,7 @@
 /*
  * vislib::net::IPAddress::IPAddress
  */
-vislib::net::IPAddress::IPAddress(const TCHAR *address) {
+vislib::net::IPAddress::IPAddress(const char *address) {
     VERIFY(this->Lookup(address));
 }
 
@@ -35,10 +35,10 @@ vislib::net::IPAddress::~IPAddress(void) {
 /*
  * vislib::net::IPAddress::Lookup
  */
-bool vislib::net::IPAddress::Lookup(const TCHAR *hostname) {
+bool vislib::net::IPAddress::Lookup(const char *hostname) {
 
     /* Try to find the host by its name first. */
-    hostent *host = ::gethostbyname(T2A(hostname));
+    hostent *host = ::gethostbyname(hostname);
 
     if (host != NULL) {
         /* Host found. */
@@ -47,7 +47,7 @@ bool vislib::net::IPAddress::Lookup(const TCHAR *hostname) {
     } else {
         /* Host not found, assume IP address. */
 
-        if ((this->address.s_addr = ::inet_addr(T2A(hostname))) == INADDR_NONE) {
+        if ((this->address.s_addr = ::inet_addr(hostname)) == INADDR_NONE) {
             /* IP address is invalid, return error. */
             return false;
         }

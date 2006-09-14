@@ -54,24 +54,53 @@ namespace sys {
         SystemMessage& operator =(const SystemMessage& rhs);
 
         /**
-         * Cast to TCHAR string. 
+         * Cast to char string. 
          *
          * This operator provides access to the human readable error message.
+         * The returned pointer is valid until the object is destroyed or 
+         * another cast operator is called.
          * The object remains owner of the memory allocated for the string.
          *
          * The error message string is created lazily.
          *
          * @return The human readable error message.
          */
-        operator const TCHAR *(void) const;
+        operator const char *(void) const;
+
+        /**
+         * Cast to wchar_t string. 
+         *
+         * This operator provides access to the human readable error message.
+         * The returned pointer is valid until the object is destroyed or 
+         * another cast operator is called.
+         * The object remains owner of the memory allocated for the string.
+         *
+         * The error message string is created lazily.
+         *
+         * @return The human readable error message.
+         */
+        operator const wchar_t *(void) const;
+
+		/**
+		 * Answer the system dependent error code associated with this 
+		 * message.
+		 *
+		 * @return The system error code.
+		 */
+		inline DWORD GetErrorCode(void) const {
+			return this->errorCode;
+		}
 
 	private:
 
 		/** A system dependent error code. */
 		DWORD errorCode;
 
+        /** Remember whether 'msg' points to a Unicode or ANSI string. */
+        mutable bool isMsgUnicode;
+
         /** The formatted message string. */
-        mutable TCHAR *msg;
+        mutable void *msg;
     };
 
 } /* end namespace sys */

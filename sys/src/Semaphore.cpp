@@ -4,9 +4,10 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
+#include "vislib/Semaphore.h"
+
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/Semaphore.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -118,7 +119,7 @@ void vislib::sys::Semaphore::Unlock(void) {
  * vislib::sys::Semaphore::Semaphore
  */
 vislib::sys::Semaphore::Semaphore(const Semaphore& rhs) {
-    throw UnsupportedOperationException(_T("vislib::sys::Semaphore::Semaphore"),
+    throw UnsupportedOperationException("vislib::sys::Semaphore::Semaphore",
         __FILE__, __LINE__);
 }
 
@@ -129,7 +130,7 @@ vislib::sys::Semaphore::Semaphore(const Semaphore& rhs) {
 vislib::sys::Semaphore& vislib::sys::Semaphore::operator =(
         const Semaphore& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

@@ -33,7 +33,17 @@ namespace vislib {
          * @param file     The file the exception was thrown in.
          * @param line     The line the exception was thrown in.
          */
-        UnsupportedOperationException(const TCHAR *funcName, const char *file, 
+        UnsupportedOperationException(const char *funcName, const char *file, 
+            const int line);
+
+        /**
+         * Ctor.
+         *
+         * @param funcName Name of the unsupported method or function.
+         * @param file     The file the exception was thrown in.
+         * @param line     The line the exception was thrown in.
+         */
+        UnsupportedOperationException(const wchar_t *funcName, const char *file, 
             const int line);
 
         /**

@@ -19,7 +19,17 @@ vislib::sys::IOException::IOException(const DWORD errorCode, const char *file,
 /*
  * vislib::sys::IOException::IOException
  */
-vislib::sys::IOException::IOException(const DWORD errorCode, const TCHAR *msg, 
+vislib::sys::IOException::IOException(const DWORD errorCode, const char *msg, 
+		const char *file, const int line) 
+		: SystemException(errorCode, file, line) {
+    Exception::setMsg(msg);
+}
+
+
+/*
+ * vislib::sys::IOException::IOException
+ */
+vislib::sys::IOException::IOException(const DWORD errorCode, const wchar_t *msg, 
 		const char *file, const int line) 
 		: SystemException(errorCode, file, line) {
     Exception::setMsg(msg);

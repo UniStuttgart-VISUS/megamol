@@ -12,10 +12,20 @@
 /*
  * vislib::IllegalParamException::IllegalParamException
  */
-vislib::IllegalParamException::IllegalParamException(const TCHAR *paramName,
+vislib::IllegalParamException::IllegalParamException(const char *paramName,
         const char *file, const int line) 
         : Exception(file, line) {
-	Exception::formatMsg(_T("Parameter '%s' has an invalid value."), paramName);
+	Exception::formatMsg("Parameter '%s' has an invalid value.", paramName);
+}
+
+
+/*
+ * vislib::IllegalParamException::IllegalParamException
+ */
+vislib::IllegalParamException::IllegalParamException(const wchar_t *paramName,
+        const char *file, const int line) 
+        : Exception(file, line) {
+	Exception::formatMsg(L"Parameter '%s' has an invalid value.", paramName);
 }
 
 

@@ -11,7 +11,16 @@
 /*
  * vislib::IllegalStateException::IllegalStateException
  */
-vislib::IllegalStateException::IllegalStateException(const TCHAR *msg,
+vislib::IllegalStateException::IllegalStateException(const char *msg,
+        const char *file, const int line) 
+        : Exception(msg, file, line) {
+}
+
+
+/*
+ * vislib::IllegalStateException::IllegalStateException
+ */
+vislib::IllegalStateException::IllegalStateException(const wchar_t *msg,
         const char *file, const int line) 
         : Exception(msg, file, line) {
 }

@@ -25,12 +25,6 @@ $Platforms = @{
 	"64" = @{ "Include" = "machine\s+\(x64\)"; "Exclude" = "machine\s+\(x86\)" };
 }
 
-# Define the codings and the two lists for them.
-$Codings = @{ 
-	"a" = @{ "Include" = @(); "Exclude" = "unicode" };
-	"w" = @{ "Include" = "unicode"; "Exclude" = @() };
-}
-
 # Define the debug and release version and the two lists for them.
 $Debugs = @{ 
 	"" = @{ "Include" = @(); "Exclude" = "\.debug" };
@@ -46,67 +40,50 @@ if ("$env:path" -inotmatch ($VSPath -replace "\\", "\\" -replace "\(", "\(" -rep
 }
 
 foreach ($p in $Platforms.Keys) {
-	foreach ($c in $Codings.Keys) {
-		foreach ($d in $Debugs.Keys) {
-		
-			# List the the libraries that match
-			$Libs = gci $LibPath\* -i *$p$c$d.lib
-			foreach ($l in $Libs)  {
-				echo "Checking $l ..."
-				$failed = $FALSE
-				$out = dumpbin /all $l.FullName
+	foreach ($d in $Debugs.Keys) {
+	
+		# List the the libraries that match
+		$Libs = gci $LibPath\* -i *$p$c$d.lib
+		foreach ($l in $Libs)  {
+			echo "Checking $l ..."
+			$failed = $FALSE
+			$out = dumpbin /all $l.FullName
 
-				# Check platform
-				foreach ($i in $Platforms[$p]["Include"]) {
-					if ("$out" -inotmatch "$i") { 
-						echo "Include '$i' for $p FAILED"
-						$failed = $TRUE
-					}
+			# Check platform
+			foreach ($i in $Platforms[$p]["Include"]) {
+				if ("$out" -inotmatch "$i") { 
+					echo "Include '$i' for $p FAILED"
+					$failed = $TRUE
 				}
-				
-				foreach ($e in $Platforms[$p]["Exclude"]) {
-					if ("$out" -imatch "$e") { 
-						echo "Exclude '$e' for $p FAILED"
-						$failed = $TRUE
-					}
+			}
+			
+			foreach ($e in $Platforms[$p]["Exclude"]) {
+				if ("$out" -imatch "$e") { 
+					echo "Exclude '$e' for $p FAILED"
+					$failed = $TRUE
 				}
-				
-				# Check character type
-				foreach ($i in $Codings[$c]["Include"]) {
-					if ("$out" -inotmatch "$i") { 
-						echo "Include '$i' for $c FAILED"
-						$failed = $TRUE
-					}
+			}
+			
+			# Check debug symbols
+			foreach ($i in $Debugs[$d]["Include"]) {
+				if ("$out" -inotmatch "$i") { 
+					echo "Include '$i' for $d FAILED"
+					$failed = $TRUE
 				}
-				
-				foreach ($e in $Codings[$c]["Exclude"]) {
-					if ("$out" -imatch "$e") { 
-						echo "Exclude '$e' for $c FAILED"
-						$failed = $TRUE
-					}
+			}
+			
+			foreach ($e in $Debugs[$d]["Exclude"]) {
+				if ("$out" -imatch "$e") { 
+					echo "Exclude '$e' for $d FAILED"
+					$failed = $TRUE
 				}
-				
-				# Check debug symbols
-				foreach ($i in $Debugs[$d]["Include"]) {
-					if ("$out" -inotmatch "$i") { 
-						echo "Include '$i' for $d FAILED"
-						$failed = $TRUE
-					}
-				}
-				
-				foreach ($e in $Debugs[$d]["Exclude"]) {
-					if ("$out" -imatch "$e") { 
-						echo "Exclude '$e' for $d FAILED"
-						$failed = $TRUE
-					}
-				}	
-				
-				if ($failed) {
-					$filename = $l.Name -replace "(\.lib)$", ".txt"
-					echo "Writing output of dumpbin to $filename  ..."
-					ni . -name $filename -force -type "file" -value ($out | out-string) >> $null
-				}
-			} # end foreach ($l in $Libs)
-		} # end foreach ($d in $Debugs.Keys)
-	} # end foreach ($c in $Codings.Keys)
+			}	
+			
+			if ($failed) {
+				$filename = $l.Name -replace "(\.lib)$", ".txt"
+				echo "Writing output of dumpbin to $filename  ..."
+				ni . -name $filename -force -type "file" -value ($out | out-string) >> $null
+			}
+		} # end foreach ($l in $Libs)
+	} # end foreach ($d in $Debugs.Keys)
 } # end foreach ($p in $Platforms.Keys)

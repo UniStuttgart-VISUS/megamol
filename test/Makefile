@@ -1,28 +1,20 @@
-# Applications:
-AR = ar
-CPP = g++
-LINK = g++
+#
+# Makefile  13.09.2006 (mueller)
+#
+# Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+#
+
+-include ../common.mk
+
+TargetName := vislibtest
+
+IncludeDir := ./include ../base/include ../sys/include ../math/include
+InputDir := ./
+
 
 # Name of the ouput file:
 OutName := vislibtest
 
-# This directory contains the source files:
-InputDir := ./
-
-# List of include directories:
-IncludeDir := ./include ../base/include ../sys/include ../math/include
-
-# List of system include directories:
-SystemIncludeDir := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
-
-# List of files to be excluded from build:
-ExcludeFromBuild := 
-
-# Intermediate directory:
-#IntDir := Lin32
-
-# Output directory:
-#OutDir := ../Lin32
 
 # C++ compiler flags:
 CPPFLAGS := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
@@ -43,9 +35,6 @@ else
 	IntDir := Lin32
 	OutDir := ../Lin32
 endif
-
-# Append library directories to flags:
-LDFLAGS += -L../base/$(IntDir) -L../sys/$(IntDir) -L../math/$(IntDir)
 
 # Append the include directories to the flags:
 CPPFLAGS += $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))

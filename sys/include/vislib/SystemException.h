@@ -13,6 +13,7 @@
 
 #include "vislib/Exception.h"
 #include "vislib/types.h"
+#include "vislib/SystemMessage.h"
 
 
 namespace vislib {
@@ -64,16 +65,24 @@ namespace sys {
 		 * @return The system error code.
 		 */
 		inline DWORD GetErrorCode(void) const {
-			return this->errorCode;
+			return this->sysMsg.GetErrorCode();
 		}
 
         /**
-         * Answer the file the exception description text. The onwnership of the
-         * memory remains at the object.
+         * Answer the file the exception description text. Behaves like
+         * Exception::GetMsgA.
          *
          * @return The exception message.
          */
-        virtual const TCHAR *GetMsg(void) const;
+        virtual const char *GetMsgA(void) const;
+
+        /**
+         * Answer the file the exception description text. Behaves like
+         * Exception::GetMsgW.
+         *
+         * @return The exception message.
+         */
+        virtual const wchar_t *GetMsgW(void) const;
 
         /**
          * Assignment operator.
@@ -86,8 +95,11 @@ namespace sys {
 
 	private:
 
-		/** A system dependent error code. */
-		DWORD errorCode;
+        /** 
+         * The system message for the error code. This member is used instead
+         * of Exception::msg.
+         */
+        SystemMessage sysMsg;
     };
 
 } /* end namespace sys */

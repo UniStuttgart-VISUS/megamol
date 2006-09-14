@@ -4,13 +4,11 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include <cstring>
-
 #include "vislib/SystemException.h"
 
-#include "vislib/error.h"
-#include "vislib/SystemMessage.h"
+#include <cstring>
 
+#include "vislib/error.h"
 
 
 /*
@@ -18,7 +16,7 @@
  */
 vislib::sys::SystemException::SystemException(const DWORD errorCode, 
         const char *file, const int line) 
-		: Exception(NULL, file, line), errorCode(errorCode) {
+		: Exception(static_cast<const char *>(NULL), file, line), sysMsg(errorCode) {
 }
 
 
@@ -26,7 +24,8 @@ vislib::sys::SystemException::SystemException(const DWORD errorCode,
  * vislib::sys::SystemException::SystemException
  */
 vislib::sys::SystemException::SystemException(const char *file, const int line)
-: Exception(NULL, file, line), errorCode(::GetLastError()) {
+        : Exception(static_cast<const char *>(NULL), file, line), 
+        sysMsg(::GetLastError()) {
 }
 
 
@@ -34,7 +33,7 @@ vislib::sys::SystemException::SystemException(const char *file, const int line)
  * vislib::sys::SystemException::SystemException
  */
 vislib::sys::SystemException::SystemException(const SystemException& rhs) 
-		: Exception(rhs), errorCode(rhs.errorCode) {
+		: Exception(rhs), sysMsg(rhs.sysMsg) {
 }
 
 
@@ -46,16 +45,18 @@ vislib::sys::SystemException::~SystemException(void) {
 
 
 /*
- * vislib::sys::SystemException::GetMsg
+ * vislib::sys::SystemException::GetMsgA
  */
-const TCHAR *vislib::sys::SystemException::GetMsg(void) const {
+const char *vislib::sys::SystemException::GetMsgA(void) const {
+    return static_cast<const char *>(this->sysMsg);
+}
 
-    if (Exception::GetMsg() == NULL) {
-        this->setMsg(static_cast<const TCHAR *>(
-            SystemMessage(this->GetErrorCode())));
-    }
 
-    return Exception::GetMsg();
+/*
+ * vislib::sys::SystemException::GetMsgW
+ */
+const wchar_t *vislib::sys::SystemException::GetMsgW(void) const {
+    return static_cast<const wchar_t *>(this->sysMsg);
 }
 
 
@@ -66,7 +67,7 @@ vislib::sys::SystemException& vislib::sys::SystemException::operator =(
 		const SystemException& rhs) {
 	if (this != &rhs) {
 		Exception::operator =(rhs);
-		this->errorCode = rhs.errorCode;
+		this->sysMsg = rhs.sysMsg;
 	}
 	return *this;
 }

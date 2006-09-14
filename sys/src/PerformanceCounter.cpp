@@ -5,6 +5,8 @@
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). Alle Rechte vorbehalten.
  */
 
+#include "vislib/PerformanceCounter.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else /* _WIN32 */
@@ -14,7 +16,6 @@
 #include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/memutils.h"
-#include "vislib/PerformanceCounter.h"
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
 
@@ -27,15 +28,15 @@ UINT64 vislib::sys::PerformanceCounter::Query(void) {
 	LARGE_INTEGER timerFreq, timerCount;
 
     if (!::QueryPerformanceFrequency(&timerFreq)) {
-        TRACE(_T("QueryPerformanceFrequency failed in ")
-            _T("vislib::sys::PerformanceCounter::Query\n"));
-        throw SystemException(::GetLastError(), __FILE__, __LINE__);
+        TRACE(Trace::LEVEL_ERROR, "QueryPerformanceFrequency failed in "
+            "vislib::sys::PerformanceCounter::Query\n");
+        throw SystemException(__FILE__, __LINE__);
 	}
     
     if (!::QueryPerformanceCounter(&timerCount)) {
-        TRACE(_T("QueryPerformanceCounter failed in ")
-            _T("vislib::sys::PerformanceCounter::Query\n"));
-        throw SystemException(::GetLastError(), __FILE__, __LINE__);
+        TRACE(Trace::LEVEL_ERROR, "QueryPerformanceCounter failed in "
+            "vislib::sys::PerformanceCounter::Query\n");
+        throw SystemException(__FILE__, __LINE__);
     }
 
 	return (timerCount.QuadPart * 1000) / timerFreq.QuadPart;
@@ -43,7 +44,7 @@ UINT64 vislib::sys::PerformanceCounter::Query(void) {
 #else /* _WIN32 */
     struct timeval t;
     if (::gettimeofday(&t, NULL) == -1) {
-        throw SystemException(::GetLastError(), __FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return static_cast<UINT64>((t.tv_sec * 1e6 + t.tv_usec) / 1000.0);

@@ -14,7 +14,6 @@
 #include "vislib/memutils.h"
 #endif /* _WIN32 */
 
-#include "vislib/tchar.h"
 #include "vislib/types.h"
 
 
@@ -72,7 +71,19 @@ namespace sys {
          * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
          */
-        bool Load(const TCHAR *moduleName);
+        bool Load(const char *moduleName);
+
+        /**
+         * Loads the library designated by the path 'moduleName'.
+         *
+         * @return true in case of success, false, if the library could not be 
+         *         loaded.
+         *
+         *
+         * @throws IllegalStateException If a library was already loaded and not
+         *                               freed before this call to Load().
+         */
+        bool Load(const wchar_t *moduleName);
 
     private:
 

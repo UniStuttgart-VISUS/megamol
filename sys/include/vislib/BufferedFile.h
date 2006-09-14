@@ -79,7 +79,13 @@ namespace sys {
         /**
          * behaves like File::Open
          */
-        virtual bool Open(const TCHAR *filename, const File::AccessMode accessMode, 
+        virtual bool Open(const char *filename, const File::AccessMode accessMode, 
+            const File::ShareMode shareMode, const File::CreationMode creationMode);
+
+        /**
+         * behaves like File::Open
+         */
+        virtual bool Open(const wchar_t *filename, const File::AccessMode accessMode, 
             const File::ShareMode shareMode, const File::CreationMode creationMode);
 
         /**

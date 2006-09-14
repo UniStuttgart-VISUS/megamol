@@ -4,6 +4,8 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
+#include "vislib/File.h"
+
 #ifdef _WIN32
 #include <Shlwapi.h>
 #else /* _WIN32 */
@@ -17,8 +19,6 @@
 #include <stdio.h> 
 #endif /* _WIN32 */
 
-#include "vislib/File.h"
-
 #include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
@@ -31,12 +31,26 @@
 /*
  * vislib::sys::File::Delete
  */
-bool vislib::sys::File::Delete(const TCHAR *filename) {
+bool vislib::sys::File::Delete(const char *filename) {
 #ifdef _WIN32
-    return (::DeleteFile(filename) == TRUE); 
+    return (::DeleteFileA(filename) == TRUE); 
 
 #else /* _WIN32 */
-    return (::remove(T2A(filename)) == 0);
+    return (::remove(filename) == 0);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Delete
+ */
+bool vislib::sys::File::Delete(const wchar_t *filename) {
+#ifdef _WIN32
+    return (::DeleteFileW(filename) == TRUE); 
+
+#else /* _WIN32 */
+    return (::remove(W2A(filename)) == 0);
 
 #endif /* _WIN32 */
 }
@@ -45,15 +59,31 @@ bool vislib::sys::File::Delete(const TCHAR *filename) {
 /*
  * vislib::sys::File::Exists
  */
-bool vislib::sys::File::Exists(const TCHAR *filename) {
+bool vislib::sys::File::Exists(const char *filename) {
 #ifdef _WIN32
-    return (::PathFileExists(filename) == TRUE);
+    return (::PathFileExistsA(filename) == TRUE);
     // GetLastError() holds more information in case of problem. who cares
 
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(T2A(filename), &buf); 
+    int i = stat(filename, &buf); 
     // errno holds additional information (ENOENT and EBADF etc.). who cares
+    return (i == 0);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Exists
+ */
+bool vislib::sys::File::Exists(const wchar_t *filename) {
+#ifdef _WIN32
+    return (::PathFileExistsW(filename) == TRUE);
+
+#else /* _WIN32 */
+    struct stat buf;
+    int i = stat(W2A(filename), &buf); 
     return (i == 0);
 
 #endif /* _WIN32 */
@@ -63,11 +93,23 @@ bool vislib::sys::File::Exists(const TCHAR *filename) {
 /*
  * vislib::sys::File::Rename
  */
-bool vislib::sys::File::Rename(const TCHAR *oldName, const TCHAR *newName) {
+bool vislib::sys::File::Rename(const char *oldName, const char *newName) {
 #ifdef _WIN32
-    return (::MoveFile(oldName, newName) == TRUE);
+    return (::MoveFileA(oldName, newName) == TRUE);
 #else /* _WIN32 */
-    return ::rename(T2A(oldName), T2A(newName));
+    return ::rename(oldName, newName);
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Rename
+ */
+bool vislib::sys::File::Rename(const wchar_t *oldName, const wchar_t *newName) {
+#ifdef _WIN32
+    return (::MoveFileW(oldName, newName) == TRUE);
+#else /* _WIN32 */
+    return ::rename(W2A(oldName), W2A(newName));
 #endif /* _WIN32 */
 }
 
@@ -165,7 +207,7 @@ bool vislib::sys::File::IsOpen(void) const {
 /*
  * vislib::sys::File::Open
  */
-bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode, 
+bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode, 
         const ShareMode shareMode, const CreationMode creationMode) {
     this->Close();
 
@@ -178,14 +220,14 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
         case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
         case READ_ONLY: access = GENERIC_READ; break;
         case WRITE_ONLY: access = GENERIC_WRITE; break;
-        default: throw IllegalParamException(_T("accessMode"), __FILE__, __LINE__);
+        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
     }
 
     switch (shareMode) {
         case SHARE_READ: share = FILE_SHARE_READ; break;
         case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
         case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
-        default: throw IllegalParamException(_T("shareMode"), __FILE__, __LINE__);
+        default: throw IllegalParamException("shareMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -193,10 +235,10 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
         case CREATE_OVERWRITE: create = CREATE_ALWAYS; break;
         case OPEN_ONLY: create = OPEN_EXISTING; break;
         case OPEN_CREATE: create = OPEN_ALWAYS; break;
-        default: throw IllegalParamException(_T("creationMode"), __FILE__, __LINE__);
+        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
     }
 
-    this->handle = ::CreateFile(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
+    this->handle = ::CreateFileA(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
     return (this->handle != INVALID_HANDLE_VALUE);
 
 #else /* _WIN32 */
@@ -208,7 +250,7 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
         case READ_WRITE: oflag |= O_RDWR; break;
         case READ_ONLY: oflag |= O_RDONLY; break;
         case WRITE_ONLY: oflag |= O_WRONLY; break;
-        default: throw IllegalParamException(_T("accessMode"), __FILE__, __LINE__);
+        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -225,11 +267,56 @@ bool vislib::sys::File::Open(const TCHAR *filename, const AccessMode accessMode,
         case OPEN_CREATE: 
             if (!fileExists) oflag |= O_CREAT;
             break;
-        default: throw IllegalParamException(_T("creationMode"), __FILE__, __LINE__);
+        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
     }
 
-    this->handle = ::open(T2A(filename), oflag);
+    this->handle = ::open(filename, oflag);
     return (this->handle != -1);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Open
+ */
+bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMode, 
+        const ShareMode shareMode, const CreationMode creationMode) {
+    this->Close();
+
+#ifdef _WIN32
+    DWORD access;
+    DWORD share;
+    DWORD create;
+
+    switch (accessMode) {
+        case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
+        case READ_ONLY: access = GENERIC_READ; break;
+        case WRITE_ONLY: access = GENERIC_WRITE; break;
+        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
+    }
+
+    switch (shareMode) {
+        case SHARE_READ: share = FILE_SHARE_READ; break;
+        case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
+        case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
+        default: throw IllegalParamException("shareMode", __FILE__, __LINE__);
+    }
+
+    switch (creationMode) {
+        case CREATE_ONLY: create = CREATE_NEW; break;
+        case CREATE_OVERWRITE: create = CREATE_ALWAYS; break;
+        case OPEN_ONLY: create = OPEN_EXISTING; break;
+        case OPEN_CREATE: create = OPEN_ALWAYS; break;
+        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
+    }
+
+    this->handle = ::CreateFileW(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
+    return (this->handle != INVALID_HANDLE_VALUE);
+
+#else /* _WIN32 */
+    // Because we know, that Linux does not support a chefmäßige Unicode-API.
+    return this->Open(W2A(filename), accessMode, shareMode, creationMode);
 
 #endif /* _WIN32 */
 }
@@ -340,7 +427,7 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
  * vislib::sys::File::File
  */
 vislib::sys::File::File(const File& rhs) {
-    throw UnsupportedOperationException(_T("vislib::sys::File::File"), 
+    throw UnsupportedOperationException("vislib::sys::File::File", 
         __FILE__, __LINE__);
 }
 
@@ -350,7 +437,7 @@ vislib::sys::File::File(const File& rhs) {
  */
 vislib::sys::File& vislib::sys::File::operator =(const File& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException(_T("rhs"), __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

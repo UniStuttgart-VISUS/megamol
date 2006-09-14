@@ -53,6 +53,9 @@ void TestThread(void) {
     Thread t2(&r2);
     DWORD cntLoops = 100;
 
+    ::AssertFalse("Thread 1 is initially not running", t1.IsRunning());
+    ::AssertFalse("Thread 2 is initially not running", t2.IsRunning());
+
     t1.Start(&cntLoops);
     t2.Start(&cntLoops);
 

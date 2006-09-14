@@ -59,8 +59,8 @@ CompilerFlags := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic
 # Additional compiler flags for special configurations
 DebugANSILinkerFlags := -DDEBUG -D_DEBUG -ggdb
 DebugUnicodeLinkerFlags := -DDEBUG -D_DEBUG -ggdb -DUNICODE -D_UNICODE
-ReleaseANSILinkerFlags := -O3
-ReleaseUnicodeLinkerFlags := -O3
+ReleaseANSILinkerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
+ReleaseUnicodeLinkerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
