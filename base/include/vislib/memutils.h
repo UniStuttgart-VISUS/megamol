@@ -42,4 +42,11 @@
 #define SAFE_FREE(ptr) if ((ptr) != NULL) { ::free(ptr); (ptr) = NULL; }
 
 
+/**
+ * Delete memory using ::operator delete and set 'ptr' NULL.
+ */
+#define SAFE_OPERATOR_DELETE(ptr) if ((ptr) != NULL) {\
+    ::operator delete(ptr); (ptr) = NULL; }
+
+
 #endif /* VISLIB_MEMUTILS_H_INCLUDED */

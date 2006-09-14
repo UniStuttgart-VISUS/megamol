@@ -11,7 +11,12 @@
 #else /* _WIN32 */
 /* tell linux runtime to do 64bit seek/tell */
 #define _FILE_OFFSET_BITS 64
-#define _LARGEFILE64_SOURCE  
+
+#ifndef _LARGEFILE64_SOURCE
+#define _LARGEFILE64_SOURCE
+#endif /* _LARGEFILE64_SOURCE */
+
+#include <climits>
 
 #include <fcntl.h>
 #include <sys/stat.h>

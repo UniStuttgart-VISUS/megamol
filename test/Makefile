@@ -20,7 +20,7 @@ OutName := vislibtest
 CPPFLAGS := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lvislibsys32ad -lvislibmath32ad -lvislibbase32ad
+LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lvislibsys32d -lvislibmath32d -lvislibbase32d
 
 ###############################################################################
 

@@ -7,10 +7,11 @@
 #include "vislib/SystemMessage.h"
 
 #ifndef _WIN32
-#include <cstring>
+#include <wchar.h>
 #endif /* _WIN32 */
 
 #include "vislib/error.h"
+#include "vislib/memutils.h"
 
 
 /*
@@ -38,7 +39,7 @@ vislib::sys::SystemMessage::~SystemMessage(void) {
         ::LocalFree(this->msg);
     }
 #else /* _WIN32 */
-    ARY_SAFE_DELETE(this->msg);
+    SAFE_OPERATOR_DELETE(this->msg);
 #endif /* _WIN32 */
 }
 
@@ -55,7 +56,7 @@ vislib::sys::SystemMessage& vislib::sys::SystemMessage::operator =(
             this->msg = NULL;
         }
 #else /* _WIN32 */
-        ARY_SAFE_DELETE(this->msg);
+        SAFE_OPERATOR_DELETE(this->msg);
 #endif /* _WIN32 */
 		this->errorCode = rhs.errorCode;
 	}
@@ -73,7 +74,7 @@ vislib::sys::SystemMessage::operator const char *(void) const {
         ::LocalFree(this->msg);
         this->msg = NULL;
 #else /* _WIN32 */
-        ARY_SAFE_DELETE(this->msg);
+        SAFE_OPERATOR_DELETE(this->msg);
 #endif /* _WIN32 */
     }
 
@@ -110,8 +111,8 @@ vislib::sys::SystemMessage::operator const char *(void) const {
 #endif /* _GNU_SOURCE */
 
         bufLen = ::strlen(msg) + 1;
-        this->msg = new char[bufLen];
-        ::strcpy(this->msg, msg);
+        this->msg = ::operator new(bufLen * sizeof(char));
+        ::memcpy(this->msg, msg, bufLen * sizeof(char));
 
         if (msg == buf) {
             // Assume that we only have to free memory that we have
@@ -137,7 +138,7 @@ vislib::sys::SystemMessage::operator const wchar_t *(void) const {
         ::LocalFree(this->msg);
         this->msg = NULL;
 #else /* _WIN32 */
-        ARY_SAFE_DELETE(this->msg);
+        SAFE_OPERATOR_DELETE(this->msg);
 #endif /* _WIN32 */
     }
 
@@ -174,8 +175,8 @@ vislib::sys::SystemMessage::operator const wchar_t *(void) const {
 #endif /* _GNU_SOURCE */
 
         bufLen = ::strlen(msg) + 1;
-        this->msg = new char[bufLen];
-        ::swprintf(this->msg, bufLen - 1, L"%hs", msg);
+        this->msg = ::operator new(bufLen * sizeof(wchar_t));
+        ::swprintf(static_cast<wchar_t *>(this->msg), bufLen - 1, L"%hs", msg);
 
         if (msg == buf) {
             // Assume that we only have to free memory that we have

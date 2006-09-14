@@ -66,7 +66,7 @@ vislib::Exception::Exception(const Exception& rhs)
  */
 vislib::Exception::~Exception(void) {
     ARY_SAFE_DELETE(this->file);
-    ARY_SAFE_DELETE(this->msg);
+    SAFE_OPERATOR_DELETE(this->msg);
 }
 
 
@@ -136,19 +136,23 @@ void vislib::Exception::formatMsg(const char *fmt, ...) {
         int bufLen = static_cast<int>(::strlen(fmt) + 1);
 
 		do {
-			ARY_SAFE_DELETE(this->msg);
+			SAFE_OPERATOR_DELETE(this->msg);
 			bufLen = static_cast<int>(bufGrowFactor * bufLen);
-			this->msg = new char[bufLen];
+            this->msg = ::operator new(bufLen * sizeof(char));
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
 		} while (::_vsnprintf_s(static_cast<char *>(this->msg), bufLen, 
                 _TRUNCATE, fmt, arglist) < 0);
+#elif _WIN32 
+        } while (::_vsnprintf(static_cast<char *>(this->msg), bufLen,
+                fmt, arglist) < 0);
 #else /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
-		} while (::_vsnprintf(this->msg, bufLen, fmt, arglist) < 0);
+		} while (::vsnprintf(static_cast<char *>(this->msg), bufLen, 
+                fmt, arglist) < 0);
 #endif /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
 
 	} else {
 		/* Delete old message and set pointer NULL. */
-		ARY_SAFE_DELETE(this->msg);
+		SAFE_OPERATOR_DELETE(this->msg);
 	}
 }
 
@@ -167,19 +171,23 @@ void vislib::Exception::formatMsg(const wchar_t *fmt, ...) {
 		int bufLen = static_cast<int>(::wcslen(fmt) + 1);
 
 		do {
-			ARY_SAFE_DELETE(this->msg);
+			SAFE_OPERATOR_DELETE(this->msg);
 			bufLen = static_cast<int>(bufGrowFactor * bufLen);
-			this->msg = new wchar_t[bufLen];
+			this->msg = ::operator new(bufLen * sizeof(wchar_t));
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
 		} while (::_vsnwprintf_s(static_cast<wchar_t *>(this->msg), bufLen, 
                 _TRUNCATE, fmt, arglist) < 0);
+#elif _WIN32 
+        } while (::_vsnwprintf(static_cast<wchar_t *>(this->msg), bufLen,
+                fmt, arglist) < 0);
 #else /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
-		} while (::_vsnwprintf(this->msg, bufLen, fmt, arglist) < 0);
+		} while (::vswprintf(static_cast<wchar_t *>(this->msg), bufLen, 
+                fmt, arglist) < 0);
 #endif /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
 
 	} else {
 		/* Delete old message and set pointer NULL. */
-		ARY_SAFE_DELETE(this->msg);
+		SAFE_OPERATOR_DELETE(this->msg);
 	}
 }
 
@@ -202,12 +210,12 @@ void vislib::Exception::setFile(const char *file) {
  * vislib::Exception::setMsg
  */
 void vislib::Exception::setMsg(const char *msg) const {
-    ARY_SAFE_DELETE(this->msg);
+    SAFE_OPERATOR_DELETE(this->msg);
 
     if (msg != NULL) {
         this->isMsgUnicode = false;
 		size_t bufLen = ::strlen(msg) + 1;
-        this->msg = new char[bufLen];
+        this->msg = ::operator new(bufLen * sizeof(char));
         ::memcpy(this->msg, msg, bufLen * sizeof(char));
     }
 }
@@ -217,12 +225,12 @@ void vislib::Exception::setMsg(const char *msg) const {
  * vislib::Exception::setMsg
  */
 void vislib::Exception::setMsg(const wchar_t *msg) const {
-    ARY_SAFE_DELETE(this->msg);
+    SAFE_OPERATOR_DELETE(this->msg);
 
     if (msg != NULL) {
         this->isMsgUnicode = true;
 		size_t bufLen = ::wcslen(msg) + 1;
-        this->msg = new wchar_t[bufLen];
+        this->msg = ::operator new(bufLen * sizeof(wchar_t));
         ::memcpy(this->msg, msg, bufLen * sizeof(wchar_t));
     }
 }

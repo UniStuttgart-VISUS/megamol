@@ -47,27 +47,21 @@ endif
 
 
 # The configuration intermetidate directories
-DebugANSIDir := Debug_ANSI
-DebugUnicodeDir := Debug_UNICODE
-ReleaseANSIDir := Release_ANSI
-ReleaseUnicodeDir := Release_UNICODE
+DebugDir := Debug
+ReleaseDir := Release
 
 
 # Common compiler flags
 CompilerFlags := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic
 
 # Additional compiler flags for special configurations
-DebugANSILinkerFlags := -DDEBUG -D_DEBUG -ggdb
-DebugUnicodeLinkerFlags := -DDEBUG -D_DEBUG -ggdb -DUNICODE -D_UNICODE
-ReleaseANSILinkerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
-ReleaseUnicodeLinkerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
+DebugCompilerFlags := -DDEBUG -D_DEBUG -ggdb
+ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
 LinkerFlags := -L/usr/X11R6/lib -lm
 
 # Additional linker flags for special configurations
-DebugANSILinkerFlags :=
-DebugUnicodeLinkerFlags :=
-ReleaseANSILinkerFlags :=
-ReleaseUnicodeLinkerFlags :=
+DebugLinkerFlags :=
+ReleaseLinkerFlags :=
