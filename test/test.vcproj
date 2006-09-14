@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase32d.lib vislibsys32d.lib vislibmath32d.lib vislibnet32d.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase32d.lib vislibsys32d.lib vislibmath32d.lib vislibnet32d.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase64d.lib vislibsys64d.lib vislibmath64d.lib vislibnet64d.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase64d.lib vislibsys64d.lib vislibmath64d.lib vislibnet64d.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -222,7 +222,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase32.lib vislibsys32.lib vislibmath32.lib vislibnet32.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase32.lib vislibsys32.lib vislibmath32.lib vislibnet32.lib"
 				LinkIncremental="0"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="false"
@@ -303,7 +303,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase64.lib vislibsys64.lib vislibmath64.lib vislibnet64.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase64.lib vislibsys64.lib vislibmath64.lib vislibnet64.lib"
 				LinkIncremental="0"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="false"
@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testfile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testfloat16.cpp"
 				>
 			</File>
@@ -377,6 +381,10 @@
 			>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testfile.h"
 				>
 			</File>
 			<File

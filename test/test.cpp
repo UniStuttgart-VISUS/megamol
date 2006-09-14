@@ -12,8 +12,8 @@
 #include "teststring.h"
 #include "testfloat16.h"
 #include "testthread.h"
+#include "testfile.h"
 
-#include "vislib/File.h"
 #include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
@@ -30,7 +30,8 @@ int main(int argc, char **argv) {
 
     //::TestString();
     //::TestFloat16();
-    ::TestThread();
+    //::TestThread();
+    ::TestFile();
 
     //::printf("%s", W2A(L"Hugo"));
 
