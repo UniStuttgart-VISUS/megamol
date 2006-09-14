@@ -16,17 +16,16 @@
 #include <limits>
 #include "vislib/assert.h"
 
-// TODO
-
-/** Epsilon value for floating point comparison. */
-#define FLOAT_EPSILON (1e-5f)
-
-/** Epsilon value for double precision floating point comparison. */
-#define DOUBLE_EPSILON (1e-7)
-
 
 namespace vislib {
 namespace math {
+
+
+    /** Epsilon value for floating point comparison. */
+    extern const float FLOAT_EPSILON;
+
+    /** Epsilon value for double precision floating point comparison. */
+    extern const float DOUBLE_EPSILON;
 
     /**
      * Answer the next power of two which is greater or equal to 'n'.
@@ -41,7 +40,7 @@ namespace math {
      *
      * @return The smallest power of two with ('n' <= result).
      */
-    template<class T> T CalcNextPowerOfTwo(const T n) {
+    template<class T> T NextPowerOfTwo(const T n) {
         ASSERT(std::numeric_limits<T>::is_integer);
         
         T retval = static_cast<T>(1);
@@ -79,9 +78,9 @@ namespace math {
      *
      * @return true, if 'm' and 'n' are nearly equal, false otherwise.
      */
-    inline bool FltEq(const float m, const float n, 
+    inline bool FltEqual(const float m, const float n, 
             const float epsilon = FLOAT_EPSILON) {
-        return (::fabs(m - n) < epsilon);
+        return (::fabsf(m - n) < epsilon);
     }
 
 
@@ -95,7 +94,7 @@ namespace math {
      *
      * @return true, if 'm' and 'n' are nearly equal, false otherwise.
      */
-    inline bool FltEq(const double m, const double n, 
+    inline bool FltEqual(const double m, const double n, 
             const double epsilon = DOUBLE_EPSILON) {
         return (::fabs(m - n) < epsilon);
     }

@@ -94,6 +94,14 @@ namespace vislib {
         UINT32 CalcHashCode(void) const;
 
         /**
+         * Prints into this string like sprintf.
+         *
+         * @param fmt The format string.
+         * @param ... Optional parameters.
+         */
+        void Format(const Char *fmt, ...);
+
+        /**
          * Answer the index of the first occurrence of 'c' in the string. The 
          * search begins with the 'beginningAt'th character. If the character
          * was not found, INVALID_POS is returned.
@@ -419,6 +427,14 @@ namespace vislib {
         }
 
         return hash;
+    }
+
+    /*
+     * String<T>::Format
+     */
+    template<class T> void String<T>::Format(const Char *fmt, ...) {
+        // TODO
+        assert(false);
     }
 
 

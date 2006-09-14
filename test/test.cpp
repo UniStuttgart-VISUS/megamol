@@ -28,10 +28,11 @@ int main(int argc, char **argv) {
     using namespace vislib;
     using namespace vislib::sys;
 
-    //::TestString();
+    ::TestFile();
+    ::TestString();
     //::TestFloat16();
     //::TestThread();
-    ::TestFile();
+    
 
     //::printf("%s", W2A(L"Hugo"));
 

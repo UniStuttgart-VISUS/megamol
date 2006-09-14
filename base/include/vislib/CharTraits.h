@@ -59,53 +59,6 @@ namespace vislib {
 		}
 
 		/**
-		 * Copy from 'src' to 'dst'. If the method returns true, 'dst' points to
-		 * a zero-terminated string that holds a copy of 'src'.
-		 *
-		 * @param dst The buffer to receive the copy.
-		 * @param cnt The size of the buffer in characters, e. g. in bytes for a
-		 *            char instantiation or in words for a wchar_t 
-		 *            instantiation.
-		 * @param src The source string.
-		 *
-		 * @return true, if the copy succeeded, false in case of an error.
-		 */
-		inline static bool SafeStringCopy(Char *dst, const Size cnt, 
-				const Char *src) {
-
-			if ((dst == NULL) || (cnt < 1)) {
-				/* No destination buffer. */
-				return false;
-
-			} else if (src == NULL) {
-				/* No input, create an empty string. */
-				ASSERT(dst != NULL);
-				ASSERT(cnt >= 1);
-
-				dst[0] = static_cast<Char>(0);
-				return true;
-
-			} else {
-				/* Have output space and input data. */
-				ASSERT(dst != NULL);
-				ASSERT(cnt >= 1);
-				ASSERT(src != NULL);
-
- 				size_t dstSize = cnt * CharSize();
-				size_t srcSize = StringSize(src);
-
-				if (dstSize >= srcSize) {
-					::memcpy(dst, src, srcSize);
-					return true;
-
-				} else {
-					/* 'dst' buffer is too small. */
-					return false;
-				}
-			}
-		}
-
-		/**
 		 * Answer the string length. 'str' can be a NULL pointer.
          *
          * @param str A zero-terminated string.
@@ -210,7 +163,7 @@ namespace vislib {
 	 *
 	 * @author Christoph Mueller
 	 */
-	class CharTraitsA : public CharTraits<CHAR> {
+	class CharTraitsA : public CharTraits<char> {
 
     protected:
 
@@ -228,39 +181,37 @@ namespace vislib {
 		 */
 		inline static bool Convert(char *dst, const Size cnt, 
 				const Char *src) {
-			return SafeStringCopy(dst, cnt, src);
+            ASSERT(dst != NULL);
+            ASSERT(src != NULL);
+			StringCopy(dst, src);
+            return true;
 		}
 
 		/**
-		 * Convert 'src' to a wide string and store it to 'dst'. If the 
-		 * string is longer than 'cnt' characters, nothing is written and
-		 * the method returns false.
+		 * Convert 'src' to a wide string and store it to 'dst'. 'cnt' is the 
+         * size of 'dst'. 'src' must contain at least 'cnt' - 1 valid
+         * characters. The caller provides the memory and remains its owner.
 		 *
 		 * @param dst The buffer to receive the converted string.
 		 * @param cnt The number of characters that can be stored in 'dst'.
-		 * @param src The zero-terminated string to be converted.
+		 * @param src The zero-terminated string to be converted. It must
+         *            contain at least 'cnt' - 1 valid characters.
 		 *
 		 * @return true, if 'src' was successfully converted and stored in 
 		 *         'dst', false otherwise.
 		 */
 		inline static bool Convert(wchar_t *dst, const Size cnt,
 				const Char *src) {
-            // TODO: Could work without test, if we assume that String and
-            // String convert always pass a buffer that is large enough.
-			Size srcLen = SafeStringLength(src);
+            ASSERT(dst != NULL);
+            ASSERT(src != NULL);
 
-			if ((dst != NULL) && (cnt > srcLen) && (src != NULL)) {
 #if (_MSC_VER >= 1400)
-				::_snwprintf_s(dst, cnt, cnt, L"%hs", src);
+            return (::_snwprintf_s(dst, cnt, cnt, L"%hs", src) == (cnt - 1));
 #elif defined(_WIN32)
-                ::_snwprintf(dst, cnt, L"%hs", src);
+            return (::_snwprintf(dst, cnt, L"%hs", src) == (cnt - 1));
 #else  /*(_MSC_VER >= 1400) */
-				::swprintf(dst, cnt, L"%hs", src);
+            return (::swprintf(dst, cnt, L"%hs", src) == (cnt - 1));
 #endif /*(_MSC_VER >= 1400) */
-				return true;
-			} else {
-				return false;
-			}
 		}
 
 		/**
@@ -296,6 +247,7 @@ namespace vislib {
 			return static_cast<Char>(::tolower(c));
 		}
 
+// TODO: Problem with locale.
 //		/**
 //		 * Convert all characters in 'str' to lower case.
 //		 *
@@ -358,35 +310,30 @@ namespace vislib {
 	protected:
 
 		/**
-		 * Convert 'src' to an ANSI string and store it to 'dst'. If the 
-		 * string is longer than 'cnt' characters, nothing is written and
-		 * the method returns false.
+		 * Convert 'src' to an ANSI string and store it to 'dst'.  'cnt' is the
+         * size of 'dst'. 'src' must contain at least 'cnt' - 1 valid
+         * characters. The caller provides the memory and remains its owner.
 		 *
 		 * @param dst The buffer to receive the converted string.
 		 * @param cnt The number of characters that can be stored in 'dst'.
-		 * @param src The zero-terminated string to be converted.
+		 * @param src The zero-terminated string to be converted. It must
+         *            contain at least 'cnt' - 1 valid characters.
 		 *
 		 * @return true, if 'src' was successfully converted and stored in 
 		 *         'dst', false otherwise.
 		 */
 		inline static bool Convert(char *dst, const Size cnt,
 				const Char *src) {
-            // TODO: Could work without test, if we assume that String and
-            // String convert always pass a buffer that is large enough.
-			Size srcLen = SafeStringLength(src);
+            ASSERT(dst != NULL);
+            ASSERT(src != NULL);
 
-			if ((dst != NULL) && (cnt > srcLen) && (src != NULL)) {
 #if (_MSC_VER >= 1400)
-				::_snprintf_s(dst, cnt, cnt, "%ls", src);
+            return (::_snprintf_s(dst, cnt, cnt, "%ls", src) == (cnt - 1));
 #elif defined(_WIN32)
-                ::_snprintf(dst, cnt, "%ls", src);
+            return (::_snprintf(dst, cnt, "%ls", src) == (cnt - 1));
 #else  /*(_MSC_VER >= 1400) */
-				::snprintf(dst, cnt, "%ls", src);
+            return (::snprintf(dst, cnt, "%ls", src) == (cnt - 1));
 #endif /*(_MSC_VER >= 1400) */
-				return true;
-			} else {
-				return false;
-			}
 		}
 
 		/**
@@ -403,7 +350,10 @@ namespace vislib {
 		 */
 		inline static bool Convert(wchar_t *dst, const Size cnt, 
 				const Char *src) {
- 			return SafeStringCopy(dst, cnt, src);
+            ASSERT(dst != NULL);
+            ASSERT(src != NULL);
+ 			StringCopy(dst, src);
+            return true;
 		}
 
 		/**

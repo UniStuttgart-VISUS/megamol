@@ -286,6 +286,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\EqualFunc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Float16.cpp"
 				>
 			</File>
@@ -297,12 +301,20 @@
 				RelativePath=".\src\StorageClass.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\Vector.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\vislib\EqualFunc.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\vislib\Float16.h"
 				>
@@ -313,6 +325,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\StorageClass.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Vector.h"
 				>
 			</File>
 		</Filter>
