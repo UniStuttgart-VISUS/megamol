@@ -6,3 +6,5 @@ Christoph: Format-Methode für String
 Guido: Öffnen von Remote-Dateien in File-Wrappern vorsehen.
 Christoph: Arithmetik für Float16
 Sebastian: UserData Resources for Linux (and Windows) including AccessClasses (and Generator for Linux)
+Sebastian: InStream Interfaceklasse erweitern (SocketInStream, SshInStream, ResourceInStream, ...)
+           OutStream Interfaceklasse erweitern (SocketOutStream, SshOutStream(?), ...)
