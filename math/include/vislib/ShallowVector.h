@@ -19,7 +19,15 @@ namespace vislib {
 namespace math {
 
     /**
-
+     * This is the implementation of an AbstractVector that uses its a 
+     * user-provided memory block for its data. The user-provided memory
+     * block is interpreted as vector components. Note, that this class has
+     * the inherent problem of producing aliases. You should only use it, if you
+     * really require vector operations on memory external to the vector
+     * objects.
+     *
+     * See documentation of AbstractVector for further information about the 
+     * vector classes.
      */
     template<class T, unsigned int D, class E = EqualFunc<T> > 
     class ShallowVector : virtual public AbstractVector<T, D, E, T *> {
@@ -28,9 +36,12 @@ namespace math {
 
         /**
          * Create a new vector initialised using 'components' as data. The
-         * vector will operate on these data.
+         * vector will operate on these data. The caller is responsible that
+         * the memory designated by 'components' lives as long as the object
+         * and all its aliases exist.
          *
-         * @param components The initial vector components.
+         * @param components The initial vector memory. This must not be a NULL
+         *                   pointer.
          */
         explicit inline ShallowVector(T *components) {
             ASSERT(components != NULL);
@@ -49,6 +60,22 @@ namespace math {
         ~ShallowVector(void);
 
         /**
+         * Set a new component pointer. The vector uses from this point the
+         * memory designated by 'components' instead of the memory passed to
+         * the ctor or in previous calls to this method for its operations.
+         * The caller remains owner of the memory designated by 'components'
+         * and must ensure that it lives as long as this object and all its
+         * aliases live.
+         *
+         * @param components The new vector component memory. This must not be
+         *                   a NULL vector.
+         */
+        inline void SetComponents(T *components) {
+            ASSERT(components != NULL);
+            this->components = components.
+        }
+
+        /**
          * Assignment.
          *
          * This operation does <b>not</b> create aliases. 
@@ -58,7 +85,7 @@ namespace math {
          * @return *this
          */
         inline ShallowVector& operator =(const ShallowVector& rhs) {
-            AbstractVector::operator =(rhs);
+            AbstractVector<T, D, E, T *>::operator =(rhs);
             return *this;
         }
 
@@ -81,7 +108,7 @@ namespace math {
         template<class Tp, unsigned int Dp, class Ep, class Sp>
         inline ShallowVector& operator =(
                 const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
-            AbstractVector::operator =(rhs);
+            AbstractVector<T, D, E, T *>::operator =(rhs);
             return *this;
         }
 

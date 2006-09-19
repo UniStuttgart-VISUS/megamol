@@ -22,7 +22,27 @@ namespace vislib {
 namespace math {
 
     /**
-
+     * This is the abstract super class for all vectors used in the vislib. It
+     * serves primarily two purposes: Firstly, it prevents code duplication 
+     * between vector classes. Secondly, it permits polymorphism between vector
+     * classes.
+     * 
+     * The AbstractVector class has the following template parameters:
+     * T is the type of scalars used to build the vector of.
+     * D is the dimension of the vector.
+     * E is an equal functor that is used to compare vectors. It is intended for
+     *   floating point instantiations.
+     * S is the component storage. For vectors that do not have their own storge
+     *   (we calle these "shallow vectors"), this must be a T * pointer. For
+     *   normal (deep) vectors, this must be a static array T[D].
+     *
+     * This class cannot be instantiated as it would be unsafe lettings the user
+     * decide on the storage class.
+     *
+     * Note, that there is no virtual method in order to prevent overhead for
+     * dynamic dispatching. This is no problem as long as no method must be
+     * overridden and as long as the dtor does nothing. This is the case for 
+     * this class and its derived classes. 
      */
     template<class T, unsigned int D, class E, class S> class AbstractVector {
 
@@ -78,8 +98,8 @@ namespace math {
         T Normalise(void);
 
         /**
-         * Directly access the internal pointer holding the vector components 
-         * to the caller. The object remains owner of the memory returned.
+         * Directly access the internal pointer holding the vector components.
+         * The object remains owner of the memory returned.
          *
          * @return The vector components in an array.
          */
@@ -88,8 +108,8 @@ namespace math {
         }
 
         /**
-         * Directly access the internal pointer holding the vector components 
-         * to the caller. The object remains owner of the memory returned.
+         * Directly access the internal pointer holding the vector components. 
+         * The object remains owner of the memory returned.
          *
          * @return The vector components in an array.
          */
@@ -190,7 +210,8 @@ namespace math {
          *
          * @return The sum of this and 'rhs'.
          */
-        AbstractVector operator +(const AbstractVector& rhs) const;
+        AbstractVector<T, D, E, T[D]> operator +(
+            const AbstractVector& rhs) const;
 
         /**
          * Add 'rhs' to this vector and answer the sum.
@@ -208,7 +229,8 @@ namespace math {
          *
          * @return The difference between this and 'rhs'.
          */
-        AbstractVector operator -(const AbstractVector& rhs) const;
+        AbstractVector<T, D, E, T[D]> operator -(
+            const AbstractVector& rhs) const;
 
         /**
          * Subtract 'rhs' from this vector and answer the difference.
@@ -226,7 +248,7 @@ namespace math {
          *
          * @return The result of the scalar multiplication.
          */
-        AbstractVector operator *(const T rhs) const;
+        AbstractVector<T, D, E, T[D]> operator *(const T rhs) const;
 
         /**
          * Scalar multiplication assignment operator.
@@ -244,7 +266,7 @@ namespace math {
          *
          * @return The result of the scalar division.
          */
-        AbstractVector operator /(const T rhs) const;
+        AbstractVector<T, D, E, T[D]> operator /(const T rhs) const;
 
         /**
          * Scalar division assignment operator.
@@ -262,7 +284,8 @@ namespace math {
          *
          * @return The product of this and rhs.
          */
-        AbstractVector operator *(const AbstractVector& rhs) const;
+        AbstractVector<T, D, E, T[D]> operator *(
+            const AbstractVector& rhs) const;
 
         /**
          * Multiplies 'rhs' component-wise with this vector and returns
@@ -306,8 +329,8 @@ namespace math {
         inline AbstractVector(void) {};
 
         /** 
-         * The AbstractVector components. This can be a ShallowVectorStorage or
-         * DeepVectorStorage instantiation.
+         * The vector components. This can be a T * pointer or a T[D] static
+         * array.
          */
         S components;
     };
@@ -424,6 +447,7 @@ namespace math {
     template<class T, unsigned int D, class E, class S>
     AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator =(
             const AbstractVector& rhs) {
+
         if (this != &rhs) {
             ::memcpy(this->components, rhs.components, D * sizeof(T));
         }
@@ -439,6 +463,7 @@ namespace math {
     template<class Tp, unsigned int Dp, class Ep, class Sp>
     AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator =(
             const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+
         if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
             for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
                 this->components[d] = static_cast<T>(rhs[d]);
@@ -458,6 +483,7 @@ namespace math {
     template<class T, unsigned int D, class E,  class S>
     bool AbstractVector<T, D, E, S>::operator ==(
             const AbstractVector& rhs) const {
+
         for (unsigned int d = 0; d < D; d++) {
             if (!E()(this->components[d], rhs.components[d])) {
                 return false;
@@ -509,9 +535,9 @@ namespace math {
      * AbstractVector<T, D, E, S>::operator +
      */
     template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S> AbstractVector<T, D, E, S>::operator +(
+    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator +(
             const AbstractVector& rhs) const {
-        AbstractVector<T, D, E, S> retval;
+        AbstractVector<T, D, E, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] + rhs.components[d];
@@ -540,9 +566,9 @@ namespace math {
      * AbstractVector<T, D, E, S>::operator -
      */
     template<class T, unsigned int D, class E,  class S>
-    AbstractVector<T, D, E, S> AbstractVector<T, D, E, S>::operator -(
+    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator -(
             const AbstractVector& rhs) const {
-        AbstractVector<T, D, E, S> retval;
+        AbstractVector<T, D, E, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] - rhs.components[d];
@@ -571,9 +597,9 @@ namespace math {
      * AbstractVector<T, D, E, S>::operator *
      */
     template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S> AbstractVector<T, D, E, S>::operator *(
+    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator *(
             const T rhs) const {
-        AbstractVector<T, D, E, S> retval;
+        AbstractVector<T, D, E, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] * rhs;
@@ -601,9 +627,9 @@ namespace math {
      * AbstractVector<T, D, E, S>::operator /
      */
     template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S> AbstractVector<T, D, E, S>::operator /(
+    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator /(
             const T rhs) const {
-        AbstractVector<T, D, E, S> retval;
+        AbstractVector<T, D, E, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] / rhs;
@@ -631,9 +657,9 @@ namespace math {
      * AbstractVector<T, D, E, S>::operator *
      */
     template<class T, unsigned int D, class E,  class S>
-    AbstractVector<T, D, E, S> AbstractVector<T, D, E, S>::operator *(
+    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator *(
             const AbstractVector& rhs) const {
-        AbstractVector<T, D, E, S> retval;
+        AbstractVector<T, D, E, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] * rhs.components[d];

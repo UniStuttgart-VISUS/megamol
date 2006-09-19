@@ -1,18 +1,18 @@
 /*
- * Vector.h
+ * Point.h
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_VECTOR_H_INCLUDED
-#define VISLIB_VECTOR_H_INCLUDED
+#ifndef VISLIB_POINT_H_INCLUDED
+#define VISLIB_POINT_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
 
-#include "vislib/AbstractVector.h"
+#include "vislib/AbstractPoint.h"
 #include "vislib/EqualFunc.h"
 
 
@@ -20,32 +20,32 @@ namespace vislib {
 namespace math {
 
     /**
-     * This is the implementation of an AbstractVector that uses its own memory 
+     * This is the implementation of an AbstractPoint that uses its own memory 
      * in a statically allocated array of dimension D. Usually, you want to use
-     * this vector class or derived classes.
+     * this point class or derived classes.
      *
-     * See documentation of AbstractVector for further information about the 
+     * See documentation of AbstractPoint for further information about the 
      * vector classes.
      */
     template<class T, unsigned int D, class E = EqualFunc<T> > 
-    class Vector : virtual public AbstractVector<T, D, E, T[D]> {
+    class Point : virtual public AbstractPoint<T, D, E, T[D]> {
 
     public:
 
         /**
-         * Create a null vector.
+         * Create a point in the coordinate origin.
          */
-        Vector(void);
+        Point(void);
 
         /**
-         * Create a new vector initialised with 'components'. 'components' must
+         * Create a new point initialised with 'coordinates'. 'coordinates' must
          * not be a NULL pointer. 
          *
-         * @param components The initial vector components.
+         * @param coordinates The initial coordinates of the point.
          */
-        explicit inline Vector(const T *components) {
-            ASSERT(components != NULL);
-            ::memcpy(this->components, components, D * sizeof(T));
+        explicit inline Point(const T *coordinates) {
+            ASSERT(coordinates != NULL);
+            ::memcpy(this->coordinates, coordinates, D * sizeof(T));
         }
 
         /**
@@ -53,21 +53,21 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */
-        inline Vector(const Vector& rhs) {
-            ::memcpy(this->components, rhs.components, D * sizeof(T));
+        inline Point(const Point& rhs) {
+            ::memcpy(this->coordinates, rhs.coordinates, D * sizeof(T));
         }
 
         /**
-         * Create a copy of 'rhs'. This ctor allows for arbitrary vector to
-         * vector conversions.
+         * Create a copy of 'rhs'. This ctor allows for arbitrary point to
+         * point conversions.
          *
          * @param rhs The vector to be cloned.
          */
         template<class Tp, unsigned int Dp, class Ep, class Sp>
-        Vector(const AbstractVector<Tp, Dp, Ep, Sp>& rhs);
+        Point(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs);
 
         /** Dtor. */
-        ~Vector(void);
+        ~Point(void);
 
         /**
          * Assignment.
@@ -76,13 +76,13 @@ namespace math {
          *
          * @return *this
          */
-        inline Vector& operator =(const Vector& rhs) {
-            AbstractVector<T, D, E, T[D]>::operator =(rhs);
+        inline Point& operator =(const Point& rhs) {
+            AbstractPoint::operator =(rhs);
             return *this;
         }
 
         /**
-         * Assigment for arbitrary vectors. A valid static_cast between T and Tp
+         * Assigment for arbitrary points. A valid static_cast between T and Tp
          * is a precondition for instantiating this template.
          *
          * This operation does <b>not</b> create aliases. 
@@ -93,35 +93,38 @@ namespace math {
          * operand has higher dimension, the missing dimensions are filled with 
          * zero components.
          *
+         * Subclasses must ensure that sufficient memory for the 'coordinates'
+         * member has been allocated before calling this operator.
+         *
          * @param rhs The right hand side operand.
          *
          * @return *this
          */
         template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Vector& operator =(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
-            AbstractVector<T, D, E, T[D]>::operator =(rhs);
+        inline Point& operator =(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
+            AbstractPoint::operator =(rhs);
             return *this;
         }
     };
 
 
     /*
-     * vislib::math::Vector<T, D, E, S>::Vector
+     * vislib::math::Point<T, D, E, S>::Point
      */
     template<class T, unsigned int D, class E>
-    Vector<T, D, E>::Vector(void) {
+    Point<T, D, E>::Point(void) {
         for (unsigned int d = 0; d < D; d++) {
-            this->components[d] = static_cast<T>(0);
+            this->coordinates[d] = static_cast<T>(0);
         }
     }
 
 
     /*
-     * vislib::math::Vector<T, D, E, S>::Vector
+     * vislib::math::Point<T, D, E, S>::Point
      */
     template<class T, unsigned int D, class E>
     template<class Tp, unsigned int Dp, class Ep, class Sp>
-    Vector<T, D, E>::Vector(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+    Point<T, D, E>::Point(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
         for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
             this->components[d] = static_cast<T>(rhs[d]);
         }
@@ -132,13 +135,13 @@ namespace math {
 
 
     /*
-     * vislib::math::Vector<T, D, E>::~Vector
+     * vislib::math::Point<T, D, E>::~Point
      */
     template<class T, unsigned int D, class E>
-    Vector<T, D, E>::~Vector(void) {
+    Point<T, D, E>::~Point(void) {
     }
 
 } /* end namespace math */
 } /* end namespace vislib */
 
-#endif /* VISLIB_VECTOR_H_INCLUDED */
+#endif /* VISLIB_POINT_H_INCLUDED */

@@ -33,13 +33,14 @@ namespace math {
 
         /**
          * Create a new vector initialised using 'components' as data. The
-         * vector will operate on these data.
+         * vector will operate on these data. The caller is responsible that
+         * the memory designated by 'components' lives as long as the object
+         * and all its aliases exist.
          *
-         * @param components The initial vector components.
+         * @param components The initial vector memory. This must not be a NULL
+         *                   pointer.
          */
-        explicit inline ShallowVector3D(T *components) {
-            this->components = components;
-        }
+        explicit inline ShallowVector3D(T *components) : Super(components) {}
 
         /**
          * Clone 'rhs'. This operation will create an alias of 'rhs'.
@@ -47,7 +48,6 @@ namespace math {
          * @param rhs The object to be cloned.
          */
         inline ShallowVector3D(const ShallowVector3D& rhs) : Super(rhs) {}
-
 
         /** Dtor. */
         virtual ~ShallowVector3D(void);

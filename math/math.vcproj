@@ -286,6 +286,18 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractPoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractPoint2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractPoint3D.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractVector.cpp"
 				>
 			</File>
@@ -307,6 +319,18 @@
 			</File>
 			<File
 				RelativePath=".\src\mathfunctions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Point.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Point2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Point3D.cpp"
 				>
 			</File>
 			<File
@@ -340,6 +364,18 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\AbstractPoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractPoint2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractPoint3D.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractVector.h"
 				>
 			</File>
@@ -365,6 +401,18 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Plane.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Point.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Point2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Point3D.h"
 				>
 			</File>
 			<File

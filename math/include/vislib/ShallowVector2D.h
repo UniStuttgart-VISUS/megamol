@@ -33,9 +33,12 @@ namespace math {
 
         /**
          * Create a new vector initialised using 'components' as data. The
-         * vector will operate on these data.
+         * vector will operate on these data. The caller is responsible that
+         * the memory designated by 'components' lives as long as the object
+         * and all its aliases exist.
          *
-         * @param components The initial vector components.
+         * @param components The initial vector memory. This must not be a NULL
+         *                   pointer.
          */
         explicit inline ShallowVector2D(T *components) : Super(components) {}
 
