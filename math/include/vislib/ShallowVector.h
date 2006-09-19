@@ -1,12 +1,12 @@
 /*
- * Vector.h
+ * ShallowVector.h
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_VECTOR_H_INCLUDED
-#define VISLIB_VECTOR_H_INCLUDED
+#ifndef VISLIB_SHALLOWVECTOR_H_INCLUDED
+#define VISLIB_SHALLOWVECTOR_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -22,57 +22,42 @@ namespace math {
 
      */
     template<class T, unsigned int D, class E = EqualFunc<T> > 
-    class Vector : public AbstractVector<T, D, E, T[D]> {
+    class ShallowVector : public AbstractVector<T, D, E, T *> {
 
     public:
 
         /**
-         * Create a null vector.
-         */
-        inline Vector(void) {
-            ::memset(this->components, 0, D * sizeof(T));
-        }
-
-        /**
-         * Create a new vector initialised with 'components'. 'components' must
-         * not be a NULL pointer. 
+         * Create a new vector initialised using 'components' as data. The
+         * vector will operate on these data.
          *
          * @param components The initial vector components.
          */
-        explicit inline Vector(const T *components) {
+        explicit inline ShallowVector(const T *components) 
+                : components(components) {
             ASSERT(components != NULL);
-            ::memcpy(this->components, components, D * sizeof(T));
         }
 
         /**
-         * Clone 'rhs'.
+         * Clone 'rhs'. This operation will create an alias of 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline Vector(const Vector& rhs) {
-            ::memcpy(this->components, rhs.components, D * sizeof(T));
-        }
-
-        /**
-         * Create a copy of 'vector'. This ctor allows for arbitrary vector to
-         * vector conversions.
-         *
-         * @param rhs The vector to be cloned.
-         */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        Vector(const AbstractVector<Tp, Dp, Ep, Sp>& rhs);
+        inline ShallowVector(const ShallowVector& rhs) 
+            : components(rhs.components) {}
 
         /** Dtor. */
-        ~Vector(void);
+        ~ShallowVector(void);
 
         /**
          * Assignment.
+         *
+         * This operation does <b>not</b> create aliases. 
          *
          * @param rhs The right hand side operand.
          *
          * @return *this
          */
-        inline Vector& operator =(const Vector& rhs) {
+        inline ShallowVector& operator =(const ShallowVector& rhs) {
             return AbstractVector::operator =(rhs);
         }
 
@@ -93,36 +78,30 @@ namespace math {
          * @return *this
          */
         template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Vector& operator =(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+        inline ShallowVector& operator =(
+                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
             AbstractVector::operator =(rhs);
             return *this;
         }
+
+    private:
+
+        /** 
+         * Forbidden ctor. A default ctor would be inherently unsafe for
+         * shallow vectors.
+         */
+        inline ShallowVector(void) {}
     };
 
 
     /*
-     * Vector<T, D, E, S>::Vector
+     * ShallowVector<T, D, E>::~ShallowVector
      */
     template<class T, unsigned int D, class E>
-    template<class Tp, unsigned int Dp, class Ep, class Sp>
-    Vector<T, D, E>::Vector(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
-        for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
-            this->components[d] = static_cast<T>(rhs[d]);
-        }
-        for (unsigned int d = Dp; d < D; d++) {
-            this->components[d] = static_cast<T>(0);
-        }
-    }
-
-
-    /*
-     * Vector<T, D, E>::~Vector
-     */
-    template<class T, unsigned int D, class E>
-    Vector<T, D, E>::~Vector(void) {
+    ShallowVector<T, D, E>::~ShallowVector(void) {
     }
 
 } /* end namespace math */
 } /* end namespace vislib */
 
-#endif /* VISLIB_VECTOR_H_INCLUDED */
+#endif /* VISLIB_SHALLOWVECTOR_H_INCLUDED */

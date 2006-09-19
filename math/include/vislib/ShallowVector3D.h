@@ -1,11 +1,11 @@
 /*
- * Vector3D.h  14.09.2006 (mueller)
+ * ShallowVector3D.h  14.09.2006 (mueller)
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_VECTOR3D_H_INCLUDED
-#define VISLIB_VECTOR3D_H_INCLUDED
+#ifndef VISLIB_SHALLOWVECTOR3D_H_INCLUDED
+#define VISLIB_SHALLOWVECTOR3D_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -22,58 +22,32 @@ namespace math {
      * remarks.
      */
     template<class T, class E = EqualFunc<T> > 
-    class Vector3D : public AbstractVector3D<T, E, T[3]> {
+    class ShallowVector3D : public AbstractVector3D<T, E, T *> {
 
     public:
 
         /** A typedef for the super class. */
-        typedef AbstractVector3D<T, E, T[3]> Super;
+        typedef AbstractVector3D<T, E, T *> Super;
 
         /**
-         * Create a null vector.
-         */
-        inline Vector3D(void) : Super() {}
-
-        /**
-         * Create a new vector initialised with 'components'. 'components' must
-         * not be a NULL pointer. 
+         * Create a new vector initialised using 'components' as data. The
+         * vector will operate on these data.
          *
          * @param components The initial vector components.
          */
-        explicit inline Vector3D(const T *components) : Super(components) {}
+        explicit inline ShallowVector3D(const T *components) 
+            : Super(components) {}
 
         /**
-         * Clone 'rhs'.
+         * Clone 'rhs'. This operation will create an alias of 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline Vector3D(const Vector3D& rhs) : Super(rhs) {}
+        inline ShallowVector3D(const ShallowVector3D& rhs) : Super(rhs) {}
 
-        /**
-         * Create a copy of 'vector'. This ctor allows for arbitrary vector to
-         * vector conversions.
-         *
-         * @param rhs The vector to be cloned.
-         */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Vector3D(const AbstractVector<Tp, Dp, Ep, Sp>& rhs)
-            : Super(rhs) {}
-
-        /**
-         * Create a new vector.
-         *
-         * @param x The x-component of the new vector.
-         * @param y The y-component of the new vector.
-         * @param z The z-component fo the new vector.
-         */
-        inline Vector3D(const T& x, const T& y, const T& z) {
-            this->components[0] = x;
-            this->components[1] = y;
-            this->components[2] = z;
-        }
 
         /** Dtor. */
-        virtual ~Vector3D(void);
+        virtual ~ShallowVector3D(void);
 
         /**
          * Assignment.
@@ -82,7 +56,7 @@ namespace math {
          *
          * @return *this
          */
-        inline Vector3D& operator =(const Vector3D& rhs) {
+        inline ShallowVector3D& operator =(const ShallowVector3D& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -105,21 +79,30 @@ namespace math {
          */
         template<class Tp, unsigned int Dp, class Ep, 
             template<class, unsigned int> class Sp>
-        inline Vector3D& operator =(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+        inline ShallowVector3D& operator =(
+                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
+
+    private:
+
+        /** 
+         * Forbidden ctor. A default ctor would be inherently unsafe for
+         * shallow vectors.
+         */
+        inline ShallowVector3D(void) {}
     };
 
 
     /*
-     * vislib::math::Vector3D<T, E, S>::~Vector3D
+     * vislib::math::ShallowVector3D<T, E, S>::~ShallowVector3D
      */
     template<class T, class E>
-    Vector3D<T, E>::~Vector3D(void) {
+    ShallowVector3D<T, E>::~ShallowVector3D(void) {
     }
 
 } /* end namespace math */
 } /* end namespace vislib */
 
-#endif /* VISLIB_VECTOR3D_H_INCLUDED */
+#endif /* VISLIB_SHALLOWVECTOR3D_H_INCLUDED */

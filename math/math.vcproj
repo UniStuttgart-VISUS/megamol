@@ -286,6 +286,18 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractVector.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractVector2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractVector3D.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\EqualFunc.cpp"
 				>
 			</File>
@@ -298,7 +310,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\StorageClass.cpp"
+				RelativePath=".\src\ShallowVector.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ShallowVector2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ShallowVector3D.cpp"
 				>
 			</File>
 			<File
@@ -320,6 +340,18 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\AbstractVector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractVector2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractVector3D.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\EqualFunc.h"
 				>
 			</File>
@@ -332,7 +364,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\StorageClass.h"
+				RelativePath=".\include\vislib\Plane.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowVector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowVector2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowVector3D.h"
 				>
 			</File>
 			<File

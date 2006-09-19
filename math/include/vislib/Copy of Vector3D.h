@@ -18,7 +18,7 @@ namespace vislib {
 namespace math {
 
     /**
-     * Specialisation for a three-dimensional vector. See Vector for additional
+     * Specialisation for a two-dimensional vector. See Vector for additional
      * remarks.
      */
     template<class T, class E = EqualFunc<T> > 
