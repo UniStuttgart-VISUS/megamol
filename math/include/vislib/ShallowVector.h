@@ -58,7 +58,8 @@ namespace math {
          * @return *this
          */
         inline ShallowVector& operator =(const ShallowVector& rhs) {
-            return AbstractVector::operator =(rhs);
+            AbstractVector::operator =(rhs);
+            return *this;
         }
 
         /**

@@ -71,7 +71,8 @@ namespace math {
          * @return *this
          */
         inline Vector& operator =(const Vector& rhs) {
-            return AbstractVector::operator =(rhs);
+            AbstractVector::operator =(rhs);
+            return *this;
         }
 
         /**

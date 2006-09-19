@@ -36,6 +36,24 @@ void TestVector(void) {
     ::AssertEqual("v1.MaxNorm() == 0", v1.MaxNorm(), 0.0f);
     ::AssertTrue("v1.IsNull()", v1.IsNull());
 
+    sv1 = v1;
+    ::AssertTrue("Deep to shallow assignment", (v1 == sv1));
+    ::AssertEqual("sv1[0] == 0", sv1[0], 0.0f);
+    ::AssertEqual("sv1[1] == 0", sv1[1], 0.0f);
+    ::AssertEqual("sv1.GetX() == 0", sv1.GetX(), 0.0f);
+    ::AssertEqual("sv1.GetY() == 0", sv1.GetY(), 0.0f);
+    ::AssertEqual("sv1.X() == 0", sv1.X(), 0.0f);
+    ::AssertEqual("sv1.Y() == 0", sv1.Y(), 0.0f);
+
+    sv2 = sv1;
+    ::AssertEqual("Shallow to shallow assignment", sv1, sv2);
+    ::AssertEqual("sv2[0] == 0", sv2[0], 0.0f);
+    ::AssertEqual("sv2[1] == 0", sv2[1], 0.0f);
+    ::AssertEqual("sv2.GetX() == 0", sv2.GetX(), 0.0f);
+    ::AssertEqual("sv2.GetY() == 0", sv2.GetY(), 0.0f);
+    ::AssertEqual("sv2.X() == 0", sv2.X(), 0.0f);
+    ::AssertEqual("sv1.Y() == 0", sv2.Y(), 0.0f);
+
     v1.SetX(2.0f);
     ::AssertEqual("v1[0] == 2", v1[0], 2.0f);
     ::AssertEqual("v1[1] == 0", v1[1], 0.0f);

@@ -78,6 +78,26 @@ namespace math {
         T Normalise(void);
 
         /**
+         * Directly access the internal pointer holding the vector components 
+         * to the caller. The object remains owner of the memory returned.
+         *
+         * @return The vector components in an array.
+         */
+        inline T * PeekComponents(void) {
+            return this->components;
+        }
+
+        /**
+         * Directly access the internal pointer holding the vector components 
+         * to the caller. The object remains owner of the memory returned.
+         *
+         * @return The vector components in an array.
+         */
+        inline const T *PeekComponents(void) const {
+            return this->components;
+        }
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand side operand.
@@ -119,6 +139,19 @@ namespace math {
         bool operator ==(const AbstractVector& rhs) const;
 
         /**
+         * Test for equality of arbitrary vector types. This operation uses the
+         * E equal functor of the left hand side operand. The Ep functor of the
+         * right hand side operand is ignored. Note that vectors with different
+         * dimensions are never equal.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @param true, if 'rhs' and this vector are equal, false otherwise.
+         */
+        template<class Tp, unsigned int Dp, class Ep, class Sp>
+        bool operator ==(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) const;
+
+        /**
          * Test for inequality.
          *
          * @param rhs The right hand side operand.
@@ -126,6 +159,20 @@ namespace math {
          * @param true, if 'rhs' and this vector are not equal, false otherwise.
          */
         inline bool operator !=(const AbstractVector& rhs) const {
+            return !(*this == rhs);
+        }
+
+        /**
+         * Test for inequality of arbitrary vectors. The operator == for further
+         * details.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @param true, if 'rhs' and this vector are not equal, false otherwise.
+         */
+        template<class Tp, unsigned int Dp, class Ep, class Sp>
+        inline bool operator !=(
+                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) const {
             return !(*this == rhs);
         }
 
@@ -250,28 +297,6 @@ namespace math {
          * @throws OutOfRangeException, If 'i' is not within [0, D[.
          */
         const T& operator [](const int i) const;
-
-        /**
-         * Cast to a T array. This operator exposes the internal pointer
-         * holding the vector components to the caller. The object remains
-         * owner of the memory returned.
-         *
-         * @return The vector components in an array.
-         */
-        inline operator T *(void) {
-            return this->components;
-        }
-
-        /**
-         * Cast to a T array. This operator exposes the internal array
-         * holding the vector components to the caller. The object remains
-         * owner of the memory returned.
-         *
-         * @return The vector components in an array.
-         */
-        inline operator const T *(void) const {
-            return this->components;
-        }
 
     protected:
 
@@ -400,7 +425,7 @@ namespace math {
     AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator =(
             const AbstractVector& rhs) {
         if (this != &rhs) {
-            ::memcpy(this->components, this->components, D * sizeof(T));
+            ::memcpy(this->components, rhs.components, D * sizeof(T));
         }
 
         return *this;
@@ -414,7 +439,7 @@ namespace math {
     template<class Tp, unsigned int Dp, class Ep, class Sp>
     AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator =(
             const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
-        if (this != &rhs) {
+        if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
             for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
                 this->components[d] = static_cast<T>(rhs[d]);
             }
@@ -435,6 +460,27 @@ namespace math {
             const AbstractVector& rhs) const {
         for (unsigned int d = 0; d < D; d++) {
             if (!E()(this->components[d], rhs.components[d])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    /*
+     * vislib::math::AbstractVector<T, D, E, S>::operator ==
+     */
+    template<class T, unsigned int D, class E,  class S>
+    template<class Tp, unsigned int Dp, class Ep, class Sp>
+    bool AbstractVector<T, D, E, S>::operator ==(
+            const AbstractVector<Tp, Dp, Ep, Sp>& rhs) const {
+        if (D != Dp) {
+            return false;
+        }
+
+        for (unsigned int d = 0; d < D; d++) {
+            if (!E()(this->components[d], static_cast<T>(components[d]))) {
                 return false;
             }
         }
