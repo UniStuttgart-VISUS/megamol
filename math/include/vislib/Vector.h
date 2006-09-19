@@ -22,16 +22,14 @@ namespace math {
 
      */
     template<class T, unsigned int D, class E = EqualFunc<T> > 
-    class Vector : public AbstractVector<T, D, E, T[D]> {
+    class Vector : virtual public AbstractVector<T, D, E, T[D]> {
 
     public:
 
         /**
          * Create a null vector.
          */
-        inline Vector(void) {
-            ::memset(this->components, 0, D * sizeof(T));
-        }
+        Vector(void);
 
         /**
          * Create a new vector initialised with 'components'. 'components' must
@@ -101,7 +99,18 @@ namespace math {
 
 
     /*
-     * Vector<T, D, E, S>::Vector
+     * vislib::math::Vector<T, D, E, S>::Vector
+     */
+    template<class T, unsigned int D, class E>
+    Vector<T, D, E>::Vector(void) {
+        for (unsigned int d = 0; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Vector<T, D, E, S>::Vector
      */
     template<class T, unsigned int D, class E>
     template<class Tp, unsigned int Dp, class Ep, class Sp>
@@ -116,7 +125,7 @@ namespace math {
 
 
     /*
-     * Vector<T, D, E>::~Vector
+     * vislib::math::Vector<T, D, E>::~Vector
      */
     template<class T, unsigned int D, class E>
     Vector<T, D, E>::~Vector(void) {

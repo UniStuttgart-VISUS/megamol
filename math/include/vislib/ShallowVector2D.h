@@ -12,6 +12,7 @@
 
 
 #include "vislib/AbstractVector2D.h"
+#include "vislib/ShallowVector.h"
 
 
 namespace vislib {
@@ -22,12 +23,13 @@ namespace math {
      * remarks.
      */
     template<class T, class E = EqualFunc<T> > 
-    class ShallowVector2D : public AbstractVector2D<T, E, T *> {
+    class ShallowVector2D : public AbstractVector2D<T, E, T *>, 
+            public ShallowVector<T, 2, E> {
 
     public:
 
-        /** A typedef for the super class. */
-        typedef AbstractVector2D<T, E, T *> Super;
+        /** A typedef for the super class having the storage related info. */
+        typedef ShallowVector<T, 2, E> Super;
 
         /**
          * Create a new vector initialised using 'components' as data. The
@@ -35,7 +37,7 @@ namespace math {
          *
          * @param components The initial vector components.
          */
-        explicit inline ShallowVector2D(const T *components) : Super(components) {}
+        explicit inline ShallowVector2D(T *components) : Super(components) {}
 
         /**
          * Clone 'rhs'. This operation will create an alias of 'rhs'.

@@ -22,7 +22,7 @@ namespace math {
      * additional remarks.
      */
     template<class T, class E, class S> 
-    class AbstractVector2D : public AbstractVector<T, 2, E, S> {
+    class AbstractVector2D : virtual public AbstractVector<T, 2, E, S> {
 
     public:
 
@@ -124,9 +124,9 @@ namespace math {
     protected:
 
         /**
-         * Disallow instances of this class. This ctor does nothing!
+         * Disallow instances of this class.
          */
-        inline AbstractVector2D(void) {};
+        inline AbstractVector2D(void) : AbstractVector<T, 2, E, S>() {};
 
     };
 

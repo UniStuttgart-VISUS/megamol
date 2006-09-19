@@ -12,6 +12,7 @@
 
 
 #include "vislib/AbstractVector2D.h"
+#include "vislib/Vector.h"
 
 
 namespace vislib {
@@ -22,12 +23,13 @@ namespace math {
      * remarks.
      */
     template<class T, class E = EqualFunc<T> > 
-    class Vector2D : public AbstractVector2D<T, E, T[2]> {
+    class Vector2D : public AbstractVector2D<T, E, T[2]>, 
+            public Vector<T, 2, E> {
 
     public:
 
-        /** A typedef for the super class. */
-        typedef AbstractVector2D<T, E, T[2]> Super;
+        /** A typedef for the super class having the storage related info. */
+        typedef Vector<T, 2, E> Super;
 
         /**
          * Create a null vector.
@@ -71,7 +73,7 @@ namespace math {
         }
 
         /** Dtor. */
-        virtual ~Vector2D(void);
+        ~Vector2D(void);
 
         /**
          * Assignment.
@@ -108,7 +110,6 @@ namespace math {
             return *this;
         }
     };
-
 
     /*
      * vislib::math::Vector2D<T, E, S>::~Vector2D

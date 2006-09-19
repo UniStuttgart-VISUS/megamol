@@ -12,6 +12,7 @@
 
 
 #include "vislib/AbstractVector3D.h"
+#include "vislib/Vector.h"
 
 
 namespace vislib {
@@ -22,12 +23,13 @@ namespace math {
      * remarks.
      */
     template<class T, class E = EqualFunc<T> > 
-    class Vector3D : public AbstractVector3D<T, E, T[3]> {
+    class Vector3D : public AbstractVector3D<T, E, T[3]>, 
+            public Vector<T, 3, E> {
 
     public:
 
-        /** A typedef for the super class. */
-        typedef AbstractVector3D<T, E, T[3]> Super;
+        /** A typedef for the super class having the storage related info. */
+        typedef Vector<T, 3, E> Super;
 
         /**
          * Create a null vector.
@@ -73,7 +75,7 @@ namespace math {
         }
 
         /** Dtor. */
-        virtual ~Vector3D(void);
+        ~Vector3D(void);
 
         /**
          * Assignment.

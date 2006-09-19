@@ -22,7 +22,7 @@ namespace math {
 
      */
     template<class T, unsigned int D, class E = EqualFunc<T> > 
-    class ShallowVector : public AbstractVector<T, D, E, T *> {
+    class ShallowVector : virtual public AbstractVector<T, D, E, T *> {
 
     public:
 
@@ -32,9 +32,9 @@ namespace math {
          *
          * @param components The initial vector components.
          */
-        explicit inline ShallowVector(const T *components) 
-                : components(components) {
+        explicit inline ShallowVector(T *components) {
             ASSERT(components != NULL);
+            this->components = components;
         }
 
         /**
