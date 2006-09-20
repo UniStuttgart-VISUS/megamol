@@ -24,13 +24,13 @@ namespace math {
      *
      * @author Christoph Mueller
      */
-    template<class T, class E = EqualFunc<T> >
-    class Point3D : public AbstractPoint3D<T, E, T[3]>, public Point<T, 3, E> {
+    template<class T >
+    class Point3D : public AbstractPoint3D<T, T[3]>, public Point<T, 3> {
 
     public:
 
         /** A typedef for the super class having the storage related info. */
-        typedef Vector<T, 3, E> Super;
+        typedef Vector<T, 3> Super;
 
         /** 
          * Create a point in the origin of the coordinate system. 
@@ -64,8 +64,8 @@ namespace math {
          *
          * @param posVec The position vector of the point.
          */
-        template<class Tp, class Ep, class Sp>
-        inline explicit Point3D(const AbstractVector<Tp, 3, Ep, Sp>& posVec) 
+        template<class Tp, class Sp>
+        inline explicit Point3D(const AbstractVector<Tp, 3, Sp>& posVec) 
             : Super(posVec) {}
 
         /**
@@ -82,8 +82,8 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */        
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Point3D(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) : Super(rhs) {}
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point3D(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super(rhs) {}
 
         /** Dtor. */
         ~Point3D(void);
@@ -120,18 +120,18 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Point3D& operator =(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point3D& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
     };
 
     /*
-     * vislib::math::Point3D::~Point3D
+     * vislib::math::Point3D<T>::~Point3D
      */
-    template<class T, class E>
-    virtual Point3D<T, E>::~Point3D(void) {
+    template<class T>
+    virtual Point3D<T>::~Point3D(void) {
     }
 
 } /* end namespace math */

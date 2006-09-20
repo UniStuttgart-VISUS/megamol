@@ -13,7 +13,6 @@
 
 
 #include "vislib/AbstractVector.h"
-#include "vislib/EqualFunc.h"
 
 
 namespace vislib {
@@ -27,8 +26,8 @@ namespace math {
      * See documentation of AbstractVector for further information about the 
      * vector classes.
      */
-    template<class T, unsigned int D, class E = EqualFunc<T> > 
-    class Vector : virtual public AbstractVector<T, D, E, T[D]> {
+    template<class T, unsigned int D> 
+    class Vector : virtual public AbstractVector<T, D, T[D]> {
 
     public:
 
@@ -63,8 +62,8 @@ namespace math {
          *
          * @param rhs The vector to be cloned.
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        Vector(const AbstractVector<Tp, Dp, Ep, Sp>& rhs);
+        template<class Tp, unsigned int Dp, class Sp>
+        Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
 
         /** Dtor. */
         ~Vector(void);
@@ -77,7 +76,7 @@ namespace math {
          * @return *this
          */
         inline Vector& operator =(const Vector& rhs) {
-            AbstractVector<T, D, E, T[D]>::operator =(rhs);
+            AbstractVector<T, D, T[D]>::operator =(rhs);
             return *this;
         }
 
@@ -97,19 +96,19 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Vector& operator =(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
-            AbstractVector<T, D, E, T[D]>::operator =(rhs);
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Vector& operator =(const AbstractVector<Tp, Dp, Sp>& rhs) {
+            AbstractVector<T, D, T[D]>::operator =(rhs);
             return *this;
         }
     };
 
 
     /*
-     * vislib::math::Vector<T, D, E, S>::Vector
+     * vislib::math::Vector<T, D>::Vector
      */
-    template<class T, unsigned int D, class E>
-    Vector<T, D, E>::Vector(void) {
+    template<class T, unsigned int D>
+    Vector<T, D>::Vector(void) {
         for (unsigned int d = 0; d < D; d++) {
             this->components[d] = static_cast<T>(0);
         }
@@ -117,11 +116,11 @@ namespace math {
 
 
     /*
-     * vislib::math::Vector<T, D, E, S>::Vector
+     * vislib::math::Vector<T, D>::Vector
      */
-    template<class T, unsigned int D, class E>
-    template<class Tp, unsigned int Dp, class Ep, class Sp>
-    Vector<T, D, E>::Vector(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+    template<class T, unsigned int D>
+    template<class Tp, unsigned int Dp, class Sp>
+    Vector<T, D>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) {
         for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
             this->components[d] = static_cast<T>(rhs[d]);
         }
@@ -132,10 +131,10 @@ namespace math {
 
 
     /*
-     * vislib::math::Vector<T, D, E>::~Vector
+     * vislib::math::Vector<T, D>::~Vector
      */
-    template<class T, unsigned int D, class E>
-    Vector<T, D, E>::~Vector(void) {
+    template<class T, unsigned int D>
+    Vector<T, D>::~Vector(void) {
     }
 
 } /* end namespace math */

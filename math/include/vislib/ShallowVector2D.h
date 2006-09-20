@@ -22,14 +22,14 @@ namespace math {
      * Specialisation for a two-dimensional vector. See Vector for additional
      * remarks.
      */
-    template<class T, class E = EqualFunc<T> > 
-    class ShallowVector2D : public AbstractVector2D<T, E, T *>, 
-            public ShallowVector<T, 2, E> {
+    template<class T> 
+    class ShallowVector2D : public AbstractVector2D<T, T *>, 
+            public ShallowVector<T, 2> {
 
     public:
 
         /** A typedef for the super class having the storage related info. */
-        typedef ShallowVector<T, 2, E> Super;
+        typedef ShallowVector<T, 2> Super;
 
         /**
          * Create a new vector initialised using 'components' as data. The
@@ -82,10 +82,9 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, 
-            template<class, unsigned int> class Sp>
+        template<class Tp, unsigned int Dp, class Sp>
         inline ShallowVector2D& operator =(
-                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+                const AbstractVector<Tp, Dp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -101,10 +100,10 @@ namespace math {
 
 
     /*
-     * vislib::math::ShallowVector2D<T, E, S>::~ShallowVector2D
+     * vislib::math::ShallowVector2D<T>::~ShallowVector2D
      */
-    template<class T, class E>
-    ShallowVector2D<T, E>::~ShallowVector2D(void) {
+    template<class T>
+    ShallowVector2D<T>::~ShallowVector2D(void) {
     }
 
 } /* end namespace math */

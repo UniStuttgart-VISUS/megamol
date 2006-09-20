@@ -310,10 +310,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\EqualFunc.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\Float16.cpp"
 				>
 			</File>
@@ -385,10 +381,6 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractVector3D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\EqualFunc.h"
 				>
 			</File>
 			<File

@@ -29,8 +29,8 @@ namespace math {
      * See documentation of AbstractVector for further information about the 
      * vector classes.
      */
-    template<class T, unsigned int D, class E = EqualFunc<T> > 
-    class ShallowVector : virtual public AbstractVector<T, D, E, T *> {
+    template<class T, unsigned int D> 
+    class ShallowVector : virtual public AbstractVector<T, D, T *> {
 
     public:
 
@@ -105,10 +105,10 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
+        template<class Tp, unsigned int Dp, class Sp>
         inline ShallowVector& operator =(
-                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
-            AbstractVector<T, D, E, T *>::operator =(rhs);
+                const AbstractVector<Tp, Dp, Sp>& rhs) {
+            AbstractVector<T, D, T *>::operator =(rhs);
             return *this;
         }
 
@@ -123,10 +123,10 @@ namespace math {
 
 
     /*
-     * ShallowVector<T, D, E>::~ShallowVector
+     * ShallowVector<T, D>::~ShallowVector
      */
-    template<class T, unsigned int D, class E>
-    ShallowVector<T, D, E>::~ShallowVector(void) {
+    template<class T, unsigned int D>
+    ShallowVector<T, D>::~ShallowVector(void) {
     }
 
 } /* end namespace math */

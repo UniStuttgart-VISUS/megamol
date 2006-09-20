@@ -13,7 +13,6 @@
 
 
 #include "vislib/AbstractPoint.h"
-#include "vislib/EqualFunc.h"
 
 
 namespace vislib {
@@ -27,8 +26,8 @@ namespace math {
      * See documentation of AbstractPoint for further information about the 
      * vector classes.
      */
-    template<class T, unsigned int D, class E = EqualFunc<T> > 
-    class Point : virtual public AbstractPoint<T, D, E, T[D]> {
+    template<class T, unsigned int D> 
+    class Point : virtual public AbstractPoint<T, D, T[D]> {
 
     public:
 
@@ -63,8 +62,8 @@ namespace math {
          *
          * @param rhs The vector to be cloned.
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        Point(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs);
+        template<class Tp, unsigned int Dp, class Sp>
+        Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
 
         /** Dtor. */
         ~Point(void);
@@ -100,8 +99,8 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Point& operator =(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
             AbstractPoint::operator =(rhs);
             return *this;
         }
@@ -109,10 +108,10 @@ namespace math {
 
 
     /*
-     * vislib::math::Point<T, D, E, S>::Point
+     * vislib::math::Point<T, D>::Point
      */
-    template<class T, unsigned int D, class E>
-    Point<T, D, E>::Point(void) {
+    template<class T, unsigned int D>
+    Point<T, D>::Point(void) {
         for (unsigned int d = 0; d < D; d++) {
             this->coordinates[d] = static_cast<T>(0);
         }
@@ -120,11 +119,11 @@ namespace math {
 
 
     /*
-     * vislib::math::Point<T, D, E, S>::Point
+     * vislib::math::Point<T, D>::Point
      */
-    template<class T, unsigned int D, class E>
-    template<class Tp, unsigned int Dp, class Ep, class Sp>
-    Point<T, D, E>::Point(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
+    template<class T, unsigned int D>
+    template<class Tp, unsigned int Dp, class Sp>
+    Point<T, D>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) {
         for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
             this->components[d] = static_cast<T>(rhs[d]);
         }
@@ -135,10 +134,10 @@ namespace math {
 
 
     /*
-     * vislib::math::Point<T, D, E>::~Point
+     * vislib::math::Point<T, D>::~Point
      */
-    template<class T, unsigned int D, class E>
-    Point<T, D, E>::~Point(void) {
+    template<class T, unsigned int D>
+    Point<T, D>::~Point(void) {
     }
 
 } /* end namespace math */

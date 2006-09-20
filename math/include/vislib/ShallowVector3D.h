@@ -22,14 +22,14 @@ namespace math {
      * Specialisation for a three-dimensional vector. See Vector for additional
      * remarks.
      */
-    template<class T, class E = EqualFunc<T> > 
-    class ShallowVector3D : public AbstractVector3D<T, E, T *>, 
-            ShallowVector<T, 3, E> {
+    template<class T> 
+    class ShallowVector3D : public AbstractVector3D<T, T *>, 
+            ShallowVector<T, 3> {
 
     public:
 
         /** A typedef for the super class. */
-        typedef ShallowVector<T, 3, E> Super;
+        typedef ShallowVector<T, 3> Super;
 
         /**
          * Create a new vector initialised using 'components' as data. The
@@ -80,10 +80,9 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, 
-            template<class, unsigned int> class Sp>
+        template<class Tp, unsigned int Dp,class Sp>
         inline ShallowVector3D& operator =(
-                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+                const AbstractVector<Tp, Dp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -99,10 +98,10 @@ namespace math {
 
 
     /*
-     * vislib::math::ShallowVector3D<T, E, S>::~ShallowVector3D
+     * vislib::math::ShallowVector3D<T>::~ShallowVector3D
      */
-    template<class T, class E>
-    ShallowVector3D<T, E>::~ShallowVector3D(void) {
+    template<class T>
+    ShallowVector3D<T>::~ShallowVector3D(void) {
     }
 
 } /* end namespace math */

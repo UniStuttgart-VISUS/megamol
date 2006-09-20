@@ -21,8 +21,8 @@ namespace math {
      * Specialisation for a two-dimensional vector. See AbstractVector for 
      * additional remarks.
      */
-    template<class T, class E, class S> 
-    class AbstractVector2D : virtual public AbstractVector<T, 2, E, S> {
+    template<class T, class S> 
+    class AbstractVector2D : virtual public AbstractVector<T, 2, S> {
 
     public:
 
@@ -91,7 +91,7 @@ namespace math {
          * @return *this
          */
         inline AbstractVector2D& operator =(const AbstractVector2D& rhs) {
-            AbstractVector<T, 2, E, S>::operator =(rhs);
+            AbstractVector<T, 2, S>::operator =(rhs);
             return *this;
         }
 
@@ -114,9 +114,9 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractVector2D& operator =(
-                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+                const AbstractVector<Tp, Dp, Sp>& rhs) {
             AbstractVector<T, 2, E, S>::operator =(rhs);
             return *this;
         }
@@ -126,16 +126,16 @@ namespace math {
         /**
          * Disallow instances of this class.
          */
-        inline AbstractVector2D(void) : AbstractVector<T, 2, E, S>() {};
+        inline AbstractVector2D(void) : AbstractVector<T, 2, S>() {};
 
     };
 
 
     /*
-     * vislib::math::AbstractVector2D<T, E, S>::~AbstractVector2D
+     * vislib::math::AbstractVector2D<T, S>::~AbstractVector2D
      */
-    template<class T, class E, class S>
-    AbstractVector2D<T, E, S>::~AbstractVector2D(void) {
+    template<class T, class S>
+    AbstractVector2D<T, S>::~AbstractVector2D(void) {
     }
 
 } /* end namespace math */

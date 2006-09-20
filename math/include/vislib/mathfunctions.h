@@ -25,7 +25,7 @@ namespace math {
     extern const float FLOAT_EPSILON;
 
     /** Epsilon value for double precision floating point comparison. */
-    extern const float DOUBLE_EPSILON;
+    extern const double DOUBLE_EPSILON;
 
     /**
      * Answer the next power of two which is greater or equal to 'n'.
@@ -69,18 +69,15 @@ namespace math {
 
 
     /**
-     * Answer whether 'm' and 'n' are nearly equal.
+     * Answer whether 'm' and 'n' are equal.
      *
-     * @param m       A floating point number.
-     * @param n       A floating point number.
-     * @param epsilon The epsilon value used for comparion. Defaults to
-     *                FLOAT_EPSILON.
+     * @param m        A number.
+     * @param n        A number.
      *
-     * @return true, if 'm' and 'n' are nearly equal, false otherwise.
+     * @return true, if 'm' and 'n' are equal, false otherwise.
      */
-    inline bool FltEqual(const float m, const float n, 
-            const float epsilon = FLOAT_EPSILON) {
-        return (::fabsf(m - n) < epsilon);
+    template<class T> inline bool IsEqual(const T m, const T n) {
+        return (m == n);
     }
 
 
@@ -89,14 +86,54 @@ namespace math {
      *
      * @param m       A floating point number.
      * @param n       A floating point number.
-     * @param epsilon The epsilon value used for comparion. Defaults to
-     *                DOUBLE_EPSILON.
+     * @param epsilon The epsilon value used for comparsion.
      *
      * @return true, if 'm' and 'n' are nearly equal, false otherwise.
      */
-    inline bool FltEqual(const double m, const double n, 
-            const double epsilon = DOUBLE_EPSILON) {
+    inline bool IsEqual(const float m, const float n, const float epsilon) {
+        return (::fabsf(m - n) < epsilon);
+    }
+
+
+    /**
+     * Answer whether 'm' and 'n' are nearly equal. This function uses the
+     * FLOAT_EPSILON constant.
+     *
+     * @param m       A floating point number.
+     * @param n       A floating point number.
+     *
+     * @return true, if 'm' and 'n' are nearly equal, false otherwise.
+     */
+    template<> inline bool IsEqual(const float m, const float n) {
+        return IsEqual(m, n, FLOAT_EPSILON);
+    }
+
+
+    /**
+     * Answer whether 'm' and 'n' are nearly equal.
+     *
+     * @param m       A floating point number.
+     * @param n       A floating point number.
+     * @param epsilon The epsilon value used for comparsion.
+     *
+     * @return true, if 'm' and 'n' are nearly equal, false otherwise.
+     */
+    inline bool IsEqual(const double m, const double n, const double epsilon) {
         return (::fabs(m - n) < epsilon);
+    }
+
+
+    /**
+     * Answer whether 'm' and 'n' are nearly equal. This function uses
+     * the DOUBLE_EPSILON constant.
+     *
+     * @param m       A floating point number.
+     * @param n       A floating point number.
+     *
+     * @return true, if 'm' and 'n' are nearly equal, false otherwise.
+     */
+    template<> inline bool IsEqual(const double m, const double n) {
+        return IsEqual(m, n, DOUBLE_EPSILON);
     }
 
 

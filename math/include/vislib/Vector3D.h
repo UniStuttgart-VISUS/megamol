@@ -22,14 +22,13 @@ namespace math {
      * Specialisation for a three-dimensional vector. See Vector for additional
      * remarks.
      */
-    template<class T, class E = EqualFunc<T> > 
-    class Vector3D : public AbstractVector3D<T, E, T[3]>, 
-            public Vector<T, 3, E> {
+    template<class T> 
+    class Vector3D : public AbstractVector3D<T, T[3]>, public Vector<T, 3> {
 
     public:
 
         /** A typedef for the super class having the storage related info. */
-        typedef Vector<T, 3, E> Super;
+        typedef Vector<T, 3> Super;
 
         /**
          * Create a null vector.
@@ -57,9 +56,8 @@ namespace math {
          *
          * @param rhs The vector to be cloned.
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Vector3D(const AbstractVector<Tp, Dp, Ep, Sp>& rhs)
-            : Super(rhs) {}
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Vector3D(const AbstractVector<Tp, Dp, Sp>& rhs) : Super(rhs) {}
 
         /**
          * Create a new vector.
@@ -105,9 +103,8 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, 
-            template<class, unsigned int> class Sp>
-        inline Vector3D& operator =(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Vector3D& operator =(const AbstractVector<Tp, Dp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -115,10 +112,9 @@ namespace math {
 
 
     /*
-     * vislib::math::Vector3D<T, E, S>::~Vector3D
+     * vislib::math::Vector3D<T>::~Vector3D
      */
-    template<class T, class E>
-    Vector3D<T, E>::~Vector3D(void) {
+    template<class T> Vector3D<T>::~Vector3D(void) {
     }
 
 } /* end namespace math */

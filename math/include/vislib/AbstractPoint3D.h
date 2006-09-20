@@ -21,8 +21,8 @@ namespace math {
      * Specialisation for a three-dimensional point. See AbstractPoint for 
      * additional remarks.
      */
-    template<class T, class E, class S> 
-    class AbstractPoint3D : virtual public AbstractPoint<T, 3, E, S> {
+    template<class T, class S> 
+    class AbstractPoint3D : virtual public AbstractPoint<T, 3, S> {
 
     public:
 
@@ -118,7 +118,7 @@ namespace math {
          * @return *this
          */
         inline AbstractPoint3D& operator =(const AbstractPoint3D& rhs) {
-            AbstractPoint<T, 3, E, S>::operator =(rhs);
+            AbstractPoint<T, 3, S>::operator =(rhs);
             return *this;
         }
 
@@ -141,10 +141,10 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractPoint3D& operator =(
-                const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
-            AbstractPoint<T, 3, E, S>::operator =(rhs);
+                const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            AbstractPoint<T, 3, S>::operator =(rhs);
             return *this;
         }
 
@@ -153,16 +153,16 @@ namespace math {
         /**
          * Disallow instances of this class. This ctor does nothing!
          */
-        inline AbstractPoint3D(void) : AbstractPoint<T, 3, E, S>() {};
+        inline AbstractPoint3D(void) : AbstractPoint<T, 3, S>() {};
 
     };
 
 
     /*
-     * vislib::math::AbstractPoint3D<T, E, S>::~AbstractPoint3D
+     * vislib::math::AbstractPoint3D<T, S>::~AbstractPoint3D
      */
-    template<class T, class E, class S>
-    AbstractPoint3D<T, E, S>::~AbstractPoint3D(void) {
+    template<class T, class S>
+    AbstractPoint3D<T, S>::~AbstractPoint3D(void) {
     }
 
 } /* end namespace math */

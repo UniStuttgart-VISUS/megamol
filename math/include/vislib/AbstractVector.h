@@ -15,6 +15,7 @@
 #include <limits>
 
 #include "vislib/assert.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 
 
@@ -30,8 +31,6 @@ namespace math {
      * The AbstractVector class has the following template parameters:
      * T is the type of scalars used to build the vector of.
      * D is the dimension of the vector.
-     * E is an equal functor that is used to compare vectors. It is intended for
-     *   floating point instantiations.
      * S is the component storage. For vectors that do not have their own storge
      *   (we calle these "shallow vectors"), this must be a T * pointer. For
      *   normal (deep) vectors, this must be a static array T[D].
@@ -44,7 +43,7 @@ namespace math {
      * overridden and as long as the dtor does nothing. This is the case for 
      * this class and its derived classes. 
      */
-    template<class T, unsigned int D, class E, class S> class AbstractVector {
+    template<class T, unsigned int D, class S> class AbstractVector {
 
     public:
 
@@ -145,8 +144,8 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        AbstractVector& operator =(const AbstractVector<Tp, Dp, Ep, Sp>& rhs);
+        template<class Tp, unsigned int Dp, class Sp>
+        AbstractVector& operator =(const AbstractVector<Tp, Dp, Sp>& rhs);
 
         /**
          * Test for equality. This operation uses the E function which the 
@@ -160,16 +159,15 @@ namespace math {
 
         /**
          * Test for equality of arbitrary vector types. This operation uses the
-         * E equal functor of the left hand side operand. The Ep functor of the
-         * right hand side operand is ignored. Note that vectors with different
-         * dimensions are never equal.
+         * IsEqual function of the left hand side operand. Note that vectors 
+         * with different dimensions are never equal.
          *
          * @param rhs The right hand side operand.
          *
          * @param true, if 'rhs' and this vector are equal, false otherwise.
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        bool operator ==(const AbstractVector<Tp, Dp, Ep, Sp>& rhs) const;
+        template<class Tp, unsigned int Dp, class Sp>
+        bool operator ==(const AbstractVector<Tp, Dp, Sp>& rhs) const;
 
         /**
          * Test for inequality.
@@ -183,16 +181,15 @@ namespace math {
         }
 
         /**
-         * Test for inequality of arbitrary vectors. The operator == for further
+         * Test for inequality of arbitrary vectors. See operator == for further
          * details.
          *
          * @param rhs The right hand side operand.
          *
          * @param true, if 'rhs' and this vector are not equal, false otherwise.
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline bool operator !=(
-                const AbstractVector<Tp, Dp, Ep, Sp>& rhs) const {
+        template<class Tp, unsigned int Dp, class Sp>
+        inline bool operator !=(const AbstractVector<Tp, Dp, Sp>& rhs) const {
             return !(*this == rhs);
         }
 
@@ -210,8 +207,7 @@ namespace math {
          *
          * @return The sum of this and 'rhs'.
          */
-        AbstractVector<T, D, E, T[D]> operator +(
-            const AbstractVector& rhs) const;
+        AbstractVector<T, D, T[D]> operator +(const AbstractVector& rhs) const;
 
         /**
          * Add 'rhs' to this vector and answer the sum.
@@ -229,8 +225,7 @@ namespace math {
          *
          * @return The difference between this and 'rhs'.
          */
-        AbstractVector<T, D, E, T[D]> operator -(
-            const AbstractVector& rhs) const;
+        AbstractVector<T, D, T[D]> operator -(const AbstractVector& rhs) const;
 
         /**
          * Subtract 'rhs' from this vector and answer the difference.
@@ -248,7 +243,7 @@ namespace math {
          *
          * @return The result of the scalar multiplication.
          */
-        AbstractVector<T, D, E, T[D]> operator *(const T rhs) const;
+        AbstractVector<T, D, T[D]> operator *(const T rhs) const;
 
         /**
          * Scalar multiplication assignment operator.
@@ -266,7 +261,7 @@ namespace math {
          *
          * @return The result of the scalar division.
          */
-        AbstractVector<T, D, E, T[D]> operator /(const T rhs) const;
+        AbstractVector<T, D, T[D]> operator /(const T rhs) const;
 
         /**
          * Scalar division assignment operator.
@@ -284,8 +279,7 @@ namespace math {
          *
          * @return The product of this and rhs.
          */
-        AbstractVector<T, D, E, T[D]> operator *(
-            const AbstractVector& rhs) const;
+        AbstractVector<T, D, T[D]> operator *(const AbstractVector& rhs) const;
 
         /**
          * Multiplies 'rhs' component-wise with this vector and returns
@@ -336,18 +330,18 @@ namespace math {
     };
 
     /*
-     * AbstractVector<T, D, E, S>::~AbstractVector
+     * AbstractVector<T, D, S>::~AbstractVector
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S>::~AbstractVector(void) {
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S>::~AbstractVector(void) {
     }
 
 
     /*
-     * AbstractVector<T, D, E, S>::Dot
+     * AbstractVector<T, D, S>::Dot
      */
-    template<class T, unsigned int D, class E, class S>
-    T AbstractVector<T, D, E, S>::Dot(const AbstractVector& rhs) const {
+    template<class T, unsigned int D, class S>
+    T AbstractVector<T, D, S>::Dot(const AbstractVector& rhs) const {
         T retval = static_cast<T>(0);
 
         for (unsigned int d = 0; d < D; d++) {
@@ -359,12 +353,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::IsNull
+     * AbstractVector<T, D, S>::IsNull
      */
-    template<class T, unsigned int D, class E,  class S>
-    bool AbstractVector<T, D, E, S>::IsNull(void) const {
+    template<class T, unsigned int D, class S>
+    bool AbstractVector<T, D, S>::IsNull(void) const {
         for (unsigned int d = 0; d < D; d++) {
-            if (!E()(this->components[d], static_cast<T>(0))) {
+            if (!IsEqual<T>(this->components[d], static_cast<T>(0))) {
                 return false;
             }
         }
@@ -375,10 +369,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::Length
+     * AbstractVector<T, D, S>::Length
      */
-    template<class T, unsigned int D, class E, class S>
-    T AbstractVector<T, D, E, S>::Length(void) const {
+    template<class T, unsigned int D, class S>
+    T AbstractVector<T, D, S>::Length(void) const {
         T retval = static_cast<T>(0);
 
         for (unsigned int d = 0; d < D; d++) {
@@ -390,10 +384,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::MaxNorm
+     * AbstractVector<T, D, S>::MaxNorm
      */
-    template<class T, unsigned int D, class E, class S>
-    T AbstractVector<T, D, E, S>::MaxNorm(void) const {
+    template<class T, unsigned int D, class S>
+    T AbstractVector<T, D, S>::MaxNorm(void) const {
 #ifdef _MSC_VER
 #pragma push_macro("min")
 #pragma push_macro("max")
@@ -420,10 +414,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::Normalise
+     * AbstractVector<T, D, S>::Normalise
      */
-    template<class T, unsigned int D, class E, class S>
-    T AbstractVector<T, D, E, S>::Normalise(void) {
+    template<class T, unsigned int D, class S>
+    T AbstractVector<T, D, S>::Normalise(void) {
         T length = this->Length();
 
         if (length != static_cast<T>(0)) {
@@ -442,10 +436,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator =
+     * AbstractVector<T, D, S>::operator =
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator =(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S>& AbstractVector<T, D, S>::operator =(
             const AbstractVector& rhs) {
 
         if (this != &rhs) {
@@ -457,12 +451,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator =
+     * AbstractVector<T, D, S>::operator =
      */
-    template<class T, unsigned int D, class E, class S>
-    template<class Tp, unsigned int Dp, class Ep, class Sp>
-    AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator =(
-            const AbstractVector<Tp, Dp, Ep, Sp>& rhs) {
+    template<class T, unsigned int D, class S>
+    template<class Tp, unsigned int Dp, class Sp>
+    AbstractVector<T, D, S>& AbstractVector<T, D, S>::operator =(
+            const AbstractVector<Tp, Dp, Sp>& rhs) {
 
         if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
             for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
@@ -478,14 +472,14 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator ==
+     * AbstractVector<T, D, S>::operator ==
      */
-    template<class T, unsigned int D, class E,  class S>
-    bool AbstractVector<T, D, E, S>::operator ==(
+    template<class T, unsigned int D, class S>
+    bool AbstractVector<T, D, S>::operator ==(
             const AbstractVector& rhs) const {
 
         for (unsigned int d = 0; d < D; d++) {
-            if (!E()(this->components[d], rhs.components[d])) {
+            if (!IsEqual<T>(this->components[d], rhs.components[d])) {
                 return false;
             }
         }
@@ -495,18 +489,18 @@ namespace math {
 
 
     /*
-     * vislib::math::AbstractVector<T, D, E, S>::operator ==
+     * vislib::math::AbstractVector<T, D, S>::operator ==
      */
-    template<class T, unsigned int D, class E,  class S>
-    template<class Tp, unsigned int Dp, class Ep, class Sp>
-    bool AbstractVector<T, D, E, S>::operator ==(
-            const AbstractVector<Tp, Dp, Ep, Sp>& rhs) const {
+    template<class T, unsigned int D, class S>
+    template<class Tp, unsigned int Dp, class Sp>
+    bool AbstractVector<T, D, S>::operator ==(
+            const AbstractVector<Tp, Dp, Sp>& rhs) const {
         if (D != Dp) {
             return false;
         }
 
         for (unsigned int d = 0; d < D; d++) {
-            if (!E()(this->components[d], static_cast<T>(components[d]))) {
+            if (!IsEqual<T>(this->components[d], rhs.components[d])) {
                 return false;
             }
         }
@@ -516,12 +510,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator -
+     * AbstractVector<T, D, S>::operator -
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S> AbstractVector<T, D, E, S>::operator -(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S> AbstractVector<T, D, S>::operator -(
             void) const {
-        AbstractVector<T, D, E, S> retval;
+        AbstractVector<T, D, S> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = -this->components[d];
@@ -532,12 +526,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator +
+     * AbstractVector<T, D, S>::operator +
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator +(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, T[D]> AbstractVector<T, D, S>::operator +(
             const AbstractVector& rhs) const {
-        AbstractVector<T, D, E, T[D]> retval;
+        AbstractVector<T, D, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] + rhs.components[d];
@@ -548,10 +542,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator +=
+     * AbstractVector<T, D, S>::operator +=
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator +=(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S>& AbstractVector<T, D, S>::operator +=(
             const AbstractVector& rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
@@ -563,12 +557,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator -
+     * AbstractVector<T, D, S>::operator -
      */
-    template<class T, unsigned int D, class E,  class S>
-    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator -(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, T[D]> AbstractVector<T, D, S>::operator -(
             const AbstractVector& rhs) const {
-        AbstractVector<T, D, E, T[D]> retval;
+        AbstractVector<T, D, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] - rhs.components[d];
@@ -579,10 +573,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator -=
+     * AbstractVector<T, D, S>::operator -=
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator -=(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S>& AbstractVector<T, D, S>::operator -=(
             const AbstractVector& rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
@@ -594,12 +588,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator *
+     * AbstractVector<T, D, S>::operator *
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator *(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, T[D]> AbstractVector<T, D, S>::operator *(
             const T rhs) const {
-        AbstractVector<T, D, E, T[D]> retval;
+        AbstractVector<T, D, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] * rhs;
@@ -610,10 +604,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator *=
+     * AbstractVector<T, D, S>::operator *=
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator *=(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S>& AbstractVector<T, D, S>::operator *=(
             const T rhs) {
         for (unsigned int d = 0; d < D; d++) {
             this->components[d] *= rhs;
@@ -624,12 +618,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator /
+     * AbstractVector<T, D, S>::operator /
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator /(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, T[D]> AbstractVector<T, D, S>::operator /(
             const T rhs) const {
-        AbstractVector<T, D, E, T[D]> retval;
+        AbstractVector<T, D, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] / rhs;
@@ -640,10 +634,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator /=
+     * AbstractVector<T, D, S>::operator /=
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator /=(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S>& AbstractVector<T, D, S>::operator /=(
             const T rhs) {
         for (unsigned int d = 0; d < D; d++) {
             this->components[d] /= rhs;
@@ -654,12 +648,12 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator *
+     * AbstractVector<T, D, S>::operator *
      */
-    template<class T, unsigned int D, class E,  class S>
-    AbstractVector<T, D, E, T[D]> AbstractVector<T, D, E, S>::operator *(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, T[D]> AbstractVector<T, D, S>::operator *(
             const AbstractVector& rhs) const {
-        AbstractVector<T, D, E, T[D]> retval;
+        AbstractVector<T, D, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.components[d] = this->components[d] * rhs.components[d];
@@ -670,10 +664,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator *=
+     * AbstractVector<T, D, S>::operator *=
      */
-    template<class T, unsigned int D, class E, class S>
-    AbstractVector<T, D, E, S>& AbstractVector<T, D, E, S>::operator *=(
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, S>& AbstractVector<T, D, S>::operator *=(
             const AbstractVector& rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
@@ -685,10 +679,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator []
+     * AbstractVector<T, D, S>::operator []
      */
-    template<class T, unsigned int D, class E, class S>
-    T& AbstractVector<T, D, E, S>::operator [](const int i) {
+    template<class T, unsigned int D, class S>
+    T& AbstractVector<T, D, S>::operator [](const int i) {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];
         } else {
@@ -698,10 +692,10 @@ namespace math {
 
 
     /*
-     * AbstractVector<T, D, E, S>::operator []
+     * AbstractVector<T, D, S>::operator []
      */
-    template<class T, unsigned int D, class E, class S>
-    const T& AbstractVector<T, D, E, S>::operator [](const int i) const {
+    template<class T, unsigned int D, class S>
+    const T& AbstractVector<T, D, S>::operator [](const int i) const {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];
         } else {

@@ -22,13 +22,13 @@ namespace math {
     /**
      * A point in two-dimensional space.
      */
-    template<class T, class E = EqualFunc<T> >
-    class Point2D : public AbstractPoint2D<T, E, T[2]>, public Point<T, 2, E> {
+    template<class T>
+    class Point2D : public AbstractPoint2D<T, T[2]>, public Point<T, 2> {
 
     public:
 
         /** A typedef for the super class having the storage related info. */
-        typedef Vector<T, 2, E> Super;
+        typedef Vector<T, 2> Super;
 
         /** 
          * Create a point in the origin of the coordinate system. 
@@ -60,8 +60,8 @@ namespace math {
          *
          * @param posVec The position vector of the point.
          */
-        template<class Tp, class Ep, class Sp>
-        inline explicit Point2D(const AbstractVector<Tp, 2, Ep, Sp>& posVec) 
+        template<class Tp, class Sp>
+        inline explicit Point2D(const AbstractVector<Tp, 2, Sp>& posVec) 
             : Super(posVec) {}
 
         /**
@@ -78,8 +78,8 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */        
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Point2D(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) : Super(rhs) {}
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point2D(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super(rhs) {}
 
         /** Dtor. */
         ~Point2D(void);
@@ -116,8 +116,8 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
-        inline Point2D& operator =(const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point2D& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -126,10 +126,10 @@ namespace math {
 
 
     /*
-     * vislib::math::Point2D::~Point2D
+     * vislib::math::Point2D<T>::~Point2D
      */
-    template<class T, class E>
-    virtual Point2D<T, E>::~Point2D(void) {
+    template<class T>
+    virtual Point2D<T>::~Point2D(void) {
     }
 
 } /* end namespace math */

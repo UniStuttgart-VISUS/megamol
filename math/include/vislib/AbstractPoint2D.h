@@ -21,8 +21,8 @@ namespace math {
      * Specialisation for a two-dimensional point. See AbstractPoint for 
      * additional remarks.
      */
-    template<class T, class E, class S> 
-    class AbstractPoint2D : virtual public AbstractPoint<T, 2, E, S> {
+    template<class T, class S> 
+    class AbstractPoint2D : virtual public AbstractPoint<T, 2, S> {
 
     public:
 
@@ -91,7 +91,7 @@ namespace math {
          * @return *this
          */
         inline AbstractPoint2D& operator =(const AbstractPoint2D& rhs) {
-            AbstractPoint<T, 2, E, S>::operator =(rhs);
+            AbstractPoint<T, 2, S>::operator =(rhs);
             return *this;
         }
 
@@ -114,10 +114,10 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, class Ep, class Sp>
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractPoint2D& operator =(
-                const AbstractPoint<Tp, Dp, Ep, Sp>& rhs) {
-            AbstractPoint<T, 2, E, S>::operator =(rhs);
+                const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            AbstractPoint<T, 2, S>::operator =(rhs);
             return *this;
         }
 
@@ -126,16 +126,16 @@ namespace math {
         /**
          * Disallow instances of this class.
          */
-        inline AbstractPoint2D(void) : AbstractPoint<T, 2, E, S>() {};
+        inline AbstractPoint2D(void) : AbstractPoint<T, 2, S>() {};
 
     };
 
 
     /*
-     * vislib::math::AbstractPoint2D<T, E, S>::~AbstractPoint2D
+     * vislib::math::AbstractPoint2D<T, S>::~AbstractPoint2D
      */
-    template<class T, class E, class S>
-    AbstractPoint2D<T, E, S>::~AbstractPoint2D(void) {
+    template<class T, class S>
+    AbstractPoint2D<T, S>::~AbstractPoint2D(void) {
     }
 
 } /* end namespace math */
