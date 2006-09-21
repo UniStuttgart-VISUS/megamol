@@ -57,6 +57,19 @@ namespace math {
         }
 
         /**
+         * Set the three components of the vector.
+         *
+         * @param x The new x-component.
+         * @param y The new y-component.
+         * @param z The new z-component.
+         */
+        inline void SetComponents(const T& x, const T& y, const T& z) {
+            this->components[0] = x;
+            this->components[1] = y;
+            this->components[2] = z;
+        }
+
+        /**
          * Set the x-component of the vector.
          *
          * @param x The new x-component.

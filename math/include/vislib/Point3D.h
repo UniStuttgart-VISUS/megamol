@@ -30,7 +30,7 @@ namespace math {
     public:
 
         /** A typedef for the super class having the storage related info. */
-        typedef Vector<T, 3> Super;
+        typedef Point<T, 3> Super;
 
         /** 
          * Create a point in the origin of the coordinate system. 
@@ -131,7 +131,7 @@ namespace math {
      * vislib::math::Point3D<T>::~Point3D
      */
     template<class T>
-    virtual Point3D<T>::~Point3D(void) {
+    Point3D<T>::~Point3D(void) {
     }
 
 } /* end namespace math */

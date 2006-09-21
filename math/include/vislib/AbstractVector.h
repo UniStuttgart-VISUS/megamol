@@ -67,6 +67,18 @@ namespace math {
         bool IsNull(void) const;
 
         /**
+         * Answer whether the rhs vector and this are parallel.
+         *
+         * If both vectors are null vectors, they are not considered to be 
+         * parallel and the the return value will be false.
+         *
+         * @return true, if both vectors are parallel, false otherwise.
+         */
+        template<class Tp, class Sp>
+        bool IsParallel(const AbstractVector<Tp, D, Sp>& rhs) const;
+
+
+        /**
          * Answer the length of the vector.
          *
          * @return The length of the vector.
@@ -365,6 +377,46 @@ namespace math {
         /* No non-null value found. */
 
         return true;
+    }
+
+
+    /*
+     * template<T, D, S>::IsParallel
+     */
+    template<class T, unsigned int D, class S>
+    template<class Tp, class Sp>
+    bool AbstractVector<T, D, S>::IsParallel(const AbstractVector<Tp, D, Sp>& rhs) const {
+        T factor; // this = factor * rhs
+        bool inited = false; // if factor is initialized
+
+        for (unsigned int d = 0; d < D; d++) {
+
+            if (IsEqual<T>(this->components[d], static_cast<T>(0))) {
+                // compare component of rhs in type of lhs
+                if (!IsEqual<T>(rhs.components[d], static_cast<T>(0))) { 
+                    return false; // would yield to a factor of zero
+                }
+                // both zero, so go on.
+
+            } else {
+                // compare component of rhs in type of lhs
+                if (IsEqual<T>(rhs.components[d], static_cast<T>(0))) {
+                    return false; // would yield to a factor of infinity
+                } else {
+                    // both not zero, check if factor is const over all components
+                    if (inited) {
+                        if (!IsEqual<T>(factor, this->components[d] / static_cast<T>(rhs.components[d]))) {
+                            return false;
+                        }
+                    } else {
+                        factor = this->components[d] / static_cast<T>(rhs.components[d]);
+                    }
+
+                }
+            }
+        }
+
+        return inited;
     }
 
 

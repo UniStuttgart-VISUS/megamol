@@ -8,7 +8,7 @@
 
 TargetName := vislibtest
 
-IncludeDir := ./include ../base/include ../sys/include ../math/include
+IncludeDir := ./include ../base/include ../sys/include ../math/include ../graphics/include
 InputDir := ./
 
 
@@ -20,7 +20,7 @@ OutName := vislibtest
 CPPFLAGS := -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lvislibmath32d -lvislibnet32d -lvislibsys32d -lvislibbase32d
+LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread 
 
 ###############################################################################
 
@@ -31,9 +31,11 @@ ifeq ($(PLATFORM), x86_64)
 	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
+	LDFLAGS += -lvislibmath64d -lvislibnet64d -lvislibsys64d -lvislibbase64d -lvislibgraphics64d
 else
 	IntDir := Lin32
 	OutDir := ../Lin32
+	LDFLAGS += -lvislibmath32 -lvislibnet32 -lvislibsys32 -lvislibbase32 -lvislibgraphics32
 endif
 
 # Append the include directories to the flags:
