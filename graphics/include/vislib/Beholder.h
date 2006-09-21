@@ -20,7 +20,7 @@ namespace vislib {
 namespace graphics {
 
     /**
-     * class modelling a scene beholder
+     * class modelling a 3d scene beholder
      */
     template<class T > class Beholder {
     public:

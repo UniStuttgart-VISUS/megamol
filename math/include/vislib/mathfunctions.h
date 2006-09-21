@@ -15,17 +15,11 @@
 #include <cstdlib>
 #include <limits>
 #include "vislib/assert.h"
+#include "vislib/mathtypes.h"
 
 
 namespace vislib {
 namespace math {
-
-
-    /** Epsilon value for floating point comparison. */
-    extern const float FLOAT_EPSILON;
-
-    /** Epsilon value for double precision floating point comparison. */
-    extern const double DOUBLE_EPSILON;
 
     /**
      * Answer the next power of two which is greater or equal to 'n'.
@@ -217,6 +211,33 @@ namespace math {
         ASSERT(d >= 0);
         return (left >= 0) ? (left % right) : ((1 - ((left + 1) / right)) * right + left);
     }
+
+
+    /**
+     * Converts an angle from degrees to radians.
+     *
+     * @param angle Angle in degrees to be converted
+     *
+     * @return Converted angle in radians
+     */
+    inline AngleRad AngleDeg2Rad(const AngleDeg &angle) {
+        return static_cast<AngleRad>(angle * static_cast<AngleDeg>(PI_DOUBLE) 
+            / static_cast<AngleDeg>(180.0));
+    }
+
+
+    /**
+     * Converts an angle from radians to degrees.
+     *
+     * @param angle Angle in radians to be converted
+     *
+     * @return Converted angle in degrees
+     */
+    inline AngleDeg AngleRad2Deg(const AngleRad &angle) {
+        return static_cast<AngleDeg>(angle * static_cast<AngleRad>(180.0)
+            / static_cast<AngleRad>(PI_DOUBLE));
+    }
+
 
 } /* end namespace math */
 } /* end namespace vislib */

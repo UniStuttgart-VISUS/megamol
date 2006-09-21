@@ -1,12 +1,9 @@
 /*
- * Beholder.cpp
+ * CameraTile.cpp
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
 
-#include "vislib/Beholder.h"
+#include "vislib/CameraTile.h"
 
-/*
- * This file is intentionally empty.
- */
