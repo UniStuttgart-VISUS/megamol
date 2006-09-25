@@ -27,6 +27,11 @@ namespace graphics {
          * TODO: Implement
          */
 
+        /*
+         * Note for the DirectX implementation:
+         *  look at D3DXMatrixPerspectiveOffCenterLH
+         */
+
     private:
 
     };

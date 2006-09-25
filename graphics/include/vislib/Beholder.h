@@ -21,6 +21,9 @@ namespace graphics {
 
     /**
      * class modelling a 3d scene beholder
+     *
+     * TODO: change setter from Vector3D to AbstractVector3D
+     * TODO: change setter from Point3D to AbstractPoint3D
      */
     template<class T > class Beholder {
     public:
