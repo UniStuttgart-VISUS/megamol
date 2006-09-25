@@ -344,7 +344,7 @@ namespace math {
     template<class Tp, class Sp>
     AbstractPoint<T, D, T[D]> AbstractPoint<T, D, S>::operator +(
             const AbstractVector<Tp, D, Sp>& rhs) const {
-        AbstractPoint<T, D, E, T[D]> retval;
+        AbstractPoint<T, D, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.coordinates[d] = this->coordinates[d] 

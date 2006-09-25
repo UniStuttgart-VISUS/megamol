@@ -53,8 +53,9 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */
-        inline ShallowVector(const ShallowVector& rhs) 
-            : components(rhs.components) {}
+        inline ShallowVector(const ShallowVector& rhs) {
+            this->components = rhs.components;
+        }
 
         /** Dtor. */
         ~ShallowVector(void);
@@ -72,7 +73,7 @@ namespace math {
          */
         inline void SetComponents(T *components) {
             ASSERT(components != NULL);
-            this->components = components.
+            this->components = components;
         }
 
         /**
@@ -85,7 +86,7 @@ namespace math {
          * @return *this
          */
         inline ShallowVector& operator =(const ShallowVector& rhs) {
-            AbstractVector<T, D, E, T *>::operator =(rhs);
+            AbstractVector<T, D, T *>::operator =(rhs);
             return *this;
         }
 

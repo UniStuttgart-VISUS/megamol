@@ -129,7 +129,7 @@ namespace math {
      * vislib::math::Point2D<T>::~Point2D
      */
     template<class T>
-    virtual Point2D<T>::~Point2D(void) {
+    Point2D<T>::~Point2D(void) {
     }
 
 } /* end namespace math */

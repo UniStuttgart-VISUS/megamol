@@ -117,7 +117,7 @@ namespace math {
         template<class Tp, unsigned int Dp, class Sp>
         inline AbstractVector2D& operator =(
                 const AbstractVector<Tp, Dp, Sp>& rhs) {
-            AbstractVector<T, 2, E, S>::operator =(rhs);
+            AbstractVector<T, 2, S>::operator =(rhs);
             return *this;
         }
 

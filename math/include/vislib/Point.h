@@ -76,7 +76,7 @@ namespace math {
          * @return *this
          */
         inline Point& operator =(const Point& rhs) {
-            AbstractPoint::operator =(rhs);
+            AbstractPoint<T, D, T[D]>::operator =(rhs);
             return *this;
         }
 
@@ -101,7 +101,7 @@ namespace math {
          */
         template<class Tp, unsigned int Dp, class Sp>
         inline Point& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
-            AbstractPoint::operator =(rhs);
+            AbstractPoint<T, D, T[D]>::operator =(rhs);
             return *this;
         }
     };
