@@ -49,7 +49,7 @@ namespace math {
          *
          * @return The coordinates in an array.
          */
-        inline T * PeekCoordinates(void) {
+        inline T *PeekCoordinates(void) {
             return this->coordinates;
         }
 

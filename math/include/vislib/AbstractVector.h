@@ -77,7 +77,6 @@ namespace math {
         template<class Tp, class Sp>
         bool IsParallel(const AbstractVector<Tp, D, Sp>& rhs) const;
 
-
         /**
          * Answer the length of the vector.
          *
@@ -114,7 +113,7 @@ namespace math {
          *
          * @return The vector components in an array.
          */
-        inline T * PeekComponents(void) {
+        inline T *PeekComponents(void) {
             return this->components;
         }
 

@@ -13,6 +13,7 @@
 
 
 #include <cstdarg>
+#include <cstdio>
 
 #include "vislib/types.h"
 
@@ -35,9 +36,17 @@ namespace vislib {
 		 */
 		static Trace& GetInstance(void);
 
+        /** 
+         * Set this level to display all tracing information. If you use this
+         * constant for tracing itself, the messages will only be output, if
+         * LEVEL_ALL is also set as current tracing level.
+         */
+        static const UINT LEVEL_ALL;
+
         /**
-         * Use this for logging errors. The value of this constant is 0, i. e.
-         * messages with LEVEL_ERROR will always be printed.
+         * Use this for logging errors. The value of this constant is 1, i. e.
+         * messages with LEVEL_ERROR will always be printed, if any logging is
+         * enabled.
          */
         static const UINT LEVEL_ERROR;
 
@@ -47,6 +56,12 @@ namespace vislib {
          */
         static const UINT LEVEL_INFO;
 
+        /** 
+         * Use this for disabling tracing. The value is 0. It cannot be used
+         * for tracing itself, but only for the current tracing level.
+         */
+        static const UINT LEVEL_NONE;
+
         /**
          * Use this for warning messages. The value of this constant 
          * is 100. 
@@ -55,6 +70,18 @@ namespace vislib {
 
         /** Dtor. */
         ~Trace(void);
+
+        /**
+         * Enables the output of the tracer messages to the file with the 
+         * specified name. 
+         *
+         * @param filename The name of the file. If NULL, file output is 
+         *                 disabled.
+         *
+         * @return true, if the log file was successfully opened, false 
+         *         otherwise. If ('filename' == NULL), return true always.
+         */
+        bool EnableFileOutput(const char *filename);
 
         /**
          * Answer the current tracing level. Messages above this level will be
@@ -95,7 +122,9 @@ namespace vislib {
 		/** The only instance of this class. */
 		static Trace *instance;
 
-		/** Ctor. */
+		/** 
+         * Ctor.
+         */
 		Trace(void);
 
 		/**
@@ -126,6 +155,9 @@ namespace vislib {
 		 * @throws IllegalParamException If (this != &rhs).
 		 */
 		Trace& operator =(const Trace& rhs);
+
+        /** Handle for file output of tracer. */
+        FILE *fp;
 
 		/** The current trace level. */
 		UINT level;

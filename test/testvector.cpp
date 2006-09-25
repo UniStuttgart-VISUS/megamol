@@ -6,7 +6,6 @@
 
 #include "testhelper.h"
 
-#include "vislib/EqualFunc.h"
 #include "vislib/ShallowVector.h"
 #include "vislib/ShallowVector2D.h"
 #include "vislib/ShallowVector3D.h"
