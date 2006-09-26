@@ -210,7 +210,8 @@ namespace math {
     template<class Tp, class Sp>
     AbstractVector3D<T, T[3]> AbstractVector3D<T, S>::Cross(
             const AbstractVector3D<Tp, Sp>& rhs) const {
-        AbstractVector3D<T, T[3]> retval(
+        AbstractVector3D<T, T[3]> retval;
+        retval.SetComponents(
             this->components[1] * static_cast<T>(rhs[2])
             - this->components[2] * static_cast<T>(rhs[1]),
             this->components[2] * static_cast<T>(rhs[0])
