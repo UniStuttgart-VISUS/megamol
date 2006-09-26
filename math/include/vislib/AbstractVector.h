@@ -13,7 +13,6 @@
 
 
 #include <limits>
-#include <memory.h>
 
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"

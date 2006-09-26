@@ -351,7 +351,7 @@ namespace math {
                 + static_cast<T>(rhs[d]);
         }
 
-        return *this;
+        return retval;
     }
 
 
@@ -384,7 +384,7 @@ namespace math {
                 - static_cast<T>(rhs[d]);
         }
 
-        return *this;
+        return retval;
     }
 
 
@@ -396,7 +396,7 @@ namespace math {
     AbstractPoint<T, D, S>& AbstractPoint<T, D, S>::operator -=(
            const AbstractVector<Tp, D, Sp>& rhs) {
         for (unsigned int d = 0; d < D; d++) {
-            this->coordinates[d] += static_cast<T>(rhs[d]);
+            this->coordinates[d] -= static_cast<T>(rhs[d]);
         }
 
         return *this;
@@ -416,7 +416,7 @@ namespace math {
                 - static_cast<T>(rhs.coordinates[d]);
         }
 
-        return *this;
+        return retval;
     }
 
 
