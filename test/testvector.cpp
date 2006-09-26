@@ -20,9 +20,9 @@ void TestVector(void) {
     float sv1data[2];
     float sv2data[2];
 
-    Vector2D<float, FltEqualFunc> v1;
-    ShallowVector2D<float, FltEqualFunc> sv1(sv1data);
-    ShallowVector2D<float, FltEqualFunc> sv2(sv2data);
+    Vector2D<float> v1;
+    ShallowVector2D<float> sv1(sv1data);
+    ShallowVector2D<float> sv2(sv2data);
     
     ::AssertEqual("v1[0] == 0", v1[0], 0.0f);
     ::AssertEqual("v1[1] == 0", v1[1], 0.0f);

@@ -11,7 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 
-#include "vislib/outstream.h"
+#include "vislib/OutStream.h"
 
 
 namespace vislib {

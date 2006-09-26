@@ -120,7 +120,7 @@ namespace vislib {
     private:
 
 		/** The only instance of this class. */
-		static Trace *instance;
+		static Trace instance;
 
 		/** 
          * Ctor.
@@ -155,6 +155,9 @@ namespace vislib {
 		 * @throws IllegalParamException If (this != &rhs).
 		 */
 		Trace& operator =(const Trace& rhs);
+
+        /** Name of the output file. */
+        char *filename;
 
         /** Handle for file output of tracer. */
         FILE *fp;

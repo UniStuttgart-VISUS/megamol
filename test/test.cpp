@@ -19,6 +19,7 @@
 #include "vislib/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemMessage.h"
+#include "vislib/Trace.h"
 
 
 #ifdef _WIN32
@@ -29,8 +30,12 @@ int main(int argc, char **argv) {
     using namespace vislib;
     using namespace vislib::sys;
 
-    ::TestFile();
-    ::TestString();
+    //vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
+    //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
+    //TRACE(1, "HORST!\n");
+
+    //::TestFile();
+    //::TestString();
     ::TestVector();
     //::TestFloat16();
     //::TestThread();

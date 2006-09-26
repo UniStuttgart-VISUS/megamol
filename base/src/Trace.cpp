@@ -8,8 +8,11 @@
 #include "vislib/Trace.h"
 
 #include <climits>
+#include <ctime>
 
+#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/memutils.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -17,11 +20,7 @@
  * vislib::Trace::GetInstance
  */
 vislib::Trace& vislib::Trace::GetInstance(void) {
-	if (vislib::Trace::instance == NULL) {
-		vislib::Trace::instance = new Trace();
-	}
-
-	return *vislib::Trace::instance;
+	return vislib::Trace::instance;
 }
 
 
@@ -59,6 +58,8 @@ const UINT vislib::Trace::LEVEL_WARN = 100;
  * vislib::Trace::~Trace
  */
 vislib::Trace::~Trace(void) {
+    ARY_SAFE_DELETE(this->filename);
+
     if (this->fp != NULL) {
         ::fclose(this->fp);
         this->fp = NULL;
@@ -70,22 +71,53 @@ vislib::Trace::~Trace(void) {
  * vislib::Trace::EnableFileOutput
  */
 bool vislib::Trace::EnableFileOutput(const char *filename) {
-    if (this->fp != NULL) {
-        ::fclose(this->fp);
-    }
+    bool retval = true;
 
     if (filename != NULL) {
-#if (_MSC_VER >= 1400)
-        return (::fopen_s(&this->fp, filename, "w+") == 0);
-#else /* (_MSC_VER >= 1400) */
-        this->fp = ::fopen(filename, "w+");
-        return (this->fp != NULL);
-#endif /* (_MSC_VER >= 1400) */
+        if ((this->filename == NULL) 
+                || (::strcmp(this->filename, filename) != 0)) {
+            ARY_SAFE_DELETE(this->filename);
+            SIZE_T len = ::strlen(filename) + 1;
+            this->filename = new char[len];
+            ASSERT(this->filename != NULL); // std::bad_alloc should have been thrown.
+            ::memcpy(this->filename, filename, len * sizeof(char));
+
+            if (this->fp != NULL) {
+                ::fclose(this->fp);
+                this->fp = NULL;
+            }
+        } 
+        /* 
+         * 'this->filename' is new trace file, 'this->fp' is NULL or the 
+         * correct file is still open.
+         */
+        
+        if (this->fp == NULL) {
+#ifdef _WIN32
+#pragma warning(disable: 4996)
+#endif /* _WIN32 */
+            if ((retval = ((this->fp = ::fopen(this->filename, "w")) != NULL))) {
+                time_t now;
+                ::time(&now);
+                ::fprintf(this->fp, "Trace file opened at %s", 
+                    ::asctime(::localtime(&now)));
+#ifdef _WIN32
+#pragma warning(default: 4996)
+#endif /* _WIN32 */
+            }
+        }
 
     } else {
-        this->fp = NULL;
-        return true;
-    }
+        /* Disable tracing to file. */
+        ARY_SAFE_DELETE(this->filename);
+        
+        if (this->fp != NULL) {
+            ::fclose(this->fp);
+            this->fp = NULL;
+        }
+    } /* end if (filename != NULL) */
+
+    return retval;
 }
 
 
@@ -114,13 +146,13 @@ void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) {
 /*
  * vislib::Trace::instance
  */
-vislib::Trace *vislib::Trace::instance = NULL;
+vislib::Trace vislib::Trace::instance;
 
 
 /*
  * vislib::Trace::Trace
  */
-vislib::Trace::Trace(void) : fp(NULL), level(LEVEL_ERROR) {
+vislib::Trace::Trace(void) : filename(NULL), fp(NULL), level(LEVEL_ERROR) {
 }
 
 

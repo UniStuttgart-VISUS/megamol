@@ -551,7 +551,7 @@ namespace math {
         }
 
         for (unsigned int d = 0; d < D; d++) {
-            if (!IsEqual<T>(this->components[d], rhs.components[d])) {
+            if (!IsEqual<T>(this->components[d], rhs[d])) {
                 return false;
             }
         }
