@@ -23,17 +23,21 @@ namespace math {
      * remarks.
      */
     template<class T> 
-    class Vector3D : public AbstractVector3D<T, T[3]>, public Vector<T, 3> {
+    class Vector3D : public AbstractVector3D<T, T[3]> {
 
     public:
 
-        /** A typedef for the super class having the storage related info. */
-        typedef Vector<T, 3> Super;
+        /** A typedef for the super class. */
+        typedef AbstractVector3D<T, T[3]> Super;
 
         /**
          * Create a null vector.
          */
-        inline Vector3D(void) : Super() {}
+        inline Vector3D(void) {
+            this->components[0] = static_cast<T>(0);
+            this->components[1] = static_cast<T>(0);
+            this->components[2] = static_cast<T>(0);
+        }
 
         /**
          * Create a new vector initialised with 'components'. 'components' must
@@ -41,14 +45,19 @@ namespace math {
          *
          * @param components The initial vector components.
          */
-        explicit inline Vector3D(const T *components) : Super(components) {}
+        explicit inline Vector3D(const T *components) {
+            ASSERT(components != NULL);
+            ::memcpy(this->components, components, 3 * sizeof(T));
+        }
 
         /**
          * Clone 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline Vector3D(const Vector3D& rhs) : Super(rhs) {}
+        inline Vector3D(const Vector3D& rhs) {
+            ::memcpy(this->components, rhs.components, 3 * sizeof(T));
+        }
 
         /**
          * Create a copy of 'vector'. This ctor allows for arbitrary vector to
@@ -57,7 +66,14 @@ namespace math {
          * @param rhs The vector to be cloned.
          */
         template<class Tp, unsigned int Dp, class Sp>
-        inline Vector3D(const AbstractVector<Tp, Dp, Sp>& rhs) : Super(rhs) {}
+        inline Vector3D(const AbstractVector<Tp, Dp, Sp>& rhs) {
+            this->components[0] = (Dp < 1) ? static_cast<T>(0) 
+                                           : static_cast<T>(rhs[0]);
+            this->components[1] = (Dp < 2) ? static_cast<T>(0) 
+                                           : static_cast<T>(rhs[1]);
+            this->components[2] = (Dp < 3) ? static_cast<T>(0) 
+                                           : static_cast<T>(rhs[2]);
+        }
 
         /**
          * Create a new vector.
@@ -109,7 +125,6 @@ namespace math {
             return *this;
         }
     };
-
 
     /*
      * vislib::math::Vector3D<T>::~Vector3D

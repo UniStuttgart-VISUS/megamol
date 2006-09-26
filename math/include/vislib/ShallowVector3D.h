@@ -22,14 +22,12 @@ namespace math {
      * Specialisation for a three-dimensional vector. See Vector for additional
      * remarks.
      */
-    template<class T> 
-    class ShallowVector3D : public AbstractVector3D<T, T *>, 
-            ShallowVector<T, 3> {
+    template<class T> class ShallowVector3D : public AbstractVector3D<T, T *> {
 
     public:
 
         /** A typedef for the super class. */
-        typedef ShallowVector<T, 3> Super;
+        typedef AbstractVector3D<T, T *> Super;
 
         /**
          * Create a new vector initialised using 'components' as data. The
@@ -40,17 +38,22 @@ namespace math {
          * @param components The initial vector memory. This must not be a NULL
          *                   pointer.
          */
-        explicit inline ShallowVector3D(T *components) : Super(components) {}
+        explicit inline ShallowVector3D(T *components) {
+            ASSERT(components != NULL);
+            this->components = components;
+        }
 
         /**
          * Clone 'rhs'. This operation will create an alias of 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline ShallowVector3D(const ShallowVector3D& rhs) : Super(rhs) {}
+        inline ShallowVector3D(const ShallowVector3D& rhs) {
+            this->components = rhs.components;
+        }
 
         /** Dtor. */
-        virtual ~ShallowVector3D(void);
+        ~ShallowVector3D(void);
 
         /**
          * Assignment.

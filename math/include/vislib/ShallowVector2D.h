@@ -22,14 +22,12 @@ namespace math {
      * Specialisation for a two-dimensional vector. See Vector for additional
      * remarks.
      */
-    template<class T> 
-    class ShallowVector2D : public AbstractVector2D<T, T *>, 
-            public ShallowVector<T, 2> {
+    template<class T> class ShallowVector2D : public AbstractVector2D<T, T *> {
 
     public:
 
-        /** A typedef for the super class having the storage related info. */
-        typedef ShallowVector<T, 2> Super;
+        /** A typedef for the super class. */
+        typedef AbstractVector2D<T, T *> Super;
 
         /**
          * Create a new vector initialised using 'components' as data. The
@@ -40,17 +38,22 @@ namespace math {
          * @param components The initial vector memory. This must not be a NULL
          *                   pointer.
          */
-        explicit inline ShallowVector2D(T *components) : Super(components) {}
+        explicit inline ShallowVector2D(T *components) {
+            ASSERT(components != NULL);
+            this->components = components;
+        }
 
         /**
          * Clone 'rhs'. This operation will create an alias of 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline ShallowVector2D(const ShallowVector2D& rhs) : Super(rhs) {}
+        inline ShallowVector2D(const ShallowVector2D& rhs) {
+            this->components = rhs.components;
+        }
 
         /** Dtor. */
-        virtual ~ShallowVector2D(void);
+        ~ShallowVector2D(void);
 
         /**
          * Assignment.

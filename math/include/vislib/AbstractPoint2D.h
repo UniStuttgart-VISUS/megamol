@@ -22,7 +22,7 @@ namespace math {
      * additional remarks.
      */
     template<class T, class S> 
-    class AbstractPoint2D : virtual public AbstractPoint<T, 2, S> {
+    class AbstractPoint2D : public AbstractPoint<T, 2, S> {
 
     public:
 

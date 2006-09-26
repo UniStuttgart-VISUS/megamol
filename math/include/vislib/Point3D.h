@@ -25,17 +25,21 @@ namespace math {
      * @author Christoph Mueller
      */
     template<class T >
-    class Point3D : public AbstractPoint3D<T, T[3]>, public Point<T, 3> {
+    class Point3D : public AbstractPoint3D<T, T[3]> {
 
     public:
 
         /** A typedef for the super class having the storage related info. */
-        typedef Point<T, 3> Super;
+        typedef AbstractPoint3D<T, T[3]> Super;
 
         /** 
          * Create a point in the origin of the coordinate system. 
          */
-        inline Point3D(void) : Super() {}
+        inline Point3D(void) {
+            this->coordinates[0] = static_cast<T>(0);
+            this->coordinates[1] = static_cast<T>(0);
+            this->coordinates[2] = static_cast<T>(0);
+        }
 
         /**
          * Create a new point.
@@ -57,7 +61,10 @@ namespace math {
          *
          * @param coordinates The coordinates of the point.
          */
-        inline explicit Point3D(const T *coordinates) : Super(coordinates) {}
+        inline explicit Point3D(const T *coordinates) {
+            ASSERT(coordinates != NULL);
+            ::memcpy(this->coordinates, coordinates, 3 * sizeof(T));
+        }
 
         /**
          * Create a new point from its position vector.
@@ -65,15 +72,19 @@ namespace math {
          * @param posVec The position vector of the point.
          */
         template<class Tp, class Sp>
-        inline explicit Point3D(const AbstractVector<Tp, 3, Sp>& posVec) 
-            : Super(posVec) {}
+        inline explicit Point3D(const AbstractVector<Tp, 3, Sp>& posVec) {
+            this->coordinates[0] = posVec[0];
+            this->coordinates[1] = posVec[1];
+        }
 
         /**
          * Clone 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline Point3D(const Point3D& rhs) : Super(rhs) {}
+        inline Point3D(const Point3D& rhs) {
+            ::memcpy(this->coordinates, rhs.coordinates, 3 * sizeof(T));
+        }
 
         /**
          * Create a copy of 'rhs'. This ctor allows for arbitrary point to
@@ -83,7 +94,14 @@ namespace math {
          * @param rhs The object to be cloned.
          */        
         template<class Tp, unsigned int Dp, class Sp>
-        inline Point3D(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super(rhs) {}
+        inline Point3D(const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            this->coordinates[0] = (Dp < 1) ? static_cast<T>(0) 
+                                            : static_cast<T>(rhs[0]);
+            this->coordinates[1] = (Dp < 2) ? static_cast<T>(0) 
+                                            : static_cast<T>(rhs[1]);
+            this->coordinates[2] = (Dp < 3) ? static_cast<T>(0) 
+                                            : static_cast<T>(rhs[2]);
+        }
 
         /** Dtor. */
         ~Point3D(void);
@@ -126,6 +144,7 @@ namespace math {
             return *this;
         }
     };
+
 
     /*
      * vislib::math::Point3D<T>::~Point3D

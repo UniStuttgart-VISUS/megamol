@@ -27,7 +27,7 @@ namespace math {
      * vector classes.
      */
     template<class T, unsigned int D> 
-    class Vector : virtual public AbstractVector<T, D, T[D]> {
+    class Vector : public AbstractVector<T, D, T[D]> {
 
     public:
 

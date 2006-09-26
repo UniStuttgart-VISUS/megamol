@@ -17,6 +17,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
 
 
@@ -440,26 +441,26 @@ namespace math {
      */
     template<class T, unsigned int D, class S>
     T AbstractVector<T, D, S>::MaxNorm(void) const {
-#ifdef _MSC_VER
-# ifdef min
-#  define VISLIB_MIN_CROWBAR 1
-#  pragma push_macro("min")
-#  pragma push_macro("max")
-#  undef min
-#  undef max
-# endif
-#endif /* _MSC_VER */
+#if defined(_MSC_VER) && defined(min)
+#define POP_MIN_CROWBAR 1
+#pragma push_macro("min")
+#undef min
+#endif /* defined(_MSC_VER) && defined(min) */
+#if defined(_MSC_VER) && defined(max)
+#define POP_MAX_CROWBAR 1
+#pragma push_macro("max")
+#undef max
+#endif /* defined(_MSC_VER) && defined(max) */
         T retval = std::numeric_limits<T>::is_integer 
             ? std::numeric_limits<T>::min() : -std::numeric_limits<T>::max();
-#ifdef _MSC_VER
-# ifdef VISLIB_MIN_CROWBAR
-#  define min
-#  define max
-#  pragma pop_macro("min")
-#  pragma pop_macro("max")
-# undef VISLIB_MIN_CROWBAR
-# endif
-#endif /* _MSC_VER */
+#ifdef POP_MIN_CROWBAR
+#pragma pop_macro("min")
+#undef POP_MIN_CROWBAR
+#endif /* POP_MIN_CROWBAR */
+#ifdef POP_MAX_CROWBAR
+#pragma pop_macro("max")
+#undef POP_MAX_CROWBAR
+#endif /* POP_MAX_CROWBAR */
 
         for (unsigned int d = 0; d < D; d++) {
             if (this->components[d] > retval) {

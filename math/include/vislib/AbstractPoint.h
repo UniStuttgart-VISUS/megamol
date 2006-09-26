@@ -270,7 +270,7 @@ namespace math {
     AbstractPoint<T, D, S>& AbstractPoint<T, D, S>::operator =(
             const AbstractPoint& rhs) {
         if (this != &rhs) {
-            ::memcpy(this->coordinates, this->coordinates, D * sizeof(T));
+            ::memcpy(this->coordinates, rhs.coordinates, D * sizeof(T));
         }
 
         return *this;

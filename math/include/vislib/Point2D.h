@@ -23,17 +23,19 @@ namespace math {
      * A point in two-dimensional space.
      */
     template<class T>
-    class Point2D : public AbstractPoint2D<T, T[2]>, public Point<T, 2> {
+    class Point2D : public AbstractPoint2D<T, T[2]> {
 
     public:
 
-        /** A typedef for the super class having the storage related info. */
-        typedef Vector<T, 2> Super;
+        /** A typedef for the super class. */
+        typedef AbstractPoint2D<T, T[2]> Super;
 
         /** 
          * Create a point in the origin of the coordinate system. 
          */
-        inline Point2D(void) : Super() {}
+        inline Point2D(void) {
+            this->coordinates[0] = this->coordinates[1] = static_cast<T>(0);
+        }
 
         /**
          * Create a new point.
@@ -53,7 +55,10 @@ namespace math {
          *
          * @param coordinates The coordinates of the point.
          */
-        inline explicit Point2D(const T *coordinates) : Super(coordinates) {}
+        inline explicit Point2D(const T *coordinates) {
+            ASSERT(coordinates != NULL);
+            ::memcpy(this->coordinates, coordinates, 2 * sizeof(T));
+        }
 
         /**
          * Create a new point from its position vector.
@@ -61,15 +66,19 @@ namespace math {
          * @param posVec The position vector of the point.
          */
         template<class Tp, class Sp>
-        inline explicit Point2D(const AbstractVector<Tp, 2, Sp>& posVec) 
-            : Super(posVec) {}
+        inline explicit Point2D(const AbstractVector<Tp, 2, Sp>& posVec) {
+            this->coordinates[0] = posVec[0];
+            this->coordinates[1] = posVec[1];
+        }
 
         /**
          * Clone 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline Point2D(const Point2D& rhs) : Super(rhs) {}
+        inline Point2D(const Point2D& rhs) {
+            ::memcpy(this->coordinates, rhs.coordinates, 2 * sizeof(T));
+        }
 
         /**
          * Create a copy of 'rhs'. This ctor allows for arbitrary point to
@@ -79,7 +88,12 @@ namespace math {
          * @param rhs The object to be cloned.
          */        
         template<class Tp, unsigned int Dp, class Sp>
-        inline Point2D(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super(rhs) {}
+        inline Point2D(const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            this->coordinates[0] = (Dp < 1) ? static_cast<T>(0) 
+                                            : static_cast<T>(rhs[0]);
+            this->coordinates[1] = (Dp < 2) ? static_cast<T>(0) 
+                                            : static_cast<T>(rhs[1]);
+        }
 
         /** Dtor. */
         ~Point2D(void);

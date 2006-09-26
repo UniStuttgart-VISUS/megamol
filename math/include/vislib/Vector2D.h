@@ -22,18 +22,19 @@ namespace math {
      * Specialisation for a two-dimensional vector. See Vector for additional
      * remarks.
      */
-    template<class T> 
-    class Vector2D : public AbstractVector2D<T, T[2]>, public Vector<T, 2> {
+    template<class T> class Vector2D : public AbstractVector2D<T, T[2]> {
 
     public:
 
-        /** A typedef for the super class having the storage related info. */
-        typedef Vector<T, 2> Super;
+        /** A typedef for the super class. */
+        typedef AbstractVector2D<T, T[2]> Super;
 
         /**
          * Create a null vector.
          */
-        inline Vector2D(void) : Super() {}
+        inline Vector2D(void) {
+            this->components[0] = this->components[1] = static_cast<T>(0);
+        }
 
         /**
          * Create a new vector initialised with 'components'. 'components' must
@@ -41,14 +42,19 @@ namespace math {
          *
          * @param components The initial vector components.
          */
-        explicit inline Vector2D(const T *components) : Super(components) {}
+        explicit inline Vector2D(const T *components) {
+            ASSERT(components != NULL);
+            ::memcpy(this->components, components, 2 * sizeof(T));
+        }
 
         /**
          * Clone 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline Vector2D(const Vector2D& rhs) : Super(rhs) {}
+        inline Vector2D(const Vector2D& rhs) {
+            ::memcpy(this->components, rhs.components, 2 * sizeof(T));
+        }
 
         /**
          * Create a copy of 'vector'. This ctor allows for arbitrary vector to
@@ -57,7 +63,12 @@ namespace math {
          * @param rhs The vector to be cloned.
          */
         template<class Tp, unsigned int Dp, class Sp>
-        inline Vector2D(const AbstractVector<Tp, Dp, Sp>& rhs) : Super(rhs) {}
+        inline Vector2D(const AbstractVector<Tp, Dp, Sp>& rhs) {
+            this->components[0] = (Dp < 1) ? static_cast<T>(0) 
+                                           : static_cast<T>(rhs[0]);
+            this->components[1] = (Dp < 2) ? static_cast<T>(0) 
+                                           : static_cast<T>(rhs[1]);
+        }
 
         /**
          * Create a new vector.

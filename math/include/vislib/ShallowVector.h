@@ -30,7 +30,7 @@ namespace math {
      * vector classes.
      */
     template<class T, unsigned int D> 
-    class ShallowVector : virtual public AbstractVector<T, D, T *> {
+    class ShallowVector : public AbstractVector<T, D, T *> {
 
     public:
 
