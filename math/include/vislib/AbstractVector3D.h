@@ -30,6 +30,30 @@ namespace math {
         ~AbstractVector3D(void);
 
         /**
+         * Answer the cross product of this vector and 'rhs'.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return The cross product of this vector and 'rhs'.
+         */
+        template<class Tp, class Sp> AbstractVector3D<T, T[3]> Cross(
+            const AbstractVector3D<Tp, Sp>& rhs) const;
+
+        ///**
+        // * Calculate the cross product of this vector and 'rhs' and assign it
+        // * to this vector.
+        // *
+        // * @param rhs The right hand side operand.
+        // *
+        // * @return *this.
+        // */
+        //template<class Tp, class Sp>
+        //inline AbstractVector3D& CrossAssign(
+        //        const AbstractVector3D<Tp, Sp>& rhs) {
+        //    return (*this = this->Cross(rhs));
+        //}
+
+        /**
          * Answer the x-component of the vector.
          *
          * @return The x-component of the vector.
@@ -176,6 +200,24 @@ namespace math {
      */
     template<class T, class S>
     AbstractVector3D<T, S>::~AbstractVector3D(void) {
+    }
+
+
+    /*
+     * vislib::math::AbstractVector3D<T, S>::Cross
+     */
+    template<class T, class S>
+    template<class Tp, class Sp>
+    AbstractVector3D<T, T[3]> AbstractVector3D<T, S>::Cross(
+            const AbstractVector3D<Tp, Sp>& rhs) const {
+        AbstractVector3D<T, T[3]> retval(
+            this->components[1] * static_cast<T>(rhs[2])
+            - this->components[2] * static_cast<T>(rhs[1]),
+            this->components[2] * static_cast<T>(rhs[0])
+            - this->components[0] * static_cast<T>(rhs[2]),
+            this->components[0] * static_cast<T>(rhs[1])
+            - this->components[1] * static_cast<T>(rhs[0]));
+        return retval;
     }
 
 } /* end namespace math */
