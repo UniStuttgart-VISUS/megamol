@@ -194,6 +194,18 @@ namespace math {
 
 
     /**
+     * Answer the square root of 'n'.
+     *
+     * @param n A number.
+     *
+     * @return The square root of 'n'.
+     */
+    inline int Sqrt(const int n) {
+        return static_cast<int>(::sqrt(static_cast<double>(n)));
+    }
+
+
+    /**
      * Calculates the unsigned modulo value.
      * Only signed interger types can be used to instanciate this function.
      * Example:

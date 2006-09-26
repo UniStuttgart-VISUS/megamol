@@ -13,6 +13,7 @@
 
 
 #include <limits>
+#include <memory.h>
 
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
@@ -440,18 +441,24 @@ namespace math {
     template<class T, unsigned int D, class S>
     T AbstractVector<T, D, S>::MaxNorm(void) const {
 #ifdef _MSC_VER
-#pragma push_macro("min")
-#pragma push_macro("max")
-#undef min
-#undef max
+# ifdef min
+#  define VISLIB_MIN_CROWBAR 1
+#  pragma push_macro("min")
+#  pragma push_macro("max")
+#  undef min
+#  undef max
+# endif
 #endif /* _MSC_VER */
         T retval = std::numeric_limits<T>::is_integer 
             ? std::numeric_limits<T>::min() : -std::numeric_limits<T>::max();
 #ifdef _MSC_VER
-#define min
-#define max
-#pragma pop_macro("min")
-#pragma pop_macro("max")
+# ifdef VISLIB_MIN_CROWBAR
+#  define min
+#  define max
+#  pragma pop_macro("min")
+#  pragma pop_macro("max")
+# undef VISLIB_MIN_CROWBAR
+# endif
 #endif /* _MSC_VER */
 
         for (unsigned int d = 0; d < D; d++) {
