@@ -87,10 +87,15 @@ namespace math {
          * @param y The new y-component.
          * @param z The new z-component.
          */
-        inline void SetComponents(const T& x, const T& y, const T& z) {
+        inline void Set(const T& x, const T& y, const T& z) {
             this->components[0] = x;
             this->components[1] = y;
             this->components[2] = z;
+        }
+
+#pragma deprecated(SetComponents) // I would like to call such a method Set (for all, vectors, points, rectangles, ...)
+        inline void SetComponents(const T& x, const T& y, const T& z) {
+            this->Set(x, y, z);
         }
 
         /**

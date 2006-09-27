@@ -298,6 +298,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractRectangle.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractVector.cpp"
 				>
 			</File>
@@ -331,6 +335,14 @@
 			</File>
 			<File
 				RelativePath=".\src\Point3D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Rectangle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ShallowRectangle.cpp"
 				>
 			</File>
 			<File
@@ -376,6 +388,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AbstractRectangle.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractVector.h"
 				>
 			</File>
@@ -413,6 +429,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Point3D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Rectangle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowRectangle.h"
 				>
 			</File>
 			<File

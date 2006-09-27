@@ -57,6 +57,19 @@ namespace math {
         }
 
         /**
+         * Set the coordinates ot the point.
+         *
+         * @param x The x-coordinate of the point.
+         * @param y The y-coordinate of the point.
+         * @param z The z-coordinate of the point.
+         */
+        inline void Set(const T& x, const T& y, const T& z) {
+            this->coordinates[0] = x;
+            this->coordinates[1] = y;
+            this->coordinates[2] = z;
+        }
+
+        /**
          * Set the x-coordinate of the point.
          *
          * @param x The new x-coordinate.

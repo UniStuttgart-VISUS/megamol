@@ -53,7 +53,7 @@ namespace math {
          * @param x The new x-component.
          * @param y The new y-component.
          */
-        inline void SetComponents(const T& x, const T& y) {
+        inline void Set(const T& x, const T& y) {
             this->components[0] = x;
             this->components[1] = y;
         }
