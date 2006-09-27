@@ -10,8 +10,12 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+
 #include "AbstractGlutApp.h"
 #include "vislib/types.h"
+#include "vislib/Beholder.h"
+#include "vislib/Camera.h"
+
 
 /*
  * Test for mono tiled display frustrum generation
@@ -24,7 +28,9 @@ public:
     virtual int PreGLInit(void);
     virtual int PostGLInit(void);
 
+    virtual void Resize(unsigned int w, unsigned int h);
     virtual void Render(void);
+    virtual bool KeyPress(unsigned char key);
 
 private:
     class Lens {
@@ -34,7 +40,7 @@ private:
 
         void Update(float sec);
 
-        void BeginDraw(unsigned int ww, unsigned int wh);
+        void BeginDraw(unsigned int ww, unsigned int wh, bool ortho);
         void EndDraw(void);
 
     private:
@@ -49,6 +55,10 @@ private:
     float angle;
     UINT64 lastTime;
     float walkSpeed, rotSpeed;
+    bool ortho;
+
+    vislib::graphics::Beholder<double> beholder;
+    vislib::graphics::Camera camera;
 };
 
 #endif /* VISLIBTEST_CAMTESTAPP_H_INCLUDED */

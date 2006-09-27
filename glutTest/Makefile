@@ -17,7 +17,7 @@ OutName := vislibgluttest
 
 
 # C++ compiler flags:
-CPPFLAGS := -DUNIX -D_GNU_SOURCE -Wall -ansi -O3 -ggdb
+CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -O3 -ggdb
 # removed: -pedantic 
 
 # Linker flags:

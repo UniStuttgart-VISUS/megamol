@@ -51,8 +51,10 @@ void keyboard(unsigned char key, int x, int y) {
         case 27: // esc
             exit(0); 
             break;
-        default: 
-            fprintf(stderr, "Warning: Key %u is not used\n", key); 
+        default:
+            if (!(app && app->KeyPress(key))) {
+                fprintf(stderr, "Warning: Key %u is not used\n", key); 
+            }
             break;
     };
 }

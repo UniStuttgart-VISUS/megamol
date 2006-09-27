@@ -426,7 +426,7 @@ namespace math {
     template<class T, unsigned int D, class S>
     T& AbstractPoint<T, D, S>::operator [](const int i) {
         if ((i >= 0) && (i < static_cast<int>(D))) {
-            return this->components[i];
+            return this->coordinates[i];
         } else {
             throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
@@ -439,7 +439,7 @@ namespace math {
     template<class T, unsigned int D, class S>
     T AbstractPoint<T, D, S>::operator [](const int i) const {
         if ((i >= 0) && (i < static_cast<int>(D))) {
-            return this->components[i];
+            return this->coordinates[i];
         } else {
             throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
