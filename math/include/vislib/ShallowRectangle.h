@@ -35,8 +35,8 @@ namespace math {
          * @return The left, bottom, right and top border of the rectangle in
          *         a consecutive order.
          */
-        explicit inline ShallowRectangle(const T *bounds) {
-            ::memcpy(this->bounds, bounds, 4 * sizeof(T));
+        explicit inline ShallowRectangle(T *bounds) {
+            this->bounds = bounds;
         }
 
         /**
@@ -45,7 +45,7 @@ namespace math {
          * @param rhs The object to clone.
          */
         inline ShallowRectangle(const ShallowRectangle& rhs) {
-            ::memcpy(this->bounds, rhs.bounds, 4 * sizeof(T));
+            this->bounds = rhs.bounds;
         }
 
         /** Dtor. */
@@ -60,7 +60,7 @@ namespace math {
          * @return *this.
          */
         inline ShallowRectangle& operator =(const ShallowRectangle& rhs) {
-            AbstractRectangle<T, T[4]>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
 
@@ -78,17 +78,22 @@ namespace math {
         template<class Tp, class Sp>
         inline ShallowRectangle& operator =(
                 const AbstractRectangle<Tp, Sp>& rhs) {
-            AbstractRectangle<T, T[4]>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
+
+    public:
+
+        /** Typedef for the super class. */
+        typedef AbstractRectangle<T, T *> Super;
     };
 
 
-/*
- * vislib::math::ShallowRectangle<T>::~ShallowRectangle
- */
-template<class T> ShallowRectangle<T>::~ShallowRectangle(void) {
-}
+    /*
+     * vislib::math::ShallowRectangle<T>::~ShallowRectangle
+     */
+    template<class T> ShallowRectangle<T>::~ShallowRectangle(void) {
+    }
 
 
 } /* end namespace math */

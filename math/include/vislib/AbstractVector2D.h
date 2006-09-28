@@ -102,7 +102,7 @@ namespace math {
          * @return *this
          */
         inline AbstractVector2D& operator =(const AbstractVector2D& rhs) {
-            AbstractVector<T, 2, S>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
 
@@ -128,16 +128,19 @@ namespace math {
         template<class Tp, unsigned int Dp, class Sp>
         inline AbstractVector2D& operator =(
                 const AbstractVector<Tp, Dp, Sp>& rhs) {
-            AbstractVector<T, 2, S>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
 
     protected:
 
+        /** A typedef for the super class. */
+        typedef AbstractVector<T, 2, S> Super;
+
         /**
          * Disallow instances of this class.
          */
-        inline AbstractVector2D(void) : AbstractVector<T, 2, S>() {};
+        inline AbstractVector2D(void) : Super() {};
 
     };
 

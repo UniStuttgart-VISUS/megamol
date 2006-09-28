@@ -286,6 +286,18 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractDimension.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractDimension2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractDimension3D.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractPoint.cpp"
 				>
 			</File>
@@ -315,6 +327,18 @@
 			</File>
 			<File
 				RelativePath=".\src\AbstractVector3D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Dimension.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Dimension2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Dimension3D.cpp"
 				>
 			</File>
 			<File
@@ -388,6 +412,18 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\AbstractDimension.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractDimension2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractDimension3D.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractPoint.h"
 				>
 			</File>
@@ -417,6 +453,18 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractVector3D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Dimension.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Dimension2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Dimension3D.h"
 				>
 			</File>
 			<File

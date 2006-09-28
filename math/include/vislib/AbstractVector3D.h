@@ -155,7 +155,7 @@ namespace math {
          * @return *this
          */
         inline AbstractVector3D& operator =(const AbstractVector3D& rhs) {
-            AbstractVector<T, 3, S>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
 
@@ -181,16 +181,19 @@ namespace math {
         template<class Tp, unsigned int Dp, class Sp>
         inline AbstractVector3D& operator =(
                 const AbstractVector<Tp, Dp, Sp>& rhs) {
-            AbstractVector<T, 3, S>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
 
     protected:
 
+        /** A typedef for the super class. */
+        typedef AbstractVector<T, 3, S> Super;
+
         /**
          * Disallow instances of this class. This ctor does nothing!
          */
-        inline AbstractVector3D(void) : AbstractVector<T, 3, S>() {};
+        inline AbstractVector3D(void) : Super() {};
 
     };
 

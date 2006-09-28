@@ -327,230 +327,234 @@ namespace math {
     };
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::AngleAndAxis
- */
-template<class T, class S>
-template<class Sp>
-void AbstractQuaternion<T, S>::AngleAndAxis(T& outAngle, 
-        AbstractVector3D<T, Sp>& outAxis) const {
-    T d = Sqrt(Sqr(this->components[IDX_X]) + Sqr(this->components[IDX_Y])
-        + Sqr(this->components[IDX_Z]));
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::AngleAndAxis
+     */
+    template<class T, class S>
+    template<class Sp>
+    void AbstractQuaternion<T, S>::AngleAndAxis(T& outAngle, 
+            AbstractVector3D<T, Sp>& outAxis) const {
+        T d = Sqrt(Sqr(this->components[IDX_X]) + Sqr(this->components[IDX_Y])
+            + Sqr(this->components[IDX_Z]));
 
-    if (!IsEqual<T>(d, static_cast<T>(0))) {
-        outAxis.SetX(this->components[IDX_X] / d);
-        outAxis.SetY(this->components[IDX_Y] / d);
-        outAxis.SetZ(this->components[IDX_Z] / d);
+        if (!IsEqual<T>(d, static_cast<T>(0))) {
+            outAxis.SetX(this->components[IDX_X] / d);
+            outAxis.SetY(this->components[IDX_Y] / d);
+            outAxis.SetZ(this->components[IDX_Z] / d);
 
-        // TODO: Not nice.
-        outAngle = static_cast<T>(2.0 
-            * ::acos(static_cast<double>(this->components[IDX_W])));
+            // TODO: Not nice.
+            outAngle = static_cast<T>(2.0 
+                * ::acos(static_cast<double>(this->components[IDX_W])));
 
-    } else {
-        outAxis.SetX(static_cast<T>(0));
-        outAxis.SetY(static_cast<T>(0));
-        outAxis.SetZ(static_cast<T>(1));
-        outAngle = 0.0f;
-    } 
+        } else {
+            outAxis.SetX(static_cast<T>(0));
+            outAxis.SetY(static_cast<T>(0));
+            outAxis.SetZ(static_cast<T>(1));
+            outAngle = 0.0f;
+        } 
 
-    ASSERT(outAxis.IsNormalised());
-}
-
-
-/*
- * vislib::math::AbstractQuaternion<T, S>::Invert
- */
-template<class T, class S>
-void AbstractQuaternion<T, S>::Invert(void) {
-    T norm = this->Norm();
-
-    if (!IsEqual<T>(norm, static_cast<T>(0))) {
-        this->components[IDX_X] /= -norm;
-        this->components[IDX_Y] /= -norm;
-        this->components[IDX_Z] /= -norm;
-        this->components[IDX_W] /= norm;
-
-    } else {
-        this->components[IDX_X] = this->components[IDX_Y] 
-            = this->components[IDX_Z] = static_cast<T>(0);
-        this->components[IDX_W] = static_cast<T>(1);
-    }
-}
-
-
-/*
- * vislib::math::AbstractQuaternion<T, S>::Normalise
- */
-template<class T, class S>
-T AbstractQuaternion<T, S>::Normalise(void) {
-    T norm = this->Norm();
-
-    if (!IsEqual<T>(norm, static_cast<T>(0))) {
-        this->components[IDX_X] /= norm;
-        this->components[IDX_Y] /= norm;
-        this->components[IDX_Z] /= norm;
-        this->components[IDX_W] /= norm;
-
-    } else {
-        this->components[IDX_X] = this->components[IDX_Y] 
-            = this->components[IDX_Z] = static_cast<T>(0);
-        this->components[IDX_W] = static_cast<T>(1);
+        ASSERT(outAxis.IsNormalised());
     }
 
-    return norm;
-}
 
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::Invert
+     */
+    template<class T, class S>
+    void AbstractQuaternion<T, S>::Invert(void) {
+        T norm = this->Norm();
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::operator =
- */
-template<class T, class S>
-AbstractQuaternion<T, S>& AbstractQuaternion<T, S>::operator =(
-       const AbstractQuaternion& rhs) {
-    if (this != &rhs) {
-        ::memcpy(this->components, rhs.components, 4 * sizeof(T));
+        if (!IsEqual<T>(norm, static_cast<T>(0))) {
+            this->components[IDX_X] /= -norm;
+            this->components[IDX_Y] /= -norm;
+            this->components[IDX_Z] /= -norm;
+            this->components[IDX_W] /= norm;
+
+        } else {
+            this->components[IDX_X] = this->components[IDX_Y] 
+                = this->components[IDX_Z] = static_cast<T>(0);
+            this->components[IDX_W] = static_cast<T>(1);
+        }
     }
 
-    return *this;
-}
 
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::Normalise
+     */
+    template<class T, class S>
+    T AbstractQuaternion<T, S>::Normalise(void) {
+        T norm = this->Norm();
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::operator =
- */
-template<class T, class S>
-template<class Tp, class Sp>
-AbstractQuaternion<T, S>& AbstractQuaternion<T, S>::operator =(
-       const AbstractQuaternion<Tp, Sp>& rhs) {
-    if (static_cast<void *>(this) != static_cast<void *>(&rhs)) {
-        this->components[IDX_X] = static_cast<T>(rhs.X());
-        this->components[IDX_Y] = static_cast<T>(rhs.Y());
-        this->components[IDX_Z] = static_cast<T>(rhs.Z());
-        this->components[IDX_W] = static_cast<T>(rhs.W());
+        if (!IsEqual<T>(norm, static_cast<T>(0))) {
+            this->components[IDX_X] /= norm;
+            this->components[IDX_Y] /= norm;
+            this->components[IDX_Z] /= norm;
+            this->components[IDX_W] /= norm;
+
+        } else {
+            this->components[IDX_X] = this->components[IDX_Y] 
+                = this->components[IDX_Z] = static_cast<T>(0);
+            this->components[IDX_W] = static_cast<T>(1);
+        }
+
+        return norm;
     }
 
-    return *this;
-}
+
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::operator =
+     */
+    template<class T, class S>
+    AbstractQuaternion<T, S>& AbstractQuaternion<T, S>::operator =(
+           const AbstractQuaternion& rhs) {
+        if (this != &rhs) {
+            ::memcpy(this->components, rhs.components, 4 * sizeof(T));
+        }
+
+        return *this;
+    }
+
+
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::operator =
+     */
+    template<class T, class S>
+    template<class Tp, class Sp>
+    AbstractQuaternion<T, S>& AbstractQuaternion<T, S>::operator =(
+           const AbstractQuaternion<Tp, Sp>& rhs) {
+        if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
+            this->components[IDX_X] = static_cast<T>(rhs.X());
+            this->components[IDX_Y] = static_cast<T>(rhs.Y());
+            this->components[IDX_Z] = static_cast<T>(rhs.Z());
+            this->components[IDX_W] = static_cast<T>(rhs.W());
+        }
+
+        return *this;
+    }
 
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::operator ==
- */
-template<class T, class S>
-bool AbstractQuaternion<T, S>::operator ==(
-        const AbstractQuaternion& rhs) const {
-    return (IsEqual(this->components[IDX_X], rhs.components[IDX_X])
-        && IsEqual(this->components[IDX_Y], rhs.components[IDX_Y])
-        && IsEqual(this->components[IDX_Z], rhs.components[IDX_Z])
-        && IsEqual(this->components[IDX_W], rhs.components[IDX_W]));
-}
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::operator ==
+     */
+    template<class T, class S>
+    bool AbstractQuaternion<T, S>::operator ==(
+            const AbstractQuaternion& rhs) const {
+        return (IsEqual(this->components[IDX_X], rhs.components[IDX_X])
+            && IsEqual(this->components[IDX_Y], rhs.components[IDX_Y])
+            && IsEqual(this->components[IDX_Z], rhs.components[IDX_Z])
+            && IsEqual(this->components[IDX_W], rhs.components[IDX_W]));
+    }
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::operator ==
- */
-template<class T, class S>
-template<class Tp, class Sp>
-bool AbstractQuaternion<T, S>::operator ==(
-        const AbstractQuaternion<Tp, Sp>& rhs) const {
-    return (IsEqual<T>(this->components[IDX_X], rhs.X())
-        && IsEqual<T>(this->components[IDX_Y], rhs.Y())
-        && IsEqual<T>(this->components[IDX_Z], rhs.Z())
-        && IsEqual<T>(this->components[IDX_W], rhs.W()));
-}
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::operator ==
+     */
+    template<class T, class S>
+    template<class Tp, class Sp>
+    bool AbstractQuaternion<T, S>::operator ==(
+            const AbstractQuaternion<Tp, Sp>& rhs) const {
+        return (IsEqual<T>(this->components[IDX_X], rhs.X())
+            && IsEqual<T>(this->components[IDX_Y], rhs.Y())
+            && IsEqual<T>(this->components[IDX_Z], rhs.Z())
+            && IsEqual<T>(this->components[IDX_W], rhs.W()));
+    }
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::operator *
- */
-template<class T, class S>
-template<class Sp>
-AbstractQuaternion<T, T[4]> AbstractQuaternion<T, S>::operator *(
-        const AbstractQuaternion<T, Sp>& rhs) const {
-    return AbstractQuaternion<T, T[4]>(
-        this->components[IDX_W] * rhs.X() 
-        + rhs.W() * this->components[IDX_X]
-        + this->components[IDX_Y] * rhs.Z() 
-            - this->components[IDX_Z] * rhs.Y(),
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::operator *
+     */
+    template<class T, class S>
+    template<class Sp>
+    AbstractQuaternion<T, T[4]> AbstractQuaternion<T, S>::operator *(
+            const AbstractQuaternion<T, Sp>& rhs) const {
+        return AbstractQuaternion<T, T[4]>(
+            this->components[IDX_W] * rhs.X() 
+            + rhs.W() * this->components[IDX_X]
+            + this->components[IDX_Y] * rhs.Z() 
+                - this->components[IDX_Z] * rhs.Y(),
 
-        this->components[IDX_W] * rhs.Y() 
-        + rhs.W() * this->components[IDX_Y] 
-        + this->components[IDX_Z] * rhs.X() 
-            - this->components[IDX_X] * rhs.Z(),
+            this->components[IDX_W] * rhs.Y() 
+            + rhs.W() * this->components[IDX_Y] 
+            + this->components[IDX_Z] * rhs.X() 
+                - this->components[IDX_X] * rhs.Z(),
 
-        this->components[IDX_W] * rhs.Z() 
-        + rhs.W() * this->comp[IDX_Z] 
-        + this->components[IDX_X] * rhs.Y() 
-        - this->components[IDX_Y] * rhs.X(),
+            this->components[IDX_W] * rhs.Z() 
+            + rhs.W() * this->comp[IDX_Z] 
+            + this->components[IDX_X] * rhs.Y() 
+            - this->components[IDX_Y] * rhs.X(),
 
-        this->components[IDX_W] * rhs.W() 
-        - (this->components[IDX_X] * rhs.X()
-        + this->components[IDX_Y] * rhs.Y() 
-        + this->components[IDX_Z] * rhs.Z()));
-    return retval;
-}
-
-
-/*
- * vislib::math::AbstractQuaternion<T, S>::operator *
- */
-template<class T, class S>
-template<class Sp>
-Vector3D<T> AbstractQuaternion<T, S>::operator *(
-        const AbstractVector3D<T, Sp>& rhs) const {
-    Vector3D<T> u(this->components);
-    return ((2.0f * ((u.Dot(rhs) * u) + (this->W() * u.Cross(rhs))))
-        + ((Sqr(this->W()) - u.Dot(u)) * rhs));
-}
+            this->components[IDX_W] * rhs.W() 
+            - (this->components[IDX_X] * rhs.X()
+            + this->components[IDX_Y] * rhs.Y() 
+            + this->components[IDX_Z] * rhs.Z()));
+        return retval;
+    }
 
 
-//template<class T> Quaternion<T>::operator Matrix3x3(void) {
-//    Quaternion q = this->Normalised();
-//    return Matrix4x4(Sqr(q.comp[3]) + Sqr(q.comp[0]) - Sqr(q.comp[1]) 
-//        - Sqr(q.comp[2]), 
-//        2.0f * q.comp[0] * q.comp[1] - 2.0f * q.comp[3] 
-//        * q.comp[2], 
-//        2.0f * q.comp[3] * q.comp[1] + 2.0f * q.comp[0] 
-//        * q.comp[2], 
-//        0.0f,
-//
-//        2.0f * q.comp[3] * q.comp[2] + 2.0f * q.comp[0] * q.comp[1],
-//        Sqr(q.comp[3]) - Sqr(q.comp[0]) + Sqr(q.comp[1]) - Sqr(q.comp[2]),
-//        2.0f * q.comp[1] * q.comp[2] - 2.0f * q.comp[3] * q.comp[0],
-//        0.0f,
-//
-//        2.0f * q.comp[0] * q.comp[2] - 2.0f * q.comp[3] * q.comp[1],
-//        2.0f * q.comp[3] * q.comp[0] - 2.0f * q.comp[1] * q.comp[2],
-//        Sqr(q.comp[3]) - Sqr(q.comp[0]) - Sqr(q.comp[1]) + Sqr(q.comp[2]),
-//        0.0f,
-//
-//        0.0f, 0.0f, 0.0f, 1.0f);
-//}
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::operator *
+     */
+    template<class T, class S>
+    template<class Sp>
+    Vector3D<T> AbstractQuaternion<T, S>::operator *(
+            const AbstractVector3D<T, Sp>& rhs) const {
+        Vector3D<T> u(this->components);
+        return ((2.0f * ((u.Dot(rhs) * u) + (this->W() * u.Cross(rhs))))
+            + ((Sqr(this->W()) - u.Dot(u)) * rhs));
+    }
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::IDX_W
- */
-template<class T, class S> const UINT_PTR AbstractQuaternion<T, S>::IDX_W = 3;
+    //template<class T> Quaternion<T>::operator Matrix3x3(void) {
+    //    Quaternion q = this->Normalised();
+    //    return Matrix4x4(Sqr(q.comp[3]) + Sqr(q.comp[0]) - Sqr(q.comp[1]) 
+    //        - Sqr(q.comp[2]), 
+    //        2.0f * q.comp[0] * q.comp[1] - 2.0f * q.comp[3] 
+    //        * q.comp[2], 
+    //        2.0f * q.comp[3] * q.comp[1] + 2.0f * q.comp[0] 
+    //        * q.comp[2], 
+    //        0.0f,
+    //
+    //        2.0f * q.comp[3] * q.comp[2] + 2.0f * q.comp[0] * q.comp[1],
+    //        Sqr(q.comp[3]) - Sqr(q.comp[0]) + Sqr(q.comp[1]) - Sqr(q.comp[2]),
+    //        2.0f * q.comp[1] * q.comp[2] - 2.0f * q.comp[3] * q.comp[0],
+    //        0.0f,
+    //
+    //        2.0f * q.comp[0] * q.comp[2] - 2.0f * q.comp[3] * q.comp[1],
+    //        2.0f * q.comp[3] * q.comp[0] - 2.0f * q.comp[1] * q.comp[2],
+    //        Sqr(q.comp[3]) - Sqr(q.comp[0]) - Sqr(q.comp[1]) + Sqr(q.comp[2]),
+    //        0.0f,
+    //
+    //        0.0f, 0.0f, 0.0f, 1.0f);
+    //}
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::IDX_X
- */
-template<class T, class S> const UINT_PTR AbstractQuaternion<T, S>::IDX_X = 0;
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::IDX_W
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_W = 3;
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::IDX_Y
- */
-template<class T, class S> const UINT_PTR AbstractQuaternion<T, S>::IDX_Y = 1;
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::IDX_X
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_X = 0;
 
 
-/*
- * vislib::math::AbstractQuaternion<T, S>::IDX_Z
- */
-template<class T, class S> const UINT_PTR AbstractQuaternion<T, S>::IDX_Z = 2;
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::IDX_Y
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_Y = 1;
+
+
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::IDX_Z
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_Z = 2;
 
 } /* end namespace math */
 } /* end namespace vislib */

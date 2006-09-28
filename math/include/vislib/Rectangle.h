@@ -123,11 +123,11 @@ namespace math {
     };
 
 
-/*
- * vislib::math::Rectangle<T>::~Rectangle
- */
-template<class T> Rectangle<T>::~Rectangle(void) {
-}
+    /*
+     * vislib::math::Rectangle<T>::~Rectangle
+     */
+    template<class T> Rectangle<T>::~Rectangle(void) {
+    }
 
 } /* end namespace math */
 } /* end namespace vislib */

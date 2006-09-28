@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testdimandrect.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testfile.cpp"
 				>
 			</File>
@@ -385,6 +389,10 @@
 			>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testdimandrect.h"
 				>
 			</File>
 			<File

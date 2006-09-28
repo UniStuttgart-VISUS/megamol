@@ -243,6 +243,24 @@ namespace math {
         }
 
         /**
+         * Directly access the internal bounds of the rectangle.
+         *
+         * @return A pointer to the rectangle bounds.
+         */
+        inline const T *PeekBounds(void) const {
+            return this->bounds;
+        }
+
+        /**
+         * Directly access the internal bounds of the rectangle.
+         *
+         * @return A pointer to the rectangle bounds.
+         */
+        inline T *PeekBounds(void) {
+            return this->bounds;
+        }
+
+        /**
          * Provide direct access to the x-coordinate of the right/top point.
          *
          * @return A reference to the x-coordinate of the right/top point.
@@ -443,180 +461,184 @@ namespace math {
     };
 
 
-/*
- * vislib::math::AbstractRectangle<T, S>::~AbstractRectangle
- */
-template<class T, class S> AbstractRectangle<T, S>::~AbstractRectangle(void) {
-}
-
-
-/*
- * vislib::math::AbstractRectangle<T, S>::CalcCenter
- */
-template<class T, class S> 
-Point2D<T> AbstractRectangle<T, S>::CalcCenter(void) const {
-    return Point2D<T>(
-        this->bounds[IDX_LEFT] + this->CalcWidth() / static_cast<T>(2),
-        this->bounds[IDX_BOTTOM] + this->CalcHeight() / static_cast<T>(2));
-}
-
-
-/*
- * vislib::math::AbstractRectangle<T, S>::EnforcePositiveSize
- */
-template<class T, class S> 
-void AbstractRectangle<T, S>::EnforcePositiveSize(void) {
-    if (this->bounds[IDX_BOTTOM] > this->bounds[IDX_TOP]) {
-        Swap(this->bounds[IDX_BOTTOM], this->bounds[IDX_TOP]);
+    /*
+     * vislib::math::AbstractRectangle<T, S>::~AbstractRectangle
+     */
+    template<class T, class S> AbstractRectangle<T, S>::~AbstractRectangle(void) {
     }
 
-    if (this->bounds[IDX_LEFT] > this->bounds[IDX_RIGHT]) {
-        Swap(this->bounds[IDX_LEFT], this->bounds[IDX_RIGHT]);
-    }
-}
 
-
-/*
- * vislib::math::AbstractRectangle<T, S>::Intersect
- */
-template<class T, class S>
-template<class Sp>
-bool AbstractRectangle<T, S>::Intersect(const AbstractRectangle<T, Sp>& rect) {
-    T bottom = MAX(this->bounds[IDX_BOTTOM], rect.Bottom());
-    T left = MAX(this->bounds[IDX_LEFT], rect.Left());
-    T right = MIN(this->bounds[IDX_RIGHT], rect.Right());
-    T top = MIN(this->bounds[IDX_TOP], rect.Top());
-    
-    if ((top < bottom) || (right < left)) {
-        this->SetNull();
-        return false;
-
-    } else {
-        this->Set(left, bottom, right, top);
-        return true;
-    }
-}
-
-
-/*
- * vislib::math::AbstractRectangle<T, S>::Union
- */
-template<class T, class S>
-template<class Sp>
-void AbstractRectangle<T, S>::Union(const AbstractRectangle<T, Sp>& rect) {
-    T rectBottom, rectLeft, rectRight, rectTop;
-    
-    if (rect.Bottom() < rect.Top()) {
-        rectBottom = rect.Bottom();
-        rectTop = rect.Top();
-    } else {
-        rectBottom = rect.Top();
-        rectTop = rect.Bottom();
+    /*
+     * vislib::math::AbstractRectangle<T, S>::CalcCenter
+     */
+    template<class T, class S> 
+    Point2D<T> AbstractRectangle<T, S>::CalcCenter(void) const {
+        return Point2D<T>(
+            this->bounds[IDX_LEFT] + this->CalcWidth() / static_cast<T>(2),
+            this->bounds[IDX_BOTTOM] + this->CalcHeight() / static_cast<T>(2));
     }
 
-    if (rect.Left() < rect.Right()) {
-        rectLeft = rect.Left();
-        rectRight = rect.Right();
-    } else {
-        rectLeft = rect.Right();
-        rectRight = rect.Left();
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::EnforcePositiveSize
+     */
+    template<class T, class S> 
+    void AbstractRectangle<T, S>::EnforcePositiveSize(void) {
+        if (this->bounds[IDX_BOTTOM] > this->bounds[IDX_TOP]) {
+            Swap(this->bounds[IDX_BOTTOM], this->bounds[IDX_TOP]);
+        }
+
+        if (this->bounds[IDX_LEFT] > this->bounds[IDX_RIGHT]) {
+            Swap(this->bounds[IDX_LEFT], this->bounds[IDX_RIGHT]);
+        }
     }
 
-    this->EnforcePositiveSize();
 
-    ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
-    ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
-    ASSERT(rectLeft <= rectRight);
-    ASSERT(rectBottom <= rectTop);
+    /*
+     * vislib::math::AbstractRectangle<T, S>::Intersect
+     */
+    template<class T, class S>
+    template<class Sp>
+    bool AbstractRectangle<T, S>::Intersect(
+            const AbstractRectangle<T, Sp>& rect) {
+        T bottom = MAX(this->bounds[IDX_BOTTOM], rect.Bottom());
+        T left = MAX(this->bounds[IDX_LEFT], rect.Left());
+        T right = MIN(this->bounds[IDX_RIGHT], rect.Right());
+        T top = MIN(this->bounds[IDX_TOP], rect.Top());
+        
+        if ((top < bottom) || (right < left)) {
+            this->SetNull();
+            return false;
 
-    if (rectLeft < this->bounds[IDX_LEFT]) {
-        this->bounds[IDX_LEFT] = rectLeft;
+        } else {
+            this->Set(left, bottom, right, top);
+            return true;
+        }
     }
 
-    if (rectRight > this->bounds[IDX_RIGHT]) {
-        this->bounds[IDX_RIGHT] = rectRight;
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::Union
+     */
+    template<class T, class S>
+    template<class Sp>
+    void AbstractRectangle<T, S>::Union(const AbstractRectangle<T, Sp>& rect) {
+        T rectBottom, rectLeft, rectRight, rectTop;
+        
+        if (rect.Bottom() < rect.Top()) {
+            rectBottom = rect.Bottom();
+            rectTop = rect.Top();
+        } else {
+            rectBottom = rect.Top();
+            rectTop = rect.Bottom();
+        }
+
+        if (rect.Left() < rect.Right()) {
+            rectLeft = rect.Left();
+            rectRight = rect.Right();
+        } else {
+            rectLeft = rect.Right();
+            rectRight = rect.Left();
+        }
+
+        this->EnforcePositiveSize();
+
+        ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
+        ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
+        ASSERT(rectLeft <= rectRight);
+        ASSERT(rectBottom <= rectTop);
+
+        if (rectLeft < this->bounds[IDX_LEFT]) {
+            this->bounds[IDX_LEFT] = rectLeft;
+        }
+
+        if (rectRight > this->bounds[IDX_RIGHT]) {
+            this->bounds[IDX_RIGHT] = rectRight;
+        }
+
+        if (rectTop > this->bounds[IDX_TOP]) {
+            this->bounds[IDX_TOP] = rectTop;
+        }
+
+        if (rectBottom < this->bounds[IDX_BOTTOM]) {
+            this->bounds[IDX_BOTTOM] = rectBottom;
+        }
     }
 
-    if (rectTop > this->bounds[IDX_TOP]) {
-        this->bounds[IDX_TOP] = rectTop;
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::operator =
+     */
+    template<class T, class S>
+    AbstractRectangle<T, S>& AbstractRectangle<T, S>::operator =(
+            const AbstractRectangle& rhs) {
+
+        if (this != &rhs) {
+            ::memcpy(this->bounds, rhs.bounds, 4 * sizeof(T));
+        }
+
+        return *this;
     }
 
-    if (rectBottom < this->bounds[IDX_BOTTOM]) {
-        this->bounds[IDX_BOTTOM] = rectBottom;
-    }
-}
 
+    /*
+     * vislib::math::AbstractRectangle<T, S>::operator =
+     */
+    template<class T, class S>
+    template<class Tp, class Sp>
+    AbstractRectangle<T, S>& AbstractRectangle<T, S>::operator =(
+            const AbstractRectangle<Tp, Sp>& rhs) {
 
-/*
- * vislib::math::AbstractRectangle<T, S>::operator =
- */
-template<class T, class S>
-AbstractRectangle<T, S>& AbstractRectangle<T, S>::operator =(
-        const AbstractRectangle& rhs) {
+        if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
+            this->bounds[IDX_BOTTOM] = static_cast<T>(rhs.Bottom());
+            this->bounds[IDX_LEFT] = static_cast<T>(rhs.Left());
+            this->bounds[IDX_RIGHT] = static_cast<T>(rhs.Right());
+            this->bounds[IDX_TOP] = static_cast<T>(rhs.Top());
+        }
 
-    if (this != &rhs) {
-        ::memcpy(this->bounds, rhs.bounds, 4 * sizeof(T));
-    }
-
-    return *this;
-}
-
-
-/*
- * vislib::math::AbstractRectangle<T, S>::operator =
- */
-template<class T, class S>
-template<class Tp, class Sp>
-AbstractRectangle<T, S>& AbstractRectangle<T, S>::operator =(
-        const AbstractRectangle<Tp, Sp>& rhs) {
-
-    if (static_cast<void *>(this) != static_cast<void *>(&rhs)) {
-        this->bounds[IDX_BOTTOM] = static_cast<T>(rhs.Bottom());
-        this->bounds[IDX_LEFT] = static_cast<T>(rhs.Left());
-        this->bounds[IDX_RIGHT] = static_cast<T>(rhs.Right());
-        this->bounds[IDX_TOP] = static_cast<T>(rhs.Top());
+        return *this;
     }
 
-    return *this;
-}
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::operator ==
+     */
+    template<class T, class S> 
+    bool AbstractRectangle<T, S>::operator ==(
+            const AbstractRectangle& rhs) const {
+        return (IsEqual<T>(this->bounds[IDX_BOTTOM], rhs.bounds[IDX_BOTTOM])
+            && IsEqual<T>(this->bounds[IDX_LEFT], rhs.bounds[IDX_LEFT]) 
+            && IsEqual<T>(this->bounds[IDX_RIGHT], rhs.bounds[IDX_RIGHT]) 
+            && IsEqual<T>(this->bounds[IDX_TOP], rhs.bounds[IDX_TOP]));
+    }
 
 
-/*
- * vislib::math::AbstractRectangle<T, S>::operator ==
- */
-template<class T, class S> 
-bool AbstractRectangle<T, S>::operator ==(const AbstractRectangle& rhs) const {
-    return (IsEqual<T>(this->bounds[IDX_BOTTOM], rhs.bounds[IDX_BOTTOM])
-        && IsEqual<T>(this->bounds[IDX_LEFT] == rhs.bounds[IDX_LEFT]) 
-        && IsEqual<T>(this->bounds[IDX_RIGHT] == rhs.bounds[IDX_RIGHT]) 
-        && IsEqual<T>(this->bounds[IDX_TOP] == rhs.bounds[IDX_TOP]));
-}
+    /*
+     * vislib::math::AbstractRectangle<T, S>::IDX_BOTTOM
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractRectangle<T, S>::IDX_BOTTOM = 1;
 
 
-/*
- * vislib::math::AbstractRectangle<T, S>::IDX_BOTTOM
- */
-template<class T, class S> 
-const UINT_PTR AbstractRectangle<T, S>::IDX_BOTTOM = 1;
+    /*
+     * vislib::math::AbstractRectangle<T, S>::IDX_RIGHT
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractRectangle<T, S>::IDX_RIGHT = 2;
 
 
-/*
- * vislib::math::AbstractRectangle<T, S>::IDX_RIGHT
- */
-template<class T, class S> 
-const UINT_PTR AbstractRectangle<T, S>::IDX_RIGHT = 2;
+    /*
+     * vislib::math::AbstractRectangle<T, S>::IDX_LEFT
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractRectangle<T, S>::IDX_LEFT = 0;
 
 
-/*
- * vislib::math::AbstractRectangle<T, S>::IDX_LEFT
- */
-template<class T, class S> const UINT_PTR AbstractRectangle<T, S>::IDX_LEFT = 0;
-
-
-/*
- * vislib::math::AbstractRectangle<T, S>::IDX_TOP
- */
-template<class T, class S> const UINT_PTR AbstractRectangle<T, S>::IDX_TOP = 3;
+    /*
+     * vislib::math::AbstractRectangle<T, S>::IDX_TOP
+     */
+    template<class T, class S> 
+    const UINT_PTR AbstractRectangle<T, S>::IDX_TOP = 3;
 
 } /* end namespace math */
 } /* end namespace vislib */

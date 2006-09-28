@@ -26,9 +26,6 @@ namespace math {
 
     public:
 
-        /** A typedef for the super class. */
-        typedef AbstractVector2D<T, T[2]> Super;
-
         /**
          * Create a null vector.
          */
@@ -117,6 +114,12 @@ namespace math {
             Super::operator =(rhs);
             return *this;
         }
+
+    protected:
+
+        /** A typedef for the super class. */
+        typedef AbstractVector2D<T, T[2]> Super;
+
     };
 
 

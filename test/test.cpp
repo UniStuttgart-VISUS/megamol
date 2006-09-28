@@ -14,6 +14,7 @@
 #include "testthread.h"
 #include "testfile.h"
 #include "testvector.h"
+#include "testdimandrect.h"
 
 #include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"
@@ -37,6 +38,8 @@ int main(int argc, char **argv) {
     //::TestFile();
     //::TestString();
     ::TestVector();
+    ::TestDimension();
+    ::TestRectangle();
     //::TestFloat16();
     //::TestThread();
     

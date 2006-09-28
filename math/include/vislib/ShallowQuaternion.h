@@ -81,12 +81,12 @@ namespace math {
     };
 
 
-/*
- * vislib::math::ShallowQuaternion<T>::~ShallowQuaternion
- */
-template<class T>
-ShallowQuaternion<T>::~ShallowQuaternion(void) {
-}
+    /*
+     * vislib::math::ShallowQuaternion<T>::~ShallowQuaternion
+     */
+    template<class T>
+    ShallowQuaternion<T>::~ShallowQuaternion(void) {
+    }
 
 
 } /* end namespace math */

@@ -113,48 +113,48 @@ namespace math {
     };
 
 
-/*
- * vislib::math::Quaternion<T>::Quaternion
- */
-template<class T>
-template<class Sp>
-Quaternion<T>::Quaternion(const T& angle, AbstractVector3D<T, Sp>& axis) {
-    T len = axis.Normalise();
-    double halfAngle = 0.5 * static_cast<double>(angle);
+    /*
+     * vislib::math::Quaternion<T>::Quaternion
+     */
+    template<class T>
+    template<class Sp>
+    Quaternion<T>::Quaternion(const T& angle, AbstractVector3D<T, Sp>& axis) {
+        T len = axis.Normalise();
+        double halfAngle = 0.5 * static_cast<double>(angle);
 
-    if (!IsEqual(len, static_cast<T>(0))){
-        len = ::sin(halfAngle) / len;
-        this->comp[0] = axis.X() * len;
-        this->comp[1] = axis.Y() * len;
-        this->comp[2] = axis.Z() * len;
-        this->comp[3] = static_cast<T>(::cos(halfAngle));
+        if (!IsEqual(len, static_cast<T>(0))){
+            len = ::sin(halfAngle) / len;
+            this->comp[0] = axis.X() * len;
+            this->comp[1] = axis.Y() * len;
+            this->comp[2] = axis.Z() * len;
+            this->comp[3] = static_cast<T>(::cos(halfAngle));
 
-    } else {
-        this->comp[0] = this->comp[1] = this->comp[2] = 0.0f;
-        this->comp[3] = 1.0f;
+        } else {
+            this->comp[0] = this->comp[1] = this->comp[2] = 0.0f;
+            this->comp[3] = 1.0f;
+        }
     }
-}
 
 
-/*
- * vislib::math::Quaternion<T>::Quaternion
- */
-template<class T>
-template<class Tp, class Sp>
-Quaternion<T>::Quaternion(const AbstractQuaternion<Tp, Sp>& rhs) {
-    this->components[IDX_X] = static_cast<T>(rhs.X());
-    this->components[IDX_Y] = static_cast<T>(rhs.Y());
-    this->components[IDX_Z] = static_cast<T>(rhs.Z());
-    this->components[IDX_W] = static_cast<T>(rhs.W());
-}
+    /*
+     * vislib::math::Quaternion<T>::Quaternion
+     */
+    template<class T>
+    template<class Tp, class Sp>
+    Quaternion<T>::Quaternion(const AbstractQuaternion<Tp, Sp>& rhs) {
+        this->components[IDX_X] = static_cast<T>(rhs.X());
+        this->components[IDX_Y] = static_cast<T>(rhs.Y());
+        this->components[IDX_Z] = static_cast<T>(rhs.Z());
+        this->components[IDX_W] = static_cast<T>(rhs.W());
+    }
 
 
-/*
- * vislib::math::Quaternion<T>::~Quaternion
- */
-template<class T>
-Quaternion<T>::~Quaternion(void) {
-}
+    /*
+     * vislib::math::Quaternion<T>::~Quaternion
+     */
+    template<class T>
+    Quaternion<T>::~Quaternion(void) {
+    }
 
 
 } /* end namespace math */
