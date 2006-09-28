@@ -8,3 +8,4 @@ Christoph: Arithmetik für Float16
 Sebastian: UserData Resources for Linux (and Windows) including AccessClasses (and Generator for Linux)
 Sebastian: InStream Interfaceklasse erweitern (SocketInStream, SshInStream, ResourceInStream, ...)
            OutStream Interfaceklasse erweitern (SocketOutStream, SshOutStream(?), ...)
+Sebastian: Trigonometrische Funktionen die in Tabellen nachschlagen (mit linearer Interpolation)

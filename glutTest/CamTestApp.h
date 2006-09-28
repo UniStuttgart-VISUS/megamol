@@ -15,6 +15,8 @@
 #include "vislib/types.h"
 #include "vislib/Beholder.h"
 #include "vislib/Camera.h"
+#define VISLIB_ENABLE_OPENGL
+#include "vislib/CameraOpenGL.h"
 
 
 /*
@@ -38,13 +40,14 @@ private:
         Lens(void);
         ~Lens(void);
 
-        void Update(float sec);
+        void Update(float sec, vislib::graphics::CameraOpenGL camera);
 
         void BeginDraw(unsigned int ww, unsigned int wh, bool ortho);
         void EndDraw(void);
 
     private:
         float x, y, w, h, ax, ay;
+        vislib::graphics::CameraOpenGL camera;
 
     };
 
@@ -56,9 +59,10 @@ private:
     UINT64 lastTime;
     float walkSpeed, rotSpeed;
     bool ortho;
+    bool nativeFull;
 
     vislib::graphics::Beholder<double> beholder;
-    vislib::graphics::Camera camera;
+    vislib::graphics::CameraOpenGL camera;
 };
 
 #endif /* VISLIBTEST_CAMTESTAPP_H_INCLUDED */

@@ -293,10 +293,6 @@
 				RelativePath=".\src\Camera.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\src\CameraTile.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -312,7 +308,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\CameraTile.h"
+				RelativePath=".\include\vislib\CameraOpenGL.h"
 				>
 			</File>
 		</Filter>

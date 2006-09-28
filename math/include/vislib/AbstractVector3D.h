@@ -93,11 +93,6 @@ namespace math {
             this->components[2] = z;
         }
 
-#pragma deprecated(SetComponents) // I would like to call such a method Set (for all, vectors, points, rectangles, ...)
-        inline void SetComponents(const T& x, const T& y, const T& z) {
-            this->Set(x, y, z);
-        }
-
         /**
          * Set the x-component of the vector.
          *
@@ -216,7 +211,7 @@ namespace math {
     AbstractVector3D<T, T[3]> AbstractVector3D<T, S>::Cross(
             const AbstractVector3D<Tp, Sp>& rhs) const {
         AbstractVector3D<T, T[3]> retval;
-        retval.SetComponents(
+        retval.Set(
             this->components[1] * static_cast<T>(rhs[2])
             - this->components[2] * static_cast<T>(rhs[1]),
             this->components[2] * static_cast<T>(rhs[0])

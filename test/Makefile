@@ -31,11 +31,11 @@ ifeq ($(PLATFORM), x86_64)
 	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
-	LDFLAGS += -lvislibmath64d -lvislibnet64d -lvislibsys64d -lvislibbase64d -lvislibgraphics64d
+	LDFLAGS += -lvislibgraphics64d -lvislibmath64d -lvislibnet64d -lvislibsys64d -lvislibbase64d
 else
 	IntDir := Lin32
 	OutDir := ../Lin32
-	LDFLAGS += -lvislibmath32 -lvislibnet32 -lvislibsys32 -lvislibbase32 -lvislibgraphics32
+	LDFLAGS += -lvislibgraphics32 -lvislibmath32 -lvislibnet32 -lvislibsys32 -lvislibbase32
 endif
 
 # Append the include directories to the flags:

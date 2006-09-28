@@ -11,6 +11,7 @@
 #include <cstdio>
 
 #include "vislib/PerformanceCounter.h"
+#include "vislib/Rectangle.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -42,7 +43,7 @@ CamTestApp::Lens::~Lens(void) {
 /*
  * CamTestApp::Lens::Update
  */
-void CamTestApp::Lens::Update(float sec) {
+void CamTestApp::Lens::Update(float sec, vislib::graphics::CameraOpenGL camera) {
     bool pong = false;
 
     this->x += ax * sec;
@@ -64,6 +65,7 @@ void CamTestApp::Lens::Update(float sec) {
         this->ay = sin(d);
     }
 
+    this->camera = camera;
 }
 
 
@@ -72,6 +74,11 @@ void CamTestApp::Lens::Update(float sec) {
  */
 void CamTestApp::Lens::BeginDraw(unsigned int ww, unsigned int wh, bool ortho) {
     glViewport(0, 0, ww, wh);
+
+    this->camera.SetTileRectangle(
+        vislib::math::Rectangle<vislib::graphics::Camera::ImageSpaceValue>
+        (this->x * this->camera.GetVirtualWidth(), this->y * this->camera.GetVirtualHeight(), 
+        (this->x + this->w) * this->camera.GetVirtualWidth(), (this->y + this->h) * this->camera.GetVirtualHeight()));
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -98,13 +105,15 @@ void CamTestApp::Lens::BeginDraw(unsigned int ww, unsigned int wh, bool ortho) {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(40.0, float(this->w * ww) / float(this->h * wh), 1.0, 10.0); // TODO: Parameters!
+    this->camera.glMultProjectionMatrix();
+    //gluPerspective(40.0, float(this->w * ww) / float(this->h * wh), 1.0, 10.0); // TODO: Parameters!
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0.0, -2.5, 0.0,  // TODO: Parameters!
-        0.0, 0.0, 0.0,  // TODO: Parameters!
-        0.0, 0.0, 1.0); // TODO: Parameters!
+    this->camera.glMultViewMatrix();
+    //gluLookAt(0.0, -2.5, 0.0,  // TODO: Parameters!
+    //    0.0, 0.0, 0.0,  // TODO: Parameters!
+    //    0.0, 0.0, 1.0); // TODO: Parameters!
 }
 
 
@@ -123,15 +132,13 @@ void CamTestApp::Lens::EndDraw(void) {
  * CamTestApp::CamTestApp
  */
 CamTestApp::CamTestApp(void) : AbstractGlutApp() {
-    this->lensCount = 6;
+    this->lensCount = 7;
     this->lenses = new Lens[this->lensCount];
     this->walkSpeed = 0.25f;
     this->rotSpeed = 0.5f;
 
-    this->walkSpeed = 0.01f;
-    this->rotSpeed = 0.05f;
-
     this->ortho = false;
+    this->nativeFull = true;
 
     this->beholder.SetView(
         vislib::math::Point3D<double>(0.0, -2.5, 0.0),
@@ -141,9 +148,14 @@ CamTestApp::CamTestApp(void) : AbstractGlutApp() {
     this->camera.SetBeholder(&this->beholder);
     this->camera.SetApertureAngle(40.0f);
     this->camera.SetNearClipDistance(1.0f);
+    this->camera.SetFocalDistance(2.5f);
     this->camera.SetApertureAngle(40.0f);
-    this->camera.SetVirtualWidth(10);
-    this->camera.SetVirtualHeight(10);
+    this->camera.SetVirtualWidth(10.0f);
+    this->camera.SetVirtualHeight(10.0f);
+
+    this->camera.SetProjectionType(this->ortho 
+        ? vislib::graphics::Camera::MONO_ORTHOGRAPHIC
+        : vislib::graphics::Camera::MONO_PERSPECTIVE);
 }
 
 
@@ -180,8 +192,8 @@ int CamTestApp::PostGLInit(void) {
  */
 void CamTestApp::Resize(unsigned int w, unsigned int h) {
     AbstractGlutApp::Resize(w, h);
-    this->camera.SetVirtualWidth(float(w) / 500.0);
-    this->camera.SetVirtualHeight(float(h) / 500.0);
+    this->camera.SetVirtualWidth(float(w) / 500.0f);
+    this->camera.SetVirtualHeight(float(h) / 500.0f);
 }
 
 
@@ -192,7 +204,14 @@ bool CamTestApp::KeyPress(unsigned char key) {
     switch(key) {
         case 'o':
             this->ortho = !this->ortho;
+            this->camera.SetProjectionType(this->ortho 
+                ? vislib::graphics::Camera::MONO_ORTHOGRAPHIC
+                : vislib::graphics::Camera::MONO_PERSPECTIVE);
             printf("Orthographic projection is %s\n", this->ortho ? "on" : "off");
+            return true;
+        case 'n':
+            this->nativeFull = !this->nativeFull;
+            printf("Native calls for full image are %s\n", this->nativeFull ? "on" : "off");
             return true;
         default: return false;            
     }
@@ -214,25 +233,31 @@ void CamTestApp::Render(void) {
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-    if (this->ortho) {
-        double w, h;
-        w = 0.5 * this->camera.GetVirtualWidth();
-        h = 0.5 * this->camera.GetVirtualHeight();
-        glOrtho(-w, w, -h, h,
-            this->camera.GetNearClipDistance(), this->camera.GetFarClipDistance());
+    if (this->nativeFull) {
+        if (this->ortho) {
+            double w, h;
+            w = 0.5 * this->camera.GetVirtualWidth();
+            h = 0.5 * this->camera.GetVirtualHeight();
+            glOrtho(-w, w, -h, h,
+                this->camera.GetNearClipDistance(), this->camera.GetFarClipDistance());
+        } else {
+            gluPerspective(this->camera.GetApertureAngle(), this->GetAspectRatio(),
+                this->camera.GetNearClipDistance(), this->camera.GetFarClipDistance());
+        }
     } else {
-        gluPerspective(this->camera.GetApertureAngle(), this->GetAspectRatio(),
-            this->camera.GetNearClipDistance(), this->camera.GetFarClipDistance());
+        this->camera.glMultProjectionMatrix();
     }
 
     glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-    {
+    if (this->nativeFull) {
         const vislib::math::Point3D<double> &pos = this->beholder.GetPosition();
         const vislib::math::Point3D<double> &lat = this->beholder.GetLookAt();
         const vislib::math::Vector3D<double> &up = this->beholder.GetUpVector();
         gluLookAt(pos.X(), pos.Y(), pos.Z(), lat.X(), lat.Y(), lat.Z(), up.X(), up.Y(), up.Z());
+    } else {
+        this->camera.glMultViewMatrix();
     }
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -242,7 +267,7 @@ void CamTestApp::Render(void) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 
     for (unsigned int i = 0; i < this->lensCount; i++) {
-        this->lenses[i].Update(sec);
+        this->lenses[i].Update(sec, this->camera);
         this->lenses[i].BeginDraw(this->GetWidth(), this->GetHeight(), this->ortho);
         this->RenderLogo();
         this->lenses[i].EndDraw();
