@@ -155,7 +155,7 @@ namespace math {
          * @return The right/bottom point of the rectangle.
          */
         inline Point2D<T> GetRightBottom(void) const {
-            return Point<T>(this->bounds[IDX_RIGHT], this->bounds[IDX_BOTTOM]);
+            return Point2D<T>(this->bounds[IDX_RIGHT], this->bounds[IDX_BOTTOM]);
         }
 
         /**
