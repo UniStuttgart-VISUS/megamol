@@ -61,6 +61,15 @@ namespace math {
         T Dot(const AbstractVector& rhs) const;
 
         /**
+         * Answer whether the vector is normalised.
+         *
+         * @return true, if the vector is normalised, false otherwise.
+         */
+        inline bool IsNormalised(void) const {
+            return IsEqual<T>(this->Length(), static_cast<T>(1));
+        }
+
+        /**
          * Answer whether the vector is a null vector.
          *
          * @return true, if the vector is a null vector, false otherwise.

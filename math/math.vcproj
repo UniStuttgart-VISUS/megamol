@@ -298,6 +298,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractQuaternion.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractRectangle.cpp"
 				>
 			</File>
@@ -338,7 +342,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Quaternion.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Rectangle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ShallowQuaternion.cpp"
 				>
 			</File>
 			<File
@@ -388,6 +400,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AbstractQuaternion.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractRectangle.h"
 				>
 			</File>
@@ -432,7 +448,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\Quaternion.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\Rectangle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowQuaternion.h"
 				>
 			</File>
 			<File
