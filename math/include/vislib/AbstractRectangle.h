@@ -13,6 +13,7 @@
 
 
 #include "vislib/assert.h"
+#include "vislib/Dimension2D.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/Point2D.h"
@@ -167,15 +168,14 @@ namespace math {
             return Point2D<T>(this->bounds[IDX_RIGHT], this->bounds[IDX_TOP]);
         }
 
-        // TODO
-        ///**
-        // * Answer the dimensions of the rectangle.
-        // *
-        // * @return The dimensions of the rectangle.
-        // */
-        //inline Dimension2D<T, S> GetSize(void) const {
-        //    return Dimension2D<T, S>(this->CalcWidth(), this->CalcHeight());
-        //}
+        /**
+         * Answer the dimensions of the rectangle.
+         *
+         * @return The dimensions of the rectangle.
+         */
+        inline Dimension2D<T> GetSize(void) const {
+            return Dimension2D<T>(this->CalcWidth(), this->CalcHeight());
+        }
 
         /**
          * Answer the y-coordinate of the right/top point.
@@ -328,16 +328,16 @@ namespace math {
             this->bounds[IDX_RIGHT] = right;
         }
 
-        // TODO
-        ///**
-        // * Set a new size of the rectangle.
-        // *
-        // * @param size The new rectangle dimensions.
-        // */
-        //inline void SetSize(const Dimension2D<T, S>& size) {
-        //    this->SetWidth(size.GetWidth());
-        //    this->SetHeight(size.GetHeight());
-        //}
+        /**
+         * Set a new size of the rectangle.
+         *
+         * @param size The new rectangle dimensions.
+         */
+        template<class Sp>
+        inline void SetSize(const AbstractDimension2D<T, Sp>& size) {
+            this->SetWidth(size.GetWidth());
+            this->SetHeight(size.GetHeight());
+        }
 
         /**
          * Change the y-coordinate of the right/top point.

@@ -12,6 +12,7 @@
 
 
 #include "vislib/assert.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 
 

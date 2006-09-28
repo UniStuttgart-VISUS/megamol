@@ -61,9 +61,19 @@ namespace math {
             ::memcpy(this->bounds, bounds, 4 * sizeof(T));
         }
 
-        //template<class Sp>
-        //Rectangle(const AbstractPoint2D<T, Sp>& origin, 
-        //    const Dimension2D<T, Sp> size);
+        /**
+         * Construct a rectangle with a specific origin and dimension.
+         *
+         * @param origin The origin of the 
+         */
+        template<class Sp1, class Sp2>
+        inline Rectangle(const AbstractPoint2D<T, Sp1>& origin, 
+                const AbstractDimension2D<T, Sp2> size) {
+            this->bounds[IDX_LEFT] = this->bounds[IDX_RIGHT] = origin.X();
+            this->bounds[IDX_BOTTOM] = this->bounds[IDX_TOP] = origin.Y();
+            this->bounds[IDX_RIGHT] += size.Width();
+            this->bounds[IDX_TOP] += size.Height();
+        }
 
         /**
          * Copy ctor.
