@@ -105,7 +105,9 @@ void StereoCamTestApp::Render(void) {
     for (int y = 0; y < SCTA_CY_TILES; y++)
         for (int x = 0; x < SCTA_CX_TILES; x++) {
             rect = this->camTilesLeft[x][y].GetTileRectangle();
-            glViewport(rect.Left() + 0.5f, rect.Bottom() + 0.5f, rect.CalcWidth() + 0.5f, rect.CalcHeight() + 0.5f);
+            glViewport(int(rect.Left() + 0.5f), 
+                int(rect.Bottom() + 0.5f), int(rect.CalcWidth() + 0.5f), 
+                int(rect.CalcHeight() + 0.5f));
 
             glMatrixMode(GL_PROJECTION);
 	        glLoadIdentity();
