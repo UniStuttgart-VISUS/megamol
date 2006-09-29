@@ -19,8 +19,12 @@
 #else /* _WIN32 */
 #endif /* _WIN32 */
 
+
 #include "AbstractGlutApp.h"
+
 #include "CamTestApp.h"
+#include "StereoCamTestApp.h"
+
 
 // static global functions
 AbstractGlutApp *app = NULL;
@@ -66,7 +70,8 @@ int main(int argc, char* argv[]) {
     printf("VISlib glut test program\n");
 
     // select test application:
-    CamTestApp cta; app = &cta;
+    //CamTestApp cta; app = &cta;
+    StereoCamTestApp scta; app = &scta;
 
     // run test application
     if (app) {
@@ -80,6 +85,8 @@ int main(int argc, char* argv[]) {
     	glutDisplayFunc(display);
 	    glutReshapeFunc(reshape);
         glutKeyboardFunc(keyboard);
+
+        glutFullScreen();
 
     	glutMainLoop();
     }

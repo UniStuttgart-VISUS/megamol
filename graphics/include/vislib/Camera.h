@@ -324,7 +324,7 @@ namespace graphics {
          * @throws IllegalStateException if this camera is not associated with a
          *         Beholder.
          */
-        void CalcFrustrumParameters(SceneSpaceValue &outLeft,
+        void CalcFrustumParameters(SceneSpaceValue &outLeft,
             SceneSpaceValue &outRight, SceneSpaceValue &outBottom,
             SceneSpaceValue &outTop, SceneSpaceValue &outNearClip,
             SceneSpaceValue &outFarClip);
@@ -344,6 +344,28 @@ namespace graphics {
             math::Point3D<SceneSpaceValue> &outPosition,
             math::Vector3D<SceneSpaceValue> &outFront,
             math::Vector3D<SceneSpaceValue> &outUp);
+
+        /**
+         * Answer wether the view or frustum parameters need to be recalculated.
+         *
+         * @return true if the parameters need to be recalculated, false 
+         *         otherwise.
+         */
+        inline bool NeedUpdate(void) {
+            return this->membersChanged || (this->updateCounter == 0)
+                || (this->holder == NULL) 
+                || (this->updateCounter != this->holder->GetUpdateCounterValue());
+        }
+
+        /**
+         * Clears all update flaggs.
+         */
+        inline void ClearUpdateFlaggs(void) {
+            this->membersChanged = false;
+            if (this->holder) {
+                this->updateCounter = this->holder->GetUpdateCounterValue();
+            }
+        }
 
     private:
 

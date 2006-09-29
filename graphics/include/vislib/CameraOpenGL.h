@@ -43,7 +43,7 @@ namespace graphics {
         /**
          * default ctor
          */
-        CameraOpenGL(void) : Camera() {
+        CameraOpenGL(void) : Camera(), viewNeedsUpdate(true), projNeedsUpdate(true) {
         }
 
         /**
@@ -51,7 +51,7 @@ namespace graphics {
          *
          * @param rhs CameraOpenGL object to copy from.
          */
-        CameraOpenGL(const CameraOpenGL& rhs) : Camera(rhs) {
+        CameraOpenGL(const CameraOpenGL& rhs) : Camera(rhs), viewNeedsUpdate(true), projNeedsUpdate(true) {
         }
 
         /**
@@ -61,7 +61,7 @@ namespace graphics {
          *                 associated with.
          */
         template <class Tp > CameraOpenGL(const Beholder<Tp>& beholder) 
-            : Camera(rhs) {
+            : Camera(rhs), viewNeedsUpdate(true), projNeedsUpdate(true) {
         }
 
         /**
@@ -78,10 +78,15 @@ namespace graphics {
          *        Camera.
          */
         void glMultProjectionMatrix(void) {
-            // TODO: Call calc only if update is needed! Store values in members.
-            Camera::SceneSpaceValue left, right, bottom, top, nearClip, farClip;
+            if (this->NeedUpdate()) {
+                this->viewNeedsUpdate = this->projNeedsUpdate = true;
+                this->ClearUpdateFlaggs();
+            }
             
-            Camera::CalcFrustrumParameters(left, right, bottom, top, nearClip, farClip);
+            if (this->projNeedsUpdate) {
+                Camera::CalcFrustumParameters(left, right, bottom, top, nearClip, farClip);
+                this->projNeedsUpdate = false;
+            }
 
             if (this->GetProjectionType() != Camera::MONO_ORTHOGRAPHIC) {
                 ::glFrustum(left, right, bottom, top, nearClip, farClip);
@@ -94,22 +99,22 @@ namespace graphics {
          * Multiplies the current openGL matrix with the viewing matrix of this
          * camera.
          *
-         * TODO: what does this comment line mean?
-         * The matrix generated postmultiplies the current matrix.
-         *
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
         void glMultViewMatrix(void) {
-            // TODO: Call calc only if update is needed! Store values in members.
-            math::Point3D<Camera::SceneSpaceValue> pos;
-            math::Vector3D<Camera::SceneSpaceValue> lookDir;
-            math::Vector3D<Camera::SceneSpaceValue> up;
+            if (this->NeedUpdate()) {
+                this->viewNeedsUpdate = this->projNeedsUpdate = true;
+                this->ClearUpdateFlaggs();
+            }
 
-            Camera::CalcViewParameters(pos, lookDir, up);
+            if (this->viewNeedsUpdate) {
+                Camera::CalcViewParameters(pos, lookDir, up);
+                this->viewNeedsUpdate = false;
+            }
 
             ::gluLookAt(pos.X(), pos.Y(), pos.Z(), 
-                lookDir.X(), lookDir.Y(), lookDir.Z(), 
+                pos.X() + lookDir.X(), pos.Y() + lookDir.Y(), pos.Z() + lookDir.Z(), 
                 up.X(), up.Y(), up.Z());
         }
 
@@ -120,6 +125,38 @@ namespace graphics {
             Camera::operator=(rhs);
             return *this;
         }
+
+    private:
+
+        /** Flaggs which members need updates */
+        bool viewNeedsUpdate, projNeedsUpdate;
+
+        /** viewing frustum minimal x */
+        Camera::SceneSpaceValue left;
+
+        /** viewing frustum maximal x */
+        Camera::SceneSpaceValue right;
+
+        /** viewing frustum minimal y */
+        Camera::SceneSpaceValue bottom;
+
+        /** viewing frustum maximal y */
+        Camera::SceneSpaceValue top;
+
+        /** viewing frustum minimal z */
+        Camera::SceneSpaceValue nearClip;
+
+        /** viewing frustum maximal z */
+        Camera::SceneSpaceValue farClip;
+
+        /** projection viewer position */
+        math::Point3D<Camera::SceneSpaceValue> pos;
+
+        /** projection viewing direction */ 
+        math::Vector3D<Camera::SceneSpaceValue> lookDir;
+
+        /** projection up vector */
+        math::Vector3D<Camera::SceneSpaceValue> up;
 
     };
 

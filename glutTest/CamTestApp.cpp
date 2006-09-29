@@ -146,8 +146,8 @@ CamTestApp::CamTestApp(void) : AbstractGlutApp() {
         vislib::math::Vector3D<double>(0.0, 0.0, 1.0));
 
     this->camera.SetBeholder(&this->beholder);
-    this->camera.SetApertureAngle(40.0f);
     this->camera.SetNearClipDistance(1.0f);
+    this->camera.SetFarClipDistance(5.0f);
     this->camera.SetFocalDistance(2.5f);
     this->camera.SetApertureAngle(40.0f);
     this->camera.SetVirtualWidth(10.0f);

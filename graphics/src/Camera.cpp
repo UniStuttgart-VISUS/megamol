@@ -178,13 +178,13 @@ vislib::graphics::Camera & vislib::graphics::Camera::operator=(
 
 
 /*
- * vislib::graphics::Camera::CalcFrustrumParameters
+ * vislib::graphics::Camera::CalcFrustumParameters
  */
-void vislib::graphics::Camera::CalcFrustrumParameters(SceneSpaceValue &outLeft,
+void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceValue &outLeft,
         SceneSpaceValue &outRight, SceneSpaceValue &outBottom,
         SceneSpaceValue &outTop, SceneSpaceValue &outNearClip,
         SceneSpaceValue &outFarClip) {
-    float w, h;
+    float w, h, off = 1.0f;
 
     if (!this->holder) {
         throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
@@ -206,6 +206,23 @@ void vislib::graphics::Camera::CalcFrustrumParameters(SceneSpaceValue &outLeft,
             outRight = this->tileRect.GetRight() * w/ this->virtualHalfWidth;
             outBottom = this->tileRect.GetBottom() * h / this->virtualHalfHeight;
             outTop = this->tileRect.GetTop() * h / this->virtualHalfHeight;
+          
+            outLeft -= w;
+            outRight -= w;
+            outBottom -= h;
+            outTop -= h;
+        } break;
+        case STEREO_OFF_AXIS_LEFT: off = -1.0f; // no break
+        case STEREO_OFF_AXIS_RIGHT: {
+            h = tan(this->halfApertureAngle) * this->nearClip;
+            w = h * this->virtualHalfWidth / this->virtualHalfHeight;
+
+            outLeft = this->tileRect.GetLeft() * w / this->virtualHalfWidth;
+            outRight = this->tileRect.GetRight() * w/ this->virtualHalfWidth;
+            outBottom = this->tileRect.GetBottom() * h / this->virtualHalfHeight;
+            outTop = this->tileRect.GetTop() * h / this->virtualHalfHeight;
+
+            w += off * (this->nearClip * this->halfStereoDisparity) / this->focalDistance;
 
             outLeft -= w;
             outRight -= w;
