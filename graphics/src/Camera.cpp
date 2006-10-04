@@ -50,6 +50,7 @@ void vislib::graphics::Camera::SetDefaultValues(void) {
     this->nearClip = 0.1f;
     this->halfStereoDisparity = 0.01f;
     this->projectionType = vislib::graphics::Camera::MONO_PERSPECTIVE;
+    this->eye = vislib::graphics::Camera::LEFT_EYE;
     this->virtualHalfWidth = static_cast<ImageSpaceValue>(400);
     this->virtualHalfHeight = static_cast<ImageSpaceValue>(300);
     this->ResetTileRectangle();
@@ -131,6 +132,15 @@ void vislib::graphics::Camera::SetProjectionType(vislib::graphics::Camera::Proje
 
 
 /*
+ * vislib::graphics::Camera::SetStereoEye
+ */
+void vislib::graphics::Camera::SetStereoEye(StereoEye eye) {
+    this->eye = eye;
+    this->membersChanged = true;
+}
+
+
+/*
  * vislib::graphics::Camera::SetVirtualWidth
  */
 void vislib::graphics::Camera::SetVirtualWidth(ImageSpaceValue virtualWidth) {
@@ -184,46 +194,52 @@ void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceValue &outLeft,
         SceneSpaceValue &outRight, SceneSpaceValue &outBottom,
         SceneSpaceValue &outTop, SceneSpaceValue &outNearClip,
         SceneSpaceValue &outFarClip) {
-    float w, h, off = 1.0f;
+    float w, h;
 
     if (!this->holder) {
         throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
     }
 
+    // clipping distances
     outNearClip = this->nearClip;
     outFarClip = this->farClip;
 
     switch(this->projectionType) {
         case MONO_PERSPECTIVE: // no break
-        case STEREO_PARALLEL_LEFT: // no break
-        case STEREO_PARALLEL_RIGHT: // no break
-        case STEREO_TOE_IN_LEFT: // no break
-        case STEREO_TOE_IN_RIGHT: {
+        case STEREO_PARALLEL: // no break
+        case STEREO_TOE_IN: {
+            // symmetric main frustum
             h = tan(this->halfApertureAngle) * this->nearClip;
             w = h * this->virtualHalfWidth / this->virtualHalfHeight;
 
+            // recalc tile rect on near clipping plane
             outLeft = this->tileRect.GetLeft() * w / this->virtualHalfWidth;
             outRight = this->tileRect.GetRight() * w/ this->virtualHalfWidth;
             outBottom = this->tileRect.GetBottom() * h / this->virtualHalfHeight;
             outTop = this->tileRect.GetTop() * h / this->virtualHalfHeight;
           
+            // cut out local frustum for tile rect
             outLeft -= w;
             outRight -= w;
             outBottom -= h;
             outTop -= h;
         } break;
-        case STEREO_OFF_AXIS_LEFT: off = -1.0f; // no break
-        case STEREO_OFF_AXIS_RIGHT: {
+        case STEREO_OFF_AXIS: {
+            // symmetric main frustum
             h = tan(this->halfApertureAngle) * this->nearClip;
             w = h * this->virtualHalfWidth / this->virtualHalfHeight;
 
+            // recalc tile rect on near clipping plane
             outLeft = this->tileRect.GetLeft() * w / this->virtualHalfWidth;
             outRight = this->tileRect.GetRight() * w/ this->virtualHalfWidth;
             outBottom = this->tileRect.GetBottom() * h / this->virtualHalfHeight;
             outTop = this->tileRect.GetTop() * h / this->virtualHalfHeight;
 
-            w += off * (this->nearClip * this->halfStereoDisparity) / this->focalDistance;
+            // shear frustum
+            w += ((this->eye == LEFT_EYE) ? -1.0f : 1.0f) 
+                * (this->nearClip * this->halfStereoDisparity) / this->focalDistance;
 
+            // cut out local frustum for tile rect
             outLeft -= w;
             outRight -= w;
             outBottom -= h;
@@ -235,7 +251,6 @@ void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceValue &outLeft,
             outRight = this->tileRect.GetRight() - this->virtualHalfWidth;
             outBottom = this->tileRect.GetBottom() - this->virtualHalfHeight;
             outTop = this->tileRect.GetTop() - this->virtualHalfHeight;
-            // return;
             break;
         default:
             // projection parameter calculation still not implemeneted
@@ -255,40 +270,36 @@ void vislib::graphics::Camera::CalcViewParameters(
         throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
     }
 
+    // mono projection position information
     this->holder->ReturnUpVector(outUp);
     this->holder->ReturnPosition(outPosition);
     this->holder->ReturnFrontVector(outFront);
 
-    if ((this->projectionType == STEREO_PARALLEL_LEFT) 
-            || (this->projectionType == STEREO_OFF_AXIS_LEFT) 
-            || (this->projectionType == STEREO_TOE_IN_LEFT)) {
-        
+    if ((this->projectionType == STEREO_PARALLEL) 
+            || (this->projectionType == STEREO_OFF_AXIS) 
+            || (this->projectionType == STEREO_TOE_IN)) {
+        // shift eye for stereo
         math::Vector3D<SceneSpaceValue> right;
-
         this->holder->ReturnRightVector(right);
         right *= this->halfStereoDisparity;
-        outPosition -= right;
-    }
 
-    if ((this->projectionType == STEREO_PARALLEL_RIGHT) 
-            || (this->projectionType == STEREO_OFF_AXIS_RIGHT) 
-            || (this->projectionType == STEREO_TOE_IN_RIGHT)) {
+        if (this->eye == LEFT_EYE) {
+            // left eye
+            outPosition -= right;
+        } else {
+            // right eye
+            outPosition += right;
+        }
 
-        math::Vector3D<SceneSpaceValue> right;
-
-        this->holder->ReturnRightVector(right);
-        right *= this->halfStereoDisparity;
-        outPosition += right;
-    }
-
-    if ((this->projectionType == STEREO_TOE_IN_LEFT) 
-            || (this->projectionType == STEREO_TOE_IN_RIGHT)) {
-
-        math::Point3D<SceneSpaceValue> lookAt;
-
-        this->holder->ReturnPosition(lookAt);
-        lookAt += outFront * this->focalDistance;
-        outFront = lookAt - outPosition;
-        outFront.Normalise(); // unsure if this is necessary
+        if (this->projectionType == STEREO_TOE_IN) {
+            // rotate camera parameters for toe in
+            math::Point3D<SceneSpaceValue> focusPoint;
+            // calculate focus point
+            this->holder->ReturnPosition(focusPoint);
+            focusPoint += outFront * this->focalDistance;
+            // recalculate front vector
+            outFront = focusPoint - outPosition;
+            // outFront.Normalise(); // unsure if this is necessary
+        }
     }
 }

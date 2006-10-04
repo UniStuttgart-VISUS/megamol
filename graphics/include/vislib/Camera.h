@@ -44,12 +44,15 @@ namespace graphics {
         enum ProjectionType {
             MONO_PERSPECTIVE = 0,
             MONO_ORTHOGRAPHIC,
-            STEREO_PARALLEL_LEFT,
-            STEREO_PARALLEL_RIGHT,
-            STEREO_OFF_AXIS_LEFT,
-            STEREO_OFF_AXIS_RIGHT,
-            STEREO_TOE_IN_LEFT,
-            STEREO_TOE_IN_RIGHT
+            STEREO_PARALLEL,
+            STEREO_OFF_AXIS,
+            STEREO_TOE_IN
+        };
+
+        /** possible values for stereo eyes */
+        enum StereoEye {
+            LEFT_EYE = 0,
+            RIGHT_EYE = 1
         };
 
         /**
@@ -137,6 +140,15 @@ namespace graphics {
             return this->projectionType;
         }
 
+        /**
+         * Returns the eye for stereo projection
+         *
+         * @return The eye for stereo projection
+         */
+        inline StereoEye GetStereoEye(void) {
+            return this->eye;
+        }
+
         /** 
          * Returns Width of the virtual camera image 
          *
@@ -214,6 +226,14 @@ namespace graphics {
          * @param stereoProjectionType The type of stereo projection
          */
         void SetProjectionType(ProjectionType projectionType);
+
+        /**
+         * Sets the eye for stereo projection and sets the memberChanged flag.
+         * This value has no effect if a mono projection is used.
+         *
+         * @param eye The new eye to be set.
+         */
+        void SetStereoEye(StereoEye eye);
 
         /** 
          * Sets the width of the virtual camera image and sets the 
@@ -335,6 +355,7 @@ namespace graphics {
          *
          * @param outPosition Returns the position of the camera.
          * @param outFront Returns the vector in viewing direction of the camera.
+         *                 The returned vector may be not normalized.
          * @param outUp Returns the up vector of the camera.
          *
          * @throws IllegalStateException if this camera is not associated with a
@@ -519,6 +540,9 @@ namespace graphics {
 
         /** type of stereo projection */
         ProjectionType projectionType;
+
+        /** eye for stereo projections */
+        StereoEye eye;
 
         /** Half width of the virtual camera image along the right vector*/
         ImageSpaceValue virtualHalfWidth;

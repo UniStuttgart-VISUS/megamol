@@ -34,8 +34,8 @@ StereoCamTestApp::StereoCamTestApp(void) : AbstractGlutApp() {
     this->cameraRight = this->cameraLeft;
 
     printf("Stereo Projection set to STEREO_PARALLEL\n");
-    this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL_LEFT);
-    this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL_RIGHT);
+    this->cameraLeft.SetStereoEye(vislib::graphics::Camera::LEFT_EYE);
+    this->cameraRight.SetStereoEye(vislib::graphics::Camera::RIGHT_EYE);
 
     this->UpdateCamTiles();
 }
@@ -144,18 +144,18 @@ bool StereoCamTestApp::KeyPress(unsigned char key) {
     switch(key) {
         case '1':
             printf("Stereo Projection set to STEREO_PARALLEL\n");
-            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL_LEFT);
-            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL_RIGHT);
+            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL);
+            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL);
             break;
         case '2':
             printf("Stereo Projection set to STEREO_OFF_AXIS\n");
-            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_OFF_AXIS_LEFT);
-            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_OFF_AXIS_RIGHT);
+            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_OFF_AXIS);
+            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_OFF_AXIS);
             break;
         case '3':
             printf("Stereo Projection set to STEREO_TOE_IN\n");
-            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_TOE_IN_LEFT);
-            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_TOE_IN_RIGHT);
+            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_TOE_IN);
+            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_TOE_IN);
             break;
         case 'a': {
             float sd = this->cameraLeft.GetStereoDisparity();
