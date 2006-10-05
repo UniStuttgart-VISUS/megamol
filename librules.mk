@@ -27,19 +27,27 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName).a
 
 # Rules for intermediate archives:	
 $(IntDir)/$(DebugDir)/lib$(TargetName).a: $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).a: "
+	@tput sgr0
 	$(AR) -cvq $@ $^
 	
 $(IntDir)/$(ReleaseDir)/lib$(TargetName).a: $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).a: "
+	@tput sgr0
 	$(AR) -cvq $@ $^	
 	
 
 # Rules for dependencies:
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@tput sgr0
 	$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/$(DebugDir)\/\0/g' > $@
 	
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@tput sgr0
 	$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/$(ReleaseDir)\/\0/g' > $@
 	
 	
@@ -48,10 +56,14 @@ $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 # Rules for object files:	
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@tput sgr0
 	$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<	
 	
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@tput sgr0
 	$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<	
 	
 	

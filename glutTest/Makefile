@@ -57,16 +57,22 @@ $(OutDir)/$(OutName): $(IntDir)/$(OutName)
 	@cp $(IntDir)/$(OutName) $(OutDir)/
 	
 $(IntDir)/$(OutName): $(CPP_OBJS) 
+	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
+	@tput sgr0
 	$(LINK) -o $@ $^ $(LDFLAGS)
 
 $(IntDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(IntDir)
+	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@tput sgr0
 	$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
 -include $(CPP_DEPS)
 	
 $(IntDir)/%.o:
 	@mkdir -p $(IntDir)
+	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@tput sgr0
 	$(CPP) -c $(CPPFLAGS) -o $@ $<
 	
 #tags:
