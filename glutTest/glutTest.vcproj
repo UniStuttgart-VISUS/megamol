@@ -20,9 +20,9 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Win32\$(ConfigurationName)"
-			IntermediateDirectory="Win32\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug32.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase32d.lib vislibmath32d.lib vislibgraphics32d.lib opengl32.lib glut32.lib vislibsys32d.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -98,9 +98,9 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="Win64\$(ConfigurationName)"
-			IntermediateDirectory="Win64\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -122,7 +122,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase64d.lib vislibmath64d.lib vislibgraphics64d.lib opengl32.lib glut64.lib vislibsys64d.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -177,9 +177,9 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Win32\$(ConfigurationName)"
-			IntermediateDirectory="Win32\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -200,7 +200,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -219,7 +219,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase32.lib vislibmath32.lib vislibgraphics32.lib opengl32.lib glut32.lib vislibsys32.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -255,9 +255,9 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="Win64\$(ConfigurationName)"
-			IntermediateDirectory="Win64\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease64.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -279,7 +279,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -298,7 +298,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase64.lib vislibmath64.lib vislibgraphics64.lib opengl32.lib glut64.lib vislibsys64.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"

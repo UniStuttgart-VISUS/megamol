@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="TargetRelease64"
+	>
+	<UserMacro
+		Name="Bits"
+		Value="64"
+		PerformEnvironmentSet="true"
+	/>
+	<UserMacro
+		Name="DebugD"
+		Value=""
+		PerformEnvironmentSet="true"
+	/>
+	<UserMacro
+		Name="BitsD"
+		Value="64"
+		PerformEnvironmentSet="true"
+	/>
+</VisualStudioPropertySheet>

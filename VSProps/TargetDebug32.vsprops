@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="TargetDebug32"
+	>
+	<UserMacro
+		Name="Bits"
+		Value="32"
+		PerformEnvironmentSet="true"
+	/>
+	<UserMacro
+		Name="DebugD"
+		Value="d"
+		PerformEnvironmentSet="true"
+	/>
+	<UserMacro
+		Name="BitsD"
+		Value="32d"
+		PerformEnvironmentSet="true"
+	/>
+</VisualStudioPropertySheet>

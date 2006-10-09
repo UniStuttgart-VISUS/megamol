@@ -20,9 +20,9 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Win32\$(ConfigurationName)"
-			IntermediateDirectory="Win32\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug32.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase32d.lib vislibsys32d.lib vislibmath32d.lib vislibnet32d.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -98,9 +98,9 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="Win64\$(ConfigurationName)"
-			IntermediateDirectory="Win64\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -122,7 +122,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase64d.lib vislibsys64d.lib vislibmath64d.lib vislibnet64d.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -177,9 +177,9 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Win32\$(ConfigurationName)"
-			IntermediateDirectory="Win32\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -222,7 +222,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase32.lib vislibsys32.lib vislibmath32.lib vislibnet32.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
 				LinkIncremental="0"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="false"
@@ -257,9 +257,9 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="Win64\$(ConfigurationName)"
-			IntermediateDirectory="Win64\$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease64.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -303,7 +303,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase64.lib vislibsys64.lib vislibmath64.lib vislibnet64.lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
 				LinkIncremental="0"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="false"
