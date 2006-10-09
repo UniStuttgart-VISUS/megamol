@@ -60,8 +60,8 @@ namespace graphics {
          * @param beholder The beholder the new camera object will be 
          *                 associated with.
          */
-        template <class Tp > CameraOpenGL(const Beholder<Tp>& beholder) 
-            : Camera(rhs), viewNeedsUpdate(true), projNeedsUpdate(true) {
+        template <class Tp > CameraOpenGL(Beholder<Tp>* beholder) 
+            : Camera(beholder), viewNeedsUpdate(true), projNeedsUpdate(true) {
         }
 
         /**
