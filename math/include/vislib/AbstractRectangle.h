@@ -56,8 +56,8 @@ namespace math {
          *
          * @return The area covered by the rectangle.
          */
-        inline T CalcArea(void) const {
-            return (this->CalcWidth() * this->CalcHeight());
+        inline T Area(void) const {
+            return (this->Width() * this->Height());
         }
 
         /** 
@@ -72,7 +72,7 @@ namespace math {
          *
          * @return The height of the rectangle.
          */
-        inline T CalcHeight(void) const {
+        inline T Height(void) const {
             return (this->bounds[IDX_TOP] > this->bounds[IDX_BOTTOM])
                 ? (this->bounds[IDX_TOP] - this->bounds[IDX_BOTTOM])
                 : (this->bounds[IDX_BOTTOM] - this->bounds[IDX_TOP]);
@@ -83,7 +83,7 @@ namespace math {
          *
          * @return The width of the rectangle.
          */
-        inline T CalcWidth(void) const {
+        inline T Width(void) const {
             return (this->bounds[IDX_RIGHT] > this->bounds[IDX_LEFT])
                 ? (this->bounds[IDX_RIGHT] - this->bounds[IDX_LEFT])
                 : (this->bounds[IDX_LEFT] - this->bounds[IDX_RIGHT]);
@@ -174,7 +174,7 @@ namespace math {
          * @return The dimensions of the rectangle.
          */
         inline Dimension2D<T> GetSize(void) const {
-            return Dimension2D<T>(this->CalcWidth(), this->CalcHeight());
+            return Dimension2D<T>(this->Width(), this->Height());
         }
 
         /**
@@ -474,8 +474,8 @@ namespace math {
     template<class T, class S> 
     Point2D<T> AbstractRectangle<T, S>::CalcCenter(void) const {
         return Point2D<T>(
-            this->bounds[IDX_LEFT] + this->CalcWidth() / static_cast<T>(2),
-            this->bounds[IDX_BOTTOM] + this->CalcHeight() / static_cast<T>(2));
+            this->bounds[IDX_LEFT] + this->Width() / static_cast<T>(2),
+            this->bounds[IDX_BOTTOM] + this->Height() / static_cast<T>(2));
     }
 
 
