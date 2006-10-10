@@ -40,7 +40,7 @@ private:
     float angle;
     UINT64 lastTime;
 
-    vislib::graphics::Beholder<double> beholder;
+    vislib::graphics::Beholder beholder;
     vislib::graphics::CameraOpenGL cameraLeft;
     vislib::graphics::CameraOpenGL cameraRight;
 

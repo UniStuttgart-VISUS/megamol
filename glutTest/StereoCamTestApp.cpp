@@ -17,9 +17,9 @@
 
 StereoCamTestApp::StereoCamTestApp(void) : AbstractGlutApp() {
     this->beholder.SetView(
-        vislib::math::Point3D<double>(0.0, -10.0, 0.0),
-        vislib::math::Point3D<double>(0.0, 0.0, 0.0),
-        vislib::math::Vector3D<double>(0.0, 0.0, 1.0));
+        vislib::math::Point3D<float>(0.0, -10.0, 0.0),
+        vislib::math::Point3D<float>(0.0, 0.0, 0.0),
+        vislib::math::Vector3D<float>(0.0, 0.0, 1.0));
 
     this->cameraLeft.SetBeholder(&this->beholder);
     this->cameraLeft.SetNearClipDistance(1.0f);
@@ -101,7 +101,7 @@ void StereoCamTestApp::Render(void) {
 
     this->RenderTestBox();
   */  
-    vislib::math::Rectangle<vislib::graphics::Camera::ImageSpaceValue> rect;
+    vislib::math::Rectangle<vislib::graphics::ImageSpaceType> rect;
     for (int y = 0; y < SCTA_CY_TILES; y++)
         for (int x = 0; x < SCTA_CX_TILES; x++) {
             rect = this->camTilesLeft[x][y].GetTileRectangle();
@@ -253,8 +253,8 @@ void StereoCamTestApp::RenderTestBox(void) {
 }
 
 void StereoCamTestApp::UpdateCamTiles(void) {
-    vislib::math::Rectangle<vislib::graphics::Camera::ImageSpaceValue> rect;
-    vislib::graphics::Camera::ImageSpaceValue w, h;
+    vislib::math::Rectangle<vislib::graphics::ImageSpaceType> rect;
+    vislib::graphics::ImageSpaceType w, h;
     for (int y = 0; y < SCTA_CY_TILES; y++)
         for (int x = 0; x < SCTA_CX_TILES; x++) {
             this->camTilesLeft[x][y] = this->cameraLeft;

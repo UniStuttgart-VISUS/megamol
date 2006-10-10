@@ -11,6 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 
+#include "vislib/graphicstypes.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/AbstractPoint3D.h"
 #include "vislib/Point3D.h"
@@ -24,7 +25,7 @@ namespace graphics {
     /**
      * class modelling a 3d scene beholder
      */
-    template<class T > class Beholder {
+    class Beholder {
     public:
 
         /**
@@ -66,10 +67,10 @@ namespace graphics {
          *               coordinates
          * @param up The up vector for the beholder
          */
-        template <class Sp1, class Sp2, class Sp3> 
-        Beholder(const math::AbstractPoint3D<T, Sp1> &position, 
-            const math::AbstractPoint3D<T, Sp2> &lookAt, 
-            const math::AbstractVector3D<T, Sp3> &up);
+        template <class Tp1, class Sp1, class Tp2, class Sp2, class Tp3, class Sp3> 
+        Beholder(const math::AbstractPoint3D<Tp1, Sp1> &position, 
+            const math::AbstractPoint3D<Tp2, Sp2> &lookAt, 
+            const math::AbstractVector3D<Tp3, Sp3> &up);
 
         /**
          * copy ctor
@@ -78,7 +79,7 @@ namespace graphics {
          *
          * @param rhs The object to be cloned.
          */
-        Beholder(const Beholder<T> &rhs);
+        Beholder(const Beholder &rhs);
 
         /**
          * assignment operator
@@ -89,7 +90,7 @@ namespace graphics {
          *
          * @return reference to this
          */
-        Beholder& operator=(const Beholder<T> &rhs);
+        Beholder& operator=(const Beholder &rhs);
 
         /**
          * Sets the look at point of the beholder and increments the 
@@ -108,7 +109,8 @@ namespace graphics {
          *         position is zero, or if the vector (lookAt - position) is
          *         parallel to the up vector.
          */
-        template <class Sp> void SetLookAt(const math::AbstractPoint3D<T, Sp> &lookAt);
+        template <class Tp, class Sp> 
+        void SetLookAt(const math::AbstractPoint3D<Tp, Sp> &lookAt);
 
         /**
          * Sets the position of the beholder and increments the updateCounter.
@@ -126,7 +128,8 @@ namespace graphics {
          *         lookAt is zero, or if the vector (lookAt - position) is
          *         parallel to the up vector.
          */
-        template <class Sp> void SetPosition(const math::AbstractPoint3D<T, Sp> &position);
+        template <class Tp, class Sp> 
+        void SetPosition(const math::AbstractPoint3D<Tp, Sp> &position);
 
         /**
          * Sets the up vector of the beholder and increments the updateCounter.
@@ -144,7 +147,8 @@ namespace graphics {
          *         parallel to the up vector, or if the up vector is a null 
          *         vector.
          */
-        template <class Sp> void SetUpVector(const math::AbstractVector3D<T, Sp> &up);
+        template <class Tp, class Sp> 
+        void SetUpVector(const math::AbstractVector3D<Tp, Sp> &up);
 
         /**
          * Sets the view parameters (position, lookAt, and up vector) of the
@@ -168,17 +172,17 @@ namespace graphics {
          *         parallel to the up vector, or if the up vector is a null 
          *         vector.
          */
-        template <class Sp1, class Sp2, class Sp3> 
-        void SetView(const math::AbstractPoint3D<T, Sp1> &position,
-            const math::AbstractPoint3D<T, Sp2> &lookAt,
-            const math::AbstractVector3D<T, Sp3> &up);
+        template <class Tp1, class Sp1, class Tp2, class Sp2, class Tp3, class Sp3> 
+        void SetView(const math::AbstractPoint3D<Tp1, Sp1> &position,
+            const math::AbstractPoint3D<Tp2, Sp2> &lookAt,
+            const math::AbstractVector3D<Tp3, Sp3> &up);
 
         /**
          * returns the position of the beholder in world coordinates.
          *
          * @return The position
          */
-        inline const math::Point3D<T> & GetPosition(void) const {
+        inline const math::Point3D<SceneSpaceType> & GetPosition(void) const {
             return this->position;
         }
 
@@ -187,7 +191,7 @@ namespace graphics {
          *
          * @return The look at point
          */
-        inline const math::Point3D<T> & GetLookAt(void) const {
+        inline const math::Point3D<SceneSpaceType> & GetLookAt(void) const {
             return this->lookAt;
         }
 
@@ -196,7 +200,7 @@ namespace graphics {
          *
          * @return The front vector
          */
-        inline const math::Vector3D<T> & GetFrontVector(void) const {
+        inline const math::Vector3D<SceneSpaceType> & GetFrontVector(void) const {
             return this->front;
         }
 
@@ -205,7 +209,7 @@ namespace graphics {
          *
          * @return The right vector
          */
-        inline const math::Vector3D<T> & GetRightVector(void) const {
+        inline const math::Vector3D<SceneSpaceType> & GetRightVector(void) const {
             return this->right;
         }
 
@@ -214,7 +218,7 @@ namespace graphics {
          *
          * @return The up vector
          */
-        inline const math::Vector3D<T> & GetUpVector(void) const {
+        inline const math::Vector3D<SceneSpaceType> & GetUpVector(void) const {
             return this->up;
         }
 
@@ -236,59 +240,47 @@ namespace graphics {
         void CalcOrthoNormalVectors(void);
 
         /** position of the beholder in world coordinates */
-        math::Point3D<T> position;
+        math::Point3D<SceneSpaceType> position;
 
         /** look at point of the beholder in world coordinates */
-        math::Point3D<T> lookAt;
+        math::Point3D<SceneSpaceType> lookAt;
 
         /**
          * Front vector of the beholder.
          */
-        math::Vector3D<T> front;
+        math::Vector3D<SceneSpaceType> front;
 
         /**
          * Right vector of the beholder.
          */
-        math::Vector3D<T> right;
+        math::Vector3D<SceneSpaceType> right;
 
         /** 
          * up vector of the beholder.
          * The vector (lookAt - position) and this vector must not be parallel.
          */
-        math::Vector3D<T> up;
+        math::Vector3D<SceneSpaceType> up;
 
         /** number indicating updates of members */
         unsigned int updateCounter;
-    };
-
-
-    /*
-     * Beholder::Beholder
-     */
-    template<class T> Beholder<T>::Beholder() : position(), 
-            lookAt(static_cast<T>(0), static_cast<T>(0), static_cast<T>(-1)), 
-            front(), right(), // front and right are calculated based on position, lookAt and up
-            up(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0)),
-            updateCounter(0) {
-        this->CalcOrthoNormalVectors();
     };
 
     
     /*
      * Beholder::Beholder
      */
-    template<class T> 
-    template<class Sp1, class Sp2, class Sp3>
-    Beholder<T>::Beholder(const math::AbstractPoint3D<T, Sp1> &position,
-            const math::AbstractPoint3D<T, Sp2> &lookAt, 
-            const math::AbstractVector3D<T, Sp3> &up) {
+    template<class Tp1, class Sp1, class Tp2, class Sp2, class Tp3, class Sp3>
+    Beholder::Beholder(const math::AbstractPoint3D<Tp1, Sp1> &position,
+            const math::AbstractPoint3D<Tp2, Sp2> &lookAt, 
+            const math::AbstractVector3D<Tp3, Sp3> &up) {
         this->updateCounter = 1;
         this->position = position;
         if (position != lookAt) {
             this->lookAt = lookAt;
         } else {
             this->updateCounter = 0;
-            this->lookAt = position + math::Vector3D<T>(static_cast<T>(0), static_cast<T>(0), static_cast<T>(-1));
+            this->lookAt = position 
+                + math::Vector3D<SceneSpaceType>(0, 0, -1);
         }
         if ((up.IsNull()) || (up.IsParallel(this->position - this->lookAt))) {
             this->updateCounter = 0;
@@ -303,34 +295,13 @@ namespace graphics {
     }
 
 
-    /*
-     * Beholder::Beholder
-     */
-    template<class T> Beholder<T>::Beholder(const Beholder &rhs) {
-        this->operator=(rhs);
-    }
-
-
-    /*
-     * Beholder::operator=
-     */
-    template<class T> Beholder<T>& Beholder<T>::operator=(const Beholder &rhs) {
-        this->position = rhs.position;
-        this->lookAt = rhs.lookAt;
-        this->up = rhs.up;
-        this->front = rhs.front;
-        this->right = rhs.right;
-        this->updateCounter = 0;
-        return *this;
-    }
 
 
     /*
      * Beholder::SetLookAt
      */
-    template<class T> 
-    template<class Sp> 
-    void Beholder<T>::SetLookAt(const math::AbstractPoint3D<T, Sp> &lookAt) {
+    template<class Tp, class Sp> 
+    void Beholder::SetLookAt(const math::AbstractPoint3D<Tp, Sp> &lookAt) {
         if ((this->position == lookAt) || (this->up.IsParallel(this->position - lookAt))) {
             throw IllegalParamException("lookAt", __FILE__, __LINE__);
         }
@@ -343,9 +314,8 @@ namespace graphics {
     /*
      * Beholder::SetPosition
      */
-    template<class T> 
-    template<class Sp>
-    void Beholder<T>::SetPosition(const math::AbstractPoint3D<T, Sp> &position) {
+    template<class Tp, class Sp>
+    void Beholder::SetPosition(const math::AbstractPoint3D<Tp, Sp> &position) {
         if ((position == this->lookAt) || (this->up.IsParallel(position - this->lookAt))) {
             throw IllegalParamException("position", __FILE__, __LINE__);
         }
@@ -358,9 +328,8 @@ namespace graphics {
     /*
      * Beholder::SetUpVector
      */
-    template<class T> 
-    template<class Sp>
-    void Beholder<T>::SetUpVector(const math::AbstractVector3D<T, Sp> &up) {
+    template<class Tp, class Sp>
+    void Beholder::SetUpVector(const math::AbstractVector3D<Tp, Sp> &up) {
         if ((up.IsNull()) || (up.IsParallel(this->position - this->lookAt))) {
             throw IllegalParamException("up", __FILE__, __LINE__);
         }
@@ -373,11 +342,10 @@ namespace graphics {
     /*
      * Beholder::SetView
      */
-    template<class T> 
-    template<class Sp1, class Sp2, class Sp3>
-    void Beholder<T>::SetView(const math::AbstractPoint3D<T, Sp1> &position, 
-            const math::AbstractPoint3D<T, Sp2> &lookAt, 
-            const math::AbstractVector3D<T, Sp3> &up) {
+    template<class Tp1, class Sp1, class Tp2, class Sp2, class Tp3, class Sp3>
+    void Beholder::SetView(const math::AbstractPoint3D<Tp1, Sp1> &position, 
+            const math::AbstractPoint3D<Tp2, Sp2> &lookAt, 
+            const math::AbstractVector3D<Tp3, Sp3> &up) {
         if (position == lookAt) {
             throw IllegalParamException("position, or lookAt", __FILE__, __LINE__);
         }
@@ -392,19 +360,6 @@ namespace graphics {
         this->up = up;
         this->updateCounter++;
         this->CalcOrthoNormalVectors();
-    }
-
-
-    /*
-     * Beholder<T>::CalcOrthoNormalVectors
-     */
-    template<class T> void Beholder<T>::CalcOrthoNormalVectors(void) {
-        this->front = this->lookAt - this->position;
-        this->front.Normalise();
-        this->right = this->front.Cross(this->up);
-        this->right.Normalise();
-        this->up = this->right.Cross(this->front);
-        this->up.Normalise();
     }
 
 } /* end namespace graphics */

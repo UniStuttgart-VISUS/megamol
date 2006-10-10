@@ -61,7 +61,7 @@ private:
     bool ortho;
     bool nativeFull;
 
-    vislib::graphics::Beholder<double> beholder;
+    vislib::graphics::Beholder beholder;
     vislib::graphics::CameraOpenGL camera;
 };
 

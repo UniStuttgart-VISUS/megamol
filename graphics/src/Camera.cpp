@@ -13,13 +13,13 @@
 #include "vislib/assert.h"
 
 
-#define CAMERA_SCENESPACE_DELTA 0.01f
+#define CAMERA_SCENESPACE_DELTA static_cast<SceneSpaceType>(0.01)
 
 
 /*
  * vislib::graphics::Camera::Camera
  */
-vislib::graphics::Camera::Camera(void) : holder(NULL), updateCounter(0) {
+vislib::graphics::Camera::Camera(void) : beholder(NULL), updateCounter(0) {
     this->SetDefaultValues();
 }
 
@@ -28,15 +28,25 @@ vislib::graphics::Camera::Camera(void) : holder(NULL), updateCounter(0) {
  * copy ctor
  */
 vislib::graphics::Camera::Camera(const vislib::graphics::Camera &rhs) 
-        : holder(NULL), updateCounter(0) {
+        : beholder(NULL), updateCounter(0) {
     *this = rhs;
 }
+
+
+/*
+ * vislib::graphics::Camera::Camera
+ */
+vislib::graphics::Camera::Camera(Beholder *beholder) : updateCounter(0) {
+    this->beholder = beholder;
+    this->SetDefaultValues();
+ }
+
 
 /**
  * vislib::graphics::Camera::~Camera
  */
 vislib::graphics::Camera::~Camera(void) {
-    delete this->holder;
+    this->beholder = NULL; // Do not delete!
 }
 
 
@@ -44,15 +54,15 @@ vislib::graphics::Camera::~Camera(void) {
  * vislib::graphics::Camera::SetDefaultValues
  */
 void vislib::graphics::Camera::SetDefaultValues(void) {
-    this->halfApertureAngle = math::AngleDeg2Rad(15.0f);
-    this->farClip = 10.0f;
-    this->focalDistance = 1.0f;
-    this->nearClip = 0.1f;
-    this->halfStereoDisparity = 0.01f;
+    this->halfApertureAngle = math::AngleDeg2Rad(15.0);
+    this->farClip = static_cast<SceneSpaceType>(10.0); // some arbitrary values
+    this->focalDistance = static_cast<SceneSpaceType>(1.0); // some arbitrary values
+    this->nearClip = static_cast<SceneSpaceType>(0.1); // some arbitrary values
+    this->halfStereoDisparity = static_cast<SceneSpaceType>(0.01);
     this->projectionType = vislib::graphics::Camera::MONO_PERSPECTIVE;
     this->eye = vislib::graphics::Camera::LEFT_EYE;
-    this->virtualHalfWidth = static_cast<ImageSpaceValue>(400);
-    this->virtualHalfHeight = static_cast<ImageSpaceValue>(300);
+    this->virtualHalfWidth = static_cast<ImageSpaceType>(400); // some arbitrary values
+    this->virtualHalfHeight = static_cast<ImageSpaceType>(300); // some arbitrary values
     this->ResetTileRectangle();
     this->updateCounter = 0;
     this->membersChanged = true;
@@ -66,7 +76,7 @@ void vislib::graphics::Camera::SetApertureAngle(math::AngleDeg apertureAngle) {
     if ((apertureAngle <= math::AngleDeg(0)) || (apertureAngle >= math::AngleDeg(180))) {
         throw IllegalParamException("apertureAngle", __FILE__, __LINE__);
     }
-    this->halfApertureAngle = math::AngleDeg2Rad(apertureAngle * 0.5f);
+    this->halfApertureAngle = math::AngleDeg2Rad(apertureAngle * static_cast<math::AngleDeg>(0.5));
     this->membersChanged = true;
 }
 
@@ -74,7 +84,7 @@ void vislib::graphics::Camera::SetApertureAngle(math::AngleDeg apertureAngle) {
 /*
  * vislib::graphics::Camera::SetFarClipDistance
  */
-void vislib::graphics::Camera::SetFarClipDistance(SceneSpaceValue farClip) {
+void vislib::graphics::Camera::SetFarClipDistance(SceneSpaceType farClip) {
     if (farClip <= this->nearClip) {
         farClip = this->nearClip + CAMERA_SCENESPACE_DELTA;
     }
@@ -86,8 +96,8 @@ void vislib::graphics::Camera::SetFarClipDistance(SceneSpaceValue farClip) {
 /*
  * vislib::graphics::Camera::SetFocalDistance
  */
-void vislib::graphics::Camera::SetFocalDistance(SceneSpaceValue focalDistance) {
-    if (focalDistance <= SceneSpaceValue(0)) {
+void vislib::graphics::Camera::SetFocalDistance(SceneSpaceType focalDistance) {
+    if (focalDistance <= static_cast<SceneSpaceType>(0)) {
         focalDistance = CAMERA_SCENESPACE_DELTA;
     }
     this->focalDistance = focalDistance;
@@ -98,8 +108,8 @@ void vislib::graphics::Camera::SetFocalDistance(SceneSpaceValue focalDistance) {
 /*
  * vislib::graphics::Camera::SetNearClipDistance
  */
-void vislib::graphics::Camera::SetNearClipDistance(SceneSpaceValue nearClip) {
-    if (nearClip <= SceneSpaceValue(0)) {
+void vislib::graphics::Camera::SetNearClipDistance(SceneSpaceType nearClip) {
+    if (nearClip <= static_cast<SceneSpaceType>(0)) {
         nearClip = CAMERA_SCENESPACE_DELTA;
     }
     this->nearClip = nearClip;
@@ -113,9 +123,9 @@ void vislib::graphics::Camera::SetNearClipDistance(SceneSpaceValue nearClip) {
 /*
  * vislib::graphics::Camera::SetStereoDisparity
  */
-void vislib::graphics::Camera::SetStereoDisparity(SceneSpaceValue stereoDisparity) {
-    this->halfStereoDisparity = stereoDisparity * 0.5f;
-    if (this->halfStereoDisparity < SceneSpaceValue(0)) {
+void vislib::graphics::Camera::SetStereoDisparity(SceneSpaceType stereoDisparity) {
+    this->halfStereoDisparity = stereoDisparity * static_cast<SceneSpaceType>(0.5);
+    if (this->halfStereoDisparity < static_cast<SceneSpaceType>(0)) {
         this->halfStereoDisparity = -this->halfStereoDisparity;
     }
     this->membersChanged = true;
@@ -143,11 +153,13 @@ void vislib::graphics::Camera::SetStereoEye(StereoEye eye) {
 /*
  * vislib::graphics::Camera::SetVirtualWidth
  */
-void vislib::graphics::Camera::SetVirtualWidth(ImageSpaceValue virtualWidth) {
-    if ((math::IsEqual(this->tileRect.Left(), 0.0f)) && (math::IsEqual(this->tileRect.Right(), this->virtualHalfWidth * 2.0f))) {
-        this->tileRect.SetRight(math::Max(virtualWidth, ImageSpaceValue(CAMERA_SCENESPACE_DELTA)));
+void vislib::graphics::Camera::SetVirtualWidth(ImageSpaceType virtualWidth) {
+    if ((math::IsEqual(this->tileRect.Left(), static_cast<SceneSpaceType>(0.0))) 
+            && (math::IsEqual(this->tileRect.Right(), this->virtualHalfWidth * static_cast<SceneSpaceType>(2.0)))) {
+        this->tileRect.SetRight(math::Max(virtualWidth, static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA)));
     }
-    this->virtualHalfWidth = math::Max(virtualWidth * 0.5f, ImageSpaceValue(CAMERA_SCENESPACE_DELTA));
+    this->virtualHalfWidth = math::Max(virtualWidth * static_cast<ImageSpaceType>(0.5), 
+        static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA));
     this->membersChanged = true;
 }
 
@@ -155,11 +167,13 @@ void vislib::graphics::Camera::SetVirtualWidth(ImageSpaceValue virtualWidth) {
 /*
  * vislib::graphics::Camera::SetVirtualHeight
  */
-void vislib::graphics::Camera::SetVirtualHeight(ImageSpaceValue virtualHeight) {
-    if ((math::IsEqual(this->tileRect.Bottom(), 0.0f)) && (math::IsEqual(this->tileRect.Top(), this->virtualHalfHeight * 2.0f))) {
-        this->tileRect.SetTop(math::Max(virtualHeight, ImageSpaceValue(CAMERA_SCENESPACE_DELTA)));
+void vislib::graphics::Camera::SetVirtualHeight(ImageSpaceType virtualHeight) {
+    if ((math::IsEqual(this->tileRect.Bottom(), static_cast<SceneSpaceType>(0.0))) 
+            && (math::IsEqual(this->tileRect.Top(), this->virtualHalfHeight * static_cast<SceneSpaceType>(2.0)))) {
+        this->tileRect.SetTop(math::Max(virtualHeight, static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA)));
     }
-    this->virtualHalfHeight = math::Max<ImageSpaceValue>(virtualHeight * 0.5f, ImageSpaceValue(CAMERA_SCENESPACE_DELTA));
+    this->virtualHalfHeight = math::Max(virtualHeight * static_cast<ImageSpaceType>(0.5), 
+        static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA));
     this->membersChanged = true;
 }
 
@@ -169,8 +183,8 @@ void vislib::graphics::Camera::SetVirtualHeight(ImageSpaceValue virtualHeight) {
  */
 vislib::graphics::Camera & vislib::graphics::Camera::operator=(
         const vislib::graphics::Camera &rhs) {
-    this->holder = rhs.holder->Clone();
 
+    this->beholder = rhs.beholder;
     this->halfApertureAngle = rhs.halfApertureAngle;
     this->farClip = rhs.farClip;
     this->focalDistance = rhs.focalDistance;
@@ -188,15 +202,24 @@ vislib::graphics::Camera & vislib::graphics::Camera::operator=(
 
 
 /*
+ * vislib::graphics::Camera::SetBeholder
+ */
+void vislib::graphics::Camera::SetBeholder(Beholder *beholder) {
+    this->beholder = beholder;
+    this->updateCounter = 0;
+}
+
+
+/*
  * vislib::graphics::Camera::CalcFrustumParameters
  */
-void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceValue &outLeft,
-        SceneSpaceValue &outRight, SceneSpaceValue &outBottom,
-        SceneSpaceValue &outTop, SceneSpaceValue &outNearClip,
-        SceneSpaceValue &outFarClip) {
-    float w, h;
+void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceType &outLeft,
+        SceneSpaceType &outRight, SceneSpaceType &outBottom,
+        SceneSpaceType &outTop, SceneSpaceType &outNearClip,
+        SceneSpaceType &outFarClip) {
+    SceneSpaceType w, h;
 
-    if (!this->holder) {
+    if (!this->beholder) {
         throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
     }
 
@@ -236,8 +259,8 @@ void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceValue &outLeft,
             outTop = this->tileRect.GetTop() * h / this->virtualHalfHeight;
 
             // shear frustum
-            w += ((this->eye == LEFT_EYE) ? -1.0f : 1.0f) 
-                * (this->nearClip * this->halfStereoDisparity) / this->focalDistance;
+            w += static_cast<SceneSpaceType>(((this->eye == LEFT_EYE) ? -1.0 : 1.0) 
+                * (this->nearClip * this->halfStereoDisparity) / this->focalDistance);
 
             // cut out local frustum for tile rect
             outLeft -= w;
@@ -263,25 +286,23 @@ void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceValue &outLeft,
  * vislib::graphics::Camera::CalcViewParameters
  */
 void vislib::graphics::Camera::CalcViewParameters(
-        math::Point3D<SceneSpaceValue> &outPosition,
-        math::Vector3D<SceneSpaceValue> &outFront,
-        math::Vector3D<SceneSpaceValue> &outUp) {
-    if (!this->holder) {
+        math::Point3D<SceneSpaceType> &outPosition,
+        math::Vector3D<SceneSpaceType> &outFront,
+        math::Vector3D<SceneSpaceType> &outUp) {
+    if (!this->beholder) {
         throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
     }
 
     // mono projection position information
-    this->holder->ReturnUpVector(outUp);
-    this->holder->ReturnPosition(outPosition);
-    this->holder->ReturnFrontVector(outFront);
+    outUp = this->beholder->GetUpVector();
+    outPosition = this->beholder->GetPosition();
+    outFront = this->beholder->GetFrontVector();
 
     if ((this->projectionType == STEREO_PARALLEL) 
             || (this->projectionType == STEREO_OFF_AXIS) 
             || (this->projectionType == STEREO_TOE_IN)) {
         // shift eye for stereo
-        math::Vector3D<SceneSpaceValue> right;
-        this->holder->ReturnRightVector(right);
-        right *= this->halfStereoDisparity;
+        math::Vector3D<SceneSpaceType> right = this->beholder->GetRightVector() * this->halfStereoDisparity;
 
         if (this->eye == LEFT_EYE) {
             // left eye
@@ -293,12 +314,7 @@ void vislib::graphics::Camera::CalcViewParameters(
 
         if (this->projectionType == STEREO_TOE_IN) {
             // rotate camera parameters for toe in
-            math::Point3D<SceneSpaceValue> focusPoint;
-            // calculate focus point
-            this->holder->ReturnPosition(focusPoint);
-            focusPoint += outFront * this->focalDistance;
-            // recalculate front vector
-            outFront = focusPoint - outPosition;
+            outFront = (this->beholder->GetPosition() + (outFront * this->focalDistance)) - outPosition;
             // outFront.Normalise(); // unsure if this is necessary
         }
     }

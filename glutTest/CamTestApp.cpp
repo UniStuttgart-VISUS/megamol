@@ -10,6 +10,7 @@
 #include <GL/glu.h>
 #include <cstdio>
 
+#include "vislib/graphicstypes.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/Rectangle.h"
 
@@ -76,7 +77,7 @@ void CamTestApp::Lens::BeginDraw(unsigned int ww, unsigned int wh, bool ortho) {
     glViewport(0, 0, ww, wh);
 
     this->camera.SetTileRectangle(
-        vislib::math::Rectangle<vislib::graphics::Camera::ImageSpaceValue>
+        vislib::math::Rectangle<vislib::graphics::ImageSpaceType>
         (this->x * this->camera.GetVirtualWidth(), this->y * this->camera.GetVirtualHeight(), 
         (this->x + this->w) * this->camera.GetVirtualWidth(), (this->y + this->h) * this->camera.GetVirtualHeight()));
 

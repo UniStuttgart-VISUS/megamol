@@ -11,6 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 
+#include "vislib/graphicstypes.h"
 #include "vislib/Beholder.h"
 #include "vislib/mathtypes.h"
 #include "vislib/IllegalStateException.h"
@@ -29,16 +30,6 @@ namespace graphics {
      */
     class Camera {
     public:
-
-        /** This type is used for values in scene space */
-        typedef float SceneSpaceValue;
-
-        /** 
-         * This type is used for values in image space 
-         * Implementation note: using float instead of unsigned int to be able 
-         * to place elements with subpixel precision
-         */
-        typedef float ImageSpaceValue;
         
         /** possible values for the projection type */
         enum ProjectionType {
@@ -79,7 +70,7 @@ namespace graphics {
          *
          * @throws std::bad_alloc 
          */
-        template <class Tp > Camera(Beholder<Tp> *beholder);
+        Camera(Beholder *beholder);
 
         /**
          * dtor
@@ -100,7 +91,7 @@ namespace graphics {
          *
          * @return distance of the far clipping plane
          */
-        inline SceneSpaceValue GetFarClipDistance(void) { 
+        inline SceneSpaceType GetFarClipDistance(void) { 
             return this->farClip;
         }
 
@@ -109,7 +100,7 @@ namespace graphics {
          *
          * @return The focal distance
          */
-        inline SceneSpaceValue GetFocalDistance(void) { 
+        inline SceneSpaceType GetFocalDistance(void) { 
             return this->focalDistance;
         }
 
@@ -118,7 +109,7 @@ namespace graphics {
          *
          * @return The distance of the near clipping plane
          */
-        inline SceneSpaceValue GetNearClipDistance(void) { 
+        inline SceneSpaceType GetNearClipDistance(void) { 
             return this->nearClip;
         }
 
@@ -127,8 +118,9 @@ namespace graphics {
          *
          * @return The eye disparity value
          */
-        inline SceneSpaceValue GetStereoDisparity(void) { 
-            return this->halfStereoDisparity * 2.0f;
+        inline SceneSpaceType GetStereoDisparity(void) { 
+            return this->halfStereoDisparity * 
+                static_cast<SceneSpaceType>(2.0);
         }
 
         /** 
@@ -154,8 +146,9 @@ namespace graphics {
          *
          * @return The width of the virtual camera image 
          */
-        inline ImageSpaceValue GetVirtualWidth(void) { 
-            return this->virtualHalfWidth * 2.0f;
+        inline ImageSpaceType GetVirtualWidth(void) { 
+            return this->virtualHalfWidth * 
+                static_cast<SceneSpaceType>(2.0);
         }
 
         /** 
@@ -163,8 +156,9 @@ namespace graphics {
          *
          * @return The height of the virtual camera image
          */
-        inline ImageSpaceValue GetVirtualHeight(void) { 
-            return this->virtualHalfHeight * 2.0f;
+        inline ImageSpaceType GetVirtualHeight(void) { 
+            return this->virtualHalfHeight * 
+                static_cast<SceneSpaceType>(2.0);
         }
 
         /**
@@ -186,7 +180,7 @@ namespace graphics {
          *
          * @param farClip the distance of the far clipping plane
          */
-        void SetFarClipDistance(SceneSpaceValue farClip);
+        void SetFarClipDistance(SceneSpaceType farClip);
 
         /** 
          * Sets the focal distance for stereo images and sets the 
@@ -196,7 +190,7 @@ namespace graphics {
          *
          * @param focalDistance The focal distance
          */
-        void SetFocalDistance(SceneSpaceValue focalDistance);
+        void SetFocalDistance(SceneSpaceType focalDistance);
 
         /** 
          * Sets distance of the near clipping plane and sets the memberChanged 
@@ -209,7 +203,7 @@ namespace graphics {
          *
          * @param nearClip The distance of the near clipping plane 
          */
-        void SetNearClipDistance(SceneSpaceValue nearClip);
+        void SetNearClipDistance(SceneSpaceType nearClip);
 
         /** 
          * Sets the eye disparity value for stereo images and sets the 
@@ -218,7 +212,7 @@ namespace graphics {
          *
          * @param stereoDisparity The eye disparity value
          */
-        void SetStereoDisparity(SceneSpaceValue stereoDisparity);
+        void SetStereoDisparity(SceneSpaceType stereoDisparity);
 
         /**
          * Sets the type of stereo projection and sets the memberChanged flag.
@@ -245,7 +239,7 @@ namespace graphics {
          *
          * @param virtualWidth The width of the virtual camera image
          */
-        void SetVirtualWidth(ImageSpaceValue virtualWidth);
+        void SetVirtualWidth(ImageSpaceType virtualWidth);
 
         /** 
          * Sets the height of the virtual camera image and sets the 
@@ -257,14 +251,14 @@ namespace graphics {
          *
          * @param virtualHeight The height of the virtual camera image 
          */
-        void SetVirtualHeight(ImageSpaceValue virtualHeight);
+        void SetVirtualHeight(ImageSpaceType virtualHeight);
 
         /**
          * Return the tile rectangle of the camera.
          *
          * @return The tile rectangle.
          */
-        inline const math::Rectangle<ImageSpaceValue> & GetTileRectangle(void) const {
+        inline const math::Rectangle<ImageSpaceType> & GetTileRectangle(void) const {
             return this->tileRect;
         }
 
@@ -276,8 +270,7 @@ namespace graphics {
          * the virtual camera image.
          */
         inline void ResetTileRectangle(void) {
-            this->tileRect.Set(static_cast<ImageSpaceValue>(0), 
-                static_cast<ImageSpaceValue>(0), 
+            this->tileRect.Set(0, 0,
                 this->virtualHalfWidth * 2.0f, this->virtualHalfHeight * 2.0f);
         }
 
@@ -287,7 +280,8 @@ namespace graphics {
          *
          * @param tileRect The new tile rectangle for the camera.
          */
-        template <class Tp, class Sp > void SetTileRectangle(const math::AbstractRectangle<Tp, Sp> &tileRect);
+        template <class Tp, class Sp > 
+        void SetTileRectangle(const math::AbstractRectangle<Tp, Sp> &tileRect);
 
         /**
          * Associates this camera with the beholder specified and resets the
@@ -301,17 +295,16 @@ namespace graphics {
          *
          * @throws std::bad_alloc 
          */
-        template <class Tp > void SetBeholder(Beholder<Tp> *beholder);
+        void SetBeholder(Beholder *beholder);
 
         /**
          * Answer the associated beholder of this camera.
          *
          * @return Pointer to the associated beholder of this camera.
-         *
-         * @throws IllegalStateException if the Getter has been instanciated
-         *         with another type as the beholder has been.
          */
-        template <class Tp > Beholder<Tp> * GetBeholder(void);
+        inline Beholder * GetBeholder(void) {
+            return this->beholder;
+        }
 
         /**
          * Assignment operator
@@ -344,10 +337,10 @@ namespace graphics {
          * @throws IllegalStateException if this camera is not associated with a
          *         Beholder.
          */
-        void CalcFrustumParameters(SceneSpaceValue &outLeft,
-            SceneSpaceValue &outRight, SceneSpaceValue &outBottom,
-            SceneSpaceValue &outTop, SceneSpaceValue &outNearClip,
-            SceneSpaceValue &outFarClip);
+        void CalcFrustumParameters(SceneSpaceType &outLeft,
+            SceneSpaceType &outRight, SceneSpaceType &outBottom,
+            SceneSpaceType &outTop, SceneSpaceType &outNearClip,
+            SceneSpaceType &outFarClip);
 
         /**
          * Calculates and returns all parameters necessary to set up the view
@@ -362,9 +355,9 @@ namespace graphics {
          *         Beholder.
          */
         void CalcViewParameters(
-            math::Point3D<SceneSpaceValue> &outPosition,
-            math::Vector3D<SceneSpaceValue> &outFront,
-            math::Vector3D<SceneSpaceValue> &outUp);
+            math::Point3D<SceneSpaceType> &outPosition,
+            math::Vector3D<SceneSpaceType> &outFront,
+            math::Vector3D<SceneSpaceType> &outUp);
 
         /**
          * Answer wether the view or frustum parameters need to be recalculated.
@@ -374,8 +367,8 @@ namespace graphics {
          */
         inline bool NeedUpdate(void) {
             return this->membersChanged || (this->updateCounter == 0)
-                || (this->holder == NULL) 
-                || (this->updateCounter != this->holder->GetUpdateCounterValue());
+                || (this->beholder == NULL) 
+                || (this->updateCounter != this->beholder->GetUpdateCounterValue());
         }
 
         /**
@@ -383,8 +376,8 @@ namespace graphics {
          */
         inline void ClearUpdateFlaggs(void) {
             this->membersChanged = false;
-            if (this->holder) {
-                this->updateCounter = this->holder->GetUpdateCounterValue();
+            if (this->beholder) {
+                this->updateCounter = this->beholder->GetUpdateCounterValue();
             }
         }
 
@@ -396,147 +389,23 @@ namespace graphics {
          */
         void SetDefaultValues(void);
 
-        /**
-         * Abstract base class as beholder facade following the crowbar pattern
-         */
-        class AbstractBeholderHolder {
-        public:
-            /**
-             * Clones this.
-             *
-             * @return Pointer to a new object with identically values as this.
-             */
-            virtual AbstractBeholderHolder * Clone(void) = 0;
-
-            /**
-             * Answer the update counter value of the beholder hold.
-             *
-             * @return The update counter value of the beholder hold.
-             */
-            virtual unsigned int GetUpdateCounterValue(void) = 0;
-        
-            /**
-             * returns the position of the beholder hold in world coordinates.
-             *
-             * @param outPosition The position
-             */
-            virtual void ReturnPosition(math::Point3D<SceneSpaceValue> &outPosition) const = 0;
-
-            /**
-             * returns the look at point of the beholder hold in world coordinates.
-             *
-             * @param outLootAt The look at point
-             */
-            virtual void ReturnLookAt(math::Point3D<SceneSpaceValue> &outLookAt) const = 0;
-
-            /**
-             * returns the front vector of the beholder hold.
-             *
-             * @param outFront The front vector
-             */
-            virtual void ReturnFrontVector(math::Vector3D<SceneSpaceValue> &outFront) const = 0;
-
-            /**
-             * returns the right vector of the beholder hold.
-             *
-             * @param outRight The right vector
-             */
-            virtual void ReturnRightVector(math::Vector3D<SceneSpaceValue> &outRight) const = 0;
-
-            /**
-             * returns the up vector of the beholder hold.
-             *
-             * @param outUp The up vector
-             */
-            virtual void ReturnUpVector(math::Vector3D<SceneSpaceValue> &outUp) const = 0;
-
-        };
-
-        /**
-         * template implementation of the beholder facade
-         */
-        template <class T > class BeholderHolder: public AbstractBeholderHolder {
-        public:
-            /**
-             * ctor
-             *
-             * @param beholder The beholder to hold
-             */
-            BeholderHolder(Beholder<T> *beholder) {
-                this->beholder = beholder;
-            }
-
-            /** behaves like AbstractBeholderHolder::Clone */
-            virtual AbstractBeholderHolder * Clone(void) {
-                return new BeholderHolder<T>(this->beholder);
-            }
-
-            /**
-             * answer the beholder hold.
-             *
-             * @return The beholder hold.
-             */
-            operator Beholder<T> *(void) {
-                return this->beholder;
-            }
-
-            /** behaves like AbstractBeholderHolder::GetUpdateCounterValue */
-            virtual unsigned int GetUpdateCounterValue(void) {
-                return this->beholder->GetUpdateCounterValue();
-            }
-
-            /** behaves like AbstractBeholderHolder::GetPosition */
-            virtual void ReturnPosition(math::Point3D<SceneSpaceValue> &outPosition) const {
-                outPosition = this->beholder->GetPosition();
-            }
-
-            /** behaves like AbstractBeholderHolder::GetLookAt */
-            virtual void ReturnLookAt(math::Point3D<SceneSpaceValue> &outLookAt) const {
-                outLookAt = this->beholder->GetLookAt();
-            }
-
-            /** behaves like AbstractBeholderHolder::GetFrontVector */
-            virtual void ReturnFrontVector(math::Vector3D<SceneSpaceValue> &outFront) const {
-                outFront = this->beholder->GetFrontVector();
-            }
-
-            /** behaves like AbstractBeholderHolder::GetRightVector */
-            virtual void ReturnRightVector(math::Vector3D<SceneSpaceValue> &outRight) const {
-                outRight = this->beholder->GetRightVector();
-            }
-
-            /** behaves like AbstractBeholderHolder::GetUpVector */
-            virtual void ReturnUpVector(math::Vector3D<SceneSpaceValue> &outUp) const {
-                outUp = this->beholder->GetUpVector();
-            }
-
-        private:
-            /** 
-             * the beholder hold 
-             *
-             * Implementation note: We do not own the beholder object, so do 
-             * not destroy the memory in the destructor!
-             */
-            Beholder<T> *beholder; 
-        };
-
         /** half aperture Angle in radians of the camera along the y axis */
         math::AngleDeg halfApertureAngle;
 
         /** Pointer to the holder of the currently attached beholder */
-        AbstractBeholderHolder *holder;
+        Beholder *beholder;
 
         /** distance of the far clipping plane */
-        SceneSpaceValue farClip;
+        SceneSpaceType farClip;
 
         /** focal distance for stereo images */
-        SceneSpaceValue focalDistance;
+        SceneSpaceType focalDistance;
 
         /** distance of the near clipping plane */
-        SceneSpaceValue nearClip;
+        SceneSpaceType nearClip;
 
         /** half eye disparity value for stereo images */
-        SceneSpaceValue halfStereoDisparity;
+        SceneSpaceType halfStereoDisparity;
 
         /** type of stereo projection */
         ProjectionType projectionType;
@@ -545,10 +414,10 @@ namespace graphics {
         StereoEye eye;
 
         /** Half width of the virtual camera image along the right vector*/
-        ImageSpaceValue virtualHalfWidth;
+        ImageSpaceType virtualHalfWidth;
 
         /** Half height of the virtual camera image along the up vector */
-        ImageSpaceValue virtualHalfHeight;
+        ImageSpaceType virtualHalfHeight;
 
         /** 
          * The camera update counter value to be compared with the update 
@@ -563,42 +432,8 @@ namespace graphics {
         bool membersChanged;
 
         /** The selected clip tile rectangle of the virtual camera image */
-        math::Rectangle<ImageSpaceValue> tileRect;
+        math::Rectangle<ImageSpaceType> tileRect;
     };
-
-
-    /*
-     * Camera::Camera
-     */
-     template <class Tp > Camera::Camera(Beholder<Tp> *beholder) : updateCounter(0) {
-        this->holder = new Camera::BeholderHolder<Tp>(beholder);
-        this->SetDefaultValues();
-     }
-
-
-    /*
-     * Camera::SetBeholder
-     */
-    template <class Tp > void Camera::SetBeholder(Beholder<Tp> *beholder) {
-        SAFE_DELETE(this->holder);
-        this->holder = new Camera::BeholderHolder<Tp>(beholder);
-        this->updateCounter = 0;
-    }
-
-
-    /*
-     * Camera::GetBeholder
-     */
-    template <class Tp > Beholder<Tp> * Camera::GetBeholder(void) {
-        Camera::BeholderHolder<Tp> *holder 
-            = dynamic_cast<Camera::BeholderHolder<Tp> *>(this->holder);
-        if (!holder) {
-            throw IllegalStateException(
-                "Camera::GetBeholder instantiated with incompatible type", 
-                __FILE__, __LINE__);
-        }
-        return *holder;
-    }
 
     
     /*

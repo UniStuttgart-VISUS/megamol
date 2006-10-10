@@ -27,6 +27,7 @@
 
 #include <GL/glu.h>
 
+#include "vislib/graphicstypes.h"
 #include "vislib/Camera.h"
 #include "vislib/Point3D.h"
 #include "vislib/Vector3D.h"
@@ -60,7 +61,7 @@ namespace graphics {
          * @param beholder The beholder the new camera object will be 
          *                 associated with.
          */
-        template <class Tp > CameraOpenGL(Beholder<Tp>* beholder) 
+        CameraOpenGL(Beholder* beholder) 
             : Camera(beholder), viewNeedsUpdate(true), projNeedsUpdate(true) {
         }
 
@@ -132,31 +133,31 @@ namespace graphics {
         bool viewNeedsUpdate, projNeedsUpdate;
 
         /** viewing frustum minimal x */
-        Camera::SceneSpaceValue left;
+        SceneSpaceType left;
 
         /** viewing frustum maximal x */
-        Camera::SceneSpaceValue right;
+        SceneSpaceType right;
 
         /** viewing frustum minimal y */
-        Camera::SceneSpaceValue bottom;
+        SceneSpaceType bottom;
 
         /** viewing frustum maximal y */
-        Camera::SceneSpaceValue top;
+        SceneSpaceType top;
 
         /** viewing frustum minimal z */
-        Camera::SceneSpaceValue nearClip;
+        SceneSpaceType nearClip;
 
         /** viewing frustum maximal z */
-        Camera::SceneSpaceValue farClip;
+        SceneSpaceType farClip;
 
         /** projection viewer position */
-        math::Point3D<Camera::SceneSpaceValue> pos;
+        math::Point3D<SceneSpaceType> pos;
 
         /** projection viewing direction */ 
-        math::Vector3D<Camera::SceneSpaceValue> lookDir;
+        math::Vector3D<SceneSpaceType> lookDir;
 
         /** projection up vector */
-        math::Vector3D<Camera::SceneSpaceValue> up;
+        math::Vector3D<SceneSpaceType> up;
 
     };
 
