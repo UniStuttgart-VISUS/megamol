@@ -274,11 +274,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractCursor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractCursor2DEvent.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractCursorEvent.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Beholder.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\Camera.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Cursor2D.cpp"
 				>
 			</File>
 		</Filter>
@@ -287,6 +303,18 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\vislib\AbstractCursor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractCursor2DEvent.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractCursorEvent.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\vislib\Beholder.h"
 				>
@@ -297,6 +325,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\CameraOpenGL.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Cursor2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\graphicstypes.h"
 				>
 			</File>
 		</Filter>

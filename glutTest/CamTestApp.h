@@ -17,6 +17,7 @@
 #include "vislib/Camera.h"
 #define VISLIB_ENABLE_OPENGL
 #include "vislib/CameraOpenGL.h"
+#include "vislib/Cursor2D.h"
 
 
 /*
@@ -27,12 +28,14 @@ public:
     CamTestApp(void);
     virtual ~CamTestApp(void);
 
-    virtual int PreGLInit(void);
-    virtual int PostGLInit(void);
+    virtual int GLInit(void);
 
     virtual void Resize(unsigned int w, unsigned int h);
     virtual void Render(void);
-    virtual bool KeyPress(unsigned char key);
+    virtual bool KeyPress(unsigned char key, int x, int y);
+    virtual void MouseEvent(int button, int state, int x, int y);
+    virtual void MouseMove(int x, int y);
+    virtual void SpecialKey(int key, int x, int y);
 
 private:
     class Lens {
@@ -63,6 +66,7 @@ private:
 
     vislib::graphics::Beholder beholder;
     vislib::graphics::CameraOpenGL camera;
+    vislib::graphics::Cursor2D cursor;
 };
 
 #endif /* VISLIBTEST_CAMTESTAPP_H_INCLUDED */

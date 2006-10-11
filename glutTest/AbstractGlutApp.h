@@ -28,18 +28,11 @@ public:
     virtual ~AbstractGlutApp(void);
 
     /**
-     * Initializes the application before the opengl state machine is initialized
-     *
-     * @return 0 if function succeeded.
-     */
-    virtual int PreGLInit(void) = 0;
-
-    /**
      * Initializes the application after the opengl state machine is initialized
      *
      * @return 0 if function succeeded.
      */
-    virtual int PostGLInit(void) = 0;
+    virtual int GLInit(void) = 0;
 
     /**
      * Callback for resizing events of the glut window.
@@ -84,7 +77,34 @@ public:
      * @return true if the key was accepted in terms, that the pressing of the 
      *         key has an effect, false if the key was ignored.
      */
-    virtual bool KeyPress(unsigned char key);
+    virtual bool KeyPress(unsigned char key, int x, int y);
+
+    /**
+     * Callback for glut mouse events.
+     *
+     * @param button The mouse button.
+     * @param state The state of the mouse button.
+     * @param x The x position of the mouse.
+     * @param y The y position of the mouse.
+     */
+    virtual void MouseEvent(int button, int state, int x, int y);
+
+    /**
+     * Callback for glut (mouse) motion events.
+     *
+     * @param x The x position of the mouse.
+     * @param y The y position of the mouse.
+     */
+    virtual void MouseMove(int x, int y);
+
+    /**
+     * Callback for glut special events.
+     *
+     * @param key The key of the event
+     * @param x The x position of the mouse.
+     * @param y The y position of the mouse.
+     */
+    virtual void SpecialKey(int key, int x, int y);
 
 private:
 

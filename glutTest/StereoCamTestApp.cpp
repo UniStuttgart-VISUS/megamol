@@ -43,13 +43,9 @@ StereoCamTestApp::StereoCamTestApp(void) : AbstractGlutApp() {
 StereoCamTestApp::~StereoCamTestApp(void) {
 }
 
-int StereoCamTestApp::PreGLInit(void) {
+int StereoCamTestApp::GLInit(void) {
     VisLogoDoStuff();
     VisLogoTwistLogo();
-    return 0;
-}
-
-int StereoCamTestApp::PostGLInit(void) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -140,7 +136,7 @@ void StereoCamTestApp::Render(void) {
     glutPostRedisplay(); // because we do animation stuff
 }
 
-bool StereoCamTestApp::KeyPress(unsigned char key) {
+bool StereoCamTestApp::KeyPress(unsigned char key, int x, int y) {
     switch(key) {
         case '1':
             printf("Stereo Projection set to STEREO_PARALLEL\n");
@@ -187,7 +183,7 @@ bool StereoCamTestApp::KeyPress(unsigned char key) {
         } break;
 
         default:
-            return AbstractGlutApp::KeyPress(key);
+            return AbstractGlutApp::KeyPress(key, x, y);
     }
     this->UpdateCamTiles();
     glutPostRedisplay();

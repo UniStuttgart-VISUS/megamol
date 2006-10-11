@@ -28,7 +28,6 @@
 
 // static global functions
 AbstractGlutApp *app = NULL;
-bool initialized = false;
 
 
 /*
@@ -41,13 +40,7 @@ void reshape(int w, int h) {
 
 void display(void) {
     assert(app != NULL);
-    if (initialized) {
-        app->Render();
-    } else {
-        app->PostGLInit();
-        initialized = true;
-        glutPostRedisplay();
-    }
+    app->Render();
 }
 
 void keyboard(unsigned char key, int x, int y) {
@@ -56,11 +49,26 @@ void keyboard(unsigned char key, int x, int y) {
             exit(0); 
             break;
         default:
-            if (!(app && app->KeyPress(key))) {
+            if (!(app && app->KeyPress(key, x, y))) {
                 fprintf(stderr, "Warning: Key %u is not used\n", key); 
             }
             break;
     };
+}
+
+void mouse(int button, int state, int x, int y) {
+    assert(app != NULL);
+    app->MouseEvent(button, state, x, y);
+}
+
+void motion(int x, int y) {
+    assert(app != NULL);
+    app->MouseMove(x, y);
+}
+
+void special(int key, int x, int y) {
+    assert(app != NULL);
+    app->SpecialKey(key, x, y);
 }
 
 /*
@@ -70,13 +78,11 @@ int main(int argc, char* argv[]) {
     printf("VISlib glut test program\n");
 
     // select test application:
-    //CamTestApp cta; app = &cta;
-    StereoCamTestApp scta; app = &scta;
+    CamTestApp cta; app = &cta;
+    //StereoCamTestApp scta; app = &scta;
 
     // run test application
     if (app) {
-        app->PreGLInit();
-
         glutInit(&argc, argv);
 
         glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA); // TODO: should be moved to AbstractGlutApp
@@ -85,8 +91,14 @@ int main(int argc, char* argv[]) {
     	glutDisplayFunc(display);
 	    glutReshapeFunc(reshape);
         glutKeyboardFunc(keyboard);
+        glutMouseFunc(mouse);
+        glutMotionFunc(motion);
+        glutPassiveMotionFunc(motion);
+        glutSpecialFunc(special);
 
-        glutFullScreen();
+        // glutFullScreen();
+
+        app->GLInit();
 
     	glutMainLoop();
     }

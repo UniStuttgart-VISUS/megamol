@@ -32,6 +32,31 @@ void AbstractGlutApp::Resize(unsigned int w, unsigned int h) {
 	glViewport(0, 0, this->width, this->height);
 }
 
-bool AbstractGlutApp::KeyPress(unsigned char key) {
+
+/*
+ * AbstractGlutApp::KeyPress
+ */
+bool AbstractGlutApp::KeyPress(unsigned char key, int x, int y) {
     return false;
+}
+
+
+/*
+ * AbstractGlutApp::MouseEvent
+ */
+void AbstractGlutApp::MouseEvent(int button, int state, int x, int y) {
+}
+
+
+/*
+ * AbstractGlutApp::MouseMove
+ */
+void AbstractGlutApp::MouseMove(int x, int y) {
+}
+
+
+/*
+ * AbstractGlutApp::SpecialKey
+ */
+void AbstractGlutApp::SpecialKey(int key, int x, int y) {
 }

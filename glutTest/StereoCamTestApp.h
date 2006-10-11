@@ -25,12 +25,11 @@ public:
     StereoCamTestApp(void);
     virtual ~StereoCamTestApp(void);
 
-    virtual int PreGLInit(void);
-    virtual int PostGLInit(void);
+    virtual int GLInit(void);
 
     virtual void Resize(unsigned int w, unsigned int h);
     virtual void Render(void);
-    virtual bool KeyPress(unsigned char key);
+    virtual bool KeyPress(unsigned char key, int x, int y);
 
 private:
     void RenderTestBox(void);

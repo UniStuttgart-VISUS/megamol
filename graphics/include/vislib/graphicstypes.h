@@ -14,16 +14,18 @@
 namespace vislib {
 namespace graphics {
 
-    /** This type is used for values in scene space */
+    /** This type is used for values in scene space. */
     typedef float SceneSpaceType;
 
     /** 
-     * This type is used for values in image space 
+     * This type is used for values in image space.
      * Implementation note: using float instead of unsigned int to be able 
      * to place elements with subpixel precision
      */
     typedef float ImageSpaceType;
 
+    /** This type is used for values in cursor space. */
+    typedef float CursorSpaceType;
     
 } /* end namespace graphics */
 } /* end namespace vislib */
