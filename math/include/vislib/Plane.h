@@ -89,7 +89,7 @@ namespace math {
          *
          * @return *this.
          */
-        Plane& operator =(const AbstractPlane& rhs) {
+        Plane& operator =(const Plane& rhs) {
             Super::operator =(rhs);
             return *this;
         }
