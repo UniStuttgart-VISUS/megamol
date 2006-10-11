@@ -289,6 +289,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractPlane.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractPoint.cpp"
 				>
 			</File>
@@ -345,6 +349,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Plane.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Point.cpp"
 				>
 			</File>
@@ -362,6 +370,10 @@
 			</File>
 			<File
 				RelativePath=".\src\Rectangle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ShallowPlane.cpp"
 				>
 			</File>
 			<File
@@ -412,6 +424,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractDimension3D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractPlane.h"
 				>
 			</File>
 			<File
@@ -492,6 +508,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Rectangle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowPlane.h"
 				>
 			</File>
 			<File

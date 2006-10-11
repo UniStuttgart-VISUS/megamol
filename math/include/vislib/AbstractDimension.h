@@ -136,7 +136,7 @@ namespace math {
          *
          * @throws OutOfRangeException If 'i' is out of range.
          */
-        const T& operator [](const int i ) const;
+        const T& operator [](const int i) const;
 
     protected:
 
