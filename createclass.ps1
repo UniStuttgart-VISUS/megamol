@@ -15,6 +15,20 @@ if ($Args.Length -eq 3) {
 	$Project = $Args[0]
 	$Mode = $Args[1]
 	$ClassName = $Args[2]
+	$Namespaces = $Args[2].Split(":", [StringSplitOptions]::RemoveEmptyEntries)
+	
+	if ($Namespaces.Length -eq 1) {
+		$Namespaces = "vislib", $Project
+	} else {
+		$ClassName = $Namespaces[$Namespaces.Length - 1]
+		$Namespaces = $Namespaces[0..($Namespaces.Length - 2)]
+	}
+	
+	$FullyQualifiedNamespace = $Namespaces[0]
+	for ($i = 1; $i -lt $Namespaces.Length; $i++) {
+		$FullyQualifiedNamespace += "::" + $Namespaces[$i]
+	}
+	
 } else {
 	echo "Usage: createclass.ps1 <project> [public|private] <classname>"
     echo ""
@@ -52,7 +66,7 @@ if ((test-path $CPPFile) -or (test-path $HFile)) {
 }
 
 # Summary and confirmation
-echo "Creating $Mode class `"$ClassName`" in project `"$Project`"";
+echo "Creating $Mode class `"$ClassName`" in namespace `"$FullyQualifiedNamespace`" in project `"$Project`"";
 $confirmation = read-host "Press 'm' to make it so"
 if ($confirmation -ne "m") {
     echo ""
@@ -77,17 +91,17 @@ $CPPContent += $ClassName + ".h`"
 
 
 /*
- * vislib::" + $ClassName + "::" + $ClassName + "
+ * " + $FullyQualifiedNamespace + "::" + $ClassName + "::" + $ClassName + "
  */
-vislib::" + $ClassName + "::" + $ClassName + "(void) {
+" + $FullyQualifiedNamespace + "::" + $ClassName + "::" + $ClassName + "(void) {
     // TODO: Implement
 }
 
 
 /*
- * vislib::" + $ClassName + "::~" + $ClassName + "
+ * " + $FullyQualifiedNamespace + "::" + $ClassName + "::~" + $ClassName + "
  */
-vislib::" + $ClassName + "::~" + $ClassName + "(void) {
+" + $FullyQualifiedNamespace + "::" + $ClassName + "::~" + $ClassName + "(void) {
     // TODO: Implement
 }"
 
@@ -108,11 +122,12 @@ $HContent += "_H_INCLUDED
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-
-namespace vislib {
-/** TODO: Add additional Namespaces here */
-
-
+"
+foreach ($Namespace in $Namespaces) {
+	$HContent += "namespace " + $Namespace + " {
+"
+}
+$HContent += "
     /**
      * TODO: comment class
      */
@@ -132,7 +147,11 @@ namespace vislib {
 
     };
     
-} /* end namespace vislib */
+"
+for ($i = $Namespaces.length - 1; $i -ge 0; $i--) {
+	$HContent += "} /* end namespace " + $Namespaces[$i] + " */
+"
+}
 
 #endif /* VISLIB_" + $ClassName.ToUpper() + "_H_INCLUDED */"
 
