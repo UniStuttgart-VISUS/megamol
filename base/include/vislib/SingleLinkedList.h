@@ -72,6 +72,14 @@ namespace vislib {
         /** ctor */
         SingleLinkedList(void);
 
+        /**
+         * copy ctor 
+         * the created list creates items identical to the items of rhs.
+         *
+         * @param rhs The linked list to copy from.
+         */
+        SingleLinkedList(const SingleLinkedList<T>& rhs);
+
         /** Dtor. */
         ~SingleLinkedList(void);
 
@@ -118,6 +126,16 @@ namespace vislib {
          * @return An iterator to the list.
          */
         class Iterator GetIterator(void);
+
+        /**
+         * Assignment operator. This list removes all items and then creates 
+         * new items identical to the items of rhs.
+         *
+         * @param rhs The linked list to copy from.
+         *
+         * @return Reference to this list.
+         */
+        SingleLinkedList<T>& operator=(const SingleLinkedList<T>& rhs);
 
     private:
 
@@ -203,6 +221,16 @@ namespace vislib {
      */
     template<class T>
     SingleLinkedList<T>::SingleLinkedList(void) : first(NULL), last(NULL) {
+    }
+
+
+    /*
+     * SingleLinkedList<T>::SingleLinkedList
+     */
+    template<class T>
+    SingleLinkedList<T>::SingleLinkedList(const SingleLinkedList<T>& rhs)
+        : first(NULL), last(NULL) {
+        *this = rhs;
     }
 
 
@@ -305,6 +333,28 @@ namespace vislib {
     typename SingleLinkedList<T>::Iterator SingleLinkedList<T>::GetIterator(void) {
         return Iterator(*this);
     }
+
+
+    /*
+     * SingleLinkedList<T>::operator=
+     */
+    template<class T>
+    SingleLinkedList<T>& SingleLinkedList<T>::operator=(const SingleLinkedList<T>& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
+
+        // might be implemented more intelligent reusing the item object 
+        //  already present in this
+        this->Clear();
+        SingleLinkedList::Iterator it = const_cast<SingleLinkedList<T>&>(rhs).GetIterator();
+        while(it.HasNext()) {
+            this->Append(it.Next());
+        }
+
+        return *this;
+    }
+
 
 } /* end namespace vislib */
 
