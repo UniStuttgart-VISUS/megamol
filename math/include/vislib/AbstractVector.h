@@ -771,6 +771,21 @@ namespace math {
     }
 
 
+    /**
+     * Scalar multiplication.
+     *
+     * @param lhs The left hand side operand, the scalar.
+     * @param rhs The right hand side operand, the vector.
+     *
+     * @return The result of the scalar multiplication.
+     */
+    template<class T, unsigned int D, class S>
+    AbstractVector<T, D, T[D]> operator *(const T lhs, 
+            const AbstractVector<T, D, S>& rhs) {
+        return rhs * lhs;
+    }
+
+
 } /* end namespace math */
 } /* end namespace vislib */
 

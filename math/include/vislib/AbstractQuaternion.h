@@ -56,6 +56,42 @@ namespace math {
             AbstractVector3D<T, Sp>& outAxis) const;
 
         /**
+         * Answer the i-component (= x-component) of the quaternion.
+         *
+         * @return The i-component.
+         */
+        inline const T& GetI(void) const {
+            return this->components[IDX_X];
+        }
+
+        /**
+         * Answer the j-component (= y-component) of the quaternion.
+         *
+         * @return The j-component.
+         */
+        inline const T& GetJ(void) const {
+            return this->components[IDX_Y];
+        }
+
+        /**
+         * Answer the k-component (= z-component) of the quaternion.
+         *
+         * @return The k-component.
+         */
+        inline const T& GetK(void) const {
+            return this->components[IDX_Z];
+        }
+
+        /**
+         * Answer the r-component (= w-component) of the quaternion.
+         *
+         * @return The r-component.
+         */
+        inline const T& GetR(void) const {
+            return this->components[IDX_W];
+        }
+
+        /**
          * Answer the w-component of the quaternion.
          *
          * @return The w-component.
@@ -78,7 +114,7 @@ namespace math {
          *
          * @return The y-component.
          */
-        inline float GetY(void) const {
+        inline const T& GetY(void) const {
             return this->components[IDX_Y];
         }
 
@@ -87,7 +123,34 @@ namespace math {
          *
          * @return The z-component.
          */
-        inline float GetZ(void) const {
+        inline const T& GetZ(void) const {
+            return this->components[IDX_Z];
+        }
+
+        /**
+         * Answer the i-component (= x-component) of the quaternion.
+         *
+         * @return The i-component.
+         */
+        inline const T& I(void) const {
+            return this->components[IDX_X];
+        }
+
+        /**
+         * Answer the j-component (= y-component) of the quaternion.
+         *
+         * @return The j-component.
+         */
+        inline const T& J(void) const {
+            return this->components[IDX_Y];
+        }
+
+        /**
+         * Answer the k-component (= z-component) of the quaternion.
+         *
+         * @return The k-component.
+         */
+        inline const T& K(void) const {
             return this->components[IDX_Z];
         }
 
@@ -136,6 +199,15 @@ namespace math {
         }
 
         /**
+         * Answer the r-component (= w-component) of the quaternion.
+         *
+         * @return The r-component.
+         */
+        inline const T& R(void) const {
+            return this->components[IDX_W];
+        }
+
+        /**
          * Set the components of the quaternion.
          *
          * @param x The new x-component.
@@ -148,6 +220,42 @@ namespace math {
             this->components[IDX_Y] = y;
             this->components[IDX_Z] = z;
             this->components[IDX_W] = w;
+        }
+
+        /**
+         * Set the i-component (= x-component) of the quaternion.
+         *
+         * @param i The new value for the component.
+         */
+        inline void SetI(const T& i) {
+            this->components[IDX_X] = i;
+        }
+
+        /**
+         * Set the j-component (= y-component) of the quaternion.
+         *
+         * @param j The new value for the component.
+         */
+        inline void SetJ(const T& j) {
+            this->components[IDX_Y] = j;
+        }
+
+        /**
+         * Set the k-component (= z-component) of the quaternion.
+         *
+         * @param k The new value for the component.
+         */
+        inline void SetK(const T& k) {
+            this->components[IDX_Z] = k;
+        }
+
+        /**
+         * Set the r-component (= w-component) of the quaternion.
+         *
+         * @param r The new value for the component.
+         */
+        inline void SetR(const T& r) {
+            this->components[IDX_W] = r;
         }
 
         /**
@@ -290,10 +398,25 @@ namespace math {
             return !(*this == rhs);
         }
 
+        /**
+         * Multiplication of two quaternions.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return The result of *this * rhs.
+         */
         template<class Sp>
         AbstractQuaternion<T, T[4]> operator *(
             const AbstractQuaternion<T, Sp>& rhs) const;
 
+        /**
+         * Multiplies a quaternion and a vector. The result is the vector 'rhs'
+         * rotated by the rotation that is defined through this quaternion.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return The resulting vector.
+         */
         template<class Sp>
         Vector3D<T> operator *(const AbstractVector3D<T, Sp>& rhs) const;
 
@@ -325,6 +448,14 @@ namespace math {
          */
         S components;
     };
+
+
+    /*
+     * vislib::AbstractQuaternion<T, S>::~AbstractQuaternion
+     */
+    template<class T, class S>
+    AbstractQuaternion<T, S>::~AbstractQuaternion(void) {
+    }
 
 
     /*
@@ -480,7 +611,7 @@ namespace math {
                 - this->components[IDX_X] * rhs.Z(),
 
             this->components[IDX_W] * rhs.Z() 
-            + rhs.W() * this->comp[IDX_Z] 
+            + rhs.W() * this->components[IDX_Z] 
             + this->components[IDX_X] * rhs.Y() 
             - this->components[IDX_Y] * rhs.X(),
 
