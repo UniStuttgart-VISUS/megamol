@@ -290,7 +290,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Iterator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\OutOfRangeException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SingleLinkedList.cpp"
 				>
 			</File>
 			<File
@@ -340,11 +348,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\Iterator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\memutils.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\vislib\OutOfRangeException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SingleLinkedList.h"
 				>
 			</File>
 			<File

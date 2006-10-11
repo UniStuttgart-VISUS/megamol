@@ -134,7 +134,7 @@ namespace vislib {
     
 } /* end namespace vislib */
 
-#endif /* VISLIB_" + $ClassName + "_H_INCLUDED */"
+#endif /* VISLIB_" + $ClassName.ToUpper() + "_H_INCLUDED */"
 
 #echo $HContent > $HFile
 ni . -name $HFile -force -type "file" -value ($HContent | out-string) >> $null
