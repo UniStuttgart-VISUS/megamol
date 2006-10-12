@@ -122,12 +122,14 @@ $HContent += "_H_INCLUDED
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+
 "
 foreach ($Namespace in $Namespaces) {
 	$HContent += "namespace " + $Namespace + " {
 "
 }
 $HContent += "
+
     /**
      * TODO: comment class
      */
@@ -135,7 +137,7 @@ $HContent += "
 
     public:
 
-        /** ctor */
+        /** Ctor. */
         " + $ClassName + "(void);
 
         /** Dtor. */
@@ -152,8 +154,9 @@ for ($i = $Namespaces.length - 1; $i -ge 0; $i--) {
 	$HContent += "} /* end namespace " + $Namespaces[$i] + " */
 "
 }
-
-#endif /* VISLIB_" + $ClassName.ToUpper() + "_H_INCLUDED */"
+$HContent += "
+#endif /* VISLIB_" + $ClassName.ToUpper() + "_H_INCLUDED */
+"
 
 #echo $HContent > $HFile
 ni . -name $HFile -force -type "file" -value ($HContent | out-string) >> $null

@@ -55,8 +55,8 @@ namespace math {
          * @param normal The normal vector of the plane.
          */
         template<class Tp1, class Sp1, class Tp2, class Sp2>
-        inline Plane(const AbstractPoint3D<Tp1, Sp2>& point, 
-                const AbstractVector3D<Tp2, Sp2>& normal) {
+        inline Plane(const AbstractPoint<Tp1, 3, Sp2>& point, 
+                const AbstractVector<Tp2, 3, Sp2>& normal) {
             this->Set(point, normal);
         }
 

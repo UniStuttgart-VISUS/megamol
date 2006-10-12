@@ -21,7 +21,7 @@ namespace math {
     /**
      * A quaternion.
      */
-    template<class T> class Quaternion : AbstractQuaternion<T, T[4]> {
+    template<class T> class Quaternion : public AbstractQuaternion<T, T[4]> {
 
     public:
 
@@ -67,8 +67,10 @@ namespace math {
          * @param angle The rotation angle.
          * @param axis  The rotation axis.
          */
-        template<class Sp>
-        Quaternion(const T& angle, AbstractVector3D<T, Sp>& axis);
+        template<class Tp, class Sp>
+        inline Quaternion(const T& angle, AbstractVector<Tp, 3, Sp>& axis) {
+            this->Set(angle, axis);
+        }
 
         /**
          * Clone 'rhs'.
@@ -111,29 +113,6 @@ namespace math {
             return *this;
         }
     };
-
-
-    /*
-     * vislib::math::Quaternion<T>::Quaternion
-     */
-    template<class T>
-    template<class Sp>
-    Quaternion<T>::Quaternion(const T& angle, AbstractVector3D<T, Sp>& axis) {
-        T len = axis.Normalise();
-        double halfAngle = 0.5 * static_cast<double>(angle);
-
-        if (!IsEqual(len, static_cast<T>(0))){
-            len = ::sin(halfAngle) / len;
-            this->comp[0] = axis.X() * len;
-            this->comp[1] = axis.Y() * len;
-            this->comp[2] = axis.Z() * len;
-            this->comp[3] = static_cast<T>(::cos(halfAngle));
-
-        } else {
-            this->comp[0] = this->comp[1] = this->comp[2] = 0.0f;
-            this->comp[3] = 1.0f;
-        }
-    }
 
 
     /*

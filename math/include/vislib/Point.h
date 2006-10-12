@@ -27,7 +27,7 @@ namespace math {
      * vector classes.
      */
     template<class T, unsigned int D> 
-    class Point : virtual public AbstractPoint<T, D, T[D]> {
+    class Point : public AbstractPoint<T, D, T[D]> {
 
     public:
 
@@ -125,10 +125,10 @@ namespace math {
     template<class Tp, unsigned int Dp, class Sp>
     Point<T, D>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) {
         for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
-            this->components[d] = static_cast<T>(rhs[d]);
+            this->coordinates[d] = static_cast<T>(rhs[d]);
         }
         for (unsigned int d = Dp; d < D; d++) {
-            this->components[d] = static_cast<T>(0);
+            this->coordinates[d] = static_cast<T>(0);
         }
     }
 

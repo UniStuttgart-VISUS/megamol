@@ -16,7 +16,7 @@
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/types.h"
-#include "vislib/Vector3D.h"
+#include "vislib/Vector.h"
 
 
 namespace vislib {
@@ -53,7 +53,7 @@ namespace math {
          */
         template<class Sp>
         void AngleAndAxis(T& outAngle, 
-            AbstractVector3D<T, Sp>& outAxis) const;
+            AbstractVector<T, 3, Sp>& outAxis) const;
 
         /**
          * Answer the i-component (= x-component) of the quaternion.
@@ -221,6 +221,16 @@ namespace math {
             this->components[IDX_Z] = z;
             this->components[IDX_W] = w;
         }
+
+        /**
+         * Set the components of the quaternion in such a way that is represents
+         * the specified rotation.
+         *
+         * @param angle The rotation angle in radians.
+         * @param axis  The vector specifying the rotation axis.
+         */
+        template<class Tp, class Sp>
+        void Set(const T& angle, AbstractVector<T, 3, Sp>& axis);
 
         /**
          * Set the i-component (= x-component) of the quaternion.
@@ -418,7 +428,7 @@ namespace math {
          * @return The resulting vector.
          */
         template<class Sp>
-        Vector3D<T> operator *(const AbstractVector3D<T, Sp>& rhs) const;
+        Vector<T, 3> operator *(const AbstractVector<T, 3, Sp>& rhs) const;
 
         //operator Matrix4x4(void) const;
 
@@ -439,8 +449,7 @@ namespace math {
         /**
          * Disallow instances of this class.
          */
-        inline AbstractQuaternion(void) {
-        }
+        inline AbstractQuaternion(void) {}
 
         /** 
          * The components of the quaterion. These are stored in the following
@@ -451,7 +460,7 @@ namespace math {
 
 
     /*
-     * vislib::AbstractQuaternion<T, S>::~AbstractQuaternion
+     * vislib::math::AbstractQuaternion<T, S>::~AbstractQuaternion
      */
     template<class T, class S>
     AbstractQuaternion<T, S>::~AbstractQuaternion(void) {
@@ -464,7 +473,7 @@ namespace math {
     template<class T, class S>
     template<class Sp>
     void AbstractQuaternion<T, S>::AngleAndAxis(T& outAngle, 
-            AbstractVector3D<T, Sp>& outAxis) const {
+            AbstractVector<T, 3, Sp>& outAxis) const {
         T d = Sqrt(Sqr(this->components[IDX_X]) + Sqr(this->components[IDX_Y])
             + Sqr(this->components[IDX_Z]));
 
@@ -529,6 +538,30 @@ namespace math {
         }
 
         return norm;
+    }
+
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::Set
+     */
+    template<class T, class S>
+    template<class Tp, class Sp>
+    void AbstractQuaternion<T, S>::Set(const T& angle, 
+            AbstractVector<T, 3, Sp>& axis) {
+            T len = axis.Normalise();
+        double halfAngle = 0.5 * static_cast<double>(angle);
+
+        if (!IsEqual(len, static_cast<T>(0))){
+            len = static_cast<T>(::sin(halfAngle) / len);
+            this->components[0] = axis.X() * len;
+            this->components[1] = axis.Y() * len;
+            this->components[2] = axis.Z() * len;
+            this->components[3] = static_cast<T>(::cos(halfAngle));
+
+        } else {
+            this->components[0] = this->components[1] 
+                = this->components[2] = static_cast<T>(0);
+            this->components[3] = static_cast<T>(1);
+        }
     }
 
 
@@ -628,9 +661,9 @@ namespace math {
      */
     template<class T, class S>
     template<class Sp>
-    Vector3D<T> AbstractQuaternion<T, S>::operator *(
-            const AbstractVector3D<T, Sp>& rhs) const {
-        Vector3D<T> u(this->components);
+    Vector<T, 3> AbstractQuaternion<T, S>::operator *(
+            const AbstractVector<T, 3, Sp>& rhs) const {
+        Vector<T, 3> u(this->components);
         return ((2.0f * ((u.Dot(rhs) * u) + (this->W() * u.Cross(rhs))))
             + ((Sqr(this->W()) - u.Dot(u)) * rhs));
     }

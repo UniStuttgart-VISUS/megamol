@@ -2,7 +2,6 @@
  * AbstractPoint.h
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
- * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_ABSTRACTPOINT_H_INCLUDED
@@ -12,13 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 
-#include <limits>
-
-#include "vislib/AbstractVector.h"
-#include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/OutOfRangeException.h"
-#include "vislib/Vector.h"
+#include "vislib/AbstractPointImpl.h"
 
 
 namespace vislib {
@@ -27,215 +20,23 @@ namespace math {
     /**
 
      */
-    template<class T, unsigned int D, class S> class AbstractPoint {
+    template<class T, unsigned int D, class S> class AbstractPoint 
+            : public AbstractPointImpl<T, D, S, AbstractPoint> {
 
     public:
 
         /** Dtor. */
         ~AbstractPoint(void);
 
-        /**
-         * Answer the distance from this point to 'toPoint'.
-         *
-         * @param toPoint The point to calculate the distance to.
-         *
-         * @return The distance between the two points.
-         */
-        T Distance(const AbstractPoint& toPoint) const;
-
-        /**
-         * Directly access the internal pointer holding the coordinates.
-         * The object remains owner of the memory returned.
-         *
-         * @return The coordinates in an array.
-         */
-        inline T *PeekCoordinates(void) {
-            return this->coordinates;
-        }
-
-        /**
-         * Directly access the internal pointer holding the coordinates.
-         * The object remains owner of the memory returned.
-         *
-         * @return The coordinates in an array.
-         */
-        inline const T *PeekCoordinates(void) const {
-            return this->coordinates;
-        }
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        AbstractPoint& operator =(const AbstractPoint& rhs);
-
-        /**
-         * Assigment for arbitrary points. A valid static_cast between T and Tp
-         * is a precondition for instantiating this template.
-         *
-         * This operation does <b>not</b> create aliases. 
-         *
-         * If the two operands have different dimensions, the behaviour is as 
-         * follows: If the left hand side operand has lower dimension, the 
-         * highest (Dp - D) dimensions are discarded. If the left hand side
-         * operand has higher dimension, the missing dimensions are filled with 
-         * zero components.
-         *
-         * Subclasses must ensure that sufficient memory for the 'coordinates'
-         * member has been allocated before calling this operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this
-         */
-        template<class Tp, unsigned int Dp, class Sp>
-        AbstractPoint& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs);
-
-        /**
-         * Test for equality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true, if *this and 'rhs' are equal, false otherwise.
-         */
-        bool operator ==(const AbstractPoint& rhs) const;
-
-        /**
-         * Test for equality of arbitrary points. This operation uses the
-         * IsEqual function of the left hand side operand. Note that points 
-         * with different dimensions are never equal.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @param true, if 'rhs' and this point are equal, false otherwise.
-         */
-        template<class Tp, unsigned int Dp, class Sp>
-        bool operator ==(const AbstractPoint<Tp, Dp, Sp>& rhs) const;
-
-        /**
-         * Test for inequality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true, if *this and 'rhs' are not equal, false otherwise.
-         */
-        inline bool operator !=(const AbstractPoint& rhs) const {
-            return !(*this == rhs);
-        }
-
-        /**
-         * Test for inequality of arbitrary points. See operator == for further
-         * details.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @param true, if 'rhs' and this vector are not equal, false otherwise.
-         */
-        template<class Tp, unsigned int Dp, class Sp>
-        inline bool operator !=(const AbstractPoint<Tp, Dp, Sp>& rhs) const {
-            return !(*this == rhs);
-        }
-
-
-        /**
-         * Move the point along the vector 'rhs'.
-         *
-         * @param rhs The direction vector to move the point to.
-         *
-         * @return A copy of this point moved by rhs.
-         */
-        template<class Tp, class Sp>
-        AbstractPoint<T, D, T[D]> operator +(
-            const AbstractVector<Tp, D, Sp>& rhs) const;
-
-        /**
-         * Move the point along the vector 'rhs'.
-         *
-         * @param rhs The direction vector to move the point to.
-         *
-         * @return *this.
-         */
-        template<class Tp, class Sp>
-        AbstractPoint& operator +=(const AbstractVector<Tp, D, Sp>& rhs);
-
-        /**
-         * Move the point along the negative vector 'rhs'.
-         *
-         * @param rhs The direction vector to move the point against.
-         *
-         * @return A copy of this point moved by rhs.
-         */
-        template<class Tp, class Sp>
-        AbstractPoint<T, D, T[D]> operator -(
-            const AbstractVector<Tp, D, Sp>& rhs) const;
-
-        /**
-         * Move the point along the negative vector 'rhs'.
-         *
-         * @param rhs The direction vector to move the point against.
-         *
-         * @return *this.
-         */
-        template<class Tp, class Sp>
-        AbstractPoint& operator -=(const AbstractVector<Tp, D, Sp>& rhs);
-
-        /**
-         * Subtract 'rhs' from this point.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return A vector pointing from this point to 'rhs'.
-         */
-        Vector<T, D> operator -(const AbstractPoint& rhs) const;
-
-        /**
-         * Directly access the 'i'th coordinate of the point.
-         *
-         * @param i The index of the coordinate within [0, D[.
-         *
-         * @return A reference to the x-coordinate for 0, 
-         *         the y-coordinate for 1, etc.
-         *
-         * @throws OutOfRangeException, if 'i' is not within [0, D[.
-         */
-        T& operator [](const int i);
-
-        /**
-         * Answer the coordinates of the point.
-         *
-         * @param i The index of the coordinate within [0, D[.
-         *
-         * @return The x-coordinate for 0, the y-coordinate for 1, etc.
-         *
-         * @throws OutOfRangeException, if 'i' is not within [0, D[.
-         */
-        T operator [](const int i) const;
-
-        /**
-         * Cast to Vector. The resulting vector is the position vector of
-         * this point.
-         *
-         * @return The position vector of the point.
-         */
-        inline operator Vector<T, D>(void) const {
-            return Vector<T, D>(this->coordinates);
-        }
-
     protected:
 
-        /**
-         * Disallow instances of this class. This ctor does nothing!
-         */
-        inline AbstractPoint(void) {};
+        /** Typedef for our super class. */
+        typedef AbstractPointImpl<T, D, S, vislib::math::AbstractPoint> Super;
 
-        /** 
-         * The coordinates of the point. This can be a T * pointer or a T[D]
-         * static array.
+        /**
+         * Disallow instances of this class. 
          */
-        S coordinates;
+        inline AbstractPoint(void) : Super() {}
     };
 
 
@@ -247,202 +48,226 @@ namespace math {
     }
 
 
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::Distance
+    /**
+     * Partial template specialisation for two-dimensional points. This 
+     * implementation provides convenience access methods to the two 
+     * coordinates.
      */
-    template<class T, unsigned int D, class S>
-    T AbstractPoint<T, D, S>::Distance(const AbstractPoint& toPoint) const {
-        double retval = 0.0;
+    template<class T, class S> class AbstractPoint<T, 2, S> 
+            : public AbstractPointImpl<T, 2, S, AbstractPoint> {
 
-        for (unsigned int i = 0; i < D; i++) {
-            retval += static_cast<double>(Sqr(toPoint.coordinates[i] 
-                - this->coordinates[i]));
+    public:
+
+        /** Dtor. */
+        ~AbstractPoint(void);
+
+        /**
+         * Answer the x-coordinate of the point.
+         *
+         * @return The x-coordinate of the point.
+         */
+        inline const T& GetX(void) const {
+            return this->coordinates[0];
         }
 
-        return static_cast<T>(::sqrt(retval));
+        /**
+         * Answer the y-coordinate of the point.
+         *
+         * @return The y-coordinate of the point.
+         */
+        inline const T& GetY(void) const {
+            return this->coordinates[1];
+        }
+
+        /**
+         * Set the coordinates ot the point.
+         *
+         * @param x The x-coordinate of the point.
+         * @param y The y-coordinate of the point.
+         */
+        inline void Set(const T& x, const T& y) {
+            this->coordinates[0] = x;
+            this->coordinates[1] = y;
+        }
+
+        /**
+         * Set the x-coordinate of the point.
+         *
+         * @param x The new x-coordinate.
+         */
+        inline void SetX(const T& x) {
+            this->coordinates[0] = x;
+        }
+
+        /**
+         * Set the y-coordinate of the point.
+         *
+         * @param y The new y-coordinate.
+         */
+        inline void SetY(const T& y) {
+            this->coordinates[1] = y;
+        }
+
+        /**
+         * Answer the x-coordinate of the point.
+         *
+         * @return The x-coordinate of the point.
+         */
+        inline const T& X(void) const {
+            return this->coordinates[0];
+        }
+
+        /**
+         * Answer the y-component of the point.
+         *
+         * @return The y-component of the point.
+         */
+        inline const T& Y(void) const {
+            return this->coordinates[1];
+        }
+
+    protected:
+
+        /** Typedef for our super class. */
+        typedef AbstractPointImpl<T, 2, S, vislib::math::AbstractPoint> Super;
+
+        /**
+         * Disallow instances of this class. 
+         */
+        inline AbstractPoint(void) : Super() {}
+    };
+
+
+    /*
+     * vislib::math::AbstractPoint<T, 2, S>::~AbstractPoint
+     */
+    template<class T, class S> AbstractPoint<T, 2, S>::~AbstractPoint(void) {
     }
 
 
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator =
+    /**
+     * Partial template specialisation for three-dimensional points. This 
+     * implementation provides convenience access methods to the three 
+     * coordinates.
      */
-    template<class T, unsigned int D, class S>
-    AbstractPoint<T, D, S>& AbstractPoint<T, D, S>::operator =(
-            const AbstractPoint& rhs) {
-        if (this != &rhs) {
-            ::memcpy(this->coordinates, rhs.coordinates, D * sizeof(T));
+    template<class T, class S> class AbstractPoint<T, 3, S> 
+            : public AbstractPointImpl<T, 3, S, AbstractPoint> {
+
+    public:
+
+        /** Dtor. */
+        ~AbstractPoint(void);
+
+        /**
+         * Answer the x-coordinate of the point.
+         *
+         * @return The x-coordinate of the point.
+         */
+        inline const T& GetX(void) const {
+            return this->coordinates[0];
         }
 
-        return *this;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator =
-     */
-    template<class T, unsigned int D, class S>
-    template<class Tp, unsigned int Dp, class Sp>
-    AbstractPoint<T, D, S>& AbstractPoint<T, D, S>::operator =(
-           const AbstractPoint<Tp, Dp, Sp>& rhs) {
-
-        if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
-            for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
-                this->coordinates[d] = static_cast<T>(rhs[d]);
-            }
-            for (unsigned int d = Dp; d < D; d++) {
-                this->coordinates[d] = static_cast<T>(0);
-            }            
+        /**
+         * Answer the y-coordinate of the point.
+         *
+         * @return The y-coordinate of the point.
+         */
+        inline const T& GetY(void) const {
+            return this->coordinates[1];
         }
 
-        return *this;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator ==
-     */
-    template<class T, unsigned int D, class S>
-    bool AbstractPoint<T, D, S>::operator ==(
-            const AbstractPoint& rhs) const {
-
-        for (unsigned int d = 0; d < D; d++) {
-            if (!IsEqual<T>(this->coordinates[d], rhs.coordinates[d])) {
-                return false;
-            }
+        /**
+         * Answer the z-coordinate of the point.
+         *
+         * @return The z-coordinate of the point.
+         */
+        inline const T& GetZ(void) const {
+            return this->coordinates[2];
         }
 
-        return true;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator ==
-     */
-    template<class T, unsigned int D, class S>
-    template<class Tp, unsigned int Dp, class Sp>
-    bool AbstractPoint<T, D, S>::operator ==(
-            const AbstractPoint<Tp, Dp,  Sp>& rhs) const {
-
-        if (D != Dp) {
-            return false;
+        /**
+         * Set the coordinates ot the point.
+         *
+         * @param x The x-coordinate of the point.
+         * @param y The y-coordinate of the point.
+         * @param z The z-coordinate of the point.
+         */
+        inline void Set(const T& x, const T& y, const T& z) {
+            this->coordinates[0] = x;
+            this->coordinates[1] = y;
+            this->coordinates[2] = z;
         }
 
-        for (unsigned int d = 0; d < D; d++) {
-            if (!IsEqual<T>(this->coordinates[d], rhs.coordinates[d])) {
-                return false;
-            }
+        /**
+         * Set the x-coordinate of the point.
+         *
+         * @param x The new x-coordinate.
+         */
+        inline void SetX(const T& x) {
+            this->coordinates[0] = x;
         }
 
-        return true;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator +
-     */
-    template<class T, unsigned int D, class S>
-    template<class Tp, class Sp>
-    AbstractPoint<T, D, T[D]> AbstractPoint<T, D, S>::operator +(
-            const AbstractVector<Tp, D, Sp>& rhs) const {
-        AbstractPoint<T, D, T[D]> retval;
-
-        for (unsigned int d = 0; d < D; d++) {
-            retval.coordinates[d] = this->coordinates[d] 
-                + static_cast<T>(rhs[d]);
+        /**
+         * Set the y-coordinate of the point.
+         *
+         * @param y The new y-coordinate.
+         */
+        inline void SetY(const T& y) {
+            this->coordinates[1] = y;
         }
 
-        return retval;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator +=
-     */
-    template<class T, unsigned int D, class S>
-    template<class Tp, class Sp>
-    AbstractPoint<T, D, S>& AbstractPoint<T, D, S>::operator +=(
-           const AbstractVector<Tp, D, Sp>& rhs) {
-        for (unsigned int d = 0; d < D; d++) {
-            this->coordinates[d] += static_cast<T>(rhs[d]);
+        /**
+         * Set the z-coordinate of the point.
+         *
+         * @param z The new z-coordinate.
+         */
+        inline void SetZ(const T& z) {
+            this->coordinates[2] = z;
         }
 
-        return *this;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator -
-     */
-    template<class T, unsigned int D, class S>
-    template<class Tp, class Sp>
-    AbstractPoint<T, D, T[D]> AbstractPoint<T, D, S>::operator -(
-           const AbstractVector<Tp, D, Sp>& rhs) const {
-        AbstractPoint<T, D, T[D]> retval;
-
-        for (unsigned int d = 0; d < D; d++) {
-            retval.coordinates[d] = this->coordinates[d] 
-                - static_cast<T>(rhs[d]);
+        /**
+         * Answer the x-coordinate of the point.
+         *
+         * @return The x-coordinate of the point.
+         */
+        inline const T& X(void) const {
+            return this->coordinates[0];
         }
 
-        return retval;
-    }
+        /**
+         * Answer the y-coordinate of the point.
+         *
+         * @return The y-coordinate of the point.
+         */
+        inline const T& Y(void) const {
+            return this->coordinates[1];
+        }
+
+        /**
+         * Answer the z-coordinate of the point.
+         *
+         * @return The z-coordinate of the point.
+         */
+        inline const T& Z(void) const {
+            return this->coordinates[2];
+        }
+
+    protected:
+
+        /** Typedef for our super class. */
+        typedef AbstractPointImpl<T, 3, S, vislib::math::AbstractPoint> Super;
+
+        /**
+         * Disallow instances of this class. 
+         */
+        inline AbstractPoint(void) : Super() {}
+    };
 
 
     /*
-     * vislib::math::AbstractPoint<T, D, S>::operator -=
+     * vislib::math::AbstractPoint<T, 3, S>::~AbstractPoint
      */
-    template<class T, unsigned int D, class S>
-    template<class Tp, class Sp>
-    AbstractPoint<T, D, S>& AbstractPoint<T, D, S>::operator -=(
-           const AbstractVector<Tp, D, Sp>& rhs) {
-        for (unsigned int d = 0; d < D; d++) {
-            this->coordinates[d] -= static_cast<T>(rhs[d]);
-        }
-
-        return *this;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator -
-     */
-    template<class T, unsigned int D, class S>
-    Vector<T, D> AbstractPoint<T, D, S>::operator -(
-           const AbstractPoint& rhs) const {
-        Vector<T, D> retval;
-
-        for (unsigned int d = 0; d < D; d++) {
-            retval[d] = this->coordinates[d] 
-                - static_cast<T>(rhs.coordinates[d]);
-        }
-
-        return retval;
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator []
-     */
-    template<class T, unsigned int D, class S>
-    T& AbstractPoint<T, D, S>::operator [](const int i) {
-        if ((i >= 0) && (i < static_cast<int>(D))) {
-            return this->coordinates[i];
-        } else {
-            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
-        }
-    }
-
-
-    /*
-     * vislib::math::AbstractPoint<T, D, S>::operator []
-     */
-    template<class T, unsigned int D, class S>
-    T AbstractPoint<T, D, S>::operator [](const int i) const {
-        if ((i >= 0) && (i < static_cast<int>(D))) {
-            return this->coordinates[i];
-        } else {
-            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
-        }
+    template<class T, class S> AbstractPoint<T, 3, S>::~AbstractPoint(void) {
     }
 
 } /* end namespace math */

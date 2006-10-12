@@ -13,10 +13,10 @@
 
 
 #include "vislib/assert.h"
-#include "vislib/Dimension2D.h"
+#include "vislib/Dimension.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
-#include "vislib/Point2D.h"
+#include "vislib/Point.h"
 #include "vislib/types.h"
 #include "vislib/utils.h"
 
@@ -65,7 +65,7 @@ namespace math {
          *
          * @return The center point of the rectangle.
          */
-        Point2D<T> CalcCenter(void) const;
+        Point<T, 2> CalcCenter(void) const;
 
         /**
          * Answer the height of the rectangle.
@@ -119,8 +119,9 @@ namespace math {
          *
          * @return The left/bottom point.
          */
-        inline Point2D<T> GetLeftBottom(void) const {
-            return Point2D<T>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM]);
+        inline Point<T, 3> GetLeftBottom(void) const {
+            return Point<T, 2>(this->bounds[IDX_LEFT], 
+                this->bounds[IDX_BOTTOM]);
         }
 
         /**
@@ -128,8 +129,9 @@ namespace math {
          *
          * @return The left/top point.
          */
-        inline Point2D<T>GetLeftTop(void) const {
-            return Point2D<T>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM]);
+        inline Point<T, 2>GetLeftTop(void) const {
+            return Point<T, 2>(this->bounds[IDX_LEFT], 
+                this->bounds[IDX_BOTTOM]);
         }
 
         /** 
@@ -137,8 +139,9 @@ namespace math {
          *
          * @return The origin point.
          */
-        inline Point2D<T> GetOrigin(void) const {
-            return Point2D<T>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM]);
+        inline Point<T, 2> GetOrigin(void) const {
+            return Point<T, 2>(this->bounds[IDX_LEFT], 
+                this->bounds[IDX_BOTTOM]);
         }
 
         /**
@@ -155,8 +158,9 @@ namespace math {
          *
          * @return The right/bottom point of the rectangle.
          */
-        inline Point2D<T> GetRightBottom(void) const {
-            return Point2D<T>(this->bounds[IDX_RIGHT], this->bounds[IDX_BOTTOM]);
+        inline Point<T, 2> GetRightBottom(void) const {
+            return Point<T, 2>(this->bounds[IDX_RIGHT], 
+                this->bounds[IDX_BOTTOM]);
         }
 
         /**
@@ -164,8 +168,9 @@ namespace math {
          *
          * @return The right/top point.
          */
-        inline Point2D<T> GetRightTop(void) const {
-            return Point2D<T>(this->bounds[IDX_RIGHT], this->bounds[IDX_TOP]);
+        inline Point<T, 2> GetRightTop(void) const {
+            return Point<T, 2>(this->bounds[IDX_RIGHT], 
+                this->bounds[IDX_TOP]);
         }
 
         /**
@@ -173,8 +178,8 @@ namespace math {
          *
          * @return The dimensions of the rectangle.
          */
-        inline Dimension2D<T> GetSize(void) const {
-            return Dimension2D<T>(this->Width(), this->Height());
+        inline Dimension<T, 2> GetSize(void) const {
+            return Dimension<T, 2>(this->Width(), this->Height());
         }
 
         /**
@@ -333,10 +338,10 @@ namespace math {
          *
          * @param size The new rectangle dimensions.
          */
-        template<class Sp>
-        inline void SetSize(const AbstractDimension2D<T, Sp>& size) {
-            this->SetWidth(size.GetWidth());
-            this->SetHeight(size.GetHeight());
+        template<class Tp, class Sp>
+        inline void SetSize(const AbstractDimension<Tp, 2, Sp>& size) {
+            this->SetWidth(static_cast<T>(size.GetWidth()));
+            this->SetHeight(static_cast<T>(size.GetHeight()));
         }
 
         /**
@@ -472,8 +477,8 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::CalcCenter
      */
     template<class T, class S> 
-    Point2D<T> AbstractRectangle<T, S>::CalcCenter(void) const {
-        return Point2D<T>(
+    Point<T, 2> AbstractRectangle<T, S>::CalcCenter(void) const {
+        return Point<T, 2>(
             this->bounds[IDX_LEFT] + this->Width() / static_cast<T>(2),
             this->bounds[IDX_BOTTOM] + this->Height() / static_cast<T>(2));
     }

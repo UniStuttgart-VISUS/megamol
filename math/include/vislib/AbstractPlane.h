@@ -13,9 +13,9 @@
 
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
-#include "vislib/Point3D.h"
+#include "vislib/Point.h"
 #include "vislib/types.h"
-#include "vislib/Vector3D.h"
+#include "vislib/Vector.h"
 
 
 namespace vislib {
@@ -30,7 +30,7 @@ namespace math {
     public:
 
         /** Enumeration for halfspaces of the plane. */
-        enum Halfspace { 
+        enum HalfSpace { 
             NEGATIVE_HALFSPACE = -1,    // Halfspace opposite of normal.
             IN_PLANE = 0,               // No halfspace, but plane itself.
             POSITIVE_HALFSPACE = 1      // Halfspace in normal direction.
@@ -82,7 +82,7 @@ namespace math {
          *         otherwise.
          */
         template<class Tp, class Sp>
-        inline bool Contains(const AbstractPoint3D<Tp, Sp>& point) const {
+        inline bool Contains(const AbstractPoint<Tp, 3, Sp>& point) const {
             return IsEqual<T>(this->Distance(point), static_cast<T>(0));
         }
         
@@ -104,7 +104,7 @@ namespace math {
          * @return The distance of 'point' to the plane.
          */
         template<class Tp, class Sp>
-        T Distance(const AbstractPoint3D<Tp, Sp>& point) const;
+        T Distance(const AbstractPoint<Tp, 3, Sp>& point) const;
 
         /**
          * Answer the parameter a in the plane equation ax + by + cz + d = 0.
@@ -150,7 +150,7 @@ namespace math {
          * @return The halfspace the point lies in.
          */
         template<class Tp, class Sp>
-        Halfspace InHalfspace(const AbstractPoint3D<Tp, Sp>& point);
+        HalfSpace Halfspace(const AbstractPoint<Tp, 3, Sp>& point);
 
         //template<class Tp, class Sp1, class Sp2>
         //IntersectionCount Intersect(const Line3D<Tp, Sp1>& line, AbstractPoint3D<T, Sp2>& outWhere) const;
@@ -161,8 +161,8 @@ namespace math {
          *
          * @return The normal of the plane.
          */
-        inline Vector3D<T> Normal(void) const {
-            Vector3D<T> retval(this->parameters);
+        inline Vector<T, 3> Normal(void) const {
+            Vector<T, 3> retval(this->parameters);
             retval.Normalise();
             return retval;
         }
@@ -177,7 +177,7 @@ namespace math {
          *
          * @return A point in the plane.
          */
-        Point3D<T> Point(void) const;
+        Point<T, 3> Point(void) const;
 
         /**
          * Answer three points in the plane.
@@ -186,8 +186,9 @@ namespace math {
          * @param outP2 Receives the second point.
          * @param outP3 Receives the third point.
          */
-        void Points(Point3D<T>& outP1, Point3D<T>& outP2, 
-            Point3D<T>& outP3) const;
+        void Points(vislib::math::Point<T, 3>& outP1, 
+            vislib::math::Point<T, 3>& outP2, 
+            vislib::math::Point<T, 3>& outP3) const;
 
         /** 
          * Change the plane equation.
@@ -212,8 +213,8 @@ namespace math {
          * @param normal The plane normal
          */
         template<class Tp1, class Sp1, class Tp2, class Sp2>
-        void Set(const AbstractPoint3D<Tp1, Sp1>& point, 
-            const AbstractVector3D<Tp2, Sp2>& normal);
+        void Set(const AbstractPoint<Tp1, 3, Sp1>& point, 
+            const AbstractVector<Tp2, 3, Sp2>& normal);
 
         /** 
          * Set the parameter a in the plan equation ax + by + cz + d = 0.
@@ -368,7 +369,7 @@ namespace math {
     template<class T, class S>
     template<class Tp, class Sp>
     T AbstractPlane<T, S>::Distance(
-            const AbstractPoint3D<Tp, Sp>& point) const {
+            const AbstractPoint<Tp, 3, Sp>& point) const {
         T a, b, c, d;           // Normalised plane parameters.
         
         this->normalise(a, b, c, d);
@@ -378,12 +379,12 @@ namespace math {
 
 
     /* 
-     * AbstractPlane<T, S>::InHalfspace
+     * AbstractPlane<T, S>::Halfspace
      */
     template<class T, class S>
     template<class Tp, class Sp>
-    typename AbstractPlane<T, S>::Halfspace AbstractPlane<T, S>::InHalfspace(
-            const AbstractPoint3D<Tp, Sp>& point) {
+    typename AbstractPlane<T, S>::HalfSpace AbstractPlane<T, S>::Halfspace(
+            const AbstractPoint<Tp, 3, Sp>& point) {
         T dist = this->Distance(point);
 
         if (IsEqual(dist, static_cast<T>(0))) {
@@ -446,7 +447,7 @@ namespace math {
      * AbstractPlane<T, S>::Point
      */
     template<class T, class S>
-    Point3D<T> AbstractPlane<T, S>::Point(void) const {
+    Point<T, 3> AbstractPlane<T, S>::Point(void) const {
         T a, b, c, d;
         this->normalise(a, b, c, d);
         return Point3D<T>(-d * a, -d * b, -d * c);
@@ -457,8 +458,9 @@ namespace math {
      * AbstractPlane<T, S>::Points
      */
     template<class T, class S>
-    void AbstractPlane<T, S>::Points(Point3D<T>& outP1, Point3D<T>& outP2,
-            Point3D<T>& outP3) const {
+    void AbstractPlane<T, S>::Points(vislib::math::Point<T, 3>& outP1, 
+            vislib::math::Point<T, 3>& outP2,
+            vislib::math::Point<T, 3>& outP3) const {
         T a, b, c, d;
         this->normalise(a, b, c, d);
         
@@ -477,8 +479,8 @@ namespace math {
      */
     template<class T, class S>
     template<class Tp1, class Sp1, class Tp2, class Sp2>
-    void AbstractPlane<T, S>::Set(const AbstractPoint3D<Tp1, Sp1>& point, 
-            const AbstractVector3D<Tp2, Sp2>& normal) {
+    void AbstractPlane<T, S>::Set(const AbstractPoint<Tp1, 3, Sp1>& point, 
+            const AbstractVector<Tp2, 3, Sp2>& normal) {
         this->parameters[IDX_A] = normal.X();
         this->parameters[IDX_B] = normal.Y();
         this->parameters[IDX_C] = normal.Z();
@@ -486,6 +488,7 @@ namespace math {
             + this->parameters[IDX_B] * point.Y() 
             + this->parameters[IDX_C] * point.Z());
     }
+
 
     /*
      * AbstractPlane<T, S>::operator =
@@ -508,7 +511,7 @@ namespace math {
     template<class Tp, class Sp>
     AbstractPlane<T, S>& AbstractPlane<T, S>::operator =(
             const AbstractPlane<Tp, Sp>& rhs) {
-        if (static_cast<void *>(this) != static_cast<void *>(&rhs)) {
+        if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
             this->parameters[IDX_A] = static_cast<T>(rhs.A());
             this->parameters[IDX_B] = static_cast<T>(rhs.B());
             this->parameters[IDX_C] = static_cast<T>(rhs.C());

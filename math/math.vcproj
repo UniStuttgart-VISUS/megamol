@@ -281,14 +281,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\AbstractDimension2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AbstractDimension3D.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\AbstractPlane.cpp"
 				>
 			</File>
@@ -297,11 +289,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\AbstractPoint2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AbstractPoint3D.cpp"
+				RelativePath=".\src\AbstractPointImpl.cpp"
 				>
 			</File>
 			<File
@@ -317,23 +305,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\AbstractVector2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AbstractVector3D.cpp"
+				RelativePath=".\src\AbstractVectorImpl.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\Dimension.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Dimension2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Dimension3D.cpp"
 				>
 			</File>
 			<File
@@ -354,14 +330,6 @@
 			</File>
 			<File
 				RelativePath=".\src\Point.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Point2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Point3D.cpp"
 				>
 			</File>
 			<File
@@ -389,23 +357,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ShallowVector2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ShallowVector3D.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\Vector.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Vector2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Vector3D.cpp"
 				>
 			</File>
 		</Filter>
@@ -419,14 +371,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractDimension2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractDimension3D.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\vislib\AbstractPlane.h"
 				>
 			</File>
@@ -435,11 +379,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractPoint2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractPoint3D.h"
+				RelativePath=".\include\vislib\AbstractPointImpl.h"
 				>
 			</File>
 			<File
@@ -455,23 +395,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractVector2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractVector3D.h"
+				RelativePath=".\include\vislib\AbstractVectorImpl.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\vislib\Dimension.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Dimension2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Dimension3D.h"
 				>
 			</File>
 			<File
@@ -492,14 +420,6 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Point.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Point2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Point3D.h"
 				>
 			</File>
 			<File
@@ -527,23 +447,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\ShallowVector2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\ShallowVector3D.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\vislib\Vector.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Vector2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Vector3D.h"
 				>
 			</File>
 		</Filter>

@@ -66,9 +66,9 @@ namespace math {
          *
          * @param origin The origin of the 
          */
-        template<class Sp1, class Sp2>
-        inline Rectangle(const AbstractPoint2D<T, Sp1>& origin, 
-                const AbstractDimension2D<T, Sp2> size) {
+        template<class Tp1, class Sp1, class Tp2, class Sp2>
+        inline Rectangle(const AbstractPoint<Tp1, 2, Sp1>& origin, 
+                const AbstractDimension<Tp2, 3, Sp2> size) {
             this->bounds[IDX_LEFT] = this->bounds[IDX_RIGHT] = origin.X();
             this->bounds[IDX_BOTTOM] = this->bounds[IDX_TOP] = origin.Y();
             this->bounds[IDX_RIGHT] += size.Width();
