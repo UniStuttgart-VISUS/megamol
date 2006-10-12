@@ -42,7 +42,7 @@ namespace math {
          *
          * @param coordinates The initial coordinates of the point.
          */
-        explicit inline Point(const T *coordinates) {
+        explicit inline Point(const T *coordinates) : Super() {
             ASSERT(coordinates != NULL);
             ::memcpy(this->coordinates, coordinates, D * sizeof(T));
         }
@@ -52,7 +52,7 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */
-        inline Point(const Point& rhs) {
+        inline Point(const Point& rhs) : Super() {
             ::memcpy(this->coordinates, rhs.coordinates, D * sizeof(T));
         }
 
@@ -76,7 +76,7 @@ namespace math {
          * @return *this
          */
         inline Point& operator =(const Point& rhs) {
-            AbstractPoint<T, D, T[D]>::operator =(rhs);
+            Super<T, D, T[D]>::operator =(rhs);
             return *this;
         }
 
@@ -101,9 +101,14 @@ namespace math {
          */
         template<class Tp, unsigned int Dp, class Sp>
         inline Point& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
-            AbstractPoint<T, D, T[D]>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
+
+    private:
+
+        /** Super class typedef. */
+        typedef AbstractPoint<T, D, T[D]> Super;
     };
 
 
@@ -111,7 +116,7 @@ namespace math {
      * vislib::math::Point<T, D>::Point
      */
     template<class T, unsigned int D>
-    Point<T, D>::Point(void) {
+    Point<T, D>::Point(void) : Super() {
         for (unsigned int d = 0; d < D; d++) {
             this->coordinates[d] = static_cast<T>(0);
         }
@@ -123,7 +128,7 @@ namespace math {
      */
     template<class T, unsigned int D>
     template<class Tp, unsigned int Dp, class Sp>
-    Point<T, D>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) {
+    Point<T, D>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
         for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
             this->coordinates[d] = static_cast<T>(rhs[d]);
         }
@@ -139,6 +144,218 @@ namespace math {
     template<class T, unsigned int D>
     Point<T, D>::~Point(void) {
     }
+
+
+    /**
+     * Partial template specialisation for two-dimensional point. This class
+     * provides a constructor with separate components.
+     */
+    template<class T> 
+    class Point<T, 2> : public AbstractPoint<T, 2, T[2]> {
+
+    public:
+
+        /** Behaves like primary class template. */
+        Point(void);
+
+        /** Behaves like primary class template. */
+        explicit inline Point(const T *coordinates) : Super() {
+            ASSERT(coordinates != NULL);
+            ::memcpy(this->coordinates, coordinates, D * sizeof(T));
+        }
+
+        /**
+         * Create a new point.
+         *
+         * @param x The x-coordinate. 
+         * @param y The y-coordinate.
+         */
+        inline Point(const T& x, const T& y) : Super() {
+            this->coorindates[0] = x;
+            this->coordinates[1] = y;
+        }
+
+        /** Behaves like primary class template. */
+        inline Point(const Point& rhs) : Super() {
+            ::memcpy(this->coordinates, rhs.coordinates, D * sizeof(T));
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
+
+        /** Behaves like primary class template. */
+        ~Point(void);
+
+        /** Behaves like primary class template. */
+        inline Point& operator =(const Point& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    private:
+
+        /** The dimensionality of the point. */
+        static const unsigned int D;
+
+        /** Super class typedef. */
+        typedef AbstractPoint<T, 2, T[2]> Super;
+
+        
+    };
+
+
+    /*
+     * vislib::math::Point<T, 2>::Point
+     */
+    template<class T> Point<T, 2>::Point(void) : Super() {
+        for (unsigned int d = 0; d < D; d++) {
+            this->coordinates[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Point<T, 2>::Point
+     */
+    template<class T>
+    template<class Tp, unsigned int Dp, class Sp>
+    Point<T, 2>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
+        for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
+            this->coordinates[d] = static_cast<T>(rhs[d]);
+        }
+        for (unsigned int d = Dp; d < D; d++) {
+            this->coordinates[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Point<T, 2>::~Point
+     */
+    template<class T> Point<T, 2>::~Point(void) {
+    }
+
+
+    /*
+     * vislib::math::Point<T, 2>::D
+     */
+    template<class T> const unsigned int Point<T, 2>::D = 2;
+
+
+    /**
+     * Partial template specialisation for three-dimensional point. This class
+     * provides a constructor with separate components.
+     */
+    template<class T> 
+    class Point<T, 3> : public AbstractPoint<T, 3, T[3]> {
+
+    public:
+
+        /** Behaves like primary class template. */
+        Point(void);
+
+        /** Behaves like primary class template. */
+        explicit inline Point(const T *coordinates) : Super() {
+            ASSERT(coordinates != NULL);
+            ::memcpy(this->coordinates, coordinates, D * sizeof(T));
+        }
+
+        /**
+         * Create a new point.
+         *
+         * @param x The x-coordinate. 
+         * @param y The y-coordinate.
+         * @param z The z-coordinate.
+         */
+        inline Point(const T& x, const T& y, const T& z) : Super() {
+            this->coorindates[0] = x;
+            this->coordinates[1] = y;
+            this->coordinates[2] = y;
+        }
+
+        /** Behaves like primary class template. */
+        inline Point(const Point& rhs) : Super() {
+            ::memcpy(this->coordinates, rhs.coordinates, D * sizeof(T));
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
+
+        /** Behaves like primary class template. */
+        ~Point(void);
+
+        /** Behaves like primary class template. */
+        inline Point& operator =(const Point& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    private:
+
+        /** The dimensionality of the point. */
+        static const unsigned int D;
+
+        /** Super class typedef. */
+        typedef AbstractPoint<T, 3, T[3]> Super;
+
+        
+    };
+
+
+    /*
+     * vislib::math::Point<T, 3>::Point
+     */
+    template<class T> Point<T, 3>::Point(void) : Super() {
+        for (unsigned int d = 0; d < D; d++) {
+            this->coordinates[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Point<T, 3>::Point
+     */
+    template<class T>
+    template<class Tp, unsigned int Dp, class Sp>
+    Point<T, 3>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
+        for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
+            this->coordinates[d] = static_cast<T>(rhs[d]);
+        }
+        for (unsigned int d = Dp; d < D; d++) {
+            this->coordinates[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Point<T, 3>::~Point
+     */
+    template<class T> Point<T, 3>::~Point(void) {
+    }
+
+
+    /*
+     * vislib::math::Point<T, 3>::D
+     */
+    template<class T> const unsigned int Point<T, 3>::D = 3;
+
+
 
 } /* end namespace math */
 } /* end namespace vislib */

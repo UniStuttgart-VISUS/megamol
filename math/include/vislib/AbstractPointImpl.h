@@ -155,7 +155,7 @@ namespace math {
          * @return A copy of this point moved by rhs.
          */
         template<class Tp, class Sp>
-        C<T, D, T[D]> operator +(const C<Tp, D, Sp>& rhs) const;
+        C<T, D, T[D]> operator +(const AbstractVector<Tp, D, Sp>& rhs) const;
 
         /**
          * Move the point along the vector 'rhs'.
@@ -165,7 +165,7 @@ namespace math {
          * @return *this.
          */
         template<class Tp, class Sp>
-        C<T, D, S>& operator +=(const C<Tp, D, Sp>& rhs);
+        C<T, D, S>& operator +=(const AbstractVector<Tp, D, Sp>& rhs);
 
         /**
          * Move the point along the negative vector 'rhs'.
@@ -358,7 +358,7 @@ namespace math {
         template<class T, unsigned int D, class S> class C> 
     template<class Tp, class Sp>
     C<T, D, T[D]> AbstractPointImpl<T, D, S, C>::operator +(
-            const C<Tp, D, Sp>& rhs) const {
+            const AbstractVector<Tp, D, Sp>& rhs) const {
         C<T, D, T[D]> retval;
 
         for (unsigned int d = 0; d < D; d++) {
@@ -377,7 +377,7 @@ namespace math {
         template<class T, unsigned int D, class S> class C> 
     template<class Tp, class Sp>
     C<T, D, S>& AbstractPointImpl<T, D, S, C>::operator +=(
-           const C<Tp, D, Sp>& rhs) {
+           const AbstractVector<Tp, D, Sp>& rhs) {
         for (unsigned int d = 0; d < D; d++) {
             this->coordinates[d] += static_cast<T>(rhs[d]);
         }
