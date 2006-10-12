@@ -142,6 +142,284 @@ namespace math {
     Vector<T, D>::~Vector(void) {
     }
 
+
+    /**
+     * Partial template specialisation for two-dimensional vectors.
+     */
+    template<class T> 
+    class Vector<T, 2> : public AbstractVector<T, 2, T[2]> {
+
+    public:
+
+        /**
+         * Create a null vector.
+         */
+        Vector(void);
+
+        /**
+         * Create a new vector initialised with 'components'. 'components' must
+         * not be a NULL pointer. 
+         *
+         * @param components The initial vector components.
+         */
+        explicit inline Vector(const T *components) {
+            ASSERT(components != NULL);
+            ::memcpy(this->components, components, D * sizeof(T));
+        }
+
+        /**
+         * Create a new vector.
+         *
+         * @param x The x-coordinate.
+         * @param y The y-coordinate.
+         */
+        inline Vector(const T& x, const T& y) {
+            this->components[0] = x;
+            this->components[1] = y;
+        }
+
+        /**
+         * Clone 'rhs'.
+         *
+         * @param rhs The object to be cloned.
+         */
+        inline Vector(const Vector& rhs) {
+            ::memcpy(this->components, rhs.components, D * sizeof(T));
+        }
+
+        /**
+         * Create a copy of 'rhs'. This ctor allows for arbitrary vector to
+         * vector conversions.
+         *
+         * @param rhs The vector to be cloned.
+         */
+        template<class Tp, unsigned int Dp, class Sp>
+        Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
+
+        /** Dtor. */
+        ~Vector(void);
+
+        /**
+         * Assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        inline Vector& operator =(const Vector& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /**
+         * Assigment for arbitrary vectors. A valid static_cast between T and Tp
+         * is a precondition for instantiating this template.
+         *
+         * This operation does <b>not</b> create aliases. 
+         *
+         * If the two operands have different dimensions, the behaviour is as 
+         * follows: If the left hand side operand has lower dimension, the 
+         * highest (Dp - D) dimensions are discarded. If the left hand side
+         * operand has higher dimension, the missing dimensions are filled with 
+         * zero components.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Vector& operator =(const AbstractVector<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    protected:
+
+        /** The dimension of the vector. */
+        static const unsigned int D;
+
+        /** A typedef for the super class. */
+        typedef AbstractVector<T, 2, T[2]> Super;
+    };
+
+
+    /*
+     * vislib::math::Vector<T, 2>::Vector
+     */
+    template<class T> Vector<T, 2>::Vector(void) {
+        for (unsigned int d = 0; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Vector<T, 2>::Vector
+     */
+    template<class T>
+    template<class Tp, unsigned int Dp, class Sp>
+    Vector<T, 2>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) {
+        for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
+            this->components[d] = static_cast<T>(rhs[d]);
+        }
+        for (unsigned int d = Dp; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Vector<T, 2>::~Vector
+     */
+    template<class T> Vector<T, 2>::~Vector(void) {
+    }
+
+
+    /*
+     * Vector<T, 2>::D
+     */
+    template<class T> const unsigned int Vector<T, 2>::D = 2;
+
+
+    /**
+     * Partial template specialisation for three-dimensional vectors.
+     */
+    template<class T> 
+    class Vector<T, 3> : public AbstractVector<T, 3, T[3]> {
+
+    public:
+
+        /**
+         * Create a null vector.
+         */
+        Vector(void);
+
+        /**
+         * Create a new vector initialised with 'components'. 'components' must
+         * not be a NULL pointer. 
+         *
+         * @param components The initial vector components.
+         */
+        explicit inline Vector(const T *components) {
+            ASSERT(components != NULL);
+            ::memcpy(this->components, components, D * sizeof(T));
+        }
+
+        /**
+         * Create a new vector.
+         *
+         * @param x The x-coordinate.
+         * @param y The y-coordinate.
+         * @param z The z-coordinate.
+         */
+        inline Vector(const T& x, const T& y, const T& z) {
+            this->components[0] = x;
+            this->components[1] = y;
+            this->components[2] = z;
+        }
+
+        /**
+         * Clone 'rhs'.
+         *
+         * @param rhs The object to be cloned.
+         */
+        inline Vector(const Vector& rhs) {
+            ::memcpy(this->components, rhs.components, D * sizeof(T));
+        }
+
+        /**
+         * Create a copy of 'rhs'. This ctor allows for arbitrary vector to
+         * vector conversions.
+         *
+         * @param rhs The vector to be cloned.
+         */
+        template<class Tp, unsigned int Dp, class Sp>
+        Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
+
+        /** Dtor. */
+        ~Vector(void);
+
+        /**
+         * Assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        inline Vector& operator =(const Vector& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /**
+         * Assigment for arbitrary vectors. A valid static_cast between T and Tp
+         * is a precondition for instantiating this template.
+         *
+         * This operation does <b>not</b> create aliases. 
+         *
+         * If the two operands have different dimensions, the behaviour is as 
+         * follows: If the left hand side operand has lower dimension, the 
+         * highest (Dp - D) dimensions are discarded. If the left hand side
+         * operand has higher dimension, the missing dimensions are filled with 
+         * zero components.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Vector& operator =(const AbstractVector<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    protected:
+
+        /** The dimension of the vector. */
+        static const unsigned int D;
+
+        /** A typedef for the super class. */
+        typedef AbstractVector<T, 3, T[3]> Super;
+    };
+
+
+    /*
+     * vislib::math::Vector<T, 3>::Vector
+     */
+    template<class T> Vector<T, 3>::Vector(void) {
+        for (unsigned int d = 0; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Vector<T, 3>::Vector
+     */
+    template<class T>
+    template<class Tp, unsigned int Dp, class Sp>
+    Vector<T, 3>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) {
+        for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
+            this->components[d] = static_cast<T>(rhs[d]);
+        }
+        for (unsigned int d = Dp; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Vector<T, 3>::~Vector
+     */
+    template<class T> Vector<T, 3>::~Vector(void) {
+    }
+
+
+    /*
+     * Vector<T, 3>::D
+     */
+    template<class T> const unsigned int Vector<T, 3>::D = 3;
+
 } /* end namespace math */
 } /* end namespace vislib */
 

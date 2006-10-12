@@ -97,7 +97,6 @@ namespace math {
             this->bounds[IDX_TOP] = static_cast<T>(rhs.Top());
         }
 
-
         /** Dtor. */
         ~Rectangle(void);
 
