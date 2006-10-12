@@ -39,6 +39,11 @@ namespace math {
          * Disallow instances of this class. 
          */
         inline AbstractVector(void) : Super() {}
+
+        /* Allow instances created by the implementation class. */
+        template<class Tf, unsigned int Df, class Sf, 
+            template<class Tf, unsigned int Df, class Sf> class Cf> 
+            friend class AbstractVectorImpl;
     };
 
 
@@ -136,6 +141,11 @@ namespace math {
          * Disallow instances of this class. 
          */
         inline AbstractVector(void) : Super() {}
+
+        /* Allow instances created by the implementation class. */
+        template<class Tf, unsigned int Df, class Sf, 
+            template<class Tf, unsigned int Df, class Sf> class Cf> 
+            friend class AbstractVectorImpl;
     };
 
 
@@ -288,6 +298,11 @@ namespace math {
          * Disallow instances of this class. 
          */
         inline AbstractVector(void) : Super() {}
+
+        /* Allow instances created by the implementation class. */
+        template<class Tf, unsigned int Df, class Sf, 
+            template<class Tf, unsigned int Df, class Sf> class Cf> 
+            friend class AbstractVectorImpl;
     };
 
 

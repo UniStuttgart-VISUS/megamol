@@ -276,7 +276,7 @@ namespace math {
          * @param z The z-coordinate.
          */
         inline Point(const T& x, const T& y, const T& z) : Super() {
-            this->coorindates[0] = x;
+            this->coordinates[0] = x;
             this->coordinates[1] = y;
             this->coordinates[2] = y;
         }

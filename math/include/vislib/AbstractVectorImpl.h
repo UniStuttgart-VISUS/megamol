@@ -23,11 +23,31 @@ namespace vislib {
 namespace math {
 
     /**
+     * This template implements the major behaviour of vectors. Its only 
+     * intended use is being the super class of the AbstractVector template
+     * and its partial template specialisation. It should never be used in
+     * any other context. It is especially not intended to be an interface!
+     *
+     * This template has several template parameters that allow instantiations
+     * for different scalar types, different dimensions and different storage
+     * classes. If the storage class S is T[D], the implementation uses its
+     * own memory for storing its data. If S is T *, an instance that uses
+     * foreign memory is created - we call this "shallow vectors". This 
+     * instantiation is used to make a user defined memory block behave like a
+     * vector. The template parameter C must be the direct subclass. It allows
+     * this class to create appropriate return values for the arithmetic
+     * operations. We use this approach to share this implementation between
+     * the primary class template AbstractVector and its partial template
+     * specialisations.
      *
      * T: The type used for scalars and vector components.
-     * D:
-     * S:
-     * C:
+     * D: The dimensions of the vector, which must be an integer greater or
+     *    equal 1.
+     * S: The "storage class". This can be either T[D] for a "deep vector" or
+     *    T * for a "shallow vector". Other instantiations are inherently 
+     *    dangerous and should never be used.
+     * C: The direct subclass, i. e. AbstractVector. This allows the 
+     *    implementation to create the required return values.
      */
     template<class T, unsigned int D, class S, 
             template<class T, unsigned int D, class S> class C> 
@@ -226,7 +246,7 @@ namespace math {
          * @return The sum of this and 'rhs'.
          */
         template<class Tp, class Sp>
-        C<T, D, S>& operator +=(const C<Tp, D, Sp>& rhs);
+        AbstractVectorImpl<T, D, S, C>& operator +=(const C<Tp, D, Sp>& rhs);
 
         /**
          * Answer the difference between this vector and 'rhs'.
@@ -246,7 +266,7 @@ namespace math {
          * @return The difference between this and 'rhs'.
          */
         template<class Tp, class Sp>
-        C<T, D, S>& operator -=(const C<Tp, D, Sp>& rhs);
+        AbstractVectorImpl<T, D, S, C>& operator -=(const C<Tp, D, Sp>& rhs);
 
         /**
          * Scalar multiplication.
@@ -264,7 +284,7 @@ namespace math {
          *
          * @return The result of the scalar multiplication.
          */
-        C<T, D, S>& operator *=(const T rhs);
+        AbstractVectorImpl<T, D, S, C>& operator *=(const T rhs);
 
         /**
          * Scalar division operator.
@@ -282,7 +302,7 @@ namespace math {
          *
          * @return The result of the scalar division.
          */
-        C<T, D, S>& operator /=(const T rhs);
+        AbstractVectorImpl<T, D, S, C>& operator /=(const T rhs);
 
         /**
          * Performs a component-wise multiplication.
@@ -303,7 +323,7 @@ namespace math {
          * @return The product of this and rhs
          */
         template<class Tp, class Sp>
-        C<T, D, S>& operator *=(const C<Tp, D, Sp>& rhs);
+        AbstractVectorImpl<T, D, S, C>& operator *=(const C<Tp, D, Sp>& rhs);
 
         /**
          * Component access.
@@ -401,7 +421,7 @@ namespace math {
 
             if (IsEqual<T>(this->components[d], static_cast<T>(0))) {
                 // compare component of rhs in type of lhs
-                if (!IsEqual<T>(rhs.components[d], static_cast<T>(0))) { 
+                if (!IsEqual<T>(rhs.components[d], static_cast<T>(0))) {
                     return false; // would yield to a factor of zero
                 }
                 // both zero, so go on.
@@ -413,13 +433,14 @@ namespace math {
                 } else {
                     // both not zero, check if factor is const over all components
                     if (inited) {
-                        if (!IsEqual<T>(factor, this->components[d] / static_cast<T>(rhs.components[d]))) {
+                        if (!IsEqual<T>(factor, this->components[d] 
+                                / static_cast<T>(rhs.components[d]))) {
                             return false;
                         }
                     } else {
-                        factor = this->components[d] / static_cast<T>(rhs.components[d]);
+                        factor = this->components[d] 
+                            / static_cast<T>(rhs.components[d]);
                     }
-
                 }
             }
         }
@@ -501,7 +522,8 @@ namespace math {
      */
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator =(const C<T, D, S>& rhs) {
+    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator =(
+            const C<T, D, S>& rhs) {
 
         if (this != &rhs) {
             ::memcpy(this->components, rhs.components, D * sizeof(T));
@@ -538,7 +560,8 @@ namespace math {
      */
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
-    bool AbstractVectorImpl<T, D, S, C>::operator ==(const C<T, D, S>& rhs) const {
+    bool AbstractVectorImpl<T, D, S, C>::operator ==(
+            const C<T, D, S>& rhs) const {
 
         for (unsigned int d = 0; d < D; d++) {
             if (!IsEqual<T>(this->components[d], rhs.components[d])) {
@@ -612,7 +635,7 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
     template<class Tp, class Sp>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator +=(
+    AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator +=(
             const C<Tp, D, Sp>& rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
@@ -647,7 +670,7 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
     template<class Tp, class Sp>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator -=(
+    AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator -=(
             const C<Tp, D, Sp>& rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
@@ -680,7 +703,7 @@ namespace math {
      */
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator *=(
+    AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator *=(
             const T rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
@@ -713,7 +736,7 @@ namespace math {
      */
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator /=(
+    AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator /=(
             const T rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
@@ -748,7 +771,7 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
     template<class Tp, class Sp>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator *=(
+    AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator *=(
             const C<Tp, D, Sp>& rhs) {
 
         for (unsigned int d = 0; d < D; d++) {

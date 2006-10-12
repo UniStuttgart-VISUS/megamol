@@ -51,9 +51,7 @@ namespace math {
          * @param outAxis  Receives the vector representing the rotation
          *                 axis. The vector is guaranteed to be normalised.
          */
-        template<class Sp>
-        void AngleAndAxis(T& outAngle, 
-            AbstractVector<T, 3, Sp>& outAxis) const;
+        void AngleAndAxis(T& outAngle, Vector<T, 3>& outAxis) const;
 
         /**
          * Answer the i-component (= x-component) of the quaternion.
@@ -230,7 +228,7 @@ namespace math {
          * @param axis  The vector specifying the rotation axis.
          */
         template<class Tp, class Sp>
-        void Set(const T& angle, AbstractVector<T, 3, Sp>& axis);
+        void Set(const T& angle, AbstractVector<Tp, 3, Sp>& axis);
 
         /**
          * Set the i-component (= x-component) of the quaternion.
@@ -471,9 +469,8 @@ namespace math {
      * vislib::math::AbstractQuaternion<T, S>::AngleAndAxis
      */
     template<class T, class S>
-    template<class Sp>
     void AbstractQuaternion<T, S>::AngleAndAxis(T& outAngle, 
-            AbstractVector<T, 3, Sp>& outAxis) const {
+            Vector<T, 3>& outAxis) const {
         T d = Sqrt(Sqr(this->components[IDX_X]) + Sqr(this->components[IDX_Y])
             + Sqr(this->components[IDX_Z]));
 
@@ -546,7 +543,7 @@ namespace math {
     template<class T, class S>
     template<class Tp, class Sp>
     void AbstractQuaternion<T, S>::Set(const T& angle, 
-            AbstractVector<T, 3, Sp>& axis) {
+            AbstractVector<Tp, 3, Sp>& axis) {
             T len = axis.Normalise();
         double halfAngle = 0.5 * static_cast<double>(angle);
 
