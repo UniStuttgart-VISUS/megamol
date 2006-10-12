@@ -31,7 +31,7 @@ namespace graphics {
 
         /**
          * Sets the number of buttons of this cursor and resets all button 
-         * states.
+         * states. No events will be triggered!
          *
          * @param btnCnt The new number of buttons.
          */
@@ -48,7 +48,7 @@ namespace graphics {
 
         /**
          * Sets the number of modifiers for this cursor and resets all modifier
-         * states.
+         * states. No events will be triggered!
          *
          * @param modCnt The new number of modifiers.
          */
@@ -64,9 +64,14 @@ namespace graphics {
         }
 
         /**
-         * Sets the State of a button.
+         * Sets the State of a button and triggers all registered cursor 
+         * events, if all of their tests succeed, with REASON_BUTTON_DOWN or
+         * with REASON_MOD_UP depending on the parameter down. 
          *
-         * TODO: Event-triggering
+         * If your up to call SetButtonState and SetModifierState in one all at
+         * once, you should first do all of your SetModifierState calls and 
+         * then do all of your SetButtonState calls, to ensure that the 
+         * modifier tests of the events are correctly evaluated.
          *
          * @param btn The number of the button whichs state will be set.
          * @param down The new value for the buttons state.
@@ -94,9 +99,14 @@ namespace graphics {
         }
 
         /**
-         * Sets the State of a modifier.
+         * Sets the State of a modifier and triggeres all registered cursor
+         * events, if all of their tests succeed, with REASON_MOD_DOWN or with
+         * REASON_MOD_UP depending on the parameter down.
          *
-         * TODO: Event-triggering
+         * If your up to call SetButtonState and SetModifierState in one all at
+         * once, you should first do all of your SetModifierState calls and 
+         * then do all of your SetButtonState calls, to ensure that the 
+         * modifier tests of the events are correctly evaluated.
          *
          * @param modifier The number of the modifier whichs state will be 
          *                 set.
@@ -128,7 +138,7 @@ namespace graphics {
         /**
          * Removes a cursor event from the observer queue of this cursor. If
          * this cursor event is not registered to this cursor, nothing is done.
-         * The event is triggered with
+         * The event is triggered with REASON_REMOVE, regardless of its tests.
          *
          * @param cursorEvent The cursor event to be added.
          */
@@ -159,14 +169,17 @@ namespace graphics {
          * ownership of the event object is not changed. The object will not
          * be freed when this cursor is destroied and the caller must ensure
          * that the event object is valid as long as it is registered to this
-         * cursor.
+         * cursor. The cursor event is triggered with REASON_ADD, regarless of
+         * its tests. If the cursor event is already registered to this cursor, 
+         * nothing is done.
          *
          * @param cursorEvent The cursor event to be added.
          */
         virtual void RegisterCursorEvent(AbstractCursorEvent *cursorEvent);
 
         /**
-         * Child classes must call this methode if the cursor position changed.
+         * Child classes must call this methode if the cursor position changed
+         * to trigger all registered cursor events with REASON_MOVE.
          */
         void TriggerMoved(void);
     private:

@@ -107,14 +107,10 @@ void CamTestApp::Lens::BeginDraw(unsigned int ww, unsigned int wh, bool ortho) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     this->camera.glMultProjectionMatrix();
-    //gluPerspective(40.0, float(this->w * ww) / float(this->h * wh), 1.0, 10.0); // TODO: Parameters!
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     this->camera.glMultViewMatrix();
-    //gluLookAt(0.0, -2.5, 0.0,  // TODO: Parameters!
-    //    0.0, 0.0, 0.0,  // TODO: Parameters!
-    //    0.0, 0.0, 1.0); // TODO: Parameters!
 }
 
 

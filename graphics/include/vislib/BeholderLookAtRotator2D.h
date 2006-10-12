@@ -39,7 +39,10 @@ namespace graphics {
         ~BeholderLookAtRotator2D(void);
 
         /**
-         * TODO: Document
+         * Callback methode called by a Cursor2D this event is registered to 
+         * when a cursor event occures. REASON_BUTTON_DOWN, REASON_MOVE and
+         * REASON_BUTTON_UP control the mouse position tracking and the 
+         * rotation of the beholder. Othere calling reasons have no effect.
          *
          * @param caller The AbstractCursor object which calles this methode.
          * @param reason The reason why for this call.

@@ -11,12 +11,6 @@
 #endif /* (_MSC_VER > 1000) */
 
 
-/** TODO: DEBUG: REMOVE THE FOLLOWING LINES */
-#ifndef VISLIB_ENABLE_OPENGL
-#define VISLIB_ENABLE_OPENGL 1
-#endif
-
-
 /**
  * To use this class you must define VISLIB_ENABLE_OPENGL.
  * Additionally you may need to link against several third party libraries:

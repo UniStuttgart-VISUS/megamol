@@ -79,7 +79,7 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
                 // pitch & yaw
 
                 // Big phat rotation crowbar ...
-                // TODO: 
+                // TODO: reimplement crowbar
                 //  Rotation problem: Moving the mouse in clockwise circles 
                 //  around the the mid-point of the upper half window, the beholder
                 //  is rotatet around the view axis. Why???
