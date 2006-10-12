@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
     ::TestVector();
     ::TestDimension();
     ::TestRectangle();
+    //::TestVector();
     //::TestFloat16();
     //::TestThread();
     

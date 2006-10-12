@@ -7,22 +7,19 @@
 #include "testhelper.h"
 
 #include "vislib/ShallowVector.h"
-#include "vislib/ShallowVector2D.h"
-#include "vislib/ShallowVector3D.h"
 #include "vislib/Vector.h"
-#include "vislib/Vector2D.h"
-#include "vislib/Vector3D.h"
 
 
 void TestVector(void) {
-    using namespace vislib::math;
+    typedef vislib::math::Vector<float, 2> Vector2D;
+    typedef vislib::math::ShallowVector<float, 2> ShallowVector2D;
 
     float sv1data[2];
     float sv2data[2];
 
-    Vector2D<float> v1;
-    ShallowVector2D<float> sv1(sv1data);
-    ShallowVector2D<float> sv2(sv2data);
+    Vector2D v1;
+    ShallowVector2D sv1(sv1data);
+    ShallowVector2D sv2(sv2data);
     
     ::AssertEqual("v1[0] == 0", v1[0], 0.0f);
     ::AssertEqual("v1[1] == 0", v1[1], 0.0f);
