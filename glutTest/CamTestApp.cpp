@@ -138,9 +138,9 @@ CamTestApp::CamTestApp(void) : AbstractGlutApp() {
     this->nativeFull = true;
 
     this->beholder.SetView(
-        vislib::math::Point3D<double>(0.0, -2.5, 0.0),
-        vislib::math::Point3D<double>(0.0, 0.0, 0.0),
-        vislib::math::Vector3D<double>(0.0, 0.0, 1.0));
+        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
 
     this->camera.SetBeholder(&this->beholder);
     this->camera.SetNearClipDistance(1.0f);
@@ -262,9 +262,9 @@ void CamTestApp::Render(void) {
 	glLoadIdentity();
 
     if (this->nativeFull) {
-        const vislib::math::Point3D<double> &pos = this->beholder.GetPosition();
-        const vislib::math::Point3D<double> &lat = this->beholder.GetLookAt();
-        const vislib::math::Vector3D<double> &up = this->beholder.GetUpVector();
+        const vislib::math::Point<double, 3> &pos = this->beholder.GetPosition();
+        const vislib::math::Point<double, 3> &lat = this->beholder.GetLookAt();
+        const vislib::math::Vector<double, 3> &up = this->beholder.GetUpVector();
         gluLookAt(pos.X(), pos.Y(), pos.Z(), lat.X(), lat.Y(), lat.Z(), up.X(), up.Y(), up.Z());
     } else {
         this->camera.glMultViewMatrix();

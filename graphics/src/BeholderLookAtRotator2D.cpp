@@ -13,6 +13,7 @@
 #include "vislib/Quaternion.h"
 #include "vislib/mathtypes.h"
 #include <stdio.h>
+#include <climits>
 
 
 /*
@@ -70,7 +71,7 @@ void vislib::graphics::BeholderLookAtRotator2D::Trigger(AbstractCursor *caller, 
                 math::AngleRad angle = ::atan2(curY, curX) - ::atan2(this->dragY, this->dragX);
 
                 // recaluclate the up vector
-                math::Vector3D<SceneSpaceType> up
+                math::Vector<SceneSpaceType, 3> up
                     = beh->GetRightVector() * static_cast<SceneSpaceType>(::sin(angle)) 
                     + beh->GetUpVector() * static_cast<SceneSpaceType>(::cos(angle));
 
@@ -87,7 +88,7 @@ void vislib::graphics::BeholderLookAtRotator2D::Trigger(AbstractCursor *caller, 
                 // something almost like arc-ball ...
 
                 // mouse-move vector in scene space
-                math::Vector3D<SceneSpaceType> rot = (beh->GetRightVector() * (this->dragX - curX)) 
+                math::Vector<SceneSpaceType, 3> rot = (beh->GetRightVector() * (this->dragX - curX)) 
                     + (beh->GetUpVector() * (this->dragY - curY));
 
                 // rotation speed: moving the mouse along the whole window 
@@ -101,16 +102,17 @@ void vislib::graphics::BeholderLookAtRotator2D::Trigger(AbstractCursor *caller, 
                 math::Quaternion<SceneSpaceType> quat(angle, rot);
 
                 // fetch current view values
-                math::Vector3D<SceneSpaceType> up = beh->GetUpVector();
-                math::Vector3D<SceneSpaceType> antiLook = beh->GetPosition() - beh->GetLookAt();
-                math::Point3D<SceneSpaceType> look = beh->GetLookAt();
+                math::Vector<SceneSpaceType, 3> up = beh->GetUpVector();
+                math::Vector<SceneSpaceType, 3> antiLook = beh->GetPosition() - beh->GetLookAt();
+                math::Point<SceneSpaceType, 3> look = beh->GetLookAt();
 
                 // rotate current view
                 up = quat * up;
                 antiLook = quat * antiLook;
 
                 // set new view
-                beh->SetView(static_cast<math::Point3D<SceneSpaceType>&>(look + antiLook), look, up);
+                math::Point<SceneSpaceType, 3> crowbar = look + antiLook;
+                beh->SetView(crowbar, look, up);
 
                 // keep on dragging
                 this->dragX = curX;

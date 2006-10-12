@@ -25,9 +25,9 @@
 BeholderRotatorTextApp::BeholderRotatorTextApp(void) : AbstractGlutApp() {
 
     this->beholder.SetView(
-        vislib::math::Point3D<double>(0.0, -2.5, 0.0),
-        vislib::math::Point3D<double>(0.0, 0.0, 0.0),
-        vislib::math::Vector3D<double>(0.0, 0.0, 1.0));
+        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
 
     this->camera.SetBeholder(&this->beholder);
     this->camera.SetNearClipDistance(0.1f);
@@ -258,9 +258,9 @@ void BeholderRotatorTextApp::RenderLogo(void) {
  */
 void BeholderRotatorTextApp::SetupRotator1(void) {
     this->beholder.SetView(
-        vislib::math::Point3D<double>(0.0, 0.0, 0.0),
-        vislib::math::Point3D<double>(0.0, 1.0, 0.0),
-        vislib::math::Vector3D<double>(0.0, 0.0, 1.0));
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Point<double, 3>(0.0, 1.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
 
     this->cursor.UnregisterCursorEvent(&this->rotator2);
     this->cursor.RegisterCursorEvent(&this->rotator1);
@@ -272,9 +272,9 @@ void BeholderRotatorTextApp::SetupRotator1(void) {
  */
 void BeholderRotatorTextApp::SetupRotator2(void) {
     this->beholder.SetView(
-        vislib::math::Point3D<double>(0.0, -2.5, 0.0),
-        vislib::math::Point3D<double>(0.0, 0.0, 0.0),
-        vislib::math::Vector3D<double>(0.0, 0.0, 1.0));
+        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
 
     this->cursor.UnregisterCursorEvent(&this->rotator1);
     this->cursor.RegisterCursorEvent(&this->rotator2);

@@ -17,9 +17,9 @@
 
 StereoCamTestApp::StereoCamTestApp(void) : AbstractGlutApp() {
     this->beholder.SetView(
-        vislib::math::Point3D<float>(0.0, -10.0, 0.0),
-        vislib::math::Point3D<float>(0.0, 0.0, 0.0),
-        vislib::math::Vector3D<float>(0.0, 0.0, 1.0));
+        vislib::math::Point<float, 3>(0.0, -10.0, 0.0),
+        vislib::math::Point<float, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<float, 3>(0.0, 0.0, 1.0));
 
     this->cameraLeft.SetBeholder(&this->beholder);
     this->cameraLeft.SetNearClipDistance(1.0f);

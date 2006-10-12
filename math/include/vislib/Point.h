@@ -278,7 +278,7 @@ namespace math {
         inline Point(const T& x, const T& y, const T& z) : Super() {
             this->coordinates[0] = x;
             this->coordinates[1] = y;
-            this->coordinates[2] = y;
+            this->coordinates[2] = z;
         }
 
         /** Behaves like primary class template. */

@@ -24,7 +24,7 @@ vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(), cam(NULL) {
  * vislib::graphics::Cursor2D::Cursor2D
  */
 vislib::graphics::Cursor2D::Cursor2D(const Cursor2D& rhs) 
-    : AbstractCursor(rhs), cam(rhs.cam), x(rhs.x), y(rhs.y) {
+    : AbstractCursor(rhs), x(rhs.x), y(rhs.y), cam(rhs.cam) {
 }
 
 

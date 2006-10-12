@@ -16,10 +16,9 @@
 #include "vislib/mathtypes.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
-#include "vislib/AbstractRectangle.h"
 #include "vislib/Rectangle.h"
-#include "vislib/Point3D.h"
-#include "vislib/Vector3D.h"
+#include "vislib/Point.h"
+#include "vislib/Vector.h"
 
 
 namespace vislib {
@@ -364,9 +363,9 @@ namespace graphics {
          *         Beholder.
          */
         void CalcViewParameters(
-            math::Point3D<SceneSpaceType> &outPosition,
-            math::Vector3D<SceneSpaceType> &outFront,
-            math::Vector3D<SceneSpaceType> &outUp);
+            math::Point<SceneSpaceType, 3> &outPosition,
+            math::Vector<SceneSpaceType, 3> &outFront,
+            math::Vector<SceneSpaceType, 3> &outUp);
 
         /**
          * Answer wether the view or frustum parameters need to be recalculated.

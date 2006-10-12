@@ -13,7 +13,6 @@
 #include "vislib/AbstractBeholderController.h"
 #include "vislib/AbstractCursor2DEvent.h"
 #include "vislib/graphicstypes.h"
-#include "vislib/Vector3D.h"
 
 
 namespace vislib {
@@ -36,7 +35,7 @@ namespace graphics {
         BeholderLookAtRotator2D(void);
 
         /** Dtor. */
-        ~BeholderLookAtRotator2D(void);
+        virtual ~BeholderLookAtRotator2D(void);
 
         /**
          * Callback methode called by a Cursor2D this event is registered to 

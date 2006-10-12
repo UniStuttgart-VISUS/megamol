@@ -12,6 +12,7 @@
 #include "vislib/Trace.h"
 #include "vislib/Quaternion.h"
 #include <stdio.h>
+#include <climits>
 
 
 /*
@@ -64,7 +65,7 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
                 math::AngleRad angle = ::atan2(curY, curX) - ::atan2(this->dragY, this->dragX);
 
                 // recaluclate the up vector
-                math::Vector3D<SceneSpaceType> up
+                math::Vector<SceneSpaceType, 3> up
                     = beh->GetRightVector() * static_cast<SceneSpaceType>(::sin(angle)) 
                     + beh->GetUpVector() * static_cast<SceneSpaceType>(::cos(angle));
 
@@ -88,7 +89,7 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
                 // rotation. There the "roll"-effect is irrelevant but here
                 // the people are getting seasick.
 
-                math::Vector3D<SceneSpaceType> rot = (beh->GetRightVector() * (curX - this->dragX)) 
+                math::Vector<SceneSpaceType, 3> rot = (beh->GetRightVector() * (curX - this->dragX)) 
                     + (beh->GetUpVector() * (curY - this->dragY));
 
                 math::AngleRad angle = rot.Normalise() / halfHeight * cam->GetHalfApertureAngleRad();
@@ -97,14 +98,15 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
 
                 math::Quaternion<SceneSpaceType> quat(angle, rot);
 
-                math::Vector3D<SceneSpaceType> up = beh->GetUpVector();
-                math::Vector3D<SceneSpaceType> look = beh->GetLookAt() - beh->GetPosition();
-                math::Point3D<SceneSpaceType> pos = beh->GetPosition();
+                math::Vector<SceneSpaceType, 3> up = beh->GetUpVector();
+                math::Vector<SceneSpaceType, 3> look = beh->GetLookAt() - beh->GetPosition();
+                math::Point<SceneSpaceType, 3> pos = beh->GetPosition();
 
                 up = quat * up;
                 look = quat * look;
 
-                beh->SetView(pos, static_cast<math::Point3D<SceneSpaceType>&>(pos + look), up);
+                math::Point<SceneSpaceType, 3> lookAt = pos + look;
+                beh->SetView(pos, lookAt, up);
 
                 // keep on dragging
                 this->dragX = curX;

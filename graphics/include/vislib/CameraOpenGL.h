@@ -23,8 +23,8 @@
 
 #include "vislib/graphicstypes.h"
 #include "vislib/Camera.h"
-#include "vislib/Point3D.h"
-#include "vislib/Vector3D.h"
+#include "vislib/Point.h"
+#include "vislib/Vector.h"
 
 
 namespace vislib {
@@ -145,13 +145,13 @@ namespace graphics {
         SceneSpaceType farClip;
 
         /** projection viewer position */
-        math::Point3D<SceneSpaceType> pos;
+        math::Point<SceneSpaceType, 3> pos;
 
         /** projection viewing direction */ 
-        math::Vector3D<SceneSpaceType> lookDir;
+        math::Vector<SceneSpaceType, 3> lookDir;
 
         /** projection up vector */
-        math::Vector3D<SceneSpaceType> up;
+        math::Vector<SceneSpaceType, 3> up;
 
     };
 

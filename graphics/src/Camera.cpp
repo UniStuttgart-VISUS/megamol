@@ -286,9 +286,9 @@ void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceType &outLeft,
  * vislib::graphics::Camera::CalcViewParameters
  */
 void vislib::graphics::Camera::CalcViewParameters(
-        math::Point3D<SceneSpaceType> &outPosition,
-        math::Vector3D<SceneSpaceType> &outFront,
-        math::Vector3D<SceneSpaceType> &outUp) {
+        math::Point<SceneSpaceType, 3> &outPosition,
+        math::Vector<SceneSpaceType, 3> &outFront,
+        math::Vector<SceneSpaceType, 3> &outUp) {
     if (!this->beholder) {
         throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
     }
@@ -302,7 +302,7 @@ void vislib::graphics::Camera::CalcViewParameters(
             || (this->projectionType == STEREO_OFF_AXIS) 
             || (this->projectionType == STEREO_TOE_IN)) {
         // shift eye for stereo
-        math::Vector3D<SceneSpaceType> right = this->beholder->GetRightVector() * this->halfStereoDisparity;
+        math::Vector<SceneSpaceType, 3> right = this->beholder->GetRightVector() * this->halfStereoDisparity;
 
         if (this->eye == LEFT_EYE) {
             // left eye
