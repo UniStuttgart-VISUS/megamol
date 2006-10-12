@@ -28,6 +28,41 @@ namespace math {
         /** Dtor. */
         ~AbstractPoint(void);
 
+        /**
+         * Assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        inline AbstractPoint& operator =(const AbstractPoint& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /**
+         * Assigment for arbitrary vectors. A valid static_cast between T and Tp
+         * is a precondition for instantiating this template.
+         *
+         * This operation does <b>not</b> create aliases. 
+         *
+         * If the two operands have different dimensions, the behaviour is as 
+         * follows: If the left hand side operand has lower dimension, the 
+         * highest (Dp - D) dimensions are discarded. If the left hand side
+         * operand has higher dimension, the missing dimensions are filled with 
+         * zero components.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractPoint& operator =(
+                const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
     protected:
 
         /** Typedef for our super class. */
@@ -63,7 +98,7 @@ namespace math {
 
     public:
 
-        /** Dtor. */
+        /** Behaves like primary class template. */
         ~AbstractPoint(void);
 
         /**
@@ -131,6 +166,21 @@ namespace math {
             return this->coordinates[1];
         }
 
+        /** Behaves like primary class template. */
+        inline AbstractPoint& operator =(const AbstractPoint& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractPoint& operator =(
+                const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+
     protected:
 
         /** Typedef for our super class. */
@@ -165,7 +215,7 @@ namespace math {
 
     public:
 
-        /** Dtor. */
+        /** Behaves like primary class template. */
         ~AbstractPoint(void);
 
         /**
@@ -260,6 +310,20 @@ namespace math {
          */
         inline const T& Z(void) const {
             return this->coordinates[2];
+        }
+
+        /** Behaves like primary class template. */
+        inline AbstractPoint& operator =(const AbstractPoint& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractPoint& operator =(
+                const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
         }
 
     protected:

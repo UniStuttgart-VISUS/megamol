@@ -30,6 +30,41 @@ namespace math {
         /** Dtor. */
         ~AbstractVector(void);
 
+        /**
+         * Assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        inline AbstractVector& operator =(const AbstractVector& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /**
+         * Assigment for arbitrary vectors. A valid static_cast between T and Tp
+         * is a precondition for instantiating this template.
+         *
+         * This operation does <b>not</b> create aliases. 
+         *
+         * If the two operands have different dimensions, the behaviour is as 
+         * follows: If the left hand side operand has lower dimension, the 
+         * highest (Dp - D) dimensions are discarded. If the left hand side
+         * operand has higher dimension, the missing dimensions are filled with 
+         * zero components.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractVector& operator =(
+                const AbstractVector<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
     protected:
 
         /** Typedef for our super class. */
@@ -64,7 +99,7 @@ namespace math {
 
     public:
 
-        /** Dtor. */
+        /** Behaves like primary class template. */
         ~AbstractVector(void);
 
         /**
@@ -86,7 +121,7 @@ namespace math {
         }
 
         /**
-         * Set the two components of the vector.
+         * Set the three components of the vector.
          *
          * @param x The new x-component.
          * @param y The new y-component.
@@ -130,6 +165,20 @@ namespace math {
          */
         inline const T& Y(void) const {
             return this->components[1];
+        }
+
+        /** Behaves like primary class template. */
+        inline AbstractVector& operator =(const AbstractVector& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractVector& operator =(
+                const AbstractVector<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
         }
 
     protected:
@@ -286,6 +335,20 @@ namespace math {
          */
         inline const T& Z(void) const {
             return this->components[2];
+        }
+
+        /** Behaves like primary class template. */
+        inline AbstractVector& operator =(const AbstractVector& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractVector& operator =(
+                const AbstractVector<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
         }
 
 

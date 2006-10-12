@@ -151,7 +151,7 @@ namespace math {
          *
          * @return *this
          */
-        C<T, D, S>& operator =(const C<T, D, S>& rhs);
+        AbstractVectorImpl<T, D, S, C>& operator =(const C<T, D, S>& rhs);
 
         /**
          * Assigment for arbitrary vectors. A valid static_cast between T and Tp
@@ -173,7 +173,7 @@ namespace math {
          * @return *this
          */
         template<class Tp, unsigned int Dp, class Sp>
-        C<T, D, S>& operator =(const C<Tp, Dp, Sp>& rhs);
+        AbstractVectorImpl<T, D, S, C>& operator =(const C<Tp, Dp, Sp>& rhs);
 
         /**
          * Test for equality. This operation uses the E function which the 
@@ -522,7 +522,7 @@ namespace math {
      */
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator =(
+    AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator =(
             const C<T, D, S>& rhs) {
 
         if (this != &rhs) {
@@ -539,7 +539,7 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
     template<class Tp, unsigned int Dp, class Sp>
-    C<T, D, S>& AbstractVectorImpl<T, D, S, C>::operator =(
+    AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator =(
             const C<Tp, Dp, Sp>& rhs) {
 
         if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
