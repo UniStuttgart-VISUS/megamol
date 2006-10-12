@@ -346,6 +346,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BeholderRotatorTextApp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CamTestApp.cpp"
 				>
 			</File>
@@ -369,6 +373,10 @@
 			>
 			<File
 				RelativePath=".\AbstractGlutApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BeholderRotatorTextApp.h"
 				>
 			</File>
 			<File

@@ -141,9 +141,6 @@ CamTestApp::CamTestApp(void) : AbstractGlutApp() {
     this->ortho = false;
     this->nativeFull = true;
 
-    this->cursor.SetButtonCount(3);
-    this->cursor.SetModifierCount(3);
-
     this->beholder.SetView(
         vislib::math::Point3D<double>(0.0, -2.5, 0.0),
         vislib::math::Point3D<double>(0.0, 0.0, 0.0),
@@ -190,7 +187,6 @@ void CamTestApp::Resize(unsigned int w, unsigned int h) {
     AbstractGlutApp::Resize(w, h);
     this->camera.SetVirtualWidth(float(w) / 500.0f);
     this->camera.SetVirtualHeight(float(h) / 500.0f);
-    this->cursor.SetSize(float(w), float(h));
 }
 
 
@@ -212,7 +208,6 @@ bool CamTestApp::KeyPress(unsigned char key, int x, int y) {
             return true;
         default: return false;            
     }
-    this->cursor.SetPosition(x, y);
 }
 
 
@@ -220,20 +215,6 @@ bool CamTestApp::KeyPress(unsigned char key, int x, int y) {
  * CamTestApp::MouseEvent
  */
 void CamTestApp::MouseEvent(int button, int state, int x, int y) {
-    unsigned int btn = 0;
-    int modifiers = glutGetModifiers();
-
-    switch (button) {
-        case GLUT_LEFT_BUTTON: btn = 0; break;
-        case GLUT_RIGHT_BUTTON: btn = 1; break;
-        case GLUT_MIDDLE_BUTTON: btn = 2; break;
-    }
-
-    this->cursor.SetPosition(x, y);
-    this->cursor.SetButtonState(btn, (state == GLUT_UP));
-    this->cursor.SetModifierState(0, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
-    this->cursor.SetModifierState(1, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
-    this->cursor.SetModifierState(2, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
 }
 
 
@@ -241,7 +222,6 @@ void CamTestApp::MouseEvent(int button, int state, int x, int y) {
  * CamTestApp::MouseMove
  */
 void CamTestApp::MouseMove(int x, int y) {
-    this->cursor.SetPosition(x, y);
 }
 
 
@@ -249,12 +229,6 @@ void CamTestApp::MouseMove(int x, int y) {
  * CamTestApp::SpecialKey
  */
 void CamTestApp::SpecialKey(int key, int x, int y) {
-    int modifiers = glutGetModifiers();
-
-    this->cursor.SetPosition(x, y);
-    this->cursor.SetModifierState(0, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
-    this->cursor.SetModifierState(1, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
-    this->cursor.SetModifierState(2, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
 }
 
 

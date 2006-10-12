@@ -21,6 +21,9 @@ namespace graphics {
      * Abstract base class for cursor2d events
      */
     class AbstractCursor2DEvent: public AbstractCursorEvent {
+    /*
+     * This class is intentionally empty.
+     */
     };
 
 } /* end namespace graphics */

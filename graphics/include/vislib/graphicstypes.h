@@ -23,9 +23,6 @@ namespace graphics {
      * to place elements with subpixel precision
      */
     typedef float ImageSpaceType;
-
-    /** This type is used for values in cursor space. */
-    typedef float CursorSpaceType;
     
 } /* end namespace graphics */
 } /* end namespace vislib */

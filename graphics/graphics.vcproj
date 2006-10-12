@@ -274,6 +274,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractBeholderController.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractCursor.cpp"
 				>
 			</File>
@@ -287,6 +291,14 @@
 			</File>
 			<File
 				RelativePath=".\src\Beholder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\BeholderLookAtRotator2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\BeholderRotator2D.cpp"
 				>
 			</File>
 			<File
@@ -304,6 +316,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\AbstractBeholderController.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractCursor.h"
 				>
 			</File>
@@ -317,6 +333,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Beholder.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\BeholderLookAtRotator2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\BeholderRotator2D.h"
 				>
 			</File>
 			<File

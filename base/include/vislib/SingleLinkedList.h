@@ -310,11 +310,17 @@ namespace vislib {
             if (i->item == item) {
                 if (j) {
                     j->next = i->next;
+                    if (this->last == i) {
+                        this->last = j;
+                    }
                     delete i;
                     i = j->next;
                 } else {
                     ASSERT(this->first == i);
                     this->first = i->next;
+                    if (this->last == i) {
+                        this->last = i->next;
+                    }
                     delete i;
                     i = this->first;
                 }

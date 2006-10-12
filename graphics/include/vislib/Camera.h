@@ -86,6 +86,15 @@ namespace graphics {
             return math::AngleRad2Deg(this->halfApertureAngle * 2.0f);
         }
 
+        /**
+         * Returns the half aperture Angle of the camera along the y axis.
+         *
+         * @return The half aperture Angel in radians.
+         */
+        inline math::AngleRad GetHalfApertureAngleRad(void) {
+            return this->halfApertureAngle;
+        }
+
         /** 
          * Returns distance of the far clipping plane 
          *

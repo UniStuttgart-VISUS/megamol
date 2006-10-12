@@ -21,6 +21,7 @@ namespace graphics {
     /* forward declarations */
     class AbstractCursorEvent;
     class AbstractCursor2DEvent;
+    class Camera;
 
 
     /**
@@ -43,21 +44,17 @@ namespace graphics {
         virtual ~Cursor2D(void);
 
         /**
-         * Sets the size of the cursor space. Keep in mind, that the cursor 
-         * position will not be clamped to these bounds, or otherwise changed.
-         *
-         * @param width The new width of the cursor space.
-         * @param height The new height of the cursor space.
-         */
-        void SetSize(CursorSpaceType width, CursorSpaceType height);
-
-        /**
-         * Sets the position of the cursor in cursor space.
+         * Sets the position of the cursor in virtual image space of the 
+         * associated camera
          *
          * @param x The new x coordinate
          * @param y The new y coordinate
+         * @param flipY Indicates whether to flip the y coordinate accordingly
+         *              to the associated camera. This is used to ensure the
+         *              origin is placed in the lower left corner of the 
+         *              window.
          */
-        void SetPosition(CursorSpaceType x, CursorSpaceType y);
+        void SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY);
 
         /**
          * Assignment operator
@@ -75,19 +72,52 @@ namespace graphics {
          */
         virtual void RegisterCursorEvent(AbstractCursor2DEvent *cursorEvent);
 
+        /**
+         * Associates a camera with this cursor. The ownership of the camera is
+         * not changed, so the caller must ensure that the camera objects lives
+         * as long as it is associated with this cursor.
+         *
+         * @param camera The camera.
+         */
+        void SetCamera(Camera *camera);
+
+        /**
+         * Returns the associated camera.
+         *
+         * @return the associated camera.
+         */
+        inline Camera * GetCamera(void) {
+            return this->cam;
+        }
+
+        /**
+         * Returns the x coordinate of the cursor.
+         *
+         * @return The x coordinate.
+         */
+        inline ImageSpaceType X(void) const {
+            return this->x;
+        }
+
+        /**
+         * Returns the y coordinate of the cursor.
+         *
+         * @return The y coordinate.
+         */
+        inline ImageSpaceType Y(void) const {
+            return this->y;
+        }
+
     private:
 
-        /** width of the cursor space */
-        CursorSpaceType width;
-
-        /** height of the cursor space */
-        CursorSpaceType height;
-
         /** x position of the cursor space */
-        CursorSpaceType x;
+        ImageSpaceType x;
 
         /** y position of the cursor space */
-        CursorSpaceType y;
+        ImageSpaceType y;
+
+        /** The associated camera */
+        Camera *cam;
 
     };
 

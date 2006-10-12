@@ -24,6 +24,7 @@
 
 #include "CamTestApp.h"
 #include "StereoCamTestApp.h"
+#include "BeholderRotatorTextApp.h"
 
 
 // static global functions
@@ -78,14 +79,17 @@ int main(int argc, char* argv[]) {
     printf("VISlib glut test program\n");
 
     // select test application:
-    CamTestApp cta; app = &cta;
+    //CamTestApp cta; app = &cta;
     //StereoCamTestApp scta; app = &scta;
+    BeholderRotatorTextApp brta; app = &brta;
 
     // run test application
     if (app) {
         glutInit(&argc, argv);
 
         glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA); // TODO: should be moved to AbstractGlutApp
+        glutInitWindowSize(512, 512); // TODO: should be configured by AbstractGlutApp
+        glutInitWindowPosition(128, 128); // TODO: should be configured by AbstractGlutApp
     	glutCreateWindow("VISlib Glut Test"); // TODO: should be configured by AbstractGlutApp
 
     	glutDisplayFunc(display);

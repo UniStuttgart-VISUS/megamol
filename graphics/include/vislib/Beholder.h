@@ -358,6 +358,11 @@ namespace graphics {
         this->position = position;
         this->lookAt = lookAt;
         this->up = up;
+
+        Tp3 x = this->up.X();
+        Tp3 y = this->up.Y();
+        Tp3 z = this->up.Z();
+
         this->updateCounter++;
         this->CalcOrthoNormalVectors();
     }

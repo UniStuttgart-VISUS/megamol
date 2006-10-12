@@ -4,8 +4,8 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIBTEST_CAMTESTAPP_H_INCLUDED
-#define VISLIBTEST_CAMTESTAPP_H_INCLUDED
+#ifndef VISLIBTEST_BEHOLDERROTATORTESTAPP_H_INCLUDED
+#define VISLIBTEST_BEHOLDERROTATORTESTAPP_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -17,15 +17,18 @@
 #include "vislib/Camera.h"
 #define VISLIB_ENABLE_OPENGL
 #include "vislib/CameraOpenGL.h"
+#include "vislib/Cursor2D.h"
+#include "vislib/BeholderRotator2D.h"
+#include "vislib/BeholderLookAtRotator2D.h"
 
 
 /*
  * Test for mono tiled display frustrum generation
  */
-class CamTestApp: public AbstractGlutApp {
+class BeholderRotatorTextApp: public AbstractGlutApp {
 public:
-    CamTestApp(void);
-    virtual ~CamTestApp(void);
+    BeholderRotatorTextApp(void);
+    virtual ~BeholderRotatorTextApp(void);
 
     virtual int GLInit(void);
 
@@ -37,34 +40,16 @@ public:
     virtual void SpecialKey(int key, int x, int y);
 
 private:
-    class Lens {
-    public:
-        Lens(void);
-        ~Lens(void);
-
-        void Update(float sec, vislib::graphics::CameraOpenGL camera);
-
-        void BeginDraw(unsigned int ww, unsigned int wh, bool ortho);
-        void EndDraw(void);
-
-    private:
-        float x, y, w, h, ax, ay;
-        vislib::graphics::CameraOpenGL camera;
-
-    };
-
     void RenderLogo(void);
-
-    unsigned int lensCount;
-    Lens *lenses;
-    float angle;
-    UINT64 lastTime;
-    float walkSpeed, rotSpeed;
-    bool ortho;
-    bool nativeFull;
 
     vislib::graphics::Beholder beholder;
     vislib::graphics::CameraOpenGL camera;
+    vislib::graphics::Cursor2D cursor;
+    vislib::graphics::BeholderRotator2D rotator1;
+    vislib::graphics::BeholderLookAtRotator2D rotator2;
+
+    void SetupRotator1(void);
+    void SetupRotator2(void);
 };
 
-#endif /* VISLIBTEST_CAMTESTAPP_H_INCLUDED */
+#endif /* VISLIBTEST_BEHOLDERROTATORTESTAPP_H_INCLUDED */

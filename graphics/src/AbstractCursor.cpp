@@ -141,8 +141,10 @@ void vislib::graphics::AbstractCursor::TriggerMoved(void) {
  * vislib::graphics::AbstractCursor::RegisterCursorEvent
  */
 void vislib::graphics::AbstractCursor::RegisterCursorEvent(AbstractCursorEvent *cursorEvent) {
-    this->events.Append(cursorEvent);
-    cursorEvent->Trigger(this, AbstractCursorEvent::REASON_ADDED, 0);
+    if (!this->events.Contains(cursorEvent)) {
+        this->events.Append(cursorEvent);
+        cursorEvent->Trigger(this, AbstractCursorEvent::REASON_ADDED, 0);
+    }
 }
 
 
