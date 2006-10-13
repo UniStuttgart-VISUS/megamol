@@ -281,6 +281,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractDimensionImpl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractPlane.cpp"
 				>
 			</File>
@@ -368,6 +372,10 @@
 			>
 			<File
 				RelativePath=".\include\vislib\AbstractDimension.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractDimensionImpl.h"
 				>
 			</File>
 			<File

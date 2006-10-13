@@ -11,9 +11,7 @@
 #endif /* _MSC_VER > 1000 */
 
 
-#include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/OutOfRangeException.h"
+#include "AbstractDimensionImpl.h"
 
 
 namespace vislib {
@@ -22,30 +20,13 @@ namespace math {
     /**
      * This class represents extents in D-dimensional space. 
      */
-    template<class T, unsigned int D, class S> class AbstractDimension {
+    template<class T, unsigned int D, class S> class AbstractDimension 
+            : public AbstractDimensionImpl<T, D, S, AbstractDimension> {
 
     public:
 
         /** Dtor. */
         ~AbstractDimension(void);
-
-        /**
-         * Access the internal dimension data directly.
-         *
-         * @return A pointer to the dimension data.
-         */
-        inline const T *PeekDimension(void) const {
-            return this->dimension;
-        }
-
-        /**
-         * Access the internal dimension data directly.
-         *
-         * @return A pointer to the dimension data.
-         */
-        inline T *PeekDimension(void) {
-            return this->dimension;
-        }
 
         /**
          * Assignment operator. This operator never creates an alias.
@@ -54,7 +35,10 @@ namespace math {
          *
          * @return *this.
          */
-        AbstractDimension& operator =(const AbstractDimension& rhs);
+        inline AbstractDimension& operator =(const AbstractDimension& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
 
         /** 
          * This operator allows for arbitrary dimension to dimension 
@@ -67,202 +51,300 @@ namespace math {
          * @return *this.
          */
         template<class Tp, unsigned int Dp, class Sp>
-        AbstractDimension& operator =(const AbstractDimension<Tp, Dp, Sp>& rhs);
-
-        /**
-         * Answer, whether this Dimension and rhs are equal. The IsEqual 
-         * function is used for comparing the components.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true, if *this and 'rhs' are equal.
-         */
-        bool operator ==(const AbstractDimension& rhs) const;
-
-        /**
-         * Answer, whether this Dimension and rhs are equal. The IsEqual 
-         * function of the left hand operand is used for comparing the 
-         * components. If D and Dp do not match, the dimensions are
-         * never equal.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true, if *this and 'rhs' are equal.
-         */
-        template<class Tp, unsigned int Dp, class Sp>
-        bool operator ==(const AbstractDimension<Tp, Dp, Sp>& rhs) const;
-
-        /**
-         * Test for inequality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true, if *this and 'rhs' are not equal.
-         */
-        inline bool operator !=(const AbstractDimension& rhs) const {
-            return !(*this == rhs);
+        inline AbstractDimension& operator =(
+                const AbstractDimension<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
         }
-
-        /**
-         * Test for inequality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true, if *this and 'rhs' are not equal.
-         */
-        template<class Tp, unsigned int Dp, class Sp>
-        inline bool operator !=(
-                const AbstractDimension<Tp, Dp, Sp>& rhs) const {
-            return !(*this == rhs);
-        }
-
-        /**
-         * Component access. 'i' must be within [0, D[.
-         *
-         * @param i The component to be accessed.
-         *
-         * @return The component's value.
-         *
-         * @throws OutOfRangeException If 'i' is out of range.
-         */
-        T& operator [](const int i);
-
-        /**
-         * Component access. 'i' must be within [0, D[.
-         *
-         * @param i The component to be accessed.
-         *
-         * @return The component's value.
-         *
-         * @throws OutOfRangeException If 'i' is out of range.
-         */
-        const T& operator [](const int i) const;
 
     protected:
+
+        /** Typedef of super class. */
+        typedef AbstractDimensionImpl<T, D, S, vislib::math::AbstractDimension> 
+            Super;
 
         /**
          * Disallow instances of this class.
          */
-        inline AbstractDimension(void) {}
+        inline AbstractDimension(void) : Super() {}
 
-        /** The extents wrapped by this class. */
-        S dimension;
+        /* Allow instances created by the implementation class. */
+        template<class Tf, unsigned int Df, class Sf, 
+            template<class Tf, unsigned int Df, class Sf> class Cf> 
+            friend class AbstractDimensionImpl;
     };
 
 
     /*
      * vislib::math::AbstractDimension<T, D, S>::~AbstractDimension
      */
-    template<class T, unsigned int D, class S> 
+    template<class T, unsigned int D, class S>
     AbstractDimension<T, D, S>::~AbstractDimension(void) {
     }
 
 
-    /* 
-     * vislib::math::AbstractDimension<T, D, S>::operator =
+    /**
+     * This is the partial template specialisation for two-dimensional
+     * dimensions. It provides additional named accessors for the components
+     * of the dimension.
      */
-    template<class T, unsigned int D, class S> 
-    AbstractDimension<T, D, S>& AbstractDimension<T, D, S>::operator =(
-            const AbstractDimension& rhs) {
+    template<class T, class S> class AbstractDimension<T, 2, S> 
+            : public AbstractDimensionImpl<T, 2, S, AbstractDimension> {
 
-        if (this != &rhs) {
-            ::memcpy(this->dimension, rhs.dimension, D * sizeof(T));
+    public:
+
+        /** Behaves like primary class template. */
+        ~AbstractDimension(void);
+
+        /**
+         * Answer the height of the dimension.
+         *
+         * @return The height.
+         */
+        inline const T& GetHeight(void) const {
+            return this->dimension[1];
         }
 
-        return *this;
-    }
-
-
-    /* 
-     * vislib::math::AbstractDimension<T, D, S>::operator =
-     */
-    template<class T, unsigned int D, class S> 
-    template<class Tp, unsigned int Dp, class Sp> 
-    AbstractDimension<T, D, S>& AbstractDimension<T, D, S>::operator =(
-            const AbstractDimension<Tp, Dp, Sp>& rhs) {
-        
-        if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
-            for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
-                this->dimension[d] = static_cast<T>(rhs[d]);
-            }
-            for (unsigned int d = Dp; d < D; d++) {
-                this->dimension[d] = static_cast<T>(0);
-            }   
+        /**
+         * Answer the width of the dimension.
+         *
+         * @return The width.
+         */
+        inline const T& GetWidth(void) const {
+            return this->dimension[0];
         }
 
-        return *this;
-    }
+        /**
+         * Answer the height of the dimension.
+         *
+         * @return The height.
+         */
+        inline const T& Height(void) const {
+            return this->dimension[1];
+        }
+
+        /**
+         * Set the components of the dimension.
+         *
+         * @param width  The new width.
+         * @param height The new height.
+         */
+        inline void Set(const T& width, const T& height) {
+            this->dimension[0] = width;
+            this->dimension[1] = height;
+        }
+
+        /**
+         * Change the height.
+         *
+         * @param height The new height
+         */
+        inline void SetHeight(const T& height) {
+            this->dimension[1] = height;
+        }
+
+        /**
+         * Change the width.
+         *
+         * @param height The new width
+         */
+        inline void SetWidth(const T& width) {
+            this->dimension[0] = width;
+        }
+
+        /**
+         * Answer the width of the dimension.
+         *
+         * @return The width.
+         */
+        inline const T& Width(void) const {
+            return this->dimension[0];
+        }
+
+        /** Behaves like primary class template. */
+        inline AbstractDimension& operator =(const AbstractDimension& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractDimension& operator =(
+                const AbstractDimension<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    protected:
+
+        /** Typedef of super class. */
+        typedef AbstractDimensionImpl<T, 2, S, vislib::math::AbstractDimension> 
+            Super;
+
+        /**
+         * Disallow instances of this class.
+         */
+        inline AbstractDimension(void) : Super() {}
+
+        /* Allow instances created by the implementation class. */
+        template<class Tf, unsigned int Df, class Sf, 
+            template<class Tf, unsigned int Df, class Sf> class Cf> 
+            friend class AbstractDimensionImpl;
+    };
 
 
     /*
-     * vislib::math::AbstractDimension<T, D, S>::operator ==
+     * vislib::math::AbstractDimension<T, 2, S>::~AbstractDimension
      */
-    template<class T, unsigned int D, class S> 
-    bool AbstractDimension<T, D, S>::operator ==(
-            const AbstractDimension& rhs) const {
-        for (unsigned int d = 0; d < D; d++) {
-            if (!IsEqual(this->dimension[d], rhs.dimension[d])) {
-                return false;
-            }
-        }
-        /* No difference found. */
-
-        return true;
+    template<class T, class S>
+    AbstractDimension<T, 2, S>::~AbstractDimension(void) {
     }
 
 
-    /*
-     * vislib::math::AbstractDimension<T, D, S>::operator ==
+    /**
+     * This is the partial template specialisation for three-dimensional
+     * dimensions. It provides additional named accessors for the components
+     * of the dimension.
      */
-    template<class T, unsigned int D, class S> 
-    template<class Tp, unsigned int Dp, class Sp>
-    bool AbstractDimension<T, D, S>::operator ==(
-            const AbstractDimension<Tp, Dp, Sp>& rhs) const {
-        if (D != Dp) {
-            /* Cannot be equal. */
-            return false;
+    template<class T, class S> class AbstractDimension<T, 3, S> 
+            : public AbstractDimensionImpl<T, 3, S, AbstractDimension> {
+
+    public:
+
+        /** Behaves like primary class template. */
+        ~AbstractDimension(void);
+
+        /**
+         * Answer the depth of the dimension.
+         *
+         * @return The depth.
+         */
+        inline const T& Depth(void) const {
+            return this->dimension[2];
         }
 
-        for (unsigned int d = 0; d < D; d++) {
-            if (!IsEqual<T>(this->dimension[d], static_cast<T>(rhs[d]))) {
-                return false;
-            }
+        /**
+         * Answer the depth of the dimension.
+         *
+         * @return The depth.
+         */
+        inline const T& GetDepth(void) const {
+            return this->dimension[2];
         }
-        /* No difference found. */
 
-        return true;
-    }
+        /**
+         * Answer the height of the dimension.
+         *
+         * @return The height.
+         */
+        inline const T& GetHeight(void) const {
+            return this->dimension[1];
+        }
+
+        /**
+         * Answer the width of the dimension.
+         *
+         * @return The width.
+         */
+        inline const T& GetWidth(void) const {
+            return this->dimension[0];
+        }
+
+        /**
+         * Answer the height of the dimension.
+         *
+         * @return The height.
+         */
+        inline const T& Height(void) const {
+            return this->dimension[1];
+        }
+
+        /**
+         * Set the components of the dimension.
+         *
+         * @param width  The new width.
+         * @param height The new height.
+         * @param depth  The new depth.
+         */
+        inline void Set(const T& width, const T& height, const T& depth) {
+            this->dimension[0] = width;
+            this->dimension[1] = height;
+            this->dimension[2] = depth;
+        }
+
+        /**
+         * Change the depth.
+         *
+         * @param depth The new depth
+         */
+        inline void SetDepth(const T& depth) {
+            this->dimension[2] = depth;
+        }
+
+        /**
+         * Change the height.
+         *
+         * @param height The new height
+         */
+        inline void SetHeight(const T& height) {
+            this->dimension[1] = height;
+        }
+
+        /**
+         * Change the width.
+         *
+         * @param height The new width
+         */
+        inline void SetWidth(const T& width) {
+            this->dimension[0] = width;
+        }
+
+        /**
+         * Answer the width of the dimension.
+         *
+         * @return The width.
+         */
+        inline const T& Width(void) const {
+            return this->dimension[0];
+        }
+
+        /** Behaves like primary class template. */
+        inline AbstractDimension& operator =(const AbstractDimension& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline AbstractDimension& operator =(
+                const AbstractDimension<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    protected:
+
+        /** Typedef of super class. */
+        typedef AbstractDimensionImpl<T, 3, S, vislib::math::AbstractDimension> 
+            Super;
+
+        /**
+         * Disallow instances of this class.
+         */
+        inline AbstractDimension(void) : Super() {}
+
+        /* Allow instances created by the implementation class. */
+        template<class Tf, unsigned int Df, class Sf, 
+            template<class Tf, unsigned int Df, class Sf> class Cf> 
+            friend class AbstractDimensionImpl;
+    };
 
 
     /*
-     * vislib::math::AbstractDimension<T, D, S>::operator []
+     * vislib::math::AbstractDimension<T, 3, S>::~AbstractDimension
      */
-    template<class T, unsigned int D, class S> 
-    T& AbstractDimension<T, D, S>::operator [](const int i) {
-        ASSERT(0 <= i);
-        ASSERT(i < static_cast<int>(D));
-
-        if ((0 <= i) && (i < static_cast<int>(D))) {
-            return this->dimension[i];
-        } else {
-            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
-        }
-    }
-
-
-    /*
-     * vislib::math::AbstractDimension<T, D, S>::operator []
-     */
-    template<class T, unsigned int D, class S> 
-    const T& AbstractDimension<T, D, S>::operator [](const int i) const {
-        ASSERT(0 <= i);
-        ASSERT(i < static_cast<int>(D));
-
-        if ((0 <= i) && (i < static_cast<int>(D))) {
-            return this->dimension[i];
-        } else {
-            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
-        }
+    template<class T, class S>
+    AbstractDimension<T, 3, S>::~AbstractDimension(void) {
     }
 
 } /* end namespace math */
