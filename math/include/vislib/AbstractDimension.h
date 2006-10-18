@@ -69,8 +69,8 @@ namespace math {
         inline AbstractDimension(void) : Super() {}
 
         /* Allow instances created by the implementation class. */
-        template<class Tf, unsigned int Df, class Sf, 
-            template<class Tf, unsigned int Df, class Sf> class Cf> 
+        template<class Tf1, unsigned int Df1, class Sf1, 
+            template<class Tf2, unsigned int Df2, class Sf2> class Cf> 
             friend class AbstractDimensionImpl;
     };
 
@@ -187,8 +187,8 @@ namespace math {
         inline AbstractDimension(void) : Super() {}
 
         /* Allow instances created by the implementation class. */
-        template<class Tf, unsigned int Df, class Sf, 
-            template<class Tf, unsigned int Df, class Sf> class Cf> 
+        template<class Tf1, unsigned int Df1, class Sf1, 
+            template<class Tf2, unsigned int Df2, class Sf2> class Cf> 
             friend class AbstractDimensionImpl;
     };
 
@@ -334,8 +334,8 @@ namespace math {
         inline AbstractDimension(void) : Super() {}
 
         /* Allow instances created by the implementation class. */
-        template<class Tf, unsigned int Df, class Sf, 
-            template<class Tf, unsigned int Df, class Sf> class Cf> 
+        template<class Tf1, unsigned int Df1, class Sf1, 
+            template<class Tf2, unsigned int Df2, class Sf2> class Cf> 
             friend class AbstractDimensionImpl;
     };
 

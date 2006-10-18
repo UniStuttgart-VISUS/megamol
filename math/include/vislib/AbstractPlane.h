@@ -450,7 +450,7 @@ namespace math {
     Point<T, 3> AbstractPlane<T, S>::Point(void) const {
         T a, b, c, d;
         this->normalise(a, b, c, d);
-        return Point3D<T>(-d * a, -d * b, -d * c);
+        return vislib::math::Point<T, 3>(-d * a, -d * b, -d * c);
     }
 
 
@@ -464,8 +464,9 @@ namespace math {
         T a, b, c, d;
         this->normalise(a, b, c, d);
         
-        outP1 = outP3 = Point3D<T>(-d * a, -d * b, -d * c);
-        outP2 = Point3D<T>(outP1.X() - b, outP1.Y() + a, outP1.Z());
+        outP1 = outP3 = vislib::math::Point<T, 3>(-d * a, -d * b, -d * c);
+        outP2 = vislib::math::Point<T, 3>(outP1.X() - b, outP1.Y() + a, 
+            outP1.Z());
         outP3 += (outP2 - outP1).Cross(this->Normal());   
 
         ASSERT(this->Contains(outP1));

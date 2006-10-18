@@ -212,6 +212,38 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
 
 
 /*
+ * vislib::net::Socket::Receive
+ */
+SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
+        SocketAddress& outFromAddr, const INT flags, const bool forceReceive) {
+    SIZE_T totalReceived = 0;   // # of bytes totally received.
+    INT lastReceived = 0;       // # of bytes received during last recv() call.
+    struct sockaddr from;
+    int fromLen = sizeof(from);
+
+    do {
+        lastReceived = ::recvfrom(this->handle, static_cast<char *>(outData) 
+            + totalReceived, static_cast<int>(cntBytes - totalReceived), flags,
+            &from, &fromLen);
+
+        if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
+            /* Successfully received new package. */
+            totalReceived += static_cast<SIZE_T>(lastReceived);
+
+        } else {
+            /* Communication failed. */
+            throw SocketException(__FILE__, __LINE__);
+        }
+
+    } while (forceReceive && (totalReceived < cntBytes));
+
+    outFromAddr = from;
+
+    return totalReceived;
+}
+
+
+/*
  * vislib::net::Socket::Send
  */
 SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes, 
@@ -237,6 +269,31 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
 
 
 /*
+ * vislib::net::Socket::Send
+ */
+SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes, 
+        const SocketAddress& toAddr, const INT flags, const bool forceSend) {
+    SIZE_T totalSent = 0;       // # of bytes totally sent.      
+    INT lastSent = 0;           // # of bytes sent during last send() call.
+    sockaddr to = static_cast<sockaddr>(toAddr);
+
+    do {
+        lastSent = ::sendto(this->handle, static_cast<const char *>(data), 
+            static_cast<int>(cntBytes - totalSent), flags, &to, sizeof(to));
+
+        if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
+            totalSent += static_cast<SIZE_T>(lastSent);
+
+        } else {
+            throw SocketException(__FILE__, __LINE__);
+        }
+
+    } while (forceSend && (totalSent < cntBytes));
+    
+    return totalSent;
+}
+
+/*
  * vislib::net::Socket::SetOption
  */
 void vislib::net::Socket::SetOption(const INT level, const INT optName, 
@@ -260,20 +317,11 @@ void vislib::net::Socket::Shutdown(const ShutdownManifest how) {
 
 
 /*
- * vislib::net::Socket::Socket
- */
-vislib::net::Socket::Socket(const Socket& rhs) {
-    throw UnsupportedOperationException("vislib::net::Socket::Socket",
-        __FILE__, __LINE__);
-}
-
-
-/*
  * vislib::net::Socket::operator =
  */
 vislib::net::Socket& vislib::net::Socket::operator =(const Socket& rhs) {
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        this->handle = rhs.handle;
     }
 
     return *this;

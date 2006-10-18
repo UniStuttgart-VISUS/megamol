@@ -148,12 +148,25 @@ namespace net {
          */
         static void Startup(void);
 
-
         /**
          * Create an invalid socket. Call Create() on the new object to create 
          * a new socket.
          */
-        Socket(void) : handle(INVALID_SOCKET) {}
+        inline Socket(void) : handle(INVALID_SOCKET) {}
+
+        /**
+         * Create socket wrapper from an existing handle.
+         *
+         * @param handle The socket handle.
+         */
+        explicit inline Socket(SOCKET handle) : handle(handle) {}
+
+        /**
+         * Create a copy of 'rhs'.
+         *
+         * @param rhs The object to be cloned.
+         */
+        inline Socket(const Socket& rhs) : handle(rhs.handle) {}
 
         /** Dtor. */
         virtual ~Socket(void);
@@ -407,21 +420,44 @@ namespace net {
             const INT flags = 0, const bool forceReceive = false);
 
         /**
-         * Receives one object of type T to 'outData'. The method does not 
-         * return until a full object of type T has been read.
+         * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
+         * 'outData' must be large enough to receive at least 'cntBytes'. 
          *
-         * Note: Be careful when communicating objects or structures to
-         * systems that have a different aligmnent!
+         * @param outData      The buffer to receive the data. The caller must
+         *                     allocate this memory and remains owner.
+         * @param cntBytes     The number of bytes to receive.
+         * @param outFromAddr  The socket address the datagram was received 
+         *                     from. This variable is only valid upon successful
+         *                     return from the method.
+         * @param flags        The flags that specify the way in which the call 
+         *                     is made.
+         * @param forceReceive If this flag is set, the method will not return
+         *                     until 'cntBytes' have been read.
          *
-         * @param outData The variable that receives the data from the socket.
-         * @param flags   The flags that specify the way in which the call is 
-         *                made.
+         * @return The number of bytes actually received.
          *
          * @throws SocketException If the operation fails.
          */
-        template<class T> inline void Receive(T& outData, const INT flags = 0) {
-            this->Receive(&outData, sizeof(T), flags, true);
-        }
+        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
+            SocketAddress& outFromAddr, const INT flags = 0, 
+            const bool forceReceive = false);
+
+        ///**
+        // * Receives one object of type T to 'outData'. The method does not 
+        // * return until a full object of type T has been read.
+        // *
+        // * Note: Be careful when communicating objects or structures to
+        // * systems that have a different aligmnent!
+        // *
+        // * @param outData The variable that receives the data from the socket.
+        // * @param flags   The flags that specify the way in which the call is 
+        // *                made.
+        // *
+        // * @throws SocketException If the operation fails.
+        // */
+        //template<class T> inline void Receive(T& outData, const INT flags = 0) {
+        //    return this->Receive(&outData, sizeof(T), flags, true);
+        //}
 
         /**
          * Send 'cntBytes' from the location designated by 'data' using this 
@@ -444,20 +480,42 @@ namespace net {
             const INT flags = 0, const bool forceSend = false);
 
         /**
-         * Sends an object of type T.
+         * Send a datagram of 'cntBytes' bytes from the location designated by 
+         * 'data' using this socket to the socket 'toAddr'.
          *
-         * Note: Be careful when communicating objects or structures to
-         * systems that have a different aligmnent!
+         * @param data      The data to be sent. The caller remains owner of the
+         *                  memory.
+         * @param cntBytes  The number of bytes to be sent. 'data' must contain
+         *                  at least this number of bytes.
+         * @param toAddr    Socket address of the destination host.
+         * @param flags     The flags that specify the way in which the call is 
+         *                  made.
+         * @param forceSend If this flag is set, the method will not return 
+         *                  until 'cntBytes' have been sent.
          *
-         * @param data  The object to be sent.
-         * @param flags The flags that specify the way in which the call is 
-         *              made.
+         * @return The number of bytes acutally sent.
          *
          * @throws SocketException If the operation fails.
          */
-        template<class T> inline void Send(const T& data, const INT flags = 0) {
-            this->Send(&data, sizeof(T), flags, true);
-        }
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
+            const SocketAddress& toAddr, const INT flags = 0, 
+            const bool forceSend = false);
+
+        ///**
+        // * Sends an object of type T.
+        // *
+        // * Note: Be careful when communicating objects or structures to
+        // * systems that have a different aligmnent!
+        // *
+        // * @param data  The object to be sent.
+        // * @param flags The flags that specify the way in which the call is 
+        // *              made.
+        // *
+        // * @throws SocketException If the operation fails.
+        // */
+        //template<class T> inline void Send(const T& data, const INT flags = 0) {
+        //    return this->Send(&data, sizeof(T), flags, true);
+        //}
 
         /**
          * Enable or disable transmission and receipt of broadcast messages on 
@@ -617,23 +675,16 @@ namespace net {
          */
         virtual void Shutdown(const ShutdownManifest how);
 
+        /**
+         * Assignment operator.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        Socket& operator =(const Socket& rhs);
+
     protected:
-
-        /**
-         * Create socket wrapper from an existing handle.
-         *
-         * @param handle The socket handle.
-         */
-        explicit inline Socket(SOCKET handle) : handle(handle) {}
-
-        /**
-         * Forbidden copy ctor. 
-         *
-         * @param rhs The object to be cloned.
-         *
-         * @throws UnsupportedOperationException Unconditionally.
-         */
-        inline Socket(const Socket& rhs);
 
         /**
          * Answer a boolean socket option.
@@ -666,17 +717,6 @@ namespace net {
 			INT tmp = value ? 1 : 0;
 			return this->SetOption(level, optName, &tmp, sizeof(INT));
 		}
-
-        /**
-         * Forbidden assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         *
-         * @throws IllegalParamException If (this != &rhs).
-         */
-        Socket& operator =(const Socket& rhs);
 
         /** The socket handle. */
         SOCKET handle;
