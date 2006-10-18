@@ -13,6 +13,7 @@
 #include <windows.h>
 #else
 #include <sys/utsname.h>
+#include <unistd.h>
 #endif
 
 
@@ -79,6 +80,28 @@ void vislib::sys::SystemInformation::GetMachineName(vislib::StringW &outName) {
     SystemInformation::GetMachineName(tmpStr);
     outName = tmpStr;
 #endif
+}
+
+
+/*
+ * vislib::sys::SystemInformation::GetPageSize
+ */
+DWORD vislib::sys::SystemInformation::GetPageSize(void) {
+#ifdef _WIN32
+    SYSTEM_INFO si;
+    ::GetSystemInfo(&si);
+    return si.dwPageSize;
+
+#else /* _WIN32 */
+    int retval = ::sysconf(_SC_PAGESIZE);
+
+    if (retval == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return static_cast<DWORD>(retval);
+
+#endif /* _WIN32 */
 }
 
 

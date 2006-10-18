@@ -11,7 +11,8 @@
 #endif /* (_MSC_VER > 1000) */
 
 
-#include "vislib/string.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -45,6 +46,17 @@ namespace sys {
          * @throws SystemException on failure
          */
         static void GetMachineName(vislib::StringW &outName);
+
+        /**
+         * Answer the page size and the granularity of page protection and 
+         * commitment.
+         *
+         * @return The page size in bytes.
+         *
+         * @throws SystemException If the page size could not be retrieved 
+         *                         (Linux only).
+         */
+        static DWORD GetPageSize(void);
 
     private:
 

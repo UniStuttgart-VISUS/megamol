@@ -197,9 +197,18 @@ namespace net {
             return this->inetAddress;
         }
 
+        inline operator const struct sockaddr_in *const(void) const {
+            return &this->inetAddress;
+        }
+
         inline operator const struct sockaddr &(void) const {
             // We know, that the data are aligned in the same way.
             return this->genericAddress;
+        }
+
+        inline operator const struct sockaddr *const(void) const {
+            // We know, that the data are aligned in the same way.
+            return &this->genericAddress;
         }
 
     protected:
