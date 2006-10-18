@@ -46,7 +46,7 @@ namespace vislib {
      * Iterator::~Iterator
      */
     template<class T> Iterator<T>::~Iterator() {
-    };
+    }
     
 } /* end namespace vislib */
 

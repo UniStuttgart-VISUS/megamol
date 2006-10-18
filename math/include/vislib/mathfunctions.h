@@ -212,15 +212,15 @@ namespace math {
      *   -3 % 5 = -3
      *   UMod(-3, 5) = 2
      *
-     * @param n The signed dividend.
-     * @param d The unsigned divisor. must not be negative.
+     * @param left The signed dividend.
+     * @param right The unsigned divisor. must not be negative.
      *
      * @return The unsigned modulo value.
      */
-    template<class T> inline T UMod(const T n, const T d) {
+    template<class T> inline T UMod(const T left, const T right) {
         ASSERT(std::numeric_limits<T>::is_integer);
         ASSERT(std::numeric_limits<T>::is_signed);
-        ASSERT(d >= 0);
+        ASSERT(right >= 0);
         return (left >= 0) ? (left % right) : ((1 - ((left + 1) / right)) * right + left);
     }
 

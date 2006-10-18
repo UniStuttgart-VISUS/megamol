@@ -21,6 +21,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/SystemMessage.h"
 #include "vislib/Trace.h"
+#include "vislib/SystemInformation.h"
 
 
 #ifdef _WIN32
@@ -30,6 +31,10 @@ int main(int argc, char **argv) {
 #endif
     using namespace vislib;
     using namespace vislib::sys;
+    
+    vislib::TString machName;
+    vislib::sys::SystemInformation::GetMachineName(machName);
+    ::_tprintf(_T("Running on %s\n"), machName.PeekBuffer());
 
     //vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
     //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
@@ -37,13 +42,12 @@ int main(int argc, char **argv) {
 
     //::TestFile();
     //::TestString();
-    ::TestVector();
-    ::TestDimension();
-    ::TestRectangle();
+    //::TestVector();
+    //::TestDimension();
+    //::TestRectangle();
     //::TestVector();
     //::TestFloat16();
     //::TestThread();
-    
 
     //::printf("%s", W2A(L"Hugo"));
 

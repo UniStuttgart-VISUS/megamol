@@ -43,10 +43,10 @@ namespace math {
          */
         inline Rectangle(const T& left, const T& bottom, const T& right, 
                 const T& top) {
-            this->bounds[IDX_LEFT] = left;
-            this->bounds[IDX_BOTTOM] = bottom;
-            this->bounds[IDX_RIGHT] = right;
-            this->bounds[IDX_TOP] = top;
+            this->bounds[Super::IDX_LEFT] = left;
+            this->bounds[Super::IDX_BOTTOM] = bottom;
+            this->bounds[Super::IDX_RIGHT] = right;
+            this->bounds[Super::IDX_TOP] = top;
         }
 
         /**
@@ -69,10 +69,10 @@ namespace math {
         template<class Tp1, class Sp1, class Tp2, class Sp2>
         inline Rectangle(const AbstractPoint<Tp1, 2, Sp1>& origin, 
                 const AbstractDimension<Tp2, 3, Sp2> size) {
-            this->bounds[IDX_LEFT] = this->bounds[IDX_RIGHT] = origin.X();
-            this->bounds[IDX_BOTTOM] = this->bounds[IDX_TOP] = origin.Y();
-            this->bounds[IDX_RIGHT] += size.Width();
-            this->bounds[IDX_TOP] += size.Height();
+            this->bounds[Super::IDX_LEFT] = this->bounds[Super::IDX_RIGHT] = origin.X();
+            this->bounds[Super::IDX_BOTTOM] = this->bounds[Super::IDX_TOP] = origin.Y();
+            this->bounds[Super::IDX_RIGHT] += size.Width();
+            this->bounds[Super::IDX_TOP] += size.Height();
         }
 
         /**
@@ -91,10 +91,10 @@ namespace math {
          */
         template<class Tp, class Sp>
         inline Rectangle(const AbstractRectangle<Tp, Sp>& rhs) {
-            this->bounds[IDX_BOTTOM] = static_cast<T>(rhs.Bottom());
-            this->bounds[IDX_LEFT] = static_cast<T>(rhs.Left());
-            this->bounds[IDX_RIGHT] = static_cast<T>(rhs.Right());
-            this->bounds[IDX_TOP] = static_cast<T>(rhs.Top());
+            this->bounds[Super::IDX_BOTTOM] = static_cast<T>(rhs.Bottom());
+            this->bounds[Super::IDX_LEFT] = static_cast<T>(rhs.Left());
+            this->bounds[Super::IDX_RIGHT] = static_cast<T>(rhs.Right());
+            this->bounds[Super::IDX_TOP] = static_cast<T>(rhs.Top());
         }
 
         /** Dtor. */
@@ -129,6 +129,11 @@ namespace math {
             AbstractRectangle<T, T[4]>::operator =(rhs);
             return *this;
         }
+
+    private:
+
+        /** Super class typedef. */
+        typedef AbstractRectangle<T, T[4]> Super;
     };
 
 

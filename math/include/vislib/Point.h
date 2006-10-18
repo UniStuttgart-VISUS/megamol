@@ -76,7 +76,7 @@ namespace math {
          * @return *this
          */
         inline Point& operator =(const Point& rhs) {
-            Super<T, D, T[D]>::operator =(rhs);
+            Super::operator =(rhs);
             return *this;
         }
 

@@ -17,7 +17,7 @@ vislib::graphics::Beholder::Beholder() : position(),
         up(0, 1, 0),
         updateCounter(0) {
     this->CalcOrthoNormalVectors();
-};
+}
 
 
 /*

@@ -775,7 +775,7 @@ namespace math {
             const C<Tp, D, Sp>& rhs) {
 
         for (unsigned int d = 0; d < D; d++) {
-            this->components[d] *= rhs.components[i];
+            this->components[d] *= rhs.components[d];
         }
 
         return *this;

@@ -29,9 +29,9 @@ namespace math {
          * Create a new quaternion (<0, 0, 0>, 1).
          */
         inline Quaternion(void) {
-            this->components[IDX_X] = this->components[IDX_Y] 
-                = this->components[IDX_Z] = static_cast<T>(0);
-            this->components[IDX_W] = static_cast<T>(1);
+            this->components[Super::IDX_X] = this->components[Super::IDX_Y] 
+                = this->components[Super::IDX_Z] = static_cast<T>(0);
+            this->components[Super::IDX_W] = static_cast<T>(1);
         }
 
         /**
@@ -43,10 +43,10 @@ namespace math {
          * @param w The new w-component.
          */
         inline Quaternion(const T& x, const T& y, const T& z, const T& w) {
-            this->components[IDX_X] = x;
-            this->components[IDX_Y] = y;
-            this->components[IDX_Z] = z;
-            this->components[IDX_W] = w;
+            this->components[Super::IDX_X] = x;
+            this->components[Super::IDX_Y] = y;
+            this->components[Super::IDX_Z] = z;
+            this->components[Super::IDX_W] = w;
         }
 
         /**
@@ -112,6 +112,11 @@ namespace math {
             AbstractQuaternion<T, T[4]>::operator =(rhs);
             return *this;
         }
+
+    private:
+
+        /** Super class typedef. */
+        typedef AbstractQuaternion<T, T[4]> Super;
     };
 
 
@@ -121,10 +126,10 @@ namespace math {
     template<class T>
     template<class Tp, class Sp>
     Quaternion<T>::Quaternion(const AbstractQuaternion<Tp, Sp>& rhs) {
-        this->components[IDX_X] = static_cast<T>(rhs.X());
-        this->components[IDX_Y] = static_cast<T>(rhs.Y());
-        this->components[IDX_Z] = static_cast<T>(rhs.Z());
-        this->components[IDX_W] = static_cast<T>(rhs.W());
+        this->components[Super::IDX_X] = static_cast<T>(rhs.X());
+        this->components[Super::IDX_Y] = static_cast<T>(rhs.Y());
+        this->components[Super::IDX_Z] = static_cast<T>(rhs.Z());
+        this->components[Super::IDX_W] = static_cast<T>(rhs.W());
     }
 
 

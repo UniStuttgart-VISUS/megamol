@@ -649,7 +649,6 @@ namespace math {
             - (this->components[IDX_X] * rhs.X()
             + this->components[IDX_Y] * rhs.Y() 
             + this->components[IDX_Z] * rhs.Z()));
-        return retval;
     }
 
 

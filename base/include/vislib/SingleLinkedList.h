@@ -353,7 +353,7 @@ namespace vislib {
         // might be implemented more intelligent reusing the item object 
         //  already present in this
         this->Clear();
-        SingleLinkedList::Iterator it = const_cast<SingleLinkedList<T>&>(rhs).GetIterator();
+        Iterator it = const_cast<SingleLinkedList<T>&>(rhs).GetIterator();
         while(it.HasNext()) {
             this->Append(it.Next());
         }

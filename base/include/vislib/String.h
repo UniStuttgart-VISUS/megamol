@@ -78,6 +78,19 @@ namespace vislib {
         ~String(void);
 
         /**
+         * Deletes the current content of the string, allocates memory for a
+         * string of length cnt, and returns a pointer to this buffer. The 
+         * terminating zero character will be set at the end of the buffer, 
+         * but the buffer itself will not be initialized.
+         *
+         * @param newLen The size of the new buffer, excluding terminating 
+         *               zero.
+         *
+         * @return The pointer to the creating internal buffer.
+         */
+        Char * AllocateBuffer(const Size newLen);
+
+        /**
          * Answer whether this string ends with the string 'str'.
          *
          * @param str The string to be searched at the end.
@@ -238,6 +251,27 @@ namespace vislib {
         String& operator =(const String& rhs);
 
         /**
+         * Assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return This string.
+         */
+        String& operator =(const Char *rhs);
+
+		/**
+         * Conversion assignment.
+		 * It will only be available, if the appropriate U::Convert() method 
+         * is implemented in the U character traits class.
+		 *
+		 * @param rhs The right hand side operand.
+         *
+         * @return This string.
+		 */
+		template<class U> String& operator =(const String<U>& rhs);
+
+
+        /**
          * Test for equality.
          *
          * @param rhs The right hand side operand.
@@ -390,6 +424,18 @@ namespace vislib {
 
 
     /*
+     * String<T>::AllocateBuffer
+     */
+    template<class T>  
+    typename String<T>::Char * String<T>::AllocateBuffer(const Size newLen) {
+        ARY_SAFE_DELETE(this->data);
+        this->data = new Char[newLen + 1];
+        this->data[newLen] = 0;
+        return this->data;
+    }
+
+
+    /*
      * String<T>::EndsWith
      */
     template<class T> bool String<T>::EndsWith(const String& str) const {
@@ -525,6 +571,42 @@ namespace vislib {
             this->data = new Char[newLen];
 
             ::memcpy(this->data, rhs.data, newLen * T::CharSize());
+        }
+
+        return *this;
+    }
+
+
+    /*
+     * String<T>::operator =
+     */
+    template<class T> String<T>& String<T>::operator =(const Char *rhs) {
+        if (this->data != rhs) {
+            delete[] this->data;
+
+            Size newLen = T::SafeStringLength(rhs) + 1;
+            this->data = new Char[newLen];
+
+            ::memcpy(this->data, rhs, newLen * T::CharSize());
+        }
+
+        return *this;
+    }
+
+
+    /*
+     * String<T>::operator =
+     */
+    template<class T> template<class U> 
+    String<T>& String<T>::operator =(const String<U>& rhs) {
+        if (static_cast<void*>(this) != static_cast<const void*>(&rhs)) {
+            delete[] this->data;
+
+            Size newLen = rhs.Length() + 1;
+		    this->data = new Char[newLen];
+
+            U::Convert(this->data, newLen, 
+                static_cast<const typename U::Char *>(rhs));
         }
 
         return *this;

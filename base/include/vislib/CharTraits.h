@@ -83,7 +83,7 @@ namespace vislib {
             ASSERT(src != NULL);
 
             Char *tmp = dst;
-            while (*tmp++ = *src++);
+            while ((*tmp++ = *src++));
             return dst;
         }
 

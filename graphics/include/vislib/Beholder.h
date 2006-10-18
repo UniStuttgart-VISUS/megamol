@@ -278,9 +278,9 @@ namespace graphics {
         }
         if ((up.IsNull()) || (up.IsParallel(this->position - this->lookAt))) {
             this->updateCounter = 0;
-            this->up.SetComponents(0, 1, 0);
+            this->up.Set(0, 1, 0);
             if (up.IsParallel(this->up)) {
-                this->up.SetComponents(0, 0, 1);
+                this->up.Set(0, 0, 1);
             }
         } else {
             this->up = up;

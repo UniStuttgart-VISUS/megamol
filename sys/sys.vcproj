@@ -346,6 +346,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SystemInformation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SystemMessage.cpp"
 				>
 			</File>
@@ -429,6 +433,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SystemException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SystemInformation.h"
 				>
 			</File>
 			<File
