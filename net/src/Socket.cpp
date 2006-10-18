@@ -219,7 +219,11 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
     SIZE_T totalReceived = 0;   // # of bytes totally received.
     INT lastReceived = 0;       // # of bytes received during last recv() call.
     struct sockaddr from;
+#ifdef _WIN32
     int fromLen = sizeof(from);
+#else /* _WIN32 */
+    socklen_t fromLen = sizeof(from);
+#endif /* _WIN32 */
 
     do {
         lastReceived = ::recvfrom(this->handle, static_cast<char *>(outData) 
