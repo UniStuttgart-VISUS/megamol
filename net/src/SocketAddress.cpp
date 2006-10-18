@@ -28,6 +28,19 @@ vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
 /*
  * vislib::net::SocketAddress::SocketAddress
  */
+vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
+										  const unsigned short port) {
+    ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
+    ::memset(&this->genericAddress, 0, sizeof(this->genericAddress));
+    this->inetAddress.sin_family = static_cast<unsigned short>(addressFamily);
+    this->inetAddress.sin_port = htons(port);
+    this->inetAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+}
+
+
+/*
+ * vislib::net::SocketAddress::SocketAddress
+ */
 vislib::net::SocketAddress::SocketAddress(struct sockaddr address) {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memcpy(&this->genericAddress, &address, sizeof(struct sockaddr));

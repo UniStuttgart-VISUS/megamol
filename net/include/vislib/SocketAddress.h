@@ -65,7 +65,6 @@ namespace net {
             //FAMILY_ICLFXBM = AF_ICLFXBM
         };
 
-
         /**
          * Create a socket address accepting 'ipAdress' on the specified port.
          *
@@ -75,6 +74,16 @@ namespace net {
          */
         SocketAddress(const AddressFamily addressFamily, 
                       const IPAddress& ipAddress, 
+                      const unsigned short port);
+
+        /**
+         * Create a socket address accepting any IP address on the specified 
+         * port.
+         *
+         * @param addressFamily The address family to create the address for.
+         * @param port          The port of the address.
+         */
+        SocketAddress(const AddressFamily addressFamily, 
                       const unsigned short port);
 
         /**

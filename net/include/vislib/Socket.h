@@ -21,6 +21,10 @@
 #define INVALID_SOCKET (-1)
 #endif /* !_WIN32 */
 
+#ifdef _MSC_VER
+#pragma comment(lib, "Ws2_32")
+#endif /* _MSC_VER */
+
 
 #include "vislib/SocketAddress.h"
 #include "vislib/types.h"
@@ -416,7 +420,7 @@ namespace net {
          * @throws SocketException If the operation fails.
          */
         template<class T> inline void Receive(T& outData, const INT flags = 0) {
-            return this->Receive(&outData, sizeof(T), flags, true);
+            this->Receive(&outData, sizeof(T), flags, true);
         }
 
         /**
@@ -452,7 +456,7 @@ namespace net {
          * @throws SocketException If the operation fails.
          */
         template<class T> inline void Send(const T& data, const INT flags = 0) {
-            return this->Send(&data, sizeof(T), flags, true);
+            this->Send(&data, sizeof(T), flags, true);
         }
 
         /**

@@ -14,6 +14,10 @@
 #include <unistd.h>
 #endif /* !_WIN32 */
 
+#ifdef _MSC_VER
+#pragma comment(lib, "shlwapi")
+#endif /* _MSC_VER */
+
 #include "vislib/types.h"
 
 
