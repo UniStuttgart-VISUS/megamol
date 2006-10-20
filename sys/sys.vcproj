@@ -282,6 +282,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DynamicFunctionPointer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\DynamicLinkLibrary.cpp"
 				>
 			</File>
@@ -369,6 +373,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\CriticalSection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\DynamicFunctionPointer.h"
 				>
 			</File>
 			<File

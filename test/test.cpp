@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 
 #include "teststring.h"
 #include "testfloat16.h"
@@ -16,6 +17,7 @@
 #include "testvector.h"
 #include "testdimandrect.h"
 
+#include "vislib/Exception.h"
 #include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
@@ -32,9 +34,25 @@ int main(int argc, char **argv) {
     using namespace vislib;
     using namespace vislib::sys;
     
-    vislib::TString machName;
-    vislib::sys::SystemInformation::GetMachineName(machName);
-    ::_tprintf(_T("Running on %s\n"), machName.PeekBuffer());
+    try {
+        vislib::TString machName;
+        vislib::sys::SystemInformation::GetMachineName(machName);
+        ::_tprintf(_T("Running on %s (%u Processor Machine)\n"), machName.PeekBuffer(), vislib::sys::SystemInformation::GetProcessorCount());
+
+        std::cout << "Page Size: " << vislib::sys::SystemInformation::GetPageSize() << " Bytes." << std::endl;
+        std::cout << "Total Memory: " << vislib::sys::SystemInformation::GetPhysicalMemorySize() << " Bytes." << std::endl;
+        std::cout << "Free Memory:  " << vislib::sys::SystemInformation::GetAvailableMemorySize() << " Bytes." << std::endl;
+
+        std::cout << "System Type: " << vislib::sys::SystemInformation::GetSystemType() << std::endl;
+        std::cout << "System Word Size: " << vislib::sys::SystemInformation::GetSystemWordSize() << std::endl;
+        std::cout << "Self System Type: " << vislib::sys::SystemInformation::GetSelfSystemType() << std::endl;
+        std::cout << "Self Word Size: " << vislib::sys::SystemInformation::GetSelfWordSize() << std::endl;
+
+    } catch(Exception e) {
+        std::cout << "Exception catched: " << e.GetMsg() << std::endl;
+    } catch(...) {
+        std::cout << "Unexpected exception catched." << std::endl;
+    }
 
     //vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
     //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);

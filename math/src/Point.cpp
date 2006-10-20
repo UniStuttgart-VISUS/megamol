@@ -10,5 +10,3 @@
 /*
  * This file is intentionally empty.
  */
-
-vislib::math::Point<int, 1> p1;

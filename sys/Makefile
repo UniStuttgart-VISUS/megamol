@@ -10,4 +10,6 @@ TargetName := vislibsys
 
 IncludeDir += ../base/include
 
+ExcludeFromBuild += ./src/DynamicFunctionPointer.cpp
+
 -include ../librules.mk

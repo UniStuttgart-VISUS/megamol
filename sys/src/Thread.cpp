@@ -17,6 +17,8 @@
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
+#include "DynamicFunctionPointer.h"
+
 #include <cstdio>
 #include <iostream>
 
@@ -53,7 +55,16 @@ void vislib::sys::Thread::Sleep(const DWORD millis) {
  */
 void vislib::sys::Thread::Reschedule(void) {
 #ifdef _WIN32
+#if (_WIN32_WINNT >= 0x0400)
     ::SwitchToThread();
+#else
+    DynamicFunctionPointer<BOOL (*)(void)> stt("kernel32", "SwitchToThread");
+    if (stt.IsValid()) {
+        stt();
+    } else {
+        ::Sleep(0);
+    }
+#endif
 #else /* _WIN32 */
     if (::sched_yield() != 0) {
         throw SystemException(__FILE__, __LINE__);
