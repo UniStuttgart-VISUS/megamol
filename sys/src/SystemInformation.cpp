@@ -12,6 +12,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <Lmcons.h>
 #else
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -19,13 +20,16 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <pwd.h>
 #endif
+
+#include <iostream>
 
 
 /*
- * vislib::sys::SystemInformation::GetMachineName
+ * vislib::sys::SystemInformation::ComputerName
  */
-void vislib::sys::SystemInformation::GetMachineName(vislib::StringA &outName) {
+void vislib::sys::SystemInformation::ComputerName(vislib::StringA &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
@@ -57,9 +61,9 @@ void vislib::sys::SystemInformation::GetMachineName(vislib::StringA &outName) {
 
 
 /*
- * vislib::sys::SystemInformation::GetMachineName
+ * vislib::sys::SystemInformation::ComputerName
  */
-void vislib::sys::SystemInformation::GetMachineName(vislib::StringW &outName) {
+void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
@@ -82,16 +86,87 @@ void vislib::sys::SystemInformation::GetMachineName(vislib::StringW &outName) {
     }
 #else
     vislib::StringA tmpStr;
-    SystemInformation::GetMachineName(tmpStr);
+    SystemInformation::ComputerName(tmpStr);
     outName = tmpStr;
 #endif
 }
 
 
 /*
- * vislib::sys::SystemInformation::GetPageSize
+ * vislib::sys::SystemInformation::UserName
  */
-DWORD vislib::sys::SystemInformation::GetPageSize(void) {
+void vislib::sys::SystemInformation::UserName(vislib::StringA &outName) {
+#ifdef _WIN32
+    unsigned long oldBufSize = UNLEN; // used for paranoia test
+    unsigned long bufSize = UNLEN;
+    char *buf = outName.AllocateBuffer(bufSize);
+
+    bufSize++;
+    while (!::GetUserNameA(buf, &bufSize)) {
+        unsigned int le = ::GetLastError();
+        bufSize--;
+
+        if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
+            oldBufSize = bufSize;
+            buf = outName.AllocateBuffer(bufSize);
+
+        } else {
+            throw SystemException(le, __FILE__, __LINE__);
+
+        }
+        bufSize++;
+    }
+#else /* _WIN32 */
+
+    /* I hate linux because it's completely impossible to write backward-compatible code */
+    uid_t uid = geteuid();
+
+    struct passwd *passwd = getpwuid(uid);
+    if (passwd == NULL) {
+        throw SystemException(ENOENT, __FILE__, __LINE__);
+    }
+    outName = passwd->pw_name;
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::SystemInformation::UserName
+ */
+void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
+#ifdef _WIN32
+    unsigned long oldBufSize = UNLEN; // used for paranoia test
+    unsigned long bufSize = UNLEN;
+    wchar_t *buf = outName.AllocateBuffer(bufSize);
+
+    bufSize++;
+    while (!::GetUserNameW(buf, &bufSize)) {
+        unsigned int le = ::GetLastError();
+        bufSize--;
+
+        if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
+            oldBufSize = bufSize;
+            buf = outName.AllocateBuffer(bufSize);
+
+        } else {
+            throw SystemException(le, __FILE__, __LINE__);
+
+        }
+        bufSize++;
+    }
+#else
+    vislib::StringA tmpStr;
+    SystemInformation::UserName(tmpStr);
+    outName = tmpStr;
+#endif
+}
+
+
+/*
+ * vislib::sys::SystemInformation::PageSize
+ */
+DWORD vislib::sys::SystemInformation::PageSize(void) {
 #ifdef _WIN32
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
@@ -111,9 +186,9 @@ DWORD vislib::sys::SystemInformation::GetPageSize(void) {
 
 
 /*
- * vislib::sys::SystemInformation::GetPhysicalMemorySize
+ * vislib::sys::SystemInformation::PhysicalMemorySize
  */
-UINT64 vislib::sys::SystemInformation::GetPhysicalMemorySize(void) {
+UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines 
@@ -136,7 +211,7 @@ UINT64 vislib::sys::SystemInformation::GetPhysicalMemorySize(void) {
     } else {
         MEMORYSTATUS memStat;
 
-        GlobalMemoryStatus(&memStat);
+        ::GlobalMemoryStatus(&memStat);
 
         retval = memStat.dwTotalPhys;
     }
@@ -161,9 +236,9 @@ UINT64 vislib::sys::SystemInformation::GetPhysicalMemorySize(void) {
 
 
 /*
- * vislib::sys::SystemInformation::GetAvailableMemorySize
+ * vislib::sys::SystemInformation::AvailableMemorySize
  */
-UINT64 vislib::sys::SystemInformation::GetAvailableMemorySize(void) {
+UINT64 vislib::sys::SystemInformation::AvailableMemorySize(void) {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines 
@@ -211,18 +286,16 @@ UINT64 vislib::sys::SystemInformation::GetAvailableMemorySize(void) {
 
 
 /*
- * vislib::sys::SystemInformation::GetProcessorCount
+ * vislib::sys::SystemInformation::ProcessorCount
  */
-unsigned int vislib::sys::SystemInformation::GetProcessorCount(void) {
+unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
 #ifdef _WIN32
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
     return si.dwNumberOfProcessors;
 
 #else /* _WIN32 */
-#if defined(get_nprocs)
-    return static_cast<unsigned int>(get_nprocs);
-#elif defined(_SC_NPROCESSORS_ONLN)
+#if defined(_SC_NPROCESSORS_ONLN)
     int retval = ::sysconf(_SC_NPROCESSORS_ONLN);
 
     if (retval == -1) {
@@ -264,22 +337,22 @@ unsigned int vislib::sys::SystemInformation::GetProcessorCount(void) {
 
 
 /*
- * vislib::sys::SystemInformation::GetSystemType
+ * vislib::sys::SystemInformation::SystemType
  */
-vislib::sys::SystemInformation::SystemType vislib::sys::SystemInformation::GetSystemType(void) {
+vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemType(void) {
     /* I'm currently very sure that the system type can be determined by the application type */
 #ifdef _WIN32
-    return SYSTEM_WINDOWS;
+    return OS_WINDOWS;
 #else
-    return SYSTEM_LINUX;
+    return OS_LINUX;
 #endif
 }
 
 
 /*
- * vislib::sys::SystemInformation::GetSystemArchitectureType
+ * vislib::sys::SystemInformation::SystemArchitectureType
  */
-unsigned int vislib::sys::SystemInformation::GetSystemWordSize(void) {
+unsigned int vislib::sys::SystemInformation::SystemWordSize(void) {
 #ifdef _WIN32
     DynamicFunctionPointer<void (WINAPI*)(SYSTEM_INFO *)> gnsi("kernel32", "GetNativeSystemInfo");
     SYSTEM_INFO info;
@@ -287,7 +360,7 @@ unsigned int vislib::sys::SystemInformation::GetSystemWordSize(void) {
     if (gnsi.IsValid()) {
         gnsi(&info);
     } else {
-        GetSystemInfo(&info);        
+        ::GetSystemInfo(&info);        
     }
 
     switch (info.wProcessorArchitecture) {
@@ -300,7 +373,7 @@ unsigned int vislib::sys::SystemInformation::GetSystemWordSize(void) {
             break;
         case PROCESSOR_ARCHITECTURE_UNKNOWN: // no break!
         default:
-            return vislib::sys::SystemInformation::GetSelfWordSize();
+            return vislib::sys::SystemInformation::SelfWordSize();
             break;
     }
 
@@ -310,7 +383,7 @@ unsigned int vislib::sys::SystemInformation::GetSystemWordSize(void) {
     struct utsname names;
 
     if (uname(&names) != 0) {
-        return vislib::sys::SystemInformation::GetSelfWordSize();
+        return vislib::sys::SystemInformation::SelfWordSize();
     }
 
     return (strstr(names.machine, "64") == NULL) ? 32 : 64;    
@@ -319,21 +392,21 @@ unsigned int vislib::sys::SystemInformation::GetSystemWordSize(void) {
 
 
 /*
- * vislib::sys::SystemInformation::GetSelfSystemType
+ * vislib::sys::SystemInformation::SelfSystemType
  */
-vislib::sys::SystemInformation::SystemType vislib::sys::SystemInformation::GetSelfSystemType(void) {
+vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SelfSystemType(void) {
 #ifdef _WIN32
-    return SYSTEM_WINDOWS;
+    return OS_WINDOWS;
 #else
-    return SYSTEM_LINUX;
+    return OS_LINUX;
 #endif
 }
 
 
 /*
- * vislib::sys::SystemInformation::GetSelfWordSize
+ * vislib::sys::SystemInformation::SelfWordSize
  */
-unsigned int vislib::sys::SystemInformation::GetSelfWordSize(void) {
+unsigned int vislib::sys::SystemInformation::SelfWordSize(void) {
 #ifdef _WIN32
 #ifdef _WIN64
     return 64;
@@ -341,15 +414,12 @@ unsigned int vislib::sys::SystemInformation::GetSelfWordSize(void) {
     return 32;
 #endif /* _WIN64 */
 #else /* _WIN 32 */
-#if defined(__LP64__) || defined(_LP64)
-#if (__LP64 == 1) || (_LP64 == 1)
+#if ((defined(__LP64__) || defined(_LP64) || defined(__x86_64__)) \
+    && ((__LP64__ == 1) || (_LP64 == 1) || (__x86_64__ == 1)))
     return 64;
-#else /* (__LP64 == 1) || (_LP64 == 1) */
+#else 
     return 32;
-#endif /* (__LP64 == 1) || (_LP64 == 1) */
-#else /* defined(__LP64__) || defined(_LP64) */
-    return 32;
-#endif /* defined(__LP64__) || defined(_LP64) */
+#endif
 #endif /* _WIN32 */
 }
 

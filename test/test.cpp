@@ -35,18 +35,21 @@ int main(int argc, char **argv) {
     using namespace vislib::sys;
     
     try {
-        vislib::TString machName;
-        vislib::sys::SystemInformation::GetMachineName(machName);
-        ::_tprintf(_T("Running on %s (%u Processor Machine)\n"), machName.PeekBuffer(), vislib::sys::SystemInformation::GetProcessorCount());
+        vislib::TString userName;
+        vislib::TString compName;
+        vislib::sys::SystemInformation::UserName(userName);
+        vislib::sys::SystemInformation::ComputerName(compName);
+        ::_tprintf(_T("Running as %s@%s (%u Proc.)\n"), userName.PeekBuffer(), compName.PeekBuffer()
+            , vislib::sys::SystemInformation::ProcessorCount());
 
-        std::cout << "Page Size: " << vislib::sys::SystemInformation::GetPageSize() << " Bytes." << std::endl;
-        std::cout << "Total Memory: " << vislib::sys::SystemInformation::GetPhysicalMemorySize() << " Bytes." << std::endl;
-        std::cout << "Free Memory:  " << vislib::sys::SystemInformation::GetAvailableMemorySize() << " Bytes." << std::endl;
+        std::cout << "Page Size: " << vislib::sys::SystemInformation::PageSize() << " Bytes." << std::endl;
+        std::cout << "Total Memory: " << vislib::sys::SystemInformation::PhysicalMemorySize() << " Bytes." << std::endl;
+        std::cout << "Free Memory:  " << vislib::sys::SystemInformation::AvailableMemorySize() << " Bytes." << std::endl;
 
-        std::cout << "System Type: " << vislib::sys::SystemInformation::GetSystemType() << std::endl;
-        std::cout << "System Word Size: " << vislib::sys::SystemInformation::GetSystemWordSize() << std::endl;
-        std::cout << "Self System Type: " << vislib::sys::SystemInformation::GetSelfSystemType() << std::endl;
-        std::cout << "Self Word Size: " << vislib::sys::SystemInformation::GetSelfWordSize() << std::endl;
+        std::cout << "System Type: " << vislib::sys::SystemInformation::SystemType() << std::endl;
+        std::cout << "System Word Size: " << vislib::sys::SystemInformation::SystemWordSize() << std::endl;
+        std::cout << "Self System Type: " << vislib::sys::SystemInformation::SelfSystemType() << std::endl;
+        std::cout << "Self Word Size: " << vislib::sys::SystemInformation::SelfWordSize() << std::endl;
 
     } catch(Exception e) {
         std::cout << "Exception catched: " << e.GetMsg() << std::endl;

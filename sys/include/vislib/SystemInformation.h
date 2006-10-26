@@ -26,10 +26,10 @@ namespace sys {
     public:
 
         /** possible values of operating system types */
-        enum SystemType {
-            SYSTEM_UNKNOWN,
-            SYSTEM_WINDOWS,
-            SYSTEM_LINUX
+        enum OSType {
+            OS_UNKNOWN,
+            OS_WINDOWS,
+            OS_LINUX
         };
 
         /**
@@ -41,7 +41,7 @@ namespace sys {
          *
          * @throws SystemException on failure
          */
-        static void GetMachineName(vislib::StringA &outName);
+        static void ComputerName(vislib::StringA &outName);
 
         /**
          * Returns an unicode string with the local computers name.
@@ -52,7 +52,31 @@ namespace sys {
          *
          * @throws SystemException on failure
          */
-        static void GetMachineName(vislib::StringW &outName);
+        static void ComputerName(vislib::StringW &outName);
+
+        /**
+         * Returns an ansi string with the local user name running this vislib
+         * application.
+         *
+         * @param outName The ansi string with the local user name. The 
+         *                previous content of the string might be destroied, 
+         *                even if the function fails.
+         *
+         * @throws SystemException on failure
+         */
+        static void UserName(vislib::StringA &outName);
+
+        /**
+         * Returns an unicode string with the local user name running this
+         * vislib application
+         *
+         * @param outName The unicode string with the local user name. The
+         *                previous content of the string might be destroied, 
+         *                even if the function fails.
+         *
+         * @throws SystemException on failure
+         */
+        static void UserName(vislib::StringW &outName);
 
         /**
          * Answer the page size and the granularity of page protection and 
@@ -63,7 +87,7 @@ namespace sys {
          * @throws SystemException If the page size could not be retrieved 
          *                         (Linux only).
          */
-        static DWORD GetPageSize(void);
+        static DWORD PageSize(void);
 
         /**
          * Return the size of physical memory in bytes.
@@ -72,7 +96,7 @@ namespace sys {
          *
          * @throws SystemException on failure.
          */
-        static UINT64 GetPhysicalMemorySize(void);
+        static UINT64 PhysicalMemorySize(void);
 
         /** 
          * Return the size of available physical memory in bytes, not including
@@ -82,7 +106,7 @@ namespace sys {
          *
          * @throws SystemException on failure.
          */
-        static UINT64 GetAvailableMemorySize(void);
+        static UINT64 AvailableMemorySize(void);
 
         /**
          * Return the number of processors in the local machine.
@@ -91,7 +115,7 @@ namespace sys {
          *
          * @throws SystemException on failure.
          */
-        static unsigned int GetProcessorCount(void);
+        static unsigned int ProcessorCount(void);
 
         /**
          * Returns the type of the operating system currently running this 
@@ -99,7 +123,7 @@ namespace sys {
          *
          * @return The type of the operating system.
          */
-        static SystemType GetSystemType(void);
+        static OSType SystemType(void);
 
         /**
          * Returns the size of a word in bit of current operating system. This
@@ -108,7 +132,7 @@ namespace sys {
          *
          * @return The word size of the operating system.
          */
-        static unsigned int GetSystemWordSize(void);
+        static unsigned int SystemWordSize(void);
 
         /**
          * Returns the type of the operating system this vislib application is
@@ -117,7 +141,7 @@ namespace sys {
          *
          * @return The system type of the current vislib application.
          */
-        static SystemType GetSelfSystemType(void);
+        static OSType SelfSystemType(void);
 
         /**
          * Returns the size of a word in bit of the current vislib 
@@ -126,7 +150,7 @@ namespace sys {
          *
          * @return The word size of the current vislib application.
          */
-        static unsigned int GetSelfWordSize(void);
+        static unsigned int SelfWordSize(void);
     
     private:
 
