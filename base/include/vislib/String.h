@@ -100,19 +100,19 @@ namespace vislib {
         bool EndsWith(const String& str) const;
 
         /**
-         * Answer a hash code of the string.
-         *
-         * @return A hash code of the string-
-         */
-        UINT32 CalcHashCode(void) const;
-
-        /**
          * Prints into this string like sprintf.
          *
          * @param fmt The format string.
          * @param ... Optional parameters.
          */
         void Format(const Char *fmt, ...);
+
+        /**
+         * Answer a hash code of the string.
+         *
+         * @return A hash code of the string-
+         */
+        UINT32 HashCode(void) const;
 
         /**
          * Answer the index of the first occurrence of 'c' in the string. The 
@@ -176,6 +176,7 @@ namespace vislib {
          */
         Size Replace(const Char oldChar, const Char newChar);
 
+        // TODO: Replace
         ///**
         // * Replace all occurrences of 'oldStr' in the string with 'newStr'.
         // */
@@ -190,6 +191,7 @@ namespace vislib {
          */
         bool StartsWith(const String& str) const;
 
+        // TODO: Substring
         ///**
         // * Answer the substring beginning at 'begin' and reaching to the end of
         // * this string. If 'begin' is after the end of this string, an empty
@@ -197,6 +199,7 @@ namespace vislib {
         // */
         //String Substring(const Size begin) const;
 
+        // TODO: Substring
         ///**
         // * Answer the substring beginning at 'begin' and having a length of at
         // * most 'length' characters. If there are less than 'length' characters
@@ -206,27 +209,31 @@ namespace vislib {
         // */
         //String Substring(const Size begin, const Size length) const;
 
+        // TODO: TrimBegin
+        ///**
+        // * Remove all characters that are in the string 'chars' from the start 
+        // * of this string. 'chars' must be zero-terminated.
+        // */
+        //void TrimBegin(const T *chars);
+
+        // TODO: TrimEnd
         ///**
         // * Remove all characters that are in the string 'chars' from the end
         // * of this string. 'chars' must be zero-terminated.
         // */
         //void TrimEnd(const T *chars);
 
-        ///**
-        // * Remove all characters that are in the string 'chars' from the start 
-        // * of this string. 'chars' must be zero-terminated.
-        // */
-        //void TrimStart(const T *chars);
-
+        // TODO: Trim
         ///**
         // * Remove all characters that are in the string 'chars' from the start
         // * and the end of this string. 'chars' must be zero-terminated.
         // */
         //inline void Trim(const T *chars) {
-        //    this->TrimStart(chars);
+        //    this->TrimBegin(chars);
         //    this->TrimEnd(chars);
         //}
 
+        // TODO: ToLowerCase
         ///**
         // * Convert all characters to lower case.
         // */
@@ -234,6 +241,7 @@ namespace vislib {
         //    T::ToLower(this->data);
         //}
 
+        // TODO: ToUpperCase
         ///**
         // * Convert all characters to upper case.
         // */
@@ -460,9 +468,26 @@ namespace vislib {
 
 
     /*
-     * String<T>::CalcHashCode
+     * String<T>::Format
      */
-    template<class T> UINT32 String<T>::CalcHashCode(void) const {
+    template<class T> void String<T>::Format(const Char *fmt, ...) {
+        va_list argptr;
+        Size size = 0;
+
+        va_start(argptr, fmt);
+        this->AllocateBuffer((size = T::Format(NULL, 0, fmt, argptr)));
+        
+        va_start(argptr, fmt);
+        T::Format(this->data, size + 1, fmt, argptr);
+
+        va_end(argptr);
+    }
+
+
+    /*
+     * String<T>::HashCode
+     */
+    template<class T> UINT32 String<T>::HashCode(void) const {
         // DJB2 hash function
         UINT32 hash = 0;
         Char c;
@@ -473,14 +498,6 @@ namespace vislib {
         }
 
         return hash;
-    }
-
-    /*
-     * String<T>::Format
-     */
-    template<class T> void String<T>::Format(const Char *fmt, ...) {
-        // TODO
-        assert(false);
     }
 
 
@@ -599,7 +616,7 @@ namespace vislib {
      */
     template<class T> template<class U> 
     String<T>& String<T>::operator =(const String<U>& rhs) {
-        if (static_cast<void*>(this) != static_cast<const void*>(&rhs)) {
+        if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
             delete[] this->data;
 
             Size newLen = rhs.Length() + 1;

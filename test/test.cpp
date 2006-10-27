@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     //TRACE(1, "HORST!\n");
 
     //::TestFile();
-    //::TestString();
+    ::TestString();
     //::TestVector();
     //::TestDimension();
     //::TestRectangle();

@@ -83,13 +83,12 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
+			Name="Debug|x64"
 			OutputDirectory="$(SolutionDir)\lib"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -105,12 +104,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -145,12 +148,13 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
+			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\lib"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -166,16 +170,12 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -282,7 +282,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractOpenGLShader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ARBShader.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CameraOpenGL.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\GLSLShader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\glverify.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\OpenGLException.cpp"
 				>
 			</File>
 		</Filter>
@@ -292,7 +312,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\AbstractOpenGLShader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ARBShader.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\CameraOpenGL.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\GLSLShader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\glverify.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\OpenGLException.h"
 				>
 			</File>
 		</Filter>

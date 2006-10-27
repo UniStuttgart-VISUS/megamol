@@ -13,6 +13,7 @@
 
 
 #include <cctype>
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <cwchar>
@@ -214,6 +215,63 @@ namespace vislib {
 #endif /*(_MSC_VER >= 1400) */
 		}
 
+        /**
+         * Prints the formatted string 'fmt' to the buffer 'dst' having at least
+         * 'cnt' characters.
+         *
+         * If 'dst' is a NULL pointer or 'cnt' is 0, the method just counts how
+         * large 'dst' should be for 'fmt' and the specified parameters.
+         *
+         * In case of an error, e. g. if 'dst' is too small or 'fmt' is a NULL
+         * pointer, the method returns -1;
+         *
+         * If 'dst' is not NULL and 'cnt' is greater than zero, the method 
+         * ensures that the resulting string in 'dst' is zero terminated, 
+         * regardless of its content.
+         *
+         * @param dst    The buffer receiving the formatted string. This buffer
+         *               must be able to hold at least 'cnt' characters or must
+         *               be NULL.
+         * @param cnt    The number of characters that fit into 'dst'.
+         * @param fmt    The format string.
+         * @param argptr The variable argument list.
+         *
+         * @return The number of characters written, not including the trailing
+         *         zero, or -1 in case of an error like 'dst' being too small 
+         *         or 'fmt' being a NULL pointer.
+         */
+        inline static Size Format(Char *dst, const Size cnt, const Char *fmt, 
+                va_list argptr) {
+            int retval = -1;
+
+#ifdef _WIN32
+            if ((dst == NULL) || (cnt <= 0)) {
+                /* Answer the prospective size of the string. */
+                retval = ::_vscprintf(fmt, argptr);
+
+            } else {
+#if (_MSC_VER >= 1400)
+                retval = ::_vsnprintf_s(dst, cnt, cnt, fmt, argptr);
+#else /* (_MSC_VER >= 1400) */
+                retval = ::_vsnprintf(dst, cnt, fmt, argptr);
+#endif /* (_MSC_VER >= 1400) */
+            } /* end if ((dst == NULL) || (cnt == 0)) */
+
+#else /* _WIN32 */
+            retval = ::vsnprintf(dst, cnt, fmt, argptr);
+
+            if ((dst != NULL) && (cnt > 0) && (retval > cnt - 1)) {
+                retval = -1;
+            }
+#endif /* _WIN32 */ 
+
+            /* Ensure string being terminated. */
+            if ((dst != NULL) && (cnt > 0)) {
+                dst[cnt - 1] = 0;
+            }
+            return static_cast<Size>(retval);
+        }
+
 		/**
 		 * Answer whether the character 'c' is a digit.
 		 *
@@ -355,6 +413,63 @@ namespace vislib {
  			StringCopy(dst, src);
             return true;
 		}
+
+        /**
+         * Prints the formatted string 'fmt' to the buffer 'dst' having at least
+         * 'cnt' characters.
+         *
+         * If 'dst' is a NULL pointer or 'cnt' is 0, the method just counts how
+         * large 'dst' should be for 'fmt' and the specified parameters.
+         *
+         * In case of an error, e. g. if 'dst' is too small or 'fmt' is a NULL
+         * pointer, the method returns -1;
+         *
+         * If 'dst' is not NULL and 'cnt' is greater than zero, the method 
+         * ensures that the resulting string in 'dst' is zero terminated, 
+         * regardless of its content.
+         *
+         * @param dst    The buffer receiving the formatted string. This buffer
+         *               must be able to hold at least 'cnt' characters or must
+         *               be NULL.
+         * @param cnt    The number of characters that fit into 'dst'.
+         * @param fmt    The format string.
+         * @param argptr The variable argument list.
+         *
+         * @return The number of characters written, not including the trailing
+         *         zero, or -1 in case of an error like 'dst' being too small 
+         *         or 'fmt' being a NULL pointer.
+         */
+        inline static Size Format(Char *dst, const Size cnt, const Char *fmt, 
+                va_list argptr) {
+            int retval = -1;
+
+#ifdef _WIN32
+            if ((dst == NULL) || (cnt <= 0)) {
+                /* Answer the prospective size of the string. */
+                retval = ::_vscwprintf(fmt, argptr);
+
+            } else {
+#if (_MSC_VER >= 1400)
+                retval = ::_vsnwprintf_s(dst, cnt, cnt, fmt, argptr);
+#else /* (_MSC_VER >= 1400) */
+                retval = ::_vsnwprintf(dst, cnt, fmt, argptr);
+#endif /* (_MSC_VER >= 1400) */
+            } /* end if ((dst == NULL) || (cnt == 0)) */
+
+#else /* _WIN32 */
+            retval = ::vswprintf(dst, cnt, fmt, argptr);
+
+            if ((dst != NULL) && (cnt > 0) && (retval > cnt - 1)) {
+                retval = -1;
+            }
+#endif /* _WIN32 */ 
+
+            /* Ensure string being terminated. */
+            if ((dst != NULL) && (cnt > 0)) {
+                dst[cnt - 1] = 0;
+            }
+            return static_cast<Size>(retval);
+        }
 
 		/**
 		 * Answer whether the character 'c' is a digit.

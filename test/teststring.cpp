@@ -89,6 +89,17 @@ void TestStringA(void) {
     AssertTrue("Character replacement", !::strcmp(s2.PeekBuffer(), "horst und hugo"));
 
     
+    s1.Format("Horst");
+    AssertTrue("Format \"Horst\"", !::strcmp(s1.PeekBuffer(), "Horst"));
+
+    s1.Format("Horst%d", 2);
+    AssertTrue("Format \"Horst2\"", !::strcmp(s1.PeekBuffer(), "Horst2"));
+
+    s1.Format("Horst%d %04.1f", 2, 2.0f);
+    AssertTrue("Format \"Horst2 02.0\"", !::strcmp(s1.PeekBuffer(), "Horst2 02.0"));
+
+    s1.Format("Horst %S", L"Hugo");
+    AssertTrue("Format \"Horst Hugo\"", !::strcmp(s1.PeekBuffer(), "Horst Hugo"));
 }
 
 void TestStringW(void) {
@@ -152,4 +163,16 @@ void TestStringW(void) {
 
     s2.Replace('H', 'h');
     AssertTrue("Character replacement", !::wcscmp(s2.PeekBuffer(), L"horst und hugo"));
+
+    s1.Format(L"Horst");
+    AssertTrue("Format \"Horst\"", !::wcscmp(s1.PeekBuffer(), L"Horst"));
+
+    s1.Format(L"Horst%d", 2);
+    AssertTrue("Format \"Horst2\"", !::wcscmp(s1.PeekBuffer(), L"Horst2"));
+
+    s1.Format(L"Horst%d %04.1f", 2, 2.0f);
+    AssertTrue("Format \"Horst2 02.0\"", !::wcscmp(s1.PeekBuffer(), L"Horst2 02.0"));
+
+    s1.Format(L"Horst %S", "Hugo");
+    AssertTrue("Format \"Horst Hugo\"", !::wcscmp(s1.PeekBuffer(), L"Horst Hugo"));
 }
