@@ -43,7 +43,7 @@ private:
     void RenderLogo(void);
 
     vislib::graphics::Beholder beholder;
-    vislib::graphics::CameraOpenGL camera;
+    vislib::graphics::gl::CameraOpenGL camera;
     vislib::graphics::Cursor2D cursor;
     vislib::graphics::BeholderRotator2D rotator1;
     vislib::graphics::BeholderLookAtRotator2D rotator2;

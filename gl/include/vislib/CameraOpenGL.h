@@ -11,14 +11,6 @@
 #endif /* (_MSC_VER > 1000) */
 
 
-/**
- * To use this class you must define VISLIB_ENABLE_OPENGL.
- * Additionally you may need to link against several third party libraries:
- *  GL GLU
- */
-#ifdef VISLIB_ENABLE_OPENGL
-
-
 #include <GL/glu.h>
 
 #include "vislib/graphicstypes.h"
@@ -29,25 +21,24 @@
 
 namespace vislib {
 namespace graphics {
+namespace gl {
 
     /**
      * camera class for openGL applications
      */
-    class CameraOpenGL: public Camera {
+    class CameraOpenGL: public vislib::graphics::Camera {
     public:
         /**
          * default ctor
          */
-        CameraOpenGL(void) : Camera(), viewNeedsUpdate(true), projNeedsUpdate(true) {
-        }
+        CameraOpenGL(void);
 
         /**
          * copy ctor
          *
          * @param rhs CameraOpenGL object to copy from.
          */
-        CameraOpenGL(const CameraOpenGL& rhs) : Camera(rhs), viewNeedsUpdate(true), projNeedsUpdate(true) {
-        }
+        CameraOpenGL(const CameraOpenGL& rhs);
 
         /**
          * Initialization ctor
@@ -55,15 +46,12 @@ namespace graphics {
          * @param beholder The beholder the new camera object will be 
          *                 associated with.
          */
-        CameraOpenGL(Beholder* beholder) 
-            : Camera(beholder), viewNeedsUpdate(true), projNeedsUpdate(true) {
-        }
+        CameraOpenGL(Beholder* beholder);
 
         /**
          * dtor
          */
-        virtual ~CameraOpenGL(void) {
-        }
+        virtual ~CameraOpenGL(void);
 
         /**
          * Multipiles the current openGL matrix with the projection matrix of 
@@ -72,23 +60,7 @@ namespace graphics {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void glMultProjectionMatrix(void) {
-            if (this->NeedUpdate()) {
-                this->viewNeedsUpdate = this->projNeedsUpdate = true;
-                this->ClearUpdateFlaggs();
-            }
-            
-            if (this->projNeedsUpdate) {
-                Camera::CalcFrustumParameters(left, right, bottom, top, nearClip, farClip);
-                this->projNeedsUpdate = false;
-            }
-
-            if (this->GetProjectionType() != Camera::MONO_ORTHOGRAPHIC) {
-                ::glFrustum(left, right, bottom, top, nearClip, farClip);
-            } else {
-                ::glOrtho(left, right, bottom, top, nearClip, farClip);
-            }
-        }
+        void glMultProjectionMatrix(void);
 
         /**
          * Multiplies the current openGL matrix with the viewing matrix of this
@@ -97,29 +69,12 @@ namespace graphics {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void glMultViewMatrix(void) {
-            if (this->NeedUpdate()) {
-                this->viewNeedsUpdate = this->projNeedsUpdate = true;
-                this->ClearUpdateFlaggs();
-            }
-
-            if (this->viewNeedsUpdate) {
-                Camera::CalcViewParameters(pos, lookDir, up);
-                this->viewNeedsUpdate = false;
-            }
-
-            ::gluLookAt(pos.X(), pos.Y(), pos.Z(), 
-                pos.X() + lookDir.X(), pos.Y() + lookDir.Y(), pos.Z() + lookDir.Z(), 
-                up.X(), up.Y(), up.Z());
-        }
+        void glMultViewMatrix(void);
 
         /**
          * Assignment operator
          */
-        CameraOpenGL& operator=(const CameraOpenGL& rhs) {
-            Camera::operator=(rhs);
-            return *this;
-        }
+        CameraOpenGL& operator=(const CameraOpenGL& rhs);
 
     private:
 
@@ -155,10 +110,9 @@ namespace graphics {
 
     };
 
+} /* end namespace gl */
 } /* end namespace graphics */
 } /* end namespace vislib */
 
-
-#endif /* VISLIB_ENABLE_OPENGL */
 
 #endif /* VISLIB_CAMERAOPENGL_H_INCLUDED */

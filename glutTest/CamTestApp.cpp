@@ -44,7 +44,7 @@ CamTestApp::Lens::~Lens(void) {
 /*
  * CamTestApp::Lens::Update
  */
-void CamTestApp::Lens::Update(float sec, vislib::graphics::CameraOpenGL camera) {
+void CamTestApp::Lens::Update(float sec, vislib::graphics::gl::CameraOpenGL camera) {
     bool pong = false;
 
     this->x += ax * sec;

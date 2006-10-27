@@ -3,7 +3,7 @@ MAKE = make
 SHELL = /bin/bash
 
 # Project directories to make:
-ProjectDirs = base sys math graphics net test glutTest
+ProjectDirs = base sys math graphics gl net test glutTest
 
 ################################################################################
 

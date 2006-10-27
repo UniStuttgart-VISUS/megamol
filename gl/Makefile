@@ -1,0 +1,13 @@
+#
+# Makefile  13.09.2006 (mueller)
+#
+# Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+#
+
+-include ../common.mk
+
+TargetName := vislibgl
+
+IncludeDir += ../base/include ../math/include ../sys/include ../graphics/include
+
+-include ../librules.mk

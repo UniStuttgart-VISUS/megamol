@@ -40,10 +40,10 @@ private:
     UINT64 lastTime;
 
     vislib::graphics::Beholder beholder;
-    vislib::graphics::CameraOpenGL cameraLeft;
-    vislib::graphics::CameraOpenGL cameraRight;
+    vislib::graphics::gl::CameraOpenGL cameraLeft;
+    vislib::graphics::gl::CameraOpenGL cameraRight;
 
-    vislib::graphics::CameraOpenGL camTilesLeft[SCTA_CX_TILES][SCTA_CY_TILES];
+    vislib::graphics::gl::CameraOpenGL camTilesLeft[SCTA_CX_TILES][SCTA_CY_TILES];
 };
 
 #endif /* VISLIBTEST_STEREOCAMTESTAPP_H_INCLUDED */

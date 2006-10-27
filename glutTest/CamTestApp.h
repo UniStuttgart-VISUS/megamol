@@ -42,14 +42,14 @@ private:
         Lens(void);
         ~Lens(void);
 
-        void Update(float sec, vislib::graphics::CameraOpenGL camera);
+        void Update(float sec, vislib::graphics::gl::CameraOpenGL camera);
 
         void BeginDraw(unsigned int ww, unsigned int wh, bool ortho);
         void EndDraw(void);
 
     private:
         float x, y, w, h, ax, ay;
-        vislib::graphics::CameraOpenGL camera;
+        vislib::graphics::gl::CameraOpenGL camera;
 
     };
 
@@ -64,7 +64,7 @@ private:
     bool nativeFull;
 
     vislib::graphics::Beholder beholder;
-    vislib::graphics::CameraOpenGL camera;
+    vislib::graphics::gl::CameraOpenGL camera;
 };
 
 #endif /* VISLIBTEST_CAMTESTAPP_H_INCLUDED */
