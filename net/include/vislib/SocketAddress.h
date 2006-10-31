@@ -163,6 +163,20 @@ namespace net {
         }
 
         /**
+         * Convert the socket address into dotted string colon port format.
+         *
+         * @return The string representation of the socket address.
+         */
+        StringA ToStringA(void) const;
+
+        /**
+         * Convert the socket address into dotted string colon port format.
+         *
+         * @return The string representation of the socket address.
+         */
+        StringW ToStringW(void) const;
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand side operand.

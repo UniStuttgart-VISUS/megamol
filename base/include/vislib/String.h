@@ -360,7 +360,8 @@ namespace vislib {
     /*
      * String<T>::INVALID_POS
      */
-    template<class T> const typename String<T>::Size String<T>::INVALID_POS = -1;
+    template<class T> 
+    const typename String<T>::Size String<T>::INVALID_POS = -1;
 
     /*
      * String<T>::String
@@ -533,6 +534,7 @@ namespace vislib {
 
         return INVALID_POS;
     }
+
 
 	/*
 	 * String<T>::Replace

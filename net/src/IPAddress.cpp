@@ -58,6 +58,15 @@ bool vislib::net::IPAddress::Lookup(const char *hostname) {
 
 
 /*
+ * vislib::net::IPAddress::ToStringA
+ */
+vislib::StringA vislib::net::IPAddress::ToStringA(void) const {
+    StringA retval(::inet_ntoa(this->address));
+    return retval;
+}
+
+
+/*
  * vislib::net::IPAddress::operator =
  */
 vislib::net::IPAddress& vislib::net::IPAddress::operator =(const IPAddress& rhs) {

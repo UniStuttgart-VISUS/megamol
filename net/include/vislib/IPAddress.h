@@ -17,6 +17,8 @@
 #include <arpa/inet.h>
 #endif /* _WIN32 */
 
+#include "vislib/String.h"
+
 
 namespace vislib {
 namespace net {
@@ -72,6 +74,22 @@ namespace net {
          *         valid, false otherwise.
          */
         virtual bool Lookup(const char *hostname);
+
+        /**
+         * Convert the IP address into dotted string format.
+         *
+         * @return The string representation of the IP address.
+         */
+        StringA ToStringA(void) const;
+
+        /**
+         * Convert the IP address into dotted string format.
+         *
+         * @return The string representation of the IP address.
+         */
+        inline StringW ToStringW(void) const {
+            return StringW(this->ToStringA());
+        }
 
         /**
          * Assignment operator.

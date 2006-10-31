@@ -175,6 +175,21 @@ void vislib::net::Socket::GetOption(const INT level, const INT optName,
 
 
 /*
+ * vislib::net::Socket::IOControl
+ */
+void vislib::net::Socket::IOControl(const DWORD ioControlCode, void *inBuffer,
+        const DWORD cntInBuffer, void *outBuffer, const DWORD cntOutBuffer,
+        DWORD& outBytesReturned) {
+#ifdef _WIN32
+    if (::WSAIoctl(this->handle, ioControlCode, inBuffer, cntInBuffer, 
+            outBuffer, cntOutBuffer, &outBytesReturned, NULL, NULL) 
+            == SOCKET_ERROR) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+#endif /* _WIN32 */
+}
+
+/*
  * vislib::net::Socket::Listen
  */
 void vislib::net::Socket::Listen(const INT backlog) {
@@ -307,6 +322,20 @@ void vislib::net::Socket::SetOption(const INT level, const INT optName,
             != 0) {
         throw SocketException(__FILE__, __LINE__);
     }
+}
+
+
+/*
+ * vislib::net::Socket::SetRcvAll
+ */
+void vislib::net::Socket::SetRcvAll(const bool enable) {
+#ifdef _WIN32
+    DWORD inBuffer = enable ? 1 : 0;
+    DWORD bytesReturned;
+    // SIO_RCVALL
+    this->IOControl(_WSAIOW(IOC_VENDOR, 1), &inBuffer, sizeof(inBuffer), NULL, 
+        0, bytesReturned);
+#endif /* _WIN32 */
 }
 
 

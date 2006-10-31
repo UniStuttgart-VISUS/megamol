@@ -81,6 +81,27 @@ void vislib::net::SocketAddress::SetIPAdress(const IPAddress& ipAddress) {
 }
 
 
+/* 
+ * vislib::net::SocketAddress::ToStringA
+ */
+vislib::StringA vislib::net::SocketAddress::ToStringA(void) const {
+    StringA retval;
+    retval.Format("%s:%u", this->GetIPAddress().ToStringA(), this->GetPort());
+    return retval;
+}
+
+
+/* 
+ * vislib::net::SocketAddress::ToStringW
+ */
+vislib::StringW vislib::net::SocketAddress::ToStringW(void) const {
+    StringW retval;
+    // TODO: might fail on linux!!
+    retval.Format(L"%s:%u", this->GetIPAddress().ToStringW(), this->GetPort());
+    return retval;
+}
+
+
 /*
  * vislib::net::SocketAddress::operator =
  */ 

@@ -298,6 +298,20 @@ namespace net {
         }
 
         /**
+         * Answer the deactivation state of the Nagle algorithm for send 
+         * coalescing.
+         *
+         * This operation fails on other sockets that TCP/IP stream sockets.
+         *
+         * @return true, if send coalescing is disabled, false otherwise.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        inline bool GetNoDelay(void) const {
+            return this->getOption(IPPROTO_TCP, TCP_NODELAY);
+        }
+
+        /**
          * Answer whether OOB data are received in the normal data stream.
          *
          * @return The current value of the option.
@@ -334,6 +348,20 @@ namespace net {
             INT retval;
             SIZE_T size = sizeof(INT);
             this->GetOption(SOL_SOCKET, SO_RCVBUF, &retval, size);
+            return retval;
+        }
+
+        /**
+         * Answer the receive time-out in milliseconds.
+         *
+         * @return The timeout in milliseconds.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        inline INT GetRcvTimeo(void) const {
+            INT retval;
+            SIZE_T size = sizeof(INT);
+            this->GetOption(SOL_SOCKET, SO_RCVTIMEO, &retval, size);
             return retval;
         }
 
@@ -378,6 +406,39 @@ namespace net {
             this->GetOption(SOL_SOCKET, SO_SNDBUF, &retval, size);
             return retval;
         }
+
+        /**
+         * Answer the send time-out in milliseconds.
+         *
+         * @return The timeout in milliseconds.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        inline INT GetSndTimeo(void) const {
+            INT retval;
+            SIZE_T size = sizeof(INT);
+            this->GetOption(SOL_SOCKET, SO_SNDTIMEO, &retval, size);
+            return retval;
+        }
+
+        /**
+         * Send an I/O Control message to the socket (Windows only).
+         *
+         * @param ioControlCode    The I/O control code. See WSAIoctl function
+         *                         in winsock2 documentation for possible codes.
+         * @param inBuffer         Pointer to the input buffer.
+         * @param cntInBuffer      Size of 'inBuffer' in bytes.
+         * @param outBuffer        Pointer to the output buffer.
+         * @param cntOutBuffer     Size of 'outBuffer' in bytes.
+         * @param outBytesReturned Bytes that have actually been returned into
+         *                         'outBuffer'.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        // TODO: Linux IOCTLs?
+        void IOControl(const DWORD ioControlCode, void *inBuffer, 
+            const DWORD cntInBuffer, void *outBuffer, const DWORD cntOutBuffer,
+            DWORD& outBytesReturned);
 
         /**
          * Answer whether the socket is valid. Only use sockets that return true
@@ -591,6 +652,20 @@ namespace net {
         }
 
         /**
+         * Disables the Nagle algorithm for send coalescing.
+         *
+         * This operation fails on other sockets that TCP/IP stream sockets.
+         *
+         * @param enable true for enabling immediate sending of packets (disable
+         *               send coalescing), false for enabling send coalescing.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        inline void SetNoDelay(const bool enable) {
+            this->setOption(IPPROTO_TCP, TCP_NODELAY, enable);
+        }
+
+        /**
          * Enable or disable receive of OOB data in the normal data stream.
          *
          * @param enable The new activation state of the option.
@@ -616,6 +691,29 @@ namespace net {
             const void *value, const SIZE_T valueLength);
 
         /**
+         * Enables a socket to receive all IP packets on the network through a
+         * WSAIoctl call. The method has only an effect on Windows systems.
+         * This IOCTL is only available on Windows 2000 or above.
+         * 
+         * The socket must be of FAMILY_INET address family, TYPE_RAW socket 
+         * type, and PROTOCOL_IP protocol. The socket also must be bound to an 
+         * explicit local interface, which means that you cannot bind to 
+         * INADDR_ANY.
+         *
+         * Once the socket is bound and the ioctl set, calls to the Receive 
+         * methods return IP datagrams passing through the given interface. 
+         * Note that you must supply a sufficiently large buffer. 
+         *
+         * Setting this ioctl requires Administrator privilege on the local 
+         * computer.
+         *
+         * @param enable
+         * 
+         * @throws SocketException If the operation fails.
+         */
+        void SetRcvAll(const bool enable);
+
+        /**
          * Specifies the total per-socket buffer space reserved for receives.
          * This is unrelated to SO_MAX_MSG_SIZE or the size of a TCP window. 
          *
@@ -625,6 +723,17 @@ namespace net {
          */
         inline void SetRcvBuf(const INT size) {
             this->SetOption(SOL_SOCKET, SO_RCVBUF, &size, sizeof(INT));
+        }
+
+        /**
+         * Set the receive time-out in milliseconds.
+         *
+         * @param timeout The timeout in milliseconds.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        inline void SetRcvTimeo(const INT timeout) {
+            this->SetOption(SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(INT));
         }
 
         /**
@@ -664,6 +773,17 @@ namespace net {
          */
         inline void SetSndBuf(const INT size) {
             this->SetOption(SOL_SOCKET, SO_SNDBUF, &size, sizeof(INT));
+        }
+
+        /**
+         * Set the send time-out in milliseconds.
+         *
+         * @param timeout The timeout in milliseconds.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        inline void SetSndTimeo(const INT timeout) {
+            this->SetOption(SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(INT));
         }
 
         /**

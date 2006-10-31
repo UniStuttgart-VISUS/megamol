@@ -55,6 +55,32 @@ namespace sys {
         static void ComputerName(vislib::StringW &outName);
 
         /**
+         * Returns a string with the local computers name.
+         *
+         * @return The computer name.
+         *
+         * @throws SystemException on failure
+         */
+        inline static StringA ComputerNameA(void) {
+            StringA retval;
+            SystemInformation::ComputerName(retval);
+            return retval;
+        }
+
+        /**
+         * Returns a string with the local computers name.
+         *
+         * @return The computer name.
+         *
+         * @throws SystemException on failure
+         */
+        inline static StringW ComputerNameW(void) {
+            StringW retval;
+            SystemInformation::ComputerName(retval);
+            return retval;
+        }
+
+        /**
          * Returns an ansi string with the local user name running this vislib
          * application.
          *
@@ -77,6 +103,34 @@ namespace sys {
          * @throws SystemException on failure
          */
         static void UserName(vislib::StringW &outName);
+
+        /**
+         * Returns a string with the local user name running this vislib 
+         * application.
+         *
+         * @return The user name.
+         *
+         * @throws SystemException on failure
+         */
+        inline static StringA UserNameA(void) {
+            StringA retval;
+            SystemInformation::UserName(retval);
+            return retval;
+        }
+
+        /**
+         * Returns a string with the local user name running this vislib 
+         * application.
+         *
+         * @return The user name.
+         *
+         * @throws SystemException on failure
+         */
+        inline static StringW UserNameW(void) {
+            StringW retval;
+            SystemInformation::UserName(retval);
+            return retval;
+        }
 
         /**
          * Answer the page size and the granularity of page protection and 
