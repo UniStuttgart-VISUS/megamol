@@ -298,6 +298,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\RawStorage.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\RegEx.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SingleLinkedList.cpp"
 				>
 			</File>
@@ -357,6 +365,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\OutOfRangeException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RawStorage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RegEx.h"
 				>
 			</File>
 			<File
