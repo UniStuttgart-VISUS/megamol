@@ -28,25 +28,29 @@
  * Make the call 'call' and if ::glGetError() returns any error code other than
  * GL_NO_ERROR, return this error code.
  *
- * This macro requires a local variable 'glError' to be defined.
+ * This macro requires a local variable '__glv_glError' to be defined. Use 
+ * USES_GL_VERIFY at begin of the enclosing function.
  *
  * @param call The OpenGL call to make.
  */
 #define GL_VERIFY_RETURN(call) call;\
-    if ((glError = ::glGetError()) != GL_NO_ERROR) { return glError; }
+    if ((__glv_glError = ::glGetError()) != GL_NO_ERROR) {\
+        return __glv_glError; }
 
 
 /** 
  * Make the call 'call' and if ::glGetError() returns any error code other than
  * GL_NO_ERROR, throw a GLException.
  *
- * This macro requires a local variable 'glError' to be defined.
+ * This macro requires a local variable '__glv_glError' to be defined. Use 
+ * USES_GL_VERIFY at begin of the enclosing function.
  *
  * @param call The OpenGL call to make.
  */
 #define GL_VERIFY_THROW(call) call;\
-    if ((glError = ::glGetError()) != GL_NO_ERROR) {\
-        throw vislib::graphics::gl::GLException(glError, __FILE__, __LINE__)\
+    if ((__glv_glError = ::glGetError()) != GL_NO_ERROR) {\
+        throw vislib::graphics::gl::OpenGLException(__glv_glError, __FILE__,\
+            __LINE__);\
     }
 
 
@@ -55,7 +59,7 @@
  *
  * @param call The OpenGL call to make.
  */
-#define GL_SUCCEEDED(call) (call, (::glGetError() == GL_NO_ERROR))
+#define GL_SUCCEEDED(call) ((call), (::glGetError() == GL_NO_ERROR))
 
 
 /**
@@ -64,7 +68,14 @@
  *
  * @param call The OpenGL call to make.
  */
-#define GL_FAILED(call) (call, (::glGetError() != GL_NO_ERROR))
+#define GL_FAILED(call) ((call), (::glGetError() != GL_NO_ERROR))
+
+
+/** 
+ * Declare the variable '__glv_glError' for use in the GL_VERIFY_* macros. Add 
+ * this macro at the begin of functions that use these macros.
+ */
+#define USES_GL_VERIFY GLenum __glv_glError
 
 
 #endif /* VISLIB_GLVERIFY_H_INCLUDED */
