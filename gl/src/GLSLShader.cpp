@@ -152,6 +152,7 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
  */
 GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
     USES_GL_VERIFY;
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glUseProgramObjectARB(0));
     GL_VERIFY_RETURN(::glDisable(GL_VERTEX_PROGRAM_ARB));
@@ -165,6 +166,7 @@ GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
  */
 GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
     USES_GL_VERIFY;
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glEnable(GL_VERTEX_PROGRAM_ARB));
     GL_VERIFY_RETURN(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
@@ -179,7 +181,171 @@ GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
 GLenum vislib::graphics::gl::GLSLShader::Release(void) {
     USES_GL_VERIFY;
 
-    GL_VERIFY_RETURN(::glDeleteObjectARB(this->hProgObj));
+    if (GLSLShader::IsValidHandle(this->hProgObj)) {
+        GL_VERIFY_RETURN(::glDeleteObjectARB(this->hProgObj));
+    }
+
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name,
+                                                      const float v1) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform1fARB(location, v1));
+    return GL_NO_ERROR;
+
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name, 
+        const float v1, const float v2) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform2fARB(location, v1, v2));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name, 
+        const float v1, const float v2, const float v3) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform3fARB(location, v1, v2, v3));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name, 
+        const float v1, const float v2, const float v3, const float v4) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform4fARB(location, v1, v2, v3, v4));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name, 
+                                                      const int v1) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform1iARB(location, v1));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name, 
+        const int v1, const int v2) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform2iARB(location, v1, v2));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name, 
+        const int v1, const int v2, const int v3) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform3iARB(location, v1, v2, v3));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::SetParameter
+ */
+GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name, 
+        const int v1, const int v2, const int v3, const int v4) {
+    USES_GL_VERIFY;
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    GLint location = ::glGetUniformLocationARB(this->hProgObj, name);
+
+    if (location < 0) {
+        return GL_INVALID_VALUE;
+    }
+
+    GL_VERIFY_RETURN(::glUniform4iARB(location, v1, v2, v3, v4));
     return GL_NO_ERROR;
 }
 

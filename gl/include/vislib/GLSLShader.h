@@ -158,10 +158,27 @@ namespace gl {
          */
         virtual GLenum Release(void);
 
-        virtual GLenum SetDouble4(const char *name, const double a, 
-            const double b, const double c, const double d);
+        virtual GLenum SetParameter(const char *name, const float v1);
 
-        virtual GLenum SetDouble4(const char *name, const double *d);
+        virtual GLenum SetParameter(const char *name, const float v1, 
+            const float v2);
+
+        virtual GLenum SetParameter(const char *name, const float v1, 
+            const float v2, const float v3);
+
+        virtual GLenum SetParameter(const char *name, const float v1,
+            const float v2, const float v3, const float v4);
+
+        virtual GLenum SetParameter(const char *name, const int v1);
+
+        virtual GLenum SetParameter(const char *name, const int v1, 
+            const int v2);
+
+        virtual GLenum SetParameter(const char *name, const int v1, 
+            const int v2, const int v3);
+
+        virtual GLenum SetParameter(const char *name, const int v1,
+            const int v2, const int v3, const int v4);
 
     protected:
 
