@@ -44,6 +44,16 @@ namespace gl {
          */
         static bool InitialiseExtensions(void);
 
+        /**
+         * Answer whether 'hProg' is a valid program object handle, that also 
+         * has not been scheduled for deletion.
+         * 
+         * @param hProg A program handle.
+         *
+         * @return true, if 'hProg' is a valid handle, false otherwise.
+         */
+        static bool IsValidHandle(GLhandleARB hProg);
+
         /** Vertex shader source for fixed function transformation. */
         static const char *FTRANSFORM_VERTEX_SHADER_SRC;
 
@@ -119,22 +129,39 @@ namespace gl {
         //    const SIZE_T cntFragmentShaderFile);
 
         /**
-         * Disables GLSL shaders.
+         * Disable the shader. This method changes the GL to render using
+         * the fixed function pipeline.
+         *
+         * It is safe to call this method, if the shader has not been
+         * successfully created or enable.
+         *
+         * @return GL_NO_ERROR in case of success, an error code, if the
+         *         shader was active but could not be disabled.
          */
-        virtual void Disable(void);
+        virtual GLenum Disable(void);
         
         /**
-         * Enables the shader.
+         * Enables the shader. The shader must have been successfully created
+         * before.
          *
-         * @throws OpenGLException       If enabling the shader failed.
-         * @throws IllegalStateException If this->type is TYPE_UNKNOWN.
+         * @return GL_NO_ERROR in case of success, an error code, if the
+         *         shader could not be enabled.
          */
-        virtual void Enable(void);
+        virtual GLenum Enable(void);
 
         /**
-         * Releases all resources allocated by the shader.
+         * Releases all resources allocated by the shader. It is safe to
+         * 
+         * @return GL_NO_ERROR if the resource have been released or have
+         *         never been allocated, an error code, if they have been
+         *         allocated but could not be released.
          */
-        virtual void Release(void);
+        virtual GLenum Release(void);
+
+        virtual GLenum SetDouble4(const char *name, const double a, 
+            const double b, const double c, const double d);
+
+        virtual GLenum SetDouble4(const char *name, const double *d);
 
     protected:
 

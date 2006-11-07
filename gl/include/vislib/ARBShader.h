@@ -77,17 +77,28 @@ namespace gl {
         virtual bool CreateFromFile(const char *filename);
 
         /**
-         * Disable ARB shaders.
+         * Disable the shader. This method changes the GL to render using
+         * the fixed function pipeline.
+         *
+         * It is safe to call this method, if the shader has not been
+         * successfully created or enable.
+         *
+         * @return GL_NO_ERROR in case of success, an error code, if the
+         *         shader was active but could not be disabled.
          */
-        virtual void Disable(void);
+        virtual GLenum Disable(void);
         
         /**
-         * Enables the shader.
+         * Enables the shader. The shader must have been successfully created
+         * before.
          *
-         * @throws OpenGLException       If enabling the shader failed.
-         * @throws IllegalStateException If this->type is TYPE_UNKNOWN.
+         * @return GL_NO_ERROR in case of success, an error code, if the
+         *         shader could not be enabled.
+         *
+         * @throws IllegalStateException If the shader is not valid, i. e. has
+         *                               not been successfully created.
          */
-        virtual void Enable(void);
+        virtual GLenum Enable(void);
 
         /**
          * Answer the type of this shader. The return value is only valid after
@@ -100,9 +111,106 @@ namespace gl {
         }
 
         /**
-         * Releases all resources allocated by the shader.
+         * Releases all resources allocated by the shader. It is safe to
+         * 
+         * @return GL_NO_ERROR if the resource have been released or have
+         *         never been allocated, an error code, if they have been
+         *         allocated but could not be released.
          */
-        virtual void Release(void);
+        virtual GLenum Release(void);
+
+        /**
+         * Set the four components of the local parameter 'name'.
+         *
+         * The shader must have been enabled before using this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The value of the first component (x/r).
+         * @param v2   The value of the second component (y/g).
+         * @param v3   The value of the third component (z/b).
+         * @param v4   The value of the fourth component (w/a). 
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLuint name, const double v1, 
+            const double v2 = 0.0, const double v3 = 0.0, 
+            const double v4 = 0.0);
+
+        /**
+         * Set the four components of the local parameter 'name'. The array
+         * 'v' must be a non NULL vector of at least four elements.
+         *
+         * The shader must have been enabled before using this method.
+         *
+         * @param name The name of the parameter.
+         * @param v    The array holding the values to pass to the shader.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLuint name, const double *v);
+
+        /**
+         * Set the four components of the local parameter 'name'.
+         *
+         * The shader must have been enabled before using this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The value of the first component (x/r).
+         * @param v2   The value of the second component (y/g).
+         * @param v3   The value of the third component (z/b).
+         * @param v4   The value of the fourth component (w/a). 
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLuint name, const float v1, 
+            const float v2 = 0.0f, const float v3 = 0.0f, 
+            const float v4 = 0.0f);
+
+        /**
+         * Set the four components of the local parameter 'name'. The array
+         * 'v' must be a non NULL vector of at least four elements.
+         *
+         * The shader must have been enabled before using this method.
+         *
+         * @param name The name of the parameter.
+         * @param v    The array holding the values to pass to the shader.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLuint name, const float *v) = 0;
+
+        /**
+         * Set the four components of the local parameter 'name'.
+         *
+         * The shader must have been enabled before using this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The value of the first component (x/r).
+         * @param v2   The value of the second component (y/g).
+         * @param v3   The value of the third component (z/b).
+         * @param v4   The value of the fourth component (w/a). 
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        inline GLenum SetParameter(const GLuint name, const int v1, 
+                const int v2 = 0, const int v3 = 0, const int v4 = 0) {
+            return this->SetParameter(name, static_cast<double>(v1), 
+                static_cast<double>(v2), static_cast<double>(v3), 
+                static_cast<double>(v4));
+        }
+
+        /**
+         * Set the four components of the local parameter 'name'. The array
+         * 'v' must be a non NULL vector of at least four elements.
+         *
+         * The shader must have been enabled before using this method.
+         *
+         * @param name The name of the parameter.
+         * @param v    The array holding the values to pass to the shader.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLuint name, const int *v);
 
     protected:
 

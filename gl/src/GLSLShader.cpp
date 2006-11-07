@@ -27,6 +27,22 @@ bool vislib::graphics::gl::GLSLShader::InitialiseExtensions(void) {
 
 
 /*
+ * vislib::graphics::gl::GLSLShader::IsValidHandle
+ */
+bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
+    USES_GL_VERIFY;
+    GLint status;
+
+    if (GL_SUCCEEDED(::glGetObjectParameterivARB(hProg, 
+            GL_OBJECT_DELETE_STATUS_ARB, &status))) {
+        return (status != 0);
+    } else {
+        return false;
+    }
+}
+
+
+/*
  * vislib::graphics::gl::GLSLShader::FTRANSFORM_VERTEX_SHADER_SRC
  */
 const char *vislib::graphics::gl::GLSLShader::FTRANSFORM_VERTEX_SHADER_SRC =
@@ -134,29 +150,37 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
 /*
  * vislib::graphics::gl::GLSLShader::Disable
  */
-void vislib::graphics::gl::GLSLShader::Disable(void) {
-    ::glUseProgramObjectARB(0);
-    ::glDisable(GL_VERTEX_PROGRAM_ARB);
-    ::glDisable(GL_FRAGMENT_PROGRAM_ARB);
+GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
+    USES_GL_VERIFY;
+
+    GL_VERIFY_RETURN(::glUseProgramObjectARB(0));
+    GL_VERIFY_RETURN(::glDisable(GL_VERTEX_PROGRAM_ARB));
+    GL_VERIFY_RETURN(::glDisable(GL_FRAGMENT_PROGRAM_ARB));
+    return GL_NO_ERROR;
 }
         
 
 /*
  * vislib::graphics::gl::GLSLShader::Enable
  */
-void vislib::graphics::gl::GLSLShader::Enable(void) {
+GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
     USES_GL_VERIFY;
-    GL_VERIFY_THROW(::glEnable(GL_VERTEX_PROGRAM_ARB));
-    GL_VERIFY_THROW(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
-    GL_VERIFY_THROW(::glUseProgramObjectARB(this->hProgObj));
+
+    GL_VERIFY_RETURN(::glEnable(GL_VERTEX_PROGRAM_ARB));
+    GL_VERIFY_RETURN(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
+    GL_VERIFY_RETURN(::glUseProgramObjectARB(this->hProgObj));
+    return GL_NO_ERROR;
 }
 
 
 /*
  * vislib::graphics::gl::GLSLShader::Release
  */
-void vislib::graphics::gl::GLSLShader::Release(void) {
-    ::glDeleteObjectARB(this->hProgObj);
+GLenum vislib::graphics::gl::GLSLShader::Release(void) {
+    USES_GL_VERIFY;
+
+    GL_VERIFY_RETURN(::glDeleteObjectARB(this->hProgObj));
+    return GL_NO_ERROR;
 }
 
 

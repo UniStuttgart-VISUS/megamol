@@ -93,23 +93,37 @@ namespace gl {
         //virtual GLenum CreateFromFile(const char *filename);
 
         /**
-         * Disable the shader.
+         * Disable the shader. This method changes the GL to render using
+         * the fixed function pipeline.
          *
-         * @throws OpenGLException If disabling the shader failed.
+         * It is safe to call this method, if the shader has not been
+         * successfully created or enable.
+         *
+         * @return GL_NO_ERROR in case of success, an error code, if the
+         *         shader was active but could not be disabled.
          */
-        virtual void Disable(void) = 0;
+        virtual GLenum Disable(void) = 0;
         
         /**
-         * Enables the shader.
+         * Enables the shader. The shader must have been successfully created
+         * before.
          *
-         * @throws OpenGLException If enabling the shader failed.
+         * @return GL_NO_ERROR in case of success, an error code, if the
+         *         shader could not be enabled.
+         *
+         * @throws IllegalStateException If the shader is not valid, i. e. has
+         *                               not been successfully created.
          */
-        virtual void Enable(void) = 0;
+        virtual GLenum Enable(void) = 0;
 
         /**
-         * Releases all resources allocated by the shader.
+         * Releases all resources allocated by the shader. It is safe to
+         * 
+         * @return GL_NO_ERROR if the resource have been released or have
+         *         never been allocated, an error code, if they have been
+         *         allocated but could not be released.
          */
-        virtual void Release(void) = 0;
+        virtual GLenum Release(void) = 0;
 
     protected:
 

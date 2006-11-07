@@ -75,7 +75,8 @@
  * Declare the variable '__glv_glError' for use in the GL_VERIFY_* macros. Add 
  * this macro at the begin of functions that use these macros.
  */
-#define USES_GL_VERIFY GLenum __glv_glError
+#define USES_GL_VERIFY GLenum __glv_glError; __glv_glError = GL_NO_ERROR
+// Note: Extra assignment prevent "unused variable" warning.
 
 
 #endif /* VISLIB_GLVERIFY_H_INCLUDED */

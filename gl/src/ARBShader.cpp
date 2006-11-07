@@ -104,23 +104,28 @@ bool vislib::graphics::gl::ARBShader::CreateFromFile(const char *filename) {
 /*
  * vislib::graphics::gl::ARBShader::Disable
  */
-void vislib::graphics::gl::ARBShader::Disable(void) {
+GLenum vislib::graphics::gl::ARBShader::Disable(void) {
+    USES_GL_VERIFY;
+
     if (this->type != TYPE_UNKNOWN) {
-        ::glBindProgramARB(this->type, 0);
-        ::glDisable(this->type);
+        GL_VERIFY_RETURN(::glBindProgramARB(this->type, 0));
+        GL_VERIFY_RETURN(::glDisable(this->type));
     }
+
+    return GL_NO_ERROR;
 }
 
 
 /*
  * vislib::graphics::gl::ARBShader::Enable
  */
-void vislib::graphics::gl::ARBShader::Enable(void) {
+GLenum vislib::graphics::gl::ARBShader::Enable(void) {
     USES_GL_VERIFY;
 
     if (this->type != TYPE_UNKNOWN) {
-        ::glEnable(this->type);
-        GL_VERIFY_THROW(::glBindProgramARB(this->type, this->id));
+        GL_VERIFY_RETURN(::glEnable(this->type));
+        GL_VERIFY_RETURN(::glBindProgramARB(this->type, this->id));
+        return GL_NO_ERROR;
     } else {
         throw IllegalStateException("'type' must not be TYPE_UNKNOWN",
             __FILE__, __LINE__);
@@ -131,9 +136,81 @@ void vislib::graphics::gl::ARBShader::Enable(void) {
 /*
  * vislib::graphics::gl::ARBShader::Release
  */
-void vislib::graphics::gl::ARBShader::Release(void) {
-    ::glDeleteProgramsARB(1, &this->id);
+GLenum vislib::graphics::gl::ARBShader::Release(void) {
+    USES_GL_VERIFY;
+
     this->type = TYPE_UNKNOWN;
+    GL_VERIFY_RETURN(::glDeleteProgramsARB(1, &this->id));
+    
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::ARBShader::SetParameter
+ */
+GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
+        const double v1, const double v2, const double v3, const double v4) {
+    USES_GL_VERIFY;
+
+    GL_VERIFY_RETURN(::glProgramLocalParameter4dARB(this->type, name, v1, v2,
+        v3, v4));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::ARBShader::SetParameter
+ */
+GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
+                                                     const double *v) {
+    USES_GL_VERIFY;
+    ASSERT(v != NULL);
+
+    GL_VERIFY_RETURN(::glProgramLocalParameter4dvARB(this->type, name, v));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::ARBShader::SetParameter
+ */
+GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
+        const float v1, const float v2, const float v3, const float v4) {
+    USES_GL_VERIFY;
+
+    GL_VERIFY_RETURN(::glProgramLocalParameter4fARB(this->type, name, v1, v2,
+        v3, v4));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::ARBShader::SetParameter
+ */
+GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
+                                                     const float *v) {
+    USES_GL_VERIFY;
+    ASSERT(v != NULL);
+
+    GL_VERIFY_RETURN(::glProgramLocalParameter4fvARB(this->type, name, v));
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::ARBShader::SetParameter
+ */
+GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
+                                                     const int *v) {
+    ASSERT(v != NULL);
+    double vd[4];
+
+    for (int i = 0; i < 4; i++) {
+        vd[i] = static_cast<double>(v[i]);
+    }
+
+    return this->SetParameter(name, vd);
 }
 
 
