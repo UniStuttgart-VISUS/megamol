@@ -360,6 +360,7 @@ void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor,
                                                    DWORD& outMinor) {
 #ifdef _WIN32
     OSVERSIONINFO ver;
+    ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     
     if (::GetVersionEx(&ver) != TRUE) {
         throw SystemException(__FILE__, __LINE__);
