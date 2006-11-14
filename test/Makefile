@@ -17,7 +17,7 @@ OutName := vislibtest
 
 
 # C++ compiler flags:
-CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
+CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 
 # Linker flags:
 LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread 
@@ -35,7 +35,7 @@ ifeq ($(PLATFORM), x86_64)
 else
 	IntDir := Lin32
 	OutDir := ../Lin32
-	LDFLAGS += -lvislibgraphics32 -lvislibmath32 -lvislibnet32 -lvislibsys32 -lvislibbase32
+	LDFLAGS += -lvislibgraphics32d -lvislibmath32d -lvislibnet32d -lvislibsys32d -lvislibbase32d
 endif
 
 # Append the include directories to the flags:

@@ -86,7 +86,8 @@ void vislib::net::SocketAddress::SetIPAdress(const IPAddress& ipAddress) {
  */
 vislib::StringA vislib::net::SocketAddress::ToStringA(void) const {
     StringA retval;
-    retval.Format("%s:%u", this->GetIPAddress().ToStringA(), this->GetPort());
+    retval.Format("%s:%u", static_cast<const char *>(
+        this->GetIPAddress().ToStringA()), this->GetPort());
     return retval;
 }
 
@@ -97,7 +98,8 @@ vislib::StringA vislib::net::SocketAddress::ToStringA(void) const {
 vislib::StringW vislib::net::SocketAddress::ToStringW(void) const {
     StringW retval;
     // TODO: might fail on linux!!
-    retval.Format(L"%s:%u", this->GetIPAddress().ToStringW(), this->GetPort());
+    retval.Format(L"%s:%u", static_cast<const wchar_t *>(
+        this->GetIPAddress().ToStringW()), this->GetPort());
     return retval;
 }
 

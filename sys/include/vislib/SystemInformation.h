@@ -179,6 +179,8 @@ namespace sys {
          */
         static OSType SystemType(void);
 
+        static void SystemVersion(DWORD& outMajor, DWORD& outMinor);
+
         /**
          * Returns the size of a word in bit of current operating system. This
          * value may differ from the word size of the current application,

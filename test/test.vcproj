@@ -374,6 +374,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testsysinfo.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testthread.cpp"
 				>
 			</File>
@@ -409,6 +413,10 @@
 			</File>
 			<File
 				RelativePath=".\teststring.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testsysinfo.h"
 				>
 			</File>
 			<File

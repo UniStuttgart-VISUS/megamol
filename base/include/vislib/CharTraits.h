@@ -20,6 +20,7 @@
 #include <cwctype>
 
 #include "vislib/assert.h"
+#include "vislib/memutils.h"
 #include "vislib/types.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -255,7 +256,7 @@ namespace vislib {
 #else /* (_MSC_VER >= 1400) */
                 retval = ::_vsnprintf(dst, cnt, fmt, argptr);
 #endif /* (_MSC_VER >= 1400) */
-            } /* end if ((dst == NULL) || (cnt == 0)) */
+            } /* end if ((dst == NULL) || (cnt <= 0)) */
 
 #else /* _WIN32 */
             retval = ::vsnprintf(dst, cnt, fmt, argptr);
@@ -428,6 +429,8 @@ namespace vislib {
          * ensures that the resulting string in 'dst' is zero terminated, 
          * regardless of its content.
          *
+         * Note: Use %hs for printing ANSI strings!
+         *
          * @param dst    The buffer receiving the formatted string. This buffer
          *               must be able to hold at least 'cnt' characters or must
          *               be NULL.
@@ -454,14 +457,39 @@ namespace vislib {
 #else /* (_MSC_VER >= 1400) */
                 retval = ::_vsnwprintf(dst, cnt, fmt, argptr);
 #endif /* (_MSC_VER >= 1400) */
-            } /* end if ((dst == NULL) || (cnt == 0)) */
+            } /* end if ((dst == NULL) || (cnt <= 0)) */
 
 #else /* _WIN32 */
-            retval = ::vswprintf(dst, cnt, fmt, argptr);
+            // Yes, you can trust your eyes: The char and wide char 
+            // implementations under Linux have a completely different 
+            // semantic. vswprintf cannot be used for determining the required
+            // size as vsprintf can.
+            SIZE_T bufferSize, bufferGrow;
+            Char *buffer = NULL;
 
-            if ((dst != NULL) && (cnt > 0) && (retval > cnt - 1)) {
-                retval = -1;
+            if ((dst == NULL) || (cnt <= 0)) {
+                /* Just count. */
+                bufferSize = static_cast<SIZE_T>(1.1
+                    * static_cast<float>(::wcslen(fmt)) + 1);
+                bufferGrow = static_cast<SIZE_T>(0.5
+                    * static_cast<float>(bufferSize));
+                buffer = new Char[bufferSize];
+
+                while ((retval = ::vswprintf(buffer, bufferSize, fmt, argptr))
+                        == -1) {
+                    ARY_SAFE_DELETE(buffer);
+                    bufferSize += bufferGrow;
+                    buffer = new Char[bufferSize];
+                }
+
+                retval = ::wcslen(buffer);
+                ARY_SAFE_DELETE(buffer);
+                
+            } else {
+                /* Format the string. */
+                retval = ::vswprintf(dst, cnt, fmt, argptr);
             }
+
 #endif /* _WIN32 */ 
 
             /* Ensure string being terminated. */

@@ -173,6 +173,6 @@ void TestStringW(void) {
     s1.Format(L"Horst%d %04.1f", 2, 2.0f);
     AssertTrue("Format \"Horst2 02.0\"", !::wcscmp(s1.PeekBuffer(), L"Horst2 02.0"));
 
-    s1.Format(L"Horst %S", "Hugo");
+    s1.Format(L"Horst %hs", "Hugo");
     AssertTrue("Format \"Horst Hugo\"", !::wcscmp(s1.PeekBuffer(), L"Horst Hugo"));
 }

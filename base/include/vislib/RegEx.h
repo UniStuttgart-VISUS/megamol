@@ -39,6 +39,7 @@ namespace vislib {
         static const char TOKEN_COMMA;
         static const char TOKEN_DOLLAR;
         static const char TOKEN_DOT;
+        static const char TOKEN_MINUS;
         static const char TOKEN_PAREN_CLOSE;
         static const char TOKEN_PAREN_OPEN;
         static const char TOKEN_PLUS;
@@ -74,6 +75,7 @@ namespace vislib {
     const char RECharTraitsA::TOKEN_COMMA = ',';
     const char RECharTraitsA::TOKEN_DOLLAR = '$';
     const char RECharTraitsA::TOKEN_DOT = '.';
+    const char RECharTraitsA::TOKEN_MINUS = '-';
     const char RECharTraitsA::TOKEN_PAREN_CLOSE = ')';
     const char RECharTraitsA::TOKEN_PAREN_OPEN = '(';
     const char RECharTraitsA::TOKEN_PLUS = '+';
@@ -577,7 +579,25 @@ namespace vislib {
 
         inOutStr++;
 
-        while ((inOutStr != 0) && (inOutStr != T::TOKEN_BRACKET_CLOSE)) {
+        while ((*inOutStr != 0) && (*inOutStr != T::TOKEN_BRACKET_CLOSE)) {
+
+            switch (*inOutStr) {
+
+                case T::TOKEN_MINUS: 
+                    // TODO
+                    break;
+
+                case T::TOKEN_BACKSLASH:
+                    // TODO
+                    //this->parseEscape(inOutStr);
+                    break;
+
+                default:
+                    // TODO
+                    break;
+            }
+            
+            inOutStr++;
             // TODO: Implementation missing.
         }
 

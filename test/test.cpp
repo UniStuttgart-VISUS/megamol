@@ -16,6 +16,7 @@
 #include "testfile.h"
 #include "testvector.h"
 #include "testdimandrect.h"
+#include "testsysinfo.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -23,7 +24,6 @@
 #include "vislib/StringConverter.h"
 #include "vislib/SystemMessage.h"
 #include "vislib/Trace.h"
-#include "vislib/SystemInformation.h"
 
 
 #ifdef _WIN32
@@ -34,34 +34,13 @@ int main(int argc, char **argv) {
     using namespace vislib;
     using namespace vislib::sys;
     
-    try {
-        vislib::TString userName;
-        vislib::TString compName;
-        vislib::sys::SystemInformation::UserName(userName);
-        vislib::sys::SystemInformation::ComputerName(compName);
-        ::_tprintf(_T("Running as %s@%s (%u Proc.)\n"), userName.PeekBuffer(), compName.PeekBuffer()
-            , vislib::sys::SystemInformation::ProcessorCount());
-
-        std::cout << "Page Size: " << vislib::sys::SystemInformation::PageSize() << " Bytes." << std::endl;
-        std::cout << "Total Memory: " << vislib::sys::SystemInformation::PhysicalMemorySize() << " Bytes." << std::endl;
-        std::cout << "Free Memory:  " << vislib::sys::SystemInformation::AvailableMemorySize() << " Bytes." << std::endl;
-
-        std::cout << "System Type: " << vislib::sys::SystemInformation::SystemType() << std::endl;
-        std::cout << "System Word Size: " << vislib::sys::SystemInformation::SystemWordSize() << std::endl;
-        std::cout << "Self System Type: " << vislib::sys::SystemInformation::SelfSystemType() << std::endl;
-        std::cout << "Self Word Size: " << vislib::sys::SystemInformation::SelfWordSize() << std::endl;
-
-    } catch(Exception e) {
-        std::cout << "Exception catched: " << e.GetMsg() << std::endl;
-    } catch(...) {
-        std::cout << "Unexpected exception catched." << std::endl;
-    }
 
     //vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
     //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
     //TRACE(1, "HORST!\n");
 
     //::TestFile();
+    ::TestSysInfo();
     ::TestString();
     //::TestVector();
     //::TestDimension();

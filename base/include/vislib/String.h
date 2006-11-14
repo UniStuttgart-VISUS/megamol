@@ -475,12 +475,18 @@ namespace vislib {
         va_list argptr;
         Size size = 0;
 
+        /* Determine required buffer size. */
         va_start(argptr, fmt);
-        this->AllocateBuffer((size = T::Format(NULL, 0, fmt, argptr)));
+        size = T::Format(NULL, 0, fmt, argptr);
+        va_end(argptr);
+
+        /* Allocate memory. */
+        ASSERT(size >= 0);
+        this->AllocateBuffer(size);
         
+        /* Write the actual output. */
         va_start(argptr, fmt);
         T::Format(this->data, size + 1, fmt, argptr);
-
         va_end(argptr);
     }
 

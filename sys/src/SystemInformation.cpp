@@ -6,9 +6,13 @@
 
 
 #include "vislib/SystemInformation.h"
-#include "vislib/UnsupportedOperationException.h"
-#include "vislib/SystemException.h"
+
 #include "DynamicFunctionPointer.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
+
+
 
 #ifdef _WIN32
 #include <windows.h>
@@ -346,6 +350,51 @@ vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemTyp
 #else
     return OS_LINUX;
 #endif
+}
+
+
+/*
+ * vislib::sys::SystemInformation::SystemVersion
+ */
+void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor, 
+                                                   DWORD& outMinor) {
+#ifdef _WIN32
+    OSVERSIONINFO ver;
+    
+    if (::GetVersionEx(&ver) != TRUE) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    outMajor = ver.dwMajorVersion;
+    outMinor = ver.dwMinorVersion;
+
+#else /* _WIN32 */
+    const int BUFFER_SIZE = 512;
+    char buffer[BUFFER_SIZE];
+    int majorVersion = 0;
+    int minorVersion = 0;
+    size_t cnt = 0;
+    FILE *fp = NULL;
+
+    if ((fp = ::popen("uname -r", "r")) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    cnt = fread(buffer, 1, sizeof(buffer) - 1, fp);
+    ::pclose(fp);
+
+    if (cnt == 0)  {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if (::sscanf(buffer, "%d.%d", &majorVersion, &minorVersion) != 2) {
+        TRACE(Trace::LEVEL_ERROR, "sscanf on version string failed.");
+        throw SystemException(ENOTSUP, __FILE__, __LINE__);
+    }
+
+    outMajor = majorVersion;
+    outMinor = minorVersion;
+#endif /* _WIN32 */
 }
 
 
