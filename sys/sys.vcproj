@@ -298,27 +298,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\FileInStream.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\FileOutStream.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\InStream.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\IOException.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\Mutex.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\OutStream.cpp"
 				>
 			</File>
 			<File
@@ -335,14 +319,6 @@
 			</File>
 			<File
 				RelativePath=".\src\Semaphore.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\StdInStream.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\StdOutStream.cpp"
 				>
 			</File>
 			<File
@@ -400,27 +376,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\FileInStream.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\FileOutStream.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\InStream.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\vislib\IOException.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\vislib\Mutex.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\OutStream.h"
 				>
 			</File>
 			<File
@@ -437,14 +397,6 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Semaphore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\StdInStream.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\StdOutStream.h"
 				>
 			</File>
 			<File
