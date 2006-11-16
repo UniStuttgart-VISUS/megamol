@@ -22,6 +22,33 @@ namespace vislib {
 namespace math {
 
     /**
+     * Answer the absolute of 'n'.
+     *
+     * @return The absolute of 'n'.
+     */
+    template<class T> inline T Abs(const T n) {
+        return ::abs(n);
+    }
+
+    /**
+     * Answer the absolute of 'n'.
+     *
+     * @return The absolute of 'n'.
+     */
+    template<> inline double Abs(const double n) {
+        return ::fabs(n);
+    }
+
+    /**
+     * Answer the absolute of 'n'.
+     *
+     * @return The absolute of 'n'.
+     */
+    template<> inline float Abs(const float n) {
+        return ::fabsf(n);
+    }
+
+    /**
      * Answer the next power of two which is greater or equal to 'n'.
      *
      * This function has logarithmic runtime complexity.
