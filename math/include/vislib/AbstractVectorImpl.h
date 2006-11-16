@@ -149,7 +149,14 @@ namespace math {
          *
          * @return The square of the length of the vector.
          */
-        inline T SquareLength(void) const;
+        T SquareLength(void) const;
+
+        /**
+         * Answer the taxicab or Manhattan norm.
+         *
+         * @return The taxicab norm of the vector.
+         */
+        T TaxicabNorm(void) const;
 
         /**
          * Assignment.
@@ -473,22 +480,6 @@ namespace math {
 
 
     /*
-     * vislib::math::AbstractVectorImpl<T, D, S, C>::SquareLength
-     */
-    template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
-    T AbstractVectorImpl<T, D, S, C>::SquareLength(void) const {
-        T retval = static_cast<T>(0);
-
-        for (unsigned int d = 0; d < D; d++) {
-            retval += Sqr(this->components[d]);
-        }
-
-        return retval;
-    }
-
-
-    /*
      * vislib::math::AbstractVectorImpl<T, D, S, C>::MaxNorm
      */
     template<class T, unsigned int D, class S, 
@@ -508,8 +499,8 @@ namespace math {
 #endif /* _MSC_VER */
 
         for (unsigned int d = 0; d < D; d++) {
-            if (this->components[d] > retval) {
-                retval = this->components[d];
+            if (::abs(this->components[d]) > retval) {
+                retval = ::abs(this->components[d]);
             }
         }
 
@@ -537,6 +528,38 @@ namespace math {
         }
 
         return length;
+    }
+
+
+    /*
+     * vislib::math::AbstractVectorImpl<T, D, S, C>::SquareLength
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C>
+    T AbstractVectorImpl<T, D, S, C>::SquareLength(void) const {
+        T retval = static_cast<T>(0);
+
+        for (unsigned int d = 0; d < D; d++) {
+            retval += Sqr(this->components[d]);
+        }
+
+        return retval;
+    }
+
+
+    /*
+     * vislib::math::AbstractVectorImpl<T, D, S, C>::TaxicabNorm
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C>
+    T AbstractVectorImpl<T, D, S, C>::TaxicabNorm(void) const {
+        T retval = static_cast<T>(0);
+
+        for (unsigned int d = 0; d < D; d++) {
+            retval += this->components[d];
+        }
+
+        return retval;
     }
 
 

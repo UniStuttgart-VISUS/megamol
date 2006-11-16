@@ -108,6 +108,16 @@ namespace vislib {
         }
 
         /**
+         * Answer whether the memory block is empty, i. e. has no memory 
+         * allocated.
+         *
+         * @return true, if no memory has been allocated, false otherwise.
+         */
+        inline bool IsEmpty(void) const {
+            return (this->size == 0);
+        }
+
+        /**
          * Assignment operation. This will deep copy the whole dynamic memory.
          *
          * @param rhs The right hand side operand.
