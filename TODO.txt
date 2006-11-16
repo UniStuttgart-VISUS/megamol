@@ -7,3 +7,5 @@ SystemMessage: Linux implementation for casts is possibly a problem.
 Thread: Linux members must possibly be protected by a mutex.
 InStream: Think of further methodes (Skip, IsEnd, ...)
 OutStream: Think of further methodes (IsOpen, Close, ...)
+graphics::BeholderDistZoom2D: Class should also be able to change camera parameters (near-clip, far-clip, focal distance).
+    Implement Zooming-Speed-Attribute.
