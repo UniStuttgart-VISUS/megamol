@@ -14,6 +14,7 @@
 #include "vislib/File.h"
 #include "vislib/IOException.h"
 #include "vislib/SystemMessage.h"
+#include "vislib/sysfunctions.h"
 
 
 using namespace vislib::sys;
@@ -162,6 +163,8 @@ static void runTests(File& f1) {
 
 
 void TestFile(void) {
+    std::cout << "Working directory \"" << vislib::sys::GetWorkingDirectoryA() << "\"" << std::endl;
+
     try {
         ::TestBaseFile();
         ::TestBufferedFile();

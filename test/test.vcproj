@@ -370,6 +370,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testprocess.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\teststring.cpp"
 				>
 			</File>
@@ -409,6 +413,10 @@
 			</File>
 			<File
 				RelativePath=".\testhelper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testprocess.h"
 				>
 			</File>
 			<File

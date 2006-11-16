@@ -18,7 +18,9 @@
 #pragma comment(lib, "shlwapi")
 #endif /* _MSC_VER */
 
+
 #include "vislib/types.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -72,6 +74,26 @@ namespace sys {
             END = SEEK_END
 #endif /* _WIN32 */
         };
+
+        /**
+         * Answer the absolute path of 'path'. 'path' can be absolute itself and
+         * will not be altered in this case.
+         *
+         * @param path A path to a file or directory.
+         *
+         * @return The absolute path.
+         */
+        static StringA AbsolutePath(const StringA& path);
+
+        /**
+         * Answer the absolute path of 'path'. 'path' can be absolute itself and
+         * will not be altered in this case.
+         *
+         * @param path A path to a file or directory.
+         *
+         * @return The absolute path.
+         */
+        static StringW AbsolutePath(const StringW& path);
 
         /**
          * Delete the file with the specified name.
@@ -136,6 +158,12 @@ namespace sys {
          *         failure.
          */
         static bool Rename(const wchar_t *oldName, const wchar_t *newName);
+
+        /** The ANSI path separator character. */
+        static const char PATH_SEPARATOR_A;
+
+        /** The Unicode path separator character. */
+        static const char PATH_SEPARATOR_W;
 
         /** Ctor. */
         File(void);

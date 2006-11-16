@@ -17,6 +17,7 @@
 #include "testvector.h"
 #include "testdimandrect.h"
 #include "testsysinfo.h"
+#include "testprocess.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -39,9 +40,10 @@ int main(int argc, char **argv) {
     //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
     //TRACE(1, "HORST!\n");
 
-    //::TestFile();
     ::TestSysInfo();
     ::TestString();
+    ::TestFile();
+    ::TestProcess();
     //::TestVector();
     //::TestDimension();
     //::TestRectangle();

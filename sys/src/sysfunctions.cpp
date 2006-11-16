@@ -28,8 +28,9 @@ vislib::StringA vislib::sys::GetWorkingDirectoryA(void) {
     char *buffer = new char[bufferSize];
 
     while (::getcwd(buffer, bufferSize) == NULL) {
+        ARY_SAFE_DELETE(buffer);
+
         if (errno == ERANGE) {
-            ARY_SAFE_DELETE(buffer);
             bufferSize += BUFFER_GROW;
             buffer = new char[bufferSize];
         } else {

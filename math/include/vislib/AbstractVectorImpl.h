@@ -499,8 +499,8 @@ namespace math {
 #endif /* _MSC_VER */
 
         for (unsigned int d = 0; d < D; d++) {
-            if (::abs(this->components[d]) > retval) {
-                retval = ::abs(this->components[d]);
+            if (Abs(this->components[d]) > retval) {
+                retval = Abs(this->components[d]);
             }
         }
 

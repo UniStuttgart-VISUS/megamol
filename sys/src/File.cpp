@@ -34,6 +34,36 @@
 
 
 /*
+ * vislib::sys::File::AbsolutePath
+ */
+StringA vislib::sys::File::AbsolutePath(const StringA& path) {
+#ifdef _WIN32
+    if (
+    return path;
+
+#else /* _WIN32 */
+    if (path.IsEmpty()) {
+        /* Path is empty, i. e. return current working directory. */
+
+    } else if (path[0] == File::PATH_SEPARATOR_A) {
+        /* Path is absolute, just return it. */
+        return path;
+    }
+#error
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::AbsolutePath
+ */
+StringW vislib::sys::File::AbsolutePath(const StringW& path) {
+    return path;
+}
+
+
+/*
  * vislib::sys::File::Delete
  */
 bool vislib::sys::File::Delete(const char *filename) {
@@ -117,6 +147,27 @@ bool vislib::sys::File::Rename(const wchar_t *oldName, const wchar_t *newName) {
     return ::rename(W2A(oldName), W2A(newName));
 #endif /* _WIN32 */
 }
+
+
+/*
+ * vislib::sys::File::PATH_SEPARATOR_A
+ */
+#ifdef _WIN32
+const char vislib::sys::File::PATH_SEPARATOR_A = '\\';
+#else /* _WIN32 */
+const char vislib::sys::File::PATH_SEPARATOR_A = '/';
+#endif /* _WIN32 */
+
+
+
+/*
+ * vislib::sys::File::PATH_SEPARATOR_W
+ */
+#ifdef _WIN32
+const char vislib::sys::File::PATH_SEPARATOR_W = L'\\';
+#else /* _WIN32 */
+const char vislib::sys::File::PATH_SEPARATOR_W = L'/';
+#endif /* _WIN32 */
 
 
 /*

@@ -9,9 +9,9 @@
 #include "vislib/Cursor2D.h"
 #include "vislib/Camera.h"
 #include "vislib/assert.h"
-#include "vislib/trace.h"
+#include "vislib/Trace.h"
 #include "vislib/IllegalParamException.h"
-#include "cmath"
+#include <cmath>
 
 
 /*
