@@ -278,6 +278,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Console.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CriticalSection.cpp"
 				>
 			</File>
@@ -353,6 +357,10 @@
 			>
 			<File
 				RelativePath=".\include\vislib\BufferedFile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Console.h"
 				>
 			</File>
 			<File

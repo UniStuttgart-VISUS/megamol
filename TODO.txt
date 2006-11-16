@@ -5,7 +5,6 @@ File: I think, IsEOF is inherently unsafe on Linux.
 DynamicLinkLibrary: Error handling for Linux is probably to working.
 SystemMessage: Linux implementation for casts is possibly a problem.
 Thread: Linux members must possibly be protected by a mutex.
-InStream: Think of further methodes (Skip, IsEnd, ...)
-OutStream: Think of further methodes (IsOpen, Close, ...)
 graphics::BeholderDistZoom2D: Class should also be able to change camera parameters (near-clip, far-clip, focal distance).
     Implement Zooming-Speed-Attribute.
+BufferedFile: Tiny seeks (e.g. cur-1) should not perform a flush.
