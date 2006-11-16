@@ -77,12 +77,6 @@ namespace graphics {
         /** Flag whether the mouse draggs. */
         bool drag;
 
-        /** drag source x coordinate */
-        ImageSpaceType dragX;
-
-        /** drag source y coordinate */
-        ImageSpaceType dragY;
-
     };
     
 } /* end namespace graphics */

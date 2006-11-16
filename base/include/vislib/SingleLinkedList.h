@@ -295,6 +295,7 @@ namespace vislib {
         Item *i = this->first;
         while(i) {
             if (i->item == item) return true;
+            i = i->next;
         }
         return false;
     }

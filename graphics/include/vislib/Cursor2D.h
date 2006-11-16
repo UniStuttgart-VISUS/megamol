@@ -45,7 +45,8 @@ namespace graphics {
 
         /**
          * Sets the position of the cursor in virtual image space of the 
-         * associated camera
+         * associated camera. The previous position of the cursor is also 
+         * changed.
          *
          * @param x The new x coordinate
          * @param y The new y coordinate
@@ -108,6 +109,26 @@ namespace graphics {
             return this->y;
         }
 
+        /**
+         * Returns the previous x coordinate of the cursor. The pervious 
+         * position of the cursor is set by cursor movements.
+         *
+         * @return The previous x coordinate.
+         */
+        inline ImageSpaceType PreviousX(void) const {
+            return this->prevX;
+        }
+
+        /**
+         * Returns the previous y coordinate of the cursor. The pervious 
+         * position of the cursor is set by cursor movements.
+         *
+         * @return The previous y coordinate.
+         */
+        inline ImageSpaceType PreviousY(void) const {
+            return this->prevY;
+        }
+
     private:
 
         /** x position of the cursor space */
@@ -115,6 +136,12 @@ namespace graphics {
 
         /** y position of the cursor space */
         ImageSpaceType y;
+
+        /** previous x position of the cursor space */
+        ImageSpaceType prevX;
+
+        /** previous y position of the cursor space */
+        ImageSpaceType prevY;
 
         /** The associated camera */
         Camera *cam;

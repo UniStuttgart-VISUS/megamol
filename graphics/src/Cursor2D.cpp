@@ -16,7 +16,10 @@
 /*
  * vislib::graphics::Cursor2D::Cursor2D
  */
-vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(), cam(NULL) {
+vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(), 
+        x(static_cast<ImageSpaceType>(0)), y(static_cast<ImageSpaceType>(0)), 
+        prevX(static_cast<ImageSpaceType>(0)), prevY(static_cast<ImageSpaceType>(0)), 
+        cam(NULL) {
 }
 
 
@@ -24,7 +27,7 @@ vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(), cam(NULL) {
  * vislib::graphics::Cursor2D::Cursor2D
  */
 vislib::graphics::Cursor2D::Cursor2D(const Cursor2D& rhs) 
-    : AbstractCursor(rhs), x(rhs.x), y(rhs.y), cam(rhs.cam) {
+: AbstractCursor(rhs), x(rhs.x), y(rhs.y), prevX(rhs.prevX), prevY(rhs.prevY), cam(rhs.cam) {
 }
 
 
@@ -40,8 +43,12 @@ vislib::graphics::Cursor2D::~Cursor2D(void) {
  * vislib::graphics::Cursor2D::SetPosition
  */
 void vislib::graphics::Cursor2D::SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY) {
-    bool unmoved = math::IsEqual(this->x, x) && math::IsEqual(this->y, y);
+    bool moved = !math::IsEqual(this->x, x) || !math::IsEqual(this->y, y);
 
+    if (moved) {
+        this->prevX = this->x;
+        this->prevY = this->y;
+    }
     this->x = x;
     this->y = y;
 
@@ -49,7 +56,7 @@ void vislib::graphics::Cursor2D::SetPosition(ImageSpaceType x, ImageSpaceType y,
         this->y = this->cam->GetVirtualHeight() - static_cast<ImageSpaceType>(1) - this->y;
     }
 
-    if (!unmoved) { // trigger move events
+    if (moved) { // trigger move events
         AbstractCursor::TriggerMoved();
     }
 }
@@ -70,6 +77,8 @@ vislib::graphics::Cursor2D& vislib::graphics::Cursor2D::operator=(const Cursor2D
     AbstractCursor::operator=(rhs);
     this->x = rhs.x;
     this->y = rhs.y; 
+    this->prevX = rhs.prevX;
+    this->prevY = rhs.prevY;
     this->cam = rhs.cam;
     return *this;
 }

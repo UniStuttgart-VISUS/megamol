@@ -39,6 +39,7 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
     Camera *cam = cursor->GetCamera();
     Beholder *beh = this->GetBeholder();
     ImageSpaceType curX, curY;
+    ImageSpaceType preX, preY;
 
     if ((beh == NULL) || (cam == NULL)) {
         TRACE(vislib::Trace::LEVEL_WARN, "BeholderRotator2D::Trigger beholer or camera missing.");
@@ -54,15 +55,15 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
 
         if (reason == REASON_BUTTON_DOWN) {
             this->drag = true;
-            this->dragX = curX;
-            this->dragY = curY;
         } else if (this->drag) {
+            preX = cursor->PreviousX() - cam->GetVirtualWidth() * static_cast<ImageSpaceType>(0.5);
+            preY = cursor->PreviousY() - halfHeight;
 
             if (cursor->GetModifierState(this->altMod)) {
                 // roll
 
                 // calc angle between mouse position vectors in image space
-                math::AngleRad angle = ::atan2(curY, curX) - ::atan2(this->dragY, this->dragX);
+                math::AngleRad angle = ::atan2(curY, curX) - ::atan2(preY, preX);
 
                 // recaluclate the up vector
                 math::Vector<SceneSpaceType, 3> up
@@ -71,10 +72,6 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
 
                 // set the new up vector
                 beh->SetUpVector(up);
-
-                // keep on dragging
-                this->dragX = curX;
-                this->dragY = curY;
 
             } else {
                 // pitch & yaw
@@ -89,8 +86,8 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
                 // rotation. There the "roll"-effect is irrelevant but here
                 // the people are getting seasick.
 
-                math::Vector<SceneSpaceType, 3> rot = (beh->GetRightVector() * (curX - this->dragX)) 
-                    + (beh->GetUpVector() * (curY - this->dragY));
+                math::Vector<SceneSpaceType, 3> rot = (beh->GetRightVector() * (curX - preX)) 
+                    + (beh->GetUpVector() * (curY - preY));
 
                 math::AngleRad angle = rot.Normalise() / halfHeight * cam->GetHalfApertureAngleRad();
 
@@ -107,10 +104,6 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
 
                 math::Point<SceneSpaceType, 3> lookAt = pos + look;
                 beh->SetView(pos, lookAt, up);
-
-                // keep on dragging
-                this->dragX = curX;
-                this->dragY = curY;
             }
         }
     } else if (reason == REASON_BUTTON_UP) {

@@ -145,6 +145,13 @@ namespace math {
         }
 
         /**
+         * Answer the square of the length of the vector.
+         *
+         * @return The square of the length of the vector.
+         */
+        inline T SquareLength(void) const;
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand side operand.
@@ -462,6 +469,22 @@ namespace math {
         }
 
         return Sqrt(retval);
+    }
+
+
+    /*
+     * vislib::math::AbstractVectorImpl<T, D, S, C>::SquareLength
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C>
+    T AbstractVectorImpl<T, D, S, C>::SquareLength(void) const {
+        T retval = static_cast<T>(0);
+
+        for (unsigned int d = 0; d < D; d++) {
+            retval += Sqr(this->components[d]);
+        }
+
+        return retval;
     }
 
 
