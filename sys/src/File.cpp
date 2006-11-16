@@ -36,9 +36,9 @@
 /*
  * vislib::sys::File::AbsolutePath
  */
-StringA vislib::sys::File::AbsolutePath(const StringA& path) {
+vislib::StringA vislib::sys::File::AbsolutePath(const StringA& path) {
 #ifdef _WIN32
-    if (
+    //if (
     return path;
 
 #else /* _WIN32 */
@@ -58,7 +58,7 @@ StringA vislib::sys::File::AbsolutePath(const StringA& path) {
 /*
  * vislib::sys::File::AbsolutePath
  */
-StringW vislib::sys::File::AbsolutePath(const StringW& path) {
+vislib::StringW vislib::sys::File::AbsolutePath(const StringW& path) {
     return path;
 }
 

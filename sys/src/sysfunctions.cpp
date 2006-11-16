@@ -22,6 +22,7 @@
  */
 vislib::StringA vislib::sys::GetWorkingDirectoryA(void) {
 #ifdef _WIN32
+    return "";
 #else /* _WIN32 */
     const SIZE_T BUFFER_GROW = 32;
     SIZE_T bufferSize = 256;
@@ -51,6 +52,7 @@ vislib::StringA vislib::sys::GetWorkingDirectoryA(void) {
  */
 vislib::StringW vislib::sys::GetWorkingDirectoryW(void) {
 #ifdef _WIN32
+    return L"";
 #else /* _WIN32 */
     return StringW(GetWorkingDirectoryA());
 #endif /* _WIN32 */

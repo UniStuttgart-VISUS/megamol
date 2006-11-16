@@ -350,6 +350,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\sysfunctions.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SystemException.cpp"
 				>
 			</File>
@@ -445,6 +449,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SyncObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\sysfunctions.h"
 				>
 			</File>
 			<File
