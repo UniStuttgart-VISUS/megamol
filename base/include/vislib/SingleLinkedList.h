@@ -121,6 +121,14 @@ namespace vislib {
         void Remove(const T& item);
 
         /**
+         * Answer the number of items in the list.
+         * Remarks: linear runtime complexity
+         *
+         * @return Number of items in the list.
+         */
+        unsigned int Count(void);
+
+        /**
          * Returns an Iterator to the list, pointing before the first element.
          *
          * @return An iterator to the list.
@@ -204,6 +212,7 @@ namespace vislib {
         SingleLinkedList<T>::Iterator::operator=(
             const typename SingleLinkedList<T>::Iterator& rhs) {
         this->next = rhs.next;
+        return *this;
     }
 
 
@@ -332,6 +341,20 @@ namespace vislib {
         }
     }
 
+
+    /*
+     * 
+     */
+    template<class T>
+    unsigned int SingleLinkedList<T>::Count(void) {
+        unsigned int c = 0;
+        Item *i = this->first;
+        while (i) {
+            c++;
+            i = i->next;
+        }
+        return c;
+    }
 
     /*
      * SingleLinkedList<T>::GetIterator
