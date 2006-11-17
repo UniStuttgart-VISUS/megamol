@@ -310,6 +310,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Path.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\PerformanceCounter.cpp"
 				>
 			</File>
@@ -389,6 +393,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Mutex.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Path.h"
 				>
 			</File>
 			<File

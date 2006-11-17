@@ -42,8 +42,9 @@ int main(int argc, char **argv) {
 
     ::TestSysInfo();
     ::TestString();
-    ::TestFile();
-    ::TestProcess();
+    //::TestFile();
+    ::TestPath();
+//::TestProcess();
     //::TestVector();
     //::TestDimension();
     //::TestRectangle();

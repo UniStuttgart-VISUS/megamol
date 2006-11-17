@@ -12,6 +12,7 @@
 #include "vislib/BufferedFile.h"
 #include "vislib/error.h"
 #include "vislib/File.h"
+#include "vislib/Path.h"
 #include "vislib/IOException.h"
 #include "vislib/SystemMessage.h"
 #include "vislib/sysfunctions.h"
@@ -163,8 +164,6 @@ static void runTests(File& f1) {
 
 
 void TestFile(void) {
-    std::cout << "Working directory \"" << vislib::sys::GetWorkingDirectoryA() << "\"" << std::endl;
-
     try {
         ::TestBaseFile();
         ::TestBufferedFile();
@@ -189,4 +188,20 @@ void TestBufferedFile(void) {
     f1.SetBufferSize(8);
     std::cout << std::endl << "Tests for BufferedFile, buffer size 8" << std::endl;
     ::runTests(f1);
+}
+
+
+void TestPath(void) {
+    using namespace vislib;
+    using namespace vislib::sys;
+    using namespace std;
+    
+    try {
+        cout << "Working directory \"" << static_cast<const char *>(Path::GetCurrentDirectoryA()) << "\"" << endl;
+        AssertEqual("Canonicalise \"horst\\..\\hugo\"", Path::Canonicalise("horst\\..\\hugo"), StringA("\\hugo"));
+        AssertEqual("Canonicalise \"horst\\.\\hugo\"", Path::Canonicalise("horst\\.\\hugo"), StringA("horst\\hugo"));
+        cout << Path::Resolve("horst\\") << endl;
+    } catch (SystemException e) {
+        cout << e.GetMsgA() << endl;
+    }
 }

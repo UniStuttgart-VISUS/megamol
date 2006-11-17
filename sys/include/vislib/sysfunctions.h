@@ -19,30 +19,10 @@
 namespace vislib {
 namespace sys {
 
+
     /** Default maximal line size to be read by the read line functions. */
     const unsigned int defMaxLineSize = 1024;
 
-    /**
-     * Answer the current working directory.
-     *
-     * @return The current working directory.
-     *
-     * @throws SystemException If the directory cannot be retrieved
-     * @throws std::bad_alloc If there is not enough memory for storing the
-     *                        directory.
-     */
-    StringA GetWorkingDirectoryA(void);
-
-    /**
-     * Answer the current working directory.
-     *
-     * @return The current working directory.
-     *
-     * @throws SystemException If the directory cannot be retrieved
-     * @throws std::bad_alloc If there is not enough memory for storing the
-     *                        directory.
-     */
-    StringW GetWorkingDirectoryW(void);
 
     /**
      * Reads ansi characters from the file until the end of file, a line break 
@@ -56,11 +36,10 @@ namespace sys {
      *
      * @return The string holding the line read.
      *
-     * @throws IllegalParamException if input is NULL.
      * @throws IOException If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
-    StringA ReadLineFromFileA(File *input, unsigned int size = defMaxLineSize);
+    StringA ReadLineFromFileA(File& input, unsigned int size = defMaxLineSize);
 
     /**
      * Reads unicode characters from the file until the end of file, a line 
@@ -76,11 +55,10 @@ namespace sys {
      *
      * @return The string holding the line read.
      *
-     * @throws IllegalParamException if input is NULL.
      * @throws IOException If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
-    StringW ReadLineFromFileW(File *input, unsigned int size = defMaxLineSize);
+    StringW ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
 
 } /* end namespace sys */
 } /* end namespace vislib */

@@ -49,6 +49,16 @@ namespace vislib {
          */
         String(const Char *data);
 
+        /**
+         * Create a string with the first 'cnt' characters from 'data'. It is 
+         * safe to pass a zero-terminated string that is shorter than 'cnt'
+         * characters. No padding occurs in this case.
+         *
+         * @param data A string.
+         * @param cnt  The number of characters to read.
+         */
+        String(const Char *data, const Size& cnt);
+
 		/**
 		 * Craete a string with the initial data 'data'. This constructor 
 		 * performns the necessary conversions. It will only be available, if the
@@ -386,6 +396,24 @@ namespace vislib {
             this->data[0] = 0;
         }
     }
+
+
+    /*
+     * String<T>::String
+     */
+    template<class T> String<T>::String(const Char *data, const Size& cnt) 
+            : data(NULL) {
+        Size newLen = T::SafeStringLength(data);
+
+        if (cnt < newLen) {
+            newLen = cnt;
+        }
+            
+        this->data = new Char[newLen + 1];
+        ::memcpy(this->data, data, newLen * T::CharSize());
+        this->data[newLen] = 0;
+    }
+
 
 	/*
 	 * String<T>::String

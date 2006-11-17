@@ -35,11 +35,10 @@ vislib::sys::Process::Environment::Environment(const char *variable, ...)
     va_list argptr;
     SIZE_T dataSize = 0;
     const char *arg;
-    char *insPos = NULL;
     
     if (variable != NULL) {
-
 #ifdef _WIN32
+        char *insPos = NULL;
 
         /* Determine the required buffer size. */
         dataSize = ::strlen(variable) + 2;
@@ -70,31 +69,31 @@ vislib::sys::Process::Environment::Environment(const char *variable, ...)
         *insPos = '0';
 
 #else /* _WIN32 */
+        char **insPos = NULL;
 
         /* Count parameters. */
         dataSize = 1;
-        char **aryPos = NULL;
 
         va_start(argptr, variable);
-        while ((arg = va_arg(argptr, const char *)) != 0) {
+        while ((arg = va_arg(argptr, const char *)) != NULL) {
             dataSize++;
         }
         va_end(argptr);
 
         /* Allocate parameter array. */
-        this->data = aryPos = new char *[dataSize];
+        this->data = insPos = new char *[dataSize];
 
         /* Allocate variable memory and copy data. */
         va_start(argptr, variable);
-        while ((arg = va_arg(argptr, const char *)) != 0) {
-            insPos = new char[::strlen(arg) + 1];
-            ::strcpy(insPos, arg);
-            aryPos++;
+        while ((arg = va_arg(argptr, const char *)) != NULL) {
+            *insPos = new char[::strlen(arg) + 1];
+            ::strcpy(*insPos, arg);
+            insPos++;
         }
         va_end(argptr);
 
         /* Last array element must be a NULL pointer. */
-        *aryPos = NULL;
+        *insPos = NULL;
 
 #endif /* _WIN32 */
     }
@@ -107,13 +106,11 @@ vislib::sys::Process::Environment::Environment(const char *variable, ...)
 vislib::sys::Process::Environment::~Environment(void) {
 #ifndef _WIN32
     /* Linux must delete the dynamically allocated strings. */
-    if (this->data != NULL) {
-        char *cursor = *this->data;
+    char **cursor = this->data;
 
-        while (cursor != NULL) {
-            ARY_SAFE_DELETE(cursor);
-            cursor++;
-        }
+    while (cursor != NULL) {
+        ARY_SAFE_DELETE(*cursor);
+        cursor++;
     }
 #endif /* !_WIN32 */
 
