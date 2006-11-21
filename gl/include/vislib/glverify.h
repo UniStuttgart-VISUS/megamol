@@ -21,7 +21,7 @@
  *
  * @param call The OpenGL call to make.
  */
-#define GL_VERIFY(call) call; ASSERT(::glGetError() != GL_NO_ERROR);
+#define GL_VERIFY(call) call; ASSERT(::glGetError() == GL_NO_ERROR);
 
 
 /** 

@@ -98,7 +98,59 @@ namespace vislib {
          *
          * @return The pointer to the creating internal buffer.
          */
-        Char * AllocateBuffer(const Size newLen);
+        Char *AllocateBuffer(const Size newLen);
+
+        /**
+         * Concatenate this string and 'rhs'. This string will hold the result.
+         *
+         * @param rhs The right hand side operand.
+         */
+        inline void Append(const Char rhs) {
+            *this += rhs;
+        }
+
+        /**
+         * Concatenate this string and 'rhs'. This string will hold the result.
+         *
+         * @param rhs The right hand side operand.
+         */
+        inline void Append(const Char *rhs) {
+            *this += rhs;
+        }
+
+        /**
+         * Concatenate this string and 'rhs'. This string will hold the result.
+         *
+         * @param rhs The right hand side operand.
+         */
+        inline void Append(const String& rhs) {
+            *this += rhs.data;
+        }
+
+        /**
+         * Remove all characters from the string.
+         */
+        void Clear(void);
+
+        /**
+         * Answer whether this string ends with the character 'c'.
+         *
+         * @param c The charater to be searched at the end.
+         *
+         * @return true, if this string ends with 'c', false otherwise.
+         */
+        bool EndsWith(const Char c) const;
+
+        /**
+         * Answer whether this string ends with the string 'str'.
+         *
+         * Note that for 'str' being a NULL pointer, the result will be false.
+         *
+         * @param str The string to be searched at the end.
+         *
+         * @return true, if this string ends with 'str', false otherwise.
+         */
+        bool EndsWith(const Char *str) const;
 
         /**
          * Answer whether this string ends with the string 'str'.
@@ -107,7 +159,52 @@ namespace vislib {
          *
          * @return true, if this string ends with 'str', false otherwise.
          */
-        bool EndsWith(const String& str) const;
+        inline bool EndsWith(const String& str) const {
+            return this->EndsWith(str.data);
+        }
+
+        /**
+         * Answer the index of the first occurrence of 'c' in the string. The 
+         * search begins with the 'beginningAt'th character. If the character
+         * was not found, INVALID_POS is returned.
+         *
+         * @param c		      The character to be searched.
+         * @param beginningAt The index of the first character to be tested.
+         *
+         * @return The first occurrence of 'c' after or at 'beginningAt' in the
+         *         string or INVALID_POS, if the character is not in the string.
+         */
+        Size Find(const Char c, const Size beginningAt = 0) const;
+
+        // TODO documentation
+        Size Find(const Char *str, const Size beginningAt = 0) const;
+        inline Size Find(const String& str, const Size beginningAt = 0) const {
+            return this->Find(str.data, beginningAt);
+        }
+
+        /**
+         * Answer the index of the last occurrence of 'c' in the string.
+         *
+         * @param c           The character to be searched.
+         * @param beginningAt This is the index of the first character to be 
+         *                    tested (effectively the last position in the 
+         *                    string to be tested). INVALID_POS can be used to
+         *                    specify that the whole string is searched without
+         *                    querying the string for its length.
+         *
+         * @return The last occurrence of 'c' in the string or INVALID_POS, if 
+         *         the character is not in the string.
+         */
+        Size FindLast(const Char c, const Size beginningAt = INVALID_POS) const;
+
+        // TODO documentation
+        Size FindLast(const Char *str, 
+            const Size beginningAt = INVALID_POS) const;
+
+        inline Size FindLast(const String& str, 
+                const Size beginningAt = INVALID_POS) const {
+            return this->FindLast(str.data, beginningAt);
+        }
 
         /**
          * Prints into this string like sprintf.
@@ -125,19 +222,6 @@ namespace vislib {
         UINT32 HashCode(void) const;
 
         /**
-         * Answer the index of the first occurrence of 'c' in the string. The 
-         * search begins with the 'beginningAt'th character. If the character
-         * was not found, INVALID_POS is returned.
-         *
-         * @param c		      The character to be searched.
-         * @param beginningAt The index of the first character to be tested.
-         *
-         * @return The first occurrence of 'c' after or at 'beginningAt' in the
-         *         string or INVALID_POS, if the character is not in the string.
-         */
-        Size IndexOf(const Char c, const Size beginningAt = 0) const;
-
-        /**
          * Answer whether the string is empty.
          *
          * @return true, if this string is empty, false otherwise.
@@ -145,16 +229,6 @@ namespace vislib {
         inline bool IsEmpty(void) const {
             return (this->Length() < 1);
         }
-
-        /**
-         * Answer the index of the last occurrence of 'c' in the string.
-         *
-         * @param c The character to be searched.
-         *
-         * @return The last occurrence of 'c' in the string or INVALID_POS, if the
-         *         character is not in the string.
-         */
-        Size LastIndexOf(const Char c) const;
 
         /**
          * Answer the length of the string.
@@ -177,6 +251,58 @@ namespace vislib {
         }
 
         /**
+         * Concatenate 'rhs' and this string. This string will hold the result.
+         *
+         * @param rhs The string to be prepended.
+         */
+        void Prepend(const Char rhs);
+
+        /**
+         * Concatenate 'rhs' and this string. This string will hold the result.
+         *
+         * @param rhs The string to be prepended.
+         */
+        void Prepend(const Char *rhs);
+
+        /**
+         * Concatenate 'rhs' and this string. This string will hold the result.
+         *
+         * @param rhs The string to be prepended.
+         */
+        inline void Prepend(const String& rhs) {
+            this->Prepend(rhs.data);
+        }
+
+        /**
+         * Delete at most 'cnt' characters from this string, beginnin at 
+         * 'begin'. INVALID_POS for 'cnt' can be used to delete all characters
+         * after 'begin'.
+         *
+         * @param begin The index of the first character to be removed.
+         * @param cnt   The number of characters to be removed, INVALID_POS for
+         *              all.
+         */
+        void Remove(const Size begin, const Size cnt = INVALID_POS);
+
+        /**
+         * Remove all occurrences of 'str' from the string.
+         *
+         * @param str The substring to be removed.
+         */
+        inline void Remove(const Char *str) {
+            this->Replace(str, T::EMPTY_STRING);
+        }
+
+        /**
+         * Remove all occurrences of 'str' from the string.
+         *
+         * @param str The substring to be removed.
+         */
+        inline void Remove(const String& str) {
+            this->Replace(str.data, T::EMPTY_STRING);
+        }
+
+        /**
          * Replace all occurrences of 'oldChar' in the string with 'newChar'.
 		 *
 		 * @param oldChar The character that is to be replaced.
@@ -186,11 +312,47 @@ namespace vislib {
          */
         Size Replace(const Char oldChar, const Char newChar);
 
-        // TODO: Replace
-        ///**
-        // * Replace all occurrences of 'oldStr' in the string with 'newStr'.
-        // */
-        //void Replace(const String oldStr, const String newStr);
+        /**
+         * Replace all occurrences of 'oldStr' in the string with 'newStr'.
+         *
+         * @param oldStr The string to be replaced.
+         * @param newStr The replacement sequence.
+         *
+         * @return The number of replacements made.
+         */
+        Size Replace(const Char *oldStr, const Char *newStr);
+
+        /**
+         * Replace all occurrences of 'oldStr' in the string with 'newStr'.
+         *
+         * @param oldStr The string to be replaced.
+         * @param newStr The replacement sequence.
+         *
+         * @return The number of replacements made.
+         */
+        inline Size Replace(const String oldStr, const String newStr) {
+            return this->Replace(oldStr.data, newStr.data);
+        }
+
+        /**
+         * Answer whether this string starts with the character 'c'.
+         *
+         * @param c The character to be searched at the begin.
+         *
+         * @return true, if this string starts with 'c', false otherwise.
+         */
+        bool StartsWith(const Char c) const;
+
+        /**
+         * Answer whether this string starts with the string 'str'.
+         *
+         * Note that for 'str' being a NULL pointer, the result is always false.
+         *
+         * @param str The string to be searched at the begin.
+         *
+         * @return true, if this string starts with 'str', false otherwise.
+         */
+        bool StartsWith(const Char *str) const;
 
         /**
          * Answer whether this string starts with the string 'str'.
@@ -199,49 +361,64 @@ namespace vislib {
          *
          * @return true, if this string starts with 'str', false otherwise.
          */
-        bool StartsWith(const String& str) const;
+        inline bool StartsWith(const String& str) const {
+            return this->StartsWith(str.data);
+        }
 
-        // TODO: Substring
-        ///**
-        // * Answer the substring beginning at 'begin' and reaching to the end of
-        // * this string. If 'begin' is after the end of this string, an empty
-        // * string is returned.
-        // */
-        //String Substring(const Size begin) const;
+        /**
+         * Answer the substring beginning at 'begin' and reaching to the end of
+         * this string. If 'begin' is after the end of this string, an empty
+         * string is returned.
+         *
+         * @param begin The index of the first character of the substring.
+         *
+         * @return The substring beginning at 'begin'.
+         */
+        String Substring(const Size begin) const;
 
-        // TODO: Substring
-        ///**
-        // * Answer the substring beginning at 'begin' and having a length of at
-        // * most 'length' characters. If there are less than 'length' characters
-        // * between 'begin' and the end of this string, the substring to the end
-        // * is returned. If 'begin' is after the end of this string, an empty 
-        // * string is returned.
-        // */
-        //String Substring(const Size begin, const Size length) const;
+        /**
+         * Answer the substring beginning at 'begin' and having a length of at
+         * most 'length' characters. If there are less than 'length' characters
+         * between 'begin' and the end of this string, the substring to the end
+         * is returned. If 'begin' is after the end of this string, an empty 
+         * string is returned.
+         *
+         * @param begin  The index of the first character of the substring.
+         * @param length The length of the substring.
+         *
+         * @return The substring.
+         */
+        String Substring(const Size begin, const Size length) const;
 
-        // TODO: TrimBegin
-        ///**
-        // * Remove all characters that are in the string 'chars' from the start 
-        // * of this string. 'chars' must be zero-terminated.
-        // */
-        //void TrimBegin(const T *chars);
+        /**
+         * Remove all characters that are in the string 'chars' from the start 
+         * of this string. 'chars' must be zero-terminated.
+         *
+         * @param chars A string of characters to be removed from the begin of 
+         *              this string.
+         */
+        void TrimBegin(const Char *chars);
 
-        // TODO: TrimEnd
-        ///**
-        // * Remove all characters that are in the string 'chars' from the end
-        // * of this string. 'chars' must be zero-terminated.
-        // */
-        //void TrimEnd(const T *chars);
+        /**
+         * Remove all characters that are in the string 'chars' from the end
+         * of this string. 'chars' must be zero-terminated.
+         *
+         * @param chars A string of characters to be removed from the end of 
+         *              this string.
+         */
+        void TrimEnd(const Char *chars);
 
-        // TODO: Trim
-        ///**
-        // * Remove all characters that are in the string 'chars' from the start
-        // * and the end of this string. 'chars' must be zero-terminated.
-        // */
-        //inline void Trim(const T *chars) {
-        //    this->TrimBegin(chars);
-        //    this->TrimEnd(chars);
-        //}
+        /**
+         * Remove all characters that are in the string 'chars' from the start
+         * and the end of this string. 'chars' must be zero-terminated.
+         *
+         * @param chars A string of characters to be removed from the begin and 
+         *              end of this string.
+         */
+        inline void Trim(const Char *chars) {
+            this->TrimBegin(chars);
+            this->TrimEnd(chars);
+        }
 
         // TODO: ToLowerCase
         ///**
@@ -288,6 +465,14 @@ namespace vislib {
 		 */
 		template<class U> String& operator =(const String<U>& rhs);
 
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true, if 'rhs' and this string are equal, false otherwise.
+         */
+        bool operator ==(const Char *rhs) const;
 
         /**
          * Test for equality.
@@ -296,7 +481,9 @@ namespace vislib {
          *
          * @return true, if 'rhs' and this string are equal, false otherwise.
          */
-        bool operator ==(const String& rhs) const;
+        inline bool operator ==(const String& rhs) const {
+            return (*this == rhs.data);
+        }
 
         /**
          * Test for inequality.
@@ -317,14 +504,50 @@ namespace vislib {
          *
          * @return A new string that is this string with 'rhs' appended.
          */
-        String operator +(const String& rhs);
+        String operator +(const Char rhs);
+
+        /**
+         * Concatenate this string and 'rhs'.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return A new string that is this string with 'rhs' appended.
+         */
+        String operator +(const Char *rhs);
+
+        /**
+         * Concatenate this string and 'rhs'.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return A new string that is this string with 'rhs' appended.
+         */
+        inline String operator +(const String& rhs) {
+            return (*this + rhs.data);
+        }
 
         /**
          * Concatenate this string and 'rhs'. This string will hold the result.
          *
          * @param rhs The right hand side operand.
          */
-        void operator +=(const String& rhs);
+        void operator +=(const Char rhs);
+
+        /**
+         * Concatenate this string and 'rhs'. This string will hold the result.
+         *
+         * @param rhs The right hand side operand.
+         */
+        void operator +=(const Char *rhs);
+
+        /**
+         * Concatenate this string and 'rhs'. This string will hold the result.
+         *
+         * @param rhs The right hand side operand.
+         */
+        inline void operator +=(const String& rhs) {
+            *this += rhs.data;
+        }
 
         /**
          * Answer the 'i'th character in the string.
@@ -473,15 +696,34 @@ namespace vislib {
 
 
     /*
+     * String<T>::Clear
+     */
+    template<class T> void String<T>::Clear(void) {
+        delete[] this->data;
+        this->data = new Char[1];
+        *this->data = 0;
+    }
+
+
+    /*
      * String<T>::EndsWith
      */
-    template<class T> bool String<T>::EndsWith(const String& str) const {
-        Size len1 = this->Length();
-        Size len2 = str.Length();
+    template<class T> bool String<T>::EndsWith(const Char c) const {
+        Size len = this->Length();
+        return (len > 0) ? (this->data[len - 1] == c) : false;
+    }
 
-        if (len2 <= len1) {
+
+    /*
+     * String<T>::EndsWith
+     */
+    template<class T> bool String<T>::EndsWith(const Char *str) const {
+        Size len1 = this->Length();
+        Size len2 = T::SafeStringLength(str);
+
+        if ((str != NULL) && (len2 <= len1)) {
             for (Size i = (len1 - len2), j = 0; i < len1; i++, j++) {
-                if (this->data[i] != str.data[j]) {
+                if (this->data[i] != str[j]) {
                     return false;
                 }
             }
@@ -490,9 +732,123 @@ namespace vislib {
             return true;
 
         } else {
-            /* Cannot end with 'str', if shorter. */
+            /* Cannot end with 'str', if shorter or 'str' is invalid. */
             return false;
         }
+    }
+
+
+    /*
+     * String<T>::Find
+     */
+    template<class T> typename String<T>::Size String<T>::Find(const Char c,
+			const Size beginningAt) const {
+        Size len = this->Length();
+        
+        for (Size i = beginningAt; i < len; i++) {
+            if (this->data[i] == c) {
+                return static_cast<int>(i);
+            }
+        }
+        /* Nothing found. */
+
+        return INVALID_POS;
+    }
+
+
+    /*
+     * String<T>::Find
+     */
+    template<class T> 
+    typename String<T>::Size String<T>::Find(const Char *str, 
+            const Size beginningAt) const {
+        // TODO: Naive implementation, consider Rabin-Karp
+        Size strLen = T::SafeStringLength(str);
+        Size len = this->Length() - strLen;
+        Size j = 0;
+
+        if ((str == NULL) || (len - beginningAt < 0)) {
+            /*
+             * 'str' is not a valid string or 'str' is longer than search 
+             * range, and therecore cannot be contained in this string. 
+             */
+            return INVALID_POS;
+        }
+        
+        /* 
+         * Search the substring. Note: 'len' is the last possible starting 
+         * point for a substring match.
+         */
+        for (Size i = beginningAt; i <= len; i++) {
+            for (j = 0; (j < strLen) && (this->data[i + j] == str[j]); j++);
+
+            if (j == strLen) {
+                /* Full 'str' was found, so return. */
+                return i;
+            }
+        }
+
+        return INVALID_POS;
+    }
+
+
+    /*
+     * String<T>::FindLast
+     */
+    template<class T> typename String<T>::Size String<T>::FindLast(
+            const Char c, const Size beginningAt) const {
+        Size len = this->Length() - 1;
+
+        if ((beginningAt > INVALID_POS) && (beginningAt < len)) {
+            /* Valid begin is specified. */
+            len = beginningAt;
+        }
+
+        for (Size i = len; i >= 0; i--) {
+            if (this->data[i] == c) {
+                return static_cast<int>(i);
+            }
+        }
+        /* Nothing found. */
+
+        return INVALID_POS;
+    }
+
+
+    /*
+     * String<T>::FindLast
+     */
+    template<class T> 
+    typename String<T>::Size String<T>::FindLast(const Char *str, 
+            const Size beginningAt) const {
+        // TODO: Naive implementation, consider Rabin-Karp
+        Size strLen = T::SafeStringLength(str) - 1;
+        Size len = this->Length() - 1;
+        Size j = 0;
+
+        if ((str == NULL) || (len < strLen)) {
+            /*
+             * 'str' is not a valid string or it is a longer string, that cannot
+             * be contained in shorter one. 
+             */
+            return INVALID_POS;
+        }
+
+        if ((beginningAt > INVALID_POS) && (beginningAt < len)) {
+            /* Valid begin is specified. */
+            len = beginningAt;
+        }
+
+        for (Size i = len; i >= 0; i--) {
+            for (j = strLen; (j >= 0) && (this->data[i - strLen + j] 
+                    == str[j]); j--);
+
+            if (j == -1) {
+                return (i - strLen);
+            }
+        }
+
+        return INVALID_POS;
     }
 
 
@@ -537,36 +893,64 @@ namespace vislib {
 
 
     /*
-     * String<T>::IndexOf
+     * String<T>::Prepend
      */
-    template<class T> typename String<T>::Size String<T>::IndexOf(const Char c,
-			const Size beginningAt) const {
+    template<class T> void String<T>::Prepend(const Char rhs) {
         Size len = this->Length();
-        
-        for (Size i = beginningAt; i < len; i++) {
-            if (this->data[i] == c) {
-                return static_cast<int>(i);
-            }
-        }
-        /* Nothing found. */
+        Char *str = new Char[len + 2];
 
-        return INVALID_POS;
+        str[0] = rhs;
+        ::memcpy(str + 1, this->data, (len + 1) * T::CharSize());
+
+        delete[] this->data;
+        this->data = str;
     }
 
 
     /*
-     * String<T>::LastIndexOf
+     * String<T>::Prepend
      */
-    template<class T> typename String<T>::Size String<T>::LastIndexOf(
-            const Char c) const {
-        for (Size i = this->Length(); i >= 0; i--) {
-            if (this->data[i] == c) {
-                return static_cast<int>(i);
-            }
-        }
-        /* Nothing found. */
+    template<class T> void String<T>::Prepend(const Char *rhs) {
+        if (rhs != NULL) {
+            Size len1 = this->Length();
+            Size len2 = T::StringLength(rhs);
+            Char *str = new Char[len1 + len2 + 1];
 
-        return INVALID_POS;
+            ::memcpy(str, rhs, len2 * T::CharSize());
+            ::memcpy(str + len2, this->data, (len1 + 1) * T::CharSize());
+
+            delete[] this->data;
+            this->data = str;
+        }
+    }
+
+
+    /*
+     * String<T>::Remove
+     */
+    template<class T> void String<T>::Remove(const Size begin, const Size cnt) {
+        Size len = this->Length();
+        Char *str = NULL;
+
+        if (begin < len) {
+            if ((cnt != INVALID_POS) && (begin + cnt <= len)) {
+                /* Remove characters from the middle. */
+                str = new Char[len - cnt + 1];
+                ::memcpy(str, this->data, begin * sizeof(Char));
+                ::memcpy(str + begin, this->data + begin + cnt, 
+                    (len - begin - cnt + 1) * sizeof(Char));
+
+            } else {
+                /* Remove all characters beginning at 'begin'. */
+                str = new Char[begin + 1];
+                ::memcpy(str, this->data, begin * sizeof(Char));
+                str[begin] = 0;
+            }
+
+            /* Swap buffers. */
+            delete[] this->data;
+            this->data = str;
+        }
     }
 
 
@@ -590,15 +974,76 @@ namespace vislib {
 
 
     /*
+     * String<T>::Replace
+     */
+    template<class T> typename String<T>::Size String<T>::Replace(
+            const Char *oldStr, const Char *newStr) {
+        Size retval = 0;                            // Number of replacements.
+        Size oldLen = T::SafeStringLength(oldStr);  // Length of 'oldStr'.
+        Size newLen = T::SafeStringLength(newStr);  // Length of 'newStr'.
+        Size nextStart = 0;                         // Next search start.
+        Char *str = NULL;                   
+        Char *dst = NULL;
+        Char *src = NULL;
+
+        if (oldLen < 1) {
+            /* String to replace is empty, nothing to do. */
+            return 0;
+        }
+
+        /* Count number of replacements. */
+        while ((nextStart = this->Find(oldStr, nextStart)) != INVALID_POS) {
+            retval++;
+            nextStart += oldLen;
+        }
+
+        if (retval < 1) {
+            /* String to replace was not found, nothing to do. */
+            return 0;
+        }
+        /* Must replace at least one occurrence at this point. */
+
+        /* Copy the data into new buffer 'str'. */
+        str = new Char[this->Length() - retval * oldLen + retval * newLen + 1];
+
+        nextStart = 0;
+        src = this->data;
+        dst = str;
+        while ((nextStart = this->Find(oldStr, nextStart)) != INVALID_POS) {
+            while (src < this->data + nextStart) {
+                *dst++ = *src++;
+            }
+            ::memcpy(dst, newStr, newLen * sizeof(Char));
+            dst += newLen;
+            src += oldLen;
+            nextStart += oldLen;
+        }
+        while ((*dst++ = *src++) != 0);
+
+        delete[] this->data;
+        this->data = str;
+        return retval;
+    }
+
+
+    /*
      * String<T>::StartsWith
      */
-    template<class T> bool String<T>::StartsWith(const String& str) const {
-        Size len1 = this->Length();
-        Size len2 = str.Length();
+    template<class T> bool String<T>::StartsWith(const Char c) const {
+        return (this->data[0] == c);
+    }
 
-        if (len2 <= len1) {
+
+    /*
+     * String<T>::StartsWith
+     */
+    template<class T> bool String<T>::StartsWith(const Char *str) const {
+        Size len1 = this->Length();
+        Size len2 = T::SafeStringLength(str);
+
+        if ((str != NULL) && (len2 <= len1)) {
             for (Size i = 0; i < len2; i++) {
-                if (this->data[i] != str.data[i]) {
+                if (this->data[i] != str[i]) {
                     return false;
                 }
             }
@@ -607,8 +1052,110 @@ namespace vislib {
             return true;
 
         } else {
-            /* Cannot start with 'str', if shorter. */
+            /* Cannot start with 'str', if shorter or 'str' invalid. */
             return false;
+        }
+    }
+
+
+    /*
+     * String<T>::Substring
+     */
+    template<class T> String<T> String<T>::Substring(const Size begin) const {
+        Size len = this->Length();
+
+        if (begin >= len) {
+            return String();
+        } else {
+            return String(this->data + begin);
+        }
+    }
+
+
+    /*
+     * String<T>::Substring
+     */
+    template<class T> String<T> String<T>::Substring(const Size begin, 
+            const Size length) const {
+        Size len = this->Length();
+
+        if (begin >= len) {
+            return String();
+        } else {
+            return String(this->data + begin, length);
+        }
+    }
+
+
+    /*
+     * vislib::String<T>::TrimBegin
+     */
+    template<class T> void String<T>::TrimBegin(const Char *chars) {
+        const Char *c = NULL;
+        Char *s = NULL;
+        Size len = this->Length();
+        Size i = 0;
+
+        for (i = 0; i < len; i++) {
+
+            /* Check for any character in 'chars' to match. */
+            c = chars;
+            while (*c && (this->data[i] != *c)) {
+                c++;
+            }
+
+            if (*c == 0) {
+                /* First character not matching any in 'chars' found. */
+                break;
+            }
+        }
+
+        if (i > 0) {
+            /* Remove characters at begin. */
+            len -= i - 1;
+            s = new Char[len];
+
+            ::memcpy(s, this->data + i, len * sizeof(Char));
+
+            delete[] this->data;
+            this->data = s;
+        }
+    }
+
+
+    /*
+     * vislib::String<T>::TrimEnd
+     */
+    template<class T> void String<T>::TrimEnd(const Char *chars) {
+        const Char *c = NULL;
+        Char *s = NULL;
+        Size len = this->Length();
+        Size i = 0;
+
+        for (i = len - 1; i >= 0; i--) {
+
+            /* Check for any character in 'chars' to match. */
+            c = chars;
+            while (*c && (this->data[i] != *c)) {
+                c++;
+            }
+
+            if (*c == 0) {
+                /* First character not matching any in 'chars' found. */
+                break;
+            }
+        }
+
+        if (i < len - 1) {
+            /* Remove characters at end. */
+            len -= len - i - 1;
+            s = new Char[len + 1];
+
+            ::memcpy(s, this->data, len * sizeof(Char));
+            s[len] = 0;
+
+            delete[] this->data;
+            this->data = s;
         }
     }
 
@@ -669,50 +1216,99 @@ namespace vislib {
     /*
      * String<T>::operator ==
      */
-    template<class T> bool String<T>::operator ==(const String& rhs) const {
-        const Char *str1 = this->data;
-        const Char *str2 = rhs.data;
+    template<class T> bool String<T>::operator ==(const Char *rhs) const {
+        const Char *str = this->data;
 
-        while ((*str1 == *str2) && (*str1 != 0)) {
-            str1++;
-            str2++;
+        if (rhs == NULL) {
+            /* 
+             * NULL pointer can never be equal as we have at least the terminating 
+             * zero in our strings. 
+             */
+            return false;
+
+        } else {
+            while ((*str == *rhs) && (*str != 0)) {
+                str++;
+                rhs++;
+            }
+
+            return (*str == *rhs);
         }
-
-        return (*str1 == *str2);
     }
 
 
     /*
      * String<T>::operator +
      */
-    template<class T> String<T> String<T>::operator +(const String& rhs) {
-        Size len1 = this->Length();
-        Size len2 = rhs.Length();
+    template<class T> String<T> String<T>::operator +(const Char rhs) {
+        Size len = this->Length();
 
         String retval;
         delete[] retval.data;   // tricky!
-        retval.data = new Char[len1 + len2 + 1];
+        retval.data = new Char[len + 2];
 
-        ::memcpy(retval.data, this->data, len1 * T::CharSize());
-        ::memcpy(retval.data + len1, rhs.data, (len2 + 1) * T::CharSize());
+        ::memcpy(retval.data, this->data, len * T::CharSize());
+        retval.data[len] = rhs;
+        retval.data[len + 1] = 0;
 
         return retval;
     }
 
 
     /*
+     * String<T>::operator +
+     */
+    template<class T> String<T> String<T>::operator +(const Char *rhs) {
+        if (rhs != NULL) {
+            Size len1 = this->Length();
+            Size len2 = T::StringLength(rhs);
+
+            String retval;
+            delete[] retval.data;   // tricky!
+            retval.data = new Char[len1 + len2 + 1];
+
+            ::memcpy(retval.data, this->data, len1 * T::CharSize());
+            ::memcpy(retval.data + len1, rhs, (len2 + 1) * T::CharSize());
+
+            return retval;
+
+        } else {
+            return String(this->data);
+        }
+    }
+
+
+    /*
      * String<T>::operator +=
      */
-    template<class T> void String<T>::operator +=(const String& rhs) {
-        Size len1 = this->Length();
-        Size len2 = rhs.Length();
-        Char *str = new Char[len1 + len2 + 1];
+    template<class T> void String<T>::operator +=(const Char rhs) {
+        Size len = this->Length();
+        Char *str = new Char[len + 2];
 
-        ::memcpy(str, this->data, len1 * T::CharSize());
-        ::memcpy(str + len1, rhs.data, (len2 + 1) * T::CharSize());
+        ::memcpy(str, this->data, len * T::CharSize());
+        str[len] = rhs;
+        str[len + 1] = 0;
 
         delete[] this->data;
         this->data = str;
+    }
+
+
+    /*
+     * String<T>::operator +=
+     */
+    template<class T> void String<T>::operator +=(const Char *rhs) {
+        if (rhs != NULL) {
+            Size len1 = this->Length();
+            Size len2 = T::StringLength(rhs);
+            Char *str = new Char[len1 + len2 + 1];
+
+            ::memcpy(str, this->data, len1 * T::CharSize());
+            ::memcpy(str + len1, rhs, (len2 + 1) * T::CharSize());
+
+            delete[] this->data;
+            this->data = str;
+        }
     }
 
 
@@ -742,7 +1338,8 @@ namespace vislib {
                 static_cast<int>(this->Length() - 1), __FILE__, __LINE__);
         }
     }
-    
+
+ 
     /** Template instantiation for ANSI strings. */
     typedef String<CharTraitsA> StringA;
 

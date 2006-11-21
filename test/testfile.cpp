@@ -195,12 +195,33 @@ void TestPath(void) {
     using namespace vislib;
     using namespace vislib::sys;
     using namespace std;
-    
+
     try {
         cout << "Working directory \"" << static_cast<const char *>(Path::GetCurrentDirectoryA()) << "\"" << endl;
-        AssertEqual("Canonicalise \"horst\\..\\hugo\"", Path::Canonicalise("horst\\..\\hugo"), StringA("\\hugo"));
-        AssertEqual("Canonicalise \"horst\\.\\hugo\"", Path::Canonicalise("horst\\.\\hugo"), StringA("horst\\hugo"));
         cout << Path::Resolve("horst\\") << endl;
+
+#ifdef _WIN32
+        AssertEqual("Canonicalise \"horst\\..\\hugo\"", Path::Canonicalise("horst\\..\\hugo"), StringA("\\hugo"));
+        AssertEqual("Canonicalise \"\\horst\\..\\hugo\"", Path::Canonicalise("\\horst\\..\\hugo"), StringA("\\hugo"));
+        AssertEqual("Canonicalise \"\\..\\horst\\..\\hugo\"", Path::Canonicalise("\\..\\horst\\..\\hugo"), StringA("\\hugo"));
+        AssertEqual("Canonicalise \"\\..\\horst\\..\\..\\hugo\"", Path::Canonicalise("\\..\\horst\\..\\..\\hugo"), StringA("\\hugo"));
+        AssertEqual("Canonicalise \"horst\\.\\hugo\"", Path::Canonicalise("horst\\.\\hugo"), StringA("horst\\hugo"));
+        AssertEqual("Canonicalise \"horst\\\\hugo\"", Path::Canonicalise("horst\\\\hugo"), StringA("horst\\hugo"));
+        AssertEqual("Canonicalise \"horst\\\\\\hugo\"", Path::Canonicalise("horst\\\\\\hugo"), StringA("horst\\hugo"));
+        AssertEqual("Canonicalise \"\\horst\\hugo\"", Path::Canonicalise("\\horst\\hugo"), StringA("\\horst\\hugo"));
+        AssertEqual("Canonicalise \"\\\\horst\\hugo\"", Path::Canonicalise("\\\\horst\\hugo"), StringA("\\\\horst\\hugo"));
+        AssertEqual("Canonicalise \"\\\\\\horst\\hugo\"", Path::Canonicalise("\\\\\\horst\\hugo"), StringA("\\\\horst\\hugo"));
+#else /* _WIN32 */
+        AssertEqual("Canonicalise \"horst/../hugo\"", Path::Canonicalise("horst/../hugo"), StringA("/hugo"));
+        AssertEqual("Canonicalise \"/horst/../hugo\"", Path::Canonicalise("/horst/../hugo"), StringA("/hugo"));
+        AssertEqual("Canonicalise \"/../horst/../hugo\"", Path::Canonicalise("/../horst/../hugo"), StringA("/hugo"));
+        AssertEqual("Canonicalise \"/../horst/../../hugo\"", Path::Canonicalise("/../horst/../../hugo"), StringA("/hugo"));
+        AssertEqual("Canonicalise \"horst/./hugo\"", Path::Canonicalise("horst/./hugo"), StringA("horst/hugo"));
+        AssertEqual("Canonicalise \"horst//hugo\"", Path::Canonicalise("horst//hugo"), StringA("horst/hugo"));
+        AssertEqual("Canonicalise \"horst///hugo\"", Path::Canonicalise("horst///hugo"), StringA("horst/hugo"));
+
+#endif /* _WIN32 */
+        
     } catch (SystemException e) {
         cout << e.GetMsgA() << endl;
     }

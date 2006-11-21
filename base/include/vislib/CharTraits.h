@@ -157,7 +157,18 @@ namespace vislib {
                 "vislib::CharTraits<T>::CharTraits", __FILE__, __LINE__);
         }
 
+        /** Empty character sequence constant. */
+        static const Char EMPTY_STRING[];
+
 	}; /* end class CharTraits */
+
+
+    /*
+     * vislib::CharTraits<T>::EMPTY_STRING
+     */
+    template<class T> 
+    const typename CharTraits<T>::Char CharTraits<T>::EMPTY_STRING[]
+        = { static_cast<Char>(0) };
 
 
 	/**

@@ -95,7 +95,13 @@ namespace sys {
         static const char SEPARATOR_A;
 
         /** The Unicode path separator character. */
-        static const char SEPARATOR_W;
+        static const wchar_t SEPARATOR_W;
+
+        /** The ANSI path separator character as zero-terminated string. */
+        static const char SEPARATORSTR_A[];
+
+        /** The ANSI path separator character as zero-terminated string. */
+        static const wchar_t SEPARATORSTR_W[];
 
         /** Dtor. */
         ~Path(void);
@@ -104,7 +110,6 @@ namespace sys {
 
         /** Disallow instances. */
         Path(void);
-
     };
     
 } /* end namespace sys */
