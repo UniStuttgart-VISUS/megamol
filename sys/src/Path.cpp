@@ -156,6 +156,50 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
 
 
 /*
+ * vislib::sys::Path::Concatenate
+ */
+vislib::StringA vislib::sys::Path::Concatenate(const StringA& lhs,
+        const StringA& rhs, const bool canonicalise) {
+    StringA retval(lhs);
+
+    if (lhs.EndsWith(SEPARATOR_A) && rhs.StartsWith(SEPARATOR_A)) {
+        retval.Append(rhs.PeekBuffer() + 1);
+
+    } else if (!lhs.EndsWith(SEPARATOR_A) && !rhs.StartsWith(SEPARATOR_A)) {
+        retval.Append(SEPARATOR_A);
+        retval.Append(rhs);
+
+    } else {
+        retval.Append(rhs);
+    }
+
+    return canonicalise ? Path::Canonicalise(retval) : retval;
+}
+
+
+/*
+ * vislib::sys::Path::Concatenate
+ */
+vislib::StringW vislib::sys::Path::Concatenate(const StringW& lhs, 
+        const StringW& rhs, const bool canonicalise) {
+    StringW retval(lhs);
+
+    if (lhs.EndsWith(SEPARATOR_W) && rhs.StartsWith(SEPARATOR_W)) {
+        retval.Append(rhs.PeekBuffer() + 1);
+
+    } else if (!lhs.EndsWith(SEPARATOR_W) && !rhs.StartsWith(SEPARATOR_W)) {
+        retval.Append(SEPARATOR_W);
+        retval.Append(rhs);
+
+    } else {
+        retval.Append(rhs);
+    }
+
+    return canonicalise ? Path::Canonicalise(retval) : retval;
+}
+
+
+/*
  * vislib::sys::Path::GetCurrentDirectoryA
  */
 vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
@@ -220,29 +264,25 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
 
 
 /*
- * vislib::sys::Path::Resolve
+ * vislib::sys::Path::IsRelative
  */
-vislib::StringA vislib::sys::Path::Resolve(const StringA& path) {
+bool vislib::sys::Path::IsRelative(const StringA& path) {
 #ifdef _WIN32
-    return StringA(Resolve(static_cast<StringW>(path)));
-
+    return (::PathIsRelativeA(path.PeekBuffer()) != FALSE);
 #else /* _WIN32 */
-    if (path.IsEmpty()) {
-        /* Path is empty, i. e. return current working directory. */
-        return GetCurrentDirectoryA();
+    return !path.StartsWith(SEPARATOR_A);
+#endif /* _WIN32 */
+}
 
-    } else if (path[0] == SEPARATOR_A) {
-        /* Path is absolute, just return it. */
-        return path;
 
-    } else {
-        /*
-         * Concatenate current directory and relative path, and canonicalise
-         * the result.
-         */
-        return Canonicalise(GetCurrentDirectoryA() + SEPARATOR_A + path);
-    }
-
+/*
+ * vislib::sys::Path::IsRelative
+ */
+bool vislib::sys::Path::IsRelative(const StringW& path) {
+#ifdef _WIN32
+    return (::PathIsRelativeW(path.PeekBuffer()) != FALSE);
+#else /* _WIN32 */
+    return !path.StartsWith(SEPARATOR_W);
 #endif /* _WIN32 */
 }
 
@@ -250,35 +290,70 @@ vislib::StringA vislib::sys::Path::Resolve(const StringA& path) {
 /*
  * vislib::sys::Path::Resolve
  */
-vislib::StringW vislib::sys::Path::Resolve(const StringW& path) {
-#ifdef _WIN32
-    StringW retval;
-    wchar_t *p = retval.AllocateBuffer(MAX_PATH);
-    ::wcsncpy(p, path.PeekBuffer(), MAX_PATH); 
+vislib::StringA vislib::sys::Path::Resolve(const StringA& path) {
+    // TODO: Windows shell API resolve does not work in the expected
+    // way, so we use the same manual approach for Windows and Linux.
 
-    if (::PathCanonicalizeW(p, path) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    return retval;
-#else /* _WIN32 */
     if (path.IsEmpty()) {
         /* Path is empty, i. e. return current working directory. */
-        return GetCurrentDirectoryW();
+        return Path::GetCurrentDirectoryA();
 
-    } else if (path[0] == SEPARATOR_W) {
+    } else if (Path::IsAbsolute(path)) {
         /* Path is absolute, just return it. */
+#ifdef _WIN32
+        if ((path.Length() < 2) || ((path[1] != SEPARATOR_A) 
+                && (path[1] != ':'))) {
+            return Path::GetCurrentDirectoryA().Substring(0, 1) + ':' + path;
+        } else {
+            /* UNC path or begins with drive letter. */
+            return path;
+        }
+#else /* _WIN32 */
         return path;
+#endif /* _WIN32 */
 
     } else {
         /*
          * Concatenate current directory and relative path, and canonicalise
          * the result.
          */
-        return Canonicalise(GetCurrentDirectoryW() + SEPARATOR_W + path);
+        return Concatenate(Path::GetCurrentDirectoryA(), path, true);
     }
+}
 
+
+/*
+ * vislib::sys::Path::Resolve
+ */
+vislib::StringW vislib::sys::Path::Resolve(const StringW& path) {
+    // TODO: Windows shell API resolve does not work in the expected
+    // way, so we use the same manual approach for Windows and Linux.
+
+    if (path.IsEmpty()) {
+        /* Path is empty, i. e. return current working directory. */
+        return Path::GetCurrentDirectoryW();
+
+    } else if (Path::IsAbsolute(path)) {
+        /* Path is absolute, just return it. */
+#ifdef _WIN32
+        if ((path.Length() < 2) || ((path[1] != SEPARATOR_W) 
+                && (path[1] != L':'))) {
+            return Path::GetCurrentDirectoryW().Substring(0, 1) + L':' + path;
+        } else {
+            /* UNC path or begins with drive letter. */
+            return path;
+        }
+#else /* _WIN32 */
+        return path;
 #endif /* _WIN32 */
+
+    } else {
+        /*
+         * Concatenate current directory and relative path, and canonicalise
+         * the result.
+         */
+        return Concatenate(Path::GetCurrentDirectoryW(), path, true);
+    }
 }
 
 

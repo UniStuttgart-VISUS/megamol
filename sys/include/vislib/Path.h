@@ -30,6 +30,40 @@ namespace sys {
         static StringW Canonicalise(const StringW& path);
 
         /**
+         * Concatenate the paths 'lhs' and 'rhs'. The method ensures, that
+         * at a path separator is inserted, if necessary. If 'lhs' has a path
+         * separator at its end or 'rhs' has a path spearator at its begin, no
+         * spearator is inserted. You can also set 'canonicalise' true in order
+         * to remove unnecessary path separators already contained in 'lhs' or
+         * 'rhs'.
+         *
+         * @param lhs          The left hand side path.
+         * @param rhs          The right hand side path.
+         * @param canonicalise Canonicalise the path before returning it.
+         *
+         * @return The concatenated path.
+         */
+        static StringA Concatenate(const StringA& lhs, const StringA& rhs,
+            const bool canonicalise = false);
+
+        /**
+         * Concatenate the paths 'lhs' and 'rhs'. The method ensures, that
+         * at a path separator is inserted, if necessary. If 'lhs' has a path
+         * separator at its end or 'rhs' has a path spearator at its begin, no
+         * spearator is inserted. You can also set 'canonicalise' true in order
+         * to remove unnecessary path separators already contained in 'lhs' or
+         * 'rhs'.
+         *
+         * @param lhs          The left hand side path.
+         * @param rhs          The right hand side path.
+         * @param canonicalise Canonicalise the path before returning it.
+         *
+         * @return The concatenated path.
+         */
+        static StringW Concatenate(const StringW& lhs, const StringW& rhs,
+            const bool canonicalise = false);
+
+        /**
          * Answer the current working directory.
          *
          * @return The current working directory.
@@ -50,6 +84,46 @@ namespace sys {
          *                        directory.
          */
         static StringW GetCurrentDirectoryW(void);
+
+        /**
+         * Answer, whether 'path' is an absolute path.
+         *
+         * @param path The path to be tested.
+         *
+         * @return true, if 'path' is absolute, false otherwise.
+         */
+        inline static bool IsAbsolute(const StringA& path) {
+            return !Path::IsRelative(path);
+        }
+
+        /**
+         * Answer, whether 'path' is an absolute path.
+         *
+         * @param path The path to be tested.
+         *
+         * @return true, if 'path' is absolute, false otherwise.
+         */
+        inline static bool IsAbsolute(const StringW& path) {
+            return !Path::IsRelative(path);
+        }
+
+        /**
+         * Answer, whether 'path' is a relative path.
+         *
+         * @param path The path to be tested.
+         *
+         * @return true, if 'path' is relative, false otherwise.
+         */
+        static bool IsRelative(const StringA& path);
+
+        /**
+         * Answer, whether 'path' is a relative path.
+         *
+         * @param path The path to be tested.
+         *
+         * @return true, if 'path' is relative, false otherwise.
+         */
+        static bool IsRelative(const StringW& path);
 
         /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
