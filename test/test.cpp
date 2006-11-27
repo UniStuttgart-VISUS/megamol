@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     ::TestString();
     //::TestFile();
     ::TestPath();
-//::TestProcess();
+    ::TestProcess();
     //::TestVector();
     //::TestDimension();
     //::TestRectangle();

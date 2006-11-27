@@ -11,7 +11,12 @@
 #endif /* (_MSC_VER > 1000) */
 
 
-#include "vislib/RawStorage.h"
+#ifdef _WIN32 
+#include <windows.h>
+#else /* _WIN32 */
+#include <unistd.h>
+#endif /* _WIN32 */
+
 #include "vislib/memutils.h"
 #include "vislib/types.h"
 
@@ -127,7 +132,12 @@ namespace sys {
 
         void Create(const char *command, const char *arguments, 
             const Environment& environment = EMPTY_ENVIRONMENT, 
-            const char *workingDirectory = NULL); 
+            const char *currentDirectory = NULL); 
+
+        void Create(const char *command, const char *arguments,
+            const char *user, const char *password,
+            const Environment& environment = EMPTY_ENVIRONMENT,
+            const char *currentDirectory = NULL);
 
     private:
 
@@ -150,6 +160,12 @@ namespace sys {
          * @throws IllegalParamException If (this != &rhs).
          */
         Process& operator =(const Process& rhs);
+
+#ifdef _WIN32
+        HANDLE hProcess;
+#else /* _WIN32 */
+        pid_t pid;
+#endif /* _WIN32 */
 
     };
     

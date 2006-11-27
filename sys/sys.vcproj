@@ -302,11 +302,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ImpersonationContext.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\IOException.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\Mutex.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PAMException.cpp"
 				>
 			</File>
 			<File
@@ -388,11 +396,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\ImpersonationContext.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\IOException.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\vislib\Mutex.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\PAMException.h"
 				>
 			</File>
 			<File

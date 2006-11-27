@@ -9,14 +9,10 @@
 
 #include <cstdarg>
 
-#ifdef _WIN32 
-#include <windows.h>
-#else /* _WIN32 */
-#include <unistd.h>
-#endif /* _WIN32 */
-
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/Path.h"
+#include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -166,8 +162,70 @@ vislib::sys::Process::~Process(void) {
  * vislib::sys::Process::Create
  */
 void vislib::sys::Process::Create(const char *command, const char *arguments, 
-        const Environment& environment, const char *workingDirectory) {
-    static_cast<const void *>(environment);
+        const Environment& environment, const char *currentDirectory) {
+#ifdef _WIN32
+    StringA cmdLine("\"");
+    cmdLine += command;
+    cmdLine += "\" ";
+    cmdLine += arguments;
+
+    STARTUPINFOA si;
+    ::ZeroMemory(&si, sizeof(STARTUPINFOA));
+    si.cb = sizeof(STARTUPINFOA);
+
+    PROCESS_INFORMATION pi;
+    ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+    // TODO: Delete old process?
+
+    // TODO: must cast away constness of string for passing it to CreateProcess.
+    //if (::CreateProcessA(NULL, cmdLine.PeekBuffer(), NULL, NULL, FALSE, 0, 
+    //        static_cast<const void *>(environment), currentDirectory, &si, &pi) 
+    //        == FALSE) {
+    //    throw SystemException(__FILE__, __LINE__);
+    //}
+
+    this->hProcess = pi.hProcess;
+
+#else /* _WIN32 */
+    // TODO impl. missing
+    assert(false);
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::Create
+ */
+void vislib::sys::Process::Create(const char *command, const char *arguments,
+        const char *user, const char *password,
+        const Environment& environment, const char *currentDirectory) {
+#ifdef _WIN32
+    // TODO impl. missing
+    assert(false);
+#else /* _WIN32 */
+    StringA idQuery;
+    FILE *fp = NULL;
+    uid_t uid;
+
+    /* Retrieve the UID of the requested user. */
+    idQuery.Format("id -u %s");
+    if ((fp = ::popen(idQuery.PeekBuffer(), "r")) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if (::fscanf(fp, "%d", &uid) != 1) {
+        ::pclose(fp);
+        throw SystemException(__FILE__, __LINE__);
+    }
+    ::pclose(fp);
+    
+
+
+
+    // TODO impl. missing
+    assert(false);
+#endif /* _WIN32 */
 }
 
 
