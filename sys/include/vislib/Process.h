@@ -72,7 +72,7 @@ namespace sys {
              *
              * @return The environment data.
              */
-            inline operator const void *(void) const {
+            inline operator void *(void) const {
                 return this->IsEmpty() ? NULL : this->data;
             }
 #else /* _WIN32 */
@@ -82,9 +82,9 @@ namespace sys {
              *
              * @return The environment data.
              */
-            inline operator const char **(void) const {
+            inline operator char *const *(void) const {
                 return this->IsEmpty() ? NULL 
-                    : const_cast<const char **>(this->data);
+                    : const_cast<char *const *>(this->data);
             }
 #endif /* _WIN32 */
 
@@ -130,14 +130,21 @@ namespace sys {
         /** Dtor. */
         ~Process(void);
 
-        void Create(const char *command, const char *arguments, 
-            const Environment& environment = EMPTY_ENVIRONMENT, 
-            const char *currentDirectory = NULL); 
+        inline void Create(const char *command, const char *arguments[] = NULL, 
+                const Environment& environment = EMPTY_ENVIRONMENT, 
+                const char *currentDirectory = NULL) {
+            this->create(command, arguments, NULL, NULL, NULL, environment, 
+                currentDirectory);
 
-        void Create(const char *command, const char *arguments,
-            const char *user, const char *password,
-            const Environment& environment = EMPTY_ENVIRONMENT,
-            const char *currentDirectory = NULL);
+        }
+
+        inline void Create(const char *command, const char *arguments[],
+                const char *user, const char *domain, const char *password,
+                const Environment& environment = EMPTY_ENVIRONMENT,
+                const char *currentDirectory = NULL) {
+            this->create(command, arguments, user, domain, password, 
+                environment, currentDirectory);
+        }
 
     private:
 
@@ -149,6 +156,13 @@ namespace sys {
          * @throws UnsupportedOperationException Unconditionally.
          */
         Process(const Process& rhs);
+
+        // TODO: Must find a way to make Linux version fail, if exec in forked
+        // process fails.
+        void create(const char *command, const char *arguments[],
+            const char *user, const char *domain, const char *password,
+            const Environment& environment, const char *currentDirectory);
+
 
         /**
          * Forbidden assignment.

@@ -11,6 +11,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/ImpersonationContext.h"
 #include "vislib/Path.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -102,11 +103,13 @@ vislib::sys::Process::Environment::Environment(const char *variable, ...)
 vislib::sys::Process::Environment::~Environment(void) {
 #ifndef _WIN32
     /* Linux must delete the dynamically allocated strings. */
-    char **cursor = this->data;
+    if (this->data != NULL) {
+        char **cursor = this->data;
 
-    while (cursor != NULL) {
-        ARY_SAFE_DELETE(*cursor);
-        cursor++;
+        while (*cursor != NULL) {
+            ARY_SAFE_DELETE(*cursor);
+            cursor++;
+        }
     }
 #endif /* !_WIN32 */
 
@@ -159,15 +162,36 @@ vislib::sys::Process::~Process(void) {
 
 
 /*
- * vislib::sys::Process::Create
+ * vislib::sys::Process::Process
  */
-void vislib::sys::Process::Create(const char *command, const char *arguments, 
+vislib::sys::Process::Process(const Process& rhs) {
+    throw UnsupportedOperationException("Process", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::sys::Process::create
+ */
+void vislib::sys::Process::create(const char *command, const char *arguments[],
+        const char *user, const char *domain, const char *password,
         const Environment& environment, const char *currentDirectory) {
+    ASSERT(command != NULL);
+
 #ifdef _WIN32
+    const char **arg = arguments;
+    HANDLE hToken = NULL;
     StringA cmdLine("\"");
     cmdLine += command;
-    cmdLine += "\" ";
-    cmdLine += arguments;
+    cmdLine += "\"";
+
+    if (arg != NULL) {
+        cmdLine += " ";
+
+        while (*arg != NULL) {
+            cmdLine += *arg;
+            arg++;
+        }
+    }
 
     STARTUPINFOA si;
     ::ZeroMemory(&si, sizeof(STARTUPINFOA));
@@ -178,62 +202,70 @@ void vislib::sys::Process::Create(const char *command, const char *arguments,
 
     // TODO: Delete old process?
 
-    // TODO: must cast away constness of string for passing it to CreateProcess.
-    //if (::CreateProcessA(NULL, cmdLine.PeekBuffer(), NULL, NULL, FALSE, 0, 
-    //        static_cast<const void *>(environment), currentDirectory, &si, &pi) 
-    //        == FALSE) {
-    //    throw SystemException(__FILE__, __LINE__);
-    //}
+    if ((user != NULL) && (password != NULL)) {
+        if (::LogonUserA(user, domain, password, LOGON32_LOGON_INTERACTIVE, 
+                LOGON32_PROVIDER_DEFAULT, &hToken) == FALSE) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+
+        // TODO: hToken has insufficient permissions to spawn process.
+        if (::CreateProcessAsUserA(hToken, NULL, 
+                const_cast<char *>(cmdLine.PeekBuffer()), NULL, NULL, FALSE, 0,
+                static_cast<void *>(environment), currentDirectory, &si, &pi)
+                == FALSE) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+    } else {
+        if (::CreateProcessA(NULL, const_cast<char *>(cmdLine.PeekBuffer()), 
+                NULL, NULL, FALSE, 0, static_cast<void *>(environment),
+                currentDirectory, &si, &pi) == FALSE) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+    }
 
     this->hProcess = pi.hProcess;
 
 #else /* _WIN32 */
-    // TODO impl. missing
-    assert(false);
-#endif /* _WIN32 */
-}
+    StringA cmd = Path::Resolve(command);
+    ImpersonationContext ic;
+    pid_t pid;
 
-
-/*
- * vislib::sys::Process::Create
- */
-void vislib::sys::Process::Create(const char *command, const char *arguments,
-        const char *user, const char *password,
-        const Environment& environment, const char *currentDirectory) {
-#ifdef _WIN32
-    // TODO impl. missing
-    assert(false);
-#else /* _WIN32 */
-    StringA idQuery;
-    FILE *fp = NULL;
-    uid_t uid;
-
-    /* Retrieve the UID of the requested user. */
-    idQuery.Format("id -u %s");
-    if ((fp = ::popen(idQuery.PeekBuffer(), "r")) == NULL) {
+    pid = ::fork();
+    if (pid < 0) {
+        /* Process creating failed. */
         throw SystemException(__FILE__, __LINE__);
+
+    } else if (pid > 0) {
+        /*
+         * We are in the new process, impersonate as new user and spawn 
+         * process. 
+         */
+        if ((user != NULL) && (password != NULL)) {
+            ic.Impersonate(user, NULL, password);
+        }
+
+        /* Change to working directory, if specified. */
+        if (currentDirectory != NULL) {
+            if (::chdir(currentDirectory) != 0) {
+                throw SystemException(__FILE__, __LINE__);
+            }
+        }
+
+        if (environment.IsEmpty()) {
+            char *tmp[] = { const_cast<char *>(cmd.PeekBuffer()), NULL };
+            if (::execv(cmd.PeekBuffer(), tmp) != 0) {
+                throw SystemException(__FILE__, __LINE__);
+            }
+                
+        } else {
+            assert(false);
+            //if (::execve(cmd.PeekBuffer(), arguments, 
+            //        static_cast<char * const*>(environment)) != 0) {
+            //    throw SystemException(__FILE__, __LINE__);
+            //}
+        }
     }
-
-    if (::fscanf(fp, "%d", &uid) != 1) {
-        ::pclose(fp);
-        throw SystemException(__FILE__, __LINE__);
-    }
-    ::pclose(fp);
-    
-
-
-
-    // TODO impl. missing
-    assert(false);
 #endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::Process::Process
- */
-vislib::sys::Process::Process(const Process& rhs) {
-    throw UnsupportedOperationException("Process", __FILE__, __LINE__);
 }
 
 

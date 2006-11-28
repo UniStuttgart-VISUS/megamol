@@ -377,11 +377,12 @@ void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor,
     size_t cnt = 0;
     FILE *fp = NULL;
 
+    // TODO: Use some shell abstraction class instead of popen.
     if ((fp = ::popen("uname -r", "r")) == NULL) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    cnt = fread(buffer, 1, sizeof(buffer) - 1, fp);
+    cnt = ::fread(buffer, 1, sizeof(buffer) - 1, fp);
     ::pclose(fp);
 
     if (cnt == 0)  {

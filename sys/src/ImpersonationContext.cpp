@@ -40,9 +40,6 @@ vislib::sys::ImpersonationContext::~ImpersonationContext(void) {
     this->revert(true);
 }
 
-void Impersonate(void) {
-}
-
 
 /*
  * vislib::sys::ImpersonationContext::Impersonate
@@ -50,6 +47,8 @@ void Impersonate(void) {
 void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         const char *domain, const char *password) {
 #ifdef _WIN32
+    this->revert(false);
+
     if (::LogonUserA(username, domain, password, LOGON32_LOGON_INTERACTIVE,
             LOGON32_PROVIDER_DEFAULT, &this->hToken) == FALSE) {
         throw SystemException(__FILE__, __LINE__);
@@ -72,6 +71,7 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
     conv.conv = logonUserConversation;
     conv.appdata_ptr = const_cast<char *>(password);
 
+    // Note: It is an evil cheat to pretend being "login" ...
     if ((pamResult = ::pam_start("login", username, &conv, &this->hPAM))
             != PAM_SUCCESS) {
         throw PAMException(hPAM, pamResult, __FILE__, __LINE__);
@@ -169,6 +169,7 @@ int vislib::sys::ImpersonationContext::resolveUID(const char *username) {
     StringA idQuery;
     int retval = 0;
 
+    // TODO: Use some shell abstraction class instead of popen.
     idQuery.Format("id -u %s", username);
     if ((fp = ::popen(idQuery.PeekBuffer(), "r")) == NULL) {
         throw SystemException(__FILE__, __LINE__);

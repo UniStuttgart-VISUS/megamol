@@ -12,10 +12,12 @@
 #include <Shlwapi.h>
 #include <windows.h>
 #else /* _WIN32 */
+#include <climits>
 #include <unistd.h>
 #endif /* _WIN32 */
 
 #include "vislib/assert.h"
+#include "vislib/Console.h"
 #include "vislib/error.h"
 #include "vislib/memutils.h"
 #include "vislib/SystemException.h"
@@ -317,6 +319,39 @@ vislib::StringA vislib::sys::Path::Resolve(const StringA& path) {
          * Concatenate current directory and relative path, and canonicalise
          * the result.
          */
+#ifndef _WIN32
+        /* 
+         * Detect and expand shell commands first on Linux first. This is 
+         * required for spawing subprocesses in Process.cpp.
+         */
+        StringA out;
+        StringA query;
+
+        query.Format("which %s", path.PeekBuffer());
+        if (Console::Run(query.PeekBuffer(), &out) == 0) {
+            out.TrimEnd("\r\n");
+            return out;
+        }
+
+        //const int BUFFER_SIZE = PATH_MAX;
+        //char buffer[BUFFER_SIZE];
+        //int cnt = 0;
+        //FILE *fp = NULL;
+        //StringA whichQuery;
+
+        //// TODO: This is inherently unsafe and a really crazy idea ...
+        //whichQuery.Format("which %s", path.PeekBuffer());
+        //if ((fp = ::popen(whichQuery.PeekBuffer(), "r")) != NULL) {
+        //    cnt = ::fread(buffer, 1, BUFFER_SIZE - 1, fp);
+        //    buffer[cnt] = 0;
+        //    if (::pclose(fp) == 0) {
+        //        StringA retval(buffer);
+        //        retval.TrimEnd("\r\n");
+        //        return retval;
+        //    }
+        //}
+#endif /* !_WIN32 */
+
         return Concatenate(Path::GetCurrentDirectoryA(), path, true);
     }
 }

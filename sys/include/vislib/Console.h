@@ -11,6 +11,10 @@
 #endif /* (_MSC_VER > 1000) */
 
 
+#include "vislib/String.h"
+#include "vislib/types.h"
+
+
 namespace vislib {
 namespace sys {
 
@@ -22,23 +26,38 @@ namespace sys {
 
     public:
 
+        // TODO: documentation
+        // TODO: Windows implementation.
+        static int Run(const char *command, StringA *outStdOut = NULL, 
+            StringA *outStdErr = NULL);
+
         /**
-         * Returns the object of the current console.
+         * Write formatted text output to the standard output.
          *
-         * @return A reference to the console object.
+         * @param fmt The string to write, possibly containing printf-style
+         *            placeholders.
+         * @param ... Values for the placeholders.
          */
-        static Console& GetConsole(void);
+        // TODO: Should Write throw a system exception in case of an error?
+        // TODO: Should Write return a boolean to signal success?
+        static void Write(const char *fmt, ...);
+
+        /**
+         * Write a line of formatted text output to the standard output. The 
+         * linebreak will be added by the method.
+         *
+         * @param fmt The string to write, possibly containing printf-style
+         *            placeholders.
+         * @param ... Values for the placeholders.
+         */
+        static void WriteLine(const char *fmt, ...);
 
         /** Dtor. */
         ~Console(void);
 
-    protected:
-
     private:
 
-    public: // delete me
-
-        /** private Ctor. */
+        /** Disallow instances of this class. */
         Console(void);
 
     };
