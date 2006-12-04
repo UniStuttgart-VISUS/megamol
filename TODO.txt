@@ -2,9 +2,13 @@ String: Advanced manipulation
 Float16: Comparison.
 Thread: Exit code handling.
 File: I think, IsEOF is inherently unsafe on Linux.
-DynamicLinkLibrary: Error handling for Linux is probably to working.
+DynamicLinkLibrary: Error handling for Linux is probably not working.
 SystemMessage: Linux implementation for casts is possibly a problem.
 Thread: Linux members must possibly be protected by a mutex.
 graphics::BeholderDistZoom2D: Class should also be able to change camera parameters (near-clip, far-clip, focal distance).
     Implement Zooming-Speed-Attribute.
 BufferedFile: Tiny seeks (e.g. cur-1) should not perform a flush.
+Console: Windows implementation for Run. Currently not required as Windows has sufficient API for doing most things, but would be nice to have.
+Process: CreateProcessAsUser does not work under Windows
+Process: Must find a way to determine if exec succeeded in the forked process.
+String: Could use more efficient substring search.

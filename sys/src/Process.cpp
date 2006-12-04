@@ -11,6 +11,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/ImpersonationContext.h"
 #include "vislib/Path.h"
 #include "vislib/SystemException.h"
@@ -149,7 +150,11 @@ vislib::sys::Process::EMPTY_ENVIRONMENT(NULL);
  * vislib::sys::Process::Process
  */
 vislib::sys::Process::Process(void) {
-    // TODO: Implement
+#ifdef _WIN32
+    this->hProcess = NULL;
+#else /* _WIN32 */
+    this->pid = -1;
+#endif /* _WIN32 */
 }
 
 
@@ -183,7 +188,6 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     StringA cmdLine("\"");
     cmdLine += command;
     cmdLine += "\"";
-
     if (arg != NULL) {
         cmdLine += " ";
 
@@ -193,14 +197,18 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         }
     }
 
+    /* A process must not be started twice. */
+    if (this->hProcess != NULL) {
+        throw IllegalStateException("This process was already created.",
+            __FILE__, __LINE__);
+    }
+
     STARTUPINFOA si;
     ::ZeroMemory(&si, sizeof(STARTUPINFOA));
     si.cb = sizeof(STARTUPINFOA);
 
     PROCESS_INFORMATION pi;
     ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-
-    // TODO: Delete old process?
 
     if ((user != NULL) && (password != NULL)) {
         if (::LogonUserA(user, domain, password, LOGON32_LOGON_INTERACTIVE, 
@@ -223,12 +231,19 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         }
     }
 
+    ::CloseHandle(pi.hThread);
     this->hProcess = pi.hProcess;
 
 #else /* _WIN32 */
     StringA cmd = Path::Resolve(command);
     ImpersonationContext ic;
     pid_t pid;
+
+    /* A process must not be started twice. */
+    if (this->pid >= 0) {
+        throw IllegalStateException("This process was already created.",
+            __FILE__, __LINE__);
+    }
 
     pid = ::fork();
     if (pid < 0) {

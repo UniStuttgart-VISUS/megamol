@@ -176,8 +176,30 @@ namespace vislib {
          */
         Size Find(const Char c, const Size beginningAt = 0) const;
 
-        // TODO documentation
+        /**
+         * Answer the index of the first occurrence of the string 'str' at or
+         * after the 'beginningAt'th character. If the string was not found, 
+         * INVALID_POS is returned.
+         *
+         * @param str         The string to be searched.
+         * @param beginningAt The index of the first character to be tested.
+         *
+         * @return The index of the first occurrence of 'str' at or after
+         *         'beginningAt' or INVALID_POS, if 'str' was not found.
+         */
         Size Find(const Char *str, const Size beginningAt = 0) const;
+
+        /**
+         * Answer the index of the first occurrence of the string 'str' at or
+         * after the 'beginningAt'th character. If the string was not found, 
+         * INVALID_POS is returned.
+         *
+         * @param str         The string to be searched.
+         * @param beginningAt The index of the first character to be tested.
+         *
+         * @return The index of the first occurrence of 'str' at or after
+         *         'beginningAt' or INVALID_POS, if 'str' was not found.
+         */
         inline Size Find(const String& str, const Size beginningAt = 0) const {
             return this->Find(str.data, beginningAt);
         }
@@ -197,10 +219,39 @@ namespace vislib {
          */
         Size FindLast(const Char c, const Size beginningAt = INVALID_POS) const;
 
-        // TODO documentation
+        /**
+         * Answer the index of the last occurrence of 'str' in the string 
+         * starting at most at 'beginningAt'. Setting 'beginningAt' to 
+         * INVALID_POS actually finds the last occurrence.
+         *
+         * @param str         The string to be searched.
+         * @param beginningAt This is the index of the first character to be 
+         *                    tested (effectively the last position in the 
+         *                    string to be tested). INVALID_POS can be used to
+         *                    specify that the whole string is searched without
+         *                    querying the string for its length.
+         *
+         * @return The begin of the last occurrence of 'str' in the string or
+         *         INVALID_POS, if 'str' was not found.
+         */
         Size FindLast(const Char *str, 
             const Size beginningAt = INVALID_POS) const;
 
+        /**
+         * Answer the index of the last occurrence of 'str' in the string 
+         * starting at most at 'beginningAt'. Setting 'beginningAt' to 
+         * INVALID_POS actually finds the last occurrence.
+         *
+         * @param str         The string to be searched.
+         * @param beginningAt This is the index of the first character to be 
+         *                    tested (effectively the last position in the 
+         *                    string to be tested). INVALID_POS can be used to
+         *                    specify that the whole string is searched without
+         *                    querying the string for its length.
+         *
+         * @return The begin of the last occurrence of 'str' in the string or
+         *         INVALID_POS, if 'str' was not found.
+         */
         inline Size FindLast(const String& str, 
                 const Size beginningAt = INVALID_POS) const {
             return this->FindLast(str.data, beginningAt);

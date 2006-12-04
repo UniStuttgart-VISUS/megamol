@@ -4,7 +4,6 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-
 #include "vislib/Console.h"
 
 #include <cstdarg>
@@ -74,6 +73,9 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
     assert(false);
     return -1;
 #else /* _WIN32 */
+    // TODO: This whole thing is an extremely large crowbar. I think it is
+    // inherently unsafe to read the program output in the current manner.
+
     pid_t pid;                      // PID of child process executing 'command'.
     int stdErrPipe[2];              // Pipe descriptors for stderr redirect.
     int stdOutPipe[2];              // Pipe descriptors for stdout redirect.

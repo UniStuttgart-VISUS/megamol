@@ -32,6 +32,17 @@ namespace sys {
 
     public:
 
+        /**
+         * This class provides a platform independent way of specifying the 
+         * environment for a new process. It accepts an arbitrary number of
+         * "variable=value" pairs in its constructor and builds a system 
+         * dependent input for the process creation. The class can be casted
+         * to the system dependent environment format.
+         *
+         * The default constructor creates an empty environment which implies
+         * that a newly created process inherits the environment of the 
+         * calling process.
+         */
         class Environment {
 
         public:
