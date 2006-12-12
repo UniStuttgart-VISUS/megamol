@@ -357,6 +357,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ShallowMatrix.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ShallowPlane.cpp"
 				>
 			</File>
@@ -464,6 +468,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Rectangle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowMatrix.h"
 				>
 			</File>
 			<File

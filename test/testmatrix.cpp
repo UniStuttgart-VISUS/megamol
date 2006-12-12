@@ -8,6 +8,8 @@
 
 #include "testhelper.h"
 
+#include "vislib/Quaternion.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/Matrix.h"
 #include "vislib/Matrix4.h"
 
@@ -207,5 +209,29 @@ void TestMatrix(void) {
     
     m4 = m4 * m2;
     ::AssertTrue("m * m^-1 = id", m4.IsIdentity());
+
+
+    Quaternion<double> q1(1.0, Vector<double, 3>(1.0, 0.0, 0.0));
+    Matrix4<double, COLUMN_MAJOR> rm1(q1);
+
+    ::AssertNearlyEqual("Rotation from quaterion @ 0, 0.", rm1.GetAt(0, 0), 1.0);
+    ::AssertNearlyEqual("Rotation from quaterion @ 1, 0.", rm1.GetAt(1, 0), 0.0);
+    ::AssertNearlyEqual("Rotation from quaterion @ 2, 0.", rm1.GetAt(2, 0), 0.0);
+    ::AssertNearlyEqual("Rotation from quaterion @ 3, 0.", rm1.GetAt(3, 0), 0.0);
+
+    ::AssertNearlyEqual("Rotation from quaterion @ 0, 1.", rm1.GetAt(0, 1), 0.0);
+    ::AssertNearlyEqual<double>("Rotation from quaterion @ 1, 1.", rm1.GetAt(1, 1), cos(1.0));
+    ::AssertNearlyEqual<double>("Rotation from quaterion @ 2, 1.", rm1.GetAt(2, 1), sin(1.0));
+    ::AssertNearlyEqual("Rotation from quaterion @ 3, 1.", rm1.GetAt(3, 1), 0.0);
+
+    ::AssertNearlyEqual("Rotation from quaterion @ 0, 2.", rm1.GetAt(0, 2), 0.0);
+    ::AssertNearlyEqual<double>("Rotation from quaterion @ 1, 2.", rm1.GetAt(1, 2), -sin(1.0));
+    ::AssertNearlyEqual<double>("Rotation from quaterion @ 2, 2.", rm1.GetAt(2, 2), cos(1.0));v
+    ::AssertNearlyEqual("Rotation from quaterion @ 3, 2.", rm1.GetAt(3, 2), 0.0);
+
+    ::AssertNearlyEqual("Rotation from quaterion @ 0, 3.", rm1.GetAt(0, 3), 0.0);
+    ::AssertNearlyEqual("Rotation from quaterion @ 1, 3.", rm1.GetAt(1, 3), 0.0);
+    ::AssertNearlyEqual("Rotation from quaterion @ 2, 3.", rm1.GetAt(2, 3), 0.0);
+    ::AssertNearlyEqual("Rotation from quaterion @ 3, 3.", rm1.GetAt(3, 3), 1.0);
 
 }

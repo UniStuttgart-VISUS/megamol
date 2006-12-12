@@ -92,11 +92,33 @@ namespace math {
          * @return A reference to 'row', 'col'.
          *
          * @throws OutOfRangeException If 'row' and 'col' does not designate a 
-         *         valid matrix component within [0, D[.
+         *                             valid matrix component within [0, D[.
          */
         inline T& GetAt(const int row, const int col) {
             return (*this)(row, col);
         }
+
+        /**
+         * Answer the 'col'th column vector.
+         *
+         * @param col The index of the column within [0, D[.
+         *
+         * @return The requested vector.
+         *
+         * @throws OutOfRangeException If 'col' is not within [0, D[.
+         */
+        Vector<T, D> GetColumn(const int col) const;
+
+        /**
+         * Answer the 'row'th row vector.
+         *
+         * @param row The index of the row within [0, D[.
+         *
+         * @return The requested vector.
+         *
+         * @throws OutOfRangeException If 'row' is not within [0, D[.
+         */
+        Vector<T, D> GetRow(const int row) const;
 
         /** 
          * Inverts the matrix.
@@ -172,6 +194,13 @@ namespace math {
          * Make this matrix a null matrix.
          */
         void SetNull(void);
+
+        /**
+         * Answer the trace (sum over the diagonal) of the matrix.
+         *
+         * @return The trace of the matrix.
+         */
+        T Trace(void) const;
 
         /**
          * Transposes the matrix.
@@ -532,6 +561,40 @@ namespace math {
 
 
     /*
+     * AbstractMatrixImpl<T, D, L, S, C>::GetColumn
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+    Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::GetColumn(
+            const int col) const {
+        Vector<T, D> retval;
+
+        for (unsigned int r = 0; r < D; r++) {
+            retval[r] = this->components[indexOf(r, col)];
+        }
+
+        return retval;
+    }
+
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::GetRow
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+    Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::GetRow(
+            const int row) const {
+        Vector<T, D> retval;
+
+        for (unsigned int c = 0; c < D; c++) {
+            retval[c] = this->components[indexOf(row, c)];
+        }
+
+        return retval;
+    }
+
+
+    /*
      * AbstractMatrixImpl<T, D, L, S, C>::Invert
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
@@ -713,6 +776,22 @@ namespace math {
         for (unsigned int i = 0; i < CNT_COMPONENTS; i++) {
             this->components[i] = static_cast<T>(0);
         }
+    }
+
+
+    /*
+     * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::Trace
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+    T AbstractMatrixImpl<T, D, L, S, C>::Trace(void) const {
+        T retval = static_cast<T>(0);
+
+        for (unsigned int i = 0; i < D; i++) {
+            retval += this->components[indexOf(i, i)];
+        }
+
+        return retval;
     }
 
 

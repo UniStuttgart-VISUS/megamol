@@ -1,11 +1,11 @@
 /*
- * Matrix.h
+ * ShallowMatrix.h
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MATRIX_H_INCLUDED
-#define VISLIB_MATRIX_H_INCLUDED
+#ifndef VISLIB_SHALLOWMATRIX_H_INCLUDED
+#define VISLIB_SHALLOWMATRIX_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -20,61 +20,43 @@ namespace math {
 
 
     /**
-     * This class implements matrices that use their own memory on the stack
-     * to store their components.
+     * This specialisation implements a "shallow matrix", i. e. a matrix object
+     * that does not own the memory of its components. You can use this class
+     * e. g. to reinterpret memory received over a network as a matrix without
+     * copying the data. You are responsible for providing the data memory as
+     * long as the object lives. If you just want to have a easy-to-use matrix 
+     * that manages its memory itself, consider using the Matrix class.
      */
     template<class T, unsigned int D, MatrixLayout L> 
-    class Matrix : public AbstractMatrix<T, D, L, T[D * D]> {
+    class ShallowMatrix : public AbstractMatrix<T, D, L, T *> {
 
     public:
 
-        /** 
-         * Create the identity matrix.
-         */
-        inline Matrix(void) : Super() {
-            this->SetIdentity();
-        }
-
         /**
-         * Create which has the same value for all components.
+         * Create a new matrix initialised using 'components' as data. The
+         * matrix will operate on these data. The caller is responsible that
+         * the memory designated by 'components' lives as long as the object
+         * and all its aliases exist.
          *
-         * @param value The initial value of all components.
+         * @param components The initial matrix memory. This must not be a NULL
+         *                   pointer.
          */
-        Matrix(const T& value);
-
-        /**
-         * Create a matrix using the specified components.
-         *
-         * @param components (D * D) components of the matrix. This must not be
-         *                   NULL and according to the matrix layout L.
-         */
-        inline Matrix(const T *components) : Super() {
+        explicit inline ShallowMatrix(T *components) {
             ASSERT(components != NULL);
-            ::memcpy(this->components, component, CNT_COMPONENTS * sizeof(T));
+            this->components = components;
         }
 
         /**
-         * Clone 'rhs'.
+         * Clone 'rhs'. This operation will create an alias of 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        inline Matrix(const Matrix& rhs) : Super() {
-            ::memcpy(this->components, rhs.component, 
-                CNT_COMPONENTS * sizeof(T));
-        }
-
-        /**
-         * Clone 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
-        inline Matrix(const AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) : Super() {
-            this->assign(rhs);
+        inline ShallowMatrix(const ShallowMatrix& rhs) {
+            this->components = rhs.components;
         }
 
         /** Dtor. */
-        ~Matrix(void);
+        ~ShallowMatrix(void);
 
         /**
          * Assignment operator.
@@ -85,7 +67,7 @@ namespace math {
          *
          * @return *this.
          */
-        inline Matrix& operator =(const Matrix& rhs) {
+        inline ShallowMatrix& operator =(const ShallowMatrix& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -110,39 +92,34 @@ namespace math {
          * @return *this
          */
         template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
-        inline Matrix& operator =(const AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) {
+        inline ShallowMatrix& operator =(
+                const AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
 
+
     protected:
 
         /** A typedef for the super class. */
-        typedef AbstractMatrix<T, D, L, T[D * D]> Super;
+        typedef AbstractMatrix<T, D, L, T *> Super;
+
+        /** 
+         * Forbidden default ctor. 
+         */
+        inline ShallowMatrix(void) {}
 
     };
 
-
     /*
-     * vislib::math::Matrix<T, D, L>::Matrix
+     * vislib::math::ShallowMatrix<T, D, L>::~ShallowMatrix
      */
     template<class T, unsigned int D, MatrixLayout L>
-    Matrix<T, D, L>::Matrix(const T& value) {
-        for (unsigned int i = 0; i < D; i++) {
-            this->components[i] = value;
-        }
-    }
-
-
-    /*
-     * vislib::math::Matrix<T, D, L>::~Matrix
-     */
-    template<class T, unsigned int D, MatrixLayout L>
-    Matrix<T, D, L>::~Matrix(void) {
+    ShallowMatrix<T, D, L>::~ShallowMatrix(void) {
     }
     
 } /* end namespace math */
 } /* end namespace vislib */
 
-#endif /* VISLIB_MATRIX_H_INCLUDED */
+#endif /* VISLIB_SHALLOWMATRIX_H_INCLUDED */
 

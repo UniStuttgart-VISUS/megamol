@@ -64,7 +64,7 @@ namespace math {
         /**
          * Construct a quaternion from an angle and a rotation axis.
          *
-         * @param angle The rotation angle.
+         * @param angle The rotation angle in radians.
          * @param axis  The rotation axis.
          */
         template<class Tp, class Sp>

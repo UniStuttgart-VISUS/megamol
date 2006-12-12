@@ -40,6 +40,13 @@ namespace math {
         inline Matrix4(const T *components) : Super(components) {}
 
         /**
+         * Create which has the same value for all components.
+         *
+         * @param value The initial value of all components.
+         */
+        explicit inline Matrix4(const T& value) : Super(value) {}
+
+        /**
          * Create a matrix using the specified components. Note, that the first
          * number of the component is the row, the second the column.
          *
@@ -80,6 +87,20 @@ namespace math {
         template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
         inline Matrix4(const AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) 
             : Super(rhs) {}
+
+        /**
+         * Create a matrix that represents the rotation of the quaternion
+         * 'rhs'.
+         *
+         * @param rhs The quaterion to be converted.
+         */
+        template<class Tp, class Sp>
+        explicit inline Matrix4(const AbstractQuaternion<Tp, Sp>& rhs) {
+            // Implementation note: No superclass ctor called
+            // Implementation note: quaternion assign does not check for
+            // self assignment, so this works here.
+            AbstractMatrix<T, 4, L, T[4 * 4]>::operator =(rhs);
+        }
 
         /** Dtor. */
         ~Matrix4(void);
@@ -122,6 +143,7 @@ namespace math {
             Super::operator =(rhs);
             return *this;
         }
+
 
     protected:
 

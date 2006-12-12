@@ -47,7 +47,7 @@ namespace math {
          * Answer the angle and the axis of the rotation that is 
          * represented by this quaternion. 
          *
-         * @param outAngle Receives the angle. 
+         * @param outAngle Receives the angle in radians. 
          * @param outAxis  Receives the vector representing the rotation
          *                 axis. The vector is guaranteed to be normalised.
          */
@@ -663,30 +663,6 @@ namespace math {
         return ((2.0f * ((u.Dot(rhs) * u) + (this->W() * u.Cross(rhs))))
             + ((Sqr(this->W()) - u.Dot(u)) * rhs));
     }
-
-
-    //template<class T> Quaternion<T>::operator Matrix3x3(void) {
-    //    Quaternion q = this->Normalised();
-    //    return Matrix4x4(Sqr(q.comp[3]) + Sqr(q.comp[0]) - Sqr(q.comp[1]) 
-    //        - Sqr(q.comp[2]), 
-    //        2.0f * q.comp[0] * q.comp[1] - 2.0f * q.comp[3] 
-    //        * q.comp[2], 
-    //        2.0f * q.comp[3] * q.comp[1] + 2.0f * q.comp[0] 
-    //        * q.comp[2], 
-    //        0.0f,
-    //
-    //        2.0f * q.comp[3] * q.comp[2] + 2.0f * q.comp[0] * q.comp[1],
-    //        Sqr(q.comp[3]) - Sqr(q.comp[0]) + Sqr(q.comp[1]) - Sqr(q.comp[2]),
-    //        2.0f * q.comp[1] * q.comp[2] - 2.0f * q.comp[3] * q.comp[0],
-    //        0.0f,
-    //
-    //        2.0f * q.comp[0] * q.comp[2] - 2.0f * q.comp[3] * q.comp[1],
-    //        2.0f * q.comp[3] * q.comp[0] - 2.0f * q.comp[1] * q.comp[2],
-    //        Sqr(q.comp[3]) - Sqr(q.comp[0]) - Sqr(q.comp[1]) + Sqr(q.comp[2]),
-    //        0.0f,
-    //
-    //        0.0f, 0.0f, 0.0f, 1.0f);
-    //}
 
 
     /*
