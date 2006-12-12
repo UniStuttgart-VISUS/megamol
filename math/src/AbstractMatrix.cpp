@@ -9,16 +9,5 @@
 
 
 /*
- * vislib::math::AbstractMatrix::AbstractMatrix
+ * This file is intentionally empty.
  */
-vislib::math::AbstractMatrix::AbstractMatrix(void) {
-    // TODO: Implement
-}
-
-
-/*
- * vislib::math::AbstractMatrix::~AbstractMatrix
- */
-vislib::math::AbstractMatrix::~AbstractMatrix(void) {
-    // TODO: Implement
-}

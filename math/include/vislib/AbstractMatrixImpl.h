@@ -605,19 +605,19 @@ namespace math {
         bool error = false;     // Error flag.
         double f;               // Multiplication factor.
         double max;             // Row pivotising.
-        int pRow;               // Pivot row.
+        unsigned int pRow;      // Pivot row.
         bool pivot = true;
-        int s;                  // Current eliminination step.
+        unsigned int s;         // Current eliminination step.
 
         a = new double[D * 2 * D];
         
         /* Create double precision matrix and add identity at the right. */
-        for (int r = 0; r < D; r++) {
-            for (int c = 0; c < D; c++) {
+        for (unsigned int r = 0; r < D; r++) {
+            for (unsigned int c = 0; c < D; c++) {
                 A(r, c) = static_cast<double>(this->components[indexOf(r, c)]);
             }
 
-            for (int c = 0; c < D; c++) {
+            for (unsigned int c = 0; c < D; c++) {
                 A(r, c + D) = (r == c) ? 1.0 : 0.0;
             }
         }
@@ -631,7 +631,7 @@ namespace math {
 
             if (pivot) {
                 pRow = s; 
-                for (int r = s + 1; r < D; r++) {
+                for (unsigned int r = s + 1; r < D; r++) {
                     if (::fabs(A(r, s)) > max) {
                         max = ::fabs(A(r, s)) ;
                         pRow = r;
@@ -648,7 +648,7 @@ namespace math {
                     // if necessary, exchange the row
                     double h;
 
-                    for (int c = s ; c < 2 * D; c++) {
+                    for (unsigned int c = s ; c < 2 * D; c++) {
                         h = A(s, c);
                         A(s, c) = A(pRow, c);
                         A(pRow, c) = h;
@@ -658,14 +658,14 @@ namespace math {
 
             // eliminations row is divided by pivot-coefficient f = a[s][s]
             f = A(s, s);
-            for (int c = s; c < 2 * D; c++) {
+            for (unsigned int c = s; c < 2 * D; c++) {
                 A(s, c) /= f;
             }
 
-            for (int r = 0; r < D; r++ ) {
+            for (unsigned int r = 0; r < D; r++ ) {
                 if (r != s) {
                     f = -A(r, s);
-                    for (int c = s; c < 2 * D; c++) {
+                    for (unsigned int c = s; c < 2 * D; c++) {
                         A(r, c) += f * A(s, c);
                     }
                 } 
@@ -676,8 +676,8 @@ namespace math {
 
         /* Copy identity on the right which is now inverse. */
         if (!error) {
-            for (int r = 0; r < D; r++) {
-                for (int c = 0; c < D; c++) { 
+            for (unsigned int r = 0; r < D; r++) {
+                for (unsigned int c = 0; c < D; c++) { 
                     this->components[indexOf(r, c)] 
                         = static_cast<T>(A(r, D + c));
                 }
@@ -1119,4 +1119,3 @@ namespace math {
 } /* end namespace vislib */
 
 #endif /* VISLIB_ABSTRACTMATRIXIMPL_H_INCLUDED */
-

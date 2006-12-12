@@ -211,7 +211,8 @@ void TestMatrix(void) {
     ::AssertTrue("m * m^-1 = id", m4.IsIdentity());
 
 
-    Quaternion<double> q1(1.0, Vector<double, 3>(1.0, 0.0, 0.0));
+    Vector<double, 3> axis(1.0, 0.0, 0.0);
+    Quaternion<double> q1(1.0, axis);
     Matrix4<double, COLUMN_MAJOR> rm1(q1);
 
     ::AssertNearlyEqual("Rotation from quaterion @ 0, 0.", rm1.GetAt(0, 0), 1.0);
@@ -226,7 +227,7 @@ void TestMatrix(void) {
 
     ::AssertNearlyEqual("Rotation from quaterion @ 0, 2.", rm1.GetAt(0, 2), 0.0);
     ::AssertNearlyEqual<double>("Rotation from quaterion @ 1, 2.", rm1.GetAt(1, 2), -sin(1.0));
-    ::AssertNearlyEqual<double>("Rotation from quaterion @ 2, 2.", rm1.GetAt(2, 2), cos(1.0));v
+    ::AssertNearlyEqual<double>("Rotation from quaterion @ 2, 2.", rm1.GetAt(2, 2), cos(1.0));
     ::AssertNearlyEqual("Rotation from quaterion @ 3, 2.", rm1.GetAt(3, 2), 0.0);
 
     ::AssertNearlyEqual("Rotation from quaterion @ 0, 3.", rm1.GetAt(0, 3), 0.0);
