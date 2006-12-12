@@ -161,6 +161,8 @@ namespace math {
         /**
          * Assignment.
          *
+         * This operation does <b>not</b> create aliases.
+         *
          * @param rhs The right hand side operand.
          *
          * @return *this

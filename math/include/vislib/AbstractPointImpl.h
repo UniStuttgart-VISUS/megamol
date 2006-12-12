@@ -74,6 +74,8 @@ namespace math {
         /**
          * Assignment operator.
          *
+         * This operation does <b>not</b> create aliases.
+         *
          * @param rhs The right hand side operand.
          *
          * @return *this.

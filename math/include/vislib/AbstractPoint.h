@@ -18,7 +18,7 @@ namespace vislib {
 namespace math {
 
     /**
-
+     * TODO: documentation
      */
     template<class T, unsigned int D, class S> class AbstractPoint 
             : public AbstractPointImpl<T, D, S, AbstractPoint> {

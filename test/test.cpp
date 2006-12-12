@@ -18,6 +18,7 @@
 #include "testdimandrect.h"
 #include "testsysinfo.h"
 #include "testprocess.h"
+#include "testmatrix.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -44,13 +45,14 @@ int main(int argc, char **argv) {
     ::TestString();
     //::TestFile();
     ::TestPath();
-    ::TestProcess();
+      //::TestProcess();
     //::TestVector();
     //::TestDimension();
     //::TestRectangle();
     //::TestVector();
     //::TestFloat16();
     //::TestThread();
+    ::TestMatrix();
 
     //::printf("%s", W2A(L"Hugo"));
 

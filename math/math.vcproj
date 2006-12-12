@@ -285,6 +285,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractMatrixImpl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractPlane.cpp"
 				>
 			</File>
@@ -326,6 +330,14 @@
 			</File>
 			<File
 				RelativePath=".\src\mathtypes.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Matrix.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Matrix4.cpp"
 				>
 			</File>
 			<File
@@ -379,6 +391,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AbstractMatrix.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractMatrixImpl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractPlane.h"
 				>
 			</File>
@@ -420,6 +440,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\mathtypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Matrix.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Matrix4.h"
 				>
 			</File>
 			<File
