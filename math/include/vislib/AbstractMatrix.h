@@ -114,6 +114,8 @@ namespace math {
         /** Dtor. */
         ~AbstractMatrix(void);
 
+        //T Determinant(void) const;
+
         /**
          * Assignment operator.
          *
@@ -190,6 +192,47 @@ namespace math {
     template<class T, MatrixLayout L, class S>
     AbstractMatrix<T, 4, L, S>::~AbstractMatrix(void) {
     }
+
+
+    ///*
+    // * vislib::math::AbstractMatrix<T, 4, L, S>::Determinant
+    // */
+    //template<class T, MatrixLayout L, class S>
+    //T AbstractMatrix<T, 4, L, S>::Determinant(void) const {
+    //// Note: Fast, but matrix size is fixed! Uses Laplace and Sarrus.
+
+    //    return (this->elements[0] 
+    //        * (this->elements[5] * this->elements[10] * this->elements[15] 
+    //        + this->elements[9] * this->elements[14] * this->elements[7] 
+    //        + this->elements[13] * this->elements[6] * this->elements[11]
+    //        - this->elements[13] * this->elements[10] * this->elements[7]
+    //        - this->elements[5] * this->elements[14] * this->elements[11]
+    //        - this->elements[9] * this->elements[6] * this->elements[15])
+
+    //        - this->elements[4]
+    //        * (this->elements[1] * this->elements[10] * this->elements[15] 
+    //        + this->elements[9] * this->elements[14] * this->elements[3] 
+    //        + this->elements[13] * this->elements[2] * this->elements[11]
+    //        - this->elements[13] * this->elements[10] * this->elements[3]
+    //        - this->elements[1] * this->elements[14] * this->elements[11]
+    //        - this->elements[9] * this->elements[2] * this->elements[15])
+
+    //        + this->elements[8]
+    //        * (this->elements[1] * this->elements[6] * this->elements[15] 
+    //        + this->elements[5] * this->elements[14] * this->elements[3] 
+    //        + this->elements[13] * this->elements[2] * this->elements[7]
+    //        - this->elements[13] * this->elements[6] * this->elements[3]
+    //        - this->elements[1] * this->elements[14] * this->elements[7]
+    //        - this->elements[5] * this->elements[2] * this->elements[15])
+
+    //        - this->elements[12] 
+    //        * (this->elements[1] * this->elements[6] * this->elements[11] 
+    //        + this->elements[5] * this->elements[10] * this->elements[3] 
+    //        + this->elements[9] * this->elements[2] * this->elements[7]
+    //        - this->elements[9] * this->elements[6] * this->elements[3]
+    //        - this->elements[1] * this->elements[10] * this->elements[7]
+    //        - this->elements[5] * this->elements[2] * this->elements[11]));
+    //}
 
 
     /*

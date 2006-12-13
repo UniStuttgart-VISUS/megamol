@@ -285,6 +285,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractMatrix.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractMatrixImpl.cpp"
 				>
 			</File>

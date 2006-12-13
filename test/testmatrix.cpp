@@ -69,6 +69,7 @@ void TestMatrix(void) {
     }
     m3 = m1;
     ::AssertFalse("Inverting uninvertable matrix.", m1.Invert());
+    ::AssertEqual("Univertable matrix has determinant 0.", m1.Determinant(), 0.0);
     ::AssertEqual("Matrix unchanged after invert failed.", m1, m3);
 
     m1.SetAt(0, 0, 1.0);
@@ -93,6 +94,8 @@ void TestMatrix(void) {
 
     m3 = m1;
     ::AssertEqual("Assignment.", m1, m3);
+
+    ::AssertNearlyEqual("Determinant", m3.Determinant(), -160.0);
 
     m2 = m1;
     ::AssertTrue("Converstion assignment.", m1 == m2);

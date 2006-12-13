@@ -65,8 +65,15 @@ namespace math {
         /** Dtor. */
         ~AbstractMatrixImpl(void);
 
-
-        //T Determinant(void) const;
+        /**
+         * Answer the determinant of this matrix.
+         *
+         * Note that the implementation uses a Gaussian elimination and is 
+         * therefore very slow.
+         *
+         * @return The determinant of the matrix.
+         */
+        T Determinant(void) const;
 
         /**
          * Get the matrix component at the specified position.
@@ -123,14 +130,11 @@ namespace math {
         /** 
          * Inverts the matrix.
          *
-         * Note that the implementation uses a Gaussian elimination and 
-         * therefore has cubic runtime complexity.
+         * Note that the implementation uses a Gaussian elimination and is 
+         * therefore very slow.
          *
          * @return true, if the matrix was inverted, false, if the matrix is not
          *         invertable.
-         *
-         * @throws std::bad_alloc If the method could not allocate enough memory
-         *                        for its computation.
          */
         bool Invert(void);
 
@@ -561,6 +565,89 @@ namespace math {
 
 
     /*
+     * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::Determinant
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    T AbstractMatrixImpl<T, D, L, S, C>::Determinant(void) const {
+#define A(r, c) a[(r) * D + (c)]
+        double a[D * D];                    // input matrix for algorithm
+        double f;                           // Multiplication factor.
+        double max;                         // Row pivotising.
+        unsigned int pRow;                  // Pivot row.
+        unsigned int s;                     // Current eliminination step.
+        T retval = static_cast<T>(1);       // The resulting determinant.
+
+        /*
+         * Create double precision row-major matrix copy as well-defined basis
+         * for Gauﬂ elimination. 
+         */
+        for (unsigned int r = 0; r < D; r++) {
+            for (unsigned int c = 0; c < D; c++) {
+                A(r, c) = static_cast<double>(this->components[indexOf(r, c)]);
+            }
+        }
+
+        /* Gauﬂ elimination. */
+        s = 0;
+        do {
+
+            /* Pivotising. */
+            max = ::fabs(A(s, s));
+            pRow = s; 
+            for (unsigned int r = s + 1; r < D; r++) {
+                if (::fabs(A(r, s)) > max) {
+                    max = ::fabs(A(r, s));
+                    pRow = r;
+                }
+            }
+
+            if (max < DOUBLE_EPSILON) {
+                /*
+                 * Matrix is not invertable, because the column cannot be 
+                 * deleted. The determinant is zero, iff the matrix is not
+                 * invertable.
+                 */
+                return static_cast<T>(0);
+            }
+
+            if (pRow != s) {
+                // if necessary, exchange the row
+                double h;
+
+                for (unsigned int c = s ; c < D; c++) {
+                    h = A(s, c);
+                    A(s, c) = A(pRow, c);
+                    A(pRow, c) = h;
+                }
+
+                retval *= -1.0; // Exchaning rows changes sign.
+            } 
+
+            /* Elimination. */
+            for (unsigned int r = s + 1; r < D; r++ ) {
+                f = -A(r, s) / A(s, s);
+                for (unsigned int c = s; c < D; c++) {
+                    A(r, c) += f * A(s, c);
+                } 
+            }
+
+            s++;
+        } while (s < D);
+
+        /* Compute determinant as product of the diagonal. */
+        ASSERT(D > 0);
+        ASSERT(::fabs(retval) == 1.0);
+        for (unsigned int i = 0; i < D; i++) {
+            retval *= A(i, i);
+        }
+
+        return retval;
+#undef A
+    }
+
+
+    /*
      * AbstractMatrixImpl<T, D, L, S, C>::GetColumn
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
@@ -601,15 +688,11 @@ namespace math {
         template<class T, unsigned int D, MatrixLayout L, class S> class C>    
     bool AbstractMatrixImpl<T, D, L, S, C>::Invert(void) {
 #define A(r, c) a[(r) * 2 * D + (c)]
-        double *a = NULL;       // input matrix for algorithm
-        bool error = false;     // Error flag.
+        double a[2 * D * D];    // input matrix for algorithm
         double f;               // Multiplication factor.
         double max;             // Row pivotising.
         unsigned int pRow;      // Pivot row.
-        bool pivot = true;
         unsigned int s;         // Current eliminination step.
-
-        a = new double[D * 2 * D];
         
         /* Create double precision matrix and add identity at the right. */
         for (unsigned int r = 0; r < D; r++) {
@@ -628,32 +711,27 @@ namespace math {
             // pivotising avoids unnecessary canceling if a zero is in the 
             // diagonal and increases the precision.
             max = ::fabs(A(s, s));
-
-            if (pivot) {
-                pRow = s; 
-                for (unsigned int r = s + 1; r < D; r++) {
-                    if (::fabs(A(r, s)) > max) {
-                        max = ::fabs(A(r, s)) ;
-                        pRow = r;
-                    }
-                }
-
-                if (error = (max < DOUBLE_EPSILON)) {
-                    break;      // delete is not possible
+            pRow = s; 
+            for (unsigned int r = s + 1; r < D; r++) {
+                if (::fabs(A(r, s)) > max) {
+                    max = ::fabs(A(r, s));
+                    pRow = r;
                 }
             }
 
-            if (pivot) {
-                if (pRow != s) {
-                    // if necessary, exchange the row
-                    double h;
+            if (max < DOUBLE_EPSILON) {
+                return false;   // delete is not possible
+            }
 
-                    for (unsigned int c = s ; c < 2 * D; c++) {
-                        h = A(s, c);
-                        A(s, c) = A(pRow, c);
-                        A(pRow, c) = h;
-                    }
-                } 
+            if (pRow != s) {
+                // if necessary, exchange the row
+                double h;
+
+                for (unsigned int c = s ; c < 2 * D; c++) {
+                    h = A(s, c);
+                    A(s, c) = A(pRow, c);
+                    A(pRow, c) = h;
+                }
             } 
 
             // eliminations row is divided by pivot-coefficient f = a[s][s]
@@ -675,17 +753,13 @@ namespace math {
         } while (s < D);
 
         /* Copy identity on the right which is now inverse. */
-        if (!error) {
-            for (unsigned int r = 0; r < D; r++) {
-                for (unsigned int c = 0; c < D; c++) { 
-                    this->components[indexOf(r, c)] 
-                        = static_cast<T>(A(r, D + c));
-                }
+        for (unsigned int r = 0; r < D; r++) {
+            for (unsigned int c = 0; c < D; c++) { 
+                this->components[indexOf(r, c)] = static_cast<T>(A(r, D + c));
             }
         }
 
-        ARY_SAFE_DELETE(a);
-        return !error;
+        return true;
 #undef A
     }
 
