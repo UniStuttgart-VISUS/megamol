@@ -6,12 +6,22 @@
 
 #include "testhelper.h"
 
+#include <vislib/Console.h>
+
 
 bool AssertTrue(const char *desc, const bool cond) {
     if (cond) {
-        std::cout << "\"" << desc << "\" succeeded." << std::endl;
+        std::cout << "\"" << desc << "\" ";
+        vislib::sys::Console::SetForegroundColor(vislib::sys::Console::GREEN);
+        std::cout << "succeeded.";
+        vislib::sys::Console::RestoreDefaultColors();
+        std::cout << std::endl;
     } else {
-        std::cout << "\n\"" << desc << "\" FAILED.\n" << std::endl;
+        std::cout << "\n\"" << desc << "\" ";
+        vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
+        std::cout << "FAILED.";
+        vislib::sys::Console::RestoreDefaultColors();
+        std::cout << "\n" << std::endl;
     }
 
     return cond;

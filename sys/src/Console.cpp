@@ -11,57 +11,37 @@
 
 #ifdef _WIN32
 #include <windows.h>
+
 #else /* _WIN32 */
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
+//#include <ncurses.h>
+//#include <unistd.h>
+
 #endif /* _WIN32 */
 
 #include "vislib/assert.h"
 #include "vislib/SystemException.h"
-
-
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
- * Coloring under windows with: 
-
-    if (! GetConsoleScreenBufferInfo(hStdout, &csbiInfo)) 
-    {
-        MessageBox(NULL, TEXT("GetConsoleScreenBufferInfo"), 
-            TEXT("Console Error"), MB_OK); 
-        return 0;
-    }
-
-    wOldColorAttrs = csbiInfo.wAttributes; 
-
-    // Set the text attributes to draw red text on black background. 
-
-    if (! SetConsoleTextAttribute(hStdout, FOREGROUND_RED | 
-            FOREGROUND_INTENSITY))
-    {
-        MessageBox(NULL, TEXT("SetConsoleTextAttribute"), 
-            TEXT("Console Error"), MB_OK);
-        return 0;
-    }
-
-
-	SetConsoleTextAttribute(hStdout, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
-	printf("weiss ");
-	SetConsoleTextAttribute(hStdout, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-	printf("weisser ");
-	SetConsoleTextAttribute(hStdout, FOREGROUND_RED);
-	printf("rot ");
-	SetConsoleTextAttribute(hStdout, FOREGROUND_RED | FOREGROUND_INTENSITY);
-	printf("roter ");
-	SetConsoleTextAttribute(hStdout, BACKGROUND_BLUE | BACKGROUND_RED | BACKGROUND_GREEN);
-	printf("andersrum\n");
-
-	//SetConsoleTextAttribute(hStdout, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
-	SetConsoleTextAttribute(hStdout, wOldColorAttrs);
-
- *
+ * vislib::sys::Console::usecolors
  */
+bool vislib::sys::Console::useColors = vislib::sys::Console::ColorsAvailable();
+
+
+/* 
+ * vislib::sys::Console::defaultFgcolor
+ */
+vislib::sys::Console::ColorType vislib::sys::Console::defaultFgcolor = vislib::sys::Console::GetForegroundColor();
+
+
+/* 
+ * vislib::sys::Console::defaultBgcolor
+ */
+vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::sys::Console::GetForegroundColor();
 
 
 /*
@@ -197,7 +177,7 @@ void vislib::sys::Console::WriteLine(const char *fmt, ...) {
  * vislib::sys::Console::Console
  */
 vislib::sys::Console::Console(void) {
-    // TODO: Implement
+    throw UnsupportedOperationException("vislib::sys::Console::Ctor", __FILE__, __LINE__);
 }
 
 
@@ -206,4 +186,216 @@ vislib::sys::Console::Console(void) {
  */
 vislib::sys::Console::~Console(void) {
     // TODO: Implement
+}
+
+
+/*
+ * vislib::sys::Console::ColorsAvailable
+ */
+bool vislib::sys::Console::ColorsAvailable(void) {
+#ifdef _WIN32
+    return true;
+#else // _WIN32
+    return false; // NCurses sucks!!!
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::ColorsEnabled
+ */
+bool vislib::sys::Console::ColorsEnabled(void) {
+    return vislib::sys::Console::useColors;
+}
+
+
+/*
+ * vislib::sys::Console::EnableColors
+ */
+void vislib::sys::Console::EnableColors(bool enable) {
+    vislib::sys::Console::useColors = enable && vislib::sys::Console::ColorsAvailable();
+}
+
+/*
+ * vislib::sys::Console::RestoreDefaultColors
+ */
+void vislib::sys::Console::RestoreDefaultColors(void) {
+    if (vislib::sys::Console::useColors) return;
+
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return; // TODO: Inform about error?
+
+    // get current info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return; // TODO: Inform about error?
+    
+    if (defaultFgcolor != UNKNOWN_COLOR) {
+        // clear foreground color bits
+        info.wAttributes &= ~(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+
+        // set new foreground color bits
+        unsigned char col = static_cast<unsigned char>(fgcolor);
+        if ((col & 0x01) != 0) info.wAttributes |= FOREGROUND_RED;
+        if ((col & 0x02) != 0) info.wAttributes |= FOREGROUND_GREEN;
+        if ((col & 0x04) != 0) info.wAttributes |= FOREGROUND_BLUE;
+        if ((col & 0x08) != 0) info.wAttributes |= FOREGROUND_INTENSITY;
+    }
+    
+    if (defaultBgcolor != UNKNOWN_COLOR) {
+        // clear background color bits
+        info.wAttributes &= ~(BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
+
+        // set new background color bits
+        unsigned char col = static_cast<unsigned char>(bgcolor);
+        if ((col & 0x01) != 0) info.wAttributes |= BACKGROUND_RED;
+        if ((col & 0x02) != 0) info.wAttributes |= BACKGROUND_GREEN;
+        if ((col & 0x04) != 0) info.wAttributes |= BACKGROUND_BLUE;
+        if ((col & 0x08) != 0) info.wAttributes |= BACKGROUND_INTENSITY;
+    }
+    
+    // set new attribut flaggs
+    SetConsoleTextAttribute(hStdout, info.wAttributes);
+
+#else // _WIN32
+//    assert(false);
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::SetForegroundColor
+ */
+void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fgcolor) {
+    if (vislib::sys::Console::useColors) return;
+    if (fgcolor == UNKNOWN_COLOR) return;
+
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return; // TODO: Inform about error?
+
+    // get current info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return; // TODO: Inform about error?
+    
+    // clear bits for foreground color
+    info.wAttributes &= ~(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+
+    // set new foreground color bits
+    unsigned char col = static_cast<unsigned char>(fgcolor);
+    if ((col & 0x01) != 0) info.wAttributes |= FOREGROUND_RED;
+    if ((col & 0x02) != 0) info.wAttributes |= FOREGROUND_GREEN;
+    if ((col & 0x04) != 0) info.wAttributes |= FOREGROUND_BLUE;
+    if ((col & 0x08) != 0) info.wAttributes |= FOREGROUND_INTENSITY;
+    
+    // set new attribut flaggs
+    SetConsoleTextAttribute(hStdout, info.wAttributes);
+
+#else // _WIN32
+//    assert(false);
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::SetBackgroundColor
+ */
+void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bgcolor) {
+    if (vislib::sys::Console::useColors) return;
+    if (bgcolor == UNKNOWN_COLOR) return;
+
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return; // TODO: Inform about error?
+
+    // get current info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return; // TODO: Inform about error?
+    
+    // clear bits for background color
+    info.wAttributes &= ~(BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
+
+    // set new background color bits
+    unsigned char col = static_cast<unsigned char>(bgcolor);
+    if ((col & 0x01) != 0) info.wAttributes |= BACKGROUND_RED;
+    if ((col & 0x02) != 0) info.wAttributes |= BACKGROUND_GREEN;
+    if ((col & 0x04) != 0) info.wAttributes |= BACKGROUND_BLUE;
+    if ((col & 0x08) != 0) info.wAttributes |= BACKGROUND_INTENSITY;
+    
+    // set new attribut flaggs
+    SetConsoleTextAttribute(hStdout, info.wAttributes);
+
+#else // _WIN32
+//    assert(false);
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::GetForegroundColor
+ */
+vislib::sys::Console::ColorType vislib::sys::Console::GetForegroundColor(void) {
+    if (useColors) return UNKNOWN_COLOR;
+
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return UNKNOWN_COLOR;
+
+    // get info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return UNKNOWN_COLOR;
+
+    // translate foreground color bits
+    unsigned char c = 0;
+    if ((info.wAttributes & FOREGROUND_RED) != 0) c += 1;
+    if ((info.wAttributes & FOREGROUND_GREEN) != 0) c += 2;
+    if ((info.wAttributes & FOREGROUND_BLUE) != 0) c += 4;
+    if ((info.wAttributes & FOREGROUND_INTENSITY) != 0) c += 8;
+
+    return static_cast<vislib::sys::Console::ColorType>(c);
+
+#else // _WIN32
+//    assert(false);
+    return UNKNOWN_COLOR;
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::GetBackgroundColor
+ */
+vislib::sys::Console::ColorType vislib::sys::Console::GetBackgroundColor(void) {
+    if (useColors) return UNKNOWN_COLOR;
+
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return UNKNOWN_COLOR;
+
+    // get info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return UNKNOWN_COLOR;
+
+    // translate background color bits
+    unsigned char c = 0;
+    if ((info.wAttributes & BACKGROUND_RED) != 0) c += 1;
+    if ((info.wAttributes & BACKGROUND_GREEN) != 0) c += 2;
+    if ((info.wAttributes & BACKGROUND_BLUE) != 0) c += 4;
+    if ((info.wAttributes & BACKGROUND_INTENSITY) != 0) c += 8;
+
+    return static_cast<vislib::sys::Console::ColorType>(c);
+
+#else // _WIN32
+//    assert(false);
+    return UNKNOWN_COLOR;
+
+#endif // _WIN32
 }
