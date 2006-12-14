@@ -236,7 +236,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
         info.wAttributes &= ~(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
         // set new foreground color bits
-        unsigned char col = static_cast<unsigned char>(fgcolor);
+        unsigned char col = static_cast<unsigned char>(vislib::sys::Console::defaultFgcolor);
         if ((col & 0x01) != 0) info.wAttributes |= FOREGROUND_RED;
         if ((col & 0x02) != 0) info.wAttributes |= FOREGROUND_GREEN;
         if ((col & 0x04) != 0) info.wAttributes |= FOREGROUND_BLUE;
@@ -248,7 +248,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
         info.wAttributes &= ~(BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 
         // set new background color bits
-        unsigned char col = static_cast<unsigned char>(bgcolor);
+        unsigned char col = static_cast<unsigned char>(vislib::sys::Console::defaultBgcolor);
         if ((col & 0x01) != 0) info.wAttributes |= BACKGROUND_RED;
         if ((col & 0x02) != 0) info.wAttributes |= BACKGROUND_GREEN;
         if ((col & 0x04) != 0) info.wAttributes |= BACKGROUND_BLUE;
