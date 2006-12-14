@@ -41,7 +41,7 @@ vislib::sys::Console::ColorType vislib::sys::Console::defaultFgcolor = vislib::s
 /* 
  * vislib::sys::Console::defaultBgcolor
  */
-vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::sys::Console::GetForegroundColor();
+vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::sys::Console::GetBackgroundColor();
 
 
 /*
@@ -220,7 +220,7 @@ void vislib::sys::Console::EnableColors(bool enable) {
  * vislib::sys::Console::RestoreDefaultColors
  */
 void vislib::sys::Console::RestoreDefaultColors(void) {
-    if (vislib::sys::Console::useColors) return;
+    if (!vislib::sys::Console::useColors) return;
 
 #ifdef _WIN32
     // get handle
@@ -236,7 +236,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
         info.wAttributes &= ~(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
         // set new foreground color bits
-        unsigned char col = static_cast<unsigned char>(vislib::sys::Console::defaultFgcolor);
+        unsigned char col = static_cast<unsigned char>(defaultFgcolor);
         if ((col & 0x01) != 0) info.wAttributes |= FOREGROUND_RED;
         if ((col & 0x02) != 0) info.wAttributes |= FOREGROUND_GREEN;
         if ((col & 0x04) != 0) info.wAttributes |= FOREGROUND_BLUE;
@@ -248,7 +248,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
         info.wAttributes &= ~(BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 
         // set new background color bits
-        unsigned char col = static_cast<unsigned char>(vislib::sys::Console::defaultBgcolor);
+        unsigned char col = static_cast<unsigned char>(defaultBgcolor);
         if ((col & 0x01) != 0) info.wAttributes |= BACKGROUND_RED;
         if ((col & 0x02) != 0) info.wAttributes |= BACKGROUND_GREEN;
         if ((col & 0x04) != 0) info.wAttributes |= BACKGROUND_BLUE;
@@ -269,7 +269,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
  * vislib::sys::Console::SetForegroundColor
  */
 void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fgcolor) {
-    if (vislib::sys::Console::useColors) return;
+    if (!vislib::sys::Console::useColors) return;
     if (fgcolor == UNKNOWN_COLOR) return;
 
 #ifdef _WIN32
@@ -305,7 +305,7 @@ void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fg
  * vislib::sys::Console::SetBackgroundColor
  */
 void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bgcolor) {
-    if (vislib::sys::Console::useColors) return;
+    if (!vislib::sys::Console::useColors) return;
     if (bgcolor == UNKNOWN_COLOR) return;
 
 #ifdef _WIN32
@@ -341,7 +341,7 @@ void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bg
  * vislib::sys::Console::GetForegroundColor
  */
 vislib::sys::Console::ColorType vislib::sys::Console::GetForegroundColor(void) {
-    if (useColors) return UNKNOWN_COLOR;
+    if (!useColors) return UNKNOWN_COLOR;
 
 #ifdef _WIN32
     // get handle
@@ -373,7 +373,7 @@ vislib::sys::Console::ColorType vislib::sys::Console::GetForegroundColor(void) {
  * vislib::sys::Console::GetBackgroundColor
  */
 vislib::sys::Console::ColorType vislib::sys::Console::GetBackgroundColor(void) {
-    if (useColors) return UNKNOWN_COLOR;
+    if (!useColors) return UNKNOWN_COLOR;
 
 #ifdef _WIN32
     // get handle
