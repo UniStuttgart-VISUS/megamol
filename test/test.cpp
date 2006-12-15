@@ -19,6 +19,7 @@
 #include "testsysinfo.h"
 #include "testprocess.h"
 #include "testmatrix.h"
+#include "testmisc.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -41,11 +42,11 @@ int main(int argc, char **argv) {
     //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
     //TRACE(1, "HORST!\n");
 
-    ::TestSysInfo();
-    ::TestString();
+    //::TestSysInfo();
+    //::TestString();
     //::TestFile();
-    ::TestPath();
-      //::TestProcess();
+    //::TestPath();
+    //::TestProcess();
     //::TestVector();
     //::TestDimension();
     //::TestRectangle();
@@ -53,6 +54,7 @@ int main(int argc, char **argv) {
     //::TestFloat16();
     //::TestThread();
     ::TestMatrix();
+    //::TestConsoleColors();
 
     //::printf("%s", W2A(L"Hugo"));
 

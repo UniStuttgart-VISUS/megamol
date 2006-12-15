@@ -13,11 +13,14 @@
 #include <windows.h>
 
 #else /* _WIN32 */
+#include <stdlib.h>
+
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
-//#include <ncurses.h>
-//#include <unistd.h>
+
+#include <curses.h>
+#include <term.h>
 
 #endif /* _WIN32 */
 
@@ -42,6 +45,87 @@ vislib::sys::Console::ColorType vislib::sys::Console::defaultFgcolor = vislib::s
  * vislib::sys::Console::defaultBgcolor
  */
 vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::sys::Console::GetBackgroundColor();
+
+
+#ifndef _WIN32
+/*
+ * Helper class for initializing linux term
+ */
+class vislib::sys::Console::Curser {
+public:
+
+    /** ctor */
+    Curser(void) {
+        // initialize terminal information database
+        setupterm(reinterpret_cast<char *>(0), 1, reinterpret_cast<int *>(0));
+
+        // get number of supported colors (should be 8)
+        int i;
+        i = tigetnum("colors");
+        this->colorsAvailable = (i >= 8);
+
+        // refresh the flag because of the undefined initialization sequence 
+        vislib::sys::Console::EnableColors(this->colorsAvailable);
+    }
+
+    /** dtor */
+    ~Curser(void) {
+    }
+
+    /** getter to colorsAvailable */
+    inline bool AreColorsAvailable(void) {
+        return this->colorsAvailable;
+    }
+
+    /** wrapper for color setting */
+    inline void SetColor(bool foreground, vislib::sys::Console::ColorType col) {
+        int colType = COLOR_BLACK;
+
+        // Translate color codes (the hard way, because of the ANSI-constant screw up
+        switch (col) {
+            case BLACK: colType = COLOR_BLACK; break;
+            case DARK_RED: colType = COLOR_RED; break;
+            case DARK_GREEN: colType = COLOR_GREEN; break;
+            case DARK_YELLOW: colType = COLOR_YELLOW; break;
+            case DARK_BLUE: colType = COLOR_BLUE; break;
+            case DARK_MAGENTA: colType = COLOR_MAGENTA; break;
+            case DARK_CYAN: colType = COLOR_CYAN; break;
+            case GRAY: colType = COLOR_WHITE; break;
+
+            case DARK_GRAY: colType = COLOR_BLACK; break;
+            case RED: colType = COLOR_RED; break;
+            case GREEN: colType = COLOR_GREEN; break;
+            case YELLOW: colType = COLOR_YELLOW; break;
+            case BLUE: colType = COLOR_BLUE; break;
+            case MAGENTA: colType = COLOR_MAGENTA; break;
+            case CYAN: colType = COLOR_CYAN; break;
+            case WHITE: colType = COLOR_WHITE; break;
+
+            case UNKNOWN_COLOR: 
+            default: return; break;
+        }
+
+        if (foreground) {
+            // color up bright foreground colors using the *BOLD*-Crowbar
+            putp(tparm(set_attributes, 0, 0, 0, 0, 0, (col & 0x08), 0, 0, 0));
+        }
+
+        putp(tparm(foreground ? set_a_foreground : set_a_background, colType));
+    }
+
+private:
+    /** flag whether there is color text support */
+    bool colorsAvailable;
+
+};
+
+
+/*
+ * Instance of linux term helper class
+ */
+vislib::sys::Console::Curser vislib::sys::Console::curser = vislib::sys::Console::Curser();
+
+#endif
 
 
 /*
@@ -196,7 +280,7 @@ bool vislib::sys::Console::ColorsAvailable(void) {
 #ifdef _WIN32
     return true;
 #else // _WIN32
-    return false; // NCurses sucks!!!
+    return vislib::sys::Console::curser.AreColorsAvailable();
 #endif // _WIN32
 }
 
@@ -259,7 +343,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-//    assert(false);
+    putp(exit_attribute_mode);
 
 #endif // _WIN32
 }
@@ -295,7 +379,7 @@ void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-//    assert(false);
+    vislib::sys::Console::curser.SetColor(true, fgcolor);
 
 #endif // _WIN32
 }
@@ -331,7 +415,7 @@ void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-//    assert(false);
+    vislib::sys::Console::curser.SetColor(false, bgcolor);
 
 #endif // _WIN32
 }
@@ -362,8 +446,7 @@ vislib::sys::Console::ColorType vislib::sys::Console::GetForegroundColor(void) {
     return static_cast<vislib::sys::Console::ColorType>(c);
 
 #else // _WIN32
-//    assert(false);
-    return UNKNOWN_COLOR;
+    return vislib::sys::Console::UNKNOWN_COLOR;
 
 #endif // _WIN32
 }
@@ -394,8 +477,7 @@ vislib::sys::Console::ColorType vislib::sys::Console::GetBackgroundColor(void) {
     return static_cast<vislib::sys::Console::ColorType>(c);
 
 #else // _WIN32
-//    assert(false);
-    return UNKNOWN_COLOR;
+    return vislib::sys::Console::UNKNOWN_COLOR;
 
 #endif // _WIN32
 }

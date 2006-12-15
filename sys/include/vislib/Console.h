@@ -174,6 +174,15 @@ namespace sys {
         /** default background color */
         static ColorType defaultBgcolor;
 
+#ifndef _WIN32
+
+        /** forward declaration of internal helper class */
+        class Curser;
+
+        /** internal helper class */
+        static Curser curser;
+#endif // _WIN32
+
     };
 
 
