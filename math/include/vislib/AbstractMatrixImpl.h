@@ -931,7 +931,7 @@ namespace math {
     typename AbstractMatrixImpl<T, D, L, S, C>::DeepStorageMatrix
     AbstractMatrixImpl<T, D, L, S, C>::operator *(
             const C<T, D, L, Sp>& rhs) const {
-        DeepStorageMatrix retval;
+        DeepStorageMatrix retval; 
         const T *rhsComps = rhs.PeekComponents();
         T *retvalComps = retval.PeekComponents();
 

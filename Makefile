@@ -8,26 +8,32 @@ ProjectDirs = base sys math graphics gl net test glutTest
 ################################################################################
 
 all:
-	@for dir in $(ProjectDirs); do		\
-		pushd $$dir;					\
-		$(MAKE)	$@ || exit 1;			\
-		popd;							\
-	done
+	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done
 
 sweep:
-	@for dir in $(ProjectDirs); do		\
-		pushd $$dir;					\
-		$(MAKE)	$@ || exit 1;			\
-		popd;							\
-	done
+	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done
 	
 clean:	
-	@for dir in $(ProjectDirs); do		\
-		pushd $$dir;					\
-		$(MAKE)	$@ || exit 1;			\
-		popd;							\
-	done
+	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done
 	
 rebuild: clean all
 
+#base:
+#	$(MAKE) -C $@
+#	
+#sys: base
+#	$(MAKE) -C $@
+#	
+#math: base
+#	$(MAKE) -C $@
+#	
+#net: base sys
+#	$(MAKE) -C $@
+#	
+#gl: base graphics math sys
+#	$(MAKE) -C $@
+#	
+#graphics: base math
+#	$(MAKE) -C $@
+	
 .PHONY: all clean sweep rebuild

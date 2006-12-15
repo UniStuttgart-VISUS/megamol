@@ -42,17 +42,22 @@ $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/$(DebugDir)\/\0/g' > $@
+	$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)\/\1.o $(IntDir)\/$(DebugDir)\/\1.d:/g' > $@
 	
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/$(ReleaseDir)\/\0/g' > $@
+	$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)\/\1.o $(IntDir)\/$(ReleaseDir)\/\1.d:/g' > $@
+
 	
-	
+ifneq ($(MAKECMDGOALS), clean)
+ifneq ($(MAKECMDGOALS), sweep)
 -include $(CPP_DEPS)
-	
+endif
+endif
+
+
 # Rules for object files:	
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
@@ -72,7 +77,6 @@ clean: sweep
 	rm -f $(OutDir)/lib$(TargetName)$(BITS).a $(OutDir)/lib$(TargetName)$(BITS)d.a
 
 sweep:
-	rm -f $(CPP_DEPS)
 	rm -rf $(IntDir)/*
 
 rebuild: clean all

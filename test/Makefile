@@ -66,7 +66,13 @@ $(IntDir)/%.d: $(InputDir)/%.cpp
 	@tput sgr0
 	$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
+
+ifneq ($(MAKECMDGOALS), clean)
+ifneq ($(MAKECMDGOALS), sweep)
 -include $(CPP_DEPS)
+endif
+endif
+
 	
 $(IntDir)/%.o:
 	@mkdir -p $(IntDir)
