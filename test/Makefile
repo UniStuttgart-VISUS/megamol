@@ -11,6 +11,10 @@ TargetName := vislibtest
 IncludeDir := ./include ../base/include ../sys/include ../math/include ../graphics/include
 InputDir := ./
 
+# VISlib libraries to link (in that order):
+VISlibDir := ../lib
+VISlibs := graphics math net sys base
+
 
 # Name of the ouput file:
 OutName := vislibtest
@@ -20,7 +24,8 @@ OutName := vislibtest
 CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lpam -lpam_misc -ldl 
+LDFLAGS := -L/usr/X11R6/lib -L$(VISlibDir) -lm -lpthread -lpam -lpam_misc -ldl 
+
 
 ###############################################################################
 
@@ -31,12 +36,15 @@ ifeq ($(PLATFORM), x86_64)
 	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
-	LDFLAGS += -lvislibgraphics64d -lvislibmath64d -lvislibnet64d -lvislibsys64d -lvislibbase64d
+	VISlibs := $(addsuffix 64d, $(addprefix vislib, $(VISlibs)))
 else
 	IntDir := Lin32
 	OutDir := ../Lin32
-	LDFLAGS += -lvislibgraphics32d -lvislibmath32d -lvislibnet32d -lvislibsys32d -lvislibbase32d
+	VISlibs := $(addsuffix 32d, $(addprefix vislib, $(VISlibs)))
 endif
+
+# Append the VISlib libraries to the linker flags:
+LDFLAGS += $(addprefix -l, $(VISlibs))
 
 # Append the include directories to the flags:
 CPPFLAGS += $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
@@ -55,7 +63,7 @@ $(OutDir)/$(OutName): $(IntDir)/$(OutName)
 	@mkdir -p $(OutDir)
 	@cp $(IntDir)/$(OutName) $(OutDir)/
 	
-$(IntDir)/$(OutName): $(CPP_OBJS) 
+$(IntDir)/$(OutName): $(CPP_OBJS) $(addsuffix .a, $(addprefix $(VISlibDir)/lib, $(VISlibs)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
 	@tput sgr0
 	$(LINK) -o $@ $^ $(LDFLAGS)
