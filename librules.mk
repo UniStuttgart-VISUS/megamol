@@ -79,6 +79,7 @@ clean: sweep
 sweep:
 	rm -rf $(IntDir)/*
 
-rebuild: clean all
+rebuild: clean
+	$(MAKE) all
 
 .PHONY: clean sweep rebuild tags
