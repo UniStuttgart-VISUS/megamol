@@ -77,6 +77,13 @@ public:
         return this->colorsAvailable;
     }
 
+    /** output function */
+    static int outputChar(int c) {
+        fputc(c, stdout);
+        fputc(c, stderr);
+        return c;
+    }
+
     /** wrapper for color setting */
     inline void SetColor(bool foreground, vislib::sys::Console::ColorType col) {
         int colType = COLOR_BLACK;
@@ -107,10 +114,10 @@ public:
 
         if (foreground) {
             // color up bright foreground colors using the *BOLD*-Crowbar
-            putp(tparm(set_attributes, 0, 0, 0, 0, 0, (col & 0x08), 0, 0, 0));
+            tputs(tparm(set_attributes, 0, 0, 0, 0, 0, (col & 0x08), 0, 0, 0), 1, outputChar);
         }
 
-        putp(tparm(foreground ? set_a_foreground : set_a_background, colType));
+        tputs(tparm(foreground ? set_a_foreground : set_a_background, colType), 1, outputChar);
     }
 
 private:
@@ -343,7 +350,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    putp(exit_attribute_mode);
+    tputs(exit_attribute_mode, 1, vislib::sys::Console::Curser::outputChar);
 
 #endif // _WIN32
 }

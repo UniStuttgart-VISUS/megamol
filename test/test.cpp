@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     //::TestFloat16();
     //::TestThread();
     ::TestMatrix();
-    //::TestConsoleColors();
+    ::TestConsoleColors();
 
     //::printf("%s", W2A(L"Hugo"));
 

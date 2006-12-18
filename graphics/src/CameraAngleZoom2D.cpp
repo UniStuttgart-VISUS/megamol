@@ -17,7 +17,7 @@
  * vislib::graphics::CameraAngleZoom2D::CameraAngleZoom2D
  */
 vislib::graphics::CameraAngleZoom2D::CameraAngleZoom2D(void) 
-        : AbstractCursor2DEvent(), AbstractCameraController(), drag(false), minAngle(5.0f), maxAngle(175.0f) {
+        : AbstractCameraController(), AbstractCursor2DEvent(), drag(false), minAngle(5.0f), maxAngle(175.0f) {
 }
 
 

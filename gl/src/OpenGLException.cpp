@@ -19,7 +19,7 @@
  */
 vislib::graphics::gl::OpenGLException::OpenGLException(const GLenum errorCode, 
         const char *file, const int line) 
-        : Exception(__FILE__, __LINE__), errorCode(errorCode) {
+        : Exception(file, line), errorCode(errorCode) {
     Exception::setMsg(reinterpret_cast<const char *>(
         ::gluErrorString(this->errorCode)));
 }
@@ -30,7 +30,7 @@ vislib::graphics::gl::OpenGLException::OpenGLException(const GLenum errorCode,
  */
 vislib::graphics::gl::OpenGLException::OpenGLException(const char *file, 
         const int line)
-        : Exception(__FILE__, __LINE__), errorCode(::glGetError()) {
+        : Exception(file, line), errorCode(::glGetError()) {
     Exception::setMsg(reinterpret_cast<const char *>(
         ::gluErrorString(this->errorCode)));
 }

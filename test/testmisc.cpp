@@ -23,6 +23,8 @@ void TestConsoleColors(void) {
 
     vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
     printf("Text set to Red on Default\n");
+    fprintf(stdout, "Text to stdout\n");
+    fprintf(stderr, "Text to stderr\n");
     printf("Foregound Color is %d\n", vislib::sys::Console::GetForegroundColor());
     printf("Backgound Color is %d\n", vislib::sys::Console::GetBackgroundColor());
 
@@ -49,6 +51,8 @@ void TestConsoleColors(void) {
 
     vislib::sys::Console::RestoreDefaultColors();
     printf("Text set to Default on Default\n");
+    fprintf(stdout, "Text to stdout\n");
+    fprintf(stderr, "Text to stderr\n");
     printf("Foregound Color is %d\n", vislib::sys::Console::GetForegroundColor());
     printf("Backgound Color is %d\n", vislib::sys::Console::GetBackgroundColor());
 
@@ -58,6 +62,8 @@ void TestConsoleColors(void) {
 
     vislib::sys::Console::SetForegroundColor(vislib::sys::Console::BLUE);
     printf("Text set to Blue on Default (should stay Default on Default)\n");
+    fprintf(stdout, "Text to stdout\n");
+    fprintf(stderr, "Text to stderr\n");
     printf("Foregound Color is %d\n", vislib::sys::Console::GetForegroundColor());
     printf("Backgound Color is %d\n", vislib::sys::Console::GetBackgroundColor());
 
@@ -72,11 +78,15 @@ void TestConsoleColors(void) {
 
     vislib::sys::Console::SetForegroundColor(vislib::sys::Console::BLUE);
     printf("Text set to Blue on Default (should stay Default on Default)\n");
+    fprintf(stdout, "Text to stdout\n");
+    fprintf(stderr, "Text to stderr\n");
     printf("Foregound Color is %d\n", vislib::sys::Console::GetForegroundColor());
     printf("Backgound Color is %d\n", vislib::sys::Console::GetBackgroundColor());
 
     vislib::sys::Console::RestoreDefaultColors();
     printf("Text set to Default on Default\n");
+    fprintf(stdout, "Text to stdout\n");
+    fprintf(stderr, "Text to stderr\n");
     printf("Foregound Color is %d\n", vislib::sys::Console::GetForegroundColor());
     printf("Backgound Color is %d\n", vislib::sys::Console::GetBackgroundColor());
 

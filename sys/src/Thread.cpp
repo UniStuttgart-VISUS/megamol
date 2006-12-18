@@ -40,9 +40,7 @@ void vislib::sys::Thread::Sleep(const DWORD millis) {
 #else /* _WIN32 */
 	if (millis >= 1000) {
 		/* At least one second to sleep. Use ::sleep() for full seconds. */
-		for (DWORD i = 0; i < millis % 1000; i++) {
-			::sleep(1000);
-		}
+        ::sleep(millis / 1000);
 	}
 
 	::usleep((millis % 1000) * 1000);
