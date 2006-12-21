@@ -101,4 +101,6 @@ void TestConsoleColors(void) {
         printf("\n");
     }
     
+    printf("The Console's Size: %u x %u\n", vislib::sys::Console::GetWidth(), vislib::sys::Console::GetHeight());
+
 }

@@ -157,6 +157,16 @@ namespace sys {
          */
         static ColorType GetBackgroundColor(void);
 
+        /**
+         * TODO: Document
+         */
+        static unsigned int GetWidth(void);
+
+        /**
+         * TODO: Document
+         */
+        static unsigned int GetHeight(void);
+
         /** Dtor. */
         ~Console(void);
 

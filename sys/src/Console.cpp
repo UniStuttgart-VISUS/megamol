@@ -488,3 +488,49 @@ vislib::sys::Console::ColorType vislib::sys::Console::GetBackgroundColor(void) {
 
 #endif // _WIN32
 }
+
+
+/*
+ * vislib::sys::Console::GetWidth
+ */
+unsigned int vislib::sys::Console::GetWidth(void) {
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return 0;
+
+    // get info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return 0;
+
+    return info.srWindow.Right + 1 - info.srWindow.Left;
+
+#else // _WIN32
+    int value = tigetnum("cols");
+    return (value == -2) ? 0 : value;
+
+#endif // _WIN32
+}
+
+ 
+/*
+ * vislib::sys::Console::GetHeight
+ */
+unsigned int vislib::sys::Console::GetHeight(void) {
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return 0;
+
+    // get info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return 0;
+
+    return info.srWindow.Bottom + 1 - info.srWindow.Top;
+
+#else // _WIN32
+    int value = tigetnum("lines");
+    return (value == -2) ? 0 : value;
+
+#endif // _WIN32
+}
