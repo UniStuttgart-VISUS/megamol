@@ -133,6 +133,26 @@ namespace vislib {
         void Clear(void);
 
         /**
+         * TODO: Document
+         */
+        inline bool Compare(const Char *rhs) const;
+
+        /**
+         * TODO: Document
+         */
+        inline bool Compare(const String& rhs) const;
+
+        /**
+         * TODO: Document
+         */
+        inline bool CompareInsensitive(const Char *rhs) const;
+
+        /**
+         * TODO: Document
+         */
+        inline bool CompareInsensitive(const String& rhs) const;
+
+        /**
          * Answer whether this string ends with the character 'c'.
          *
          * @param c The charater to be searched at the end.
@@ -753,6 +773,54 @@ namespace vislib {
         delete[] this->data;
         this->data = new Char[1];
         *this->data = 0;
+    }
+
+
+    /*
+     * String<T>::Compare
+     */
+    template<class T> bool String<T>::Compare(const Char *rhs) const {
+        return (*this == rhs);
+    }
+
+
+    /*
+     * String<T>::Compare
+     */
+    template<class T> bool String<T>::Compare(const String& rhs) const {
+        return (*this == rhs.data);
+    }
+
+
+    /*
+     * String<T>::CompareInsensitive
+     */
+    template<class T> bool String<T>::CompareInsensitive(const Char *rhs) const {
+        const Char *str = this->data;
+
+        if (rhs == NULL) {
+            /* 
+             * NULL pointer can never be equal as we have at least the terminating 
+             * zero in our strings. 
+             */
+            return false;
+
+        } else {
+            while ((T::ToLower(*str) == T::ToLower(*rhs)) && (*str != 0)) {
+                str++;
+                rhs++;
+            }
+
+            return (T::ToLower(*str) == T::ToLower(*rhs));
+        }
+    }
+
+
+    /*
+     * String<T>::CompareInsensitive
+     */
+    template<class T> bool String<T>::CompareInsensitive(const String& rhs) const {
+        return this->CompareInsensitive(rhs.data);
     }
 
 
