@@ -14,6 +14,7 @@
 
 #include "vislib/types.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/String.h"
 
 
 bool AssertTrue(const char *desc, const bool cond);
@@ -24,6 +25,30 @@ template<class T> bool AssertEqual(const char *desc,
                                    const T& lhs, 
                                    const T& rhs) {
     return ::AssertTrue(desc, (lhs == rhs));
+}
+
+template<class T> bool AssertEqual(const char *desc, 
+                                   const char *lhs, 
+                                   const T& rhs) {
+    return ::AssertTrue(desc, vislib::StringA(lhs).Compare(vislib::StringA(rhs)));
+}
+
+template<class T> bool AssertEqual(const char *desc, 
+                                   const wchar_t *lhs, 
+                                   const T& rhs) {
+    return ::AssertTrue(desc, vislib::StringW(lhs).Compare(vislib::StringW(rhs)));
+}
+
+template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
+                                   const char *lhs, 
+                                   const T& rhs) {
+    return ::AssertTrue(desc, vislib::StringA(lhs).CompareInsensitive(vislib::StringA(rhs)));
+}
+
+template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
+                                   const wchar_t *lhs, 
+                                   const T& rhs) {
+    return ::AssertTrue(desc, vislib::StringW(lhs).CompareInsensitive(vislib::StringW(rhs)));
 }
 
 template<class T> bool AssertNotEqual(const char *desc,
@@ -43,5 +68,13 @@ template<class T> bool AssertNotNearlyEqual(const char *desc,
                                             const T& rhs) {
     return ::AssertFalse(desc, vislib::math::IsEqual<T>(lhs, rhs));
 }
+
+void AssertOutput(const char *desc);
+
+void AssertOutputSuccess(void);
+
+void AssertOutputFail(void);
+
+#define AssertException(desc, call, exception) AssertOutput(desc); try { call; AssertOutputFail(); } catch(exception e) { AssertOutputSuccess(); } catch(...) { AssertOutputFail(); }
 
 #endif /* VISLIBTEST_TESTHELPER_H_INCLUDED */

@@ -158,12 +158,16 @@ namespace sys {
         static ColorType GetBackgroundColor(void);
 
         /**
-         * TODO: Document
+         * Answer the current width of the console window.
+         *
+         * @return The width of the console window, or 0 if an error occured
          */
         static unsigned int GetWidth(void);
 
         /**
-         * TODO: Document
+         * Answer the current height of the console window.
+         *
+         * @return The height of the console window, or 0 if an error occured
          */
         static unsigned int GetHeight(void);
 

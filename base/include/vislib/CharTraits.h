@@ -43,7 +43,7 @@ namespace vislib {
 	 */
 	template<class T> class CharTraits {
 	
-    protected:
+    public:
 
 		/** Define an type-independent name for the char traits. */
 		typedef T Char;
@@ -59,6 +59,8 @@ namespace vislib {
 		inline static Size CharSize(void) {
 			return sizeof(T);
 		}
+
+    protected:
 
 		/**
 		 * Answer the string length. 'str' can be a NULL pointer.
@@ -178,6 +180,52 @@ namespace vislib {
 	 */
 	class CharTraitsA : public CharTraits<char> {
 
+    public:
+
+		/**
+		 * Answer whether the character 'c' is a digit.
+		 *
+		 * @param c A character.
+		 *
+		 * @return true, if 'c' is a digit, false otherwise.
+		 */
+		inline static bool IsDigit(const Char c) {
+			return (::isdigit(c) != 0);		// Explicit compare prevents C4800.
+		}
+
+		/**
+		 * Answer whether the character 'c' is a whitespace character.
+		 *
+		 * @param c A character.
+		 *
+		 * @return true, if 'c' is a whitespace, false otherwise.
+		 */
+		inline static bool IsSpace(const Char c) {
+			return (::isspace(c) != 0);		// Explicit compare prevents C4800.
+		}
+
+		/**
+		 * Answer the lower case version of 'c'.
+		 *
+		 * @param c A character.
+		 *
+		 * @return The lower case version of 'c'.
+		 */
+		inline static Char ToLower(const Char c) {
+			return static_cast<Char>(::tolower(c));
+		}
+
+		/**
+		 * Answer the upper case version of 'c'.
+		 *
+		 * @param c A character.
+		 *
+		 * @return The upper case version of 'c'.
+		 */
+		inline static Char ToUpper(const Char c) {
+			return static_cast<Char>(::toupper(c));
+		}
+
     protected:
 
 		/**
@@ -284,39 +332,6 @@ namespace vislib {
             return static_cast<Size>(retval);
         }
 
-		/**
-		 * Answer whether the character 'c' is a digit.
-		 *
-		 * @param c A character.
-		 *
-		 * @return true, if 'c' is a digit, false otherwise.
-		 */
-		inline static bool IsDigit(const Char c) {
-			return (::isdigit(c) != 0);		// Explicit compare prevents C4800.
-		}
-
-		/**
-		 * Answer whether the character 'c' is a whitespace character.
-		 *
-		 * @param c A character.
-		 *
-		 * @return true, if 'c' is a whitespace, false otherwise.
-		 */
-		inline static bool IsSpace(const Char c) {
-			return (::isspace(c) != 0);		// Explicit compare prevents C4800.
-		}
-
-		/**
-		 * Answer the lower case version of 'c'.
-		 *
-		 * @param c A character.
-		 *
-		 * @return The lower case version of 'c'.
-		 */
-		inline static Char ToLower(const Char c) {
-			return static_cast<Char>(::tolower(c));
-		}
-
 // TODO: Problem with locale.
 //		/**
 //		 * Convert all characters in 'str' to lower case.
@@ -331,17 +346,6 @@ namespace vislib {
 //			assert(false);
 //#endif /* _WIN32 */
 //		}
-
-		/**
-		 * Answer the upper case version of 'c'.
-		 *
-		 * @param c A character.
-		 *
-		 * @return The upper case version of 'c'.
-		 */
-		inline static Char ToUpper(const Char c) {
-			return static_cast<Char>(::toupper(c));
-		}
 
 //		/**
 //		 * Convert all characters in 'str' to upper case.
@@ -376,6 +380,52 @@ namespace vislib {
 	 * @author Christoph Mueller
 	 */
 	class CharTraitsW : public CharTraits<WCHAR> {
+
+    public:
+
+		/**
+		 * Answer whether the character 'c' is a digit.
+		 *
+		 * @param c A character.
+		 *
+		 * @return true, if 'c' is a digit, false otherwise.
+		 */
+		inline static bool IsDigit(const Char c) {
+			return (::iswdigit(c) != 0);	// Explicit compare prevents C4800.
+		}
+
+		/**
+		 * Answer whether the character 'c' is a whitespace character.
+		 *
+		 * @param c A character.
+		 *
+		 * @return true, if 'c' is a whitespace, false otherwise.
+		 */
+		inline static bool IsSpace(const Char c) {
+			return (::iswspace(c) != 0);	// Explicit compare prevents C4800.
+		}
+
+		/**
+		 * Answer the lower case version of 'c'.
+		 *
+		 * @param c A character.
+		 *
+		 * @return The lower case version of 'c'.
+		 */
+		inline static Char ToLower(const Char c) {
+			return ::towlower(c);
+		}
+
+		/**
+		 * Answer the upper case version of 'c'.
+		 *
+		 * @param c A character.
+		 *
+		 * @return The upper case version of 'c'.
+		 */
+		inline static Char ToUpper(const Char c) {
+			return ::towupper(c);
+		}
 
 	protected:
 
@@ -510,39 +560,6 @@ namespace vislib {
             return static_cast<Size>(retval);
         }
 
-		/**
-		 * Answer whether the character 'c' is a digit.
-		 *
-		 * @param c A character.
-		 *
-		 * @return true, if 'c' is a digit, false otherwise.
-		 */
-		inline static bool IsDigit(const Char c) {
-			return (::iswdigit(c) != 0);	// Explicit compare prevents C4800.
-		}
-
-		/**
-		 * Answer whether the character 'c' is a whitespace character.
-		 *
-		 * @param c A character.
-		 *
-		 * @return true, if 'c' is a whitespace, false otherwise.
-		 */
-		inline static bool IsSpace(const Char c) {
-			return (::iswspace(c) != 0);	// Explicit compare prevents C4800.
-		}
-
-		/**
-		 * Answer the lower case version of 'c'.
-		 *
-		 * @param c A character.
-		 *
-		 * @return The lower case version of 'c'.
-		 */
-		inline static Char ToLower(const Char c) {
-			return ::towlower(c);
-		}
-
 //		/**
 //		 * Convert all characters in 'str' to lower case.
 //		 *
@@ -556,17 +573,6 @@ namespace vislib {
 //			assert(false);
 //#endif /* _WIN32 */
 //		}
-
-		/**
-		 * Answer the upper case version of 'c'.
-		 *
-		 * @param c A character.
-		 *
-		 * @return The upper case version of 'c'.
-		 */
-		inline static Char ToUpper(const Char c) {
-			return ::towupper(c);
-		}
 
 //		/**
 //		 * Convert all characters in 'str' to upper case.
