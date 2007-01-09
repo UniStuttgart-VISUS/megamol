@@ -1306,7 +1306,13 @@ namespace vislib {
             Size newLen = T::SafeStringLength(rhs) + 1;
             this->data = new Char[newLen];
 
-            ::memcpy(this->data, rhs, newLen * T::CharSize());
+            if (rhs != NULL) {
+                ::memcpy(this->data, rhs, newLen * T::CharSize());
+
+            } else {
+                this->data[0] = 0;
+
+            }
         }
 
         return *this;
