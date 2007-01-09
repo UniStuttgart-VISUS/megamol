@@ -248,7 +248,8 @@ namespace math {
         ASSERT(std::numeric_limits<T>::is_integer);
         ASSERT(std::numeric_limits<T>::is_signed);
         ASSERT(right >= 0);
-        return (left >= 0) ? (left % right) : ((1 - ((left + 1) / right)) * right + left);
+        return (left >= 0) ? (left % right) : ((left % right) + right);
+        // return (left >= 0) ? (left % right) : ((1 - ((left + 1) / right)) * right + left);
     }
 
 
