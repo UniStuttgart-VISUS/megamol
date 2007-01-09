@@ -7,6 +7,8 @@
 #include "testcmdlineparser.h"
 #include "testhelper.h"
 
+#include <vislib/Console.h>
+
 #include "vislib/CmdLineParser.h"
 #include "vislib/CmdLineProvider.h"
 
@@ -55,26 +57,28 @@ void TestCmdLineParser(void) {
 
     vislib::StringA cmdName = vislib::sys::CmdLineProviderA::GetModuleName();
     vislib::sys::CmdLineProviderA cmdLine(cmdName, 
-        "Horst 1.2 -h '' Hugo \"321 \"\"Heinz\" --tEst 4.2 Helmut -Help 11");
+        "Horst 1.2 -h '' -hugo \"321 \"\"Heinz\" --tEst 4.2 Helmut -Help 11 -ht 4.1");
 
-    AssertEqual("cmdLine.ArgC() == 12", cmdLine.ArgC(), 12);
+    AssertEqual("cmdLine.ArgC() == 14", cmdLine.ArgC(), 14);
     AssertNotEqual<char**>("cmdLine.ArgV() != NULL", cmdLine.ArgV(), NULL);
     AssertEqual("cmdLine.ArgV()[0] == GetModuleName", cmdLine.ArgV()[0], cmdName);
     AssertEqual("cmdLine.ArgV()[1] == Horst", cmdLine.ArgV()[1], "Horst");
     AssertEqual("cmdLine.ArgV()[2] == 1.2", cmdLine.ArgV()[2], "1.2");
     AssertEqual("cmdLine.ArgV()[3] == -h", cmdLine.ArgV()[3], "-h");
     AssertEqual("cmdLine.ArgV()[4] == ''", cmdLine.ArgV()[4], "''");
-    AssertEqual("cmdLine.ArgV()[5] == Hugo", cmdLine.ArgV()[5], "Hugo");
+    AssertEqual("cmdLine.ArgV()[5] == -hugo", cmdLine.ArgV()[5], "-hugo");
     AssertEqual("cmdLine.ArgV()[6] == 321 \"Heinz", cmdLine.ArgV()[6], "321 \"Heinz");
     AssertEqual("cmdLine.ArgV()[7] == --tEst", cmdLine.ArgV()[7], "--tEst");
     AssertEqual("cmdLine.ArgV()[8] == 4.2", cmdLine.ArgV()[8], "4.2");
     AssertEqual("cmdLine.ArgV()[9] == Helmut", cmdLine.ArgV()[9], "Helmut");
     AssertEqual("cmdLine.ArgV()[10] == -Help", cmdLine.ArgV()[10], "-Help");
     AssertEqual("cmdLine.ArgV()[11] == 11", cmdLine.ArgV()[11], "11");
+    AssertEqual("cmdLine.ArgV()[12] == -ht", cmdLine.ArgV()[10], "-ht");
+    AssertEqual("cmdLine.ArgV()[13] == 4.1", cmdLine.ArgV()[11], "4.1");
 
     CLParser parser;
     CLPOption helpOption('h', "help");
-    CLPOption testOption('t', "Test", vislib::sys::CmdLineParserA::Option::DOUBLE_VALUE);
+    CLPOption testOption('t', "Test", "Just a fucking test option.", vislib::sys::CmdLineParserA::Option::DOUBLE_VALUE);
 
     AssertFalse("helpOption.IsValueValid() == false", helpOption.IsValueValid());
     AssertEqual("helpOption.GetValueType() == NO_VALUE", helpOption.GetValueType(), CLPOption::NO_VALUE);
@@ -109,7 +113,35 @@ void TestCmdLineParser(void) {
     AssertNotEqual<const CLPOption*>("parser.FindOption(t) != NULL", parser.FindOption('t'), NULL);
 
     AssertEqual("parser.Parse == 0", parser.Parse(cmdLine.ArgC(), cmdLine.ArgV()), 0);
-    AssertFalse("No Warnings", parser.GetWarnings().HasNext());
-    AssertFalse("No Errors", parser.GetErrors().HasNext());
+
+    /*if (!AssertFalse("No Warnings", parser.GetWarnings().HasNext()))*/ { // TODO: Check!
+        CLParser::WarningIterator wii = parser.GetWarnings();
+        if (wii.HasNext()) {
+            printf("Warnings:\n");
+        }
+
+        while (wii.HasNext()) {
+            CLParser::Warning &w = wii.Next();
+            vislib::sys::Console::SetForegroundColor(vislib::sys::Console::YELLOW);
+            printf("Warning %d [Arg %u]: ", int(w.GetWarnCode()), w.GetArgument());
+            vislib::sys::Console::RestoreDefaultColors();
+            printf("%s\n", CLParser::Warning::GetWarningString(w.GetWarnCode()));
+        }
+    }
+
+    /*if (!AssertFalse("No Errors", parser.GetErrors().HasNext()))*/ { // TODO: Check!
+        CLParser::ErrorIterator err = parser.GetErrors();
+        if (err.HasNext()) {
+            printf("Errors:\n");
+        }
+
+        while (err.HasNext()) {
+            CLParser::Error &e = err.Next();
+            vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
+            printf("Error %d [Arg %u]: ", int(e.GetErrorCode()), e.GetArgument());
+            vislib::sys::Console::RestoreDefaultColors();
+            printf("%s\n", e.GetErrorString(e.GetErrorCode()));
+        }
+    }
 
 }

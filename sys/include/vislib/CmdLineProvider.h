@@ -34,8 +34,9 @@ namespace sys {
         /** 
          * CmdLineParser is friend because it's able to output internal data 
          * structures compatible with CmdLineProvider.
+         *  <Tf> should only be used when equal with <T>
          */
-        template<class T> friend class CmdLineParser;
+        template<class Tf> friend class CmdLineParser;
 
         /** Define a local name for the character type. */
         typedef typename T::Char Char;

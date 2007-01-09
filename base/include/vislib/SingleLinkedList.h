@@ -14,7 +14,7 @@
 #include "vislib/memutils.h"
 #include "vislib/Iterator.h"
 #include "vislib/Exception.h"
-#include "assert.h"
+#include "vislib/assert.h"
 
 
 namespace vislib {
