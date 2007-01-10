@@ -23,6 +23,8 @@
 #include "vislib/memutils.h"
 #include "vislib/types.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/FormatException.h"
+#include "vislib/IllegalParamException.h"
 
 
 namespace vislib {
@@ -226,6 +228,62 @@ namespace vislib {
 			return static_cast<Char>(::toupper(c));
 		}
 
+        /**
+         * Converts the string str to the returned integer value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed integer value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        integer value.
+         */
+        inline static int ParseInt(const Char *str) {
+            int retval;
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+            if (
+#if (_MSC_VER >= 1400)
+                sscanf_s
+#else  /*(_MSC_VER >= 1400) */
+                sscanf
+#endif /*(_MSC_VER >= 1400) */
+                (str, "%d", &retval) != 1) {
+                throw FormatException("Cannot convert String to Integer", __FILE__, __LINE__);
+            }
+            return retval;
+        }
+
+        /**
+         * Converts the string str to the returned floating point value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed floating point value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        floating point value.
+         */
+        inline static double ParseDouble(const Char *str) {
+            double retval;
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+            if (
+#if (_MSC_VER >= 1400)
+                sscanf_s
+#else  /*(_MSC_VER >= 1400) */
+                sscanf
+#endif /*(_MSC_VER >= 1400) */
+                (str, "%lf", &retval) != 1) {
+                throw FormatException("Cannot convert String to Double", __FILE__, __LINE__);
+            }
+            return retval;
+        }
+
     protected:
 
 		/**
@@ -427,6 +485,61 @@ namespace vislib {
 			return ::towupper(c);
 		}
 
+        /**
+         * Converts the string str to the returned integer value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed integer value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        integer value.
+         */
+        inline static int ParseInt(const Char *str) {
+            int retval;
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+            if (
+#if (_MSC_VER >= 1400)
+                swscanf_s
+#else  /*(_MSC_VER >= 1400) */
+                swscanf
+#endif /*(_MSC_VER >= 1400) */
+                (str, L"%d", &retval) != 1) {
+                throw FormatException("Cannot convert String to Integer", __FILE__, __LINE__);
+            }
+            return retval;
+        }
+
+        /**
+         * Converts the string str to the returned floating point value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed floating point value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        floating point value.
+         */
+        inline static double ParseDouble(const Char *str) {
+            double retval;
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+            if (
+#if (_MSC_VER >= 1400)
+                swscanf_s
+#else  /*(_MSC_VER >= 1400) */
+                swscanf
+#endif /*(_MSC_VER >= 1400) */
+                (str, L"%lf", &retval) != 1) {
+                throw FormatException("Cannot convert String to Double", __FILE__, __LINE__);
+            }
+            return retval;
+        }
 	protected:
 
 		/**

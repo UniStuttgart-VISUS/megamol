@@ -282,6 +282,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\FormatException.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\IllegalParamException.cpp"
 				>
 			</File>
@@ -345,6 +349,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Exception.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\FormatException.h"
 				>
 			</File>
 			<File

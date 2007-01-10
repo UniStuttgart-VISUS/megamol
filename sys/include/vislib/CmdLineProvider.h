@@ -482,7 +482,7 @@ namespace sys {
      */
     template<class T> void CmdLineProvider<T>::CreateCmdLine(const Char *appName, const Char *cmdLine) {
         Char *ci;
-        Char *start;
+        Char *start = NULL;
         unsigned int state;
 
         // clear old argument list

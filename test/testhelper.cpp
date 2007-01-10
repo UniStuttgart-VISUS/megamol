@@ -6,7 +6,12 @@
 
 #include "testhelper.h"
 
+#include <iomanip>
+
 #include <vislib/Console.h>
+
+
+static unsigned int testCounter = 0;
 
 
 bool AssertTrue(const char *desc, const bool cond) {
@@ -29,6 +34,9 @@ bool AssertFalse(const char *desc, const bool cond) {
 }
 
 void AssertOutput(const char *desc) {
+    vislib::sys::Console::SetForegroundColor(vislib::sys::Console::DARK_GRAY);
+    std::cout << "[" << std::setw(3) << std::setfill('0') << ++testCounter << std::setw(0) << "] ";
+    vislib::sys::Console::RestoreDefaultColors();
     std::cout << "\"" << desc << "\" ";
 }
 

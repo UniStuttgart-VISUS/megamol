@@ -75,6 +75,12 @@ void AssertOutputSuccess(void);
 
 void AssertOutputFail(void);
 
+// this succeeds if exactly the specified exception is thrown.
+// has no return value!
 #define AssertException(desc, call, exception) AssertOutput(desc); try { call; AssertOutputFail(); } catch(exception e) { AssertOutputSuccess(); } catch(...) { AssertOutputFail(); }
+
+// this succeeds if NO exception is thrown.
+// has no return value!
+#define AssertNoException(desc, call) AssertOutput(desc); try { call; AssertOutputSuccess(); } catch(...) { AssertOutputFail(); }
 
 #endif /* VISLIBTEST_TESTHELPER_H_INCLUDED */
