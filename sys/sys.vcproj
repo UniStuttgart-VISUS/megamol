@@ -278,6 +278,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\CmdLineParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CmdLineProvider.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Console.cpp"
 				>
 			</File>
@@ -369,6 +377,14 @@
 			>
 			<File
 				RelativePath=".\include\vislib\BufferedFile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\CmdLineParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\CmdLineProvider.h"
 				>
 			</File>
 			<File

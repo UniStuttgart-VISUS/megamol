@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "testhelper.h"
 #include "teststring.h"
 #include "testfloat16.h"
 #include "testthread.h"
@@ -20,6 +21,7 @@
 #include "testprocess.h"
 #include "testmatrix.h"
 #include "testmisc.h"
+#include "testcmdlineparser.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -53,8 +55,9 @@ int main(int argc, char **argv) {
     //::TestVector();
     //::TestFloat16();
     //::TestThread();
-    ::TestMatrix();
-    ::TestConsoleColors();
+    //::TestMatrix();
+    //::TestConsoleColors();
+    //::TestCmdLineParser();
 
     //::printf("%s", W2A(L"Hugo"));
 
@@ -71,6 +74,7 @@ int main(int argc, char **argv) {
     //SystemMessage sysMsg(4);
     //::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
 
+    ::OutputAssertTestSummary();
 #ifdef _WIN32
     ::_tsystem(_T("pause"));
 #endif

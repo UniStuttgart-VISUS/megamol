@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testcmdlineparser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testdimandrect.cpp"
 				>
 			</File>
@@ -405,6 +409,10 @@
 			>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testcmdlineparser.h"
 				>
 			</File>
 			<File

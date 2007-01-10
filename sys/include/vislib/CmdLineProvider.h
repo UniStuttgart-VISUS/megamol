@@ -663,13 +663,14 @@ namespace sys {
      */
     template<class T> String<T> CmdLineProvider<T>::SingleStringCommandLine(bool includeFirst) {
         String<T> retval;
+        int startIndex = includeFirst ? 0 : 1;
 
-        if (this->argCount > 0) {
+        if (this->argCount > startIndex) {
             // calculate length of string to be returned
-            unsigned int len = this->argCount - 1; // separating spaces
+            unsigned int len = this->argCount - (1 + startIndex); // separating spaces
 
-            for (int i = 0; i < this->argCount; i++) {
-                bool needQuots = false;
+            for (int i = startIndex; i < this->argCount; i++) {
+                bool needQuots = (*this->arguments[i] == 0);
                 for (Char *ci = this->arguments[i]; *ci != 0; ci++) {
                     len++; // character
                     if (T::IsSpace(*ci)) needQuots = true; // parameter with spaces
@@ -677,17 +678,18 @@ namespace sys {
                         needQuots = true;
                         len++; // escape qouts
                     }
-                }    
+                }
                 if (needQuots) len += 2;
             }
 
             // build string
             Char *data = retval.AllocateBuffer(len);
 
-            for (int i = 0; i < this->argCount; i++) {
-                if (i > 0) *(data++) = static_cast<Char>(' '); // seperating space
+            for (int i = startIndex; i < this->argCount; i++) {
+                if (i > startIndex) *(data++) = static_cast<Char>(' '); // seperating space
 
                 // remember start if quots are needed
+                bool needQuots = (*this->arguments[i] == 0);
                 Char *cs = data;
 
                 for (Char *ci = this->arguments[i]; *ci != 0; *ci++) {
@@ -695,18 +697,22 @@ namespace sys {
 
                     if ((T::IsSpace(*ci)) || (*ci == static_cast<Char>('"'))) {
                         // quots are needed!
-                        data = cs;
-                        *(data++) = static_cast<Char>('"'); // starting quot
-                        for (ci = this->arguments[i]; *ci != 0; *ci++) {
-                            if (*ci == static_cast<Char>('"')) { // escape quot
-                                *(data++) = static_cast<Char>('"');
-                            }
-                            *(data++) = *ci;
-                        }
-                        *(data++) = static_cast<Char>('"'); // ending quot
+                        needQuots = true;
                         break;
                     }
                 }    
+
+                if (needQuots) {
+                    data = cs;
+                    *(data++) = static_cast<Char>('"'); // starting quot
+                    for (Char *ci = this->arguments[i]; *ci != 0; *ci++) {
+                        if (*ci == static_cast<Char>('"')) { // escape quot
+                            *(data++) = static_cast<Char>('"');
+                        }
+                        *(data++) = *ci;
+                    }
+                    *(data++) = static_cast<Char>('"'); // ending quot
+                }
             }
 
             *(data++) = 0;

@@ -75,6 +75,8 @@ void AssertOutputSuccess(void);
 
 void AssertOutputFail(void);
 
+void OutputAssertTestSummary(void);
+
 // this succeeds if exactly the specified exception is thrown.
 // has no return value!
 #define AssertException(desc, call, exception) AssertOutput(desc); try { call; AssertOutputFail(); } catch(exception e) { AssertOutputSuccess(); } catch(...) { AssertOutputFail(); }
