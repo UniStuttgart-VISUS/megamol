@@ -62,8 +62,6 @@ namespace vislib {
 			return sizeof(T);
 		}
 
-    protected:
-
 		/**
 		 * Answer the string length. 'str' can be a NULL pointer.
          *
@@ -75,6 +73,8 @@ namespace vislib {
 		inline static Size SafeStringLength(const Char *str) {
             return (str != NULL) ? CharTraits::StringLength(str) : 0;
 		}
+
+    protected:
 
         /**
          * Copy the zero-terminated string 'src' to 'dst'.

@@ -35,9 +35,6 @@ namespace vislib {
          *
          * @return The next element, which becomes the current element after
          *         calling this methode.
-         *
-         * @throws Exception if there is no next element. 
-         * TODO: use meaningful exception
          */
         virtual T& Next(void) = 0;
     };

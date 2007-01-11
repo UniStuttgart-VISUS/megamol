@@ -13,7 +13,7 @@
 
 #include "vislib/memutils.h"
 #include "vislib/Iterator.h"
-#include "vislib/Exception.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/assert.h"
 
 
@@ -53,7 +53,11 @@ namespace vislib {
             /** Behaves like Iterator<T>::HasNext */
             virtual bool HasNext(void) const;
 
-            /** Behaves like Iterator<T>::Next */
+            /** 
+             * Behaves like Iterator<T>::Next 
+             *
+             * @throw IllegalStateException if there is no next element
+             */
             virtual T& Next(void);
 
             /** assignment operator */
@@ -197,7 +201,7 @@ namespace vislib {
     T& SingleLinkedList<T>::Iterator::Next(void) {
         Item *retVal = this->next;
         if (!this->next) {
-            throw Exception(__FILE__, __LINE__);
+            throw IllegalStateException("No next element.", __FILE__, __LINE__);
         }
         this->next = this->next->next;
         return retVal->item;
