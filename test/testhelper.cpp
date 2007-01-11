@@ -38,7 +38,7 @@ bool AssertFalse(const char *desc, const bool cond) {
 
 void AssertOutput(const char *desc) {
     vislib::sys::Console::SetForegroundColor(vislib::sys::Console::DARK_GRAY);
-    std::cout << "[" << std::setw(3) << std::setfill('0') << (testhelp_testSuccess + testhelp_testFail + 1) << std::setw(0) << "] ";
+    std::cout << "[" << std::setw(4) << std::setfill('0') << (testhelp_testSuccess + testhelp_testFail + 1) << std::setw(0) << "] ";
     vislib::sys::Console::RestoreDefaultColors();
     std::cout << "\"" << desc << "\" ";
 }

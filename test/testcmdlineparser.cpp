@@ -101,8 +101,8 @@ void TestCmdLineParser(void) {
     AssertEqual("cmdLine.ArgV()[13] == 4.1", cmdLine.ArgV()[13], CLPS("4.1"));
 
     CLParser parser;
-    CLPOption helpOption(CLPS('h'), CLPS("help"));
-    CLPOption testOption(CLPS('t'), CLPS("Test"), CLPS("Just a fucking test option."), CLPOption::DOUBLE_VALUE);
+    CLPOption helpOption(CLPS('h'), CLPS("help"), CLPS("Would print some helpful help."));
+    CLPOption testOption(CLPS('t'), CLPS("Test"), NULL, CLPOption::DOUBLE_VALUE);
 
 //    AssertFalse("helpOption.IsValueValid() == false", helpOption.IsValueValid());
     AssertEqual("helpOption.GetValueType() == NO_VALUE", helpOption.GetValueType(), CLPOption::NO_VALUE);
@@ -317,4 +317,19 @@ void TestCmdLineParser(void) {
             }
         }
     }
+
+    printf("Testing generated online help:\n");
+    CLParser::OptionDescIterator odi = parser.OptionDescriptions();
+    if (AssertEqual("first description block present", odi.HasNext(), true)) {
+        CLPChar *desc = odi.Next();
+        printf("%s\n", desc);
+        AssertEqual("first description block correct", desc, CLPS("--help -h  Would print some helpful help."));
+        if (AssertEqual("second description block present", odi.HasNext(), true)) {
+            desc = odi.Next();
+            printf("%s\n", desc);
+            AssertEqual("second description block correct", desc, CLPS("--Test -t  "));
+            AssertEqual("no third description block available", odi.HasNext(), false);
+        }
+    }
+
 }

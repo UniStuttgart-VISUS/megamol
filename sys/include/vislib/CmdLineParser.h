@@ -22,6 +22,8 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Iterator.h"
 #include "vislib/CmdLineProvider.h"
+#include "vislib/ColumnFormatter.h"
+#include "vislib/Console.h"
 
 
 namespace vislib {
@@ -168,6 +170,33 @@ namespace sys {
                 return this->firstArg;
             }
 
+            /**
+             * Answer the short name of the option.
+             *
+             * @return the short name.
+             */
+            inline const Char GetShortName(void) const {
+                return this->shortName;
+            }
+
+            /**
+             * Answer the long name of the option.
+             *
+             * @return The long name.
+             */
+            inline const String<T>& GetLongName(void) const {
+                return this->longName;
+            }
+
+            /**
+             * Answer the description of the option.
+             *
+             * @return The description.
+             */
+            inline const String<T>& GetDescription(void) const {
+                return this->description;
+            }
+
         private:
 
             /** forbidden copy ctor. */
@@ -195,6 +224,16 @@ namespace sys {
             Argument *firstArg;
 
         };
+
+    private:
+            
+        /**
+         * private iterator for the list of registered options. Neccessary
+         * to avoid a gcc compiler bug not recognizing the type.
+         */
+        typedef typename vislib::SingleLinkedList<Option*>::Iterator OptionPtrIterator;
+
+    public:
 
         /**
          * Nested class for parsed command line arguments building up the
@@ -509,17 +548,61 @@ namespace sys {
         class OptionDescIterator: public Iterator<Char*> {
         public:
             friend class CmdLineParser<T>;
-                
-            /* TODO: Implement */
+
+            /** 
+             * copy ctor 
+             *
+             * @param rhs Reference to the source object
+             */
+            OptionDescIterator(const OptionDescIterator& rhs);
+
+            /**
+             * dtor 
+             */
+            virtual ~OptionDescIterator(void);
+
+            /** 
+             * assignment operator 
+             *
+             * @param rhs Reference to the source object
+             *
+             * @return Reference to this.
+             */
+            OptionDescIterator& operator=(const OptionDescIterator& rhs);
+
+            /** Behaves like Iterator<T>::HasNext */
+            virtual bool HasNext(void) const;
+
+            /** 
+             * Behaves like Iterator<T>::Next 
+             *
+             * @throw IllegalStateException if there is no next element
+             */
+            virtual Char*& Next(void);
 
         private:
 
+            /** private init ctor */
+            OptionDescIterator(vislib::SingleLinkedList<Option*> &opts);
+
+            /** pointer to the list list of the options of the parser */
+            vislib::SingleLinkedList<Option*> *options;
+
+            /** iterator before next option */
+            OptionPtrIterator option;
+
+            /** formatter object */
+            vislib::ColumnFormatter<T> formatter;
+
+            /** output string */
+            Char *output;
+
         };
 
-        /** typdef for returning errors */
+        /** typedef for returning errors */
         typedef typename vislib::SingleLinkedList<Error>::Iterator ErrorIterator;
 
-        /** typdef for returning warnings */
+        /** typedef for returning warnings */
         typedef typename vislib::SingleLinkedList<Warning>::Iterator WarningIterator;
 
         /** Ctor. */
@@ -722,13 +805,19 @@ namespace sys {
          */
         void ExtractSelectedArguments(CmdLineProvider<T> &outCmdLine);
 
-    private:
-
         /**
-         * private iterator for the list of registered options. Neccessary
-         * to avoid a gcc compiler bug not recognizing the type.
+         * Creates an option description iterator which can be used to create 
+         * an online help of the registered options of this parser. The 
+         * iterator will enter an invalid state if the option list of the 
+         * parser is changes (e.g. if the parser object ist destroied).
+         * 
+         * @return The option description iterator.
          */
-        typedef typename vislib::SingleLinkedList<Option*>::Iterator OptionPtrIterator;
+        inline OptionDescIterator OptionDescriptions(void) {
+            return OptionDescIterator(this->options);
+        }
+
+    private:
 
         /** forbidden copy Ctor. */
         CmdLineParser(const CmdLineParser& rhs);
@@ -915,6 +1004,124 @@ namespace sys {
         ASSERT(this->type != TYPE_UNKNOWN);
 
         return T::ParseDouble(this->valueArg); // throws FormatException on failure
+    }
+
+
+    /*
+     * CmdLineParser<T>::OptionDescIterator::OptionDescIterator
+     */
+    template<class T> 
+    CmdLineParser<T>::OptionDescIterator::OptionDescIterator(const OptionDescIterator& rhs) : output(NULL) {
+        *this = rhs;
+    }
+
+
+    /*
+     * CmdLineParser<T>::OptionDescIterator::OptionDescIterator
+     */
+    template<class T> 
+    CmdLineParser<T>::OptionDescIterator::~OptionDescIterator(void) {
+        ARY_SAFE_DELETE(this->output);
+    }
+
+
+    /*
+     * CmdLineParser<T>::OptionDescIterator::operator=
+     */
+    template<class T> 
+    typename CmdLineParser<T>::OptionDescIterator& CmdLineParser<T>::OptionDescIterator::operator=(const OptionDescIterator& rhs) {
+        if (this != &rhs) {
+            this->options = rhs.options;
+            this->option = rhs.option;
+            this->formatter = rhs.formatter;
+
+            ARY_SAFE_DELETE(this->output);
+            unsigned int len = T::SafeStringLength(rhs.output);
+            this->output = new Char[len + 1];
+            this->output[len] = 0;
+            if (len > 0) {
+                ::memcpy(this->output, rhs.output, len * T::CharSize());
+            }
+        }
+
+        return *this;
+    }
+
+
+    /*
+     * CmdLineParser<T>::OptionDescIterator::HasNext
+     */
+    template<class T> 
+    bool CmdLineParser<T>::OptionDescIterator::HasNext(void) const {
+        return this->option.HasNext();
+    }
+
+
+    /*
+     * CmdLineParser<T>::OptionDescIterator::Next
+     */
+    template<class T> 
+    typename CmdLineParser<T>::Char*& CmdLineParser<T>::OptionDescIterator::Next(void) {
+        Option *opt = this->option.Next();
+        ARY_SAFE_DELETE(this->output);
+
+        vislib::String<T> str;
+        if (!opt->GetLongName().IsEmpty()) {
+            str = vislib::String<T>(static_cast<Char>('-'), 2) + opt->GetLongName();
+        }
+        if (opt->GetShortName() != 0) {
+            if (!str.IsEmpty()) {
+                str += static_cast<Char>(' ');
+            }
+            str += static_cast<Char>('-');
+            str += opt->GetShortName();
+        }
+
+        this->formatter[0].SetText(str);
+        this->formatter[1].SetText(opt->GetDescription());
+        this->formatter >> str;
+
+        unsigned int len = str.Length();
+        this->output = new Char[len + 1];
+        this->output[len] = 0;
+        if (len > 0) {
+            ::memcpy(this->output, str.PeekBuffer(), len * T::CharSize());
+        }
+
+        return this->output;
+    }
+
+
+    /*
+     * CmdLineParser<T>::OptionDescIterator::OptionDescIterator
+     */
+    template<class T> 
+    CmdLineParser<T>::OptionDescIterator::OptionDescIterator(vislib::SingleLinkedList<Option*> &opts) : formatter(2), output(NULL) {
+        this->options = &opts;
+        this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), 2));
+        this->formatter.SetMaxWidth(vislib::sys::Console::GetWidth() - 1);
+        this->formatter[1].SetWidth(0);
+
+        unsigned int optnamelen = 0;
+        this->option = this->options->GetIterator();
+        while (this->option.HasNext()) {
+            Option *opt = this->option.Next();
+            unsigned int len = opt->GetLongName().Length();
+            if (len > 0) len += 2;
+            if (opt->GetShortName() != 0) {
+                len += ((len > 0) ? 3 : 2);
+            }
+
+            if (len > optnamelen) optnamelen = len;
+        }
+        if (optnamelen > ((this->formatter.GetMaxWidth() - 2) / 4)) {
+            optnamelen = ((this->formatter.GetMaxWidth() - 2) / 4);
+        }
+        this->formatter[0].SetWidth(optnamelen);
+        this->formatter[0].DisableWrapping();
+
+        this->option = this->options->GetIterator();
+
     }
 
 
@@ -1337,4 +1544,3 @@ namespace sys {
 } /* end namespace vislib */
 
 #endif /* VISLIB_CMDLINEPARSER_H_INCLUDED */
-

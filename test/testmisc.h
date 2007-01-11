@@ -12,4 +12,6 @@
 
 void TestConsoleColors(void);
 
+void TestColumnFormatter(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

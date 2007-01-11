@@ -57,7 +57,8 @@ int main(int argc, char **argv) {
     //::TestThread();
     //::TestMatrix();
     //::TestConsoleColors();
-    //::TestCmdLineParser();
+    ::TestCmdLineParser();
+    ::TestColumnFormatter();
 
     //::printf("%s", W2A(L"Hugo"));
 

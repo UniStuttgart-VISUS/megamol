@@ -278,6 +278,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ColumnFormatter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Exception.cpp"
 				>
 			</File>
@@ -345,6 +349,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\CharTraits.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ColumnFormatter.h"
 				>
 			</File>
 			<File
