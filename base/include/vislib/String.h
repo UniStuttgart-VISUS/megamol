@@ -491,6 +491,25 @@ namespace vislib {
             this->TrimEnd(chars);
         }
 
+        /**
+         * Remove all whitespace characters from the start of this string.
+         */
+        void TrimSpacesBegin(void);
+
+        /**
+         * Remove all whitespace characters from the end of this string. 
+         */
+        void TrimSpacesEnd(void);
+
+        /**
+         * Remove all whitespace characters from the start and the end of this
+         * string.
+         */
+        inline void TrimSpaces(void) {
+            this->TrimSpacesBegin();
+            this->TrimSpacesEnd();
+        }
+
         // TODO: ToLowerCase
         ///**
         // * Convert all characters to lower case.
@@ -1275,6 +1294,63 @@ namespace vislib {
 
             delete[] this->data;
             this->data = s;
+        }
+    }
+
+    
+    /*
+     * String<T>::TrimSpacesBegin
+     */
+    template<class T> void String<T>::TrimSpacesBegin(void) {
+        if ((this->data != NULL) && T::IsSpace(this->data[0])) {
+            Char *begin = NULL;
+            unsigned int len = 0;
+            Char *ptr;
+
+            // calculate string length without the leading whitespaces
+            for (ptr = this->data; *ptr != 0; ptr++) {
+                if (begin == NULL) {
+                    if (!T::IsSpace(*ptr)) { // first non-whitespace character
+                        begin = ptr;
+                        len = 1;
+                    }
+
+                } else {
+                    len++;
+
+                }
+            }
+
+            ptr = new Char[len + 1]; 
+            memcpy(ptr, begin, len * sizeof(Char));
+            ptr[len] = 0;
+
+            delete[] this->data;
+            this->data = ptr;
+        }
+    }
+
+
+    /*
+     * String<T>::TrimSpacesEnd
+     */
+    template<class T> void String<T>::TrimSpacesEnd(void) {
+        unsigned int len = this->Length();
+        while (len > 0) {
+            len--;
+            if (!T::IsSpace(this->data[len])) {
+                len++;
+                break;
+            }
+        }
+
+        if (len > 0) {
+            Char *nb = new Char[len + 1];
+            memcpy(nb, this->data, len * sizeof(Char));
+            nb[len] = 0;
+
+            delete[] this->data;
+            this->data = nb;
         }
     }
 
