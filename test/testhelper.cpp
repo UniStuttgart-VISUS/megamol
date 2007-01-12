@@ -6,11 +6,14 @@
 
 #include "testhelper.h"
 
-#include <iostream>
 #include <iomanip>
 
 #include <vislib/Console.h>
 
+
+static bool _assertTrueShowSuccess = true;
+
+static bool _assertTrueShowFailure = true;
 
 static unsigned int testhelp_testSuccess = 0;
 
@@ -19,13 +22,21 @@ static unsigned int testhelp_testFail = 0;
 
 bool AssertTrue(const char *desc, const bool cond) {
     if (cond) {
-        AssertOutput(desc);
-        AssertOutputSuccess();
+        if (::_assertTrueShowSuccess) {
+            AssertOutput(desc);
+            AssertOutputSuccess();
+        } else {    // CROWBAR
+            ::testhelp_testSuccess++;
+        }
     } else {
-        std::cout << std::endl;
-        AssertOutput(desc);
-        AssertOutputFail();
-        std::cout << std::endl;
+        if (::_assertTrueShowFailure) {
+            std::cout << std::endl;
+            AssertOutput(desc);
+            AssertOutputFail();
+            std::cout << std::endl;
+        } else {    // CROWBAR
+            ::testhelp_testFail++;
+        }
     }
 
     return cond;
@@ -37,26 +48,37 @@ bool AssertFalse(const char *desc, const bool cond) {
 }
 
 void AssertOutput(const char *desc) {
-    vislib::sys::Console::SetForegroundColor(vislib::sys::Console::DARK_GRAY);
-    std::cout << "[" << std::setw(4) << std::setfill('0') << (testhelp_testSuccess + testhelp_testFail + 1) << std::setw(0) << "] ";
-    vislib::sys::Console::RestoreDefaultColors();
-    std::cout << "\"" << desc << "\" ";
+    using namespace std;
+    using namespace vislib::sys;
+
+    Console::SetForegroundColor(Console::DARK_GRAY);
+    cout << "[" << setw(4) << setfill('0') 
+        << (testhelp_testSuccess + testhelp_testFail + 1) 
+        << setw(0) << "] ";
+    Console::RestoreDefaultColors();
+    cout << "\"" << desc << "\" ";
 }
 
 void AssertOutputSuccess(void) {
+    using namespace std;
+    using namespace vislib::sys;
+
     testhelp_testSuccess++;
-    vislib::sys::Console::SetForegroundColor(vislib::sys::Console::GREEN);
-    std::cout << "succeeded.";
-    vislib::sys::Console::RestoreDefaultColors();
-    std::cout << std::endl;
+    Console::SetForegroundColor(Console::GREEN);
+    cout << "succeeded.";
+    Console::RestoreDefaultColors();
+    cout << endl;
 }
 
 void AssertOutputFail(void) {
+    using namespace std;
+    using namespace vislib::sys;
+
     testhelp_testFail++;
-    vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
-    std::cout << "FAILED.";
-    vislib::sys::Console::RestoreDefaultColors();
-    std::cout << std::endl;
+    Console::SetForegroundColor(Console::RED);
+    cout << "FAILED.";
+    Console::RestoreDefaultColors();
+    cout << endl;
 }
 
 void OutputAssertTestSummary(void) {
@@ -73,7 +95,6 @@ void OutputAssertTestSummary(void) {
             vislib::sys::Console::SetForegroundColor(vislib::sys::Console::GRAY);
         }
     }
-    std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(1);
     std::cout << "  " << testhelp_testSuccess << " Tests succeeded (" << persSuccess << "%)" << std::endl;
     vislib::sys::Console::RestoreDefaultColors();
 
@@ -81,7 +102,14 @@ void OutputAssertTestSummary(void) {
         vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
     }
     std::cout << "  " << testhelp_testFail << " Tests failed (" << persFail << "%)" << std::endl << std::endl;
-    std::cout << std::resetiosflags(std::ios::fixed);
-
     vislib::sys::Console::RestoreDefaultColors();
+}
+
+
+void EnableAssertSuccessOutput(const bool isEnabled) {
+    ::_assertTrueShowSuccess = isEnabled;
+}
+
+void EnableAssertFailureOutput(const bool isEnabled) {
+    ::_assertTrueShowFailure = isEnabled;
 }

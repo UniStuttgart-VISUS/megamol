@@ -294,6 +294,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DateTime.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\DateTimeSpan.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\DynamicFunctionPointer.cpp"
 				>
 			</File>
@@ -393,6 +401,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\CriticalSection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\DateTime.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\DateTimeSpan.h"
 				>
 			</File>
 			<File

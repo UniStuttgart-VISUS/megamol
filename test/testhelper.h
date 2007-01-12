@@ -85,4 +85,8 @@ void OutputAssertTestSummary(void);
 // has no return value!
 #define AssertNoException(desc, call) AssertOutput(desc); try { call; AssertOutputSuccess(); } catch(...) { AssertOutputFail(); }
 
+void EnableAssertSuccessOutput(const bool isEnabled);
+
+void EnableAssertFailureOutput(const bool isEnabled);
+
 #endif /* VISLIBTEST_TESTHELPER_H_INCLUDED */

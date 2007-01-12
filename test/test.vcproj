@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testdate.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testcmdlineparser.cpp"
 				>
 			</File>
@@ -409,6 +413,10 @@
 			>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testdate.h"
 				>
 			</File>
 			<File
