@@ -243,9 +243,9 @@ void TestColumnFormatter(void) {
     ColFormatter >> output;
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
-    expected = CFS("Second | The second test      | But no out of columns    | So the wrapping is  \n")
-               CFS("       | comes with some word |                          | very easy.          \n")
-               CFS("       | wraps.               |                          | ");
+    expected = CFS("Second | The second test      | But no out of columns    | So the wrapping is\n")
+               CFS("       | comes with some word |                          | very easy.\n")
+               CFS("       | wraps.               |                          |");
     if (!AssertEqual("Formatted 2. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -263,9 +263,9 @@ void TestColumnFormatter(void) {
     ColFormatter >> output;
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
-    expected = CFS("The Third Test | TTT performs | A short out of column    | Seeing forward to   \n")
-               CFS("       | some out of column   | test!                    | test 4.             \n")
-               CFS("       | tests.               |                          | ");
+    expected = CFS("The Third Test | TTT performs | A short out of column    | Seeing forward to\n")
+               CFS("       | some out of column   | test!                    | test 4.\n")
+               CFS("       | tests.               |                          |");
     if (!AssertEqual("Formatted 3. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -283,10 +283,10 @@ void TestColumnFormatter(void) {
     ColFormatter >> output;
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
-    expected = CFS("The fourth test comes with a very very very very very very very very very very \n")
-               CFS("very long first column as hardcore test. | The 3. Column | This was the fourth \n")
-               CFS("       | 2. Column is in 3.   | starts where it should   | test.               \n")
-               CFS("       | line                 | be.                      | ");
+    expected = CFS("The fourth test comes with a very very very very very very very very very very\n")
+               CFS("very long first column as hardcore test. | The 3. Column | This was the fourth\n")
+               CFS("       | 2. Column is in 3.   | starts where it should   | test.\n")
+               CFS("       | line                 | be.                      |");
     if (!AssertEqual("Formatted 4. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -385,7 +385,7 @@ void TestColumnFormatter(void) {
     ColFormatter >> output;
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.01234.--.012345678901234567890123456789
-    expected = CFS("First Column        .--.The second column now gets a very very long text to    \n")
+    expected = CFS("First Column        .--.The second column now gets a very very long text to\n")
                CFS("                    .--.push into a new line..--.Third Column");
     if (!AssertEqual("Formatted 11. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
@@ -397,7 +397,7 @@ void TestColumnFormatter(void) {
     ColFormatter >> output;
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.01234.--.012345678901234567890123456789
-    expected = CFS("First Column        .--.The second column is now shorter, But still too long   \n")
+    expected = CFS("First Column        .--.The second column is now shorter, But still too long\n")
                CFS("                    .--..--.Third Column");
     if (!AssertEqual("Formatted 12. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
@@ -410,7 +410,7 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.01234.--.012345678901234567890123456789
     expected = CFS("First Column        .--.The second column is now a bit longer again.  I want to\n")
-               CFS("                    .--.check space interpretation on word wrap here..--.Third \n")
+               CFS("                    .--.check space interpretation on word wrap here..--.Third\n")
                CFS("                    .--.                                             .--.Column");
     if (!AssertEqual("Formatted 13. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);

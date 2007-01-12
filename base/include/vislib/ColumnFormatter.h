@@ -101,13 +101,12 @@ namespace vislib {
             /**
              * Sets the text of the column. The text is copied. Special 
              * formating characters (e.g. '\n', '\t', '\r', '\a', or '\b') will
-             * corrupt the output of FormatColumns and must not be used.
+             * corrupt the output of FormatColumns and must not be used. The
+             * text will be trimmed right.
              *
              * @param text The new text of the column.
              */
-            inline void SetText(const String& text) {
-                this->text = text;
-            }
+            void SetText(const String& text);
 
             /**
              * Answer the text of the column.
@@ -138,8 +137,26 @@ namespace vislib {
             /** text of the column */
             String text;
 
-            /** internal width value during the calculation*/
-            unsigned int realWidth;
+            /** 
+             * internal variable storing the position of the first character of
+             * the columns content.
+             */
+            unsigned int colStart;
+
+            /** internal variable storing the real size of the column. */
+            unsigned int colWidth;
+
+            /**
+             * internal variable storing the position of the first character
+             * after the columns content.
+             */
+            unsigned int colEnd;
+
+            /**
+             * internal variable storing a pointer to the remaining content of
+             * the column.
+             */
+            Char *rmTextBuf;
 
         };
 
@@ -270,6 +287,10 @@ namespace vislib {
          * follows). If the text is too short, it will be filled up with white
          * spaces.
          *
+         * The output string may contain newline control characters. However, 
+         * the last line of the string will end with a non-whitespace 
+         * character (no newline control character).
+         *
          * @param outString String receiving the formatted output.
          *
          * @return A reference to outString.
@@ -299,6 +320,11 @@ namespace vislib {
 
     private:
 
+        /**
+         * Calculates the real placement of the columns.
+         */
+        void CalcColumnPlacment(void);
+
         /** number of columns */
         unsigned int colCount;
 
@@ -315,7 +341,7 @@ namespace vislib {
 
 
     /*
-     * CmdLineParser<T>::Argument::Argument
+     * ColumnFormatter<T>::Column::Column
      */
     template<class T>
     ColumnFormatter<T>::Column::Column(void) : width(0), noWrap(false), text() {
@@ -323,7 +349,7 @@ namespace vislib {
 
 
     /*
-     * CmdLineParser<T>::Argument::~Argument
+     * ColumnFormatter<T>::Column::~Column
      */
     template<class T>
     ColumnFormatter<T>::Column::~Column(void) {
@@ -331,7 +357,7 @@ namespace vislib {
 
 
     /*
-     * CmdLineParser<T>::Argument::Argument
+     * ColumnFormatter<T>::Column::Column
      */
     template<class T>
     ColumnFormatter<T>::Column::Column(const Column& rhs) {
@@ -340,7 +366,7 @@ namespace vislib {
 
 
     /*
-     * CmdLineParser<T>::Argument::operator=
+     * ColumnFormatter<T>::Column::operator=
      */
     template<class T>
     typename ColumnFormatter<T>::Column& ColumnFormatter<T>::Column::operator=(const Column& rhs) {
@@ -351,6 +377,16 @@ namespace vislib {
         }
 
         return *this;
+    }
+
+
+    /*
+     * ColumnFormatter<T>::Column::SetText
+     */
+    template<class T>
+    void ColumnFormatter<T>::Column::SetText(const String& text) {
+        this->text = text;
+        this->text.TrimSpaces();
     }
 
 
@@ -435,21 +471,128 @@ namespace vislib {
      */
     template<class T>
     typename ColumnFormatter<T>::String& ColumnFormatter<T>::FormatColumns(String &outString) {
+        outString.Clear();
+        if (this->colCount == 0) return outString;
 
-        // some sort of debug implementation to be able to write the online help producer for the CmdLineParser
-        if (this->colCount > 0) {
-            outString = this->cols[0].GetText();
-            for (unsigned int i = 1; i < this->colCount; i++) {
-                outString += this->separator;
-                outString += this->cols[i].GetText();
+        // calculate the columns starts, ends and widths.
+        this->CalcColumnPlacment();
+        // initialize
+        for (unsigned int i = 0; i < this->colCount; i++) {
+            this->cols[i].rmTextBuf = const_cast<Char*>(this->cols[i].text.PeekBuffer());
+        }
+        
+        String bufStr;
+        Char *linebuf = bufStr.AllocateBuffer(this->maxWidth + 10); // 10 is a paranoia value
+        linebuf[0] = '\n';
+        Char *buffer = linebuf + 1;
+
+        while(true) {
+            // break if all data has been output
+            bool finished = true;
+            for (unsigned int i = 0; i < this->colCount; i++) {
+                if (*this->cols[i].rmTextBuf != 0) finished = false;
+            }
+            if (finished) break;
+
+            // build another output line
+
+            // prepare buffer
+            for (unsigned int i = 0; i < this->maxWidth; i++) {
+                buffer[i] = static_cast<Char>(' ');
+            }
+            buffer[this->maxWidth] = 0;
+
+            // buffer position
+            unsigned int pos = 0;
+
+            // fill in the cool text:
+            for (unsigned int ci = 0; ci < this->colCount; ci++) {
+                Column *col = &this->cols[ci];
+                if (col->rmTextBuf[0] == 0) {
+                    if (ci > 0) { // prepend separator if not first column
+                        const Char *sepBuf = this->separator.PeekBuffer();
+                        while (*sepBuf != 0) {
+                            buffer[pos++] = *(sepBuf++);
+                            ASSERT(pos < this->maxWidth + 1);
+                        }
+                    }
+
+                    pos = col->colEnd;
+                    continue; // omit empty columns;
+                }
+    
+                if (pos >= col->colEnd) continue; // omit column if the space is already used
+                if (pos + this->separator.Length() > col->colEnd) { 
+                    pos = col->colEnd;
+                    continue; // omit column if insufficient space
+                }
+
+                bool canWrap = !col->noWrap;
+                if ((col->colWidth != col->width) || (col->width == 0)) { // auto-grow column
+                    canWrap = false; 
+                }
+                
+                if (ci > 0) { // prepend separator if not first column
+                    const Char *sepBuf = this->separator.PeekBuffer();
+                    while (*sepBuf != 0) {
+                        buffer[pos++] = *(sepBuf++);
+                        ASSERT(pos < this->maxWidth + 1);
+                    }
+                }
+
+                if (static_cast<unsigned int>(T::SafeStringLength(col->rmTextBuf)) <= (col->colEnd - pos)) {
+                    // remaining column content fits into column
+                    while (*col->rmTextBuf != 0) {
+                        buffer[pos++] = *(col->rmTextBuf++);
+                        ASSERT(pos < this->maxWidth + 1);
+                    }
+                    pos = col->colEnd;
+                    continue;
+                }
+
+                // remaining column content does NOT fit into the remaining column
+                unsigned int right = (canWrap ? col->colEnd : this->maxWidth);
+                unsigned int len = T::SafeStringLength(col->rmTextBuf);
+                if (len > right - pos) {
+                    len = right - pos;
+                }
+
+                // decrease len if word wrap can be performed
+                unsigned int textlen = len;
+                if (col->rmTextBuf[textlen] != 0) {
+                    // breaking the string!
+                    while ((textlen > 0) && (!T::IsSpace(col->rmTextBuf[textlen]))) textlen--;
+                    while ((textlen > 0) && (T::IsSpace(col->rmTextBuf[textlen]))) textlen--;
+                    if (textlen == 0) {
+                        textlen = len; // no spaces were found, so break hard
+                    } else {
+                        textlen++;
+                    }
+                }
+
+                // copy text
+                for (unsigned int i = 0; i < textlen; i++) {
+                    buffer[pos++] = *col->rmTextBuf;
+                    col->rmTextBuf++;
+                    ASSERT(pos < this->maxWidth + 1);
+                }
+                pos += len - textlen;
+
+                // omit upcoming spaces in col->rmTextBuf
+                while ((*col->rmTextBuf != 0) && T::IsSpace(*col->rmTextBuf)) {
+                    col->rmTextBuf++;
+                }
+
             }
 
-        } else {
-            outString.Clear();
+            while((pos > 0) && (T::IsSpace(buffer[pos - 1]))) pos--;
+            buffer[pos] = 0;
+
+            outString += ((outString.IsEmpty()) ? (buffer) : (linebuf));
 
         }
 
-        // TODO: Implement real functionallity
+        outString.TrimSpacesEnd();
 
         return outString;
     }
@@ -472,6 +615,109 @@ namespace vislib {
         }
 
         return *this;
+    }
+
+    
+    /*
+     * ColumnFormatter<T>::CalcColumnPlacment
+     */
+    template<class T>
+    void ColumnFormatter<T>::CalcColumnPlacment(void) {
+        unsigned int left = 0;
+        unsigned int sepW = this->separator.Length();
+        unsigned int maxW;
+        Column *col;
+        bool wrap;
+
+        // calculating widths of all columns 
+        for (unsigned int i = 0; i < this->colCount; i++) {
+            col = &this->cols[i];
+            maxW = this->maxWidth - left - ((sepW + 1) * (this->colCount - (i + 1)));
+            wrap = !col->noWrap;
+
+            col->colWidth = col->width;
+            if ((col->colWidth == 0) || (col->colWidth > maxW)) {
+                // columns is auto-grow
+                wrap = false; // go into no wrap mode
+                col->colWidth = col->text.Length();
+
+                if (col->colWidth > maxW) {
+                    // columns content exceeds a single line
+
+                    // Do the word wrap
+                    Char *buf = const_cast<Char*>(col->text.PeekBuffer());
+                    Char *lastWordStart = NULL;
+                    unsigned int len = 0;
+                    unsigned int lines = 1;
+                    bool lastS = false;
+
+                    while(*buf != 0) {
+                        len++;
+                        bool s = T::IsSpace(*buf);
+                        if (lastS && ! s) {
+                            lastWordStart = buf;
+                        }
+                        if (len > (this->maxWidth - left)) {
+                            if (s) { // omit unneeded spaces
+                                while ((*buf != 0) && (T::IsSpace(*buf))) {
+                                    buf++;
+                                }
+                                ASSERT(buf != 0); // because all strings had been trimmed right
+                                lastWordStart = NULL;
+                            }
+
+                            if (lastWordStart == NULL) {
+                                lastWordStart = buf;
+                            }
+                            lines++;
+                            len = 1;
+                            buf = lastWordStart;
+                            lastWordStart = NULL;
+                        }
+
+                        lastS = s;
+                        buf++;
+                    }
+
+                    col->colWidth = len;
+                    if (col->colWidth > maxW) {
+                        // column content is too large to place the following 
+                        // columns right aside, but is short enough that the
+                        // content fits into a single line.
+                        ASSERT(lines == 1);
+                        col->colWidth = 0; 
+                    }
+                }
+            }
+
+            col->colStart = left;
+            col->colEnd = col->colStart + col->colWidth;
+            // start value for the next column
+            left = col->colEnd + sepW;
+        }
+
+        // correct values if too wide
+        if (this->cols[this->colCount - 1].colEnd > this->maxWidth) {
+            for (unsigned int i = 0; i < this->colCount; i++) {
+                if (i > 0) {
+                    this->cols[i].colStart = this->cols[i - 1].colEnd + sepW;
+                }
+                this->cols[i].colEnd = static_cast<unsigned int>(
+                    double(this->cols[i].colEnd) * double(this->maxWidth) / double(this->cols[this->colCount - 1].colEnd));
+            }
+            this->cols[this->colCount - 1].colEnd = this->maxWidth;
+
+        }
+
+        // if last column is auto-grow, fill the maximum width
+        if ((this->cols[this->colCount - 1].width == 0) || (this->cols[this->colCount - 1].width >= this->maxWidth)) {
+            this->cols[this->colCount - 1].colEnd = this->maxWidth;
+        }
+
+        // calc column widths
+        for (unsigned int i = 0; i < this->colCount; i++) {
+            this->cols[i].colWidth = this->cols[i].colEnd - this->cols[i].colStart;
+        }
     }
 
     
