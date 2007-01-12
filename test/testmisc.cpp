@@ -10,7 +10,7 @@
 #include <vislib/Console.h>
 #include <vislib/ColumnFormatter.h>
 
-#define USE_UNICODE_COLUMNFORMATTER
+// #define USE_UNICODE_COLUMNFORMATTER
 
 #ifndef USE_UNICODE_COLUMNFORMATTER
 typedef vislib::ColumnFormatterA ColumnFormatter;
@@ -122,9 +122,21 @@ void TestConsoleColors(void) {
 
 }
 
+void TestColumnFormatterHelper(CFString &result, CFString &expected) {
+    vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
+    std::cout << "Expected:" << std::endl;
+    vislib::sys::Console::RestoreDefaultColors();
+    std::cout << expected.PeekBuffer() << std::endl;
+    vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
+    std::cout << "Result:" << std::endl;
+    vislib::sys::Console::RestoreDefaultColors();
+    std::cout << result.PeekBuffer() << std::endl;
+}
+
 void TestColumnFormatter(void) {
     ColumnFormatter ColFormatter;
     CFString output = CFS("Test");
+    CFString expected;
 
     ColFormatter.SetMaxWidth(79);
     AssertEqual<unsigned int>("Maximum Width = 79", ColFormatter.GetMaxWidth(), 79);
@@ -154,7 +166,7 @@ void TestColumnFormatter(void) {
     ColFormatter[3].DisableWrapping();
     AssertEqual("Column[3] Wrapping = false", ColFormatter[3].IsWrappingDisabled(), true);
 
-    ColFormatter[0].SetText(CFS("1."));
+    ColFormatter[0].SetText(CFS("1.  "));
     ColFormatter[1].SetText(CFS("This is 1. test"));
     ColFormatter[2].SetText(CFS("All Text fits into line"));
     ColFormatter[3].SetText(CFS("No wrapping at all"));
@@ -211,10 +223,12 @@ void TestColumnFormatter(void) {
     AssertEqual("Column[3] Text = \"No wrapping at all\"", ColFormatter[3].GetText(), CFS("No wrapping at all"));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 1. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
-        CFS("1.     | This is 1. test      | All Text fits into line  | No wrapping at all"));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
+    expected = CFS("1.     | This is 1. test      | All Text fits into line  | No wrapping at all");
+    if (!AssertEqual("Formatted 1. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
 //                               123456
@@ -227,12 +241,14 @@ void TestColumnFormatter(void) {
     ColFormatter[3].SetText(CFS("So the wrapping is very easy."));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 2. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
-        CFS("Second | The second test      | But no out of columns    | So the wrapping is  \n")
-        CFS("       | comes with some word |                          | very easy.          \n")
-        CFS("       | wraps.               |                          | "));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
+    expected = CFS("Second | The second test      | But no out of columns    | So the wrapping is  \n")
+               CFS("       | comes with some word |                          | very easy.          \n")
+               CFS("       | wraps.               |                          | ");
+    if (!AssertEqual("Formatted 2. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
 //                               123456
@@ -245,12 +261,14 @@ void TestColumnFormatter(void) {
     ColFormatter[3].SetText(CFS("Seeing forward to test 4."));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 3. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
-        CFS("The Third Test | TTT performs | A short out of column    | Seeing forward to   \n")
-        CFS("       | some out of column   | test!                    | test 4.             \n")
-        CFS("       | tests.               |                          | "));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
+    expected = CFS("The Third Test | TTT performs | A short out of column    | Seeing forward to   \n")
+               CFS("       | some out of column   | test!                    | test 4.             \n")
+               CFS("       | tests.               |                          | ");
+    if (!AssertEqual("Formatted 3. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
 //                               123456
@@ -263,13 +281,15 @@ void TestColumnFormatter(void) {
     ColFormatter[3].SetText(CFS("This was the fourth test."));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 4. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
-        CFS("The fourth test comes with a very very very very very very very very very very \n")
-        CFS("very long first column as hardcore test. | The 3. Column | This was the fourth \n")
-        CFS("       | 2. Column is in 3.   | starts where it should   | test.               \n")
-        CFS("       | line                 | be.                      | "));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
+    expected = CFS("The fourth test comes with a very very very very very very very very very very \n")
+               CFS("very long first column as hardcore test. | The 3. Column | This was the fourth \n")
+               CFS("       | 2. Column is in 3.   | starts where it should   | test.               \n")
+               CFS("       | line                 | be.                      | ");
+    if (!AssertEqual("Formatted 4. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter.SetColumnCount(3);
@@ -285,43 +305,51 @@ void TestColumnFormatter(void) {
     ColFormatter[2].SetText(CFS("012345678901234567890123456789"));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 5. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
-        CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
-        CFS("                    .--.                              .--.123456789"));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
+    expected = CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
+               CFS("                    .--.                              .--.123456789");
+    if (!AssertEqual("Formatted 5. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter[0].SetWidth(102);
 
     ColFormatter >> output;
-    AssertEqual("Formatted 6. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
-        CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
-        CFS("                    .--.                              .--.123456789"));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
+    expected = CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
+               CFS("                    .--.                              .--.123456789");
+    if (!AssertEqual("Formatted 6. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter[1].DisableWrapping();
     ColFormatter[1].SetText(CFS("012345678901234567890123456789012345678901234567890123456789"));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 7. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
-        CFS("01234567890123456789.--.0123456789012345678901234567890123456789012345678901234\n")
-        CFS("                    .--.56789                         .--.012345678901234567890\n")
-        CFS("                    .--.                              .--.123456789"));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
+    expected = CFS("01234567890123456789.--.0123456789012345678901234567890123456789012345678901234\n")
+               CFS("                    .--.56789                         .--.012345678901234567890\n")
+               CFS("                    .--.                              .--.123456789");
+    if (!AssertEqual("Formatted 7. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter[1].EnableWrapping();
 
     ColFormatter >> output;
-    AssertEqual("Formatted 8. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
-        CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
-        CFS("                    .--.012345678901234567890123456789.--.123456789"));                         
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
+    expected = CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
+               CFS("                    .--.012345678901234567890123456789.--.123456789");
+    if (!AssertEqual("Formatted 8. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter[0].SetWidth(20);
@@ -330,11 +358,13 @@ void TestColumnFormatter(void) {
     ColFormatter[1].SetText(CFS("Horst"));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 9. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
-        CFS("012345678901234567890123456789012345678901234567890   .--.012345678901234567890\n")
-        CFS("                    .--.Horst                         .--.123456789"));                         
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
+    expected = CFS("012345678901234567890123456789012345678901234567890   .--.012345678901234567890\n")
+               CFS("                    .--.Horst                         .--.123456789");
+    if (!AssertEqual("Formatted 9. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter[1].SetWidth(0);
@@ -342,29 +372,48 @@ void TestColumnFormatter(void) {
     ColFormatter[2].SetText(CFS("Third Column"));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 10. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.01234.--.012345678901234567890123456789
-        CFS("First Column        .--.Horst.--.Third Column"));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.01234.--.012345678901234567890123456789
+    expected = CFS("First Column        .--.Horst.--.Third Column");
+    if (!AssertEqual("Formatted 10. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter[1].SetText(CFS("The second column now gets a very very long text to push into a new line."));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 11. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.01234.--.012345678901234567890123456789
-        CFS("First Column        .--.The second column now gets a very very long text to    \n")
-        CFS("                    .--.push into a new line..--.Third Column"));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.01234.--.012345678901234567890123456789
+    expected = CFS("First Column        .--.The second column now gets a very very long text to    \n")
+               CFS("                    .--.push into a new line..--.Third Column");
+    if (!AssertEqual("Formatted 11. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 //----------------------------------------------------------------------------
     ColFormatter[1].SetText(CFS("The second column is now shorter, But still too long"));
 
     ColFormatter >> output;
-    AssertEqual("Formatted 12. output as expected", output,
-//           1234567890123456789012345678901234567890123456789012345678901234567890123456789
-//           01234567890123456789.--.01234.--.012345678901234567890123456789
-        CFS("First Column        .--.The second column is now shorter, But still too long   \n")
-        CFS("                    .--..--.Third Column"));
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.01234.--.012345678901234567890123456789
+    expected = CFS("First Column        .--.The second column is now shorter, But still too long   \n")
+               CFS("                    .--..--.Third Column");
+    if (!AssertEqual("Formatted 12. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
+
+//----------------------------------------------------------------------------
+    ColFormatter[1].SetText(CFS("The second column is now a bit longer again.  I want to check space interpretation on word wrap here."));
+
+    ColFormatter >> output;
+//                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
+//                  01234567890123456789.--.01234.--.012345678901234567890123456789
+    expected = CFS("First Column        .--.The second column is now a bit longer again.  I want to\n")
+               CFS("                    .--.check space interpretation on word wrap here..--.Third \n")
+               CFS("                    .--.                                             .--.Column");
+    if (!AssertEqual("Formatted 13. output as expected", output, expected)) {
+        TestColumnFormatterHelper(output, expected);
+    }
 
 }

@@ -95,6 +95,7 @@ void OutputAssertTestSummary(void) {
             vislib::sys::Console::SetForegroundColor(vislib::sys::Console::GRAY);
         }
     }
+    std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(1);
     std::cout << "  " << testhelp_testSuccess << " Tests succeeded (" << persSuccess << "%)" << std::endl;
     vislib::sys::Console::RestoreDefaultColors();
 
@@ -102,6 +103,8 @@ void OutputAssertTestSummary(void) {
         vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
     }
     std::cout << "  " << testhelp_testFail << " Tests failed (" << persFail << "%)" << std::endl << std::endl;
+    std::cout << std::resetiosflags(std::ios::fixed);
+
     vislib::sys::Console::RestoreDefaultColors();
 }
 

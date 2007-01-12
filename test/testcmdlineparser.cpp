@@ -327,7 +327,7 @@ void TestCmdLineParser(void) {
         if (AssertEqual("second description block present", odi.HasNext(), true)) {
             desc = odi.Next();
             printf("%s\n", desc);
-            AssertEqual("second description block correct", desc, CLPS("--Test -t  "));
+            AssertEqual("second description block correct", desc, CLPS("--Test -t"));
             AssertEqual("no third description block available", odi.HasNext(), false);
         }
     }
