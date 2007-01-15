@@ -16,4 +16,6 @@ void TestStringA(void);
 
 void TestStringW(void);
 
+void TestUTF8String(void);
+
 #endif /* VISLIBTEST_TESTSTRING_H_INCLUDED */

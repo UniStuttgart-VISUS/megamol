@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     //TRACE(1, "HORST!\n");
 
     //::TestSysInfo();
-    //::TestString();
+    ::TestString();
     //::TestFile();
     //::TestPath();
     //::TestProcess();
@@ -57,8 +57,8 @@ int main(int argc, char **argv) {
     //::TestThread();
     //::TestMatrix();
     //::TestConsoleColors();
-    ::TestCmdLineParser();
-    ::TestColumnFormatter();
+    //::TestCmdLineParser();
+    //::TestColumnFormatter();
 
     //::printf("%s", W2A(L"Hugo"));
 

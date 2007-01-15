@@ -334,6 +334,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\UTF8Encoder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils.cpp"
 				>
 			</File>
