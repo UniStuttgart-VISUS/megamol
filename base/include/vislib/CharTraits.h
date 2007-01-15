@@ -329,7 +329,7 @@ namespace vislib {
 #ifdef _WIN32
             int lenIn = StringLength(src) + 1;	// Count only once.
             int lenOut = ::MultiByteToWideChar(CP_ACP, 0, src, lenIn, NULL, 0);
-                dst[cnt - 1] = 0;
+            if ((lenOut > 0) && (static_cast<Size>(lenOut) <= cnt)) {
                 return (::MultiByteToWideChar(CP_ACP, 0, src, lenIn, dst, 
                     lenOut) > 0);
             } else {
