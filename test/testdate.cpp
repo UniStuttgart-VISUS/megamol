@@ -120,9 +120,14 @@ void TestDateTime(void)  {
     ::DateConversionTest(2004, 3, 1, 5, 32, 35);
 
     ::DateConversionTest(-1, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-1, 2, 1, 0, 0, 0);
+    ::DateConversionTest(-1, 3, 1, 0, 0, 0);
     ::DateConversionTest(-1, 1, 1, 0, 0, 1);
     ::DateConversionTest(-3, 1, 1, 0, 0, 0);
     ::DateConversionTest(-4, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-4, 1, 1, 0, 0, 1);
+    ::DateConversionTest(-4, 2, 29, 0, 0, 0);
+    ::DateConversionTest(-4, 3, 1, 0, 0, 0);
     ::DateConversionTest(-5, 1, 1, 0, 0, 0);
     ::DateConversionTest(-99, 1, 1, 0, 0, 0);
     ::DateConversionTest(-100, 1, 1, 0, 0, 0);
@@ -130,8 +135,20 @@ void TestDateTime(void)  {
     ::DateConversionTest(-399, 1, 1, 0, 0, 0);
     ::DateConversionTest(-400, 1, 1, 0, 0, 0);
     ::DateConversionTest(-401, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-404, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-405 , 1, 1, 0, 0, 0);
+    ::DateConversionTest(-799, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-800, 1, 1, 0, 0, 0);
+    ::DateConversionTest(-800, 2, 28, 0, 0, 0);
+    ::DateConversionTest(-800, 2, 29, 0, 0, 0);
+    ::DateConversionTest(-800, 3, 1, 0, 0, 0);
+    ::DateConversionTest(-801, 1, 1, 0, 0, 0);
     ::DateConversionTest(-1700, 1, 1, 0, 0, 0);
     ::DateConversionTest(-1700, 1, 1, 12, 34, 56);
+    ::DateConversionTest(-1704, 1, 1, 5, 32, 35);
+    ::DateConversionTest(-1704, 2, 1, 5, 1, 00);
+    ::DateConversionTest(-1704, 3, 1, 5, 00, 35);
+    ::DateConversionTest(-1704, 12, 31, 0, 0, 1);
     ::DateConversionTest(-2004, 1, 1, 5, 32, 35);
     ::DateConversionTest(-2004, 2, 1, 5, 1, 00);
     ::DateConversionTest(-2004, 3, 1, 5, 00, 35);

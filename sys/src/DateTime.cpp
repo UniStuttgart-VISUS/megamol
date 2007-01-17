@@ -74,22 +74,28 @@ void vislib::sys::DateTime::GetDate(INT& outYear,
                                     INT& outMonth, 
                                     INT& outDay) const {
     INT64 days = this->value / ONE_DAY;     // Full days.
+    INT64 bcExtraOffset = (this->value % ONE_DAY == 0) ? 1 : 0;
     INT64 cnt400Years = 0;                  // # of 400 year blocks.
     INT64 cnt100Years = 0;                  // # of 100 year blocks.
     INT64 cnt4Years = 0;                    // # of 4 year blocks.
     INT64 cntYears = 0;                     // # of remaining years.
     bool containsLeapYear = true;           // Contains 4 year block leap year?
 
-    /* Ensure 'days' to be positive, B. C. dates are handled later. */
-    //if (days < 0) {
-    //    days = -days;
-    //}
     if (days >= 0) {
+        /*
+         * The subsequent iterative divisions and modulo operations require a 
+         * year 0 to work. However, the Gregorian calendar does not have such
+         * a year and therefore a value of 0 represents 01.01.0001 in this 
+         * class. Therefore, we add the non-existing year 0 for the following 
+         * steps here. Note, that we have to add 366 days because the 
+         * non-existing year 0 would be a leap year according to the rules of
+         * the Gregorian calendar.
+         */
         days += 366;
-    //} else {
-    //    days++;
-    }
 
+    } else {
+        days = -days + 365;
+    }
 
     /* 
      * Determine 400 year blocks lying behind and make 'days' relative to
@@ -171,11 +177,14 @@ void vislib::sys::DateTime::GetDate(INT& outYear,
     /* At this point, we can compute the year. */
     outYear = static_cast<INT>(400 * cnt400Years + 100 * cnt100Years
          + 4 * cnt4Years + cntYears);
-    //if (outYear == 0) {
-    //    outYear++;
-    //}
-    //if (this->value < 0) {
-    //    outYear = -outYear;
+    if (this->value < 0) {
+        outYear = -outYear;
+        days = 365 - days - 1;
+//        ASSERT(days >= 0);
+    }
+    //if (days < 0) {
+    //    days = 365 + IsLeapYear(outYear - 1) + days + 1;
+    //    //days = -days;
     //}
 
 

@@ -32,6 +32,15 @@ void TestString(void) {
     AssertTrue("assignment-conversion-test #3", !::strcmp(a1, "Hällo Wörld"));
     AssertTrue("assignment-conversion-test #4", !::wcscmp(w1, L"Hällo Wörld"));
 
+	wchar_t wc = L'ä';
+	char ac = 0;
+	CharTraitsA::Convert(ac, wc);
+	AssertEqual("Wide to ANSI character conversion.", ac, 'ä');
+
+	ac = 'ö';
+	CharTraitsA::Convert(wc, ac);
+	AssertEqual("ANSI to wide character conversion.", wc, L'ö');
+
     TestUTF8String();
 
 }

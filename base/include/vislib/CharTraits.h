@@ -19,6 +19,11 @@
 #include <cwchar>
 #include <cwctype>
 
+#ifndef _WIN32
+#include <langinfo.h>
+#include <iconv.h>
+#endif /* !_WIN32 */
+
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
 #include "vislib/types.h"
@@ -164,6 +169,18 @@ namespace vislib {
         /** Empty character sequence constant. */
         static const Char EMPTY_STRING[];
 
+#ifndef _WIN32
+
+		/** The code identifier for normal chars. */
+		static const char *ICONV_CODE_CHAR;
+
+		/**The code identifier for wide chars. */
+		static const char *ICONV_CODE_WCHAR;
+
+		/** Constant identifying an invalid iconv_t. */
+		static const iconv_t INVALID_ICONV_T;
+#endif /* !_WIN32 */
+
     }; /* end class CharTraits */
 
 
@@ -175,6 +192,30 @@ namespace vislib {
         = { static_cast<Char>(0) };
 
 
+#ifndef _WIN32
+	/*
+	 * vislib::CharTraits<T>::ICONV_CODE_CHAR
+	 */
+	template<class T>
+	const char *CharTraits<T>::ICONV_CODE_CHAR = "MS-ANSI";
+
+	
+	/*
+	 * vislib::CharTraits<T>::ICONV_CODE_WCHAR
+	 */
+	template<class T>
+	const char *CharTraits<T>::ICONV_CODE_WCHAR = "WCHAR_T";
+
+
+	/*
+	 * vislib::CharTraits<T>::INVALID_ICONV_T
+	 */
+	template<class T> 
+	const iconv_t CharTraits<T>::INVALID_ICONV_T 
+		= reinterpret_cast<iconv_t>(-1);
+#endif /* !_WIN32 */
+
+
     /**
      * Specialisation for ANSI character traits.
      *
@@ -183,6 +224,37 @@ namespace vislib {
     class CharTraitsA : public CharTraits<char> {
 
     public:
+
+        /**
+         * Convert character 'src' to an ANSI character saved to 'dst'.
+         *
+         * @param dst The variable receiving the converted character.
+         * @param src The character to be converted.
+         *
+         * @return true, if 'src' was successfully converted and stored in 
+         *         'dst', false otherwise.
+         */
+        inline static bool Convert(char& dst, const Char src) {
+			dst = src;
+			return true;
+        }
+
+        /**
+         * Convert character 'src' to an wide character saved to 'dst'.
+         *
+         * @param dst The variable receiving the converted character.
+         * @param src The character to be converted.
+         *
+         * @return true, if 'src' was successfully converted and stored in 
+         *         'dst', false otherwise.
+         */
+        inline static bool Convert(wchar_t& dst, const Char src) {
+#ifdef _WIN32
+			return (::MultiByteToWideChar(CP_ACP, 0, &src, 1, &dst, 1) > 0);
+#else /* _WIN32 */
+			return Convert(&dst, 1, &src);
+#endif /* _WIN32 */
+        }
 
         /**
          * Answer whether the character 'c' is a digit.
@@ -354,16 +426,32 @@ namespace vislib {
             ASSERT(src != NULL);
 
 #ifdef _WIN32
-            int lenIn = StringLength(src) + 1;	// Count only once.
-            int lenOut = ::MultiByteToWideChar(CP_ACP, 0, src, lenIn, NULL, 0);
-            if ((lenOut > 0) && (static_cast<Size>(lenOut) <= cnt)) {
-                return (::MultiByteToWideChar(CP_ACP, 0, src, lenIn, dst, 
-                    lenOut) > 0);
-            } else {
-                return false;
-            }
+			return (::MultiByteToWideChar(CP_ACP, 0, src, cnt, dst, cnt) > 0);
 #else /* _WIN32 */
-            return (::swprintf(dst, cnt, L"%hs", src) == (cnt - 1));
+			iconv_t hIconv = INVALID_ICONV_T;
+			char *in = reinterpret_cast<char *>(const_cast<Char *>(src));
+			char *out = reinterpret_cast<char *>(dst);
+			size_t lenIn = cnt * sizeof(Char);
+			size_t lenOut = cnt * sizeof(wchar_t);
+			bool retval = false;
+			//char *li = NULL;
+
+			
+			//if (strlen(li = nl_langinfo(CODESET)) < 1) {
+			//	return false;
+			//}
+
+			if ((hIconv = ::iconv_open(ICONV_CODE_WCHAR, ICONV_CODE_CHAR))
+					!= INVALID_ICONV_T) {
+				if (::iconv(hIconv, &in, &lenIn, &out, &lenOut) 
+						!= static_cast<size_t>(-1)) {
+					retval = true;
+				}
+
+				::iconv_close(hIconv);
+			}
+
+			return retval;
 #endif /* _WIN32 */
         }
 
@@ -474,6 +562,38 @@ namespace vislib {
     class CharTraitsW : public CharTraits<WCHAR> {
 
     public:
+
+        /**
+         * Convert character 'src' to an ANSI character saved to 'dst'.
+         *
+         * @param dst The variable receiving the converted character.
+         * @param src The character to be converted.
+         *
+         * @return true, if 'src' was successfully converted and stored in 
+         *         'dst', false otherwise.
+         */
+        inline static bool Convert(char& dst, const Char src) {
+#ifdef _WIN32
+            return (::WideCharToMultiByte(CP_ACP, 0, &src, 1, &dst, 1, NULL,
+				NULL) > 0);
+#else /* _WIN32 */
+			return Convert(&dst, 1, &src);
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Convert character 'src' to an wide character saved to 'dst'.
+         *
+         * @param dst The variable receiving the converted character.
+         * @param src The character to be converted.
+         *
+         * @return true, if 'src' was successfully converted and stored in 
+         *         'dst', false otherwise.
+         */
+        inline static bool Convert(wchar_t& dst, const Char src) {
+			dst = src;
+			return true;
+        }
 
         /**
          * Answer whether the character 'c' is a digit.
@@ -631,17 +751,32 @@ namespace vislib {
             ASSERT(src != NULL);
 
 #ifdef _WIN32
-            int lenIn = StringLength(src)+ 1;	// Count only once.
-            int lenOut = ::WideCharToMultiByte(CP_ACP, 0, src, lenIn, NULL, 0, 
-                NULL, NULL);
-            if ((lenOut > 0) && (static_cast<Size>(lenOut) <= cnt)) {
-                return (::WideCharToMultiByte(CP_ACP, 0, src, lenIn, dst, 
-                    lenOut, NULL, NULL) > 0);
-            } else {
-                return false;
-            }
+            return (::WideCharToMultiByte(CP_ACP, 0, src, cnt, dst, cnt, NULL, 
+				NULL) > 0);
 #else /* _WIN32 */
-            return (::snprintf(dst, cnt, "%ls", src) == (cnt - 1));
+			iconv_t hIconv = INVALID_ICONV_T;
+			char *in = reinterpret_cast<char *>(const_cast<Char *>(src));
+			char *out = reinterpret_cast<char *>(dst);
+			size_t lenIn = cnt * sizeof(Char);
+			size_t lenOut = cnt * sizeof(wchar_t);
+			bool retval = false;
+			//char *li = NULL;
+
+			//if (strlen(li = nl_langinfo(CODESET)) < 1) {
+			//	return false;
+			//}
+
+			if ((hIconv = ::iconv_open(ICONV_CODE_CHAR, ICONV_CODE_WCHAR))
+					!= INVALID_ICONV_T) {
+				if (::iconv(hIconv, &in, &lenIn, &out, &lenOut) 
+						!= static_cast<size_t>(-1)) {
+					retval = true;
+				}
+
+				::iconv_close(hIconv);
+			}
+
+			return retval;
 #endif /* _WIN32 */
         }
 
