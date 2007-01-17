@@ -166,6 +166,16 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
 #endif
 }
 
+/*
+ * vislib::sys::SystemInformation::AllocationGranularity
+ */
+#ifdef _WIN32
+DWORD vislib::sys::SystemInformation::AllocationGranularity(void) {
+    SYSTEM_INFO si;
+    ::GetSystemInfo(&si);
+    return si.dwAllocationGranularity;
+}
+#endif /* _WIN32*/
 
 /*
  * vislib::sys::SystemInformation::PageSize

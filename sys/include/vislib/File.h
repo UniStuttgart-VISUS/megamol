@@ -322,6 +322,8 @@ namespace sys {
          */
         File& operator =(const File& rhs);
 
+	protected:
+
         /** The file handle. */
 #ifdef _WIN32
         HANDLE handle;

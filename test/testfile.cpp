@@ -10,6 +10,7 @@
 
 #include "testhelper.h"
 #include "vislib/BufferedFile.h"
+#include "vislib/MemmappedFile.h"
 #include "vislib/error.h"
 #include "vislib/File.h"
 #include "vislib/Path.h"
@@ -120,7 +121,7 @@ static void runTests(File& f1) {
 
     AssertEqual("Seek to 1", f1.Seek(1, File::BEGIN), 
         static_cast<File::FileSize>(1));
-    AssertEqual("Writing 5 characters to file", f1.Write(writeBuffer, 3), 
+    AssertEqual("Writing 3 characters to file", f1.Write(writeBuffer, 3), 
         static_cast<File::FileSize>(3));
     AssertEqual("Reading after new characters ", f1.Read(readBuffer, 1),
         static_cast<File::FileSize>(1));
@@ -165,8 +166,9 @@ static void runTests(File& f1) {
 
 void TestFile(void) {
     try {
-        ::TestBaseFile();
-        ::TestBufferedFile();
+        //::TestBaseFile();
+        //::TestBufferedFile();
+		::TestMemmappedFile();
     } catch (IOException e) {
         std::cout << e.GetMsgA() << std::endl;
     }
@@ -188,6 +190,12 @@ void TestBufferedFile(void) {
     f1.SetBufferSize(8);
     std::cout << std::endl << "Tests for BufferedFile, buffer size 8" << std::endl;
     ::runTests(f1);
+}
+
+void TestMemmappedFile(void) {
+	MemmappedFile f1;
+	std::cout << std::endl << "Tests for MemmappedFile" << std::endl;
+	::runTests(f1);
 }
 
 

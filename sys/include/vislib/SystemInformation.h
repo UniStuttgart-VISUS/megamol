@@ -133,8 +133,25 @@ namespace sys {
         }
 
         /**
-         * Answer the page size and the granularity of page protection and 
-         * commitment.
+         * Answer the the granularity of page protection and 
+         * commitment. Until we know better on Linux this is equivalent
+		 * to PageSize()
+         *
+         * @return The allocation granularity in bytes.
+         *
+         * @throws SystemException If the page size could not be retrieved 
+         *                         (Linux only).
+         */
+#ifdef _WIN32
+		static DWORD AllocationGranularity(void);
+#else /* _WIN32 */
+		static inline DWORD AllocationGranularity(void) {
+			return PageSize();
+		}
+#endif /* _WIN32 */
+
+        /**
+         * Answer the page size
          *
          * @return The page size in bytes.
          *

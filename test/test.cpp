@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
     //::TestSysInfo();
     ::TestString();
-    //::TestFile();
+    ::TestFile();
     //::TestPath();
     //::TestProcess();
     //::TestVector();

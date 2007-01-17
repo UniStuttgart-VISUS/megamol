@@ -16,6 +16,8 @@ void TestBaseFile(void);
 
 void TestBufferedFile(void);
 
+void TestMemmappedFile(void);
+
 void TestPath(void);
 
 #endif /* VISLIBTEST_TESTFILE_H_INCLUDED */

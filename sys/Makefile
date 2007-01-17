@@ -8,7 +8,7 @@
 
 TargetName := vislibsys
 
-IncludeDir += ../base/include
+IncludeDir += ../base/include ../math/include
 
 ExcludeFromBuild += ./src/DynamicFunctionPointer.cpp
 
