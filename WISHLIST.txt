@@ -8,4 +8,3 @@ Christoph: Arithmetik für Float16
 Sebastian: UserData Resources for Linux (and Windows) including AccessClasses (and Generator for Linux)
 Sebastian: Trigonometrische Funktionen die in Tabellen nachschlagen (mit linearer Interpolation)
 Sebastian: FPS-Counter mit "BeginFrame" und "EndFrame"; FPS (Theoretisch/Real) in (Last/Mid/Min/Max)
-Sebastian: UTF8-String-De/Encoder 

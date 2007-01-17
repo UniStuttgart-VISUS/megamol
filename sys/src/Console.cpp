@@ -12,6 +12,8 @@
 #ifdef _WIN32
 #include <windows.h>
 
+#include "DynamicFunctionPointer.h"
+
 #else /* _WIN32 */
 #include <stdlib.h>
 
@@ -21,6 +23,8 @@
 
 #include <curses.h>
 #include <term.h>
+
+#include "vislib/StringConverter.h"
 
 #endif /* _WIN32 */
 
@@ -66,10 +70,29 @@ public:
 
         // refresh the flag because of the undefined initialization sequence 
         vislib::sys::Console::EnableColors(this->colorsAvailable);
+
+        if (!isatty(STDOUT_FILENO) || !isatty(STDERR_FILENO)) {
+            vislib::sys::Console::EnableColors(false);
+        }
+
+        // console title crowbar is not initialized.
+        this->consoleTitleInit = false;
+
+        this->isXterm = false;
+        this->dcopPresent = false;
+        this->isKonsole = false;
+
+        // no old console title
+        this->oldConsoleTitle = NULL;
     }
 
     /** dtor */
     ~Curser(void) {
+        
+        if (this->oldConsoleTitle != NULL) {
+            this->SetConsoleTitle(this->oldConsoleTitle);
+            ARY_SAFE_DELETE(this->oldConsoleTitle);
+        }
     }
 
     /** getter to colorsAvailable */
@@ -120,9 +143,146 @@ public:
         tputs(tparm(foreground ? set_a_foreground : set_a_background, colType), 1, outputChar);
     }
 
+    /** sets the console title, if possible */
+    inline void SetConsoleTitle(const char *title) {
+        if (!this->consoleTitleInit) {
+            // first time call
+
+            { // check capabilities
+                vislib::StringA out;
+                vislib::StringA err;
+
+                this->dcopPresent = false;
+                this->isKonsole = false;
+
+                // first check if dcop is available
+                vislib::sys::Console::Run("dcop", &out, &err);
+
+                this->dcopPresent = (err.Length() == 0);
+
+                // check if environment variable $KONSOLE_DCOP_SESSION is present
+                char *v = ::getenv("KONSOLE_DCOP_SESSION");
+
+                this->isKonsole = (v != NULL);
+
+                // check if environment variable $TERM is 'xterm'
+                v = ::getenv("TERM");
+
+                this->isXterm = ((v != NULL) && (strcasecmp(v, "xterm") == 0));
+                if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
+                    this->isXterm = false;
+                }
+
+            }
+
+            if (this->oldConsoleTitle == NULL) {
+                // try to store the old title
+                vislib::StringA oldName;
+
+                if (this->dcopPresent && this->isKonsole) {
+                    vislib::StringA cmd;
+                    cmd.Format("dcop $KONSOLE_DCOP_SESSION sessionName");
+                    vislib::sys::Console::Run(cmd.PeekBuffer(), &oldName, NULL);
+
+/*                } else if (this->isXterm) {
+                    // getting title from xterm is very unsecure
+                    struct termios tty_ts, tty_ts_orig, tty_ts_tst; // termios settings 
+                    struct termios *tty_ts_orig_pt = NULL;
+
+                    // get and backup tty_in termios 
+                    tcgetattr(STDIN_FILENO, &tty_ts);
+                    tty_ts_orig = tty_ts;
+                    tty_ts_orig_pt = &tty_ts_orig;
+
+                    // set tty raw 
+                    tty_ts.c_iflag = 0;
+                    tty_ts.c_lflag = 0;
+
+                    tty_ts.c_cc[VMIN] = 1;
+                    tty_ts.c_cc[VTIME] = 1;
+                    tty_ts.c_lflag &= ~(ICANON | ECHO);
+                    tcsetattr(STDIN_FILENO, TCSANOW, &tty_ts);
+
+                    printf("\033[21t"); // request title control sequence
+                    fflush(stdout);
+
+                    int n;
+                    char s[1024];
+                    n = read(STDIN_FILENO, s, sizeof(s) - sizeof(char));  // TODO: Problem with rxvt. 
+                    s[1023] = 0;
+
+                    if (n > 5) {
+                        s[n - 2] = 0;
+                        oldName = &s[3];
+                    }
+
+                    if (tty_ts_orig_pt) {
+                        tcsetattr(STDIN_FILENO, TCSAFLUSH, tty_ts_orig_pt);
+                    }
+*/
+                } else { 
+                    // another way?
+
+                }
+
+                unsigned int size = oldName.Length();
+                if (size > 0) {
+                    this->oldConsoleTitle = new char[size + 1];
+                    ::memcpy(this->oldConsoleTitle, oldName.PeekBuffer(), size * sizeof(char));
+                    this->oldConsoleTitle[size] = 0;
+
+                    // truncate control characters at the end
+                    size--;
+                    while ((size > 0) && (this->oldConsoleTitle[size] < 0x20)) {
+                        this->oldConsoleTitle[size--] = 0;
+                    }
+
+                }
+
+            }
+
+            this->consoleTitleInit = true;
+        }
+
+        if (this->oldConsoleTitle == NULL) {
+            // we won't set a new title if we're not able to recreate the current one
+            return;
+        }
+
+        if (this->dcopPresent && this->isKonsole) {
+            vislib::StringA cmd;
+            cmd.Format("dcop $KONSOLE_DCOP_SESSION renameSession '%s'", title);
+            vislib::sys::Console::Run(cmd.PeekBuffer(), NULL, NULL);
+
+        } else if (this->isXterm) {
+            // xterm operating system command: echo '\033]0;AAAAA\007'
+            printf("\033]0;%s\007", title);
+
+        } else {
+            // another way? 
+
+        }
+
+    }
+
 private:
     /** flag whether there is color text support */
     bool colorsAvailable;
+
+    /** flag whether the console title mechnisms has been initialized. */
+    bool consoleTitleInit;
+
+    /** flag whether dcop is available */
+    bool dcopPresent;
+
+    /** flag whether this is an xterm */
+    bool isXterm;
+
+    /** flag whether the console is a KDE Konsole */
+    bool isKonsole;
+
+    /** old console title stored, which should be restored on exit */
+    char *oldConsoleTitle;
 
 };
 
@@ -531,6 +691,74 @@ unsigned int vislib::sys::Console::GetHeight(void) {
 #else // _WIN32
     int value = tigetnum("lines");
     return (value == -2) ? 0 : value;
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::SetTitle
+ */
+void vislib::sys::Console::SetTitle(const vislib::StringA& title) {
+#ifdef _WIN32
+    ::SetConsoleTitleA(title);
+
+#else // _WIN32
+    vislib::sys::Console::curser.SetConsoleTitle(title);
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::SetTitle
+ */
+void vislib::sys::Console::SetTitle(const vislib::StringW& title) {
+#ifdef _WIN32
+    ::SetConsoleTitleW(title);
+
+#else // _WIN32
+    // we only support ANSI-Strings for Linux consoles.
+    vislib::sys::Console::curser.SetConsoleTitle(W2A(title));
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::SetIcon
+ */
+void vislib::sys::Console::SetIcon(unsigned int id) {
+#ifdef _WIN32
+    // Creates an HWND handle for the console window
+    HWND console = NULL;
+    DynamicFunctionPointer<HWND (*)(void)> getConsoleWindow("kernel32", "GetConsoleWindow");
+    if (!getConsoleWindow.IsValid()) return; // function not found. Windows too old.
+    console = getConsoleWindow();
+    if (console == NULL) return; // no console present
+
+    // Creates an HINSTANCE handle for the current application.
+    // 'GetModuleHandleA' creates a HMODULE which should be the same as 
+    // HINSTANCE, at least this is the common hope.
+    HMODULE instance = ::GetModuleHandleA(NULL);
+    if (instance == NULL) return; // no instance handle available ... hmm
+
+    // Load the requested icon ressource
+    HICON icon = ::LoadIcon(instance, MAKEINTRESOURCE(id)); 
+    if (icon == NULL) return; // icon ressource not found.
+
+    // setting the icon.
+#ifndef _WIN64
+#pragma warning(disable: 4244)
+#endif
+    ::SetClassLongPtr(console, GCLP_HICON, reinterpret_cast<LONG_PTR>(icon));
+    ::SetClassLongPtr(console, GCLP_HICONSM, reinterpret_cast<LONG_PTR>(icon));
+#ifndef _WIN64
+#pragma warning(default: 4244)
+#endif
+
+#else // _WIN32
+    // Linux is stupid
 
 #endif // _WIN32
 }

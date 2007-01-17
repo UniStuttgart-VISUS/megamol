@@ -29,6 +29,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/SystemMessage.h"
 #include "vislib/Trace.h"
+#include "vislib/Console.h"
 
 
 #ifdef _WIN32
@@ -38,14 +39,20 @@ int main(int argc, char **argv) {
 #endif
     using namespace vislib;
     using namespace vislib::sys;
-    
+
+#ifdef _WIN32
+    vislib::sys::Console::SetTitle(L"VISlib™ Test Application");
+#else  /* _WIN32 */
+    vislib::sys::Console::SetTitle("VISlib Test Application");
+#endif /* _WIN32 */
+    vislib::sys::Console::SetIcon(1);
 
     //vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
     //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
     //TRACE(1, "HORST!\n");
 
-    //::TestSysInfo();
-    ::TestString();
+    ::TestSysInfo();
+    //::TestString();
     ::TestFile();
     //::TestPath();
     //::TestProcess();

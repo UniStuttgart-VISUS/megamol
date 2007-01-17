@@ -171,6 +171,27 @@ namespace sys {
          */
         static unsigned int GetHeight(void);
 
+        /**
+         * Sets the title of the console window, if possible.
+         *
+         * @param title The new title of the console window.
+         */
+        static void SetTitle(const vislib::StringA& title);
+
+        /**
+         * Sets the title of the console window, if possible.
+         *
+         * @param title The new title of the console window.
+         */
+        static void SetTitle(const vislib::StringW& title);
+
+        /**
+         * Sets the icon of the console window, if possible.
+         *
+         * @param id The ressource id of the icon.
+         */
+        static void SetIcon(unsigned int id);
+
         /** Dtor. */
         ~Console(void);
 
@@ -195,6 +216,7 @@ namespace sys {
 
         /** internal helper class */
         static Curser curser;
+
 #endif // _WIN32
 
     };
