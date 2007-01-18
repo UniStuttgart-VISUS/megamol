@@ -35,6 +35,8 @@ if ($Args.Length -eq 3) {
 	exit
 }
 
+$curYear = get-date -uformat "%Y"
+
 # Check creation mode and set path variables
 $CPPPath = ".\$Project\src\"
 if ($Mode -eq "public") {
@@ -77,7 +79,10 @@ if ($confirmation -ne "m") {
 $CPPContent = "/*
  * " + $ClassName + ".cpp
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - "
+ $CPPContent += $curYear
+ $CPPContent += " by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
 
@@ -109,7 +114,10 @@ $CPPContent += $ClassName + ".h`"
 $HContent = "/*
  * " + "$ClassName" + ".h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - "
+ $HContent += $curYear
+ $HContent += " by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_" 
