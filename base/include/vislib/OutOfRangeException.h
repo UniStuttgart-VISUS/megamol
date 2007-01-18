@@ -55,7 +55,7 @@ namespace vislib {
          *
          * @return *this.
          */
-        virtual OutOfRangeException& operator =(const OutOfRangeException& rhs);
+        OutOfRangeException& operator =(const OutOfRangeException& rhs);
     };
 }
 

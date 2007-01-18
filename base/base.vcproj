@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\NoSuchElementException.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\OutOfRangeException.cpp"
 				>
 			</File>
@@ -315,6 +319,10 @@
 			</File>
 			<File
 				RelativePath=".\src\SingleLinkedList.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Stack.cpp"
 				>
 			</File>
 			<File
@@ -384,6 +392,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\NoSuchElementException.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\OutOfRangeException.h"
 				>
 			</File>
@@ -397,6 +409,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SingleLinkedList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Stack.h"
 				>
 			</File>
 			<File
