@@ -15,6 +15,8 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/Point.h"
+#include "vislib/ShallowVector.h"
 #include "vislib/String.h"
 #include "vislib/Vector.h"
 
@@ -355,6 +357,37 @@ namespace math {
         template<class Sp>
         Vector<T, D - 1> operator *(
             const AbstractVector<T, D - 1, Sp>& rhs) const;
+
+        /**
+         * Multiplies this matrix with the point 'rhs'.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return The transformed point.
+         */
+        template<class Sp>
+        inline Point<T, D> operator *(const AbstractPoint<T, D, Sp>& rhs) const {
+            ShallowVector<T, D> v(const_cast<double *>(rhs.PeekCoordinates()));
+            return Point<T, D>(v.PeekComponents());
+        }
+
+        /**
+         * Extends 'rhs' to be a point with homogenous coordinates and 
+         * multiplies the matrix with this point. Before returning the (D - 1)
+         * dimensional result, a perspective divide is performed to normalise 
+         * the last component to 1. This component is discarded in the result.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return The transformed point.
+         */
+        template<class Sp>
+        inline Point<T, D - 1> operator *(
+                const AbstractPoint<T, D - 1, Sp>& rhs) const {
+            ShallowVector<T, D - 1> v(const_cast<double *>(
+                rhs.PeekCoordinates()));
+            return Point<T, D - 1>(v.PeekComponents());
+        }
 
         /**
          * Assignment operator.
@@ -982,8 +1015,8 @@ namespace math {
     }
 
 
-    /* vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator *
-     *
+    /* 
+     * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator *
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
         template<class T, unsigned int D, MatrixLayout L, class S> class C>  
