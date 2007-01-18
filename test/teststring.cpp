@@ -34,7 +34,7 @@ void TestString(void) {
 
 	wchar_t wc = L'ä';
 	char ac = 0;
-	CharTraitsA::Convert(ac, wc);
+	CharTraitsW::Convert(ac, wc);
 	AssertEqual("Wide to ANSI character conversion.", ac, 'ä');
 
 	ac = 'ö';
@@ -443,11 +443,11 @@ void TestUTF8String(void) {
     AssertTrue("Decode", vislib::UTF8Encoder::Decode(strW, utf8));
     AssertEqual("decoding of UTF8 \"Bäh!\" to unicode correct.", strW, L"Bäh!");
 
-    unsigned char tst1[] = {0xc3, 0xa4, 0xc3, 0xb6, 0xc3, 0xbc, 0xc3, 0x84, 0xc3, 0x96, 0xc3, 0x9c, 0xc3, 0x9f, 0xe2, 0x84, 0xa2, 0x00};
-    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, L"äöüÄÖÜß™"));
-    AssertEqual("UTF8 of L\"äöüÄÖÜß™\" correct.", utf8, reinterpret_cast<const char*>(tst1));
+    unsigned char tst1[] = {0xc3, 0xa4, 0xc3, 0xb6, 0xc3, 0xbc, 0xc3, 0x84, 0xc3, 0x96, 0xc3, 0x9c, 0xc3, 0x9f, 0x00};
+    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, L"äöüÄÖÜß"));
+    AssertEqual("UTF8 of L\"äöüÄÖÜß\" correct.", utf8, reinterpret_cast<const char*>(tst1));
 
-    AssertEqual<int>("Size of UTF8 String is correct", vislib::UTF8Encoder::StringLength(utf8), int(strlen("äöüÄÖÜß™")));
+    AssertEqual<int>("Size of UTF8 String is correct", vislib::UTF8Encoder::StringLength(utf8), int(strlen("äöüÄÖÜß")));
 
     //AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "äöüÄÖÜß™"));
     //AssertEqual("UTF8 of \"äöüÄÖÜß™\" correct.", utf8, reinterpret_cast<const char*>(tst1));

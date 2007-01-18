@@ -282,8 +282,10 @@ namespace vislib {
          * Convert 'src' to an ANSI character.
          *
          * @param src The character to be converted.
+         * @param defChar The character value that will be returned if any 
+         *                error occures.
          */
-        inline static char ToANSI(const Char src) {
+        inline static char ToANSI(const Char src, const char defChar = '?') {
             return src;
         }
 
@@ -302,19 +304,12 @@ namespace vislib {
          * Convert 'src' to an Unicode character.
          *
          * @param src The character to be converted.
+         * @param defChar The character value that will be returned if any 
+         *                error occures.
          */
-        inline static wchar_t ToUnicode(const Char src) {
-            wchar_t o[2];
-
-#if (_MSC_VER >= 1400)
-            _snwprintf_s(o, 2, 2, L"%hc", src); // TODO: Implement better
-#elif defined(_WIN32)
-            _snwprintf(o, 2, L"%hc", src); // TODO: Implement better
-#else  /*(_MSC_VER >= 1400) */
-            swprintf(o, 2, L"%hc", src); // TODO: Implement better
-#endif /*(_MSC_VER >= 1400) */
-
-            return o[0];
+        inline static wchar_t ToUnicode(const Char src, const wchar_t defChar = L'?') {
+            wchar_t o;
+            return Convert(o, src) ? o : defChar;
 
         }
 
@@ -621,26 +616,13 @@ namespace vislib {
          * Convert 'src' to an ANSI character.
          *
          * @param src The character to be converted.
+         * @param defChar The character value that will be returned if any 
+         *                error occures.
          */
-        inline static char ToANSI(const Char src) {
-#ifdef _WIN32
-            char o[2];
-#if (_MSC_VER >= 1400)
-            _snprintf_s(o, 2, 2, "%lc", src); // TODO: Implement better
-#else  /*(_MSC_VER >= 1400) */
-            _snprintf(o, 2, "%lc", src); // TODO: Implement better
-#endif /*(_MSC_VER >= 1400) */
-            return o[0];
+        inline static char ToANSI(const Char src, char defChar = '?') {
+            char o;
+            return Convert(o, src) ? o : defChar;
 
-#else  /* _WIN32 */
-            Char i[2];
-            i[0] = src;
-            i[1] = 0;
-            char o[2];
-            snprintf(o, 2, "%ls", i); // TODO: Implement better
-            return o[0];
-
-#endif /* _WIN32 */
         }
 
         /**
@@ -658,8 +640,10 @@ namespace vislib {
          * Convert 'src' to an ANSI character.
          *
          * @param src The character to be converted.
+         * @param defChar The character value that will be returned if any 
+         *                error occures.
          */
-        inline static wchar_t ToUnicode(const Char src) {
+        inline static wchar_t ToUnicode(const Char src, wchar_t defChar = '?') {
             return src;
         }
 
