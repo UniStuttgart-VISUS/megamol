@@ -368,7 +368,7 @@ namespace math {
         template<class Sp>
         inline Point<T, D> operator *(const AbstractPoint<T, D, Sp>& rhs) const {
             ShallowVector<T, D> v(const_cast<double *>(rhs.PeekCoordinates()));
-            return Point<T, D>(v.PeekComponents());
+            return Point<T, D>((*this * v).PeekComponents());
         }
 
         /**
@@ -386,7 +386,7 @@ namespace math {
                 const AbstractPoint<T, D - 1, Sp>& rhs) const {
             ShallowVector<T, D - 1> v(const_cast<double *>(
                 rhs.PeekCoordinates()));
-            return Point<T, D - 1>(v.PeekComponents());
+            return Point<T, D - 1>((*this * v).PeekComponents());
         }
 
         /**
