@@ -161,6 +161,8 @@ static void runTests(File& f1) {
 
     File::Delete("hugo.txt");
     AssertFalse("\"hugo.txt\" was deleted", File::Exists("hugo.txt"));
+
+	AssertTrue("All tests complete", 1);
 }
 
 

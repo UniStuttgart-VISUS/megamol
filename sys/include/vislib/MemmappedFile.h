@@ -17,30 +17,15 @@ namespace sys {
 
     /**
      * Instances of this class repsesent a file based on vislib::sys::File but
-     * with buffered access for reading and writing.
+     * with memory-mapped access for reading and writing. Memory-mapped I/O is very efficient and
+	 * recommended for reading. Read/write access is fully supported but should be
+	 * used with caution. Write-only access does not exist and is therefore silently upgraded to
+	 * read/write.
      *
      * @author Guido Reina (guido.reina@vis.uni-stuttgart.de)
      */
     class MemmappedFile : public File {
     public:
-
-        ///**
-        // * Answers the default size used when creating new BufferedFile objects
-        // *
-        // * @return size in bytes used when creating new buffers
-        // */
-        //inline static File::FileSize GetDefaultBufferSize(void) {
-        //    return BufferedFile::defaultBufferSize;
-        //}
-
-        ///**
-        // * Sets the default size used when creating new BufferedFile objects
-        // *
-        // * @param newSize The new size in bytes used when creating new buffers
-        // */
-        //inline static void SetDefaultBufferSize(File::FileSize newSize) {
-        //    BufferedFile::defaultBufferSize = newSize;
-        //}
 
         /** Ctor. */
         MemmappedFile(void);
@@ -50,14 +35,14 @@ namespace sys {
          */
         virtual ~MemmappedFile(void);
 
-        /** Close the file, if open. */
+        /** Close the file, if open. Flush, if necessary. */
         virtual void Close(void);
 
         /**
          * behaves like File::Flush, except that it flushes only dirty buffers.
          *
-         * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
-         *                    could not be flushed to disk.
+         * @throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
+         *                    could not be flushed to disk. GetLastError() will provide details.
          */
         virtual void Flush(void);
 
@@ -67,18 +52,22 @@ namespace sys {
          *
          * @return number of bytes in view
          */
-        inline File::FileSize GetViewSize(void) const {
+        virtual inline File::FileSize GetViewSize(void) const {
 			return this->viewSize;
         }
 
         /**
-         * behaves like File::GetSize
+         * behaves mostly like File::GetSize
+		 *
+		 * @throws IllegalStateException if the file is not open
          */
         virtual File::FileSize GetSize(void) const;
 
         /**
          * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
 		 * since there is no such thing as a memory-mapped WRITE_ONLY file.
+		 *
+		 * @throws IOException
          */
         virtual bool Open(const char *filename, const File::AccessMode accessMode, 
             const File::ShareMode shareMode, const File::CreationMode creationMode);
@@ -86,27 +75,34 @@ namespace sys {
         /**
          * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
 		 * since there is no such thing as a memory-mapped WRITE_ONLY file.
+		 *
+		 * @throws IOException
          */
         virtual bool Open(const wchar_t *filename, const File::AccessMode accessMode, 
             const File::ShareMode shareMode, const File::CreationMode creationMode);
 
         /**
          * behaves like File::Read
-         * Performs an implicit flush if the buffer is not in read mode.	// BUG: DO WE NEED TO?
-         * Ensures that the buffer is in read mode.							// BUG: I WANT TRUE READWRITE FILES
+         * Performs an implicit flush if the view is dirty and changed.
+		 *
+		 * @throws IOException ERROR_WRITE_FAULT if flushing
+		 * @throws IOException ERROR_ACCESS_DENIED if called on write-only files
+		 * @throws IOException on mapping failures. Use GetLastError().
+		 * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
          */
         virtual File::FileSize Read(void *outBuf, const File::FileSize bufSize);
 
         /**
          * behaves like File::Seek
-         * Performs an implicit flush if the buffer is in write mode.		// BUG: ONLY WHEN DIRTY
+		 * If the destination is beyond file extents, it is cropped.
+         * No flush is performed since changing views already takes care of that.
          */
         virtual File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from);
 
         /**
          * Sets the size of the current view.
-         * Calling this method implictly flushes the buffer.
-		 * The size is automatically rounded to the next smaller multiple of AllocationGranularity.
+         * Calling this method implictly unmaps the view (and flushes the buffer).
+		 * The size is automatically rounded to the next smaller, greater-than-zero multiple of AllocationGranularity.
 		 *
 		 * @return the actually set size
          *
@@ -118,27 +114,63 @@ namespace sys {
 
         /**
          * behaves like File::Tell
+		 *
+		 * @throws IllegalStateException if the file is not open
          */
         virtual File::FileSize Tell(void) const;
 
         /**
          * behaves like File::Write
-         * Performs an implicit flush if the buffer is not in write mode.	// BUG: nah.
-         * Ensures that the buffer is in write mode.						// BUG: nah. depends on access
+         * Performs an implicit flush if the view is dirty and changed.
          *
-         * @throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
-         *                    could not be flushed to disk.
+		 * @throws IOException ERROR_WRITE_FAULT if flushing
+		 * @throws IOException ERROR_ACCESS_DENIED if called on read-only files
+		 * @throws IOException on mapping failures. Use GetLastError().
+		 * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
          */
         virtual File::FileSize Write(const void *buf, const File::FileSize bufSize);
 
     private:
 
-		inline void safeUnmap();
+		/**
+		 * If file is in write mode, this calls for a Flush(). Then it unmaps the current view,
+		 * if there is any. mappedData will be NULL afterwards.
+		 *
+		 * @throws IOException if unmapping fails. Use GetLastError().
+		 */
+		inline void SafeUnmapView();
 
-		inline void safeCloseMapping();
+		/**
+		 * Closes the mapping applied to handle. If views still exist, the mapping will persist
+		 * until these are unmapped as well.
+		 *
+		 * @throws IOException if closing fails. Use GetLastError().
+		 */
+		inline void SafeCloseMapping();
 
-        ///** Possible values for the buffer mode */
-        //enum BufferMode { VOID_BUFFER, READ_BUFFER, WRITE_BUFFER };
+		/**
+		 * Generates the next-smaller multiple of AllocationGranularity to make sure it is aligned
+		 * and can be used for view mapping.
+		 *
+		 * @param position the number to be aligned.
+         *
+		 * @return the aligned number
+		 */
+		inline File::FileSize AlignPosition(File::FileSize position);
+
+		/**
+		 * Generates a view on the current mapping of the open file, taking into account the current
+		 * view size as well as the actual file size.
+		 * 
+		 * @param desiredAccess as expected by MapViewOfFile
+		 * @param filePos starting position of view. Must be aligned to AllocationGranularity.
+		 *
+		 * @return pointer to the memory where the view resides
+		 *
+		 * @throws IOException if view creation fails. Use GetLastError().
+		 * @throws IllegalStateException if the current mapping is invalid or the file is closed, for example.
+		 */
+		inline char* SafeMapView(DWORD desiredAccess, ULARGE_INTEGER filePos);
 
         /**
          * Forbidden copy-ctor.
@@ -163,13 +195,7 @@ namespace sys {
 		/**
 		 * I do not like to implement the open twice. So here goes the common code.
 		 */
-		bool commonOpen(const File::AccessMode accessMode);
-
-        ///** the default buffer size when creating new buffers */
-        //static File::FileSize defaultBufferSize;
-
-        ///** the buffer for IO */
-        //unsigned char *buffer;
+		bool CommonOpen(const File::AccessMode accessMode);
 
         /** 
          * the starting position of the view in bytes from the beginning of 
@@ -195,7 +221,7 @@ namespace sys {
 #endif /* _WIN32 */
 
 		/**
-		 * writing needs this parameter for each now mapping...
+		 * paging mode, writing needs this parameter for each new mapping...
 		 */
 		DWORD protect;
 
@@ -203,9 +229,6 @@ namespace sys {
 		 * store the access mode for later reference (e.g. views)
 		 */
 		File::AccessMode access;
-
-        ///** the mode of the current buffer */
-        //BufferMode bufferMode;
 
         /** the absolute position inside the file */
         File::FileSize filePos;
@@ -221,9 +244,6 @@ namespace sys {
 
 		/** does a writable view have to be written back to disk */
 		bool viewDirty;
-
-        ///** the number of bytes of the buffer which hold valid informations */
-        //File::FileSize validBufferSize;
 
     };
 
