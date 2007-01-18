@@ -31,6 +31,7 @@
 #include "vislib/assert.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/Thread.h"
 
 
 /*
@@ -57,6 +58,19 @@ vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::s
  */
 class vislib::sys::Console::Curser {
 public:
+
+#define READER_DATA_BUFFER_SIZE 1024
+
+    /** helper data struct for the stdin reader */
+    struct ReaderData {
+
+        /** The buffer */
+        char buffer[READER_DATA_BUFFER_SIZE];
+
+        /** The length of the valid buffer content */
+        unsigned int len;
+
+    };
 
     /** ctor */
     Curser(void) {
@@ -143,6 +157,26 @@ public:
         tputs(tparm(foreground ? set_a_foreground : set_a_background, colType), 1, outputChar);
     }
 
+    /** helper function to aviod linux stdin read lock */
+    static DWORD AskStdin(const void *userData) {
+        struct ReaderData *rd = static_cast<struct ReaderData*>(const_cast<void*>(userData));
+        rd->len = 0;
+        rd->buffer[0] = 0;
+
+        int n;
+                    //char s[1024];
+        n = read(STDIN_FILENO, rd->buffer, READER_DATA_BUFFER_SIZE - 1);
+        rd->buffer[READER_DATA_BUFFER_SIZE - 1] = 0;
+        rd->len = n;
+
+        //while(true) {
+        //    printf(".");
+        //    vislib::sys::Thread::Sleep(500);
+        //}
+
+        return 0;
+    }
+
     /** sets the console title, if possible */
     inline void SetConsoleTitle(const char *title) {
         if (!this->consoleTitleInit) {
@@ -184,9 +218,9 @@ public:
                     cmd.Format("dcop $KONSOLE_DCOP_SESSION sessionName");
                     vislib::sys::Console::Run(cmd.PeekBuffer(), &oldName, NULL);
 
-/*                } else if (this->isXterm) {
+                } else if (this->isXterm) {
                     // getting title from xterm is very unsecure
-                    struct termios tty_ts, tty_ts_orig, tty_ts_tst; // termios settings 
+                    struct termios tty_ts, tty_ts_orig; // termios settings 
                     struct termios *tty_ts_orig_pt = NULL;
 
                     // get and backup tty_in termios 
@@ -206,20 +240,36 @@ public:
                     printf("\033[21t"); // request title control sequence
                     fflush(stdout);
 
-                    int n;
-                    char s[1024];
-                    n = read(STDIN_FILENO, s, sizeof(s) - sizeof(char));  // TODO: Problem with rxvt. 
-                    s[1023] = 0;
+                    {
+                        struct ReaderData rd;
+                        rd.len = 0;
 
-                    if (n > 5) {
-                        s[n - 2] = 0;
-                        oldName = &s[3];
+                        vislib::sys::Thread stdinreader(AskStdin);
+                        stdinreader.Start(&rd);
+                        unsigned int cnt = 0;
+                        while(cnt < 1000) {
+                            vislib::sys::Thread::Sleep(50);
+                            cnt += 50;
+                            if (rd.len > 0) {
+                                break;
+                            }
+                        }
+                        if (rd.len == 0) {                       
+                            stdinreader.Terminate(true);
+                            rd.len = 0;
+                        }
+
+                        if (rd.len > 5) {
+                            rd.buffer[rd.len - 2] = 0;
+                            oldName = &rd.buffer[3];
+                        }
+
                     }
 
                     if (tty_ts_orig_pt) {
                         tcsetattr(STDIN_FILENO, TCSAFLUSH, tty_ts_orig_pt);
                     }
-*/
+
                 } else { 
                     // another way?
 
@@ -286,6 +336,7 @@ private:
 
 };
 
+#undef READER_DATA_BUFFER_SIZE
 
 /*
  * Instance of linux term helper class

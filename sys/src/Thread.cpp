@@ -97,7 +97,7 @@ vislib::sys::Thread::Thread(Runnable *runnable)
  * vislib::sys::Thread::Thread
  */
 vislib::sys::Thread::Thread(Runnable::Function runnableFunc) 
-        : id(0), runnable(NULL), runnableFunc(NULL) {
+        : id(0), runnable(NULL), runnableFunc(runnableFunc) {
 #ifdef _WIN32
 	this->handle = NULL;
 
