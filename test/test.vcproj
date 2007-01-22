@@ -354,15 +354,23 @@
 				>
 			</File>
 			<File
-				RelativePath=".\testdate.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\testcmdlineparser.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\testcollection.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\testdate.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testdimandrect.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\testdiscovery.cpp"
 				>
 			</File>
 			<File
@@ -383,6 +391,10 @@
 			</File>
 			<File
 				RelativePath=".\testmisc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\testpointers.cpp"
 				>
 			</File>
 			<File
@@ -416,15 +428,23 @@
 				>
 			</File>
 			<File
-				RelativePath=".\testdate.h"
-				>
-			</File>
-			<File
 				RelativePath=".\testcmdlineparser.h"
 				>
 			</File>
 			<File
+				RelativePath=".\testcollection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testdate.h"
+				>
+			</File>
+			<File
 				RelativePath=".\testdimandrect.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testdiscovery.h"
 				>
 			</File>
 			<File
@@ -445,6 +465,10 @@
 			</File>
 			<File
 				RelativePath=".\testmisc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testpointers.h"
 				>
 			</File>
 			<File

@@ -274,6 +274,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\Array.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CharTraits.cpp"
 				>
 			</File>
@@ -322,6 +326,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SmartPtr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Stack.cpp"
 				>
 			</File>
@@ -355,6 +363,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\vislib\Array.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\vislib\assert.h"
 				>
@@ -409,6 +421,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SingleLinkedList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SmartPtr.h"
 				>
 			</File>
 			<File
