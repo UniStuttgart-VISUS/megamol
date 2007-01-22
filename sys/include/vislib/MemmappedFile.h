@@ -12,6 +12,11 @@
 
 #include "vislib/File.h"
 
+#ifndef _WIN32
+#define __USE_FILE_OFFSET64
+#include <sys/mman.h>
+#endif /* _WIN32 */
+
 namespace vislib {
 namespace sys {
 
@@ -86,7 +91,7 @@ namespace sys {
          * Performs an implicit flush if the view is dirty and changed.
 		 *
 		 * @throws IOException ERROR_WRITE_FAULT if flushing
-		 * @throws IOException ERROR_ACCESS_DENIED if called on write-only files
+		 * @throws IOException ERROR_ACCESS_DENIED (windows) or EACCES (linux) if called on write-only files
 		 * @throws IOException on mapping failures. Use GetLastError().
 		 * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
          */
@@ -133,6 +138,13 @@ namespace sys {
     private:
 
 		/**
+		 * Generate a valid view size if it is greater than the difference between viewStart and endPos
+		 *
+		 * @return the corrected view size
+		 */
+		inline File::FileSize AdjustedViewSize();
+
+		/**
 		 * If file is in write mode, this calls for a Flush(). Then it unmaps the current view,
 		 * if there is any. mappedData will be NULL afterwards.
 		 *
@@ -160,17 +172,15 @@ namespace sys {
 
 		/**
 		 * Generates a view on the current mapping of the open file, taking into account the current
-		 * view size as well as the actual file size.
+		 * view size as well as the actual file size. The start of the view is the aligned value of
+		 * this->filePos. this->viewStart is updated accordingly.
 		 * 
-		 * @param desiredAccess as expected by MapViewOfFile
-		 * @param filePos starting position of view. Must be aligned to AllocationGranularity.
-		 *
 		 * @return pointer to the memory where the view resides
 		 *
 		 * @throws IOException if view creation fails. Use GetLastError().
-		 * @throws IllegalStateException if the current mapping is invalid or the file is closed, for example.
+		 * @throws IllegalStateException if the current mapping is invalid or the file is closed, or the access type is wrong
 		 */
-		inline char* SafeMapView(DWORD desiredAccess, ULARGE_INTEGER filePos);
+		inline char* SafeMapView();
 
         /**
          * Forbidden copy-ctor.
@@ -217,13 +227,17 @@ namespace sys {
 #ifdef _WIN32
 		HANDLE mapping;
 #else /* _WIN32 */
-		// BUG: data type???
+		// unnecessary
 #endif /* _WIN32 */
 
 		/**
 		 * paging mode, writing needs this parameter for each new mapping...
 		 */
+#ifdef _WIN32
 		DWORD protect;
+#else /* _WIN32 */
+		int protect;
+#endif
 
 		/**
 		 * store the access mode for later reference (e.g. views)
