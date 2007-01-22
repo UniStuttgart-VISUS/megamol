@@ -74,9 +74,9 @@ vislib::net::SocketAddress::~SocketAddress(void) {
 
 
 /*
- * vislib::net::SocketAddress::SetIPAdress
+ * vislib::net::SocketAddress::SetIPAddress
  */
-void vislib::net::SocketAddress::SetIPAdress(const IPAddress& ipAddress) {
+void vislib::net::SocketAddress::SetIPAddress(const IPAddress& ipAddress) {
     this->inetAddress.sin_addr = static_cast<struct in_addr>(ipAddress);
 }
 

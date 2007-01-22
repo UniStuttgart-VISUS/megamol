@@ -8,7 +8,7 @@
 
 TargetName := vislibtest
 
-IncludeDir := ./include ../base/include ../sys/include ../math/include ../graphics/include
+IncludeDir := ./include ../base/include ../sys/include ../math/include ../graphics/include ../net/include
 InputDir := ./
 
 # VISlib libraries to link (in that order):

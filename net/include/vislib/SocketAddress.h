@@ -66,7 +66,7 @@ namespace net {
         };
 
         /**
-         * Create a socket address accepting 'ipAdress' on the specified port.
+         * Create a socket address accepting 'ipAddress' on the specified port.
          *
          * @param addressFamily The address family to create the address for.
          * @param ipAddress     The IP address part of the address.
@@ -139,7 +139,7 @@ namespace net {
         /**
          * Set a new address family.
          *
-         * @param adressFamily The new address family.
+         * @param addressFamily The new address family.
          */
         inline void SetAddressFamily(const AddressFamily addressFamily) {
             this->genericAddress.sa_family 
@@ -151,7 +151,7 @@ namespace net {
          *
          * @param ipAddress The new IP address.
          */
-        void SetIPAdress(const IPAddress& ipAddress);
+        void SetIPAddress(const IPAddress& ipAddress);
 
         /**
          * Set a new port number.

@@ -47,7 +47,7 @@ static void DateValueTest(const INT year, const INT month, const INT day,
  */
 void TestDateTime(void)  {
     vislib::sys::DateTime dateTime;
-    INT year, month, day, hour, minute, second;
+    //INT year, month, day, hour, minute, second;
 
     ::EnableAssertSuccessOutput(false);
 
