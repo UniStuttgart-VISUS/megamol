@@ -46,8 +46,9 @@ namespace sys {
         /**
          * behaves like File::Flush, except that it flushes only dirty buffers.
          *
-         * @throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
-         *                    could not be flushed to disk. GetLastError() will provide details.
+         * @throws IOException with ERROR_WRITE_FAULT (EFBIG on linux) if a buffer in write mode
+         *                    could not be flushed to disk. GetLastError() will provide details (Windows).
+		 * @throws IOException with details (linux).
          */
         virtual void Flush(void);
 
@@ -70,7 +71,8 @@ namespace sys {
 
         /**
          * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
-		 * since there is no such thing as a memory-mapped WRITE_ONLY file.
+		 * since there is no such thing as a memory-mapped WRITE_ONLY file (also under linux even if no one
+		 * tells you that there is NO SUCH THING as a O_WRONLY memmapped file *hate*).
 		 *
 		 * @throws IOException
          */
@@ -79,7 +81,8 @@ namespace sys {
 
         /**
          * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
-		 * since there is no such thing as a memory-mapped WRITE_ONLY file.
+		 * since there is no such thing as a memory-mapped WRITE_ONLY file (also under linux even if no one
+		 * tells you that there is NO SUCH THING as a O_WRONLY memmapped file *hate*).
 		 *
 		 * @throws IOException
          */
@@ -90,7 +93,7 @@ namespace sys {
          * behaves like File::Read
          * Performs an implicit flush if the view is dirty and changed.
 		 *
-		 * @throws IOException ERROR_WRITE_FAULT if flushing
+		 * @throws IOException ERROR_WRITE_FAULT (EFBIG on linux) if flushing
 		 * @throws IOException ERROR_ACCESS_DENIED (windows) or EACCES (linux) if called on write-only files
 		 * @throws IOException on mapping failures. Use GetLastError().
 		 * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
@@ -113,7 +116,7 @@ namespace sys {
          *
          * @param newSize The number of bytes to be used for the new view.
          *
-         * @throws IOException if the flush cannot be performed
+         * @throws see Flush()
          */
          File::FileSize SetViewSize(File::FileSize newSize);
 
@@ -128,8 +131,8 @@ namespace sys {
          * behaves like File::Write
          * Performs an implicit flush if the view is dirty and changed.
          *
-		 * @throws IOException ERROR_WRITE_FAULT if flushing
-		 * @throws IOException ERROR_ACCESS_DENIED if called on read-only files
+		 * @throws IOException ERROR_WRITE_FAULT (EFBIG on linux) if flushing fails
+		 * @throws IOException ERROR_ACCESS_DENIED (EACCES on linux) if called on read-only files
 		 * @throws IOException on mapping failures. Use GetLastError().
 		 * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
          */
