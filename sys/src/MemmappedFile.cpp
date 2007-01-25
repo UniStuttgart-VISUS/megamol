@@ -26,9 +26,9 @@
  */
 vislib::sys::MemmappedFile::MemmappedFile(void) 
 #ifdef _WIN32
-        : File(), viewStart(0), viewSize(0), mappedData(NULL), viewDirty(false), mapping(INVALID_HANDLE_VALUE) {
+		: File(), viewStart(0), viewSize(SystemInformation::AllocationGranularity()), mappedData(NULL), viewDirty(false), mapping(INVALID_HANDLE_VALUE) {
 #else /* _WIN32 */
-        : File(), viewStart(0), viewSize(0), mappedData(NULL), viewDirty(false) {
+        : File(), viewStart(0), viewSize(SystemInformation::AllocationGranularity()), mappedData(NULL), viewDirty(false) {
 #endif /* _WIN32 */
 }
 
@@ -36,7 +36,6 @@ vislib::sys::MemmappedFile::MemmappedFile(void)
  * vislib::sys::MemmappedFile::~MemmappedFile
  */
 vislib::sys::MemmappedFile::~MemmappedFile(void) {
-	// BUG: delete stuff
 	// relies on File::~File closing the file
 }
 
@@ -44,11 +43,12 @@ vislib::sys::MemmappedFile::~MemmappedFile(void) {
 /*
  * vislib::sys::MemmappedFile::AdjustedViewSize
  */
-inline vislib::sys::File::FileSize vislib::sys::MemmappedFile::AdjustedViewSize() {
-	vislib::sys::File::FileSize vs = this->viewSize;
+inline vislib::sys::File::FileSize vislib::sys::MemmappedFile::AdjustedViewSize(File::FileSize pos) {
+	File::FileSize vs = this->viewSize;
+	File::FileSize start = AlignPosition(pos);
 	if (this->access == READ_ONLY || this->access == READ_WRITE) {
-		if (this->endPos < this->viewStart + this->viewSize) {
-			vs = this->endPos - this->viewStart;
+		if (this->endPos < start + this->viewSize) {
+			vs = this->endPos - start;
 		}
 	}
 	return vs;
@@ -66,7 +66,7 @@ inline void vislib::sys::MemmappedFile::SafeUnmapView() {
 #ifdef _WIN32
 		if (!UnmapViewOfFile(this->mappedData)) {
 #else /* _WIN32 */
-		size_t vs = static_cast <size_t>(this->AdjustedViewSize());
+		size_t vs = static_cast <size_t>(this->AdjustedViewSize(this->viewStart));
 		if (munmap(this->mappedData, vs) == -1) {
 #endif /* _WIN32 */
 			throw IOException(::GetLastError(), __FILE__, __LINE__);
@@ -89,7 +89,7 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 	if (this->mapping == NULL || this->mapping == INVALID_HANDLE_VALUE) {
 		throw IllegalStateException("SafeMapView while mapping invalid", __FILE__, __LINE__);
 	}
-	SIZE_T vs = static_cast <SIZE_T>(this->AdjustedViewSize());
+	SIZE_T vs = static_cast <SIZE_T>(this->AdjustedViewSize(this->filePos));
 	switch(this->access) {
 		case READ_ONLY:
 			da = FILE_MAP_READ;
@@ -112,7 +112,7 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 	this->viewStart = fp.QuadPart;
 #else /* _WIN32 */
 	off_t fp = this->AlignPosition(this->filePos);
-	size_t vs = static_cast <size_t>(this->AdjustedViewSize());
+	size_t vs = static_cast <size_t>(this->AdjustedViewSize(this->filePos));
 
 	if (this->endPos < fp + vs) {
 		/* go to the location corresponding to the last byte */
@@ -135,21 +135,40 @@ inline char* vislib::sys::MemmappedFile::SafeMapView() {
 }
 
 
+#ifdef _WIN32
+/*
+ * vislib::sys::MemmappedFile::SafeCreateMapping
+ */
+inline void vislib::sys::MemmappedFile::SafeCreateMapping(File::FileSize mappingsize) {
+	ULARGE_INTEGER oldSize;
+	oldSize.QuadPart = mappingsize;
 
+	this->mapping = CreateFileMapping(this->handle, NULL, this->protect, oldSize.HighPart, oldSize.LowPart, NULL);
+	if (GetLastError() == ERROR_ALREADY_EXISTS) {
+		LARGE_INTEGER s;
+		GetFileSizeEx(this->handle, &s);
+		this->referenceSize = s.QuadPart;
+	}
+	if (this->mapping == NULL || this->mapping == INVALID_HANDLE_VALUE) {
+		throw IOException(::GetLastError(), __FILE__, __LINE__);
+	}
+}
+#endif /* _WIN32 */
+
+
+#ifdef _WIN32
 /*
  * vislib::sys::MemmappedFile::SafeCloseMapping
  */
 inline void vislib::sys::MemmappedFile::SafeCloseMapping() {
-#ifdef _WIN32
 	if (this->mapping != INVALID_HANDLE_VALUE && this->mapping != NULL) {
 		if (CloseHandle(this->mapping) == 0) {
 			throw IOException(::GetLastError(), __FILE__, __LINE__);
 		}
 		this->mapping = INVALID_HANDLE_VALUE;
 	}
-#else /* _WIN32 */
-#endif /* _WIN32 */
 }
+#endif /* _WIN32 */
 
 
 /*
@@ -169,7 +188,9 @@ inline vislib::sys::File::FileSize vislib::sys::MemmappedFile::AlignPosition(vis
 void vislib::sys::MemmappedFile::Close(void) {
     this->Flush();
 	this->SafeUnmapView();
+#ifdef _WIN32
 	this->SafeCloseMapping();
+#endif /* _WIN32 */
 
 	if (this->access == READ_WRITE || this->access == WRITE_ONLY) {
 #ifdef _WIN32
@@ -188,7 +209,6 @@ void vislib::sys::MemmappedFile::Close(void) {
 	
 	File::Close();
     this->viewStart = 0;
-	this->viewSize = 0;
 	this->viewDirty = false;
 }
 
@@ -203,7 +223,7 @@ void vislib::sys::MemmappedFile::Flush(void) {
 			throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
 		}
 #else /* _WIN32 */
-		size_t vs = static_cast<size_t>(this->AdjustedViewSize());
+		size_t vs = static_cast<size_t>(this->AdjustedViewSize(this->viewStart));
 		if (msync(this->mappedData, vs, MS_SYNC) == -1) {
 			throw IOException(GetLastError(), __FILE__, __LINE__);
 		}
@@ -298,7 +318,6 @@ bool vislib::sys::MemmappedFile::CommonOpen(const File::AccessMode accessMode) {
 #ifdef _WIN32
 	this->viewStart = 0;
 	this->viewDirty = false;
-	this->viewSize = SystemInformation::AllocationGranularity();
 	LARGE_INTEGER oldSize;
 	switch(accessMode) {
 		case READ_ONLY:
@@ -329,21 +348,10 @@ bool vislib::sys::MemmappedFile::CommonOpen(const File::AccessMode accessMode) {
 			throw IllegalParamException("accessMode", __FILE__, __LINE__);
 			break;
 	}
-	this->mapping = CreateFileMapping(this->handle, NULL, this->protect, oldSize.HighPart, oldSize.LowPart, NULL);
-	if (GetLastError() == ERROR_ALREADY_EXISTS) {
-		LARGE_INTEGER s;
-		GetFileSizeEx(this->handle, &s);
-		this->referenceSize = s.QuadPart;
-	}
-	if (this->mapping == NULL || this->mapping == INVALID_HANDLE_VALUE) {
-		throw IOException(::GetLastError(), __FILE__, __LINE__);
-		File::Close();
-		return false;
-	}
+	this->SafeCreateMapping(oldSize.QuadPart);
 #else /* _WIN32 */
 	this->viewStart = 0;
 	this->viewDirty = false;
-	this->viewSize = SystemInformation::AllocationGranularity();
     struct stat64 stat;
 
 	this->protect = 0;
@@ -353,7 +361,6 @@ bool vislib::sys::MemmappedFile::CommonOpen(const File::AccessMode accessMode) {
 			if (::fstat64(this->handle, &stat) == 0) {
 				this->endPos = stat.st_size;
 				this->referenceSize = stat.st_size;
-				//oldSize.QuadPart = 0;
 			} else {
 				throw IOException(::GetLastError(), __FILE__, __LINE__);
 			}
@@ -426,10 +433,9 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Read(void *outBuf,
 		char *bufferPos;
 
 		// no view defined or outside view
-		if (this->mappedData == NULL || this->filePos < this->viewStart || this->filePos > this->viewStart + this->viewSize) {
+		if (this->mappedData == NULL || this->filePos < this->viewStart || this->filePos >= this->viewStart + this->viewSize) {
 			this->SafeUnmapView();
 			this->mappedData = this->SafeMapView();
-			//viewStart = fp.QuadPart;
 		}
 		dataLeft = bufS;
 		bufferPos = (char*)outBuf;
@@ -521,7 +527,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Write(const void *buf, c
 	}
 
 	if (bufSize == 0) {
-		// null op
+		// NOP
 		return 0;
 	}
 
@@ -541,39 +547,31 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Write(const void *buf, c
 		throw IOException(EFBIG, __FILE__, __LINE__);
 #endif /* _WIN32 */
 	}
-	if (this->filePos == this->referenceSize) {
-		// I dub thee 'append'
-		this->Flush();
-#ifdef _WIN32
-		LARGE_INTEGER s;
-		s.QuadPart = this->referenceSize + bufSize;
-		DWORD lastError = GetLastError();
-		this->mapping = CreateFileMapping(this->handle, NULL, this->protect, s.HighPart, s.LowPart, NULL);
-		if ((GetLastError() != ERROR_ALREADY_EXISTS && GetLastError() != lastError) || this->mapping == NULL
-				|| this->mapping == INVALID_HANDLE_VALUE) {
-			// something is wrong
-			throw IOException(::GetLastError(), __FILE__, __LINE__);
-		}
-#endif /* _WIN32 */
-		this->SafeUnmapView();
-		this->referenceSize = this->referenceSize + bufSize;
-		this->mappedData = this->SafeMapView();
-	}
-	if (this->filePos < viewStart || this->filePos > viewStart + viewSize || this->mappedData == NULL) {
-		this->mappedData = this->SafeMapView();
-	}
 	while (dataLeft > 0) {
+		if (this->filePos == this->referenceSize) {
+			// I dub thee 'append'
+			this->SafeUnmapView();
+#ifdef _WIN32
+			this->SafeCloseMapping();
+			//this->SafeCreateMapping(this->referenceSize + dataLeft);
+			this->SafeCreateMapping(this->referenceSize + this->viewSize);
+#endif /* _WIN32 */
+			//this->referenceSize = this->referenceSize + dataLeft;
+			this->referenceSize = this->referenceSize + this->viewSize;
+			this->mappedData = this->SafeMapView();
+		} else {
+			if (this->filePos < this->viewStart || this->filePos >= this->viewStart + this->viewSize
+					|| this->mappedData == NULL) {
+				this->SafeUnmapView();
+				this->mappedData = this->SafeMapView();
+			}
+		}
 		writeSize = vislib::math::Min(dataLeft, this->viewStart + this->viewSize - filePos);
-		memcpy(static_cast <void*> (mappedData + filePos - viewStart), bufferPos, static_cast <size_t>(writeSize));
+		memcpy(static_cast <void*> (this->mappedData + this->filePos - this->viewStart), bufferPos, static_cast <size_t>(writeSize));
 		bufferPos += writeSize;
 		this->filePos += writeSize;
 		dataLeft -= writeSize;
 		this->viewDirty = true;
-		if (dataLeft > 0) {
-			this->Flush();
-			this->SafeUnmapView();
-			this->mappedData = SafeMapView();
-		}
 	}
 	this->endPos = vislib::math::Max(this->filePos, this->endPos);
 	return bufSize - dataLeft;

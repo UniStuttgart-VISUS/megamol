@@ -141,11 +141,13 @@ namespace sys {
     private:
 
 		/**
-		 * Generate a valid view size if it is greater than the difference between viewStart and endPos
+		 * Generate a valid view size in relation to a file pointer position
+		 *
+		 * @param pos the (unaligned) position
 		 *
 		 * @return the corrected view size
 		 */
-		inline File::FileSize AdjustedViewSize();
+		inline File::FileSize AdjustedViewSize(File::FileSize pos);
 
 		/**
 		 * If file is in write mode, this calls for a Flush(). Then it unmaps the current view,
@@ -155,6 +157,20 @@ namespace sys {
 		 */
 		inline void SafeUnmapView();
 
+
+#ifdef _WIN32
+		/**
+		 * Creates a this->mapping for this->handle. This is only needed on windows.
+		 * Will update this->referenceSize  to fit the new size or if the handle generated is the clone of another handle to
+		 * an already open file.
+		 *
+		 * @param mappingsize the maximum file size to be mapped; this will be available for views.
+		 *
+		 * @throws IOException if creation fails.
+		 */
+		inline void SafeCreateMapping(File::FileSize mappingsize);
+
+
 		/**
 		 * Closes the mapping applied to handle. If views still exist, the mapping will persist
 		 * until these are unmapped as well.
@@ -162,6 +178,8 @@ namespace sys {
 		 * @throws IOException if closing fails. Use GetLastError().
 		 */
 		inline void SafeCloseMapping();
+#endif /* _WIN32 */
+
 
 		/**
 		 * Generates the next-smaller multiple of AllocationGranularity to make sure it is aligned
