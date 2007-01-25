@@ -17,10 +17,140 @@
 #include "vislib/IOException.h"
 #include "vislib/SystemMessage.h"
 #include "vislib/sysfunctions.h"
+#include "vislib/SystemInformation.h"
+#include "vislib/PerformanceCounter.h"
 
+#ifdef _WIN32
+#pragma warning ( disable : 4996 )
+#define SNPRINTF _snprintf
+#define FORMATINT64 "%I64u"
+#else /* _WIN32 */
+#define SNPRINTF snprintf
+#define FORMATINT64 "%lu"
+#endif /* _WIN32 */
 
 using namespace vislib::sys;
 
+//static const File::FileSize BIGFILE_SIZE = 5368708992;
+//static const File::FileSize BIGFILE_LASTVAL = 671088623;
+static const File::FileSize BIGFILE_SIZE = 300000;
+static const File::FileSize BIGFILE_LASTVAL = 37499;
+static const char fname[] = "bigfile.bin";
+static File::FileSize BUF_SIZE = SystemInformation::AllocationGranularity() * 2;
+
+static void generateBigOne(File& f1) {
+	File::FileSize dataLeft = BIGFILE_SIZE;
+	File::FileSize splitPos = 0, val = 0, *tmp;
+	char *buf = new char[static_cast<size_t>(BUF_SIZE)];
+	vislib::sys::PerformanceCounter *p = new vislib::sys::PerformanceCounter();
+
+	File::FileSize perf, ptotal = 0, numWritten;
+	float minrate = 100000000.0f;
+	float maxrate = 0.0f;
+	float rate;
+
+	if (File::Exists(fname)) {
+		return;
+	}
+	AssertTrue("Can generate file", f1.Open(fname, File::WRITE_ONLY, File::SHARE_READWRITE, File::CREATE_ONLY));
+	AssertTrue("AllocationGranularity is a multiple of 8", SystemInformation::AllocationGranularity() % 8 == 0);
+
+	try {
+		while(dataLeft > 0) {
+			for (tmp = (File::FileSize*)buf; tmp < (File::FileSize*)(buf + BUF_SIZE); tmp++) {
+				*tmp = val++;
+			}
+			p->SetMark();
+			if (dataLeft < BUF_SIZE) {
+				f1.Write(buf, dataLeft);
+				numWritten = dataLeft;
+				dataLeft = 0;
+			} else {
+				f1.Write(buf, splitPos);
+				f1.Write(buf+splitPos, BUF_SIZE - splitPos);
+				dataLeft -= BUF_SIZE;
+				numWritten = BUF_SIZE;
+			}
+			perf = p->Difference();
+			ptotal += perf;
+			rate = (float)numWritten/1024.0f / perf;
+			if (rate < minrate) minrate=rate;
+			if (rate > maxrate) maxrate=rate;
+			splitPos = ++splitPos % BUF_SIZE;
+		}
+		AssertTrue("Generate big testfile", true);
+		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear writing: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize()/1024.0f / ptotal);
+		std::cout << buf;
+		f1.Close();
+	} catch (IOException e) {
+		AssertTrue("Generate big testfile", false);
+		std::cout << e.GetMsgA() << std::endl;
+	}
+	f1.Open(fname, File::READ_ONLY, File::SHARE_READWRITE, File::OPEN_ONLY);
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "File size = "FORMATINT64, BIGFILE_SIZE);
+	AssertEqual(buf, BIGFILE_SIZE, f1.GetSize());
+	f1.Close();
+}
+
+static File::FileSize checkContent(char *buf, File::FileSize pos, File::FileSize chunk) {
+	char *offset;
+	File::FileSize i, ret;
+
+	for (offset = buf, i = pos / 8; offset < buf + chunk; offset+=8, i++) {
+		if (*(reinterpret_cast<File::FileSize*>(offset)) != i) {
+			AssertTrue("File contents comparison", false);
+		}
+		ret = i;
+	}
+	return ret;
+}
+
+static void testBigOne(File& f1) {
+	vislib::sys::PerformanceCounter *p = new vislib::sys::PerformanceCounter();
+	char *buf = new char[static_cast<size_t>(BUF_SIZE)];
+	File::FileSize numRead, perf, ptotal, pos, lastval;
+	float minrate = 100000000.0f;
+	float maxrate = 0.0f;
+	float rate;
+
+	f1.Open(fname, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
+
+	pos = ptotal = 0;
+	try {
+		p->SetMark();
+		while((numRead = f1.Read(buf, BUF_SIZE)) == BUF_SIZE) {
+			perf = p->Difference();
+			ptotal += perf;
+			rate = (float)numRead/1024.0f / perf;
+			if (rate < minrate) minrate=rate;
+			if (rate > maxrate) maxrate=rate;
+
+			lastval = checkContent(buf, pos, numRead);
+			pos += numRead;
+
+			p->SetMark();
+		}
+		if (numRead > 0) {
+			perf = p->Difference();
+			ptotal += perf;
+			rate = (float)numRead/1024.0f / perf;
+			if (rate < minrate) minrate=rate;
+			if (rate > maxrate) maxrate=rate;
+			lastval = checkContent(buf, pos, numRead);
+			pos += numRead;
+		}
+	} catch (IOException e) {
+		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Reading successful ("FORMATINT64")", pos);
+		AssertTrue(buf, false);
+	}
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Values consistent up to pos "FORMATINT64, BIGFILE_SIZE);
+	AssertEqual(buf, pos, BIGFILE_SIZE);
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Last value = "FORMATINT64, BIGFILE_LASTVAL);
+	AssertEqual(buf, lastval, BIGFILE_LASTVAL);
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear reading: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize()/1024.0f / ptotal);
+	std::cout << buf;
+	f1.Close();
+}
 
 static void runTests(File& f1) {
     const File::FileSize TEXT_SIZE = 26;
@@ -78,6 +208,14 @@ static void runTests(File& f1) {
     AssertNotEqual("Seek to end", f1.SeekToEnd(), 
         static_cast<File::FileSize>(0));
     AssertTrue("Is at end", f1.IsEOF());
+
+    try {
+        f1.Write(readBuffer, TEXT_SIZE);
+        AssertTrue("Cannot write on READ_ONLY file", false);
+    } catch (IOException e) {
+        AssertTrue("Cannot write on READ_ONLY file", true);
+        std::cout << e.GetMsgA() << std::endl;
+    }
 
     AssertEqual("Seek to 2", f1.Seek(2, File::BEGIN), 
         static_cast<File::FileSize>(2));
@@ -168,8 +306,8 @@ static void runTests(File& f1) {
 
 void TestFile(void) {
     try {
-        //::TestBaseFile();
-        //::TestBufferedFile();
+        ::TestBaseFile();
+        ::TestBufferedFile();
 		::TestMemmappedFile();
     } catch (IOException e) {
         std::cout << e.GetMsgA() << std::endl;
@@ -192,12 +330,27 @@ void TestBufferedFile(void) {
     f1.SetBufferSize(8);
     std::cout << std::endl << "Tests for BufferedFile, buffer size 8" << std::endl;
     ::runTests(f1);
+
+	::generateBigOne(f1);
+	::testBigOne(f1);	
 }
 
 void TestMemmappedFile(void) {
 	MemmappedFile f1;
 	std::cout << std::endl << "Tests for MemmappedFile" << std::endl;
 	::runTests(f1);
+	
+	::generateBigOne(f1);
+	char *buf = new char[static_cast<size_t>(BUF_SIZE)];
+
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Testing with views of "FORMATINT64" (machine default)\n", f1.GetViewSize());
+	std::cout << buf;
+	::testBigOne(f1);
+
+	f1.SetViewSize(8 * 1024 * 1024);
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Testing with views of "FORMATINT64"\n", f1.GetViewSize());
+	std::cout << buf;
+	::testBigOne(f1);
 }
 
 
