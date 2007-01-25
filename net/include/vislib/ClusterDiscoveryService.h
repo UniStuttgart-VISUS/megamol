@@ -27,7 +27,15 @@
 namespace vislib {
 namespace net {
 
-
+    /**
+     * This class implements a method for discovering other computers in a
+     * network via UDP broadcasts. 
+     *
+     * The user specifies a name as identifier of the cluster to be searched
+     * and the object creates an array of all nodes that respond to a request
+     * whether they are also members of this cluster. The object also anwers
+     * requests of other nodes.
+     */
     class ClusterDiscoveryService {
 
     public:
@@ -41,6 +49,28 @@ namespace net {
         /** The first message ID that can be used for a user message. */
         static const UINT16 MSG_TYPE_USER;
 
+        /**
+         * Create a new instance.
+         *
+         * @param name         This is the name of the cluster to detect. 
+         *                     It is used to ensure that nodes answering a
+         *                     discovery request want to join the same cluster.
+         *                     The name must have at most MAX_USER_DATA 
+         *                     characters.
+         * @param bindAddr     The address to bind the discovery responder
+         *                     service to. The listening socket will be bound
+         *                     to this address.
+         * @param bcastAddr    The broadcast address of the network. All
+         *                     requests will be sent to this address. The 
+         *                     destination port of messages is derived from
+         *                     'bindAddr'.
+         * @param responseAddr This is the "call back address" of the current
+         *                     node, on which user-defined communication should
+         *                     be initiated. The ClusterDiscoveryService
+         *                     does not use this address itself, but just
+         *                     communicates it to all other nodes which
+         *                     then can use it.
+         */
         ClusterDiscoveryService(const StringA& name, 
             const SocketAddress& bindAddr, const IPAddress& bcastAddr,
             const SocketAddress& responseAddr);
@@ -231,6 +261,9 @@ namespace net {
             }
         } PeerNode;
 
+        /** Such an array is used for storing the known peer nodes. */
+        typedef Array<PeerNode> PeerNodeList;
+
         /**
          * Add 'node' to the list of known peer nodes. If node is already known,
          * nothing is done.
@@ -307,7 +340,7 @@ namespace net {
         sys::Thread *responseThread;
 
         /** This array holds the peer nodes. */
-        Array<PeerNode> peerNodes;
+        PeerNodeList peerNodes;
 
         /** The timeout for receive operations in milliseconds. */
         INT timeoutReceive;
