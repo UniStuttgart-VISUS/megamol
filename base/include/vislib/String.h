@@ -510,6 +510,15 @@ namespace vislib {
             this->TrimSpacesEnd();
         }
 
+        /**
+         * If the string is longer than 'size' characters, truncate it to be 
+         * 'size' characters. Note, that the trailing zero is added behind the
+         * last character.
+         *
+         * @param size The maximum size to truncate the string to.
+         */
+        void Truncate(const Size size);
+
         // TODO: ToLowerCase
         ///**
         // * Convert all characters to lower case.
@@ -1351,6 +1360,24 @@ namespace vislib {
 
             delete[] this->data;
             this->data = nb;
+        }
+    }
+
+
+    /*
+     * String<T>::Truncate
+     */
+    template<class T> void String<T>::Truncate(const Size size) {
+        Size len = this->Length();
+        Char *str = NULL;
+
+        if (size < len) {
+            str = new Char[size + 1];
+            ::memcpy(str, this->data, size * sizeof(Char));
+            str[size] = 0;
+
+            delete[] this->data;
+            this->data = str;
         }
     }
 

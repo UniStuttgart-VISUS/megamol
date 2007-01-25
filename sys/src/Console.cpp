@@ -357,6 +357,7 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 #else /* _WIN32 */
     // TODO: This whole thing is an extremely large crowbar. I think it is
     // inherently unsafe to read the program output in the current manner.
+    // TODO: Could use some of the timeout mechanisms?
 
     pid_t pid;                      // PID of child process executing 'command'.
     int stdErrPipe[2];              // Pipe descriptors for stderr redirect.
@@ -479,7 +480,8 @@ void vislib::sys::Console::WriteLine(const char *fmt, ...) {
  * vislib::sys::Console::Console
  */
 vislib::sys::Console::Console(void) {
-    throw UnsupportedOperationException("vislib::sys::Console::Ctor", __FILE__, __LINE__);
+    throw UnsupportedOperationException("vislib::sys::Console::Console", 
+        __FILE__, __LINE__);
 }
 
 
@@ -487,7 +489,6 @@ vislib::sys::Console::Console(void) {
  * vislib::sys::Console::~Console
  */
 vislib::sys::Console::~Console(void) {
-    // TODO: Implement
 }
 
 

@@ -1,5 +1,5 @@
 Guido: Möglichkeit, plattformunabhängig Fensterbotschaften zu versenden.
-Christoph: Thread-Abstraktion
+//Christoph: Thread-Abstraktion
 Christoph: Thread-Pool
 //Thomas: Float16
 Christoph: Format-Methode für String
@@ -8,3 +8,5 @@ Christoph: Arithmetik für Float16
 Sebastian: UserData Resources for Linux (and Windows) including AccessClasses (and Generator for Linux)
 Sebastian: Trigonometrische Funktionen die in Tabellen nachschlagen (mit linearer Interpolation)
 Sebastian: FPS-Counter mit "BeginFrame" und "EndFrame"; FPS (Theoretisch/Real) in (Last/Mid/Min/Max)
+Christoph: History für FPS-Counter (ähnlich unserem Robo-Trail bei BS)
+Christoph: SmartArrayPtr, evtl. dabei doch über ein (De)Allocator-Konzept mit alloc, realloc und dealloc nachdenken, um duplizierten Code zu vermeiden.
