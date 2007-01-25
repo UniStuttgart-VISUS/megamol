@@ -41,10 +41,20 @@ vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
 /*
  * vislib::net::SocketAddress::SocketAddress
  */
-vislib::net::SocketAddress::SocketAddress(struct sockaddr address) {
+vislib::net::SocketAddress::SocketAddress(struct sockaddr& address) {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memcpy(&this->genericAddress, &address, sizeof(struct sockaddr));
 }
+
+
+/*
+ * vislib::net::SocketAddress::SocketAddress
+ */
+vislib::net::SocketAddress::SocketAddress(struct sockaddr_in& address) {
+    ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
+    ::memcpy(&this->inetAddress, &address, sizeof(struct sockaddr_in));
+}
+
 
 
 /*

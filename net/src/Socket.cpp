@@ -1,5 +1,5 @@
 /*
- * SocketAddress.cpp
+ * Socket.cpp
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). All rights reserved.
@@ -16,6 +16,7 @@
 #include "vislib/Socket.h"
 
 #include "vislib/assert.h"
+#include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -40,7 +41,8 @@ void vislib::net::Socket::Startup(void) {
 #ifdef _WIN32
     WSAData wsaData;
 
-    if (::WSAStartup(MAKEWORD(1, 1), &wsaData) != 0) {
+    // Note: Need Winsock 2 for timeouts.
+    if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         throw SocketException(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
@@ -263,6 +265,50 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
 
 
 /*
+ * vislib::net::Socket::Receive
+ */
+SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
+        const INT timeout, SocketAddress& outFromAddr, const INT flags) {
+    int n = 0;                  // Highest descriptor in 'readSet' + 1.
+    fd_set readSet;             // Set of socket to check for readability.
+    struct timeval timeOut;     // Timeout for readability check.
+
+    /* Handle infinite timeout first by calling normal Receive. */
+    if (timeout < 1) {
+        return this->Receive(outData, cntBytes, outFromAddr, flags, false);
+    }
+
+    /* Initialise socket set and timeout structure. */
+    FD_ZERO(&readSet);
+    FD_SET(this->handle, &readSet);
+
+    timeOut.tv_sec = timeout / 1000;
+    timeOut.tv_usec = (timeout % 1000) * 1000;
+
+    /* Wait for the socket to become readable. */
+#ifndef _WIN32
+    n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
+#endif /* !_WIN32 */
+    if (::select(n, &readSet, NULL, NULL, &timeOut) == -1) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    if (FD_ISSET(this->handle, &readSet)) {
+        /* Delegate reading to normal Receive. */
+        return this->Receive(outData, cntBytes, outFromAddr, flags, false);
+
+    } else {
+        /* Signal timeout. */
+#ifdef _WIN32
+        throw SocketException(WSAETIMEDOUT, __FILE__, __LINE__);
+#else /* _WIN32 */
+        throw SocketException(ETIME, __FILE__, __LINE__);
+#endif /* _WIN32 */
+    } 
+}
+
+
+/*
  * vislib::net::Socket::Send
  */
 SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes, 
@@ -311,6 +357,51 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
     
     return totalSent;
 }
+
+
+/*
+ * vislib::net::Socket::Send
+ */
+SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
+        const INT timeout, const SocketAddress& toAddr, const INT flags) {
+    int n = 0;                  // Highest descriptor in 'writeSet' + 1.
+    fd_set writeSet;            // Set of socket to check for writability.
+    struct timeval timeOut;     // Timeout for writability check.
+
+    /* Handle infinite timeout first by calling normal Send. */
+    if (timeout < 1) {
+        return this->Send(data, cntBytes, toAddr, flags, false);
+    }
+
+    /* Initialise socket set and timeout structure. */
+    FD_ZERO(&writeSet);
+    FD_SET(this->handle, &writeSet);
+
+    timeOut.tv_sec = timeout / 1000;
+    timeOut.tv_usec = (timeout % 1000) * 1000;
+
+    /* Wait for the socket to become readable. */
+#ifndef _WIN32
+    n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
+#endif /* !_WIN32 */
+    if (::select(n, &writeSet, NULL, NULL, &timeOut) == -1) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    if (FD_ISSET(this->handle, &writeSet)) {
+        /* Delegate reading to normal Receive. */
+        return this->Send(data, cntBytes, toAddr, flags, false);
+
+    } else {
+        /* Signal timeout. */
+#ifdef _WIN32
+        throw SocketException(WSAETIMEDOUT, __FILE__, __LINE__);
+#else /* _WIN32 */
+        throw SocketException(ETIME, __FILE__, __LINE__);
+#endif /* _WIN32 */
+    }
+}
+
 
 /*
  * vislib::net::Socket::SetOption

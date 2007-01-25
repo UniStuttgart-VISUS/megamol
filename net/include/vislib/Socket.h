@@ -503,6 +503,30 @@ namespace net {
             SocketAddress& outFromAddr, const INT flags = 0, 
             const bool forceReceive = false);
 
+        /**
+         * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
+         * 'outData' must be large enough to receive at least 'cntBytes'. 
+         *
+         * @param outData      The buffer to receive the data. The caller must
+         *                     allocate this memory and remains owner.
+         * @param cntBytes     The number of bytes to receive.
+         * @param timeout      A timeout in milliseconds. A value less than 1 
+         *                     specifies an infinite timeout. If the operation 
+         *                     timeouts, an exception will be thrown.
+         * @param outFromAddr  The socket address the datagram was received 
+         *                     from. This variable is only valid upon successful
+         *                     return from the method.
+         * @param flags        The flags that specify the way in which the call 
+         *                     is made.
+         *
+         * @return The number of bytes actually received.
+         *
+         * @throws SocketException If the operation fails or timeouts.
+         */
+        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
+            const INT timeout, SocketAddress& outFromAddr, 
+            const INT flags = 0);
+
         ///**
         // * Receives one object of type T to 'outData'. The method does not 
         // * return until a full object of type T has been read.
@@ -561,6 +585,31 @@ namespace net {
         virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
             const SocketAddress& toAddr, const INT flags = 0, 
             const bool forceSend = false);
+
+        /**
+         * Send a datagram of 'cntBytes' bytes from the location designated by 
+         * 'data' using this socket to the socket 'toAddr'.
+         *
+         * @param data      The data to be sent. The caller remains owner of the
+         *                  memory.
+         * @param cntBytes  The number of bytes to be sent. 'data' must contain
+         *                  at least this number of bytes.
+         * @param timeout   A timeout in milliseconds. A value less than 1 
+         *                  specifies an infinite timeout. If the operation 
+         *                  timeouts, an exception will be thrown.
+         * @param toAddr    Socket address of the destination host.
+         * @param flags     The flags that specify the way in which the call is 
+         *                  made.
+         *
+         * @return The number of bytes acutally sent.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
+            const INT timeout, const SocketAddress& toAddr, 
+            const INT flags = 0);
+        // Note: Strange order of arguments ('timeout' before 'toAddress') 
+        // resolves ambiguity with other Sends.
 
         ///**
         // * Sends an object of type T.
@@ -728,6 +777,9 @@ namespace net {
         /**
          * Set the receive time-out in milliseconds.
          *
+         * Note that this timeout does not affect datagram sockets. Use the
+         * special timeouted Receive for receiving datagrams with a timeout.
+         *
          * @param timeout The timeout in milliseconds.
          *
          * @throws SocketException If the operation fails.
@@ -777,6 +829,9 @@ namespace net {
 
         /**
          * Set the send time-out in milliseconds.
+         *
+         * Note that this timeout does not affect datagram sockets. Use the
+         * special timeouted Send method on datagram sockets.
          *
          * @param timeout The timeout in milliseconds.
          *

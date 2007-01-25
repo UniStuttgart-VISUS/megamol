@@ -91,7 +91,14 @@ namespace net {
          *
          * @param address A struct to be copied.
          */
-        SocketAddress(struct sockaddr address);
+        SocketAddress(struct sockaddr& address);
+
+        /**
+         * Cast ctor for struct sockaddr_in.
+         *
+         * @param address A struct to be copied.
+         */
+        SocketAddress(struct sockaddr_in& address);
 
         /** Default ctor. */
         SocketAddress(void);
