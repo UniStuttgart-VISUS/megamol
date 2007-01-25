@@ -331,6 +331,7 @@ namespace vislib {
             }
 
             this->count--;
+            this->elements[this->count].~T();   // Call dtor on erased element.
         }
     }
 
@@ -357,6 +358,11 @@ namespace vislib {
                     range * sizeof(T));
             }
 
+            // Call dtors on erased elements. 
+            for (SIZE_T i = this->count - cntRemoved; i < this->count; i++) {
+                this->elements[i].~T();
+            }
+
             this->count -= cntRemoved;
         }
     }
@@ -375,7 +381,8 @@ namespace vislib {
                 }
 
                 this->count--;
-                i--;
+                this->elements[this->count].~T();   // Call dtor on erased elm.
+                i--;                                // Next element moved fwd.
             }
         }
     }
@@ -394,7 +401,7 @@ namespace vislib {
          * array.
          */
         if (capacity < this->capacity) {
-            for (SIZE_T i = this->count - 1; i < this->capacity; i++) {
+            for (SIZE_T i = capacity; i < this->count; i++) {
                 this->elements[i].~T();
             }
 
