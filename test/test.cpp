@@ -22,6 +22,10 @@
 #include "testmatrix.h"
 #include "testmisc.h"
 #include "testcmdlineparser.h"
+#include "testdate.h"
+#include "testcollection.h"
+#include "testpointers.h"
+#include "testdiscovery.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -66,6 +70,10 @@ int main(int argc, char **argv) {
     //::TestConsoleColors();
     //::TestCmdLineParser();
     //::TestColumnFormatter();
+    //::TestDateTime();
+    //::TestArray();
+    //::TestSmartPtr();
+    //::TestClusterDiscoveryService();
 
     //::printf("%s", W2A(L"Hugo"));
 

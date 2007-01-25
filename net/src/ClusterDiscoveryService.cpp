@@ -71,6 +71,33 @@ vislib::net::ClusterDiscoveryService::~ClusterDiscoveryService(void) {
 
 
 /*
+ * vislib::net::ClusterDiscoveryService::AddListener
+ */
+void vislib::net::ClusterDiscoveryService::AddListener(
+        ClusterDiscoveryListener *listener) {
+    ASSERT(listener != NULL);
+
+    this->critSect.Lock();
+    if ((listener != NULL) && !this->listeners.Contains(listener)) {
+        this->listeners.Append(listener);
+    }
+    this->critSect.Unlock();
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::RemoveListener
+ */
+void vislib::net::ClusterDiscoveryService::RemoveListener(
+        ClusterDiscoveryListener *listener) {
+    ASSERT(listener != NULL);
+
+    this->critSect.Lock();
+    this->listeners.Remove(listener);
+    this->critSect.Unlock();
+}
+
+/*
  * vislib::net::ClusterDiscoveryService::Start
  */
 bool vislib::net::ClusterDiscoveryService::Start(void) {
@@ -188,11 +215,7 @@ DWORD vislib::net::ClusterDiscoveryService::Requester::Run(
 
                         /* Add peer to local list, if not yet known. */
                         peerNode.address = response.responseAddr;
-                        this->cds.peerNodesCritSect.Lock();
-                        if (!this->cds.peerNodes.Contains(peerNode)) {
-                            this->cds.peerNodes.Append(peerNode);
-                        }
-                        this->cds.peerNodesCritSect.Unlock();
+                        this->cds.addPeerNode(peerNode);
                     }
 
                 } /* end if (response.magicNumber == MAGIC_NUMBER) */
@@ -326,11 +349,7 @@ DWORD vislib::net::ClusterDiscoveryService::Responder::Run(
 
                     /* Add peer to local list, if not yet known. */
                     peerNode.address = request.responseAddr;
-                    this->cds.peerNodesCritSect.Lock();
-                    if (!this->cds.peerNodes.Contains(peerNode)) {
-                        this->cds.peerNodes.Append(peerNode);
-                    }
-                    this->cds.peerNodesCritSect.Unlock();
+                    this->cds.addPeerNode(peerNode);
                 }
             } /* end if (response.magicNumber == MAGIC_NUMBER) */
 
@@ -376,6 +395,46 @@ bool vislib::net::ClusterDiscoveryService::Responder::Terminate(void) {
 
 // End of nested class Responder
 ////////////////////////////////////////////////////////////////////////////////
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::addPeerNode
+ */
+void vislib::net::ClusterDiscoveryService::addPeerNode(const PeerNode& node) {
+    this->critSect.Lock();
+    
+    if (!this->peerNodes.Contains(node)) {
+        this->peerNodes.Append(node);
+
+        /* Fire event. */
+        // TODO: We need a const iterator.
+        ListenerList::Iterator it = const_cast<ClusterDiscoveryService *>(
+            this)->listeners.GetIterator();
+        while (it.HasNext()) {
+            it.Next()->OnNodeFound(*this, node.address);
+        }
+    }
+
+    this->critSect.Unlock();
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::fireNodeFound
+ */
+//void vislib::net::ClusterDiscoveryService::fireNodeFound(
+//        const PeerNode& node) const {
+//    this->critSect.Lock();
+//    
+//    // TODO: We need a const iterator.
+//    ListenerList::Iterator it = const_cast<ClusterDiscoveryService *>(
+//        this)->listeners.GetIterator();
+//    while (it.HasNext()) {
+//        it.Next()->OnNodeFound(*this, node.address);
+//    }
+//
+//    this->critSect.Unlock();
+//}
 
 
 /*

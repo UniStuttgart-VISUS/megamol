@@ -15,7 +15,9 @@
 #include "vislib/IPAddress.h"   // Must be included at begin!
 #include "vislib/Socket.h"      // Must be included at begin!
 #include "vislib/Array.h"
+#include "vislib/ClusterDiscoveryListener.h"
 #include "vislib/CriticalSection.h"
+#include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 #include "vislib/Thread.h"
 #include "vislib/types.h"
@@ -50,6 +52,16 @@ namespace net {
          */
         virtual ~ClusterDiscoveryService(void);
 
+        /**
+         * Add a new ClusterDiscoveryListener to be informed about discovery
+         * events. The caller remains owner of the memory designated by 
+         * 'listener' and must ensure that the object exists as long as the
+         * listener is registered.
+         *
+         * @param listener The listener to register. This must not be NULL.
+         */
+        void AddListener(ClusterDiscoveryListener *listener);
+
 
         /**
          * Answer the address the service is listening on for discovery
@@ -80,6 +92,16 @@ namespace net {
         const SocketAddress& GetResponseAddr(void) const {
             return this->responseAddr;
         }
+
+        /**
+         * Removes, if registered, 'listener' from the list of objects informed
+         * about discovery events. The caller remains owner of the memory 
+         * designated by 'listener'.
+         *
+         * @param listener The listener to be removed. Nothing happens, if the
+         *                 listener was not registered.
+         */
+        void RemoveListener(ClusterDiscoveryListener *listener);
 
         virtual bool Start(void);
 
@@ -194,6 +216,9 @@ namespace net {
             };
         } Message;
 
+        /** A shortcut to the listener list type. */
+        typedef SingleLinkedList<ClusterDiscoveryListener *> ListenerList;
+
         /** 
          * This structure is used to identify a peer node that has been found
          * during the discovery process.
@@ -205,6 +230,29 @@ namespace net {
                 return (this->address == rhs.address);
             }
         } PeerNode;
+
+        /**
+         * Add 'node' to the list of known peer nodes. If node is already known,
+         * nothing is done.
+         *
+         * This method also fires the node found event by calling OnNodeFound
+         * on all registered ClusterDiscoveryListeners.
+         *
+         * This method is thread-safe.
+         *
+         * @param node The node to be added.
+         */
+        void addPeerNode(const PeerNode& node);
+
+        ///**
+        // * Inform all registered ClusterDiscoveryListeners about a new node that
+        // * was found.
+        // *
+        // * This method is thread-safe.
+        // *
+        // * @parma node The new node that was found.
+        // */
+        //void fireNodeFound(const PeerNode& node) const;
 
         /** The magic number at the begin of each message. */
         static const UINT16 MAGIC_NUMBER;
@@ -221,6 +269,12 @@ namespace net {
         /** The address that the response thread binds to. */
         SocketAddress bindAddr;
 
+        /**
+         * Critical section protecting access to the 'peerNodes' array and the
+         * 'listeners' list.
+         */
+        mutable sys::CriticalSection critSect;
+
         /** The address we send in a response message. */
         SocketAddress responseAddr;
 
@@ -233,6 +287,9 @@ namespace net {
 
         /** The time in milliseconds between two discovery requests. */
         UINT requestInterval;
+
+        /** This list holds the objects to be informed about new nodes. */
+        ListenerList listeners;
 
         /** The name of the cluster this discovery service should form. */
         StringA name;
@@ -252,14 +309,15 @@ namespace net {
         /** This array holds the peer nodes. */
         Array<PeerNode> peerNodes;
 
-        /** Critical section protecting access to the 'peerNodes' array. */
-        sys::CriticalSection peerNodesCritSect;
-
         /** The timeout for receive operations in milliseconds. */
         INT timeoutReceive;
 
         /** The timeout for send operations in milliseconds. */
         INT timeoutSend;
+
+        /* Allow threads to access protected methods. */
+        friend class Responder;
+        friend class Requester;
     };
 
 
