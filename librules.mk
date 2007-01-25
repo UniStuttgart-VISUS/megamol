@@ -11,6 +11,17 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.d, 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags)
 
+ifndef VISLIB_VERBOSE
+    VISLIB_VERBOSE = 0
+endif
+ifeq ($(VISLIB_VERBOSE),1)
+    Q =
+    ARFLAGS = -cvq
+else
+    Q = @
+    ARFLAGS = -cq
+endif
+
 all: $(TargetName)d $(TargetName)
 
 
@@ -29,12 +40,12 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName).a
 $(IntDir)/$(DebugDir)/lib$(TargetName).a: $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).a: "
 	@tput sgr0
-	$(AR) -cvq $@ $^
+	$(Q)$(AR) $(ARFLAGS) $@ $^
 	
 $(IntDir)/$(ReleaseDir)/lib$(TargetName).a: $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).a: "
 	@tput sgr0
-	$(AR) -cvq $@ $^	
+	$(Q)$(AR) $(ARFLAGS) $@ $^	
 	
 
 # Rules for dependencies:
@@ -42,13 +53,13 @@ $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)\/\1.o $(IntDir)\/$(DebugDir)\/\1.d:/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)\/\1.o $(IntDir)\/$(DebugDir)\/\1.d:/g' > $@
 	
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)\/\1.o $(IntDir)\/$(ReleaseDir)\/\1.d:/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)\/\1.o $(IntDir)\/$(ReleaseDir)\/\1.d:/g' > $@
 
 	
 ifneq ($(MAKECMDGOALS), clean)
@@ -63,13 +74,13 @@ $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<	
+	$(Q)$(CPP) -c $(CPPFLAGS) $(DebugCompilerFlags) -o $@ $<	
 	
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<	
+	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<	
 	
 	
 # Cleanup rules:	

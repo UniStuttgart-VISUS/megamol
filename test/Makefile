@@ -26,6 +26,14 @@ CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
 # Linker flags:
 LDFLAGS := -L/usr/X11R6/lib -L$(VISlibDir) -lm -lpthread -lpam -lpam_misc -ldl -lncurses
 
+ifndef VISLIB_VERBOSE
+    VISLIB_VERBOSE = 0
+endif
+ifeq ($(VISLIB_VERBOSE),1)
+    Q =
+else
+    Q = @
+endif
 
 ###############################################################################
 
@@ -66,13 +74,13 @@ $(OutDir)/$(OutName): $(IntDir)/$(OutName)
 $(IntDir)/$(OutName): $(CPP_OBJS) $(addsuffix .a, $(addprefix $(VISlibDir)/lib, $(VISlibs)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
 	@tput sgr0
-	$(LINK) -o $@ $^ $(LDFLAGS)
+	$(Q)$(LINK) -o $@ $^ $(LDFLAGS)
 
 $(IntDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(IntDir)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
 
 ifneq ($(MAKECMDGOALS), clean)
