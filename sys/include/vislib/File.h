@@ -229,7 +229,7 @@ namespace sys {
          * @param outBuf  The buffer to receive the data.
          * @param bufSize The size of 'outBuf' in bytes.
          *
-         * @return The number of bytes acutally read.
+         * @return The number of bytes actually read.
          *
          * @throws IOException
          */
