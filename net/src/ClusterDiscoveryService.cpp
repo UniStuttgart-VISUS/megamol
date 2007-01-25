@@ -38,7 +38,7 @@ vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
         timeoutSend(5 * 1000) {     // TODO
     this->name.Truncate(MAX_USER_DATA);
 
-    this->peerNodes.Resize(1);  // TODO: Remove alloc crowbar!
+    this->peerNodes.Resize(0);  // TODO: Remove alloc crowbar!
 }
 
 
@@ -348,8 +348,10 @@ DWORD vislib::net::ClusterDiscoveryService::Responder::Run(
                         peerAddr.ToStringA().PeekBuffer());
 
                     /* Add peer to local list, if not yet known. */
-                    peerNode.address = request.responseAddr;
-                    this->cds.addPeerNode(peerNode);
+                    // TODO: This is nonsense. The message currently does not
+                    // contain a response address. Consider inserting one.
+                    //peerNode.address = request.responseAddr;
+                    //this->cds.addPeerNode(peerNode);
                 }
             } /* end if (response.magicNumber == MAGIC_NUMBER) */
 
