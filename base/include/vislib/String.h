@@ -523,9 +523,15 @@ namespace vislib {
         ///**
         // * Convert all characters to lower case.
         // */
-        //inline void ToLowerCase(void) {
-        //    T::ToLower(this->data);
-        //}
+//#pragma deprecated(ToLowerCase)
+//        inline void ToLowerCase(void) {
+//            //T::ToLower(this->data);
+//            // TODO: This is a quick hack and should not be used.
+//            Size len = this->Length();
+//            for (Size i = 0; i < len; i++) {
+//                this->data[i] = T::ToLower(this->data[i]);
+//            }
+//        }
 
         // TODO: ToUpperCase
         ///**

@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     //::TestDateTime();
     //::TestArray();
     //::TestSmartPtr();
-    //::TestClusterDiscoveryService();
+    ::TestClusterDiscoveryService();
 
     //::printf("%s", W2A(L"Hugo"));
 

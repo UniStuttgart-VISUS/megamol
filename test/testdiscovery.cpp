@@ -6,6 +6,7 @@
 
 #include "testdiscovery.h"
 #include "vislib/ClusterDiscoveryService.h"
+#include "vislib/SystemInformation.h"
 
 #include <iostream>
 
@@ -31,15 +32,21 @@ void MyListener::OnNodeFound(const vislib::net::ClusterDiscoveryService& src,
 
 void TestClusterDiscoveryService(void) {
     using namespace vislib::net;
+    using namespace vislib::sys;
 
     MyListener myListener;
-    
+
+    // TODO: MIDL_uhyper_crowbar
+    Socket::Startup();
+
     ClusterDiscoveryService cds("testnet", 
-        SocketAddress(SocketAddress::FAMILY_INET, IPAddress("129.69.215.38"), 28181), 
+        SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA()), 28181), 
         IPAddress("129.69.215.255"), 
-        SocketAddress(SocketAddress::FAMILY_INET, IPAddress("129.69.215.38"), 12345));
+        SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA()), 12345));
     cds.AddListener(&myListener);
     cds.Start();
-    vislib::sys::Thread::Sleep(5 * 1000);
+    Thread::Sleep(60 * 1000);
     cds.Stop();
+
+    Socket::Cleanup();
 }
