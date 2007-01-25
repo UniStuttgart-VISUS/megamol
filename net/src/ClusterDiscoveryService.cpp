@@ -13,13 +13,32 @@
 
 
 /*
+ * vislib::net::ClusterDiscoveryService::MSG_TYPE_USER
+ */
+const UINT16 vislib::net::ClusterDiscoveryService::MSG_TYPE_USER = 16;
+
+
+/*
  * vislib::net::ClusterDiscoveryService::ClusterDiscoveryService
  */
 vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
         const StringA& name, const SocketAddress& bindAddr, 
-        const IPAddress& bcastAddr)
-        : bcastAddr(SocketAddress::FAMILY_INET, bcastAddr, bindAddr.GetPort()), name(name),
-        requestThread(&requestFunc), responseThread(&responseFunc) {
+        const IPAddress& bcastAddr, const SocketAddress& responseAddr)
+        : bcastAddr(SocketAddress::FAMILY_INET, bcastAddr, bindAddr.GetPort()), 
+        bindAddr(bindAddr), 
+        expectedResponseCnt(2),      // TODO
+        responseAddr(responseAddr), 
+        requestInterval(3 * 1000),  // TODO
+        name(name), 
+        requester(NULL), 
+        responder(NULL), 
+        requestThread(NULL), 
+        responseThread(NULL),
+        timeoutReceive(2 * 1000),   // TODO
+        timeoutSend(5 * 1000) {     // TODO
+    this->name.Truncate(MAX_USER_DATA);
+
+    this->peerNodes.Resize(1);  // TODO: Remove alloc crowbar!
 }
 
 
@@ -27,8 +46,27 @@ vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
  * vislib::net::ClusterDiscoveryService::~ClusterDiscoveryService
  */
 vislib::net::ClusterDiscoveryService::~ClusterDiscoveryService(void) {
-    this->requestThread.Terminate(true);
-    this->responseThread.Terminate(true);
+    if (this->requestThread != NULL) {
+        try {
+            this->requestThread->Terminate(false);
+            SAFE_DELETE(this->requester);
+            SAFE_DELETE(this->requestThread);
+        } catch (...) {
+            TRACE(Trace::LEVEL_WARN, "The discovery requester thread could "
+                "not be successfully terminated.\n");
+        }
+    }
+
+    if (this->responseThread != NULL) {
+        try {
+            this->responseThread->Terminate(false);
+            SAFE_DELETE(this->responder);
+            SAFE_DELETE(this->responseThread);
+        } catch (...) {
+            TRACE(Trace::LEVEL_WARN, "The discovery responder thread could "
+                "not be successfully terminated.\n");
+        }
+    }
 }
 
 
@@ -36,134 +74,315 @@ vislib::net::ClusterDiscoveryService::~ClusterDiscoveryService(void) {
  * vislib::net::ClusterDiscoveryService::Start
  */
 bool vislib::net::ClusterDiscoveryService::Start(void) {
-    return this->requestThread.Start(this) && this->responseThread.Start(this);
+    /* Prepare and start the thread generating the discovery requests. */
+    this->requester = new Requester(*this);
+    this->requestThread = new vislib::sys::Thread(this->requester);
+    this->requestThread->Start();
+
+    /* Prepare the response thread. */
+    this->responder = new Responder(*this);
+    this->responseThread = new vislib::sys::Thread(this->responder);
+    this->responseThread->Start();
+
+    // TODO: Remove debug crowbaring
+    //this->requestThread->Join();
+    //sys::Thread::Sleep(5 * 1000);
+    //this->requestThread->Terminate(false);
+    //sys::Thread::Sleep(5 * 1000);
+    //this->requestThread->Join();
+    return true;
 }
 
 
 /*
- * vislib::net::ClusterDiscoveryService::requestFunc
+ * vislib::net::ClusterDiscoveryService::Stop
  */
-DWORD vislib::net::ClusterDiscoveryService::requestFunc(const void *userData) {
-    // TODO: 'userData' should not be const in runnable and RunnableFunc
-    ClusterDiscoveryService *cds = static_cast<ClusterDiscoveryService *>(
-        const_cast<void *>(userData));
+bool vislib::net::ClusterDiscoveryService::Stop(void) {
+    try {
+        this->requestThread->Terminate(false);
+        this->responseThread->Terminate(false);
+        return true;
+    } catch (sys::SystemException e) {
+        TRACE(Trace::LEVEL_ERROR, "Stopping discovery threads failed. The "
+            "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
+        return false;
+    }
+}
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Begin of nested class Requester
+
+/*
+ * vislib::net::ClusterDiscoveryService::Requester::Requester
+ */
+vislib::net::ClusterDiscoveryService::Requester::Requester(
+        ClusterDiscoveryService& cds) : cds(cds), isRunning(true) {
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::Requester::~Requester
+ */
+vislib::net::ClusterDiscoveryService::Requester::~Requester(void) {
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::Requester::Run
+ */
+DWORD vislib::net::ClusterDiscoveryService::Requester::Run(
+        const void *reserved) {
     SocketAddress peerAddr;
     PeerNode peerNode;
     Message request;
     Message response;
     Socket socket;
 
+    // Assert expected memory layout of messages.
     ASSERT(sizeof(request) == MAX_USER_DATA + 4);
-    ASSERT(static_cast<void *>(&(request.name)) 
-        == static_cast<void *>(&request + 4));
+    ASSERT(reinterpret_cast<BYTE *>(&(request.name)) 
+       == reinterpret_cast<BYTE *>(&request) + 4);
 
+    /* Prepare the socket. */
     try {
+        Socket::Startup();
         socket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM, 
             Socket::PROTOCOL_UDP);
-        //socket.SetSndTimeo(3000);
+        socket.SetBroadcast(true);
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_ERROR, "%d: %s", e.GetErrorCode(), e.GetMsgA());
-        return -1;
+        TRACE(Trace::LEVEL_ERROR, "Discovery requester thread could not "
+            "create its. The error code is %d (\"%s\").\n", e.GetErrorCode(),
+            e.GetMsgA());
+        return 1;
     }
 
+    /* Prepare our request for multiple broadcasting. */
     request.magicNumber = MAGIC_NUMBER;
     request.msgType = MSG_TYPE_DISCOVERY_REQUEST;
 #if (_MSC_VER >= 1400)
-    ::strncpy_s(request.name, MAX_USER_DATA, cds->name, MAX_USER_DATA);
+    ::strncpy_s(request.name, MAX_USER_DATA, this->cds.name, MAX_USER_DATA);
 #else /* (_MSC_VER >= 1400) */
-    ::strncpy(request.name, cds->name.PeekBuffer(), MAX_USER_DATA);
+    ::strncpy(request.name, this->cds.name.PeekBuffer(), MAX_USER_DATA);
 #endif /* (_MSC_VER >= 1400) */
 
-    while (true) {
+    while (this->isRunning) {
         try {
-            socket.Send(&request, sizeof(Message), cds->bcastAddr);
 
-            socket.Receive(&response, sizeof(Message), peerAddr);
-            if ((response.magicNumber == MAGIC_NUMBER) 
-                    && (response.msgType == MSG_TYPE_DISCVOERY_RESPONSE)) {
-        cds->peerNodesCritSect.Lock();
-        if (!cds->peerNodes.Contains(peerNode)) {
-            cds->peerNodes.Append(peerNode);
-        }
-        cds->peerNodesCritSect.Unlock();                    
-            }
+            /* Broadcast request. */
+            socket.Send(&request, sizeof(Message), this->cds.bcastAddr);
+            TRACE(Trace::LEVEL_INFO, "Request thread sent "
+                "MSG_TYPE_DISCOVERY_REQUEST to %s.\n",
+                this->cds.bcastAddr.ToStringA().PeekBuffer());
+
+            for (UINT i = 0; i < this->cds.expectedResponseCnt; i++) {
+                socket.Receive(&response, sizeof(Message), 
+                    this->cds.timeoutReceive, peerAddr);
+                if (response.magicNumber == MAGIC_NUMBER) {
+                    /* Message OK, look for its content. */
+
+                    if (response.msgType == MSG_TYPE_DISCOVERY_RESPONSE) {
+                        TRACE(Trace::LEVEL_INFO, "Request thread received "
+                            "MSG_TYPE_DISCOVERY_RESPONSE from from %s.\n",
+                            peerAddr.ToStringA().PeekBuffer());
+
+                        /* Add peer to local list, if not yet known. */
+                        peerNode.address = response.responseAddr;
+                        this->cds.peerNodesCritSect.Lock();
+                        if (!this->cds.peerNodes.Contains(peerNode)) {
+                            this->cds.peerNodes.Append(peerNode);
+                        }
+                        this->cds.peerNodesCritSect.Unlock();
+                    }
+
+                } /* end if (response.magicNumber == MAGIC_NUMBER) */
+            } /* end for (UINT i = 0; i < ... */
+
+            sys::Thread::Sleep(this->cds.requestInterval);
+
         } catch (SocketException e) {
-            TRACE(Trace::LEVEL_ERROR, "%d: %s", e.GetErrorCode(), e.GetMsgA());
+            TRACE(Trace::LEVEL_WARN, "A socket error occurred in the "
+                "discovery request thread. The error code is %d (\"%s\").\n",
+                e.GetErrorCode(), e.GetMsgA());
+        } catch (Exception e) {
+            TRACE(Trace::LEVEL_WARN, "A discovery request could not be "
+                "dispatched due to an unexpected exception (\"%s\").\n", 
+                e.GetMsgA());
+            return 2;
+        } catch (...) {
+            TRACE(Trace::LEVEL_WARN, "A discovery request could not be "
+                "dispatched due to an unexpected exception.\n");
+            return 3;
         }
+    } /* end while (this->isRunning) */
 
+    /* Clean up. */
+    try {
+        socket.Shutdown(Socket::BOTH);
+        socket.Close();
+        Socket::Cleanup();
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_ERROR, "Socket cleanup failed in the discovery "
+            "request thread. The error code is %d (\"%s\").\n", 
+            e.GetErrorCode(), e.GetMsgA());
     }
-
-    //msgHdr.msgType = MSG_TYPE_DISCOVERY_REQUEST;
-    //msgHdr.msgSize = cds->name.Length() + 1;
-    //try {
-    //    socket.Send(&msgHdr, sizeof(MessageHeader), cds->bcastAddr);
-    //    socket.Send(cds->name.PeekBuffer(), msgHdr.msgSize, cds->bcastAddr);
-    //} catch (SocketException e) {
-    //    TRACE(Trace::LEVEL_ERROR, "%d: %s", e.GetErrorCode(), e.GetMsgA());
-    //}
-
-    //try {
-    //    socket.Receive(&msgHdr, sizeof(MessageHeader), peerAddr);
-    //    peerNode.ipAddress = peerAddr.GetIPAddress();
-    //
-    //    cds->peerNodesCritSect.Lock();
-    //    if (!cds->peerNodes.Contains(peerNode)) {
-    //        cds->peerNodes.Append(peerNode);
-    //    }
-    //    cds->peerNodesCritSect.Unlock();    
-    //} catch (SocketException e) {
-    //    TRACE(Trace::LEVEL_ERROR, "%d: %s", e.GetErrorCode(), e.GetMsgA());
-    //}
 
     return 0;
 }
 
 
 /*
- * vislib::net::ClusterDiscoveryService::responseFunc
+ * vislib::net::ClusterDiscoveryService::Requester::Terminate
  */
-DWORD vislib::net::ClusterDiscoveryService::responseFunc(const void *userData) {
-    // TODO: 'userData' should not be const in runnable and RunnableFunc
-    ClusterDiscoveryService *cds = static_cast<ClusterDiscoveryService *>(
-        const_cast<void *>(userData));
+bool vislib::net::ClusterDiscoveryService::Requester::Terminate(void) {
+    // TODO: Should perhaps be protected by crit sect.
+    this->isRunning = false;
+    return true;
+}
 
-    //SocketAddress peerAddr;     // Peer node to respond to.
-    //MessageHeader msgHdr;
-    //Socket socket;              // The socket used for messages.
-
-    //try {
-    //    socket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM, 
-    //        Socket::PROTOCOL_UDP);
-    //    //socket.Bind(SocketAddress(SocketAddress::FAMILY_INET, IPAddress("localhost"), 28181));
-    //} catch (SocketException e) {
-    //    TRACE(Trace::LEVEL_ERROR, "%d: %s", e.GetErrorCode(), e.GetMsgA());
-    //    return -1;
-    //}
-
-    //try {
-    //    while (true) {
-    //        socket.Receive(&msgHdr, sizeof(MessageHeader), peerAddr);
-
-    //        msgHdr.msgType = MSG_TYPE_DISCVOERY_RESPONSE;
-    //        msgHdr.msgSize = 0;
-    //        socket.Send(&response, sizeof(MessageHeader), peerAddr);
-    //    }
-    //} catch (SocketException e) {
-    //    TRACE(Trace::LEVEL_ERROR, "Respond %d: %s", e.GetErrorCode(), e.GetMsgA());
-    //}
+// End of nested class Requester
+////////////////////////////////////////////////////////////////////////////////
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Begin of nested class Responder
+
+/*
+ * vislib::net::ClusterDiscoveryService::Responder::Responder
+ */
+vislib::net::ClusterDiscoveryService::Responder::Responder(
+        ClusterDiscoveryService& cds) : cds(cds), isRunning(true) {
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::Responder::~Responder
+ */
+vislib::net::ClusterDiscoveryService::Responder::~Responder(void) {
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::Responder::Run
+ */
+DWORD vislib::net::ClusterDiscoveryService::Responder::Run(
+        const void *reserved) {
+    SocketAddress peerAddr;     // Receives address of UDP communication peer.
+    PeerNode peerNode;          // The peer node to register in our list.
+    Message request;            // Receives the request messages.
+    Message discoveryResponse;  // The discovery response we send.
+    Socket socket;              // The datagram socket that is listening.
+
+    // Assert expected message memory layout.
+    ASSERT(sizeof(request) == MAX_USER_DATA + 4);
+    ASSERT(reinterpret_cast<BYTE *>(&(request.name)) 
+       == reinterpret_cast<BYTE *>(&request) + 4);
+
+    /* 
+     * Prepare a datagram socket listening for requests on the specified 
+     * adapter and port. 
+     */
+    try {
+        Socket::Startup();
+        socket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM, 
+            Socket::PROTOCOL_UDP);
+        socket.Bind(this->cds.bindAddr);
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_ERROR, "Discovery responder thread could not "
+            "create its socket and bind it to the requested address. The "
+            "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
+        return 1;
+    }
+
+    /* Prepare a discovery response for multiple use. */
+    discoveryResponse.magicNumber = MAGIC_NUMBER;
+    discoveryResponse.msgType = MSG_TYPE_DISCOVERY_RESPONSE;
+    discoveryResponse.responseAddr = this->cds.responseAddr;
+
+    while (this->isRunning) {
+        try {
+
+            /* Wait for next message. */
+            // Note: This receive operation must be timeouted in order to allow
+            // the thread to be terminated in a controlled manner.
+            socket.Receive(&request, sizeof(Message)/*, this->cds.timeoutReceive*/, 
+                peerAddr);
+
+            if (request.magicNumber == MAGIC_NUMBER) {
+                /* Message OK, look for its content. */
+
+                if ((request.msgType == MSG_TYPE_DISCOVERY_REQUEST) 
+                        && (this->cds.name.Compare(request.name))) {
+                    /* Got a discovery request for own cluster. */
+                    TRACE(Trace::LEVEL_INFO, "Response thread received "
+                        "MSG_TYPE_DISCOVERY_REQUEST from %s.\n", 
+                        peerAddr.ToStringA().PeekBuffer());
+                    
+                    socket.Send(&discoveryResponse, sizeof(Message), 
+                        this->cds.timeoutSend, peerAddr);
+                    TRACE(Trace::LEVEL_INFO, "Response thread sent "
+                        "MSG_TYPE_DISCOVERY_RESPONSE to %s.\n", 
+                        peerAddr.ToStringA().PeekBuffer());
+
+                    /* Add peer to local list, if not yet known. */
+                    peerNode.address = request.responseAddr;
+                    this->cds.peerNodesCritSect.Lock();
+                    if (!this->cds.peerNodes.Contains(peerNode)) {
+                        this->cds.peerNodes.Append(peerNode);
+                    }
+                    this->cds.peerNodesCritSect.Unlock();
+                }
+            } /* end if (response.magicNumber == MAGIC_NUMBER) */
+
+        } catch (SocketException e) {
+            TRACE(Trace::LEVEL_WARN, "A socket error occurred in the "
+                "discovery response thread. The error code is %d (\"%s\").\n",
+                e.GetErrorCode(), e.GetMsgA());
+        } catch (Exception e) {
+            TRACE(Trace::LEVEL_WARN, "A discovery request could not be "
+                "answered due to an unexpected exception (\"%s\").\n", 
+                e.GetMsgA());
+            return 2;
+        } catch (...) {
+            TRACE(Trace::LEVEL_WARN, "A discovery request could not be "
+                "answered due to an unexpected exception.\n");
+            return 3;
+        }
+
+    } /* end while (this->isRunning) */
+
+    try {
+        socket.Shutdown(Socket::BOTH);
+        socket.Close();
+        Socket::Cleanup();
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_ERROR, "Socket cleanup failed in the discovery "
+            "response thread. The error code is %d (\"%s\").\n", 
+            e.GetErrorCode(), e.GetMsgA());
+    }
 
     return 0;
 }
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::Responder::Terminate
+ */
+bool vislib::net::ClusterDiscoveryService::Responder::Terminate(void) {
+    // TODO: Should perhaps be protected by crit sect.
+    this->isRunning = false;
+    return true;
+}
+
+// End of nested class Responder
+////////////////////////////////////////////////////////////////////////////////
 
 
 /*
  * vislib::net::ClusterDiscoveryService::MAGIC_NUMBER
  */
 const UINT16 vislib::net::ClusterDiscoveryService::MAGIC_NUMBER 
-    = static_cast<UINT16>('v') << 16 | static_cast<UINT16>('l');
+    = static_cast<UINT16>('v') << 8 | static_cast<UINT16>('l');
 
 
 /*
@@ -174,7 +393,7 @@ const UINT16 vislib::net::ClusterDiscoveryService::MSG_TYPE_DISCOVERY_REQUEST
 
 
 /*
- * vislib::net::ClusterDiscoveryService::MSG_TYPE_DISCVOERY_RESPONSE
+ * vislib::net::ClusterDiscoveryService::MSG_TYPE_DISCOVERY_RESPONSE
  */
-const UINT16 vislib::net::ClusterDiscoveryService::MSG_TYPE_DISCVOERY_RESPONSE 
+const UINT16 vislib::net::ClusterDiscoveryService::MSG_TYPE_DISCOVERY_RESPONSE 
     = 2;
