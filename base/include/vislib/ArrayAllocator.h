@@ -13,15 +13,17 @@
 
 
 #include "vislib/memutils.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
 
 
     /**
-     * TODO: comment class
+     * Allocates arrays of dynamic memory. The allocator guarantees the ctor and
+	 * dtor of the object to be called.
      */
-    class ArrayAllocator {
+    template<class T> class ArrayAllocator {
 
     public:
 
