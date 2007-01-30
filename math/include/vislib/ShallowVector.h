@@ -71,11 +71,11 @@ namespace math {
          * @param components The new vector component memory. This must not be
          *                   a NULL vector.
          */
-#pragma deprecated(SetComponents)
-        inline void SetComponents(T *components) {
-            ASSERT(components != NULL);
-            this->components = components;
-        }
+//#pragma deprecated(SetComponents)
+//        inline void SetComponents(T *components) {
+//            ASSERT(components != NULL);
+//            this->components = components;
+//        }
 
         /**
          * Assignment.

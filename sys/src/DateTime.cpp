@@ -73,6 +73,7 @@ vislib::sys::DateTime::~DateTime(void) {
 void vislib::sys::DateTime::GetDate(INT& outYear, 
                                     INT& outMonth, 
                                     INT& outDay) const {
+	ASSERT(false); // TODO: Implementation missing
     INT64 days = this->value / ONE_DAY;     // Full days.
     INT64 bcExtraOffset = (this->value % ONE_DAY == 0) ? 1 : 0;
     INT64 cnt400Years = 0;                  // # of 400 year blocks.
