@@ -7,7 +7,9 @@
 #include "testpointers.h"
 #include "testhelper.h"
 
+#ifndef DEBUG
 #define DEBUG
+#endif
 #include "vislib/SmartPtr.h"
 
 
