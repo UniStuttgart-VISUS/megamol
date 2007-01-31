@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
     //::TestSysInfo();
     //::TestString();
-    //::TestFile();
+    ::TestFile();
     //::TestPath();
     //::TestProcess();
     //::TestVector();
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     //::TestArray();
     //::TestSmartPtr();
     //::TestClusterDiscoveryService();
-    ::TestNetworkInformation();
+    //::TestNetworkInformation();
 
     //::printf("%s", W2A(L"Hugo"));
 

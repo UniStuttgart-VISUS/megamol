@@ -34,7 +34,9 @@ using namespace vislib::sys;
 //static const File::FileSize BIGFILE_SIZE = 5368708992;
 //static const File::FileSize BIGFILE_LASTVAL = 671088623;
 static const File::FileSize BIGFILE_SIZE = 300000;
-static const File::FileSize BIGFILE_LASTVAL = 37499;
+//static const File::FileSize BIGFILE_LASTVAL = 37499;
+static const File::FileSize BIGFILE_LASTVAL = (BIGFILE_SIZE / 8) - 1;
+
 static const char fname[] = "bigfile.bin";
 static File::FileSize BUF_SIZE = SystemInformation::AllocationGranularity() * 2;
 
@@ -67,19 +69,19 @@ static void generateBigOne(File& f1) {
 				dataLeft = 0;
 			} else {
 				f1.Write(buf, splitPos);
-				f1.Write(buf+splitPos, BUF_SIZE - splitPos);
+				f1.Write(buf + splitPos, BUF_SIZE - splitPos);
 				dataLeft -= BUF_SIZE;
 				numWritten = BUF_SIZE;
 			}
 			perf = p->Difference();
 			ptotal += perf;
 			rate = (float)numWritten/1024.0f / perf;
-			if (rate < minrate) minrate=rate;
-			if (rate > maxrate) maxrate=rate;
+			if (rate < minrate) minrate = rate;
+			if (rate > maxrate) maxrate = rate;
 			splitPos = ++splitPos % BUF_SIZE;
 		}
 		AssertTrue("Generate big testfile", true);
-		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear writing: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize()/1024.0f / ptotal);
+		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear writing: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize() / 1024.0f / ptotal);
 		std::cout << buf;
 		f1.Close();
 	} catch (IOException e) {
@@ -96,8 +98,9 @@ static File::FileSize checkContent(char *buf, File::FileSize pos, File::FileSize
 	char *offset;
 	File::FileSize i, ret;
 
-	for (offset = buf, i = pos / 8; offset < buf + chunk; offset+=8, i++) {
-		if (*(reinterpret_cast<File::FileSize*>(offset)) != i) {
+	for (offset = buf, i = pos / 8; offset < buf + chunk; offset += 8, i++) {
+        ret = *(reinterpret_cast<File::FileSize*>(offset)); // for better debugging
+		if (ret != i) {
 			AssertTrue("File contents comparison", false);
 		}
 		ret = i;
@@ -150,6 +153,11 @@ static void testBigOne(File& f1) {
 	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear reading: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize()/1024.0f / ptotal);
 	std::cout << buf;
 	f1.Close();
+    delete[] buf;
+}
+
+static void removeBigOne(void) {
+    AssertTrue("Delete test file", vislib::sys::File::Delete(fname));
 }
 
 static void runTests(File& f1) {
@@ -305,6 +313,8 @@ static void runTests(File& f1) {
 
 
 void TestFile(void) {
+    AssertEqual("TestFileSize % 8 == 0", static_cast<INT64>(BIGFILE_SIZE) % static_cast<INT64>(8), static_cast<INT64>(0));
+
     try {
         ::TestBaseFile();
         ::TestBufferedFile();
@@ -319,6 +329,10 @@ void TestBaseFile(void) {
     File f1;
     std::cout << std::endl << "Tests for File" << std::endl;
     ::runTests(f1);
+
+	::generateBigOne(f1);
+	::testBigOne(f1);
+    ::removeBigOne();
 }
 
 
@@ -333,6 +347,7 @@ void TestBufferedFile(void) {
 
 	::generateBigOne(f1);
 	::testBigOne(f1);	
+    ::removeBigOne();
 }
 
 void TestMemmappedFile(void) {
@@ -351,6 +366,7 @@ void TestMemmappedFile(void) {
 	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Testing with views of "FORMATINT64"\n", f1.GetViewSize());
 	std::cout << buf;
 	::testBigOne(f1);
+    ::removeBigOne();
 }
 
 

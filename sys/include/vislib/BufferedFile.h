@@ -169,6 +169,9 @@ namespace sys {
         /** the mode of the current buffer */
         BufferMode bufferMode;
 
+        /** the access mode the file has been opened with */
+        File::AccessMode fileMode;
+
         /** the position inside the buffer */
         File::FileSize bufferOffset;
 
