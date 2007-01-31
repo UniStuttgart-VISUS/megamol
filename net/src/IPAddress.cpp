@@ -26,6 +26,25 @@ vislib::net::IPAddress::IPAddress(const char *address) {
 
 
 /*
+ * vislib::net::IPAddress::IPAddress
+ */
+vislib::net::IPAddress::IPAddress(unsigned char i1, unsigned char i2, unsigned char i3, unsigned char i4) {
+#ifdef _WIN32
+    this->address.S_un.S_un_b.s_b1 = i1;
+    this->address.S_un.S_un_b.s_b2 = i2;
+    this->address.S_un.S_un_b.s_b3 = i3;
+    this->address.S_un.S_un_b.s_b4 = i4;
+#else /* _WIN32 */
+    this->address.s_addr
+        = (static_cast<unsigned int>(i1))
+        + (static_cast<unsigned int>(i2) << 8)
+        + (static_cast<unsigned int>(i3) << 16)
+        + (static_cast<unsigned int>(i4) << 24);
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::net::IPAddress::~IPAddress
  */
 vislib::net::IPAddress::~IPAddress(void) {

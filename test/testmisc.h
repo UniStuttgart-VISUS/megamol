@@ -14,4 +14,6 @@ void TestConsoleColors(void);
 
 void TestColumnFormatter(void);
 
+void TestNetworkInformation(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

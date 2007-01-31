@@ -286,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\NetworkInformation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Socket.cpp"
 				>
 			</File>
@@ -313,6 +317,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\IPAddress.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\NetworkInformation.h"
 				>
 			</File>
 			<File

@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
     //TRACE(1, "HORST!\n");
 
-    ::TestSysInfo();
+    //::TestSysInfo();
     //::TestString();
     //::TestFile();
     //::TestPath();
@@ -72,8 +72,9 @@ int main(int argc, char **argv) {
     //::TestColumnFormatter();
     //::TestDateTime();
     //::TestArray();
-    ::TestSmartPtr();
+    //::TestSmartPtr();
     //::TestClusterDiscoveryService();
+    ::TestNetworkInformation();
 
     //::printf("%s", W2A(L"Hugo"));
 

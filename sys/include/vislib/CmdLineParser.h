@@ -60,8 +60,6 @@ namespace sys {
          * An option is defined by a short name, a long name, and a value type.
          * The parser will check the short names case sensitive but the long 
          * names case insensitive.
-         *
-         * TODO: add functionality to CmdLineParser to generate an online help text.
          */
         class Option {
         public:

@@ -44,6 +44,16 @@ namespace net {
         explicit IPAddress(const char *address = "127.0.0.1");
 
         /**
+         * Create an IPAddress from four characters.
+         *
+         * @param i1 The first number of the IP address.
+         * @param i2 The first number of the IP address.
+         * @param i3 The first number of the IP address.
+         * @param i4 The first number of the IP address.
+         */
+        explicit IPAddress(unsigned char i1, unsigned char i2, unsigned char i3, unsigned char i4);
+
+        /**
          * Cast constructor from struct in_addr.
          *
          * @param address The in_addr structure to be copied.
