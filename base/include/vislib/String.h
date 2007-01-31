@@ -609,7 +609,7 @@ namespace vislib {
          *
          * @return A new string that is this string with 'rhs' appended.
          */
-        String operator +(const Char rhs);
+        String operator +(const Char rhs) const;
 
         /**
          * Concatenate this string and 'rhs'.
@@ -618,7 +618,7 @@ namespace vislib {
          *
          * @return A new string that is this string with 'rhs' appended.
          */
-        String operator +(const Char *rhs);
+        String operator +(const Char *rhs) const;
 
         /**
          * Concatenate this string and 'rhs'.
@@ -627,7 +627,7 @@ namespace vislib {
          *
          * @return A new string that is this string with 'rhs' appended.
          */
-        inline String operator +(const String& rhs) {
+        inline String operator +(const String& rhs) const {
             return (*this + rhs.data);
         }
 
@@ -1474,7 +1474,7 @@ namespace vislib {
     /*
      * String<T>::operator +
      */
-    template<class T> String<T> String<T>::operator +(const Char rhs) {
+    template<class T> String<T> String<T>::operator +(const Char rhs) const {
         Size len = this->Length();
 
         String retval;
@@ -1492,7 +1492,7 @@ namespace vislib {
     /*
      * String<T>::operator +
      */
-    template<class T> String<T> String<T>::operator +(const Char *rhs) {
+    template<class T> String<T> String<T>::operator +(const Char *rhs) const {
         if (rhs != NULL) {
             Size len1 = this->Length();
             Size len2 = T::StringLength(rhs);
