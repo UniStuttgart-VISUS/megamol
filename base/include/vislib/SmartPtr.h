@@ -14,6 +14,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
+#include "vislib/SingleAllocator.h"
 #include "vislib/types.h"
 
 
@@ -24,10 +25,21 @@ namespace vislib {
      * This is a smart pointer class that implements reference counting.
      *
      * All memory that a smart pointer can point to must have been allocated on 
-     * the heap using the global new operator, as the delete operator is used
-     * for freeing the memory.
+     * the heap using the a method compatible with the Allocator A. The user is
+	 * responsible for allocating the memory that is assigned to a SmartPtr with
+	 * a compatible method, i. e. with new when using the default 
+	 * SingleAllocator and with new[] when using the array allocator.
+	 *
+	 * The template parameter T specifies the static type of the memory 
+	 * designated by the pointer. 
+	 *
+	 * The template parameter A is the allocator that specifies the method for
+	 * freeing the memory. It must have a Deallocate method that calls the dtor
+	 * of the object(s) deallocated. The allocator must support the same static
+	 * type T as the SmartPtr. The valor of A defaults to SingleAllocator<T>,
+	 * i. e. the memory is assumed to be allocated using "new T".
      */
-    template <class T> class SmartPtr {
+    template <class T, class A = SingleAllocator<T> > class SmartPtr {
 
     public:
 
@@ -59,9 +71,22 @@ namespace vislib {
          * @return true, if the pointer is a NULL pointer, false otherwise.
          */
         inline bool IsNull(void) const {
+			ASSERT ((this->ptr == NULL) || (this->ptr->obj != NULL));
             return (this->ptr == NULL);
         }
 
+		/**
+		 * Assignment operator.
+		 *
+		 * This operation makes decrements the reference count on the current
+		 * pointer and makes 'rhs' the new object with an reference count of 1.
+		 * If 'rhs' is NULL, the smart pointer is made the NULL pointer without
+		 * a special reference counting.
+		 *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+		 */
         SmartPtr& operator =(T *rhs);
 
         /**
@@ -138,6 +163,12 @@ namespace vislib {
             return (this->ptr != NULL) ? this->ptr->obj : NULL;
         }
 
+#if defined(DEBUG) || defined(_DEBUG)
+		inline UINT _GetCnt(void) const {
+			return (this->ptr != NULL) ? this->ptr->cnt : 0;
+		}
+#endif /* defined(DEBUG) || defined(_DEBUG) */
+
     private:
 
         /** This is a helper structure for doing the reference counting. */
@@ -163,32 +194,30 @@ namespace vislib {
 
 
     /*
-     * vislib::SmartPtr<T>::SmartPtr
+     * vislib::SmartPtr<T, A>::SmartPtr
      */
-    template<class T> SmartPtr<T>::SmartPtr(T *ptr) : ptr(NULL) {
-        if (ptr != NULL) {
-            this->ptr = new CounterProxy(ptr);
-        }
+    template<class T, class A> SmartPtr<T, A>::SmartPtr(T *ptr) : ptr(NULL) {
+		*this = ptr;
     }
 
 
     /*
-     * vislib::SmartPtr<T>::~SmartPtr
+     * vislib::SmartPtr<T, A>::~SmartPtr
      */
-    template<class T> SmartPtr<T>::~SmartPtr(void) {
+    template<class T, class A> SmartPtr<T, A>::~SmartPtr(void) {
         *this = NULL;
     }
 
 
     /*
-     * vislib::SmartPtr<T>::operator =
+     * vislib::SmartPtr<T, A>::operator =
      */
-    template<class T> 
-    SmartPtr<T>& SmartPtr<T>::operator =(T *rhs) {
+    template<class T, class A> 
+    SmartPtr<T, A>& SmartPtr<T, A>::operator =(T *rhs) {
 
         /* Handle reference decrement on current object. */
         if ((this->ptr != NULL) && (--this->ptr->cnt == 0)) {
-            SAFE_DELETE(this->ptr->obj);
+			A::Deallocate(this->ptr->obj);
             SAFE_DELETE(this->ptr);
         }
 
@@ -203,15 +232,15 @@ namespace vislib {
 
 
     /*
-     * vislib::SmartPtr<T>::operator =
+     * vislib::SmartPtr<T, A>::operator =
      */
-    template<class T> 
-    SmartPtr<T>& SmartPtr<T>::operator =(const SmartPtr& rhs) {
+    template<class T, class A> 
+    SmartPtr<T, A>& SmartPtr<T, A>::operator =(const SmartPtr& rhs) {
         if (this != &rhs) {
 
             /* Handle reference decrement on current object. */
             if ((this->ptr != NULL) && (--this->ptr->cnt == 0)) {
-                SAFE_DELETE(this->ptr->obj);
+                A::Deallocate(this->ptr->obj);
                 SAFE_DELETE(this->ptr);
             }
 

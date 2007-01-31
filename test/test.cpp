@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
     ::TestSysInfo();
     //::TestString();
-    ::TestFile();
+    //::TestFile();
     //::TestPath();
     //::TestProcess();
     //::TestVector();
@@ -72,8 +72,8 @@ int main(int argc, char **argv) {
     //::TestColumnFormatter();
     //::TestDateTime();
     //::TestArray();
-    //::TestSmartPtr();
-    ::TestClusterDiscoveryService();
+    ::TestSmartPtr();
+    //::TestClusterDiscoveryService();
 
     //::printf("%s", W2A(L"Hugo"));
 

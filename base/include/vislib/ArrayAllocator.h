@@ -20,8 +20,11 @@ namespace vislib {
 
 
     /**
-     * Allocates arrays of dynamic memory. The allocator guarantees the ctor and
-	 * dtor of the object to be called.
+     * Allocates arrays of dynamic memory. 
+	 *
+	 * It uses the C++ array new and delete operators and therefore guarantees
+	 * that the default ctors and the dtors of the objects allocated are called
+	 * when necessary.
      */
     template<class T> class ArrayAllocator {
 
@@ -43,33 +46,33 @@ namespace vislib {
 		/**
 		 * Deallocate the memory designated by 'inOutPtr'.
 		 *
-		 * @param inOutPtr The pointer to the memory.
-		 * @param cnt      The size of the array 'inOutPtr'.
+		 * @param inOutPtr The pointer to the memory. The pointer will be set 
+		 *                 NULL when the method returns.
 		 */
-		static inline void Deallocate(T *& inOutPtr, const SIZE_T cnt) {
+		static inline void Deallocate(T *& inOutPtr) {
 			delete[] inOutPtr;
 			inOutPtr = NULL;
 		}
 
-		/**
-		 * Reallocate 'ptr' to be an array having 'cntNew' elements. The 
-		 * overlapping part of the old array will remain in the new array, too.
-		 *
-		 * @param ptr    The pointer to be reallocated.
-		 * @param cntOld The current size of the array designated by 'ptr'.
-		 * @param cntNew The new size of the array.
-		 *
-		 * @return A pointer to the reallocated memory.
-		 *
-		 * @throws std::bad_alloc If the new memory could not be allocated.
-		 */
-		static inline T *Reallocate(T *ptr, const SIZE_T cntOld, 
-				const SIZE_T cntNew) {
-			T *retval = new T[cnt];
-			::memcpy(retval, ptr, (cntOld < cntNew) ? cntOld : cntNew);
-			delete[] ptr;
-			return retval;
-		}
+		///**
+		// * Reallocate 'ptr' to be an array having 'cntNew' elements. The 
+		// * overlapping part of the old array will remain in the new array, too.
+		// *
+		// * @param ptr    The pointer to be reallocated.
+		// * @param cntOld The current size of the array designated by 'ptr'.
+		// * @param cntNew The new size of the array.
+		// *
+		// * @return A pointer to the reallocated memory.
+		// *
+		// * @throws std::bad_alloc If the new memory could not be allocated.
+		// */
+		//static inline T *Reallocate(T *ptr, const SIZE_T cntOld, 
+		//		const SIZE_T cntNew) {
+		//	T *retval = new T[cnt];
+		//	::memcpy(retval, ptr, (cntOld < cntNew) ? cntOld : cntNew);
+		//	delete[] ptr;
+		//	return retval;
+		//}
 
     private:
 

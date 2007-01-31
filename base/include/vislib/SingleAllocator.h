@@ -19,10 +19,10 @@ namespace vislib {
 
     /**
      * This class creates typed memory for a single object of the template type.
-	 * It therefore cannot be used for allocating arrays and syntactially 
-	 * differs from an array allocator.
+	 * It therefore cannot be used for allocating continuous arrays.
 	 *
-	 * The allocator guarantees that the default ctor is called on the newly
+	 * The allocator uses the C++ allocation and deallocation mechanisms and 
+	 * therefore guarantees that the default ctor is called on the newly
 	 * allocated object and that the dtor is called before deallocating an
 	 * object.
      */
@@ -45,7 +45,8 @@ namespace vislib {
 		/**
 		 * Deallocate 'ptr' and set it NULL.
 		 *
-		 * @param inOutPtr The pointer to be deallocated.
+		 * @param inOutPtr The pointer to be deallocated. The pointer will be 
+		 *                 set NULL before the method returns.
 		 */
 		static inline void Deallocate(T *& inOutPtr) {
 			delete inOutPtr;

@@ -7,6 +7,7 @@
 #include "testdiscovery.h"
 #include "vislib/ClusterDiscoveryService.h"
 #include "vislib/SystemInformation.h"
+#include "vislib/Trace.h"
 
 #include <iostream>
 
@@ -31,8 +32,12 @@ void MyListener::OnNodeFound(const vislib::net::ClusterDiscoveryService& src,
 
 
 void TestClusterDiscoveryService(void) {
+    using namespace vislib;
     using namespace vislib::net;
     using namespace vislib::sys;
+
+    UINT oldLevel = Trace::GetInstance().GetLevel();
+    //Trace::GetInstance().SetLevel(Trace::LEVEL_ERROR);
 
     MyListener myListener;
 
@@ -48,5 +53,6 @@ void TestClusterDiscoveryService(void) {
     Thread::Sleep(60 * 1000);
     cds.Stop();
 
+    Trace::GetInstance().SetLevel(oldLevel);
     Socket::Cleanup();
 }
