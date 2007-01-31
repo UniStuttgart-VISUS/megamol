@@ -14,6 +14,7 @@
 #else /* _WIN32 */
 #include <climits>
 #include <unistd.h>
+#include <cstdlib> // for getenv
 #endif /* _WIN32 */
 
 #include "vislib/assert.h"
@@ -261,6 +262,51 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
 
 #else /* _WIN32 */
     return StringW(GetCurrentDirectoryA());
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::GetUserHomeDirectoryA
+ */
+vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
+#ifdef _WIN32
+    char path[MAX_PATH];
+
+    if (FAILED(::SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
+        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
+    }
+
+    return path;
+
+#else /* _WIN32 */
+    char *path = getenv("HOME"); // Crowbar
+
+    if (path == NULL) {
+        throw SystemException(ENOENT, __FILE__, __LINE__);
+    }
+
+    return path;
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::GetUserHomeDirectoryW
+ */
+vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
+#ifdef _WIN32
+    wchar_t path[MAX_PATH];
+
+    if (FAILED(::SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
+        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
+    }
+
+    return path;
+
+#else /* _WIN32 */
+    return StringW(GetUserHomeDirectoryA());
+
 #endif /* _WIN32 */
 }
 

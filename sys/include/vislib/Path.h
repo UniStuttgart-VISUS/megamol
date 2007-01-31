@@ -86,6 +86,26 @@ namespace sys {
         static StringW GetCurrentDirectoryW(void);
 
         /**
+         * Answer the home directory of the user. On windows the 'My Documents'
+         * folder is returned.
+         *
+         * @return The users home directory.
+         *
+         * @throws SystemException If the directory cannot be retrieved
+         */
+        static StringA GetUserHomeDirectoryA(void);
+
+        /**
+         * Answer the home directory of the user. On windows the 'My Documents'
+         * folder is returned.
+         *
+         * @return The users home directory.
+         *
+         * @throws SystemException If the directory cannot be retrieved
+         */
+        static StringW GetUserHomeDirectoryW(void);
+
+        /**
          * Answer, whether 'path' is an absolute path.
          *
          * @param path The path to be tested.
