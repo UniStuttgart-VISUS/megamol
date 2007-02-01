@@ -115,6 +115,48 @@ namespace sys {
         static bool Exists(const wchar_t *filename);
 
         /**
+         * Answer whether a file with the specified name is a directory.
+         *
+         * @param filename Path to the file to be tested.
+         *
+         * @return true, if the specified file exists and is a directory,
+         *         false otherwise.
+         */
+        static bool IsDirectory(const char *filename);
+
+        /**
+         * Answer whether a file with the specified name is a directory.
+         *
+         * @param filename Path to the file to be tested.
+         *
+         * @return true, if the specified file exists and is a directory,
+         *         false otherwise.
+         */
+        static bool IsDirectory(const wchar_t *filename);
+
+        /**
+         * Answer whether a file with the specified name is a normal file (not 
+         * a directory or any other special file system element).
+         *
+         * @param filename Path to the file to be tested.
+         *
+         * @return true, if the specified file exists and is a normal file,
+         *         false otherwise.
+         */
+        static bool IsFile(const char *filename);
+
+        /**
+         * Answer whether a file with the specified name is a normal file (not 
+         * a directory or any other special file system element).
+         *
+         * @param filename Path to the file to be tested.
+         *
+         * @return true, if the specified file exists and is a normal file,
+         *         false otherwise.
+         */
+        static bool IsFile(const wchar_t *filename);
+
+        /**
          * Rename the file 'oldName' to 'newName'.
          *
          * @param oldName The name of the file to be renamed.

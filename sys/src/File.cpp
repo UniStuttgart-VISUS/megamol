@@ -101,6 +101,86 @@ bool vislib::sys::File::Exists(const wchar_t *filename) {
 /*
  * vislib::sys::File::Rename
  */
+bool vislib::sys::File::IsDirectory(const char *filename) {
+#ifdef _WIN32
+    WIN32_FILE_ATTRIBUTE_DATA attrs;
+    if (::GetFileAttributesExA(filename, GetFileExInfoStandard, &attrs) != 0) {
+        return (attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
+    }
+    return false; // error on lookup. filename is not accessable or valid
+
+#else /* _WIN32 */
+    struct stat buf;
+    int i = stat(filename, &buf); 
+    return (i == 0) && S_ISDIR(buf.st_mode);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Rename
+ */
+bool vislib::sys::File::IsDirectory(const wchar_t *filename) {
+#ifdef _WIN32
+    WIN32_FILE_ATTRIBUTE_DATA attrs;
+    if (::GetFileAttributesExW(filename, GetFileExInfoStandard, &attrs) != 0) {
+        return (attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
+    }
+    return false; // error on lookup. filename is not accessable or valid
+
+#else /* _WIN32 */
+    struct stat buf;
+    int i = stat(W2A(filename), &buf); 
+    return (i == 0) && S_ISDIR(buf.st_mode);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Rename
+ */
+bool vislib::sys::File::IsFile(const char *filename) {
+#ifdef _WIN32
+    WIN32_FILE_ATTRIBUTE_DATA attrs;
+    if (::GetFileAttributesExA(filename, GetFileExInfoStandard, &attrs) != 0) {
+        return (attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+    }
+    return false; // error on lookup. filename is not accessable or valid
+
+#else /* _WIN32 */
+    struct stat buf;
+    int i = stat(filename, &buf); 
+    return (i == 0) && S_ISREG(buf.st_mode);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Rename
+ */
+bool vislib::sys::File::IsFile(const wchar_t *filename) {
+#ifdef _WIN32
+    WIN32_FILE_ATTRIBUTE_DATA attrs;
+    if (::GetFileAttributesExW(filename, GetFileExInfoStandard, &attrs) != 0) {
+        return (attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+    }
+    return false; // error on lookup. filename is not accessable or valid
+
+#else /* _WIN32 */
+    struct stat buf;
+    int i = stat(W2A(filename), &buf); 
+    return (i == 0) && S_ISREG(buf.st_mode);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::File::Rename
+ */
 bool vislib::sys::File::Rename(const char *oldName, const char *newName) {
 #ifdef _WIN32
     return (::MoveFileA(oldName, newName) == TRUE);
