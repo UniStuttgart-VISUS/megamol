@@ -410,6 +410,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testthelog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testthread.cpp"
 				>
 			</File>
@@ -481,6 +485,10 @@
 			</File>
 			<File
 				RelativePath=".\testsysinfo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testthelog.h"
 				>
 			</File>
 			<File

@@ -26,6 +26,7 @@
 #include "testcollection.h"
 #include "testpointers.h"
 #include "testdiscovery.h"
+#include "testthelog.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -57,7 +58,7 @@ int main(int argc, char **argv) {
 
     //::TestSysInfo();
     //::TestString();
-    ::TestFile();
+    //::TestFile();
     //::TestPath();
     //::TestProcess();
     //::TestVector();
@@ -75,6 +76,7 @@ int main(int argc, char **argv) {
     //::TestSmartPtr();
     //::TestClusterDiscoveryService();
     //::TestNetworkInformation();
+    //::TestTheLogWithPhun();
 
     //::printf("%s", W2A(L"Hugo"));
 

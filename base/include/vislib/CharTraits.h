@@ -34,6 +34,11 @@
 
 namespace vislib {
 
+    /** forward declaration of a friend from another namespace */
+    namespace sys {
+        class Log;
+    }
+
     /**
      * This class is the basis class for character trait descriptor classes. The
      * character trait classes are used to instantiate the string template.
@@ -545,6 +550,7 @@ namespace vislib {
         /* Declare our friends. */
         template<class T> friend class String;
         template<class S, class T, INT32 B> friend class StringConverter;
+        friend class vislib::sys::Log;
 
     }; /* end class CharTraitsA */
 
@@ -905,6 +911,7 @@ namespace vislib {
         /* Declare our friends. */
         template<class T> friend class String;
         template<class S, class T, INT32 B> friend class StringConverter;
+        friend class vislib::sys::Log;
 
     }; /* end class CharTraitsW */
 

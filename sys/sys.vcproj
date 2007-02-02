@@ -326,6 +326,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Log.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\MemmappedFile.cpp"
 				>
 			</File>
@@ -437,6 +441,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\IOException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Log.h"
 				>
 			</File>
 			<File
