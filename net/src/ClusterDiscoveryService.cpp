@@ -22,12 +22,12 @@ const UINT16 vislib::net::ClusterDiscoveryService::MSG_TYPE_USER = 16;
  * vislib::net::ClusterDiscoveryService::ClusterDiscoveryService
  */
 vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
-        const StringA& name, const SocketAddress& bindAddr, 
-        const IPAddress& bcastAddr, const SocketAddress& responseAddr)
-        : bcastAddr(SocketAddress::FAMILY_INET, bcastAddr, bindAddr.GetPort()), 
-        bindAddr(bindAddr), 
-        expectedResponseCnt(2),      // TODO
+        const StringA& name, const SHORT bindPort, const IPAddress& bcastAddr, 
+		const SocketAddress& responseAddr)
+        : bcastAddr(SocketAddress::FAMILY_INET, bcastAddr, bindPort), 
+		bindAddr(SocketAddress::FAMILY_INET, bindPort), 
         responseAddr(responseAddr), 
+        expectedResponseCnt(2),      // TODO
         requestInterval(3 * 1000),  // TODO
         name(name), 
         requester(NULL), 
@@ -170,6 +170,10 @@ DWORD vislib::net::ClusterDiscoveryService::Requester::Run(
     ASSERT(sizeof(request) == MAX_USER_DATA + 4);
     ASSERT(reinterpret_cast<BYTE *>(&(request.name)) 
        == reinterpret_cast<BYTE *>(&request) + 4);
+                        
+	/* Add myself as known host. */
+	peerNode.address = this->cds.responseAddr;
+    this->cds.addPeerNode(peerNode);
 
     /* Prepare the socket. */
     try {
@@ -192,6 +196,9 @@ DWORD vislib::net::ClusterDiscoveryService::Requester::Run(
 #else /* (_MSC_VER >= 1400) */
     ::strncpy(request.name, this->cds.name.PeekBuffer(), MAX_USER_DATA);
 #endif /* (_MSC_VER >= 1400) */
+
+
+	TRACE(Trace::LEVEL_INFO, "The discovery request thread is starting ...\n");
 
     while (this->isRunning) {
         try {
@@ -241,8 +248,6 @@ DWORD vislib::net::ClusterDiscoveryService::Requester::Run(
 
     /* Clean up. */
     try {
-        socket.Shutdown(Socket::BOTH);
-        socket.Close();
         Socket::Cleanup();
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_ERROR, "Socket cleanup failed in the discovery "
@@ -309,7 +314,8 @@ DWORD vislib::net::ClusterDiscoveryService::Responder::Run(
         Socket::Startup();
         socket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM, 
             Socket::PROTOCOL_UDP);
-        socket.Bind(this->cds.bindAddr);
+		socket.SetBroadcast(true);
+		socket.Bind(this->cds.bindAddr);
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_ERROR, "Discovery responder thread could not "
             "create its socket and bind it to the requested address. The "
@@ -321,6 +327,8 @@ DWORD vislib::net::ClusterDiscoveryService::Responder::Run(
     discoveryResponse.magicNumber = MAGIC_NUMBER;
     discoveryResponse.msgType = MSG_TYPE_DISCOVERY_RESPONSE;
     discoveryResponse.responseAddr = this->cds.responseAddr;
+
+	TRACE(Trace::LEVEL_INFO, "The discovery response thread is starting ...\n");
 
     while (this->isRunning) {
         try {
@@ -373,8 +381,6 @@ DWORD vislib::net::ClusterDiscoveryService::Responder::Run(
     } /* end while (this->isRunning) */
 
     try {
-        socket.Shutdown(Socket::BOTH);
-        socket.Close();
         Socket::Cleanup();
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_ERROR, "Socket cleanup failed in the discovery "

@@ -57,9 +57,8 @@ namespace net {
          *                     discovery request want to join the same cluster.
          *                     The name must have at most MAX_USER_DATA 
          *                     characters.
-         * @param bindAddr     The address to bind the discovery responder
-         *                     service to. The listening socket will be bound
-         *                     to this address.
+         * @param bindPort     The port to bind the responder thread to. All
+		 *                     discovery requests must be directed to this port.
          * @param bcastAddr    The broadcast address of the network. All
          *                     requests will be sent to this address. The 
          *                     destination port of messages is derived from
@@ -71,9 +70,8 @@ namespace net {
          *                     communicates it to all other nodes which
          *                     then can use it.
          */
-        ClusterDiscoveryService(const StringA& name, 
-            const SocketAddress& bindAddr, const IPAddress& bcastAddr,
-            const SocketAddress& responseAddr);
+        ClusterDiscoveryService(const StringA& name, const SHORT bindPort, 
+			const IPAddress& bcastAddr, const SocketAddress& responseAddr);
 
         /** 
          * Dtor.

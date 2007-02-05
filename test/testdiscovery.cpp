@@ -37,7 +37,7 @@ void TestClusterDiscoveryService(void) {
     using namespace vislib::sys;
 
     UINT oldLevel = Trace::GetInstance().GetLevel();
-    //Trace::GetInstance().SetLevel(Trace::LEVEL_ERROR);
+    Trace::GetInstance().SetLevel(Trace::LEVEL_ERROR);
 
     MyListener myListener;
 
@@ -45,7 +45,7 @@ void TestClusterDiscoveryService(void) {
     Socket::Startup();
 
     ClusterDiscoveryService cds("testnet", 
-        SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA()), 28181), 
+        28181, 
         IPAddress("129.69.215.255"), 
         SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA()), 12345));
     cds.AddListener(&myListener);
