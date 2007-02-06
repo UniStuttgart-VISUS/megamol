@@ -43,6 +43,9 @@ namespace vislib {
         /** The default initial capacity. */
         static const SIZE_T DEFAULT_CAPACITY;
 
+        /** This constant signals an invalid index position. */
+        static const INT_PTR INVALID_POS;
+
         /** 
          * Create an array with the specified initial capacity.
          *
@@ -112,7 +115,9 @@ namespace vislib {
          * @return true, if 'element' is at least once in the array, false 
          *         otherwise.
          */
-        bool Contains(const T& element) const;
+        inline bool Contains(const T& element) const {
+            return (this->IndexOf(element) >= 0);
+        }
 
         /**
          * Answer the number of items in the array. Note that the result is not
@@ -142,6 +147,68 @@ namespace vislib {
         void Erase(const SIZE_T beginIdx, const SIZE_T cnt);
 
         /**
+         * Answer a pointer to the first copy of 'element' in the array. If no
+         * element equal to 'element' is found, a NULL pointer is returned.
+         *
+         * @param element The element to be tested.
+         *
+         * @return A pointer to the local copy of 'element' or NULL, if no such
+         *         element is found.
+         */
+        inline const T *Find(const T& element) const {
+            INT_PTR idx = this->IndexOf(element);
+            return (idx >= 0) ? (this->elements + idx) : NULL;
+        }
+
+        /**
+         * Answer a pointer to the first copy of 'element' in the array. If no
+         * element equal to 'element' is found, a NULL pointer is returned.
+         *
+         * @param element The element to be tested.
+         *
+         * @return A pointer to the local copy of 'element' or NULL, if no such
+         *         element is found.
+         */
+        T *Find(const T& element) {
+            INT_PTR idx = this->IndexOf(element);
+            return (idx >= 0) ? (this->elements + idx) : NULL;
+        }
+
+        /**
+         * Answer the first element in the array.
+         *
+         * @return A reference to the first element in the array.
+         *
+         * @throws OutOfRangeException, if the array is empty.
+         */
+        inline const T& First(void) const {
+            return (*this)[0];
+        }
+
+        /**
+         * Answer the first element in the array.
+         *
+         * @return A reference to the first element in the array.
+         *
+         * @throws OutOfRangeException, if the array is empty.
+         */
+        inline T& First(void) {
+            return (*this)[0];
+        }
+
+        /**
+         * Answer the index of the first occurrence of 'element' in the array
+         * after 'beginAt'.
+         *
+         * @param element The element to be searched.
+         * @param beginAt The first index to be checked. Defaults to 0.
+         *
+         * @return The index of the first occurrence of 'element' in the array,
+         *         or INVALID_POS if the element is not in the array.
+         */
+        INT_PTR IndexOf(const T& element, const SIZE_T beginAt = 0) const;
+
+        /**
          * Answer whether there is no element in the array. Note that a return
          * value of true does not mean that no memory is allocated.
          *
@@ -149,6 +216,31 @@ namespace vislib {
          */
         inline bool IsEmpty(void) const {
             return (this->count == 0);
+        }
+
+        /**
+         * Answer the last element in the array.
+         *
+         * @return A reference to the last element in the array.
+         *
+         * @throws OutOfRangeException, if the array is empty.
+         */
+        inline const T& Last(void) const {
+            // This implementation is not nice, but should work at it overflows.
+            return (*this)[this->count - 1];
+        }
+
+
+        /**
+         * Answer the last element in the array.
+         *
+         * @return A reference to the last element in the array.
+         *
+         * @throws OutOfRangeException, if the array is empty.
+         */
+        inline T& Last(void) {
+            // This implementation is not nice, but should work at it overflows.
+            return (*this)[this->count - 1];
         }
 
         /**
@@ -186,7 +278,7 @@ namespace vislib {
          * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        T& operator [](const INT idx);
+        T& operator [](const SIZE_T idx);
 
         /**
          * Access the 'idx'th element in the array.
@@ -199,7 +291,37 @@ namespace vislib {
          * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        const T& operator [](const INT idx) const;
+        const T& operator [](const SIZE_T idx) const;
+
+        /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        inline T& operator [](const INT idx) {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
+
+        /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        const T& operator [](const INT idx) const {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
 
         /**
          * Assignment.
@@ -223,11 +345,19 @@ namespace vislib {
 
     };
 
+
     /*
      * vislib::Array<T>::DEFAULT_CAPACITY
      */
     template<class T>
     const SIZE_T Array<T>::DEFAULT_CAPACITY = 8;
+
+
+    /*
+     * vislib::Array<T>::INVALID_POS
+     */
+    template<class T>
+    const INT_PTR Array<T>::INVALID_POS = -1;
 
 
     /*
@@ -304,23 +434,6 @@ namespace vislib {
 
 
     /*
-     * Array<T>::Contains
-     */
-    template<class T>
-    bool Array<T>::Contains(const T& element) const {
-
-        for (SIZE_T i = 0; i < this->count; i++) {
-            if (this->elements[i] == element) {
-                return true;
-            }
-        }
-        /* Nothing found. */
-
-        return false;
-    }
-
-
-    /*
      * Array<T>::Erase
      */
     template<class T>
@@ -365,6 +478,22 @@ namespace vislib {
 
             this->count -= cntRemoved;
         }
+    }
+
+
+    /*
+     * Array<T>::IndexOf
+     */
+    template<class T>
+    INT_PTR Array<T>::IndexOf(const T& element, const SIZE_T beginAt) const {
+        for (SIZE_T i = 0; i < this->count; i++) {
+            if (this->elements[i] == element) {
+                return i;
+            }
+        }
+        /* Nothing found. */
+
+        return INVALID_POS;
     }
 
 
@@ -434,11 +563,11 @@ namespace vislib {
      * Array<T>::operator []
      */
     template<class T>
-    T& Array<T>::operator [](const INT idx) {
-        if ((idx >= 0) && (static_cast<SIZE_T>(idx) < this->count)) {
+    T& Array<T>::operator [](const SIZE_T idx) {
+        if (static_cast<SIZE_T>(idx) < this->count) {
             return this->elements[idx];
         } else {
-            throw OutOfRangeException(idx, 0, 
+            throw OutOfRangeException(static_cast<INT>(idx), 0, 
                 static_cast<INT>(this->count - 1), __FILE__, __LINE__);
         }
     }
@@ -448,11 +577,11 @@ namespace vislib {
      * Array<T>::operator []
      */
     template<class T>
-    const T& Array<T>::operator [](const INT idx) const {
-        if ((idx >= 0) && (static_cast<SIZE_T>(idx) < this->count)) {
+    const T& Array<T>::operator [](const SIZE_T idx) const {
+        if (static_cast<SIZE_T>(idx) < this->count) {
             return this->elements[idx];
         } else {
-            throw OutOfRangeException(idx, 0, 
+            throw OutOfRangeException(static_cast<INT>(idx), 0, 
                 static_cast<INT>(this->count - 1), __FILE__, __LINE__);
         }
     }
