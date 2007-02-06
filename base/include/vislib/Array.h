@@ -551,6 +551,10 @@ namespace vislib {
             if ((newPtr = ::realloc(this->elements, this->capacity * sizeof(T)))
                     != NULL) {
                 this->elements = static_cast<T *>(newPtr);
+
+				for (SIZE_T i = this->count; i < this->capacity; i++) {
+					new (this->elements + i) T;
+				}
             } else {
                 SAFE_FREE(this->elements);
                 throw std::bad_alloc();
