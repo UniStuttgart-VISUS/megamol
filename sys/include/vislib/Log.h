@@ -256,12 +256,55 @@ namespace sys {
 		}
 
         /**
-         * Set a new tracing level. Messages above this level will be ignored.
+         * Set a new log level. Messages above this level will be ignored.
          *
          * @param level The new log level.
          */
 		inline void SetLevel(const UINT level) {
 			this->level = level;
+		}
+
+        /**
+         * Answer the current echo level. Messages above this level will be
+         * ignored, while the other messages will be echoed to the echo output
+         * stream.
+         *
+         * @return The current echo level.
+         */
+		inline UINT GetEchoLevel(void) const {
+			return this->echoLevel;
+		}
+
+        /**
+         * Set a new echo level. Messages above this level will be ignored, 
+         * while the other messages will be echoed to the echo output stream.
+         *
+         * @param level The new echo level.
+         */
+		inline void SetEchoLevel(const UINT level) {
+			this->echoLevel = level;
+		}
+        /**
+         * Answer the current echo output stream. This log object does not own
+         * this stream.
+         *
+         * @return The current echo level.
+         */
+		inline FILE* GetEchoOutStream(void) const {
+			return this->echoOut;
+		}
+
+        /**
+         * Set a new echo output stream. The log object does not take ownership
+         * of this stream, thus the caller must ensure that the stream is valid
+         * and open as long as it is used by this log object. To disable echo
+         * output, simply set this stream to NULL (which is also the default
+         * value).
+         *
+         * @param level The new echo output stream.
+         */
+		inline void SetEchoOutStream(FILE* stream) {
+			this->echoOut = stream;
 		}
 
         /**
@@ -389,6 +432,12 @@ namespace sys {
 
         /** flag whether or not to flush the log file after each message. */
         bool autoflush;
+
+        /** the current echo log level */
+        UINT echoLevel;
+
+        /** the echo output stream */
+        FILE *echoOut;
 
     };
     

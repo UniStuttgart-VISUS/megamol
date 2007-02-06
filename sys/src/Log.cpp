@@ -8,7 +8,7 @@
 
 #include "vislib/Log.h"
 
-#include "vislib/Assert.h"
+#include "vislib/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -96,7 +96,8 @@ vislib::sys::Log::OfflineMessage& vislib::sys::Log::OfflineMessage::operator=(co
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(UINT level, unsigned int msgbufsize) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true) {
+        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
+        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
     this->SetOfflineMessageBufferSize(msgbufsize);
 }
 
@@ -104,7 +105,8 @@ vislib::sys::Log::Log(UINT level, unsigned int msgbufsize)
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true) {
+        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
+        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -113,7 +115,8 @@ vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix)
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true) {
+        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
+        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -122,7 +125,8 @@ vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix)
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(const Log& source) 
-        : level(LEVEL_ERROR), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true) {
+        : level(LEVEL_ERROR), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
+        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
     *this = source;
 }
 
@@ -138,6 +142,7 @@ vislib::sys::Log::~Log(void) {
     if (this->offlineMsgs) {
         ARY_SAFE_DELETE(this->offlineMsgs);
     }
+    // DO NOT fclose(echoOut), because we don't own it!
 }
 
 
@@ -183,6 +188,7 @@ bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
 #endif /* _WIN32 */
 
         // flush offline messages if any available
+        // Do not echo offline messages, because they already had been echoed, if they are of the right level
         if (this->offlineMsgs) {
 
             for (unsigned int i = 0; i < this->msgbufsize; i++) {
@@ -206,11 +212,12 @@ bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
             ARY_SAFE_DELETE(this->offlineMsgs);
         }
     } else {
-        ASSERT(this->offlineMsgs == NULL);
         this->filename.Clear();
 
-        this->offlineMsgs = new OfflineMessage[this->msgbufsize];
-        this->omittedMsgs = 0;
+        if (this->offlineMsgs == NULL) {
+            this->offlineMsgs = new OfflineMessage[this->msgbufsize];
+            this->omittedMsgs = 0;
+        }
     }
 
     return true;
@@ -259,6 +266,7 @@ bool vislib::sys::Log::SetLogFileName(const wchar_t *filename, bool addSuffix) {
 #endif /* _WIN32 */
 
         // flush offline messages if any available
+        // Do not echo offline messages, because they already had been echoed, if they are of the right level
         if (this->offlineMsgs) {
 
             for (unsigned int i = 0; i < this->msgbufsize; i++) {
@@ -347,6 +355,26 @@ void vislib::sys::Log::FlushLog(void) {
  * vislib::sys::Log::WriteMsg
  */
 void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
+    if ((this->echoOut != NULL) && (level <= this->echoLevel) && (level > 0)) {
+        va_list argptr;
+        fprintf(this->echoOut, "%4u|", level); // shorter message prefix
+        va_start(argptr, fmt);
+#ifdef _WIN32
+#if (_MSC_VER >= 1400)
+        ::vfprintf_s(this->echoOut, fmt, argptr);
+#else /* (_MSC_VER >= 1400) */
+        ::vfprintf(this->echoOut, fmt, argptr);
+#endif /* (_MSC_VER >= 1400) */
+#else /* _WIN32 */
+        ::vfprintf(this->echoOut, fmt, argptr);
+#endif /* _WIN32 */
+        va_end(argptr);
+        // check if fmt ends with '\n', otherwise append one
+        const char *p = fmt;
+        while ((*p != 0) && (*(p + 1) != 0)) p++;
+        if (*p != '\n') fprintf(this->echoOut, "\n");
+    }
+
 	if ((level <= this->level) && (level > 0)) {
         va_list argptr;
         if (this->logfile) {
@@ -423,6 +451,26 @@ void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
  * vislib::sys::Log::WriteMsg
  */
 void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
+    if ((this->echoOut != NULL) && (level <= this->echoLevel) && (level > 0)) {
+        va_list argptr;
+        fprintf(this->echoOut, "%4u|", level); // shorter message prefix
+        va_start(argptr, fmt);
+#ifdef _WIN32
+#if (_MSC_VER >= 1400)
+        ::vfwprintf_s(this->echoOut, fmt, argptr);
+#else /* (_MSC_VER >= 1400) */
+        ::vfwprintf(this->echoOut, fmt, argptr);
+#endif /* (_MSC_VER >= 1400) */
+#else /* _WIN32 */
+        ::vfwprintf(this->echoOut, fmt, argptr);
+#endif /* _WIN32 */
+        va_end(argptr);
+        // check if fmt ends with '\n', otherwise append one
+        const wchar_t *p = fmt;
+        while ((*p != 0) && (*(p + 1) != 0)) p++;
+        if (*p != '\n') fprintf(this->echoOut, "\n");
+    }
+
 	if ((level <= this->level) && (level > 0)) {
         va_list argptr;
         if (this->logfile) {
@@ -592,8 +640,9 @@ vislib::StringA vislib::sys::Log::GetFileNameSuffix(void) {
 
     t->tm_mon += 1;
     t->tm_year += 1900;
-    suffix.Format("_%s__%d_%d_%d__%d_%d", vislib::sys::SystemInformation::ComputerNameA().PeekBuffer()
+    suffix.Format("_%s_%.2d%.2d%.4d_%.2d%.2d", vislib::sys::SystemInformation::ComputerNameA().PeekBuffer()
         ,t->tm_mday, t->tm_mon, t->tm_year, t->tm_hour, t->tm_min);
+    // TODO: extent with process id
 
     return suffix;
 }
