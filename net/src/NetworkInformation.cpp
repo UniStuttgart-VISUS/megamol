@@ -82,12 +82,12 @@ unsigned int vislib::net::NetworkInformation::AdapterCount(void) {
  * vislib::net::NetworkInformation::AdapterInformation
  */
 const vislib::net::NetworkInformation::Adapter& vislib::net::NetworkInformation::AdapterInformation(unsigned int i) {
-    if (i >= countNetAdapters) {
-        throw vislib::OutOfRangeException(i, 0, countNetAdapters - 1, __FILE__, __LINE__);
-    }
-
     if (netAdapters.IsNull()) {
         InitAdapters();
+    }
+
+    if (i >= countNetAdapters) {
+        throw vislib::OutOfRangeException(i, 0, countNetAdapters - 1, __FILE__, __LINE__);
     }
 
     return (&*netAdapters)[i];
