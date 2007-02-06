@@ -49,4 +49,11 @@
     ::operator delete(ptr); (ptr) = NULL; }
 
 
+#ifndef _WIN32
+/**
+ * Set 'size' bytes to zero beginning at 'ptr'.
+ */
+#define ZeroMemory(ptr, size) memset((ptr), 0, (size))
+#endif /* !_WIN32 */
+
 #endif /* VISLIB_MEMUTILS_H_INCLUDED */

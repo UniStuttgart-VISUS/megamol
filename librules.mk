@@ -90,7 +90,8 @@ clean: sweep
 sweep:
 	rm -rf $(IntDir)/*
 
-rebuild: clean
-	$(MAKE) all
+rebuild: 
+	@$(MAKE) clean
+	@$(MAKE) all
 
 .PHONY: clean sweep rebuild tags
