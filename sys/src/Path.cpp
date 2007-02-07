@@ -18,7 +18,6 @@
 #endif /* _WIN32 */
 
 #include "vislib/assert.h"
-#include "vislib/Console.h"
 #include "vislib/error.h"
 #include "vislib/memutils.h"
 #include "vislib/SystemException.h"

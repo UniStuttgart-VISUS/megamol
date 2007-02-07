@@ -10,6 +10,7 @@
 #include <cstdarg>
 
 #include "vislib/assert.h"
+#include "vislib/Console.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/ImpersonationContext.h"
@@ -241,7 +242,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     pid_t pid;
 
     /* Detect and expand shell commands first first. */
-    query.Format("which %s", path.PeekBuffer());
+    query.Format("which %s", command);
     if (Console::Run(query.PeekBuffer(), &cmd) == 0) {
         cmd.TrimEnd("\r\n");
     } else {
