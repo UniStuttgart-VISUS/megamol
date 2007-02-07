@@ -401,8 +401,58 @@ namespace vislib {
          *
          * @return The number of replacements made.
          */
-        inline Size Replace(const String oldStr, const String newStr) {
+        inline Size Replace(const String& oldStr, const String& newStr) {
             return this->Replace(oldStr.data, newStr.data);
+        }
+
+        /**
+         * Replace all occurrences of 'oldChar' in the string with 'newStr'.
+         *
+         * @param oldChar The character to be replaced.
+         * @param newStr  The replacement sequence.
+         *
+         * @return The number of replacements made.
+         */
+        inline Size Replace(const Char oldChar, const Char *newStr) {
+            Char tmp[2] = { oldChar, static_cast<Char>(0) };
+            return this->Replace(tmp, newStr);
+        }
+
+        /**
+         * Replace all occurrences of 'oldChar' in the string with 'newStr'.
+         *
+         * @param oldChar The character to be replaced.
+         * @param newStr  The replacement sequence.
+         *
+         * @return The number of replacements made.
+         */
+        inline Size Replace(const Char oldChar, const String& newStr) {
+            return this->Replace(oldChar, newStr.data);
+        }
+
+        /**
+         * Replace all occurrences of 'oldStr' in the character with 'newChar'.
+         *
+         * @param oldStr  The string to be replaced.
+         * @param newChar The replacement character.
+         *
+         * @return The number of replacements made.
+         */
+        inline Size Replace(const Char *oldStr, const Char newChar) {
+            Char tmp[2] = { newChar, static_cast<Char>(0) };
+            return this->Replace(oldStr, tmp);
+        }
+
+        /**
+         * Replace all occurrences of 'oldStr' in the character with 'newChar'.
+         *
+         * @param oldStr  The string to be replaced.
+         * @param newChar The replacement character.
+         *
+         * @return The number of replacements made.
+         */
+        inline Size Replace(const String& oldStr, const Char newChar) {
+            return this->Replace(oldStr.data, newChar);
         }
 
         /**

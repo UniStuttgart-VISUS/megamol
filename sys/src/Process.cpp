@@ -235,9 +235,18 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     this->hProcess = pi.hProcess;
 
 #else /* _WIN32 */
-    StringA cmd = Path::Resolve(command);
+    StringA query;
+    StringA cmd;
     ImpersonationContext ic;
     pid_t pid;
+
+    /* Detect and expand shell commands first first. */
+    query.Format("which %s", path.PeekBuffer());
+    if (Console::Run(query.PeekBuffer(), &cmd) == 0) {
+        cmd.TrimEnd("\r\n");
+    } else {
+        cmd = Path::Resolve(command);
+    }
 
     /* A process must not be started twice. */
     if (this->pid >= 0) {

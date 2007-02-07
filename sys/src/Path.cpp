@@ -37,8 +37,8 @@ vislib::StringA vislib::sys::Path::Canonicalise(const StringA& path) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_A);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_A);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
 
     /* Ensure that a UNC path remains a UNC path. */
     if (path.StartsWith(DOUBLE_SEPARATOR)) {
@@ -83,8 +83,8 @@ vislib::StringA vislib::sys::Path::Canonicalise(const StringA& path) {
     retval.Remove(CUR_REF);
     
     /* Remove odd and even number of repeated path separators. */
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_A);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_A);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_A);
 
     return retval;
 #endif /* _WIN32 */
@@ -104,8 +104,8 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_W);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_W);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
 
     /* Ensure that a UNC path remains a UNC path. */
     if (path.StartsWith(DOUBLE_SEPARATOR)) {
@@ -150,8 +150,8 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
     retval.Remove(CUR_REF);
     
     /* Remove odd and even number of repeated path separators. */
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_W);
-    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATORSTR_W);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
+    retval.Replace(DOUBLE_SEPARATOR.PeekBuffer(), SEPARATOR_W);
 
     return retval;
 #endif /* _WIN32 */
@@ -217,7 +217,6 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
 
     StringA retval(buffer);
     ARY_SAFE_DELETE(buffer);
-    return retval;
 
 #else /* _WIN32 */
     const SIZE_T BUFFER_GROW = 32;
@@ -237,9 +236,14 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
 
     StringA retval(buffer);
     ARY_SAFE_DELETE(buffer);
-    return retval;
 
 #endif /* _WIN32 */
+
+    if (!retval.EndsWith(SEPARATOR_A)) {
+        retval += SEPARATOR_A;
+    }
+
+    return retval;
 }
 
 
@@ -258,6 +262,10 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
 
     StringW retval(buffer);
     ARY_SAFE_DELETE(buffer);
+
+    if (!retval.EndsWith(SEPARATOR_W)) {
+        retval += SEPARATOR_W;
+    }
     return retval;
 
 #else /* _WIN32 */
@@ -271,13 +279,12 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
  */
 vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
 #ifdef _WIN32
-    char path[MAX_PATH];
+    StringA retval;
 
-    if (FAILED(::SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
+    if (FAILED(::SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, 0, 
+            retval.AllocateBuffer(MAX_PATH)))) {
         throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
-
-    return path;
 
 #else /* _WIN32 */
     char *path = getenv("HOME"); // Crowbar
@@ -286,8 +293,14 @@ vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
         throw SystemException(ENOENT, __FILE__, __LINE__);
     }
 
-    return path;
+    StringA retval(path);
 #endif /* _WIN32 */
+
+    if (!retval.EndsWith(SEPARATOR_A)) {
+        retval += SEPARATOR_A;
+    }
+
+    return retval;
 }
 
 
@@ -296,13 +309,17 @@ vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
  */
 vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
 #ifdef _WIN32
-    wchar_t path[MAX_PATH];
+    StringW retval;
 
-    if (FAILED(::SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, 0, path))) {
+    if (FAILED(::SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, 0, 
+            retval.AllocateBuffer(MAX_PATH)))) {
         throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
-    return path;
+    if (!retval.EndsWith(SEPARATOR_W)) {
+        retval += SEPARATOR_W;
+    }
+    return retval;
 
 #else /* _WIN32 */
     return StringW(GetUserHomeDirectoryA());
@@ -338,14 +355,19 @@ bool vislib::sys::Path::IsRelative(const StringW& path) {
 /*
  * vislib::sys::Path::Resolve
  */
-vislib::StringA vislib::sys::Path::Resolve(const StringA& path) {
+vislib::StringA vislib::sys::Path::Resolve(StringA path) {
     // TODO: Windows shell API resolve does not work in the expected
     // way, so we use the same manual approach for Windows and Linux.
+
+#ifdef _WIN32
+    /* Remove unchefm‰ﬂige path separators. */
+    path.Replace('/', SEPARATOR_A);
+#endif /* _WIN32 */
 
     if (path.IsEmpty()) {
         /* Path is empty, i. e. return current working directory. */
         return Path::GetCurrentDirectoryA();
-
+    
     } else if (Path::IsAbsolute(path)) {
         /* Path is absolute, just return it. */
 #ifdef _WIN32
@@ -360,45 +382,18 @@ vislib::StringA vislib::sys::Path::Resolve(const StringA& path) {
         return path;
 #endif /* _WIN32 */
 
+    } else if ((path[0] == MYDOCUMENTS_MARKER_A) 
+            && ((path.Length() == 1) || path[1] == SEPARATOR_A)) {
+        path.Replace(MYDOCUMENTS_MARKER_A, Path::GetUserHomeDirectoryA());
+        return Path::Canonicalise(path);
+
     } else {
         /*
          * Concatenate current directory and relative path, and canonicalise
          * the result.
          */
-#ifndef _WIN32
-        /* 
-         * Detect and expand shell commands first on Linux first. This is 
-         * required for spawing subprocesses in Process.cpp.
-         */
-        StringA out;
-        StringA query;
 
-        query.Format("which %s", path.PeekBuffer());
-        if (Console::Run(query.PeekBuffer(), &out) == 0) {
-            out.TrimEnd("\r\n");
-            return out;
-        }
-
-        //const int BUFFER_SIZE = PATH_MAX;
-        //char buffer[BUFFER_SIZE];
-        //int cnt = 0;
-        //FILE *fp = NULL;
-        //StringA whichQuery;
-
-        //// TODO: This is inherently unsafe and a really crazy idea ...
-        //whichQuery.Format("which %s", path.PeekBuffer());
-        //if ((fp = ::popen(whichQuery.PeekBuffer(), "r")) != NULL) {
-        //    cnt = ::fread(buffer, 1, BUFFER_SIZE - 1, fp);
-        //    buffer[cnt] = 0;
-        //    if (::pclose(fp) == 0) {
-        //        StringA retval(buffer);
-        //        retval.TrimEnd("\r\n");
-        //        return retval;
-        //    }
-        //}
-#endif /* !_WIN32 */
-
-        return Concatenate(Path::GetCurrentDirectoryA(), path, true);
+        return Path::Concatenate(Path::GetCurrentDirectoryA(), path, true);
     }
 }
 
@@ -406,9 +401,14 @@ vislib::StringA vislib::sys::Path::Resolve(const StringA& path) {
 /*
  * vislib::sys::Path::Resolve
  */
-vislib::StringW vislib::sys::Path::Resolve(const StringW& path) {
+vislib::StringW vislib::sys::Path::Resolve(StringW path) {
     // TODO: Windows shell API resolve does not work in the expected
     // way, so we use the same manual approach for Windows and Linux.
+
+#ifdef _WIN32
+    /* Remove unchefm‰ﬂige path separators. */
+    path.Replace(L'/', SEPARATOR_W);
+#endif /* _WIN32 */
 
     if (path.IsEmpty()) {
         /* Path is empty, i. e. return current working directory. */
@@ -427,6 +427,11 @@ vislib::StringW vislib::sys::Path::Resolve(const StringW& path) {
 #else /* _WIN32 */
         return path;
 #endif /* _WIN32 */
+
+    } else if ((path[0] == MYDOCUMENTS_MARKER_W) 
+            && ((path.Length() == 1) || path[1] == SEPARATOR_W)) {
+        path.Replace(MYDOCUMENTS_MARKER_W, Path::GetUserHomeDirectoryW());
+        return Path::Canonicalise(path);
 
     } else {
         /*
@@ -469,6 +474,18 @@ void vislib::sys::Path::SetCurrentDirectory(const StringW& path) {
 
 
 /*
+ * vislib::sys::Path::MYDOCUMENTS_MARKER_A
+ */
+const char vislib::sys::Path::MYDOCUMENTS_MARKER_A = '~';
+
+
+/*
+ * vislib::sys::Path::MYDOCUMENTS_MARKER_W
+ */
+const char vislib::sys::Path::MYDOCUMENTS_MARKER_W = L'~';
+
+
+/*
  * vislib::sys::Path::SEPARATOR_A
  */
 #ifdef _WIN32
@@ -487,20 +504,6 @@ const wchar_t vislib::sys::Path::SEPARATOR_W = L'\\';
 #else /* _WIN32 */
 const wchar_t vislib::sys::Path::SEPARATOR_W = L'/';
 #endif /* _WIN32 */
-
-
-/*
- * vislib::sys::Path::SEPARATORSTR_A
- */
-const char vislib::sys::Path::SEPARATORSTR_A[] 
-    = { SEPARATOR_A, static_cast<char>(0) };
-
-
-/*
- * vislib::sys::Path::SEPARATORSTR_W
- */
-const wchar_t vislib::sys::Path::SEPARATORSTR_W[] 
-    = { SEPARATOR_W, static_cast<wchar_t>(0) };
 
 
 /*

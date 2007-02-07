@@ -378,12 +378,29 @@ void TestPath(void) {
     try {
         cout << "Working directory \"" << static_cast<const char *>(Path::GetCurrentDirectoryA()) << "\"" << endl;
 
+        cout << "Resolve \"~\" " << Path::Resolve("~") << endl;
+        cout << "Resolve \"~/\" " << Path::Resolve("~/") << endl;
+        cout << "Resolve \"~/heinz\" " << Path::Resolve("~/heinz") << endl;
+        cout << "Resolve \"~heinz\" " << Path::Resolve("~heinz") << endl;
+        cout << "Resolve \"./~\" " << Path::Resolve("./~") << endl;
+
+        cout << "Resolve \"horst\" " << Path::Resolve("horst") << endl;
+        cout << "Resolve \"/horst\" " << Path::Resolve("/horst") << endl;
+        cout << "Resolve \"/horst/\" " << Path::Resolve("/horst/") << endl;
+        cout << "Resolve \"//horst/\" " << Path::Resolve("//horst/") << endl;
+
 #ifdef _WIN32
         cout << "Resolve \"horst\" " << Path::Resolve("horst") << endl;
         cout << "Resolve \"\\horst\" " << Path::Resolve("\\horst") << endl;
         cout << "Resolve \"C:\\horst\" " << Path::Resolve("C:\\horst") << endl;
         cout << "Resolve \"\\horst\\\" " << Path::Resolve("\\horst\\") << endl;
         cout << "Resolve \"\\\\horst\\\" " << Path::Resolve("\\\\horst\\") << endl;
+        cout << "Resolve \"~\\\" " << Path::Resolve("~\\") << endl;
+        cout << "Resolve \"~\\heinz\" " << Path::Resolve("~\\heinz") << endl;
+        cout << "Resolve \"~heinz\" " << Path::Resolve("~heinz") << endl;
+        cout << "Resolve \".\\~\" " << Path::Resolve(".\\~") << endl;
+
+
         AssertEqual("Canonicalise \"horst\\..\\hugo\"", Path::Canonicalise("horst\\..\\hugo"), StringA("\\hugo"));
         AssertEqual("Canonicalise \"\\horst\\..\\hugo\"", Path::Canonicalise("\\horst\\..\\hugo"), StringA("\\hugo"));
         AssertEqual("Canonicalise \"\\..\\horst\\..\\hugo\"", Path::Canonicalise("\\..\\horst\\..\\hugo"), StringA("\\hugo"));
@@ -395,10 +412,6 @@ void TestPath(void) {
         AssertEqual("Canonicalise \"\\\\horst\\hugo\"", Path::Canonicalise("\\\\horst\\hugo"), StringA("\\\\horst\\hugo"));
         AssertEqual("Canonicalise \"\\\\\\horst\\hugo\"", Path::Canonicalise("\\\\\\horst\\hugo"), StringA("\\\\horst\\hugo"));
 #else /* _WIN32 */
-        cout << "Resolve \"horst\" " << Path::Resolve("horst") << endl;
-        cout << "Resolve \"/horst\" " << Path::Resolve("/horst") << endl;
-        cout << "Resolve \"/horst/\" " << Path::Resolve("/horst/") << endl;
-        cout << "Resolve \"//horst/\" " << Path::Resolve("//horst/") << endl;
         AssertEqual("Canonicalise \"horst/../hugo\"", Path::Canonicalise("horst/../hugo"), StringA("/hugo"));
         AssertEqual("Canonicalise \"/horst/../hugo\"", Path::Canonicalise("/horst/../hugo"), StringA("/hugo"));
         AssertEqual("Canonicalise \"/../horst/../hugo\"", Path::Canonicalise("/../horst/../hugo"), StringA("/hugo"));

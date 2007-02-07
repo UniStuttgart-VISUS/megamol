@@ -25,8 +25,32 @@ namespace sys {
 
     public:
 
+        /**
+         * Canonicalises the path. 
+         *
+         * The method removes all relative references to the current path (".") 
+         * and to the previous path part ("..") and all sequences of more than
+         * one path separator except for the UNC marker at the begin of the 
+         * path.
+         *
+         * @param path The path to canonicalise.
+         *
+         * @return The canonicalised path.
+         */
         static StringA Canonicalise(const StringA& path);
 
+        /**
+         * Canonicalises the path. 
+         *
+         * The method removes all relative references to the current path (".") 
+         * and to the previous path part ("..") and all sequences of more than
+         * one path separator except for the UNC marker at the begin of the 
+         * path.
+         *
+         * @param path The path to canonicalise.
+         *
+         * @return The canonicalised path.
+         */
         static StringW Canonicalise(const StringW& path);
 
         /**
@@ -66,6 +90,8 @@ namespace sys {
         /**
          * Answer the current working directory.
          *
+         * The returned string is guaranteed to end with a path separator.
+         *
          * @return The current working directory.
          *
          * @throws SystemException If the directory cannot be retrieved
@@ -76,6 +102,8 @@ namespace sys {
 
         /**
          * Answer the current working directory.
+         *
+         * The returned string is guaranteed to end with a path separator.
          *
          * @return The current working directory.
          *
@@ -89,6 +117,8 @@ namespace sys {
          * Answer the home directory of the user. On windows the 'My Documents'
          * folder is returned.
          *
+         * The returned string is guaranteed to end with a path separator.
+         *
          * @return The users home directory.
          *
          * @throws SystemException If the directory cannot be retrieved
@@ -98,6 +128,8 @@ namespace sys {
         /**
          * Answer the home directory of the user. On windows the 'My Documents'
          * folder is returned.
+         *
+         * The returned string is guaranteed to end with a path separator.
          *
          * @return The users home directory.
          *
@@ -149,22 +181,43 @@ namespace sys {
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
          * will not be altered in this case.
          *
+         * If the path consists only of the the '~' character, it is expanded to
+         * be the user home respectively the "My Documents" folder as returned
+         * by GetUserHomeDirectory().
+         * If the path begins with the sequence "~/", this part is expanded to
+         * be the user home, too. 
+         * Any other occurrence of the '~' character remains unchanged, i. e.
+         * "./~" is assumed to reference a local directory "~".
+         * 
+         * On Windows, Resolve additionally changes every '/' in the path to the
+         * Windows path separator '\'.
+         *
          * @param path A path to a file or directory.
          *
          * @return The absolute path.
          */
-        static StringA Resolve(const StringA& path);
+        static StringA Resolve(StringA path);
 
         /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
          * will not be altered in this case.
          *
+         * If the path consists only of the the '~' character, it is expanded to
+         * be the user home respectively the "My Documents" folder as returned
+         * by GetUserHomeDirectory().
+         * If the path begins with the sequence "~/", this part is expanded to
+         * be the user home, too. 
+         * Any other occurrence of the '~' character remains unchanged, i. e.
+         * "./~" is assumed to reference a local directory "~".
+         * 
+         * On Windows, Resolve additionally changes every '/' in the path to the
+         * Windows path separator '\'.
+         *
          * @param path A path to a file or directory.
          *
          * @return The absolute path.
          */
-        static StringW Resolve(const StringW& path);
-
+        static StringW Resolve(StringW path);
         /**
          * Changes the current directory to be 'path'.
          *
@@ -185,17 +238,17 @@ namespace sys {
          */
         static void SetCurrentDirectory(const StringW& path);
 
+        /** The home directory marker character. */
+        static const char MYDOCUMENTS_MARKER_A;
+
+        /** The home directory marker character. */
+        static const char MYDOCUMENTS_MARKER_W;
+
         /** The ANSI path separator character. */
         static const char SEPARATOR_A;
 
         /** The Unicode path separator character. */
         static const wchar_t SEPARATOR_W;
-
-        /** The ANSI path separator character as zero-terminated string. */
-        static const char SEPARATORSTR_A[];
-
-        /** The ANSI path separator character as zero-terminated string. */
-        static const wchar_t SEPARATORSTR_W[];
 
         /** Dtor. */
         ~Path(void);
