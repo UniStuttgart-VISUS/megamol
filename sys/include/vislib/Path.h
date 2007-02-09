@@ -13,6 +13,9 @@
 
 #include "vislib/String.h"
 
+#ifdef _MSC_VER
+#pragma comment(lib, "shlwapi")
+#endif /* _MSC_VER */
 
 namespace vislib {
 namespace sys {
