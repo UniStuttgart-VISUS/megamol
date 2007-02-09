@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="sys"
 	ProjectGUID="{AC94966A-1E30-47A8-A503-0F9737FD1FE8}"
 	RootNamespace="sys"
@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DirectoryIterator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\DynamicFunctionPointer.cpp"
 				>
 			</File>
@@ -417,6 +421,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\DateTimeSpan.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\DirectoryIterator.h"
 				>
 			</File>
 			<File

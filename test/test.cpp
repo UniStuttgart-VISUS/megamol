@@ -27,6 +27,7 @@
 #include "testpointers.h"
 #include "testdiscovery.h"
 #include "testthelog.h"
+#include "testdirectoryiterator.h"
 
 #include "vislib/Exception.h"
 #include "vislib/SystemException.h"
@@ -77,8 +78,7 @@ int main(int argc, char **argv) {
     //::TestClusterDiscoveryService();
     //::TestNetworkInformation();
     //::TestTheLogWithPhun();
-    ::TestClusterDiscoveryService();
-    //:TestNetworkInformation();
+	//::TestDirectoryIterator();
 
     //::printf("%s", W2A(L"Hugo"));
 

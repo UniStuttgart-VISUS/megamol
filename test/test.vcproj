@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="test"
 	ProjectGUID="{6CC64435-55B7-4AA2-A66C-61CDA2255733}"
 	RootNamespace="test"
@@ -370,6 +370,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testdirectoryiterator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testdiscovery.cpp"
 				>
 			</File>
@@ -445,6 +449,10 @@
 			</File>
 			<File
 				RelativePath=".\testdimandrect.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testdirectoryiterator.h"
 				>
 			</File>
 			<File
