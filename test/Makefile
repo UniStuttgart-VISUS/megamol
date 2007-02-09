@@ -21,7 +21,7 @@ OutName := vislibtest
 
 
 # C++ compiler flags:
-CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O3 -ggdb
+CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 
 # Linker flags:
 LDFLAGS := -L/usr/X11R6/lib -L$(VISlibDir) -lm -lpthread -lpam -lpam_misc -ldl -lncurses
