@@ -91,14 +91,14 @@ namespace net {
          *
          * @param address A struct to be copied.
          */
-        SocketAddress(struct sockaddr& address);
+        SocketAddress(const struct sockaddr& address);
 
         /**
          * Cast ctor for struct sockaddr_in.
          *
          * @param address A struct to be copied.
          */
-        SocketAddress(struct sockaddr_in& address);
+        SocketAddress(const struct sockaddr_in& address);
 
         /** Default ctor. */
         SocketAddress(void);
@@ -109,6 +109,15 @@ namespace net {
          * @param rhs The object to be cloned.
          */
         SocketAddress(const SocketAddress& rhs);
+
+        /**
+         * Create a copy of 'address' but change the port to 'newPort'.
+         *
+         * @param address The address to be cloned.
+         * @param newPort The new port.
+         */
+        SocketAddress(const SocketAddress& address, 
+                      const unsigned short newPort); 
   
         /** Dtor. */
         virtual ~SocketAddress(void);
@@ -166,7 +175,7 @@ namespace net {
          * @param port The new port number.
          */
         inline void SetPort(const unsigned short port) {
-            this->inetAddress.sin_port = port;
+            this->inetAddress.sin_port = htons(port);
         }
 
         /**

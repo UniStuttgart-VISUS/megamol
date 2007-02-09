@@ -41,7 +41,7 @@ vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
 /*
  * vislib::net::SocketAddress::SocketAddress
  */
-vislib::net::SocketAddress::SocketAddress(struct sockaddr& address) {
+vislib::net::SocketAddress::SocketAddress(const struct sockaddr& address) {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memcpy(&this->genericAddress, &address, sizeof(struct sockaddr));
 }
@@ -50,7 +50,7 @@ vislib::net::SocketAddress::SocketAddress(struct sockaddr& address) {
 /*
  * vislib::net::SocketAddress::SocketAddress
  */
-vislib::net::SocketAddress::SocketAddress(struct sockaddr_in& address) {
+vislib::net::SocketAddress::SocketAddress(const struct sockaddr_in& address) {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memcpy(&this->inetAddress, &address, sizeof(struct sockaddr_in));
 }
@@ -73,6 +73,18 @@ vislib::net::SocketAddress::SocketAddress(const SocketAddress& rhs) {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memcpy(&this->genericAddress, &rhs.genericAddress, 
         sizeof(this->genericAddress));
+}
+
+
+/*
+ * vislib::net::SocketAddress::SocketAddress
+ */
+vislib::net::SocketAddress::SocketAddress(const SocketAddress& address, 
+        const unsigned short newPort) {
+    ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
+    this->inetAddress.sin_family = address.inetAddress.sin_family;
+    this->inetAddress.sin_port = htons(newPort);
+    this->inetAddress.sin_addr.s_addr = address.inetAddress.sin_addr.s_addr;
 }
 
 

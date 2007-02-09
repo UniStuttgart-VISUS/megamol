@@ -77,6 +77,8 @@ int main(int argc, char **argv) {
     //::TestClusterDiscoveryService();
     //::TestNetworkInformation();
     //::TestTheLogWithPhun();
+    ::TestClusterDiscoveryService();
+    //:TestNetworkInformation();
 
     //::printf("%s", W2A(L"Hugo"));
 

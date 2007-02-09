@@ -13,6 +13,7 @@
 #include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -164,6 +165,28 @@ bool vislib::sys::Thread::IsRunning(void) const {
 
 
 /*
+ * vislib::sys::Thread::Join
+ */
+void vislib::sys::Thread::Join(void) {
+#ifdef _WIN32
+    if (this->handle != NULL) {
+        if (::WaitForSingleObject(this->handle, INFINITE) == WAIT_FAILED) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+    }
+
+#else /* _WIN32 */
+    if (this->id != 0) {
+        if (::pthread_join(this->id, NULL) != 0) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+    }
+
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::Thread::Start
  */
 bool vislib::sys::Thread::Start(const void *userData) {
@@ -239,45 +262,37 @@ bool vislib::sys::Thread::Terminate(const bool forceTerminate,
 #endif /* _WIN32 */
 
     } else {
-        /* Do not force the thread to terminate, but ask it to do so. */
-        if (this->runnable == NULL) {
-            throw IllegalParamException("'forceTerminate' must be true, if "
-                "the thread is not using a Runnable.", __FILE__, __LINE__);
-        }
-        ASSERT(this->runnable != NULL);
-
-        if (this->runnable->Terminate()) {
-            /* Runnable did acknowledge, wait for the thread to finish. */
-            this->Join();
-            return true;
-
-        } else {
-            /* Runnable did not acknowledge, return immediately. */
-            return false;
-        }
+        return this->TryTerminate(true);
     } /* end if (forceTerminate) */
 }
 
 
 /*
- * vislib::sys::Thread::Join(void)
+ * vislib::sys::Thread::TryTerminate
  */
-void vislib::sys::Thread::Join(void) {
-#ifdef _WIN32
-    if (this->handle != NULL) {
-        if (::WaitForSingleObject(this->handle, INFINITE) == WAIT_FAILED) {
-            throw SystemException(__FILE__, __LINE__);
-        }
+bool vislib::sys::Thread::TryTerminate(const bool doWait) {
+    
+    if (this->runnable == NULL) {
+        throw IllegalStateException("TryTerminate can only be used, if the "
+            "thread is using a Runnable.", __FILE__, __LINE__);
     }
+    ASSERT(this->runnable != NULL); 
 
-#else /* _WIN32 */
-    if (this->id != 0) {
-        if (::pthread_join(this->id, NULL) != 0) {
-            throw SystemException(__FILE__, __LINE__);
-        }
+    if (this->runnable->Terminate()) {
+        /*
+         * Wait for thread to finish, if Runnable acknowledged and waiting was
+         * requested.
+         */
+        if (doWait) {
+            this->Join();
+        } 
+        
+        return true;
+
+    } else {
+        /* Runnable did not acknowledge. */
+        return false;
     }
-
-#endif /* _WIN32 */
 }
 
 

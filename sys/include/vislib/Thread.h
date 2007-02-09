@@ -113,6 +113,14 @@ namespace sys {
 		bool IsRunning(void) const;
 
         /**
+         * Waits for the thread to finish. If the thread was not started, the
+         * method just returns.
+         *
+         * @throws SystemException If waiting for the thread failed.
+         */
+        void Join(void);
+
+        /**
          * Start the thread.
          *
          * A thread can only be started, if it is in the state NEW or
@@ -140,12 +148,9 @@ namespace sys {
          * If the thread has been constructed using a Runnable object, the
          * behaviour is as follows: If 'forceTerminate' is true, the thread
          * is forcefully terminated and the method returns true. Otherwise,
-         * the method will ask the Runnable to finish as soon as possible. If
-         * the Runnable acknowledges the request, the method will wait for the
-         * thread to finish and return true afterwards. If the Runnable does
-         * not acknowledge the request, the method returns false immediately.
-         * Note, that Terminate can possibly cause a deadlock, if the Runnable
-         * acknowledges the request and does not return.
+         * the method behaves as TryTerminate(true). Note, that this can cause
+         * a deadlock, if your Runnable acknowledges a termination request but
+         * does not finish.
          *
          * @param forceTerminate If true, the thread is terminated immediately,
          *                       if false, the thread has the possibility to do
@@ -160,7 +165,7 @@ namespace sys {
          * 
          * @returns true, if the thread has been terminated, false, otherwise.
          *
-         * @throws IllegalParamException If 'forceTerminate' is false and the
+         * @throws IllegalStateException If 'forceTerminate' is false and the
          *                               thread has been constructed using a 
          *                               RunnableFunc.
          * @throws SystemException       If terminating the thread forcefully
@@ -169,12 +174,31 @@ namespace sys {
         bool Terminate(const bool forceTerminate, const int exitCode = 0);
 
         /**
-         * Waits for the thread to finish. If the thread was not started, the
-         * method just returns.
+         * This method tries to terminate a thread in a controlled manner. It
+         * can only be called, if the thread has been constructed using a
+         * Runnable object.
          *
-         * @throws SystemException If waiting for the thread failed.
+         * The behaviour is as follows: The method will ask the Runnable to 
+         * finish as soon as possible. If the Runnable acknowledges the request,
+         * the method can wait for the thread to finish. It returns true in
+         * both cases. If the Runnable does not acknowledge the request, the 
+         * method returns false immediately.
+         *
+         * Note, that TryTerminate(true) can possibly cause a deadlock, if the 
+         * Runnable acknowledges the request and does not return.
+         *
+         * @param doWait If set true, the method will wait for the thread to
+         *               finish, if the Runnable acknowlegdes the termination
+         *               request. Otherwise, the method will return immediately
+         *               after requesting the termination.
+         *
+         * @return true, if the Runnable acknowledged the termination request,
+         *         false otherwise.
+         *
+         * @throws IllegalStateException If the thread has been constructed 
+         *                               using a RunnableFunc.
          */
-        void Join(void);
+        bool TryTerminate(const bool doWait = false);
 
 	private:
 

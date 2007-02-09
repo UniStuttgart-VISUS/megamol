@@ -21,3 +21,13 @@ vislib::net::ClusterDiscoveryListener::ClusterDiscoveryListener(void) {
  */
 vislib::net::ClusterDiscoveryListener::~ClusterDiscoveryListener(void) {
 }
+
+
+/*
+ * vislib::net::ClusterDiscoveryListener::OnUserMessage
+ */
+void vislib::net::ClusterDiscoveryListener::OnUserMessage(
+        const ClusterDiscoveryService& src, const SocketAddress& sender, 
+        const UINT16 msgType, const BYTE *msgBody) {
+    /* Does nothing. */
+}

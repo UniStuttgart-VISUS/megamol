@@ -133,6 +133,9 @@ namespace net {
          * Windows, it calls WSACleanup. Call this method after you finished 
          * using sockets for releasing the resources associated with the 
          * Winsock-DLL.
+		 *
+		 * It is safe to call Cleanup multiple times as long as Startup has been
+		 * called multiple times before.
          *
          * @throws SocketException In case of an error.
          */
@@ -143,6 +146,9 @@ namespace net {
          * Windows, this method calls WSAStartup and initialises the 
          * Winsock-DLL. You must call this method once before using any sockets.
          * Call Cleanup() after you finished the use of sockets.
+		 *
+		 * It is safe to call Startup multiple times as long as the same number
+		 * of Cleanup calls is made afterwards.
          *
          * @throws SocketException In case of an error.
          */
