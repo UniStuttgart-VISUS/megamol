@@ -1,13 +1,16 @@
 #include "testdirectoryiterator.h"
 
+#include "vislib/error.h"
 #include "vislib/File.h"
 #include "vislib/Path.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
+#include "vislib/StringConverter.h"
 #include "vislib/DirectoryIterator.h"
 #include "vislib/Array.h"
 #include "vislib/Stack.h"
 #include "testhelper.h"
+#include "vislib/SystemMessage.h"
 
 #include <iostream>
 
@@ -40,7 +43,11 @@ static void TestDirectoryIteratorA(Array<StringA> dirs, Array<StringA> files) {
 #ifdef _WIN32
 			_mkdir(dirs[i]);
 #else /* _WIN32 */
-			mkdir(dirs[i], 0);
+			//std::cout << "Making directory " << dirs[i] << std::endl;
+			if (mkdir(dirs[i], S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
+				int e = GetLastError();
+				std::cout << e << "  " << static_cast<const char *>(SystemMessage(e)) << std::endl;
+			}
 #endif /* _WIN32 */
 		}
 		for (i = 0; i < static_cast<int>(files.Count()); i++) {
@@ -92,7 +99,11 @@ static void TestDirectoryIteratorW(Array<StringW> dirs, Array<StringW> files) {
 #ifdef _WIN32
 			_wmkdir(dirs[i]);
 #else /* _WIN32 */
-			mkdir(StringA(dirs[i]), 0);
+			//std::cout << "Making directory " << StringA(dirs[i]) << std::endl;
+			if (mkdir(StringA(dirs[i]), S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
+				int e = GetLastError();
+				std::cout << e << "  " << static_cast<const char *>(SystemMessage(e)) << std::endl;
+			}
 #endif /* _WIN32 */
 		}
 		for (i = 0; i < static_cast<int>(files.Count()); i++) {
@@ -104,7 +115,8 @@ static void TestDirectoryIteratorW(Array<StringW> dirs, Array<StringW> files) {
 		i = 0;
 		StringW relPath;
 		while (!st.IsEmpty()) {
-			DirectoryIterator<CharTraitsW> di(relPath = st.Pop());
+			relPath = st.Pop();
+			DirectoryIterator<CharTraitsW> di(relPath);
 			while (di.HasNext()) {
 				i++;
 				de = di.Next();
@@ -151,5 +163,6 @@ void TestDirectoryIterator(void) {
 	wfiles.Append(wdirs[0] + Path::SEPARATOR_W + L"Überlevel0.0");
 	wfiles.Append(wdirs[0] + Path::SEPARATOR_W + L"Überlevel0.1");
 	wfiles.Append(wdirs[2] + Path::SEPARATOR_W + L"Überlevel2.0");
+
 	::TestDirectoryIteratorW(wdirs, wfiles);
 }

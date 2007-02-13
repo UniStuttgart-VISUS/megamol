@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include "vislib/File.h"
+#include "vislib/StringConverter.h"
 #endif /* _WIN32 */
 
 namespace vislib {
@@ -360,13 +361,18 @@ namespace sys {
 		DIR *dirStream;
 #endif /* _WIN32 */
 
+#ifdef _WIN32
+#else /* _WIN32 */
 		/** 
 		 * since (on linux) we need to explicitly find out if an entry is a directory,
 		 * we also need to remember where we are iterating.
 		 */
-#ifdef _WIN32
-#else /* _WIN32 */
 		StringA basePath;
+
+		/**
+		 * unicode on linux is... suboptimal.
+		 */
+		DirectoryIterator<CharTraitsA> *DICA;
 #endif /* _WIN32 */
 
 	}; /* end class DirectoryIterator<CharTraitsA> */
@@ -409,35 +415,7 @@ namespace sys {
 		}
 		this->nextItem.Path = fd.cFileName;
 #else /* _WIN32 */
-#if 0
-		struct dirent *de;
-
-		if ((this->dirStream = opendir(path)) == NULL) {
-			throw SystemException(__FILE__, __LINE__);
-		}
-		this->basePath = path;
-		// BUG: Linux documentation is all lies. the errno stunt does not work at all.
-		//errno = 0;
-		do {
-			if ((de = readdir(this->dirStream)) == NULL) {
-				//if (errno == 0) {
-				//	this->nextItem.Path.Clear();
-				//} else {
-				//	throw SystemException(errno, __FILE__, __LINE__);
-				//}
-			}
-		} while (de != NULL && ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0)));
-		if (de == NULL) {
-			this->nextItem.Path.Clear();
-		}	else {
-			if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATORSTR_A + de->d_name)) {
-				this->nextItem.Type = Item::DIRECTORY;
-			} else {
-				this->nextItem.Type = Item::FILE;
-			}
-			this->nextItem.Path = de->d_name;
-		}
-#endif
+		this->DICA = new DirectoryIterator<CharTraitsA>(W2A(path));
 #endif /* _WIN32 */
 	}
 
@@ -451,9 +429,7 @@ namespace sys {
 			FindClose(this->findHandle);
 		}
 #else /* _WIN32 */
-		if (this->dirStream != NULL) {
-			closedir(dirStream);
-		}
+		delete this->DICA;
 #endif /* WIN32 */
 	}
 
@@ -462,7 +438,11 @@ namespace sys {
 	 * DirectoryIterator<CharTraitsW>::HasNext
 	 */
 	bool DirectoryIterator<CharTraitsW>::HasNext() const {
+#ifdef _WIN32
 		return !this->nextItem.Path.IsEmpty();
+#else /* _WIN32 */
+		return this->DICA->HasNext();
+#endif /* _WIN32 */
 	}
 
 
@@ -470,8 +450,8 @@ namespace sys {
 	 * DirectoryIterator<CharTraitsW>::Next
 	 */
 	DirectoryEntry<CharTraitsW>& DirectoryIterator<CharTraitsW>::Next() {
-		this->currentItem = this->nextItem;
 #ifdef _WIN32
+		this->currentItem = this->nextItem;
 		if (this->currentItem.Path.IsEmpty()) {
 			throw IllegalStateException("No next element.", __FILE__, __LINE__);
 		} else {
@@ -497,37 +477,9 @@ namespace sys {
 			return this->currentItem;
 		}
 #else /* _WIN32 */
-#if 0
-		if (this->currentItem.Path.IsEmpty()) {
-			throw IllegalStateException("No next element.", __FILE__, __LINE__);
-		} else {
-			struct dirent *de;
-			do {
-				// BUG: Linux documentation is all lies. the errno stunt does not work at all.
-				//errno = 0;
-				if ((de = readdir(this->dirStream)) == NULL) {
-					//if (errno == 0) {
-					//	this->nextItem.Path.Clear();
-					//} else {
-					//	throw SystemException(errno, __FILE__, __LINE__);
-					//}
-				} else {
-					if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATORSTR_A + de->d_name)) {
-						this->nextItem.Type = Item::DIRECTORY;
-					} else {
-						this->nextItem.Type = Item::FILE;
-					}
-				}
-			} while (de != NULL && ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0)));
-			if (de == NULL) {
-				this->nextItem.Path.Clear();
-			}
-			else {
-				this->nextItem.Path = de->d_name;
-			}
-			return this->currentItem;
-		}
-#endif
+		DirectoryEntry<CharTraitsA> deTmp = this->DICA->Next();
+		this->currentItem.Path = StringW(deTmp.Path);
+		this->currentItem.Type = static_cast<DirectoryEntry<CharTraitsW>::EntryType>(deTmp.Type);
 		return this->currentItem;
 #endif /* _WIN32 */
 	} /* end class DirectoryIterator<CharTraitsW> */
