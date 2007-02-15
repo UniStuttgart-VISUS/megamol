@@ -68,8 +68,8 @@ int StereoCamTestApp::GLInit(void) {
     return 0;
 }
 
-void StereoCamTestApp::Resize(unsigned int w, unsigned int h) {
-    AbstractGlutApp::Resize(w, h);
+void StereoCamTestApp::OnResize(unsigned int w, unsigned int h) {
+    AbstractGlutApp::OnResize(w, h);
     this->cameraRight.SetVirtualWidth(float(w));
     this->cameraRight.SetVirtualHeight(float(h));
     this->cameraLeft.SetVirtualWidth(float(w));
@@ -136,7 +136,7 @@ void StereoCamTestApp::Render(void) {
     glutPostRedisplay(); // because we do animation stuff
 }
 
-bool StereoCamTestApp::KeyPress(unsigned char key, int x, int y) {
+bool StereoCamTestApp::OnKeyPress(unsigned char key, int x, int y) {
     switch(key) {
         case '1':
             printf("Stereo Projection set to STEREO_PARALLEL\n");
@@ -183,7 +183,7 @@ bool StereoCamTestApp::KeyPress(unsigned char key, int x, int y) {
         } break;
 
         default:
-            return AbstractGlutApp::KeyPress(key, x, y);
+            return AbstractGlutApp::OnKeyPress(key, x, y);
     }
     this->UpdateCamTiles();
     glutPostRedisplay();

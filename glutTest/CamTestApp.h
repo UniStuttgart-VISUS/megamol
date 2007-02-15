@@ -29,12 +29,12 @@ public:
 
     virtual int GLInit(void);
 
-    virtual void Resize(unsigned int w, unsigned int h);
+    virtual void OnResize(unsigned int w, unsigned int h);
     virtual void Render(void);
-    virtual bool KeyPress(unsigned char key, int x, int y);
-    virtual void MouseEvent(int button, int state, int x, int y);
-    virtual void MouseMove(int x, int y);
-    virtual void SpecialKey(int key, int x, int y);
+    virtual bool OnKeyPress(unsigned char key, int x, int y);
+    virtual void OnMouseEvent(int button, int state, int x, int y);
+    virtual void OnMouseMove(int x, int y);
+    virtual void OnSpecialKey(int key, int x, int y);
 
 private:
     class Lens {

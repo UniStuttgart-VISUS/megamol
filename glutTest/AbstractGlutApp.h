@@ -41,7 +41,7 @@ public:
      * @param w New width of the window
      * @param h New Height of the window
      */
-    virtual void Resize(unsigned int w, unsigned int h);
+    virtual void OnResize(unsigned int w, unsigned int h);
 
     /**
      * Callback for rendering events.
@@ -77,7 +77,7 @@ public:
      * @return true if the key was accepted in terms, that the pressing of the 
      *         key has an effect, false if the key was ignored.
      */
-    virtual bool KeyPress(unsigned char key, int x, int y);
+    virtual bool OnKeyPress(unsigned char key, int x, int y);
 
     /**
      * Callback for glut mouse events.
@@ -87,7 +87,7 @@ public:
      * @param x The x position of the mouse.
      * @param y The y position of the mouse.
      */
-    virtual void MouseEvent(int button, int state, int x, int y);
+    virtual void OnMouseEvent(int button, int state, int x, int y);
 
     /**
      * Callback for glut (mouse) motion events.
@@ -95,7 +95,7 @@ public:
      * @param x The x position of the mouse.
      * @param y The y position of the mouse.
      */
-    virtual void MouseMove(int x, int y);
+    virtual void OnMouseMove(int x, int y);
 
     /**
      * Callback for glut special events.
@@ -104,7 +104,7 @@ public:
      * @param x The x position of the mouse.
      * @param y The y position of the mouse.
      */
-    virtual void SpecialKey(int key, int x, int y);
+    virtual void OnSpecialKey(int key, int x, int y);
 
 private:
 

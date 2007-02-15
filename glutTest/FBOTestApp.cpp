@@ -1,0 +1,180 @@
+/*
+ * FBOTestApp.cpp
+ *
+ * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ */
+
+#include "FBOTestApp.h"
+
+#include <GL/glut.h>
+#include <iostream>
+
+#include "vislib/glverify.h"
+#include "vislogo.h"
+
+
+/*
+ * FBOTestApp::FBOTestApp
+ */
+FBOTestApp::FBOTestApp(void) : AbstractGlutApp() {
+}
+
+
+/*
+ * FBOTestApp::~FBOTestApp
+ */
+FBOTestApp::~FBOTestApp(void) {
+}
+
+
+/*
+ * FBOTestApp::GLInit
+ */
+int FBOTestApp::GLInit(void) {
+    using vislib::graphics::gl::FramebufferObject;
+    
+    int retval = 0;
+
+    ::VisLogoDoStuff();
+    ::VisLogoTwistLogo();
+
+    ::glEnable(GL_DEPTH_TEST);
+
+    if (!FramebufferObject::InitialiseExtensions()) {
+        retval++;
+    }
+    try {
+        FramebufferObject::ColorAttachParams cap[2];
+        cap[0].internalFormat = cap[1].internalFormat = GL_RGBA8;
+        cap[0].format = cap[1].format = GL_RGBA;
+        cap[0].type = cap[1].type = GL_UNSIGNED_BYTE;
+        //cap[1].type = GL_FLOAT;
+
+        FramebufferObject::DepthAttachParams dap;
+        dap.format = GL_DEPTH_COMPONENT32;
+        dap.state = FramebufferObject::ATTACHMENT_TEXTURE;
+        FramebufferObject::StencilAttachParams sap;
+        sap.state = FramebufferObject::ATTACHMENT_DISABLED;
+
+        //if (!this->fbo.Create(512, 512, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 
+        //        FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
+        if (!this->fbo.Create(512, 512, 2, cap, dap, sap)) {
+            std::cout << "Framebuffer object creation failed." << std::endl;
+            ASSERT(false);
+            retval++;
+        }
+    } catch (vislib::graphics::gl::OpenGLException e) {
+        std::cout << e.GetMsgA() << " @ " << e.GetFile() << ":" << e.GetLine() 
+            << std::endl;
+        retval++;
+    }
+
+    return retval;
+}
+
+
+
+/*
+ * FBOTestApp::Render
+ */
+void FBOTestApp::Render(void) {
+    USES_GL_VERIFY;
+    unsigned int cntVertices = ::VisLogoCountVertices();
+	unsigned int vIdx;
+   
+    try {
+        GL_VERIFY_EXPR(this->fbo.Enable(1));
+        
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        //::glEnable(GL_STENCIL_TEST);
+        //::glStencilFunc(GL_ALWAYS, 1, 1);
+        //::glStencilOp(GL_KEEP,GL_KEEP, GL_REPLACE);
+
+        ::glMatrixMode(GL_PROJECTION);
+        ::glLoadIdentity();
+        ::gluOrtho2D(0, 0, this->fbo.GetWidth(), this->fbo.GetHeight());
+
+        ::glMatrixMode(GL_MODELVIEW);
+        ::glLoadIdentity();
+
+        ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        ::glBegin(GL_QUAD_STRIP);
+	    for (unsigned int i = 0; i < 20; i++) {
+		    for (unsigned int j = 0; j < cntVertices / 20; j++) {
+			    vIdx = (i + j * 20) % cntVertices;
+                ::glColor3dv(VisLogoVertexColor(vIdx)->f);
+                ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
+                ::glVertex3dv(VisLogoVertex(vIdx)->f);
+
+			    vIdx = ((i + 1) % 20 + j * 20) % cntVertices;
+                ::glColor3dv(VisLogoVertexColor(vIdx)->f);
+                ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
+                ::glVertex3dv(VisLogoVertex(vIdx)->f);
+		    }
+	    }
+
+        // Close strip.
+	    vIdx = 0;
+        ::glColor3dv(VisLogoVertexColor(vIdx)->f);
+        ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
+        ::glVertex3dv(VisLogoVertex(vIdx)->f);
+
+	    vIdx = 1;
+        ::glColor3dv(VisLogoVertexColor(vIdx)->f);
+        ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
+        ::glVertex3dv(VisLogoVertex(vIdx)->f);
+
+        ::glEnd();
+        ::glFlush();
+        GL_VERIFY_EXPR(this->fbo.Disable());
+
+     //   //::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        GL_VERIFY_EXPR(this->fbo.BindColorTexture(1));
+        //GL_VERIFY_EXPR(this->fbo.BindDepthTexture());
+        ::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+       
+        //::glViewport(0, 0, this->GetWidth(), this->GetHeight());
+       
+        ::glMatrixMode(GL_PROJECTION);
+        ::glLoadIdentity();
+        ::gluPerspective(45.0, this->GetAspectRatio(), 0.1, 100.0);
+
+        ::glMatrixMode(GL_MODELVIEW);
+        ::glLoadIdentity();
+        ::glTranslated(0.0, 0.0, -5.0);
+        
+        ::glEnable(GL_TEXTURE_2D);
+        ::glBegin(GL_QUADS);
+        ::glTexCoord2d(0.0, 0.0);
+        ::glVertex3d(-1.0, -1.0, 0.0);  // bottom left
+        ::glTexCoord2d(1.0, 0.0);
+        ::glVertex3d(1.0, -1.0, -3.0);  // bottom right
+        ::glTexCoord2d(1.0, 1.0);
+        ::glVertex3d(1.0, 1.0, -3.0);   // top right
+        ::glTexCoord2d(0.0, 1.0);
+        ::glVertex3d(-1.0, 1.0, 0.0);   // top left
+        ::glEnd();  
+
+        ::glDisable(GL_TEXTURE_2D);
+        ::glColor3f(1.0, 1.0, 1.0);
+        ::glEnable(GL_POLYGON_OFFSET_LINE);
+        ::glPolygonOffset(-1.0f, -1.0f);
+        ::glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        ::glBegin(GL_QUADS);
+        ::glVertex3d(-1.0, -1.0, 0.0);  // bottom left
+        ::glVertex3d(1.0, -1.0, -3.0);  // bottom right
+        ::glVertex3d(1.0, 1.0, -3.0);   // top right
+        ::glVertex3d(-1.0, 1.0, 0.0);   // top left
+        ::glEnd();     
+        ::glDisable(GL_POLYGON_OFFSET_LINE);
+
+        ::glutSwapBuffers();
+
+    } catch (vislib::graphics::gl::OpenGLException e) {
+        std::cout << e.GetMsgA() << std::endl;
+    }
+}

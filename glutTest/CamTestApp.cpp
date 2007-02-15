@@ -177,19 +177,19 @@ int CamTestApp::GLInit(void) {
 
 
 /*
- * CamTestApp::Resize
+ * CamTestApp::OnResize
  */
-void CamTestApp::Resize(unsigned int w, unsigned int h) {
-    AbstractGlutApp::Resize(w, h);
+void CamTestApp::OnResize(unsigned int w, unsigned int h) {
+    AbstractGlutApp::OnResize(w, h);
     this->camera.SetVirtualWidth(float(w) / 500.0f);
     this->camera.SetVirtualHeight(float(h) / 500.0f);
 }
 
 
 /*
- * CamTestApp::KeyPress
+ * CamTestApp::OnKeyPress
  */
-bool CamTestApp::KeyPress(unsigned char key, int x, int y) {
+bool CamTestApp::OnKeyPress(unsigned char key, int x, int y) {
     switch(key) {
         case 'o':
             this->ortho = !this->ortho;
@@ -208,23 +208,23 @@ bool CamTestApp::KeyPress(unsigned char key, int x, int y) {
 
 
 /*
- * CamTestApp::MouseEvent
+ * CamTestApp::OnMouseEvent
  */
-void CamTestApp::MouseEvent(int button, int state, int x, int y) {
+void CamTestApp::OnMouseEvent(int button, int state, int x, int y) {
 }
 
 
 /*
- * CamTestApp::MouseMove
+ * CamTestApp::OnMouseMove
  */
-void CamTestApp::MouseMove(int x, int y) {
+void CamTestApp::OnMouseMove(int x, int y) {
 }
 
 
 /*
- * CamTestApp::SpecialKey
+ * CamTestApp::OnSpecialKey
  */
-void CamTestApp::SpecialKey(int key, int x, int y) {
+void CamTestApp::OnSpecialKey(int key, int x, int y) {
 }
 
 

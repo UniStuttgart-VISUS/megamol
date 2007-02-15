@@ -27,9 +27,9 @@ public:
 
     virtual int GLInit(void);
 
-    virtual void Resize(unsigned int w, unsigned int h);
+    virtual void OnResize(unsigned int w, unsigned int h);
     virtual void Render(void);
-    virtual bool KeyPress(unsigned char key, int x, int y);
+    virtual bool OnKeyPress(unsigned char key, int x, int y);
 
 private:
     void RenderTestBox(void);

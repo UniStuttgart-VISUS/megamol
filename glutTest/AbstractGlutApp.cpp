@@ -25,38 +25,38 @@ AbstractGlutApp::~AbstractGlutApp(void) {
 
 
 /*
- * AbstractGlutApp::Resize
+ * AbstractGlutApp::OnResize
  */
-void AbstractGlutApp::Resize(unsigned int w, unsigned int h) {
+void AbstractGlutApp::OnResize(unsigned int w, unsigned int h) {
     this->aspectRatio = float(this->width = w) / float(this->height = ((h > 0) ? h : 1));
 	glViewport(0, 0, this->width, this->height);
 }
 
 
 /*
- * AbstractGlutApp::KeyPress
+ * AbstractGlutApp::OnKeyPress
  */
-bool AbstractGlutApp::KeyPress(unsigned char key, int x, int y) {
+bool AbstractGlutApp::OnKeyPress(unsigned char key, int x, int y) {
     return false;
 }
 
 
 /*
- * AbstractGlutApp::MouseEvent
+ * AbstractGlutApp::OnMouseEvent
  */
-void AbstractGlutApp::MouseEvent(int button, int state, int x, int y) {
+void AbstractGlutApp::OnMouseEvent(int button, int state, int x, int y) {
 }
 
 
 /*
- * AbstractGlutApp::MouseMove
+ * AbstractGlutApp::OnMouseMove
  */
-void AbstractGlutApp::MouseMove(int x, int y) {
+void AbstractGlutApp::OnMouseMove(int x, int y) {
 }
 
 
 /*
- * AbstractGlutApp::SpecialKey
+ * AbstractGlutApp::OnSpecialKey
  */
-void AbstractGlutApp::SpecialKey(int key, int x, int y) {
+void AbstractGlutApp::OnSpecialKey(int key, int x, int y) {
 }

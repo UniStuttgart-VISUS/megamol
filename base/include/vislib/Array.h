@@ -260,6 +260,19 @@ namespace vislib {
         void Resize(const SIZE_T capacity);
 
         /**
+         * Make the array assume that it has 'count' valid elements. If 'count'
+         * is less than the current number of elements, this has the same effect
+         * as erasing all elements beginning at index 'count' until the end. If
+         * 'count' is larger than the current element count, the requested 
+         * number of elements is allocated. Note that the new elements might 
+         * have undefined content. The method only guarantees the default ctor
+         * to be called.
+         *
+         * @param count The new number of elements in the array.
+         */
+        void SetCount(const SIZE_T count);
+
+        /**
          * Trim the capacity of the array to match the current number of 
          * elements. This has the same effect as calling Resize(Count()).
          */
@@ -434,7 +447,7 @@ namespace vislib {
 
 
     /*
-     * Array<T>::Erase
+     * vislib::Array<T>::Erase
      */
     template<class T>
     void Array<T>::Erase(const SIZE_T idx) {
@@ -450,7 +463,7 @@ namespace vislib {
 
 
     /*
-     * Array<T>::Erase
+     * vislib::Array<T>::Erase
      */
     template<class T>
     void Array<T>::Erase(const SIZE_T beginIdx, const SIZE_T cnt) {
@@ -482,7 +495,7 @@ namespace vislib {
 
 
     /*
-     * Array<T>::IndexOf
+     * vislib::Array<T>::IndexOf
      */
     template<class T>
     INT_PTR Array<T>::IndexOf(const T& element, const SIZE_T beginAt) const {
@@ -498,7 +511,7 @@ namespace vislib {
 
 
     /*
-     * Array<T>::Remove
+     * vislib::Array<T>::Remove
      */
     template<class T>
     void Array<T>::Remove(const T& element) {
@@ -518,7 +531,7 @@ namespace vislib {
 
 
     /*
-     * Array<T>::Resize
+     * vislib::Array<T>::Resize
      */
     template<class T>
     void Array<T>::Resize(const SIZE_T capacity) {
@@ -564,7 +577,20 @@ namespace vislib {
 
 
     /*
-     * Array<T>::operator []
+     * vislib::Array<T>::SetCount
+     */
+    template<class T> void Array<T>::SetCount(const SIZE_T count) {
+        if (count < this->count) {
+            this->Erase(count, this->count - count);
+        } else {
+            this->AssertCapacity(count);
+            this->count = count;
+        }
+    }
+
+
+    /*
+     * vislib::Array<T>::operator []
      */
     template<class T>
     T& Array<T>::operator [](const SIZE_T idx) {
@@ -578,7 +604,7 @@ namespace vislib {
 
 
     /*
-     * Array<T>::operator []
+     * vislib::Array<T>::operator []
      */
     template<class T>
     const T& Array<T>::operator [](const SIZE_T idx) const {
@@ -592,7 +618,7 @@ namespace vislib {
 
 
     /*
-     * Array<T>::operator =
+     * vislib::Array<T>::operator =
      */
     template<class T>
     Array<T>& Array<T>::operator =(const Array& rhs) {

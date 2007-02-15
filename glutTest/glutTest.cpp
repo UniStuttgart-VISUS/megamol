@@ -4,6 +4,8 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
+#include "AbstractGlutApp.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else /* _WIN32 */
@@ -17,14 +19,22 @@
 
 #ifdef _WIN32
 #else /* _WIN32 */
+#include <GL/glx.h>
 #endif /* _WIN32 */
 
-
-#include "AbstractGlutApp.h"
+#if (_MSC_VER > 1000)
+#pragma warning(disable: 4996)
+#endif /* (_MSC_VER > 1000) */
+#define GLH_EXT_SINGLE_FILE
+#include "glh/glh_extensions.h"
+#if (_MSC_VER > 1000)
+#pragma warning(default: 4996)
+#endif /* (_MSC_VER > 1000) */
 
 #include "CamTestApp.h"
 #include "StereoCamTestApp.h"
 #include "BeholderRotatorTextApp.h"
+#include "FBOTestApp.h"
 
 
 // static global functions
@@ -36,7 +46,7 @@ AbstractGlutApp *app = NULL;
  */
 void reshape(int w, int h) {
     assert(app != NULL);
-    app->Resize(w, h);
+    app->OnResize(w, h);
 }
 
 void display(void) {
@@ -50,7 +60,7 @@ void keyboard(unsigned char key, int x, int y) {
             exit(0); 
             break;
         default:
-            if (!(app && app->KeyPress(key, x, y))) {
+            if (!(app && app->OnKeyPress(key, x, y))) {
                 fprintf(stderr, "Warning: Key %u is not used\n", key); 
             }
             break;
@@ -59,17 +69,17 @@ void keyboard(unsigned char key, int x, int y) {
 
 void mouse(int button, int state, int x, int y) {
     assert(app != NULL);
-    app->MouseEvent(button, state, x, y);
+    app->OnMouseEvent(button, state, x, y);
 }
 
 void motion(int x, int y) {
     assert(app != NULL);
-    app->MouseMove(x, y);
+    app->OnMouseMove(x, y);
 }
 
 void special(int key, int x, int y) {
     assert(app != NULL);
-    app->SpecialKey(key, x, y);
+    app->OnSpecialKey(key, x, y);
 }
 
 /*
@@ -81,7 +91,8 @@ int main(int argc, char* argv[]) {
     // select test application:
     //CamTestApp cta; app = &cta;
     //StereoCamTestApp scta; app = &scta;
-    BeholderRotatorTextApp brta; app = &brta;
+    //BeholderRotatorTextApp brta; app = &brta;
+    FBOTestApp fbota; app = &fbota;
 
     // run test application
     if (app) {

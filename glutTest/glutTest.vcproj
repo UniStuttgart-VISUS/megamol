@@ -52,6 +52,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
+				UndefinePreprocessorDefinitions="GL_SGIX_async"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -354,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FBOTestApp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\glutTest.cpp"
 				>
 			</File>
@@ -381,6 +386,10 @@
 			</File>
 			<File
 				RelativePath=".\CamTestApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FBOTestApp.h"
 				>
 			</File>
 			<File

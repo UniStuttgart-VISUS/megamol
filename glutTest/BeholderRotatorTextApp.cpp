@@ -94,19 +94,19 @@ int BeholderRotatorTextApp::GLInit(void) {
 
 
 /*
- * BeholderRotatorTextApp::Resize
+ * BeholderRotatorTextApp::OnResize
  */
-void BeholderRotatorTextApp::Resize(unsigned int w, unsigned int h) {
-    AbstractGlutApp::Resize(w, h);
+void BeholderRotatorTextApp::OnResize(unsigned int w, unsigned int h) {
+    AbstractGlutApp::OnResize(w, h);
     this->camera.SetVirtualWidth(w);
     this->camera.SetVirtualHeight(h);
 }
 
 
 /*
- * BeholderRotatorTextApp::KeyPress
+ * BeholderRotatorTextApp::OnKeyPress
  */
-bool BeholderRotatorTextApp::KeyPress(unsigned char key, int x, int y) {
+bool BeholderRotatorTextApp::OnKeyPress(unsigned char key, int x, int y) {
     bool retval = true;
     switch(key) {
         case '1': this->SetupRotator1(); break;
@@ -119,9 +119,9 @@ bool BeholderRotatorTextApp::KeyPress(unsigned char key, int x, int y) {
 
 
 /*
- * BeholderRotatorTextApp::MouseEvent
+ * BeholderRotatorTextApp::OnMouseEvent
  */
-void BeholderRotatorTextApp::MouseEvent(int button, int state, int x, int y) {
+void BeholderRotatorTextApp::OnMouseEvent(int button, int state, int x, int y) {
     unsigned int btn = 0;
     int modifiers = glutGetModifiers();
 
@@ -140,17 +140,17 @@ void BeholderRotatorTextApp::MouseEvent(int button, int state, int x, int y) {
 
 
 /*
- * BeholderRotatorTextApp::MouseMove
+ * BeholderRotatorTextApp::OnMouseMove
  */
-void BeholderRotatorTextApp::MouseMove(int x, int y) {
+void BeholderRotatorTextApp::OnMouseMove(int x, int y) {
     this->cursor.SetPosition(x, y, true);
 }
 
 
 /*
- * BeholderRotatorTextApp::SpecialKey
+ * BeholderRotatorTextApp::OnSpecialKey
  */
-void BeholderRotatorTextApp::SpecialKey(int key, int x, int y) {
+void BeholderRotatorTextApp::OnSpecialKey(int key, int x, int y) {
     int modifiers = glutGetModifiers();
 
     this->cursor.SetModifierState(0, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
