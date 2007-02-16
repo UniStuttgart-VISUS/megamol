@@ -21,6 +21,9 @@
 #include "vislib/error.h"
 #include "vislib/memutils.h"
 #include "vislib/SystemException.h"
+#include "vislib/MissingImplementationException.h"
+#include "vislib/Stack.h"
+#include "vislib/File.h"
 
 
 /*
@@ -347,6 +350,160 @@ bool vislib::sys::Path::IsRelative(const StringW& path) {
     return (::PathIsRelativeW(path.PeekBuffer()) != FALSE);
 #else /* _WIN32 */
     return !path.StartsWith(SEPARATOR_W);
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::MakeDirectory
+ */
+void vislib::sys::Path::MakeDirectory(const StringA& path) {
+    Stack<StringA> missingParts;
+    StringA firstBuilt;
+    StringA curPath = Resolve(path);
+
+    while (!File::Exists(curPath)) {
+        StringA::Size pos = curPath.FindLast(SEPARATOR_A);
+        if (pos != StringA::INVALID_POS) {
+            missingParts.Push(curPath.Substring(pos + 1));
+            curPath.Truncate(pos);
+
+        } else {
+            // Problem: No Separators left, but directory still does not exist.
+#ifdef _WIN32
+            throw vislib::sys::SystemException(ERROR_INVALID_NAME, __FILE__, __LINE__);
+#else /* _WIN32 */
+            throw vislib::sys::SystemException(EINVAL, __FILE__, __LINE__);
+#endif /* _WIN32 */
+        }
+    }
+
+    // curPath exists
+    if (!File::IsDirectory(curPath)) {
+        // the latest existing directory is not a directory (may be a file?)
+#ifdef _WIN32
+        throw vislib::sys::SystemException(ERROR_DIRECTORY, __FILE__, __LINE__);
+#else /* _WIN32 */
+        throw vislib::sys::SystemException(EEXIST, __FILE__, __LINE__);
+#endif /* _WIN32 */
+    }
+
+    while (!missingParts.IsEmpty()) {
+        curPath += SEPARATOR_A;
+        curPath += missingParts.Pop();
+
+#ifdef _WIN32
+        if (CreateDirectoryA(curPath, NULL) != 0) {
+#else /* _WIN32 */
+        if (mkdir(curPath, S_IRWXG | S_IRWXO | S_IRWXU) == 0) { // TODO: Check
+#endif /* _WIN32 */
+            // success, so go on.
+            if (firstBuilt.IsEmpty()) {
+                firstBuilt = curPath;
+            }
+
+        } else {
+            DWORD errorCode = GetLastError();
+
+            try {
+                // failure, so try to remove already created paths and throw exception.
+                RemoveDirectory(firstBuilt, true);
+            } catch(...) {
+            }
+
+            throw vislib::sys::SystemException(errorCode, __FILE__, __LINE__);
+        }
+    }
+    // we are done!
+}
+
+
+/*
+ * vislib::sys::Path::MakeDirectory
+ */
+void vislib::sys::Path::MakeDirectory(const StringW& path) {
+#ifdef _WIN32
+    Stack<StringW> missingParts;
+    StringW firstBuilt;
+    StringW curPath = Resolve(path);
+
+    while (!File::Exists(curPath)) {
+        StringW::Size pos = curPath.FindLast(SEPARATOR_W);
+        if (pos != StringW::INVALID_POS) {
+            missingParts.Push(curPath.Substring(pos + 1));
+            curPath.Truncate(pos);
+
+        } else {
+            // Problem: No Separators left, but directory still does not exist.
+            throw vislib::sys::SystemException(ERROR_INVALID_NAME, __FILE__, __LINE__);
+        }
+    }
+
+    // curPath exists
+    if (!File::IsDirectory(curPath)) {
+        // the latest existing directory is not a directory (may be a file?)
+        throw vislib::sys::SystemException(ERROR_DIRECTORY, __FILE__, __LINE__);
+    }
+
+    while (!missingParts.IsEmpty()) {
+        curPath += SEPARATOR_W;
+        curPath += missingParts.Pop();
+
+        if (CreateDirectoryW(curPath, NULL) != 0) {
+            // success, so go on.
+            if (firstBuilt.IsEmpty()) {
+                firstBuilt = curPath;
+            }
+
+        } else {
+            DWORD errorCode = GetLastError();
+
+            try {
+                // failure, so try to remove already created paths and throw exception.
+                RemoveDirectory(firstBuilt, true);
+            } catch(...) {
+            }
+
+            throw vislib::sys::SystemException(errorCode, __FILE__, __LINE__);
+        }
+    }
+    // we are done!
+
+#else /* _WIN32 */
+    // linux is stupid
+    MakeDirectory(W2A(path));
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::RemoveDirectory
+ */
+void vislib::sys::Path::RemoveDirectory(const StringA& path, bool recursive) {
+    if (!File::Exists(path)) return; // we don't delete non-existing stuff
+
+#ifdef _WIN32
+    throw vislib::MissingImplementationException("RemoveDirectory", __FILE__, __LINE__);
+
+#else /* _WIN32 */
+    throw vislib::MissingImplementationException("RemoveDirectory", __FILE__, __LINE__);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::RemoveDirectory
+ */
+void vislib::sys::Path::RemoveDirectory(const StringW& path, bool recursive) {
+#ifdef _WIN32
+    throw vislib::MissingImplementationException("RemoveDirectory", __FILE__, __LINE__);
+
+#else /* _WIN32 */
+    // linux is stupid
+    RemoveDirectory(W2A(path), recursive);
+
 #endif /* _WIN32 */
 }
 

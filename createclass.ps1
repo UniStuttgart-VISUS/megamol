@@ -129,10 +129,16 @@ $HContent += "_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
-#if defined(_WIN32) && defined(_MANAGED)
+"
+
+if ($Mode -eq "public") {
+    $HContent += "#if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
+"
+}
 
+$HContent += "
 
 "
 foreach ($Namespace in $Namespaces) {
@@ -166,10 +172,16 @@ for ($i = $Namespaces.length - 1; $i -ge 0; $i--) {
 "
 }
 $HContent += "
-#if defined(_WIN32) && defined(_MANAGED)
+"
+
+if ($Mode -eq "public") {
+    $HContent += "#if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_" + $ClassName.ToUpper() + "_H_INCLUDED */
+"
+}
+
+$HContent += "#endif /* VISLIB_" + $ClassName.ToUpper() + "_H_INCLUDED */
 "
 
 #echo $HContent > $HFile

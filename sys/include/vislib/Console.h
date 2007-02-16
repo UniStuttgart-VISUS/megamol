@@ -9,6 +9,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include "vislib/String.h"
@@ -225,5 +228,7 @@ namespace sys {
 } /* end namespace sys */
 } /* end namespace vislib */
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_CONSOLE_H_INCLUDED */
-

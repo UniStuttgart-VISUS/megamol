@@ -36,6 +36,7 @@
 #include "vislib/SystemMessage.h"
 #include "vislib/Trace.h"
 #include "vislib/Console.h"
+#include "vislib/Path.h"
 
 
 #ifdef _WIN32
@@ -79,6 +80,13 @@ int main(int argc, char **argv) {
     //::TestNetworkInformation();
     //::TestTheLogWithPhun();
 	//::TestDirectoryIterator();
+
+    try {
+//        vislib::sys::Path::MakeDirectory(L"Horst\\Hugo\\Heinz\\Hans\\Hel?mut");
+        vislib::sys::Path::RemoveDirectory("Wurst", true);
+    } catch(vislib::sys::SystemException e) {
+        const char *msg = e.GetMsgA();
+    }
 
     //::printf("%s", W2A(L"Hugo"));
 

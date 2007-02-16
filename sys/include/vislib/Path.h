@@ -9,6 +9,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include "vislib/String.h"
@@ -181,6 +184,56 @@ namespace sys {
         static bool IsRelative(const StringW& path);
 
         /**
+         * Creates a directory and all intermediate directories on the path 
+         * which currently do not exist. If the creating of on directory fails
+         * all intermediate directories created by this methode call will be 
+         * removed, if possible.
+         *
+         * @param path The path to the directory to be created. 
+         *
+         * @throws SystemException if an error occured.
+         */
+        static void MakeDirectory(const StringA& path);
+
+        /**
+         * Creates a directory and all intermediate directories on the path 
+         * which currently do not exist. If the creating of on directory fails
+         * all intermediate directories created by this methode call will be 
+         * removed, if possible.
+         *
+         * @param path The path to the directory to be created. 
+         *
+         * @throws SystemException if an error occured.
+         */
+        static void MakeDirectory(const StringW& path);
+
+        /**
+         * Removes a directory and optional all files and subdirectories.
+         *
+         * @param path      The path to the directory to be removed.
+         * @param recursive Flag wether or not to remove items recursively. If
+         *                  true, all files and subdirectories will be also
+         *                  removed. If false and the directory is not empty
+         *                  the function will fail.
+         *
+         * @throws SystemException if an error occured.
+         */
+        static void RemoveDirectory(const StringA& path, bool recursive);
+
+        /**
+         * Removes a directory and optional all files and subdirectories.
+         *
+         * @param path      The path to the directory to be removed.
+         * @param recursive Flag wether or not to remove items recursively. If
+         *                  true, all files and subdirectories will be also
+         *                  removed. If false and the directory is not empty
+         *                  the function will fail.
+         *
+         * @throws SystemException if an error occured.
+         */
+        static void RemoveDirectory(const StringW& path, bool recursive);
+
+        /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
          * will not be altered in this case.
          *
@@ -221,6 +274,7 @@ namespace sys {
          * @return The absolute path.
          */
         static StringW Resolve(StringW path);
+
         /**
          * Changes the current directory to be 'path'.
          *
@@ -265,5 +319,7 @@ namespace sys {
 } /* end namespace sys */
 } /* end namespace vislib */
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_PATH_H_INCLUDED */
-
