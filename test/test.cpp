@@ -81,12 +81,12 @@ int main(int argc, char **argv) {
     //::TestTheLogWithPhun();
 	//::TestDirectoryIterator();
 
-    try {
-//        vislib::sys::Path::MakeDirectory(L"Horst\\Hugo\\Heinz\\Hans\\Hel?mut");
-        vislib::sys::Path::RemoveDirectory("Wurst", true);
-    } catch(vislib::sys::SystemException e) {
-        const char *msg = e.GetMsgA();
-    }
+//    try {
+////        vislib::sys::Path::MakeDirectory(L"Horst\\Hugo\\Heinz\\Hans\\Hel?mut");
+//        vislib::sys::Path::RemoveDirectory("Wurst", true);
+//    } catch(vislib::sys::SystemException e) {
+//        const char *msg = e.GetMsgA();
+//    }
 
     //::printf("%s", W2A(L"Hugo"));
 
