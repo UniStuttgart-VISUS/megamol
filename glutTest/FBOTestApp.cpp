@@ -48,7 +48,7 @@ int FBOTestApp::GLInit(void) {
         cap[0].internalFormat = cap[1].internalFormat = GL_RGBA8;
         cap[0].format = cap[1].format = GL_RGBA;
         cap[0].type = cap[1].type = GL_UNSIGNED_BYTE;
-        //cap[1].type = GL_FLOAT;
+        //cap[0].type = GL_FLOAT;
 
         FramebufferObject::DepthAttachParams dap;
         dap.format = GL_DEPTH_COMPONENT32;
@@ -83,7 +83,7 @@ void FBOTestApp::Render(void) {
 	unsigned int vIdx;
    
     try {
-        GL_VERIFY_EXPR(this->fbo.Enable(1));
+        GL_VERIFY_EXPR(this->fbo.Enable(0));
         
         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -131,8 +131,8 @@ void FBOTestApp::Render(void) {
 
      //   //::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        GL_VERIFY_EXPR(this->fbo.BindColorTexture(1));
-        //GL_VERIFY_EXPR(this->fbo.BindDepthTexture());
+        GL_VERIFY_EXPR(this->fbo.BindColorTexture(0));
+        GL_VERIFY_EXPR(this->fbo.BindDepthTexture());
         ::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

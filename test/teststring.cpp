@@ -221,6 +221,11 @@ void TestStringA(void) {
     s1.Clear();
     AssertTrue("Cleared string is emtpy", s1.IsEmpty());
 
+#ifdef _WIN32
+    AssertTrue("Resource found.", s1.Load(101));
+    AssertTrue("Load string from resource", !::strcmp(s1.PeekBuffer(), "Das ist ein Test."));
+#endif /* _WIN32 */
+
 }
 
 void TestStringW(void) {

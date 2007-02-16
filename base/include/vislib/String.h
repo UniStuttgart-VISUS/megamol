@@ -10,6 +10,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include "vislib/CharTraits.h"
@@ -300,6 +303,32 @@ namespace vislib {
         inline bool IsEmpty(void) const {
             return (this->Length() < 1);
         }
+
+#ifdef _WIN32
+        /**
+         * Load a string resource from the string table of the module designated
+         * by the instance handle hInst.
+         *
+         * @param id The ID of the resource to retrieve.
+         *
+         * @return true in case of success, false, if the resource could not be
+         *         found.
+         */
+        bool Load(const HINSTANCE hInst, const UINT id);
+
+        /**
+         * Load a string resource using the instance handle of the current
+         * executable.
+         *
+         * @param id The ID of the resource to retrieve.
+         *
+         * @return true in case of success, false, if the resource could not be
+         *         found.
+         */
+        inline bool Load(const UINT id) {
+            return this->Load(::GetModuleHandle(NULL), id);
+        }
+#endif /* _WIN32 */
 
         /**
          * Answer the length of the string.
@@ -1095,6 +1124,36 @@ namespace vislib {
     }
 
 
+#ifdef _WIN32
+    /*
+     * String<T>::Load
+     */
+    template<class T>
+    bool String<T>::Load(const HINSTANCE hInst, const UINT id) {
+        INT bufLen = 128;
+        INT charsRead = 0;
+        Char *buffer = new Char[bufLen];
+        ASSERT(buffer != NULL);
+
+        while ((charsRead = T::StringFromResource(hInst, id, buffer, bufLen)) 
+                == bufLen - 1) {
+            delete[] buffer;
+            bufLen *= 2;
+            buffer = new Char[bufLen];
+            ASSERT(buffer != NULL);
+        }
+
+        if (charsRead > 0) {
+            *this = buffer;
+        }
+
+        ARY_SAFE_DELETE(buffer);
+        return (charsRead > 0);
+
+    }
+#endif /* _WIN32 */
+
+
     /*
      * String<T>::Prepend
      */
@@ -1635,4 +1694,7 @@ namespace vislib {
 
 } /* end namespace vislib */
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_STRING_H_INCLUDED */

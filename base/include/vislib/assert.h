@@ -10,6 +10,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include <cassert>
@@ -24,6 +27,9 @@
 #endif /* ASSERT */
 
 
+#define BECAUSE_I_KNOW(exp) ASSERT(exp)
+
+
 #ifndef VERIFY
 #if (defined(DEBUG) || defined(_DEBUG))
 #define VERIFY(exp) ASSERT(exp)
@@ -33,4 +39,7 @@
 #endif /* VERIFY */
 
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ASSERT_H_INCLUDED */

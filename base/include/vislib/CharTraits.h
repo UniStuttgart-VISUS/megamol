@@ -10,6 +10,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include <cctype>
@@ -128,6 +131,40 @@ namespace vislib {
 
             return (*lhs == *rhs);
         }
+
+#ifdef _WIN32
+        /** 
+         * Load an ANSI string from the embedded resources.
+         *
+         * @param hInst  The instance handle to use the string table of.
+         * @param id     The resource ID.
+         * @param outStr Receives the string.
+         * @param cntStr The size of the 'outStr' buffer in characters.
+         *
+         * @return The number of characters, not including the terminating zero,
+         *         in case of success, 0 otherwise.
+         */
+        inline static INT StringFromResource(HINSTANCE hInst, const UINT id, 
+                char *outStr, const INT cntStr) {
+            return ::LoadStringA(hInst, id, outStr, cntStr);
+        }
+
+        /** 
+         * Load an Unicode string from the embedded resources.
+         *
+         * @param hInst  The instance handle to use the string table of.
+         * @param id     The resource ID.
+         * @param outStr Receives the string.
+         * @param cntStr The size of the 'outStr' buffer in characters.
+         *
+         * @return The number of characters, not including the terminating zero,
+         *         in case of success, 0 otherwise.
+         */
+        inline static INT StringFromResource(HINSTANCE hInst, const UINT id, 
+                wchar_t *outStr, const INT cntStr) {
+            return ::LoadStringW(hInst, id, outStr, cntStr);
+        }
+#endif /* _WIN32 */
 
         /**
          * Answer the string length. 'str' must not be NULL.
@@ -923,5 +960,8 @@ namespace vislib {
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 }
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_CHARTRAITS_H_INCLUDED */
 

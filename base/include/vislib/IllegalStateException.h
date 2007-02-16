@@ -9,6 +9,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include "Exception.h"
@@ -68,4 +71,7 @@ namespace vislib {
     };
 }
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ILLEGALSTATEEXCEPTION_H_INCLUDED */

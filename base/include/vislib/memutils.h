@@ -10,6 +10,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include <memory.h>
@@ -56,4 +59,7 @@
 #define ZeroMemory(ptr, size) memset((ptr), 0, (size))
 #endif /* !_WIN32 */
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_MEMUTILS_H_INCLUDED */

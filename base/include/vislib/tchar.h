@@ -9,6 +9,9 @@
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #ifdef _WIN32
 #include <tchar.h>
@@ -48,4 +51,7 @@ typedef char TCHAR;
 
 #endif /* _WIN32 */
 
+#if defined(_WIN32) && defined(_MANAGED)
+#pragma managed(pop)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_TCHAR_H_INCLUDED */
