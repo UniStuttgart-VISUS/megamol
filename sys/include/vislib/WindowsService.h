@@ -16,6 +16,8 @@
 
 #ifdef _WIN32
 
+#define TEMPLATE_CROWBAR_ENABLED 1
+
 #include <windows.h>
 
 #include "vislib/assert.h"
@@ -605,6 +607,7 @@ namespace sys {
 
     };
 
+#if !defined(TEMPLATE_CROWBAR_ENABLED) || (TEMPLATE_CROWBAR_ENABLED == 0)
 
     /*
      * vislib::sys::WindowsService<CharTraitsA>::Install
@@ -802,6 +805,8 @@ namespace sys {
 
         return *this;
     }
+
+#endif /* !defined(TEMPLATE_CROWBAR_ENABLED) || ... */
     
     // END OF PARTIAL TEMPLATE SPECIALISATION FOR CharTraitsA
     ////////////////////////////////////////////////////////////////////////////
@@ -815,8 +820,15 @@ namespace sys {
      * Partial template specialisation of WindowsService for wide characters.
      */
     template<> class WindowsService<CharTraitsW> {
+
+    public: 
+
+        /** Characters to use in this class. */
         typedef CharTraitsW::Char Char;
+
+        /** String to use in this class. */
         typedef String<CharTraitsW> String;
+
         /**
          * Install 'binaryPath' as Windows service using 'svcName' as 
          * identifying name.
@@ -1154,6 +1166,8 @@ namespace sys {
     };
 
 
+#if !defined(TEMPLATE_CROWBAR_ENABLED) || (TEMPLATE_CROWBAR_ENABLED == 0)
+
     /*
      * vislib::sys::WindowsService<CharTraitsW>::Install
      */
@@ -1351,20 +1365,28 @@ namespace sys {
         return *this;
     }
 
+#endif /* !defined(TEMPLATE_CROWBAR_ENABLED) || ... */
+
     // END OF PARTIAL TEMPLATE SPECIALISATION FOR CharTraitsW
     ////////////////////////////////////////////////////////////////////////////
 
 
-    /** Instantiation of WindowsService for ANSI strings. */
-    typedef WindowsService<CharTraitsA> WindowsServiceA;
+    ///** Instantiation of WindowsService for ANSI strings. */
+    //typedef WindowsService<CharTraitsA> WindowsServiceA;
 
-    /** Instantiation of WindowsService for Unicode strings. */
-    typedef WindowsService<CharTraitsW> WindowsServiceW;
+    ///** Instantiation of WindowsService for Unicode strings. */
+    //typedef WindowsService<CharTraitsW> WindowsServiceW;
 
 } /* end namespace sys */
 } /* end namespace vislib */
 
 
+//#undef IMPLEMENT_WINDOWS_SERVICE_INSTALL1
+//#undef IMPLEMENT_WINDOWS_SERVICE_INSTALL2
+//#undef IMPLEMENT_WINDOWS_SERVICE_UNINSTALL
+//#undef IMPLEMENT_WINDOWS_SERVICE_RUN
+//#undef IMPLEMENT_WINDOWS_SERVICE_HANDLER_EX
+//#undef IMPLEMENT_WINDOWS_SERVICE_SERVICE_MAIN
 
 #endif /* _WIN32 */
 
