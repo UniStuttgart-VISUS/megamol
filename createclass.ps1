@@ -85,7 +85,6 @@ $CPPContent = "/*
  * Alle Rechte vorbehalten.
  */
 
-
 #include `""
 
 if ($Mode -eq "public") {

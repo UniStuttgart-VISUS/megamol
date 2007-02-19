@@ -28,15 +28,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcproj", 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A9B41824-1F1C-42BC-AC16-CCCA32859BA5}"
-	ProjectSection(SolutionItems) = preProject
-		checkdumpbin.ps1 = checkdumpbin.ps1
-		common.mk = common.mk
-		createclass.ps1 = createclass.ps1
-		librules.mk = librules.mk
-		Makefile = Makefile
-		TODO.txt = TODO.txt
-		WISHLIST.txt = WISHLIST.txt
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graphics", "graphics\graphics.vcproj", "{8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1}"
 	ProjectSection(ProjectDependencies) = postProject

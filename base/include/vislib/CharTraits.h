@@ -43,6 +43,16 @@ namespace vislib {
     }
 
     /**
+     * This is an identifier for the currently supported char traits. It is used
+     * to identify the char traits at runtime.
+     */
+    enum CharType {
+        UNDEFINED_CHAR = 0,
+        ANSI_CHAR,
+        UNICODE_CHAR
+    };
+
+    /**
      * This class is the basis class for character trait descriptor classes. The
      * character trait classes are used to instantiate the string template.
      *    
@@ -56,7 +66,7 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    template<class T> class CharTraits {
+    template<class T, CharType U> class CharTraits {
     
     public:
 
@@ -73,6 +83,15 @@ namespace vislib {
          */
         inline static Size CharSize(void) {
             return sizeof(T);
+        }
+
+        /**
+         * Answer the type identifier of the characters.
+         *
+         * @return The type identifier.
+         */
+        inline static CharType CharType(void) {
+            return U;
         }
 
         /**
@@ -227,33 +246,33 @@ namespace vislib {
 
 
     /*
-     * vislib::CharTraits<T>::EMPTY_STRING
+     * vislib::CharTraits<T, U>::EMPTY_STRING
      */
-    template<class T> 
-    const typename CharTraits<T>::Char CharTraits<T>::EMPTY_STRING[]
+    template<class T, CharType U> 
+    const typename CharTraits<T, U>::Char CharTraits<T, U>::EMPTY_STRING[]
         = { static_cast<Char>(0) };
 
 
 #ifndef _WIN32
 	/*
-	 * vislib::CharTraits<T>::ICONV_CODE_CHAR
+	 * vislib::CharTraits<T, U>::ICONV_CODE_CHAR
 	 */
-	template<class T>
-	const char *CharTraits<T>::ICONV_CODE_CHAR = "MS-ANSI";
+	template<class T, CharType U>
+	const char *CharTraits<T, U>::ICONV_CODE_CHAR = "MS-ANSI";
 
 	
 	/*
-	 * vislib::CharTraits<T>::ICONV_CODE_WCHAR
+	 * vislib::CharTraits<T, U>::ICONV_CODE_WCHAR
 	 */
-	template<class T>
-	const char *CharTraits<T>::ICONV_CODE_WCHAR = "WCHAR_T";
+	template<class T, CharType U>
+	const char *CharTraits<T, U>::ICONV_CODE_WCHAR = "WCHAR_T";
 
 
 	/*
-	 * vislib::CharTraits<T>::INVALID_ICONV_T
+	 * vislib::CharTraits<T, U>::INVALID_ICONV_T
 	 */
-	template<class T> 
-	const iconv_t CharTraits<T>::INVALID_ICONV_T 
+	template<class T, CharType U> 
+	const iconv_t CharTraits<T, U>::INVALID_ICONV_T 
 		= reinterpret_cast<iconv_t>(-1);
 #endif /* !_WIN32 */
 
@@ -263,7 +282,7 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    class CharTraitsA : public CharTraits<char> {
+    class CharTraitsA : public CharTraits<char, ANSI_CHAR> {
 
     public:
 
@@ -597,7 +616,7 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    class CharTraitsW : public CharTraits<WCHAR> {
+    class CharTraitsW : public CharTraits<WCHAR, UNICODE_CHAR> {
 
     public:
 
