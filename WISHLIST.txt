@@ -1,12 +1,14 @@
-Guido: Möglichkeit, plattformunabhängig Fensterbotschaften zu versenden.
-//Christoph: Thread-Abstraktion
+Guido: Möglichkeit, plattformunabhängig (Fenster-)Botschaften zu versenden.
 Christoph: Thread-Pool
-//Thomas: Float16
-Christoph: Format-Methode für String
 Guido: Öffnen von Remote-Dateien in File-Wrappern vorsehen.
-Christoph: Arithmetik für Float16
-Sebastian: UserData Resources for Linux (and Windows) including AccessClasses (and Generator for Linux)
+Christoph: Compare für Float16; Arithmetik für Float16
+Sebastian: UserData Resources für Linux (und Windows) inclusive Zugriffsklasse (und Generator/Compiler/WhatSoEver für Linux)
 Sebastian: Trigonometrische Funktionen die in Tabellen nachschlagen (mit linearer Interpolation)
-Sebastian: FPS-Counter mit "BeginFrame" und "EndFrame"; FPS (Theoretisch/Real) in (Last/Mid/Min/Max)
-Christoph: History für FPS-Counter (ähnlich unserem Robo-Trail bei BS)
-Christoph: SmartArrayPtr, evtl. dabei doch über ein (De)Allocator-Konzept mit alloc, realloc und dealloc nachdenken, um duplizierten Code zu vermeiden.
+Christoph/Sebastian: FPS-Counter mit "BeginFrame" und "EndFrame"; FPS (Theoretisch/Real) in (Last/Mid/Min/Max); History für FPS-Counter (ähnlich unserem Robo-Trail bei BS)
+Sebastian: Hash-Map
+Sebastian: Regular-Expression
+Christoph: "Man sollte sich mal im allgemeinen Gedanken über die Collections machen"
+Sebastian: Screensaver/Powermanagement verhindern
+Sebastian: OmniString-Fassaden-Klasse die jeden Stringtyp enthalten kann. (Darüber nachdenken!)
+Sebastian: Ein besseres Framework für die Tests (Z.B.: Auswählen der Tests über die Kommandozeile)
+Sebastian: glh/extgen.cpp (und Co.) so aufbohren, dass noch ein C++-Kompatibler Header erzeugt wird. (z.B. .hpp)
