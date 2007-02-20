@@ -49,6 +49,17 @@ namespace sys {
 		String<T> Path;
 		EntryType Type;
 	};
+ 
+
+    /** Template instantiation for ANSI char DirectoryEntry. */
+    typedef DirectoryEntry<CharTraitsA> DirectoryEntryA;
+
+    /** Template instantiation for wide char DirectoryEntry. */
+    typedef DirectoryEntry<CharTraitsW> DirectoryEntryW;
+
+    /** Template instantiation for TCHAR DirectoryEntrys. */
+    typedef DirectoryEntry<TCharTraits> TDirectoryEntry;
+
 
     /**
      * Instances of this class let the user enumerate all files/subdirectories in
@@ -233,6 +244,17 @@ namespace sys {
 #endif /* _WIN32 */
 
 	}; /* end class DirectoryIterator<CharTraitsA> */
+ 
+
+    /** Template instantiation for ANSI char DirectoryIterator. */
+    typedef DirectoryIterator<CharTraitsA> DirectoryIteratorA;
+
+    /** Template instantiation for wide char DirectoryIterator. */
+    typedef DirectoryIterator<CharTraitsW> DirectoryIteratorW;
+
+    /** Template instantiation for TCHAR DirectoryIterator. */
+    typedef DirectoryIterator<TCharTraits> TDirectoryIterator;
+
 
 } /* end namespace sys */
 } /* end namespace vislib */

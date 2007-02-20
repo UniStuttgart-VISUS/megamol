@@ -24,6 +24,9 @@
 #include "vislib/MissingImplementationException.h"
 #include "vislib/Stack.h"
 #include "vislib/File.h"
+#include "vislib/DirectoryIterator.h"
+#include "vislib/String.h"
+#include "vislib/StringConverter.h"
 
 
 /*
@@ -407,7 +410,7 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
 
             try {
                 // failure, so try to remove already created paths and throw exception.
-                RemoveDirectory(firstBuilt, true);
+                DeleteDirectory(firstBuilt, true);
             } catch(...) {
             }
 
@@ -460,7 +463,7 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
 
             try {
                 // failure, so try to remove already created paths and throw exception.
-                RemoveDirectory(firstBuilt, true);
+                DeleteDirectory(firstBuilt, true);
             } catch(...) {
             }
 
@@ -478,27 +481,102 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
 
 
 /*
- * vislib::sys::Path::RemoveDirectory
+ * vislib::sys::Path::PurgeDirectory
  */
-void vislib::sys::Path::RemoveDirectory(const StringA& path, bool recursive) {
-    if (!File::Exists(path)) return; // we don't delete non-existing stuff
+void vislib::sys::Path::PurgeDirectory(const StringA& path, bool recursive) {
+    StringA fullpath = Resolve(path);
+    if (!fullpath.EndsWith(SEPARATOR_A)) fullpath += SEPARATOR_A;
+    DirectoryIteratorA iter(fullpath);
 
-#ifdef _WIN32
-    throw vislib::MissingImplementationException("RemoveDirectory", __FILE__, __LINE__);
+    while (iter.HasNext()) {
+        DirectoryEntryA entry = iter.Next();
+        if (entry.Type == DirectoryEntryA::FILE) {
+            vislib::sys::File::Delete(fullpath + entry.Path);
 
-#else /* _WIN32 */
-    throw vislib::MissingImplementationException("RemoveDirectory", __FILE__, __LINE__);
+        } else
+        if (entry.Type == DirectoryEntryA::DIRECTORY) {
+            if (recursive) {
+                DeleteDirectory(fullpath + entry.Path, true);
+            }
 
-#endif /* _WIN32 */
+        } else {
+            ASSERT(FALSE); // DirectoryEntry is something unknown to this 
+                           // implementation. Check DirectoryIterator for 
+                           // changes.
+        }
+    }
 }
 
 
 /*
- * vislib::sys::Path::RemoveDirectory
+ * vislib::sys::Path::PurgeDirectory
  */
-void vislib::sys::Path::RemoveDirectory(const StringW& path, bool recursive) {
+void vislib::sys::Path::PurgeDirectory(const StringW& path, bool recursive) {
+    StringW fullpath = Resolve(path);
+    if (!fullpath.EndsWith(SEPARATOR_W)) fullpath += SEPARATOR_W;
+    DirectoryIteratorW iter(fullpath);
+
+    while (iter.HasNext()) {
+        DirectoryEntryW entry = iter.Next();
+        if (entry.Type == DirectoryEntryW::FILE) {
+            vislib::sys::File::Delete(fullpath + entry.Path);
+
+        } else
+        if (entry.Type == DirectoryEntryW::DIRECTORY) {
+            if (recursive) {
+                DeleteDirectory(fullpath + entry.Path, true);
+            }
+
+        } else {
+            ASSERT(FALSE); // DirectoryEntry is something unknown to this 
+                           // implementation. Check DirectoryIterator for 
+                           // changes.
+        }
+    }
+}
+
+
+/*
+ * vislib::sys::Path::DeleteDirectory
+ */
+void vislib::sys::Path::DeleteDirectory(const StringA& path, bool recursive) {
+    if (!File::Exists(path)) return; // we don't delete non-existing stuff
+    StringA fullPath = Resolve(path);
+    if (!fullPath.EndsWith(SEPARATOR_A)) fullPath += SEPARATOR_A;
+
+    if (recursive) {
+        // remove files and directory
+        PurgeDirectory(fullPath, true);
+    }
+
 #ifdef _WIN32
-    throw vislib::MissingImplementationException("RemoveDirectory", __FILE__, __LINE__);
+    if (RemoveDirectoryA(fullPath) == 0) {
+#else /* _WIN32 */
+    if (rmdir(fullPath) != 0) {
+#endif /* _WIN32 */
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
+
+}
+
+
+/*
+ * vislib::sys::Path::DeleteDirectory
+ */
+void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
+#ifdef _WIN32
+    if (!File::Exists(path)) return; // we don't delete non-existing stuff
+    StringW fullPath = Resolve(path);
+    if (!fullPath.EndsWith(SEPARATOR_W)) fullPath += SEPARATOR_W;
+
+    if (recursive) {
+        // remove files and directory
+        PurgeDirectory(fullPath, true);
+    }
+
+    if (RemoveDirectoryW(fullPath) == 0) {
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
 
 #else /* _WIN32 */
     // linux is stupid

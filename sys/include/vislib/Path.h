@@ -208,22 +208,27 @@ namespace sys {
         static void MakeDirectory(const StringW& path);
 
         /**
-         * Removes a directory and optional all files and subdirectories.
+         * Clears a directory by removing all files and optionally all 
+         * subdirectories.
          *
-         * @param path      The path to the directory to be removed.
-         * @param recursive Flag wether or not to remove items recursively. If
-         *                  true, all files and subdirectories will be also
-         *                  removed. If false and the directory is not empty
-         *                  the function will fail.
-         *
-         * @throws SystemException if an error occured.
+         * @param path The director to purge.
+         * @param recursive If true all subdirectories will be also removed.
          */
-        static void RemoveDirectory(const StringA& path, bool recursive);
+        static void PurgeDirectory(const StringA& path, bool recursive);
 
         /**
-         * Removes a directory and optional all files and subdirectories.
+         * Clears a directory by removing all files and optionally all 
+         * subdirectories.
          *
-         * @param path      The path to the directory to be removed.
+         * @param path The director to purge.
+         * @param recursive If true all subdirectories will be also removed.
+         */
+        static void PurgeDirectory(const StringW& path, bool recursive);
+
+        /**
+         * Deletes a directory and optional all files and subdirectories.
+         *
+         * @param path      The path to the directory to be deleted.
          * @param recursive Flag wether or not to remove items recursively. If
          *                  true, all files and subdirectories will be also
          *                  removed. If false and the directory is not empty
@@ -231,7 +236,20 @@ namespace sys {
          *
          * @throws SystemException if an error occured.
          */
-        static void RemoveDirectory(const StringW& path, bool recursive);
+        static void DeleteDirectory(const StringA& path, bool recursive);
+
+        /**
+         * Deletes a directory and optional all files and subdirectories.
+         *
+         * @param path      The path to the directory to be deleted.
+         * @param recursive Flag wether or not to remove items recursively. If
+         *                  true, all files and subdirectories will be also
+         *                  removed. If false and the directory is not empty
+         *                  the function will fail.
+         *
+         * @throws SystemException if an error occured.
+         */
+        static void DeleteDirectory(const StringW& path, bool recursive);
 
         /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
