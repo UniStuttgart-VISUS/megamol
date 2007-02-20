@@ -14,11 +14,14 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#define TEMPLATE_CROWBAR_ENABLED 1
+
+
 #include "vislib/CharTraits.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
 #include "vislib/IOException.h"
-#include "vislib/IllegalStateException.h"
+#include "vislib/NoSuchElementException.h"
 #include "vislib/SystemException.h"
 #include "vislib/Path.h"
 
@@ -52,7 +55,8 @@ namespace sys {
 	 * a certain path. In contrast to the OS-dependent implementations, "." and ".."
 	 * are omitted.
      */
-	template<class T> class DirectoryIterator: public vislib::Iterator<DirectoryEntry<T> > {
+	template<class T> class DirectoryIterator
+            : public vislib::Iterator<DirectoryEntry<T> > {
 	};/* end class Iterator */
 
 
@@ -61,7 +65,9 @@ namespace sys {
 	 * a certain path. In contrast to the OS-dependent implementations, "." and ".."
 	 * are omitted. For Unicode support, use DirectoryIterator<CharTraitsW>.
      */
-	template<> class DirectoryIterator<CharTraitsA>: public vislib::Iterator<DirectoryEntry<CharTraitsA> > {
+	template<> class DirectoryIterator<CharTraitsA>
+            : public vislib::Iterator<DirectoryEntry<CharTraitsA> > {
+        typedef CharTraitsA::Char Char;
 		typedef DirectoryEntry<CharTraitsA> Item;
 	public:
 
@@ -82,7 +88,7 @@ namespace sys {
 		/** 
 		 * Behaves like Iterator<T>::Next 
 		 *
-		 * @throws IllegalStateException if there is no next element
+		 * @throws NoSuchElementException if there is no next element
 		 */
 		virtual Item& Next();
 
@@ -139,168 +145,14 @@ namespace sys {
 	}; /* end class DirectoryIterator<CharTraitsA> */
 
 
-	/*
-	 * DirectoryIterator<CharTraitsA>::DirectoryIterator
-	 */
-	DirectoryIterator<CharTraitsA>::DirectoryIterator(const CharTraitsA::Char *path) {
-#ifdef _WIN32
-		WIN32_FIND_DATAA fd;
-
-		StringA p = path;
-		if (!p.EndsWith(vislib::sys::Path::SEPARATOR_A)) {
-			if (!p.EndsWith(":")) {
-				p += vislib::sys::Path::SEPARATOR_A;
-			}
-		}
-
-		this->findHandle = FindFirstFileA(p + "*.*", &fd);
-		if (this->findHandle == INVALID_HANDLE_VALUE) {
-			throw SystemException(__FILE__, __LINE__);
-		}
-
-		while ((strcmp(fd.cFileName, ".") == 0) || (strcmp(fd.cFileName, "..") == 0)) {
-			if (FindNextFileA(this->findHandle, &fd) == 0) {
-				DWORD le;
-				if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
-					this->nextItem.Path.Clear();
-				} else {
-					throw SystemException(le, __FILE__, __LINE__);
-				}
-			}
-		}
-
-		if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			this->nextItem.Type = Item::DIRECTORY;
-		} else {
-			this->nextItem.Type = Item::FILE;
-		}
-		this->nextItem.Path = fd.cFileName;
-#else /* _WIN32 */
-		struct dirent *de;
-
-		if ((this->dirStream = opendir(path)) == NULL) {
-			throw SystemException(__FILE__, __LINE__);
-		}
-		this->basePath = path;
-		// BUG: Linux documentation is all lies. the errno stunt does not work at all.
-		//errno = 0;
-		do {
-			if ((de = readdir(this->dirStream)) == NULL) {
-				//if (errno == 0) {
-				//	this->nextItem.Path.Clear();
-				//} else {
-				//	throw SystemException(errno, __FILE__, __LINE__);
-				//}
-			}
-		} while (de != NULL && ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0)));
-		if (de == NULL) {
-			this->nextItem.Path.Clear();
-		}	else {
-			if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
-				this->nextItem.Type = Item::DIRECTORY;
-			} else {
-				this->nextItem.Type = Item::FILE;
-			}
-			this->nextItem.Path = de->d_name;
-		}
-#endif /* _WIN32 */
-	}
-
-
-	/*
-	 * DirectoryIterator<CharTraitsA>::~DirectoryIterator
-	 */
-	DirectoryIterator<CharTraitsA>::~DirectoryIterator() {
-#ifdef _WIN32
-		if (this->findHandle != INVALID_HANDLE_VALUE) {
-			FindClose(this->findHandle);
-		}
-#else /* _WIN32 */
-		if (this->dirStream != NULL) {
-			closedir(dirStream);
-		}
-#endif /* WIN32 */
-	}
-
-
-	/*
-	 * DirectoryIterator<CharTraitsA>::HasNext
-	 */
-	bool DirectoryIterator<CharTraitsA>::HasNext() const {
-		return !this->nextItem.Path.IsEmpty();
-	}
-
-
-	/*
-	 * DirectoryIterator<CharTraitsA>::Next
-	 */
-	DirectoryEntry<CharTraitsA>& DirectoryIterator<CharTraitsA>::Next() {
-		this->currentItem = this->nextItem;
-#ifdef _WIN32
-		if (this->currentItem.Path.IsEmpty()) {
-			throw IllegalStateException("No next element.", __FILE__, __LINE__);
-		} else {
-			WIN32_FIND_DATAA fd;
-			DWORD le;
-
-			do {
-				if (FindNextFileA(this->findHandle, &fd) == 0) {
-					if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
-						this->nextItem.Path.Clear();
-					} else {
-						throw IOException(le, __FILE__, __LINE__);
-					}
-				} else {
-					if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-						this->nextItem.Type = Item::DIRECTORY;
-					} else {
-						this->nextItem.Type = Item::FILE;
-					}
-					this->nextItem.Path = fd.cFileName;
-				}
-			} while ((strcmp(fd.cFileName, ".") == 0) || (strcmp(fd.cFileName, "..") == 0));
-			return this->currentItem;
-		}
-#else /* _WIN32 */
-		if (this->currentItem.Path.IsEmpty()) {
-			throw IllegalStateException("No next element.", __FILE__, __LINE__);
-		} else {
-			struct dirent *de;
-			do {
-				// BUG: Linux documentation is all lies. the errno stunt does not work at all.
-				//errno = 0;
-				if ((de = readdir(this->dirStream)) == NULL) {
-					//if (errno == 0) {
-					//	this->nextItem.Path.Clear();
-					//} else {
-					//	throw SystemException(errno, __FILE__, __LINE__);
-					//}
-				} else {
-					if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
-						this->nextItem.Type = Item::DIRECTORY;
-					} else {
-						this->nextItem.Type = Item::FILE;
-					}
-				}
-			} while (de != NULL && ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0)));
-			if (de == NULL) {
-				this->nextItem.Path.Clear();
-			}
-			else {
-				this->nextItem.Path = de->d_name;
-			}
-			return this->currentItem;
-		}
-#endif /* _WIN32 */
-	}
-
-
     /**
      * Instances of this class let the user enumerate all files/subdirectories in
 	 * a certain path. In contrast to the OS-dependent implementations, "." and ".."
 	 * are omitted.
      */
-	template<> class DirectoryIterator<CharTraitsW>: public vislib::Iterator<DirectoryEntry<CharTraitsW> > {
+	template<> class DirectoryIterator<CharTraitsW> 
+            : public vislib::Iterator<DirectoryEntry<CharTraitsW> > {
+        typedef CharTraitsW::Char Char;
 		typedef DirectoryEntry<CharTraitsW> Item;
 	public:
 
@@ -321,7 +173,7 @@ namespace sys {
 		/** 
 		 * Behaves like Iterator<T>::Next 
 		 *
-		 * @throws IllegalStateException if there is no next element
+		 * @throws NoSuchElementException if there is no next element
 		 */
 		virtual Item& Next();
 
@@ -382,115 +234,13 @@ namespace sys {
 
 	}; /* end class DirectoryIterator<CharTraitsA> */
 
-
-	/*
-	 * DirectoryIterator<CharTraitsW>::DirectoryIterator
-	 */
-	DirectoryIterator<CharTraitsW>::DirectoryIterator(const CharTraitsW::Char *path) {
-#ifdef _WIN32
-		WIN32_FIND_DATAW fd;
-
-		StringW p = path;
-		if (!p.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
-			if (!p.EndsWith(L":")) {
-				p += vislib::sys::Path::SEPARATOR_W;
-			}
-		}
-
-		this->findHandle = FindFirstFileW(p + L"*.*", &fd);
-		if (this->findHandle == INVALID_HANDLE_VALUE) {
-			throw SystemException(__FILE__, __LINE__);
-		}
-
-		while ((wcscmp(fd.cFileName, L".") == 0) || (wcscmp(fd.cFileName, L"..") == 0)) {
-			if (FindNextFileW(this->findHandle, &fd) == 0) {
-				DWORD le;
-				if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
-					this->nextItem.Path.Clear();
-				} else {
-					throw SystemException(le, __FILE__, __LINE__);
-				}
-			}
-		}
-
-		if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			this->nextItem.Type = Item::DIRECTORY;
-		} else {
-			this->nextItem.Type = Item::FILE;
-		}
-		this->nextItem.Path = fd.cFileName;
-#else /* _WIN32 */
-		this->DICA = new DirectoryIterator<CharTraitsA>(W2A(path));
-#endif /* _WIN32 */
-	}
-
-
-	/*
-	 * DirectoryIterator<CharTraitsW>::~DirectoryIterator
-	 */
-	DirectoryIterator<CharTraitsW>::~DirectoryIterator() {
-#ifdef _WIN32
-		if (this->findHandle != INVALID_HANDLE_VALUE) {
-			FindClose(this->findHandle);
-		}
-#else /* _WIN32 */
-		delete this->DICA;
-#endif /* WIN32 */
-	}
-
-
-	/*
-	 * DirectoryIterator<CharTraitsW>::HasNext
-	 */
-	bool DirectoryIterator<CharTraitsW>::HasNext() const {
-#ifdef _WIN32
-		return !this->nextItem.Path.IsEmpty();
-#else /* _WIN32 */
-		return this->DICA->HasNext();
-#endif /* _WIN32 */
-	}
-
-
-	/*
-	 * DirectoryIterator<CharTraitsW>::Next
-	 */
-	DirectoryEntry<CharTraitsW>& DirectoryIterator<CharTraitsW>::Next() {
-#ifdef _WIN32
-		this->currentItem = this->nextItem;
-		if (this->currentItem.Path.IsEmpty()) {
-			throw IllegalStateException("No next element.", __FILE__, __LINE__);
-		} else {
-			WIN32_FIND_DATAW fd;
-			DWORD le;
-
-			do {
-				if (FindNextFileW(this->findHandle, &fd) == 0) {
-					if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
-						this->nextItem.Path.Clear();
-					} else {
-						throw SystemException(le, __FILE__, __LINE__);
-					}
-				} else {
-					if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-						this->nextItem.Type = Item::DIRECTORY;
-					} else {
-						this->nextItem.Type = Item::FILE;
-					}
-					this->nextItem.Path = fd.cFileName;
-				}
-			} while ((wcscmp(fd.cFileName, L".") == 0) || (wcscmp(fd.cFileName, L"..") == 0));
-			return this->currentItem;
-		}
-#else /* _WIN32 */
-		DirectoryEntry<CharTraitsA> deTmp = this->DICA->Next();
-		this->currentItem.Path = StringW(deTmp.Path);
-		this->currentItem.Type = static_cast<DirectoryEntry<CharTraitsW>::EntryType>(deTmp.Type);
-		return this->currentItem;
-#endif /* _WIN32 */
-	} /* end class DirectoryIterator<CharTraitsW> */
-
 } /* end namespace sys */
 } /* end namespace vislib */
+
+
+#if !(defined(TEMPLATE_CROWBAR_ENABLED) && (TEMPLATE_CROWBAR_ENABLED != 0))
+#include "vislib/DirectoryIterator.inl"
+#endif /* !(defined(TEMPLATE_CROWBAR_ENABLED) ... */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

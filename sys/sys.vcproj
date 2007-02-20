@@ -432,6 +432,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\DirectoryIterator.inl"
+				>
+			</File>
+			<File
 				RelativePath=".\src\DynamicFunctionPointer.h"
 				>
 			</File>
@@ -517,6 +521,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\WindowsService.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\WindowsService.inl"
 				>
 			</File>
 		</Filter>
