@@ -138,7 +138,7 @@ namespace sys {
          *
          * @throws SystemException If the creation of the new thread failed.
          */
-		bool Start(const void *userData = NULL);
+		bool Start(void *userData = NULL);
 
         /**
          * Terminate the thread. 
@@ -212,7 +212,7 @@ namespace sys {
          */
         typedef struct ThreadFuncParam_t {
             Thread *thread;             // The thread to execute.
-            const void *userData;       // The user parameters.
+            void *userData;             // The user parameters.
         } ThreadFuncParam;
 
 

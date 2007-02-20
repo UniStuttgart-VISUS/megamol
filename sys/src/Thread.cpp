@@ -189,7 +189,7 @@ void vislib::sys::Thread::Join(void) {
 /*
  * vislib::sys::Thread::Start
  */
-bool vislib::sys::Thread::Start(const void *userData) {
+bool vislib::sys::Thread::Start(void *userData) {
     if (this->IsRunning()) {
         /*
          * The thread must not be started twice at the same time as this would

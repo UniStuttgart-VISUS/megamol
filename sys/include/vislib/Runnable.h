@@ -37,7 +37,7 @@ namespace sys {
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        typedef DWORD (* Function)(const void *userData); 
+        typedef DWORD (* Function)(void *userData); 
 
         /**
          * Perform the work of a thread.
@@ -48,7 +48,7 @@ namespace sys {
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        virtual DWORD Run(const void *userData) = 0;
+        virtual DWORD Run(void *userData) = 0;
 
         /**
          * The Runnable should abort its work as soon as possible. This method
