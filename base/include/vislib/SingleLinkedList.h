@@ -17,6 +17,7 @@
 #include "vislib/memutils.h"
 #include "vislib/Iterator.h"
 #include "vislib/IllegalStateException.h"
+#include "vislib/NoSuchElementException.h"
 #include "vislib/assert.h"
 
 
@@ -126,6 +127,16 @@ namespace vislib {
          * @param item The item to be removed.
          */
         void Remove(const T& item);
+
+        /**
+         * Returns the first element of the list and removes this element from 
+         * the list.
+         *
+         * @return The old first element of the list.
+         *
+         * @throw NoSuchElementException if the list is empty.
+         */
+        T Shift(void);
 
         /**
          * Answer the number of items in the list.
@@ -350,7 +361,33 @@ namespace vislib {
 
 
     /*
-     * 
+     * SingleLinkedList<T>::Shift
+     */
+    template<class T>
+    T SingleLinkedList<T>::Shift(void) {
+        T retval;
+        if (this->first != NULL) {
+            Item *i = this->first;
+
+            this->first = this->first->next;
+            if (this->first == NULL) {
+                this->last = NULL;
+            }
+
+            revtal = i->item;
+
+            delete i;
+
+        } else {
+            throw NoSuchElementException("Single linked list is empty", __FILE__, __LINE__);
+        }
+
+        return retval;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Count 
      */
     template<class T>
     unsigned int SingleLinkedList<T>::Count(void) {
