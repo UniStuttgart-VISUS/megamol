@@ -169,6 +169,10 @@ namespace vislib {
             return this->first->item;
         }
 
+		inline bool IsEmpty(void) const {
+			return this->first == NULL;
+		}
+
     private:
 
         /** anchor of the single linked list */
@@ -380,7 +384,7 @@ namespace vislib {
                 this->last = NULL;
             }
 
-            revtal = i->item;
+            retval = i->item;
 
             delete i;
 
@@ -405,6 +409,7 @@ namespace vislib {
         }
         return c;
     }
+
 
     /*
      * SingleLinkedList<T>::GetIterator
