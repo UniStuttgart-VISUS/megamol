@@ -90,7 +90,7 @@ namespace vislib {
          *
          * @return The type identifier.
          */
-        inline static CharType CharType(void) {
+        inline static vislib::CharType CharType(void) {
             return U;
         }
 
