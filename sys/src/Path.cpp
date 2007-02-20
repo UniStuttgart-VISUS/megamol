@@ -15,6 +15,8 @@
 #include <climits>
 #include <unistd.h>
 #include <cstdlib> // for getenv
+#include <sys/stat.h>
+#include <sys/types.h>
 #endif /* _WIN32 */
 
 #include "vislib/assert.h"
@@ -500,7 +502,7 @@ void vislib::sys::Path::PurgeDirectory(const StringA& path, bool recursive) {
             }
 
         } else {
-            ASSERT(FALSE); // DirectoryEntry is something unknown to this 
+            ASSERT(false); // DirectoryEntry is something unknown to this 
                            // implementation. Check DirectoryIterator for 
                            // changes.
         }
@@ -528,7 +530,7 @@ void vislib::sys::Path::PurgeDirectory(const StringW& path, bool recursive) {
             }
 
         } else {
-            ASSERT(FALSE); // DirectoryEntry is something unknown to this 
+            ASSERT(false); // DirectoryEntry is something unknown to this 
                            // implementation. Check DirectoryIterator for 
                            // changes.
         }
@@ -580,7 +582,7 @@ void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
 
 #else /* _WIN32 */
     // linux is stupid
-    RemoveDirectory(W2A(path), recursive);
+    DeleteDirectory(W2A(path), recursive);
 
 #endif /* _WIN32 */
 }
