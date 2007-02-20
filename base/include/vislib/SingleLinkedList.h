@@ -163,6 +163,12 @@ namespace vislib {
          */
         SingleLinkedList<T>& operator=(const SingleLinkedList<T>& rhs);
 
+        inline const T& GetHead(void) const {
+            if (this->first == NULL)
+                throw NoSuchElementException("*grrrr*", __FILE__, __LINE__);
+            return this->first->item;
+        }
+
     private:
 
         /** anchor of the single linked list */
