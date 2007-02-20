@@ -14,9 +14,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#define TEMPLATE_CROWBAR_ENABLED 1
-
-
 #include "vislib/CharTraits.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
@@ -260,9 +257,7 @@ namespace sys {
 } /* end namespace vislib */
 
 
-#if !(defined(TEMPLATE_CROWBAR_ENABLED) && (TEMPLATE_CROWBAR_ENABLED != 0))
-#include "vislib/DirectoryIterator.inl"
-#endif /* !(defined(TEMPLATE_CROWBAR_ENABLED) ... */
+//#include "vislib/DirectoryIterator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

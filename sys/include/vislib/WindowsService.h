@@ -16,8 +16,6 @@
 
 #ifdef _WIN32
 
-#define TEMPLATE_CROWBAR_ENABLED 1
-
 #include <windows.h>
 
 #include "vislib/assert.h"
@@ -754,19 +752,17 @@ namespace sys {
     ////////////////////////////////////////////////////////////////////////////
 
 
-    ///** Instantiation of WindowsService for ANSI strings. */
-    //typedef WindowsService<CharTraitsA> WindowsServiceA;
+    /** Instantiation of WindowsService for ANSI strings. */
+    typedef WindowsService<CharTraitsA> WindowsServiceA;
 
-    ///** Instantiation of WindowsService for Unicode strings. */
-    //typedef WindowsService<CharTraitsW> WindowsServiceW;
+    /** Instantiation of WindowsService for Unicode strings. */
+    typedef WindowsService<CharTraitsW> WindowsServiceW;
 
 } /* end namespace sys */
 } /* end namespace vislib */
 
 
-#if !(defined(TEMPLATE_CROWBAR_ENABLED) && (TEMPLATE_CROWBAR_ENABLED != 0))
-#include "vislib/WindowsService.inl"
-#endif /* !(defined(TEMPLATE_CROWBAR_ENABLED) ... */
+//#include "vislib/WindowsService.inl"
 
 #endif /* _WIN32 */
 

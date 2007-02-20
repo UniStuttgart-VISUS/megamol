@@ -9,8 +9,6 @@
 
 #ifdef _WIN32
 
-#if (defined(TEMPLATE_CROWBAR_ENABLED) && (TEMPLATE_CROWBAR_ENABLED != 0))
 #include "vislib/WindowsService.inl"
-#endif /* (defined(TEMPLATE_CROWBAR_ENABLED) ... */
 
 #endif /* _WIN32 */
