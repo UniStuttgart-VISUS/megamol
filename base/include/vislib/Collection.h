@@ -1,12 +1,12 @@
 /*
- * AbstractCollection.h
+ * Collection.h
  *
  * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTCOLLECTION_H_INCLUDED
-#define VISLIB_ABSTRACTCOLLECTION_H_INCLUDED
+#ifndef VISLIB_COLLECTION_H_INCLUDED
+#define VISLIB_COLLECTION_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -24,7 +24,7 @@ namespace vislib {
     /**
      * This is the abstract superclass of collections in the vislib.
      */
-    template<class T> class AbstractCollection {
+    template<class T> class Collection {
 
     public:
 
@@ -47,14 +47,18 @@ namespace vislib {
         // ToString
 
         // Synchronisation????
-        // Sort
 
-        // SortedCollection mit First/Last/Append/Prepend/...
-
-
+        // inline const_cast-crowbar for equal const/non-const accessors?
 
         /** Dtor. */
-        virtual ~AbstractCollection(void);
+        virtual ~Collection(void);
+
+        /**
+         * Add 'element' to the collection. 
+         *
+         * @param elemen The element to be added.
+         */
+        virtual void Add(const T& element) = 0;
 
         /** Remove all elements from the collection. */
         virtual void Clear(void) = 0;
@@ -103,47 +107,11 @@ namespace vislib {
         virtual T *Find(const T& element) = 0;
 
         /**
-         * Answer the first element in the collection.
-         *
-         * @return A reference to the first element.
-         *
-         * @throws OutOfRangeException, if the collection is empty.
-         */
-        //virtual const T& First(void) const = 0;
-
-        /**
-         * Answer the first element in the collection.
-         *
-         * @return A reference to the first element.
-         *
-         * @throws OutOfRangeException, if the collection is empty.
-         */
-        //virtual T& First(void) = 0;
-
-        /**
          * Answer whether there is no element in the collection.
          *
          * @return true, if the collection is empty, false otherwise.
          */
         virtual bool IsEmpty(void) const = 0;
-
-        /**
-         * Answer the last element in the collection.
-         *
-         * @return A reference to the last element.
-         *
-         * @throws OutOfRangeException, if the collection is empty.
-         */
-        //virtual const T& Last(void) const = 0;
-
-        /**
-         * Answer the last element in the collection.
-         *
-         * @return A reference to the last element.
-         *
-         * @throws OutOfRangeException, if the collection is empty.
-         */
-        //virtual T& Last(void) = 0;
 
         /**
          * Remove all elements that are equal to 'element' from the collection.
@@ -155,27 +123,20 @@ namespace vislib {
     protected:
 
         /** Ctor. */
-        AbstractCollection(void);
+        inline Collection(void) {}
 
     };
 
 
     /*
-     * vislib::AbstractCollection<T>::~AbstractCollection
+     * vislib::Collection<T>::~Collection
      */
-    template<class T>AbstractCollection<T>::~AbstractCollection(void) {
+    template<class T> Collection<T>::~Collection(void) {
     }
 
-
-    /*
-     * vislib::AbstractCollection<T>::AbstractCollection
-     */
-    template<class T> AbstractCollection<T>::AbstractCollection(void) {
-    }
-    
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTCOLLECTION_H_INCLUDED */
+#endif /* VISLIB_COLLECTION_H_INCLUDED */

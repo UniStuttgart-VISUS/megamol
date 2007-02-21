@@ -274,10 +274,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\AbstractCollection.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\Array.cpp"
 				>
 			</File>
@@ -287,6 +283,10 @@
 			</File>
 			<File
 				RelativePath=".\src\CharTraits.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Collection.cpp"
 				>
 			</File>
 			<File
@@ -319,6 +319,10 @@
 			</File>
 			<File
 				RelativePath=".\src\NoSuchElementException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\OrderedCollection.cpp"
 				>
 			</File>
 			<File
@@ -384,10 +388,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\include\vislib\AbstractCollection.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\vislib\Array.h"
 				>
 			</File>
@@ -401,6 +401,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\CharTraits.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Collection.h"
 				>
 			</File>
 			<File
@@ -437,6 +441,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\NoSuchElementException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\OrderedCollection.h"
 				>
 			</File>
 			<File
