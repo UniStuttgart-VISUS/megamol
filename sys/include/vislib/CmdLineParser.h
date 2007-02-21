@@ -198,6 +198,18 @@ namespace sys {
                 return this->description;
             }
 
+            /**
+             * Compare operator.
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return if the objects are equal
+             */
+            inline bool operator==(const Option& rhs) const {
+                return (this->shortName == rhs.shortName)
+                    && (this->longName == rhs.longName)
+                    && (this->valueType == rhs.valueType);
+            }
         private:
 
             /** forbidden copy ctor. */
@@ -456,6 +468,17 @@ namespace sys {
                 return this->argument;
             }
 
+            /**
+             * Compare operator.
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return if the objects are equal
+             */
+            inline bool operator==(const Error& rhs) const {
+                return (this->errorcode == rhs.errorcode) && (this->argument == rhs.argument);
+            }
+
         private:
             
             /** error code */
@@ -531,6 +554,17 @@ namespace sys {
              */
             inline unsigned int GetArgument(void) {
                 return this->argument;
+            }
+
+            /**
+             * Compare operator.
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return if the objects are equal
+             */
+            inline bool operator==(const Warning& rhs) const {
+                return (this->warncode == rhs.warncode) && (this->argument == rhs.argument);
             }
 
         private:

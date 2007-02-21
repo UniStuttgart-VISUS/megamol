@@ -19,6 +19,7 @@
 #include "vislib/IllegalStateException.h"
 #include "vislib/NoSuchElementException.h"
 #include "vislib/assert.h"
+#include "vislib/OrderedCollection.h"
 
 
 namespace vislib {
@@ -27,7 +28,7 @@ namespace vislib {
     /**
      * class of a single linked list of object from type T
      */
-    template <class T> class SingleLinkedList {
+    template <class T> class SingleLinkedList : public OrderedCollection<T> {
     private:
 
         /** Type for storing items */
@@ -89,26 +90,28 @@ namespace vislib {
         SingleLinkedList(const SingleLinkedList<T>& rhs);
 
         /** Dtor. */
-        ~SingleLinkedList(void);
+        virtual ~SingleLinkedList(void);
+
+        /** 
+         * Appends an item to the end of the list. Runtime complexity: O(1)
+         *
+         * @param item The item to be added.
+         */
+        virtual inline void Add(const T& element) {
+            this->Append(element);
+        }
+
+        /** 
+         * Appends an item to the end of the list. Runtime complexity: O(1)
+         *
+         * @param item The item to be added.
+         */
+        virtual void Append(const T& item);
 
         /**
          * Clears the whole list.
          */
-        void Clear(void);
-
-        /** 
-         * Appends an item to the end of the list.
-         *
-         * @param item The item to be added.
-         */
-        void Append(const T& item);
-
-        /**
-         * Adds an item to the beginning of the list.
-         *
-         * @param item The item to be added.
-         */
-        void AddFront(const T& item);
+        virtual void Clear(void);
 
         /**
          * Checks whether an item is contained in the list.
@@ -117,7 +120,91 @@ namespace vislib {
          *
          * @return true if the item is contained in the list, false otherwise.
          */
-        bool Contains(const T& item);
+        virtual bool Contains(const T& item) const;
+
+        /**
+         * Answer the number of items in the collection.
+         *
+         * @return Number of items in the collection.
+         */
+        virtual SIZE_T Count(void) const;
+
+        /**
+         * Answer a pointer to the first copy of 'element' in the collection. 
+         * If no element equal to 'element' is found, a NULL pointer is 
+         * returned.
+         *
+         * @param element The element to be tested.
+         *
+         * @return A pointer to the local copy of 'element' or NULL, if no such
+         *         element is found.
+         */
+        virtual const T *Find(const T& element) const;
+
+        /**
+         * Answer a pointer to the first copy of 'element' in the collection. 
+         * If no element equal to 'element' is found, a NULL pointer is 
+         * returned.
+         *
+         * @param element The element to be tested.
+         *
+         * @return A pointer to the local copy of 'element' or NULL, if no such
+         *         element is found.
+         */
+        virtual T *Find(const T& element);
+
+        /**
+         * Answer the first element in the collection. Runtime complexity: O(1)
+         *
+         * @return A reference to the first element.
+         *
+         * @throws NoSuchElementException, if the collection is empty.
+         */
+        virtual const T& First(void) const;
+
+        /**
+         * Answer the first element in the collection. Runtime complexity: O(1)
+         *
+         * @return A reference to the first element.
+         *
+         * @throws NoSuchElementException, if the collection is empty.
+         */
+        virtual T& First(void);
+
+        /**
+         * Answer whether there is no element in the collection. Runtime 
+         * complexity: O(1)
+         *
+         * @return true, if the collection is empty, false otherwise.
+         */
+		virtual inline bool IsEmpty(void) const {
+			return this->first == NULL;
+		}
+
+        /**
+         * Answer the last element in the collection. Runtime complexity: O(1)
+         *
+         * @return A reference to the last element.
+         *
+         * @throws NoSuchElementException, if the collection is empty.
+         */
+        virtual const T& Last(void) const;
+
+        /**
+         * Answer the last element in the collection. Runtime complexity: O(1)
+         *
+         * @return A reference to the last element.
+         *
+         * @throws NoSuchElementException, if the collection is empty.
+         */
+        virtual T& Last(void);
+
+        /**
+         * Adds an item to the beginning of the list. Runtime complexity: O(1)
+         *
+         * @param item The item to be added.
+         */
+        virtual void Prepend(const T& item);
 
         /**
          * Removes an item from the list.
@@ -126,25 +213,19 @@ namespace vislib {
          *
          * @param item The item to be removed.
          */
-        void Remove(const T& item);
+        virtual void Remove(const T& item);
 
         /**
-         * Returns the first element of the list and removes this element from 
-         * the list.
-         *
-         * @return The old first element of the list.
-         *
-         * @throw NoSuchElementException if the list is empty.
+         * Remove the first element from the collection. If the collection
+         * is empty, this method has no effect. Runtime complexity: O(1)
          */
-        T Shift(void);
+        virtual void RemoveFirst(void);
 
         /**
-         * Answer the number of items in the list.
-         * Remarks: linear runtime complexity
-         *
-         * @return Number of items in the list.
+         * Remove the last element from the collection. If the collection is
+         * empty, this method has no effect. Runtime complexity: O(n)
          */
-        unsigned int Count(void);
+        virtual void RemoveLast(void);
 
         /**
          * Returns an Iterator to the list, pointing before the first element.
@@ -163,15 +244,16 @@ namespace vislib {
          */
         SingleLinkedList<T>& operator=(const SingleLinkedList<T>& rhs);
 
-        inline const T& GetHead(void) const {
-            if (this->first == NULL)
-                throw NoSuchElementException("*grrrr*", __FILE__, __LINE__);
-            return this->first->item;
-        }
+        /**
+         * Compare operator. Two single linked lists are equal if the elements
+         * in both lists are equal and in same order. Runtime complexity: O(n)
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return if the lists are considered equal
+         */
+        bool operator==(const SingleLinkedList<T>& rhs);
 
-		inline bool IsEmpty(void) const {
-			return this->first == NULL;
-		}
 
     private:
 
@@ -233,7 +315,7 @@ namespace vislib {
 
 
     /*
-     * assignment operator
+     * SingleLinkedList<T>::Iterator::operator=
      */
     template<class T>
     typename SingleLinkedList<T>::Iterator& 
@@ -257,7 +339,7 @@ namespace vislib {
      * SingleLinkedList<T>::SingleLinkedList
      */
     template<class T>
-    SingleLinkedList<T>::SingleLinkedList(void) : first(NULL), last(NULL) {
+    SingleLinkedList<T>::SingleLinkedList(void) : OrderedCollection<T>(), first(NULL), last(NULL) {
     }
 
 
@@ -266,7 +348,7 @@ namespace vislib {
      */
     template<class T>
     SingleLinkedList<T>::SingleLinkedList(const SingleLinkedList<T>& rhs)
-        : first(NULL), last(NULL) {
+        : OrderedCollection<T>(), first(NULL), last(NULL) {
         *this = rhs;
     }
 
@@ -279,20 +361,7 @@ namespace vislib {
         this->Clear();
     }
 
-    
-    /*
-     * SingleLinkedList<T>::Clear
-     */
-    template<class T>
-    void SingleLinkedList<T>::Clear(void) {
-        while (first) {
-            last = first->next;
-            delete first;
-            first = last;
-        }
-    }
 
-        
     /*
      * SingleLinkedList<T>::Append
      */
@@ -310,17 +379,15 @@ namespace vislib {
 
 
     /*
-     * SingleLinkedList<T>::AddFront
+     * SingleLinkedList<T>::Clear
      */
     template<class T>
-    void SingleLinkedList<T>::AddFront(const T& item) {
-        Item *i = new Item;
-        i->next = this->first;
-        this->first = i;
-        if (!this->last) {
-            this->last = this->first;
+    void SingleLinkedList<T>::Clear(void) {
+        while (first) {
+            last = first->next;
+            delete first;
+            first = last;
         }
-        i->item = item;
     }
 
 
@@ -328,13 +395,114 @@ namespace vislib {
      * SingleLinkedList<T>::Contains
      */
     template<class T>
-    bool SingleLinkedList<T>::Contains(const T& item) {
-        Item *i = this->first;
+    bool SingleLinkedList<T>::Contains(const T& item) const {
+        const Item *i = this->first;
         while(i) {
             if (i->item == item) return true;
             i = i->next;
         }
         return false;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Count 
+     */
+    template<class T>
+    SIZE_T SingleLinkedList<T>::Count(void) const {
+        unsigned int c = 0;
+        Item *i = this->first;
+        while (i) {
+            c++;
+            i = i->next;
+        }
+        return c;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Find
+     */
+    template<class T>
+    const T *SingleLinkedList<T>::Find(const T& element) const {
+        const Item *i = this->first;
+        while(i) {
+            if (i->item == element) return &i->item;
+            i = i->next;
+        }
+        return NULL;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Find
+     */
+    template<class T> T *SingleLinkedList<T>::Find(const T& element) {
+        Item *i = this->first;
+        while(i) {
+            if (i->item == element) return &i->item;
+            i = i->next;
+        }
+        return NULL;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::First
+     */
+    template<class T> const T& SingleLinkedList<T>::First(void) const {
+        if (this->first == NULL) {
+            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+        }
+        return this->first->item;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::First
+     */
+    template<class T> T& SingleLinkedList<T>::First(void) {
+        if (this->first == NULL) {
+            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+        }
+        return this->first->item;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Last
+     */
+    template<class T> const T& SingleLinkedList<T>::Last(void) const {
+        if (this->last == NULL) {
+            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+        }
+        return this->last->item;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Last
+     */
+    template<class T> T& SingleLinkedList<T>::Last(void) {
+        if (this->last == NULL) {
+            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+        }
+        return this->last->item;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Prepend
+     */
+    template<class T>
+    void SingleLinkedList<T>::Prepend(const T& item) {
+        Item *i = new Item;
+        i->next = this->first;
+        this->first = i;
+        if (!this->last) {
+            this->last = this->first;
+        }
+        i->item = item;
     }
 
 
@@ -371,43 +539,36 @@ namespace vislib {
 
 
     /*
-     * SingleLinkedList<T>::Shift
+     * SingleLinkedList<T>::RemoveFirst
      */
-    template<class T>
-    T SingleLinkedList<T>::Shift(void) {
-        T retval;
-        if (this->first != NULL) {
+    template<class T> void SingleLinkedList<T>::RemoveFirst(void) {
+        if (this->first) {
             Item *i = this->first;
-
             this->first = this->first->next;
-            if (this->first == NULL) {
-                this->last = NULL;
-            }
-
-            retval = i->item;
-
+            if (!this->first) this->last = NULL;
             delete i;
-
-        } else {
-            throw NoSuchElementException("Single linked list is empty", __FILE__, __LINE__);
         }
-
-        return retval;
     }
 
 
     /*
-     * SingleLinkedList<T>::Count 
+     * SingleLinkedList<T>::RemoveLast
      */
-    template<class T>
-    unsigned int SingleLinkedList<T>::Count(void) {
-        unsigned int c = 0;
-        Item *i = this->first;
-        while (i) {
-            c++;
-            i = i->next;
+    template<class T> void SingleLinkedList<T>::RemoveLast(void) {
+        if (this->last) {
+            Item *newlast = NULL;
+            if (this->first != this->last) {
+                newlast = this->first;
+                while (newlast->next != this->last) {
+                    newlast = newlast->next;
+                    ASSERT(newlast);
+                }
+            } else {
+                this->first = NULL;
+            }
+            delete this->last;
+            this->last = newlast;
         }
-        return c;
     }
 
 
@@ -438,6 +599,23 @@ namespace vislib {
         }
 
         return *this;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::operator==
+     */
+    template<class T>
+    bool SingleLinkedList<T>::operator==(const SingleLinkedList<T>& rhs) {
+        Item *i = this->first, j = rhs.first;
+
+        while (i) {
+            if ((!j) || (i->item != j->item)) return false;
+            i = i->next;
+            j = j->next;
+        }
+
+        return (j == NULL);
     }
 
 
