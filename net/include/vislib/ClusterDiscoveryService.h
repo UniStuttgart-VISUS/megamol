@@ -317,7 +317,7 @@ namespace net {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(const void *reserved = NULL);
+            virtual DWORD Run(void *reserved = NULL);
 
             /**
              * Ask the thread to terminate.
@@ -364,7 +364,7 @@ namespace net {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(const void *reserved = NULL);
+            virtual DWORD Run(void *reserved = NULL);
 
             /**
              * Ask the thread to terminate.

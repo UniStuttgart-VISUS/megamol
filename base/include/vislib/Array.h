@@ -18,9 +18,9 @@
 
 #include "vislib/assert.h"
 #include "vislib/Iterator.h"
+#include "vislib/OrderedCollection.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/memutils.h"
-#include "vislib/types.h"
 
 
 namespace vislib {
@@ -39,7 +39,7 @@ namespace vislib {
      *
      * No memory is allocated, if the capacity is forced to zero.
      */
-    template <class T> class Array {
+    template <class T> class Array : public OrderedCollection<T> {
 
     public:
 
@@ -73,7 +73,7 @@ namespace vislib {
         Array(const Array& rhs);
 
         /** Dtor. */
-        ~Array(void);
+        virtual ~Array(void);
 
         /** 
          * Appends an element to the end of the array. If necessary, the 
@@ -81,7 +81,17 @@ namespace vislib {
          *
          * @param element The item to be appended.
          */
-        void Append(const T& element);
+        virtual inline void Add(const T& element) {
+            this->Append(element);
+        }
+
+        /** 
+         * Appends an element to the end of the array. If necessary, the 
+         * capacity is increased.
+         *
+         * @param element The item to be appended.
+         */
+        virtual void Append(const T& element);
 
         /**
          * Reserves memory for at least 'capacity' elements in the array. If
@@ -99,7 +109,7 @@ namespace vislib {
         /**
          * Erase all elements from the array.
          */
-        void Clear(void);
+        virtual void Clear(void);
 
         /**
          * Answer the capacity of the array.
@@ -118,7 +128,7 @@ namespace vislib {
          * @return true, if 'element' is at least once in the array, false 
          *         otherwise.
          */
-        inline bool Contains(const T& element) const {
+        virtual inline bool Contains(const T& element) const {
             return (this->IndexOf(element) >= 0);
         }
 
@@ -128,7 +138,7 @@ namespace vislib {
          *
          * @return Number of items in the array.
          */
-        inline SIZE_T Count(void) const {
+        virtual inline SIZE_T Count(void) const {
             return this->count;
         }
 
@@ -158,7 +168,7 @@ namespace vislib {
          * @return A pointer to the local copy of 'element' or NULL, if no such
          *         element is found.
          */
-        inline const T *Find(const T& element) const {
+        virtual inline const T *Find(const T& element) const {
             INT_PTR idx = this->IndexOf(element);
             return (idx >= 0) ? (this->elements + idx) : NULL;
         }
@@ -172,7 +182,7 @@ namespace vislib {
          * @return A pointer to the local copy of 'element' or NULL, if no such
          *         element is found.
          */
-        T *Find(const T& element) {
+        virtual T *Find(const T& element) {
             INT_PTR idx = this->IndexOf(element);
             return (idx >= 0) ? (this->elements + idx) : NULL;
         }
@@ -184,7 +194,7 @@ namespace vislib {
          *
          * @throws OutOfRangeException, if the array is empty.
          */
-        inline const T& First(void) const {
+        virtual inline const T& First(void) const {
             return (*this)[0];
         }
 
@@ -195,7 +205,7 @@ namespace vislib {
          *
          * @throws OutOfRangeException, if the array is empty.
          */
-        inline T& First(void) {
+        virtual inline T& First(void) {
             return (*this)[0];
         }
 
@@ -217,7 +227,7 @@ namespace vislib {
          *
          * @return true, if there is no element in the array, false otherwise.
          */
-        inline bool IsEmpty(void) const {
+        virtual inline bool IsEmpty(void) const {
             return (this->count == 0);
         }
 
@@ -228,7 +238,7 @@ namespace vislib {
          *
          * @throws OutOfRangeException, if the array is empty.
          */
-        inline const T& Last(void) const {
+        virtual inline const T& Last(void) const {
             // This implementation is not nice, but should work at it overflows.
             return (*this)[this->count - 1];
         }
@@ -241,17 +251,24 @@ namespace vislib {
          *
          * @throws OutOfRangeException, if the array is empty.
          */
-        inline T& Last(void) {
+        virtual inline T& Last(void) {
             // This implementation is not nice, but should work at it overflows.
             return (*this)[this->count - 1];
         }
+
+        /**
+         * Add 'element' as first element of the array.
+         *
+         * @param element The element to be added.
+         */
+        virtual void Prepend(const T& element);
 
         /**
          * Remove all elements that are equal to 'element' from the array.
          *
          * @param element The element to be removed.
          */
-        void Remove(const T& element);
+        virtual void Remove(const T& element);
 
         /**
          * Resize the array to have exactly 'capacity' elements. If 'capacity'
@@ -435,6 +452,7 @@ namespace vislib {
     template<class T>
     void Array<T>::AssertCapacity(const SIZE_T capacity) {
         if (this->capacity < capacity) {
+            // TODO: Could allocate more than required here.
             this->Resize(capacity);
         }
     }
@@ -510,6 +528,24 @@ namespace vislib {
         /* Nothing found. */
 
         return INVALID_POS;
+    }
+
+
+    /*
+     * vislib::Array<T>::Prepend
+     */
+    template<class T>
+    void Array<T>::Prepend(const T& element) {
+        // TODO: This implementation is extremely inefficient. Could use single
+        // memcpy when reallocating.
+        this->AssertCapacity(this->count + 1);
+
+        for (SIZE_T i = this->count; i > 0; i--) {
+            this->elements[i] = this->elements[i - 1];
+        }
+
+        this->elements[0] = element;
+        this->count++;
     }
 
 

@@ -226,7 +226,7 @@ vislib::net::ClusterDiscoveryService::Sender::~Sender(void) {
  * vislib::net::ClusterDiscoveryService::Sender::Run
  */
 DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
-        const void *reserved) {
+        void *reserved) {
     Message request;        // The UDP datagram we send.
     Socket socket;          // The socket used for the broadcast.
 
@@ -336,7 +336,7 @@ vislib::net::ClusterDiscoveryService::Receiver::~Receiver(void) {
  * vislib::net::ClusterDiscoveryService::Receiver::Run
  */
 DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
-        const void *reserved) {
+        void *reserved) {
     SocketAddress peerAddr;     // Receives address of UDP communication peer.
     PeerNode peerNode;          // The peer node to register in our list.
     Message request;            // Receives the request messages.

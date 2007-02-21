@@ -20,7 +20,7 @@ public:
 
     inline MyRunnable(const UINT id) : cnt(1), id(id) {};
 
-    virtual DWORD Run(const void *userData);
+    virtual DWORD Run(void *userData);
 
 private:
 
@@ -30,7 +30,7 @@ private:
 };
 
 
-DWORD MyRunnable::Run(const void *userData) {
+DWORD MyRunnable::Run(void *userData) {
     if (userData != NULL) {
         this->cnt = *static_cast<const DWORD *>(userData);
     }

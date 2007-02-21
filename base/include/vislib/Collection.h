@@ -71,7 +71,7 @@ namespace vislib {
          * @return true, if 'element' is at least once in the collection, false
          *         otherwise.
          */
-        inline bool Contains(const T& element) const {
+        virtual inline bool Contains(const T& element) const {
             return (this->Find(element) != NULL);
         }
 

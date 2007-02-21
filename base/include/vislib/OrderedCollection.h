@@ -85,7 +85,7 @@ namespace vislib {
          * Sort the collection.
          */
         //template<class C>
-        virtual void Sort(void) = 0;
+        //virtual void Sort(void) = 0;
 
     protected:
 
