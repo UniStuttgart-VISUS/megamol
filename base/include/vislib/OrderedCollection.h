@@ -24,12 +24,12 @@ namespace vislib {
     /**
      * TODO: comment class
      */
-    template<class T> class OrderedCollection : Collection<T> {
+    template<class T> class OrderedCollection : public Collection<T> {
 
     public:
 
         /** Dtor. */
-        ~OrderedCollection(void);
+        virtual ~OrderedCollection(void);
 
         /**
          * Add 'element' as last element in the collection.
@@ -90,7 +90,7 @@ namespace vislib {
     protected:
 
         /** Ctor. */
-        inline OrderedCollection(void) : Collection() {}
+        inline OrderedCollection(void) : Collection<T>() {}
 
     };
     
@@ -107,4 +107,3 @@ namespace vislib {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ORDEREDCOLLECTION_H_INCLUDED */
-

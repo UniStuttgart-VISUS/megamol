@@ -9,6 +9,7 @@
 #include "testhelper.h"
 
 #include "vislib/Array.h"
+#include "vislib/String.h"
 
 
 void TestArray(void) {
@@ -77,4 +78,9 @@ void TestArray(void) {
 
     intAry2.Trim();
     ::AssertEqual("Trim empty array", intAry2.Capacity(), SIZE_T(0));
+
+    
+    Array<vislib::StringA> strAry;
+    strAry.Append("Horst");
+    AssertTrue("Contains \"Horst\"", strAry.Contains("Horst"));
 }

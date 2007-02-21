@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     //::TestCmdLineParser();
     //::TestColumnFormatter();
     //::TestDateTime();
-    //::TestArray();
+    ::TestArray();
     //::TestSmartPtr();
     //::TestClusterDiscoveryService();
     //::TestNetworkInformation();

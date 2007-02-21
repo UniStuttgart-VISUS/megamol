@@ -158,7 +158,7 @@ public:
     }
 
     /** helper function to aviod linux stdin read lock */
-    static DWORD AskStdin(const void *userData) {
+    static DWORD AskStdin(void *userData) {
         struct ReaderData *rd = static_cast<struct ReaderData*>(const_cast<void*>(userData));
         rd->len = 0;
         rd->buffer[0] = 0;

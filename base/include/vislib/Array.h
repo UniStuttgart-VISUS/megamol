@@ -21,6 +21,7 @@
 #include "vislib/OrderedCollection.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/memutils.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -398,7 +399,7 @@ namespace vislib {
      */
     template<class T>
     Array<T>::Array(const SIZE_T capacity) 
-            : capacity(0), count(0), elements(NULL) {
+            : OrderedCollection<T>(), capacity(0), count(0), elements(NULL) {
         this->AssertCapacity(capacity);
     }
 
@@ -408,7 +409,8 @@ namespace vislib {
      */
     template<class T>
     Array<T>::Array(const SIZE_T capacity, const T& element) 
-            : capacity(0), count(capacity), elements(NULL) {
+            : OrderedCollection<T>(), capacity(0), count(capacity), 
+            elements(NULL) {
         this->AssertCapacity(capacity);
         for (SIZE_T i = 0; i < this->count; i++) {
             this->elements[i] = element;
@@ -420,7 +422,8 @@ namespace vislib {
      * vislib::Array<T>::Array
      */
     template<class T>
-    Array<T>::Array(const Array& rhs) : capacity(0), count(0), elements(NULL) {
+    Array<T>::Array(const Array& rhs) 
+            : OrderedCollection<T>(), capacity(0), count(0), elements(NULL) {
         *this = rhs;
     }
 
@@ -604,9 +607,9 @@ namespace vislib {
                     != NULL) {
                 this->elements = static_cast<T *>(newPtr);
 
-				for (SIZE_T i = this->count; i < this->capacity; i++) {
-					new (this->elements + i) T;
-				}
+                for (SIZE_T i = this->count; i < this->capacity; i++) {
+                    new (this->elements + i) T;
+                }
             } else {
                 SAFE_FREE(this->elements);
                 throw std::bad_alloc();
