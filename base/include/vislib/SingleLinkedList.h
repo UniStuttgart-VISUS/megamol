@@ -607,10 +607,11 @@ namespace vislib {
      */
     template<class T>
     bool SingleLinkedList<T>::operator==(const SingleLinkedList<T>& rhs) {
-        Item *i = this->first, j = rhs.first;
+        Item *i = this->first;
+		const Item *j = rhs.first;
 
         while (i) {
-            if ((!j) || (i->item != j->item)) return false;
+            if ((!j) || (!(i->item == j->item))) return false;
             i = i->next;
             j = j->next;
         }
