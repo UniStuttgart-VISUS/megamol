@@ -272,6 +272,20 @@ namespace vislib {
         virtual void Remove(const T& element);
 
         /**
+         * Remove the first element from the collection. 
+         */
+        virtual void RemoveFirst(void) {
+            this->Erase(0);
+        }
+
+        /**
+         * Remove the last element from the collection.
+         */
+        virtual void RemoveLast(void) {
+            this->Erase(this->count - 1);
+        }
+
+        /**
          * Resize the array to have exactly 'capacity' elements. If 'capacity'
          * is less than the current number of elements in the array, all 
          * elements at and behind the index 'capacity' are erased.
@@ -307,6 +321,7 @@ namespace vislib {
          * @param idx The index of the element to access. This must be a value
          *            within [0, this->Count()[.
          *
+
          * @return A reference to the 'idx'th element.
          *
          * @throws OutOfRangeException If 'idx' is not within 

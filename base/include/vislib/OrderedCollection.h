@@ -43,7 +43,8 @@ namespace vislib {
          *
          * @return A reference to the first element.
          *
-         * @throws OutOfRangeException, if the collection is empty.
+         * @throws OutOfRangeException or
+         *         NoSuchElementException If the collection is empty.
          */
         virtual const T& First(void) const = 0;
 
@@ -52,7 +53,8 @@ namespace vislib {
          *
          * @return A reference to the first element.
          *
-         * @throws OutOfRangeException, if the collection is empty.
+         * @throws OutOfRangeException or
+         *         NoSuchElementException If the collection is empty.
          */
         virtual T& First(void) = 0;
 
@@ -61,7 +63,8 @@ namespace vislib {
          *
          * @return A reference to the last element.
          *
-         * @throws OutOfRangeException, if the collection is empty.
+         * @throws OutOfRangeException or
+         *         NoSuchElementException If the collection is empty.
          */
         virtual const T& Last(void) const = 0;
 
@@ -70,7 +73,8 @@ namespace vislib {
          *
          * @return A reference to the last element.
          *
-         * @throws OutOfRangeException, if the collection is empty.
+         * @throws OutOfRangeException or
+         *         NoSuchElementException If the collection is empty.
          */
         virtual T& Last(void) = 0;
 
@@ -80,6 +84,18 @@ namespace vislib {
          * @param element The element to be added.
          */
         virtual void Prepend(const T& element) = 0;
+
+        /**
+         * Remove the first element from the collection. If the collection
+         * is empty, this method has no effect.
+         */
+        virtual void RemoveFirst(void) = 0;
+
+        /**
+         * Remove the last element from the collection. If the collection is
+         * empty, this method has no effect.
+         */
+        virtual void RemoveLast(void) = 0;
 
         /**
          * Sort the collection.
