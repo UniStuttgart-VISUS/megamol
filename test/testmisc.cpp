@@ -10,6 +10,13 @@
 
 #include <vislib/Console.h>
 #include <vislib/ColumnFormatter.h>
+#include <vislib/Exception.h>
+#include <vislib/SystemException.h>
+#include <vislib/PerformanceCounter.h>
+#include <vislib/StringConverter.h>
+#include <vislib/SystemMessage.h>
+#include <vislib/Path.h>
+#include <vislib/Trace.h>
 
 // #define USE_UNICODE_COLUMNFORMATTER
 
@@ -443,4 +450,44 @@ void TestNetworkInformation(void) {
 
     }
 
+}
+
+void TestTrace(void) {
+    vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
+    TRACE(1, "HORST!\n");
+}
+
+void TestExceptions(void) {
+    vislib::sys::SystemException e1(2, __FILE__, __LINE__);
+    ::_tprintf(_T("%s\n"), e1.GetMsg());
+
+    vislib::Exception e2(__FILE__, __LINE__);
+    ::_tprintf(_T("%s\n"), e2.GetMsg()); 
+}
+
+void TestSystemMessage(void) {
+    vislib::sys::SystemMessage sysMsg(4);
+    ::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
+}
+
+void TestPerformanceCounter(void) {
+    for (int i = 0; i < 100; i++) {
+        ::_tprintf(_T("%lu\n"), vislib::sys::PerformanceCounter::Query());
+    }
+}
+
+void TestPathManipulations(void) {
+    // Hazard! Think of some more secure test cases.
+
+    //try {
+    //    vislib::sys::Path::MakeDirectory(L"Horst/Hugo/Heinz/Hans/Helmut");
+    //    vislib::sys::Path::DeleteDirectory("Wurst", true);
+    //} catch(vislib::sys::SystemException e) {
+    //    fprintf(stderr, "SystemException: %s\n", e.GetMsgA());
+    //} catch(vislib::Exception e) {
+    //    fprintf(stderr, "Exception: %s\n", e.GetMsgA());
+    //} catch(...) {
+    //    fprintf(stderr, "Unknown Exception.\n");
+    //}
 }

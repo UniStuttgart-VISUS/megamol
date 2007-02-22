@@ -15,7 +15,9 @@
 
 void TestString(void) {
     using namespace vislib;
-    
+
+    //::printf("%s", W2A(L"Hugo"));
+
     TestStringA();
     TestStringW();
 

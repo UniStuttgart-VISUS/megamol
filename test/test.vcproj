@@ -522,6 +522,10 @@
 				RelativePath=".\test.rc"
 				>
 			</File>
+			<File
+				RelativePath="H:\Profile\My Documents.{450D8FBA-AD25-11D0-98A8-0800361B1103}\My Pictures\vis.ico"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\Makefile"

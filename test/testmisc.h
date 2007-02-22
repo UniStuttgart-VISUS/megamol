@@ -10,10 +10,24 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+/*
+ * Test functions for less automated tests of smaller vislib functions 
+ */
+
 void TestConsoleColors(void);
 
 void TestColumnFormatter(void);
 
 void TestNetworkInformation(void);
+
+void TestTrace(void);
+
+void TestExceptions(void);
+
+void TestSystemMessage(void);
+
+void TestPerformanceCounter(void);
+
+void TestPathManipulations(void);
 
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

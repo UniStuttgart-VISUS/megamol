@@ -191,9 +191,16 @@ namespace sys {
         /**
          * Sets the icon of the console window, if possible.
          *
-         * @param id The ressource id of the icon.
+         * @param id The integer ressource id of the icon.
          */
-        static void SetIcon(unsigned int id);
+        static void SetIcon(int id);
+
+        /**
+         * Sets the icon of the console window, if possible.
+         *
+         * @param id The ANSI string ressource id of the icon.
+         */
+        static void SetIcon(char *id);
 
         /** Dtor. */
         ~Console(void);

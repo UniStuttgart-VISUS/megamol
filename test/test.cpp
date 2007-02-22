@@ -8,8 +8,11 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include "vislib/Console.h"
 
+/* include test implementations */
 #include "testhelper.h"
 #include "teststring.h"
 #include "testfloat16.h"
@@ -29,14 +32,49 @@
 #include "testthelog.h"
 #include "testdirectoryiterator.h"
 
-#include "vislib/Exception.h"
-#include "vislib/SystemException.h"
-#include "vislib/PerformanceCounter.h"
-#include "vislib/StringConverter.h"
-#include "vislib/SystemMessage.h"
-#include "vislib/Trace.h"
-#include "vislib/Console.h"
-#include "vislib/Path.h"
+/* type for test functions */
+typedef void (*VislibTestFunction)(void);
+
+/* type for test manager structure */
+typedef struct _VislibTest_t {
+    TCHAR *testName; // the tests name. Used as command line argument to select this test.
+    VislibTestFunction testFunc; // the function called when this test is selected.
+    char *testDesc; // the description of this test. Used for the online help.
+} VislibTest;
+
+
+/* all available tests:
+ * Add your tests here
+ */
+VislibTest tests[] = {
+    // base
+    {_T("Array"), ::TestArray, "Tests vislib::Array"},
+    {_T("ColumnFormatter"), ::TestColumnFormatter, "Tests vislib::ColumnFormatter"},
+    {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
+    {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
+    // math
+    {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
+    {_T("Float16"), ::TestFloat16, "Tests vislib::math::Float16"},
+    {_T("Matrix"), ::TestMatrix, "Tests vislib::math::Matrix"},
+    {_T("Rectangle"), ::TestRectangle, "Tests vislib::math::Rectangle"},
+    {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
+    // net
+    {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
+    {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
+    // sys
+    {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
+    {_T("ConColors"), ::TestConsoleColors, "Tests colored console output using vislib::sys::Console"},
+    {_T("DateTime"), ::TestDateTime, "Tests vislib::sys::DateTime"},
+    {_T("DirIterator"), ::TestDirectoryIterator, "Test vislib::sys::DirectoryIterator"},
+    {_T("File"), ::TestFile, "Tests vislib::sys::File and derived classes"},
+    {_T("Log"), ::TestTheLogWithPhun, "Tests vislib::sys::Log"},
+    {_T("Path"), ::TestPath, "Tests vislib::sys::Path"},
+    {_T("Process"), ::TestProcess, "Tests vislib::sys::Process"},
+    {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
+    {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
+    // end guard. Do not remove. Must be last entry
+    {NULL, NULL, NULL}
+};
 
 
 #ifdef _WIN32
@@ -44,66 +82,94 @@ int _tmain(int argc, TCHAR **argv) {
 #else
 int main(int argc, char **argv) {
 #endif
-    using namespace vislib;
-    using namespace vislib::sys;
+    unsigned int countTests = (sizeof(tests) / sizeof(VislibTest)) - 1;
 
+    printf("VISlib Test Application\n\n");
+
+    /* setting console title and icon. */
+    /* could be in testmisc, but i like it here, running always. ;-) */
 #ifdef _WIN32
     vislib::sys::Console::SetTitle(L"VISlib™ Test Application");
 #else  /* _WIN32 */
     vislib::sys::Console::SetTitle("VISlib Test Application");
 #endif /* _WIN32 */
-    vislib::sys::Console::SetIcon(1);
+    vislib::sys::Console::SetIcon(101);
 
-    //vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
-    //vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
-    //TRACE(1, "HORST!\n");
+    /* check command line arguments*/
+    if (argc <= 1) {
+        fprintf(stderr, "You must specify at least on test to perform.\n\n");
+        fprintf(stderr, "Syntax:\n\t%s testname [testname] ...\n\n", argv[0]);
+        fprintf(stderr, "Available Testnames are:\n");
+        for (unsigned int i = 0; i < countTests; i++) {
+            fprintf(stderr, "\t");
+#ifdef _WIN32
+            _ftprintf(stderr, _T("%s"), tests[i].testName);
+#else /* _WIN32 */
+            fprintf(stderr, "%s", tests[i].testName);
+#endif /* _WIN32 */
+            fprintf(stderr, "\n\t\t%s\n", tests[i].testDesc);
+        }
+        fprintf(stderr, "\n");
 
-    //::TestSysInfo();
-    //::TestString();
-    //::TestFile();
-    //::TestPath();
-    //::TestProcess();
-    //::TestVector();
-    //::TestDimension();
-    //::TestRectangle();
-    //::TestVector();
-    //::TestFloat16();
-    //::TestThread();
-    //::TestMatrix();
-    //::TestConsoleColors();
-    //::TestCmdLineParser();
-    //::TestColumnFormatter();
-    //::TestDateTime();
-    ::TestArray();
-    //::TestSmartPtr();
-    //::TestClusterDiscoveryService();
-    //::TestNetworkInformation();
-    //::TestTheLogWithPhun();
-	//::TestDirectoryIterator();
+    } else {
+        /* checking command line arguments for unknown tests */
+        for (int i = 1; i < argc; i++) {
+            bool found = false;
 
-//    try {
-////        vislib::sys::Path::MakeDirectory(L"Horst\\Hugo\\Heinz\\Hans\\Hel?mut");
-//        vislib::sys::Path::RemoveDirectory("Wurst", true);
-//    } catch(vislib::sys::SystemException e) {
-//        const char *msg = e.GetMsgA();
-//    }
+            for (unsigned int j = 0; j < countTests; j++) {
+#ifdef _WIN32
+#pragma warning(disable: 4996)
+                if (_tcsicmp(argv[i], tests[j].testName) == 0) {
+#pragma warning(default: 4996)
+#else /* _WIN32 */
+                if (strcasecmp(argv[i], tests[j].testName) == 0) {
+#endif /* _WIN32 */
+                    found = true;
+                }
 
-    //::printf("%s", W2A(L"Hugo"));
+            }
 
-    //SystemException e1(2, __FILE__, __LINE__);
-    //::_tprintf(_T("%s\n"), e1.GetMsg());
+            if (!found) {
+                fprintf(stderr, "Warning: No Test named ");
+#ifdef _WIN32
+                _ftprintf(stderr, _T("%s"), argv[i]);
+#else /* _WIN32 */
+                fprintf(stderr, "%s", argv[i]);
+#endif /* _WIN32 */                
+                fprintf(stderr, " found. Ignoring this argument.\n\n");
+            }
+        }
 
-    //Exception e2(__FILE__, __LINE__);
-    //::_tprintf(_T("%s\n"), e2.GetMsg());
-    
-    //for (int i = 0; i < 100; i++) {
-    //    ::_tprintf(_T("%lu\n"), PerformanceCounter::Query());
-    //}
-    
-    //SystemMessage sysMsg(4);
-    //::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
+        /* run selected tests */
+        for (int i = 1; i < argc; i++) {
+            for (unsigned int j = 0; j < countTests; j++) {
+#ifdef _WIN32
+#pragma warning(disable: 4996)
+                if (_tcsicmp(argv[i], tests[j].testName) == 0) {
+#pragma warning(default: 4996)
+#else /* _WIN32 */
+                if (strcasecmp(argv[i], tests[j].testName) == 0) {
+#endif /* _WIN32 */
 
-    ::OutputAssertTestSummary();
+                    printf("Performing Test %d: ", i);
+#ifdef _WIN32
+                    _tprintf(_T("%s\n"), tests[j].testName);
+#else /* _WIN32 */
+                    printf("%s\n", tests[j].testName);
+#endif /* _WIN32 */
+
+                    tests[j].testFunc();
+
+                    printf("\n");
+                    break; // next argument
+                }
+            }
+        }
+
+        /* output test summary */
+        ::OutputAssertTestSummary();
+    }
+
 #ifdef _WIN32
     ::_tsystem(_T("pause"));
 #endif

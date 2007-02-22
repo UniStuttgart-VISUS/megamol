@@ -780,7 +780,20 @@ void vislib::sys::Console::SetTitle(const vislib::StringW& title) {
 /*
  * vislib::sys::Console::SetIcon
  */
-void vislib::sys::Console::SetIcon(unsigned int id) {
+void vislib::sys::Console::SetIcon(int id) {
+#ifdef _WIN32
+    vislib::sys::Console::SetIcon(MAKEINTRESOURCEA(id));
+#else // _WIN32
+    // Linux is stupid
+
+#endif // _WIN32
+}
+
+
+/*
+ * vislib::sys::Console::SetIcon
+ */
+void vislib::sys::Console::SetIcon(char *id) {
 #ifdef _WIN32
     // Creates an HWND handle for the console window
     HWND console = NULL;
@@ -796,7 +809,7 @@ void vislib::sys::Console::SetIcon(unsigned int id) {
     if (instance == NULL) return; // no instance handle available ... hmm
 
     // Load the requested icon ressource
-    HICON icon = ::LoadIcon(instance, MAKEINTRESOURCE(id)); 
+    HICON icon = ::LoadIconA(instance, id); 
     if (icon == NULL) return; // icon ressource not found.
 
     // setting the icon.
