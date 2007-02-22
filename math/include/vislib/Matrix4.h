@@ -165,22 +165,22 @@ namespace math {
             const T& m21, const T& m22, const T& m23, const T& m24, 
             const T& m31, const T& m32, const T& m33, const T& m34, 
             const T& m41, const T& m42, const T& m43, const T& m44) : Super() {
-        this->components[indexOf(0, 0)] = m11;
-        this->components[indexOf(0, 1)] = m12;
-        this->components[indexOf(0, 2)] = m13;
-        this->components[indexOf(0, 3)] = m14;
-        this->components[indexOf(1, 0)] = m21;
-        this->components[indexOf(1, 1)] = m22;
-        this->components[indexOf(1, 2)] = m23;
-        this->components[indexOf(1, 3)] = m24;
-        this->components[indexOf(2, 0)] = m31;
-        this->components[indexOf(2, 1)] = m32;
-        this->components[indexOf(2, 2)] = m33;
-        this->components[indexOf(2, 3)] = m34;
-        this->components[indexOf(3, 0)] = m41;
-        this->components[indexOf(3, 1)] = m42;
-        this->components[indexOf(3, 2)] = m43;
-        this->components[indexOf(3, 3)] = m44;
+        this->components[Super::indexOf(0, 0)] = m11;
+        this->components[Super::indexOf(0, 1)] = m12;
+        this->components[Super::indexOf(0, 2)] = m13;
+        this->components[Super::indexOf(0, 3)] = m14;
+        this->components[Super::indexOf(1, 0)] = m21;
+        this->components[Super::indexOf(1, 1)] = m22;
+        this->components[Super::indexOf(1, 2)] = m23;
+        this->components[Super::indexOf(1, 3)] = m24;
+        this->components[Super::indexOf(2, 0)] = m31;
+        this->components[Super::indexOf(2, 1)] = m32;
+        this->components[Super::indexOf(2, 2)] = m33;
+        this->components[Super::indexOf(2, 3)] = m34;
+        this->components[Super::indexOf(3, 0)] = m41;
+        this->components[Super::indexOf(3, 1)] = m42;
+        this->components[Super::indexOf(3, 2)] = m43;
+        this->components[Super::indexOf(3, 3)] = m44;
     }
 
     /*

@@ -75,6 +75,18 @@ namespace sys {
             const DWORD svcType = SERVICE_WIN32_OWN_PROCESS,
             const DWORD startType = SERVICE_AUTO_START);
 
+        /**
+         * Set a description for the service with the specified name. The 
+         * service must have been installed before.
+         *
+         * @param svcName Name of the service to set the description for.
+         * @param desc    The description text.
+         *
+         * @return true, if the description was successfully set, false 
+         *         otherwise.
+         */
+        static bool SetDescription(const String& svcName, const String& desc);
+
 
         /** Dtor. */
         virtual ~WindowsService(void);
@@ -100,13 +112,11 @@ namespace sys {
         /**
          * Install this executable as service on the current machine.
          *
-         * @param svcType   The service type.
          * @param startType The startup type of the service.
          *
          * @throws SystemException If the service could not be installed.
          */
-        void Install(const DWORD svcType = SERVICE_WIN32_OWN_PROCESS,
-            const DWORD startType = SERVICE_AUTO_START);
+        void Install(const DWORD startType = SERVICE_AUTO_START);
 
         /**
          * Start the service main function. If the method succeeds, it does not
@@ -227,7 +237,7 @@ namespace sys {
          *             service.
          * @param argv The command line arguments passed to the service.
          */
-        virtual void OnRun(const DWORD argc, const Char *argv) = 0;
+        virtual DWORD OnRun(const DWORD argc, const Char *argv) = 0;
 
         /**
          * Notifies a service of system power events.
@@ -300,11 +310,15 @@ namespace sys {
          *
          * @param name
          * @param displayName
+         * @param svcType   The service type.
          * @param controlsAccepted
          */
         inline WindowsService(const String& name, const String& displayName, 
-                const DWORD controlsAccepted)
+                const DWORD svcType, const DWORD controlsAccepted)
                 : displayName(displayName), name(name), hStatus(NULL) {
+            ::ZeroMemory(&this->status, sizeof(SERVICE_STATUS));
+            this->status.dwServiceType = svcType;
+            this->status.dwCurrentState = SERVICE_STOPPED;
             this->status.dwControlsAccepted = controlsAccepted;
         }
 
@@ -432,6 +446,18 @@ namespace sys {
             const DWORD svcType = SERVICE_WIN32_OWN_PROCESS,
             const DWORD startType = SERVICE_AUTO_START);
 
+        /**
+         * Set a description for the service with the specified name. The 
+         * service must have been installed before.
+         *
+         * @param svcName Name of the service to set the description for.
+         * @param desc    The description text.
+         *
+         * @return true, if the description was successfully set, false 
+         *         otherwise.
+         */
+        static bool SetDescription(const String& svcName, const String& desc);
+
 
         /** Dtor. */
         virtual ~WindowsService(void);
@@ -457,13 +483,11 @@ namespace sys {
         /**
          * Install this executable as service on the current machine.
          *
-         * @param svcType   The service type.
          * @param startType The startup type of the service.
          *
          * @throws SystemException If the service could not be installed.
          */
-        void Install(const DWORD svcType = SERVICE_WIN32_OWN_PROCESS,
-            const DWORD startType = SERVICE_AUTO_START);
+        void Install(const DWORD startType = SERVICE_AUTO_START);
 
         /**
          * Start the service main function. If the method succeeds, it does not
@@ -583,8 +607,10 @@ namespace sys {
          * @param argc The number of command line arguments passed to the 
          *             service.
          * @param argv The command line arguments passed to the service.
+         *
+         * @return The exit code of the service.
          */
-        virtual void OnRun(const DWORD argc, const Char *argv) = 0;
+        virtual DWORD OnRun(const DWORD argc, const Char *argv) = 0;
 
         /**
          * Notifies a service of system power events.
@@ -657,11 +683,15 @@ namespace sys {
          *
          * @param name
          * @param displayName
+         * @param svcType   The service type.
          * @param controlsAccepted
          */
         inline WindowsService(const String& name, const String& displayName, 
-                const DWORD controlsAccepted)
+                const DWORD svcType, const DWORD controlsAccepted)
                 : displayName(displayName), name(name), hStatus(NULL) {
+            ::ZeroMemory(&this->status, sizeof(SERVICE_STATUS));
+            this->status.dwServiceType = svcType;
+            this->status.dwCurrentState = SERVICE_STOPPED;
             this->status.dwControlsAccepted = controlsAccepted;
         }
 

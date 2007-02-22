@@ -5,6 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
+#define HKSERVICESA "System\\CurrentControlSet\\Services"
+#define HKSERVICESW L"System\\CurrentControlSet\\Services"
+#define VALNAMEDESCA "Description"
+#define VALNAMEDESCW L"Description"
+
 #define IMPLEMENT_WINDOWS_SERVICE_INSTALL1(strType)                            \
 	SC_HANDLE hSCMgr = NULL;                                                   \
 	SC_HANDLE hSvc = NULL;		                                               \
@@ -25,13 +30,38 @@
     ::CloseServiceHandle(hSCMgr); 
 
 
+#define IMPLEMENT_WINDOWS_SERVICE_SETDESCRIPTION(strType)                      \
+    HKEY hKeyServices = NULL;                                                  \
+    HKEY hKeySvc = NULL;                                                       \
+    bool retval = false;                                                       \
+                                                                               \
+    if (::RegOpenKey##strType(HKEY_LOCAL_MACHINE, HKSERVICES##strType,         \
+            &hKeyServices) != ERROR_SUCCESS) {                                 \
+        return false;                                                          \
+    }                                                                          \
+                                                                               \
+    if (::RegOpenKey##strType(hKeyServices, svcName, &hKeySvc)                 \
+            != ERROR_SUCCESS) {                                                \
+        ::RegCloseKey(hKeyServices);                                           \
+        return false;                                                          \
+    }                                                                          \
+                                                                               \
+    retval = (::RegSetValueEx##strType(hKeySvc, VALNAMEDESC##strType, 0,       \
+        REG_SZ, reinterpret_cast<const BYTE *>(desc.PeekBuffer()),             \
+        desc.Length() * CharTraits##strType::CharSize()) == ERROR_SUCCESS);    \
+                                                                               \
+    ::RegCloseKey(hKeyServices);                                               \
+    ::RegCloseKey(hKeySvc);                                                    \
+    return retval;
+
+
 #define IMPLEMENT_WINDOWS_SERVICE_INSTALL2(strType)                            \
     String##strType binaryPath;                                                \
                                                                                \
     if (::GetModuleFileName##strType(NULL, binaryPath.AllocateBuffer(MAX_PATH),\
             MAX_PATH)) {                                                       \
         WindowsService::Install(binaryPath, this->name,                        \
-            this->displayName, svcType, startType);                            \
+            this->displayName, this->status.dwServiceType, startType);         \
     } else {                                                                   \
         throw SystemException(__FILE__, __LINE__);                             \
     }
@@ -207,16 +237,23 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                                                                                \
     if ((hStatus = ::RegisterServiceCtrlHandlerEx##strType(NULL,               \
             WindowsService::handlerEx, WindowsService::instance)) != NULL) {   \
-        ::ZeroMemory(&status, sizeof(SERVICE_STATUS));                         \
-        status.dwServiceType = SERVICE_WIN32;                                  \
         status.dwCurrentState = SERVICE_RUNNING;                               \
         ::SetServiceStatus(hStatus, &status);                                  \
                                                                                \
-        WindowsService::instance->OnRun(argc, argv);                           \
+        status.dwServiceSpecificExitCode                                       \
+            = WindowsService::instance->OnRun(argc, argv);                     \
+        if (status.dwServiceSpecificExitCode == 0) {                           \
+            status.dwWin32ExitCode = 0;                                        \
+        } else {                                                               \
+            status.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;             \
+        }                                                                      \
                                                                                \
         status.dwCurrentState = SERVICE_STOPPED;                               \
         ::SetServiceStatus(hStatus, &status);                                  \
     }                                                                          \
+                                                                               \
+    ::CloseServiceHandle(reinterpret_cast<SC_HANDLE>(hStatus));                \
+    hStatus = NULL;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +266,15 @@ void vislib::sys::WindowsService<vislib::CharTraitsA>::Install(
         const String& binaryPath, const String& svcName, 
         const String& displayName, const DWORD svcType, const DWORD startType) {
     IMPLEMENT_WINDOWS_SERVICE_INSTALL1(A);
+}
+
+
+/*
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::SetDescription
+ */
+bool vislib::sys::WindowsService<vislib::CharTraitsA>::SetDescription(
+        const String& svcName, const String& desc) {
+    IMPLEMENT_WINDOWS_SERVICE_SETDESCRIPTION(A);
 }
 
 
@@ -246,7 +292,7 @@ vislib::sys::WindowsService<vislib::CharTraitsA>::~WindowsService(void) {
  * vislib::sys::WindowsService<vislib::CharTraitsA>::Install
  */
 void vislib::sys::WindowsService<vislib::CharTraitsA>::Install(
-        const DWORD svcType, const DWORD startType) {
+        const DWORD startType) {
     IMPLEMENT_WINDOWS_SERVICE_INSTALL2(A);
 }
 
@@ -440,6 +486,16 @@ void vislib::sys::WindowsService<vislib::CharTraitsW>::Install(
 
 
 /*
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::SetDescription
+ */
+bool vislib::sys::WindowsService<vislib::CharTraitsW>::SetDescription(
+        const String& svcName, const String& desc) {
+    IMPLEMENT_WINDOWS_SERVICE_SETDESCRIPTION(W);
+}
+
+
+
+/*
  * vislib::sys::WindowsService<vislib::CharTraitsW>::~WindowsService
  */
 vislib::sys::WindowsService<vislib::CharTraitsW>::~WindowsService(void) {
@@ -453,7 +509,7 @@ vislib::sys::WindowsService<vislib::CharTraitsW>::~WindowsService(void) {
  * vislib::sys::WindowsService<vislib::CharTraitsW>::Install
  */
 void vislib::sys::WindowsService<vislib::CharTraitsW>::Install(
-        const DWORD svcType, const DWORD startType) {
+        const DWORD startType) {
     IMPLEMENT_WINDOWS_SERVICE_INSTALL2(W);
 }
 

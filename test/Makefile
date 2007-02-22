@@ -24,7 +24,7 @@ OutName := vislibtest
 CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -L$(VISlibDir) -lm -lpthread -lpam -lpam_misc -ldl -lncurses
+LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
 
 ifndef VISLIB_VERBOSE
     VISLIB_VERBOSE = 0
@@ -44,10 +44,12 @@ ifeq ($(PLATFORM), x86_64)
 	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
+	LDFLAGS += -L/usr/X11R6/lib64
 	VISlibs := $(addsuffix 64d, $(addprefix vislib, $(VISlibs)))
 else
 	IntDir := Lin32
 	OutDir := ../Lin32
+	LDFLAGS += -L/usr/X11R6/lib
 	VISlibs := $(addsuffix 32d, $(addprefix vislib, $(VISlibs)))
 endif
 

@@ -22,7 +22,10 @@ namespace vislib {
 
 
     /**
-     * TODO: comment class
+     * OrderedCollection is a special collection which is assumed to have 
+     * elements in a specific order. Therefore, it is possible to access the 
+     * first and the last element and append and prepend new elements. The 
+     * ordered collection can also be sorted.
      */
     template<class T> class OrderedCollection : public Collection<T> {
 

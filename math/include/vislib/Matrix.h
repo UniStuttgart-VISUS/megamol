@@ -53,7 +53,8 @@ namespace math {
          */
         inline Matrix(const T *components) : Super() {
             ASSERT(components != NULL);
-            ::memcpy(this->components, component, CNT_COMPONENTS * sizeof(T));
+            ::memcpy(this->components, components, Super::CNT_COMPONENTS
+                * sizeof(T));
         }
 
         /**
@@ -63,7 +64,7 @@ namespace math {
          */
         inline Matrix(const Matrix& rhs) : Super() {
             ::memcpy(this->components, rhs.component, 
-                CNT_COMPONENTS * sizeof(T));
+                Super::CNT_COMPONENTS * sizeof(T));
         }
 
         /**

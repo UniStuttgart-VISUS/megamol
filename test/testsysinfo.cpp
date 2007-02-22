@@ -34,6 +34,16 @@ void TestSysInfo(void) {
         vislib::sys::SystemInformation::SystemVersion(verMajor, verMinor);
         std::cout << "System version " << verMajor << "." << verMinor << std::endl;
 
+        SystemInformation::MonitorDimArray monitorSizes;
+        DWORD cntMonitors = SystemInformation::MonitorSize(monitorSizes);
+        std::cout << "Found " << cntMonitors << " monitors" << std::endl;
+        for (DWORD i = 0; i < cntMonitors; i++) {
+            std::cout << "Monitor " << i << " has size (" 
+                << monitorSizes[int(i)].Width() << ", " 
+                << monitorSizes[int(i)].Height() << ")" 
+                << std::endl;
+        }
+
     } catch (SystemException e) {
         std::cout << "SystemException: " << e.GetErrorCode() << " " << e.GetMsg() << std::endl;
 

@@ -8,11 +8,10 @@
 #include "vislib/SystemInformation.h"
 
 #include "DynamicFunctionPointer.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
-
-
 
 #ifdef _WIN32
 #include <windows.h>
@@ -25,9 +24,70 @@
 #include <stdio.h>
 #include <errno.h>
 #include <pwd.h>
+#include <X11/Xlib.h>
 #endif
 
-#include <iostream>
+
+/*
+ * vislib::sys::SystemInformation::AllocationGranularity
+ */
+#ifdef _WIN32
+DWORD vislib::sys::SystemInformation::AllocationGranularity(void) {
+    SYSTEM_INFO si;
+    ::GetSystemInfo(&si);
+    return si.dwAllocationGranularity;
+}
+#endif /* _WIN32*/
+
+
+/*
+ * vislib::sys::SystemInformation::AvailableMemorySize
+ */
+UINT64 vislib::sys::SystemInformation::AvailableMemorySize(void) {
+#ifdef _WIN32
+    /*
+     * It's necessary to call the ex version to get information on machines 
+     * with more then 4 GB ram. However, staticly linking would restrict the
+     * vislib to windowsXP pro and newer, which is a to hard restrict.
+     */
+    UINT64 retval = 0;
+    DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
+
+    if (gmsEx.IsValid()) {
+        MEMORYSTATUSEX memStat;
+        memStat.dwLength = sizeof(memStat);
+
+        if (gmsEx(&memStat) == 0) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+
+        retval = memStat.ullAvailPhys;
+
+    } else {
+        MEMORYSTATUS memStat;
+
+        GlobalMemoryStatus(&memStat);
+
+        retval = memStat.dwAvailPhys;
+    }
+
+    return retval;
+#else /* _WIN32 */
+    struct sysinfo info;
+
+    if (sysinfo(&info) != 0) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
+        /* a fucking old kernel is used */
+        return static_cast<UINT64>(info.freeram);
+    }
+    return static_cast<UINT64>(info.freeram) 
+        * static_cast<UINT64>(info.mem_unit);
+
+#endif /* _WIN32 */
+}
 
 
 /*
@@ -92,6 +152,324 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
     vislib::StringA tmpStr;
     SystemInformation::ComputerName(tmpStr);
     outName = tmpStr;
+#endif
+}
+
+
+///* 
+// * vislib::sys::SystemInformation::DisplayDeviceCount
+// */
+//DWORD vislib::sys::SystemInformation::DisplayDeviceCount(void) {
+//#ifdef _WIN32
+//    DISPLAY_DEVICE dpyDev;
+//    dpyDev.cb = sizeof(DISPLAY_DEVICE);
+//    DWORD retval = 0;
+//
+//    while (::EnumDisplayDevices(NULL, retval, &dpyDev, 0)) {
+//        retval++;
+//    }
+//
+//    return retval; 
+//
+//#else /* _WIN32 */
+//    return 1;
+//#endif /* _WIN32 */
+//}
+
+
+
+/*
+ * vislib::sys::SystemInformation::MonitorSize
+ */
+DWORD vislib::sys::SystemInformation::MonitorSize(
+        MonitorDimArray& outMonitorSizes) {
+    outMonitorSizes.Clear();
+
+#ifdef _WIN32
+    if (!::EnumDisplayMonitors(NULL, NULL, SystemInformation::monitorEnumProc,
+            reinterpret_cast<LPARAM>(&outMonitorSizes))) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+#else /* _WIN32 */
+    Display *dpy = NULL;
+    StringA errorDesc;
+    int cntScreens = 0;
+
+    if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
+        errorDesc.Format("Could not open display \"%s\".", 
+            ::XDisplayName(NULL));
+        throw Exception(errorDesc, __FILE__, __LINE__);
+    }
+
+    cntScreens = ScreenCount(dpy);
+    for (int i = 0; i < cntScreens; i++) {
+        outMonitorSizes.Append(MonitorDim(DisplayWidth(dpy, i), 
+            DisplayHeight(dpy, i)));
+    }
+    
+    ::XCloseDisplay(dpy);
+
+#endif /* _WIN32 */
+
+    return static_cast<DWORD>(outMonitorSizes.Count());
+}
+
+
+
+/*
+ * vislib::sys::SystemInformation::PhysicalMemorySize
+ */
+UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
+#ifdef _WIN32
+    /*
+     * It's necessary to call the ex version to get information on machines 
+     * with more then 4 GB ram. However, staticly linking would restrict the
+     * vislib to windowsXP pro and newer, which is a to hard restrict.
+     */
+    UINT64 retval = 0;
+    DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
+
+    if (gmsEx.IsValid()) {
+        MEMORYSTATUSEX memStat;
+        memStat.dwLength = sizeof(memStat);
+
+        if (gmsEx(&memStat) == 0) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+
+        retval = memStat.ullTotalPhys;
+
+    } else {
+        MEMORYSTATUS memStat;
+
+        ::GlobalMemoryStatus(&memStat);
+
+        retval = memStat.dwTotalPhys;
+    }
+
+    return retval;
+#else /* _WIN32 */
+    struct sysinfo info;
+
+    if (sysinfo(&info) != 0) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
+        /* a fucking old kernel is used */
+        return static_cast<UINT64>(info.totalram);
+    }
+    return static_cast<UINT64>(info.totalram) 
+        * static_cast<UINT64>(info.mem_unit);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::SystemInformation::PageSize
+ */
+DWORD vislib::sys::SystemInformation::PageSize(void) {
+#ifdef _WIN32
+    SYSTEM_INFO si;
+    ::GetSystemInfo(&si);
+    return si.dwPageSize;
+
+#else /* _WIN32 */
+    int retval = ::sysconf(_SC_PAGESIZE);
+
+    if (retval == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return static_cast<DWORD>(retval);
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::SystemInformation::ProcessorCount
+ */
+unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
+#ifdef _WIN32
+    SYSTEM_INFO si;
+    ::GetSystemInfo(&si);
+    return si.dwNumberOfProcessors;
+
+#else /* _WIN32 */
+#if defined(_SC_NPROCESSORS_ONLN)
+    int retval = ::sysconf(_SC_NPROCESSORS_ONLN);
+
+    if (retval == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return static_cast<unsigned int>(retval);
+#else 
+    
+    // TODO: Rewrite as soon as better support classes are available
+    FILE *cpuinfo = fopen("/proc/cpuinfo", "rt");
+    if (cpuinfo) {
+        unsigned int countCPUs = 0;
+        const unsigned int lineSize = 1024;
+        char line[lineSize + 1];
+        line[lineSize] = 0;
+
+        while (!feof(cpuinfo)) {
+            fgets(line, lineSize, cpuinfo);
+
+            // case sensitive check necessary
+            // see /proc/cpuinfo on afro or mmoovis?? for more information
+            if (strstr(line, "processor") != NULL) { 
+                countCPUs++;
+            }
+        }
+
+        fclose(cpuinfo);
+        return countCPUs;
+    }
+
+    // errno is set by failed fopen
+    throw SystemException(__FILE__, __LINE__);
+
+    return 0; // never reached 
+#endif
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::SystemInformation::SelfSystemType
+ */
+vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SelfSystemType(void) {
+#ifdef _WIN32
+    return OS_WINDOWS;
+#else
+    return OS_LINUX;
+#endif
+}
+
+
+/*
+ * vislib::sys::SystemInformation::SelfWordSize
+ */
+unsigned int vislib::sys::SystemInformation::SelfWordSize(void) {
+#ifdef _WIN32
+#ifdef _WIN64
+    return 64;
+#else
+    return 32;
+#endif /* _WIN64 */
+#else /* _WIN 32 */
+#if ((defined(__LP64__) || defined(_LP64) || defined(__x86_64__)) \
+    && ((__LP64__ != 0) || (_LP64 != 0) || (__x86_64__ != 0)))
+    return 64;
+#else 
+    return 32;
+#endif
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::SystemInformation::SystemType
+ */
+vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemType(void) {
+    /* I'm currently very sure that the system type can be determined by the application type */
+#ifdef _WIN32
+    return OS_WINDOWS;
+#else
+    return OS_LINUX;
+#endif
+}
+
+
+/*
+ * vislib::sys::SystemInformation::SystemVersion
+ */
+void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor, 
+                                                   DWORD& outMinor) {
+#ifdef _WIN32
+    OSVERSIONINFO ver;
+    ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    
+    if (::GetVersionEx(&ver) != TRUE) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    outMajor = ver.dwMajorVersion;
+    outMinor = ver.dwMinorVersion;
+
+#else /* _WIN32 */
+    const int BUFFER_SIZE = 512;
+    char buffer[BUFFER_SIZE];
+    int majorVersion = 0;
+    int minorVersion = 0;
+    size_t cnt = 0;
+    FILE *fp = NULL;
+
+    // TODO: Use some shell abstraction class instead of popen.
+    if ((fp = ::popen("uname -r", "r")) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    cnt = ::fread(buffer, 1, sizeof(buffer) - 1, fp);
+    ::pclose(fp);
+
+    if (cnt == 0)  {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if (::sscanf(buffer, "%d.%d", &majorVersion, &minorVersion) != 2) {
+        TRACE(Trace::LEVEL_ERROR, "sscanf on version string failed.");
+        throw SystemException(ENOTSUP, __FILE__, __LINE__);
+    }
+
+    outMajor = majorVersion;
+    outMinor = minorVersion;
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::SystemInformation::SystemWordSize
+ */
+unsigned int vislib::sys::SystemInformation::SystemWordSize(void) {
+#ifdef _WIN32
+    DynamicFunctionPointer<void (WINAPI*)(SYSTEM_INFO *)> gnsi("kernel32", "GetNativeSystemInfo");
+    SYSTEM_INFO info;
+
+    if (gnsi.IsValid()) {
+        gnsi(&info);
+    } else {
+        ::GetSystemInfo(&info);        
+    }
+
+    switch (info.wProcessorArchitecture) {
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            return 32;
+            break;
+        case PROCESSOR_ARCHITECTURE_IA64: // no break!
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            return 64;
+            break;
+        case PROCESSOR_ARCHITECTURE_UNKNOWN: // no break!
+        default:
+            return vislib::sys::SystemInformation::SelfWordSize();
+            break;
+    }
+
+    assert(false); // never reached!
+    return 0;
+#else
+    struct utsname names;
+
+    if (uname(&names) != 0) {
+        return vislib::sys::SystemInformation::SelfWordSize();
+    }
+
+    return (strstr(names.machine, "64") == NULL) ? 32 : 64;    
 #endif
 }
 
@@ -166,323 +544,22 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
 #endif
 }
 
-/*
- * vislib::sys::SystemInformation::AllocationGranularity
- */
+
 #ifdef _WIN32
-DWORD vislib::sys::SystemInformation::AllocationGranularity(void) {
-    SYSTEM_INFO si;
-    ::GetSystemInfo(&si);
-    return si.dwAllocationGranularity;
-}
-#endif /* _WIN32*/
-
 /*
- * vislib::sys::SystemInformation::PageSize
+ * vislib::sys::SystemInformation::monitorEnumProc
  */
-DWORD vislib::sys::SystemInformation::PageSize(void) {
-#ifdef _WIN32
-    SYSTEM_INFO si;
-    ::GetSystemInfo(&si);
-    return si.dwPageSize;
+BOOL CALLBACK vislib::sys::SystemInformation::monitorEnumProc(HMONITOR hMonitor,
+        HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+    ASSERT(hdcMonitor == NULL);
+    MonitorDimArray *da = reinterpret_cast<MonitorDimArray *>(dwData);
 
-#else /* _WIN32 */
-    int retval = ::sysconf(_SC_PAGESIZE);
+    da->Append(MonitorDim(math::Abs(lprcMonitor->right - lprcMonitor->left), 
+        math::Abs(lprcMonitor->bottom - lprcMonitor->top)));
 
-    if (retval == -1) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    return static_cast<DWORD>(retval);
-
-#endif /* _WIN32 */
+    return TRUE;
 }
-
-
-/*
- * vislib::sys::SystemInformation::PhysicalMemorySize
- */
-UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
-#ifdef _WIN32
-    /*
-     * It's necessary to call the ex version to get information on machines 
-     * with more then 4 GB ram. However, staticly linking would restrict the
-     * vislib to windowsXP pro and newer, which is a to hard restrict.
-     */
-    UINT64 retval = 0;
-    DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
-
-    if (gmsEx.IsValid()) {
-        MEMORYSTATUSEX memStat;
-        memStat.dwLength = sizeof(memStat);
-
-        if (gmsEx(&memStat) == 0) {
-            throw SystemException(__FILE__, __LINE__);
-        }
-
-        retval = memStat.ullTotalPhys;
-
-    } else {
-        MEMORYSTATUS memStat;
-
-        ::GlobalMemoryStatus(&memStat);
-
-        retval = memStat.dwTotalPhys;
-    }
-
-    return retval;
-#else /* _WIN32 */
-    struct sysinfo info;
-
-    if (sysinfo(&info) != 0) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
-        /* a fucking old kernel is used */
-        return static_cast<UINT64>(info.totalram);
-    }
-    return static_cast<UINT64>(info.totalram) 
-        * static_cast<UINT64>(info.mem_unit);
-
-#endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::SystemInformation::AvailableMemorySize
- */
-UINT64 vislib::sys::SystemInformation::AvailableMemorySize(void) {
-#ifdef _WIN32
-    /*
-     * It's necessary to call the ex version to get information on machines 
-     * with more then 4 GB ram. However, staticly linking would restrict the
-     * vislib to windowsXP pro and newer, which is a to hard restrict.
-     */
-    UINT64 retval = 0;
-    DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
-
-    if (gmsEx.IsValid()) {
-        MEMORYSTATUSEX memStat;
-        memStat.dwLength = sizeof(memStat);
-
-        if (gmsEx(&memStat) == 0) {
-            throw SystemException(__FILE__, __LINE__);
-        }
-
-        retval = memStat.ullAvailPhys;
-
-    } else {
-        MEMORYSTATUS memStat;
-
-        GlobalMemoryStatus(&memStat);
-
-        retval = memStat.dwAvailPhys;
-    }
-
-    return retval;
-#else /* _WIN32 */
-    struct sysinfo info;
-
-    if (sysinfo(&info) != 0) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
-        /* a fucking old kernel is used */
-        return static_cast<UINT64>(info.freeram);
-    }
-    return static_cast<UINT64>(info.freeram) 
-        * static_cast<UINT64>(info.mem_unit);
-
-#endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::SystemInformation::ProcessorCount
- */
-unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
-#ifdef _WIN32
-    SYSTEM_INFO si;
-    ::GetSystemInfo(&si);
-    return si.dwNumberOfProcessors;
-
-#else /* _WIN32 */
-#if defined(_SC_NPROCESSORS_ONLN)
-    int retval = ::sysconf(_SC_NPROCESSORS_ONLN);
-
-    if (retval == -1) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    return static_cast<unsigned int>(retval);
-#else 
-    
-    // TODO: Rewrite as soon as better support classes are available
-    FILE *cpuinfo = fopen("/proc/cpuinfo", "rt");
-    if (cpuinfo) {
-        unsigned int countCPUs = 0;
-        const unsigned int lineSize = 1024;
-        char line[lineSize + 1];
-        line[lineSize] = 0;
-
-        while (!feof(cpuinfo)) {
-            fgets(line, lineSize, cpuinfo);
-
-            // case sensitive check necessary
-            // see /proc/cpuinfo on afro or mmoovis?? for more information
-            if (strstr(line, "processor") != NULL) { 
-                countCPUs++;
-            }
-        }
-
-        fclose(cpuinfo);
-        return countCPUs;
-    }
-
-    // errno is set by failed fopen
-    throw SystemException(__FILE__, __LINE__);
-
-    return 0; // never reached 
-#endif
-#endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::SystemInformation::SystemType
- */
-vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemType(void) {
-    /* I'm currently very sure that the system type can be determined by the application type */
-#ifdef _WIN32
-    return OS_WINDOWS;
-#else
-    return OS_LINUX;
-#endif
-}
-
-
-/*
- * vislib::sys::SystemInformation::SystemVersion
- */
-void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor, 
-                                                   DWORD& outMinor) {
-#ifdef _WIN32
-    OSVERSIONINFO ver;
-    ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    
-    if (::GetVersionEx(&ver) != TRUE) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    outMajor = ver.dwMajorVersion;
-    outMinor = ver.dwMinorVersion;
-
-#else /* _WIN32 */
-    const int BUFFER_SIZE = 512;
-    char buffer[BUFFER_SIZE];
-    int majorVersion = 0;
-    int minorVersion = 0;
-    size_t cnt = 0;
-    FILE *fp = NULL;
-
-    // TODO: Use some shell abstraction class instead of popen.
-    if ((fp = ::popen("uname -r", "r")) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    cnt = ::fread(buffer, 1, sizeof(buffer) - 1, fp);
-    ::pclose(fp);
-
-    if (cnt == 0)  {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    if (::sscanf(buffer, "%d.%d", &majorVersion, &minorVersion) != 2) {
-        TRACE(Trace::LEVEL_ERROR, "sscanf on version string failed.");
-        throw SystemException(ENOTSUP, __FILE__, __LINE__);
-    }
-
-    outMajor = majorVersion;
-    outMinor = minorVersion;
-#endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::SystemInformation::SystemArchitectureType
- */
-unsigned int vislib::sys::SystemInformation::SystemWordSize(void) {
-#ifdef _WIN32
-    DynamicFunctionPointer<void (WINAPI*)(SYSTEM_INFO *)> gnsi("kernel32", "GetNativeSystemInfo");
-    SYSTEM_INFO info;
-
-    if (gnsi.IsValid()) {
-        gnsi(&info);
-    } else {
-        ::GetSystemInfo(&info);        
-    }
-
-    switch (info.wProcessorArchitecture) {
-        case PROCESSOR_ARCHITECTURE_INTEL:
-            return 32;
-            break;
-        case PROCESSOR_ARCHITECTURE_IA64: // no break!
-        case PROCESSOR_ARCHITECTURE_AMD64:
-            return 64;
-            break;
-        case PROCESSOR_ARCHITECTURE_UNKNOWN: // no break!
-        default:
-            return vislib::sys::SystemInformation::SelfWordSize();
-            break;
-    }
-
-    assert(false); // never reached!
-    return 0;
-#else
-    struct utsname names;
-
-    if (uname(&names) != 0) {
-        return vislib::sys::SystemInformation::SelfWordSize();
-    }
-
-    return (strstr(names.machine, "64") == NULL) ? 32 : 64;    
-#endif
-}
-
-
-/*
- * vislib::sys::SystemInformation::SelfSystemType
- */
-vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SelfSystemType(void) {
-#ifdef _WIN32
-    return OS_WINDOWS;
-#else
-    return OS_LINUX;
-#endif
-}
-
-
-/*
- * vislib::sys::SystemInformation::SelfWordSize
- */
-unsigned int vislib::sys::SystemInformation::SelfWordSize(void) {
-#ifdef _WIN32
-#ifdef _WIN64
-    return 64;
-#else
-    return 32;
-#endif /* _WIN64 */
-#else /* _WIN 32 */
-#if ((defined(__LP64__) || defined(_LP64) || defined(__x86_64__)) \
-    && ((__LP64__ == 1) || (_LP64 == 1) || (__x86_64__ == 1)))
-    return 64;
-#else 
-    return 32;
-#endif
-#endif /* _WIN32 */
-}
+#endif /*_ WIN32 */
 
 
 /*

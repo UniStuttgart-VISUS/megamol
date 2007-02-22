@@ -248,34 +248,34 @@ namespace math {
         Quaternion<T> q(rhs);
         q.Normalise();
 
-        this->components[indexOf(0, 0)] 
+        this->components[Super::indexOf(0, 0)] 
             = Sqr(q.W()) + Sqr(q.X()) - Sqr(q.Y()) - Sqr(q.Z());
-        this->components[indexOf(0, 1)] 
+        this->components[Super::indexOf(0, 1)] 
             = static_cast<T>(2) * (q.X() * q.Y() - q.W() * q.Z());
-        this->components[indexOf(0, 2)] 
+        this->components[Super::indexOf(0, 2)] 
             = static_cast<T>(2) * (q.W() * q.Y() + q.X() * q.Z()); 
-        this->components[indexOf(0, 3)] = static_cast<T>(0);
+        this->components[Super::indexOf(0, 3)] = static_cast<T>(0);
 
-        this->components[indexOf(1, 0)] 
+        this->components[Super::indexOf(1, 0)] 
             = static_cast<T>(2) * (q.W() * q.Z() + q.X() * q.Y());
-        this->components[indexOf(1, 1)] 
+        this->components[Super::indexOf(1, 1)] 
             = Sqr(q.W()) - Sqr(q.X()) + Sqr(q.Y()) - Sqr(q.Z());
-        this->components[indexOf(1, 2)] 
+        this->components[Super::indexOf(1, 2)] 
             = static_cast<T>(2) * (q.Y() * q.Z() - q.W() * q.X());
-        this->components[indexOf(1, 3)] = static_cast<T>(0);
+        this->components[Super::indexOf(1, 3)] = static_cast<T>(0);
 
-        this->components[indexOf(2, 0)] 
+        this->components[Super::indexOf(2, 0)] 
             = static_cast<T>(2) * (q.X() * q.Z() - q.W() * q.Y());
-        this->components[indexOf(2, 1)] 
+        this->components[Super::indexOf(2, 1)] 
             = static_cast<T>(2) * (q.W() * q.X() - q.Y() * q.Z());
-        this->components[indexOf(2, 2)] 
+        this->components[Super::indexOf(2, 2)] 
             = Sqr(q.W()) - Sqr(q.X()) - Sqr(q.Y()) + Sqr(q.Z());
-        this->components[indexOf(2, 3)] = static_cast<T>(0);
+        this->components[Super::indexOf(2, 3)] = static_cast<T>(0);
 
-        this->components[indexOf(3, 0)] = static_cast<T>(0);
-        this->components[indexOf(3, 1)] = static_cast<T>(0);
-        this->components[indexOf(3, 2)] = static_cast<T>(0);
-        this->components[indexOf(3, 3)] = static_cast<T>(1);
+        this->components[Super::indexOf(3, 0)] = static_cast<T>(0);
+        this->components[Super::indexOf(3, 1)] = static_cast<T>(0);
+        this->components[Super::indexOf(3, 2)] = static_cast<T>(0);
+        this->components[Super::indexOf(3, 3)] = static_cast<T>(1);
 
         return *this;
     }
