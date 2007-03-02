@@ -15,14 +15,7 @@
 
 
 #include "vislib/AbstractOpenGLShader.h"
-
-#if (_MSC_VER > 1000)
-#pragma warning(disable: 4996)
-#endif /* (_MSC_VER > 1000) */
-#include "glh/glh_extensions.h"
-#if (_MSC_VER > 1000)
-#pragma warning(default: 4996)
-#endif /* (_MSC_VER > 1000) */
+#include "vislib/ExtensionsDependent.h"
 
 
 namespace vislib {
@@ -33,7 +26,7 @@ namespace gl {
     /**
      * TODO: comment class
      */
-    class ARBShader : public AbstractOpenGLShader {
+    class ARBShader : public AbstractOpenGLShader, public ExtensionsDependent<ARBShader> {
 
     public:
 
@@ -46,13 +39,12 @@ namespace gl {
 
 
         /**
-         * Initialise the extensions that are required for ARB shaders. This 
-         * method must be called before creating the first shader.
+         * Answer the extensions that are required for ARB shaders as
+         * space-separated ANSI strings.
          *
-         * @return true, if all required extension could be loaded, 
-         *         false otherwise.
+         * @return The extensions that are requiered for ARB shaders.
          */
-        static bool InitialiseExtensions(void);
+        static const char * RequiredExtensions(void);
 
         /** Ctor. */
         ARBShader(void);

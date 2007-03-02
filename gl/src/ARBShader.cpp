@@ -17,13 +17,11 @@
 
 
 /*
- * vislib::graphics::gl::ARBShader::InitialiseExtensions
+ * vislib::graphics::gl::ARBShader::RequiredExtensions
  */
-bool vislib::graphics::gl::ARBShader::InitialiseExtensions(void) {
-    return (::glh_init_extensions(
-        "GL_ARB_fragment_program "
-        "GL_ARB_vertex_program "
-        ) != 0);
+const char * vislib::graphics::gl::ARBShader::RequiredExtensions(void) {
+    return "GL_ARB_fragment_program "
+        "GL_ARB_vertex_program ";
 }
 
 

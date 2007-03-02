@@ -15,15 +15,8 @@
 
 
 #include "vislib/AbstractOpenGLShader.h"
+#include "vislib/ExtensionsDependent.h"
 #include "vislib/types.h"
-
-#if (_MSC_VER > 1000)
-#pragma warning(disable: 4996)
-#endif /* (_MSC_VER > 1000) */
-#include "glh/glh_extensions.h"
-#if (_MSC_VER > 1000)
-#pragma warning(default: 4996)
-#endif /* (_MSC_VER > 1000) */
 
 
 namespace vislib {
@@ -34,18 +27,9 @@ namespace gl {
     /**
      * TODO: comment class
      */
-    class GLSLShader : public AbstractOpenGLShader {
+    class GLSLShader : public AbstractOpenGLShader, public ExtensionsDependent<GLSLShader> {
 
     public:
-
-        /**
-         * Initialise the extensions that are required for GLSL shader objects. 
-         * This method must be called before creating the first shader.
-         *
-         * @return true, if all required extension could be loaded, 
-         *         false otherwise.
-         */
-        static bool InitialiseExtensions(void);
 
         /**
          * Answer whether 'hProg' is a valid program object handle, that also 
@@ -56,6 +40,14 @@ namespace gl {
          * @return true, if 'hProg' is a valid handle, false otherwise.
          */
         static bool IsValidHandle(GLhandleARB hProg);
+
+        /**
+         * Answer the extensions that are required for ARB shaders as
+         * space-separated ANSI strings.
+         *
+         * @return The extensions that are requiered for ARB shaders.
+         */
+        static const char * RequiredExtensions(void);
 
         /** Vertex shader source for fixed function transformation. */
         static const char *FTRANSFORM_VERTEX_SHADER_SRC;

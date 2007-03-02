@@ -14,15 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#if (_MSC_VER > 1000)
-#pragma warning(disable: 4996)
-#endif /* (_MSC_VER > 1000) */
-#include "glh/glh_extensions.h"
-#if (_MSC_VER > 1000)
-#pragma warning(default: 4996)
-#endif /* (_MSC_VER > 1000) */
 
-
+#include "vislib/ExtensionsDependent.h"
 #include "vislib/types.h"
 
 
@@ -34,7 +27,7 @@ namespace gl {
     /**
      * 
      */
-    class FramebufferObject {
+    class FramebufferObject : public ExtensionsDependent<FramebufferObject> {
 
     public:
 
@@ -65,6 +58,14 @@ namespace gl {
         } StencilAttachParams;
 
         /**
+         * Answer the extensions that are required for framebuffer objects as
+         * space-separated ANSI strings.
+         *
+         * @return The extensions that are requiered for framebuffer objects.
+         */
+        static const char * RequiredExtensions(void);
+
+        /**
          * Answer the maximum number of color attachment the current hardware
          * supports.
          *
@@ -74,15 +75,6 @@ namespace gl {
          *                         retrieved.
          */
         UINT GetMaxColorAttachments(void);
-
-        /**
-         * Initialise the extensions that are required for framebuffer objects.
-         * This method must be called before using any framebuffer object.
-         *
-         * @return true, if all required extension could be loaded, 
-         *         false otherwise.
-         */
-        static bool InitialiseExtensions(void);
 
         /** Ctor. */
         FramebufferObject(void);

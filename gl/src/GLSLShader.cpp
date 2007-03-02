@@ -17,16 +17,6 @@
 
 
 /*
- * vislib::graphics::gl::GLSLShader::InitialiseExtensions
- */
-bool vislib::graphics::gl::GLSLShader::InitialiseExtensions(void) {
-    return (::glh_init_extensions(
-        "GL_ARB_shader_objects "
-        ) != 0);
-}
-
-
-/*
  * vislib::graphics::gl::GLSLShader::IsValidHandle
  */
 bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
@@ -39,6 +29,14 @@ bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
     } else {
         return false;
     }
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::RequiredExtensions
+ */
+const char * vislib::graphics::gl::GLSLShader::RequiredExtensions(void) {
+    return "GL_ARB_shader_objects ";
 }
 
 

@@ -17,9 +17,16 @@
 #include "vislib/UnsupportedOperationException.h"
 
 
+/*
+ * vislib::graphics::gl::FramebufferObject::RequiredExtensions
+ */
+const char * vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
+    return "GL_EXT_framebuffer_object ";
+}
+
 
 /*
- * vislib::::graphics::gl::FramebufferObject::GetMaxColorAttachments
+ * vislib::graphics::gl::FramebufferObject::GetMaxColorAttachments
  */
 UINT vislib::graphics::gl::FramebufferObject::GetMaxColorAttachments(void) {
     USES_GL_VERIFY;
@@ -28,16 +35,6 @@ UINT vislib::graphics::gl::FramebufferObject::GetMaxColorAttachments(void) {
     GL_VERIFY_THROW(::glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &retval));
 
     return static_cast<UINT>(retval);
-}
-
-
-/*
- * vislib::graphics::gl::FramebufferObject::InitialiseExtensions
- */
-bool vislib::graphics::gl::FramebufferObject::InitialiseExtensions(void) {
-    return (::glh_init_extensions(
-        "GL_EXT_framebuffer_object "
-        ) != 0);
 }
 
 

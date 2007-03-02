@@ -294,6 +294,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ExtensionsDependent.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\FramebufferObject.cpp"
 				>
 			</File>
@@ -325,6 +329,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\CameraOpenGL.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ExtensionsDependent.h"
 				>
 			</File>
 			<File
