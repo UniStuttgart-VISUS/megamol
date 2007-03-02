@@ -373,6 +373,36 @@ namespace vislib {
         }
 
         /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        inline T& operator [](const UINT idx) {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
+
+        /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        const T& operator [](const UINT idx) const {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand operand.

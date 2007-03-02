@@ -50,6 +50,15 @@ namespace sys {
          */
         void Free(void);
 
+        /**
+         * Answer a function pointer to the function named 'procName'.
+         *
+         * @param procName The name of the function to be seached.
+         *
+         * @return A pointer to the function.
+         *
+         // TODO: Exception handling
+         */
 #ifdef _WIN32
         FARPROC GetProcAddress(const CHAR *procName) const;
 #else /* _WIN32 */
