@@ -24,7 +24,8 @@ OutName := vislibtest
 CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 
 # Linker flags:
-LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
+#LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
+LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -ldl -lncurses 
 
 ifndef VISLIB_VERBOSE
     VISLIB_VERBOSE = 0

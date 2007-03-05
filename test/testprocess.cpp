@@ -13,8 +13,8 @@
 #endif /* !_WIN32 */
 
 #include "testhelper.h"
-#include "vislib/ImpersonationContext.h"
-#include "vislib/PAMException.h"
+//#include "vislib/ImpersonationContext.h"
+//#include "vislib/PAMException.h"
 #include "vislib/Process.h"
 #include "vislib/SystemException.h"
 
@@ -27,6 +27,7 @@ void TestProcess(void) {
     using namespace std;
     using namespace vislib::sys;
 
+#ifdef _WIN32   // TODO PAM disabled
 
     ImpersonationContext i;
     try {
@@ -76,4 +77,6 @@ void TestProcess(void) {
     } catch (SystemException se) {
         cout << se.GetMsgA() << endl;
     }
+
+#endif /* _WIN32 */  // TODO PAM disabled
 }
