@@ -13,7 +13,9 @@
 #include "vislib/Console.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
+#ifdef _WIN32 // TODO: PAM disabled
 #include "vislib/ImpersonationContext.h"
+#endif // TODO
 #include "vislib/Path.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -236,6 +238,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     this->hProcess = pi.hProcess;
 
 #else /* _WIN32 */
+#if 0   // TODO: PAM disabled
     StringA query;
     StringA cmd;
     ImpersonationContext ic;
@@ -290,6 +293,61 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
             //}
         }
     }
+#else
+    StringA query;
+    StringA cmd;
+    pid_t pid;
+
+    /* Detect and expand shell commands first first. */
+    query.Format("which %s", command);
+    if (Console::Run(query.PeekBuffer(), &cmd) == 0) {
+        cmd.TrimEnd("\r\n");
+    } else {
+        cmd = Path::Resolve(command);
+    }
+
+    /* A process must not be started twice. */
+    if (this->pid >= 0) {
+        throw IllegalStateException("This process was already created.",
+            __FILE__, __LINE__);
+    }
+
+    pid = ::fork();
+    if (pid < 0) {
+        /* Process creating failed. */
+        throw SystemException(__FILE__, __LINE__);
+
+    } else if (pid > 0) {
+        /*
+         * We are in the new process, impersonate as new user and spawn 
+         * process. 
+         */
+        if ((user != NULL) && (password != NULL)) {
+            ASSERT(false);
+        }
+
+        /* Change to working directory, if specified. */
+        if (currentDirectory != NULL) {
+            if (::chdir(currentDirectory) != 0) {
+                throw SystemException(__FILE__, __LINE__);
+            }
+        }
+
+        if (environment.IsEmpty()) {
+            char *tmp[] = { const_cast<char *>(cmd.PeekBuffer()), NULL };
+            if (::execv(cmd.PeekBuffer(), tmp) != 0) {
+                throw SystemException(__FILE__, __LINE__);
+            }
+                
+        } else {
+            assert(false);
+            //if (::execve(cmd.PeekBuffer(), arguments, 
+            //        static_cast<char * const*>(environment)) != 0) {
+            //    throw SystemException(__FILE__, __LINE__);
+            //}
+        }
+    }
+#endif 
 #endif /* _WIN32 */
 }
 
