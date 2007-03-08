@@ -13,8 +13,10 @@
 #endif /* !_WIN32 */
 
 #include "testhelper.h"
-//#include "vislib/ImpersonationContext.h"
-//#include "vislib/PAMException.h"
+#ifdef _WIN32
+#include "vislib/ImpersonationContext.h"
+#include "vislib/PAMException.h"
+#endif  // TODO PAM disabled
 #include "vislib/Process.h"
 #include "vislib/SystemException.h"
 

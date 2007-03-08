@@ -18,9 +18,9 @@
 #include "vislib/IPAddress.h"   // Must be included at begin!
 #include "vislib/Socket.h"      // Must be included at begin!
 #include "vislib/Array.h"
-#include "vislib/ClusterDiscoveryListener.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/SingleLinkedList.h"
+#include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 #include "vislib/Thread.h"
 #include "vislib/types.h"
@@ -29,6 +29,10 @@
 
 namespace vislib {
 namespace net {
+
+    /* Forward declarations. */
+    class ClusterDiscoveryListener;
+
 
     /**
      * This class implements a method for discovering other computers in a
@@ -41,7 +45,25 @@ namespace net {
      */
     class ClusterDiscoveryService {
 
+    private:
+
+        /** 
+         * This structure is used to identify a peer node that has been found
+         * during the discovery process.
+         */
+        typedef struct PeerNode_t {
+            SocketAddress address;          // User communication address (ID).
+            SocketAddress discoveryAddr;    // Discovery service address.
+            UINT cntResponseChances;        // Implicit disconnect detector.
+
+            inline bool operator ==(const PeerNode_t& rhs) const {
+                return (this->address == rhs.address);
+            }
+        } PeerNode;
+
     public:
+
+        typedef vislib::SmartPtr<PeerNode> PeerHandle;
 
         /** The default port number used by the discovery service. */
         static const USHORT DEFAULT_PORT;
@@ -140,7 +162,7 @@ namespace net {
          *
          * @return The address the listening socket is bound to.
          */
-        const SocketAddress& GetBindAddr(void) const {
+        inline const SocketAddress& GetBindAddr(void) const {
             return this->bindAddr;
         }
 
@@ -201,12 +223,12 @@ namespace net {
 
         /**
          * Send a user-defined message to the node that is identified with the
-         * response address 'to'. Note that 'to' is not the address which to the
-         * message is acutally sent, but only the node identifier. The user
-         * message can be an arbitrary sequence of a most MAX_USER_DATA bytes.
+         * peer node handle 'hPeer'.The user message can be an arbitrary 
+         * sequence of a most MAX_USER_DATA bytes.
          *
          * You must have called Socket::Startup before you can use this method.
          *
+         * @param hPeer   Handle to the peer node to send the message to.
          * @param msgType The message type identifier. This must be a 
          *                user-defined value of MSG_TYPE_USER or larger.
          * @param msgBody A pointer to the message body. This must not be NULL.
@@ -219,11 +241,12 @@ namespace net {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws IllegalParamException If 'msgType' is below MSG_TYPE_USER,
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         *                               or 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        UINT SendUserMessage(const SocketAddress& to, const UINT16 msgType,
+        UINT SendUserMessage(const PeerHandle& hPeer, const UINT16 msgType,
             const void *msgBody, const SIZE_T msgSize);
 
         /**
@@ -264,7 +287,7 @@ namespace net {
          */
         inline SocketAddress operator [](const INT idx) const {
             this->critSect.Lock();
-            SocketAddress retval = this->peerNodes[idx].address;
+            SocketAddress retval = this->peerNodes[idx]->address;
             this->critSect.Unlock();
             return retval;
         }
@@ -282,10 +305,22 @@ namespace net {
          */
         inline SocketAddress operator [](const SIZE_T idx) const {
             this->critSect.Lock();
-            SocketAddress retval = this->peerNodes[idx].address;
+            SocketAddress retval = this->peerNodes[idx]->address;
             this->critSect.Unlock();
             return retval;
         }
+
+        /**
+         * Answer the user communication address of 'hPeer'. 
+         *
+         * @param hPeer The handle of the peer node.
+         *
+         * @return The socket address that has been specified by the peer node
+         *         for user communication.
+         *
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         */
+        SocketAddress operator [](const PeerHandle& hPeer) const;
 
     protected:
 
@@ -409,25 +444,11 @@ namespace net {
         /** A shortcut to the listener list type. */
         typedef SingleLinkedList<ClusterDiscoveryListener *> ListenerList;
 
-        /** 
-         * This structure is used to identify a peer node that has been found
-         * during the discovery process.
-         */
-        typedef struct PeerNode_t {
-            SocketAddress address;          // User communication address (ID).
-            SocketAddress discoveryAddr;    // Discovery service address.
-            UINT cntResponseChances;        // Implicit disconnect detector.
-
-            inline bool operator ==(const PeerNode_t& rhs) const {
-                return (this->address == rhs.address);
-            }
-        } PeerNode;
-
         /** Such an array is used for storing the known peer nodes. */
-        typedef Array<PeerNode> PeerNodeList;
+        typedef Array<PeerHandle> PeerNodeList;
 
         /**
-         * Add 'node' to the list of known peer nodes. If node is already known,
+         * Add a peer to the list of known peer nodes. If node is already known,
          * the response chance counter is reset to its original value.
          *
          * This method also fires the node found event by calling OnNodeFound
@@ -435,9 +456,15 @@ namespace net {
          *
          * This method is thread-safe.
          *
-         * @param node The node to be added.
+         * @param discoveryAddr The socket address the discovery service of the
+         *                      peer node sent the message. Note, that the 
+         *                      port is automatically corrected to the correct
+         *                      service port and must not be set by the caller.
+         * @param address       The user communication address the peer node 
+         *                      reported.
          */
-        void addPeerNode(const PeerNode& node);
+        void addPeerNode(const SocketAddress& discoveryAddr, 
+            const SocketAddress& address);
 
         /**
          * Inform all registered ClusterDiscoveryListeners about a a user 
@@ -463,8 +490,18 @@ namespace net {
             const BYTE *msgBody) const;
 
         /**
-         * Answer the index of the peer node that runs its discovery 
-         * service on 'addr'. If no such node exists, -1 is returned.
+         * Answer whether 'hPeer' is a valid peer node handle.
+         *
+         * @param hPeer Handle to a peer node.
+         *
+         * @return true, if 'hPeer' is valid, false otherwise.
+         */
+        bool isValidPeerHandle(const PeerHandle& hPeer) const;
+
+        /**
+         * Answer the index of the peer node that reported the user 
+         * communication address 'addr'. If no such node exists, -1 
+         * is returned.
          *
          * This method is NOT thread-safe.
          *
@@ -472,20 +509,22 @@ namespace net {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromDiscoveryAddr(const IPAddress& addr) const;
+        INT_PTR peerFromAddress(const SocketAddress& addr) const;
 
         /**
-         * Answer the index of the peer node that uses 'addr' as its
-         * user defined response address. If no such node exists, -1 is 
-         * returned.
+         * Answer the index of the peer node that runs its discovery 
+         * service on 'addr'. If no such node exists, -1 is returned.
+         *
+         * Only the IP address is taken into account, not the port. It is
+         * therefore safe to use the UDP sender address for 'addr'.
          *
          * This method is NOT thread-safe.
          *
-         * @param addr The response address to search.
+         * @param addr The discovery address to lookup.
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromResponseAddr(const SocketAddress& addr) const;
+        INT_PTR peerFromDiscoveryAddr(const SocketAddress& addr) const;
 
         /**
          * Prepares the list of known peer nodes for a new request. 
@@ -537,14 +576,16 @@ namespace net {
             const void *msgBody, const SIZE_T msgSize);
 
         /**
-         * Remove the peer node 'node'.
+         * Remove the peer node having the user communication address 'address'.
+         * If no such node exists, nothing will happen.
          *
          * This method also fires the node lost event sigaling an explicit
          * remove of the node.
          *
-         * @param node The node to be removed.
+         * @param address The socket address that the peer node reported as its
+         *                user communication port.
          */
-        void removePeerNode(const PeerNode& node);
+        void removePeerNode(const SocketAddress& address);
 
         /** The magic number at the begin of each message. */
         static const UINT16 MAGIC_NUMBER;

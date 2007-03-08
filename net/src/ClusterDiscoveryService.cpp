@@ -8,6 +8,7 @@
 #include "vislib/ClusterDiscoveryService.h"
 
 #include "vislib/assert.h"
+#include "vislib/ClusterDiscoveryListener.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
@@ -120,7 +121,7 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         try {
             this->userMsgSocket.Send(&msg, sizeof(Message), 
-                this->peerNodes[i].discoveryAddr);
+                this->peerNodes[i]->discoveryAddr);
         } catch (SocketException e) {
             TRACE(Trace::LEVEL_WARN, "ClusterDiscoveryService could not send "
                 "user message (\"%s\").\n", e.GetMsgA());
@@ -136,29 +137,31 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
  * vislib::net::ClusterDiscoveryService::SendUserMessage
  */
 UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
-        const SocketAddress& to, const UINT16 msgType, const void *msgBody, 
+        const PeerHandle& hPeer, const UINT16 msgType, const void *msgBody, 
         const SIZE_T msgSize) {
     Message msg;                // The datagram we are going to send.
-    INT_PTR idx = -1;           // Index of target node.
+    UINT retval = 0;            // Retval, 0 in case of success.
 
     this->prepareUserMessage(msg, msgType, msgBody, msgSize);
     ASSERT(this->userMsgSocket.IsValid());
-
+    
     this->critSect.Lock();
-    if ((idx = this->peerFromResponseAddr(to)) >= 0) {
-        try {
-            // TODO: Should avoid cast.
-            this->userMsgSocket.Send(&msg, sizeof(Message), 
-                this->peerNodes[static_cast<INT>(idx)].discoveryAddr);
-        } catch (SocketException e) {
-            TRACE(Trace::LEVEL_WARN, "ClusterDiscoveryService could not send "
-                "user message (\"%s\").\n", e.GetMsgA());
-            idx = -1;
-        }
+
+    if (!this->isValidPeerHandle(hPeer)) {
+        this->critSect.Unlock();
+        throw IllegalParamException("hPeer", __FILE__, __LINE__);
+    }
+
+    try {
+        this->userMsgSocket.Send(&msg, sizeof(Message), hPeer->discoveryAddr);
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_WARN, "ClusterDiscoveryService could not send "
+            "user message (\"%s\").\n", e.GetMsgA());
+        retval++;
     }
     this->critSect.Unlock();
 
-    return (idx >= 0) ? 0 : 1;
+    return retval;
 }
 
 
@@ -201,6 +204,27 @@ bool vislib::net::ClusterDiscoveryService::Stop(void) {
             "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
         return false;
     }
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::operator []
+ */
+vislib::net::SocketAddress vislib::net::ClusterDiscoveryService::operator [](
+        const PeerHandle& hPeer) const {
+    SocketAddress retval;
+    
+    this->critSect.Lock();
+
+    if (!this->isValidPeerHandle(hPeer)) {
+        this->critSect.Unlock();
+        throw IllegalParamException("hPeer", __FILE__, __LINE__);
+    } else {
+        retval = hPeer->address;
+        this->critSect.Unlock();
+    }
+
+    return retval;
 }
 
 
@@ -339,13 +363,13 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
         void *reserved) {
     SocketAddress peerAddr;     // Receives address of UDP communication peer.
     PeerNode peerNode;          // The peer node to register in our list.
-    Message request;            // Receives the request messages.
+    Message msg;                // Receives the request messages.
     Socket socket;              // The datagram socket that is listening.
 
     // Assert expected message memory layout.
-    ASSERT(sizeof(request) == MAX_USER_DATA + 4);
-    ASSERT(reinterpret_cast<BYTE *>(&(request.senderBody)) 
-       == reinterpret_cast<BYTE *>(&request) + 4);
+    ASSERT(sizeof(msg) == MAX_USER_DATA + 4);
+    ASSERT(reinterpret_cast<BYTE *>(&(msg.senderBody)) 
+       == reinterpret_cast<BYTE *>(&msg) + 4);
 
     /* 
      * Prepare a datagram socket listening for requests on the specified 
@@ -365,11 +389,8 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
     }
 
     /* Register myself as known node first. */
-    peerNode.address = this->cds.responseAddr;
-    peerNode.discoveryAddr = SocketAddress(this->cds.responseAddr, 
-        this->cds.bindAddr.GetPort());  // TODO: This is hugly.
-    peerNode.cntResponseChances = this->cds.cntResponseChances + 1;
-    this->cds.addPeerNode(peerNode);
+    this->cds.addPeerNode(this->cds.responseAddr, this->cds.responseAddr);
+    // TODO: Using the response address as discovery address is hugly.
 
     TRACE(Trace::LEVEL_INFO, "The discovery receiver thread is starting ...\n");
 
@@ -377,38 +398,34 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
         try {
 
             /* Wait for next message. */
-            socket.Receive(&request, sizeof(Message), peerAddr);
+            socket.Receive(&msg, sizeof(Message), peerAddr);
 
-            if (request.magicNumber == MAGIC_NUMBER) {
+            if (msg.magicNumber == MAGIC_NUMBER) {
                 /* Message OK, look for its content. */
 
-                if ((request.msgType == MSG_TYPE_IAMHERE) 
-                        && (this->cds.name.Compare(request.senderBody.name))) {
+                if ((msg.msgType == MSG_TYPE_IAMHERE) 
+                        && (this->cds.name.Compare(msg.senderBody.name))) {
                     /* Got a discovery request for own cluster. */
                     TRACE(Trace::LEVEL_INFO, "Discovery service received "
                         "MSG_TYPE_IAMHERE from %s.\n", 
                         peerAddr.ToStringA().PeekBuffer());
                     
                     /* Add peer to local list, if not yet known. */
-                    peerNode.address = request.senderBody.sockAddr;
-                    this->cds.addPeerNode(peerNode);
+                    this->cds.addPeerNode(peerAddr, msg.senderBody.sockAddr);
 
-                } else if ((request.msgType == MSG_TYPE_SAYONARA)
-                        && (this->cds.name.Compare(request.senderBody.name))) {
+                } else if ((msg.msgType == MSG_TYPE_SAYONARA)
+                        && (this->cds.name.Compare(msg.senderBody.name))) {
                     /* Got an explicit disconnect. */
                     TRACE(Trace::LEVEL_INFO, "Response thread received "
                         "MSG_TYPE_SAYONARA from %s.\n",
                         peerAddr.ToStringA().PeekBuffer());
 
-                    peerNode.address = request.senderBody.sockAddr;
-                    peerNode.discoveryAddr = SocketAddress(peerAddr, 
-                        this->cds.bindAddr.GetPort());
-                    this->cds.removePeerNode(peerNode);
+                    this->cds.removePeerNode(msg.senderBody.sockAddr);
 
-                } else if (request.msgType >= MSG_TYPE_USER) {
+                } else if (msg.msgType >= MSG_TYPE_USER) {
                     /* Received user message. */
-                    this->cds.fireUserMessage(peerAddr, request.msgType, 
-                        request.userData);
+                    this->cds.fireUserMessage(peerAddr, msg.msgType, 
+                        msg.userData);
                 }
             } /* end if (response.magicNumber == MAGIC_NUMBER) */
 
@@ -452,26 +469,36 @@ bool vislib::net::ClusterDiscoveryService::Receiver::Terminate(void) {
 /*
  * vislib::net::ClusterDiscoveryService::addPeerNode
  */
-void vislib::net::ClusterDiscoveryService::addPeerNode(const PeerNode& node) {
+void vislib::net::ClusterDiscoveryService::addPeerNode(
+        const SocketAddress& discoveryAddr, const SocketAddress& address) {
+    INT_PTR idx = 0;            // Index of possible duplicate.
+    PeerHandle hPeer = NULL;    // Old or new peer node handle.
+
     this->critSect.Lock();
-
-    PeerNode *localNode = this->peerNodes.Find(node);
-
-    if (localNode != NULL) {
+    
+    if ((idx = this->peerFromAddress(address)) >= 0) {
         /* Already known, reset disconnect chance. */
-        localNode->cntResponseChances = this->cntResponseChances + 1;
+        TRACE(Trace::LEVEL_INFO, "Peer node %s is already known.\n", 
+            static_cast<const char *>(address.ToStringA()));
+        hPeer = this->peerNodes[static_cast<INT>(idx)];
 
     } else {
         /* Not known, so add it and fire event. */
-        this->peerNodes.Append(node);
+        hPeer = new PeerNode;
+        hPeer->address = address;
+        hPeer->discoveryAddr = SocketAddress(discoveryAddr, 
+            this->bindAddr.GetPort());
+
+        this->peerNodes.Append(hPeer);
 
         ListenerList::Iterator it = const_cast<ClusterDiscoveryService *>(
             this)->listeners.GetIterator();
         while (it.HasNext()) {
-            it.Next()->OnNodeFound(*this, node.address);
+            it.Next()->OnNodeFound(*this, hPeer);
         }
     }
 
+    hPeer->cntResponseChances = this->cntResponseChances + 1;
     this->critSect.Unlock();
 }
 
@@ -486,7 +513,7 @@ void vislib::net::ClusterDiscoveryService::fireUserMessage(
 
     this->critSect.Lock();
     
-    if ((idx = this->peerFromDiscoveryAddr(sender.GetIPAddress())) >= 0) {
+    if ((idx = this->peerFromDiscoveryAddr(sender)) >= 0) {
    
         // TODO: We need a const iterator.
         ListenerList::Iterator it = const_cast<ClusterDiscoveryService *>(
@@ -494,8 +521,7 @@ void vislib::net::ClusterDiscoveryService::fireUserMessage(
         while (it.HasNext()) {
             // TODO: Should avoid cast.
             it.Next()->OnUserMessage(*this, 
-                this->peerNodes[static_cast<INT>(idx)].address, msgType, 
-                msgBody);
+                this->peerNodes[static_cast<INT>(idx)], msgType, msgBody);
         }
     }
 
@@ -504,16 +530,27 @@ void vislib::net::ClusterDiscoveryService::fireUserMessage(
 
 
 /*
- * vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr
+ * vislib::net::ClusterDiscoveryService::isValidPeerHandle
  */
-INT_PTR vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr(
-        const IPAddress& addr) const {
+bool vislib::net::ClusterDiscoveryService::isValidPeerHandle(
+        const PeerHandle& hPeer) const {
+    struct sockaddr address = static_cast<sockaddr>(hPeer->address);
+    // TODO: This is not IPv6 compatible!
+    return (reinterpret_cast<int&>(address) != 0);
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::peerFromAddress
+ */
+INT_PTR vislib::net::ClusterDiscoveryService::peerFromAddress(
+        const SocketAddress& addr) const {
     // TODO: Think of faster solution.  
     INT_PTR retval = -1;
 
     //this->critSect.Lock();
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
-        if (this->peerNodes[i].discoveryAddr.GetIPAddress() == addr) {
+        if (this->peerNodes[i]->address == addr) {
             retval = i;
             break;
         }
@@ -525,16 +562,17 @@ INT_PTR vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr(
 
 
 /*
- * vislib::net::ClusterDiscoveryService::peerFromResponseAddr
+ * vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr
  */
-INT_PTR vislib::net::ClusterDiscoveryService::peerFromResponseAddr(
+INT_PTR vislib::net::ClusterDiscoveryService::peerFromDiscoveryAddr(
         const SocketAddress& addr) const {
-    // TODO: Think of faster solution.
+    // TODO: Think of faster solution.  
     INT_PTR retval = -1;
+    IPAddress peerIP = addr.GetIPAddress();
 
     //this->critSect.Lock();
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
-        if (this->peerNodes[i].address == addr) {
+        if (this->peerNodes[i]->discoveryAddr.GetIPAddress() == peerIP) {
             retval = i;
             break;
         }
@@ -550,18 +588,23 @@ INT_PTR vislib::net::ClusterDiscoveryService::peerFromResponseAddr(
  */
 void vislib::net::ClusterDiscoveryService::prepareRequest(void) {
     this->critSect.Lock();
+    struct sockaddr invalidAddr;
+    reinterpret_cast<int&>(invalidAddr) = 0;
 
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
-        if (this->peerNodes[i].cntResponseChances == 0) {
+        if (this->peerNodes[i]->cntResponseChances == 0) {
             
             /* Fire event. */
             // TODO: We need a const iterator.
             ListenerList::Iterator it = const_cast<ClusterDiscoveryService *>(
                 this)->listeners.GetIterator();
             while (it.HasNext()) {
-                it.Next()->OnNodeLost(*this, this->peerNodes[i].address,
+                it.Next()->OnNodeLost(*this, this->peerNodes[i],
                     ClusterDiscoveryListener::LOST_IMLICITLY);
             }
+
+            /* Make the handle invalid. */
+            this->peerNodes[i]->address = invalidAddr;
 
             /* Remove peer from list. */
             this->peerNodes.Erase(i);
@@ -569,7 +612,7 @@ void vislib::net::ClusterDiscoveryService::prepareRequest(void) {
 
         } else {
             /* Decrement response chance for upcoming request. */
-            this->peerNodes[i].cntResponseChances--;
+            this->peerNodes[i]->cntResponseChances--;
         }
     }
 
@@ -620,21 +663,27 @@ void vislib::net::ClusterDiscoveryService::prepareUserMessage(
  * vislib::net::ClusterDiscoveryService::removePeerNode
  */
 void vislib::net::ClusterDiscoveryService::removePeerNode(
-        const PeerNode& node) {
+        const SocketAddress& address) {
     INT_PTR idx = 0;
+    struct sockaddr invalidAddr;
+    reinterpret_cast<int&>(invalidAddr) = 0;
     
     this->critSect.Lock();
 
-    if ((idx = this->peerNodes.IndexOf(node)) >= 0) {
+    if ((idx = this->peerFromAddress(address)) >= 0) {
+        PeerHandle hPeer = this->peerNodes[static_cast<INT>(idx)];
 
         /* Fire event. */
         // TODO: We need a const iterator.
         ListenerList::Iterator it = const_cast<ClusterDiscoveryService *>(
             this)->listeners.GetIterator();
         while (it.HasNext()) {
-            it.Next()->OnNodeLost(*this, SocketAddress(node.address),
+            it.Next()->OnNodeLost(*this, hPeer, 
                 ClusterDiscoveryListener::LOST_EXPLICITLY);
         }
+
+        /* Invalidate handle. */
+        hPeer->address = invalidAddr;
 
         /* Remove peer from list. */
         this->peerNodes.Erase(idx);

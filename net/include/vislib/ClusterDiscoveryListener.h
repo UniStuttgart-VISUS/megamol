@@ -15,14 +15,13 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/types.h"
+#include "vislib/ClusterDiscoveryService.h"
 
 
 namespace vislib {
 namespace net {
 
     /* Forward declarations. */
-    class ClusterDiscoveryService;
     class SocketAddress;
 
 
@@ -66,7 +65,7 @@ namespace net {
          *             specified.
          */
         virtual void OnNodeFound(const ClusterDiscoveryService& src, 
-            const SocketAddress& addr) = 0;
+            const ClusterDiscoveryService::PeerHandle& hPeer) = 0;
 
         /**
          * This method will be called, if a new computer disconnected from
@@ -75,13 +74,16 @@ namespace net {
          * This method should return very quickly and should not perform
          * excessive work as it is executed in the discovery thread.
          *
+         * Note that the peer handle 'hPeer' is only guaranteed to be valid
+         * until this method returns!
+         *
          * @param src    The discovery service that fired the event.
-         * @param addr   The response address that the node that left the 
-         *               cluster had.
+         * @param hPeer  The handle of the peer that was removed.
          * @param reason The reason why the node was removed from the cluster.
          */
 		virtual void OnNodeLost(const ClusterDiscoveryService& src,
-			const SocketAddress& addr, const NodeLostReason reason) = 0;
+			const ClusterDiscoveryService::PeerHandle& hPeer, 
+            const NodeLostReason reason) = 0;
 
         /**
          * This method is
@@ -90,15 +92,15 @@ namespace net {
          * excessive work as it is executed in the discovery thread.
          *
          * @param src     The discovery service that fired the event.
-         * @param sender  The address of the node that sent the message.
+         * @param hPeer   Handle of the peer node that sent the message.
          * @param msgType The message type identifier.
          * @param msgBody The message body data. These are user defined and
          *                probably dependent on the 'msgType'. The caller 
          *                remains owner of the memory designated by 'msgBody'.
          */
         virtual void OnUserMessage(const ClusterDiscoveryService& src,
-            const SocketAddress& sender, const UINT16 msgType, 
-            const BYTE *msgBody);
+            const ClusterDiscoveryService::PeerHandle& hPeer, 
+            const UINT16 msgType, const BYTE *msgBody);
     };
     
 } /* end namespace net */
