@@ -77,26 +77,40 @@ namespace sys {
         /**
          * Loads the library designated by the path 'moduleName'.
          *
+         * @param moduleName The name of the module to load. If the name is not
+         *                   a fully qualified path, the module is searched for
+         *                   in a platform dependent manner.
+         * @param dontResolveReferences References from the module to other
+         *                              dynamic modules should not be resolved
+         *                              by loading the other dynamic modules.
+         *                              (Ignored on Linux platforms)
+         *
          * @return true in case of success, false, if the library could not be 
          *         loaded.
-         *
          *
          * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
          */
-        bool Load(const char *moduleName);
+        bool Load(const char *moduleName, bool dontResolveReferences = false);
 
         /**
          * Loads the library designated by the path 'moduleName'.
          *
+         * @param moduleName The name of the module to load. If the name is not
+         *                   a fully qualified path, the module is searched for
+         *                   in a platform dependent manner.
+         * @param dontResolveReferences References from the module to other
+         *                              dynamic modules should not be resolved
+         *                              by loading the other dynamic modules.
+         *                              (Ignored on Linux platforms)
+         *
          * @return true in case of success, false, if the library could not be 
          *         loaded.
-         *
          *
          * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
          */
-        bool Load(const wchar_t *moduleName);
+        bool Load(const wchar_t *moduleName, bool dontResolveReferences = false);
 
     private:
 

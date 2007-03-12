@@ -73,14 +73,15 @@ void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
 /*
  * vislib::sys::DynamicLinkLibrary::Load
  */
-bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName) {
+bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName, bool dontResolveReferences) {
     if (this->IsLoaded()) {
         throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    return ((this->hModule = ::LoadLibraryA(moduleName)) != NULL);
+    return ((this->hModule = ::LoadLibraryExA(moduleName, NULL, 
+        (dontResolveReferences) ? DONT_RESOLVE_DLL_REFERENCES : 0)) != NULL);
 #else /* _WIN32 */
     // TODO: Error handling using dlerror
     return ((this->hModule = ::dlopen(moduleName, RTLD_LAZY)) != NULL);
@@ -91,14 +92,15 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName) {
 /*
  * vislib::sys::DynamicLinkLibrary::Load
  */
-bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName) {
+bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName, bool dontResolveReferences) {
     if (this->IsLoaded()) {
         throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    return ((this->hModule = ::LoadLibraryW(moduleName)) != NULL);
+    return ((this->hModule = ::LoadLibraryExW(moduleName, NULL, 
+        (dontResolveReferences) ? DONT_RESOLVE_DLL_REFERENCES : 0)) != NULL);
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefmäßige Unicode-API.
     return this->Load(W2A(moduleName));
