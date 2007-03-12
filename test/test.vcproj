@@ -199,7 +199,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/FAcs"
 				Optimization="2"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
