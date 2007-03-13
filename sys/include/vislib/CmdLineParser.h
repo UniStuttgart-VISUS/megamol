@@ -277,7 +277,7 @@ namespace sys {
              *
              * @return the type of the argument.
              */
-            inline Type GetType(void) {
+            inline Type GetType(void) const {
                 return this->type;
             }
 
@@ -285,7 +285,7 @@ namespace sys {
              * If the type of this argument is not TYPE_UNKNOWN, this method
              * returns a pointer to the option object this argument matches.
              */
-            inline Option* GetOption(void) {
+            inline Option* GetOption(void) const {
                 return this->option;
             }
             
@@ -305,7 +305,7 @@ namespace sys {
              *
              * @return true if this argument is selected, false otherwise.
              */
-            inline bool IsSelected(void) {
+            inline bool IsSelected(void) const {
                 return this->selected;
             }
 
@@ -329,6 +329,15 @@ namespace sys {
              */
             inline void ToggleSelect(void) {
                 this->selected = !this->selected;
+            }
+
+            /**
+             * Returns the original argument string.
+             *
+             * @return The original argument string.
+             */
+            inline const Char* GetInputString(void) const {
+                return this->arg;
             }
 
             /**
