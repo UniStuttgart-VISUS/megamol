@@ -51,13 +51,69 @@ vislib::sys::Console::ColorType vislib::sys::Console::defaultFgcolor = vislib::s
  */
 vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::sys::Console::GetBackgroundColor();
 
-
-#ifndef _WIN32
 /*
  * Helper class for initializing linux term
  */
-class vislib::sys::Console::Curser {
+class vislib::sys::Console::ConsoleHelper {
 public:
+
+#ifdef _WIN32
+    /** ctor */
+    ConsoleHelper(void) : restoreIcons(false) {
+    }
+
+    /** dtor */
+    ~ConsoleHelper(void) {
+
+        if (restoreIcons) {
+            // Restore console icons on exit.
+            HWND console = NULL;
+            DynamicFunctionPointer<HWND (*)(void)> getConsoleWindow("kernel32", "GetConsoleWindow");
+            if (getConsoleWindow.IsValid()) {
+                console = getConsoleWindow();
+                if (console != NULL) {
+                    ::SendMessageA(console, WM_SETICON, ICON_BIG, 
+                        (this->oldBigIcon) 
+                        ? reinterpret_cast<LPARAM>(this->oldBigIcon) 
+                        : GetClassLongPtrA(console, GCLP_HICON));
+                    ::SendMessageA(console, WM_SETICON, ICON_SMALL, 
+                        (this->oldSmlIcon) 
+                        ? reinterpret_cast<LPARAM>(this->oldSmlIcon) 
+                        : GetClassLongPtrA(console, GCLP_HICONSM));
+                }
+            }
+        }
+    }
+
+    /**
+     * Keeps record of the old window icons for restoration at program 
+     * termination.
+     *
+     * @param console The hwnd to the console. Must not be NULL.
+     */
+    void MemorizeWindowIcons(HWND console) {
+        // only memorize icons on the very first call.
+        if (this->restoreIcons) return;
+
+        this->restoreIcons = true; 
+        this->oldBigIcon = reinterpret_cast<HICON>(
+            ::SendMessageA(console, WM_GETICON, ICON_BIG, 0));
+        this->oldSmlIcon = reinterpret_cast<HICON>(
+            ::SendMessageA(console, WM_GETICON, ICON_SMALL, 0));
+    }
+
+private:
+
+    /** flag indicating if the restoration of icons is necessary. */
+    bool restoreIcons;
+
+    /** old icon value of the big window icon */
+    HICON oldBigIcon;
+
+    /** old icon value of the small window icon */
+    HICON oldSmlIcon;
+
+#else /* _WIN32 */
 
 #define READER_DATA_BUFFER_SIZE 1024
 
@@ -73,7 +129,7 @@ public:
     };
 
     /** ctor */
-    Curser(void) {
+    ConsoleHelper(void) {
         // initialize terminal information database
         setupterm(reinterpret_cast<char *>(0), 1, reinterpret_cast<int *>(0));
 
@@ -101,7 +157,7 @@ public:
     }
 
     /** dtor */
-    ~Curser(void) {
+    ~ConsoleHelper(void) {
         
         if (this->oldConsoleTitle != NULL) {
             this->SetConsoleTitle(this->oldConsoleTitle);
@@ -334,16 +390,32 @@ private:
     /** old console title stored, which should be restored on exit */
     char *oldConsoleTitle;
 
+#undef READER_DATA_BUFFER_SIZE
+
+#endif
+
 };
 
-#undef READER_DATA_BUFFER_SIZE
+
+/*
+ * vislib::sys::Console::ConsoleHelperManager::ConsoleHelperManager
+ */
+vislib::sys::Console::ConsoleHelperManager::ConsoleHelperManager(void) : object(new ConsoleHelper) {
+}
+
+
+/*
+ * vislib::sys::Console::ConsoleHelperManager::~ConsoleHelperManager
+ */
+vislib::sys::Console::ConsoleHelperManager::~ConsoleHelperManager(void) {
+    delete this->object;
+}
+
 
 /*
  * Instance of linux term helper class
  */
-vislib::sys::Console::Curser vislib::sys::Console::curser = vislib::sys::Console::Curser();
-
-#endif
+vislib::sys::Console::ConsoleHelperManager vislib::sys::Console::helper;
 
 
 /*
@@ -499,7 +571,7 @@ bool vislib::sys::Console::ColorsAvailable(void) {
 #ifdef _WIN32
     return true;
 #else // _WIN32
-    return vislib::sys::Console::curser.AreColorsAvailable();
+    return vislib::sys::Console::helper()->AreColorsAvailable();
 #endif // _WIN32
 }
 
@@ -562,7 +634,7 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    tputs(exit_attribute_mode, 1, vislib::sys::Console::Curser::outputChar);
+    tputs(exit_attribute_mode, 1, vislib::sys::Console::ConsoleHelper::outputChar);
 
 #endif // _WIN32
 }
@@ -598,7 +670,7 @@ void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    vislib::sys::Console::curser.SetColor(true, fgcolor);
+    vislib::sys::Console::helper()->SetColor(true, fgcolor);
 
 #endif // _WIN32
 }
@@ -634,7 +706,7 @@ void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    vislib::sys::Console::curser.SetColor(false, bgcolor);
+    vislib::sys::Console::helper()->SetColor(false, bgcolor);
 
 #endif // _WIN32
 }
@@ -756,7 +828,7 @@ void vislib::sys::Console::SetTitle(const vislib::StringA& title) {
     ::SetConsoleTitleA(title);
 
 #else // _WIN32
-    vislib::sys::Console::curser.SetConsoleTitle(title);
+    vislib::sys::Console::helper()->SetConsoleTitle(title);
 
 #endif // _WIN32
 }
@@ -771,7 +843,7 @@ void vislib::sys::Console::SetTitle(const vislib::StringW& title) {
 
 #else // _WIN32
     // we only support ANSI-Strings for Linux consoles.
-    vislib::sys::Console::curser.SetConsoleTitle(W2A(title));
+    vislib::sys::Console::helper()->SetConsoleTitle(W2A(title));
 
 #endif // _WIN32
 }
@@ -813,14 +885,9 @@ void vislib::sys::Console::SetIcon(char *id) {
     if (icon == NULL) return; // icon ressource not found.
 
     // setting the icon.
-#ifndef _WIN64
-#pragma warning(disable: 4244)
-#endif
-    ::SetClassLongPtr(console, GCLP_HICON, reinterpret_cast<LONG_PTR>(icon));
-    ::SetClassLongPtr(console, GCLP_HICONSM, reinterpret_cast<LONG_PTR>(icon));
-#ifndef _WIN64
-#pragma warning(default: 4244)
-#endif
+    vislib::sys::Console::helper()->MemorizeWindowIcons(console);
+    SendMessageA(console, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon));
+    SendMessageA(console, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon));
 
 #else // _WIN32
     // Linux is stupid

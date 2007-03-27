@@ -42,31 +42,32 @@ int FBOTestApp::GLInit(void) {
 
     if (!FramebufferObject::InitialiseExtensions()) {
         retval++;
-    }
-    try {
-        FramebufferObject::ColorAttachParams cap[2];
-        cap[0].internalFormat = cap[1].internalFormat = GL_RGBA8;
-        cap[0].format = cap[1].format = GL_RGBA;
-        cap[0].type = cap[1].type = GL_UNSIGNED_BYTE;
-        //cap[0].type = GL_FLOAT;
+    } else {
+        try {
+            FramebufferObject::ColorAttachParams cap[2];
+            cap[0].internalFormat = cap[1].internalFormat = GL_RGBA8;
+            cap[0].format = cap[1].format = GL_RGBA;
+            cap[0].type = cap[1].type = GL_UNSIGNED_BYTE;
+            //cap[0].type = GL_FLOAT;
 
-        FramebufferObject::DepthAttachParams dap;
-        dap.format = GL_DEPTH_COMPONENT32;
-        dap.state = FramebufferObject::ATTACHMENT_TEXTURE;
-        FramebufferObject::StencilAttachParams sap;
-        sap.state = FramebufferObject::ATTACHMENT_DISABLED;
+            FramebufferObject::DepthAttachParams dap;
+            dap.format = GL_DEPTH_COMPONENT32;
+            dap.state = FramebufferObject::ATTACHMENT_TEXTURE;
+            FramebufferObject::StencilAttachParams sap;
+            sap.state = FramebufferObject::ATTACHMENT_DISABLED;
 
-        //if (!this->fbo.Create(512, 512, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 
-        //        FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
-        if (!this->fbo.Create(512, 512, 2, cap, dap, sap)) {
-            std::cout << "Framebuffer object creation failed." << std::endl;
-            ASSERT(false);
+            //if (!this->fbo.Create(512, 512, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 
+            //        FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
+            if (!this->fbo.Create(512, 512, 2, cap, dap, sap)) {
+                std::cout << "Framebuffer object creation failed." << std::endl;
+                ASSERT(false);
+                retval++;
+            }
+        } catch (vislib::graphics::gl::OpenGLException e) {
+            std::cout << e.GetMsgA() << " @ " << e.GetFile() << ":" << e.GetLine() 
+                << std::endl;
             retval++;
         }
-    } catch (vislib::graphics::gl::OpenGLException e) {
-        std::cout << e.GetMsgA() << " @ " << e.GetFile() << ":" << e.GetLine() 
-            << std::endl;
-        retval++;
     }
 
     return retval;
