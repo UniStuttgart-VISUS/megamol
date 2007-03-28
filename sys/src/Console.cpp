@@ -51,13 +51,40 @@ vislib::sys::Console::ColorType vislib::sys::Console::defaultFgcolor = vislib::s
  */
 vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::sys::Console::GetBackgroundColor();
 
+
 /*
  * Helper class for initializing linux term
+ * singelton design pattern
  */
 class vislib::sys::Console::ConsoleHelper {
 public:
 
+    static ConsoleHelper * GetInstance() {
+        static ConsoleHelper helper = ConsoleHelper();
+        return &helper;
+    }
+
 #ifdef _WIN32
+
+    /**
+     * Keeps record of the old window icons for restoration at program 
+     * termination.
+     *
+     * @param console The hwnd to the console. Must not be NULL.
+     */
+    void MemorizeWindowIcons(HWND console) {
+        // only memorize icons on the very first call.
+        if (this->restoreIcons) return;
+
+        this->restoreIcons = true; 
+        this->oldBigIcon = reinterpret_cast<HICON>(
+            ::SendMessageA(console, WM_GETICON, ICON_BIG, 0));
+        this->oldSmlIcon = reinterpret_cast<HICON>(
+            ::SendMessageA(console, WM_GETICON, ICON_SMALL, 0));
+    }
+
+private:
+
     /** ctor */
     ConsoleHelper(void) : restoreIcons(false) {
     }
@@ -85,25 +112,6 @@ public:
         }
     }
 
-    /**
-     * Keeps record of the old window icons for restoration at program 
-     * termination.
-     *
-     * @param console The hwnd to the console. Must not be NULL.
-     */
-    void MemorizeWindowIcons(HWND console) {
-        // only memorize icons on the very first call.
-        if (this->restoreIcons) return;
-
-        this->restoreIcons = true; 
-        this->oldBigIcon = reinterpret_cast<HICON>(
-            ::SendMessageA(console, WM_GETICON, ICON_BIG, 0));
-        this->oldSmlIcon = reinterpret_cast<HICON>(
-            ::SendMessageA(console, WM_GETICON, ICON_SMALL, 0));
-    }
-
-private:
-
     /** flag indicating if the restoration of icons is necessary. */
     bool restoreIcons;
 
@@ -127,43 +135,6 @@ private:
         unsigned int len;
 
     };
-
-    /** ctor */
-    ConsoleHelper(void) {
-        // initialize terminal information database
-        setupterm(reinterpret_cast<char *>(0), 1, reinterpret_cast<int *>(0));
-
-        // get number of supported colors (should be 8)
-        int i;
-        i = tigetnum("colors");
-        this->colorsAvailable = (i >= 8);
-
-        // refresh the flag because of the undefined initialization sequence 
-        vislib::sys::Console::EnableColors(this->colorsAvailable);
-
-        if (!isatty(STDOUT_FILENO) || !isatty(STDERR_FILENO)) {
-            vislib::sys::Console::EnableColors(false);
-        }
-
-        // console title crowbar is not initialized.
-        this->consoleTitleInit = false;
-
-        this->isXterm = false;
-        this->dcopPresent = false;
-        this->isKonsole = false;
-
-        // no old console title
-        this->oldConsoleTitle = NULL;
-    }
-
-    /** dtor */
-    ~ConsoleHelper(void) {
-        
-        if (this->oldConsoleTitle != NULL) {
-            this->SetConsoleTitle(this->oldConsoleTitle);
-            ARY_SAFE_DELETE(this->oldConsoleTitle);
-        }
-    }
 
     /** getter to colorsAvailable */
     inline bool AreColorsAvailable(void) {
@@ -372,6 +343,41 @@ private:
     }
 
 private:
+
+    /** ctor */
+    ConsoleHelper(void) {
+        // initialize terminal information database
+        setupterm(reinterpret_cast<char *>(0), 1, reinterpret_cast<int *>(0));
+
+        // get number of supported colors (should be 8)
+        int i;
+        i = tigetnum("colors");
+        this->colorsAvailable = (i >= 8);
+
+        if (!isatty(STDOUT_FILENO) || !isatty(STDERR_FILENO)) {
+            this->colorsAvailable = false;
+        }
+
+        // console title crowbar is not initialized.
+        this->consoleTitleInit = false;
+
+        this->isXterm = false;
+        this->dcopPresent = false;
+        this->isKonsole = false;
+
+        // no old console title
+        this->oldConsoleTitle = NULL;
+    }
+
+    /** dtor */
+    ~ConsoleHelper(void) {
+        
+        if (this->oldConsoleTitle != NULL) {
+            this->SetConsoleTitle(this->oldConsoleTitle);
+            ARY_SAFE_DELETE(this->oldConsoleTitle);
+        }
+    }
+
     /** flag whether there is color text support */
     bool colorsAvailable;
 
@@ -393,29 +399,7 @@ private:
 #undef READER_DATA_BUFFER_SIZE
 
 #endif
-
 };
-
-
-/*
- * vislib::sys::Console::ConsoleHelperManager::ConsoleHelperManager
- */
-vislib::sys::Console::ConsoleHelperManager::ConsoleHelperManager(void) : object(new ConsoleHelper) {
-}
-
-
-/*
- * vislib::sys::Console::ConsoleHelperManager::~ConsoleHelperManager
- */
-vislib::sys::Console::ConsoleHelperManager::~ConsoleHelperManager(void) {
-    delete this->object;
-}
-
-
-/*
- * Instance of linux term helper class
- */
-vislib::sys::Console::ConsoleHelperManager vislib::sys::Console::helper;
 
 
 /*
@@ -571,7 +555,7 @@ bool vislib::sys::Console::ColorsAvailable(void) {
 #ifdef _WIN32
     return true;
 #else // _WIN32
-    return vislib::sys::Console::helper()->AreColorsAvailable();
+    return vislib::sys::Console::ConsoleHelper::GetInstance()->AreColorsAvailable();
 #endif // _WIN32
 }
 
@@ -670,7 +654,7 @@ void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    vislib::sys::Console::helper()->SetColor(true, fgcolor);
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetColor(true, fgcolor);
 
 #endif // _WIN32
 }
@@ -706,7 +690,7 @@ void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    vislib::sys::Console::helper()->SetColor(false, bgcolor);
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetColor(false, bgcolor);
 
 #endif // _WIN32
 }
@@ -828,7 +812,7 @@ void vislib::sys::Console::SetTitle(const vislib::StringA& title) {
     ::SetConsoleTitleA(title);
 
 #else // _WIN32
-    vislib::sys::Console::helper()->SetConsoleTitle(title);
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title);
 
 #endif // _WIN32
 }
@@ -843,7 +827,7 @@ void vislib::sys::Console::SetTitle(const vislib::StringW& title) {
 
 #else // _WIN32
     // we only support ANSI-Strings for Linux consoles.
-    vislib::sys::Console::helper()->SetConsoleTitle(W2A(title));
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(W2A(title));
 
 #endif // _WIN32
 }
@@ -885,7 +869,7 @@ void vislib::sys::Console::SetIcon(char *id) {
     if (icon == NULL) return; // icon ressource not found.
 
     // setting the icon.
-    vislib::sys::Console::helper()->MemorizeWindowIcons(console);
+    vislib::sys::Console::ConsoleHelper::GetInstance()->MemorizeWindowIcons(console);
     SendMessageA(console, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon));
     SendMessageA(console, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon));
 

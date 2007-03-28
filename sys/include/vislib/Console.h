@@ -219,36 +219,7 @@ namespace sys {
         /** default background color */
         static ColorType defaultBgcolor;
 
-        /** forward declaration of internal helper class */
         class ConsoleHelper;
-
-        /**
-         * Fassade class holding a console helper and cleaning up on 
-         * application termination.
-         *
-         * TODO: replace using generic a template class
-         */
-        class ConsoleHelperManager {
-        public:
-
-            /** ctor */
-            ConsoleHelperManager(void);
-
-            /** dtor */
-            ~ConsoleHelperManager(void);
-
-            /** accessor to the real helper object */
-            inline ConsoleHelper * operator()(void) {
-                return this->object;
-            }
-
-        private:
-            /** the real helper object */
-            ConsoleHelper *object;
-        };
-
-        /** internal helper class */
-        static ConsoleHelperManager helper;
 
     };
 

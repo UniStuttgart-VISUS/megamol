@@ -23,6 +23,7 @@ CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -gg
 # Linker flags:
 LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lglut -lGLU -lGL
 
+
 ###############################################################################
 
 # Determine the current platform:
@@ -59,13 +60,13 @@ $(OutDir)/$(OutName): $(IntDir)/$(OutName)
 $(IntDir)/$(OutName): $(CPP_OBJS) 
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
 	@tput sgr0
-	$(LINK) -o $@ $^ $(LDFLAGS)
+	$(Q)$(LINK) -o $@ $^ $(LDFLAGS)
 
 $(IntDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(IntDir)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
 
 ifneq ($(MAKECMDGOALS), clean)
@@ -79,7 +80,7 @@ $(IntDir)/%.o:
 	@mkdir -p $(IntDir)
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -c $(CPPFLAGS) -o $@ $<
+	$(Q)$(CPP) -c $(CPPFLAGS) -o $@ $<
 	
 #tags:
 #	ctags *.c *.cpp *.h

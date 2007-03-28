@@ -12,6 +12,19 @@ MAKE = make
 SHELL = /bin/bash
 
 
+# Set Verbosity
+ifndef VISLIB_VERBOSE
+    VISLIB_VERBOSE = 0
+endif
+ifeq ($(VISLIB_VERBOSE),1)
+    Q =
+    ARFLAGS = -cvq
+else
+    Q = @
+    ARFLAGS = -cq
+endif
+
+
 # Determine the plaform architecture
 ifeq ($(shell uname -p), x86_64)
 	PLATFORM := x64

@@ -11,16 +11,6 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.d, 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags)
 
-ifndef VISLIB_VERBOSE
-    VISLIB_VERBOSE = 0
-endif
-ifeq ($(VISLIB_VERBOSE),1)
-    Q =
-    ARFLAGS = -cvq
-else
-    Q = @
-    ARFLAGS = -cq
-endif
 
 all: $(TargetName)d $(TargetName)
 

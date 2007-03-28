@@ -27,14 +27,6 @@ CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 #LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
 LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -ldl -lncurses 
 
-ifndef VISLIB_VERBOSE
-    VISLIB_VERBOSE = 0
-endif
-ifeq ($(VISLIB_VERBOSE),1)
-    Q =
-else
-    Q = @
-endif
 
 ###############################################################################
 
@@ -97,7 +89,7 @@ $(IntDir)/%.o:
 	@mkdir -p $(IntDir)
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(CPP) -c $(CPPFLAGS) -o $@ $<
+	$(Q)$(CPP) -c $(CPPFLAGS) -o $@ $<
 	
 #tags:
 #	ctags *.c *.cpp *.h
