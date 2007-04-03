@@ -5,6 +5,7 @@
  */
 
 #include "AbstractGlutApp.h"
+#include "GlutAppManager.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -37,30 +38,36 @@
 #include "FBOTestApp.h"
 
 
-// static global functions
-AbstractGlutApp *app = NULL;
-
-
 /*
  * std glut callbacks
  */
 void reshape(int w, int h) {
-    assert(app != NULL);
-    app->OnResize(w, h);
+
+    // at least one pixel size!
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+
+    GlutAppManager::GetInstance()->SetSize(w, h);
+    if (GlutAppManager::CurrentApp()) {
+        GlutAppManager::CurrentApp()->OnResize(w, h);
+    }
 }
 
 void display(void) {
-    assert(app != NULL);
-    app->Render();
+    if (GlutAppManager::CurrentApp()) {
+        GlutAppManager::CurrentApp()->Render();
+    } else {
+        GlutAppManager::GetInstance()->glRenderEmptyScreen();
+    }
 }
 
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
         case 27: // esc
-            exit(0); 
+            GlutAppManager::ExitApplication(0);
             break;
         default:
-            if (!(app && app->OnKeyPress(key, x, y))) {
+            if (!(GlutAppManager::CurrentApp() && GlutAppManager::CurrentApp()->OnKeyPress(key, x, y))) {
                 fprintf(stderr, "Warning: Key %u is not used\n", key); 
             }
             break;
@@ -68,18 +75,21 @@ void keyboard(unsigned char key, int x, int y) {
 }
 
 void mouse(int button, int state, int x, int y) {
-    assert(app != NULL);
-    app->OnMouseEvent(button, state, x, y);
+    if (GlutAppManager::CurrentApp()) {
+        GlutAppManager::CurrentApp()->OnMouseEvent(button, state, x, y);
+    }
 }
 
 void motion(int x, int y) {
-    assert(app != NULL);
-    app->OnMouseMove(x, y);
+    if (GlutAppManager::CurrentApp()) {
+        GlutAppManager::CurrentApp()->OnMouseMove(x, y);
+    }
 }
 
 void special(int key, int x, int y) {
-    assert(app != NULL);
-    app->OnSpecialKey(key, x, y);
+    if (GlutAppManager::CurrentApp()) {
+        GlutAppManager::CurrentApp()->OnSpecialKey(key, x, y);
+    }
 }
 
 /*
@@ -88,35 +98,35 @@ void special(int key, int x, int y) {
 int main(int argc, char* argv[]) {
     printf("VISlib glut test program\n");
 
-    // select test application:
-    //CamTestApp cta; app = &cta;
-    //StereoCamTestApp scta; app = &scta;
-    BeholderRotatorTextApp brta; app = &brta;
-    //FBOTestApp fbota; app = &fbota;
+    // register factories:
+    GlutAppManager::InstallFactory<CamTestApp>("Camera Test");
+    GlutAppManager::InstallFactory<StereoCamTestApp>("Stereo Camera Test");
+    GlutAppManager::InstallFactory<BeholderRotatorTextApp>("Beholder Rotator Test");
+    GlutAppManager::InstallFactory<FBOTestApp>("Framebuffer Object Test");
 
     // run test application
-    if (app) {
-        glutInit(&argc, argv);
+    glutInit(&argc, argv);
 
-        glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA); // TODO: should be moved to AbstractGlutApp
-        glutInitWindowSize(512, 512); // TODO: should be configured by AbstractGlutApp
-        glutInitWindowPosition(128, 128); // TODO: should be configured by AbstractGlutApp
-    	glutCreateWindow("VISlib Glut Test"); // TODO: should be configured by AbstractGlutApp
+    // TODO: Startup settings object with compatibility check
+    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);  // TODO: should be moved to AbstractGlutApp
+    glutInitWindowSize(512, 512);                               // TODO: should be configured by AbstractGlutApp
+    glutInitWindowPosition(128, 128);                           // TODO: should be configured by AbstractGlutApp
+    glutCreateWindow("VISlib Glut Test");                       // TODO: should be configured by AbstractGlutApp
 
-    	glutDisplayFunc(display);
-	    glutReshapeFunc(reshape);
-        glutKeyboardFunc(keyboard);
-        glutMouseFunc(mouse);
-        glutMotionFunc(motion);
-        glutPassiveMotionFunc(motion);
-        glutSpecialFunc(special);
+    glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
+    glutMouseFunc(mouse);
+    glutMotionFunc(motion);
+    glutPassiveMotionFunc(motion);
+    glutSpecialFunc(special);
 
-        // glutFullScreen();
+    GlutAppManager::GetInstance()->InitGlutWindow();
 
-        app->GLInit();
+    // glutFullScreen();
+    // app->GLInit();
 
-    	glutMainLoop();
-    }
+    glutMainLoop();
 
 	return 0;
 }

@@ -177,6 +177,13 @@ int CamTestApp::GLInit(void) {
 
 
 /*
+ * CamTestApp::GLDeinit
+ */
+void CamTestApp::GLDeinit(void) {
+}
+
+
+/*
  * CamTestApp::OnResize
  */
 void CamTestApp::OnResize(unsigned int w, unsigned int h) {

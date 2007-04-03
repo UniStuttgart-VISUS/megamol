@@ -34,6 +34,9 @@ public:
      */
     virtual int GLInit(void) = 0;
 
+    /** Deinitializes the application. */
+    virtual void GLDeinit(void) = 0;
+
     /**
      * Callback for resizing events of the glut window.
      * Calculates the aspect ratio of the window.

@@ -24,6 +24,7 @@ public:
     FBOTestApp(void);
     virtual ~FBOTestApp(void);
     virtual int GLInit(void);
+    virtual void GLDeinit(void);
     virtual void Render(void);
 
 private:

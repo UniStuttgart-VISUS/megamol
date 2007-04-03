@@ -74,6 +74,13 @@ int FBOTestApp::GLInit(void) {
 }
 
 
+/*
+ * FBOTestApp::GLDeinit
+ */
+void FBOTestApp::GLDeinit(void) {
+    ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
 
 /*
  * FBOTestApp::Render
@@ -130,7 +137,7 @@ void FBOTestApp::Render(void) {
         ::glFlush();
         GL_VERIFY_EXPR(this->fbo.Disable());
 
-     //   //::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         GL_VERIFY_EXPR(this->fbo.BindColorTexture(0));
         GL_VERIFY_EXPR(this->fbo.BindDepthTexture());

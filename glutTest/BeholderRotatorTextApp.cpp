@@ -97,6 +97,14 @@ int BeholderRotatorTextApp::GLInit(void) {
 
 
 /*
+ * BeholderRotatorTextApp::GLDeinit
+ */
+void BeholderRotatorTextApp::GLDeinit(void) {
+    // Intentionally empty!
+}
+
+
+/*
  * BeholderRotatorTextApp::OnResize
  */
 void BeholderRotatorTextApp::OnResize(unsigned int w, unsigned int h) {

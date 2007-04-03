@@ -68,6 +68,11 @@ int StereoCamTestApp::GLInit(void) {
     return 0;
 }
 
+void StereoCamTestApp::GLDeinit(void) {
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
 void StereoCamTestApp::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
     this->cameraRight.SetVirtualWidth(float(w));

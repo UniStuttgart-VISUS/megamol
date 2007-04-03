@@ -32,6 +32,7 @@ public:
     virtual ~BeholderRotatorTextApp(void);
 
     virtual int GLInit(void);
+    virtual void GLDeinit(void);
 
     virtual void OnResize(unsigned int w, unsigned int h);
     virtual void Render(void);
