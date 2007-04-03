@@ -16,6 +16,7 @@
 
 
 #include <memory.h>
+#include <stdlib.h>
 
 
 #ifndef NULL

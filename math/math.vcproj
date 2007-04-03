@@ -81,11 +81,12 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
+			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\lib"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\VSProps\TargetDebug64.vsprops;..\vislib.vsprops"
+			InheritedPropertySheets="..\VSProps\TargetRelease32.vsprops;..\vislib.vsprops"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -101,16 +102,12 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -145,12 +142,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
+			Name="Debug|x64"
 			OutputDirectory="$(SolutionDir)\lib"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\VSProps\TargetRelease32.vsprops;..\vislib.vsprops"
+			InheritedPropertySheets="..\VSProps\TargetDebug64.vsprops;..\vislib.vsprops"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -166,12 +162,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -277,6 +277,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractCuboid.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractDimension.cpp"
 				>
 			</File>
@@ -318,6 +322,10 @@
 			</File>
 			<File
 				RelativePath=".\src\AbstractVectorImpl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Cuboid.cpp"
 				>
 			</File>
 			<File
@@ -391,6 +399,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\AbstractCuboid.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractDimension.h"
 				>
 			</File>
@@ -432,6 +444,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractVectorImpl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Cuboid.h"
 				>
 			</File>
 			<File
@@ -517,7 +533,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -525,7 +541,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool

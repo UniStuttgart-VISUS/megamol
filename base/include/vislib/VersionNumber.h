@@ -14,6 +14,11 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#ifdef __GNUC__
+#warning Your C library is s***
+#undef major
+#undef minor
+#endif /* __GNUC__ */
 
 #include "vislib/String.h"
 
@@ -291,6 +296,11 @@ namespace vislib {
     };
     
 } /* end namespace vislib */
+
+#ifdef __GNUC__
+#define major gnu_dev_major
+#define minor gnu_dev_minor
+#endif /* __GNUC__ */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

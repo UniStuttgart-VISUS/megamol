@@ -39,6 +39,9 @@ namespace sys {
          */
         typedef DWORD (* Function)(void *userData); 
 
+        /** Dtor. */
+        virtual ~Runnable(void);
+
         /**
          * Perform the work of a thread.
          *

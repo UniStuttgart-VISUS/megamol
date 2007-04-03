@@ -9,6 +9,11 @@
 #include "vislib/VersionNumber.h"
 #include "vislib/StringConverter.h"
 
+#ifdef __GNUC__
+#undef major
+#undef minor
+#endif /* __GNUC__ */
+
 
 /*
  * vislib::VersionNumber::VersionNumber
