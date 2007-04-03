@@ -17,6 +17,7 @@
 #include "vislib/Camera.h"
 #define VISLIB_ENABLE_OPENGL
 #include "vislib/CameraOpenGL.h"
+#include "vislib/InputModifiers.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/BeholderRotator2D.h"
 #include "vislib/BeholderLookAtRotator2D.h"
@@ -44,6 +45,7 @@ private:
 
     vislib::graphics::Beholder beholder;
     vislib::graphics::gl::CameraOpenGL camera;
+    vislib::graphics::InputModifiers modkeys;
     vislib::graphics::Cursor2D cursor;
     vislib::graphics::BeholderRotator2D rotator1;
     vislib::graphics::BeholderLookAtRotator2D rotator2;

@@ -38,19 +38,22 @@ BeholderRotatorTextApp::BeholderRotatorTextApp(void) : AbstractGlutApp() {
     this->camera.SetVirtualHeight(10.0f);
     this->camera.SetProjectionType(vislib::graphics::Camera::MONO_PERSPECTIVE);
 
+    this->modkeys.SetModifierCount(3);
+    this->modkeys.RegisterObserver(&this->cursor);
+
     this->cursor.SetButtonCount(3);
-    this->cursor.SetModifierCount(3);
+    this->cursor.SetInputModifiers(&this->modkeys);
     this->cursor.SetCamera(&this->camera);
     
     this->rotator1.SetBeholder(&this->beholder);
     this->rotator1.SetTestButton(0); // left button
     this->rotator1.SetModifierTestCount(0);
-    this->rotator1.SetAltModifier(1); // GLUT_ACTIVE_CTRL modifier
+    this->rotator1.SetAltModifier(vislib::graphics::InputModifiers::MODIFIER_CTRL);
 
     this->rotator2.SetBeholder(&this->beholder);
     this->rotator2.SetTestButton(0); // left button
     this->rotator2.SetModifierTestCount(0);
-    this->rotator2.SetAltModifier(1); // GLUT_ACTIVE_CTRL modifier
+    this->rotator2.SetAltModifier(vislib::graphics::InputModifiers::MODIFIER_CTRL);
 
     this->SetupRotator2();
 }
@@ -131,9 +134,9 @@ void BeholderRotatorTextApp::OnMouseEvent(int button, int state, int x, int y) {
         case GLUT_MIDDLE_BUTTON: btn = 2; break;
     }
 
-    this->cursor.SetModifierState(0, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
-    this->cursor.SetModifierState(1, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
-    this->cursor.SetModifierState(2, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
     this->cursor.SetPosition(x, y, true);
     this->cursor.SetButtonState(btn, (state == GLUT_DOWN));
 }
@@ -153,9 +156,9 @@ void BeholderRotatorTextApp::OnMouseMove(int x, int y) {
 void BeholderRotatorTextApp::OnSpecialKey(int key, int x, int y) {
     int modifiers = glutGetModifiers();
 
-    this->cursor.SetModifierState(0, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
-    this->cursor.SetModifierState(1, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
-    this->cursor.SetModifierState(2, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
     this->cursor.SetPosition(x, y, true);
 }
 

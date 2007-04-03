@@ -91,8 +91,8 @@ int main(int argc, char* argv[]) {
     // select test application:
     //CamTestApp cta; app = &cta;
     //StereoCamTestApp scta; app = &scta;
-    //BeholderRotatorTextApp brta; app = &brta;
-    FBOTestApp fbota; app = &fbota;
+    BeholderRotatorTextApp brta; app = &brta;
+    //FBOTestApp fbota; app = &fbota;
 
     // run test application
     if (app) {

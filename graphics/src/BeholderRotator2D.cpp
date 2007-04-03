@@ -56,10 +56,15 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
         if (reason == REASON_BUTTON_DOWN) {
             this->drag = true;
         } else if (this->drag) {
+            bool alt = false;
+            if (cursor->GetInputModifiers() != NULL) {
+                alt = cursor->GetInputModifiers()->GetModifierState(this->altMod);
+            }
+
             preX = cursor->PreviousX() - cam->GetVirtualWidth() * static_cast<ImageSpaceType>(0.5);
             preY = cursor->PreviousY() - halfHeight;
 
-            if (cursor->GetModifierState(this->altMod)) {
+            if (alt) {
                 // roll
 
                 // calc angle between mouse position vectors in image space

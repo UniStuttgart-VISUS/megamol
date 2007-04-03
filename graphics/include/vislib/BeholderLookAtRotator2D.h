@@ -17,6 +17,7 @@
 #include "vislib/AbstractBeholderController.h"
 #include "vislib/AbstractCursor2DEvent.h"
 #include "vislib/graphicstypes.h"
+#include "vislib/InputModifiers.h"
 
 
 namespace vislib {
@@ -60,7 +61,7 @@ namespace graphics {
          *
          * @param modifier The modifier.
          */
-        inline void SetAltModifier(unsigned int modifier) {
+        inline void SetAltModifier(InputModifiers::Modifier modifier) {
             this->altMod = modifier;
         }
 
@@ -69,14 +70,14 @@ namespace graphics {
          *
          * @return The modifier.
          */
-        inline unsigned int GetAltModifier(void) const {
+        inline InputModifiers::Modifier GetAltModifier(void) const {
             return this->altMod;
         }
 
     private:
 
         /** The modifier for alternate rotation */
-        unsigned int altMod;
+        InputModifiers::Modifier altMod;
 
         /** Flag whether the mouse draggs. */
         bool drag;

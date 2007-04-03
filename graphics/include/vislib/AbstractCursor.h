@@ -17,16 +17,16 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/AbstractCursorEvent.h"
+#include "vislib/InputModifiers.h"
 
 
 namespace vislib {
 namespace graphics {
 
-
     /**
      * Abstract base class for cursors
      */
-    class AbstractCursor {
+    class AbstractCursor : public InputModifiers::Observer {
     public:
 
         /** Dtor. */
@@ -50,31 +50,15 @@ namespace graphics {
         }
 
         /**
-         * Sets the number of modifiers for this cursor and resets all modifier
-         * states. No events will be triggered!
-         *
-         * @param modCnt The new number of modifiers.
-         */
-        void SetModifierCount(unsigned int modCnt);
-
-        /**
-         * Answer the number of modifiers for this cursor.
-         *
-         * @return The number of modifiers.
-         */
-        inline unsigned int GetModifierCount(void) {
-            return this->modCnt;
-        }
-
-        /**
          * Sets the State of a button and triggers all registered cursor 
          * events, if all of their tests succeed, with REASON_BUTTON_DOWN or
-         * with REASON_MOD_UP depending on the parameter down. 
+         * with REASON_BUTTON_UP depending on the parameter down. 
          *
-         * If your up to call SetButtonState and SetModifierState in one all at
-         * once, you should first do all of your SetModifierState calls and 
-         * then do all of your SetButtonState calls, to ensure that the 
-         * modifier tests of the events are correctly evaluated.
+         * If you are up to call SetButtonState and SetModifierState of the 
+         * corresponding InputModifiers object all at once, you should first 
+         * do all of your SetModifierState calls and then do all of your 
+         * SetButtonState calls, to ensure that the modifier tests of the 
+         * events are correctly evaluated.
          *
          * @param btn The number of the button whichs state will be set.
          * @param down The new value for the buttons state.
@@ -102,41 +86,11 @@ namespace graphics {
         }
 
         /**
-         * Sets the State of a modifier and triggeres all registered cursor
-         * events, if all of their tests succeed, with REASON_MOD_DOWN or with
-         * REASON_MOD_UP depending on the parameter down.
-         *
-         * If your up to call SetButtonState and SetModifierState in one all at
-         * once, you should first do all of your SetModifierState calls and 
-         * then do all of your SetButtonState calls, to ensure that the 
-         * modifier tests of the events are correctly evaluated.
-         *
-         * @param modifier The number of the modifier whichs state will be 
-         *                 set.
-         * @param down The new value for the modifiers state.
-         *
-         * @throws IllegalParamException if modifier is larger or equal to the
-         *         number of modifiers for this cursor.
+         * Callback on modifier changed.
+         * @see vislib::graphics::InputModifiers::Observer::ModifierChanged
          */
-        virtual void SetModifierState(unsigned int modifier, bool down);
-
-        /**
-         * Answer the State of a modifier.
-         *
-         * @param modifier The number of the modifier whichs state will be 
-         *                 returned.
-         *
-         * @return The state of the modifier.
-         *
-         * @throws IllegalParamException if modifier is larger or equal to the
-         *         number of modifiers for this cursor.
-         */
-        inline bool GetModifierState(unsigned int modifier) {
-            if (modifier >= this->modCnt) {
-                throw IllegalParamException("modifier", __FILE__, __LINE__);
-            }
-            return this->modStates[modifier];
-        }
+        virtual void ModifierChanged(const InputModifiers& sender, 
+            InputModifiers::Modifier mod, bool pressed);
 
         /**
          * Removes a cursor event from the observer queue of this cursor. If
@@ -147,6 +101,27 @@ namespace graphics {
          */
         void UnregisterCursorEvent(AbstractCursorEvent *cursorEvent);
 
+        /**
+         * Associates a InputModifiers object with this object. This must be 
+         * used with care since differences in the states of the current and
+         * the new InputModifiers object are not checked! The replaced object
+         * will not be freed, since this object does not take the ownership of
+         * the memory of the InputModifiers objects.
+         *
+         * @param mods The new InputModifiers object.
+         */
+        inline void SetInputModifiers(InputModifiers *mods) {
+            this->mods = mods;
+        }
+
+        /**
+         * Answer the associated InputModifiers object.
+         *
+         * @return The associated InputModifiers object.
+         */
+        inline InputModifiers * GetInputModifiers(void) const {
+            return this->mods;
+        }
 
     protected:
 
@@ -185,6 +160,7 @@ namespace graphics {
          * to trigger all registered cursor events with REASON_MOVE.
          */
         void TriggerMoved(void);
+
     private:
 
         /** number of buttons */
@@ -193,11 +169,8 @@ namespace graphics {
         /** button states */
         bool *btnStates;
 
-        /** number of modifiers */
-        unsigned int modCnt;
-
-        /** modifier states */
-        bool *modStates;
+        /** Pointer to InputModifiers object */
+        InputModifiers *mods;
 
         /** observer list of registered cursor events */
         SingleLinkedList<AbstractCursorEvent *> events;

@@ -321,6 +321,10 @@
 				RelativePath=".\src\Cursor2D.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\InputModifiers.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -377,6 +381,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\graphicstypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\InputModifiers.h"
 				>
 			</File>
 		</Filter>

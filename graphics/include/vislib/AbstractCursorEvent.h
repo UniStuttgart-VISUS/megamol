@@ -15,6 +15,7 @@
 
 
 #include "vislib/IllegalParamException.h"
+#include "vislib/InputModifiers.h"
 
 
 namespace vislib {
@@ -86,7 +87,7 @@ namespace graphics {
          * @throws IllegalParamException if i is larger or equal to number of
          *         modifier tests.
          */
-        void SetModifierTest(unsigned int i, unsigned int modifier, bool value);
+        void SetModifierTest(unsigned int i, InputModifiers::Modifier modifier, bool value);
 
         /**
          * Sets the button for the button test and activates the button test.
@@ -148,7 +149,7 @@ namespace graphics {
          * @throws IllegalParamException if i is larger or equal the number of
          *         modifier tests.
          */
-        inline unsigned int GetTestModifier(unsigned int i) {
+        inline InputModifiers::Modifier GetTestModifier(unsigned int i) {
             if (i >= this->countModTests) {
                 throw IllegalParamException("i", __FILE__, __LINE__);
             }
@@ -192,7 +193,7 @@ namespace graphics {
         unsigned int countModTests;
 
         /** The modifiers for the tests. */
-        unsigned int *modifiers;
+        InputModifiers::Modifier *modifiers;
 
         /** The modifier test values for the tests. */
         bool *modifierValues;

@@ -33,9 +33,9 @@ void vislib::graphics::AbstractCursorEvent::SetModifierTestCount(unsigned int mo
     delete[] this->modifiers;
     delete[] this->modifierValues;
     this->countModTests = modTestCount;
-    this->modifiers = new unsigned int[this->countModTests];
+    this->modifiers = new InputModifiers::Modifier[this->countModTests];
     this->modifierValues = new bool[this->countModTests];
-    ::memset(this->modifiers, 0, sizeof(unsigned int) * this->countModTests);
+    ::memset(this->modifiers, 0, sizeof(InputModifiers::Modifier) * this->countModTests);
     ::memset(this->modifierValues, 0, sizeof(bool) * this->countModTests);
 }
 
@@ -43,7 +43,8 @@ void vislib::graphics::AbstractCursorEvent::SetModifierTestCount(unsigned int mo
 /*
  * vislib::graphics::AbstractCursorEvent::SetModifierTest
  */
-void vislib::graphics::AbstractCursorEvent::SetModifierTest(unsigned int i, unsigned int modifier, bool value) {
+void vislib::graphics::AbstractCursorEvent::SetModifierTest(
+        unsigned int i, InputModifiers::Modifier modifier, bool value) {
     if (i >= this->countModTests) {
         throw IllegalParamException("i", __FILE__, __LINE__);
     }

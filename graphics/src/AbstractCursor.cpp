@@ -14,7 +14,7 @@
  * vislib::graphics::AbstractCursor::AbstractCursor
  */
 vislib::graphics::AbstractCursor::AbstractCursor(void) 
-        : btnCnt(0), btnStates(NULL), modCnt(0), modStates(NULL) {
+        : btnCnt(0), btnStates(NULL), mods(NULL) {
     this->events.Clear();
 }
 
@@ -23,7 +23,7 @@ vislib::graphics::AbstractCursor::AbstractCursor(void)
  * vislib::graphics::AbstractCursor::AbstractCursor
  */
 vislib::graphics::AbstractCursor::AbstractCursor(const AbstractCursor& rhs) 
-        : btnCnt(0), btnStates(NULL), modCnt(0), modStates(NULL) {
+        : btnCnt(0), btnStates(NULL), mods(rhs.mods) {
     this->events.Clear();
     *this = rhs;
 }
@@ -34,7 +34,6 @@ vislib::graphics::AbstractCursor::AbstractCursor(const AbstractCursor& rhs)
  */
 vislib::graphics::AbstractCursor::~AbstractCursor(void) {
     delete[] this->btnStates;
-    delete[] this->modStates;
     
     this->events.Clear(); // Does not delete the event object listed
 }
@@ -46,13 +45,10 @@ vislib::graphics::AbstractCursor::~AbstractCursor(void) {
 vislib::graphics::AbstractCursor& vislib::graphics::AbstractCursor::operator=(
         const vislib::graphics::AbstractCursor &rhs) {
     delete[] this->btnStates;
-    delete[] this->modStates;
     this->btnCnt = rhs.btnCnt;
-    this->modCnt = rhs.modCnt;
     this->btnStates = new bool[this->btnCnt];
-    this->modStates = new bool[this->modCnt];
     ::memcpy(this->btnStates, rhs.btnStates, sizeof(bool) * this->btnCnt);
-    ::memcpy(this->modStates, rhs.modStates, sizeof(bool) * this->modCnt);
+    this->mods = rhs.mods;
     this->events = rhs.events;
     return *this;
 }
@@ -66,17 +62,6 @@ void vislib::graphics::AbstractCursor::SetButtonCount(unsigned int btnCnt) {
     this->btnCnt = btnCnt;
     this->btnStates = new bool[this->btnCnt];
     ::memset(this->btnStates, 0, sizeof(bool) * this->btnCnt);
-}
-
-
-/*
- * vislib::graphics::AbstractCursor::SetModifierCount
- */
-void vislib::graphics::AbstractCursor::SetModifierCount(unsigned int modCnt) {
-    delete[] this->modStates;
-    this->modCnt = modCnt;
-    this->modStates = new bool[this->modCnt];
-    ::memset(this->modStates, 0, sizeof(bool) * this->modCnt);
 }
 
 
@@ -101,23 +86,35 @@ void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn, bool dow
 
 
 /*
- * vislib::graphics::AbstractCursor::SetModifierState
+ * vislib::graphics::AbstractCursor::ModifierChanged
  */
-void vislib::graphics::AbstractCursor::SetModifierState(unsigned int modifier, bool down) {
-    if (modifier >= this->modCnt) {
-        throw IllegalParamException("btn", __FILE__, __LINE__);
-    }
-
-    if (down) {
-        this->modStates[modifier] = true;
-        this->TestTriggerAllEvents(true, true, 
-            AbstractCursorEvent::REASON_MOD_DOWN, modifier);
-    } else {
-        this->TestTriggerAllEvents(true, true, 
-            AbstractCursorEvent::REASON_MOD_UP, modifier);
-        this->modStates[modifier] = false;
-    }
+void vislib::graphics::AbstractCursor::ModifierChanged(
+        const InputModifiers& sender, InputModifiers::Modifier mod, bool pressed) {
+    // Trigger Events
+    this->TestTriggerAllEvents(true, true, 
+        pressed ? AbstractCursorEvent::REASON_MOD_DOWN : AbstractCursorEvent::REASON_MOD_UP,
+        static_cast<unsigned int>(mod));
 }
+
+//
+///*
+// * vislib::graphics::AbstractCursor::SetModifierState
+// */
+//void vislib::graphics::AbstractCursor::SetModifierState(unsigned int modifier, bool down) {
+//    if (modifier >= this->modCnt) {
+//        throw IllegalParamException("btn", __FILE__, __LINE__);
+//    }
+//
+//    if (down) {
+//        this->modStates[modifier] = true;
+//        this->TestTriggerAllEvents(true, true, 
+//            AbstractCursorEvent::REASON_MOD_DOWN, modifier);
+//    } else {
+//        this->TestTriggerAllEvents(true, true, 
+//            AbstractCursorEvent::REASON_MOD_UP, modifier);
+//        this->modStates[modifier] = false;
+//    }
+//}
 
 
 /*
@@ -161,14 +158,14 @@ bool vislib::graphics::AbstractCursor::TestEvent(
         }
     }
 
-    if (testMod && cursorEvent->DoesModifierTest()) {
+    if (testMod && cursorEvent->DoesModifierTest() && (this->mods != NULL)) {
         unsigned int modTestCount = cursorEvent->GetModifierTestCount();
         for (unsigned int i = 0; i < modTestCount; i++) {
-            unsigned int testMod = cursorEvent->GetTestModifier(i);
-            if (testMod >= this->modCnt) {
+            InputModifiers::Modifier testMod = cursorEvent->GetTestModifier(i);
+            if (testMod >= this->mods->GetModifierCount()) {
                 return false;
             }
-            if (this->modStates[testMod] != cursorEvent->GetTestModifierValue(i)) {
+            if (this->mods->GetModifierState(testMod) != cursorEvent->GetTestModifierValue(i)) {
                 return false;
             }
         }
