@@ -35,6 +35,9 @@ public:
          */
         AbstractFactory(const char *name);
 
+        /** dtor. */
+        virtual ~AbstractFactory(void) { }
+
         /**
          * Factory method.
          *
@@ -81,6 +84,9 @@ public:
          *             This will also be used as menu item text.
          */
         Factory(const char *name);
+
+        /** dtor. */
+        virtual ~Factory(void) { }
 
         /**
          * Factory methode.
