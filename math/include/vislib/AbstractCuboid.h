@@ -245,8 +245,8 @@ namespace math {
          * @return The dimensions of the cuboid.
          */
         inline Dimension<T, 3> GetSize(void) const {
-            return Dimension<T, 3>(this->CalcWidth(), this->CalcHeight(),
-                this->CalcDepth());
+            return Dimension<T, 3>(this->Width(), this->Height(),
+                this->Depth());
         }
 
         /**
@@ -496,7 +496,7 @@ namespace math {
          * @return The volume of the cuboid.
          */
         inline T Volume(void) const {
-            return (this->CalcWidth() * this->CalcHeight() * this->CalcDepth());
+            return (this->Width() * this->Height() * this->Depth());
         }
 
         /**
@@ -605,9 +605,9 @@ namespace math {
     vislib::math::Point<T, 3> 
     vislib::math::AbstractCuboid<T, S>::CalcCenter(void) const {
         return Point<T, 3>(
-            this->left + this->CalcWidth() / static_cast<T>(2),
-            this->bottom + this->CalcHeight() / static_cast<T>(2),
-            this->back + this->CalcDepth() / static_cast<T>(2));
+            this->bounds[IDX_LEFT] + this->Width() / static_cast<T>(2),
+            this->bounds[IDX_BOTTOM] + this->Height() / static_cast<T>(2),
+            this->bounds[IDX_BACK] + this->Depth() / static_cast<T>(2));
     }
 
 

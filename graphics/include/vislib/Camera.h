@@ -22,6 +22,8 @@
 #include "vislib/Rectangle.h"
 #include "vislib/Point.h"
 #include "vislib/Vector.h"
+#include "vislib/Cuboid.h"
+#include <float.h>
 
 
 namespace vislib {
@@ -78,6 +80,17 @@ namespace graphics {
          * dtor
          */
         virtual ~Camera(void);
+
+        /**
+         * Calculates the optimal clipping distances for the giving bounding
+         * box, based on the position of the associated beholder.
+         *
+         * @param box The bounding box of the scene content.
+         * @param minNear The minimal value for the near clipping plane
+         * @param maxFar The maximal value for the far clipping plane
+         */
+        void CalcClipDistances(const vislib::math::Cuboid<SceneSpaceType> &box,
+            SceneSpaceType minNear = 0.01f, SceneSpaceType maxFar = FLT_MAX);
 
         /** 
          * Returns aperture Angle of the camera along the y axis.

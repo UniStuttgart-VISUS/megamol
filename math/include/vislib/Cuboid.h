@@ -26,7 +26,7 @@ namespace math {
      *
      * @author Christoph Mueller
      */
-    template<class T> class Cuboid : AbstractCuboid<T, T[6]> {
+    template<class T> class Cuboid : public AbstractCuboid<T, T[6]> {
 
     public:
 

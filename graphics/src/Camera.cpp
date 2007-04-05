@@ -42,11 +42,69 @@ vislib::graphics::Camera::Camera(Beholder *beholder) : updateCounter(0) {
  }
 
 
-/**
+/*
  * vislib::graphics::Camera::~Camera
  */
 vislib::graphics::Camera::~Camera(void) {
     this->beholder = NULL; // Do not delete!
+}
+
+
+/*
+ * vislib::graphics::Camera::CalcClipDistances
+ */
+void vislib::graphics::Camera::CalcClipDistances(
+        const vislib::math::Cuboid<SceneSpaceType> &box,
+        SceneSpaceType minNear, SceneSpaceType maxFar) {
+    if (this->beholder == NULL) return;
+    vislib::math::Point<FLOAT, 3> camPos = this->beholder->GetPosition();
+    vislib::math::Vector<FLOAT, 3> front = this->beholder->GetFrontVector();
+    vislib::math::Vector<FLOAT, 3> tmp;
+    FLOAT dist;
+
+    tmp = box.GetLeftBottomBack() - camPos;
+    dist = tmp.Dot(front);
+    this->farClip = this->nearClip = dist;
+
+    tmp = box.GetLeftBottomFront() - camPos;
+    dist = tmp.Dot(front);
+    if (dist < this->nearClip) this->nearClip = dist;
+    if (dist > this->farClip) this->farClip = dist;
+
+    tmp = box.GetLeftTopFront() - camPos;
+    dist = tmp.Dot(front);
+    if (dist < this->nearClip) this->nearClip = dist;
+    if (dist > this->farClip) this->farClip = dist;
+
+    tmp = box.GetLeftTopBack() - camPos;
+    dist = tmp.Dot(front);
+    if (dist < this->nearClip) this->nearClip = dist;
+    if (dist > this->farClip) this->farClip = dist;
+
+    tmp = box.GetRightTopBack() - camPos;
+    dist = tmp.Dot(front);
+    if (dist < this->nearClip) this->nearClip = dist;
+    if (dist > this->farClip) this->farClip = dist;
+
+    tmp = box.GetRightTopFront() - camPos;
+    dist = tmp.Dot(front);
+    if (dist < this->nearClip) this->nearClip = dist;
+    if (dist > this->farClip) this->farClip = dist;
+
+    tmp = box.GetRightBottomFront() - camPos;
+    dist = tmp.Dot(front);
+    if (dist < this->nearClip) this->nearClip = dist;
+    if (dist > this->farClip) this->farClip = dist;
+
+    tmp = box.GetRightBottomBack() - camPos;
+    dist = tmp.Dot(front);
+    if (dist < this->nearClip) this->nearClip = dist;
+    if (dist > this->farClip) this->farClip = dist;
+
+    if (this->nearClip < minNear) this->nearClip = minNear;
+    if (this->farClip > maxFar) this->farClip = maxFar;
+
+    this->membersChanged = true;
 }
 
 
