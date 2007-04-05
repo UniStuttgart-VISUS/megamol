@@ -469,7 +469,8 @@ namespace math {
     /*
      * vislib::math::AbstractRectangle<T, S>::~AbstractRectangle
      */
-    template<class T, class S> AbstractRectangle<T, S>::~AbstractRectangle(void) {
+    template<class T, class S> 
+    AbstractRectangle<T, S>::~AbstractRectangle(void) {
     }
 
 

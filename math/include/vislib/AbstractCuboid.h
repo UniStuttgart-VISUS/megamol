@@ -747,6 +747,49 @@ namespace math {
             && IsEqual<T>(this->bounds[IDX_TOP], rhs.bounds[IDX_TOP]));
     }
 
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::IDX_BACK
+     */
+    template<class T, class S> 
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_BACK = 2;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM
+     */
+    template<class T, class S> 
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM = 1;
+    
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::IDX_FRONT
+     */
+    template<class T, class S> 
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_FRONT = 5;
+    
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::IDX_RIGHT
+     */
+    template<class T, class S> 
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_RIGHT = 3;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::IDX_LEFT
+     */
+    template<class T, class S> 
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_LEFT = 0;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::IDX_TOP
+     */
+    template<class T, class S> 
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_TOP = 4;
+
+
     ///*
     // * vislib::math::AbstractCuboid<T>::operator []
     // */
