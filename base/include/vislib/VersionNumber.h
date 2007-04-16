@@ -14,11 +14,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#ifdef __GNUC__
-#warning Your C library is s***
-#undef major
-#undef minor
-#endif /* __GNUC__ */
 
 #include "vislib/String.h"
 
@@ -41,12 +36,13 @@ namespace vislib {
         /**
          * Ctor.
          *
-         * @param major The major version number.
-         * @param minor The minor version number.
-         * @param build The build number.
-         * @param revision The revision number.
+         * @param majorNumber The major version number.
+         * @param minorNumber The minor version number.
+         * @param buildNumber The build number.
+         * @param revisionNumber The revision number.
          */
-        VersionNumber(VersionInt major = 0, VersionInt minor = 0, VersionInt build = 0, VersionInt revision = 0);
+        VersionNumber(VersionInt majorNumber = 0, VersionInt minorNumber = 0, 
+            VersionInt buildNumber = 0, VersionInt revisionNumber = 0);
 
         /** 
          * Copy ctor. 
@@ -86,7 +82,7 @@ namespace vislib {
          * @return The major version number.
          */
         inline VersionInt GetMajorVersionNumber(void) const {
-            return this->major;
+            return this->majorNumber;
         }
         
         /**
@@ -95,7 +91,7 @@ namespace vislib {
          * @return The minor version number.
          */
         inline VersionInt GetMinorVersionNumber(void) const {
-            return this->minor;
+            return this->minorNumber;
         }
         
         /**
@@ -104,7 +100,7 @@ namespace vislib {
          * @return The build number.
          */
         inline VersionInt GetBuildNumber(void) const {
-            return this->build;
+            return this->buildNumber;
         }
         
         /**
@@ -113,13 +109,13 @@ namespace vislib {
          * @return The revision number.
          */
         inline VersionInt GetRevisionNumber(void) const {
-            return this->revision;
+            return this->revisionNumber;
         }
 
         /**
          * Sets the version number to the value of a string. The string must
          * contain between one and four positive numbers separated by '.' 
-         * characters. No white space characters must be inside this string.
+         * characters. This string must not contain any white space characters.
          * However, any trailing characters behinde the last number will be
          * ignored. If not all version numbers could be successfully parsed
          * the one not set, will be set to zero.
@@ -137,7 +133,7 @@ namespace vislib {
         /**
          * Sets the version number to the value of a string. The string must
          * contain between one and four positive numbers separated by '.' 
-         * characters. No white space characters must be inside this string.
+         * characters. This string must not contain any white space characters.
          * However, any trailing characters behinde the last number will be
          * ignored. If not all version numbers could be successfully parsed
          * the one not set, will be set to zero.
@@ -155,16 +151,17 @@ namespace vislib {
         /**
          * Sets the version numbers.
          *
-         * @param major The major version number.
-         * @param minor The minor version number.
-         * @param build The build number.
-         * @param revision The revision number.
+         * @param majorNumber The major version number.
+         * @param minorNumber The minor version number.
+         * @param buildNumber The build number.
+         * @param revisionNumber The revision number.
          */
-        inline void Set(VersionInt major, VersionInt minor = 0, VersionInt build = 0, VersionInt revision = 0) {
-            this->major = major;
-            this->minor = minor;
-            this->build = build;
-            this->revision = revision;
+        inline void Set(VersionInt majorNumber, VersionInt minorNumber = 0, 
+                VersionInt buildNumber = 0, VersionInt revisionNumber = 0) {
+            this->majorNumber = majorNumber;
+            this->minorNumber = minorNumber;
+            this->buildNumber = buildNumber;
+            this->revisionNumber = revisionNumber;
         }
 
         /**
@@ -216,8 +213,10 @@ namespace vislib {
          * @return true if all four version numbers of both operands are equal.
          */
         inline bool operator==(const VersionNumber& rhs) const {
-            return (this->major == rhs.major) && (this->minor == rhs.minor)
-                && (this->build == rhs.build) && (this->revision == rhs.revision);
+            return (this->majorNumber == rhs.majorNumber) 
+                && (this->minorNumber == rhs.minorNumber)
+                && (this->buildNumber == rhs.buildNumber) 
+                && (this->revisionNumber == rhs.revisionNumber);
         }
 
         /**
@@ -240,10 +239,13 @@ namespace vislib {
          * @return true if this version numbers is less than rhs.
          */
         inline bool operator<(const VersionNumber& rhs) const {
-            return ((this->major < rhs.major) || ((this->major == rhs.major)
-                && ((this->minor < rhs.minor) || ((this->minor == rhs.minor)
-                && ((this->build < rhs.build) || ((this->build == rhs.build)
-                && (this->revision < rhs.revision)))))));
+            return ((this->majorNumber < rhs.majorNumber) 
+                || ((this->majorNumber == rhs.majorNumber)
+                && ((this->minorNumber < rhs.minorNumber) 
+                || ((this->minorNumber == rhs.minorNumber)
+                && ((this->buildNumber < rhs.buildNumber) 
+                || ((this->buildNumber == rhs.buildNumber)
+                && (this->revisionNumber < rhs.revisionNumber)))))));
         }
 
         /**
@@ -282,25 +284,20 @@ namespace vislib {
     private:
 
         /** major version number */
-        VersionInt major;
+        VersionInt majorNumber;
 
         /** minor version number */
-        VersionInt minor;
+        VersionInt minorNumber;
 
         /** build number */
-        VersionInt build;
+        VersionInt buildNumber;
 
         /** revision number */
-        VersionInt revision;
+        VersionInt revisionNumber;
 
     };
     
 } /* end namespace vislib */
-
-#ifdef __GNUC__
-#define major gnu_dev_major
-#define minor gnu_dev_minor
-#endif /* __GNUC__ */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -9,24 +9,23 @@
 #include "vislib/VersionNumber.h"
 #include "vislib/StringConverter.h"
 
-#ifdef __GNUC__
-#undef major
-#undef minor
-#endif /* __GNUC__ */
-
 
 /*
  * vislib::VersionNumber::VersionNumber
  */
-vislib::VersionNumber::VersionNumber(VersionInt major, VersionInt minor, VersionInt build, VersionInt revision) 
-        : major(major), minor(minor), build(build), revision(revision) {
+vislib::VersionNumber::VersionNumber(VersionInt majorNumber, 
+        VersionInt minorNumber, VersionInt buildNumber, 
+        VersionInt revisionNumber) 
+        : majorNumber(majorNumber), minorNumber(minorNumber), 
+        buildNumber(buildNumber), revisionNumber(revisionNumber) {
 }
 
 
 /*
  * vislib::VersionNumber::VersionNumber
  */
-vislib::VersionNumber::VersionNumber(const VersionNumber& rhs) : major(0), minor(0), build(0), revision(0) {
+vislib::VersionNumber::VersionNumber(const VersionNumber& rhs) 
+        : majorNumber(0), minorNumber(0), buildNumber(0), revisionNumber(0) {
     *this = rhs;
 }
 
@@ -34,7 +33,8 @@ vislib::VersionNumber::VersionNumber(const VersionNumber& rhs) : major(0), minor
 /*
  * vislib::VersionNumber::VersionNumber
  */
-vislib::VersionNumber::VersionNumber(const char *ver) : major(0), minor(0), build(0), revision(0) {
+vislib::VersionNumber::VersionNumber(const char *ver) 
+        : majorNumber(0), minorNumber(0), buildNumber(0), revisionNumber(0) {
     this->Parse(ver);
 }
 
@@ -42,7 +42,8 @@ vislib::VersionNumber::VersionNumber(const char *ver) : major(0), minor(0), buil
 /*
  * vislib::VersionNumber::VersionNumber
  */
-vislib::VersionNumber::VersionNumber(const wchar_t *ver) : major(0), minor(0), build(0), revision(0) {
+vislib::VersionNumber::VersionNumber(const wchar_t *ver) 
+        : majorNumber(0), minorNumber(0), buildNumber(0), revisionNumber(0) {
     this->Parse(ver);
 }
 
@@ -58,8 +59,56 @@ vislib::VersionNumber::~VersionNumber(void) {
  * vislib::VersionNumber::Parse
  */
 unsigned int vislib::VersionNumber::Parse(const char *verStr) {
-    // TODO: Implement
-    return 0;
+    int retval = 0;
+    int value = 0;
+    int charValue;
+
+    this->majorNumber = 0;
+    this->minorNumber = 0;
+    this->buildNumber = 0;
+    this->revisionNumber = 0;
+
+    for (int state = 1; state > 0; verStr++) {
+        charValue = static_cast<int>(*verStr) - static_cast<int>('0');
+        switch (state) {
+            case 1: // first character of a number
+                if ((charValue < 0) || (charValue > 9)) {
+                    state = 0; // unexpected; expecting a digit. 
+                } else {
+                    value = charValue;
+                    state = 2;
+                }
+                break;
+            case 2: // later character of a number
+                if ((charValue < 0) || (charValue > 9)) {
+                    switch (retval) {
+                        case 0: this->majorNumber = value; break;
+                        case 1: this->minorNumber = value; break;
+                        case 2: this->buildNumber = value; break;
+                        case 3: this->revisionNumber = value; break;
+                    }
+                    retval++;
+                    if (retval > 3) {
+                        retval = 4;
+                        state = 0; // finished.
+                    } else {
+                        if ((*verStr == '.') || (*verStr == ',')) {
+                            state = 1; // valid separator
+                        } else {
+                            state = 0; // end of valid string
+                        }
+                    }
+                } else {
+                    value = 10 * value + charValue;
+                }
+                break;
+            default: // something went really wrong!
+                state = 0;
+                break;
+        }
+    }
+
+    return retval;
 }
 
 
@@ -67,8 +116,56 @@ unsigned int vislib::VersionNumber::Parse(const char *verStr) {
  * vislib::VersionNumber::Parse
  */
 unsigned int vislib::VersionNumber::Parse(const wchar_t *verStr) {
-    // TODO: Implement
-    return 0;
+    int retval = 0;
+    int value = 0;
+    int charValue;
+
+    this->majorNumber = 0;
+    this->minorNumber = 0;
+    this->buildNumber = 0;
+    this->revisionNumber = 0;
+
+    for (int state = 1; state > 0; verStr++) {
+        charValue = static_cast<int>(*verStr) - static_cast<int>(L'0');
+        switch (state) {
+            case 1: // first character of a number
+                if ((charValue < 0) || (charValue > 9)) {
+                    state = 0; // unexpected; expecting a digit. 
+                } else {
+                    value = charValue;
+                    state = 2;
+                }
+                break;
+            case 2: // later character of a number
+                if ((charValue < 0) || (charValue > 9)) {
+                    switch (retval) {
+                        case 0: this->majorNumber = value; break;
+                        case 1: this->minorNumber = value; break;
+                        case 2: this->buildNumber = value; break;
+                        case 3: this->revisionNumber = value; break;
+                    }
+                    retval++;
+                    if (retval > 3) {
+                        retval = 4;
+                        state = 0; // finished.
+                    } else {
+                        if ((*verStr == L'.') || (*verStr == L',')) {
+                            state = 1; // valid separator
+                        } else {
+                            state = 0; // end of valid string
+                        }
+                    }
+                } else {
+                    value = 10 * value + charValue;
+                }
+                break;
+            default: // something went really wrong!
+                state = 0;
+                break;
+        }
+    }
+
+    return retval;
 }
 
 
@@ -78,15 +175,19 @@ unsigned int vislib::VersionNumber::Parse(const wchar_t *verStr) {
 vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
     vislib::StringA tmp;
     if (num == 1) {
-        tmp.Format("%u", static_cast<unsigned int>(this->major));
+        tmp.Format("%u", static_cast<unsigned int>(this->majorNumber));
     } else if (num == 2) {
-        tmp.Format("%u.%u", static_cast<unsigned int>(this->major), static_cast<unsigned int>(this->minor));
+        tmp.Format("%u.%u", static_cast<unsigned int>(this->majorNumber), 
+            static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
-        tmp.Format("%u.%u.%u", static_cast<unsigned int>(this->major), static_cast<unsigned int>(this->minor)
-            , static_cast<unsigned int>(this->build));
+        tmp.Format("%u.%u.%u", static_cast<unsigned int>(this->majorNumber), 
+            static_cast<unsigned int>(this->minorNumber),
+            static_cast<unsigned int>(this->buildNumber));
     } else if (num >= 4) {
-        tmp.Format("%u.%u.%u.%u", static_cast<unsigned int>(this->major), static_cast<unsigned int>(this->minor)
-            , static_cast<unsigned int>(this->build), static_cast<unsigned int>(this->revision));
+        tmp.Format("%u.%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
+            static_cast<unsigned int>(this->minorNumber), 
+            static_cast<unsigned int>(this->buildNumber), 
+            static_cast<unsigned int>(this->revisionNumber));
     }
     return tmp;
 }
@@ -99,15 +200,20 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
 #ifdef _WIN32
     vislib::StringW tmp;
     if (num == 1) {
-        tmp.Format(L"%u", static_cast<unsigned int>(this->major));
+        tmp.Format(L"%u", static_cast<unsigned int>(this->majorNumber));
     } else if (num == 2) {
-        tmp.Format(L"%u.%u", static_cast<unsigned int>(this->major), static_cast<unsigned int>(this->minor));
+        tmp.Format(L"%u.%u", static_cast<unsigned int>(this->majorNumber), 
+            static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
-        tmp.Format(L"%u.%u.%u", static_cast<unsigned int>(this->major), static_cast<unsigned int>(this->minor)
-            , static_cast<unsigned int>(this->build));
+        tmp.Format(L"%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
+            static_cast<unsigned int>(this->minorNumber), 
+            static_cast<unsigned int>(this->buildNumber));
     } else if (num >= 4) {
-        tmp.Format(L"%u.%u.%u.%u", static_cast<unsigned int>(this->major), static_cast<unsigned int>(this->minor)
-            , static_cast<unsigned int>(this->build), static_cast<unsigned int>(this->revision));
+        tmp.Format(L"%u.%u.%u.%u", 
+            static_cast<unsigned int>(this->majorNumber), 
+            static_cast<unsigned int>(this->minorNumber),
+            static_cast<unsigned int>(this->buildNumber),
+            static_cast<unsigned int>(this->revisionNumber));
     }
     return tmp;
 #else /* _WIN32 */
@@ -121,9 +227,9 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
  * vislib::VersionNumber::operator=
  */
 vislib::VersionNumber& vislib::VersionNumber::operator=(const VersionNumber& rhs) {
-    this->major = rhs.major;
-    this->minor = rhs.minor;
-    this->build = rhs.build;
-    this->revision = rhs.revision;
+    this->majorNumber = rhs.majorNumber;
+    this->minorNumber = rhs.minorNumber;
+    this->buildNumber = rhs.buildNumber;
+    this->revisionNumber = rhs.revisionNumber;
     return *this;
 }

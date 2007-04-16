@@ -63,6 +63,13 @@ namespace sys {
      */
     StringW ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
 
+    /**
+     * Answer the number of milliseconds since midnight of the current day.
+     *
+     * @return milliseconds since midnight.
+     */
+    unsigned int GetTicksOfDay(void);
+
 } /* end namespace sys */
 } /* end namespace vislib */
 

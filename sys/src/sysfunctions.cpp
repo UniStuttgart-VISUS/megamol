@@ -10,6 +10,8 @@
 #ifdef _WIN32
 #else /* _WIN32 */
 #include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
 #endif /* _WIN32 */
 
 #include "vislib/memutils.h"
@@ -109,4 +111,36 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
     StringW str(buf);
     delete[] buf;
     return str;
+}
+
+
+/*
+ * vislib::sys::GetTicksOfDay
+ */
+unsigned int vislib::sys::GetTicksOfDay(void) {
+#ifdef _WIN32
+    SYSTEMTIME systemTime;
+    ::GetLocalTime(&systemTime);
+    return static_cast<unsigned int>(systemTime.wMilliseconds) 
+        + 1000 * (static_cast<unsigned int>(systemTime.wSecond) + 60 * (systemTime.wMinute + 60 * systemTime.wHour));
+
+#else /* _WIN32 */
+    struct timeval tv;
+    struct tm tm;
+
+    if (::gettimeofday(&tv, NULL) == 0) {
+
+        if (::gmtime_r(&tv.tv_sec, &tm) != NULL) {
+            return (tv.tv_usec / 1000) 
+                + 1000 * (static_cast<unsigned int>(tm.tm_sec) + 60 * (tm.tm_min + 60 * tm.tm_hour));
+
+        } else {
+            return tv.tv_usec / 1000 + 1000 * (tv.tv_sec % 86400);
+        }
+
+    } else {
+        return 0; // ultimate linux failure.
+    }
+
+#endif /* _WIN32 */
 }
