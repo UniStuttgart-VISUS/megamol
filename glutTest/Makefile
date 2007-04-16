@@ -4,7 +4,7 @@
 # Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
 #
 
--include ../common.mk
+-include ../config.mk
 
 TargetName := vislibgluttest
 

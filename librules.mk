@@ -5,8 +5,12 @@
 #
 
 CPP_SRCS := $(filter-out $(ExcludeFromBuild), $(wildcard $(InputDir)/*.cpp))
-CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS))))\
-	$(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS))))
+CPP_DEPS_DEBUG := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS))))
+CPP_DEPS_RELEASE :=	$(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS))))
+CPP_DEPS := $(CPP_DEPS_DEBUG) $(CPP_DEPS_RELEASE)
+
+OBJS_DEBUG := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+OBJS_RELEASE := $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags)
@@ -20,19 +24,18 @@ $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName).a
 	@mkdir -p $(OutDir)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS)d.a
 	
-$(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName).a
+$(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName).a 
 	@mkdir -p $(OutDir)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS).a	
 	
 
-
 # Rules for intermediate archives:	
-$(IntDir)/$(DebugDir)/lib$(TargetName).a: $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+$(IntDir)/$(DebugDir)/lib$(TargetName).a: $(OBJS_DEBUG)
 	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
 	@tput sgr0
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 	
-$(IntDir)/$(ReleaseDir)/lib$(TargetName).a: $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+$(IntDir)/$(ReleaseDir)/lib$(TargetName).a: $(OBJS_RELEASE)
 	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
 	@tput sgr0
 	$(Q)$(AR) $(ARFLAGS) $@ $^	
@@ -43,13 +46,13 @@ $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
 	@tput sgr0
-	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)\/\1.o $(IntDir)\/$(DebugDir)\/\1.d:/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(DebugDir)\/\1.d $(IntDir)\/$(DebugDir)\/\1.o:/g' > $@
 	
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@ "
 	@tput sgr0
-	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $^ | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)\/\1.o $(IntDir)\/$(ReleaseDir)\/\1.d:/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)\/\1.d $(IntDir)\/$(ReleaseDir)\/\1.o:/g' > $@
 
 	
 ifneq ($(MAKECMDGOALS), clean)

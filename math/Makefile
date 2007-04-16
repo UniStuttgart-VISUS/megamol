@@ -4,12 +4,20 @@
 # Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
 #
 
--include ../common.mk
+#
+# This is the default VISlib makefile. Do not change it. Any per project 
+# configuration must be done in the separate file project.mk. project.mk must
+# be located in the same directory as this makefile.
+#
+# At least the TargetName variable must be set in project.mk.
+#
 
-TargetName := vislibmath
 
-IncludeDir += ../base/include
+# Include project default configuration.
+-include ../config.mk
 
-ExcludeFromBuild += $(InputDir)/Cuboid.cpp $(InputDir)/Dimension.cpp $(InputDir)/Dimension2D.cpp $(InputDir)/Dimension3D.cpp $(InputDir)/Matrix4x4.cpp $(InputDir)/Quaternion.cpp $(InputDir)/Rectangle.cpp $(InputDir)/Plane.cpp
+# Include user settings and override.
+-include project.mk
 
+# Include common build rules.
 -include ../librules.mk

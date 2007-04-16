@@ -16,7 +16,7 @@ SHELL = /bin/bash
 ifndef VISLIB_VERBOSE
     VISLIB_VERBOSE = 0
 endif
-ifeq ($(VISLIB_VERBOSE),1)
+ifeq ($(VISLIB_VERBOSE), 1)
     Q =
     ARFLAGS = -cvq
 else

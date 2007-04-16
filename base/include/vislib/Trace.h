@@ -65,6 +65,18 @@ namespace vislib {
          */
         static const UINT LEVEL_NONE;
 
+        /** Messages above this level are used for VISlib internal tracing. */
+        static const UINT LEVEL_VL;
+
+        /** Messages with this level represent a VISlib internal error. */
+        static const UINT LEVEL_VL_ERROR;
+
+        /** Messages with this level represent a VISlib internal message. */
+        static const UINT LEVEL_VL_INFO;
+
+        /** Messages with this level represent a VISlib internal warning. */
+        static const UINT LEVEL_VL_WARN;
+
         /**
          * Use this for warning messages. The value of this constant 
          * is 100. 
