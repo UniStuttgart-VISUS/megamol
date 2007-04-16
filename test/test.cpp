@@ -60,6 +60,7 @@ VislibTest tests[] = {
     {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
+    {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},

@@ -12,4 +12,6 @@
 
 void TestClusterDiscoveryService(void);
 
+void TestClusterDiscoveryObserver(void);
+
 #endif /* VISLIBTEST_TESTDISCOVERY_H_INCLUDED */

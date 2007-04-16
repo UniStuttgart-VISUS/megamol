@@ -83,7 +83,7 @@ void MyListener::OnUserMessage(const vislib::net::ClusterDiscoveryService& src,
 }
 
 
-void TestClusterDiscoveryService(void) {
+static void runCDS(const bool observer) {
     using namespace vislib;
     using namespace vislib::net;
     using namespace vislib::sys;
@@ -98,7 +98,7 @@ void TestClusterDiscoveryService(void) {
 
     ClusterDiscoveryService cds("testnet", 
         SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA()), 12345),
-        IPAddress("129.69.215.255"));
+        IPAddress("129.69.215.255"), ClusterDiscoveryService::DEFAULT_PORT, observer);
     cds.AddListener(&myListener);
     cds.Start();
     Thread::Sleep(60 * 1000);
@@ -106,4 +106,14 @@ void TestClusterDiscoveryService(void) {
 
     Trace::GetInstance().SetLevel(oldLevel);
     Socket::Cleanup();
+}
+
+
+void TestClusterDiscoveryService(void) {
+    ::runCDS(false);
+}
+
+
+void TestClusterDiscoveryObserver(void) {
+    ::runCDS(true);
 }

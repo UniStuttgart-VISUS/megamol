@@ -32,12 +32,14 @@ const UINT16 vislib::net::ClusterDiscoveryService::MSG_TYPE_USER = 16;
 vislib::net::ClusterDiscoveryService::ClusterDiscoveryService(
         const StringA& name, const SocketAddress& responseAddr, 
         const IPAddress& bcastAddr, const USHORT bindPort, 
-        const UINT requestInterval, const UINT cntResponseChances)
+        const bool isObserver, const UINT requestInterval, 
+        const UINT cntResponseChances)
         : bcastAddr(SocketAddress::FAMILY_INET, bcastAddr, bindPort), 
         bindAddr(SocketAddress::FAMILY_INET, bindPort), 
         responseAddr(responseAddr), 
         cntResponseChances(cntResponseChances),
         requestInterval(requestInterval),
+        isObserver(isObserver),
         name(name), 
         sender(NULL), 
         receiver(NULL), 
@@ -59,7 +61,7 @@ vislib::net::ClusterDiscoveryService::~ClusterDiscoveryService(void) {
             SAFE_DELETE(this->sender);
             SAFE_DELETE(this->senderThread);
         } catch (...) {
-            TRACE(Trace::LEVEL_WARN, "The discovery sender thread could "
+            TRACE(Trace::LEVEL_VL_WARN, "The discovery sender thread could "
                 "not be successfully terminated.\n");
         }
     }
@@ -70,7 +72,7 @@ vislib::net::ClusterDiscoveryService::~ClusterDiscoveryService(void) {
             SAFE_DELETE(this->receiver);
             SAFE_DELETE(this->receiverThread);
         } catch (...) {
-            TRACE(Trace::LEVEL_WARN, "The discovery receiver thread could "
+            TRACE(Trace::LEVEL_VL_WARN, "The discovery receiver thread could "
                 "not be successfully terminated.\n");
         }
     }
@@ -123,7 +125,7 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
             this->userMsgSocket.Send(&msg, sizeof(Message), 
                 this->peerNodes[i]->discoveryAddr);
         } catch (SocketException e) {
-            TRACE(Trace::LEVEL_WARN, "ClusterDiscoveryService could not send "
+            TRACE(Trace::LEVEL_VL_WARN, "ClusterDiscoveryService could not send "
                 "user message (\"%s\").\n", e.GetMsgA());
             retval++;
         }
@@ -155,7 +157,7 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
     try {
         this->userMsgSocket.Send(&msg, sizeof(Message), hPeer->discoveryAddr);
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_WARN, "ClusterDiscoveryService could not send "
+        TRACE(Trace::LEVEL_VL_WARN, "ClusterDiscoveryService could not send "
             "user message (\"%s\").\n", e.GetMsgA());
         retval++;
     }
@@ -200,7 +202,7 @@ bool vislib::net::ClusterDiscoveryService::Stop(void) {
 
         return true;
     } catch (sys::SystemException e) {
-        TRACE(Trace::LEVEL_ERROR, "Stopping discovery threads failed. The "
+        TRACE(Trace::LEVEL_VL_ERROR, "Stopping discovery threads failed. The "
             "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
         return false;
     }
@@ -266,13 +268,13 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
             Socket::PROTOCOL_UDP);
         socket.SetBroadcast(true);
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_ERROR, "Discovery sender thread could not "
+        TRACE(Trace::LEVEL_VL_ERROR, "Discovery sender thread could not "
             "create its. The error code is %d (\"%s\").\n", e.GetErrorCode(),
             e.GetMsgA());
         return 1;
     }
 
-    /* Prepare our request for multiple broadcasting. */
+    /* Prepare our request for initial broadcasting. */
     request.magicNumber = MAGIC_NUMBER;
     request.msgType = MSG_TYPE_IAMHERE;
     request.senderBody.sockAddr = this->cds.responseAddr;
@@ -284,23 +286,58 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
         MAX_NAME_LEN);
 #endif /* (_MSC_VER >= 1400) */
 
-    TRACE(Trace::LEVEL_INFO, "The discovery sender thread is starting ...\n");
+    TRACE(Trace::LEVEL_VL_INFO, "The discovery sender thread is starting ...\n");
+
+    /* Send the initial "immediate alive request" message. */
+    try {
+        socket.Send(&request, sizeof(Message), this->cds.bcastAddr);
+        TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent MSG_TYPE_IAMHERE "
+            "to %s.\n", this->cds.bcastAddr.ToStringA().PeekBuffer());
+
+        /*
+         * If the discovery service is configured not to be member of the 
+         * cluster, but to only search other members, the sender thread can 
+         * leave after the first request sent above.
+         * Otherwise, the thread should wait for the normal request interval
+         * time before really starting.
+         */
+        if (this->cds.isObserver) {
+            TRACE(Trace::LEVEL_VL_INFO, "Discovery service is leaving request "
+                "thread as it is only discovering other nodes.\n");
+            return 0;
+        } else {
+            sys::Thread::Sleep(this->cds.requestInterval);
+        }
+
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_VL_WARN, "A socket error occurred in the "
+            "discovery sender thread. The error code is %d (\"%s\").\n",
+            e.GetErrorCode(), e.GetMsgA());
+    } catch (...) {
+        TRACE(Trace::LEVEL_VL_ERROR, "The discovery sender caught an "
+            "unexpected exception.\n");
+        return 2;
+    }
+
+    /* Change our request for alive broadcasting. */
+    request.msgType = MSG_TYPE_IAMALIVE;
 
     while (this->isRunning) {
         try {    
 			/* Broadcast request. */
             this->cds.prepareRequest();
             socket.Send(&request, sizeof(Message), this->cds.bcastAddr);
-            TRACE(Trace::LEVEL_INFO, "Discovery service sent MSG_TYPE_IAMHERE "
-                "to %s.\n", this->cds.bcastAddr.ToStringA().PeekBuffer());
+            TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
+                "MSG_TYPE_IAMALIVE to %s.\n", 
+                this->cds.bcastAddr.ToStringA().PeekBuffer());
 
             sys::Thread::Sleep(this->cds.requestInterval);
         } catch (SocketException e) {
-            TRACE(Trace::LEVEL_WARN, "A socket error occurred in the "
+            TRACE(Trace::LEVEL_VL_WARN, "A socket error occurred in the "
                 "discovery sender thread. The error code is %d (\"%s\").\n",
                 e.GetErrorCode(), e.GetMsgA());
         } catch (...) {
-            TRACE(Trace::LEVEL_ERROR, "The discovery sender caught an "
+            TRACE(Trace::LEVEL_VL_ERROR, "The discovery sender caught an "
                 "unexpected exception.\n");
             return 2;
         }
@@ -311,12 +348,12 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
   		/* Now inform all other nodes, that we are out. */
         request.msgType = MSG_TYPE_SAYONARA;
         socket.Send(&request, sizeof(Message), this->cds.bcastAddr);
-        TRACE(Trace::LEVEL_INFO, "Discovery service sent MSG_TYPE_SAYONARA to "
+        TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent MSG_TYPE_SAYONARA to "
             "%s.\n", this->cds.bcastAddr.ToStringA().PeekBuffer());
         
         Socket::Cleanup();
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_ERROR, "Socket cleanup failed in the discovery "
+        TRACE(Trace::LEVEL_VL_ERROR, "Socket cleanup failed in the discovery "
             "request thread. The error code is %d (\"%s\").\n", 
             e.GetErrorCode(), e.GetMsgA());
     }
@@ -382,17 +419,19 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
         socket.SetBroadcast(true);
         socket.Bind(this->cds.bindAddr);
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_ERROR, "Discovery receiver thread could not "
+        TRACE(Trace::LEVEL_VL_ERROR, "Discovery receiver thread could not "
             "create its socket and bind it to the requested address. The "
             "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
         return 1;
     }
 
-    /* Register myself as known node first. */
-    this->cds.addPeerNode(this->cds.responseAddr, this->cds.responseAddr);
-    // TODO: Using the response address as discovery address is hugly.
+    /* Register myself as known node first (observer does not know itself). */
+    if (!this->cds.isObserver) {
+        this->cds.addPeerNode(this->cds.responseAddr, this->cds.responseAddr);
+        // TODO: Using the response address as discovery address is hugly.
+    }
 
-    TRACE(Trace::LEVEL_INFO, "The discovery receiver thread is starting ...\n");
+    TRACE(Trace::LEVEL_VL_INFO, "The discovery receiver thread is starting ...\n");
 
     while (this->isRunning) {
         try {
@@ -403,20 +442,48 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
             if (msg.magicNumber == MAGIC_NUMBER) {
                 /* Message OK, look for its content. */
 
-                if ((msg.msgType == MSG_TYPE_IAMHERE) 
+                if ((msg.msgType == MSG_TYPE_IAMALIVE) 
                         && (this->cds.name.Compare(msg.senderBody.name))) {
                     /* Got a discovery request for own cluster. */
-                    TRACE(Trace::LEVEL_INFO, "Discovery service received "
-                        "MSG_TYPE_IAMHERE from %s.\n", 
+                    TRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
+                        "MSG_TYPE_IAMALIVE from %s.\n", 
                         peerAddr.ToStringA().PeekBuffer());
                     
                     /* Add peer to local list, if not yet known. */
                     this->cds.addPeerNode(peerAddr, msg.senderBody.sockAddr);
 
+                } else if ((msg.msgType == MSG_TYPE_IAMHERE) 
+                        && (this->cds.name.Compare(msg.senderBody.name))) {
+                    /* 
+                     * Get an initial discovery request. This triggers an 
+                     * immediate alive message, but without adding the sender to
+                     * the cluster.
+                     *
+                     * Note: Nodes sending the MSG_TYPE_IAMHERE message must
+                     * be added to the list of known nodes, because nodes in 
+                     * observer mode also send MSG_TYPE_IAMHERE to request an
+                     * immediate response of all running nodes.
+                     */
+                    TRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
+                        "MSG_TYPE_IAMHERE from %s.\n", 
+                        peerAddr.ToStringA().PeekBuffer());
+
+                    if (!this->cds.isObserver) {
+                        /* Observers must not send alive messages. */
+                        peerAddr.SetPort(this->cds.bindAddr.GetPort());
+                        ASSERT(msg.magicNumber == MAGIC_NUMBER);
+                        msg.msgType = MSG_TYPE_IAMALIVE;
+                        msg.senderBody.sockAddr = this->cds.responseAddr;
+                        socket.Send(&msg, sizeof(Message), peerAddr);
+                        TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
+                            "immediate MSG_TYPE_IAMALIVE answer to %s.\n",
+                            peerAddr.ToStringA().PeekBuffer());
+                    }
+
                 } else if ((msg.msgType == MSG_TYPE_SAYONARA)
                         && (this->cds.name.Compare(msg.senderBody.name))) {
                     /* Got an explicit disconnect. */
-                    TRACE(Trace::LEVEL_INFO, "Response thread received "
+                    TRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
                         "MSG_TYPE_SAYONARA from %s.\n",
                         peerAddr.ToStringA().PeekBuffer());
 
@@ -430,11 +497,11 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
             } /* end if (response.magicNumber == MAGIC_NUMBER) */
 
         } catch (SocketException e) {
-            TRACE(Trace::LEVEL_WARN, "A socket error occurred in the "
+            TRACE(Trace::LEVEL_VL_WARN, "A socket error occurred in the "
                 "discovery receiver thread. The error code is %d (\"%s\").\n",
                 e.GetErrorCode(), e.GetMsgA());
         } catch (...) {
-            TRACE(Trace::LEVEL_ERROR, "The discovery receiver caught an "
+            TRACE(Trace::LEVEL_VL_ERROR, "The discovery receiver caught an "
                 "unexpected exception.\n");
             return 2;
         }
@@ -444,7 +511,7 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_ERROR, "Socket cleanup failed in the discovery "
+        TRACE(Trace::LEVEL_VL_ERROR, "Socket cleanup failed in the discovery "
             "receiver thread. The error code is %d (\"%s\").\n", 
             e.GetErrorCode(), e.GetMsgA());
     }
@@ -478,7 +545,7 @@ void vislib::net::ClusterDiscoveryService::addPeerNode(
     
     if ((idx = this->peerFromAddress(address)) >= 0) {
         /* Already known, reset disconnect chance. */
-        TRACE(Trace::LEVEL_INFO, "Peer node %s is already known.\n", 
+        TRACE(Trace::LEVEL_VL_INFO, "Peer node %s is already known.\n", 
             static_cast<const char *>(address.ToStringA()));
         hPeer = this->peerNodes[static_cast<INT>(idx)];
 
@@ -698,6 +765,12 @@ void vislib::net::ClusterDiscoveryService::removePeerNode(
  */
 const UINT16 vislib::net::ClusterDiscoveryService::MAGIC_NUMBER 
     = static_cast<UINT16>('v') << 8 | static_cast<UINT16>('l');
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMALIVE
+ */
+const UINT16 vislib::net::ClusterDiscoveryService::MSG_TYPE_IAMALIVE = 2;
 
 
 /*

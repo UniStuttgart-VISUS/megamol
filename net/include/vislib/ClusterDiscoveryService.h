@@ -112,6 +112,9 @@ namespace net {
          * @param bindPort            The port to bind the receiver thread to.
          *                            All discovery requests must be directed to
          *                            this port.
+         * @param isObserver          If this flag is set, the discovery service 
+         *                            will only discover nodes, but not request
+         *                            membership in the cluster.
          * @param requestInterval     The interval between two discovery 
          *                            requests in milliseconds.
          * @param cntResponseChances  The number of requests that another node 
@@ -123,6 +126,7 @@ namespace net {
             const SocketAddress& responseAddr, 
             const IPAddress& bcastAddr,
             const USHORT bindPort = DEFAULT_PORT,
+            const bool discoveryOnly = false,
             const UINT requestInterval = 10 * 1000,
             const UINT cntResponseChances = 1);
 
@@ -590,7 +594,10 @@ namespace net {
         /** The magic number at the begin of each message. */
         static const UINT16 MAGIC_NUMBER;
 
-        /** Message type ID of a discovery request. */
+        /** Message type ID of a repeated discovery request. */
+        static const UINT16 MSG_TYPE_IAMALIVE;
+
+        /** Message type ID of an initial discovery request. */
         static const UINT16 MSG_TYPE_IAMHERE;
 
         /** Message type ID of the explicit disconnect notification. */
@@ -619,6 +626,12 @@ namespace net {
 
         /** The time in milliseconds between two discovery requests. */
         UINT requestInterval;
+
+        /**
+         * If this flag is set, the discovery service will not send 
+         * MSG_TYPE_IAMALIVE for being added to the peer list of other nodes.
+         */
+        bool isObserver;
 
         /** This list holds the objects to be informed about new nodes. */
         ListenerList listeners;
