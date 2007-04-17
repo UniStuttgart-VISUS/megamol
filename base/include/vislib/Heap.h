@@ -44,7 +44,19 @@ namespace vislib {
 
     public:
 
-        /** Ctor. */
+        /** 
+         * Create a new heap with the specified initial capacity allocated for
+         * elements.
+         * 
+         * It is important to specify a meaningful capacity, e. g. the maximum
+         * number of elements expected to be queued at one time in a priority
+         * queue.
+         *
+         * @param capacity The initial capacity of the underlying array. This
+         *                 amount of memory is directly allocated. If the heap,
+         *                 however, needs more memory, it will dynamically 
+         *                 reallocate the array.
+         */
         Heap(const SIZE_T capacity = Array<T>::DEFAULT_CAPACITY);
 
         /** Dtor. */
@@ -52,6 +64,8 @@ namespace vislib {
 
         /**
          * Add a new element to the heap.
+         *
+         * This method has logarithmic runtime complexity.
          */
         inline void Add(const T& element) {
             this->elements.Append(element);
@@ -106,7 +120,11 @@ namespace vislib {
         /**
          * Answer the first element in the heap, i. e. its root.
          *
+         * This method has constant runtime complexity.
+         *
          * @return The root element of the heap.
+         *
+         * @throws OutOfRangeException, if the heap is empty.
          */
         inline const T& First(void) const {
             return this->elements[0];
@@ -126,6 +144,8 @@ namespace vislib {
 
         /**
          * Remove the root of the heap.
+         *
+         * This method has logarithmic runtime complexity.
          */
         void RemoveFirst(void);
 
