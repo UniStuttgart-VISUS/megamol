@@ -9,6 +9,8 @@
 #include "testhelper.h"
 
 #include "vislib/Array.h"
+#include "vislib/Heap.h"
+#include "vislib/Pair.h"
 #include "vislib/String.h"
 
 
@@ -83,4 +85,63 @@ void TestArray(void) {
     Array<vislib::StringA> strAry;
     strAry.Append("Horst");
     AssertTrue("Contains \"Horst\"", strAry.Contains("Horst"));
+}
+
+
+void TestHeap(void) {
+    using vislib::Array;
+    using vislib::Heap;
+    using vislib::Pair;
+
+    typedef vislib::Pair<int, char> MyPair;
+    
+    Heap<MyPair> heap;
+
+    ::AssertEqual("Heap default capacity", heap.Capacity(), Array<MyPair>::DEFAULT_CAPACITY);
+    ::AssertEqual("Heap initially empty", heap.Count(), SIZE_T(0));
+    ::AssertTrue("IsEmpty method", heap.IsEmpty());
+
+    heap.Add(MyPair(3, 'H'));
+    ::AssertEqual("One element added", heap.Count(), SIZE_T(1));
+    ::AssertFalse("IsEmpty method", heap.IsEmpty());
+
+    heap.Add(MyPair(7, 't'));
+    heap.Add(MyPair(5, 'r'));
+    heap.Add(MyPair(6, 's'));
+    heap.Add(MyPair(4, 'o'));
+    ::AssertEqual("Four additional elements added", heap.Count(), SIZE_T(5));
+
+    ::AssertEqual("Get element 'H'", heap.First().Value(), 'H');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 'o'", heap.First().Value(), 'o');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 'r'", heap.First().Value(), 'r');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 's'", heap.First().Value(), 's');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 't'", heap.First().Value(), 't');
+    heap.RemoveFirst();
+    ::AssertTrue("Heap is empty now", heap.IsEmpty());
+
+    heap.Add(MyPair(7, 't'));
+    heap.Add(MyPair(5, 'r'));
+    heap.Add(MyPair(4, 'o'));
+    heap.Add(MyPair(0, 'H'));
+    heap.Add(MyPair(6, 's'));
+    heap.Add(MyPair(4, 'o'));
+    ::AssertEqual("Heap filled with duplicate key", heap.Count(), SIZE_T(6));
+
+    ::AssertEqual("Get element 'H'", heap.First().Value(), 'H');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 'o'", heap.First().Value(), 'o');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 'o'", heap.First().Value(), 'o');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 'r'", heap.First().Value(), 'r');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 's'", heap.First().Value(), 's');
+    heap.RemoveFirst();
+    ::AssertEqual("Get element 't'", heap.First().Value(), 't');
+    heap.RemoveFirst();
+    ::AssertTrue("Heap is empty now", heap.IsEmpty());
 }

@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Heap.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\IllegalParamException.cpp"
 				>
 			</File>
@@ -327,6 +331,10 @@
 			</File>
 			<File
 				RelativePath=".\src\OutOfRangeException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Pair.cpp"
 				>
 			</File>
 			<File
@@ -420,6 +428,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\Heap.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\IllegalParamException.h"
 				>
 			</File>
@@ -449,6 +461,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\OutOfRangeException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Pair.h"
 				>
 			</File>
 			<File
