@@ -1540,7 +1540,7 @@ namespace sys {
                 this->formatter[0].SetWidth(this->formatter[1].GetWidth());
                 this->formatter[1].SetWidth(2);
             } else {
-                str += StringConverter<CharTraitsA, T>("\n  No Values\n");
+                str += static_cast<Char>('\n');
             }
         }
 
