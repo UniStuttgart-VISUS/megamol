@@ -106,6 +106,9 @@ namespace vislib {
             return (str != NULL) ? CharTraits::StringLength(str) : 0;
         }
 
+        /** Empty character sequence constant. */
+        static const Char EMPTY_STRING[];
+
     protected:
 
         /**
@@ -226,9 +229,6 @@ namespace vislib {
             throw UnsupportedOperationException(
                 "vislib::CharTraits<T>::CharTraits", __FILE__, __LINE__);
         }
-
-        /** Empty character sequence constant. */
-        static const Char EMPTY_STRING[];
 
 #ifndef _WIN32
 

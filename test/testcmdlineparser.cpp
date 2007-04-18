@@ -102,12 +102,11 @@ void TestCmdLineParser(void) {
 
     CLParser parser;
     CLPOption helpOption(CLPS('h'), CLPS("help"), CLPS("Would print some helpful help."));
-    CLPOption testOption(CLPS('t'), CLPS("Test"), NULL, CLPOption::DOUBLE_VALUE);
+    CLPOption testOption(CLPS('t'), CLPS("Test"), NULL, false, CLPOption::ValueDesc::ValueList(CLPOption::DOUBLE_OR_STRING_VALUE));
 
-//    AssertFalse("helpOption.IsValueValid() == false", helpOption.IsValueValid());
-    AssertEqual("helpOption.GetValueType() == NO_VALUE", helpOption.GetValueType(), CLPOption::NO_VALUE);
-//    AssertFalse("testOption.IsValueValid() == false", testOption.IsValueValid());
-    AssertEqual("testOption.GetValueType() == DOUBLE_VALUE", testOption.GetValueType(), CLPOption::DOUBLE_VALUE);
+    AssertTrue("helpOption.GetValueCount() == 0", helpOption.GetValueCount() == 0);
+    AssertTrue("testOption.GetValueCount() == 1", testOption.GetValueCount() == 1);
+    AssertEqual("testOption.GetValueType(0) == DOUBLE_OR_STRING_VALUE", testOption.GetValueType(0), CLPOption::DOUBLE_OR_STRING_VALUE);
 
     AssertEqual<const CLPOption*>("parser.FindOption(HeLp) == NULL", parser.FindOption(CLPS("HeLp")), NULL);
     AssertEqual<const CLPOption*>("parser.FindOption(t) == NULL", parser.FindOption(CLPS('t')), NULL);
@@ -268,7 +267,6 @@ void TestCmdLineParser(void) {
 
                 AssertEqual("First Help Option Occurrence is 3", helpOption.GetFirstOccurrence(), parser.GetArgument(3));
                 AssertEqual("First Test Option Occurrence is 7", testOption.GetFirstOccurrence(), parser.GetArgument(7));
-                AssertEqual("Test Option Value Type is correctly communicated", testOption.GetFirstOccurrence()->GetValueType(), testOption.GetValueType());
 
                 CLPArgument *arg = parser.GetArgument(7);
                 AssertException("Argument[7].GetValueString; Exception UnsupportedOperationException", arg->GetValueString(), vislib::UnsupportedOperationException);
@@ -332,4 +330,57 @@ void TestCmdLineParser(void) {
         }
     }
 
+    { // new test on options with multiple values 
+        CLProvider cmdLine(cmdName, CLPS("Horst -t 12 1.2 true ninja -t Hugo 1 2 3 4 5 6 7 8 9 Ende"));
+        CLParser parser;
+        CLPOption testOption(CLPS('t'), CLPS("Test"), CLPS("This is a rather stupid test option with multiple, four to be exact, values of defined types."
+            "The option is not used to do something interesting, but the parser is tested."), true, 
+            CLPOption::ValueDesc::ValueList(CLPOption::INT_VALUE, "Count", "Number of Stuff or something")
+            ->Add(CLPOption::DOUBLE_OR_STRING_VALUE, "Factor", "Increases or decreases the size of Stuff")
+            ->Add(CLPOption::BOOL_OR_STRING_VALUE, "Flag", "May activate something.")
+            ->Add(CLPOption::STRING_VALUE, "Desc", "Finallay some real words"));
+        parser.AddOption(&testOption);
+
+        parsed = AssertTrue("parser.Parse == 0", (parser.Parse(cmdLine.ArgC(), cmdLine.ArgV()) >= 0));
+
+        CLParser::WarningIterator wii = parser.GetWarnings();
+        if (wii.HasNext()) {
+            printf("Checking Warnings:\n");
+            while (wii.HasNext()) {
+                CLPWarning &w = wii.Next();
+                vislib::sys::Console::SetForegroundColor(vislib::sys::Console::YELLOW);
+                printf("Warning %d [Arg %u]: ", int(w.GetWarnCode()), w.GetArgument());
+                vislib::sys::Console::RestoreDefaultColors();
+                printf("%s\n", CLParser::Warning::GetWarningString(w.GetWarnCode()));
+            }
+        }
+
+        CLParser::ErrorIterator err = parser.GetErrors();
+        if (err.HasNext()) {
+            printf("Checking Errors (EXPECTING 1):\n");
+            while (err.HasNext()) {
+                CLPError &e = err.Next();
+                vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
+                printf("Error %d [Arg %u]: ", int(e.GetErrorCode()), e.GetArgument());
+                vislib::sys::Console::RestoreDefaultColors();
+                printf("%s\n", e.GetErrorString(e.GetErrorCode()));
+            }
+        }
+
+        AssertTrue("testOption found", testOption.GetFirstOccurrence() != NULL);
+
+        AssertEqual<unsigned int>("Parsing resulted into 19 Argument objects", parser.ArgumentCount(), 19);
+        //if (parser.ArgumentCount() == 19) {
+        //    for (int i = 0; i < 19; i++) {
+        //        CLParser::Argument *arg = parser.GetArgument(i);
+        //        printf("%i: \"%s\" %i %i\n", i, arg->GetInputString(), int(arg->GetType()), int(arg->GetValueType()));
+        //    }
+        //}
+
+        CLParser::OptionDescIterator odi = parser.OptionDescriptions(true);
+        while (odi.HasNext()) {
+            printf("%s", odi.Next());
+        }
+
+    }
 }

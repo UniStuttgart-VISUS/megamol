@@ -1,7 +1,8 @@
 /*
  * CmdLineParser.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006-2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_CMDLINEPARSER_H_INCLUDED
@@ -19,9 +20,11 @@
 #include "vislib/IllegalStateException.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/FormatException.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/String.h"
+#include "vislib/StringConverter.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Iterator.h"
 #include "vislib/CmdLineProvider.h"
@@ -74,7 +77,229 @@ namespace sys {
                 NO_VALUE,
                 STRING_VALUE,
                 INT_VALUE,
-                DOUBLE_VALUE
+                DOUBLE_VALUE,
+                BOOL_VALUE,
+                INT_OR_STRING_VALUE,
+                DOUBLE_OR_STRING_VALUE,
+                BOOL_OR_STRING_VALUE
+            };
+
+            /**
+             * Nested class representing an option value descriptor.
+             */
+            class ValueDesc {
+            public:
+                /** allow parser to access the members directly */
+                friend class CmdLineParser<T>;
+
+                /** dtor */
+                ~ValueDesc(void) {
+                    ValueDesc *t;
+                    while (this->next) {
+                        t = this->next->next;
+                        this->next->next = NULL;
+                        delete this->next;
+                        this->next = t;
+                    }
+                }
+
+                /**
+                 * Construction function for the beginning of a list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                static inline ValueDesc * ValueList(ValueType type, const Char *name = NULL, const Char *desc = NULL) {
+                    ValueDesc *t = new ValueDesc(type);
+                    if (name != NULL) {
+                        t->name = name;
+                    }
+                    if (desc != NULL) {
+                        t->description = desc;
+                    }
+                    return t;
+                }
+
+                /**
+                 * Construction function for the beginning of a list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                static inline ValueDesc * ValueList(ValueType type, const String<T>& name, const Char *desc = NULL) {
+                    return ValueList(type, name.PeekBuffer(), desc);
+                }
+
+                /**
+                 * Construction function for the beginning of a list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                static inline ValueDesc * ValueList(ValueType type, const Char *name, const String<T>& desc) {
+                    return ValueList(type, name, desc.PeekBuffer());
+                }
+
+                /**
+                 * Construction function for the beginning of a list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                static inline ValueDesc * ValueList(ValueType type, const String<T>& name, const String<T>& desc) {
+                    return ValueList(type, name.PeekBuffer(), desc.PeekBuffer());
+                }
+
+                /**
+                 * Construction function to build up the list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                inline ValueDesc * Add(ValueType type, const Char *name = NULL, const Char *desc = NULL) {
+                    ValueDesc *t = this;
+                    while (t->next) { t = t->next; }
+                    t->next = new ValueDesc(type);
+                    t = t->next;
+                    if (name != NULL) {
+                        t->name = name;
+                    }
+                    if (desc != NULL) {
+                        t->description = desc;
+                    }
+                    return this;
+                }
+
+                /**
+                 * Construction function to build up the list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                inline ValueDesc * Add(ValueType type, const String<T>& name, const Char *desc = NULL) {
+                    return Add(type, name.PeekBuffer(), desc);
+                }
+
+                /**
+                 * Construction function to build up the list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                inline ValueDesc * Add(ValueType type, const Char *name, const String<T>& desc) {
+                    return Add(type, name, desc.PeekBuffer());
+                }
+
+                /**
+                 * Construction function to build up the list of values.
+                 *
+                 * @param type The type of the value to append to the list of 
+                 *             values. Must not be NO_VALUE!
+                 * @param name The name of the value. If NULL a name like 
+                 *             "value i" is generated.
+                 * @param desc The desctiption of the value or NULL if no 
+                 *             description should be available.
+                 */
+                inline ValueDesc * Add(ValueType type, const String<T>& name, const String<T>& desc) {
+                    return Add(type, name.PeekBuffer(), desc.PeekBuffer());
+                }
+
+                /** 
+                 * Answer the number of values.
+                 *
+                 * @return the number of values.
+                 */
+                unsigned int Count(void) const;
+
+                /** 
+                 * Answer the name of the i-th value.
+                 *
+                 * @return the name of the i-th value.
+                 *
+                 * @throw OutOfRangeException if i is out of range.
+                 */
+                inline const String<T>& Name(unsigned int i) const {
+                    return this->element(i).name;
+                }
+
+                /** 
+                 * Answer the description of the i-th value.
+                 *
+                 * @return the description of the i-th value.
+                 *
+                 * @throw OutOfRangeException if i is out of range.
+                 */
+                inline const String<T>& Description(unsigned int i) const {
+                    return this->element(i).description;
+                }
+
+                /** 
+                 * Answer the type of the i-th value.
+                 *
+                 * @return the type of the i-th value.
+                 *
+                 * @throw OutOfRangeException if i is out of range.
+                 */
+                inline ValueType Type(unsigned int i) const {
+                    return this->element(i).type;
+                }
+
+            private:
+
+                /** private ctor */
+                ValueDesc(ValueType type) 
+                    : name(), description(), type(type), next(NULL) {
+                    ASSERT(this->type != NO_VALUE);
+                }
+
+                /**
+                 * Answer the i-th value object.
+                 *
+                 * @return the i-th value object.
+                 *
+                 * @throw OutOfRangeException if i is out of range.
+                 */
+                const ValueDesc &element(unsigned int i) const;
+
+                /** the name of the value */
+                String<T> name;
+
+                /** the description of the value */
+                String<T> description;
+
+                /** the type of the value */
+                ValueType type;
+
+                /** the pointer to the next element in the value list */
+                ValueDesc *next;
             };
 
             /** 
@@ -89,11 +314,18 @@ namespace sys {
              *                    NULL if no description string is provided.
              *                    Otherwise the string will be copied into an
              *                    internal buffer.
-             * @param valueType The variable to be expected to follow this
+             * @param unique Flag indicating if this option must not appear
+             *               more then once in the command line. If the option
+             *               appears more then once, only the first one is
+             *               correctly parsed to be this option. The other
+             *               appearences will be ignored and there will be a 
+             *               warning.
+             * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
             Option(const Char shortName, const Char *longName = NULL, 
-                const Char *description = NULL, ValueType valueType = NO_VALUE);
+                const Char *description = NULL, bool unique = false, 
+                ValueDesc *valueList = NULL);
 
             /** 
              * ctor.
@@ -107,11 +339,18 @@ namespace sys {
              *                    NULL if no description string is provided.
              *                    Otherwise the string will be copied into an
              *                    internal buffer.
-             * @param valueType The variable to be expected to follow this
+             * @param unique Flag indicating if this option must not appear
+             *               more then once in the command line. If the option
+             *               appears more then once, only the first one is
+             *               correctly parsed to be this option. The other
+             *               appearences will be ignored and there will be a 
+             *               warning.
+             * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
             Option(const Char shortName, const String<T>& longName, 
-                const Char *description = NULL, ValueType valueType = NO_VALUE);
+                const Char *description = NULL, bool unique = false, 
+                ValueDesc *valueList = NULL);
 
             /** 
              * ctor.
@@ -123,11 +362,18 @@ namespace sys {
              * @param description The description string of the option. The 
              *                    string will be copied into an internal 
              *                    buffer.
-             * @param valueType The variable to be expected to follow this
+             * @param unique Flag indicating if this option must not appear
+             *               more then once in the command line. If the option
+             *               appears more then once, only the first one is
+             *               correctly parsed to be this option. The other
+             *               appearences will be ignored and there will be a 
+             *               warning.
+             * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
             Option(const Char shortName, const Char *longName, 
-                const String<T>& description, ValueType valueType = NO_VALUE);
+                const String<T>& description, bool unique = false, 
+                ValueDesc *valueList = NULL);
 
             /** 
              * ctor.
@@ -140,22 +386,60 @@ namespace sys {
              * @param description The description string of the option. The 
              *                    string will be copied into an internal 
              *                    buffer.
-             * @param valueType The variable to be expected to follow this
+             * @param unique Flag indicating if this option must not appear
+             *               more then once in the command line. If the option
+             *               appears more then once, only the first one is
+             *               correctly parsed to be this option. The other
+             *               appearences will be ignored and there will be a 
+             *               warning.
+             * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
             Option(const Char shortName, const String<T>& longName, 
-                const String<T>& description, ValueType valueType = NO_VALUE);
+                const String<T>& description, bool unique = false, 
+                ValueDesc *valueList = NULL);
 
             /** dtor. */
             ~Option(void);
 
             /**
-             * Answer the value type of this option.
+             * Answer the number of values of this option.
              *
-             * @return The value type of this option.
+             * @return The number of values of this option.
              */
-            inline ValueType GetValueType(void) const {
-                return this->valueType;
+            inline unsigned int GetValueCount(void) const {
+                return (this->values) ? this->values->Count() : 0;
+            }
+
+            /**
+             * Answer the type of the i-th value of this option.
+             *
+             * @return The type of the i-th value.
+             *
+             * @throws OutOfRangeException if i larger or equal value count.
+             */
+            inline ValueType GetValueType(unsigned int i) const {
+                return this->values->Type(i);
+            }
+            /**
+             * Answer the type of the i-th value of this option.
+             *
+             * @return The type of the i-th value.
+             *
+             * @throws OutOfRangeException if i larger or equal value count.
+             */
+            inline const String<T>& GetValueName(unsigned int i) const {
+                return this->values->Name(i);
+            }
+            /**
+             * Answer the type of the i-th value of this option.
+             *
+             * @return The type of the i-th value.
+             *
+             * @throws OutOfRangeException if i larger or equal value count.
+             */
+            inline const String<T>& GetValueDescription(unsigned int i) const {
+                return this->values->Description(i);
             }
 
             /**
@@ -210,6 +494,7 @@ namespace sys {
                     && (this->longName == rhs.longName)
                     && (this->valueType == rhs.valueType);
             }
+
         private:
 
             /** forbidden copy ctor. */
@@ -230,8 +515,14 @@ namespace sys {
             /** description string of the option */
             String<T> description;
 
-            /** the value type of the option */
-            ValueType valueType;
+            /** flag indicating if this option is unique */
+            bool unique;
+
+            ///** the length of the value list */
+            //unsigned int valueCount;
+
+            /** the value list of the option */
+            ValueDesc *values;
 
             /** first occurance of this option */
             Argument *firstArg;
@@ -297,7 +588,7 @@ namespace sys {
              *         Option::NO_VALUE.
              */
             inline typename Option::ValueType GetValueType(void) const {
-                return this->option ? this->option->GetValueType() : Option::NO_VALUE;
+                return this->valueType;
             }
 
             /**
@@ -377,6 +668,17 @@ namespace sys {
              */
             const double GetValueDouble(void) const;
 
+            /**
+             * Returns the bool value of this argument.
+             *
+             * @return The bool value of this argument.
+             *
+             * @throw UnsupportedOperationException if the value type of the 
+             *        option is not boolean type or if this argument does not 
+             *        have a value.
+             */
+            const bool GetValueBool(void) const;
+
         private:
 
             /** private ctor */
@@ -409,6 +711,9 @@ namespace sys {
             /** argument string of the value */
             Char *valueArg;
 
+            /** the value type of this value */
+            typename Option::ValueType valueType;
+
         };
 
         /**
@@ -421,7 +726,9 @@ namespace sys {
             enum ErrorCode {
                 NONE = 0,
                 UNKNOWN,
-                NEGATIVE_ARGC
+                NEGATIVE_ARGC,
+                MISSING_VALUE,
+                INVALID_VALUE
             };
 
             /**
@@ -434,10 +741,23 @@ namespace sys {
             static char * GetErrorString(ErrorCode errorcode) {
                 char *retval;
                 switch(errorcode) {
-                    case NONE: retval = "No Error"; break;
-                    case NEGATIVE_ARGC: retval = "Parameter argc must not be negative"; break;
-                    case UNKNOWN: // no break
-                    default: retval = "Unknown Error"; break;
+                    case NONE: 
+                        retval = "No Error"; 
+                        break;
+                    case NEGATIVE_ARGC: 
+                        retval = "Parameter argc must not be negative."; 
+                        break;
+                    case MISSING_VALUE: 
+                        retval = "Option value is missing."; 
+                        break;
+                    case INVALID_VALUE:
+                        retval = "Option value is invalid.";
+                        break;
+                    case UNKNOWN: 
+                        // no break
+                    default: 
+                        retval = "Unknown Error"; 
+                        break;
                 }
                 return retval;
             }
@@ -506,8 +826,8 @@ namespace sys {
             /** possible values for warncode */
             enum WarnCode {
                 NONE = 0,
-                MISSING_VALUE,
                 UNKNOWN_SHORT_NAMES,
+                UNIQUE_OPTION_MORE_THEN_ONCE,
                 UNKNOWN
             };
 
@@ -521,11 +841,20 @@ namespace sys {
             static char * GetWarningString(WarnCode warncode) {
                 char *retval;
                 switch(warncode) {
-                    case NONE: retval = "No Warning"; break;
-                    case MISSING_VALUE: retval = "Option value is missing"; break;
-                    case UNKNOWN_SHORT_NAMES: retval = "At least one short name not recognized. Whole argument ignored."; break;
-                    case UNKNOWN: // no break
-                    default: retval = "Unknown Warning"; break;
+                    case NONE: 
+                        retval = "No Warning"; 
+                        break;
+                    case UNKNOWN_SHORT_NAMES: 
+                        retval = "At least one short name not recognized. Whole argument ignored."; 
+                        break;
+                    case UNIQUE_OPTION_MORE_THEN_ONCE: 
+                        retval = "A Unique option appears more then once in the argument list.";
+                        break;
+                    case UNKNOWN: 
+                        // no break
+                    default: 
+                        retval = "Unknown Warning"; 
+                        break;
                 }
                 return retval;
             }
@@ -627,7 +956,7 @@ namespace sys {
         private:
 
             /** private init ctor */
-            OptionDescIterator(vislib::SingleLinkedList<Option*> &opts);
+            OptionDescIterator(vislib::SingleLinkedList<Option*> &opts, bool withValues);
 
             /** pointer to the list list of the options of the parser */
             vislib::SingleLinkedList<Option*> *options;
@@ -640,6 +969,9 @@ namespace sys {
 
             /** output string */
             Char *output;
+
+            /** flag indicating to include the value descriptions */
+            bool withValues;
 
         };
 
@@ -807,6 +1139,24 @@ namespace sys {
         }
 
         /**
+         * Returns a pointer to the Argument object directly following a given
+         * Argument object.
+         *
+         * @param arg The argument provided.
+         *
+         * @return The directly following argument, or NULL if the given
+         *         argument arg is the last one or NULL.
+         */
+        inline Argument * NextArgument(const Argument *arg) {
+            for (int i = 1; i < this->arglistSize; i++) {
+                if (&this->arglist[i - 1] == arg) {
+                    return &this->arglist[i];
+                }
+            }
+            return NULL;
+        }
+
+        /**
          * Selects all arguments of the command line list.
          */
         inline void SelectAllArguments(void) {
@@ -855,10 +1205,14 @@ namespace sys {
          * iterator will enter an invalid state if the option list of the 
          * parser is changes (e.g. if the parser object ist destroied).
          * 
+         * @param withValues If true, the descriptions of the option values are
+         *                   also included. If false, only the descriptions of
+         *                   the options are shown.
+         *
          * @return The option description iterator.
          */
-        inline OptionDescIterator OptionDescriptions(void) {
-            return OptionDescIterator(this->options);
+        inline OptionDescIterator OptionDescriptions(bool withValues = false) {
+            return OptionDescIterator(this->options, withValues);
         }
 
     private:
@@ -885,18 +1239,46 @@ namespace sys {
         vislib::SingleLinkedList<Warning> warnings;
     };
 
+    
+    /*
+     * CmdLineParser<T>::Option::ValueDesc::Count
+     */
+    template<class T> 
+    unsigned int CmdLineParser<T>::Option::ValueDesc::Count(void) const {
+        unsigned int i = 0;
+        for (const ValueDesc *t = this; t != NULL; t = t->next) { i++; }
+        return i;
+    }
+
+
+    /*
+     * CmdLineParser<T>::Option::ValueDesc::Element
+     */
+    template<class T>
+    const typename CmdLineParser<T>::Option::ValueDesc& 
+            CmdLineParser<T>::Option::ValueDesc::element(unsigned int i) const {
+        const ValueDesc *rv = this;
+        while (i > 0) {
+            if (!rv) {
+                throw vislib::OutOfRangeException(i, 0, this->Count(), __FILE__, __LINE__);
+            }
+            rv = rv->next;
+            i--;
+        }
+        return *rv;
+    }
+
 
     /*
      * CmdLineParser<T>::Option::Option
      */
     template<class T> 
     CmdLineParser<T>::Option::Option(const Char shortName, const Char *longName, 
-            const Char *description, ValueType valueType) 
-            : parser(NULL), firstArg(NULL) {
+        const Char *description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
+            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
         this->shortName = shortName;
         this->longName = longName;
         this->description = description;
-        this->valueType = valueType;
     }
 
 
@@ -905,12 +1287,11 @@ namespace sys {
      */
     template<class T> 
     CmdLineParser<T>::Option::Option(const Char shortName, const String<T>& longName, 
-            const Char *description, ValueType valueType) 
-            : parser(NULL), firstArg(NULL) {
+            const Char *description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
+            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
         this->shortName = shortName;
         this->longName = longName;
         this->description = description;
-        this->valueType = valueType;
     }
 
 
@@ -919,12 +1300,11 @@ namespace sys {
      */
     template<class T> 
     CmdLineParser<T>::Option::Option(const Char shortName, const Char *longName, 
-            const String<T>& description, ValueType valueType) 
-            : parser(NULL), firstArg(NULL) {
+            const String<T>& description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
+            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
         this->shortName = shortName;
         this->longName = longName;
         this->description = description;
-        this->valueType = valueType;
     }
 
 
@@ -933,12 +1313,11 @@ namespace sys {
      */
     template<class T> 
     CmdLineParser<T>::Option::Option(const Char shortName, const String<T>& longName, 
-            const String<T>& description, ValueType valueType) 
-            : parser(NULL), firstArg(NULL) {
+            const String<T>& description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
+            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
         this->shortName = shortName;
         this->longName = longName;
         this->description = description;
-        this->valueType = valueType;
     }
 
 
@@ -956,6 +1335,7 @@ namespace sys {
      */
     template<class T>
     CmdLineParser<T>::Option::~Option(void) {
+        SAFE_DELETE(this->values); // paranoia
     }
 
 
@@ -976,7 +1356,7 @@ namespace sys {
     template<class T>
     CmdLineParser<T>::Argument::Argument(void) : arg(NULL), argid(0), pos(0), 
             type(CmdLineParser<T>::Argument::TYPE_UNKNOWN), option(NULL), 
-            selected(false), valueArg(NULL) {
+            selected(false), valueArg(NULL), valueType(CmdLineParser<T>::Option::NO_VALUE) {
     }
 
 
@@ -1048,6 +1428,20 @@ namespace sys {
         ASSERT(this->type != TYPE_UNKNOWN);
 
         return T::ParseDouble(this->valueArg); // throws FormatException on failure
+    }
+
+    
+    /*
+     * CmdLineParser<T>::Argument::GetValueBool
+     */
+    template<class T> 
+    const bool CmdLineParser<T>::Argument::GetValueBool(void) const {
+        if (this->GetValueType() != Option::BOOL_VALUE) {
+            throw vislib::UnsupportedOperationException("Option value of incompatible type", __FILE__, __LINE__);
+        }
+        ASSERT(this->type != TYPE_UNKNOWN);
+
+        return T::ParseBool(this->valueArg); // throws FormatException on failure
     }
 
 
@@ -1122,8 +1516,33 @@ namespace sys {
         }
 
         this->formatter[0].SetText(str);
-        this->formatter[1].SetText(opt->GetDescription());
+        this->formatter[1].SetText(T::EMPTY_STRING);
+        this->formatter[this->withValues ? 2 : 1].SetText(opt->GetDescription());
         this->formatter >> str;
+
+        if (this->withValues) {
+            if (opt->GetValueCount() > 0) {
+                str += StringConverter<CharTraitsA, T>("\n  Values:\n");
+                vislib::String<T> str2;
+                this->formatter[1].SetWidth(this->formatter[0].GetWidth());
+                this->formatter[0].SetWidth(2);
+                
+                unsigned int cnt = opt->GetValueCount();
+                for (unsigned int i = 0; i < cnt; i++) {
+                    this->formatter[0].SetText(T::EMPTY_STRING);
+                    this->formatter[1].SetText(opt->GetValueName(i));
+                    this->formatter[2].SetText(opt->GetValueDescription(i));
+                    this->formatter >> str2;
+                    str += str2;
+                    str += static_cast<Char>('\n');
+                }
+
+                this->formatter[0].SetWidth(this->formatter[1].GetWidth());
+                this->formatter[1].SetWidth(2);
+            } else {
+                str += StringConverter<CharTraitsA, T>("\n  No Values\n");
+            }
+        }
 
         unsigned int len = str.Length();
         this->output = new Char[len + 1];
@@ -1140,11 +1559,13 @@ namespace sys {
      * CmdLineParser<T>::OptionDescIterator::OptionDescIterator
      */
     template<class T> 
-    CmdLineParser<T>::OptionDescIterator::OptionDescIterator(vislib::SingleLinkedList<Option*> &opts) : formatter(2), output(NULL) {
+    CmdLineParser<T>::OptionDescIterator::OptionDescIterator(vislib::SingleLinkedList<Option*> &opts, bool withValues) 
+            : formatter(withValues ? 3 : 2), output(NULL), withValues(withValues) {
         this->options = &opts;
         this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), 2));
         this->formatter.SetMaxWidth(vislib::sys::Console::GetWidth() - 1);
-        this->formatter[1].SetWidth(0);
+        this->formatter[1].SetWidth(2);
+        this->formatter[this->withValues ? 2 : 1].SetWidth(0);
 
         unsigned int optnamelen = 0;
         this->option = this->options->GetIterator();
@@ -1157,6 +1578,13 @@ namespace sys {
             }
 
             if (len > optnamelen) optnamelen = len;
+
+            if (this->withValues) {
+                for (int i = opt->GetValueCount() - 1; i >= 0; i--) {
+                    len = opt->GetValueName(i).Length() + 2;
+                    if (len > optnamelen) optnamelen = len;
+                }
+            }
         }
         if (optnamelen > ((this->formatter.GetMaxWidth() - 2) / 4)) {
             optnamelen = ((this->formatter.GetMaxWidth() - 2) / 4);
@@ -1347,17 +1775,18 @@ namespace sys {
                         argTypes[i] = Argument::TYPE_OPTION_LONGNAME;
                         multi = 1;
 
-                        if (o->GetValueType() != Option::NO_VALUE) { // known option with value
-                            if (i + 1 >= argc) { 
-                                // this is last arg, so there is no value!
-                                this->warnings.Append(Warning(Warning::MISSING_VALUE, i));
+                        if (o->GetValueCount() > 0) { // known option with value
+                            if (i + static_cast<int>(o->GetValueCount()) >= argc) { 
+                                // this arg is near end of list and there are not enought values!
+                                this->errors.Append(Error(Error::MISSING_VALUE, i));
                                 retval = 1;
 
                             } else {
-                                i++;
-                                argTypes[i] = Argument::TYPE_OPTION_VALUE;
-                                multi++;
-
+                                for (int j2 = o->GetValueCount() - 1; j2 >= 0; j2--) {
+                                    i++;
+                                    argTypes[i] = Argument::TYPE_OPTION_VALUE;
+                                    multi++;
+                                }
                             }
                         }
 
@@ -1397,7 +1826,7 @@ namespace sys {
                     if (cleanList) { // all short names are known
                         argTypes[i] = Argument::TYPE_OPTION_SHORTNAMES;
 
-                        bool warnmissingvalues = false;
+                        bool errmissingvalues = false;
 
                         for (unsigned int j = 1; j <= multi; j++) {
                             opti = this->options.GetIterator();
@@ -1406,21 +1835,22 @@ namespace sys {
                                 ASSERT(opt != NULL);
                                 if (opt->shortName == argv[i][j]) {
                                     
-                                    if (opt->GetValueType() != Option::NO_VALUE) {
+                                    if (opt->GetValueCount() > 0) {
                                         if (j == multi) { // last of the short names
-                                            if (i + 1 >= argc) { 
-                                                // this is last arg, so there is no value!
-                                                this->warnings.Append(Warning(Warning::MISSING_VALUE, i));
+                                            if (i + static_cast<int>(opt->GetValueCount()) >= argc) { 
+                                                // this arg is near end of list and there are not enought values!
+                                                this->errors.Append(Error(Error::MISSING_VALUE, i));
                                                 retval = 1;
 
                                             } else {
-                                                i++;
-                                                argTypes[i] = Argument::TYPE_OPTION_VALUE;
-                                                multi++;
-
+                                                for (int j2 = opt->GetValueCount() - 1; j2 >= 0; j2--) {
+                                                    i++;
+                                                    argTypes[i] = Argument::TYPE_OPTION_VALUE;
+                                                    multi++;
+                                                }
                                             }
                                         } else {
-                                            warnmissingvalues = true;
+                                            errmissingvalues = true;
                                         }
                                     }
 
@@ -1429,17 +1859,15 @@ namespace sys {
                             } /* while (opti.HasNext()) */
                         } /* for (unsigned int j = 1; j <= multi; j++) */
 
-                        if (warnmissingvalues) {
-                            this->warnings.Append(Warning(Warning::MISSING_VALUE, i));
+                        if (errmissingvalues) {
+                            this->errors.Append(Error(Error::MISSING_VALUE, i));
                         }
 
-                    } else if (someKnown) { // some but not all short names are known
-                        this->warnings.Append(Warning(Warning::UNKNOWN_SHORT_NAMES, i));
+                    } else {
+                        if (someKnown) { // some but not all short names are known
+                            this->warnings.Append(Warning(Warning::UNKNOWN_SHORT_NAMES, i));
+                        }
 
-                        argTypes[i] = Argument::TYPE_UNKNOWN; // parameter or value to unknown option
-                        multi = 1;
-
-                    } else { // no short names are known
                         argTypes[i] = Argument::TYPE_UNKNOWN; // parameter or value to unknown option
                         multi = 1;
 
@@ -1480,6 +1908,12 @@ namespace sys {
                             this->arglist[this->arglistSize].type = Argument::TYPE_OPTION_LONGNAME;
                             if (opt->firstArg == NULL) {
                                 opt->firstArg = &this->arglist[this->arglistSize];
+                            } else {
+                                if (opt->unique) { // a secound encounter of a unique option!
+                                    this->warnings.Append(Warning(Warning::UNIQUE_OPTION_MORE_THEN_ONCE, i));
+                                    this->arglist[this->arglistSize].type = Argument::TYPE_UNKNOWN; // because this is gonna be ignored!
+                                    this->arglist[this->arglistSize].selected = true;
+                                }
                             }
                             this->arglistSize++;
                             break;
@@ -1498,6 +1932,12 @@ namespace sys {
                                 this->arglist[this->arglistSize].type = Argument::TYPE_OPTION_SHORTNAMES;
                                 if (opt->firstArg == NULL) {
                                     opt->firstArg = &this->arglist[this->arglistSize];
+                                } else {
+                                    if (opt->unique) {
+                                        this->warnings.Append(Warning(Warning::UNIQUE_OPTION_MORE_THEN_ONCE, i));
+                                        this->arglist[this->arglistSize].type = Argument::TYPE_UNKNOWN; // because this is gonna be ignored!
+                                        this->arglist[this->arglistSize].selected = true;
+                                    }
                                 }
                                 this->arglistSize++;
                                 break;
@@ -1505,18 +1945,105 @@ namespace sys {
                         } /* while (opti.HasNext()) */
                     } /* for (Char *sn = &argv[i][2]; *sn != 0; sn++) */
                     break; /* TYPE_OPTION_SHORTNAMES */
-                case Argument::TYPE_OPTION_VALUE:
-                    this->arglist[this->arglistSize].type = Argument::TYPE_OPTION_VALUE;
-                    ASSERT(this->arglistSize > 0);
-                    ASSERT((this->arglist[this->arglistSize - 1].type == Argument::TYPE_OPTION_LONGNAME)
-                        || (this->arglist[this->arglistSize - 1].type == Argument::TYPE_OPTION_SHORTNAMES));
-                    ASSERT(this->arglist[this->arglistSize - 1].option != NULL);
-                    ASSERT(this->arglist[this->arglistSize - 1].option->GetValueType() != Option::NO_VALUE);
-                    this->arglist[this->arglistSize].option = this->arglist[this->arglistSize - 1].option;
-                    this->arglist[this->arglistSize - 1].valueArg = argv[i];
-                    this->arglist[this->arglistSize].valueArg = argv[i];
+                case Argument::TYPE_OPTION_VALUE: {
+                    int optIdx = -1;
+                    for (int j = this->arglistSize - 1; j >= 0; j--) {
+                        if ((this->arglist[j].type == Argument::TYPE_OPTION_LONGNAME)
+                                || (this->arglist[j].type == Argument::TYPE_OPTION_SHORTNAMES)) {
+                            optIdx = j;
+                        }
+                        if (this->arglist[j].type != Argument::TYPE_OPTION_VALUE) break;
+                    }
+
+                    if ((optIdx < 0) || (this->arglistSize > optIdx + this->arglist[optIdx].option->GetValueCount())) {
+                        // wrong classified option value
+                        // sounds like an internal error
+                        // may happen to later values if one value of an option with multiple values is invalid
+                        this->arglist[this->arglistSize].type = Argument::TYPE_UNKNOWN;
+                        this->arglist[this->arglistSize].selected = true;
+
+                    } else {
+                        this->arglist[this->arglistSize].type = Argument::TYPE_OPTION_VALUE;
+                        this->arglist[this->arglistSize].option = this->arglist[optIdx].option;
+                        this->arglist[this->arglistSize].valueArg = argv[i];
+
+                        switch (this->arglist[this->arglistSize].option->GetValueType(this->arglistSize - (optIdx + 1))) {
+                            default: // implementation error!
+                            case Option::NO_VALUE: // some very uneasy internal error
+                                this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
+                                break;
+                            case Option::STRING_VALUE: // cannot fail
+                                this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;
+                                break;
+                            case Option::INT_VALUE:
+                                try {
+                                    T::ParseInt(argv[i]);
+                                    this->arglist[this->arglistSize].valueType = Option::INT_VALUE;
+                                } catch(...) {
+                                    this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
+                                }
+                                break;
+                            case Option::DOUBLE_VALUE:
+                                try {
+                                    T::ParseDouble(argv[i]);
+                                    this->arglist[this->arglistSize].valueType = Option::DOUBLE_VALUE;
+                                } catch(...) {
+                                    this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
+                                }
+                                break;
+                            case Option::BOOL_VALUE:
+                                try {
+                                    T::ParseBool(argv[i]);
+                                    this->arglist[this->arglistSize].valueType = Option::BOOL_VALUE;
+                                } catch(...) {
+                                    this->arglist[this->arglistSize].valueType = Option::NO_VALUE;
+                                }
+                                break;
+                            case Option::INT_OR_STRING_VALUE:
+                                try {
+                                    T::ParseInt(argv[i]);
+                                    this->arglist[this->arglistSize].valueType = Option::INT_VALUE;
+                                } catch(...) {
+                                    this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;
+                                }
+                                break;
+                            case Option::DOUBLE_OR_STRING_VALUE:
+                                try {
+                                    T::ParseDouble(argv[i]);
+                                    this->arglist[this->arglistSize].valueType = Option::DOUBLE_VALUE;
+                                } catch(...) {
+                                    this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;
+                                }
+                                break;
+                            case Option::BOOL_OR_STRING_VALUE:
+                                try {
+                                    T::ParseBool(argv[i]);
+                                    this->arglist[this->arglistSize].valueType = Option::BOOL_VALUE;
+                                } catch(...) {
+                                    this->arglist[this->arglistSize].valueType = Option::STRING_VALUE;
+                                }
+                                break;
+                        }
+
+                        if (this->arglist[this->arglistSize].valueType == Option::NO_VALUE) {
+                            // errorhandling if the value could not be parsed to it's requestes type.
+                            this->errors.Add(Error(Error::INVALID_VALUE, i));
+                            this->arglist[this->arglistSize].type = Argument::TYPE_UNKNOWN;
+                            this->arglist[optIdx].type = Argument::TYPE_UNKNOWN;
+                            if ((this->arglist[optIdx].option) && (this->arglist[optIdx].option->firstArg == &this->arglist[optIdx])) {
+                                this->arglist[optIdx].option->firstArg = NULL;
+                            }
+                        }
+
+                        if (static_cast<unsigned int>(optIdx + 1) == this->arglistSize) {
+                            // some sort of ugly backward compatibility
+                            this->arglist[optIdx].valueArg = this->arglist[this->arglistSize].valueArg;
+                            this->arglist[optIdx].valueType = this->arglist[this->arglistSize].valueType;
+                        }
+                    }
+                    
                     this->arglistSize++;
-                    break; /* TYPE_OPTION_VALUE */
+                } break; /* TYPE_OPTION_VALUE */
                 case Argument::TYPE_UNKNOWN:
                 default:
                     this->arglist[this->arglistSize].type = Argument::TYPE_UNKNOWN;
