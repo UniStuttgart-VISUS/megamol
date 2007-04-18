@@ -386,6 +386,58 @@ namespace vislib {
         }
 
         /**
+         * Converts the string str to the returned boolean value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed boolean value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        boolean value.
+         */
+        inline static bool ParseBool(const Char *str) {
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+
+            if (
+#ifdef _WIN32
+                (_stricmp("true", str) == 0) || (_stricmp("t", str) == 0) || 
+                (_stricmp("yes", str) == 0) || (_stricmp("y", str) == 0) || 
+                (_stricmp("on", str) == 0)
+#else /* _WIN32 */
+                (strcasecmp("true", str) == 0) || (strcasecmp("t", str) == 0) || 
+                (strcasecmp("yes", str) == 0) || (strcasecmp("y", str) == 0) || 
+                (strcasecmp("on", str) == 0)
+#endif /* _WIN32 */
+                    ) {
+                return true;
+            }
+            if (
+#ifdef _WIN32
+                (_stricmp("false", str) == 0) || (_stricmp("f", str) == 0) || 
+                (_stricmp("no", str) == 0) || (_stricmp("n", str) == 0) || 
+                (_stricmp("off", str) == 0)
+#else /* _WIN32 */
+                (strcasecmp("false", str) == 0) || (strcasecmp("f", str) == 0) || 
+                (strcasecmp("no", str) == 0) || (strcasecmp("n", str) == 0) || 
+                (strcasecmp("off", str) == 0)
+#endif /* _WIN32 */
+                    ) {
+                return false;
+            }
+
+            try {
+                int i = ParseInt(str);
+                return (i != 0);
+            } catch (...) {
+            }
+
+            throw FormatException("Cannot convert String to Boolean", __FILE__, __LINE__);
+        };
+
+        /**
          * Converts the string str to the returned integer value.
          *
          * @param str The input string.
@@ -719,6 +771,58 @@ namespace vislib {
         inline static Char ToUpper(const Char c) {
             return ::towupper(c);
         }
+
+        /**
+         * Converts the string str to the returned boolean value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed boolean value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        boolean value.
+         */
+        inline static bool ParseBool(const Char *str) {
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+
+            if (
+#ifdef _WIN32
+                (_wcsicmp(L"true", str) == 0) || (_wcsicmp(L"t", str) == 0) || 
+                (_wcsicmp(L"yes", str) == 0) || (_wcsicmp(L"y", str) == 0) || 
+                (_wcsicmp(L"on", str) == 0)
+#else /* _WIN32 */
+                (wcscasecmp(L"true", str) == 0) || (wcscasecmp(L"t", str) == 0) || 
+                (wcscasecmp(L"yes", str) == 0) || (wcscasecmp(L"y", str) == 0) || 
+                (wcscasecmp(L"on", str) == 0)
+#endif /* _WIN32 */
+                    ) {
+                return true;
+            }
+            if (
+#ifdef _WIN32
+                (_wcsicmp(L"false", str) == 0) || (_wcsicmp(L"f", str) == 0) || 
+                (_wcsicmp(L"no", str) == 0) || (_wcsicmp(L"n", str) == 0) || 
+                (_wcsicmp(L"off", str) == 0)
+#else /* _WIN32 */
+                (wcscasecmp(L"false", str) == 0) || (wcscasecmp(L"f", str) == 0) || 
+                (wcscasecmp(L"no", str) == 0) || (wcscasecmp(L"n", str) == 0) || 
+                (wcscasecmp(L"off", str) == 0)
+#endif /* _WIN32 */
+                    ) {
+                return false;
+            }
+
+            try {
+                int i = ParseInt(str);
+                return (i != 0);
+            } catch (...) {
+            }
+
+            throw FormatException("Cannot convert String to Boolean", __FILE__, __LINE__);
+        };
 
         /**
          * Converts the string str to the returned integer value.
