@@ -421,6 +421,7 @@ namespace sys {
             inline ValueType GetValueType(unsigned int i) const {
                 return this->values->Type(i);
             }
+
             /**
              * Answer the type of the i-th value of this option.
              *
@@ -431,6 +432,7 @@ namespace sys {
             inline const String<T>& GetValueName(unsigned int i) const {
                 return this->values->Name(i);
             }
+
             /**
              * Answer the type of the i-th value of this option.
              *
@@ -1516,29 +1518,40 @@ namespace sys {
         }
 
         this->formatter[0].SetText(str);
-        this->formatter[1].SetText(T::EMPTY_STRING);
-        this->formatter[this->withValues ? 2 : 1].SetText(opt->GetDescription());
+        if (this->withValues) {
+            this->formatter[1].SetText(T::EMPTY_STRING);
+            this->formatter[2].SetText(opt->GetDescription());
+        } else {
+            this->formatter[1].SetText(opt->GetDescription());
+        }
         this->formatter >> str;
 
         if (this->withValues) {
             if (opt->GetValueCount() > 0) {
-                str += StringConverter<CharTraitsA, T>("\n  Values:\n");
+                str += static_cast<Char>('\n');
                 vislib::String<T> str2;
-                this->formatter[1].SetWidth(this->formatter[0].GetWidth());
+
+                this->formatter[1].SetWidth(this->formatter[0].GetWidth() - 4);
                 this->formatter[0].SetWidth(2);
+                this->formatter[0].SetText(T::EMPTY_STRING);
+                this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), 2));
                 
                 unsigned int cnt = opt->GetValueCount();
                 for (unsigned int i = 0; i < cnt; i++) {
-                    this->formatter[0].SetText(T::EMPTY_STRING);
-                    this->formatter[1].SetText(opt->GetValueName(i));
+                    str2 = StringConverter<CharTraitsA, T>("<");
+                    str2 += opt->GetValueName(i);
+                    str2 += static_cast<Char>('>');
+                    this->formatter[1].SetText(str2);
                     this->formatter[2].SetText(opt->GetValueDescription(i));
                     this->formatter >> str2;
                     str += str2;
                     str += static_cast<Char>('\n');
                 }
 
-                this->formatter[0].SetWidth(this->formatter[1].GetWidth());
-                this->formatter[1].SetWidth(2);
+                this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), 1));
+                this->formatter[0].SetWidth(this->formatter[1].GetWidth() + 4);
+                this->formatter[1].SetWidth(0);
+
             } else {
                 str += static_cast<Char>('\n');
             }
@@ -1562,10 +1575,12 @@ namespace sys {
     CmdLineParser<T>::OptionDescIterator::OptionDescIterator(vislib::SingleLinkedList<Option*> &opts, bool withValues) 
             : formatter(withValues ? 3 : 2), output(NULL), withValues(withValues) {
         this->options = &opts;
-        this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), 2));
+        this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), withValues ? 1 : 2));
         this->formatter.SetMaxWidth(vislib::sys::Console::GetWidth() - 1);
-        this->formatter[1].SetWidth(2);
-        this->formatter[this->withValues ? 2 : 1].SetWidth(0);
+        this->formatter[1].SetWidth(0);
+        if (this->withValues) {
+            this->formatter[2].SetWidth(0);
+        }
 
         unsigned int optnamelen = 0;
         this->option = this->options->GetIterator();
@@ -1581,7 +1596,7 @@ namespace sys {
 
             if (this->withValues) {
                 for (int i = opt->GetValueCount() - 1; i >= 0; i--) {
-                    len = opt->GetValueName(i).Length() + 2;
+                    len = opt->GetValueName(i).Length() + 6;
                     if (len > optnamelen) optnamelen = len;
                 }
             }
@@ -1735,7 +1750,6 @@ namespace sys {
      */
     template<class T>
     int CmdLineParser<T>::Parse(int argc, Char **argv) {
-        int retval = 0;
         ARY_SAFE_DELETE(this->arglist);
         this->arglistSize = 0;
         this->errors.Clear();
@@ -1779,7 +1793,6 @@ namespace sys {
                             if (i + static_cast<int>(o->GetValueCount()) >= argc) { 
                                 // this arg is near end of list and there are not enought values!
                                 this->errors.Append(Error(Error::MISSING_VALUE, i));
-                                retval = 1;
 
                             } else {
                                 for (int j2 = o->GetValueCount() - 1; j2 >= 0; j2--) {
@@ -1840,7 +1853,6 @@ namespace sys {
                                             if (i + static_cast<int>(opt->GetValueCount()) >= argc) { 
                                                 // this arg is near end of list and there are not enought values!
                                                 this->errors.Append(Error(Error::MISSING_VALUE, i));
-                                                retval = 1;
 
                                             } else {
                                                 for (int j2 = opt->GetValueCount() - 1; j2 >= 0; j2--) {
@@ -2057,7 +2069,13 @@ namespace sys {
         // free temporary variables
         delete[] argTypes;
 
-        return retval;
+        if (this->errors.Count() > 0) {
+            return -1;
+        }
+        if (this->warnings.Count() > 0) {
+            return 1;
+        }
+        return 0;
     }
 
 
