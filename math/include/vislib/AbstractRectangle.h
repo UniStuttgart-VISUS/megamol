@@ -43,21 +43,33 @@ namespace math {
         ~AbstractRectangle(void);
 
         /**
-         * Provide direct access to the y-coordinate of the left/bottom point.
-         *
-         * @return A reference to the y-coordinate of the left/bottom point.
-         */
-        inline const T& Bottom(void) const {
-            return this->bounds[IDX_BOTTOM];
-        }
-
-        /**
          * Answer the area covered by the rectangle.
          *
          * @return The area covered by the rectangle.
          */
         inline T Area(void) const {
             return (this->Width() * this->Height());
+        }
+
+        /**
+         * Answer the aspect ratio of the rectangle.
+         *
+         * @return The aspect ratio of the rectangle.
+         */
+        inline double AspectRatio(void) const {
+            if (IsEqual<double>(this->Height(), 0.0)) {
+                return 0.0;
+            }
+            return double(this->Width()) / double(this->Height());
+        }
+
+        /**
+         * Provide direct access to the y-coordinate of the left/bottom point.
+         *
+         * @return A reference to the y-coordinate of the left/bottom point.
+         */
+        inline const T& Bottom(void) const {
+            return this->bounds[IDX_BOTTOM];
         }
 
         /** 

@@ -62,6 +62,15 @@ namespace math {
         ~AbstractVectorImpl(void);
 
         /**
+         * Answer the angle between this vector and 'rhs'.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return The angle between this vector and 'rhs'.
+         */
+        AngleRad Angle(const C<T, D, S>& rhs) const;
+
+        /**
          * Answer the dot product of this vector and 'rhs'.
          *
          * @param rhs The right hand side operand.
@@ -389,6 +398,27 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C>
     AbstractVectorImpl<T, D, S, C>::~AbstractVectorImpl(void) {
+    }
+
+
+    /*
+     * AbstractVectorImpl<T, D, S, C>::Angle
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C>
+    AngleRad AbstractVectorImpl<T, D, S, C>::Angle(const C<T, D, S>& rhs) const {
+        C<T, D, T[D]> v1;
+        C<T, D, T[D]> v2;
+
+        for (unsigned int d = 0; d < D; d++) {
+            v1.components[d] = this->components[d];
+            v2.components[d] = rhs.components[d];
+        }
+
+        v1.Normalise();
+        v2.Normalise();
+
+        return static_cast<AngleRad>(::acos(v1.Dot(v2)));
     }
 
 

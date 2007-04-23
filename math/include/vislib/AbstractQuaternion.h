@@ -660,7 +660,7 @@ namespace math {
     Vector<T, 3> AbstractQuaternion<T, S>::operator *(
             const AbstractVector<T, 3, Sp>& rhs) const {
         Vector<T, 3> u(this->components);
-        return ((2.0f * ((u.Dot(rhs) * u) + (this->W() * u.Cross(rhs))))
+        return ((static_cast<T>(2.0) * ((u.Dot(rhs) * u) + (this->W() * u.Cross(rhs))))
             + ((Sqr(this->W()) - u.Dot(u)) * rhs));
     }
 

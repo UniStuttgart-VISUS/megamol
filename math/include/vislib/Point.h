@@ -174,7 +174,7 @@ namespace math {
          * @param y The y-coordinate.
          */
         inline Point(const T& x, const T& y) : Super() {
-            this->coorindates[0] = x;
+            this->coordinates[0] = x;
             this->coordinates[1] = y;
         }
 
