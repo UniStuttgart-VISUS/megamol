@@ -94,7 +94,8 @@ void vislib::graphics::BeholderRotator2D::Trigger(AbstractCursor *caller, Trigge
                 math::Vector<SceneSpaceType, 3> rot = (beh->GetRightVector() * (curX - preX)) 
                     + (beh->GetUpVector() * (curY - preY));
 
-                math::AngleRad angle = rot.Normalise() / halfHeight * cam->GetHalfApertureAngleRad();
+                math::AngleRad angle = static_cast<math::AngleRad>(rot.Normalise() / halfHeight) 
+                    * cam->GetHalfApertureAngleRad();
 
                 rot = rot.Cross(beh->GetFrontVector());
 

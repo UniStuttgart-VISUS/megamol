@@ -197,7 +197,7 @@ namespace graphics {
         }
 
         /**
-         * returns the front vector of the beholder.
+         * returns the normalized front vector of the beholder.
          *
          * @return The front vector
          */
@@ -206,7 +206,7 @@ namespace graphics {
         }
 
         /**
-         * returns the right vector of the beholder.
+         * returns the normalized right vector of the beholder.
          *
          * @return The right vector
          */
@@ -215,7 +215,7 @@ namespace graphics {
         }
 
         /**
-         * returns the up vector of the beholder.
+         * returns the normalized up vector of the beholder.
          *
          * @return The up vector
          */

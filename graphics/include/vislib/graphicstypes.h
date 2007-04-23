@@ -18,7 +18,7 @@ namespace vislib {
 namespace graphics {
 
     /** This type is used for values in scene space. */
-    typedef float SceneSpaceType;
+    typedef double SceneSpaceType;
 
     /** 
      * This type is used for values in image space.

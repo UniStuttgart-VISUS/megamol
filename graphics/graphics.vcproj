@@ -325,6 +325,10 @@
 				RelativePath=".\src\InputModifiers.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\ZoomToRectangle.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -385,6 +389,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\InputModifiers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ZoomToRectangle.h"
 				>
 			</File>
 		</Filter>

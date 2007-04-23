@@ -171,8 +171,7 @@ namespace graphics {
          * @return The width of the virtual camera image 
          */
         inline ImageSpaceType GetVirtualWidth(void) { 
-            return this->virtualHalfWidth * 
-                static_cast<SceneSpaceType>(2.0);
+            return static_cast<ImageSpaceType>(this->virtualHalfWidth * 2.0);
         }
 
         /** 
@@ -181,8 +180,7 @@ namespace graphics {
          * @return The height of the virtual camera image
          */
         inline ImageSpaceType GetVirtualHeight(void) { 
-            return this->virtualHalfHeight * 
-                static_cast<SceneSpaceType>(2.0);
+            return static_cast<ImageSpaceType>(this->virtualHalfHeight * 2.0);
         }
 
         /**
@@ -414,7 +412,7 @@ namespace graphics {
         void SetDefaultValues(void);
 
         /** half aperture Angle in radians of the camera along the y axis */
-        math::AngleDeg halfApertureAngle;
+        math::AngleRad halfApertureAngle;
 
         /** Pointer to the holder of the currently attached beholder */
         Beholder *beholder;

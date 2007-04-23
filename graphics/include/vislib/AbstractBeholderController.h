@@ -47,7 +47,7 @@ namespace graphics {
          *
          * @return The associated beholder.
          */
-        inline Beholder * GetBeholder(void) {
+        inline Beholder * GetBeholder(void) const {
             return this->beholder;
         }
 

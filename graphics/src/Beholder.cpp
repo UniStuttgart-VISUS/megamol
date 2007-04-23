@@ -51,5 +51,5 @@ void vislib::graphics::Beholder::CalcOrthoNormalVectors(void) {
     this->right = this->front.Cross(this->up);
     this->right.Normalise();
     this->up = this->right.Cross(this->front);
-    this->up.Normalise();
+    this->up.Normalise(); // should not be neccessary, but to be sure (inaccuracy)
 }

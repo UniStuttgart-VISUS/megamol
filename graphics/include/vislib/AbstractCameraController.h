@@ -47,7 +47,7 @@ namespace graphics {
          *
          * @return The associated beholder.
          */
-        inline Camera * GetCamera(void) {
+        inline Camera * GetCamera(void) const {
             return this->camera;
         }
 

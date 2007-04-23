@@ -212,8 +212,8 @@ void vislib::graphics::Camera::SetStereoEye(StereoEye eye) {
  * vislib::graphics::Camera::SetVirtualWidth
  */
 void vislib::graphics::Camera::SetVirtualWidth(ImageSpaceType virtualWidth) {
-    if ((math::IsEqual(this->tileRect.Left(), static_cast<SceneSpaceType>(0.0))) 
-            && (math::IsEqual(this->tileRect.Right(), this->virtualHalfWidth * static_cast<SceneSpaceType>(2.0)))) {
+    if ((math::IsEqual(this->tileRect.Left(), static_cast<ImageSpaceType>(0.0))) 
+            && (math::IsEqual(this->tileRect.Right(), this->virtualHalfWidth * static_cast<ImageSpaceType>(2.0)))) {
         this->tileRect.SetRight(math::Max(virtualWidth, static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA)));
     }
     this->virtualHalfWidth = math::Max(virtualWidth * static_cast<ImageSpaceType>(0.5), 
@@ -226,8 +226,8 @@ void vislib::graphics::Camera::SetVirtualWidth(ImageSpaceType virtualWidth) {
  * vislib::graphics::Camera::SetVirtualHeight
  */
 void vislib::graphics::Camera::SetVirtualHeight(ImageSpaceType virtualHeight) {
-    if ((math::IsEqual(this->tileRect.Bottom(), static_cast<SceneSpaceType>(0.0))) 
-            && (math::IsEqual(this->tileRect.Top(), this->virtualHalfHeight * static_cast<SceneSpaceType>(2.0)))) {
+    if ((math::IsEqual(this->tileRect.Bottom(), static_cast<ImageSpaceType>(0.0))) 
+            && (math::IsEqual(this->tileRect.Top(), this->virtualHalfHeight * static_cast<ImageSpaceType>(2.0)))) {
         this->tileRect.SetTop(math::Max(virtualHeight, static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA)));
     }
     this->virtualHalfHeight = math::Max(virtualHeight * static_cast<ImageSpaceType>(0.5), 
