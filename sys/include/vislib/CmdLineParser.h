@@ -453,7 +453,7 @@ namespace sys {
              *         is destroied or the Parse methode of the parser is 
              *         called.
              */
-            inline Argument *GetFirstOccurrence(void) {
+            inline Argument *GetFirstOccurrence(void) const {
                 return this->firstArg;
             }
 
@@ -1149,8 +1149,8 @@ namespace sys {
          * @return The directly following argument, or NULL if the given
          *         argument arg is the last one or NULL.
          */
-        inline Argument * NextArgument(const Argument *arg) {
-            for (int i = 1; i < this->arglistSize; i++) {
+        inline Argument * NextArgument(const Argument *arg) const {
+            for (unsigned int i = 1; i < this->arglistSize; i++) {
                 if (&this->arglist[i - 1] == arg) {
                     return &this->arglist[i];
                 }
