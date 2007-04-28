@@ -28,7 +28,7 @@ CamTestApp::Lens::Lens(void) {
     this->h = 0.25f;
     this->x = float(::rand() % 1000) / 1000.0f * (1.0f - this->w);
     this->y = float(::rand() % 1000) / 1000.0f * (1.0f - this->h);
-    this->ax = float(::rand() % 2000) / 2000.0f * M_PI;
+    this->ax = float(::rand() % 2000) / 2000.0f * float(M_PI);
     this->ay = sin(this->ax);
     this->ax = cos(this->ax);
 }
@@ -62,8 +62,8 @@ void CamTestApp::Lens::Update(float sec, vislib::graphics::gl::CameraOpenGL came
     if (pong) {
         double d = atan2(this->ay, this->ax);
         d += (double(::rand() % 2001 - 1000) / 1000.0f) * 0.5f;
-        this->ax = cos(d);
-        this->ay = sin(d);
+        this->ax = float(cos(d));
+        this->ay = float(sin(d));
     }
 
     this->camera = camera;

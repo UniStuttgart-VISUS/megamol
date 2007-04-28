@@ -40,7 +40,7 @@ GlutAppManager::~GlutAppManager(void) {
         delete app;
     }
 
-    for (int i = this->factories.Count() - 1; i >= 0; i--) {
+    for (int i = int(this->factories.Count()) - 1; i >= 0; i--) {
         AbstractFactory *f = this->factories[i];
         this->factories[i] = NULL;
         delete f;
@@ -198,9 +198,12 @@ void GlutAppManager::glRenderEmptyScreen(void) {
 
     glColor3f(0.7f, 0.8f, 1.0f);
 
-    glprintf(10, This->height - 28, GLUT_BITMAP_HELVETICA_18, "VISlib glutTest Application");
-    glprintf(10, This->height - 44, GLUT_BITMAP_HELVETICA_12, "Copyright  2007, Universität Stuttgart (VIS). Alle Rechte vorbehalten.");
-    glprintf(10, This->height - 60, GLUT_BITMAP_HELVETICA_12, "Use the right click context menu to select a test.");
+    glprintf(10.0f, float(This->height - 28), GLUT_BITMAP_HELVETICA_18,
+        "VISlib glutTest Application");
+    glprintf(10.0f, float(This->height - 44), GLUT_BITMAP_HELVETICA_12,
+        "Copyright  2007, Universität Stuttgart (VIS). Alle Rechte vorbehalten.");
+    glprintf(10.0f, float(This->height - 60), GLUT_BITMAP_HELVETICA_12,
+        "Use the right click context menu to select a test.");
 
 	glFlush();
 

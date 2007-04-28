@@ -159,28 +159,28 @@ bool StereoCamTestApp::OnKeyPress(unsigned char key, int x, int y) {
             this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_TOE_IN);
             break;
         case 'a': {
-            float sd = this->cameraLeft.GetStereoDisparity();
+            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetStereoDisparity();
             sd /= 1.2f;
             this->cameraLeft.SetStereoDisparity(sd);
             this->cameraRight.SetStereoDisparity(sd);
             printf("Stereo Disparity set to %f\n", sd);
         } break;
         case 'y': {
-            float sd = this->cameraLeft.GetStereoDisparity();
+            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetStereoDisparity();
             sd *= 1.2f;
             this->cameraLeft.SetStereoDisparity(sd);
             this->cameraRight.SetStereoDisparity(sd);
             printf("Stereo Disparity set to %f\n", sd);
         } break;
         case 's': {
-            float sd = this->cameraLeft.GetFocalDistance();
+            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetFocalDistance();
             sd -= 0.1f;
             this->cameraLeft.SetFocalDistance(sd);
             this->cameraRight.SetFocalDistance(sd);
             printf("Focal distance set to %f\n", sd);
         } break;
         case 'x': {
-            float sd = this->cameraLeft.GetFocalDistance();
+            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetFocalDistance();
             sd += 0.1f;
             this->cameraLeft.SetFocalDistance(sd);
             this->cameraRight.SetFocalDistance(sd);

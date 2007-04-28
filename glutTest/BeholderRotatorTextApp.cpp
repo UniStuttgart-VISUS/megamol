@@ -109,8 +109,8 @@ void BeholderRotatorTextApp::GLDeinit(void) {
  */
 void BeholderRotatorTextApp::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
-    this->camera.SetVirtualWidth(w);
-    this->camera.SetVirtualHeight(h);
+    this->camera.SetVirtualWidth(static_cast<vislib::graphics::ImageSpaceType>(w));
+    this->camera.SetVirtualHeight(static_cast<vislib::graphics::ImageSpaceType>(h));
 }
 
 
@@ -124,7 +124,8 @@ bool BeholderRotatorTextApp::OnKeyPress(unsigned char key, int x, int y) {
         case '2': this->SetupRotator2(); break;
         default: retval = false; break;
     }
-    this->cursor.SetPosition(x, y, true);
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
     return retval;
 }
 
@@ -145,7 +146,8 @@ void BeholderRotatorTextApp::OnMouseEvent(int button, int state, int x, int y) {
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
-    this->cursor.SetPosition(x, y, true);
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
     this->cursor.SetButtonState(btn, (state == GLUT_DOWN));
 }
 
@@ -154,7 +156,8 @@ void BeholderRotatorTextApp::OnMouseEvent(int button, int state, int x, int y) {
  * BeholderRotatorTextApp::OnMouseMove
  */
 void BeholderRotatorTextApp::OnMouseMove(int x, int y) {
-    this->cursor.SetPosition(x, y, true);
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
 }
 
 
@@ -167,7 +170,8 @@ void BeholderRotatorTextApp::OnSpecialKey(int key, int x, int y) {
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
-    this->cursor.SetPosition(x, y, true);
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
 }
 
 
