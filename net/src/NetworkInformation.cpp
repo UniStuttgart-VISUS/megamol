@@ -71,7 +71,7 @@ vislib::net::NetworkInformation::Adapter::~Adapter(void) {
  */
 unsigned int vislib::net::NetworkInformation::AdapterCount(void) {
     if (netAdapters.IsNull()) {
-        InitAdapters();
+        initAdapters();
     }
 
     return countNetAdapters;
@@ -83,7 +83,7 @@ unsigned int vislib::net::NetworkInformation::AdapterCount(void) {
  */
 const vislib::net::NetworkInformation::Adapter& vislib::net::NetworkInformation::AdapterInformation(unsigned int i) {
     if (netAdapters.IsNull()) {
-        InitAdapters();
+        initAdapters();
     }
 
     if (i >= countNetAdapters) {
@@ -95,9 +95,9 @@ const vislib::net::NetworkInformation::Adapter& vislib::net::NetworkInformation:
 
 
 /*
- * vislib::net::NetworkInformation::InitAdapters
+ * vislib::net::NetworkInformation::initAdapters
  */
-void vislib::net::NetworkInformation::InitAdapters(void) {
+void vislib::net::NetworkInformation::initAdapters(void) {
     ASSERT(netAdapters.IsNull());
     countNetAdapters = 0;
 
@@ -190,14 +190,18 @@ void vislib::net::NetworkInformation::InitAdapters(void) {
                 (&*netAdapters)[countNetAdapters].netmaskValid = Adapter::VALID;
                 
                 // calculate broadcast address
-                UINT32 addr = static_cast<UINT32>(
-                    static_cast<struct in_addr>((&*netAdapters)[countNetAdapters].address).s_addr);
                 UINT32 mask = static_cast<UINT32>(
                     static_cast<struct in_addr>((&*netAdapters)[countNetAdapters].netmask).s_addr);
-                struct in_addr broadcast;
-                broadcast.s_addr = addr | ~mask;
-                (&*netAdapters)[countNetAdapters].broadcast = broadcast;
-                (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::VALID_GENERATED;
+                if (mask == 0) {
+                    (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::NOT_VALID;
+                } else {
+                    UINT32 addr = static_cast<UINT32>(
+                        static_cast<struct in_addr>((&*netAdapters)[countNetAdapters].address).s_addr);
+                    struct in_addr broadcast;
+                    broadcast.s_addr = addr | ~mask;
+                    (&*netAdapters)[countNetAdapters].broadcast = broadcast;
+                    (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::VALID_GENERATED;
+                }
 
                 // store mac address
                 (&*netAdapters)[countNetAdapters].mac = "";
@@ -226,8 +230,8 @@ void vislib::net::NetworkInformation::InitAdapters(void) {
             for (int i = 1; i < 256; i++) {
                 info.ifr_ifindex = i;
                 if (ioctl(testSocket, SIOCGIFNAME, &info) == 0) {
-	                // Only use ethernet interfaces
-	                ioctl(testSocket, SIOCGIFHWADDR, &info);
+                    // Only use ethernet interfaces
+                    ioctl(testSocket, SIOCGIFHWADDR, &info);
                     if (info.ifr_hwaddr.sa_family == ARPHRD_ETHER) {
                         countNetAdapters++;
                     }
@@ -241,10 +245,9 @@ void vislib::net::NetworkInformation::InitAdapters(void) {
             for (int i = 1; i < 256; i++) {
                 info.ifr_ifindex = i;
                 if (ioctl(testSocket, SIOCGIFNAME, &info) == 0) {
-	                // Only use ethernet interfaces
-	                ioctl(testSocket, SIOCGIFHWADDR, &info);
-	                if (info.ifr_hwaddr.sa_family == ARPHRD_ETHER) {
-                        // adapter[countNetAdapters]
+                    // Only use ethernet interfaces
+                    ioctl(testSocket, SIOCGIFHWADDR, &info);
+                    if (info.ifr_hwaddr.sa_family == ARPHRD_ETHER) {
 
                         // name             SIOCGIFNAME
                         info.ifr_ifindex = i;
@@ -283,7 +286,24 @@ void vislib::net::NetworkInformation::InitAdapters(void) {
                             (&*netAdapters)[countNetAdapters].broadcast = IPAddress(bcaddr->sin_addr);
                             (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::VALID;
                         } else {
-                            (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::NOT_VALID;
+                            if ((&*netAdapters)[countNetAdapters].addressValid &&
+                                    (&*netAdapters)[countNetAdapters].netmaskValid) {
+                                // calculate broadcast address
+                                UINT32 mask = static_cast<UINT32>(
+                                    static_cast<struct in_addr>((&*netAdapters)[countNetAdapters].netmask).s_addr);
+                                if (mask == 0) {
+                                    (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::NOT_VALID;
+                                } else {
+                                    UINT32 addr = static_cast<UINT32>(
+                                        static_cast<struct in_addr>((&*netAdapters)[countNetAdapters].address).s_addr);
+                                    struct in_addr broadcast;
+                                    broadcast.s_addr = addr | ~mask;
+                                    (&*netAdapters)[countNetAdapters].broadcast = broadcast;
+                                    (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::VALID_GENERATED;
+                                }
+                            } else {
+                                (&*netAdapters)[countNetAdapters].broadcastValid = Adapter::NOT_VALID;
+                            }
                         }
 
                         // mac address      SIOCGIFHWADDR
@@ -301,7 +321,7 @@ void vislib::net::NetworkInformation::InitAdapters(void) {
                         countNetAdapters++;
                     }
                 }
-	        }
+            }
 
             close(testSocket);
         }

@@ -186,15 +186,15 @@ namespace net {
         };
 
         /**
-         * Answer the number of network adapters.
+         * Answer the number of ethernet network adapters.
          *
          * @return The number of network adapters.
          */
         static unsigned int AdapterCount(void);
 
         /**
-         * Returns a reference to the information object of the i-th network 
-         * adapter.
+         * Returns a reference to the information object of the i-th ethernet
+         * network adapter.
          *
          * @param i The number of the network adapter.
          *
@@ -210,7 +210,7 @@ namespace net {
         /**
          * Initializes the list of network adapter objects
          */
-        static void InitAdapters(void);
+        static void initAdapters(void);
 
         /** forbidden Ctor. */
         NetworkInformation(void);
