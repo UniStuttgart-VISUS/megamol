@@ -210,6 +210,56 @@ vislib::StringW vislib::sys::Path::Concatenate(const StringW& lhs,
 
 
 /*
+ * vislib::sys::Path::DeleteDirectory
+ */
+void vislib::sys::Path::DeleteDirectory(const StringA& path, bool recursive) {
+    if (!File::Exists(path)) return; // we don't delete non-existing stuff
+    StringA fullPath = Resolve(path);
+    if (!fullPath.EndsWith(SEPARATOR_A)) fullPath += SEPARATOR_A;
+
+    if (recursive) {
+        // remove files and directory
+        PurgeDirectory(fullPath, true);
+    }
+
+#ifdef _WIN32
+    if (RemoveDirectoryA(fullPath) == 0) {
+#else /* _WIN32 */
+    if (rmdir(fullPath) != 0) {
+#endif /* _WIN32 */
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
+
+}
+
+
+/*
+ * vislib::sys::Path::DeleteDirectory
+ */
+void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
+#ifdef _WIN32
+    if (!File::Exists(path)) return; // we don't delete non-existing stuff
+    StringW fullPath = Resolve(path);
+    if (!fullPath.EndsWith(SEPARATOR_W)) fullPath += SEPARATOR_W;
+
+    if (recursive) {
+        // remove files and directory
+        PurgeDirectory(fullPath, true);
+    }
+
+    if (RemoveDirectoryW(fullPath) == 0) {
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
+
+#else /* _WIN32 */
+    // linux is stupid
+    DeleteDirectory(W2A(path), recursive);
+
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::Path::GetCurrentDirectoryA
  */
 vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
@@ -535,56 +585,6 @@ void vislib::sys::Path::PurgeDirectory(const StringW& path, bool recursive) {
                            // changes.
         }
     }
-}
-
-
-/*
- * vislib::sys::Path::DeleteDirectory
- */
-void vislib::sys::Path::DeleteDirectory(const StringA& path, bool recursive) {
-    if (!File::Exists(path)) return; // we don't delete non-existing stuff
-    StringA fullPath = Resolve(path);
-    if (!fullPath.EndsWith(SEPARATOR_A)) fullPath += SEPARATOR_A;
-
-    if (recursive) {
-        // remove files and directory
-        PurgeDirectory(fullPath, true);
-    }
-
-#ifdef _WIN32
-    if (RemoveDirectoryA(fullPath) == 0) {
-#else /* _WIN32 */
-    if (rmdir(fullPath) != 0) {
-#endif /* _WIN32 */
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
-    }
-
-}
-
-
-/*
- * vislib::sys::Path::DeleteDirectory
- */
-void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
-#ifdef _WIN32
-    if (!File::Exists(path)) return; // we don't delete non-existing stuff
-    StringW fullPath = Resolve(path);
-    if (!fullPath.EndsWith(SEPARATOR_W)) fullPath += SEPARATOR_W;
-
-    if (recursive) {
-        // remove files and directory
-        PurgeDirectory(fullPath, true);
-    }
-
-    if (RemoveDirectoryW(fullPath) == 0) {
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
-    }
-
-#else /* _WIN32 */
-    // linux is stupid
-    DeleteDirectory(W2A(path), recursive);
-
-#endif /* _WIN32 */
 }
 
 

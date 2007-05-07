@@ -32,6 +32,20 @@ namespace sys {
     public:
 
         /**
+         * Compares two paths. Both paths are considdered equal if the 
+         * canonicalised absolute paths are equal. Under windows the
+         * comparision is done case insensitive. Under linux the comparision
+         * is case sensitive.
+         *
+         * @param lhs The first path to be compared.
+         * @param rhs The second path to be compared.
+         *
+         * @return True if both paths are considdered equal, false otherwise.
+         */
+        template<class T>
+        static bool Compare(const String<T>& lhs, const String<T>& rhs);
+
+        /**
          * Canonicalises the path. 
          *
          * The method removes all relative references to the current path (".") 
@@ -92,6 +106,32 @@ namespace sys {
          */
         static StringW Concatenate(const StringW& lhs, const StringW& rhs,
             const bool canonicalise = false);
+
+        /**
+         * Deletes a directory and optional all files and subdirectories.
+         *
+         * @param path      The path to the directory to be deleted.
+         * @param recursive Flag wether or not to remove items recursively. If
+         *                  true, all files and subdirectories will be also
+         *                  removed. If false and the directory is not empty
+         *                  the function will fail.
+         *
+         * @throws SystemException if an error occured.
+         */
+        static void DeleteDirectory(const StringA& path, bool recursive);
+
+        /**
+         * Deletes a directory and optional all files and subdirectories.
+         *
+         * @param path      The path to the directory to be deleted.
+         * @param recursive Flag wether or not to remove items recursively. If
+         *                  true, all files and subdirectories will be also
+         *                  removed. If false and the directory is not empty
+         *                  the function will fail.
+         *
+         * @throws SystemException if an error occured.
+         */
+        static void DeleteDirectory(const StringW& path, bool recursive);
 
         /**
          * Answer the current working directory.
@@ -226,32 +266,6 @@ namespace sys {
         static void PurgeDirectory(const StringW& path, bool recursive);
 
         /**
-         * Deletes a directory and optional all files and subdirectories.
-         *
-         * @param path      The path to the directory to be deleted.
-         * @param recursive Flag wether or not to remove items recursively. If
-         *                  true, all files and subdirectories will be also
-         *                  removed. If false and the directory is not empty
-         *                  the function will fail.
-         *
-         * @throws SystemException if an error occured.
-         */
-        static void DeleteDirectory(const StringA& path, bool recursive);
-
-        /**
-         * Deletes a directory and optional all files and subdirectories.
-         *
-         * @param path      The path to the directory to be deleted.
-         * @param recursive Flag wether or not to remove items recursively. If
-         *                  true, all files and subdirectories will be also
-         *                  removed. If false and the directory is not empty
-         *                  the function will fail.
-         *
-         * @throws SystemException if an error occured.
-         */
-        static void DeleteDirectory(const StringW& path, bool recursive);
-
-        /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
          * will not be altered in this case.
          *
@@ -333,6 +347,21 @@ namespace sys {
         /** Disallow instances. */
         Path(void);
     };
+
+
+    /*
+     * Path::Compare<T>
+     */
+    template<class T>
+    bool Path::Compare(const String<T>& lhs, const String<T>& rhs) {
+        String<T> rlhs = (Path::IsAbsolute(lhs)) ? Path::Canonicalise(lhs) : Path::Resolve(lhs);
+        String<T> rrhs = (Path::IsAbsolute(rhs)) ? Path::Canonicalise(rhs) : Path::Resolve(rhs);
+#ifdef _WIN32
+        return rlhs.CompareInsensitive(rrhs);
+#else /* _WIN32 */
+        return rlhs.Compare(rrhs);
+#endif /* _WIN32 */
+    }
     
 } /* end namespace sys */
 } /* end namespace vislib */

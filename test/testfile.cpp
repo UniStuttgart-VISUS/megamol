@@ -421,6 +421,29 @@ void TestPath(void) {
         AssertEqual("Canonicalise \"horst///hugo\"", Path::Canonicalise("horst///hugo"), StringA("horst/hugo"));
 
 #endif /* _WIN32 */
+
+        // testing compare methods
+#ifdef _WIN32
+        AssertTrue("Compare \"C:\\horst\\\" == \"C:\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsA>("C:\\horst\\", "C:\\..\\HoRsT\\"));
+        AssertTrue("Compare \"\\horst\\\" == \"\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsA>("\\horst\\", "\\..\\HoRsT\\"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"\\hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "\\hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "hugo"));
+
+        AssertTrue("Compare \"C:\\horst\\\" == \"C:\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsW>(L"C:\\horst\\", L"C:\\..\\HoRsT\\"));
+        AssertTrue("Compare \"\\horst\\\" == \"\\..\\HoRsT\\\"", Path::Compare<vislib::CharTraitsW>(L"\\horst\\", L"\\..\\HoRsT\\"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"\\hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"\\hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"hugo"));
+#else /* _WIN32 */
+        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<vislib::CharTraitsA>("/horst/", "/../horst/"));
+        AssertFalse("Compare \"/horst\" != \"/Horst\"", Path::Compare<vislib::CharTraitsA>("/horst", "/Horst"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"/hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "/hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsA>(Path::Resolve("hugo"), "hugo"));
+
+        AssertTrue("Compare \"/horst/\" == \"/../horst/\"", Path::Compare<vislib::CharTraitsW>(L"/horst/", L"/../horst/"));
+        AssertFalse("Compare \"/horst\" != \"/Horst\"", Path::Compare<vislib::CharTraitsW>(L"/horst", L"/Horst"));
+        AssertFalse("Compare \"Path::Resolve(hugo)\" != \"/hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"/hugo"));
+        AssertTrue("Compare \"Path::Resolve(hugo)\" == \"hugo\"", Path::Compare<vislib::CharTraitsW>(Path::Resolve(L"hugo"), L"hugo"));
+#endif /* _WIN32 */
         
     } catch (SystemException e) {
         cout << e.GetMsgA() << endl;
