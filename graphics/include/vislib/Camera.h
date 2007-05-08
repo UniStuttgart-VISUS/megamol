@@ -329,6 +329,53 @@ namespace graphics {
         }
 
         /**
+         * Answer the position of the eye. This point is based on the beholder
+         * position, but may be moved because of the eye disparity in case of
+         * stereo projection.
+         *
+         *
+         * @throws IllegalStateException if no beholder is associated with this
+         *         Camera.
+         * @return The position of the eye.
+         */
+        const math::Point<SceneSpaceType, 3> EyePosition(void) const;
+
+        /**
+         * Answer the eye front normal vector of the looking direction. This 
+         * vector is based on the beholder front vector, but may be rotated 
+         * because of stereo projection.
+         *
+         * @return The eye front vector.
+         *
+         * @throws IllegalStateException if no beholder is associated with this
+         *         Camera.
+         */
+        const math::Vector<SceneSpaceType, 3> EyeFrontVector(void) const;
+
+        /**
+         * Answer the eye right normal vector of the looking direction. This 
+         * vector is based on the beholder right vector, but may be rotated 
+         * because of stereo projection.
+         *
+         * @return The eye right vector.
+         *
+         * @throws IllegalStateException if no beholder is associated with this
+         *         Camera.
+         */
+        const math::Vector<SceneSpaceType, 3> EyeRightVector(void) const;
+
+        /**
+         * Answer the eye up normal vector of the looking direction. This 
+         * vector is identical to the beholder up vector.
+         *
+         * @return The eye up vector.
+         *
+         * @throws IllegalStateException if no beholder is associated with this
+         *         Camera.
+         */
+        const math::Vector<SceneSpaceType, 3> EyeUpVector(void) const;
+
+        /**
          * Assignment operator
          *
          * @param rhs Camera values will be copied from
@@ -365,23 +412,6 @@ namespace graphics {
             SceneSpaceType &outFarClip);
 
         /**
-         * Calculates and returns all parameters necessary to set up the view
-         * matrix of this camera.
-         *
-         * @param outPosition Returns the position of the camera.
-         * @param outFront Returns the vector in viewing direction of the camera.
-         *                 The returned vector may be not normalized.
-         * @param outUp Returns the up vector of the camera.
-         *
-         * @throws IllegalStateException if this camera is not associated with a
-         *         Beholder.
-         */
-        void CalcViewParameters(
-            math::Point<SceneSpaceType, 3> &outPosition,
-            math::Vector<SceneSpaceType, 3> &outFront,
-            math::Vector<SceneSpaceType, 3> &outUp);
-
-        /**
          * Answer wether the view or frustum parameters need to be recalculated.
          *
          * @return true if the parameters need to be recalculated, false 
@@ -409,7 +439,7 @@ namespace graphics {
          * Sets default values for all members, except updateCounter, and
          * holder which are not changed.
          */
-        void SetDefaultValues(void);
+        void setDefaultValues(void);
 
         /** half aperture Angle in radians of the camera along the y axis */
         math::AngleRad halfApertureAngle;

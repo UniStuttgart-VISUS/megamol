@@ -76,7 +76,9 @@ void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) {
     }
 
     if (this->viewNeedsUpdate) {
-        Camera::CalcViewParameters(pos, lookDir, up);
+        pos = this->EyePosition();
+        lookDir = this->EyeFrontVector();
+        up = this->EyeUpVector();
         this->viewNeedsUpdate = false;
     }
 

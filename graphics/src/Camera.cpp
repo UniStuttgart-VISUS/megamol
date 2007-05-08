@@ -20,7 +20,7 @@
  * vislib::graphics::Camera::Camera
  */
 vislib::graphics::Camera::Camera(void) : beholder(NULL), updateCounter(0) {
-    this->SetDefaultValues();
+    this->setDefaultValues();
 }
 
 
@@ -38,7 +38,7 @@ vislib::graphics::Camera::Camera(const vislib::graphics::Camera &rhs)
  */
 vislib::graphics::Camera::Camera(Beholder *beholder) : updateCounter(0) {
     this->beholder = beholder;
-    this->SetDefaultValues();
+    this->setDefaultValues();
  }
 
 
@@ -109,9 +109,9 @@ void vislib::graphics::Camera::CalcClipDistances(
 
 
 /*
- * vislib::graphics::Camera::SetDefaultValues
+ * vislib::graphics::Camera::setDefaultValues
  */
-void vislib::graphics::Camera::SetDefaultValues(void) {
+void vislib::graphics::Camera::setDefaultValues(void) {
     this->halfApertureAngle = math::AngleDeg2Rad(15.0);
     this->farClip = static_cast<SceneSpaceType>(10.0); // some arbitrary values
     this->focalDistance = static_cast<SceneSpaceType>(1.0); // some arbitrary values
@@ -341,39 +341,86 @@ void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceType &outLeft,
 
 
 /*
- * vislib::graphics::Camera::CalcViewParameters
+ * vislib::graphics::Camera::EyePosition
  */
-void vislib::graphics::Camera::CalcViewParameters(
-        math::Point<SceneSpaceType, 3> &outPosition,
-        math::Vector<SceneSpaceType, 3> &outFront,
-        math::Vector<SceneSpaceType, 3> &outUp) {
+const vislib::math::Point<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyePosition(void) const {
     if (!this->beholder) {
         throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
     }
-
-    // mono projection position information
-    outUp = this->beholder->GetUpVector();
-    outPosition = this->beholder->GetPosition();
-    outFront = this->beholder->GetFrontVector();
-
+    
     if ((this->projectionType == STEREO_PARALLEL) 
             || (this->projectionType == STEREO_OFF_AXIS) 
             || (this->projectionType == STEREO_TOE_IN)) {
+
+        math::Point<SceneSpaceType, 3> pos = this->beholder->GetPosition();
+
         // shift eye for stereo
         math::Vector<SceneSpaceType, 3> right = this->beholder->GetRightVector() * this->halfStereoDisparity;
 
         if (this->eye == LEFT_EYE) {
-            // left eye
-            outPosition -= right;
+            pos -= right; // left eye
         } else {
-            // right eye
-            outPosition += right;
+            pos += right; // right eye
         }
 
-        if (this->projectionType == STEREO_TOE_IN) {
-            // rotate camera parameters for toe in
-            outFront = (this->beholder->GetPosition() + (outFront * this->focalDistance)) - outPosition;
-            // outFront.Normalise(); // unsure if this is necessary
-        }
+        return pos;
+    } else {
+        return this->beholder->GetPosition();
     }
+
+}
+
+
+/*
+ * vislib::graphics::Camera::EyeFrontVector
+ */
+const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyeFrontVector(void) const {
+    if (!this->beholder) {
+        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
+    }
+
+    if (this->projectionType == STEREO_TOE_IN) {
+
+        math::Vector<SceneSpaceType, 3> front = (this->beholder->GetPosition() 
+            + (this->beholder->GetFrontVector() * this->focalDistance)) - this->EyePosition();
+        front.Normalise();
+        return front;
+
+    } else {
+        return this->beholder->GetFrontVector();
+    }
+}
+
+
+/*
+ * vislib::graphics::Camera::EyeRightVector
+ */
+const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyeRightVector(void) const {
+    if (!this->beholder) {
+        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
+    }
+
+    if ((this->projectionType == STEREO_PARALLEL) 
+            || (this->projectionType == STEREO_OFF_AXIS) 
+            || (this->projectionType == STEREO_TOE_IN)) {
+
+        math::Vector<SceneSpaceType, 3> right = this->EyeFrontVector().Cross(this->beholder->GetUpVector());
+        right.Normalise();
+        return right;
+
+    } else {
+        return this->beholder->GetRightVector();
+    }
+}
+
+
+/*
+ * vislib::graphics::Camera::EyeUpVector
+ */
+const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyeUpVector(void) const {
+    if (!this->beholder) {
+        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
+    }
+
+    return this->beholder->GetUpVector();
 }
