@@ -72,6 +72,29 @@ namespace sys {
             /** allow parser to access the members directly */
             friend class CmdLineParser<T>;
 
+            /** 
+             * possible flags for the ctors. These are bits an can be combined
+             * using the or operator "|".
+             */
+            enum Flags {
+                FLAG_NULL = 0,
+                /** Symbolic constant for no flags */
+                FLAG_UNIQUE = 1, 
+                /**
+                 * Flag indicating that this option must not appear more then 
+                 * once in the command line. If the option appears more then 
+                 * once, only the first one is correctly parsed to be this 
+                 * option. The other appearences will be ignored and there will
+                 * be a warning.
+                 */
+                FLAG_REQUIRED = 2  
+                /**
+                 * Flag indicating that this option is required. If at least 
+                 * one required option is missing in the command line there 
+                 * will be an error.
+                 */
+            };
+
             /** possible variable types */
             enum ValueType {
                 NO_VALUE,
@@ -314,18 +337,16 @@ namespace sys {
              *                    NULL if no description string is provided.
              *                    Otherwise the string will be copied into an
              *                    internal buffer.
-             * @param unique Flag indicating if this option must not appear
-             *               more then once in the command line. If the option
-             *               appears more then once, only the first one is
-             *               correctly parsed to be this option. The other
-             *               appearences will be ignored and there will be a 
-             *               warning.
+             * @param flags The flags of the option.
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            Option(const Char shortName, const Char *longName = NULL, 
-                const Char *description = NULL, bool unique = false, 
-                ValueDesc *valueList = NULL);
+            inline Option(const Char shortName, const Char *longName = NULL, 
+                    const Char *description = NULL, Flags flags = FLAG_NULL, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName, description, flags, 
+                    valueList);
+            }
 
             /** 
              * ctor.
@@ -339,41 +360,39 @@ namespace sys {
              *                    NULL if no description string is provided.
              *                    Otherwise the string will be copied into an
              *                    internal buffer.
-             * @param unique Flag indicating if this option must not appear
-             *               more then once in the command line. If the option
-             *               appears more then once, only the first one is
-             *               correctly parsed to be this option. The other
-             *               appearences will be ignored and there will be a 
-             *               warning.
+             * @param flags The flags of the option.
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            Option(const Char shortName, const String<T>& longName, 
-                const Char *description = NULL, bool unique = false, 
-                ValueDesc *valueList = NULL);
-
+            inline Option(const Char shortName, const String<T>& longName, 
+                    const Char *description = NULL, Flags flags = FLAG_NULL, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName.PeekBuffer(), description,
+                    flags, valueList);
+            }            
+            
             /** 
              * ctor.
              * 
              * @param shortName The single character name of the option, or 0
              *                  if no short name should be used.
-             * @param longName The long name string of the option. The string 
-             *                 will be copied into an internal buffer.
-             * @param description The description string of the option. The 
-             *                    string will be copied into an internal 
-             *                    buffer.
-             * @param unique Flag indicating if this option must not appear
-             *               more then once in the command line. If the option
-             *               appears more then once, only the first one is
-             *               correctly parsed to be this option. The other
-             *               appearences will be ignored and there will be a 
-             *               warning.
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            Option(const Char shortName, const Char *longName, 
-                const String<T>& description, bool unique = false, 
-                ValueDesc *valueList = NULL);
+            inline Option(const Char shortName, const Char *longName, 
+                    const String<T>& description, Flags flags = FLAG_NULL, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName, description.PeekBuffer(), 
+                    flags, valueList);
+            }
 
             /** 
              * ctor.
@@ -383,21 +402,103 @@ namespace sys {
              * @param longName The long name string of the option. Can be NULL
              *                 if no long name should be used. Otherwise the
              *                 string will be copied into an internal buffer.
-             * @param description The description string of the option. The 
-             *                    string will be copied into an internal 
-             *                    buffer.
-             * @param unique Flag indicating if this option must not appear
-             *               more then once in the command line. If the option
-             *               appears more then once, only the first one is
-             *               correctly parsed to be this option. The other
-             *               appearences will be ignored and there will be a 
-             *               warning.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
              * @param valueList The list of values expected to follow this 
              *                  option directly in the command line.
              */
-            Option(const Char shortName, const String<T>& longName, 
-                const String<T>& description, bool unique = false, 
-                ValueDesc *valueList = NULL);
+            inline Option(const Char shortName, const String<T>& longName, 
+                    const String<T>& description = NULL, Flags flags = FLAG_NULL, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName.PeekBuffer(), 
+                    description.PeekBuffer(), flags, valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char *longName = NULL, 
+                    const Char *description = NULL, Flags flags = FLAG_NULL, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName, description, 
+                    flags, valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const String<T>& longName, 
+                    const Char *description = NULL, Flags flags = FLAG_NULL, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
+                    description, flags, valueList);
+            }            
+            
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char *longName, const String<T>& description, 
+                    Flags flags = FLAG_NULL, ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName, 
+                    description.PeekBuffer(), flags, valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const String<T>& longName, 
+                    const String<T>& description = NULL, 
+                    Flags flags = FLAG_NULL, ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
+                    description.PeekBuffer(), flags, valueList);
+            }
 
             /** dtor. */
             ~Option(void);
@@ -499,6 +600,25 @@ namespace sys {
 
         private:
 
+            /**
+             * Initializes the class. This methode is called from the different
+             * inline constructors.
+             *
+             * @param shortName The single character name of the option, or 0
+             *                  if no short name should be used.
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. The 
+             *                    string will be copied into an internal 
+             *                    buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            void initObject(const Char shortName, const Char *longName, 
+                const Char *description, Flags flags, ValueDesc *valueList);
+
             /** forbidden copy ctor. */
             Option(const Option& rhs);
 
@@ -517,11 +637,11 @@ namespace sys {
             /** description string of the option */
             String<T> description;
 
-            /** flag indicating if this option is unique */
+            /** flag indicating that this option is unique */
             bool unique;
 
-            ///** the length of the value list */
-            //unsigned int valueCount;
+            /** flag indicating that this option is required */
+            bool required;
 
             /** the value list of the option */
             ValueDesc *values;
@@ -531,13 +651,20 @@ namespace sys {
 
         };
 
+        /**
+         * typedef for SingleLinkedList of pointers to the Option objects. Be 
+         * careful not to delete the object the pointer are pointing to, since
+         * normally you wont own their memory.
+         */
+        typedef vislib::SingleLinkedList<Option*> OptionPtrList;
+
     private:
             
         /**
          * private iterator for the list of registered options. Neccessary
          * to avoid a gcc compiler bug not recognizing the type.
          */
-        typedef typename vislib::SingleLinkedList<Option*>::Iterator OptionPtrIterator;
+        typedef typename OptionPtrList::Iterator OptionPtrIterator;
 
     public:
 
@@ -730,7 +857,8 @@ namespace sys {
                 UNKNOWN,
                 NEGATIVE_ARGC,
                 MISSING_VALUE,
-                INVALID_VALUE
+                INVALID_VALUE,
+                MISSING_REQUIRED_OPTIONS
             };
 
             /**
@@ -754,6 +882,9 @@ namespace sys {
                         break;
                     case INVALID_VALUE:
                         retval = "Option value is invalid.";
+                        break;
+                    case MISSING_REQUIRED_OPTIONS:
+                        retval = "At least one required option is missing.";
                         break;
                     case UNKNOWN: 
                         // no break
@@ -958,10 +1089,10 @@ namespace sys {
         private:
 
             /** private init ctor */
-            OptionDescIterator(vislib::SingleLinkedList<Option*> &opts, bool withValues);
+            OptionDescIterator(OptionPtrList &opts, bool withValues);
 
             /** pointer to the list list of the options of the parser */
-            vislib::SingleLinkedList<Option*> *options;
+            OptionPtrList *options;
 
             /** iterator before next option */
             OptionPtrIterator option;
@@ -1095,12 +1226,22 @@ namespace sys {
          *
          * @param argc The number of arguments in argv.
          * @param argv The array of the argument strings.
+         * @param includeFirstArgument Indicates if the first argument should
+         *                             be included in the parsing process. If
+         *                             the first argument is the path of the
+         *                             started application module it might be
+         *                             helpful to ignore this first argument by
+         *                             providing a value of false to avoid
+         *                             missinterpretations. However, if the
+         *                             first argument is not included, it will
+         *                             not be part of the created command line
+         *                             list of Argument objects!
          *
          * @return 0 on success, 1 if warnings are present, or -1 if errors 
          *         are present. Information about the errors and warnings can
          *         be received using "GetErrors()", and "GetWarnings()".
          */
-        int Parse(int argc, Char **argv);
+        int Parse(int argc, Char **argv, bool includeFirstArgument = true);
 
         /**
          * Returns the Errors created by the last call of "Parse()".
@@ -1217,6 +1358,17 @@ namespace sys {
             return OptionDescIterator(this->options, withValues);
         }
 
+        /**
+         * Answer a single linked list of all missing required options. Be 
+         * careful not to delete the objects the pointers in this list are
+         * pointing to, since you normally wont own their memory. If there are 
+         * no missing required options, a empty list will be returned.
+         *
+         * @return A single linked list of pointers to all missing required
+         *         options.
+         */
+        const OptionPtrList ListMissingRequiredOptions(void) const;
+
     private:
 
         /** forbidden copy Ctor. */
@@ -1226,7 +1378,7 @@ namespace sys {
         CmdLineParser& operator=(const CmdLineParser& rhs);
 
         /** list of options */
-        vislib::SingleLinkedList<Option*> options;
+        OptionPtrList options;
 
         /** the command line list created by parse */
         Argument *arglist;
@@ -1275,58 +1427,6 @@ namespace sys {
      * CmdLineParser<T>::Option::Option
      */
     template<class T> 
-    CmdLineParser<T>::Option::Option(const Char shortName, const Char *longName, 
-        const Char *description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
-            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
-        this->shortName = shortName;
-        this->longName = longName;
-        this->description = description;
-    }
-
-
-    /*
-     * CmdLineParser<T>::Option::Option
-     */
-    template<class T> 
-    CmdLineParser<T>::Option::Option(const Char shortName, const String<T>& longName, 
-            const Char *description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
-            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
-        this->shortName = shortName;
-        this->longName = longName;
-        this->description = description;
-    }
-
-
-    /*
-     * CmdLineParser<T>::Option::Option
-     */
-    template<class T> 
-    CmdLineParser<T>::Option::Option(const Char shortName, const Char *longName, 
-            const String<T>& description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
-            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
-        this->shortName = shortName;
-        this->longName = longName;
-        this->description = description;
-    }
-
-
-    /*
-     * CmdLineParser<T>::Option::Option
-     */
-    template<class T> 
-    CmdLineParser<T>::Option::Option(const Char shortName, const String<T>& longName, 
-            const String<T>& description, bool unique, typename CmdLineParser<T>::Option::ValueDesc *valueList) 
-            : parser(NULL), unique(unique), values(valueList), firstArg(NULL) {
-        this->shortName = shortName;
-        this->longName = longName;
-        this->description = description;
-    }
-
-
-    /*
-     * CmdLineParser<T>::Option::Option
-     */
-    template<class T> 
     CmdLineParser<T>::Option::Option(const Option& rhs) {
         throw vislib::UnsupportedOperationException("Option Copy Ctor", __FILE__, __LINE__);
     }
@@ -1338,6 +1438,24 @@ namespace sys {
     template<class T>
     CmdLineParser<T>::Option::~Option(void) {
         SAFE_DELETE(this->values); // paranoia
+    }
+
+
+    /*
+     * CmdLineParser<T>::Option::initObject
+     */
+    template<class T>
+    void CmdLineParser<T>::Option::initObject(const Char shortName, 
+            const Char *longName, const Char *description, Flags flags, 
+            ValueDesc *valueList) {
+        this->parser = NULL;
+        this->unique = ((flags & FLAG_UNIQUE) == FLAG_UNIQUE);
+        this->required = ((flags & FLAG_REQUIRED) == FLAG_REQUIRED);
+        this->values = valueList;
+        this->firstArg = NULL;
+        this->shortName = shortName;
+        this->longName = longName;
+        this->description = description;
     }
 
 
@@ -1572,7 +1690,7 @@ namespace sys {
      * CmdLineParser<T>::OptionDescIterator::OptionDescIterator
      */
     template<class T> 
-    CmdLineParser<T>::OptionDescIterator::OptionDescIterator(vislib::SingleLinkedList<Option*> &opts, bool withValues) 
+    CmdLineParser<T>::OptionDescIterator::OptionDescIterator(OptionPtrList &opts, bool withValues) 
             : formatter(withValues ? 3 : 2), output(NULL), withValues(withValues) {
         this->options = &opts;
         this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), withValues ? 1 : 2));
@@ -1749,7 +1867,7 @@ namespace sys {
      * CmdLineParser<T>::Parse
      */
     template<class T>
-    int CmdLineParser<T>::Parse(int argc, Char **argv) {
+    int CmdLineParser<T>::Parse(int argc, Char **argv, bool includeFirstArgument) {
         ARY_SAFE_DELETE(this->arglist);
         this->arglistSize = 0;
         this->errors.Clear();
@@ -1768,7 +1886,7 @@ namespace sys {
         // identify known options, values and calculate the length of the 
         // argument list to be created.
         // Also check for simple errors or warnings
-        for (int i = 0; i < argc; i++) {
+        for (int i = includeFirstArgument ? 0 : 1; i < argc; i++) {
             unsigned int multi;
 
             if (argv[i][0] == static_cast<Char>('-')) { // option
@@ -1901,8 +2019,8 @@ namespace sys {
         this->arglist = new Argument[this->arglistSize];
         this->arglistSize = 0;
 
-        // fill arguemnt list
-        for (int i = 0; i < argc; i++) {
+        // fill argument list
+        for (int i = includeFirstArgument ? 0 : 1; i < argc; i++) {
             this->arglist[this->arglistSize].arg = argv[i];
             this->arglist[this->arglistSize].argid = i;
             this->arglist[this->arglistSize].pos = 0;
@@ -2069,6 +2187,17 @@ namespace sys {
         // free temporary variables
         delete[] argTypes;
 
+        // checking if all required options are present
+        opti = this->options.GetIterator();
+        while (opti.HasNext()) {
+            Option *opt = opti.Next();
+            if (opt->required && (opt->firstArg == NULL)) {
+                this->errors.Add(Error(Error::MISSING_REQUIRED_OPTIONS, 0));
+                break;
+            }
+        }
+
+        /** returning the right value */
         if (this->errors.Count() > 0) {
             return -1;
         }
@@ -2118,6 +2247,25 @@ namespace sys {
             ASSERT(outCmdLine.argCount == outCmdLine.storeCount);
         }
     }
+
+
+    /*
+     * CmdLineParser<T>::ListMissingRequiredOptions
+     */
+    template<class T> const typename CmdLineParser<T>::OptionPtrList 
+            CmdLineParser<T>::ListMissingRequiredOptions(void) const {
+        OptionPtrList newList;
+        OptionPtrIterator opti = this->options.GetIterator();
+        while (opti.HasNext()) {
+            Option *opt = opti.Next();
+            if (opt->required && (opt->firstArg == NULL)) {
+                newList->Append(opt);
+            }
+        }
+
+        return newList;
+    }
+
 
 
     /** Template instantiation for ANSI strings. */

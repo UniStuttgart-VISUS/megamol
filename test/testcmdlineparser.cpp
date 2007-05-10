@@ -102,7 +102,7 @@ void TestCmdLineParser(void) {
 
     CLParser parser;
     CLPOption helpOption(CLPS('h'), CLPS("help"), CLPS("Would print some helpful help."));
-    CLPOption testOption(CLPS('t'), CLPS("Test"), NULL, false, CLPOption::ValueDesc::ValueList(CLPOption::DOUBLE_OR_STRING_VALUE));
+    CLPOption testOption(CLPS('t'), CLPS("Test"), NULL, CLPOption::FLAG_NULL, CLPOption::ValueDesc::ValueList(CLPOption::DOUBLE_OR_STRING_VALUE));
 
     AssertTrue("helpOption.GetValueCount() == 0", helpOption.GetValueCount() == 0);
     AssertTrue("testOption.GetValueCount() == 1", testOption.GetValueCount() == 1);
@@ -334,7 +334,7 @@ void TestCmdLineParser(void) {
         CLProvider cmdLine(cmdName, CLPS("Horst -t 12 1.2 true ninja -t Hugo 1 2 3 4 5 6 7 8 9 Ende"));
         CLParser parser;
         CLPOption testOption(CLPS('t'), CLPS("Test"), CLPS("This is a rather stupid test option with multiple, four to be exact, values of defined types."
-            "The option is not used to do something interesting, but the parser is tested."), true, 
+            "The option is not used to do something interesting, but the parser is tested."), CLPOption::FLAG_UNIQUE, 
             CLPOption::ValueDesc::ValueList(CLPOption::INT_VALUE, "Count", "Number of Stuff or something")
             ->Add(CLPOption::DOUBLE_OR_STRING_VALUE, "Factor", "Increases or decreases the size of Stuff")
             ->Add(CLPOption::BOOL_OR_STRING_VALUE, "Flag", "May activate something.")
