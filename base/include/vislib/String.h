@@ -136,22 +136,40 @@ namespace vislib {
         void Clear(void);
 
         /**
-         * TODO: Document
+         * Answer whether both strings have the same value.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true if both strings are equal, false otherwise.
          */
         inline bool Compare(const Char *rhs) const;
 
         /**
-         * TODO: Document
+         * Answer whether both strings have the same value.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true if both strings are equal, false otherwise.
          */
         inline bool Compare(const String& rhs) const;
 
         /**
-         * TODO: Document
+         * Answer whether both strings have the same value, comparing them
+         * case insensitive.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true if both strings are equal, false otherwise.
          */
         inline bool CompareInsensitive(const Char *rhs) const;
 
         /**
-         * TODO: Document
+         * Answer whether both strings have the same value, comparing them
+         * case insensitive.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true if both strings are equal, false otherwise.
          */
         inline bool CompareInsensitive(const String& rhs) const;
 
@@ -513,6 +531,40 @@ namespace vislib {
          */
         inline bool StartsWith(const String& str) const {
             return this->StartsWith(str.data);
+        }
+
+        /**
+         * Answer whether this string starts with the character 'c'. The 
+         * comparation of the strings will be performed case insensitive.
+         *
+         * @param c The character to be searched at the begin.
+         *
+         * @return true, if this string starts with 'c', false otherwise.
+         */
+        bool StartsWithInsensitive(const Char c) const;
+
+        /**
+         * Answer whether this string starts with the string 'str'. The 
+         * comparation of the strings will be performed case insensitive.
+         *
+         * Note that for 'str' being a NULL pointer, the result is always false.
+         *
+         * @param str The string to be searched at the begin.
+         *
+         * @return true, if this string starts with 'str', false otherwise.
+         */
+        bool StartsWithInsensitive(const Char *str) const;
+
+        /**
+         * Answer whether this string starts with the string 'str'. The 
+         * comparation of the strings will be performed case insensitive.
+         *
+         * @param str The string to be searched at the begin.
+         *
+         * @return true, if this string starts with 'str', false otherwise.
+         */
+        inline bool StartsWithInsensitive(const String& str) const {
+            return this->StartsWithInsensitive(str.data);
         }
 
         /**
@@ -1300,12 +1352,46 @@ namespace vislib {
      * String<T>::StartsWith
      */
     template<class T> bool String<T>::StartsWith(const Char *str) const {
+        // TODO: Better implementation without Length calculations
         Size len1 = this->Length();
         Size len2 = T::SafeStringLength(str);
 
         if ((str != NULL) && (len2 <= len1)) {
             for (Size i = 0; i < len2; i++) {
                 if (this->data[i] != str[i]) {
+                    return false;
+                }
+            }
+            /* No difference found. */
+
+            return true;
+
+        } else {
+            /* Cannot start with 'str', if shorter or 'str' invalid. */
+            return false;
+        }
+    }
+
+
+    /*
+     * String<T>::StartsWithInsensitive
+     */
+    template<class T> bool String<T>::StartsWithInsensitive(const Char c) const {
+        return (T::ToLower(this->data[0]) == T::ToLower(c));
+    }
+
+
+    /*
+     * String<T>::StartsWithInsensitive
+     */
+    template<class T> bool String<T>::StartsWithInsensitive(const Char *str) const {
+        // TODO: Better implementation without Length calculations
+        Size len1 = this->Length();
+        Size len2 = T::SafeStringLength(str);
+
+        if ((str != NULL) && (len2 <= len1)) {
+            for (Size i = 0; i < len2; i++) {
+                if (T::ToLower(this->data[i]) != T::ToLower(str[i])) {
                     return false;
                 }
             }
