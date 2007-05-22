@@ -18,6 +18,7 @@
 #include "vislib/Dimension.h"
 #include "vislib/Point.h"
 #include "vislib/types.h"
+#include "vislib/mathfunctions.h"
 
 
 namespace vislib {
@@ -664,9 +665,9 @@ namespace math {
 
         this->EnforcePositiveSize();
 
-        ASSERT(this->left <= this->right);
-        ASSERT(this->bottom <= this->top);
-        ASSERT(this->back <= this->front);
+        ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
+        ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
+        ASSERT(this->bounds[IDX_BACK] <= this->bounds[IDX_FRONT]);
         ASSERT(cubLeft <= cubRight);
         ASSERT(cubBottom <= cubTop);
         ASSERT(cubBack <= cubFront);

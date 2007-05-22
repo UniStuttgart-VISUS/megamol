@@ -235,6 +235,19 @@ namespace math {
     }
 
 
+	/**
+	 * Swaps two values.
+	 *
+	 * @param a The first value.
+	 * @param b The second value.
+	 */
+	template<class T> inline void Swap(T& a,  T& b) {
+		T tmp = a;
+		a = b;
+		b = tmp;
+	}
+
+
     /**
      * Calculates the unsigned modulo value.
      * Only signed interger types can be used to instanciate this function.
