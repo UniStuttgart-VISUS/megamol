@@ -118,6 +118,14 @@ namespace vislib {
 		}
 
 		/**
+		 * Set the trace prefix for console output. If NULL, no prefix will be 
+		 * added.
+		 *
+		 * @param prefix The new prefix or NULL for disabling prefixing.
+		 */
+		void SetPrefix(const char *prefix);
+
+		/**
 		 * Trace the message 'fmt', if an appropriate tracing level was set.
 		 *
 		 * @param level The trace level for the message.
@@ -133,6 +141,9 @@ namespace vislib {
 		//void operator ()(const char *fmt, ...);
 
     private:
+
+		/** The default prefix of the console output. */
+		static const char *DEFAULT_PREFIX;
 
 		/** The only instance of this class. */
 		static Trace instance;
@@ -177,6 +188,12 @@ namespace vislib {
         /** Handle for file output of tracer. */
         FILE *fp;
 
+		/** 
+		 * The prefix of the console output. Prefixing is disabled, if this pointer
+		 * is NULL.
+		 */
+		char *prefix;
+
 		/** The current trace level. */
 		UINT level;
 
@@ -190,6 +207,10 @@ namespace vislib {
 #else /* defined(DEBUG) || defined(_DEBUG) */
 #define TRACE if (0) vislib::Trace::GetInstance()
 #endif /* defined(DEBUG) || defined(_DEBUG) */
+
+#define VISLIB_TRACELVL_ERROR (vislib::Trace::LEVEL_ERROR)
+#define VISLIB_TRACELVL_INFO (vislib::Trace::LEVEL_INFO)
+#define VISLIB_TRACELVL_WARN (vislib::Trace::LEVEL_WARN)
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

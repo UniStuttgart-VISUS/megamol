@@ -146,6 +146,22 @@ bool vislib::Trace::EnableFileOutput(const char *filename) {
 
 
 /*
+ * vislib::Trace::SetPrefix
+ */
+void vislib::Trace::SetPrefix(const char *prefix) {
+	ARY_SAFE_DELETE(this->prefix);
+	ASSERT(this->prefix == NULL);		// Ensure potential disabling.
+
+	if (prefix != NULL) {
+		SIZE_T len = ::strlen(prefix) + 1;
+		this->prefix = new char[len];
+		ASSERT(this->prefix != NULL);	// std::bad_alloc or OK.
+		::memcpy(this->prefix, prefix, len * sizeof(char));	
+	}
+}
+
+
+/*
  * vislib::Trace::operator ()
  */
 void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) {
@@ -168,6 +184,11 @@ void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) {
 
 
 /*
+ * vislib::Trace::DEFAULT_PREFIX
+ */
+const char *vislib::Trace::DEFAULT_PREFIX = "TRACE: ";
+
+/*
  * vislib::Trace::instance
  */
 vislib::Trace vislib::Trace::instance;
@@ -176,10 +197,12 @@ vislib::Trace vislib::Trace::instance;
 /*
  * vislib::Trace::Trace
  */
-vislib::Trace::Trace(void) : filename(NULL), fp(NULL), level(LEVEL_ERROR) {
+vislib::Trace::Trace(void) : filename(NULL), fp(NULL), prefix(NULL), 
+		level(LEVEL_ERROR) {
 #if defined(DEBUG) || defined(_DEBUG)
     this->level = LEVEL_ALL;
 #endif /* defined(DEBUG) || defined(_DEBUG) */
+	this->SetPrefix(DEFAULT_PREFIX);
 }
 
 
@@ -197,7 +220,9 @@ vislib::Trace::Trace(const Trace& rhs) {
  */
 void vislib::Trace::trace(const UINT level, const char *fmt, va_list list) {
 	if ((level <= this->level) && (level > 0) && (fmt != NULL)) {
-		::fprintf(stderr, "TRACE: ");
+		if (this->prefix != NULL) {
+			::fprintf(stderr, this->prefix);
+		}
         ::vfprintf(stderr, fmt, list);
 		::fflush(stderr);
 
