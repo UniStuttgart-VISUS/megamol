@@ -208,9 +208,10 @@ namespace vislib {
 #define TRACE if (0) vislib::Trace::GetInstance()
 #endif /* defined(DEBUG) || defined(_DEBUG) */
 
-#define VISLIB_TRACELVL_ERROR (vislib::Trace::LEVEL_ERROR)
-#define VISLIB_TRACELVL_INFO (vislib::Trace::LEVEL_INFO)
-#define VISLIB_TRACELVL_WARN (vislib::Trace::LEVEL_WARN)
+/* Short names for the predefined trace levels. */
+#define VISLIB_TRCELVL_ERROR (vislib::Trace::LEVEL_ERROR)
+#define VISLIB_TRCELVL_INFO (vislib::Trace::LEVEL_INFO)
+#define VISLIB_TRCELVL_WARN (vislib::Trace::LEVEL_WARN)
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
