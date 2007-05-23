@@ -869,6 +869,26 @@ namespace net {
          */
         Socket& operator =(const Socket& rhs);
 
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true, if *this and 'rhs' are equal, false otherwise.
+         */
+        bool operator ==(const Socket& rhs) const;
+
+        /**
+         * Test for inequality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true, if *this and 'rhs' are not equal, false otherwise.
+         */
+        inline bool operator !=(const Socket& rhs) const {
+            return !(*this == rhs);
+        }
+
     protected:
 
         /**

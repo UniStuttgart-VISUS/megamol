@@ -30,6 +30,11 @@
 #define BECAUSE_I_KNOW(exp) ASSERT(exp)
 
 
+// If DEBUG and NDEBUG are defined at the same time, the VERIFY macro goes mad!
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(NDEBUG)
+#error "{ DEBUG | _DEBUG } and NDEBUG must not be defined at the same time!"
+#endif /* (defined(DEBUG) || defined(_DEBUG)) && defined(NDEBUG) */
+
 #ifndef VERIFY
 #if (defined(DEBUG) || defined(_DEBUG))
 #define VERIFY(exp) ASSERT(exp)

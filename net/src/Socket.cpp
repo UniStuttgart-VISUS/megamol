@@ -450,3 +450,11 @@ vislib::net::Socket& vislib::net::Socket::operator =(const Socket& rhs) {
 
     return *this;
 }
+
+
+/*
+ * vislib::net::Socket::operator ==
+ */
+bool vislib::net::Socket::operator ==(const Socket& rhs) const {
+    return (this->handle == rhs.handle);
+}
