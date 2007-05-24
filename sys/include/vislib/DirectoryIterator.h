@@ -36,14 +36,20 @@
 namespace vislib {
 namespace sys {
 
+	/**
+     * Represents a single entry in a directory as returned by DirectoryIterator.
+     */
 	template<class T> class DirectoryEntry {
 		typedef typename T::Char Char;
 	public:
+		/** Enum for the currently supported types of DirectoryEntry */
 		enum EntryType {
 			DIRECTORY,
 			FILE
 		};
+		/** Name of the entry. This is not the full path! */
 		String<T> Path;
+		/** Type of the entry */
 		EntryType Type;
 	};
  
