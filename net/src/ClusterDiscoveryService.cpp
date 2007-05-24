@@ -122,8 +122,8 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
     this->critSect.Lock();
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         try {
-            this->userMsgSocket.Send(&msg, sizeof(Message), 
-                this->peerNodes[i]->discoveryAddr);
+            this->userMsgSocket.Send(this->peerNodes[i]->discoveryAddr,
+                &msg, sizeof(Message));
         } catch (SocketException e) {
             TRACE(Trace::LEVEL_VL_WARN, "ClusterDiscoveryService could not send "
                 "user message (\"%s\").\n", e.GetMsgA());
@@ -155,7 +155,7 @@ UINT vislib::net::ClusterDiscoveryService::SendUserMessage(
     }
 
     try {
-        this->userMsgSocket.Send(&msg, sizeof(Message), hPeer->discoveryAddr);
+        this->userMsgSocket.Send(hPeer->discoveryAddr, &msg, sizeof(Message));
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_VL_WARN, "ClusterDiscoveryService could not send "
             "user message (\"%s\").\n", e.GetMsgA());
@@ -290,7 +290,7 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
 
     /* Send the initial "immediate alive request" message. */
     try {
-        socket.Send(&request, sizeof(Message), this->cds.bcastAddr);
+        socket.Send(this->cds.bcastAddr, &request, sizeof(Message));
         TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent MSG_TYPE_IAMHERE "
             "to %s.\n", this->cds.bcastAddr.ToStringA().PeekBuffer());
 
@@ -326,7 +326,7 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
         try {    
 			/* Broadcast request. */
             this->cds.prepareRequest();
-            socket.Send(&request, sizeof(Message), this->cds.bcastAddr);
+            socket.Send(this->cds.bcastAddr, &request, sizeof(Message));
             TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
                 "MSG_TYPE_IAMALIVE to %s.\n", 
                 this->cds.bcastAddr.ToStringA().PeekBuffer());
@@ -347,7 +347,7 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
     try {
   		/* Now inform all other nodes, that we are out. */
         request.msgType = MSG_TYPE_SAYONARA;
-        socket.Send(&request, sizeof(Message), this->cds.bcastAddr);
+        socket.Send(this->cds.bcastAddr, &request, sizeof(Message));
         TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent MSG_TYPE_SAYONARA to "
             "%s.\n", this->cds.bcastAddr.ToStringA().PeekBuffer());
         
@@ -437,7 +437,7 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
         try {
 
             /* Wait for next message. */
-            socket.Receive(&msg, sizeof(Message), peerAddr);
+            socket.Receive(peerAddr, &msg, sizeof(Message));
 
             if (msg.magicNumber == MAGIC_NUMBER) {
                 /* Message OK, look for its content. */
@@ -474,7 +474,7 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
                         ASSERT(msg.magicNumber == MAGIC_NUMBER);
                         msg.msgType = MSG_TYPE_IAMALIVE;
                         msg.senderBody.sockAddr = this->cds.responseAddr;
-                        socket.Send(&msg, sizeof(Message), peerAddr);
+                        socket.Send(peerAddr, &msg, sizeof(Message));
                         TRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
                             "immediate MSG_TYPE_IAMALIVE answer to %s.\n",
                             peerAddr.ToStringA().PeekBuffer());

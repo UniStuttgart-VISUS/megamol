@@ -50,6 +50,12 @@ void vislib::net::Socket::Startup(void) {
 
 
 /*
+ * vislib::net::Socket::TIMEOUT_INFINITE 
+ */
+const UINT vislib::net::Socket::TIMEOUT_INFINITE = 0;
+
+
+/*
  * vislib::net::Socket::~Socket
  */
 vislib::net::Socket::~Socket(void) {
@@ -93,7 +99,7 @@ vislib::net::Socket vislib::net::Socket::Accept(SocketAddress *outConnAddr) {
  * vislib::net::Socket::Bind
  */
 void vislib::net::Socket::Bind(const SocketAddress& address) {
-    if (::bind(this->handle, &static_cast<const struct sockaddr>(address),
+    if (::bind(this->handle, static_cast<const struct sockaddr *>(address),
             sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
@@ -124,10 +130,11 @@ void vislib::net::Socket::Close(void) {
  */
 void vislib::net::Socket::Connect(const SocketAddress& address) {
 #ifdef _WIN32
-    if (::WSAConnect(this->handle, &static_cast<const struct sockaddr>(address),
-            sizeof(struct sockaddr), NULL, NULL, NULL, NULL) == SOCKET_ERROR) {
+    if (::WSAConnect(this->handle, static_cast<const struct sockaddr *>(
+            address), sizeof(struct sockaddr), NULL, NULL, NULL, NULL) 
+            == SOCKET_ERROR) {
 #else /* _WIN32 */
-    if (::connect(this->handle, &static_cast<const struct sockaddr>(address),
+    if (::connect(this->handle, static_cast<const struct sockaddr *>(address),
             sizeof(struct sockaddr)) == SOCKET_ERROR) {
 #endif /* _Win32 */
         throw SocketException(__FILE__, __LINE__);
@@ -188,6 +195,8 @@ void vislib::net::Socket::IOControl(const DWORD ioControlCode, void *inBuffer,
             == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
+#else /* _WIN32 */
+    // TODO
 #endif /* _WIN32 */
 }
 
@@ -205,80 +214,23 @@ void vislib::net::Socket::Listen(const INT backlog) {
  * vislib::net::Socket::Receive
  */
 SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes, 
-        const INT flags, const bool forceReceive) {
-    SIZE_T totalReceived = 0;   // # of bytes totally received.
-    INT lastReceived = 0;       // # of bytes received during last recv() call.
-
-    do {
-        lastReceived = ::recv(this->handle, static_cast<char *>(outData) 
-            + totalReceived, static_cast<int>(cntBytes - totalReceived), flags);
-
-        if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
-            /* Successfully received new package. */
-            totalReceived += static_cast<SIZE_T>(lastReceived);
-
-        } else {
-            /* Communication failed. */
-            throw SocketException(__FILE__, __LINE__);
-        }
-
-    } while (forceReceive && (totalReceived < cntBytes));
-
-    return totalReceived;
-}
-
-
-/*
- * vislib::net::Socket::Receive
- */
-SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
-        SocketAddress& outFromAddr, const INT flags, const bool forceReceive) {
-    SIZE_T totalReceived = 0;   // # of bytes totally received.
-    INT lastReceived = 0;       // # of bytes received during last recv() call.
-    struct sockaddr from;
-#ifdef _WIN32
-    int fromLen = sizeof(from);
-#else /* _WIN32 */
-    socklen_t fromLen = sizeof(from);
-#endif /* _WIN32 */
-
-    do {
-        lastReceived = ::recvfrom(this->handle, static_cast<char *>(outData) 
-            + totalReceived, static_cast<int>(cntBytes - totalReceived), flags,
-            &from, &fromLen);
-
-        if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
-            /* Successfully received new package. */
-            totalReceived += static_cast<SIZE_T>(lastReceived);
-
-        } else {
-            /* Communication failed. */
-            throw SocketException(__FILE__, __LINE__);
-        }
-
-    } while (forceReceive && (totalReceived < cntBytes));
-
-    outFromAddr = from;
-
-    return totalReceived;
-}
-
-
-/*
- * vislib::net::Socket::Receive
- */
-SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
-        const INT timeout, SocketAddress& outFromAddr, const INT flags) {
+        const INT timeout, const INT flags, const bool forceReceive) {
     int n = 0;                  // Highest descriptor in 'readSet' + 1.
     fd_set readSet;             // Set of socket to check for readability.
     struct timeval timeOut;     // Timeout for readability check.
 
-    /* Handle infinite timeout first by calling normal Receive. */
+    /* Check parameter constraints. */
+    if ((timeout >= 1) && forceReceive) {
+        throw IllegalParamException("forceReceive", __FILE__, __LINE__);
+    }
+
+    /* Handle infinite timeout first by calling normal receive operation. */
     if (timeout < 1) {
-        return this->Receive(outData, cntBytes, outFromAddr, flags, false);
+        return this->receive(outData, cntBytes, flags, forceReceive);
     }
 
     /* Initialise socket set and timeout structure. */
+    ASSERT(forceReceive == false);
     FD_ZERO(&readSet);
     FD_SET(this->handle, &readSet);
 
@@ -294,8 +246,61 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
     }
 
     if (FD_ISSET(this->handle, &readSet)) {
-        /* Delegate reading to normal Receive. */
-        return this->Receive(outData, cntBytes, outFromAddr, flags, false);
+        /* Delegate to normal receive operation. */
+        return this->receive(outData, cntBytes, flags, forceReceive);
+
+    } else {
+        /* Signal timeout. */
+#ifdef _WIN32
+        throw SocketException(WSAETIMEDOUT, __FILE__, __LINE__);
+#else /* _WIN32 */
+        throw SocketException(ETIME, __FILE__, __LINE__);
+#endif /* _WIN32 */
+    } 
+}
+
+
+/*
+ * vislib::net::Socket::Receive
+ */
+SIZE_T vislib::net::Socket::Receive(SocketAddress& outFromAddr, void *outData, 
+        const SIZE_T cntBytes, const INT timeout, const INT flags,  
+        const bool forceReceive) {
+    int n = 0;                  // Highest descriptor in 'readSet' + 1.
+    fd_set readSet;             // Set of socket to check for readability.
+    struct timeval timeOut;     // Timeout for readability check.
+
+    /* Check parameter constraints. */
+    if ((timeout >= 1) && forceReceive) {
+        throw IllegalParamException("forceReceive", __FILE__, __LINE__);
+    }
+
+    /* Handle infinite timeout first by calling normal receive operation. */
+    if (timeout < 1) {
+        return this->receiveFrom( outFromAddr, outData, cntBytes,flags, 
+            forceReceive);
+    }
+
+    /* Initialise socket set and timeout structure. */
+    ASSERT(forceReceive == false);
+    FD_ZERO(&readSet);
+    FD_SET(this->handle, &readSet);
+
+    timeOut.tv_sec = timeout / 1000;
+    timeOut.tv_usec = (timeout % 1000) * 1000;
+
+    /* Wait for the socket to become readable. */
+#ifndef _WIN32
+    n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
+#endif /* !_WIN32 */
+    if (::select(n, &readSet, NULL, NULL, &timeOut) == -1) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    if (FD_ISSET(this->handle, &readSet)) {
+        /* Delegate to normal receive operation. */
+        return this->receiveFrom(outFromAddr, outData, cntBytes, flags, 
+            forceReceive);
 
     } else {
         /* Signal timeout. */
@@ -312,68 +317,23 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
  * vislib::net::Socket::Send
  */
 SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes, 
-        const INT flags, const bool forceSend) {
-    SIZE_T totalSent = 0;       // # of bytes totally sent.      
-    INT lastSent = 0;           // # of bytes sent during last send() call.
-
-    do {
-        lastSent = ::send(this->handle, static_cast<const char *>(data), 
-            static_cast<int>(cntBytes - totalSent), flags);
-
-        if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
-            totalSent += static_cast<SIZE_T>(lastSent);
-
-        } else {
-            throw SocketException(__FILE__, __LINE__);
-        }
-
-    } while (forceSend && (totalSent < cntBytes));
-    
-    return totalSent;
-}
-
-
-/*
- * vislib::net::Socket::Send
- */
-SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes, 
-        const SocketAddress& toAddr, const INT flags, const bool forceSend) {
-    SIZE_T totalSent = 0;       // # of bytes totally sent.      
-    INT lastSent = 0;           // # of bytes sent during last send() call.
-    sockaddr to = static_cast<sockaddr>(toAddr);
-
-    do {
-        lastSent = ::sendto(this->handle, static_cast<const char *>(data), 
-            static_cast<int>(cntBytes - totalSent), flags, &to, sizeof(to));
-
-        if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
-            totalSent += static_cast<SIZE_T>(lastSent);
-
-        } else {
-            throw SocketException(__FILE__, __LINE__);
-        }
-
-    } while (forceSend && (totalSent < cntBytes));
-    
-    return totalSent;
-}
-
-
-/*
- * vislib::net::Socket::Send
- */
-SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
-        const INT timeout, const SocketAddress& toAddr, const INT flags) {
+        const INT flags, const INT timeout, const bool forceSend) {
     int n = 0;                  // Highest descriptor in 'writeSet' + 1.
     fd_set writeSet;            // Set of socket to check for writability.
     struct timeval timeOut;     // Timeout for writability check.
 
-    /* Handle infinite timeout first by calling normal Send. */
+    /* Check parameter constraints. */
+    if ((timeout >= 1) && forceSend) {
+        throw IllegalParamException("forceSend", __FILE__, __LINE__);
+    }
+
+    /* Handle infinite timeout first by calling normal send operation. */
     if (timeout < 1) {
-        return this->Send(data, cntBytes, toAddr, flags, false);
+        return this->send(data, cntBytes, flags, forceSend);
     }
 
     /* Initialise socket set and timeout structure. */
+    ASSERT(forceSend == false);
     FD_ZERO(&writeSet);
     FD_SET(this->handle, &writeSet);
 
@@ -389,8 +349,59 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
     }
 
     if (FD_ISSET(this->handle, &writeSet)) {
-        /* Delegate reading to normal Receive. */
-        return this->Send(data, cntBytes, toAddr, flags, false);
+        /* Delegate to normal send operation. */
+        return this->send(data, cntBytes, flags, forceSend);
+
+    } else {
+        /* Signal timeout. */
+#ifdef _WIN32
+        throw SocketException(WSAETIMEDOUT, __FILE__, __LINE__);
+#else /* _WIN32 */
+        throw SocketException(ETIME, __FILE__, __LINE__);
+#endif /* _WIN32 */
+    }
+}
+
+
+/*
+ * vislib::net::Socket::Send
+ */
+SIZE_T vislib::net::Socket::Send(const SocketAddress& toAddr, const void *data,
+        const SIZE_T cntBytes, const INT timeout, const INT flags,
+        const bool forceSend) {
+    int n = 0;                  // Highest descriptor in 'writeSet' + 1.
+    fd_set writeSet;            // Set of socket to check for writability.
+    struct timeval timeOut;     // Timeout for writability check.
+
+    /* Check parameter constraints. */
+    if ((timeout >= 1) && forceSend) {
+        throw IllegalParamException("forceSend", __FILE__, __LINE__);
+    }
+
+    /* Handle infinite timeout first by calling normal send operation. */
+    if (timeout < 1) {
+        return this->sendTo(toAddr, data, cntBytes, flags, forceSend);
+    }
+
+    /* Initialise socket set and timeout structure. */
+    ASSERT(forceSend == false);
+    FD_ZERO(&writeSet);
+    FD_SET(this->handle, &writeSet);
+
+    timeOut.tv_sec = timeout / 1000;
+    timeOut.tv_usec = (timeout % 1000) * 1000;
+
+    /* Wait for the socket to become readable. */
+#ifndef _WIN32
+    n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
+#endif /* !_WIN32 */
+    if (::select(n, &writeSet, NULL, NULL, &timeOut) == -1) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    if (FD_ISSET(this->handle, &writeSet)) {
+        /* Delegate to normal send operation. */
+        return this->sendTo(toAddr, data, cntBytes, flags, forceSend);
 
     } else {
         /* Signal timeout. */
@@ -457,4 +468,120 @@ vislib::net::Socket& vislib::net::Socket::operator =(const Socket& rhs) {
  */
 bool vislib::net::Socket::operator ==(const Socket& rhs) const {
     return (this->handle == rhs.handle);
+}
+
+
+/*
+ * vislib::net::Socket::receive
+ */
+SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes, 
+        const INT flags, const bool forceReceive) {
+    SIZE_T totalReceived = 0;   // # of bytes totally received.
+    INT lastReceived = 0;       // # of bytes received during last recv() call.
+
+    do {
+        lastReceived = ::recv(this->handle, static_cast<char *>(outData) 
+            + totalReceived, static_cast<int>(cntBytes - totalReceived), flags);
+
+        if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
+            /* Successfully received new package. */
+            totalReceived += static_cast<SIZE_T>(lastReceived);
+
+        } else {
+            /* Communication failed. */
+            throw SocketException(__FILE__, __LINE__);
+        }
+
+    } while (forceReceive && (totalReceived < cntBytes));
+
+    return totalReceived;
+}
+
+
+/*
+ * vislib::net::Socket::receiveFrom
+ */
+SIZE_T vislib::net::Socket::receiveFrom(SocketAddress& outFromAddr, 
+        void *outData, const SIZE_T cntBytes, const INT flags, 
+        const bool forceReceive) {
+    SIZE_T totalReceived = 0;   // # of bytes totally received.
+    INT lastReceived = 0;       // # of bytes received during last recv() call.
+    struct sockaddr from;
+#ifdef _WIN32
+    int fromLen = sizeof(from);
+#else /* _WIN32 */
+    socklen_t fromLen = sizeof(from);
+#endif /* _WIN32 */
+
+    do {
+        lastReceived = ::recvfrom(this->handle, static_cast<char *>(outData) 
+            + totalReceived, static_cast<int>(cntBytes - totalReceived), flags,
+            &from, &fromLen);
+
+        if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
+            /* Successfully received new package. */
+            totalReceived += static_cast<SIZE_T>(lastReceived);
+
+        } else {
+            /* Communication failed. */
+            throw SocketException(__FILE__, __LINE__);
+        }
+
+    } while (forceReceive && (totalReceived < cntBytes));
+
+    outFromAddr = from;
+
+    return totalReceived;
+}
+
+
+/*
+ * vislib::net::Socket::send
+ */
+SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes, 
+        const INT flags, const bool forceSend) {
+    SIZE_T totalSent = 0;       // # of bytes totally sent.      
+    INT lastSent = 0;           // # of bytes sent during last send() call.
+
+    do {
+        lastSent = ::send(this->handle, static_cast<const char *>(data), 
+            static_cast<int>(cntBytes - totalSent), flags);
+
+        if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
+            totalSent += static_cast<SIZE_T>(lastSent);
+
+        } else {
+            throw SocketException(__FILE__, __LINE__);
+        }
+
+    } while (forceSend && (totalSent < cntBytes));
+    
+    return totalSent;
+}
+
+
+/*
+ * vislib::net::Socket::sendTo
+ */
+SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr, 
+        const void *data, const SIZE_T cntBytes, const INT flags, 
+        const bool forceSend) {
+    SIZE_T totalSent = 0;       // # of bytes totally sent.      
+    INT lastSent = 0;           // # of bytes sent during last send() call.
+    sockaddr to = static_cast<sockaddr>(toAddr);
+
+    do {
+        lastSent = ::sendto(this->handle, static_cast<const char *>(data), 
+            static_cast<int>(cntBytes - totalSent), flags, &to, sizeof(to));
+
+        if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
+            totalSent += static_cast<SIZE_T>(lastSent);
+
+        } else {
+            throw SocketException(__FILE__, __LINE__);
+        }
+
+    } while (forceSend && (totalSent < cntBytes));
+    
+    return totalSent;
 }

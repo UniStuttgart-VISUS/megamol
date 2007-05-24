@@ -158,6 +158,9 @@ namespace net {
          */
         static void Startup(void);
 
+        /** Constant for specifying an infinite timeout. */
+        static const UINT TIMEOUT_INFINITE;
+
         /**
          * Create an invalid socket. Call Create() on the new object to create 
          * a new socket.
@@ -478,6 +481,9 @@ namespace net {
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
          * @param cntBytes     The number of bytes to receive.
+         * @param timeout      A timeout in milliseconds. A value less than 1 
+         *                     specifies an infinite timeout. If the operation 
+         *                     timeouts, an exception will be thrown.
          * @param flags        The flags that specify the way in which the call 
          *                     is made.
          * @param forceReceive If this flag is set, the method will not return
@@ -485,57 +491,43 @@ namespace net {
          *
          * @return The number of bytes actually received.
          *
-         * @throws SocketException If the operation fails.
+         * @throws SocketException       If the operation fails or timeouts.
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         *                               and 'forceReceive' is true.
          */
         virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes, 
-            const INT flags = 0, const bool forceReceive = false);
-
-        /**
-         * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
-         * 'outData' must be large enough to receive at least 'cntBytes'. 
-         *
-         * @param outData      The buffer to receive the data. The caller must
-         *                     allocate this memory and remains owner.
-         * @param cntBytes     The number of bytes to receive.
-         * @param outFromAddr  The socket address the datagram was received 
-         *                     from. This variable is only valid upon successful
-         *                     return from the method.
-         * @param flags        The flags that specify the way in which the call 
-         *                     is made.
-         * @param forceReceive If this flag is set, the method will not return
-         *                     until 'cntBytes' have been read.
-         *
-         * @return The number of bytes actually received.
-         *
-         * @throws SocketException If the operation fails.
-         */
-        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            SocketAddress& outFromAddr, const INT flags = 0, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
             const bool forceReceive = false);
 
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
          * 'outData' must be large enough to receive at least 'cntBytes'. 
          *
+         * This method can only be used on datagram sockets.
+         *
+         * @param outFromAddr  The socket address the datagram was received 
+         *                     from. This variable is only valid upon successful
+         *                     return from the method.
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
          * @param cntBytes     The number of bytes to receive.
          * @param timeout      A timeout in milliseconds. A value less than 1 
          *                     specifies an infinite timeout. If the operation 
          *                     timeouts, an exception will be thrown.
-         * @param outFromAddr  The socket address the datagram was received 
-         *                     from. This variable is only valid upon successful
-         *                     return from the method.
          * @param flags        The flags that specify the way in which the call 
          *                     is made.
+         * @param forceReceive If this flag is set, the method will not return
+         *                     until 'cntBytes' have been read.
          *
          * @return The number of bytes actually received.
          *
-         * @throws SocketException If the operation fails or timeouts.
+         * @throws SocketException       If the operation fails or timeouts.
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         *                               and 'forceReceive' is true.
          */
-        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            const INT timeout, SocketAddress& outFromAddr, 
-            const INT flags = 0);
+        virtual SIZE_T Receive(SocketAddress& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceReceive = false);
 
         ///**
         // * Receives one object of type T to 'outData'. The method does not 
@@ -562,44 +554,29 @@ namespace net {
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
          *                  at least this number of bytes.
+         * @param timeout   A timeout in milliseconds. A value less than 1 
+         *                  specifies an infinite timeout. If the operation 
+         *                  timeouts, an exception will be thrown.
          * @param flags     The flags that specify the way in which the call is 
          *                  made.
-         * @param forceSend If this flag is set, the method will not return 
-         *                  until 'cntBytes' have been sent.
          *
          * @return The number of bytes acutally sent.
          *
-         * @throws SocketException If the operation fails.
+         * @throws SocketException       If the operation fails.
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         *                               and 'forceSend' is true.
          */
         virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
-            const INT flags = 0, const bool forceSend = false);
-
-        /**
-         * Send a datagram of 'cntBytes' bytes from the location designated by 
-         * 'data' using this socket to the socket 'toAddr'.
-         *
-         * @param data      The data to be sent. The caller remains owner of the
-         *                  memory.
-         * @param cntBytes  The number of bytes to be sent. 'data' must contain
-         *                  at least this number of bytes.
-         * @param toAddr    Socket address of the destination host.
-         * @param flags     The flags that specify the way in which the call is 
-         *                  made.
-         * @param forceSend If this flag is set, the method will not return 
-         *                  until 'cntBytes' have been sent.
-         *
-         * @return The number of bytes acutally sent.
-         *
-         * @throws SocketException If the operation fails.
-         */
-        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
-            const SocketAddress& toAddr, const INT flags = 0, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
             const bool forceSend = false);
 
         /**
          * Send a datagram of 'cntBytes' bytes from the location designated by 
          * 'data' using this socket to the socket 'toAddr'.
          *
+         * This method can only be used on datagram sockets.
+         *
+         * @param toAddr    Socket address of the destination host.
          * @param data      The data to be sent. The caller remains owner of the
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
@@ -607,19 +584,18 @@ namespace net {
          * @param timeout   A timeout in milliseconds. A value less than 1 
          *                  specifies an infinite timeout. If the operation 
          *                  timeouts, an exception will be thrown.
-         * @param toAddr    Socket address of the destination host.
          * @param flags     The flags that specify the way in which the call is 
          *                  made.
          *
          * @return The number of bytes acutally sent.
          *
-         * @throws SocketException If the operation fails.
+         * @throws SocketException       If the operation fails.
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         *                               and 'forceSend' is true.
          */
-        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
-            const INT timeout, const SocketAddress& toAddr, 
-            const INT flags = 0);
-        // Note: Strange order of arguments ('timeout' before 'toAddress') 
-        // resolves ambiguity with other Sends.
+        virtual SIZE_T Send(const SocketAddress& toAddr, const void *data, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceSend = false);
 
         ///**
         // * Sends an object of type T.
@@ -907,6 +883,97 @@ namespace net {
             this->GetOption(level, optName, &value, valueSize);
             return (value != 0);
         }
+
+        /**
+         * Receives 'cntBytes' from the socket and saves them to the memory 
+         * designated by 'outData'. 'outData' must be large enough to receive at
+         * least 'cntBytes'. 
+         *
+         * This is a blocking call!
+         *
+         * @param outData      The buffer to receive the data. The caller must
+         *                     allocate this memory and remains owner.
+         * @param cntBytes     The number of bytes to receive.
+         * @param flags        The flags that specify the way in which the call 
+         *                     is made.
+         * @param forceReceive If this flag is set, the method will not return
+         *                     until 'cntBytes' have been read.
+         *
+         * @return The number of bytes actually received.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        SIZE_T receive(void *outData, const SIZE_T cntBytes, const INT flags,
+            const bool forceReceive);
+
+        /**
+         * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
+         * 'outData' must be large enough to receive at least 'cntBytes'. 
+         *
+         * This is a blocking call!
+         *
+         * @param outFromAddr  The socket address the datagram was received 
+         *                     from. This variable is only valid upon successful
+         *                     return from the method.
+         * @param outData      The buffer to receive the data. The caller must
+         *                     allocate this memory and remains owner.
+         * @param cntBytes     The number of bytes to receive.
+         * @param flags        The flags that specify the way in which the call 
+         *                     is made.
+         * @param forceReceive If this flag is set, the method will not return
+         *                     until 'cntBytes' have been read.
+         *
+         * @return The number of bytes actually received.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        SIZE_T receiveFrom(SocketAddress& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT flags, const bool forceReceive);
+
+        /**
+         * Send 'cntBytes' from the location designated by 'data' using this 
+         * socket.
+         *
+         * This is a blocking call
+         *
+         * @param data      The data to be sent. The caller remains owner of the
+         *                  memory.
+         * @param cntBytes  The number of bytes to be sent. 'data' must contain
+         *                  at least this number of bytes.
+         * @param flags     The flags that specify the way in which the call is 
+         *                  made.
+         * @param forceSend If this flag is set, the method will not return 
+         *                  until 'cntBytes' have been sent.
+         *
+         * @return The number of bytes acutally sent.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        SIZE_T send(const void *data, const SIZE_T cntBytes, 
+            const INT flags = 0, const bool forceSend = false);
+
+        /**
+         * Send a datagram of 'cntBytes' bytes from the location designated by 
+         * 'data' using this socket to the socket 'toAddr'.
+         *
+         * This is a blocking call!
+         *
+         * @param toAddr    Socket address of the destination host.
+         * @param data      The data to be sent. The caller remains owner of the
+         *                  memory.
+         * @param cntBytes  The number of bytes to be sent. 'data' must contain
+         *                  at least this number of bytes.
+         * @param flags     The flags that specify the way in which the call is 
+         *                  made.
+         * @param forceSend If this flag is set, the method will not return 
+         *                  until 'cntBytes' have been sent.
+         *
+         * @return The number of bytes acutally sent.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        SIZE_T sendTo(const SocketAddress& toAddr, const void *data, 
+            const SIZE_T cntBytes, const INT flags, const bool forceSend);
 
         /**
          * Set a boolean socket option.
