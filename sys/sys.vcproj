@@ -274,6 +274,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AutoLock.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\BufferedFile.cpp"
 				>
 			</File>
@@ -327,6 +331,10 @@
 			</File>
 			<File
 				RelativePath=".\src\IOException.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\LamportClock.cpp"
 				>
 			</File>
 			<File
@@ -400,6 +408,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\vislib\AutoLock.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\BufferedFile.h"
 				>
 			</File>
@@ -457,6 +469,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\IOException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\LamportClock.h"
 				>
 			</File>
 			<File
