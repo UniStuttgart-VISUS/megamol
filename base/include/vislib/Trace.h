@@ -87,6 +87,20 @@ namespace vislib {
         ~Trace(void);
 
         /**
+         * Enables the output of the tracer messages to the application or 
+         * system debugger, i. e. to the Output window of Visual Studio.
+         *
+         * This setting has currently no effect on non-Windows systems.
+         *
+         * @param useDebugger true for enabling the debugger output, false for
+         *                    disabling it.
+         *
+         * @return true, if the debugger output was successfully enabled or
+         *         disabled, false otherwise.
+         */
+        bool EnableDebuggerOutput(const bool useDebugger);
+
+        /**
          * Enables the output of the tracer messages to the file with the 
          * specified name. 
          *
@@ -196,6 +210,9 @@ namespace vislib {
 
 		/** The current trace level. */
 		UINT level;
+
+        /** The the debugger API for writing strings. */
+        bool useDebugger;
 
 	};
 

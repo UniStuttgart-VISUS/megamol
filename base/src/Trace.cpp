@@ -9,6 +9,7 @@
 
 #include <climits>
 #include <ctime>
+#include <stdexcept>
 
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
@@ -88,6 +89,15 @@ vislib::Trace::~Trace(void) {
         ::fclose(this->fp);
         this->fp = NULL;
     }
+}
+
+
+/*
+ * vislib::Trace::EnableDebuggerOutput
+ */
+bool vislib::Trace::EnableDebuggerOutput(const bool useDebugger) {
+    this->useDebugger = useDebugger;
+    return true;
 }
 
 
@@ -230,6 +240,27 @@ void vislib::Trace::trace(const UINT level, const char *fmt, va_list list) {
             ::vfprintf(this->fp, fmt, list);
             ::fflush(this->fp);
         }
+
+#ifdef _WIN32
+        if (this->useDebugger) {
+            try {
+                int cnt = ::_vscprintf(fmt, list) + 1;
+                char *tmp = new char[cnt];
+#if 0 || (_MSC_VER >= 1400)
+                ::_vsnprintf_s(tmp, cnt, cnt, fmt, list);
+#else /* (_MSC_VER >= 1400) */
+                ::vsnprintf(tmp, cnt, fmt, list);
+#endif /* (_MSC_VER >= 1400) */
+                
+                ::OutputDebugStringA(tmp);
+                ARY_SAFE_DELETE(tmp);
+            } catch (std::bad_alloc) {
+                ::fprintf(stderr, "OutputDebugStringA failed because of "
+                    "insufficient system memory\n");
+		        ::fflush(stderr);
+            }
+        }
+#endif /* _WIN32 */
 	}
 }
 
