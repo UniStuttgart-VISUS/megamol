@@ -79,4 +79,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_AUTOLOCK_H_INCLUDED */
-

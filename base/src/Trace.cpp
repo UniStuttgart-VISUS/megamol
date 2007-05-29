@@ -208,7 +208,7 @@ vislib::Trace vislib::Trace::instance;
  * vislib::Trace::Trace
  */
 vislib::Trace::Trace(void) : filename(NULL), fp(NULL), prefix(NULL), 
-		level(LEVEL_ERROR) {
+        level(LEVEL_ERROR), useDebugger(true) {
 #if defined(DEBUG) || defined(_DEBUG)
     this->level = LEVEL_ALL;
 #endif /* defined(DEBUG) || defined(_DEBUG) */
