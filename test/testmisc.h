@@ -14,7 +14,7 @@
  * Test functions for less automated tests of smaller vislib functions 
  */
 
-void TestConsoleColors(void);
+void TestConsoleColours(void);
 
 void TestColumnFormatter(void);
 

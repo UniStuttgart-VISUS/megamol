@@ -84,6 +84,12 @@ void AssertOutputFail(void) {
 void OutputAssertTestSummary(void) {
     std::cout << std::endl << "Assert Test Summary:" << std::endl;
     unsigned int testAll = testhelp_testFail + testhelp_testSuccess;
+
+    if (testAll == 0) {
+        std::cout << "  No Test conducted." << std::endl << std::endl;
+        return;
+    }
+
     double persFail = double(testhelp_testFail) / double(testAll) * 100.0;
     double persSuccess = double(testhelp_testSuccess) / double(testAll) * 100.0;
     std::cout << "  " << testAll << " Assert Tests." << std::endl;

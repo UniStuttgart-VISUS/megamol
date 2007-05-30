@@ -40,6 +40,11 @@ namespace graphics {
         class Observer {
         public:
 
+#ifndef _WIN32
+            /** dtor */
+            virtual ~Observer(void) { /* just to make stupid gcc 4 happy */ }
+#endif /* !_WIN32 */
+
             /** 
              * called when the state of a modifier changed. The modifiers state
              * is always true, so the observers are informed on press event 

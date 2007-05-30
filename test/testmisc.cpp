@@ -34,7 +34,7 @@ typedef wchar_t CFChar;
 
 #endif // USE_UNICODE_COLUMNFORMATTER
 
-void TestConsoleColors(void) {
+void TestConsoleColours(void) {
     bool hc = vislib::sys::Console::ColorsAvailable();
     printf("Console has %scolors\n", hc ? "" : "no ");
     if (!hc) return;
