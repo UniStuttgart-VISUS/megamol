@@ -12,3 +12,5 @@ Sebastian: Screensaver/Powermanagement verhindern
 Sebastian: OmniString-Fassaden-Klasse die jeden Stringtyp enthalten kann. (Darüber nachdenken!)
 Sebastian: Ein besseres Framework für die Tests (Z.B.: Auswählen der Tests über die Kommandozeile)
 Sebastian: glh/extgen.cpp (und Co.) so aufbohren, dass noch ein C++-Kompatibler Header erzeugt wird. (z.B. .hpp)
+Christoph: Hashes
+Guido: Plattformunabhängiges Preloading
