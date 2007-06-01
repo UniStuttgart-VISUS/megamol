@@ -60,6 +60,16 @@ namespace graphics {
         vislib::graphics::SceneSpaceType GetMinDist(void);
 
         /**
+         * Answers the scaling factor from the mouse movement to the 
+         * coordinates translation.
+         *
+         * @return The scaling factor.
+         */
+        inline float GetSpeedScaling(void) const {
+            return this->scale;
+        }
+
+        /**
          * Setter for the minimal distance to be set for the beholder.
          *
          * @param dist The minimal distance.
@@ -67,6 +77,14 @@ namespace graphics {
          * @throws IllegalParamException if dist is less or equal zero.
          */
         void SetMinDist(vislib::graphics::SceneSpaceType dist);
+
+        /**
+         * Sets a new scaling factor from the mouse movement to the coordinates
+         * translation.
+         *
+         * @param speed The new scaling factor.
+         */
+        void SetSpeedScaling(float speed);
 
     private:
 
@@ -78,6 +96,9 @@ namespace graphics {
          * at point 
          */
         vislib::graphics::SceneSpaceType squareMinDist;
+
+        /** The scaling speed */
+        float scale;
 
     };
     

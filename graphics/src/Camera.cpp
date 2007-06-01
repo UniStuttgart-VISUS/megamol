@@ -56,12 +56,16 @@ vislib::graphics::Camera::~Camera(void) {
 void vislib::graphics::Camera::CalcClipDistances(
         const vislib::math::Cuboid<SceneSpaceType> &box,
         SceneSpaceType minNear, SceneSpaceType maxFar) {
-    if (this->beholder == NULL) return;
-    vislib::math::Point<FLOAT, 3> camPos = this->beholder->GetPosition();
-    vislib::math::Vector<FLOAT, 3> front = this->beholder->GetFrontVector();
-    vislib::math::Vector<FLOAT, 3> tmp;
-    FLOAT dist;
 
+    if (this->beholder == NULL) return;
+
+    // get important beholder vectors
+    vislib::math::Point<vislib::graphics::SceneSpaceType, 3> camPos = this->beholder->GetPosition();
+    vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> front = this->beholder->GetFrontVector();
+    vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> tmp;
+    vislib::graphics::SceneSpaceType dist;
+
+    // calculate depth of all 8 edges
     tmp = box.GetLeftBottomBack() - camPos;
     dist = tmp.Dot(front);
     this->farClip = this->nearClip = dist;
@@ -101,9 +105,17 @@ void vislib::graphics::Camera::CalcClipDistances(
     if (dist < this->nearClip) this->nearClip = dist;
     if (dist > this->farClip) this->farClip = dist;
 
+    // add some epsilon because we want the bounding box to be visible all time.
+    dist = this->farClip - this->nearClip;
+    dist *= 0.001f;
+    this->nearClip -= dist;
+    this->farClip += dist;
+
+    // clamp the distances
     if (this->nearClip < minNear) this->nearClip = minNear;
     if (this->farClip > maxFar) this->farClip = maxFar;
 
+    // indicate that something changed
     this->membersChanged = true;
 }
 

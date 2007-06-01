@@ -18,7 +18,7 @@
  * vislib::graphics::BeholderDistZoom2D::BeholderDistZoom2D
  */
 vislib::graphics::BeholderDistZoom2D::BeholderDistZoom2D(void) 
-        : AbstractCursor2DEvent(), AbstractBeholderController(), drag(false), squareMinDist(1.0f) {
+        : AbstractCursor2DEvent(), AbstractBeholderController(), drag(false), squareMinDist(1.0f), scale(1.0f) {
 }
 
 
@@ -48,8 +48,7 @@ void vislib::graphics::BeholderDistZoom2D::Trigger(AbstractCursor *caller, Trigg
 
             float delta = (cursor->PreviousY() - cursor->Y()) / cursor->GetCamera()->GetVirtualHeight();
 
-            // TODO: Parameter!
-            delta *= 10.0f; /* magic scaling value */
+            delta *= scale;
 
             vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> deltaV = beholder->GetFrontVector() * delta;
             vislib::math::Point<vislib::graphics::SceneSpaceType, 3> nPos = beholder->GetPosition() + deltaV;
@@ -57,19 +56,6 @@ void vislib::graphics::BeholderDistZoom2D::Trigger(AbstractCursor *caller, Trigg
             if ((nPos - beholder->GetLookAt()).SquareLength() >= this->squareMinDist) {
                 beholder->SetPosition(nPos);
             }
-
-            // TODO: Implement
-
-            /*
-            vislib::math::AngleDeg a = 
-                ((cursor->PreviousY() - cursor->Y()) / cam->GetVirtualHeight() * (this->maxAngle - this->minAngle))
-                + cam->GetApertureAngle();
-
-            if (a < this->minAngle) a = this->minAngle;
-            if (a > this->maxAngle) a = this->maxAngle;
-
-            cam->SetApertureAngle(a);
-            */
         }
     } else if (reason == REASON_BUTTON_UP) {
         this->drag = false;
@@ -93,4 +79,15 @@ void vislib::graphics::BeholderDistZoom2D::SetMinDist(vislib::graphics::SceneSpa
         throw IllegalParamException("dist", __FILE__, __LINE__);
     }
     this->squareMinDist = dist * dist;
+}
+
+
+/*
+ * vislib::graphics::BeholderDistZoom2D::SetSpeedScaling
+ */
+void vislib::graphics::BeholderDistZoom2D::SetSpeedScaling(float speed) {
+    if (speed <= 0.0f) {
+        throw IllegalParamException("speed", __FILE__, __LINE__);
+    }
+    this->scale = speed;
 }
