@@ -22,16 +22,16 @@
 
 
 /*
- * vislib::sys::LinuxDaemon::~LinuxDaemon
+ * vislib::sys::LinuxDaemon<T>::~LinuxDaemon
  */
-vislib::sys::LinuxDaemon::~LinuxDaemon(void) {
+template<class T> vislib::sys::LinuxDaemon<T>::~LinuxDaemon(void) {
 }
 
 
 /*
- * vislib::sys::LinuxDaemon::Run
+ * vislib::sys::LinuxDaemon<T>::Run
  */
-bool vislib::sys::LinuxDaemon::Run(void) {
+template<class T> bool vislib::sys::LinuxDaemon<T>::Run(void) {
     pid_t pid;                  // The process ID of the daemon process.
     pid_t sid;                  // The session ID of the daemon process.
         
@@ -79,9 +79,9 @@ bool vislib::sys::LinuxDaemon::Run(void) {
 
 
 /*
- * vislib::sys::LinuxDaemon::LinuxDaemon
+ * vislib::sys::LinuxDaemon<T>::LinuxDaemon
  */
-vislib::sys::LinuxDaemon::LinuxDaemon(void) {
+template<class T> vislib::sys::LinuxDaemon<T>::LinuxDaemon(void) {
 }
 
 #endif /* !_WIN32 */
