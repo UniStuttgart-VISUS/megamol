@@ -33,7 +33,7 @@ namespace vislib {
         HashAlgorithm(void);
 
         /** Dtor. */
-        ~HashAlgorithm(void);
+        virtual ~HashAlgorithm(void);
 
         /**
          * Answer the hash value until now.

@@ -35,7 +35,7 @@ namespace vislib {
         MD5HashProvider(void);
 
         /** Dtor. */
-        ~MD5HashProvider(void);
+        virtual ~MD5HashProvider(void);
 
         /**
          * Answer the hash value until now.
