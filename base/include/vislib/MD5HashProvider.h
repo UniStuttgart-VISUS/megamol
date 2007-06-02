@@ -164,11 +164,11 @@ namespace vislib {
         /** The final hash after the final block was transformed. */
         BYTE hash[HASH_SIZE];
 
-        /** Determines whether the hash has been initialised. */
-        bool isInitialised;
-
         /** Determines whether the final block has been transformed. */
         bool isFinalised;
+
+        /** Determines whether the hash has been initialised. */
+        bool isInitialised;
 
     };
     
