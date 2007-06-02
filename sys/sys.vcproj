@@ -338,6 +338,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\LinuxDaemon.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Log.cpp"
 				>
 			</File>
@@ -473,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\LamportClock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\LinuxDaemon.h"
 				>
 			</File>
 			<File

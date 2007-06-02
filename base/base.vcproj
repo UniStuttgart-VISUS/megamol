@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\HashAlgorithm.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Heap.cpp"
 				>
 			</File>
@@ -315,6 +319,10 @@
 			</File>
 			<File
 				RelativePath=".\src\Iterator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MD5HashProvider.cpp"
 				>
 			</File>
 			<File
@@ -428,6 +436,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\HashAlgorithm.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\Heap.h"
 				>
 			</File>
@@ -441,6 +453,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Iterator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\MD5HashProvider.h"
 				>
 			</File>
 			<File

@@ -454,6 +454,7 @@ void TestNetworkInformation(void) {
 
 void TestTrace(void) {
     vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
+    vislib::Trace::GetInstance().EnableDebuggerOutput(true);
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
     TRACE(1, "HORST!\n");
 }

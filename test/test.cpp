@@ -31,6 +31,8 @@
 #include "testdiscovery.h"
 #include "testthelog.h"
 #include "testdirectoryiterator.h"
+#include "testhash.h"
+
 
 /* type for test functions */
 typedef void (*VislibTestFunction)(void);
@@ -53,6 +55,8 @@ VislibTest tests[] = {
     {_T("ColumnFormatter"), ::TestColumnFormatter, "Tests vislib::ColumnFormatter"},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
+    {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
+    {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("Float16"), ::TestFloat16, "Tests vislib::math::Float16"},
@@ -65,7 +69,7 @@ VislibTest tests[] = {
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
-    {_T("ConColors"), ::TestConsoleColors, "Tests colored console output using vislib::sys::Console"},
+    //{_T("ConColors"), ::TestConsoleColors, "Tests colored console output using vislib::sys::Console"},
     {_T("DateTime"), ::TestDateTime, "Tests vislib::sys::DateTime"},
     {_T("DirIterator"), ::TestDirectoryIterator, "Test vislib::sys::DirectoryIterator"},
     {_T("File"), ::TestFile, "Tests vislib::sys::File and derived classes"},

@@ -386,6 +386,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testhash.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testhelper.cpp"
 				>
 			</File>
@@ -469,6 +473,10 @@
 			</File>
 			<File
 				RelativePath=".\testfloat16.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testhash.h"
 				>
 			</File>
 			<File

@@ -58,6 +58,8 @@
  * Set 'size' bytes to zero beginning at 'ptr'.
  */
 #define ZeroMemory(ptr, size) memset((ptr), 0, (size))
+
+#define SecureZeroMemory ZeroMemory
 #endif /* !_WIN32 */
 
 #if defined(_WIN32) && defined(_MANAGED)
