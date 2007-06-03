@@ -294,7 +294,7 @@ void vislib::SHA1HashProvider::result(UINT8 *messageDigest,
         context->Computed = 1;
     }
 
-    for (int i = 0; i < SHA1HashProvider::HASH_SIZE; i++) {
+    for (UINT i = 0; i < SHA1HashProvider::HASH_SIZE; i++) {
         messageDigest[i] = context->Intermediate_Hash[i >> 2] >> 8 
             * (3 - (i & 0x03));
     }
