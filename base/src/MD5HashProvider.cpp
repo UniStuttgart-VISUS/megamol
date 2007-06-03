@@ -30,7 +30,7 @@
 #include "vislib/MD5HashProvider.h"
 
 #include "vislib/assert.h"
-#include "vislib/IllegalStateException.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
 
 
@@ -100,10 +100,8 @@ static const unsigned char PADDING[64] = {
 /*
  * vislib::MD5HashProvider::MD5HashProvider
  */
-vislib::MD5HashProvider::MD5HashProvider(void) 
-        : HashAlgorithm(), isFinalised(false), isInitialised(false) {
-    ::ZeroMemory(&this->context, sizeof(MD5_CTX));
-    ::ZeroMemory(this->hash, MD5HashProvider::HASH_SIZE);
+vislib::MD5HashProvider::MD5HashProvider(void) : HashAlgorithm() {
+    this->Initialise();
 }
 
 
@@ -112,32 +110,6 @@ vislib::MD5HashProvider::MD5HashProvider(void)
  */
 vislib::MD5HashProvider::~MD5HashProvider(void) {
     ::SecureZeroMemory(&this->context, sizeof(MD5_CTX));
-    ::SecureZeroMemory(this->hash, MD5HashProvider::HASH_SIZE);
-}
-
-
-/*
- * vislib::MD5HashProvider::GetHash
- */
-bool vislib::MD5HashProvider::GetHash(BYTE *outHash, SIZE_T& inOutSize) const {
-    bool retval = false;
-    
-    if ((outHash != NULL) && (inOutSize >= MD5HashProvider::HASH_SIZE)) {
-        if (this->isFinalised) {
-            /* Hash is already computed. */
-            ::memcpy(outHash, this->hash, MD5HashProvider::HASH_SIZE);
-
-        } else {
-            /* Finalise temporary solution. */
-            MD5_CTX tmpCtx = this->context;
-            MD5HashProvider::finalise(outHash, &tmpCtx);
-        }
-
-        retval = true;
-    }
-
-    inOutSize = MD5HashProvider::HASH_SIZE;
-    return retval;
 }
 
 
@@ -145,17 +117,13 @@ bool vislib::MD5HashProvider::GetHash(BYTE *outHash, SIZE_T& inOutSize) const {
  * vislib::MD5HashProvider::Initialise
  */
 void vislib::MD5HashProvider::Initialise(void) {
-  this->context.count[0] = context.count[1] = 0;
-  
-  /* Load magic initialization constants. */
-  this->context.state[0] = 0x67452301;
-  this->context.state[1] = 0xefcdab89;
-  this->context.state[2] = 0x98badcfe;
-  this->context.state[3] = 0x10325476;
+    this->context.count[0] = context.count[1] = 0;
 
-  ::SecureZeroMemory(this->hash, MD5HashProvider::HASH_SIZE);
-  this->isFinalised = false;
-  this->isInitialised = true;
+    /* Load magic initialization constants. */
+    this->context.state[0] = 0x67452301;
+    this->context.state[1] = 0xefcdab89;
+    this->context.state[2] = 0x98badcfe;
+    this->context.state[3] = 0x10325476;
 }
 
 
@@ -164,17 +132,9 @@ void vislib::MD5HashProvider::Initialise(void) {
  */
 void vislib::MD5HashProvider::TransformBlock(const BYTE *input, 
                                              const SIZE_T cntInput) {
-    if (this->isFinalised) {
-        throw IllegalStateException("MD5HashProvider::isFinalised", __FILE__, 
-            __LINE__);
-    }
+    // Must be initialised as the ctor does this.
 
-    if (!this->isInitialised) {
-        throw IllegalStateException("!MD5HashProvider::isFinalised", __FILE__, 
-            __LINE__);
-    }
-
-    if (input != NULL) {
+    if ((input != NULL) && (cntInput > 0)) {
         MD5HashProvider::update(&this->context, input, cntInput);
     }
 }
@@ -183,16 +143,22 @@ void vislib::MD5HashProvider::TransformBlock(const BYTE *input,
 /*
  * vislib::MD5HashProvider::TransformFinalBlock
  */
-void vislib::MD5HashProvider::TransformFinalBlock(const BYTE *input, 
-        const SIZE_T cntInput) {
+bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash, 
+        SIZE_T& inOutSize, const BYTE *input, const SIZE_T cntInput) {
+    MD5_CTX ctx = this->context;    // Local context to be finalised.
+    bool retval = false;            // Remember whether output was copied.
 
     /* Transform final block before finalising. */
     this->TransformBlock(input, cntInput);
-    ASSERT(!this->isFinalised); // Exception should have been thrown otherwise.
 
     /* Finalise and remember that already finalised. */
-    MD5HashProvider::finalise(this->hash, &this->context);
-    this->isFinalised = true;
+    if ((outHash != NULL) && (inOutSize >= MD5HashProvider::HASH_SIZE)) {
+        MD5HashProvider::finalise(outHash, &ctx);
+        retval = true;
+    }
+
+    inOutSize = MD5HashProvider::HASH_SIZE;
+    return retval;
 }
 
 
@@ -255,7 +221,7 @@ void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
 
     /* Store state in 'outHash'. */
     MD5HashProvider::encode(output, context->state, 
-        MD5HashProvider::HASH_SIZE);
+        static_cast<UINT>(MD5HashProvider::HASH_SIZE));
 
     /* Zeroize sensitive information. */
     ::SecureZeroMemory(context, sizeof(MD5_CTX));
@@ -391,4 +357,23 @@ void vislib::MD5HashProvider::update(MD5_CTX *context, const BYTE *input,
 
     /* Buffer remaining input */
     ::memcpy(&context->buffer[index], input + i, cntInput - i);
+}
+
+
+/*
+ * vislib::MD5HashProvider::HASH_SIZE 
+ */
+const SIZE_T vislib::MD5HashProvider::HASH_SIZE = 16;
+
+
+/*
+ * vislib::MD5HashProvider::operator =
+ */
+vislib::MD5HashProvider& vislib::MD5HashProvider::operator =(
+        const MD5HashProvider& rhs) {
+    if (this != &rhs) {
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
+    }
+
+    return *this;
 }

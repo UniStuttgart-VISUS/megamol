@@ -25,6 +25,56 @@ vislib::HashAlgorithm::~HashAlgorithm(void) {
 
 
 /*
+ * vislib::HashAlgorithm::ComputeHash
+ */
+bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+        const BYTE *input, const SIZE_T cntInput) {
+    this->Initialise();
+    return this->TransformFinalBlock(outHash, inOutSize, input, cntInput);
+}
+
+
+/*
+ * vislib::HashAlgorithm::ComputeHash
+ */
+bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+        const char *input) {
+    return this->ComputeHash(outHash, inOutSize, 
+        reinterpret_cast<const BYTE *>(input), ::strlen(input));
+}
+
+
+/*
+ * vislib::HashAlgorithm::ComputeHash
+ */
+bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+        const wchar_t *input) {
+    return this->ComputeHash(outHash, inOutSize, 
+        reinterpret_cast<const BYTE *>(input), 
+        ::wcslen(input) * sizeof(wchar_t));
+}
+
+
+/*
+ * vislib::HashAlgorithm::GetHashSize
+ */ 
+SIZE_T vislib::HashAlgorithm::GetHashSize(void) const {
+    SIZE_T retval;
+    const_cast<HashAlgorithm *>(this)->TransformFinalBlock(NULL, retval, NULL, 0);
+    return retval;
+}
+
+
+/*
+ * vislib::HashAlgorithm::GetHashValue
+ */
+bool vislib::HashAlgorithm::GetHashValue(BYTE *outHash, 
+                                         SIZE_T& inOutSize) const {
+    return const_cast<HashAlgorithm *>(this)->TransformFinalBlock(outHash, inOutSize, NULL, 0);
+}
+
+
+/*
  * vislib::HashAlgorithm::ToStringA
  */
 vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
@@ -35,9 +85,9 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
     StringA tmp(' ', 2);
 
     try {
-        this->GetHash(hash, hashSize);
+        this->GetHashValue(hash, hashSize);
         hash = new BYTE[hashSize];
-        this->GetHash(hash, hashSize);
+        this->GetHashValue(hash, hashSize);
 
         out = retval.AllocateBuffer(2 * static_cast<StringA::Size>(hashSize));
         ASSERT(out[2 * hashSize] == 0);
@@ -66,9 +116,9 @@ vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
     StringW tmp(L' ', 2);
 
     try {
-        this->GetHash(hash, hashSize);
+        this->GetHashValue(hash, hashSize);
         hash = new BYTE[hashSize];
-        this->GetHash(hash, hashSize);
+        this->GetHashValue(hash, hashSize);
 
         out = retval.AllocateBuffer(2 * static_cast<StringW::Size>(hashSize));
         ASSERT(out[2 * hashSize] == 0);
@@ -83,4 +133,20 @@ vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
 
     ARY_SAFE_DELETE(hash);
     return retval;
+}
+
+
+/*
+ * vislib::HashAlgorithm::HashAlgorithm
+ */
+vislib::HashAlgorithm::HashAlgorithm(const HashAlgorithm& rhs) {
+}
+
+
+/*
+ * vislib::HashAlgorithm::operator =
+ */
+vislib::HashAlgorithm& vislib::HashAlgorithm::operator =(
+        const HashAlgorithm& rhs) {
+    return *this;
 }

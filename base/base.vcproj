@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SHA1HashProvider.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SingleAllocator.cpp"
 				>
 			</File>
@@ -489,6 +493,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\RegEx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SHA1HashProvider.h"
 				>
 			</File>
 			<File

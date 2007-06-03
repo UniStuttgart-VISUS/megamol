@@ -22,7 +22,8 @@ namespace vislib {
 
 
     /**
-     * This class provides MD5 hashes as defined in RFC 1321.
+     * This class provides MD5 hashes as defined in RFC 1321. It produces a
+     * 128-bit fingerprint of the input.
      *
      * This code is derived from the RSA Data Security, Inc. MD5 
      * Message-Digest Algorithm.
@@ -31,32 +32,14 @@ namespace vislib {
 
     public:
 
-        /** Ctor. */
+        /** 
+         * Initialises the hash. It is not necessary to call Initialise before
+         * the first use.
+         */
         MD5HashProvider(void);
 
         /** Dtor. */
         virtual ~MD5HashProvider(void);
-
-        /**
-         * Answer the hash value until now.
-         *
-         * If the hash has not yet been finalised, it will be temporarily 
-         * finalised.
-         *
-         * @param outHash   Receives the hash.
-         * @param inOutSize Pass the size of 'outHash' in this variable. After
-         *                  the method returns, the actual size of the has
-         *                  has been written to this variable, regardless 
-         *                  whether the hash has been written to 'outHash'.
-         *
-         * @return true, if the hash was completely returned to 'outHash', 
-         *         false, if 'outHash' was too small, but the hash could be 
-         *         retrieved in principle. 'inOutSize' is set to the required
-         *         size of 'outHash' in the latter case.
-         *
-         * @throws IllegalStateException If the hash has not been initialised.
-         */
-        virtual bool GetHash(BYTE *outHash, SIZE_T& inOutSize) const;
 
         /**
          * Initialise the hash. This method must be called before any other 
@@ -76,27 +59,30 @@ namespace vislib {
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
          *
-         * @throws IllegalStateException If the hash has not been initialised 
-         *                               or was already finalised.
+         * @throws IllegalStateException If the hash has not been initialised.
          */
         virtual void TransformBlock(const BYTE *input, const SIZE_T cntInput);
 
         /**
-         * Update the hash with a new block of 'cntInput' bytes and finalise
-         * it afterwards. No data can be added after the final block was
-         * transformed.
+         * Update the hash with a new block of 'cntInput' bytes and compute the
+         * hash value afterwards.
          *
          * It is safe to pass a NULL pointer as 'input'. In this case, the 
-         * hash is not updated, but nevertheless finalised.
+         * hash is not updated, but only its current value is returned. This
+         * call is equivalent to calling GetHashValue.
          *
-         * @param input    The data to be added to the hash.
-         * @param cntInput The number of bytes in 'input'.
+         * @param outHash   Receives the hash.
+         * @param inOutSize Pass the size of 'outHash' in this variable. After
+         *                  the method returns, the actual size of the has
+         *                  has been written to this variable, regardless 
+         *                  whether the hash has been written to 'outHash'.
+         * @param input     The data to be added to the hash.
+         * @param cntInput  The number of bytes in 'input'.
          *
-         * @throws IllegalStateException If the hash has not been initialised 
-         *                               or was already finalised.
+         * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual void TransformFinalBlock(const BYTE *input, 
-            const SIZE_T cntInput);
+        virtual bool TransformFinalBlock(BYTE *outHash, SIZE_T& inOutSize,
+            const BYTE *input, const SIZE_T cntInput);
 
     private:
 
@@ -156,20 +142,21 @@ namespace vislib {
             const SIZE_T cntInput);
 
         /** The size of the MD5 hash in bytes. */
-        static const SIZE_T HASH_SIZE = 16;
+        static const SIZE_T HASH_SIZE;
+
+        /**
+         * Forbidden assignemt operator.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this
+         *
+         * @throws IllegalParamException If this != &rhs.
+         */
+        MD5HashProvider& operator =(const MD5HashProvider& rhs);
 
         /** Context of the currently computed hash. */
         MD5_CTX context;
-
-        /** The final hash after the final block was transformed. */
-        BYTE hash[HASH_SIZE];
-
-        /** Determines whether the final block has been transformed. */
-        bool isFinalised;
-
-        /** Determines whether the hash has been initialised. */
-        bool isInitialised;
-
     };
     
 } /* end namespace vislib */

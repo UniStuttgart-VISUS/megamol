@@ -24,6 +24,11 @@ namespace vislib {
 
     /**
      * The base class all cryptographic hash algorithms are derived from.
+     *
+     * All subclasses must implement the initialisation, the transformation of
+     * a block and the transformation of the final block. This superclass 
+     * implements some convenience methods, which faciliate the use of the
+     * hash algorithms.
      */
     class HashAlgorithm {
 
@@ -36,10 +41,81 @@ namespace vislib {
         virtual ~HashAlgorithm(void);
 
         /**
-         * Answer the hash value until now.
+         * Computes the hash of 'input'. This is a convenience method that 
+         * performs an automatic reinitalisation of the hash. Using it is 
+         * equivalent to calling Initialise followed by TransformFinalBlock.
          *
-         * If the hash has not yet been finalised, it will be temporarily 
-         * finalised.
+         * @param outHash   Receives the hash.
+         * @param inOutSize Pass the size of 'outHash' in this variable. After
+         *                  the method returns, the actual size of the has
+         *                  has been written to this variable, regardless 
+         *                  whether the hash has been written to 'outHash'.
+         * @param input     The data to be added to the hash.
+         * @param cntInput  The number of bytes in 'input'.
+         *
+         * @return true, if the hash was completely returned to 'outHash', 
+         *         false, if 'outHash' was too small, but the hash could be 
+         *         retrieved in principle. 'inOutSize' is set to the required
+         *         size of 'outHash' in the latter case.
+         */
+        bool ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+            const BYTE *input, const SIZE_T cntInput);
+
+        /**
+         * Computes the hash of the zero-terminated string 'input'. This is 
+         * a convenience method that performs an automatic reinitalisation of 
+         * the hash. Using it is equivalent to calling Initialise followed by 
+         * TransformFinalBlock with the length of 'input' as size parameter for
+         * the input length.
+         *
+         * @param outHash   Receives the hash.
+         * @param inOutSize Pass the size of 'outHash' in this variable. After
+         *                  the method returns, the actual size of the has
+         *                  has been written to this variable, regardless 
+         *                  whether the hash has been written to 'outHash'.
+         * @param input     The data to be added to the hash.
+         * @param cntInput  The number of bytes in 'input'.
+         *
+         * @return true, if the hash was completely returned to 'outHash', 
+         *         false, if 'outHash' was too small, but the hash could be 
+         *         retrieved in principle. 'inOutSize' is set to the required
+         *         size of 'outHash' in the latter case.
+         */
+        bool ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+            const char *input);
+
+        /**
+         * Computes the hash of the zero-terminated string 'input'. This is 
+         * a convenience method that performs an automatic reinitalisation of 
+         * the hash. Using it is equivalent to calling Initialise followed by 
+         * TransformFinalBlock with the length of 'input' as size parameter for
+         * the input length.
+         *
+         * @param outHash   Receives the hash.
+         * @param inOutSize Pass the size of 'outHash' in this variable. After
+         *                  the method returns, the actual size of the has
+         *                  has been written to this variable, regardless 
+         *                  whether the hash has been written to 'outHash'.
+         * @param input     The data to be added to the hash.
+         * @param cntInput  The number of bytes in 'input'.
+         *
+         * @return true, if the hash was completely returned to 'outHash', 
+         *         false, if 'outHash' was too small, but the hash could be 
+         *         retrieved in principle. 'inOutSize' is set to the required
+         *         size of 'outHash' in the latter case.
+         */
+        bool ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+            const wchar_t *input);
+
+        /**
+         * Answer the size of the hash value in bytes.
+         *
+         * @return The size of the hash in bytes.
+         */
+        SIZE_T GetHashSize(void) const;
+
+        /**
+         * Answer the hash value until now.
          *
          * @param outHash   Receives the hash.
          * @param inOutSize Pass the size of 'outHash' in this variable. After
@@ -51,10 +127,8 @@ namespace vislib {
          *         false, if 'outHash' was too small, but the hash could be 
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
-         *
-         * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual bool GetHash(BYTE *outHash, SIZE_T& inOutSize) const = 0;
+        bool GetHashValue(BYTE *outHash, SIZE_T& inOutSize) const;
 
         /**
          * Initialise the hash. This method must be called before any other 
@@ -73,29 +147,28 @@ namespace vislib {
          *
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
-         *
-         * @throws IllegalStateException If the hash has not been initialised 
-         *                               or was already finalised.
          */
         virtual void TransformBlock(const BYTE *input, 
             const SIZE_T cntInput) = 0;
 
         /**
-         * Update the hash with a new block of 'cntInput' bytes and finalise
-         * it afterwards. No data can be added after the final block was
-         * transformed.
+         * Update the hash with a new block of 'cntInput' bytes and compute the
+         * hash value afterwards.
          *
          * It is safe to pass a NULL pointer as 'input'. In this case, the 
-         * hash is not updated, but nevertheless finalised.
+         * hash is not updated, but only its current value is returned. This
+         * call is equivalent to calling GetHashValue.
          *
-         * @param input    The data to be added to the hash.
-         * @param cntInput The number of bytes in 'input'.
-         *
-         * @throws IllegalStateException If the hash has not been initialised 
-         *                               or was already finalised.
+         * @param outHash   Receives the hash.
+         * @param inOutSize Pass the size of 'outHash' in this variable. After
+         *                  the method returns, the actual size of the has
+         *                  has been written to this variable, regardless 
+         *                  whether the hash has been written to 'outHash'.
+         * @param input     The data to be added to the hash.
+         * @param cntInput  The number of bytes in 'input'.
          */
-        virtual void TransformFinalBlock(const BYTE *input, 
-            const SIZE_T cntInput) = 0;
+        virtual bool TransformFinalBlock(BYTE *outHash, SIZE_T& inOutSize, 
+            const BYTE *input, const SIZE_T cntInput) = 0;
 
         /**
          * Answer a hexadecimal string representation of the hash.
@@ -110,6 +183,25 @@ namespace vislib {
          * @return The hash as string.
          */
         virtual StringW ToStringW(void) const;
+
+    protected:
+
+        /**
+         * Copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         */
+        HashAlgorithm(const HashAlgorithm& rhs);
+
+        /**
+         * Assignment operator.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        HashAlgorithm& operator =(const HashAlgorithm& rhs);
+
     };
     
 } /* end namespace vislib */
