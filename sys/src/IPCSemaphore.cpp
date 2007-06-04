@@ -7,12 +7,15 @@
 
 #include "vislib/IPCSemaphore.h"
 
+
+#ifndef _WIN32
+
+#include <sys/types.h>
+
 #include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/SystemException.h"
 
-
-#ifndef _WIN32
 
 /*
  * vislib::sys::IPCSemaphore::IPCSemaphore
@@ -133,7 +136,7 @@ void vislib::sys::IPCSemaphore::init(const char name, const long initialCount,
     if ((this->id = ::semget(key, MEMBER_IDX, DFT_PERMS)) == -1) {
         /* Semaphore does not exist, create a new one. */   
 
-        this->id = ::semget(key, 1, IPC_CREAT | IPC_EXCL | DFT_PERMS));
+        this->id = ::semget(key, 1, IPC_CREAT | IPC_EXCL | DFT_PERMS);
         ASSERT(this->id != -1); // TODO: Throw exception here?
 
         /* Set initial count. */
