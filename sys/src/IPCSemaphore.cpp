@@ -7,6 +7,7 @@
 
 #include "vislib/IPCSemaphore.h"
 
+#include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/SystemException.h"
 
@@ -84,10 +85,11 @@ bool vislib::sys::IPCSemaphore::TryLock(void) {
 void vislib::sys::IPCSemaphore::Unlock(void) {
     struct sembuf unlock = { MEMBER_IDX, 1, IPC_NOWAIT };
 
-    if (this->getCount() == SEM_RESOURCE_MAX) {
-        /* Semaphore is not locked. */
-        return;
-    }
+    // TODO
+    //if (this->getCount() == SEM_RESOURCE_MAX) {
+    //    /* Semaphore is not locked. */
+    //    return;
+    //}
 
     unlock.sem_num = MEMBER_IDX;
 
@@ -124,7 +126,7 @@ int vislib::sys::IPCSemaphore::getCount(void) {
 void vislib::sys::IPCSemaphore::init(const char name, const long initialCount,
           const long maxCount) {
     // TODO maxCount is not handled!
-    key_t key = ::ftok(".", name[0]);   // TODO: Ist das sinnvoll? Eher nicht ...
+    key_t key = ::ftok(".", name);   // TODO: Ist das sinnvoll? Eher nicht ...
     union semun options;
 
     /* Try to open existing semaphore. */
