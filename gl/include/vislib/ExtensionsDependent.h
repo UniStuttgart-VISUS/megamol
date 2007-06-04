@@ -22,6 +22,8 @@
 #if (_MSC_VER > 1000)
 #pragma warning(default: 4996)
 #endif /* (_MSC_VER > 1000) */
+#include "vislib/String.h"
+#include "vislib/StringTokeniser.h"
 
 
 namespace vislib {
@@ -55,6 +57,14 @@ namespace gl {
          *         false otherwise.
          */
         static bool InitialiseExtensions(void);
+    
+        /**
+         * Answers whether the required extensions are available.
+         *
+         * @return True if all required extensions are available and 
+         *         initialisation should be successful, false otherwise.
+         */
+        static bool AreExtensionsAvailable(void);
 
     protected:
 
@@ -70,6 +80,24 @@ namespace gl {
      */
     template<class T> bool ExtensionsDependent<T>::InitialiseExtensions(void) {
         return (::glh_init_extensions(T::RequiredExtensions()) != 0);
+    }
+
+
+    /*
+     * ExtensionsDependent::InitialiseExtensions
+     */
+    template<class T> bool ExtensionsDependent<T>::AreExtensionsAvailable(void) {
+        // check required extensions individually
+        StringTokeniserA extensions(T::RequiredExtensions(), ' ');
+        while (extensions.HasNext()) {
+            StringA str = extensions.Next();
+            str.TrimSpaces();
+            if (str.IsEmpty()) continue;
+            if (glh_extension_supported(str.PeekBuffer()) == 0) {
+                return false; // this extension is missing
+            }
+        }
+        return true; // no extension was missing
     }
     
 } /* end namespace gl */

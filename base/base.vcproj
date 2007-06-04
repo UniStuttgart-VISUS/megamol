@@ -382,6 +382,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\StringTokeniser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Trace.cpp"
 				>
 			</File>
@@ -521,6 +525,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\StringConverter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\StringTokeniser.h"
 				>
 			</File>
 			<File

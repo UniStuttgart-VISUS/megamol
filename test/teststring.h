@@ -18,4 +18,6 @@ void TestStringW(void);
 
 void TestUTF8String(void);
 
+void TestStringTokeniser(void);
+
 #endif /* VISLIBTEST_TESTSTRING_H_INCLUDED */

@@ -11,6 +11,7 @@
 #include "vislib/CharTraits.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/StringConverter.h"
+#include "vislib/StringTokeniser.h"
 
 
 void TestString(void) {
@@ -44,6 +45,8 @@ void TestString(void) {
 	AssertEqual("ANSI to wide character conversion.", wc, L'ö');
 
     TestUTF8String();
+
+    TestStringTokeniser();
 
 }
 
@@ -470,5 +473,45 @@ void TestUTF8String(void) {
 
     AssertTrue("Decode", vislib::UTF8Encoder::Decode(strW, utf8));
     AssertEqual("decoding of UTF8 \"äöüÄÖÜß\" to unicode correct.", strW, L"äöüÄÖÜß");
+
+}
+
+
+/*
+ * TestStringTokeniser
+ */
+void TestStringTokeniser(void) {
+    printf("Testing StringTokeniser:\n");
+    
+    vislib::StringTokeniserA tokeniser("This is  a Test", " ");
+    if (!AssertTrue("Tokeniser HasNext", tokeniser.HasNext())) return;
+    AssertEqual("Token correct", tokeniser.Next(), "This");
+    if (!AssertTrue("Tokeniser HasNext", tokeniser.HasNext())) return;
+    AssertEqual("Token correct", tokeniser.Next(), "is");
+    if (!AssertTrue("Tokeniser HasNext", tokeniser.HasNext())) return;
+    AssertEqual("Token correct", tokeniser.Next(), "");
+    if (!AssertTrue("Tokeniser HasNext", tokeniser.HasNext())) return;
+    AssertEqual("Token correct", tokeniser.Next(), "a");
+    if (!AssertTrue("Tokeniser HasNext", tokeniser.HasNext())) return;
+    AssertEqual("Token correct", tokeniser.Next(), "Test");
+    if (!AssertFalse("Tokeniser HasNext NOT", tokeniser.HasNext())) return;
+
+    vislib::StringTokeniserA t1("ThisBLAHisBLAHaBLAHsecondBLAHTest", "BLAH");
+    if (!AssertTrue("Tokeniser HasNext", t1.HasNext())) return;
+    AssertEqual("Token correct", t1.Next(), "This");
+    if (!AssertTrue("Tokeniser HasNext", t1.HasNext())) return;
+    AssertEqual("Token correct", t1.Next(), "is");
+    if (!AssertTrue("Tokeniser HasNext", t1.HasNext())) return;
+    AssertEqual("Token correct", t1.Next(), "a");
+    if (!AssertTrue("Tokeniser HasNext", t1.HasNext())) return;
+    AssertEqual("Token correct", t1.Next(), "second");
+    if (!AssertTrue("Tokeniser HasNext", t1.HasNext())) return;
+    AssertEqual("Token correct", t1.Next(), "Test");
+    if (!AssertFalse("Tokeniser HasNext NOT", t1.HasNext())) return;
+
+    vislib::StringTokeniserA t2("Test with no match a all", "Hugo");
+    if (!AssertTrue("Tokeniser HasNext", t2.HasNext())) return;
+    AssertEqual("Token correct", t2.Next(), "Test with no match a all");
+    if (!AssertFalse("Tokeniser HasNext NOT", t2.HasNext())) return;
 
 }
