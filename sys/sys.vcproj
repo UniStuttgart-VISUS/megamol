@@ -334,6 +334,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\IPCSemaphore.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\LamportClock.cpp"
 				>
 			</File>
@@ -473,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\IOException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\IPCSemaphore.h"
 				>
 			</File>
 			<File
