@@ -238,7 +238,7 @@ namespace vislib {
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
             const String<C>& input, const typename C::Char delimiter)
-            : input(input), delimiter(delimiter), inputPos(0) {
+            : input(input), delimiter(delimiter, 1), inputPos(0) {
         this->Reset();
     }
 
@@ -268,7 +268,7 @@ namespace vislib {
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
             const typename C::Char *input, const typename C::Char delimiter)
-            : input(input), delimiter(delimiter), inputPos(0) {
+            : input(input), delimiter(delimiter, 1), inputPos(0) {
         this->Reset();
     }
 
@@ -305,21 +305,6 @@ namespace vislib {
         this->inputPos = 0;
         this->prepareNextToken();
         this->inputPos = 0;
-    }
-
-
-    /*
-     * StringTokeniser<C>::prepareNextToken
-     */
-    template<class C> void StringTokeniser<C>::prepareNextToken(void) {
-        typename String<C>::Size pos = this->input.Find(this->delimiter, this->inputPos);
-        if (pos != String<C>::INVALID_POS) {
-            this->next = this->input.Substring(this->inputPos, pos - this->inputPos);
-            this->inputPos = pos + this->delimiter.Length();
-        } else {
-            this->next = this->input.Substring(this->inputPos);
-            this->inputPos = String<C>::INVALID_POS;
-        }
     }
 
 
@@ -366,7 +351,7 @@ namespace vislib {
      */
     template<class C> void StringTokeniser<C>::Set(const String<C>& input, const typename C::Char delimitor) {
         this->input = input;
-        this->delimitor = delimitor;
+        this->delimitor = String<C>(delimitor, 1);
         this->Reset();
     }
     
@@ -396,10 +381,25 @@ namespace vislib {
      */
     template<class C> void StringTokeniser<C>::Set(const typename C::Char* input, const typename C::Char delimitor) {
         this->input = input;
-        this->delimitor = delimitor;
+        this->delimitor = String<C>(delimitor, 1);
         this->Reset();
     }
-    
+
+
+    /*
+     * StringTokeniser<C>::prepareNextToken
+     */
+    template<class C> void StringTokeniser<C>::prepareNextToken(void) {
+        typename String<C>::Size pos = this->input.Find(this->delimiter, this->inputPos);
+        if (pos != String<C>::INVALID_POS) {
+            this->next = this->input.Substring(this->inputPos, pos - this->inputPos);
+            this->inputPos = pos + this->delimiter.Length();
+        } else {
+            this->next = this->input.Substring(this->inputPos);
+            this->inputPos = String<C>::INVALID_POS;
+        }
+    }
+
 
     /** Template instantiation for ANSI strings. */
     typedef StringTokeniser<CharTraitsA> StringTokeniserA;
