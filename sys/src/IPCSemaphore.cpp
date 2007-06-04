@@ -10,6 +10,7 @@
 
 #ifndef _WIN32
 
+#include <sys/ipc.h>
 #include <sys/types.h>
 
 #include "vislib/assert.h"
@@ -130,7 +131,7 @@ void vislib::sys::IPCSemaphore::init(const char name, const long initialCount,
           const long maxCount) {
     // TODO maxCount is not handled!
     key_t key = ::ftok(".", name);   // TODO: Ist das sinnvoll? Eher nicht ...
-    union semun options;
+    //union semun options;
 
     /* Try to open existing semaphore. */
     if ((this->id = ::semget(key, MEMBER_IDX, DFT_PERMS)) == -1) {
@@ -141,8 +142,8 @@ void vislib::sys::IPCSemaphore::init(const char name, const long initialCount,
 
         /* Set initial count. */
         if (this->id != -1) {
-            options.val = static_cast<int>(initialCount);
-            ::semctl(this->id, MEMBER_IDX, SETVAL, options);
+            //options.val = static_cast<int>(initialCount);
+            ::semctl(this->id, MEMBER_IDX, SETVAL, initialCount);
         }
     }
 }
