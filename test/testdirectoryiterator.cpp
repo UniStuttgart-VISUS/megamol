@@ -157,12 +157,12 @@ void TestDirectoryIterator(void) {
 
 	Array<StringW> wdirs;
 	Array<StringW> wfiles;
-	wdirs.Append(L"Überlevel0");
-	wdirs.Append(wdirs[0] + Path::SEPARATOR_W + L"Überlevel1");
-	wdirs.Append(wdirs[1] + Path::SEPARATOR_W + L"Überlevel2");
-	wfiles.Append(wdirs[0] + Path::SEPARATOR_W + L"Überlevel0.0");
-	wfiles.Append(wdirs[0] + Path::SEPARATOR_W + L"Überlevel0.1");
-	wfiles.Append(wdirs[2] + Path::SEPARATOR_W + L"Überlevel2.0");
+	wdirs.Append(L"Ãœberlevel0");
+	wdirs.Append(wdirs[0] + Path::SEPARATOR_W + L"Ãœberlevel1");
+	wdirs.Append(wdirs[1] + Path::SEPARATOR_W + L"Ãœberlevel2");
+	wfiles.Append(wdirs[0] + Path::SEPARATOR_W + L"Ãœberlevel0.0");
+	wfiles.Append(wdirs[0] + Path::SEPARATOR_W + L"Ãœberlevel0.1");
+	wfiles.Append(wdirs[2] + Path::SEPARATOR_W + L"Ãœberlevel2.0");
 
 	::TestDirectoryIteratorW(wdirs, wfiles);
 }
