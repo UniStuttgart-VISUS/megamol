@@ -231,6 +231,22 @@ void TestStringA(void) {
     AssertTrue("Load string from resource", !::strcmp(s1.PeekBuffer(), "Das ist ein Test."));
 #endif /* _WIN32 */
 
+    s1 = "Horst Horst";
+    s1.Replace("orst", "ugo", 1);
+    AssertTrue("Limited string replace", !::strcmp(s1.PeekBuffer(), "Hugo Horst"));
+
+    s1 = "Horst Horst";
+    s1.Replace("orst", "ugo", StringA::NO_LIMIT);
+    AssertTrue("Unlimited string replace", !::strcmp(s1.PeekBuffer(), "Hugo Hugo"));
+
+    s1 = "Horst Horst";
+    s1.Replace('o', 'i', 1);
+    AssertTrue("Limited char replace", !::strcmp(s1.PeekBuffer(), "Hirst Horst"));
+
+    s1 = "Horst Horst";
+    s1.Replace('o', 'i', StringA::NO_LIMIT);
+    AssertTrue("Unlimited char replace", !::strcmp(s1.PeekBuffer(), "Hirst Hirst"));
+
 }
 
 void TestStringW(void) {
@@ -412,6 +428,28 @@ void TestStringW(void) {
     s1 = L"Horst";
     s1.Clear();
     AssertTrue("Cleared string is emtpy", s1.IsEmpty());
+
+#ifdef _WIN32
+    AssertTrue("Resource found.", s1.Load(101));
+    AssertTrue("Load string from resource", !::wcscmp(s1.PeekBuffer(), L"Das ist ein Test."));
+#endif /* _WIN32 */
+
+    s1 = L"Horst Horst";
+    s1.Replace(L"orst", L"ugo", 1);
+    AssertTrue("Limited string replace", !::wcscmp(s1.PeekBuffer(), L"Hugo Horst"));
+
+    s1 = L"Horst Horst";
+    s1.Replace(L"orst", L"ugo", StringW::NO_LIMIT);
+    AssertTrue("Unlimited string replace", !::wcscmp(s1.PeekBuffer(), L"Hugo Hugo"));
+
+    s1 = L"Horst Horst";
+    s1.Replace(L'o', L'i', 1);
+    AssertTrue("Limited char replace", !::wcscmp(s1.PeekBuffer(), L"Hirst Horst"));
+
+    s1 = L"Horst Horst";
+    s1.Replace(L'o', L'i', StringW::NO_LIMIT);
+    AssertTrue("Unlimited char replace", !::wcscmp(s1.PeekBuffer(), L"Hirst Hirst"));
+
 }
 
 void TestUTF8String(void) {

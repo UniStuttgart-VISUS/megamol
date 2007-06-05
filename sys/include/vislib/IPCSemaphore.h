@@ -33,35 +33,63 @@ namespace sys {
      * 
      * On Windows systems, this just maps on the standard semaphore of the 
      * system. You should name your semaphore in order to use it for 
-     * inter-process synchronisation.
+     * inter-process synchronisation. Note that semaphores for IPC must be 
+     * named.
      *
      * On Linux systems, the class wraps a System V semaphore, which 
      * implemented by the system kernel. Only the first character of the name
      * will be used on Linux. The string ctor is only intended for compatibility
-     * with Windows.
+     * with Windows. If the name of the semaphore starts with the Windows kernel
+     * namespaces "Global\" or "Local\", these will be removed and the first
+     * character after the namespace is used for generating the name. The name
+     * of the semaphore is created using ftok and the root directory.
      *
      * NOTE: YOU SHOULD NOT USE THESE SEMAPHORES FOR SYNCHRONISING THREADS!
      */
 #ifdef _WIN32
-    typedef Semaphore IPCSemaphore;
+    class IPCSemaphore : public Semaphore {
 #else /* _WIN32 */
     class IPCSemaphore : public SyncObject {
+#endif /* _WIN32 */
 
     public:
 
         /** 
-         * Ctor. 
-         * TODO: Doku
+         * Open or create a new semaphore with the specified name. The ctor 
+         * first tries to open an existing semaphore and creates a new one, if
+         * such a semaphore does not exist.
+         *
+         * @param name         The name of the semaphore.
+		 * @param initialCount The initial count for the semaphore object. This value
+		 *                     must be within [0, maxCount]. If the value is not 
+		 *                     within this range, it will be clamped to be valid.
+		 * @param maxCount     The maximum count for the semaphore object, which must
+		 *                     be greater than zero. If the value is less than 1, it
+		 *                     will be corrected to be 1.
          */
         IPCSemaphore(const char name, const long initialCount = 1, 
             const long maxCount = 1);
 
-        // TODO: Doku
+        /** 
+         * Open or create a new semaphore with the specified name. The ctor 
+         * first tries to open an existing semaphore and creates a new one, if
+         * such a semaphore does not exist.
+         *
+         * @param name         The name of the semaphore.
+		 * @param initialCount The initial count for the semaphore object. This value
+		 *                     must be within [0, maxCount]. If the value is not 
+		 *                     within this range, it will be clamped to be valid.
+		 * @param maxCount     The maximum count for the semaphore object, which must
+		 *                     be greater than zero. If the value is less than 1, it
+		 *                     will be corrected to be 1.
+         */
         IPCSemaphore(const char *name, const long initialCount = 1, 
             const long maxCount = 1);
 
         /** Dtor. */
         ~IPCSemaphore(void);
+
+#ifndef _WIN32
 
         /**
          * Acquire a lock on the semaphore. This method blocks until the lock is
@@ -99,7 +127,11 @@ namespace sys {
          */
         virtual void Unlock(void);
 
+#endif /* !_WIN32 */
+
     private:
+
+#ifndef _WIN32
 
         /** The index of this member in the semaphore group. */
         static const int MEMBER_IDX;
@@ -110,15 +142,55 @@ namespace sys {
         /** Answer the current value of the semaphore. */
         int getCount(void);
 
-        // TODO Doku
-        void init(const char name, const long initialCount, 
+#endif /* !_WIN32 */
+
+		/**
+		 * Forbidden copy ctor.
+		 *
+		 * @param rhs The object to be cloned.
+		 *
+		 * @throws UnsupportedOperationException Unconditionally.
+		 */
+		IPCSemaphore(const IPCSemaphore& rhs);
+
+		/**
+		 * Forbidden assignment.
+		 *
+		 * @param rhs The right hand side operand.
+		 *
+		 * @return *this.
+		 *
+		 * @throws IllegalParamException If (this != &rhs).
+		 */
+		IPCSemaphore& operator =(const IPCSemaphore& rhs);
+
+        /**
+         * Initialise the semaphore.
+         *
+         * All parameters can be directly passed from the ctor, all possible
+         * corrections and the processing of the name is done here.
+         *
+         * On Windows, the assumption that the semaphore has not yet been 
+         * created and the handle is therefore NULL is made.
+         *
+         * @param name         The name (processing occurrs here).
+         * @param initialCount The inital count (possible correction here).
+         * @param maxCount     The maximum count (possible correction here).
+         */
+        void init(const char *name, const long initialCount, 
             const long maxCount);
+
+#ifndef _WIN32
 
         /** ID of the semaphore set we use for this semaphore. */
         int id;
 
+        /** Maximum count the semaphore can get. */
+        int maxCount;
+
+#endif /* !_WIN32 */
+
     };
-#endif /* _WIN32 */
     
 } /* end namespace sys */
 } /* end namespace vislib */

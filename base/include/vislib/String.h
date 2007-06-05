@@ -42,6 +42,12 @@ namespace vislib {
         /** Index of not found substrings. */
         static const Size INVALID_POS;
 
+        /**
+         * This value for replace limit guarantees that all occurrences are 
+         * replaced. 
+         */
+        static const Size NO_LIMIT;
+
         /** Create a new and empty string. */
         String(void);
 
@@ -425,31 +431,43 @@ namespace vislib {
 		 *
 		 * @param oldChar The character that is to be replaced.
 		 * @param newChar The new character.
+         * @param limit   If this is a positive integer, at most 'limit' 
+         *                replacements are made. Use NO_LIMIT for replacing all
+         *                occurrences.
 		 *
 		 * @return The number of characters that have been replaced.
          */
-        Size Replace(const Char oldChar, const Char newChar);
+        Size Replace(const Char oldChar, const Char newChar, 
+            const Size limit = NO_LIMIT);
 
         /**
          * Replace all occurrences of 'oldStr' in the string with 'newStr'.
          *
          * @param oldStr The string to be replaced.
          * @param newStr The replacement sequence.
+         * @param limit  If this is a positive integer, at most 'limit' 
+         *               replacements are made. Use NO_LIMIT for replacing all
+         *               occurrences.
          *
          * @return The number of replacements made.
          */
-        Size Replace(const Char *oldStr, const Char *newStr);
+        Size Replace(const Char *oldStr, const Char *newStr,
+            const Size limit = NO_LIMIT);
 
         /**
          * Replace all occurrences of 'oldStr' in the string with 'newStr'.
          *
          * @param oldStr The string to be replaced.
          * @param newStr The replacement sequence.
+         * @param limit  If this is a positive integer, at most 'limit' 
+         *               replacements are made. Use NO_LIMIT for replacing all
+         *               occurrences.
          *
          * @return The number of replacements made.
          */
-        inline Size Replace(const String& oldStr, const String& newStr) {
-            return this->Replace(oldStr.data, newStr.data);
+        inline Size Replace(const String& oldStr, const String& newStr,
+                const Size limit = NO_LIMIT) {
+            return this->Replace(oldStr.data, newStr.data, limit);
         }
 
         /**
@@ -457,12 +475,16 @@ namespace vislib {
          *
          * @param oldChar The character to be replaced.
          * @param newStr  The replacement sequence.
+         * @param limit   If this is a positive integer, at most 'limit' 
+         *                replacements are made. Use NO_LIMIT for replacing all
+         *                occurrences.
          *
          * @return The number of replacements made.
          */
-        inline Size Replace(const Char oldChar, const Char *newStr) {
+        inline Size Replace(const Char oldChar, const Char *newStr,
+                const Size limit = NO_LIMIT) {
             Char tmp[2] = { oldChar, static_cast<Char>(0) };
-            return this->Replace(tmp, newStr);
+            return this->Replace(tmp, newStr, limit);
         }
 
         /**
@@ -470,11 +492,15 @@ namespace vislib {
          *
          * @param oldChar The character to be replaced.
          * @param newStr  The replacement sequence.
+         * @param limit   If this is a positive integer, at most 'limit' 
+         *                replacements are made. Use NO_LIMIT for replacing all
+         *                occurrences.
          *
          * @return The number of replacements made.
          */
-        inline Size Replace(const Char oldChar, const String& newStr) {
-            return this->Replace(oldChar, newStr.data);
+        inline Size Replace(const Char oldChar, const String& newStr,
+                const Size limit = NO_LIMIT) {
+            return this->Replace(oldChar, newStr.data, limit);
         }
 
         /**
@@ -482,12 +508,16 @@ namespace vislib {
          *
          * @param oldStr  The string to be replaced.
          * @param newChar The replacement character.
+         * @param limit   If this is a positive integer, at most 'limit' 
+         *                replacements are made. Use NO_LIMIT for replacing all
+         *                occurrences.
          *
          * @return The number of replacements made.
          */
-        inline Size Replace(const Char *oldStr, const Char newChar) {
+        inline Size Replace(const Char *oldStr, const Char newChar,
+                const Size limit = NO_LIMIT) {
             Char tmp[2] = { newChar, static_cast<Char>(0) };
-            return this->Replace(oldStr, tmp);
+            return this->Replace(oldStr, tmp, limit);
         }
 
         /**
@@ -495,11 +525,15 @@ namespace vislib {
          *
          * @param oldStr  The string to be replaced.
          * @param newChar The replacement character.
+         * @param limit   If this is a positive integer, at most 'limit' 
+         *                replacements are made. Use NO_LIMIT for replacing all
+         *                occurrences.
          *
          * @return The number of replacements made.
          */
-        inline Size Replace(const String& oldStr, const Char newChar) {
-            return this->Replace(oldStr.data, newChar);
+        inline Size Replace(const String& oldStr, const Char newChar,
+                const Size limit = NO_LIMIT) {
+            return this->Replace(oldStr.data, newChar, limit);
         }
 
         /**
@@ -831,6 +865,14 @@ namespace vislib {
      */
     template<class T> 
     const typename String<T>::Size String<T>::INVALID_POS = -1;
+
+
+    /*
+     * String<T>::NO_LIMIT
+     */
+    template<class T> 
+    const typename String<T>::Size String<T>::NO_LIMIT = -1;
+
 
     /*
      * String<T>::String
@@ -1272,11 +1314,11 @@ namespace vislib {
 	 * String<T>::Replace
 	 */
     template<class T> typename String<T>::Size String<T>::Replace(
-            const Char oldChar, const Char newChar) {
+            const Char oldChar, const Char newChar, const Size limit) {
 		Size retval = 0;
 		Size len = this->Length();
 		
-		for (Size i = 0; i < len; i++) {
+		for (Size i = 0; (i < len) && ((limit < 0) || (retval < limit)); i++) {
 			if (this->data[i] == oldChar) {
 				this->data[i] = newChar;
 				retval++;
@@ -1291,7 +1333,7 @@ namespace vislib {
      * String<T>::Replace
      */
     template<class T> typename String<T>::Size String<T>::Replace(
-            const Char *oldStr, const Char *newStr) {
+            const Char *oldStr, const Char *newStr, const Size limit) {
         Size retval = 0;                            // Number of replacements.
         Size oldLen = T::SafeStringLength(oldStr);  // Length of 'oldStr'.
         Size newLen = T::SafeStringLength(newStr);  // Length of 'newStr'.
@@ -1306,7 +1348,8 @@ namespace vislib {
         }
 
         /* Count number of replacements. */
-        while ((nextStart = this->Find(oldStr, nextStart)) != INVALID_POS) {
+        while (((nextStart = this->Find(oldStr, nextStart)) != INVALID_POS)
+                && ((limit < 0) || (retval < limit))) {
             retval++;
             nextStart += oldLen;
         }
@@ -1321,15 +1364,18 @@ namespace vislib {
         str = new Char[this->Length() - retval * oldLen + retval * newLen + 1];
 
         nextStart = 0;
+        retval = 0;
         src = this->data;
         dst = str;
-        while ((nextStart = this->Find(oldStr, nextStart)) != INVALID_POS) {
+        while (((nextStart = this->Find(oldStr, nextStart)) != INVALID_POS)
+                && ((limit < 0) || (retval < limit))) {
             while (src < this->data + nextStart) {
                 *dst++ = *src++;
             }
             ::memcpy(dst, newStr, newLen * sizeof(Char));
             dst += newLen;
             src += oldLen;
+            retval++;
             nextStart += oldLen;
         }
         while ((*dst++ = *src++) != 0);
@@ -1352,22 +1398,18 @@ namespace vislib {
      * String<T>::StartsWith
      */
     template<class T> bool String<T>::StartsWith(const Char *str) const {
-        // TODO: Better implementation without Length calculations
-        Size len1 = this->Length();
-        Size len2 = T::SafeStringLength(str);
+        if (str != NULL) {
+            const Char *s = str;
+            const Char *d = this->data;
 
-        if ((str != NULL) && (len2 <= len1)) {
-            for (Size i = 0; i < len2; i++) {
-                if (this->data[i] != str[i]) {
-                    return false;
-                }
+            while (*s == *d) {
+                s++;
+                d++;
             }
-            /* No difference found. */
-
-            return true;
+            return (*s == 0);   // 's' must have been consumed completely.
 
         } else {
-            /* Cannot start with 'str', if shorter or 'str' invalid. */
+            /* Cannot start with 'str', if 'str' invalid. */
             return false;
         }
     }
@@ -1385,22 +1427,18 @@ namespace vislib {
      * String<T>::StartsWithInsensitive
      */
     template<class T> bool String<T>::StartsWithInsensitive(const Char *str) const {
-        // TODO: Better implementation without Length calculations
-        Size len1 = this->Length();
-        Size len2 = T::SafeStringLength(str);
+        if (str != NULL) {
+            const Char *s = str;
+            const Char *d = this->data;
 
-        if ((str != NULL) && (len2 <= len1)) {
-            for (Size i = 0; i < len2; i++) {
-                if (T::ToLower(this->data[i]) != T::ToLower(str[i])) {
-                    return false;
-                }
+            while (T::ToLower(*s) == T::ToLower(*d)) {
+                s++;
+                d++;
             }
-            /* No difference found. */
-
-            return true;
+            return (*s == 0);   // 's' must have been consumed completely.
 
         } else {
-            /* Cannot start with 'str', if shorter or 'str' invalid. */
+            /* Cannot start with 'str', if 'str' invalid. */
             return false;
         }
     }

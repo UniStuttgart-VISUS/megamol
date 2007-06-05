@@ -620,7 +620,7 @@ vislib::StringA vislib::sys::Path::Resolve(StringA path) {
 
     } else if ((path[0] == MYDOCUMENTS_MARKER_A) 
             && ((path.Length() == 1) || path[1] == SEPARATOR_A)) {
-        path.Replace(MYDOCUMENTS_MARKER_A, Path::GetUserHomeDirectoryA());
+        path.Replace(MYDOCUMENTS_MARKER_A, Path::GetUserHomeDirectoryA(), 1);
         return Path::Canonicalise(path);
 
     } else {

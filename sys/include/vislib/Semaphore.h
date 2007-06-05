@@ -79,7 +79,7 @@ namespace sys {
          */
         virtual void Unlock(void);
 
-    private:
+    protected:
 
 		/**
 		 * Forbidden copy ctor.
