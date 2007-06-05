@@ -7,6 +7,7 @@
 #include "vislib/Semaphore.h"
 
 #include "vislib/assert.h"
+#include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -28,12 +29,7 @@ vislib::sys::Semaphore::Semaphore(const long initialCount, const long maxCount) 
     ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
-	this->count = i;
-	this->maxCount = m;
-
-	if (this->count == 0) {
-		this->waitMutex.Lock();
-	}
+    ::sem_init(&this->handle, 0, i); 
 
 #endif /* _WIN32 */
 }
@@ -47,7 +43,7 @@ vislib::sys::Semaphore::~Semaphore(void) {
     ::CloseHandle(this->handle);
 
 #else /* _WIN32 */
-	// Do nothing.
+    ::sem_destroy(&this->handle);
 
 #endif /* _WIN32 */
 }
@@ -76,16 +72,43 @@ void vislib::sys::Semaphore::Lock(void) {
     }
 
 #else /* _WIN32 */
-    this->waitMutex.Lock();			// Wait to be signaled.
-	ASSERT(this->count > 0);
-	this->mutex.Lock();				// Prevent other calls to Lock()/Unlock().
-	this->waitMutex.Unlock();
-	
-	if (--this->count == 0) {
-		this->waitMutex.Lock();
-	}
+    if (::sem_wait(&this->handle) == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+#endif /* _WIN32 */
+}
 
-	this->mutex.Unlock();			// Allow other calls to Lock()/Unlock().
+
+/*
+ * vislib::sys::Semaphore::TryLock
+ */
+bool vislib::sys::Semaphore::TryLock(void) {
+#ifdef _WIN32
+    switch (::WaitForSingleObject(this->handle, 0)) {
+
+        case WAIT_OBJECT_0:
+            /* falls through. */
+        case WAIT_ABANDONED:
+            return true;
+
+        case WAIT_TIMEOUT:
+            return false;
+
+        default:
+            throw SystemException(__FILE__, __LINE__);
+    }
+
+#else /* _WIN32 */
+    if (::sem_trywait(&this->handle) == -1) {
+        int error = ::GetLastError(); 
+        if (error == EAGAIN) {
+            return false;
+        } else {
+            throw SystemException(error, __FILE__, __LINE__);
+        }
+    }
+
+    return true;
 #endif /* _WIN32 */
 }
 
@@ -100,17 +123,9 @@ void vislib::sys::Semaphore::Unlock(void) {
     }
 
 #else /* _WIN32 */
-    this->mutex.Lock();				// Prevent other calls to Lock()/Unlock().
-	
-	if (++this->count > this->maxCount) {
-		this->count = this->maxCount;
-	}
-
-	if (this->count == 1) {
-		this->waitMutex.Unlock();	// Signal a waiting thread.
-	}
-
-	this->mutex.Unlock();			// Allow other calls to Lock()/Unlock().
+    if (::sem_post(&this->handle) == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
 #endif /* _WIN32 */
 }
 

@@ -17,7 +17,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else /* _WIN32 */
-#include "Mutex.h"
+#include <semaphore.h>
 #endif /* _WIN32 */
 
 #include "SyncObject.h"
@@ -28,11 +28,10 @@ namespace sys {
 
     /**
      * A platform independent semaphore.
-	 *
-	 * Implementation notes: On Windows systems, this synchronisation object can
-     * be used for inter-process synchronisation tasks. The implementation uses 
-     * the semaphore that Windows provides. On Linux systems, the semaphore is 
-     * emulated using mutexes.
+     *
+     * Note: Maximum count is not supported on Linux and ignored.
+     * Note: This semaphore cannot be used for inter-process synchronisation on 
+     * Linux.
      *
      * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
      */
@@ -67,6 +66,19 @@ namespace sys {
          * @throws SystemException If the lock could not be acquired.
          */
         virtual void Lock(void);
+
+        /**
+         * Try to acquire a lock on the semaphore for the calling thread. If the 
+         * semaphore is already locked by another thread, the method will return
+         * immediately and the return value is false. The method is therefore 
+         * non-blocking.
+         *
+         * @return true, if the lock was acquired, false, if not.
+         *
+         * @throws SystemException If an error occurred when trying to acquire
+         *                         the lock.
+         */
+        virtual bool TryLock(void);
 
         /**
          * Release the semaphore.
@@ -107,20 +119,8 @@ namespace sys {
         HANDLE handle;
 
 #else /* _WIN32 */
-		/** The actual count for the sempahore object. */
-		long count;
-
-		/** The maximum count for the semaphore object. */
-		long maxCount;
-
-		/** The mutex that is used for protecting the attributed. */
-		Mutex mutex;
-
-		/** 
-		 * This mutex is used to block the calling thread, if the count
-		 * reached zero.
-		 */
-		Mutex waitMutex;
+		/** The POSIX semaphore handle. */
+        sem_t handle;
 
 #endif /* _WIN32 */
 	};
