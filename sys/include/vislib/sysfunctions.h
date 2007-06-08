@@ -14,6 +14,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#ifdef _WIN32
+#include <shlwapi.h>
+#endif /* _WIN32 */
+
 #include "vislib/File.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
@@ -69,6 +73,43 @@ namespace sys {
      * @return milliseconds since midnight.
      */
     unsigned int GetTicksOfDay(void);
+
+#ifdef _WIN32
+    /**
+     * Answer the version of a Windows system DLL.
+     *
+     * @param outVersion Receives the version of the specified module. The 
+     *                   'cbSize' must have been set to the actual size of the
+     *                   'outVersion' structure before calling the function.
+     * @param moduleName The name of the system DLL to retrieve the version of.
+     *
+     * @return The return value of the DllGetVersion of 'moduleName', which is
+     *         NOERROR in case of success or an appropriate error code 
+     *         otherwise.
+     *
+     * @throws SystemException If the specified module could not be opened or if
+     *                         it has no DllGetVersion function.
+     */
+    HRESULT GetDLLVersion(DLLVERSIONINFO& outVersion, const char *moduleName);
+
+    /**
+     * Answer the version of a Windows system DLL.
+     *
+     * @param outVersion Receives the version of the specified module. The 
+     *                   'cbSize' must have been set to the actual size of the
+     *                   'outVersion' structure before calling the function.
+     * @param moduleName The name of the system DLL to retrieve the version of.
+     *
+     * @return The return value of the DllGetVersion of 'moduleName', which is
+     *         NOERROR in case of success or an appropriate error code 
+     *         otherwise.
+     *
+     * @throws SystemException If the specified module could not be opened or if
+     *                         it has no DllGetVersion function.
+     */
+    HRESULT GetDLLVersion(DLLVERSIONINFO& outVersion, 
+        const wchar_t * moduleName);
+#endif /* _WIN32 */
 
 } /* end namespace sys */
 } /* end namespace vislib */

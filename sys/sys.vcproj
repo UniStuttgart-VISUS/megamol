@@ -406,6 +406,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\TrayIcon.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\WindowsService.cpp"
 				>
 			</File>
@@ -549,6 +553,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Thread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\TrayIcon.h"
 				>
 			</File>
 			<File

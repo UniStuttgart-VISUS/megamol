@@ -16,8 +16,8 @@
 
 #include "vislib/memutils.h"
 #include "vislib/IllegalParamException.h"
-
 #include "vislib/IOException.h"
+#include "vislib/SystemException.h"
 
 
 /*
@@ -144,3 +144,47 @@ unsigned int vislib::sys::GetTicksOfDay(void) {
 
 #endif /* _WIN32 */
 }
+
+
+#ifdef _WIN32
+/*
+ * vislib::sys::GetDLLVersion
+ */
+HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion, 
+                                   const char *moduleName) {
+    DLLGETVERSIONPROC dllGetVersion = NULL;
+    HMODULE hModule = NULL;
+
+    if ((hModule = ::LoadLibraryA(moduleName)) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
+            hModule, "DllGetVersion"))) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return dllGetVersion(&outVersion);
+}
+
+
+/*
+ * vislib::sys::GetDLLVersion
+ */
+HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion, 
+                                   const wchar_t * moduleName) {
+    DLLGETVERSIONPROC dllGetVersion = NULL;
+    HMODULE hModule = NULL;
+
+    if ((hModule = ::LoadLibraryW(moduleName)) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
+            hModule, "DllGetVersion"))) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return dllGetVersion(&outVersion);
+}
+#endif /* _WIN32 */

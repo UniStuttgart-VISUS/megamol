@@ -426,6 +426,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testtrayicon.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testvector.cpp"
 				>
 			</File>
@@ -513,6 +517,10 @@
 			</File>
 			<File
 				RelativePath=".\testthread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testtrayicon.h"
 				>
 			</File>
 			<File

@@ -144,4 +144,8 @@ void TestHeap(void) {
     ::AssertEqual("Get element 't'", heap.First().Value(), 't');
     heap.RemoveFirst();
     ::AssertTrue("Heap is empty now", heap.IsEmpty());
+
+    heap.Add(MyPair(4, 'o'));
+    heap.Clear();
+    ::AssertTrue("Heap is empty after Clear", heap.IsEmpty());
 }

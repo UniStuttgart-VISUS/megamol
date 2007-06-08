@@ -27,6 +27,12 @@ namespace vislib {
      * This class implements a binary heap, which can be used as a priority
      * queue.
      *
+     * The heap accepts multiple entries with the same key, i. e. the same
+     * priporty.
+     *
+     * The return order of elements having the same key is undefined as
+     * heaps are not stable.
+     *
      * The template class T must support the method
      *
      * const KeyType& Key(void) const 
@@ -100,7 +106,7 @@ namespace vislib {
         /**
          * Remove all elements from the heap.
          */
-        inline void Clear(void) const {
+        inline void Clear(void) {
             this->elements.Clear();
         }
 

@@ -32,6 +32,7 @@
 #include "testthelog.h"
 #include "testdirectoryiterator.h"
 #include "testhash.h"
+#include "testtrayicon.h"
 
 
 /* type for test functions */
@@ -78,6 +79,7 @@ VislibTest tests[] = {
     {_T("Process"), ::TestProcess, "Tests vislib::sys::Process"},
     {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
+    {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };
