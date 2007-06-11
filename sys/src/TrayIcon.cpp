@@ -90,8 +90,13 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
 
         /* Register pointer to this object as user data. */
 #pragma warning(disable: 4311)
-        ::SetWindowLongPtrW(this->hWnd, GWL_USERDATA, 
-            reinterpret_cast<LONG>(this));
+        ::SetWindowLongPtrW(this->hWnd, GWLP_USERDATA, 
+#ifdef _WIN64
+            reinterpret_cast<LONG_PTR>
+#else  /* _WIN64 */
+            reinterpret_cast<LONG>
+#endif /* _WIN64 */
+            (this));
 #pragma warning(default: 4311)
 
     } else {
@@ -346,7 +351,7 @@ LRESULT WINAPI vislib::sys::TrayIcon::wndProc(HWND hWnd, UINT msg,
         WPARAM wParam, LPARAM lParam) {
 #pragma warning(disable: 4312)
     TrayIcon *thisPtr = reinterpret_cast<TrayIcon *>(
-        ::GetWindowLongPtr(hWnd, GWL_USERDATA));
+        ::GetWindowLongPtr(hWnd, GWLP_USERDATA));
 #pragma warning(default: 4312)
 
     if ((thisPtr != NULL) && (msg == thisPtr->nid.uCallbackMessage)) {
