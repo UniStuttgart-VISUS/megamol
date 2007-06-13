@@ -37,11 +37,25 @@ namespace net {
     public:
 
         /**
+         * Create an IPAddress form the dottet string format or host name.
+         *
+         * @param address The IP address in the dotted string format or a valid
+         *                host name.
+         *
+         * @return The IP address matching 'address'.
+         *
+         * @throws IllegalParamException If 'address' is not a valid IP address 
+         *                               or host name.
+         */
+        static IPAddress Create(const char *address = "127.0.01");
+
+        /**
          * Create an IPAddress from the dotted string format.
 		 *
 		 * NOTE: The address might be invalid after construction, if 'address'
 		 * is not a valid host name or IP address in the dotted string format.
-		 * It is recommended to use the Lookup() method for finding a host.
+		 * It is recommended to use the Lookup() method for finding a host or
+         * creating the address by IPAddress::Create.
          *
          * @param address The IP address in the dotted string format.
          */

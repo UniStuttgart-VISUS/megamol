@@ -95,6 +95,32 @@ void vislib::net::ClusterDiscoveryService::AddListener(
 
 
 /*
+ * vislib::net::ClusterDiscoveryService::IsRunning
+ */
+bool vislib::net::ClusterDiscoveryService::IsRunning(void) const {
+    bool retval = false;
+
+    if ((this->receiverThread != NULL) && (this->senderThread != NULL)) {
+        retval = (this->receiverThread->IsRunning() 
+            && this->senderThread->IsRunning());
+    }
+
+    return retval;
+}
+
+
+/*
+ * vislib::net::ClusterDiscoveryService::IsStopped
+ */
+bool vislib::net::ClusterDiscoveryService::IsStopped(void) const {
+    return (((this->receiverThread == NULL) 
+        || !this->receiverThread->IsRunning())
+        && ((this->sender == NULL)
+        || !this->senderThread->IsRunning()));
+}
+
+
+/*
  * vislib::net::ClusterDiscoveryService::RemoveListener
  */
 void vislib::net::ClusterDiscoveryService::RemoveListener(
@@ -193,12 +219,12 @@ void vislib::net::ClusterDiscoveryService::Start(void) {
 /*
  * vislib::net::ClusterDiscoveryService::Stop
  */
-bool vislib::net::ClusterDiscoveryService::Stop(void) {
+bool vislib::net::ClusterDiscoveryService::Stop(const bool noWait) {
     try {
         // Note: Receiver must be stopped first, in order to prevent shutdown
         // deadlock when waiting for the last message.
         this->receiverThread->TryTerminate(false);
-        this->senderThread->Terminate(false);
+        this->senderThread->TryTerminate(!noWait);
 
         return true;
     } catch (sys::SystemException e) {

@@ -13,8 +13,22 @@
 #include "vislib/IPAddress.h"
 
 #include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/StringConverter.h"
 
+
+/*
+ * vislib::net::IPAddress::Create
+ */
+vislib::net::IPAddress vislib::net::IPAddress::Create(const char *address) {
+    IPAddress retval;
+
+    if (!retval.Lookup(address)) {
+        throw IllegalParamException("address", __FILE__, __LINE__);
+    }
+
+    return retval;
+}
 
 
 /*
@@ -28,7 +42,8 @@ vislib::net::IPAddress::IPAddress(const char *address) {
 /*
  * vislib::net::IPAddress::IPAddress
  */
-vislib::net::IPAddress::IPAddress(unsigned char i1, unsigned char i2, unsigned char i3, unsigned char i4) {
+vislib::net::IPAddress::IPAddress(unsigned char i1, unsigned char i2, 
+        unsigned char i3, unsigned char i4) {
 #ifdef _WIN32
     this->address.S_un.S_un_b.s_b1 = i1;
     this->address.S_un.S_un_b.s_b2 = i2;

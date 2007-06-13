@@ -60,9 +60,10 @@ namespace net {
          * This method should return very quickly and should not perform
          * excessive work as it is executed in the discovery thread.
          *
-         * @param src  The discovery service that fired the event.
-         * @param addr The response address that the node discovered has
-         *             specified.
+         * @param src   The discovery service that fired the event.
+         * @param hPeer The handle of the peer that was found. The response 
+         *              address associated with this handle can be retrieved
+         *              via src[hPeer].
          */
         virtual void OnNodeFound(const ClusterDiscoveryService& src, 
             const ClusterDiscoveryService::PeerHandle& hPeer) = 0;

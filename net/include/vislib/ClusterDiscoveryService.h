@@ -191,6 +191,23 @@ namespace net {
         }
 
         /**
+         * Answer whether the discovery service is running. This is the case, if
+         * both, the sender and the receiver thread are running.
+         *
+         * @return true, if the service is running, false otherwise.
+         */
+        bool IsRunning(void) const;
+
+        /**
+         * Answer whether the discovery service is stopped. This is the case, if 
+         * none of the threads is running, i. e. neither the sender nor the
+         * receiver thread.
+         *
+         * @return true, if the service is stopped, false otherwise.
+         */
+        bool IsStopped(void) const;
+
+        /**
          * Removes, if registered, 'listener' from the list of objects informed
          * about discovery events. The caller remains owner of the memory 
          * designated by 'listener'.
@@ -272,11 +289,14 @@ namespace net {
          * This operation stops the broadcaster and the receiver thread. The
          * broadcaster will send a disconnect message before it ends.
          *
+         * @param noWait If set true, the method will not block.
+         *
          * @return true, if the threads have been terminated without any
          *         problem, false, if a SystemException has been thrown by 
-         *         one of the threads.
+         *         one of the threads or if the thread did not acknowledge
+         *         a 'noWait' terminate.
          */
-        virtual bool Stop(void);
+        virtual bool Stop(const bool noWait = false);
 
         /**
          * Answer the application defined communication address of the 'idx'th

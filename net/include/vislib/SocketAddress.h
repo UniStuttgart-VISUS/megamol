@@ -69,6 +69,38 @@ namespace net {
         };
 
         /**
+         * Create a socket address by looking up the specified host or IP 
+         * address.
+         *
+         * @param addressFamily The address family to create the address for.
+         * @param host          An IP address in the dotted string format or a 
+         *                      host name.
+         * @param port          The port of the address.
+         * 
+         * @return The socket address, if all parameters are valid.
+         *
+         * @throws IllegalParamException If 'host' is not a valid host name or
+         *                               IP address.
+         */
+        static SocketAddress Create(const AddressFamily addressFamily, 
+            const char *host, const unsigned short port);
+
+        /**
+         * Create a socket address by looking up the specified host or IP 
+         * address and using FAMILY_INET.
+         *
+         * @param host An IP address in the dotted string format or a host name.
+         * @param port The port of the address.
+         * 
+         * @return The socket address, if all parameters are valid.
+         *
+         * @throws IllegalParamException If 'host' is not a valid host name or
+         *                               IP address.
+         */
+        static SocketAddress CreateInet(const char *host, 
+            const unsigned short port);
+
+        /**
          * Create a socket address accepting 'ipAddress' on the specified port.
          *
          * @param addressFamily The address family to create the address for.

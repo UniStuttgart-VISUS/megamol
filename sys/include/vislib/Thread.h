@@ -109,6 +109,17 @@ namespace sys {
 		 */
         DWORD GetExitCode(void) const;
 
+        /**
+         * Answer a pointer to the Runnable executed by this thread. If the
+         * thread executes a ThreadFunc instead of a runnable, this method
+         * will return NULL.
+         *
+         * @return A pointer to the Runnable or NULL, if a function is used.
+         */
+        inline const Runnable *GetRunnable(void) const {
+            return this->runnable;
+        }
+
 		/**
 		 * Answer whether the thread is currently running.
 		 *

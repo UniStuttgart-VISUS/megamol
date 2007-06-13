@@ -12,6 +12,25 @@
 
 
 /*
+ * vislib::net::SocketAddress::Create
+ */
+vislib::net::SocketAddress vislib::net::SocketAddress::Create(
+        const AddressFamily addressFamily, const char *host, 
+        const unsigned short port) {
+    return SocketAddress(addressFamily, IPAddress::Create(host), port);
+}
+
+
+/*
+ * vislib::net::SocketAddress::CreateInet
+ */
+vislib::net::SocketAddress vislib::net::SocketAddress::CreateInet(
+        const char *host, const unsigned short port) {
+    return SocketAddress(FAMILY_INET, IPAddress::Create(host), port);
+}
+
+
+/*
  * vislib::net::SocketAddress::SocketAddress
  */
 vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
