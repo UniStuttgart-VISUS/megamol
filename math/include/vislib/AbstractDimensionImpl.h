@@ -25,7 +25,21 @@ namespace math {
 
 
     /**
-     * TODO: Documentation
+     * This template implements the most parts of the dimension behaviour. Its
+     * only intended use is being the super class of the AbstractDimension 
+     * template and its partial template specialisation. The same reuse of code
+     * as in AbstractVectorImpl is the reason for this class.
+     *
+     * The following template parameters are used:
+     *
+     * T: The type used for the components of the dimension.
+     * D: The dimensionality of the dimension, e. g. 2 for representing 2D sizes.
+     * S: The "storage class". This can be either T[D] for a "deep dimension" or
+     *    T * for a "shallow dimensions". Other instantiations are inherently 
+     *    dangerous and should never be used.
+     * C: The direct subclass, i. e. AbstractDimension. This allows the 
+     *    implementation to create the required return values. Other 
+     *    instantiations are inherently dangerous and should never be used.
      */
     template<class T, unsigned int D, class S, 
             template<class T, unsigned int D, class S> class C> 
