@@ -221,6 +221,14 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
 GLenum vislib::graphics::gl::FramebufferObject::Disable(void) {
     USES_GL_VERIFY;
 
+    if (::glBindFramebufferEXT == NULL) {
+        /* 
+         * Extensions might not have been initialised, but dtor will call
+         * Disable anyway.
+         */
+        return GL_INVALID_OPERATION;
+    }
+
     GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0));
 
     if (this->IsValid()) {
@@ -302,6 +310,14 @@ bool vislib::graphics::gl::FramebufferObject::IsValid(void) const throw() {
  */
 void vislib::graphics::gl::FramebufferObject::Release(void) {
     USES_GL_VERIFY;
+
+    if (::glDeleteRenderbuffersEXT == NULL) {
+        /* 
+         * Extensions might not have been initialised, but dtor will call 
+         * Release anyway. 
+         */
+        return;
+    }
 
     /* Release depth and stencil buffers, if any. */
     for (UINT i = 0; i < 2; i++) {
