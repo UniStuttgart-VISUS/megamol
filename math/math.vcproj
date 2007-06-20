@@ -377,6 +377,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ShallowPoint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ShallowQuaternion.cpp"
 				>
 			</File>
@@ -496,6 +500,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\ShallowPlane.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowPoint.h"
 				>
 			</File>
 			<File
