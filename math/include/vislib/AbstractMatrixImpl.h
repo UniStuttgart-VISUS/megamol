@@ -14,6 +14,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include <iomanip>
+#include <ios>
+#include <iostream>
+
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
@@ -79,6 +83,13 @@ namespace math {
          * @return The determinant of the matrix.
          */
         T Determinant(void) const;
+
+        /**
+         * Dump the matrix to the specified stream.
+         *
+         * @param out The stream to dump the matrix to.
+         */
+        void Dump(std::ostream& out) const;
 
         /**
          * Get the matrix component at the specified position.
@@ -680,6 +691,32 @@ namespace math {
 
         return retval;
 #undef A
+    }
+
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::Dump
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+    void AbstractMatrixImpl<T, D, L, S, C>::Dump(std::ostream& out) const {
+        out << std::setiosflags(std::ios::fixed) << std::setprecision(3) 
+            << std::setfill(' ');
+
+        for (unsigned int r = 0; r < D; r++) {
+            out << "{ ";
+
+            for (unsigned int c = 0; c < D; c++) {
+                out << std::setw(7) << this->components[indexOf(r, c)];
+                
+                if (c < D - 1) {
+                    out << ", ";
+                }
+            }
+            out << " }" << std::endl;
+        }
+
+        out << std::resetiosflags(std::ios::fixed);
     }
 
 

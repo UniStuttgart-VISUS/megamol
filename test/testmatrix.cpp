@@ -8,6 +8,8 @@
 
 #include "testhelper.h"
 
+#include <iostream>
+
 #include "vislib/Quaternion.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Matrix.h"
@@ -91,6 +93,8 @@ void TestMatrix(void) {
     m1.SetAt(1, 3, 3.0);
     m1.SetAt(2, 3, 4.0);
     m1.SetAt(3, 3, 1.0);
+
+    m1.Dump(cout);
 
     m3 = m1;
     ::AssertEqual("Assignment.", m1, m3);
