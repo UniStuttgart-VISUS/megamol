@@ -36,7 +36,10 @@
 #include "StereoCamTestApp.h"
 #include "BeholderRotatorTextApp.h"
 #include "FBOTestApp.h"
+#include "FBOTest2App.h"
 
+/** the startup test selection */
+static int startupTest;
 
 /*
  * std glut callbacks
@@ -48,16 +51,21 @@ void reshape(int w, int h) {
     if (h < 1) h = 1;
 
     GlutAppManager::GetInstance()->SetSize(w, h);
+
     if (GlutAppManager::CurrentApp()) {
         GlutAppManager::CurrentApp()->OnResize(w, h);
     }
 }
 
 void display(void) {
-    if (GlutAppManager::CurrentApp()) {
+	if (GlutAppManager::CurrentApp()) {
         GlutAppManager::CurrentApp()->Render();
     } else {
         GlutAppManager::GetInstance()->glRenderEmptyScreen();
+		if (startupTest >= 0) {
+			GlutAppManager::OnMenuItemClicked(startupTest);
+			startupTest = -1;
+		}
     }
 }
 
@@ -97,12 +105,14 @@ void special(int key, int x, int y) {
  */
 int main(int argc, char* argv[]) {
     printf("VISlib glut test program\n");
+	startupTest = -1;
 
     // register factories:
     GlutAppManager::InstallFactory<CamTestApp>("Camera Test");
     GlutAppManager::InstallFactory<StereoCamTestApp>("Stereo Camera Test");
     GlutAppManager::InstallFactory<BeholderRotatorTextApp>("Beholder Rotator Test");
     GlutAppManager::InstallFactory<FBOTestApp>("Framebuffer Object Test");
+	GlutAppManager::InstallFactory<FBOTest2App>("Framebuffer Object Test #2");
 
     // run test application
     glutInit(&argc, argv);
@@ -122,6 +132,21 @@ int main(int argc, char* argv[]) {
     glutSpecialFunc(special);
 
     GlutAppManager::GetInstance()->InitGlutWindow();
+
+	// start a glut application
+	if (argc > 1) {
+		int id;
+#if (_MSC_VER >= 1400)
+#pragma warning(disable: 4996)
+#endif
+		if (sscanf(argv[1], "%d", &id) == 1) {
+#if (_MSC_VER >= 1400)
+#pragma warning(default: 4996)
+#endif
+			printf("Trying to start Test %d\n", id);
+			startupTest = id;
+		}
+	}
 
     // glutFullScreen();
     // app->GLInit();

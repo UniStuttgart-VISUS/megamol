@@ -101,11 +101,13 @@ GLenum vislib::graphics::gl::FramebufferObject::BindColorTexture(
 GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
     USES_GL_VERIFY;
 
-    if (this->attachmentOther[ATTACH_IDX_DEPTH].state == ATTACHMENT_TEXTURE) {
+    if ((this->attachmentOther[ATTACH_IDX_DEPTH].state == ATTACHMENT_TEXTURE)
+			|| (this->attachmentOther[ATTACH_IDX_DEPTH].state 
+			== ATTACHMENT_EXTERNAL_TEXTURE))	{
         GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
             this->attachmentOther[ATTACH_IDX_DEPTH].id));
     } else {
-        throw IllegalStateException("The depth attachment attachment must be "
+        throw IllegalStateException("The depth attachment must be "
             "a texture attachment in order to be bound as a texture.", 
             __FILE__, __LINE__);
     }
@@ -169,6 +171,13 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
                 this->attachmentOther[ATTACH_IDX_DEPTH].id, 0));
             break;
 
+		case ATTACHMENT_EXTERNAL_TEXTURE:
+			this->attachmentOther[ATTACH_IDX_DEPTH].id = dap.externalID;
+            GL_VERIFY_THROW(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, 
+                this->attachmentOther[ATTACH_IDX_DEPTH].id, 0));
+            break;
+
         default:
             /* Nothing to do. */
             break;
@@ -214,6 +223,21 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
     return retval;
 }
 
+
+/*
+ * vislib::graphics::gl::FramebufferObject::DepthTextureID
+ */
+GLuint vislib::graphics::gl::FramebufferObject::DepthTextureID(void) {
+	if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE)
+			&& (this->attachmentOther[ATTACH_IDX_DEPTH].state 
+			!= ATTACHMENT_EXTERNAL_TEXTURE)) {
+		throw vislib::IllegalStateException("The depth attachment must be a "
+            "texture attachment in order to retrieve the texture id.",
+			__FILE__, __LINE__);
+	}
+
+	return this->attachmentOther[ATTACH_IDX_DEPTH].id;
+}
 
 /*
  * vislib::graphics::gl::FramebufferObject::Disable
@@ -332,6 +356,10 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
                 GL_VERIFY_THROW(::glDeleteRenderbuffersEXT(1, 
                     &this->attachmentOther[i].id));
                 break;
+
+			case ATTACHMENT_EXTERNAL_TEXTURE:
+				/* Nothing to do. */
+				break;
 
             default:
                 /* Nothing to do. */

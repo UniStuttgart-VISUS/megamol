@@ -355,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FBOTest2App.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\FBOTestApp.cpp"
 				>
 			</File>
@@ -390,6 +394,10 @@
 			</File>
 			<File
 				RelativePath=".\CamTestApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FBOTest2App.h"
 				>
 			</File>
 			<File
