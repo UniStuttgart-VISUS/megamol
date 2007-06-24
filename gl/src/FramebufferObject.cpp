@@ -386,6 +386,9 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     this->cntColorAttachments = 0;
     ARY_SAFE_DELETE(this->attachmentColor);
 
+	// set width and height to zero to indicate that the fbo is empty
+	this->width = 0;
+	this->height = 0;
 }
 
 
