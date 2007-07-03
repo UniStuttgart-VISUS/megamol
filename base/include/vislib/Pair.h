@@ -37,7 +37,7 @@ namespace vislib {
          * @param first  The first element.
          * @param second The second element.
          */
-        inline Pair(const T& first, const T& second);
+        inline Pair(const T& first, const U& second);
 
         /**
          * Clone 'rhs'.
@@ -184,7 +184,7 @@ namespace vislib {
     /*
      * vislib::Pair<T, U>::Pair
      */
-    template<class T, class U> Pair<T, U>::Pair(const T& first, const T& second)
+    template<class T, class U> Pair<T, U>::Pair(const T& first, const U& second)
             : first(first), second(second) {
     }
 
