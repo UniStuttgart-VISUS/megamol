@@ -6,4 +6,4 @@
 
 TargetName := vislibgraphics
 
-IncludeDir += ../base/include ../math/include
+IncludeDir += ../base/include ../math/include ../sys/include

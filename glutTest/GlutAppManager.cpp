@@ -12,7 +12,10 @@
 #include <GL/glut.h>
 #include <GL/gl.h>
 #include "GlutAppManager.h"
+#include "vislib/FpsCounter.h"
 
+/** not nice! */
+extern vislib::graphics::FpsCounter fpsCounter;
 
 
 /*
@@ -129,6 +132,8 @@ void GlutAppManager::OnMenuItemClicked(int menuID) {
                     This->app->OnResize(This->width, This->height);
 
                     printf("  Test selected.\n");
+
+                    fpsCounter.Reset();
 
                 } else {
                     delete This->app;

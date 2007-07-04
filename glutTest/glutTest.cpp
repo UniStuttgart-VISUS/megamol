@@ -38,8 +38,26 @@
 #include "FBOTestApp.h"
 #include "FBOTest2App.h"
 
+#include "vislib/FpsCounter.h"
+#include "vislib/Thread.h"
+
 /** the startup test selection */
 static int startupTest;
+
+/** the global frames per second counter */
+vislib::graphics::FpsCounter fpsCounter;
+
+/*
+ * fps output function
+ */
+unsigned int OutputFps(void *) {
+    while (true) {
+        vislib::sys::Thread::Sleep(1000);
+        printf("FPS: (%f average; %f minimum; %f maximum)\n", 
+            fpsCounter.FPS(), fpsCounter.MinFPS(), fpsCounter.MaxFPS());
+    }
+    return 0;
+} 
 
 /*
  * std glut callbacks
@@ -58,6 +76,7 @@ void reshape(int w, int h) {
 }
 
 void display(void) {
+    fpsCounter.FrameBegin();
 	if (GlutAppManager::CurrentApp()) {
         GlutAppManager::CurrentApp()->Render();
     } else {
@@ -67,6 +86,7 @@ void display(void) {
 			startupTest = -1;
 		}
     }
+    fpsCounter.FrameEnd();
 }
 
 void keyboard(unsigned char key, int x, int y) {
@@ -104,6 +124,8 @@ void special(int key, int x, int y) {
  * main
  */
 int main(int argc, char* argv[]) {
+    vislib::sys::Thread fpsOutputThread((vislib::sys::Runnable::Function)OutputFps);
+
     printf("VISlib glut test program\n");
 	startupTest = -1;
 
@@ -132,6 +154,8 @@ int main(int argc, char* argv[]) {
     glutSpecialFunc(special);
 
     GlutAppManager::GetInstance()->InitGlutWindow();
+
+    fpsOutputThread.Start();
 
 	// start a glut application
 	if (argc > 1) {
