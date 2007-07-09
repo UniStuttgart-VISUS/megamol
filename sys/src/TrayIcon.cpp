@@ -406,8 +406,8 @@ bool vislib::sys::TrayIcon::configureBalloonHelp(const wchar_t *balloonText,
 #if (_WIN32_IE >= 0x0500)
     if (this->capabilities >= CAPABILITIES_V2) {
 
-#if (_MSC_VER >= 1400)
         if (balloonText != NULL) {
+#if (_MSC_VER >= 1400)
             ::wcsncpy_s(this->nid.szInfo, MAX_BALLOON_LEN, balloonText, 
                 MAX_BALLOON_LEN);
 #else  /*(_MSC_VER >= 1400) */
