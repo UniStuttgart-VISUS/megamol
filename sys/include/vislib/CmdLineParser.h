@@ -87,11 +87,18 @@ namespace sys {
                  * option. The other appearences will be ignored and there will
                  * be a warning.
                  */
-                FLAG_REQUIRED = 2  
+                FLAG_REQUIRED = 2,
                 /**
                  * Flag indicating that this option is required. If at least 
                  * one required option is missing in the command line there 
                  * will be an error.
+                 */
+                FLAG_EXCLUSIVE = 4
+                /**
+                 * Flag indicating that this option may only appear as first 
+                 * option. Any following parameters will be classified as
+                 * "TYPE_UNKNOWN". If this option is used not as first option,
+                 * an error is generated. (This implies "FLAG_UNIQUE").
                  */
             };
 
@@ -643,6 +650,9 @@ namespace sys {
             /** flag indicating that this option is required */
             bool required;
 
+            /** flag indicating that this option is exclusive */
+            bool exclusive;
+
             /** the value list of the option */
             ValueDesc *values;
 
@@ -858,7 +868,8 @@ namespace sys {
                 NEGATIVE_ARGC,
                 MISSING_VALUE,
                 INVALID_VALUE,
-                MISSING_REQUIRED_OPTIONS
+                MISSING_REQUIRED_OPTIONS,
+                MISSPLACED_EXCLUSIVE_OPTION
             };
 
             /**
@@ -885,6 +896,9 @@ namespace sys {
                         break;
                     case MISSING_REQUIRED_OPTIONS:
                         retval = "At least one required option is missing.";
+                        break;
+                    case MISSPLACED_EXCLUSIVE_OPTION:
+                        retval = "An exclusive option was mixed up with other options. The exclusive option must be specified as first parameter.";
                         break;
                     case UNKNOWN: 
                         // no break
@@ -1451,6 +1465,7 @@ namespace sys {
         this->parser = NULL;
         this->unique = ((flags & FLAG_UNIQUE) == FLAG_UNIQUE);
         this->required = ((flags & FLAG_REQUIRED) == FLAG_REQUIRED);
+        this->exclusive = ((flags & FLAG_EXCLUSIVE) == FLAG_EXCLUSIVE);
         this->values = valueList;
         this->firstArg = NULL;
         this->shortName = shortName;
@@ -1906,11 +1921,29 @@ namespace sys {
                     if (o != NULL) { // known option
                         argTypes[i] = Argument::TYPE_OPTION_LONGNAME;
                         multi = 1;
+                        bool exclusive = false;
 
+                        if (o->exclusive) {
+                            if (i == (includeFirstArgument ? 0 : 1)) {
+                                // exclusive option starting the parameter list
+                                for (int j = i + 1; j < argc; j++) {
+                                    argTypes[j] = Argument::TYPE_UNKNOWN;
+                                    this->arglistSize++;
+                                }
+                                exclusive = true;
+
+                            } else {
+                                // exclusive option not on first position.
+                                this->errors.Append(Error(Error::MISSPLACED_EXCLUSIVE_OPTION, i));
+                                argTypes[i] = Argument::TYPE_UNKNOWN;
+
+                            }
+                        }
                         if (o->GetValueCount() > 0) { // known option with value
                             if (i + static_cast<int>(o->GetValueCount()) >= argc) { 
                                 // this arg is near end of list and there are not enought values!
                                 this->errors.Append(Error(Error::MISSING_VALUE, i));
+                                argTypes[i] = Argument::TYPE_UNKNOWN;
 
                             } else {
                                 for (int j2 = o->GetValueCount() - 1; j2 >= 0; j2--) {
@@ -1920,6 +1953,8 @@ namespace sys {
                                 }
                             }
                         }
+
+                        if (exclusive) i = argc;
 
                     } else { // unknown option
                         argTypes[i] = Argument::TYPE_UNKNOWN; // parameter or value to unknown option
@@ -1932,6 +1967,7 @@ namespace sys {
                     // check if all short names are known!
                     bool cleanList = true;
                     bool someKnown = false;
+                    bool exclusive = false;
 
                     multi = 0;
 
@@ -1945,6 +1981,39 @@ namespace sys {
                             Option *opt = opti.Next();
                             ASSERT(opt != NULL);
                             if (opt->shortName == *sn) {
+
+                                if (opt->exclusive) {
+                                    exclusive = true;
+                                    if (i == (includeFirstArgument ? 0 : 1)) {
+                                        if (sn == &argv[i][1]) {
+                                            if (*(sn + 1) != 0) {
+                                                // exclusive short name mixed up with other short names. This is not allowed!
+                                                this->errors.Append(Error(Error::MISSPLACED_EXCLUSIVE_OPTION, i));
+                                                cleanList = false;
+
+                                            } else {
+                                                // solitary exclusive short name.
+                                                for (int j = i + 1; j < argc; j++) {
+                                                    argTypes[j] = Argument::TYPE_UNKNOWN;
+                                                    this->arglistSize++;
+                                                }
+
+                                            }
+
+                                        } else {
+                                            // short name of exclusive option not on first position
+                                            this->errors.Append(Error(Error::MISSPLACED_EXCLUSIVE_OPTION, i));
+                                            cleanList = false;
+
+                                        }
+                                    } else {
+                                        // short name of exclusive option not on first position
+                                        this->errors.Append(Error(Error::MISSPLACED_EXCLUSIVE_OPTION, i));
+                                        cleanList = false;
+
+                                    }
+                                }
+
                                 found = true;
                                 someKnown = true;
                                 break;
@@ -1993,8 +2062,10 @@ namespace sys {
                             this->errors.Append(Error(Error::MISSING_VALUE, i));
                         }
 
+                        if (exclusive) i = argc;
+
                     } else {
-                        if (someKnown) { // some but not all short names are known
+                        if (someKnown && !exclusive) { // some but not all short names are known
                             this->warnings.Append(Warning(Warning::UNKNOWN_SHORT_NAMES, i));
                         }
 
