@@ -51,7 +51,7 @@ void vislib::graphics::BeholderDistZoom2D::Trigger(AbstractCursor *caller, Trigg
             delta *= scale;
 
             vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> deltaV = beholder->GetFrontVector() * delta;
-            vislib::math::Point<vislib::graphics::SceneSpaceType, 3> nPos = beholder->GetPosition() + deltaV;
+            vislib::math::Point<vislib::graphics::SceneSpaceType, 3> nPos = beholder->GetPosition() - deltaV;
 
             if ((nPos - beholder->GetLookAt()).SquareLength() >= this->squareMinDist) {
                 beholder->SetPosition(nPos);
