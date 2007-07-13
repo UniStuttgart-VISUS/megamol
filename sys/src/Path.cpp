@@ -390,7 +390,8 @@ vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
  */
 bool vislib::sys::Path::IsRelative(const StringA& path) {
 #ifdef _WIN32
-    return (::PathIsRelativeA(path.PeekBuffer()) != FALSE);
+    return (::PathIsRelativeA(path.PeekBuffer()) != FALSE)
+        || ((path.PeekBuffer()[0] == SEPARATOR_A) && (path.PeekBuffer()[1] != SEPARATOR_A));
 #else /* _WIN32 */
     return !path.StartsWith(SEPARATOR_A);
 #endif /* _WIN32 */
@@ -402,7 +403,8 @@ bool vislib::sys::Path::IsRelative(const StringA& path) {
  */
 bool vislib::sys::Path::IsRelative(const StringW& path) {
 #ifdef _WIN32
-    return (::PathIsRelativeW(path.PeekBuffer()) != FALSE);
+    return (::PathIsRelativeW(path.PeekBuffer()) != FALSE)
+        || ((path.PeekBuffer()[0] == SEPARATOR_W) && (path.PeekBuffer()[1] != SEPARATOR_W));
 #else /* _WIN32 */
     return !path.StartsWith(SEPARATOR_W);
 #endif /* _WIN32 */
@@ -591,45 +593,49 @@ void vislib::sys::Path::PurgeDirectory(const StringW& path, bool recursive) {
 /*
  * vislib::sys::Path::Resolve
  */
-vislib::StringA vislib::sys::Path::Resolve(StringA path) {
+vislib::StringA vislib::sys::Path::Resolve(StringA path, StringA basepath) {
     // TODO: Windows shell API resolve does not work in the expected
     // way, so we use the same manual approach for Windows and Linux.
 
 #ifdef _WIN32
-    /* Remove unchefm‰ﬂige path separators. */
+    /* Replace unchefm‰ﬂige path separators. */
+    basepath.Replace('/', SEPARATOR_A);
     path.Replace('/', SEPARATOR_A);
 #endif /* _WIN32 */
 
+    if (Path::IsRelative(basepath)) {
+        basepath = Resolve(basepath);
+    }
+
     if (path.IsEmpty()) {
         /* Path is empty, i. e. return current working directory. */
-        return Path::GetCurrentDirectoryA();
+        return Path::Canonicalise(basepath);
     
     } else if (Path::IsAbsolute(path)) {
         /* Path is absolute, just return it. */
-#ifdef _WIN32
-        if ((path.Length() < 2) || ((path[1] != SEPARATOR_A) 
-                && (path[1] != ':'))) {
-            return Path::GetCurrentDirectoryA().Substring(0, 1) + ':' + path;
-        } else {
-            /* UNC path or begins with drive letter. */
-            return path;
-        }
-#else /* _WIN32 */
-        return path;
-#endif /* _WIN32 */
+        return Path::Canonicalise(path);
 
     } else if ((path[0] == MYDOCUMENTS_MARKER_A) 
             && ((path.Length() == 1) || path[1] == SEPARATOR_A)) {
+        /*
+         * replace leading ~ with users home directory
+         */
         path.Replace(MYDOCUMENTS_MARKER_A, Path::GetUserHomeDirectoryA(), 1);
         return Path::Canonicalise(path);
+
+    } else if ((path[0] == SEPARATOR_A) && (path[1] != SEPARATOR_A)) {
+        /*
+         * Concatenate current drive and relative path, and canonicalise
+         * the result.
+         */
+        return Path::Concatenate(basepath.Substring(0, 2), path, true);
 
     } else {
         /*
          * Concatenate current directory and relative path, and canonicalise
          * the result.
          */
-
-        return Path::Concatenate(Path::GetCurrentDirectoryA(), path, true);
+        return Path::Concatenate(basepath, path, true);
     }
 }
 
@@ -637,44 +643,49 @@ vislib::StringA vislib::sys::Path::Resolve(StringA path) {
 /*
  * vislib::sys::Path::Resolve
  */
-vislib::StringW vislib::sys::Path::Resolve(StringW path) {
+vislib::StringW vislib::sys::Path::Resolve(StringW path, StringW basepath) {
     // TODO: Windows shell API resolve does not work in the expected
     // way, so we use the same manual approach for Windows and Linux.
 
 #ifdef _WIN32
-    /* Remove unchefm‰ﬂige path separators. */
+    /* Replace unchefm‰ﬂige path separators. */
+    basepath.Replace(L'/', SEPARATOR_W);
     path.Replace(L'/', SEPARATOR_W);
 #endif /* _WIN32 */
 
+    if (Path::IsRelative(basepath)) {
+        basepath = Resolve(basepath);
+    }
+
     if (path.IsEmpty()) {
         /* Path is empty, i. e. return current working directory. */
-        return Path::GetCurrentDirectoryW();
+        return Path::Canonicalise(basepath);
 
     } else if (Path::IsAbsolute(path)) {
         /* Path is absolute, just return it. */
-#ifdef _WIN32
-        if ((path.Length() < 2) || ((path[1] != SEPARATOR_W) 
-                && (path[1] != L':'))) {
-            return Path::GetCurrentDirectoryW().Substring(0, 1) + L':' + path;
-        } else {
-            /* UNC path or begins with drive letter. */
-            return path;
-        }
-#else /* _WIN32 */
-        return path;
-#endif /* _WIN32 */
+        return Path::Canonicalise(path);
 
     } else if ((path[0] == MYDOCUMENTS_MARKER_W) 
             && ((path.Length() == 1) || path[1] == SEPARATOR_W)) {
+        /*
+         * replace leading ~ with users home directory
+         */
         path.Replace(MYDOCUMENTS_MARKER_W, Path::GetUserHomeDirectoryW());
         return Path::Canonicalise(path);
+
+    } else if ((path[0] == SEPARATOR_W) && (path[1] != SEPARATOR_W)) {
+        /*
+         * Concatenate current drive and relative path, and canonicalise
+         * the result.
+         */
+        return Path::Concatenate(basepath.Substring(0, 2), path, true);
 
     } else {
         /*
          * Concatenate current directory and relative path, and canonicalise
          * the result.
          */
-        return Concatenate(Path::GetCurrentDirectoryW(), path, true);
+        return Concatenate(basepath, path, true);
     }
 }
 

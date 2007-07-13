@@ -32,20 +32,6 @@ namespace sys {
     public:
 
         /**
-         * Compares two paths. Both paths are considdered equal if the 
-         * canonicalised absolute paths are equal. Under windows the
-         * comparision is done case insensitive. Under linux the comparision
-         * is case sensitive.
-         *
-         * @param lhs The first path to be compared.
-         * @param rhs The second path to be compared.
-         *
-         * @return True if both paths are considdered equal, false otherwise.
-         */
-        template<class T>
-        static bool Compare(const String<T>& lhs, const String<T>& rhs);
-
-        /**
          * Canonicalises the path. 
          *
          * The method removes all relative references to the current path (".") 
@@ -74,12 +60,26 @@ namespace sys {
         static StringW Canonicalise(const StringW& path);
 
         /**
+         * Compares two paths. Both paths are considdered equal if the 
+         * canonicalised absolute paths are equal. Under windows the
+         * comparision is done case insensitive. Under linux the comparision
+         * is case sensitive.
+         *
+         * @param lhs The first path to be compared.
+         * @param rhs The second path to be compared.
+         *
+         * @return True if both paths are considdered equal, false otherwise.
+         */
+        template<class T>
+        static bool Compare(const String<T>& lhs, const String<T>& rhs);
+
+        /**
          * Concatenate the paths 'lhs' and 'rhs'. The method ensures, that
          * at a path separator is inserted, if necessary. If 'lhs' has a path
          * separator at its end or 'rhs' has a path spearator at its begin, no
          * spearator is inserted. You can also set 'canonicalise' true in order
          * to remove unnecessary path separators already contained in 'lhs' or
-         * 'rhs'.
+         * 'rhs'. This is not equal 'Resolve(rhs, lhs)'!
          *
          * @param lhs          The left hand side path.
          * @param rhs          The right hand side path.
@@ -96,7 +96,7 @@ namespace sys {
          * separator at its end or 'rhs' has a path spearator at its begin, no
          * spearator is inserted. You can also set 'canonicalise' true in order
          * to remove unnecessary path separators already contained in 'lhs' or
-         * 'rhs'.
+         * 'rhs'. This is not equal 'Resolve(rhs, lhs)'!
          *
          * @param lhs          The left hand side path.
          * @param rhs          The right hand side path.
@@ -267,7 +267,7 @@ namespace sys {
 
         /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
-         * will not be altered in this case.
+         * will only be canonicalised this case.
          *
          * If the path consists only of the the '~' character, it is expanded to
          * be the user home respectively the "My Documents" folder as returned
@@ -284,11 +284,13 @@ namespace sys {
          *
          * @return The absolute path.
          */
-        static StringA Resolve(StringA path);
+        static inline StringA Resolve(StringA path) {
+            return Resolve(path, GetCurrentDirectoryA());
+        }
 
         /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
-         * will not be altered in this case.
+         * will only be canonicalised this case.
          *
          * If the path consists only of the the '~' character, it is expanded to
          * be the user home respectively the "My Documents" folder as returned
@@ -305,7 +307,55 @@ namespace sys {
          *
          * @return The absolute path.
          */
-        static StringW Resolve(StringW path);
+        static inline StringW Resolve(StringW path) {
+            return Resolve(path, GetCurrentDirectoryW());
+        }
+        
+        /**
+         * Answer the absolute path of 'path'. 'path' can be absolute itself and
+         * will only be canonicalised this case.
+         *
+         * If the path consists only of the the '~' character, it is expanded to
+         * be the user home respectively the "My Documents" folder as returned
+         * by GetUserHomeDirectory().
+         * If the path begins with the sequence "~/", this part is expanded to
+         * be the user home, too. 
+         * Any other occurrence of the '~' character remains unchanged, i. e.
+         * "./~" is assumed to reference a local directory "~".
+         * 
+         * On Windows, Resolve additionally changes every '/' in the path to the
+         * Windows path separator '\'.
+         *
+         * @param path A path to a file or directory.
+         * @param basePath The base path which will be used to resolve 'path'.
+         *                 Must not be an unc path.
+         *
+         * @return The absolute path.
+         */
+        static StringA Resolve(StringA path, StringA basepath);
+
+        /**
+         * Answer the absolute path of 'path'. 'path' can be absolute itself and
+         * will only be canonicalised this case.
+         *
+         * If the path consists only of the the '~' character, it is expanded to
+         * be the user home respectively the "My Documents" folder as returned
+         * by GetUserHomeDirectory().
+         * If the path begins with the sequence "~/", this part is expanded to
+         * be the user home, too. 
+         * Any other occurrence of the '~' character remains unchanged, i. e.
+         * "./~" is assumed to reference a local directory "~".
+         * 
+         * On Windows, Resolve additionally changes every '/' in the path to the
+         * Windows path separator '\'.
+         *
+         * @param path A path to a file or directory.
+         * @param basePath The base path which will be used to resolve 'path'.
+         *                 Must not be an unc path.
+         *
+         * @return The absolute path.
+         */
+        static StringW Resolve(StringW path, StringW basepath);
 
         /**
          * Changes the current directory to be 'path'.

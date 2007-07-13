@@ -400,6 +400,8 @@ void TestPath(void) {
         cout << "Resolve \"~heinz\" " << Path::Resolve("~heinz") << endl;
         cout << "Resolve \".\\~\" " << Path::Resolve(".\\~") << endl;
 
+        AssertTrue("Path \"\\hugo\" is relative", Path::IsRelative("\\hugo"));
+        AssertTrue("Path \"\\\\hugo\" is absolute", Path::IsAbsolute("\\\\hugo"));
 
         AssertEqual("Canonicalise \"horst\\..\\hugo\"", Path::Canonicalise("horst\\..\\hugo"), StringA("\\hugo"));
         AssertEqual("Canonicalise \"\\horst\\..\\hugo\"", Path::Canonicalise("\\horst\\..\\hugo"), StringA("\\hugo"));
