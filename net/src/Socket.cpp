@@ -121,6 +121,8 @@ void vislib::net::Socket::Close(void) {
             throw SocketException(__FILE__, __LINE__);
         }
 
+        this->handle = INVALID_SOCKET;
+
     } /* end if (this->IsValid()) */
 }
 

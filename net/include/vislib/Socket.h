@@ -834,7 +834,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        virtual void Shutdown(const ShutdownManifest how);
+        virtual void Shutdown(const ShutdownManifest how = BOTH);
 
         /**
          * Assignment operator.
