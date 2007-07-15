@@ -519,10 +519,10 @@ namespace math {
     template<class Sp>
     bool AbstractRectangle<T, S>::Intersect(
             const AbstractRectangle<T, Sp>& rect) {
-        T bottom = MAX(this->bounds[IDX_BOTTOM], rect.Bottom());
-        T left = MAX(this->bounds[IDX_LEFT], rect.Left());
-        T right = MIN(this->bounds[IDX_RIGHT], rect.Right());
-        T top = MIN(this->bounds[IDX_TOP], rect.Top());
+        T bottom = Max(this->bounds[IDX_BOTTOM], rect.Bottom());
+        T left = Max(this->bounds[IDX_LEFT], rect.Left());
+        T right = Min(this->bounds[IDX_RIGHT], rect.Right());
+        T top = Min(this->bounds[IDX_TOP], rect.Top());
         
         if ((top < bottom) || (right < left)) {
             this->SetNull();
