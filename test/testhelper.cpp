@@ -68,6 +68,7 @@ void AssertOutputSuccess(void) {
     cout << "succeeded.";
     Console::RestoreDefaultColors();
     cout << endl;
+    cout << flush;
 }
 
 void AssertOutputFail(void) {
@@ -79,6 +80,7 @@ void AssertOutputFail(void) {
     cout << "FAILED.";
     Console::RestoreDefaultColors();
     cout << endl;
+    cout << flush;
 }
 
 void OutputAssertTestSummary(void) {

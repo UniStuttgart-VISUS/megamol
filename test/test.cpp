@@ -33,6 +33,7 @@
 #include "testdirectoryiterator.h"
 #include "testhash.h"
 #include "testtrayicon.h"
+#include "testnamedpipe.h"
 
 
 /* type for test functions */
@@ -70,7 +71,7 @@ VislibTest tests[] = {
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
-    //{_T("ConColors"), ::TestConsoleColors, "Tests colored console output using vislib::sys::Console"},
+    {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},
     {_T("DateTime"), ::TestDateTime, "Tests vislib::sys::DateTime"},
     {_T("DirIterator"), ::TestDirectoryIterator, "Test vislib::sys::DirectoryIterator"},
     {_T("File"), ::TestFile, "Tests vislib::sys::File and derived classes"},
@@ -80,6 +81,7 @@ VislibTest tests[] = {
     {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
+    {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };

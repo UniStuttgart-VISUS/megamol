@@ -402,6 +402,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testnamedpipe.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testpointers.cpp"
 				>
 			</File>
@@ -493,6 +497,10 @@
 			</File>
 			<File
 				RelativePath=".\testmisc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testnamedpipe.h"
 				>
 			</File>
 			<File

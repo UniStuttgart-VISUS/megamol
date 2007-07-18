@@ -358,6 +358,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\NamedPipe.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\PAMException.cpp"
 				>
 			</File>
@@ -505,6 +509,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Mutex.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\NamedPipe.h"
 				>
 			</File>
 			<File
