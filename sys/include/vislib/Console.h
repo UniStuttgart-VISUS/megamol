@@ -16,6 +16,7 @@
 
 #include "vislib/String.h"
 #include "vislib/types.h"
+#include "vislib/Log.h"
 
 
 namespace vislib {
@@ -49,6 +50,32 @@ namespace sys {
             WHITE = 0x0F,
             UNKNOWN_COLOR = 0x10
         };
+
+        /**
+         * Log echo output target implementation using special functions of the
+         * console, like coloured text.
+         */
+        class ConsoleLogEchoTarget : public vislib::sys::Log::EchoTarget {
+        public:
+
+            /** ctor */
+            ConsoleLogEchoTarget() { }
+
+            /** dtor */
+            virtual ~ConsoleLogEchoTarget() { }
+
+            /**
+             * Writes a string to the echo output target. Implementations may 
+             * assume that message ends with a new line control sequence.
+             *
+             * @param level The message level.
+             * @param message The message ANSI string.
+             */
+            virtual void Write(UINT level, const char *message) const;
+        };
+
+        /** The log echo output target of the console. */
+        static const ConsoleLogEchoTarget LogEchoOutTarget;
 
         // TODO: documentation
         // TODO: Windows implementation.

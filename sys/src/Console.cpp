@@ -35,6 +35,39 @@
 
 
 /*
+ * vislib::sys::Console::ConsoleLogEchoTarget::Write
+ */
+void vislib::sys::Console::ConsoleLogEchoTarget::Write(UINT level, 
+        const char *message) const {
+    if (vislib::sys::Console::ColorsEnabled()) {
+        vislib::sys::Console::ColorType color;
+
+        if (level <= vislib::sys::Log::LEVEL_ERROR) color = vislib::sys::Console::RED; // error
+        else if (level <= vislib::sys::Log::LEVEL_WARN) color = vislib::sys::Console::YELLOW; // warning
+        else if (level <= vislib::sys::Log::LEVEL_INFO) color = vislib::sys::Console::WHITE; // info
+        else color = vislib::sys::Console::UNKNOWN_COLOR;
+
+        if (color != vislib::sys::Console::UNKNOWN_COLOR) {
+            vislib::sys::Console::SetForegroundColor(color);
+            vislib::sys::Console::Write("%.4d", level);
+            vislib::sys::Console::RestoreDefaultColors();
+            vislib::sys::Console::Write("|%s", message);
+        } else {
+            vislib::sys::Console::Write("%.4d|%s", level, message);
+        }
+    } else {
+        vislib::sys::Console::Write("%.4d|%s", level, message);
+    }
+}
+
+
+/*
+ * vislib::sys::Console::LogEchoOutTarget
+ */
+const vislib::sys::Console::ConsoleLogEchoTarget vislib::sys::Console::LogEchoOutTarget;
+
+
+/*
  * vislib::sys::Console::usecolors
  */
 bool vislib::sys::Console::useColors = vislib::sys::Console::ColorsAvailable();

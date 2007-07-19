@@ -313,6 +313,14 @@ namespace vislib {
         void Format(const Char *fmt, ...);
 
         /**
+         * Prints into this string like vsprintf.
+         *
+         * @param fmt The format string.
+         * @param ... Optional parameters.
+         */
+        void Format(const Char *fmt, va_list argptr);
+
+        /**
          * Answer a hash code of the string.
          *
          * @return A hash code of the string-
@@ -1198,6 +1206,27 @@ namespace vislib {
         va_start(argptr, fmt);
         T::Format(this->data, size + 1, fmt, argptr);
         va_end(argptr);
+    }
+
+
+    /*
+     * String<T>::Format
+     */
+    template<class T> void String<T>::Format(const Char *fmt, va_list argptr) {
+        va_list argptrtmp;
+        Size size = 0;
+
+        /* Determine required buffer size. */
+        argptrtmp = argptr;
+        size = T::Format(NULL, 0, fmt, argptr);
+
+        /* Allocate memory. */
+        ASSERT(size >= 0);
+        this->AllocateBuffer(size);
+        
+        /* Write the actual output. */
+        argptr = argptrtmp;
+        T::Format(this->data, size + 1, fmt, argptr);
     }
 
 

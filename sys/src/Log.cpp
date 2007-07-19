@@ -10,12 +10,49 @@
 
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "vislib/mathfunctions.h"
 #include "vislib/SystemInformation.h"
+#include "vislib/Thread.h"
 #include <climits>
 #include <ctime>
+
+
+/*
+ * vislib::sys::Log::EchoTargetStream::StdOut
+ */
+const vislib::sys::Log::EchoTargetStream vislib::sys::Log::EchoTargetStream::StdOut(stdout);
+
+
+/*
+ * vislib::sys::Log::EchoTargetStream::StdErr
+ */
+const vislib::sys::Log::EchoTargetStream vislib::sys::Log::EchoTargetStream::StdErr(stderr);
+
+
+/*
+ * vislib::sys::Log::EchoTargetStream::EchoTargetStream
+ */
+vislib::sys::Log::EchoTargetStream::EchoTargetStream(FILE *stream) 
+        : stream(stream) {
+}
+
+
+/*
+ * vislib::sys::Log::EchoTargetStream::Write
+ */
+void vislib::sys::Log::EchoTargetStream::Write(UINT level, const char *message) const {
+    fprintf(this->stream, "%.4d|%s", level, message);
+}
+
+
+/*
+ * vislib::sys::Log::EchoTargetStream::~EchoTargetStream
+ */
+vislib::sys::Log::EchoTargetStream::~EchoTargetStream() {
+    // DO NOT CLOSE THE STREAM
+}
 
 
 /*
@@ -355,26 +392,22 @@ void vislib::sys::Log::FlushLog(void) {
  * vislib::sys::Log::WriteMsg
  */
 void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
+
+    // write echo message
     if ((this->echoOut != NULL) && (level <= this->echoLevel) && (level > 0)) {
+
+        vislib::StringA txt;
+
         va_list argptr;
-        fprintf(this->echoOut, "%4u|", level); // shorter message prefix
         va_start(argptr, fmt);
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-        ::vfprintf_s(this->echoOut, fmt, argptr);
-#else /* (_MSC_VER >= 1400) */
-        ::vfprintf(this->echoOut, fmt, argptr);
-#endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
-        ::vfprintf(this->echoOut, fmt, argptr);
-#endif /* _WIN32 */
+        txt.Format(fmt, argptr);
         va_end(argptr);
-        // check if fmt ends with '\n', otherwise append one
-        const char *p = fmt;
-        while ((*p != 0) && (*(p + 1) != 0)) p++;
-        if (*p != '\n') fprintf(this->echoOut, "\n");
+        if (!txt.EndsWith('\n')) txt += "\n";
+
+        this->echoOut->Write(level, txt.PeekBuffer());
     }
 
+    // write log message
 	if ((level <= this->level) && (level > 0)) {
         va_list argptr;
         if (this->logfile) {
@@ -451,26 +484,21 @@ void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
  * vislib::sys::Log::WriteMsg
  */
 void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
+
+    // write echo message
     if ((this->echoOut != NULL) && (level <= this->echoLevel) && (level > 0)) {
+        vislib::StringW txt;
+
         va_list argptr;
-        fprintf(this->echoOut, "%4u|", level); // shorter message prefix
         va_start(argptr, fmt);
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-        ::vfwprintf_s(this->echoOut, fmt, argptr);
-#else /* (_MSC_VER >= 1400) */
-        ::vfwprintf(this->echoOut, fmt, argptr);
-#endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
-        ::vfwprintf(this->echoOut, fmt, argptr);
-#endif /* _WIN32 */
+        txt.Format(fmt, argptr);
         va_end(argptr);
-        // check if fmt ends with '\n', otherwise append one
-        const wchar_t *p = fmt;
-        while ((*p != 0) && (*(p + 1) != 0)) p++;
-        if (*p != '\n') fprintf(this->echoOut, "\n");
+        if (!txt.EndsWith(L'\n')) txt += L"\n";
+
+        this->echoOut->Write(level, W2A(txt));
     }
 
+    // write log message
 	if ((level <= this->level) && (level > 0)) {
         va_list argptr;
         if (this->logfile) {
@@ -596,8 +624,9 @@ void vislib::sys::Log::WriteMsgPrefix(UINT level, const TimeStamp& timestamp) {
     timeStamp = localtime(&timestamp);
 #endif /* _WIN32 */
 
-    fprintf(this->logfile, "%2d:%.2d:%.2d|%4d|", 
-        timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec, level);
+    fprintf(this->logfile, "%2d:%.2d:%.2d|%8x|%4d|", 
+        timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec, 
+        vislib::sys::Thread::CurrentID(), level);
 }
 
 
@@ -640,9 +669,8 @@ vislib::StringA vislib::sys::Log::GetFileNameSuffix(void) {
 
     t->tm_mon += 1;
     t->tm_year += 1900;
-    suffix.Format("_%s_%.2d%.2d%.4d_%.2d%.2d", vislib::sys::SystemInformation::ComputerNameA().PeekBuffer()
-        ,t->tm_mday, t->tm_mon, t->tm_year, t->tm_hour, t->tm_min);
-    // TODO: extent with process id
+    suffix.Format("_%s.%.8x_%.2d.%.2d.%.4d_%.2d.%.2d", vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
+        vislib::sys::Thread::CurrentID(), t->tm_mday, t->tm_mon, t->tm_year, t->tm_hour, t->tm_min);
 
     return suffix;
 }

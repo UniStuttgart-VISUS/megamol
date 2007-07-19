@@ -77,6 +77,78 @@ namespace sys {
         /** The default log object. */
         static Log DefaultLog;
 
+        /**
+         * Nested abstract base class of echo output targets.
+         */
+        class EchoTarget {
+        public:
+
+            /** ctor */
+            EchoTarget() { }
+
+            /** dtor */
+            virtual ~EchoTarget() { }
+
+            /**
+             * Writes a string to the echo output target. Implementations may 
+             * assume that message ends with a new line control sequence.
+             *
+             * @param level The message level.
+             * @param message The message ANSI string.
+             */
+            virtual void Write(UINT level, const char *message) const = 0;
+
+        };
+
+        /**
+         * Implementation of EchoTarget writing the messages to a posix system
+         * stream.
+         */
+        class EchoTargetStream : public EchoTarget {
+        public:
+
+            /** Object echoing to stdout */
+            static const EchoTargetStream StdOut;
+
+            /** Object echoing to stderr */
+            static const EchoTargetStream StdErr;
+
+            /** 
+             * ctor 
+             *
+             * @param stream Specifies the stream used. This target object will
+             *               not close the stream 
+             */
+            EchoTargetStream(FILE *stream);
+
+            /**
+             * Writes a string to the echo output target. Implementations may 
+             * assume that message ends with a new line control sequence.
+             *
+             * @param level The message level.
+             * @param message The message ANSI string.
+             */
+            virtual void Write(UINT level, const char *message) const;
+
+            /**
+             * Answers the associated stream.
+             *
+             * @return The associated stream.
+             */
+            inline FILE * Stream(void) const {
+                return this->stream;
+            }
+
+            /** dtor */
+            virtual ~EchoTargetStream();
+
+        private:
+
+            /** the echo stream */
+            FILE *stream;
+        };
+
+
         /** 
          * Ctor. Constructs a new log file without a physical file. 
          *
@@ -288,25 +360,24 @@ namespace sys {
 			this->echoLevel = level;
 		}
         /**
-         * Answer the current echo output stream. This log object does not own
-         * this stream.
+         * Answer the current echo output target. This log object does not own
+         * this target.
          *
          * @return The current echo level.
          */
-		inline FILE* GetEchoOutStream(void) const {
+		inline const EchoTarget* GetEchoOutTarget(void) const {
 			return this->echoOut;
 		}
 
         /**
-         * Set a new echo output stream. The log object does not take ownership
-         * of this stream, thus the caller must ensure that the stream is valid
-         * and open as long as it is used by this log object. To disable echo
-         * output, simply set this stream to NULL (which is also the default
-         * value).
+         * Set a new echo output target. This Log object does not take 
+         * ownership of the targets memory. Therefore the caller must ensure
+         * that the pointer of the target object is valid as long as it is used
+         * by this Log object. Use 'NULL' pointer to deactivate echo output.
          *
          * @param level The new echo output stream.
          */
-		inline void SetEchoOutStream(FILE* stream) {
+		inline void SetEchoOutTarget(const EchoTarget* stream) {
 			this->echoOut = stream;
 		}
 
@@ -440,7 +511,7 @@ namespace sys {
         UINT echoLevel;
 
         /** the echo output stream */
-        FILE *echoOut;
+        const EchoTarget *echoOut;
 
     };
     
