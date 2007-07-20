@@ -1217,15 +1217,30 @@ namespace vislib {
         Size size = 0;
 
         /* Determine required buffer size. */
+#undef ___local_arg_list_copyied
+#ifndef _WIN32
+#if defined(va_copy)
+        va_copy(argptrtmp, argptr);
+#define ___local_arg_list_copyied 1
+#elif defined(__va_copy) /* va_copy */
+        __va_copy(argptrtmp, argptr);
+#define ___local_arg_list_copyied 1
+#endif /* va_copy */
+#endif /* !_WIN32 */
+#ifndef ___local_arg_list_copyied
         argptrtmp = argptr;
-        size = T::Format(NULL, 0, fmt, argptr);
+#endif /* !___local_arg_list_copyied */
+        size = T::Format(NULL, 0, fmt, argptrtmp);
+#ifdef ___local_arg_list_copyied
+        va_end(argptrtmp);
+#endif /* ___local_arg_list_copyied */
+#undef ___local_arg_list_copyied
 
         /* Allocate memory. */
         ASSERT(size >= 0);
         this->AllocateBuffer(size);
         
         /* Write the actual output. */
-        argptr = argptrtmp;
         T::Format(this->data, size + 1, fmt, argptr);
     }
 
