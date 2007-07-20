@@ -126,9 +126,9 @@ void vislib::sys::NamedPipe::Open(vislib::StringA name,
         this->Close();
     }
 
+    vislib::StringA pipeName = PipeSystemName(name);
+
 #ifdef _WIN32
-    vislib::StringA pipeName = "\\\\.\\pipe\\";
-    pipeName += name;
     
     this->handle = ::CreateNamedPipeA(pipeName.PeekBuffer(), 
         FILE_FLAG_FIRST_PIPE_INSTANCE | 
@@ -182,10 +182,6 @@ void vislib::sys::NamedPipe::Open(vislib::StringA name,
         vislib::sys::Path::MakeDirectory(this->baseDir);
     }
 
-    vislib::StringA pipeName = this->baseDir;
-    pipeName += "/";
-    pipeName += name;
-
     // Create the FIFO if it does not exist
     mode_t oldMask = ::umask(0);
     if (::mknod(pipeName.PeekBuffer(), S_IFIFO | 0666, 0) != 0) {
@@ -229,7 +225,66 @@ void vislib::sys::NamedPipe::Open(vislib::StringW name,
 
 #ifdef _WIN32
 
-    throw vislib::MissingImplementationException("Linux*", __FILE__, __LINE__);
+    // check parameters
+    if (!this->checkPipeName(name)) {
+        throw IllegalParamException("name", __FILE__, __LINE__);
+    }
+    if (mode == vislib::sys::NamedPipe::PIPE_MODE_NONE) {
+        throw IllegalParamException("mode", __FILE__, __LINE__);
+    }
+
+    // close old pipe
+    if (this->IsOpen()) {
+        this->Close();
+    }
+
+    vislib::StringW pipeName = PipeSystemName(name);
+    
+    this->handle = ::CreateNamedPipeW(pipeName.PeekBuffer(), 
+        FILE_FLAG_FIRST_PIPE_INSTANCE | 
+        ((mode == PIPE_MODE_READ) ? PIPE_ACCESS_INBOUND : PIPE_ACCESS_OUTBOUND),
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, 2, PIPE_BUFFER_SIZE, 
+        PIPE_BUFFER_SIZE, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+
+    this->isClient = false;    
+
+    if (this->handle == INVALID_HANDLE_VALUE) {
+        DWORD lastError = ::GetLastError();
+
+        if (lastError == ERROR_ACCESS_DENIED) {
+            // pipe already created! So we are the client
+
+            this->handle = ::CreateFileW(pipeName.PeekBuffer(), 
+                ((mode == PIPE_MODE_WRITE) ? GENERIC_WRITE : GENERIC_READ), 
+                0, NULL, OPEN_EXISTING, 0, 0);
+    
+            this->isClient = true;
+
+            if (this->handle == INVALID_HANDLE_VALUE) {
+                throw vislib::sys::SystemException(__FILE__, __LINE__);
+            }
+
+        } else {
+            throw vislib::sys::SystemException(__FILE__, __LINE__);
+        }
+    }
+
+    if (!this->isClient) {
+        DWORD lastError;
+        bool connected = ::ConnectNamedPipe(this->handle, NULL) ? true 
+            : ((lastError = GetLastError()) == ERROR_PIPE_CONNECTED); 
+
+        if (!connected) {
+            // pipe broken before even creating
+            ::CloseHandle(this->handle);
+            this->handle = INVALID_HANDLE_VALUE;
+            this->mode = PIPE_MODE_NONE;
+
+            throw vislib::sys::SystemException(lastError, __FILE__, __LINE__);
+        }
+    }
+
+    this->mode = mode;
 
 #else /* _WIN32 */
 
@@ -301,6 +356,46 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
         buffer = static_cast<void*>(static_cast<char*>(buffer) + outRead);
         size -= outRead;
     }
+}
+
+
+/*
+ * vislib::sys::NamedPipe::PipeSystemName
+ */
+vislib::StringA vislib::sys::NamedPipe::PipeSystemName(const vislib::StringA &name) {
+    if (!checkPipeName(name)) {
+        throw IllegalParamException("name", __FILE__, __LINE__);
+    }
+
+#ifdef _WIN32
+    vislib::StringA pipeName = "\\\\.\\pipe\\";
+    pipeName += name;
+#else /* _WIN32 */
+    vislib::StringA pipeName = baseDir;
+    pipeName += "/";
+    pipeName += name;
+#endif /* _WIN32 */
+    return pipeName;
+}
+
+
+/*
+ * vislib::sys::NamedPipe::PipeSystemName
+ */
+vislib::StringW vislib::sys::NamedPipe::PipeSystemName(const vislib::StringW &name) {
+    if (!checkPipeName(name)) {
+        throw IllegalParamException("name", __FILE__, __LINE__);
+    }
+
+#ifdef _WIN32
+    vislib::StringW pipeName = L"\\\\.\\pipe\\";
+    pipeName += name;
+#else /* _WIN32 */
+    vislib::StringW pipeName = A2W(baseDir);
+    pipeName += L"/";
+    pipeName += name;
+#endif /* _WIN32 */
+    return pipeName;
 }
 
 

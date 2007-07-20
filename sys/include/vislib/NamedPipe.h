@@ -155,6 +155,34 @@ namespace sys {
         void Read(void *buffer, unsigned int size);
 
         /**
+         * Answer the full system name of a pipe. The pipe name 'name' is 
+         * expanded by an os dependent path. On Windows the return value will
+         * be '\\.\pipe\name' and on Linux the return value will be
+         * '/tmp/vislibpipes/name'.
+         *
+         * @param name The name of the named pipe.
+         *
+         * @return The full system name of the named pipe.
+         *
+         * @throws IllegalParamException if name is not a valid pipe name.
+         */
+        static vislib::StringA PipeSystemName(const vislib::StringA &name);
+
+        /**
+         * Answer the full system name of a pipe. The pipe name 'name' is 
+         * expanded by an os dependent path. On Windows the return value will
+         * be '\\.\pipe\name' and on Linux the return value will be
+         * '/tmp/vislibpipes/name'.
+         *
+         * @param name The name of the named pipe.
+         *
+         * @return The full system name of the named pipe.
+         *
+         * @throws IllegalParamException if name is not a valid pipe name.
+         */
+        static vislib::StringW PipeSystemName(const vislib::StringW &name);
+
+        /**
          * Writes 'size' bytes from 'buffer' into the pipe. The method does not
          * return until all bytes are written. Communication errors (e. g. when
          * the pipe breaks) result in exceptions.
@@ -182,7 +210,7 @@ namespace sys {
          *
          * @return true if the name is valid, false otherwise.
          */
-        template<class T> bool checkPipeName(const String<T> &name);
+        template<class T> static bool checkPipeName(const String<T> &name);
 
 #ifdef _WIN32
         /** The handle of the pipe */
