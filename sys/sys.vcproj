@@ -322,6 +322,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Event.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\File.cpp"
 				>
 			</File>
@@ -473,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\error.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Event.h"
 				>
 			</File>
 			<File
