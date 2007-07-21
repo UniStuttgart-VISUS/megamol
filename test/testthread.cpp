@@ -7,6 +7,7 @@
 #include "testthread.h"
 #include "testhelper.h"
 
+#include "vislib/CriticalSection.h"
 #include "vislib/Event.h"
 #include "vislib/Mutex.h"
 #include "vislib/Runnable.h"
@@ -15,6 +16,9 @@
 
 
 using namespace vislib::sys;
+
+// Ensure that a whole line is output at once on cout.
+static CriticalSection COUT_IO_LOCK;
 
 
 // Test runnable
@@ -76,9 +80,13 @@ DWORD SynchronisedRunnable::Run(void *userData) {
         : 100;
 
     if (UseSemaphore) {
+        COUT_IO_LOCK.Lock();
         std::cout << "Using semaphore ..." << std::endl;
+        COUT_IO_LOCK.Unlock();
     } else {
+        COUT_IO_LOCK.Lock();
         std::cout << "Using mutex ..." << std::endl;
+        COUT_IO_LOCK.Unlock();
     }
 
     for (UINT i = 0; i < cnt; i++) {
@@ -100,8 +108,8 @@ DWORD SynchronisedRunnable::Run(void *userData) {
 
 int SynchronisedRunnable::Cnt = 0;
 bool SynchronisedRunnable::UseSemaphore = false;
-vislib::sys::Mutex SynchronisedRunnable::mutex;
-vislib::sys::Semaphore SynchronisedRunnable::semaphore;
+Mutex SynchronisedRunnable::mutex;
+Semaphore SynchronisedRunnable::semaphore;
 
 
 
@@ -128,19 +136,26 @@ private:
 
 DWORD EventRunnable::Run(void *userData) {
     UserData *ud = static_cast<UserData *>(userData);
+    DWORD retval = 0;
     
     if (ud->isSignalDude) {
-        std::cout << "Thread " << vislib::sys::Thread::CurrentID() 
-            <<  " will signal event " << ud->cnt << " times ..." << std::endl;
+        COUT_IO_LOCK.Lock();
+        std::cout << "Thread " << Thread::CurrentID() <<  " will signal event " 
+            << ud->cnt << " times ..." << std::endl;
+        COUT_IO_LOCK.Unlock();
 
         for (UINT i = 0; i < ((ud->resetEvent) ? 1 : 2) * ud->cnt; i++) {
+            COUT_IO_LOCK.Lock();
             std::cout << "Event is being signaled." << std::endl;
+            COUT_IO_LOCK.Unlock();
             ud->evt->Set();
 
             Thread::Sleep(20);
 
             if (ud->resetEvent) {
+                COUT_IO_LOCK.Lock();
                 std::cout << "Event is manually reset." << std::endl;
+                COUT_IO_LOCK.Unlock();
                 ud->evt->Reset();
             }
 
@@ -148,18 +163,23 @@ DWORD EventRunnable::Run(void *userData) {
         }
 
     } else {
-        std::cout << "Thread " << vislib::sys::Thread::CurrentID()
+        COUT_IO_LOCK.Lock();
+        std::cout << "Thread " << Thread::CurrentID() 
             << " will wait for being signaled " << ud->cnt << " times ..." 
             << std::endl;
+        COUT_IO_LOCK.Unlock();
 
         for (UINT i = 0; i < ud->cnt; i++) {
             ud->evt->Wait();
-            std::cout << "Thread " << vislib::sys::Thread::CurrentID()
+            retval++;
+            COUT_IO_LOCK.Lock();
+            std::cout << "Thread " << Thread::CurrentID() 
                 << " has been signaled." << std::endl;
+            COUT_IO_LOCK.Unlock();
         }
     }
 
-    return 0;
+    return retval;
 }
 
 
@@ -173,8 +193,8 @@ SynchronisedRunnable s1;
 SynchronisedRunnable s2;
 
 // Event test variables.
-vislib::sys::Event evtAuto(false);
-vislib::sys::Event evtManual(true);
+Event evtAuto(false);
+Event evtManual(true);
 EventRunnable e1;
 EventRunnable e2;
 EventRunnable e3;
@@ -192,10 +212,14 @@ void TestThread(void) {
     t1.Start(&cntLoops);
     t2.Start(&cntLoops);
 
+    COUT_IO_LOCK.Lock();
     ::AssertTrue("Thread 1 is running", t1.IsRunning());
     ::AssertTrue("Thread 2 is running", t2.IsRunning());
+    COUT_IO_LOCK.Unlock();
 
+    COUT_IO_LOCK.Lock();
     ::AssertFalse("Thread cannot be started twice", t1.Start());
+    COUT_IO_LOCK.Unlock();
 
     t1.Join();
     t2.Join();
@@ -254,6 +278,10 @@ void TestThread(void) {
     t8.Join();
     t9.Join();
 
+    ::AssertEqual("Signal Dude Thread has never waited", t7.GetExitCode(), DWORD(0));
+    ::AssertEqual("Exit code is number of event being signaled", t8.GetExitCode(), cntLoops);
+    ::AssertEqual("Exit code is number of event being signaled", t9.GetExitCode(), cntLoops);
+
     udSignal.evt = &evtManual;
     udSignal.resetEvent = true; 
     udWait.evt = &evtManual;
@@ -270,5 +298,9 @@ void TestThread(void) {
     t10.Join();
     t11.Join();
     t12.Join();
+
+    ::AssertEqual("Signal Dude Thread has never waited", t10.GetExitCode(), DWORD(0));
+    ::AssertEqual("Exit code is number of event being signaled", t11.GetExitCode(), cntLoops);
+    ::AssertEqual("Exit code is number of event being signaled", t12.GetExitCode(), cntLoops);
 
 }
