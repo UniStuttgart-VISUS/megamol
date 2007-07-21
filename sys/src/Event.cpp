@@ -8,7 +8,10 @@
 #include "vislib/Event.h"
 
 #ifndef _WIN32
+#include <climits>
+#include <cstring>
 #include <ctime>
+#include <unistd.h>
 #endif /* !_WIN32 */
 
 #include "vislib/assert.h"
@@ -38,7 +41,7 @@ vislib::sys::Event::Event(const bool isManualReset) {
 
 #else /* _WIN32 */
     ::pthread_condattr_init(&this->attr);
-    ::pthread_cond_init(&this->cont, this->attr);
+    ::pthread_cond_init(&this->cond, &this->attr);
 
 #endif /* _WIN32 */
 }
@@ -51,7 +54,8 @@ vislib::sys::Event::~Event(void) {
 #ifdef _WIN32
     ::CloseHandle(this->handle);
 #else /* _WIN32 */
-    while (::pthread_cond_destory(&this->cont) == EBUSY) {
+    while (::pthread_cond_destroy(&this->cond) == EBUSY) {
+
         ::usleep(1000);
     }
 
@@ -140,8 +144,8 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
             returnCode = ::pthread_cond_wait(&this->cond, 
                 &this->condMutex.mutex);
             if (returnCode != 0) {
-                this->mutex.Unlock();
-                ::throw SystemException(returnCode, __FILE__, __LINE);
+                this->condMutex.Unlock();
+                throw SystemException(returnCode, __FILE__, __LINE__);
             }
 
             /*
@@ -188,7 +192,7 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
 
         /* Wait for the condition. */
         returnCode = ::pthread_cond_timedwait(&this->cond, 
-            &this->contMutex.mutex, &tsEnd);
+            &this->condMutex.mutex, &tsEnd);
         this->condMutex.Unlock();
         switch (returnCode) {
             case 0:

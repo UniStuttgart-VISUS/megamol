@@ -122,10 +122,10 @@ namespace sys {
 
 #else /* _WIN32 */
         /** The condition attributes. */
-        pthread_cond_addr_t attr;
+        pthread_condattr_t attr;
 
         /** The condition used to wake up blocked threads. */
-        pthread_cond_t condition;
+        pthread_cond_t cond;
 
         /** The condition mutex. */
         Mutex condMutex;
