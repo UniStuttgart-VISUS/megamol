@@ -55,8 +55,7 @@ vislib::sys::Event::~Event(void) {
     ::CloseHandle(this->handle);
 #else /* _WIN32 */
     while (::pthread_cond_destroy(&this->cond) == EBUSY) {
-
-        ::usleep(1000);
+        ::usleep(1000); // TODO: this is a good idea? Might block dtor.
     }
 
     ::pthread_condattr_destroy(&this->attr);
@@ -177,11 +176,16 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
         tsEnd.tv_sec += timeout / 1000;
         tsEnd.tv_nsec += (timeout % 1000) * 1000;
 
-        /* Simulate timeout for pthread_mutex_lock. */
+        /*
+         * Simulate timeout for pthread_mutex_lock. The mutex cannot be simply
+         * locked using a blocking operation as another thread might wait for
+         * the condition without a timeout. In this case, a timed wait operation
+         * would be blocked, too, because of 'condMutex' being locked.
+         */
         while (!(isLocked = this->condMutex.TryLock()) 
                 && ((tsEnd.tv_sec > tsNow.tv_sec)
                 || (tsEnd.tv_nsec >= tsNow.tv_nsec))) {
-            ::usleep(10);
+            ::usleep(10);   // TODO: Is this a good value?
             ::clock_gettime(CLOCK_REALTIME, &tsNow);
         }
 

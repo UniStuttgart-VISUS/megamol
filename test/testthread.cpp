@@ -7,6 +7,7 @@
 #include "testthread.h"
 #include "testhelper.h"
 
+#include "vislib/Event.h"
 #include "vislib/Mutex.h"
 #include "vislib/Runnable.h"
 #include "vislib/Semaphore.h"
@@ -104,18 +105,87 @@ vislib::sys::Semaphore SynchronisedRunnable::semaphore;
 
 
 
+// Test Events.
+class EventRunnable : public Runnable {
 
+public:
+    typedef struct UserData_t {
+        UINT cnt;
+        vislib::sys::Event *evt;
+        bool isSignalDude;
+        bool resetEvent;
+    } UserData;
+
+    inline EventRunnable() {}
+
+    virtual DWORD Run(void *userData);
+
+private:
+
+    static vislib::sys::Event event;
+
+};
+
+DWORD EventRunnable::Run(void *userData) {
+    UserData *ud = static_cast<UserData *>(userData);
+    
+    if (ud->isSignalDude) {
+        std::cout << "Thread " << vislib::sys::Thread::CurrentID() 
+            <<  " will signal event " << ud->cnt << " times ..." << std::endl;
+
+        for (UINT i = 0; i < ((ud->resetEvent) ? 1 : 2) * ud->cnt; i++) {
+            std::cout << "Event is being signaled." << std::endl;
+            ud->evt->Set();
+
+            Thread::Sleep(20);
+
+            if (ud->resetEvent) {
+                std::cout << "Event is manually reset." << std::endl;
+                ud->evt->Reset();
+            }
+
+            Thread::Sleep(20);
+        }
+
+    } else {
+        std::cout << "Thread " << vislib::sys::Thread::CurrentID()
+            << " will wait for being signaled " << ud->cnt << " times ..." 
+            << std::endl;
+
+        for (UINT i = 0; i < ud->cnt; i++) {
+            ud->evt->Wait();
+            std::cout << "Thread " << vislib::sys::Thread::CurrentID()
+                << " has been signaled." << std::endl;
+        }
+    }
+
+    return 0;
+}
+
+
+// Thread test variables.
 MyRunnable r1(1);
 MyRunnable r2(2);
 
+
+// Synchronisation test variables.
 SynchronisedRunnable s1;
 SynchronisedRunnable s2;
 
+// Event test variables.
+vislib::sys::Event evtAuto(false);
+vislib::sys::Event evtManual(true);
+EventRunnable e1;
+EventRunnable e2;
+EventRunnable e3;
+
 void TestThread(void) {
+    DWORD cntLoops = 100;
+    
+    // Thread tests
     Thread t1(&r1);
     Thread t2(&r2);
-    DWORD cntLoops = 100;
-
+    
     ::AssertFalse("Thread 1 is initially not running", t1.IsRunning());
     ::AssertFalse("Thread 2 is initially not running", t2.IsRunning());
 
@@ -134,6 +204,7 @@ void TestThread(void) {
     ::AssertEqual("Exit code is number of loops", t2.GetExitCode(), cntLoops);
 
 
+    // Synchronisation tests
     SynchronisedRunnable::Cnt = 0;
     SynchronisedRunnable::UseSemaphore = false;
     Thread t3(&s1);
@@ -164,5 +235,40 @@ void TestThread(void) {
     ::AssertEqual("Exit code is number of loops", t5.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of loops", t6.GetExitCode(), cntLoops);
     ::AssertEqual("Counter twice number of loops", DWORD(SynchronisedRunnable::Cnt), 2 * cntLoops);
+
+
+    // Event tests.
+    cntLoops = 2;
+    EventRunnable::UserData udSignal = { cntLoops, &::evtAuto, true, false };
+    EventRunnable::UserData udWait = { cntLoops, &::evtAuto, false, false };
+
+    Thread t7(&e1);
+    Thread t8(&e2);
+    Thread t9(&e3);
+
+    t7.Start(&udSignal);
+    t8.Start(&udWait);
+    t9.Start(&udWait);
+
+    t7.Join();
+    t8.Join();
+    t9.Join();
+
+    udSignal.evt = &evtManual;
+    udSignal.resetEvent = true; 
+    udWait.evt = &evtManual;
+    udWait.resetEvent = true; 
+
+    Thread t10(&e1);
+    Thread t11(&e2);
+    Thread t12(&e3);
+
+    t10.Start(&udSignal);
+    t11.Start(&udWait);
+    t12.Start(&udWait);
+
+    t10.Join();
+    t11.Join();
+    t12.Join();
 
 }
