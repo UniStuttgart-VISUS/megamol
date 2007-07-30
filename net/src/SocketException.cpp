@@ -53,3 +53,15 @@ vislib::net::SocketException& vislib::net::SocketException::operator =(
     return *this;
 }
 
+
+/*
+ * vislib::net::SocketException::IsTimeout
+ */
+bool vislib::net::SocketException::IsTimeout(void) const {
+#ifdef _WIN32
+    return (this->GetErrorCode() == WSAETIMEDOUT);
+#else /* _WIN32 */
+    return (this->GetErrorCode() == ETIMEDOUT);
+#endif /* _WIN32 */
+}
+

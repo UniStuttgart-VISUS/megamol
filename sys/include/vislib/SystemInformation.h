@@ -159,7 +159,7 @@ namespace sys {
          */
         static unsigned int ProcessorCount(void);
 
- /**
+        /**
          * Returns the type of the operating system this vislib application is
          * built for. Will usually the same value as the return value of
          * "GetSystemType".

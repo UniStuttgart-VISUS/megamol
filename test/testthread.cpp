@@ -19,6 +19,8 @@ using namespace vislib::sys;
 
 // Ensure that a whole line is output at once on cout.
 static CriticalSection COUT_IO_LOCK;
+#define LOCK_COUT ::COUT_IO_LOCK.Lock()
+#define UNLOCK_COUT ::COUT_IO_LOCK.Unlock()
 
 
 // Test runnable
@@ -80,13 +82,13 @@ DWORD SynchronisedRunnable::Run(void *userData) {
         : 100;
 
     if (UseSemaphore) {
-        COUT_IO_LOCK.Lock();
+        LOCK_COUT;
         std::cout << "Using semaphore ..." << std::endl;
-        COUT_IO_LOCK.Unlock();
+        UNLOCK_COUT;
     } else {
-        COUT_IO_LOCK.Lock();
+        LOCK_COUT;
         std::cout << "Using mutex ..." << std::endl;
-        COUT_IO_LOCK.Unlock();
+        UNLOCK_COUT;
     }
 
     for (UINT i = 0; i < cnt; i++) {
@@ -121,7 +123,7 @@ public:
         UINT cnt;
         vislib::sys::Event *evt;
         bool isSignalDude;
-        bool resetEvent;
+        vislib::sys::Semaphore *resetSem;
     } UserData;
 
     inline EventRunnable() {}
@@ -139,43 +141,57 @@ DWORD EventRunnable::Run(void *userData) {
     DWORD retval = 0;
     
     if (ud->isSignalDude) {
-        COUT_IO_LOCK.Lock();
+        LOCK_COUT;
         std::cout << "Thread " << Thread::CurrentID() <<  " will signal event " 
             << ud->cnt << " times ..." << std::endl;
-        COUT_IO_LOCK.Unlock();
+        std::cout << "Thread " << Thread::CurrentID() << " will " 
+            << ((ud->resetSem != NULL) ? "" : "not ") << "reset the event "
+            << "manually." << std::endl;
+        UNLOCK_COUT;
 
-        for (UINT i = 0; i < ((ud->resetEvent) ? 1 : 2) * ud->cnt; i++) {
-            COUT_IO_LOCK.Lock();
-            std::cout << "Event is being signaled." << std::endl;
-            COUT_IO_LOCK.Unlock();
+        for (UINT i = 0; i < ((ud->resetSem != NULL) ? 1 : 2 * ud->cnt); i++) {
+            LOCK_COUT;
+            std::cout << "Event is being signaled " << i << "." << std::endl;
+            UNLOCK_COUT;
             ud->evt->Set();
 
-            Thread::Sleep(20);
+            if (ud->resetSem != NULL) {
+                LOCK_COUT;
+                std::cout << "Waiting to reset manually." << std::endl;
+                UNLOCK_COUT;
+                for (UINT j = 0; j < 2 * ud->cnt; j++) {
+                    ud->resetSem->Lock();
+                }
 
-            if (ud->resetEvent) {
-                COUT_IO_LOCK.Lock();
-                std::cout << "Event is manually reset." << std::endl;
-                COUT_IO_LOCK.Unlock();
                 ud->evt->Reset();
+                LOCK_COUT;
+                std::cout << "Event is manually reset." << std::endl;
+                UNLOCK_COUT;
             }
 
             Thread::Sleep(20);
         }
 
     } else {
-        COUT_IO_LOCK.Lock();
+        LOCK_COUT;
         std::cout << "Thread " << Thread::CurrentID() 
             << " will wait for being signaled " << ud->cnt << " times ..." 
             << std::endl;
-        COUT_IO_LOCK.Unlock();
+        std::cout << "Thread " << Thread::CurrentID() << 
+            ((ud->resetSem != NULL) ? " expects " : " does not expect ")
+            << "a manual reset event." << std::endl;
+        UNLOCK_COUT;
 
         for (UINT i = 0; i < ud->cnt; i++) {
             ud->evt->Wait();
+            if (ud->resetSem != NULL) {
+                ud->resetSem->Unlock();
+            }
             retval++;
-            COUT_IO_LOCK.Lock();
+            LOCK_COUT;
             std::cout << "Thread " << Thread::CurrentID() 
-                << " has been signaled." << std::endl;
-            COUT_IO_LOCK.Unlock();
+                << " has been signaled " << i << "." << std::endl;
+            UNLOCK_COUT;
         }
     }
 
@@ -203,6 +219,7 @@ void TestThread(void) {
     DWORD cntLoops = 100;
     
     // Thread tests
+    std::cout << std::endl << "Initial thread tests" << std::endl;
     Thread t1(&r1);
     Thread t2(&r2);
     
@@ -212,14 +229,14 @@ void TestThread(void) {
     t1.Start(&cntLoops);
     t2.Start(&cntLoops);
 
-    COUT_IO_LOCK.Lock();
+    LOCK_COUT;
     ::AssertTrue("Thread 1 is running", t1.IsRunning());
     ::AssertTrue("Thread 2 is running", t2.IsRunning());
-    COUT_IO_LOCK.Unlock();
+    UNLOCK_COUT;
 
-    COUT_IO_LOCK.Lock();
+    LOCK_COUT;
     ::AssertFalse("Thread cannot be started twice", t1.Start());
-    COUT_IO_LOCK.Unlock();
+    UNLOCK_COUT;
 
     t1.Join();
     t2.Join();
@@ -229,6 +246,7 @@ void TestThread(void) {
 
 
     // Synchronisation tests
+    std::cout << std::endl << "Thread synchronisation tests" << std::endl;
     SynchronisedRunnable::Cnt = 0;
     SynchronisedRunnable::UseSemaphore = false;
     Thread t3(&s1);
@@ -262,9 +280,10 @@ void TestThread(void) {
 
 
     // Event tests.
+    std::cout << std::endl << "Auto-reset event tests" << std::endl;
     cntLoops = 2;
-    EventRunnable::UserData udSignal = { cntLoops, &::evtAuto, true, false };
-    EventRunnable::UserData udWait = { cntLoops, &::evtAuto, false, false };
+    EventRunnable::UserData udSignal = { cntLoops, &::evtAuto, true, NULL };
+    EventRunnable::UserData udWait = { cntLoops, &::evtAuto, false, NULL };
 
     Thread t7(&e1);
     Thread t8(&e2);
@@ -282,10 +301,13 @@ void TestThread(void) {
     ::AssertEqual("Exit code is number of event being signaled", t8.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of event being signaled", t9.GetExitCode(), cntLoops);
 
+
+    std::cout << std::endl << "Manual-reset event tests" << std::endl;
+    Semaphore resetSem(0);
     udSignal.evt = &evtManual;
-    udSignal.resetEvent = true; 
+    udSignal.resetSem = &resetSem;
     udWait.evt = &evtManual;
-    udWait.resetEvent = true; 
+    udWait.resetSem = &resetSem;
 
     Thread t10(&e1);
     Thread t11(&e2);

@@ -318,6 +318,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Environment.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\error.cpp"
 				>
 			</File>
@@ -473,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\DynamicLinkLibrary.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Environment.h"
 				>
 			</File>
 			<File

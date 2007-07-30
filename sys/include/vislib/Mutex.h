@@ -111,9 +111,6 @@ namespace sys {
         /** The mutex object. */
         pthread_mutex_t mutex;
 
-        /** The Linux Event implmentation must access the pthread mutex. */
-        friend class Event;
-
 #endif /* _WIN32 */
 	};
 

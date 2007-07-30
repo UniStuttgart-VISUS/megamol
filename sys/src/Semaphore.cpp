@@ -6,6 +6,10 @@
 
 #include "vislib/Semaphore.h"
 
+#ifndef _WIN32
+#include <ctime>
+#endif /* _!WIN32 */
+
 #include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
@@ -84,7 +88,29 @@ void vislib::sys::Semaphore::Lock(void) {
  */
 bool vislib::sys::Semaphore::TryLock(void) {
 #ifdef _WIN32
-    switch (::WaitForSingleObject(this->handle, 0)) {
+    return this->TryLock(0);
+
+#else /* _WIN32 */
+    if (::sem_trywait(&this->handle) == -1) {
+        int error = ::GetLastError(); 
+        if (error == EAGAIN) {
+            return false;
+        } else {
+            throw SystemException(error, __FILE__, __LINE__);
+        }
+    }
+
+    return true;
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Semaphore::TryLock
+ */
+bool vislib::sys::Semaphore::TryLock(const DWORD timeout) {
+#ifdef _WIN32
+    switch (::WaitForSingleObject(this->handle, timeout)) {
 
         case WAIT_OBJECT_0:
             /* falls through. */
@@ -99,9 +125,15 @@ bool vislib::sys::Semaphore::TryLock(void) {
     }
 
 #else /* _WIN32 */
-    if (::sem_trywait(&this->handle) == -1) {
+    struct timespec tsEnd;
+    
+    ::clock_gettime(CLOCK_REALTIME, &tsEnd);
+    tsEnd.tv_sec += timeout / 1000;
+    tsEnd.tv_nsec += (timeout % 1000) * 1000;
+
+    if (::sem_timedwait(&this->handle, &tsEnd) == -1) {
         int error = ::GetLastError(); 
-        if (error == EAGAIN) {
+        if ((error == EAGAIN) || (error == ETIMEDOUT)) {
             return false;
         } else {
             throw SystemException(error, __FILE__, __LINE__);

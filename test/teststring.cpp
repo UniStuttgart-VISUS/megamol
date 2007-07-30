@@ -30,19 +30,19 @@ void TestString(void) {
     AssertTrue("ANSI to wide character conversion constructor", !::wcscmp(w1, L"Horst"));
     AssertTrue("Wide to ANSI character conversion constructor", !::strcmp(a2, "Hugo"));
 
-    a1 = StringW(L"H‰llo Wˆrld");
-    w1 = StringA("H‰llo Wˆrld");
-    AssertTrue("assignment-conversion-test #3", !::strcmp(a1, "H‰llo Wˆrld"));
-    AssertTrue("assignment-conversion-test #4", !::wcscmp(w1, L"H‰llo Wˆrld"));
+    a1 = StringW(L"H√§llo W√∂rld");
+    w1 = StringA("H√§llo W√∂rld");
+    AssertTrue("assignment-conversion-test #3", !::strcmp(a1, "H√§llo W√∂rld"));
+    AssertTrue("assignment-conversion-test #4", !::wcscmp(w1, L"H√§llo W√∂rld"));
 
-	wchar_t wc = L'‰';
+	wchar_t wc = L'√§';
 	char ac = 0;
 	CharTraitsW::Convert(ac, wc);
-	AssertEqual("Wide to ANSI character conversion.", ac, '‰');
+	AssertEqual("Wide to ANSI character conversion.", ac, char('√§'));
 
-	ac = 'ˆ';
+	ac = char('√∂');
 	CharTraitsA::Convert(wc, ac);
-	AssertEqual("ANSI to wide character conversion.", wc, L'ˆ');
+	AssertEqual("ANSI to wide character conversion.", wc, L'√∂');
 
     TestUTF8String();
 
@@ -457,13 +457,13 @@ void TestUTF8String(void) {
     vislib::StringA strA;
     vislib::StringW strW;
 
-    AssertEqual("CharTraitsW::ToAnsi", vislib::CharTraitsW::ToANSI(L'‰'), '‰');
-    AssertEqual("CharTraitsA::ToUnicode", vislib::CharTraitsA::ToUnicode('÷'), L'÷');
+    AssertEqual("CharTraitsW::ToAnsi", vislib::CharTraitsW::ToANSI(L'√§'), char('√§'));
+    AssertEqual("CharTraitsA::ToUnicode", vislib::CharTraitsA::ToUnicode('√ñ'), L'√ñ');
 
     AssertEqual<unsigned int>("UTF8-Size of \"Horst\" is 6", vislib::UTF8Encoder::CalcUTF8Size("Horst"), 6);
     AssertEqual<unsigned int>("UTF8-Size of L\"Horst\" is 6", vislib::UTF8Encoder::CalcUTF8Size(L"Horst"), 6);
-    AssertEqual<unsigned int>("UTF8-Size of \"B‰h\" is 5", vislib::UTF8Encoder::CalcUTF8Size("B‰h"), 5);
-    AssertEqual<unsigned int>("UTF8-Size of L\"B‰h\" is 5", vislib::UTF8Encoder::CalcUTF8Size(L"B‰h"), 5);
+    AssertEqual<unsigned int>("UTF8-Size of \"B√§h\" is 5", vislib::UTF8Encoder::CalcUTF8Size("B√§h"), 5);
+    AssertEqual<unsigned int>("UTF8-Size of L\"B√§h\" is 5", vislib::UTF8Encoder::CalcUTF8Size(L"B√§h"), 5);
 
     AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "This is a 7-Bit Ansi Test."));
     AssertEqual("UTF8 of \"This is a 7-Bit Ansi Test.\" correct.", utf8, "This is a 7-Bit Ansi Test.");
@@ -480,37 +480,37 @@ void TestUTF8String(void) {
     AssertEqual("decoding of UTF8 \"This is a 7-Bit Ansi Test.\" to unicode correct.", strW, L"This is a 7-Bit Ansi Test.");
 
     unsigned char tst0[] = {'B', 0xc3, 0xa4, 'h', '!', 0x00};
-    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "B‰h!"));
-    AssertEqual("UTF8 of \"B‰h!\" correct.", utf8, reinterpret_cast<const char*>(tst0));
+    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "B√§h!"));
+    AssertEqual("UTF8 of \"B√§h!\" correct.", utf8, reinterpret_cast<const char*>(tst0));
 
-    AssertEqual<int>("Size of UTF8 String is correct", vislib::UTF8Encoder::StringLength(utf8), int(strlen("B‰h!")));
+    AssertEqual<int>("Size of UTF8 String is correct", vislib::UTF8Encoder::StringLength(utf8), int(strlen("B√§h!")));
 
     AssertTrue("Decode", vislib::UTF8Encoder::Decode(strA, utf8));
-    AssertEqual("decoding of UTF8 \"B‰h!\" to ansi correct.", strA, "B‰h!");
+    AssertEqual("decoding of UTF8 \"B√§h!\" to ansi correct.", strA, "B√§h!");
 
     AssertTrue("Decode", vislib::UTF8Encoder::Decode(strW, utf8));
-    AssertEqual("decoding of UTF8 \"B‰h!\" to unicode correct.", strW, L"B‰h!");
+    AssertEqual("decoding of UTF8 \"B√§h!\" to unicode correct.", strW, L"B√§h!");
 
     unsigned char tst1[] = {0xc3, 0xa4, 0xc3, 0xb6, 0xc3, 0xbc, 0xc3, 0x84, 0xc3, 0x96, 0xc3, 0x9c, 0xc3, 0x9f, 0x00};
-    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, L"‰ˆ¸ƒ÷‹ﬂ"));
-    AssertEqual("UTF8 of L\"‰ˆ¸ƒ÷‹ﬂ\" correct.", utf8, reinterpret_cast<const char*>(tst1));
+    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, L"√§√∂√º√Ñ√ñ√ú√ü"));
+    AssertEqual("UTF8 of L\"√§√∂√º√Ñ√ñ√ú√ü\" correct.", utf8, reinterpret_cast<const char*>(tst1));
 
-    AssertEqual<int>("Size of UTF8 String is correct", vislib::UTF8Encoder::StringLength(utf8), int(strlen("‰ˆ¸ƒ÷‹ﬂ")));
+    AssertEqual<int>("Size of UTF8 String is correct", vislib::UTF8Encoder::StringLength(utf8), int(strlen("√§√∂√º√Ñ√ñ√ú√ü")));
 
-    //AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "‰ˆ¸ƒ÷‹ﬂô"));
-    //AssertEqual("UTF8 of \"‰ˆ¸ƒ÷‹ﬂô\" correct.", utf8, reinterpret_cast<const char*>(tst1));
+    //AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "√§√∂√º√Ñ√ñ√ú√ü‚Ñ¢"));
+    //AssertEqual("UTF8 of \"√§√∂√º√Ñ√ñ√ú√ü‚Ñ¢\" correct.", utf8, reinterpret_cast<const char*>(tst1));
 
-    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "‰ˆ¸ƒ÷‹ﬂ"));
-    tst1[14] = 0; // the ô-Character is destroied by the conversion from ansi to unicode with wsnprintf
-    AssertEqual("UTF8 of \"‰ˆ¸ƒ÷‹ﬂ\" correct.", utf8, reinterpret_cast<const char*>(tst1));
+    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, "√§√∂√º√Ñ√ñ√ú√ü"));
+    tst1[14] = 0; // the ‚Ñ¢-Character is destroied by the conversion from ansi to unicode with wsnprintf
+    AssertEqual("UTF8 of \"√§√∂√º√Ñ√ñ√ú√ü\" correct.", utf8, reinterpret_cast<const char*>(tst1));
 
-//    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, L"‰ˆ¸ƒ÷‹ﬂô"));
+//    AssertTrue("Encode", vislib::UTF8Encoder::Encode(utf8, L"√§√∂√º√Ñ√ñ√ú√ü‚Ñ¢"));
 
     AssertTrue("Decode", vislib::UTF8Encoder::Decode(strA, utf8));
-    AssertEqual("decoding of UTF8 \"‰ˆ¸ƒ÷‹ﬂ\" to ansi correct.", strA, "‰ˆ¸ƒ÷‹ﬂ");
+    AssertEqual("decoding of UTF8 \"√§√∂√º√Ñ√ñ√ú√ü\" to ansi correct.", strA, "√§√∂√º√Ñ√ñ√ú√ü");
 
     AssertTrue("Decode", vislib::UTF8Encoder::Decode(strW, utf8));
-    AssertEqual("decoding of UTF8 \"‰ˆ¸ƒ÷‹ﬂ\" to unicode correct.", strW, L"‰ˆ¸ƒ÷‹ﬂ");
+    AssertEqual("decoding of UTF8 \"√§√∂√º√Ñ√ñ√ú√ü\" to unicode correct.", strW, L"√§√∂√º√Ñ√ñ√ú√ü");
 
 }
 

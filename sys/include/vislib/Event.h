@@ -18,8 +18,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else /* _WIN32 */
-#include "vislib/Mutex.h"
-#include "vislib/types.h"
+#include "vislib/Semaphore.h"
 #endif /* _WIN32 */
 
 
@@ -51,11 +50,14 @@ namespace sys {
         /** 
          * Create a new event.
          *
-         * @param isManualReset Make the event a manual-reset event. If the
-         *                      flag is not set, an auto-reset event is
-         *                      created.
+         * @param isManualReset       Make the event a manual-reset event. If 
+         *                            the flag is not set, an auto-reset event 
+         *                            is created.
+         * @param isInitiallySignaled Specifies whether the event is initially
+         *                            signaled.
          */
-        Event(const bool isManualReset = false);
+        Event(const bool isManualReset = false, 
+            const bool isInitiallySignaled = false);
 
         /** Dtor. */
         ~Event(void);
@@ -121,23 +123,11 @@ namespace sys {
         HANDLE handle;
 
 #else /* _WIN32 */
-        /** The condition attributes. */
-        pthread_condattr_t attr;
-
-        /** The condition used to wake up blocked threads. */
-        pthread_cond_t cond;
-
-        /** The condition mutex. */
-        Mutex condMutex;
-
-        /** The mutex protecting the event state. */
-        Mutex stateMutex;
-
         /** Remember whether the event is a manual reset event. */
         bool isManualReset;
-        
-        /** The event state, true for signaled, false for non-signaled. */
-        bool isSignaled;
+
+        /** The semaphore used to emulate the event. */
+        Semaphore semaphore;
 
 #endif /* _WIN32 */
 

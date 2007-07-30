@@ -9,15 +9,13 @@
 
 #ifndef _WIN32
 #include <climits>
-#include <cstring>
-#include <ctime>
-#include <unistd.h>
 #endif /* !_WIN32 */
 
 #include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -30,18 +28,23 @@ const DWORD vislib::sys::Event::TIMEOUT_INFINITE = INFINITE;
 const DWORD vislib::sys::Event::TIMEOUT_INFINITE = UINT_MAX;
 #endif /* _WIN32 */
 
+
 /*
  * vislib::sys::Event::Event
  */
-vislib::sys::Event::Event(const bool isManualReset) {
+vislib::sys::Event::Event(const bool isManualReset, 
+                          const bool isInitiallySignaled) {
 #ifdef _WIN32
     this->handle = ::CreateEvent(NULL, isManualReset ? TRUE : FALSE, FALSE, 
         NULL);
     ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
-    ::pthread_condattr_init(&this->attr);
-    ::pthread_cond_init(&this->cond, &this->attr);
+    this->isManualReset = isManualReset;
+
+    if (!isInitiallySignaled) {
+        this->semaphore.TryLock();
+    }
 
 #endif /* _WIN32 */
 }
@@ -53,12 +56,9 @@ vislib::sys::Event::Event(const bool isManualReset) {
 vislib::sys::Event::~Event(void) {
 #ifdef _WIN32
     ::CloseHandle(this->handle);
-#else /* _WIN32 */
-    while (::pthread_cond_destroy(&this->cond) == EBUSY) {
-        ::usleep(1000); // TODO: this is a good idea? Might block dtor.
-    }
 
-    ::pthread_condattr_destroy(&this->attr);
+#else /* _WIN32 */
+    /* Nothing to do. */
 
 #endif /* _WIN32 */
 }
@@ -74,9 +74,10 @@ void vislib::sys::Event::Reset(void) {
     }
 
 #else /* _WIN32 */
-    this->stateMutex.Lock();
-    this->isSignaled = false;
-    this->stateMutex.Unlock();
+    TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Reset\n");
+    
+    this->semaphore.TryLock();
+    ASSERT(!this->semaphore.TryLock());
 
 #endif /* _WIN32 */
 }
@@ -92,15 +93,11 @@ void vislib::sys::Event::Set(void) {
     }
 
 #else /* _WIN32 */
-    /* Make the event signaled. */
-    this->stateMutex.Lock();
-    this->isSignaled = true;
-    this->stateMutex.Unlock();
-    
-    /* Release all thread to check the event state. */
-    int returnCode = ::pthread_cond_broadcast(&this->cond);
-    if (returnCode != 0) {
-        throw SystemException(returnCode, __FILE__, __LINE__);
+    TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Set\n");
+
+    if (!this->semaphore.TryLock()) {
+        /* Count is 0, i. e. semaphore is in non-signaled state. */
+        this->semaphore.Unlock();
     }
 
 #endif /* _WIN32 */
@@ -130,95 +127,23 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
     }
 
 #else /* _WIN32 */
-    bool isLocked = false;      // State of condition mutex.
-    bool isSignaled = false;    // Local copy of signaled state.
-    int returnCode = 0;         // Return code of wait operation.
-    struct timespec tsEnd;      // The timestamp when the operation times out.
-    struct timespec tsNow;      // The current timestamp when waiting.
+    TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Wait\n");
+    bool retval = false;
 
     if (timeout == TIMEOUT_INFINITE) {
-        this->condMutex.Lock();
-
-        while (!isSignaled) {
-            returnCode = ::pthread_cond_wait(&this->cond, 
-                &this->condMutex.mutex);
-            if (returnCode != 0) {
-                this->condMutex.Unlock();
-                throw SystemException(returnCode, __FILE__, __LINE__);
-            }
-
-            /*
-             * Check this->isSignaled as we always relase all threads once
-             * the event is signaled. However, in case the event is auto-reset
-             * only one of these may be released. Checking the signaled state
-             * and reseting it must be atomic, i. e. protected by the same
-             * 'stateMutex' lock operation. 
-             *
-             * In case 'isSignaled' is false, another thread was released by 
-             * the auto-reset event before this one. We must wait for the 
-             * condition to be come signaled again.
-             */
-            this->stateMutex.Lock();
-            if ((isSignaled = this->isSignaled)) {
-                if (!this->isManualReset) {
-                    this->isSignaled = false;
-                }
-            }
-            this->stateMutex.Unlock();
-        }
-        
-        this->condMutex.Unlock();
-        return true;
+        this->semaphore.Lock();
+        retval = true;
 
     } else {
-        ::clock_gettime(CLOCK_REALTIME, &tsEnd);
-        ::memcpy(&tsNow, &tsEnd, sizeof(struct timespec));
-        tsEnd.tv_sec += timeout / 1000;
-        tsEnd.tv_nsec += (timeout % 1000) * 1000;
+        retval = this->semaphore.TryLock(timeout);
+    }
 
-        /*
-         * Simulate timeout for pthread_mutex_lock. The mutex cannot be simply
-         * locked using a blocking operation as another thread might wait for
-         * the condition without a timeout. In this case, a timed wait operation
-         * would be blocked, too, because of 'condMutex' being locked.
-         */
-        while (!(isLocked = this->condMutex.TryLock()) 
-                && ((tsEnd.tv_sec > tsNow.tv_sec)
-                || (tsEnd.tv_nsec >= tsNow.tv_nsec))) {
-            ::usleep(10);   // TODO: Is this a good value?
-            ::clock_gettime(CLOCK_REALTIME, &tsNow);
-        }
+    if (retval && this->isManualReset) {
+        TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Wait signal again\n");
+        this->semaphore.Unlock();
+    }
 
-        if (!isLocked) {
-            /* Lock on mutex timed out. */
-            return false;
-        }
-
-        /* Wait for the condition. */
-        returnCode = ::pthread_cond_timedwait(&this->cond, 
-            &this->condMutex.mutex, &tsEnd);
-        this->condMutex.Unlock();
-        switch (returnCode) {
-            case 0:
-                /* Do nothing. */
-                break;
-
-            case ETIMEDOUT:
-                return false;
-                /* Unreachable. */
-
-            default:
-                throw SystemException(returnCode, __FILE__, __LINE__);
-                /* Unreachable. */
-        }
-        ASSERT(isLocked);
-
-        this->stateMutex.Lock();
-        isSignaled = this->isSignaled;
-        this->stateMutex.Unlock();
-
-        return this->isSignaled;
-    } /* end if (timeout == TIMEOUT_INFINITE) */
+    return retval;
 #endif /* _WIN32 */
 }
 

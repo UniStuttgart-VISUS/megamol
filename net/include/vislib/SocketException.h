@@ -65,6 +65,13 @@ namespace net {
          */
         virtual SocketException& operator =(const SocketException& rhs);
 
+        /**
+         * Answer whether the exception represents a timeout.
+         *
+         * @return true, if the exception represents a timeout, false otherwise.
+         */
+        bool IsTimeout(void) const;
+
     };
 
 } /* end namespace net */

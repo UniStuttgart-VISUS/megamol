@@ -101,7 +101,8 @@ void FBOTestApp::Render(void) {
 
         ::glMatrixMode(GL_PROJECTION);
         ::glLoadIdentity();
-        ::gluOrtho2D(0, 0, this->fbo.GetWidth(), this->fbo.GetHeight());
+        ::glOrtho(0.0, this->fbo.GetWidth(), this->fbo.GetHeight(), 0.0, 
+            -1.0, 1.0);
 
         ::glMatrixMode(GL_MODELVIEW);
         ::glLoadIdentity();

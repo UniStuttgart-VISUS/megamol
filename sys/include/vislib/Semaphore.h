@@ -21,6 +21,7 @@
 #endif /* _WIN32 */
 
 #include "SyncObject.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -79,6 +80,19 @@ namespace sys {
          *                         the lock.
          */
         virtual bool TryLock(void);
+
+        /**
+         * Try to acquire a lock on the semaphore for the calling thread for the
+         * specified number of milliseconds. If the semaphore could not be locked
+         * within the specified amount of time, the method returns and the return 
+         * value is false.
+         *
+         * @return true, if the lock was acquired, false, if not.
+         *
+         * @throws SystemException If an error occurred when trying to acquire
+         *                         the lock.
+         */
+        virtual bool TryLock(const DWORD timeout);
 
         /**
          * Release the semaphore.
