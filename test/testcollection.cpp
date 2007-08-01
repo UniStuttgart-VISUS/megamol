@@ -47,6 +47,21 @@ void TestArray(void) {
     ::AssertEqual("First element unchanged", intAry[0], 4);
     ::AssertEqual("Last element unchanged", intAry[1], 99);
 
+    intAry.Insert(1, 5);
+    ::AssertEqual("First element unchanged", intAry[0], 4);
+    ::AssertEqual("Element inserted", intAry[1], 5);
+    ::AssertEqual("Last element moved", intAry[2], 99);
+
+    intAry.Insert(0, 1);
+    ::AssertEqual("Insert at begin", intAry[0], 1);
+
+    intAry.Insert(intAry.Count() - 1, 1981);
+    ::AssertEqual("Insert at end", intAry[intAry.Count() - 2], 1981);
+    ::AssertEqual("End moved", intAry.Last(), 99);
+
+    intAry.Insert(intAry.Count(), 2007);
+    ::AssertEqual("Append using Insert", intAry.Last(), 2007);
+    
 
     Array<int> intAry2(10, 42);
     

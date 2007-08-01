@@ -225,6 +225,20 @@ namespace vislib {
         INT_PTR IndexOf(const T& element, const SIZE_T beginAt = 0) const;
 
         /**
+         * Insert 'element' at position 'idx' in the array. All elements behind
+         * 'idx' are shifted one element right. 'idx' must be a valid index in 
+         * the array or the index directly following the end, i. e. Count(). In
+         * the latter case, the method behaves like Append().
+         *
+         * @param idx     The position to insert the element at.
+         * @param element The element to add.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()].
+         */
+        virtual void Insert(const SIZE_T idx, const T& element);
+
+        /**
          * Answer whether there is no element in the array. Note that a return
          * value of true does not mean that no memory is allocated.
          *
@@ -548,6 +562,28 @@ namespace vislib {
         /* Nothing found. */
 
         return INVALID_POS;
+    }
+
+
+    /*
+     * vislib::Array<T>::Insert
+     */
+    template<class T>
+    void Array<T>::Insert(const SIZE_T idx, const T& element) {
+        if (static_cast<SIZE_T>(idx) <= this->count) {
+            this->AssertCapacity(this->count + 1);
+
+            for (SIZE_T i = this->count; i > idx; i--) {
+                this->elements[i] = this->elements[i - 1];
+            }
+            
+            this->elements[idx] = element;
+            this->count++;
+
+        } else {
+            throw OutOfRangeException(static_cast<INT>(idx), 0, 
+                static_cast<INT>(this->count - 1), __FILE__, __LINE__);
+        }
     }
 
 
