@@ -28,6 +28,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="powershell &quot;$(InputDir)\include\glh\genextfile.ps1&quot; &quot;$(InputDir)\include\GL\glext.h&quot; &quot;$(InputDir)\include\glh\extfile.txt&quot;&#x0D;&#x0A;&quot;$(VCInstallDir)\vcpackages\vcbuild.exe&quot; &quot;$(InputDir)\include\glh\glh.vcproj&quot; $(ConfigurationName) /useenv&#x0D;&#x0A;@echo Generating $(InputDir)\include\glh\glh_genext.h&quot; from &quot;$(InputDir)\include\glh\extfile.txt&quot; ...&#x0D;&#x0A;&quot;$(InputDir)\include\glh\$(ConfigurationName)\glh.exe&quot; &quot;$(InputDir)\include\glh\glh_genext.h&quot; &quot;$(InputDir)\include\glh\extfile.txt&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -158,6 +159,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="powershell &quot;$(InputDir)\include\glh\genextfile.ps1&quot; &quot;$(InputDir)\include\GL\glext.h&quot; &quot;$(InputDir)\include\glh\extfile.txt&quot;&#x0D;&#x0A;&quot;$(VCInstallDir)\vcpackages\vcbuild.exe&quot; &quot;$(InputDir)\include\glh\glh.vcproj&quot; $(ConfigurationName) /useenv&#x0D;&#x0A;@echo Generating $(InputDir)\include\glh\glh_genext.h&quot; from &quot;$(InputDir)\include\glh\extfile.txt&quot; ...&#x0D;&#x0A;&quot;$(InputDir)\include\glh\$(ConfigurationName)\glh.exe&quot; &quot;$(InputDir)\include\glh\glh_genext.h&quot; &quot;$(InputDir)\include\glh\extfile.txt&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
