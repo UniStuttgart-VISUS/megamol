@@ -718,7 +718,7 @@ namespace sys {
         this->memoryAnchor[this->storeCount] = new Char[len];
         this->memoryAnchor[this->storeCount][0] = 0;
         this->memoryAnchor[this->storeCount][len - 1] = 0;
-        memcpy(this->memoryAnchor[this->storeCount], arg, sizeof(Char*) * len);
+        memcpy(this->memoryAnchor[this->storeCount], arg, sizeof(Char) * len);
 
         this->storeCount++;
 
@@ -750,7 +750,7 @@ namespace sys {
         this->memoryAnchor[0] = new Char[len];
         this->memoryAnchor[0][0] = 0;
         this->memoryAnchor[0][len - 1] = 0;
-        memcpy(this->memoryAnchor[0], arg, sizeof(Char*) * len);
+        memcpy(this->memoryAnchor[0], arg, sizeof(Char) * len);
 
         this->storeCount++;
 
