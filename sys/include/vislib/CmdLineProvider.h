@@ -279,6 +279,38 @@ namespace sys {
         }
 
         /**
+         * Appends an argument to the command line.
+         *
+         * @param arg The argument to be appenden to the command line.
+         */
+        void Append(const Char *arg);
+
+        /**
+         * Appends an argument to the command line.
+         *
+         * @param arg The argument to be appenden to the command line.
+         */
+        inline void Append(const String<T>& arg) {
+            this->Append(arg.PeekBuffer());
+        }
+
+        /**
+         * Prepends an argument to the command line.
+         *
+         * @param arg The argument to be prependen to the command line.
+         */
+        void Prepend(const Char *arg);
+
+        /**
+         * Prepends an argument to the command line.
+         *
+         * @param arg The argument to be prependen to the command line.
+         */
+        void Prepend(const String<T>& arg) {
+            this->Prepend(arg.PeekBuffer());
+        }
+
+        /**
          * Generates and returns a single string containing the whole command
          * line. Calling "CreateCmdList()" with this string, will generate an
          * internal data structure equal to the one of this object.
@@ -300,7 +332,7 @@ namespace sys {
     private:
 
         /** clears the argument list */
-        void ClearArgumentList(void);
+        void clearArgumentList(void);
 
         /**
          * Creates an argument from two given pointers.
@@ -310,7 +342,13 @@ namespace sys {
          *
          * @return The new created argument string.
          */
-        Char *CreateArgument(Char *left, Char *right);
+        Char *createArgument(Char *left, Char *right);
+
+        /**
+         * Reflects all changes done to the pointers returned by 'ArgC' and 
+         * 'ArgV' by updating 'storeCount' and 'memoryAnchor'.
+         */
+        void reflectCallerChanges(void);
 
         /** 
          * Number of created arguments. This is not unsigned to be more 
@@ -446,7 +484,7 @@ namespace sys {
      * CmdLineProvider<T>::~CmdLineProvider
      */
     template<class T> CmdLineProvider<T>::~CmdLineProvider() {
-        this->ClearArgumentList();
+        this->clearArgumentList();
 
     }
 
@@ -456,7 +494,7 @@ namespace sys {
      */
     template<class T> CmdLineProvider<T>& CmdLineProvider<T>::operator=(const CmdLineProvider<T>& rhs) {
         if (*rhs != this) {
-            this->ClearArgumentList();
+            this->clearArgumentList();
 
             this->storeCount = rhs.storeCount;
             this->argCount = rhs.storeCount; // TODO: Maybe restore the (changed) arguments
@@ -489,7 +527,7 @@ namespace sys {
         unsigned int state;
 
         // clear old argument list
-        this->ClearArgumentList();
+        this->clearArgumentList();
 
         // count strings in command line
         this->storeCount = (appName == NULL) ? 0 : 1;
@@ -575,18 +613,18 @@ namespace sys {
                 case 2:
                     if (*ci == 0) { // end of parameter
                         state = 0;
-                        this->memoryAnchor[this->argCount++] = this->CreateArgument(start, (ci - 1));
+                        this->memoryAnchor[this->argCount++] = this->createArgument(start, (ci - 1));
                     } else if (*ci == static_cast<Char>('"')) { // start of qouted section
                         state = 3;
                     } else if (T::IsSpace(*ci)) { // end of parameter
                         state = 1;
-                        this->memoryAnchor[this->argCount++] = this->CreateArgument(start, (ci - 1));
+                        this->memoryAnchor[this->argCount++] = this->createArgument(start, (ci - 1));
                     }
                     break;
                 case 3:
                     if (*ci == 0) { // end of parameter
                         state = 0;
-                        this->memoryAnchor[this->argCount++] = this->CreateArgument(start, (ci - 1));
+                        this->memoryAnchor[this->argCount++] = this->createArgument(start, (ci - 1));
                     } else if (*ci == static_cast<Char>('"')) { // possible end of qouted section/parameter
                         state = 4;
                     } 
@@ -594,12 +632,12 @@ namespace sys {
                 case 4:
                     if (*ci == 0) { // end of parameter
                         state = 0;
-                        this->memoryAnchor[this->argCount++] = this->CreateArgument(start, (ci - 2));
+                        this->memoryAnchor[this->argCount++] = this->createArgument(start, (ci - 2));
                     } else if (*ci == static_cast<Char>('"')) { // escaped qout!
                         state = 3;
                     } else if (T::IsSpace(*ci)) { // end of parameter
                         state = 1; // truncate last space!
-                        this->memoryAnchor[this->argCount++] = this->CreateArgument(start, (ci - 2));
+                        this->memoryAnchor[this->argCount++] = this->createArgument(start, (ci - 2));
                     } else { // end of qouted section
                         state = 2;
                     }
@@ -618,9 +656,9 @@ namespace sys {
 
 
     /*
-     * CmdLineProvider<T>::ClearArgumentList
+     * CmdLineProvider<T>::clearArgumentList
      */
-    template<class T> void CmdLineProvider<T>::ClearArgumentList(void) {
+    template<class T> void CmdLineProvider<T>::clearArgumentList(void) {
         if (this->memoryAnchor != NULL) {
             for (int i = 0; i < this->storeCount; i++) {
                 ARY_SAFE_DELETE(this->memoryAnchor[i]);
@@ -636,9 +674,9 @@ namespace sys {
 
 
     /*
-     * CmdLineProvider<T>::CreateArgument
+     * CmdLineProvider<T>::createArgument
      */
-    template<class T> typename CmdLineProvider<T>::Char * CmdLineProvider<T>::CreateArgument(Char *left, Char *right) {
+    template<class T> typename CmdLineProvider<T>::Char * CmdLineProvider<T>::createArgument(Char *left, Char *right) {
         Char *buf = NULL;
         int len = static_cast<int>(right - left) + 1;
 
@@ -658,6 +696,70 @@ namespace sys {
         }        
 
         return buf;
+    }
+
+
+    /*
+     * CmdLineProvider<T>::Append
+     */
+    template<class T> void CmdLineProvider<T>::Append(const Char *arg) {
+        this->reflectCallerChanges();
+        
+        // and now, because i know that memory anchor and active argument 
+        // list are equal ...
+        delete[] this->memoryAnchor;
+        this->memoryAnchor = new Char*[this->storeCount + 1];
+
+        // copy old pointers
+        memcpy(this->memoryAnchor, this->arguments, sizeof(Char*) * this->storeCount);
+        
+        // copy new argument
+        unsigned int len = T::SafeStringLength(arg) + 1;
+        this->memoryAnchor[this->storeCount] = new Char[len];
+        this->memoryAnchor[this->storeCount][0] = 0;
+        this->memoryAnchor[this->storeCount][len - 1] = 0;
+        memcpy(this->memoryAnchor[this->storeCount], arg, sizeof(Char*) * len);
+
+        this->storeCount++;
+
+        // update active argument list
+        delete[] this->arguments;
+        this->arguments = new Char*[this->storeCount];
+        memcpy(this->arguments, this->memoryAnchor, sizeof(Char*) * this->storeCount);        
+
+        this->argCount++;
+    }
+
+
+    /*
+     * CmdLineProvider<T>::Prepend
+     */
+    template<class T> void CmdLineProvider<T>::Prepend(const Char *arg) {
+        this->reflectCallerChanges();
+        
+        // and now, because i know that memory anchor and active argument 
+        // list are equal ...
+        delete[] this->memoryAnchor;
+        this->memoryAnchor = new Char*[this->storeCount + 1];
+
+        // copy old pointers
+        memcpy(this->memoryAnchor + 1, this->arguments, sizeof(Char*) * this->storeCount);
+        
+        // copy new argument
+        unsigned int len = T::SafeStringLength(arg) + 1;
+        this->memoryAnchor[0] = new Char[len];
+        this->memoryAnchor[0][0] = 0;
+        this->memoryAnchor[0][len - 1] = 0;
+        memcpy(this->memoryAnchor[0], arg, sizeof(Char*) * len);
+
+        this->storeCount++;
+
+        // update active argument list
+        delete[] this->arguments;
+        this->arguments = new Char*[this->storeCount];
+        memcpy(this->arguments, this->memoryAnchor, sizeof(Char*) * this->storeCount);        
+
+        this->argCount++;
     }
 
 
@@ -727,6 +829,40 @@ namespace sys {
         }
 
         return retval;
+    }
+
+
+    /*
+     * CmdLineProvider<T>::reflectCallerChanges
+     */
+    template<class T> void CmdLineProvider<T>::reflectCallerChanges(void) {
+
+        // delete all entries in mV which are missing in aV
+        for (int i = 0; i < this->storeCount; i++) {
+            bool found = false;
+            for (int j = 0; j < this->argCount; j++) {
+                if (this->memoryAnchor[i] == this->arguments[j]) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                delete[] this->memoryAnchor[i];
+            }
+        }
+
+        // allocate new memory for the memory anchor
+        if (this->storeCount != this->argCount) {
+            delete[] this->memoryAnchor;
+            this->storeCount = this->argCount;
+            this->memoryAnchor = new Char*[this->storeCount];
+        }
+
+        // copy remaining elements
+        for (int i = 0; i < this->storeCount; i++) {
+            this->memoryAnchor[i] = this->arguments[i];
+        }
+
     }
 
 

@@ -2287,7 +2287,7 @@ namespace sys {
         ASSERT((this->arglist == NULL) || (outCmdLine.ArgC() == 0) || (this->arglist[0].arg != outCmdLine.ArgV()[0]));
 
         // outCmdLine must not be the same as used for Parse!
-        outCmdLine.ClearArgumentList();
+        outCmdLine.clearArgumentList();
     
         if (this->arglist != NULL) {
             // count selected arguments
@@ -2309,7 +2309,7 @@ namespace sys {
                     while ((*end != 0) && (*(end + 1) != 0)) end++;
 
                     outCmdLine.arguments[outCmdLine.storeCount] = outCmdLine.memoryAnchor[outCmdLine.storeCount] = 
-                        outCmdLine.CreateArgument(this->arglist[i].arg, end);
+                        outCmdLine.createArgument(this->arglist[i].arg, end);
 
                     outCmdLine.storeCount++;
                 }
