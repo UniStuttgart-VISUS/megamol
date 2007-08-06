@@ -10,6 +10,7 @@
 
 #include "vislib/GLSLShader.h"
 
+#include "vislib/Array.h"
 #include "vislib/glverify.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -146,6 +147,73 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
 
 
 /*
+ * vislib::graphics::gl::GLSLShader::CreateFromFiles
+ */
+bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
+        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
+        const char **fragmentShaderFiles, 
+        const SIZE_T cntFragmentShaderFiles) {
+
+    // using arrays for automatic cleanup when a 'read' throws an exception
+    Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
+    Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
+
+    for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+        if (!this->read(vertexShaderSrcs[i], vertexShaderFiles[i])) {
+            return false;
+        }
+    }
+
+    for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+        if (!this->read(fragmentShaderSrcs[i], fragmentShaderFiles[i])) {
+            return false;
+        }
+    }
+
+    // built up pointer arrays for attributes
+    const char **vertexShaderSrcPtrs = new const char*[cntVertexShaderFiles];
+    const char **fragmentShaderSrcPtrs = new const char*[cntFragmentShaderFiles];
+
+    try {
+        for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
+        }
+        for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
+        }
+
+        bool retval = this->Create(vertexShaderSrcPtrs, cntVertexShaderFiles, 
+            fragmentShaderSrcPtrs, cntFragmentShaderFiles);
+
+        delete[] vertexShaderSrcPtrs;
+        delete[] fragmentShaderSrcPtrs;
+
+        return retval;
+
+        // free pointer arrays on exception
+    } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
+        delete[] vertexShaderSrcPtrs;
+        delete[] fragmentShaderSrcPtrs;
+        throw e;
+    } catch(CompileException e) {
+        delete[] vertexShaderSrcPtrs;
+        delete[] fragmentShaderSrcPtrs;
+        throw e;
+    } catch(Exception e) {
+        delete[] vertexShaderSrcPtrs;
+        delete[] fragmentShaderSrcPtrs;
+        throw e;
+    } catch(...) {
+        delete[] vertexShaderSrcPtrs;
+        delete[] fragmentShaderSrcPtrs;
+        throw Exception("Unknown Exception", __FILE__, __LINE__);
+    }
+
+    return false; // should be unreachable code!
+}
+
+
+/*
  * vislib::graphics::gl::GLSLShader::Disable
  */
 GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
@@ -170,6 +238,16 @@ GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
     GL_VERIFY_RETURN(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
     GL_VERIFY_RETURN(::glUseProgramObjectARB(this->hProgObj));
     return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::ParameterLocation
+ */
+GLint vislib::graphics::gl::GLSLShader::ParameterLocation(const char *name) const {
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    return ::glGetUniformLocationARB(this->hProgObj, name);
 }
 
 

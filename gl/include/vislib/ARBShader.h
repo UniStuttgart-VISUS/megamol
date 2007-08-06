@@ -50,7 +50,7 @@ namespace gl {
         ARBShader(void);
 
         /** Dtor. */
-        ~ARBShader(void);
+        virtual ~ARBShader(void);
 
         /**
          *

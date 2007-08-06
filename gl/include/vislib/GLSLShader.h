@@ -25,9 +25,16 @@ namespace gl {
 
 
     /**
-     * TODO: comment class
+     * Class of GLSLShaders.
+     *
+     * Use a 'Create' Method to construct a shader programm. After this was 
+     * successful you can activate the shader using 'Enable'. Although you can
+     * access the shader programm handle directly it is recommended to use the
+     * classes methods where possible (e.g.: better use 'SetParameter' then 
+     * 'glUniform').
      */
-    class GLSLShader : public AbstractOpenGLShader, public ExtensionsDependent<GLSLShader> {
+    class GLSLShader : public AbstractOpenGLShader, 
+            public ExtensionsDependent<GLSLShader> {
 
     public:
 
@@ -56,7 +63,7 @@ namespace gl {
         GLSLShader(void);
 
         /** Dtor. */
-        ~GLSLShader(void);
+        virtual ~GLSLShader(void);
 
         /**
          * Create a new shader using 'vertexShaderSrc' as source code of the 
@@ -119,9 +126,27 @@ namespace gl {
         virtual bool CreateFromFile(const char *vertexShaderFile,
             const char *fragmentShaderFile);
 
-        //virtual bool CreateFromFile(const char **vertexShaderFile,
-        //    const SIZE_T cntVertexShaderFile, const char **fragmentShaderFile,
-        //    const SIZE_T cntFragmentShaderFile);
+        /**
+         * Create a new shader loading the shader code from several files.
+         *
+         * @param vertexShaderFiles      Array of names of the vertex shader 
+         *                               source files.
+         * @param cntVertexShaderFiles   Number of vertex shader source files
+         * @param fragmentShaderFiles    Array of names of the fragment shader
+         *                               source files.
+         * @param cntFragmentShaderFiles Number of fragment shader source files
+         * 
+         * @return true, if the shader was successfully created, false, if one
+         *         of the shader files could not be opened.
+         * 
+         * @throws OpenGLException If an OpenGL call for creating the shader
+         *                         fails.
+         * @throws IOException     If reading the shader code from an open
+         *                         file failed.
+         */
+        virtual bool CreateFromFiles(const char **vertexShaderFiles,
+            const SIZE_T cntVertexShaderFiles, const char **fragmentShaderFiles,
+            const SIZE_T cntFragmentShaderFiles);
 
         /**
          * Disable the shader. This method changes the GL to render using
@@ -143,6 +168,29 @@ namespace gl {
          *         shader could not be enabled.
          */
         virtual GLenum Enable(void);
+
+        /**
+         * Answers the location of a uniform parameter. This location can be
+         * used as parameter for 'glUniform' functions and 'SetParameter' 
+         * methods.
+         *
+         * @param name The name of the uniform parameter. Must not be NULL.
+         *
+         * @return The location of the uniform parameter. A value less then
+         *         Zero indicates an invalid position.
+         */
+        GLint ParameterLocation(const char *name) const;
+
+        /**
+         * Answer the OpenGL Program handle. Use with care since manipulating
+         * the handle may result in undefined behaviour. Use this handle for
+         * calling OpenGL functions not wrapped by this class.
+         *
+         * @return The OpenGL Program handle.
+         */
+        inline GLhandleARB ProgramHandle(void) const {
+            return this->hProgObj;
+        }
 
         /**
          * Releases all resources allocated by the shader. It is safe to
