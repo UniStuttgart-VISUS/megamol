@@ -26,7 +26,7 @@ bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
 
     if (GL_SUCCEEDED(::glGetObjectParameterivARB(hProg, 
             GL_OBJECT_DELETE_STATUS_ARB, &status))) {
-        return (status != 0);
+        return (status == 0);
     } else {
         return false;
     }
