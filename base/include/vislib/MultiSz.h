@@ -422,7 +422,7 @@ namespace vislib {
      * MultiSz<T>::MultiSz
      */
     template<class T> 
-    MultiSz<T>::MultiSz(const Char *multiSz = NULL) : data(NULL) {
+    MultiSz<T>::MultiSz(const Char *multiSz) : data(NULL) {
         *this = multiSz;
     }
 

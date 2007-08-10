@@ -101,7 +101,7 @@ namespace sys {
 #ifdef _WIN32
                 return this->data.Count();
 #else /* _WIN32 */
-                return Snapshot::count(this->data);
+                return Snapshot::count(const_cast<const char **>(this->data));
 #endif /* _WIN32 */
             }
 
@@ -279,7 +279,7 @@ namespace sys {
              *             The caller remains owner of the memory designated 
              *             by this pointer.
              */
-            static SIZE_T count(const char **data);
+            static SIZE_T count(const char **const data);
 #endif /* !_WIN32 */
 
             /**
@@ -307,7 +307,8 @@ namespace sys {
             static const wchar_t *find(const wchar_t *name, 
                 const wchar_t *data);
 #else /* _WIN32 */
-            static const char *find(const char *name, const char *data);
+            static const char *find(const char *name, 
+                const char **const data);
 #endif /* _WIN32 */
 
 #ifndef _WIN32
@@ -323,7 +324,7 @@ namespace sys {
              * @param data The environment block to assign. The caller remains 
              *             owner of the memory designated by this pointer.
              */
-            void assign(const char **data);
+            void assign(const char **const data);
 #endif /* !_WIN32 */
 
 #ifdef _WIN32
