@@ -330,6 +330,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\MultiSz.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\NoSuchElementException.cpp"
 				>
 			</File>
@@ -473,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\MissingImplementationException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\MultiSz.h"
 				>
 			</File>
 			<File

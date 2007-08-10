@@ -34,6 +34,8 @@
 #include "testhash.h"
 #include "testtrayicon.h"
 #include "testnamedpipe.h"
+#include "testenvironment.h"
+#include "testmultisz.h"
 
 
 /* type for test functions */
@@ -59,6 +61,7 @@ VislibTest tests[] = {
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
+    {_T("MultiSz"), ::TestMultiSz, "Tests vislib::MultiSz"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("Float16"), ::TestFloat16, "Tests vislib::math::Float16"},
@@ -82,6 +85,7 @@ VislibTest tests[] = {
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
+    {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment and the nested Snapshot"},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };

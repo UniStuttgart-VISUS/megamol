@@ -582,7 +582,7 @@ namespace vislib {
 
         } else {
             throw OutOfRangeException(static_cast<INT>(idx), 0, 
-                static_cast<INT>(this->count - 1), __FILE__, __LINE__);
+                static_cast<INT>(this->count), __FILE__, __LINE__);
         }
     }
 

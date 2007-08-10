@@ -378,6 +378,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testenvironment.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testfile.cpp"
 				>
 			</File>
@@ -399,6 +403,10 @@
 			</File>
 			<File
 				RelativePath=".\testmisc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\testmultisz.cpp"
 				>
 			</File>
 			<File
@@ -476,6 +484,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testenvironment.h"
+				>
+			</File>
+			<File
 				RelativePath=".\testfile.h"
 				>
 			</File>
@@ -497,6 +509,10 @@
 			</File>
 			<File
 				RelativePath=".\testmisc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testmultisz.h"
 				>
 			</File>
 			<File
