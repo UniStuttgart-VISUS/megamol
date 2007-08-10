@@ -188,6 +188,19 @@ namespace math {
 
 
     /**
+     * Compute the signum of 'n'.
+     *
+     * @param n A number.
+     *
+     * @return The signum of 'n'.
+     */
+    template<class T> inline T Signum(const T n) {
+        return static_cast<T>((n > static_cast<T>(0)) ? 1 
+            : ((n < static_cast<T>(0)) ? -1 : 0));
+    }
+
+
+    /**
      * Compute the square of 'n'.
      * 
      * @param n A number.

@@ -11,6 +11,7 @@
 #include "vislib/assert.h"
 #include "vislib/Trace.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/mathfunctions.h"
 #include <cmath>
 
 
@@ -37,25 +38,25 @@ void vislib::graphics::BeholderDistZoom2D::Trigger(AbstractCursor *caller, Trigg
         this->drag = true;
     } else if (reason == REASON_MOVE) {
         if (this->drag) {
-            vislib::graphics::Cursor2D *cursor = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
-            vislib::graphics::Beholder *beholder = this->GetBeholder();
+            Cursor2D *cursor = dynamic_cast<Cursor2D*>(caller);
+            Beholder *beholder = this->GetBeholder();
             ASSERT(cursor != NULL);
 
             if ((beholder == NULL) || (cursor->GetCamera() == NULL)) {
-                TRACE(vislib::Trace::LEVEL_WARN, "BeholderDistZoom2D::Trigger beholder or camera missing.");
+                TRACE(Trace::LEVEL_WARN, "BeholderDistZoom2D::Trigger beholder or camera missing.");
                 return;
             }
 
-            float delta = (cursor->PreviousY() - cursor->Y()) / cursor->GetCamera()->GetVirtualHeight();
+            SceneSpaceType delta 
+                = SceneSpaceType(cursor->Y() - cursor->PreviousY()) 
+                / SceneSpaceType(cursor->GetCamera()->GetVirtualHeight());
+            delta *= SceneSpaceType(scale);
 
-            delta *= scale;
+            SceneSpaceType maxDelta = (beholder->GetPosition() - beholder->GetLookAt()).Length() - this->GetMinDist();
+            if (maxDelta < SceneSpaceType(0)) maxDelta = SceneSpaceType(0);
+            if (delta > maxDelta) delta = maxDelta;
 
-            vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> deltaV = beholder->GetFrontVector() * delta;
-            vislib::math::Point<vislib::graphics::SceneSpaceType, 3> nPos = beholder->GetPosition() - deltaV;
-
-            if ((nPos - beholder->GetLookAt()).SquareLength() >= this->squareMinDist) {
-                beholder->SetPosition(nPos);
-            }
+            beholder->SetPosition(beholder->GetPosition() + (beholder->GetFrontVector() * delta));
         }
     } else if (reason == REASON_BUTTON_UP) {
         this->drag = false;
