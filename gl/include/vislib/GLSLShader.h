@@ -158,7 +158,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an error code, if the
          *         shader was active but could not be disabled.
          */
-        virtual GLenum Disable(void);
+        virtual GLenum Disable(void) const;
         
         /**
          * Enables the shader. The shader must have been successfully created
@@ -167,7 +167,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an error code, if the
          *         shader could not be enabled.
          */
-        virtual GLenum Enable(void);
+        virtual GLenum Enable(void) const;
 
         /**
          * Answers the location of a uniform parameter. This location can be
@@ -201,27 +201,27 @@ namespace gl {
          */
         virtual GLenum Release(void);
 
-        virtual GLenum SetParameter(const char *name, const float v1);
+        virtual GLenum SetParameter(const char *name, const float v1) const;
 
         virtual GLenum SetParameter(const char *name, const float v1, 
-            const float v2);
+            const float v2) const;
 
         virtual GLenum SetParameter(const char *name, const float v1, 
-            const float v2, const float v3);
+            const float v2, const float v3) const;
 
         virtual GLenum SetParameter(const char *name, const float v1,
-            const float v2, const float v3, const float v4);
+            const float v2, const float v3, const float v4) const;
 
-        virtual GLenum SetParameter(const char *name, const int v1);
-
-        virtual GLenum SetParameter(const char *name, const int v1, 
-            const int v2);
+        virtual GLenum SetParameter(const char *name, const int v1) const;
 
         virtual GLenum SetParameter(const char *name, const int v1, 
-            const int v2, const int v3);
+            const int v2) const;
+
+        virtual GLenum SetParameter(const char *name, const int v1, 
+            const int v2, const int v3) const;
 
         virtual GLenum SetParameter(const char *name, const int v1,
-            const int v2, const int v3, const int v4);
+            const int v2, const int v3, const int v4) const;
 
     protected:
 
@@ -250,7 +250,7 @@ namespace gl {
          *                         i. e. because 'hProg' is not a valid shader
          *                         handle.
          */
-        bool isCompiled(GLhandleARB hProg);
+        bool isCompiled(GLhandleARB hProg) const;
 
         /** 
          * Answer the linker status of the program designated by 'hProg'.
@@ -264,7 +264,7 @@ namespace gl {
          *                         i. e. because 'hProg' is not a valid shader
          *                         handle.
          */
-        bool isLinked(GLhandleARB hProg);
+        bool isLinked(GLhandleARB hProg) const;
 
         /** Handle of the program object. */
         GLhandleARB hProgObj;
