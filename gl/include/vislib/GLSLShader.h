@@ -158,7 +158,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an error code, if the
          *         shader was active but could not be disabled.
          */
-        virtual GLenum Disable(void) const;
+        virtual GLenum Disable(void);
         
         /**
          * Enables the shader. The shader must have been successfully created
@@ -167,7 +167,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an error code, if the
          *         shader could not be enabled.
          */
-        virtual GLenum Enable(void) const;
+        virtual GLenum Enable(void);
 
         /**
          * Answers the location of a uniform parameter. This location can be
@@ -182,13 +182,13 @@ namespace gl {
         GLint ParameterLocation(const char *name) const;
 
         /**
-         * Answer the OpenGL Program handle. Use with care since manipulating
+         * Answer the OpenGL program handle. Use with care since manipulating
          * the handle may result in undefined behaviour. Use this handle for
          * calling OpenGL functions not wrapped by this class.
          *
-         * @return The OpenGL Program handle.
+         * @return The OpenGL program handle.
          */
-        inline GLhandleARB ProgramHandle(void) const {
+        inline GLhandleARB GetProgramHandle(void) const {
             return this->hProgObj;
         }
 
@@ -201,27 +201,37 @@ namespace gl {
          */
         virtual GLenum Release(void);
 
-        virtual GLenum SetParameter(const char *name, const float v1) const;
+        virtual GLenum SetParameter(const char *name, const float v1);
 
         virtual GLenum SetParameter(const char *name, const float v1, 
-            const float v2) const;
+            const float v2);
 
         virtual GLenum SetParameter(const char *name, const float v1, 
-            const float v2, const float v3) const;
+            const float v2, const float v3);
 
         virtual GLenum SetParameter(const char *name, const float v1,
-            const float v2, const float v3, const float v4) const;
+            const float v2, const float v3, const float v4);
 
-        virtual GLenum SetParameter(const char *name, const int v1) const;
-
-        virtual GLenum SetParameter(const char *name, const int v1, 
-            const int v2) const;
+        virtual GLenum SetParameter(const char *name, const int v1);
 
         virtual GLenum SetParameter(const char *name, const int v1, 
-            const int v2, const int v3) const;
+            const int v2);
+
+        virtual GLenum SetParameter(const char *name, const int v1, 
+            const int v2, const int v3);
 
         virtual GLenum SetParameter(const char *name, const int v1,
-            const int v2, const int v3, const int v4) const;
+            const int v2, const int v3, const int v4);
+
+        /**
+         * Casts this object to the GLhandleABR value representing the OpenGL
+         * program handle.
+         *
+         * @return The OpenGL program handle.
+         */
+        inline operator GLhandleARB(void) const {
+            return this->hProgObj;
+        }
 
     protected:
 
@@ -236,7 +246,7 @@ namespace gl {
          *                         i. e. because 'hProg' is not a valid shader
          *                         program.
          */
-        StringA getProgramInfoLog(GLhandleARB hProg);
+        static StringA getProgramInfoLog(GLhandleARB hProg);
 
         /** 
          * Answer the compile status of the program designated by 'hProg'.
@@ -250,7 +260,7 @@ namespace gl {
          *                         i. e. because 'hProg' is not a valid shader
          *                         handle.
          */
-        bool isCompiled(GLhandleARB hProg) const;
+        static bool isCompiled(GLhandleARB hProg);
 
         /** 
          * Answer the linker status of the program designated by 'hProg'.
@@ -264,7 +274,7 @@ namespace gl {
          *                         i. e. because 'hProg' is not a valid shader
          *                         handle.
          */
-        bool isLinked(GLhandleARB hProg) const;
+        static bool isLinked(GLhandleARB hProg);
 
         /** Handle of the program object. */
         GLhandleARB hProgObj;
