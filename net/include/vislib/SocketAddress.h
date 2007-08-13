@@ -101,6 +101,14 @@ namespace net {
             const unsigned short port);
 
         /**
+         * Create a socket address accepting any IP address on the specified 
+         * port and using FAMILY_INET.
+         *
+         * @param port The port of the address.
+         */
+        static SocketAddress CreateInet(const unsigned short port);
+
+        /**
          * Create a socket address accepting 'ipAddress' on the specified port.
          *
          * @param addressFamily The address family to create the address for.

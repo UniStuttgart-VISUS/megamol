@@ -31,6 +31,15 @@ vislib::net::SocketAddress vislib::net::SocketAddress::CreateInet(
 
 
 /*
+ * vislib::net::SocketAddress::CreateInet
+ */
+vislib::net::SocketAddress vislib::net::SocketAddress::CreateInet(
+        const unsigned short port) {
+    return SocketAddress(FAMILY_INET, port);
+}
+
+
+/*
  * vislib::net::SocketAddress::SocketAddress
  */
 vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,

@@ -227,11 +227,11 @@ namespace net {
         /**
          * Create a new socket.
          *
-         * @param protocolFamily
-         * @param type
-         * @param protocol
+         * @param protocolFamily The protocol family.
+         * @param type           The type of the socket.
+         * @param protocol       The protocol to use.
          *
-         * @throws
+         * @throws SocketException If the operation fails.
          */
         virtual void Create(const ProtocolFamily protocolFamily, const Type type, 
             const Protocol protocol);
