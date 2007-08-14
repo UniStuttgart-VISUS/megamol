@@ -30,7 +30,6 @@ namespace sys {
     /** Default maximal line size to be read by the read line functions. */
     const unsigned int defMaxLineSize = 1024;
 
-
     /**
      * Reads ansi characters from the file until the end of file, a line break 
      * is reached, or size characters are read. The returned string does not
@@ -66,6 +65,35 @@ namespace sys {
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
     StringW ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
+
+    /**
+     * Read the content of the file 'filename' into 'outSrc'. 'outSrc' is 
+     * being erased by this operation.
+     *
+     * @param outStr   The string to receive the content.
+     * @param filename The name of the file being read.
+     *
+     * @return true, if the file could be read, false, if the file was not 
+     *         found or could not be opened.
+     *
+     * @throws IOException If reading from the file failed.
+     */
+    bool ReadTextFile(StringA& outStr, const char *filename);
+
+    /**
+     * Read the content of the file 'file' into 'outSrc'. 'outSrc' is being 
+     * erased by this operation. 'file' will be read from the current position,
+     * will be read until EoF, and will not be closed after operation.
+     *
+     * @param outStr The string to receive the content.
+     * @param file   The file object being read.
+     *
+     * @return true, if the file could be read, false, if the file was not 
+     *         found or could not be opened.
+     *
+     * @throws IOException If reading from the file failed.
+     */
+    bool ReadTextFile(StringA& outStr, File& file);
 
     /**
      * Answer the number of milliseconds since midnight of the current day.

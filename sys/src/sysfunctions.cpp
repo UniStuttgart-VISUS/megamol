@@ -14,10 +14,14 @@
 #include <sys/time.h>
 #endif /* _WIN32 */
 
-#include "vislib/memutils.h"
+#include "vislib/File.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"
+#include "vislib/memutils.h"
+#include "vislib/String.h"
+#include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -111,6 +115,41 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
     StringW str(buf);
     delete[] buf;
     return str;
+}
+
+
+/*
+ * vislib::sys::ReadTextFile
+ */
+bool vislib::sys::ReadTextFile(vislib::StringA& outStr, const char *filename) {
+    File file;
+    if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, 
+            File::OPEN_ONLY)) {
+        TRACE(Trace::LEVEL_ERROR, "Text file \"%s\" could not be opened.", 
+            filename);
+        return false;
+    }
+    return ReadTextFile(outStr, file);
+}
+
+
+/*
+ * vislib::sys::ReadTextFile
+ */
+bool vislib::sys::ReadTextFile(vislib::StringA& outStr, 
+        vislib::sys::File& file) {
+    File::FileSize size; // Size of the remainig file in bytes.
+    char *src = NULL;    // Array to hold source.
+
+    size = file.GetSize() - file.Tell();
+    ASSERT(size < INT_MAX);
+    src = outStr.AllocateBuffer(static_cast<vislib::StringA::Size>(size));
+
+    /* Read source and ensure binary zero at end. */
+    file.Read(src, size); 
+    src[size] = 0;
+
+    return true;
 }
 
 

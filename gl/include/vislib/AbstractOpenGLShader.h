@@ -133,20 +133,6 @@ namespace gl {
         /** Disallow instances of this class. */
         AbstractOpenGLShader(void);
 
-        /**
-         * Read the content of the file 'filename' into 'outSrc'. 'outSrc' is 
-         * being erased by this operation.
-         *
-         * @param outStr   The string to receive the content.
-         * @param filename The name of the file being read.
-         *
-         * @return true, if the file could be read, false, if the file was not 
-         *         found or could not be opened.
-         *
-         * @throws IOException If reading from the file failed.
-         */
-        virtual bool read(StringA& outStr, const char *filename) const;
-
     };
     
 } /* end namespace gl */

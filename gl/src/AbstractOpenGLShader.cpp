@@ -85,35 +85,3 @@ vislib::graphics::gl::AbstractOpenGLShader::~AbstractOpenGLShader(void) {
 vislib::graphics::gl::AbstractOpenGLShader::AbstractOpenGLShader(void) {
     /* Nothing to do. */
 }
-
-
-/*
- * vislib::graphics::gl::AbstractOpenGLShader::read
- */
-bool vislib::graphics::gl::AbstractOpenGLShader::read(StringA& outStr,
-        const char *filename) const {
-    using namespace vislib::sys;
-
-    File file;                      // File to read source from.
-    File::FileSize size;            // Size of the file in bytes.
-    char *src = NULL;               // Array to hold source.
-
-    /* Open shader file. */
-    if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, 
-            File::OPEN_ONLY)) {
-        TRACE(Trace::LEVEL_ERROR, "Shader file \"%s\" could not be opened.", 
-            filename);
-        return false;
-    }
-
-    /* Allocate memory for source. */
-    size = file.GetSize();
-    ASSERT(size < INT_MAX);
-    src = outStr.AllocateBuffer(static_cast<StringA::Size>(size));
-    
-    /* Read source and ensure binary zero at end. */
-    file.Read(src, size); 
-    src[size] = 0;
-
-    return true;
-}

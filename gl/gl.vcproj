@@ -317,6 +317,10 @@
 				RelativePath=".\src\OpenGLException.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\ShaderSource.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -353,6 +357,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\OpenGLException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShaderSource.h"
 				>
 			</File>
 		</Filter>

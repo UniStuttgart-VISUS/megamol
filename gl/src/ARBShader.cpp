@@ -13,6 +13,7 @@
 #include "vislib/glverify.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
+#include "vislib/sysfunctions.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -91,7 +92,7 @@ bool vislib::graphics::gl::ARBShader::Create(const char *src) {
 bool vislib::graphics::gl::ARBShader::CreateFromFile(const char *filename) {
     StringA src;
 
-    if (this->read(src, filename)) {
+    if (vislib::sys::ReadTextFile(src, filename)) {
         return this->Create(src);
     } else {
         return false;

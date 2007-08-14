@@ -14,6 +14,7 @@
 #include "vislib/glverify.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
+#include "vislib/sysfunctions.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -134,11 +135,11 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
     StringA vertexShaderSrc;
     StringA fragmentShaderSrc;
 
-    if (!this->read(vertexShaderSrc, vertexShaderFile)) {
+    if (!vislib::sys::ReadTextFile(vertexShaderSrc, vertexShaderFile)) {
         return false;
     }
 
-    if (!this->read(fragmentShaderSrc, fragmentShaderFile)) {
+    if (!vislib::sys::ReadTextFile(fragmentShaderSrc, fragmentShaderFile)) {
         return false;
     }
 
@@ -159,20 +160,23 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
     Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
 
     for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
-        if (!this->read(vertexShaderSrcs[i], vertexShaderFiles[i])) {
+        if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
+                vertexShaderFiles[i])) {
             return false;
         }
     }
 
     for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
-        if (!this->read(fragmentShaderSrcs[i], fragmentShaderFiles[i])) {
+        if (!vislib::sys::ReadTextFile(fragmentShaderSrcs[i], 
+                fragmentShaderFiles[i])) {
             return false;
         }
     }
 
     // built up pointer arrays for attributes
     const char **vertexShaderSrcPtrs = new const char*[cntVertexShaderFiles];
-    const char **fragmentShaderSrcPtrs = new const char*[cntFragmentShaderFiles];
+    const char **fragmentShaderSrcPtrs 
+        = new const char*[cntFragmentShaderFiles];
 
     try {
         for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
