@@ -465,6 +465,8 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
         socket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM, 
             Socket::PROTOCOL_UDP);
         socket.SetBroadcast(true);
+        socket.SetExclusiveAddrUse(false);
+        socket.SetReuseAddr(true);
         socket.Bind(this->cds.bindAddr);
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_VL_ERROR, "Discovery receiver thread could not "
