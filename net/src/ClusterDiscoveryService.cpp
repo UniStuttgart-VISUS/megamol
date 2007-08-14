@@ -95,6 +95,28 @@ void vislib::net::ClusterDiscoveryService::AddListener(
 
 
 /*
+ * vislib::net::ClusterDiscoveryService::GetDiscoveryAddress
+ */
+vislib::net::IPAddress 
+vislib::net::ClusterDiscoveryService::GetDiscoveryAddress(
+        const PeerHandle& hPeer) const {
+    IPAddress retval = IPAddress::NONE;
+    
+    this->critSect.Lock();
+
+    if (!this->isValidPeerHandle(hPeer)) {
+        this->critSect.Unlock();
+        throw IllegalParamException("hPeer", __FILE__, __LINE__);
+    } else {
+        retval = hPeer->discoveryAddr.GetIPAddress();
+        this->critSect.Unlock();
+    }
+
+    return retval;
+}
+
+
+/*
  * vislib::net::ClusterDiscoveryService::IsRunning
  */
 bool vislib::net::ClusterDiscoveryService::IsRunning(void) const {

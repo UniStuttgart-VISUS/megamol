@@ -180,6 +180,18 @@ namespace net {
         }
 
         /**
+         * Answer the source IP address 'hPeer' uses for discovery communication. 
+         *
+         * @param hPeer The handle of the peer node.
+         *
+         * @return The IP address of the adapter that is used by 'hPeer' for the
+         *         discovery communication.
+         *
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         */
+        IPAddress GetDiscoveryAddress(const PeerHandle& hPeer) const;
+
+        /**
          * Answer the call back socket address that is sent to peer nodes 
          * when they are discovered. This address can be used to establish a
          * connection to our node in a application defined manner.
@@ -188,6 +200,20 @@ namespace net {
          */
         const SocketAddress& GetResponseAddr(void) const {
             return this->responseAddr;
+        }
+
+        /**
+         * Answer the user communication address of 'hPeer'. 
+         *
+         * @param hPeer The handle of the peer node.
+         *
+         * @return The socket address that has been specified by the peer node
+         *         for user communication.
+         *
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         */
+        inline SocketAddress GetUserComAddress(const PeerHandle& hPeer) const {
+            return (*this)[hPeer];
         }
 
         /**

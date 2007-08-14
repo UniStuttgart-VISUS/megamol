@@ -18,6 +18,18 @@
 
 
 /*
+ * vislib::net::IPAddress::ANY
+ */
+const vislib::net::IPAddress vislib::net::IPAddress::ANY(INADDR_ANY);
+
+
+/*
+ * vislib::net::IPAddress::NONE
+ */
+const vislib::net::IPAddress vislib::net::IPAddress::NONE(INADDR_NONE);
+
+
+/*
  * vislib::net::IPAddress::Create
  */
 vislib::net::IPAddress vislib::net::IPAddress::Create(const char *address) {
@@ -117,4 +129,12 @@ vislib::net::IPAddress& vislib::net::IPAddress::operator =(const IPAddress& rhs)
  */
 bool vislib::net::IPAddress::operator ==(const IPAddress& rhs) const {
     return (::memcmp(&this->address, &rhs.address, sizeof(in_addr)) == 0);
+}
+
+
+/*
+ * vislib::net::IPAddress::IPAddress
+ */
+vislib::net::IPAddress::IPAddress(const unsigned long address) {
+    this->address.s_addr = address;
 }

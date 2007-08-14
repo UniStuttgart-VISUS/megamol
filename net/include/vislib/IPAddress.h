@@ -36,6 +36,16 @@ namespace net {
 
     public:
 
+        /** 
+         * Constant special IP address that allows receiving from all available
+         * adapters and sending from the default (lowest-numbered adapter)
+         * interface.
+         */
+        static const IPAddress ANY;
+
+        /** Constant invalid IP address. */
+        static const IPAddress NONE;
+
         /**
          * Create an IPAddress form the dottet string format or host name.
          *
@@ -69,7 +79,8 @@ namespace net {
          * @param i3 The first number of the IP address.
          * @param i4 The first number of the IP address.
          */
-        explicit IPAddress(unsigned char i1, unsigned char i2, unsigned char i3, unsigned char i4);
+        IPAddress(unsigned char i1, unsigned char i2, unsigned char i3, 
+            unsigned char i4);
 
         /**
          * Cast constructor from struct in_addr.
@@ -168,6 +179,13 @@ namespace net {
         }
 
     protected:
+
+        /**
+         * Create an IPAddress from its representation as a single integer.
+		 *
+         * @param address The address as integer.
+         */
+        explicit IPAddress(const unsigned long address);
 
         /** The IP address wrapped by this object. */
         struct in_addr address;

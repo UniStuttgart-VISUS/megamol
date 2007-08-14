@@ -167,6 +167,12 @@ namespace vislib {
         }
 
 #if defined(DEBUG) || defined(_DEBUG)
+        /**
+         * Answer the current reference count. THIS METHOD IS ONLY AVAILABLE IN
+         * DEBUG BUILDS!
+         *
+         * @return The reference count.
+         */
 		inline UINT _GetCnt(void) const {
 			return (this->ptr != NULL) ? this->ptr->cnt : 0;
 		}
