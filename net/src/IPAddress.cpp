@@ -20,13 +20,15 @@
 /*
  * vislib::net::IPAddress::ANY
  */
-const vislib::net::IPAddress vislib::net::IPAddress::ANY(INADDR_ANY);
+const vislib::net::IPAddress vislib::net::IPAddress::ANY(
+    static_cast<unsigned long>(INADDR_ANY));
 
 
 /*
  * vislib::net::IPAddress::NONE
  */
-const vislib::net::IPAddress vislib::net::IPAddress::NONE(INADDR_NONE);
+const vislib::net::IPAddress vislib::net::IPAddress::NONE(
+    static_cast<unsigned long>(INADDR_NONE));
 
 
 /*
