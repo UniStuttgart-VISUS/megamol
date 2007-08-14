@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
+#include <climits>
 #endif /* _WIN32 */
 
 #include "vislib/File.h"
