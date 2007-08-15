@@ -99,9 +99,9 @@ namespace vislib {
          */
         inline const TCHAR *GetMsg(void) const {
 #if defined(UNICODE) || defined(_UNICODE)
-            return this->GetMsgW();
+            return reinterpret_cast<const TCHAR *>(this->GetMsgW());
 #else /* defined(UNICODE) || defined(_UNICODE) */
-            return this->GetMsgA();
+            return reinterpret_cast<const TCHAR *>(this->GetMsgA());
 #endif /* defined(UNICODE) || defined(_UNICODE) */
         }
 
