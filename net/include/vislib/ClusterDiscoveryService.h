@@ -148,6 +148,15 @@ namespace net {
         void AddListener(ClusterDiscoveryListener *listener);
 
         /**
+         * Clear all peer nodes that have been found until now.
+         */
+        inline void ClearPeers(void) {
+            this->critSect.Lock();
+            this->peerNodes.Clear();
+            this->critSect.Unlock();
+        }
+
+        /**
          * Answer the number of known peer nodes. This number includes also
          * this node.
          *
