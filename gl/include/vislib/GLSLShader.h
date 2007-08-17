@@ -66,9 +66,115 @@ namespace gl {
         virtual ~GLSLShader(void);
 
         /**
-         * Create a new shader using 'vertexShaderSrc' as source code of the 
+         * Compiles a new shader program object using a vertex shader and a
+         * fragment shader. Both shader sources will be compiled into shader
+         * objects and both will be attached to a program object. The program
+         * object will not be linked. You must call 'Link' before you can use
+         * the shader. Using 'vertexShaderSrc' as source code of the 
          * vertex shader and 'fragmentShaderSrc' as source code of the pixel
          * shader.
+         *
+         * @param vertexShaderSrc   The null terminated source string of the 
+         *                          vertex shader.
+         * @param fragmentShaderSrc The null terminated source string of the
+         *                          pixel shader.
+         *
+         * @return true if the shader was successfully compiled.
+         *
+         * @throws OpenGLException If an OpenGL call for compiling the shader
+         *                         fails.
+         */
+        virtual bool Compile(const char *vertexShaderSrc, 
+            const char *fragmentShaderSrc);
+
+        /**
+         * Compiles a new shader program object using a vertex shader and a
+         * fragment shader. Both shader sources will be compiled into shader
+         * objects and both will be attached to a program object. The program
+         * object will not be linked. You must call 'Link' before you can use
+         * the shader. Using the concatenation of the null terminated
+         * strings in 'vertexShaderSrc' as source code of the vertex shader 
+         * and the content of 'fragmentShaderSrc' as source code of the pixel
+         * shader.
+         *
+         * @param vertexShaderSrc      An array of 'cntVertexShaderSrc' null
+         *                             terminated strings forming the vertex
+         *                             shader.
+         * @param cntVertexShaderSrc   The number of elements in 
+         *                             'vertexShaderSrc'.
+         * @param fragmentShaderSrc    An array of 'cntFragmentShaderSrc' null
+         *                             terminated strings forming the pixel
+         *                             shader.
+         * @param cntFragmentShaderSrc The number of elements in
+         *                             'fragmentShaderSrc'.
+         * @param insertLineDirective  Indicates whether the '#line' directive
+         *                             should be inserted between each two
+         *                             shader source strings.
+         *
+         * @return true if the shader was successfully compiled.
+         *
+         * @throws OpenGLException If an OpenGL call for compiling the shader
+         *                         fails.
+         */
+        virtual bool Compile(const char **vertexShaderSrc, 
+            const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
+            const SIZE_T cntFragmentShaderSrc, 
+            bool insertLineDirective = true);
+
+        /**
+         * Compiles a new shader program object using a vertex shader and a
+         * fragment shader. Both shader sources will be compiled into shader
+         * objects and both will be attached to a program object. The program
+         * object will not be linked. You must call 'Link' before you can use
+         * the shader. Loading the shader code from two files.
+         *
+         * @param vertexShaderFile   The name of the vertex shader source file.
+         * @param fragmentShaderFile The name of the pixel shader source file.
+         * 
+         * @return true if the shader was successfully compiled.
+         *
+         * @throws OpenGLException If an OpenGL call for compiling the shader
+         *                         fails.
+         * @throws IOException     If reading the shader code from an open
+         *                         file failed.
+         */
+        virtual bool CompileFromFile(const char *vertexShaderFile,
+            const char *fragmentShaderFile);
+
+        /**
+         * Compiles a new shader program object using a vertex shader and a
+         * fragment shader. Both shader sources will be compiled into shader
+         * objects and both will be attached to a program object. The program
+         * object will not be linked. You must call 'Link' before you can use
+         * the shader. Loading the shader code from several files.
+         *
+         * @param vertexShaderFiles      Array of names of the vertex shader 
+         *                               source files.
+         * @param cntVertexShaderFiles   Number of vertex shader source files
+         * @param fragmentShaderFiles    Array of names of the fragment shader
+         *                               source files.
+         * @param cntFragmentShaderFiles Number of fragment shader source files
+         * @param insertLineDirective    Indicates whether the '#line' 
+         *                               directive should be inserted between 
+         *                               each two shader source strings.
+         * 
+         * @return true if the shader was successfully compiled.
+         *
+         * @throws OpenGLException If an OpenGL call for compiling the shader
+         *                         fails.
+         * @throws IOException     If reading the shader code from an open
+         *                         file failed.
+         */
+        virtual bool CompileFromFiles(const char **vertexShaderFiles,
+            const SIZE_T cntVertexShaderFiles, const char **fragmentShaderFiles,
+            const SIZE_T cntFragmentShaderFiles, 
+            bool insertLineDirective = true);
+
+        /**
+         * Create a new shader using 'vertexShaderSrc' as source code of the 
+         * vertex shader and 'fragmentShaderSrc' as source code of the pixel
+         * shader. This is equal to the corresponding calls of 'Compile' and
+         * 'Link'.
          *
          * @param vertexShaderSrc   The null terminated source string of the 
          *                          vertex shader.
@@ -87,7 +193,8 @@ namespace gl {
          * Create a new shader using the concatenation of the null terminated
          * strings in 'vertexShaderSrc' as source code of the vertex shader 
          * and the content of 'fragmentShaderSrc' as source code of the pixel
-         * shader.
+         * shader. This is equal to the corresponding calls of 'Compile' and
+         * 'Link'.
          *
          * @param vertexShaderSrc      An array of 'cntVertexShaderSrc' null
          *                             terminated strings forming the vertex
@@ -114,7 +221,8 @@ namespace gl {
             bool insertLineDirective = true);
 
         /**
-         * Crate a new shader loading the shader code from two files.
+         * Crate a new shader loading the shader code from two files. This is 
+         * equal to the corresponding calls of 'Compile' and 'Link'.
          *
          * @param vertexShaderFile   The name of the vertex shader source file.
          * @param fragmentShaderFile The name of the pixel shader source file.
@@ -131,7 +239,8 @@ namespace gl {
             const char *fragmentShaderFile);
 
         /**
-         * Create a new shader loading the shader code from several files.
+         * Create a new shader loading the shader code from several files. This
+         * is equal to the corresponding calls of 'Compile' and 'Link'.
          *
          * @param vertexShaderFiles      Array of names of the vertex shader 
          *                               source files.
@@ -178,6 +287,16 @@ namespace gl {
         virtual GLenum Enable(void);
 
         /**
+         * Links the shader. The shader must already be successfully compiled.
+         *
+         * @return true If the shader linked successfully.
+         *
+         * @throws OpenGLException If an OpenGL call for linking the shader
+         *                         fails.
+         */
+        virtual bool Link(void);
+
+        /**
          * Answers the location of a uniform parameter. This location can be
          * used as parameter for 'glUniform' functions and 'SetParameter' 
          * methods.
@@ -196,7 +315,7 @@ namespace gl {
          *
          * @return The OpenGL program handle.
          */
-        inline GLhandleARB GetProgramHandle(void) const {
+        inline GLhandleARB ProgramHandle(void) const {
             return this->hProgObj;
         }
 

@@ -69,20 +69,21 @@ vislib::graphics::gl::GLSLShader::~GLSLShader(void) {
 
 
 /*
- * vislib::graphics::gl::GLSLShader::Create
+ * vislib::graphics::gl::GLSLShader::Compile
  */
-bool vislib::graphics::gl::GLSLShader::Create(const char *vertexShaderSrc, 
+bool vislib::graphics::gl::GLSLShader::Compile(const char *vertexShaderSrc, 
                                               const char *fragmentShaderSrc) {
     const char *v[] = { vertexShaderSrc };
     const char *f[] = { fragmentShaderSrc };
     
-    return this->Create(v, 1, f, 1, false);
+    return this->Compile(v, 1, f, 1, false);
 }
 
+
 /*
- * vislib::graphics::gl::GLSLShader::Create
+ * vislib::graphics::gl::GLSLShader::Compile
  */
-bool vislib::graphics::gl::GLSLShader::Create(const char **vertexShaderSrc, 
+bool vislib::graphics::gl::GLSLShader::Compile(const char **vertexShaderSrc, 
         const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
         const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
     USES_GL_VERIFY;
@@ -102,20 +103,15 @@ bool vislib::graphics::gl::GLSLShader::Create(const char **vertexShaderSrc,
     GL_VERIFY_THROW(this->hProgObj = ::glCreateProgramObjectARB());
     GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hVertexShader));
     GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hPixelShader));
-    GL_VERIFY_THROW(::glLinkProgramARB(this->hProgObj));
-    if (!this->isLinked(this->hProgObj)) {
-        throw CompileException(this->getProgramInfoLog(this->hProgObj), 
-            __FILE__, __LINE__);
-    }
 
     return true;
 }
 
 
 /*
- * vislib::graphics::gl::GLSLShader::CreateFromFile
+ * vislib::graphics::gl::GLSLShader::CompileFromFile
  */
-bool vislib::graphics::gl::GLSLShader::CreateFromFile(
+bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         const char *vertexShaderFile, const char *fragmentShaderFile) {
     StringA vertexShaderSrc;
     StringA fragmentShaderSrc;
@@ -128,14 +124,14 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
         return false;
     }
 
-    return this->Create(vertexShaderSrc, fragmentShaderSrc);
+    return this->Compile(vertexShaderSrc, fragmentShaderSrc);
 }
 
 
 /*
- * vislib::graphics::gl::GLSLShader::CreateFromFiles
+ * vislib::graphics::gl::GLSLShader::CompileFromFiles
  */
-bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
+bool vislib::graphics::gl::GLSLShader::CompileFromFiles(
         const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
         const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
@@ -171,7 +167,7 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
             fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
         }
 
-        bool retval = this->Create(vertexShaderSrcPtrs, cntVertexShaderFiles, 
+        bool retval = this->Compile(vertexShaderSrcPtrs, cntVertexShaderFiles, 
             fragmentShaderSrcPtrs, cntFragmentShaderFiles, 
             insertLineDirective);
 
@@ -204,6 +200,65 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
 
 
 /*
+ * vislib::graphics::gl::GLSLShader::Create
+ */
+bool vislib::graphics::gl::GLSLShader::Create(const char *vertexShaderSrc, 
+                                              const char *fragmentShaderSrc) {
+    if (this->Compile(vertexShaderSrc, fragmentShaderSrc)) {
+        return this->Link();
+    } else {
+        return false;
+    }
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::Create
+ */
+bool vislib::graphics::gl::GLSLShader::Create(const char **vertexShaderSrc, 
+        const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
+        const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
+    if (this->Compile(vertexShaderSrc, cntVertexShaderSrc, fragmentShaderSrc, 
+            cntFragmentShaderSrc, insertLineDirective)) {
+        return this->Link();
+    } else {
+        return false;
+    }
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::CreateFromFile
+ */
+bool vislib::graphics::gl::GLSLShader::CreateFromFile(
+        const char *vertexShaderFile, const char *fragmentShaderFile) {
+    if (this->CompileFromFile(vertexShaderFile, fragmentShaderFile)) {
+        return this->Link();
+    } else {
+        return false;
+    }
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::CreateFromFiles
+ */
+bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
+        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
+        const char **fragmentShaderFiles, 
+        const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
+
+    if (this->CompileFromFiles(vertexShaderFiles, cntVertexShaderFiles, 
+            fragmentShaderFiles, cntFragmentShaderFiles, 
+            insertLineDirective)) {
+        return this->Link();
+    } else {
+        return false;
+    }
+}
+
+
+/*
  * vislib::graphics::gl::GLSLShader::Disable
  */
 GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
@@ -232,6 +287,23 @@ GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
 
 
 /*
+ * vislib::graphics::gl::GLSLShader::Link
+ */
+bool vislib::graphics::gl::GLSLShader::Link() {
+    USES_GL_VERIFY;
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    
+    GL_VERIFY_THROW(::glLinkProgramARB(this->hProgObj));
+    if (!this->isLinked(this->hProgObj)) {
+        throw CompileException(this->getProgramInfoLog(this->hProgObj), 
+            __FILE__, __LINE__);
+    }
+
+    return true;
+}
+
+
+/*
  * vislib::graphics::gl::GLSLShader::ParameterLocation
  */
 GLint vislib::graphics::gl::GLSLShader::ParameterLocation(const char *name) const {
@@ -248,6 +320,20 @@ GLenum vislib::graphics::gl::GLSLShader::Release(void) {
     USES_GL_VERIFY;
 
     if (GLSLShader::IsValidHandle(this->hProgObj)) {
+        GLint objCnt;
+
+        if (GL_SUCCEEDED(::glGetObjectParameterivARB(this->hProgObj, 
+                GL_OBJECT_ATTACHED_OBJECTS_ARB, &objCnt))) {
+            GLhandleARB *objs = new GLhandleARB(objCnt);
+
+            if (GL_SUCCEEDED(::glGetAttachedObjectsARB(this->hProgObj, 
+                    objCnt, &objCnt, objs))) {
+                for (GLint i = 0; i < objCnt; i++) {
+                    ::glDeleteObjectARB(objs[i]);
+                }
+            }
+        }            
+
         GL_VERIFY_RETURN(::glDeleteObjectARB(this->hProgObj));
     }
 
