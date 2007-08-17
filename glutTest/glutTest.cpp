@@ -37,6 +37,7 @@
 #include "BeholderRotatorTextApp.h"
 #include "FBOTestApp.h"
 #include "FBOTest2App.h"
+#include "GLSLShaderTest.h"
 
 #include "vislib/FpsCounter.h"
 #include "vislib/Thread.h"
@@ -135,6 +136,7 @@ int main(int argc, char* argv[]) {
     GlutAppManager::InstallFactory<BeholderRotatorTextApp>("Beholder Rotator Test");
     GlutAppManager::InstallFactory<FBOTestApp>("Framebuffer Object Test");
 	GlutAppManager::InstallFactory<FBOTest2App>("Framebuffer Object Test #2");
+    GlutAppManager::InstallFactory<GLSLShaderTest>("GLSLShader Test");
 
     // run test application
     glutInit(&argc, argv);

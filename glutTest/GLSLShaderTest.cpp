@@ -1,0 +1,252 @@
+/*
+ * GLSLShaderTest.cpp
+ *
+ * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ */
+#include "GLSLShaderTest.h"
+
+#include <GL/glut.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <cstdio>
+
+#include "vislib/graphicstypes.h"
+#include "vislib/Rectangle.h"
+#include "vislib/sysfunctions.h"
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include "vislogo.h"
+#include <cstdlib>
+
+
+/*
+ * GLSLShaderTest::GLSLShaderTest
+ */
+GLSLShaderTest::GLSLShaderTest(void) : AbstractGlutApp(), schade() {
+
+    this->beholder.SetView(
+        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
+
+    this->camera.SetBeholder(&this->beholder);
+    this->camera.SetNearClipDistance(0.1f);
+    this->camera.SetFarClipDistance(7.0f);
+    this->camera.SetFocalDistance(2.5f);
+    this->camera.SetApertureAngle(50.0f);
+    this->camera.SetVirtualWidth(10.0f);
+    this->camera.SetVirtualHeight(10.0f);
+    this->camera.SetProjectionType(vislib::graphics::Camera::MONO_PERSPECTIVE);
+
+    this->modkeys.SetModifierCount(3);
+    this->modkeys.RegisterObserver(&this->cursor);
+
+    this->rotator2.SetBeholder(&this->beholder);
+    this->rotator2.SetTestButton(0); // left button
+    this->rotator2.SetModifierTestCount(0);
+    this->rotator2.SetAltModifier(vislib::graphics::InputModifiers::MODIFIER_CTRL);
+
+    this->cursor.SetButtonCount(3);
+    this->cursor.SetInputModifiers(&this->modkeys);
+    this->cursor.SetCamera(&this->camera);
+    this->cursor.RegisterCursorEvent(&this->rotator2);
+}
+
+
+/*
+ * GLSLShaderTest::~GLSLShaderTest
+ */
+GLSLShaderTest::~GLSLShaderTest(void) {
+}
+
+
+/*
+ * GLSLShaderTest::GLInit
+ */
+int GLSLShaderTest::GLInit(void) {
+
+    if (!::vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+        return -12;
+    }
+
+    VisLogoDoStuff();
+    VisLogoTwistLogo();
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
+    glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+    this->camera.glMultViewMatrix();
+
+    float lp[4] = {-2.0f, -2.0f, 2.0f, 0.0f};
+    glLightfv(GL_LIGHT0, GL_POSITION, lp);
+
+    float la[4] = {0.1f, 0.1f, 0.1f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_AMBIENT, la);
+
+    float ld[4] = {0.9f, 0.9f, 0.9f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, ld);
+
+    glEnable(GL_COLOR_MATERIAL);
+
+    if (!this->schade.Create(
+            vislib::graphics::gl::GLSLShader::FTRANSFORM_VERTEX_SHADER_SRC,
+"\n"
+"uniform vec2 v;\n"
+"\n"
+"void main(void) {\n"
+"  float alpha = v.x * v.x;\n"
+"  float beta = 1.0 - alpha;\n"
+"  float scale = (1.0 - gl_FragCoord.z) * 40.0;\n"
+"  alpha *= scale;\n"
+"  beta *= scale;\n"
+"  gl_FragColor = alpha * vec4(0.25, 0.5, 1.0, 1.0) + beta * vec4(0.5, 1.0, 0.25, 1.0);\n"
+"}\n")) {
+        return -13;
+    }
+
+    this->beholder.SetView(
+        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
+
+    return 0;
+}
+
+
+/*
+ * GLSLShaderTest::GLDeinit
+ */
+void GLSLShaderTest::GLDeinit(void) {
+    this->schade.Release();
+}
+
+
+/*
+ * GLSLShaderTest::OnResize
+ */
+void GLSLShaderTest::OnResize(unsigned int w, unsigned int h) {
+    AbstractGlutApp::OnResize(w, h);
+    this->camera.SetVirtualWidth(static_cast<vislib::graphics::ImageSpaceType>(w));
+    this->camera.SetVirtualHeight(static_cast<vislib::graphics::ImageSpaceType>(h));
+}
+
+
+/*
+ * GLSLShaderTest::OnKeyPress
+ */
+bool GLSLShaderTest::OnKeyPress(unsigned char key, int x, int y) {
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
+    return false; // retval;
+}
+
+
+/*
+ * GLSLShaderTest::OnMouseEvent
+ */
+void GLSLShaderTest::OnMouseEvent(int button, int state, int x, int y) {
+    unsigned int btn = 0;
+    int modifiers = glutGetModifiers();
+
+    switch (button) {
+        case GLUT_LEFT_BUTTON: btn = 0; break;
+        case GLUT_RIGHT_BUTTON: btn = 1; break;
+        case GLUT_MIDDLE_BUTTON: btn = 2; break;
+    }
+
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
+    this->cursor.SetButtonState(btn, (state == GLUT_DOWN));
+}
+
+
+/*
+ * GLSLShaderTest::OnMouseMove
+ */
+void GLSLShaderTest::OnMouseMove(int x, int y) {
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
+}
+
+
+/*
+ * GLSLShaderTest::OnSpecialKey
+ */
+void GLSLShaderTest::OnSpecialKey(int key, int x, int y) {
+    int modifiers = glutGetModifiers();
+
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
+    this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, (modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT);
+    this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
+        static_cast<vislib::graphics::ImageSpaceType>(y), true);
+}
+
+
+/*
+ * GLSLShaderTest::Render
+ */
+void GLSLShaderTest::Render(void) {
+
+    glViewport(0, 0, this->GetWidth(), this->GetHeight());
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+    this->camera.glMultProjectionMatrix();
+
+    glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+    this->camera.glMultViewMatrix();
+
+    this->schade.Enable();
+
+//    glUniform1fARB(this->schade.ParameterLocation("v"), 1, viewportStuff);
+    float angle = M_PI * float(vislib::sys::GetTicksOfDay() % 2000) / 1000.0f;
+    this->schade.SetParameter("v", sinf(angle), cos(angle));
+
+    unsigned int vCount = VisLogoCountVertices();
+	unsigned int p;
+
+    glBegin(GL_QUAD_STRIP);
+
+    for (unsigned int i = 0; i < 20; i++) {
+		for (unsigned int j = 0; j < vCount / 20; j++) {
+			p = (i + j * 20) % vCount;
+			glColor3dv(VisLogoVertexColor(p)->f);
+			glNormal3dv(VisLogoVertexNormal(p)->f);
+			glVertex3dv(VisLogoVertex(p)->f);
+
+            p = ((i + 1) % 20 + j * 20) % vCount;
+			glColor3dv(VisLogoVertexColor(p)->f);
+			glNormal3dv(VisLogoVertexNormal(p)->f);
+			glVertex3dv(VisLogoVertex(p)->f);
+		}
+	}
+
+    p = 0; // closing strip
+	glColor3dv(VisLogoVertexColor(p)->f);
+	glNormal3dv(VisLogoVertexNormal(p)->f);
+	glVertex3dv(VisLogoVertex(p)->f);
+
+    p = 1;
+	glColor3dv(VisLogoVertexColor(p)->f);
+	glNormal3dv(VisLogoVertexNormal(p)->f);
+	glVertex3dv(VisLogoVertex(p)->f);
+
+    glEnd();
+
+    this->schade.Disable();
+
+	glFlush();
+
+	glutSwapBuffers();
+    glutPostRedisplay();
+}

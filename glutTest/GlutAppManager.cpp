@@ -99,6 +99,7 @@ void GlutAppManager::InitGlutWindow(void) {
     this->windowMenu = glutCreateMenu(GlutAppManager::OnMenuItemClicked);
 
     glutAddSubMenu("Select Test", this->appMenu);
+    glutAddMenuEntry("Restart Test", -2);
     glutAddMenuEntry("Exit", -1);
 
     glutAttachMenu(GLUT_RIGHT_BUTTON);
@@ -111,6 +112,24 @@ void GlutAppManager::InitGlutWindow(void) {
 void GlutAppManager::OnMenuItemClicked(int menuID) {
     if (menuID == -1) {
         GlutAppManager::ExitApplication(0);
+    } else if (menuID == -2) {
+        GlutAppManager *This = GlutAppManager::GetInstance();
+        if (This->app) {
+            This->app->GLDeinit();
+            if (This->app->GLInit() == 0) {
+                // TODO: initializes the glut stuff
+                This->app->OnResize(This->width, This->height);
+
+                printf("Test restarted.\n");
+
+                fpsCounter.Reset();
+
+            } else {
+                delete This->app;
+                This->app = NULL;
+                printf("Test could not be restarted.\n");
+            }
+        }
     } else if ((menuID >= 0) && (menuID < int(GlutAppManager::GetInstance()->factories.Count()))) {
         GlutAppManager *This = GlutAppManager::GetInstance();
         // select an test application factory
