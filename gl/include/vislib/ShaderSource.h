@@ -173,6 +173,8 @@ namespace gl {
          * @param code The code snipped to be added.
          *
          * @return The snipped added.
+         *
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Append(
             const vislib::SmartPtr<Snippet>& code);
@@ -206,6 +208,7 @@ namespace gl {
          *
          * @return The snippet inserted.
          *
+         * @throw IllegalParamException if code is <NULL>.
          * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
@@ -218,6 +221,8 @@ namespace gl {
          * @param code The snippet to be prepended.
          *
          * @return The snippet prepended.
+         *
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Prepend(
             const vislib::SmartPtr<Snippet>& code);
@@ -238,6 +243,8 @@ namespace gl {
          * @param code The snippet to be set as shader source.
          *
          * @return The snipped set as shader source.
+         *
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Set(
             const vislib::SmartPtr<Snippet>& code);

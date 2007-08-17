@@ -9,6 +9,7 @@
 #include <cstdarg>
 #include "vislib/memutils.h"
 #include "vislib/CharTraits.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/String.h"
 #include "vislib/sysfunctions.h"
 
@@ -153,6 +154,9 @@ const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>&
 vislib::graphics::gl::ShaderSource::Append(
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
+    if (code.IsNull()) {
+        throw IllegalParamException("code", __FILE__, __LINE__);
+    }
     this->snippets.Append(code);
     ARY_SAFE_DELETE(this->code);
     return this->snippets.Last();
@@ -199,6 +203,9 @@ const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>&
 vislib::graphics::gl::ShaderSource::Insert(const SIZE_T idx, 
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
+    if (code.IsNull()) {
+        throw IllegalParamException("code", __FILE__, __LINE__);
+    }
     this->snippets.Insert(idx, code);
     ARY_SAFE_DELETE(this->code);  
     return this->snippets[idx];
@@ -212,6 +219,9 @@ const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>&
 vislib::graphics::gl::ShaderSource::Prepend(
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
+    if (code.IsNull()) {
+        throw IllegalParamException("code", __FILE__, __LINE__);
+    }
     this->snippets.Prepend(code);
     ARY_SAFE_DELETE(this->code);
     return this->snippets.First();
@@ -234,6 +244,9 @@ const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>&
 vislib::graphics::gl::ShaderSource::Set(
         const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 
         code) {
+    if (code.IsNull()) {
+        throw IllegalParamException("code", __FILE__, __LINE__);
+    }
     this->snippets = Array<SmartPtr<Snippet> >(1, code);
     ARY_SAFE_DELETE(this->code);
     return this->snippets.First();

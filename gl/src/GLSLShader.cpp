@@ -14,6 +14,7 @@
 #include "vislib/glverify.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
+#include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -75,7 +76,7 @@ bool vislib::graphics::gl::GLSLShader::Create(const char *vertexShaderSrc,
     const char *v[] = { vertexShaderSrc };
     const char *f[] = { fragmentShaderSrc };
     
-    return this->Create(v, 1, f, 1);
+    return this->Create(v, 1, f, 1, false);
 }
 
 /*
@@ -83,35 +84,19 @@ bool vislib::graphics::gl::GLSLShader::Create(const char *vertexShaderSrc,
  */
 bool vislib::graphics::gl::GLSLShader::Create(const char **vertexShaderSrc, 
         const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
-        const SIZE_T cntFragmentShaderSrc) {
+        const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
     USES_GL_VERIFY;
     ASSERT(vertexShaderSrc != NULL);
     ASSERT(fragmentShaderSrc != NULL);
 
-    GLhandleARB hPixelShader;
-    GLhandleARB hVertexShader;
+    this->Release();
 
-    /* Prepare vertex shader. */
-    GL_VERIFY_THROW(hVertexShader = ::glCreateShaderObjectARB(
-        GL_VERTEX_SHADER_ARB));
-    GL_VERIFY_THROW(::glShaderSourceARB(hVertexShader, 
-        static_cast<GLsizei>(cntVertexShaderSrc), vertexShaderSrc, NULL));
-    GL_VERIFY_THROW(::glCompileShaderARB(hVertexShader));
-    if (!this->isCompiled(hVertexShader)) {
-        throw CompileException(this->getProgramInfoLog(hVertexShader), __FILE__,
-            __LINE__);
-    }
-
-    /* Prepare pixel shader. */
-    GL_VERIFY_THROW(hPixelShader = ::glCreateShaderObjectARB(
-        GL_FRAGMENT_SHADER_ARB));
-    GL_VERIFY_THROW(::glShaderSourceARB(hPixelShader, 
-        static_cast<GLsizei>(cntFragmentShaderSrc), fragmentShaderSrc, NULL));
-    GL_VERIFY_THROW(::glCompileShaderARB(hPixelShader));
-    if (!this->isCompiled(hVertexShader)) {
-        throw CompileException(this->getProgramInfoLog(hPixelShader), __FILE__, 
-            __LINE__);
-    }
+    GLhandleARB hPixelShader = this->compileNewShader(GL_FRAGMENT_SHADER_ARB,
+        fragmentShaderSrc, static_cast<GLsizei>(cntFragmentShaderSrc), 
+        insertLineDirective);
+    GLhandleARB hVertexShader = this->compileNewShader(GL_VERTEX_SHADER_ARB,
+        vertexShaderSrc, static_cast<GLsizei>(cntVertexShaderSrc), 
+        insertLineDirective);
 
     /* Assemble program object. */
     GL_VERIFY_THROW(this->hProgObj = ::glCreateProgramObjectARB());
@@ -153,7 +138,7 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
 bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
         const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
-        const SIZE_T cntFragmentShaderFiles) {
+        const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
     Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
@@ -187,7 +172,8 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
         }
 
         bool retval = this->Create(vertexShaderSrcPtrs, cntVertexShaderFiles, 
-            fragmentShaderSrcPtrs, cntFragmentShaderFiles);
+            fragmentShaderSrcPtrs, cntFragmentShaderFiles, 
+            insertLineDirective);
 
         delete[] vertexShaderSrcPtrs;
         delete[] fragmentShaderSrcPtrs;
@@ -427,6 +413,52 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const char *name,
 
     GL_VERIFY_RETURN(::glUniform4iARB(location, v1, v2, v3, v4));
     return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::compileNewShader
+ */
+GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type, 
+        const char **src, GLsizei cnt, bool insertLineDirective) {
+    USES_GL_VERIFY;
+    GLhandleARB shader;
+    RawStorage powerMemory;
+
+    if (insertLineDirective && (cnt > 1)) {
+        StringA tmp;
+        char *ptr;
+        tmp.Format("%d", cnt);
+
+        // very tricky:
+        powerMemory.AssertSize((sizeof(char*) * (cnt * 2 - 1)) 
+            + ((cnt - 1) * sizeof(char) * (11 + tmp.Length())));
+        ptr = powerMemory.As<char>() + (sizeof(char*) * (cnt = cnt * 2 - 1));
+        for (GLsizei i = 0; i < cnt; i++) {
+            if (i % 2 == 0) {
+                powerMemory.As<const char*>()[i] = src[i / 2];
+            } else {
+                unsigned int len;
+                tmp.Format("#line 0 %d\n", int((i + 1) / 2));
+                len = (tmp.Length() + 1) * sizeof(char);
+                memcpy(ptr, tmp.PeekBuffer(), len);
+                powerMemory.As<char*>()[i] = ptr;
+                ptr += len;
+            }
+        }
+
+        src = powerMemory.As<const char*>();
+    }
+
+    GL_VERIFY_THROW(shader = ::glCreateShaderObjectARB(type));
+    GL_VERIFY_THROW(::glShaderSourceARB(shader, cnt, src, NULL));
+    GL_VERIFY_THROW(::glCompileShaderARB(shader));
+
+    if (!isCompiled(shader)) {
+        throw CompileException(getProgramInfoLog(shader), __FILE__, __LINE__);
+    }
+
+    return shader;
 }
 
 

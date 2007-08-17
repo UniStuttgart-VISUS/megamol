@@ -99,6 +99,9 @@ namespace gl {
          *                             shader.
          * @param cntFragmentShaderSrc The number of elements in
          *                             'fragmentShaderSrc'.
+         * @param insertLineDirective  Indicates whether the '#line' directive
+         *                             should be inserted between each two
+         *                             shader source strings.
          *
          * @return true, if the shader was successfully created.
          *
@@ -107,7 +110,8 @@ namespace gl {
          */
         virtual bool Create(const char **vertexShaderSrc, 
             const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
-            const SIZE_T cntFragmentShaderSrc);
+            const SIZE_T cntFragmentShaderSrc, 
+            bool insertLineDirective = true);
 
         /**
          * Crate a new shader loading the shader code from two files.
@@ -135,6 +139,9 @@ namespace gl {
          * @param fragmentShaderFiles    Array of names of the fragment shader
          *                               source files.
          * @param cntFragmentShaderFiles Number of fragment shader source files
+         * @param insertLineDirective    Indicates whether the '#line' 
+         *                               directive should be inserted between 
+         *                               each two shader source strings.
          * 
          * @return true, if the shader was successfully created, false, if one
          *         of the shader files could not be opened.
@@ -146,7 +153,8 @@ namespace gl {
          */
         virtual bool CreateFromFiles(const char **vertexShaderFiles,
             const SIZE_T cntVertexShaderFiles, const char **fragmentShaderFiles,
-            const SIZE_T cntFragmentShaderFiles);
+            const SIZE_T cntFragmentShaderFiles, 
+            bool insertLineDirective = true);
 
         /**
          * Disable the shader. This method changes the GL to render using
@@ -234,6 +242,23 @@ namespace gl {
         }
 
     protected:
+
+        /**
+         * Creates and compiles a new shader.
+         *
+         * @param shaderType Specifies the type of shader to be created.
+         * @param src The shader source code elements.
+         * @param cnt The number of source code elements.
+         * @param insertLineDirective Indicates whether to insert '#line' 
+         *                            directives between each two shader source
+         *                            elements.
+         *
+         * @return the compiled shader object.
+         *
+         * @throw CompileException if there was a compilation error.
+         */
+        GLhandleARB compileNewShader(GLenum type, const char **src, 
+            GLsizei cnt, bool insertLineDirective); 
 
         /**
          * Answer the shader error string for the specified program object.
