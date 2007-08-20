@@ -43,6 +43,11 @@ namespace gl {
         class Snippet {
         public:
 
+#ifndef _WIN32
+            /** stupid dtor for stupid gcc */
+            virtual ~Snippet(void) { }
+#endif /* !_WIN32 */
+
             /**
              * Returns the content of the snippet.
              */
