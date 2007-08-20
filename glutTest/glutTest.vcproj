@@ -363,6 +363,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GLSLGeomShaderTest.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\GLSLShaderTest.cpp"
 				>
 			</File>
@@ -406,6 +410,10 @@
 			</File>
 			<File
 				RelativePath=".\FBOTestApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GLSLGeomShaderTest.h"
 				>
 			</File>
 			<File
