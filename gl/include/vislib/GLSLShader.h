@@ -165,7 +165,7 @@ namespace gl {
          * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
-        virtual bool CompileFromFiles(const char **vertexShaderFiles,
+        virtual bool CompileFromFile(const char **vertexShaderFiles,
             const SIZE_T cntVertexShaderFiles, const char **fragmentShaderFiles,
             const SIZE_T cntFragmentShaderFiles, 
             bool insertLineDirective = true);
@@ -260,7 +260,7 @@ namespace gl {
          * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
-        virtual bool CreateFromFiles(const char **vertexShaderFiles,
+        virtual bool CreateFromFile(const char **vertexShaderFiles,
             const SIZE_T cntVertexShaderFiles, const char **fragmentShaderFiles,
             const SIZE_T cntFragmentShaderFiles, 
             bool insertLineDirective = true);

@@ -14,6 +14,7 @@
 #include "vislib/glverify.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
+#include "vislib/memutils.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -129,9 +130,9 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
 
 
 /*
- * vislib::graphics::gl::GLSLShader::CompileFromFiles
+ * vislib::graphics::gl::GLSLShader::CompileFromFile
  */
-bool vislib::graphics::gl::GLSLShader::CompileFromFiles(
+bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
         const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
@@ -171,27 +172,27 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFiles(
             fragmentShaderSrcPtrs, cntFragmentShaderFiles, 
             insertLineDirective);
 
-        delete[] vertexShaderSrcPtrs;
-        delete[] fragmentShaderSrcPtrs;
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
 
         return retval;
 
         // free pointer arrays on exception
     } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
-        delete[] vertexShaderSrcPtrs;
-        delete[] fragmentShaderSrcPtrs;
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(CompileException e) {
-        delete[] vertexShaderSrcPtrs;
-        delete[] fragmentShaderSrcPtrs;
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(Exception e) {
-        delete[] vertexShaderSrcPtrs;
-        delete[] fragmentShaderSrcPtrs;
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(...) {
-        delete[] vertexShaderSrcPtrs;
-        delete[] fragmentShaderSrcPtrs;
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw Exception("Unknown Exception", __FILE__, __LINE__);
     }
 
@@ -241,14 +242,14 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
 
 
 /*
- * vislib::graphics::gl::GLSLShader::CreateFromFiles
+ * vislib::graphics::gl::GLSLShader::CreateFromFile
  */
-bool vislib::graphics::gl::GLSLShader::CreateFromFiles(
+bool vislib::graphics::gl::GLSLShader::CreateFromFile(
         const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
         const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
 
-    if (this->CompileFromFiles(vertexShaderFiles, cntVertexShaderFiles, 
+    if (this->CompileFromFile(vertexShaderFiles, cntVertexShaderFiles, 
             fragmentShaderFiles, cntFragmentShaderFiles, 
             insertLineDirective)) {
         return this->Link();

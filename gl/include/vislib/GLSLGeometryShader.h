@@ -78,12 +78,13 @@ namespace gl {
         virtual ~GLSLGeometryShader(void);
 
         /**
-         * Compiles a new shader program object using a vertex shader and a
-         * fragment shader. Both shader sources will be compiled into shader
-         * objects and both will be attached to a program object. The program
-         * object will not be linked. You must call 'Link' before you can use
-         * the shader. Using 'vertexShaderSrc' as source code of the 
-         * vertex shader and 'fragmentShaderSrc' as source code of the pixel
+         * Compiles a new shader program object using a vertex shader, a 
+         * geometry shader, and a fragment shader. All shader sources will be 
+         * compiled into shader objects and they will be attached to a program
+         * object. The program object will not be linked. You must call 'Link'
+         * before you can use the shader. Using 'vertexShaderSrc' as source 
+         * code of the vertex shader, 'geometryShaderSrc' as source code of the
+         * geometry shader and 'fragmentShaderSrc' as source code of the pixel
          * shader.
          *
          * @param vertexShaderSrc   The null terminated source string of the 
@@ -102,13 +103,13 @@ namespace gl {
             const char *geometryShaderSrc, const char *fragmentShaderSrc);
 
         /**
-         * Compiles a new shader program object using a vertex shader and a
-         * fragment shader. Both shader sources will be compiled into shader
-         * objects and both will be attached to a program object. The program
-         * object will not be linked. You must call 'Link' before you can use
-         * the shader. Using the concatenation of the null terminated
-         * strings in 'vertexShaderSrc' as source code of the vertex shader 
-         * and the content of 'fragmentShaderSrc' as source code of the pixel
+         * Compiles a new shader program object using a vertex shader, a 
+         * geometry shader, and a fragment shader. All shader sources will be 
+         * compiled into shader objects and they will be attached to a program
+         * object. The program object will not be linked. You must call 'Link'
+         * before you can use the shader. Using 'vertexShaderSrc' as source 
+         * code of the vertex shader, 'geometryShaderSrc' as source code of the
+         * geometry shader and 'fragmentShaderSrc' as source code of the pixel
          * shader.
          *
          * @param vertexShaderSrc      An array of 'cntVertexShaderSrc' null
@@ -141,9 +142,68 @@ namespace gl {
             const SIZE_T cntFragmentShaderSrc, 
             bool insertLineDirective = true);
 
-    protected:
+        /**
+         * Compiles a new shader program object using a vertex shader, a 
+         * geometry shader, and a fragment shader. All shader sources will be 
+         * compiled into shader objects and they will be attached to a program
+         * object. The program object will not be linked. You must call 'Link'
+         * before you can use the shader. Using 'vertexShaderFile' content as
+         * source code of the vertex shader, 'geometryShaderFile' content as
+         * source code of the geometry shader and 'fragmentShaderFile' content
+         * as source code of the pixel shader.
+         *
+         * @param vertexShaderFile   The name of the vertex shader source file.
+         * @param geometryShaderFile The name of the geometry shader source 
+         *                           file.
+         * @param fragmentShaderFile The name of the pixel shader source file.
+         * 
+         * @return true if the shader was successfully compiled.
+         *
+         * @throws OpenGLException If an OpenGL call for compiling the shader
+         *                         fails.
+         * @throws IOException     If reading the shader code from an open
+         *                         file failed.
+         */
+        virtual bool CompileFromFile(const char *vertexShaderFile, 
+            const char *geometryShaderFile, const char *fragmentShaderFile);
 
-    private:
+        /**
+         * Compiles a new shader program object using a vertex shader, a 
+         * geometry shader, and a fragment shader. All shader sources will be 
+         * compiled into shader objects and they will be attached to a program
+         * object. The program object will not be linked. You must call 'Link'
+         * before you can use the shader. Using 'vertexShaderFiles' content as
+         * source code of the vertex shader, 'geometryShaderFiles' content as
+         * source code of the geometry shader and 'fragmentShaderFiles' content
+         * as source code of the pixel shader.
+         *
+         * @param vertexShaderFiles      Array of names of the vertex shader 
+         *                               source files.
+         * @param cntVertexShaderFiles   Number of vertex shader source files
+         * @param geometryShaderFiles    Array of names of the geometry shader 
+         *                               source files.
+         * @param cntGeometryShaderFiles Number of geometry shader source files
+         * @param fragmentShaderFiles    Array of names of the fragment shader
+         *                               source files.
+         * @param cntFragmentShaderFiles Number of fragment shader source files
+         * @param insertLineDirective    Indicates whether the '#line' 
+         *                               directive should be inserted between 
+         *                               each two shader source strings.
+         * 
+         * @return true if the shader was successfully compiled.
+         *
+         * @throws OpenGLException If an OpenGL call for compiling the shader
+         *                         fails.
+         * @throws IOException     If reading the shader code from an open
+         *                         file failed.
+         */
+        virtual bool CompileFromFile(const char **vertexShaderFiles,
+            const SIZE_T cntVertexShaderFiles,
+            const char **geometryShaderFiles,
+            const SIZE_T cntGeometryShaderFiles,
+            const char **fragmentShaderFiles,
+            const SIZE_T cntFragmentShaderFiles,
+            bool insertLineDirective = true);
 
     };
     
