@@ -215,6 +215,27 @@ DWORD vislib::sys::SystemInformation::MonitorSize(
 }
 
 
+/*
+ * vislib::sys::SystemInformation::PageSize
+ */
+DWORD vislib::sys::SystemInformation::PageSize(void) {
+#ifdef _WIN32
+    SYSTEM_INFO si;
+    ::GetSystemInfo(&si);
+    return si.dwPageSize;
+
+#else /* _WIN32 */
+    int retval = ::sysconf(_SC_PAGESIZE);
+
+    if (retval == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return static_cast<DWORD>(retval);
+
+#endif /* _WIN32 */
+}
+
 
 /*
  * vislib::sys::SystemInformation::PhysicalMemorySize
@@ -267,25 +288,47 @@ UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
 
 
 /*
- * vislib::sys::SystemInformation::PageSize
+ * vislib::sys::SystemInformation::PrimaryMonitorSize
  */
-DWORD vislib::sys::SystemInformation::PageSize(void) {
+vislib::sys::SystemInformation::MonitorDim 
+vislib::sys::SystemInformation::PrimaryMonitorSize(void) {
 #ifdef _WIN32
-    SYSTEM_INFO si;
-    ::GetSystemInfo(&si);
-    return si.dwPageSize;
+    RECT rect;
+    ::ZeroMemory(&rect, sizeof(RECT));  // Initialise as invalid.
 
-#else /* _WIN32 */
-    int retval = ::sysconf(_SC_PAGESIZE);
-
-    if (retval == -1) {
+    if (!::EnumDisplayMonitors(NULL, NULL, 
+            SystemInformation::findPrimaryMonitorProc,
+            reinterpret_cast<LPARAM>(&rect))) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    return static_cast<DWORD>(retval);
+    if ((rect.left == 0) && (rect.right == 0) && (rect.top == 0) 
+            && (rect.bottom == 0)) {
+        /* Enumeration was not successful in finding primary display. */
+        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
+    }
 
+    return MonitorDim(math::Abs(rect.right - rect.left), 
+        math::Abs(rect.bottom - rect.top));
+#else /* _WIN32 */
+    int dftScreen = 0;
+    Display *dpy = NULL;
+    StringA errorDesc;
+    MonitorDim retval;
+
+    if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
+        errorDesc.Format("Could not open display \"%s\".", 
+            ::XDisplayName(NULL));
+        throw Exception(errorDesc, __FILE__, __LINE__);
+    }
+
+    dftScreen = DefaultScreen(dpy);
+    retval.Set(DisplayWidth(dpy, dftScreen), DisplayHeight(dpy, dftScreen));
+    ::XCloseDisplay(dpy);
+    return retval;
 #endif /* _WIN32 */
 }
+
 
 
 /*
@@ -553,10 +596,35 @@ BOOL CALLBACK vislib::sys::SystemInformation::monitorEnumProc(HMONITOR hMonitor,
         HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
     ASSERT(hdcMonitor == NULL);
     MonitorDimArray *da = reinterpret_cast<MonitorDimArray *>(dwData);
-
+    
     da->Append(MonitorDim(math::Abs(lprcMonitor->right - lprcMonitor->left), 
         math::Abs(lprcMonitor->bottom - lprcMonitor->top)));
 
+    return TRUE;
+}
+
+
+/*
+ * vislib::sys::SystemInformation::findPrimaryMonitorProc
+ */
+BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
+        HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+    MONITORINFO mi;
+
+    ::ZeroMemory(&mi, sizeof(MONITORINFO));
+    mi.cbSize = sizeof(MONITORINFO);
+    
+    if (::GetMonitorInfo(hMonitor, &mi) != FALSE) {
+        if ((mi.dwFlags & MONITORINFOF_PRIMARY) != 0) {
+            *reinterpret_cast<LPRECT>(dwData) = *lprcMonitor;
+            //return FALSE;
+            // Stopping the enumeration by returning FALSE does not work at
+            // least on Vista.
+        }
+    } else {
+        throw SystemException(__FILE__, __LINE__);
+    }
+ 
     return TRUE;
 }
 #endif /*_ WIN32 */
@@ -566,7 +634,8 @@ BOOL CALLBACK vislib::sys::SystemInformation::monitorEnumProc(HMONITOR hMonitor,
  * vislib::sys::SystemInformation::SystemInformation
  */
 vislib::sys::SystemInformation::SystemInformation(void) {
-    throw vislib::UnsupportedOperationException("SystemInformation ctor", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("SystemInformation ctor",
+        __FILE__, __LINE__);
 }
 
 

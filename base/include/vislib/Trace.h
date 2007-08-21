@@ -145,7 +145,7 @@ namespace vislib {
 		 * @param level The trace level for the message.
 		 * @param fmt   The format string for the trace message.
 		 */
-		void operator ()(const UINT level, const char *fmt, ...);
+		void operator ()(const UINT level, const char *fmt, ...) throw();
 
 		///**
 		// * Trace the message 'fmt'.
@@ -183,7 +183,7 @@ namespace vislib {
 		 * @param fmt   The format string for the trace message.
 		 * @param list  The variable argument list.
 		 */
-		void trace(const UINT level, const char *fmt, va_list list);
+		void trace(const UINT level, const char *fmt, va_list list) throw();
 
 		/**
 		 * Forbidden assignment.

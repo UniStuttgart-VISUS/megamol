@@ -126,8 +126,10 @@ namespace sys {
          *
          * @return The number of entries in 'outMonitorSizes'.
          *
-         * @throws Exception On Linux, if the X11 display could not be
-         *                   opened.
+         * @throws SystemException If a system call required for retrieving
+         *                         the information failed.
+         * @throws Exception       On Linux, if the X11 display could not be
+         *                         opened.
          */
         static DWORD MonitorSize(MonitorDimArray& outMonitorSizes);
 
@@ -149,6 +151,19 @@ namespace sys {
          * @throws SystemException on failure.
          */
         static UINT64 PhysicalMemorySize(void);
+
+        /**
+         * Answer the sizeof the primary monitor. 
+         *
+         * @return The dimension of the primary monitor.
+         *
+         * @throws SystemException If a system call required for retrieving
+         *                         the information failed or no monitor was
+         *                         found.
+         * @throws Exception       On Linux, if the X11 display could not be
+         *                         opened.
+         */
+        static MonitorDim PrimaryMonitorSize(void);
 
         /**
          * Return the number of processors in the local machine.
@@ -271,6 +286,24 @@ namespace sys {
          */
         static BOOL CALLBACK monitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, 
             LPRECT lprcMonitor, LPARAM dwData);
+
+        /** 
+         * Callback method for finding the primary monitor on windows.
+         *
+         * @param hMonitor    Handle to display monitor.
+         * @param hdcMonitor  Handle to monitor DC.
+         * @param lprcMonitor Monitor intersection rectangle.
+         * @param dwData      Pointer to a RECT to store the dimension to. 
+         *                    Nothing will be written, if the primary monitor
+         *                    could not be found.
+         *
+         * @return TRUE if the enumeration should be continued, FALSE otherwise.
+         *
+         * @throws SystemException If it was not possible to determine whether 
+         *                         'hMonitor' designates the primary monitor.
+         */
+        static BOOL CALLBACK findPrimaryMonitorProc(HMONITOR hMonitor, 
+            HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData);
 #endif /* _WIN32 */
 
         /** forbidden Ctor. */

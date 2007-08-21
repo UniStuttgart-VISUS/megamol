@@ -315,6 +315,7 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
         socket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM, 
             Socket::PROTOCOL_UDP);
         socket.SetBroadcast(true);
+        //socket.SetLinger(true, 0);  // Force hard close.
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_VL_ERROR, "Discovery sender thread could not "
             "create its. The error code is %d (\"%s\").\n", e.GetErrorCode(),
@@ -465,9 +466,11 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
         socket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM, 
             Socket::PROTOCOL_UDP);
         socket.SetBroadcast(true);
+        // TODO: Make shared socket use configurable (security issue!).
         socket.SetExclusiveAddrUse(false);
         socket.SetReuseAddr(true);
         socket.Bind(this->cds.bindAddr);
+        //socket.SetLinger(false, 0);     // Force hard close.
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_VL_ERROR, "Discovery receiver thread could not "
             "create its socket and bind it to the requested address. The "
@@ -772,6 +775,7 @@ void vislib::net::ClusterDiscoveryService::prepareUserMessage(
     if (!this->userMsgSocket.IsValid()) {
         this->userMsgSocket.Create(Socket::FAMILY_INET, Socket::TYPE_DGRAM,
             Socket::PROTOCOL_UDP);
+        //this->userMsgSocket.SetLinger(false, 0);    // Force hard close.
     }
 }
 

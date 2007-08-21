@@ -38,14 +38,19 @@ void TestSysInfo(void) {
         DWORD cntMonitors = SystemInformation::MonitorSize(monitorSizes);
         std::cout << "Found " << cntMonitors << " monitors" << std::endl;
         for (DWORD i = 0; i < cntMonitors; i++) {
-            std::cout << "Monitor " << i << " has size (" 
+            std::cout << "Monitor " << i << " has size [" 
                 << monitorSizes[int(i)].Width() << ", " 
-                << monitorSizes[int(i)].Height() << ")" 
+                << monitorSizes[int(i)].Height() << "]" 
                 << std::endl;
         }
 
+        SystemInformation::MonitorDim priMonSize = SystemInformation::PrimaryMonitorSize();
+        std::cout << "Primary monitor size: [" << priMonSize.Width() 
+            << ", " << priMonSize.Height() << "]" << std::endl;
+
+
     } catch (SystemException e) {
-        std::cout << "SystemException: " << e.GetErrorCode() << " " << e.GetMsg() << std::endl;
+        std::cout << "SystemException: " << e.GetErrorCode() << " " << e.GetMsgA() << std::endl;
 
     } catch(...) {
         std::cout << "Unexpected exception catched." << std::endl;
