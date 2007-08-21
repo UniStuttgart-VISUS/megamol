@@ -205,6 +205,18 @@ namespace gl {
             const SIZE_T cntFragmentShaderFiles,
             bool insertLineDirective = true);
 
+        /**
+         * Sets a shader program parameter using 'glProgramParameteriEXT'. 
+         * These parameters must be set before linking the shader. In general
+         * the parameters 'GL_GEOMETRY_INPUT_TYPE_EXT', 
+         * 'GL_GEOMETRY_OUTPUT_TYPE_EXT', and 'GL_GEOMETRY_VERTICES_OUT_EXT' 
+         * must be set to appropriate values.
+         *
+         * @param name  The name constant of the parameter to be set.
+         * @param value The value to set the parameter to.
+         */
+        void SetProgramParameter(GLenum name, GLint value);
+
     };
     
 } /* end namespace gl */
@@ -215,4 +227,3 @@ namespace gl {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_GLSLGEOMETRYSHADER_H_INCLUDED */
-

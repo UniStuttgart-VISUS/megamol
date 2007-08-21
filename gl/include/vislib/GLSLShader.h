@@ -16,6 +16,7 @@
 
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/ExtensionsDependent.h"
+#include "vislib/glverify.h"
 #include "vislib/types.h"
 
 
@@ -64,6 +65,19 @@ namespace gl {
 
         /** Dtor. */
         virtual ~GLSLShader(void);
+
+        /**
+         * Binds a generic vertex attribute to a named shader attribute, 
+         * allowing to use more descriptive names in the shader sources.
+         * The attribute binding is performed with the next call of 'Link'.
+         *
+         * @param index The index of the generic vertex attribute.
+         * @param name  The name of the shader attribute.
+         *
+         * @return true if the binding was successful (however, you must still
+         *         call 'Link' before anything happens), false on error.
+         */
+        virtual GLenum BindAttribute(GLint index, const char *name);
 
         /**
          * Compiles a new shader program object using a vertex shader and a
@@ -328,27 +342,517 @@ namespace gl {
          */
         virtual GLenum Release(void);
 
-        virtual GLenum SetParameter(const char *name, const float v1);
+        /**
+         * Sets the one component of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const char *name, const float v1) {
+            return this->SetParameter(this->ParameterLocation(name), v1);
+        }
 
+        /**
+         * Sets the two components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
         virtual GLenum SetParameter(const char *name, const float v1, 
+                const float v2) {
+            return this->SetParameter(this->ParameterLocation(name), v1, v2);
+        }
+
+        /**
+         * Sets the three components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const char *name, const float v1, 
+                const float v2, const float v3) {
+            return this->SetParameter(this->ParameterLocation(name), 
+                v1, v2, v3);
+        }
+
+        /**
+         * Sets the four components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         * @param v4   The fourth value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const char *name, const float v1,
+                const float v2, const float v3, const float v4) {
+            return this->SetParameter(this->ParameterLocation(name), 
+                v1, v2, v3, v4);
+        }
+
+        /**
+         * Sets the one component of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const char *name, const int v1) {
+            return this->SetParameter(this->ParameterLocation(name), v1);
+        }
+
+        /**
+         * Sets the two components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const char *name, const int v1, 
+                const int v2) {
+            return this->SetParameter(this->ParameterLocation(name), v1, v2);
+        }
+
+        /**
+         * Sets the three components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const char *name, const int v1, 
+                const int v2, const int v3) {
+            return this->SetParameter(this->ParameterLocation(name), 
+                v1, v2, v3);
+        }
+
+        /**
+         * Sets the four components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The name of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         * @param v4   The fourth value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const char *name, const int v1,
+                const int v2, const int v3, const int v4) {
+            return this->SetParameter(this->ParameterLocation(name), 
+                v1, v2, v3, v4);
+        }
+
+        /**
+         * Sets the one component of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const float v1);
+
+        /**
+         * Sets the two components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const float v1, 
             const float v2);
 
-        virtual GLenum SetParameter(const char *name, const float v1, 
+        /**
+         * Sets the three components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const float v1, 
             const float v2, const float v3);
 
-        virtual GLenum SetParameter(const char *name, const float v1,
+        /**
+         * Sets the four components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         * @param v4   The fourth value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const float v1,
             const float v2, const float v3, const float v4);
 
-        virtual GLenum SetParameter(const char *name, const int v1);
+        /**
+         * Sets the one component of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const int v1);
 
-        virtual GLenum SetParameter(const char *name, const int v1, 
+        /**
+         * Sets the two components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const int v1, 
             const int v2);
 
-        virtual GLenum SetParameter(const char *name, const int v1, 
+        /**
+         * Sets the three components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const int v1, 
             const int v2, const int v3);
 
-        virtual GLenum SetParameter(const char *name, const int v1,
+        /**
+         * Sets the four components of the parameter 'name'.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name The location of the parameter.
+         * @param v1   The first value for the parameter.
+         * @param v2   The second value for the parameter.
+         * @param v3   The third value for the parameter.
+         * @param v4   The fourth value for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameter(const GLint name, const int v1,
             const int v2, const int v3, const int v4);
+
+        /**
+         * Sets the one component of the parameter 'name'. 'value' points to 
+         * an array with 'count' times one float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray1(const char *name, const GLsizei count, 
+                const float *value) {
+            return this->SetParameterArray1(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the two components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times two float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray2(const char *name, const GLsizei count, 
+                const float *value) {
+            return this->SetParameterArray2(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the three components of the parameter 'name'. 'value' points to
+         * an array with 'count' times three float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray3(const char *name, const GLsizei count, 
+                const float *value) {
+            return this->SetParameterArray3(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the four components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times four float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray4(const char *name, const GLsizei count, 
+                const float *value) {
+            return this->SetParameterArray4(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the one component of the parameter 'name'. 'value' points to 
+         * an array with 'count' times one integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray1(const char *name, const GLsizei count, 
+                const int *value) {
+            return this->SetParameterArray1(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the two components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times two integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray2(const char *name, const GLsizei count, 
+                const int *value) {
+            return this->SetParameterArray2(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the three components of the parameter 'name'. 'value' points to
+         * an array with 'count' times three integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray3(const char *name, const GLsizei count, 
+                const int *value) {
+            return this->SetParameterArray3(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the four components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times four integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The name of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray4(const char *name, const GLsizei count, 
+                const int *value) {
+            return this->SetParameterArray4(this->ParameterLocation(name), count,
+                value);
+        }
+
+        /**
+         * Sets the one component of the parameter 'name'. 'value' points to 
+         * an array with 'count' times one float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray1(const GLint name, 
+            const GLsizei count, const float *value);
+
+        /**
+         * Sets the two components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times two float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray2(const GLint name, 
+            const GLsizei count, const float *value);
+
+        /**
+         * Sets the three components of the parameter 'name'. 'value' points to
+         * an array with 'count' times three float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray3(const GLint name, 
+            const GLsizei count, const float *value);
+
+        /**
+         * Sets the four components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times four float values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray4(const GLint name, 
+            const GLsizei count, const float *value);
+
+        /**
+         * Sets the one component of the parameter 'name'. 'value' points to 
+         * an array with 'count' times one integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray1(const GLint name, 
+            const GLsizei count, const int *value);
+
+        /**
+         * Sets the two components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times two integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray2(const GLint name, 
+            const GLsizei count, const int *value);
+
+        /**
+         * Sets the three components of the parameter 'name'. 'value' points to
+         * an array with 'count' times three integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray3(const GLint name, 
+            const GLsizei count, const int *value);
+
+        /**
+         * Sets the four components of the parameter 'name'. 'value' points to 
+         * an array with 'count' times four integer values.
+         *
+         * The shader must be enabled before calling this method.
+         *
+         * @param name  The location of the parameter.
+         * @param count The number of value groups in the array.
+         * @param value The values for the parameter.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        virtual GLenum SetParameterArray4(const GLint name, 
+            const GLsizei count, const int *value);
 
         /**
          * Casts this object to the GLhandleABR value representing the OpenGL
@@ -423,6 +927,7 @@ namespace gl {
         /** Handle of the program object. */
         GLhandleARB hProgObj;
     };
+
     
 } /* end namespace gl */
 } /* end namespace graphics */

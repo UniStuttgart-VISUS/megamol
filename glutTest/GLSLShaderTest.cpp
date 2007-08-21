@@ -208,9 +208,11 @@ void GLSLShaderTest::Render(void) {
 
     this->schade.Enable();
 
-//    glUniform1fARB(this->schade.ParameterLocation("v"), 1, viewportStuff);
     float angle = M_PI * float(vislib::sys::GetTicksOfDay() % 2000) / 1000.0f;
-    this->schade.SetParameter("v", sinf(angle), cos(angle));
+    float value[2] = { sin(angle), cos(angle) };
+
+//    this->schade.SetParameter("v", value[0], value[1]);
+    this->schade.SetParameterArray2("v", 1, value);
 
     unsigned int vCount = VisLogoCountVertices();
 	unsigned int p;

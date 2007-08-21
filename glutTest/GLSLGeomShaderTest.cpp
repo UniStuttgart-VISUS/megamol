@@ -105,16 +105,19 @@ int GLSLGeomShaderTest::GLInit(void) {
 "#extension GL_EXT_gpu_shader4:enable\n"
 "#extension GL_EXT_geometry_shader4 : enable\n"
 "\n"
+"#define DELTA 0.5\n"
+"#define DOUBLEDELTA 1.0\n"
+"\n"
 "void main(void) {\n"
 "    gl_Position = gl_PositionIn[0];\n"
-"    gl_Position.y -= 1.0;\n"
+"    gl_Position.y -= DELTA;\n"
 "    EmitVertex();\n"
 "\n"
-"    gl_Position.y += 2.0;\n"
-"    gl_Position.x -= 1.0;\n"
+"    gl_Position.y += DOUBLEDELTA;\n"
+"    gl_Position.x -= DELTA;\n"
 "    EmitVertex();\n"
 "\n"
-"    gl_Position.x += 2.0;\n"
+"    gl_Position.x += DOUBLEDELTA;\n"
 "    EmitVertex();\n"
 "\n"
 "    EndPrimitive();\n"
@@ -127,9 +130,12 @@ int GLSLGeomShaderTest::GLInit(void) {
         return -13;
     }
 
-    glProgramParameteriEXT(this->schade, GL_GEOMETRY_INPUT_TYPE_EXT, GL_POINTS);
-    glProgramParameteriEXT(this->schade, GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    glProgramParameteriEXT(this->schade, GL_GEOMETRY_VERTICES_OUT_EXT, 3);
+    //glProgramParameteriEXT(this->schade, GL_GEOMETRY_INPUT_TYPE_EXT, GL_POINTS);
+    //glProgramParameteriEXT(this->schade, GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+    //glProgramParameteriEXT(this->schade, GL_GEOMETRY_VERTICES_OUT_EXT, 3);
+    this->schade.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_POINTS);
+    this->schade.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+    this->schade.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 3);
 
     if (!this->schade.Link()) {
         return -14;
@@ -237,6 +243,12 @@ void GLSLGeomShaderTest::Render(void) {
 
     glBegin(GL_POINTS);
     glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f( 1.0f, 0.0f, 0.0f);
+    glVertex3f(-1.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f,  1.0f, 0.0f);
+    glVertex3f(0.0f, -1.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f,  1.0f);
+    glVertex3f(0.0f, 0.0f, -1.0f);
     glEnd();
 
 ////    glUniform1fARB(this->schade.ParameterLocation("v"), 1, viewportStuff);

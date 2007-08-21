@@ -216,3 +216,14 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
 
     return false; // should be unreachable code!
 }
+
+
+/*
+ * vislib::graphics::gl::GLSLGeometryShader::SetProgramParameter
+ */
+void vislib::graphics::gl::GLSLGeometryShader::SetProgramParameter(GLenum name,
+        GLint value) {
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+
+    glProgramParameteriEXT(this->hProgObj, name, value);
+}
