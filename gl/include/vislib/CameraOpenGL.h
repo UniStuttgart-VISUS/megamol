@@ -75,6 +75,26 @@ namespace gl {
         void glMultViewMatrix(void);
 
         /**
+         * Answer the projection matrix of the frustum of this camera.
+         *
+         * @param mat Points to an array of 16 floats receiving the matrix.
+         *
+         * throws IllegalStateException if no beholder is associated with this
+         *        Camera.
+         */
+        void GetProjectionMatrix(float *mat);
+
+        /**
+         * Answer the view matrix of the frustum of this camera.
+         *
+         * @param mat Points to an array of 16 floats receiving the matrix.
+         *
+         * throws IllegalStateException if no beholder is associated with this
+         *        Camera.
+         */
+        void GetViewMatrix(float *mat);
+
+        /**
          * Assignment operator
          */
         CameraOpenGL& operator=(const CameraOpenGL& rhs);
