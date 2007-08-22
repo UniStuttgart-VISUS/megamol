@@ -174,7 +174,8 @@ void vislib::Trace::SetPrefix(const char *prefix) {
 /*
  * vislib::Trace::operator ()
  */
-void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) {
+void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) 
+        throw() {
 	va_list list;
 	va_start(list, fmt);
 	this->trace(level, fmt, list);
@@ -228,7 +229,8 @@ vislib::Trace::Trace(const Trace& rhs) {
 /*
  * vislib::Trace::trace
  */
-void vislib::Trace::trace(const UINT level, const char *fmt, va_list list) {
+void vislib::Trace::trace(const UINT level, const char *fmt, va_list list) 
+        throw() {
 	if ((level <= this->level) && (level > 0) && (fmt != NULL)) {
 		if (this->prefix != NULL) {
 			::fprintf(stderr, this->prefix);
