@@ -69,9 +69,7 @@ vislib::sys::NamedPipe::NamedPipe(void)
  * vislib::sys::NamedPipe::~NamedPipe
  */
 vislib::sys::NamedPipe::~NamedPipe(void) {
-    if (this->IsOpen()) {
-        this->Close();
-    }
+    this->Close();
 }
 
 
@@ -79,27 +77,32 @@ vislib::sys::NamedPipe::~NamedPipe(void) {
  * vislib::sys::NamedPipe::Close
  */
 void vislib::sys::NamedPipe::Close(void) {
-    if (this->IsOpen()) {
+    if (this->handle != 
+#ifdef _WIN32
+        INVALID_HANDLE_VALUE
+#else /* _WIN32 */
+        0
+#endif /* _WIN32 */
+        ) {
 
 #ifdef _WIN32
 
-        ::FlushFileBuffers(this->handle);
+        try {
+            ::FlushFileBuffers(this->handle);
+        } catch (...) { }
+
         if (!this->isClient) {
             // flush server side pipe
-            ::DisconnectNamedPipe(this->handle); 
+            ::DisconnectNamedPipe(this->handle);
         }
         ::CloseHandle(this->handle);
 
         this->handle = INVALID_HANDLE_VALUE;
 
-
 #else /* _WIN32 */
 
         ::close(this->handle);
         this->handle = 0;
-
-        // TODO: Think of a way of cleaning up the pipe file
-
 #endif /* _WIN32 */ 
 
         this->mode = PIPE_MODE_NONE;
@@ -129,14 +132,14 @@ void vislib::sys::NamedPipe::Open(vislib::StringA name,
     vislib::StringA pipeName = PipeSystemName(name);
 
 #ifdef _WIN32
+
+    this->isClient = false;    
     
     this->handle = ::CreateNamedPipeA(pipeName.PeekBuffer(), 
         FILE_FLAG_FIRST_PIPE_INSTANCE | 
         ((mode == PIPE_MODE_READ) ? PIPE_ACCESS_INBOUND : PIPE_ACCESS_OUTBOUND),
         PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, 2, PIPE_BUFFER_SIZE, 
         PIPE_BUFFER_SIZE, NMPWAIT_USE_DEFAULT_WAIT, NULL);
-
-    this->isClient = false;    
 
     if (this->handle == INVALID_HANDLE_VALUE) {
         DWORD lastError = ::GetLastError();
@@ -239,14 +242,14 @@ void vislib::sys::NamedPipe::Open(vislib::StringW name,
     }
 
     vislib::StringW pipeName = PipeSystemName(name);
+
+    this->isClient = false;    
     
     this->handle = ::CreateNamedPipeW(pipeName.PeekBuffer(), 
         FILE_FLAG_FIRST_PIPE_INSTANCE | 
         ((mode == PIPE_MODE_READ) ? PIPE_ACCESS_INBOUND : PIPE_ACCESS_OUTBOUND),
         PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, 2, PIPE_BUFFER_SIZE, 
         PIPE_BUFFER_SIZE, NMPWAIT_USE_DEFAULT_WAIT, NULL);
-
-    this->isClient = false;    
 
     if (this->handle == INVALID_HANDLE_VALUE) {
         DWORD lastError = ::GetLastError();
