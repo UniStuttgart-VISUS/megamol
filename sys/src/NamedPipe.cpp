@@ -6,6 +6,7 @@
  */
 
 #include "vislib/NamedPipe.h"
+#include "vislib/error.h"
 #include "vislib/File.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -14,6 +15,7 @@
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -24,8 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include "vislib/Trace.h"
-#include "vislib/error.h"
 #endif /* !_WIN32 */
 
 
@@ -59,9 +59,11 @@ vislib::sys::NamedPipe::NamedPipe(void)
 #endif /* _WIN32 */ 
         ), mode(PIPE_MODE_NONE) {
 
-#ifndef _WIN32
+#ifdef _WIN32
+    ::ZeroMemory(&this->overlapped, sizeof(OVERLAPPED));
+#else /* _WIN32 */
     ::signal(SIGPIPE, linuxConsumeBrokenPipes);
-#endif /* !_WIN32 */ 
+#endif /* _WIN32 */ 
 }
 
 
@@ -77,6 +79,14 @@ vislib::sys::NamedPipe::~NamedPipe(void) {
  * vislib::sys::NamedPipe::Close
  */
 void vislib::sys::NamedPipe::Close(void) {
+
+#ifdef _WIN32
+    if (this->overlapped.hEvent != NULL) {
+        ::CloseHandle(this->overlapped.hEvent);
+        this->overlapped.hEvent = NULL;
+    }
+#endif /* _WIN32 */
+
     if (this->handle != 
 #ifdef _WIN32
         INVALID_HANDLE_VALUE
@@ -113,8 +123,8 @@ void vislib::sys::NamedPipe::Close(void) {
 /*
  * vislib::sys::NamedPipe::Open
  */
-void vislib::sys::NamedPipe::Open(vislib::StringA name, 
-        vislib::sys::NamedPipe::PipeMode mode) {
+bool vislib::sys::NamedPipe::Open(vislib::StringA name, 
+        vislib::sys::NamedPipe::PipeMode mode, unsigned int timeout) {
 
     // check parameters
     if (!this->checkPipeName(name)) {
@@ -133,19 +143,29 @@ void vislib::sys::NamedPipe::Open(vislib::StringA name,
 
 #ifdef _WIN32
 
+    if (timeout == 0) {
+        timeout = INFINITE;
+    }
+
     this->isClient = false;    
+
+    // create the overlapped structure allowing us to produce timeouts
+    ::ZeroMemory(&this->overlapped, sizeof(OVERLAPPED));
+    this->overlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL); // manual reset event
     
+    // create the pipe
     this->handle = ::CreateNamedPipeA(pipeName.PeekBuffer(), 
-        FILE_FLAG_FIRST_PIPE_INSTANCE | 
+        FILE_FLAG_FIRST_PIPE_INSTANCE | FILE_FLAG_OVERLAPPED | 
         ((mode == PIPE_MODE_READ) ? PIPE_ACCESS_INBOUND : PIPE_ACCESS_OUTBOUND),
         PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, 2, PIPE_BUFFER_SIZE, 
-        PIPE_BUFFER_SIZE, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+        PIPE_BUFFER_SIZE, 0, NULL);
 
     if (this->handle == INVALID_HANDLE_VALUE) {
+        // creation failed
         DWORD lastError = ::GetLastError();
 
         if (lastError == ERROR_ACCESS_DENIED) {
-            // pipe already created! So we are the client
+            // pipe already created! So we should be the client
 
             this->handle = ::CreateFileA(pipeName.PeekBuffer(), 
                 ((mode == PIPE_MODE_WRITE) ? GENERIC_WRITE : GENERIC_READ), 
@@ -158,28 +178,52 @@ void vislib::sys::NamedPipe::Open(vislib::StringA name,
             }
 
         } else {
+            // creation really failed!
             throw vislib::sys::SystemException(__FILE__, __LINE__);
         }
     }
 
     if (!this->isClient) {
-        DWORD lastError;
-        bool connected = ::ConnectNamedPipe(this->handle, NULL) ? true 
-            : ((lastError = GetLastError()) == ERROR_PIPE_CONNECTED); 
+        // continue initialising the server
+        ::ConnectNamedPipe(this->handle, &this->overlapped);
 
-        if (!connected) {
-            // pipe broken before even creating
-            ::CloseHandle(this->handle);
-            this->handle = INVALID_HANDLE_VALUE;
-            this->mode = PIPE_MODE_NONE;
+        switch (::WaitForSingleObject(this->overlapped.hEvent, timeout)) {
+            case WAIT_OBJECT_0: {
+                // event signaled so connection should be established
+                DWORD dummy;
+                if (::GetOverlappedResult(this->handle, &this->overlapped, &dummy, FALSE) == 0) {
+                    throw vislib::sys::SystemException(__FILE__, __LINE__);
+                }
+                ::ResetEvent(this->overlapped.hEvent);
 
-            throw vislib::sys::SystemException(lastError, __FILE__, __LINE__);
+            } break;
+            default: {
+                // unknown error
+                vislib::sys::SystemMessage msg(::GetLastError());
+                TRACE(Trace::LEVEL_VL_INFO, 
+                    "NamedPipe Open WaitForSigleObject Error: \"%s\"", 
+                    static_cast<const char*>(msg));
+            } // NO BREAK;
+            case WAIT_TIMEOUT: {
+                // timeout
+                if (::CancelIo(this->handle) == 0) {
+                    vislib::sys::SystemMessage msg(::GetLastError());
+                    TRACE(Trace::LEVEL_VL_INFO, 
+                        "NamedPipe Open Timeout: CancelIo failed \"%s\"", 
+                        static_cast<const char*>(msg));
+                }
+                this->Close();
+                return false;
+            } break;
         }
     }
+    ASSERT(this->handle != INVALID_HANDLE_VALUE);
+    this->mode = mode;
+    return true; // pipe opened
 
 #else /* _WIN32 */
 
-//    TRACE(VISLIB_TRCELVL_INFO, "vislib::sys::NamedPipe::Open\n");
+    TRACE(vislib::Trace::LEVEL_VL_INFO, "vislib::sys::NamedPipe::Open\n");
 
     if (!vislib::sys::File::IsDirectory(this->baseDir)) {
         vislib::sys::Path::MakeDirectory(this->baseDir);
@@ -189,7 +233,7 @@ void vislib::sys::NamedPipe::Open(vislib::StringA name,
     mode_t oldMask = ::umask(0);
     if (::mknod(pipeName.PeekBuffer(), S_IFIFO | 0666, 0) != 0) {
 
-//        TRACE(vislib::Trace::LEVEL_VL_INFO, "mknod failed\n");
+        TRACE(vislib::Trace::LEVEL_VL_INFO, "mknod failed\n");
 
         DWORD lastError = ::GetLastError();
         if (lastError != EEXIST) {
@@ -199,32 +243,45 @@ void vislib::sys::NamedPipe::Open(vislib::StringA name,
     }
     ::umask(oldMask);
 
-    this->handle = ::open(pipeName.PeekBuffer(), O_SYNC | 
+    TRACE(vislib::Trace::LEVEL_VL_INFO, "opening ... \n");
+
+    this->handle = ::open(pipeName.PeekBuffer(), O_SYNC | O_NONBLOCK |
         ((mode == PIPE_MODE_READ) ? O_RDONLY : O_WRONLY));
     if (!this->handle) {
 
-//        TRACE(vislib::Trace::LEVEL_VL_INFO, "open failed\n");
+        TRACE(vislib::Trace::LEVEL_VL_INFO, "open failed\n");
 
         throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
 
-    /* Tricky.
-     * This works since 'open' blocks until both ends of the pipe are opend.
-     */
+    int fileflags = ::fcntl(this->handle, F_GETFL);
+    TRACE(vislib::Trace::LEVEL_VL_INFO, "File flags: %.8x\n", fileflags);
+
+    fileflags &= ~(O_NONBLOCK);
+
+    ::fcntl(this->handle, F_SETFL, fileflags);
+
+    int fileflags = ::fcntl(this->handle, F_GETFL);
+    TRACE(vislib::Trace::LEVEL_VL_INFO, "File flags: %.8x\n", fileflags);
+
+    // Tricky.
+    // This works since 'open' blocks until both ends of the pipe are opend.
     ::unlink(pipeName.PeekBuffer());
 
+    if (this->handle) {
+        this->mode = mode;
+    }
+    return (this->handle != 0); // pipe opened
+
 #endif /* _WIN32 */ 
-
-    this->mode = mode;
-
 }
 
 
 /*
  * vislib::sys::NamedPipe::Open
  */
-void vislib::sys::NamedPipe::Open(vislib::StringW name, 
-        vislib::sys::NamedPipe::PipeMode mode) {
+bool vislib::sys::NamedPipe::Open(vislib::StringW name, 
+        vislib::sys::NamedPipe::PipeMode mode, unsigned int timeout) {
 
 #ifdef _WIN32
 
@@ -243,19 +300,29 @@ void vislib::sys::NamedPipe::Open(vislib::StringW name,
 
     vislib::StringW pipeName = PipeSystemName(name);
 
+    if (timeout == 0) {
+        timeout = INFINITE;
+    }
+
     this->isClient = false;    
+
+    // create the overlapped structure allowing us to produce timeouts
+    ::ZeroMemory(&this->overlapped, sizeof(OVERLAPPED));
+    this->overlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL); // manual reset event
     
+    // create the pipe
     this->handle = ::CreateNamedPipeW(pipeName.PeekBuffer(), 
-        FILE_FLAG_FIRST_PIPE_INSTANCE | 
+        FILE_FLAG_FIRST_PIPE_INSTANCE | FILE_FLAG_OVERLAPPED | 
         ((mode == PIPE_MODE_READ) ? PIPE_ACCESS_INBOUND : PIPE_ACCESS_OUTBOUND),
         PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, 2, PIPE_BUFFER_SIZE, 
-        PIPE_BUFFER_SIZE, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+        PIPE_BUFFER_SIZE, 0, NULL);
 
     if (this->handle == INVALID_HANDLE_VALUE) {
+        // creation failed
         DWORD lastError = ::GetLastError();
 
         if (lastError == ERROR_ACCESS_DENIED) {
-            // pipe already created! So we are the client
+            // pipe already created! So we should be the client
 
             this->handle = ::CreateFileW(pipeName.PeekBuffer(), 
                 ((mode == PIPE_MODE_WRITE) ? GENERIC_WRITE : GENERIC_READ), 
@@ -268,31 +335,57 @@ void vislib::sys::NamedPipe::Open(vislib::StringW name,
             }
 
         } else {
+            // creation really failed!
             throw vislib::sys::SystemException(__FILE__, __LINE__);
         }
     }
 
     if (!this->isClient) {
-        DWORD lastError;
-        bool connected = ::ConnectNamedPipe(this->handle, NULL) ? true 
-            : ((lastError = GetLastError()) == ERROR_PIPE_CONNECTED); 
+        // continue initialising the server
+        ::ConnectNamedPipe(this->handle, &this->overlapped);
 
-        if (!connected) {
-            // pipe broken before even creating
-            ::CloseHandle(this->handle);
-            this->handle = INVALID_HANDLE_VALUE;
-            this->mode = PIPE_MODE_NONE;
+        switch (::WaitForSingleObject(this->overlapped.hEvent, timeout)) {
+            case WAIT_OBJECT_0: {
+                // event signaled so connection should be established
+                DWORD dummy;
+                if (::GetOverlappedResult(this->handle, &this->overlapped, &dummy, FALSE) == 0) {
+                    throw vislib::sys::SystemException(__FILE__, __LINE__);
+                }
+                ::ResetEvent(this->overlapped.hEvent);
 
-            throw vislib::sys::SystemException(lastError, __FILE__, __LINE__);
+            } break;
+            default: {
+                // unknown error
+                vislib::sys::SystemMessage msg(::GetLastError());
+                TRACE(Trace::LEVEL_VL_INFO, 
+                    "NamedPipe Open WaitForSigleObject Error: \"%s\"", 
+                    static_cast<const char*>(msg));
+            } // NO BREAK;
+            case WAIT_TIMEOUT: {
+                // timeout
+                if (::CancelIo(this->handle) == 0) {
+                    vislib::sys::SystemMessage msg(::GetLastError());
+                    TRACE(Trace::LEVEL_VL_INFO, 
+                        "NamedPipe Open Timeout: CancelIo failed \"%s\"", 
+                        static_cast<const char*>(msg));
+                }
+                this->Close();
+                return false;
+            } break;
         }
     }
+    
+#ifdef _WIN32
+    ASSERT(this->handle != INVALID_HANDLE_VALUE);
+#endif /* _WIN32 */
 
     this->mode = mode;
+    return true;
 
 #else /* _WIN32 */
 
     // since linux and unicode do not really work (as always)           
-    this->Open(W2A(name), mode);
+    return this->Open(W2A(name), mode, timeout);
 
 #endif /* _WIN32 */ 
 }
@@ -321,16 +414,39 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
 
 #ifdef _WIN32
 
-        if (!::ReadFile(this->handle, buffer, size, &outRead, NULL)) {
-            // pipe broken
-            ::FlushFileBuffers(this->handle);
-            if (!this->isClient) {
-                ::DisconnectNamedPipe(this->handle); 
+        ::ResetEvent(this->overlapped.hEvent);
+        if (!::ReadFile(this->handle, buffer, size, &outRead, &this->overlapped)) {
+            DWORD readAll = 0;
+            DWORD le = ::GetLastError();
+            if (le == ERROR_IO_PENDING) {
+                while (le == ERROR_IO_PENDING) {
+                    ::WaitForSingleObject(this->overlapped.hEvent, INFINITE);
+                    BOOL gor = ::GetOverlappedResult(this->handle, &this->overlapped, &outRead, FALSE);
+                    le = (gor != 0) ? NO_ERROR : ::GetLastError();
+                    readAll += outRead;
+
+                    if (le == ERROR_IO_INCOMPLETE) {
+                        le = ERROR_IO_PENDING;
+                    }
+                    if (le == ERROR_IO_PENDING) {
+                        ::Sleep(1);
+                    } else if (le != NO_ERROR) {
+                        // problem! (pipe broken)
+                        ::FlushFileBuffers(this->handle);
+                        ::CancelIo(this->handle);
+                        this->Close();
+                        throw vislib::sys::SystemException(le, __FILE__, __LINE__);
+                    }
+                }
+            } else {
+                // problem! (pipe broken)
+                ::FlushFileBuffers(this->handle);
+                ::CancelIo(this->handle);
+                this->Close();
+                throw vislib::sys::SystemException(le, __FILE__, __LINE__);
             }
-            ::CloseHandle(this->handle);
-            this->handle = INVALID_HANDLE_VALUE;
-            this->mode = PIPE_MODE_NONE;
-            throw vislib::sys::SystemException(__FILE__, __LINE__);
+            outRead = readAll;
+
         }
 
 #else /* _WIN32 */
@@ -425,12 +541,39 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
 
 #ifdef _WIN32
 
-        if (!::WriteFile(this->handle, buffer, size, &outWritten, NULL)) {
-            // pipe broken
-            ::CloseHandle(this->handle);
-            this->handle = INVALID_HANDLE_VALUE;
-            this->mode = PIPE_MODE_NONE;
-            throw vislib::sys::SystemException(__FILE__, __LINE__);
+        ::ResetEvent(this->overlapped.hEvent);
+        if (!::WriteFile(this->handle, buffer, size, &outWritten, &this->overlapped)) {
+            DWORD writeAll = 0;
+            DWORD le = ::GetLastError();
+            if (le == ERROR_IO_PENDING) {
+                while (le == ERROR_IO_PENDING) {
+                    ::WaitForSingleObject(this->overlapped.hEvent, INFINITE);
+                    BOOL gor = ::GetOverlappedResult(this->handle, &this->overlapped, &outWritten, FALSE);
+                    le = (gor != 0) ? NO_ERROR : ::GetLastError();
+                    writeAll += outWritten;
+
+                    if (le == ERROR_IO_INCOMPLETE) {
+                        le = ERROR_IO_PENDING;
+                    }
+                    if (le == ERROR_IO_PENDING) {
+                        ::Sleep(1);
+                    } else if (le != NO_ERROR) {
+                        // problem! (pipe broken)
+                        ::FlushFileBuffers(this->handle);
+                        ::CancelIo(this->handle);
+                        this->Close();
+                        throw vislib::sys::SystemException(le, __FILE__, __LINE__);
+                    }
+                }
+            } else {
+                // problem! (pipe broken)
+                ::FlushFileBuffers(this->handle);
+                ::CancelIo(this->handle);
+                this->Close();
+                throw vislib::sys::SystemException(le, __FILE__, __LINE__);
+            }
+            outWritten = writeAll;
+
         }
 
 #else /* _WIN32 */

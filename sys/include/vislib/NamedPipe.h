@@ -91,13 +91,19 @@ namespace sys {
          * @param name The name of the named pipe.
          *             TODO: Document further
          * @param mode The PipeMode to be used. Must not be 'PIPE_MODE_NONE'.
+         * @param timeout Specifies the connection timeout in milliseconds. If 
+         *                the pipe cannot be opened within this time out the
+         *                functions returns false. A value of zero disables the
+         *                timeout.
+         *
+         * @return 'true' if the pipe has been opened, 'false' otherwise.
          *
          * @throws IllegalParamException if name contains any invalid 
          *                               characters.
          * @throws IllegalParamException if openMode == 'PIPE_MODE_NONE'
          * @throws SystemException if the pipe could not be opened.
          */
-        void Open(StringA name, PipeMode mode);
+        bool Open(StringA name, PipeMode mode, unsigned int timeout = 0);
 
         /**
          * Opens a named pipe. If another pipe is already opend, that pipe is 
@@ -120,13 +126,19 @@ namespace sys {
          * @param name The name of the named pipe.
          *             TODO: Document further
          * @param mode The PipeMode to be used. Must not be 'PIPE_MODE_NONE'.
+         * @param timeout Specifies the connection timeout in milliseconds. If 
+         *                the pipe cannot be opened within this time out the
+         *                functions returns false. A value of zero disables the
+         *                timeout.
+         *
+         * @return 'true' if the pipe has been opened, 'false' otherwise.
          *
          * @throws IllegalParamException if name contains any invalid 
          *                               characters.
          * @throws IllegalParamException if openMode == 'PIPE_MODE_NONE'
          * @throws SystemException if the pipe could not be opened.
          */
-        void Open(StringW name, PipeMode mode);
+        bool Open(StringW name, PipeMode mode, unsigned int timeout = 0);
 
         /**
          * Answers the OpenMode of the pipe or 'PIPE_MODE_NONE' if the pipe is
@@ -218,6 +230,9 @@ namespace sys {
 
         /** flag indicating if the pipe is the client */
         bool isClient;
+
+        /** The overlapped structure of timeout control */
+        OVERLAPPED overlapped;
 
 #else /* _WIN32 */
         /** The handle of the pipe */

@@ -171,10 +171,12 @@ int main(int argc, char **argv) {
 #else /* _WIN32 */
                     printf("%s\n", tests[j].testName);
 #endif /* _WIN32 */
+                    fflush(stdout);
 
                     tests[j].testFunc();
 
-                    printf("\n");
+                    printf("End of Test %d.\n", i);
+                    fflush(stdout);
                     break; // next argument
                 }
             }

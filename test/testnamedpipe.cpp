@@ -169,6 +169,11 @@ void TestNamedPipe(void) {
     char buf[256];
     buf[255] = 0;
 
+
+    // test named pip open timeout
+    AssertFalse("Open Pipe times out", pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_WRITE, 1000));
+
+
     // initialize Barrier
     m1.Lock();
     m2.Lock();
