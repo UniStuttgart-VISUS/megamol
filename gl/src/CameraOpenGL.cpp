@@ -107,13 +107,23 @@ void vislib::graphics::gl::CameraOpenGL::GetProjectionMatrix(float *mat) {
     ZeroMemory(mat, sizeof(float) * 16);
     vislib::math::ShallowMatrix<float, 4, vislib::math::COLUMN_MAJOR> matrix(mat);
 
-    matrix.SetAt(0, 0, (2.0f * this->nearClip) / (this->right - this->left));
-    matrix.SetAt(1, 1, (2.0f * this->nearClip) / (this->top - this->bottom));
-    matrix.SetAt(0, 2, (this->right + this->left) / (this->right - this->left));
-    matrix.SetAt(1, 2, (this->top + this->bottom) / (this->top - this->bottom));
-    matrix.SetAt(2, 2, - (this->farClip + this->nearClip) / (this->farClip - this->nearClip));
-    matrix.SetAt(3, 2, -1.0f);
-    matrix.SetAt(2, 3, - (2.0f * this->farClip * this->nearClip) / (this->farClip - this->nearClip));
+    if (this->GetProjectionType() != Camera::MONO_ORTHOGRAPHIC) {
+        matrix.SetAt(0, 0, (2.0f * this->nearClip) / (this->right - this->left));
+        matrix.SetAt(1, 1, (2.0f * this->nearClip) / (this->top - this->bottom));
+        matrix.SetAt(0, 2, (this->right + this->left) / (this->right - this->left));
+        matrix.SetAt(1, 2, (this->top + this->bottom) / (this->top - this->bottom));
+        matrix.SetAt(2, 2, - (this->farClip + this->nearClip) / (this->farClip - this->nearClip));
+        matrix.SetAt(3, 2, -1.0f);
+        matrix.SetAt(2, 3, - (2.0f * this->farClip * this->nearClip) / (this->farClip - this->nearClip));
+    } else {
+        matrix.SetAt(0, 0, 2.0f / (this->right - this->left));
+        matrix.SetAt(1, 1, 2.0f / (this->top - this->bottom));
+        matrix.SetAt(2, 2, -2.0f / (this->farClip - this->nearClip));
+        matrix.SetAt(0, 3, (this->right + this->left) / (this->right - this->left));
+        matrix.SetAt(1, 3, (this->top + this->bottom) / (this->top - this->bottom));
+        matrix.SetAt(2, 3, (this->farClip + this->nearClip) / (this->farClip - this->nearClip));
+        matrix.SetAt(3, 3, -1.0f);
+    }
 }
 
 
@@ -147,6 +157,7 @@ void vislib::graphics::gl::CameraOpenGL::GetViewMatrix(float *mat) {
     matrix.SetAt(2, 0, -lookDir.GetX());
     matrix.SetAt(2, 1, -lookDir.GetY());
     matrix.SetAt(2, 2, -lookDir.GetZ());
+    matrix.SetAt(3, 3, 1.0f);
 
 }
 
