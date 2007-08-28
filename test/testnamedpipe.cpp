@@ -59,7 +59,7 @@ DWORD TestNamedPipeSecondThread(void *param) {
     //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     try {
-        pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_READ);
+        pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_READ, 1000);
         SyncHere();
         AssertTrue("Open Pipe 2 for reading", true);
     } catch(...) {
@@ -173,6 +173,8 @@ void TestNamedPipe(void) {
     // test named pip open timeout
     AssertFalse("Open Pipe times out", pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_WRITE, 1000));
 
+    AssertFalse("Open Pipe times out", pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_READ, 1000));
+
 
     // initialize Barrier
     m1.Lock();
@@ -182,7 +184,7 @@ void TestNamedPipe(void) {
     m2.Unlock();
 
     try {
-        pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_WRITE);
+        pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_WRITE, 1000);
         AssertTrue("Open Pipe 1 for writing", true);
     } catch(...) {
         AssertTrue("Open Pipe 1 for writing", false);
