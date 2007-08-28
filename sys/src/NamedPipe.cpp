@@ -23,9 +23,9 @@
 #include <linux/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <signal.h>
+#include "vislib/Thread.h"
+#include "vislib/PerformanceCounter.h"
 #endif /* !_WIN32 */
 
 
@@ -34,6 +34,9 @@
 
 
 #ifndef _WIN32
+namespace vislib {
+namespace sys {
+
 /*
  * linuxConsumeBrokenPipes
  */
@@ -41,9 +44,59 @@ void linuxConsumeBrokenPipes(int) {
     /* do nothing! More important do not exit!!! */
 }
 
+} /* end namespace sys */
+} /* end namespace vislib */
+
 
 /** the file system base directory for the pipe nodes */
 const char vislib::sys::NamedPipe::baseDir[] = "/tmp/vislibpipes";
+
+
+/*****************************************************************************/
+
+
+/*
+ * vislib::sys::NamedPipe::Exterminatus::Exterminatus
+ */
+vislib::sys::NamedPipe::Exterminatus::Exterminatus(unsigned int timeout, 
+        const char *pipename, bool readend) 
+        : Runnable(), connected(false), terminated(false), timeout(timeout),
+        pipename(pipename), readend(readend) {
+}
+
+
+/*
+ * vislib::sys::NamedPipe::Exterminatus::~Exterminatus
+ */
+vislib::sys::NamedPipe::Exterminatus::~Exterminatus(void) {
+}
+
+
+/*
+ * vislib::sys::NamedPipe::Exterminatus::Run
+ */
+DWORD vislib::sys::NamedPipe::Exterminatus::Run(void *userData) {
+    PerformanceCounter counter;
+
+    while (!this->connected && (static_cast<unsigned int>(counter.Difference()) < this->timeout)) {
+        Thread::Sleep(1);
+    }
+
+    if (!this->connected) {
+        // not connected after timeout
+        this->terminated = true;
+
+        int terminator = ::open(pipename, O_SYNC | (this->readend ? O_RDONLY : O_WRONLY));
+        if (terminator >= 0) {
+            ::close(terminator);
+        }
+    }
+
+    return 0;
+}
+
+
+/*****************************************************************************/
 #endif /* !_WIN32 */
 
 
@@ -55,7 +108,7 @@ vislib::sys::NamedPipe::NamedPipe(void)
 #ifdef _WIN32
         INVALID_HANDLE_VALUE
 #else /* _WIN32 */ 
-        0
+        -1
 #endif /* _WIN32 */ 
         ), mode(PIPE_MODE_NONE) {
 
@@ -87,13 +140,11 @@ void vislib::sys::NamedPipe::Close(void) {
     }
 #endif /* _WIN32 */
 
-    if (this->handle != 
 #ifdef _WIN32
-        INVALID_HANDLE_VALUE
+    if (this->handle != INVALID_HANDLE_VALUE) {
 #else /* _WIN32 */
-        0
+    if (this->handle >= 0) {
 #endif /* _WIN32 */
-        ) {
 
 #ifdef _WIN32
 
@@ -112,7 +163,7 @@ void vislib::sys::NamedPipe::Close(void) {
 #else /* _WIN32 */
 
         ::close(this->handle);
-        this->handle = 0;
+        this->handle = -1;
 #endif /* _WIN32 */ 
 
         this->mode = PIPE_MODE_NONE;
@@ -222,8 +273,8 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     return true; // pipe opened
 
 #else /* _WIN32 */
-
-    TRACE(vislib::Trace::LEVEL_VL_INFO, "vislib::sys::NamedPipe::Open\n");
+    Exterminatus ext(timeout, pipeName.PeekBuffer(), (mode != PIPE_MODE_READ));
+    vislib::sys::Thread tot(&ext);
 
     if (!vislib::sys::File::IsDirectory(this->baseDir)) {
         vislib::sys::Path::MakeDirectory(this->baseDir);
@@ -233,7 +284,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     mode_t oldMask = ::umask(0);
     if (::mknod(pipeName.PeekBuffer(), S_IFIFO | 0666, 0) != 0) {
 
-        TRACE(vislib::Trace::LEVEL_VL_INFO, "mknod failed\n");
+//        TRACE(vislib::Trace::LEVEL_VL_INFO, "mknod failed\n");
 
         DWORD lastError = ::GetLastError();
         if (lastError != EEXIST) {
@@ -243,35 +294,37 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     }
     ::umask(oldMask);
 
-    TRACE(vislib::Trace::LEVEL_VL_INFO, "opening ... \n");
+//    TRACE(vislib::Trace::LEVEL_VL_INFO, "vislib::sys::NamedPipe::Open\n");
 
-    this->handle = ::open(pipeName.PeekBuffer(), O_SYNC | O_NONBLOCK |
-        ((mode == PIPE_MODE_READ) ? O_RDONLY : O_WRONLY));
-    if (!this->handle) {
-
-        TRACE(vislib::Trace::LEVEL_VL_INFO, "open failed\n");
-
-        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    if (timeout > 0) {
+        tot.Start();
     }
 
-    int fileflags = ::fcntl(this->handle, F_GETFL);
-    TRACE(vislib::Trace::LEVEL_VL_INFO, "File flags: %.8x\n", fileflags);
+    this->handle = ::open(pipeName.PeekBuffer(), O_SYNC | 
+        ((mode == PIPE_MODE_READ) ? O_RDONLY : O_WRONLY));
+    ext.MarkConnected();
 
-    fileflags &= ~(O_NONBLOCK);
+    if (timeout > 0) {
+        tot.Join();
+    }
 
-    ::fcntl(this->handle, F_SETFL, fileflags);
-
-    int fileflags = ::fcntl(this->handle, F_GETFL);
-    TRACE(vislib::Trace::LEVEL_VL_INFO, "File flags: %.8x\n", fileflags);
+    if (this->handle < 0) {
+//        TRACE(vislib::Trace::LEVEL_VL_INFO, "open failed.\n");
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    } else if (ext.IsTerminated()) {
+//        TRACE(vislib::Trace::LEVEL_VL_INFO, "open timed out.\n");
+        ::close(this->handle);
+        this->handle = -1;
+    }
 
     // Tricky.
     // This works since 'open' blocks until both ends of the pipe are opend.
     ::unlink(pipeName.PeekBuffer());
 
-    if (this->handle) {
+    if (this->handle >= 0) {
         this->mode = mode;
     }
-    return (this->handle != 0); // pipe opened
+    return (this->handle >= 0); // pipe opened
 
 #endif /* _WIN32 */ 
 }
@@ -462,7 +515,7 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
 
             ::close(this->handle);
-            this->handle = 0;
+            this->handle = -1;
             this->mode = PIPE_MODE_NONE;
 
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");
@@ -589,7 +642,7 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
 
             ::close(this->handle);
-            this->handle = 0;
+            this->handle = -1;
             this->mode = PIPE_MODE_NONE;
 
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");

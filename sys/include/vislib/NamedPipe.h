@@ -16,6 +16,9 @@
 
 
 #include "vislib/String.h"
+#ifndef _WIN32
+#include "vislib/Runnable.h"
+#endif /* !_WIN32 */
 
 
 namespace vislib {
@@ -38,6 +41,10 @@ namespace sys {
      * Note: The linux implementation registers a signal handler for the signal
      * SIGPIPE. Do not register another handler or the behaviour of this class
      * is undefined.
+     *
+     * Note: The linux implementation uses a "hand-shake" message to determine 
+     * if the connection was successfully created. These NamedPipe objects are
+     * therefore NOT compatible with any other named pipe implementations.
      */
     class NamedPipe {
     public:
@@ -235,6 +242,71 @@ namespace sys {
         OVERLAPPED overlapped;
 
 #else /* _WIN32 */
+
+        /**
+         * Nested runnable class creating the timeout terminating mechanism.
+         */
+        class Exterminatus : public Runnable {
+        public:
+
+            /** 
+             * ctor 
+             *
+             * @param timeout The timeout in milliseconds
+             * @param pipename The name of the pipe to terminate after timeout
+             * @param readend 'true' if the termination is performed using the
+             *                reading end, 'false' when using the writing end.
+             */
+            Exterminatus(unsigned int timeout, const char *pipename, bool readend);
+
+            /** dtor */
+            ~Exterminatus(void);
+
+            /**
+             * Perform the work of a thread.
+             *
+             * @param userData A pointer to user data that are passed to the thread,
+             *                 if it started.
+             *
+             * @return The application dependent return code of the thread. This 
+             *         must not be STILL_ACTIVE (259).
+             */
+            virtual DWORD Run(void *userData);
+
+            /** Marks the pipe as connected. */
+            inline void MarkConnected(void) {
+                this->connected = true;
+            }
+
+            /**
+             * Answer if the pipe has to be terminated due to timeout.
+             *
+             * @return 'true' if the pipe has to be terminated, 
+             *         'false' otherwise.
+             */
+            inline bool IsTerminated(void) const {
+                return this->terminated;
+            }
+
+        private:
+
+            /** flag indicating that the pipe is connected. */
+            bool connected;
+
+            /** flag indicating that the pipe has been terminated */
+            bool terminated;
+
+            /** the timeout value */
+            unsigned int timeout;
+
+            /** the name of the pipe */
+            const char *pipename;
+
+            /** flag whether to open the reading end of the pipe */
+            bool readend;
+
+        };
+
         /** The handle of the pipe */
         int handle;
 
