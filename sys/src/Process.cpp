@@ -9,6 +9,10 @@
 
 #include <cstdarg>
 
+#ifndef _WIN32
+#include <fcntl.h>
+#endif /* !_WIN32 */
+
 #include "vislib/assert.h"
 #include "vislib/Console.h"
 #include "vislib/error.h"
@@ -180,7 +184,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         } else {
             int cntArgs = 1;
             if (arguments != NULL) {
-                while (arguments[i] != NULL) {
+                for (int i = 0; (arguments[i] != NULL); i++) {
                     cntArgs++;
                 }
             }
@@ -188,11 +192,12 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
             args.As<char *>()[0] = const_cast<char *>(cmd.PeekBuffer());
             args.As<char *>()[cntArgs] = NULL;
             for (int i = 1; i < cntArgs; i++) {
-                args.As<char *>()[i] = arguments[i - 1];
+                args.As<char *>()[i] = const_cast<char *>(arguments[i - 1]);
             }
             
-            ::execve(cmd.PeekBuffer(), args, reinterpret_cast<char * const*>(
-                static_cast<const void *>((environment)));
+            ::execve(cmd.PeekBuffer(), args.As<char *>(), 
+		reinterpret_cast<char **>(
+		const_cast<void *>(static_cast<const void *>(environment))));
         }
 
         /* exec failed at this point, so report error to parent. */
@@ -214,7 +219,8 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         /* Try to read error from child process if e. g. exec failed. */
         if (read(pipe[0], &errno, sizeof(errno)) != -1) {
             /* Child process wrote an error code, so report it. */
-            ASSERT(::GetLastError() == errno);  // Exception will use GLE.
+            // SystemException will use GetLastError, ensure correct code.
+            ASSERT(static_cast<int>(::GetLastError()) == errno);
             this->pid = -1;
             ::close(pipe[0]);
             throw SystemException(__FILE__, __LINE__);
