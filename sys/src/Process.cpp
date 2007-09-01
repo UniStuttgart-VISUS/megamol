@@ -11,142 +11,24 @@
 
 #include "vislib/assert.h"
 #include "vislib/Console.h"
+#include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #ifdef _WIN32 // TODO: PAM disabled
 #include "vislib/ImpersonationContext.h"
 #endif // TODO
 #include "vislib/Path.h"
+#include "vislib/RawStorage.h"
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 
-
-/*
- * vislib::sys::Process::Environment::Environment
- */
-vislib::sys::Process::Environment::Environment(void) : data(NULL) {
-}
-
-
-/*
- * vislib::sys::Process::Environment::Environment
- */
-vislib::sys::Process::Environment::Environment(const char *variable, ...) 
-        : data(NULL) {
-    va_list argptr;
-    SIZE_T dataSize = 0;
-    const char *arg;
-    
-    if (variable != NULL) {
-#ifdef _WIN32
-        char *insPos = NULL;
-
-        /* Determine the required buffer size. */
-        dataSize = ::strlen(variable) + 2;
-
-        va_start(argptr, variable);
-        while ((arg = va_arg(argptr, const char *)) != NULL) {
-            dataSize += (::strlen(arg) + 1);
-        }
-        va_end(argptr);
-
-        /* Allocate buffer. */
-        this->data = insPos = new char[dataSize];
-
-        /* Copy the input. */
-        dataSize = ::strlen(variable) + 1;
-        ::memcpy(insPos, variable, dataSize * sizeof(char));
-        insPos += dataSize;
-
-        va_start(argptr, variable);
-        while ((arg = va_arg(argptr, const char *)) != NULL) {
-            dataSize = ::strlen(arg) + 1;
-            ::memcpy(insPos, arg, dataSize);
-            insPos += dataSize;
-        }
-        va_end(argptr);
-
-        /* Insert terminating double zero. */
-        *insPos = '0';
-
-#else /* _WIN32 */
-        char **insPos = NULL;
-
-        /* Count parameters. */
-        dataSize = 1;
-
-        va_start(argptr, variable);
-        while ((arg = va_arg(argptr, const char *)) != NULL) {
-            dataSize++;
-        }
-        va_end(argptr);
-
-        /* Allocate parameter array. */
-        this->data = insPos = new char *[dataSize];
-
-        /* Allocate variable memory and copy data. */
-        va_start(argptr, variable);
-        while ((arg = va_arg(argptr, const char *)) != NULL) {
-            *insPos = new char[::strlen(arg) + 1];
-            ::strcpy(*insPos, arg);
-            insPos++;
-        }
-        va_end(argptr);
-
-        /* Last array element must be a NULL pointer. */
-        *insPos = NULL;
-
-#endif /* _WIN32 */
-    }
-}
-
-
-/*
- * vislib::sys::Process::Environment::~Environment
- */
-vislib::sys::Process::Environment::~Environment(void) {
-#ifndef _WIN32
-    /* Linux must delete the dynamically allocated strings. */
-    if (this->data != NULL) {
-        char **cursor = this->data;
-
-        while (*cursor != NULL) {
-            ARY_SAFE_DELETE(*cursor);
-            cursor++;
-        }
-    }
-#endif /* !_WIN32 */
-
-    ARY_SAFE_DELETE(this->data);
-}
-
-
-/*
- * vislib::sys::Process::Environment::Environment
- */
-vislib::sys::Process::Environment::Environment(const Environment& rhs) {
-    throw UnsupportedOperationException("Environment", __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::sys::Process::Environment::operator =
- */
-vislib::sys::Process::Environment& 
-vislib::sys::Process::Environment::operator =(const Environment& rhs) {
-    if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
-    }
-
-    return *this;
-}
 
 
 /*
  * vislib::sys::Process::EMPTY_ENVIRONMENT
  */
-const vislib::sys::Process::Environment 
-vislib::sys::Process::EMPTY_ENVIRONMENT(NULL);
+const vislib::sys::Environment::Snapshot 
+vislib::sys::Process::EMPTY_ENVIRONMENT;
 
 
 /*
@@ -182,7 +64,8 @@ vislib::sys::Process::Process(const Process& rhs) {
  */
 void vislib::sys::Process::create(const char *command, const char *arguments[],
         const char *user, const char *domain, const char *password,
-        const Environment& environment, const char *currentDirectory) {
+        const Environment::Snapshot& environment, 
+        const char *currentDirectory) {
     ASSERT(command != NULL);
 
 #ifdef _WIN32
@@ -222,13 +105,15 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         // TODO: hToken has insufficient permissions to spawn process.
         if (::CreateProcessAsUserA(hToken, NULL, 
                 const_cast<char *>(cmdLine.PeekBuffer()), NULL, NULL, FALSE, 0,
-                static_cast<void *>(environment), currentDirectory, &si, &pi)
+                const_cast<void *>(static_cast<const void *>(environment)), 
+                currentDirectory, &si, &pi)
                 == FALSE) {
             throw SystemException(__FILE__, __LINE__);
         }
     } else {
         if (::CreateProcessA(NULL, const_cast<char *>(cmdLine.PeekBuffer()), 
-                NULL, NULL, FALSE, 0, static_cast<void *>(environment),
+                NULL, NULL, FALSE, 0, 
+                const_cast<void *>(static_cast<const void *>(environment)),
                 currentDirectory, &si, &pi) == FALSE) {
             throw SystemException(__FILE__, __LINE__);
         }
@@ -238,11 +123,16 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     this->hProcess = pi.hProcess;
 
 #else /* _WIN32 */
-#if 0   // TODO: PAM disabled
-    StringA query;
-    StringA cmd;
-    ImpersonationContext ic;
-    pid_t pid;
+   // TODO: PAM disabled
+    StringA query;  // Query to which to expand shell commands.
+    StringA cmd;    // The command actually run.
+    int pipe[2];    // A pipe to get the error code of exec.
+
+    /* A process must not be started twice. */
+    if (this->pid >= 0) {
+        throw IllegalStateException("This process was already created.",
+            __FILE__, __LINE__);
+    }
 
     /* Detect and expand shell commands first first. */
     query.Format("which %s", command);
@@ -251,103 +141,88 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
     } else {
         cmd = Path::Resolve(command);
     }
+    ASSERT(Path::IsAbsolute(cmd));
 
-    /* A process must not be started twice. */
-    if (this->pid >= 0) {
-        throw IllegalStateException("This process was already created.",
-            __FILE__, __LINE__);
-    }
-
-    pid = ::fork();
-    if (pid < 0) {
-        /* Process creating failed. */
+    /* Open a pipe to get the exec error codes. */
+    if (::pipe(pipe) == -1) {
         throw SystemException(__FILE__, __LINE__);
-
-    } else if (pid > 0) {
-        /*
-         * We are in the new process, impersonate as new user and spawn 
-         * process. 
-         */
-        if ((user != NULL) && (password != NULL)) {
-            ic.Impersonate(user, NULL, password);
-        }
-
-        /* Change to working directory, if specified. */
-        if (currentDirectory != NULL) {
-            if (::chdir(currentDirectory) != 0) {
-                throw SystemException(__FILE__, __LINE__);
-            }
-        }
-
-        if (environment.IsEmpty()) {
-            char *tmp[] = { const_cast<char *>(cmd.PeekBuffer()), NULL };
-            if (::execv(cmd.PeekBuffer(), tmp) != 0) {
-                throw SystemException(__FILE__, __LINE__);
-            }
-                
-        } else {
-            assert(false);
-            //if (::execve(cmd.PeekBuffer(), arguments, 
-            //        static_cast<char * const*>(environment)) != 0) {
-            //    throw SystemException(__FILE__, __LINE__);
-            //}
-        }
-    }
-#else
-    StringA query;
-    StringA cmd;
-    pid_t pid;
-
-    /* Detect and expand shell commands first first. */
-    query.Format("which %s", command);
-    if (Console::Run(query.PeekBuffer(), &cmd) == 0) {
-        cmd.TrimEnd("\r\n");
-    } else {
-        cmd = Path::Resolve(command);
     }
 
-    /* A process must not be started twice. */
-    if (this->pid >= 0) {
-        throw IllegalStateException("This process was already created.",
-            __FILE__, __LINE__);
-    }
-
-    pid = ::fork();
-    if (pid < 0) {
-        /* Process creating failed. */
+    /* Make the system close the pipe if exec is called successfully. */
+    if (::fcntl(pipe[1], F_SETFD, FD_CLOEXEC)) {
+        ::close(pipe[0]);
+        ::close(pipe[1]);
         throw SystemException(__FILE__, __LINE__);
+    }
 
-    } else if (pid > 0) {
-        /*
-         * We are in the new process, impersonate as new user and spawn 
-         * process. 
-         */
+    /* Create new process. */
+    this->pid = ::fork();
+    if (this->pid == 0) {
+        /* We are in the child process now. */
+        ::close(pipe[0]);       // We do not need the read end any more.
+
+        /** Impersonate as new user. */
         if ((user != NULL) && (password != NULL)) {
+            //ic.Impersonate(user, NULL, password);
             ASSERT(false);
         }
 
         /* Change to working directory, if specified. */
         if (currentDirectory != NULL) {
             if (::chdir(currentDirectory) != 0) {
-                throw SystemException(__FILE__, __LINE__);
+                ::write(pipe[1], &errno, sizeof(errno));
             }
         }
 
-        if (environment.IsEmpty()) {
+        if (environment.IsEmpty() && (arguments == NULL)) {
             char *tmp[] = { const_cast<char *>(cmd.PeekBuffer()), NULL };
-            if (::execv(cmd.PeekBuffer(), tmp) != 0) {
-                throw SystemException(__FILE__, __LINE__);
-            }
-                
+            ::execv(cmd.PeekBuffer(), tmp);
         } else {
-            assert(false);
-            //if (::execve(cmd.PeekBuffer(), arguments, 
-            //        static_cast<char * const*>(environment)) != 0) {
-            //    throw SystemException(__FILE__, __LINE__);
-            //}
+            int cntArgs = 1;
+            if (arguments != NULL) {
+                while (arguments[i] != NULL) {
+                    cntArgs++;
+                }
+            }
+            vislib::RawStorage args((cntArgs + 1) * sizeof(char *));
+            args.As<char *>()[0] = const_cast<char *>(cmd.PeekBuffer());
+            args.As<char *>()[cntArgs] = NULL;
+            for (int i = 1; i < cntArgs; i++) {
+                args.As<char *>()[i] = arguments[i - 1];
+            }
+            
+            ::execve(cmd.PeekBuffer(), args, reinterpret_cast<char * const*>(
+                static_cast<const void *>((environment)));
+        }
+
+        /* exec failed at this point, so report error to parent. */
+        ::write(pipe[1], &errno, sizeof(errno));
+        ::close(pipe[1]);
+        ::_exit(errno);
+    
+    } else if (this->pid < 0) {
+        /* Process creating failed. */
+        ::close(pipe[0]);       // There is no child which could write.
+        ::close(pipe[1]);       // We do not need the write end any more.
+        throw SystemException(__FILE__, __LINE__);
+
+    } else {
+        /* Process was spawned, we are in parent. */
+        ASSERT(this->pid > 0);
+        ::close(pipe[1]);       // We do not need the write end any more.
+
+        /* Try to read error from child process if e. g. exec failed. */
+        if (read(pipe[0], &errno, sizeof(errno)) != -1) {
+            /* Child process wrote an error code, so report it. */
+            ASSERT(::GetLastError() == errno);  // Exception will use GLE.
+            this->pid = -1;
+            ::close(pipe[0]);
+            throw SystemException(__FILE__, __LINE__);
+        } else {
+            /* Reading error failed, so the child already closed the pipe. */
+            ::close(pipe[0]);
         }
     }
-#endif 
 #endif /* _WIN32 */
 }
 
