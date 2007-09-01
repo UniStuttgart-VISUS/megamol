@@ -11,6 +11,8 @@
 
 #ifndef _WIN32
 #include <fcntl.h>
+#include <signal.h>
+#include <sys/types.h>
 #endif /* !_WIN32 */
 
 #include "vislib/assert.h"
@@ -24,8 +26,50 @@
 #include "vislib/Path.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
+
+
+/*
+ * vislib::sys::Process::Exists
+ */
+bool vislib::sys::Process::Exists(const PID processID) {
+#ifdef _WIN32
+    HANDLE hProcess;
+    DWORD exitCode;
+
+    // TODO: Es wäre sicherer die Existenz darüber festzustellen, daß der
+    // Prozess nicht in signaled state ist. Darüber nachdenken, ob das 
+    // irgendwelche Probleme machen könnte.
+    // Ggf. dann auch bei den Threads den state anstatt des exit code verwenden.
+    if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
+            != NULL) {
+        if (!::GetExitCodeProcess(hProcess, &exitCode)) {
+            throw SystemException(__FILE__, __LINE__);
+        }
+
+        return (exitCode == STILL_ACTIVE);
+    } 
+
+    return false;
+
+#else /* _WIN32 */
+    return (!((::kill(processID, 0) == -1) && (errno == ESRCH)));
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::Exit
+ */
+void vislib::sys::Process::Exit(const DWORD exitCode) {
+#ifdef _WIN32
+    ::ExitProcess(exitCode);
+#else /* _WIN32 */
+    ::exit(exitCode);
+#endif /* _WIN32 */
+}
 
 
 /*
@@ -60,6 +104,27 @@ vislib::sys::Process::~Process(void) {
  */
 vislib::sys::Process::Process(const Process& rhs) {
     throw UnsupportedOperationException("Process", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::sys::Process::GetID
+ */
+vislib::sys::Process::PID vislib::sys::Process::GetID(void) const {
+#ifdef _WIN32
+    DWORD retval = ::GetProcessId(this->hProcess);
+    if (retval == 0) {
+        throw SystemException(__FILE__, __LINE__);
+    } else {
+        return retval;
+    }
+#else /* _WIN32 */
+    if (this->pid == -1) {
+        throw SystemException(ESRCH, __FILE__, __LINE__);
+    } else {
+        return this->pid;
+    }
+#endif /* _WIN32 */
 }
 
 
@@ -130,6 +195,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
    // TODO: PAM disabled
     StringA query;  // Query to which to expand shell commands.
     StringA cmd;    // The command actually run.
+    DWORD error;    // Exception error code.
     int pipe[2];    // A pipe to get the error code of exec.
 
     /* A process must not be started twice. */
@@ -146,6 +212,8 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         cmd = Path::Resolve(command);
     }
     ASSERT(Path::IsAbsolute(cmd));
+    TRACE(Trace::LEVEL_VL_INFO, "CreateProcess: command is \"%s\"\n",
+        cmd.PeekBuffer());
 
     /* Open a pipe to get the exec error codes. */
     if (::pipe(pipe) == -1) {
@@ -154,9 +222,10 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
 
     /* Make the system close the pipe if exec is called successfully. */
     if (::fcntl(pipe[1], F_SETFD, FD_CLOEXEC)) {
+        error = errno;
         ::close(pipe[0]);
         ::close(pipe[1]);
-        throw SystemException(__FILE__, __LINE__);
+        throw SystemException(error, __FILE__, __LINE__);
     }
 
     /* Create new process. */
@@ -174,7 +243,10 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         /* Change to working directory, if specified. */
         if (currentDirectory != NULL) {
             if (::chdir(currentDirectory) != 0) {
+                error = errno;
                 ::write(pipe[1], &errno, sizeof(errno));
+                ::close(pipe[1]);
+                ::_exit(error);
             }
         }
 
@@ -196,20 +268,22 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
             }
             
             ::execve(cmd.PeekBuffer(), args.As<char *>(), 
-		reinterpret_cast<char **>(
-		const_cast<void *>(static_cast<const void *>(environment))));
+                reinterpret_cast<char **>(const_cast<void *>(
+                static_cast<const void *>(environment))));
         }
 
         /* exec failed at this point, so report error to parent. */
         ::write(pipe[1], &errno, sizeof(errno));
+        error = errno;
         ::close(pipe[1]);
-        ::_exit(errno);
+        ::_exit(error);
     
     } else if (this->pid < 0) {
         /* Process creating failed. */
+        error = errno;
         ::close(pipe[0]);       // There is no child which could write.
         ::close(pipe[1]);       // We do not need the write end any more.
-        throw SystemException(__FILE__, __LINE__);
+        throw SystemException(error, __FILE__, __LINE__);
 
     } else {
         /* Process was spawned, we are in parent. */
@@ -217,18 +291,39 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         ::close(pipe[1]);       // We do not need the write end any more.
 
         /* Try to read error from child process if e. g. exec failed. */
-        if (read(pipe[0], &errno, sizeof(errno)) != -1) {
+        if (::read(pipe[0], &errno, sizeof(errno)) > 0) {
             /* Child process wrote an error code, so report it. */
-            // SystemException will use GetLastError, ensure correct code.
-            ASSERT(static_cast<int>(::GetLastError()) == errno);
+            // Preserve errno for exception.
+            error = errno;
             this->pid = -1;
             ::close(pipe[0]);
-            throw SystemException(__FILE__, __LINE__);
+            throw SystemException(error, __FILE__, __LINE__);
         } else {
             /* Reading error failed, so the child already closed the pipe. */
             ::close(pipe[0]);
         }
     }
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::Terminate
+ */
+void vislib::sys::Process::Terminate(const DWORD exitCode) {
+#ifdef _WIN32
+    if (!::TerminateProcess(this->hProcess, exitCode)) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+    
+    ::CloseHandle(this->hProcess);
+    this->hProcess = NULL;
+#else /* _WIN32 */
+    if (::kill(this->pid, SIGKILL) == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    this->pid = -1;
 #endif /* _WIN32 */
 }
 

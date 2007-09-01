@@ -36,6 +36,46 @@ namespace sys {
 
     public:
 
+        /** System-dependent process ID type. */
+#ifdef _WIN32
+        typedef DWORD PID;
+#else /* _WIN32 */
+        typedef pid_t PID;
+#endif /* _WIN32 */
+
+        /**
+         * Answer the ID of the calling process.
+         *
+         * @eturn The ID of the calling process.
+         */
+        static inline DWORD CurrentID(void) {
+#ifdef _WIN32
+            return ::GetCurrentProcessId();
+#else /* _WIN32 */
+            return ::getpid();
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Check whether a process with the specified ID exists.
+         *
+         * @param processID The ID of the process to check.
+         *
+         * @return true if a process with the specified ID exists, false 
+         *         otherwise.
+         *
+         * @throws SystemInformation If the requested information could not be
+         *                           retrieved.
+         */
+        static bool Exists(const PID processID);
+
+        /**
+         * Exit the calling process.
+         *
+         * @param exitCode The exit code to return.
+         */
+        static void Exit(const DWORD exitCode);
+
         /** 
          * This constant is an empty environment, which can be used to make a 
          * process inherit the current environment.
@@ -86,6 +126,37 @@ namespace sys {
         //        environment, currentDirectory);
         //}
 
+        /**
+         * Answer the ID of this process.
+         *
+         * @return The ID of the process.
+         *
+         * @throws SystemException If no process has been created or the process
+         *                         already terminated.
+         */
+        PID GetID(void) const;
+
+        /**
+         * Forcefully terminate a process previousely started using one of the
+         * Create methods. 
+         *
+         * It is not safe to call this method if no process has been created.
+         * The method will also fail if the process already exited.
+         *
+         * On Windows, 'exitCode' is set as exit code of the terminated process.
+         * Note that the state of global data maintained by DLLs may be 
+         * compromised by this operation according to MSDN.
+         *
+         * On Linux, 'exitCode' has no meaning. The process is terminated using
+         * SIGKILL. The method might terminate another process than intended if
+         * the process already has been terminated and its PID has been reused.
+         *
+         * @param exitCode The exit code to set for the process.
+         *
+         * @throws SystemException If the process could not be terminated.
+         */
+        void Terminate(const DWORD exitCode = 0);
+
     private:
 
         /**
@@ -103,7 +174,6 @@ namespace sys {
             const char *user, const char *domain, const char *password,
             const Environment::Snapshot& environment, 
             const char *currentDirectory);
-
 
         /**
          * Forbidden assignment.

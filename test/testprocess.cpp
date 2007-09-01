@@ -50,19 +50,23 @@ void TestProcess(void) {
         cout << pe.GetMsgA() << endl;
     }
 
-    try {
-        Process p1;
-#ifdef _WIN32
-        AssertNoException("Process::Create", p1.Create("notepad.exe"));
-#else
-        AssertNoException("Process::Create", p1.Create("top"));
-#endif 
-
-        //Process p2;
-        //p2.Create("notepad.exe", NULL, IMPERSONATION_USER, IMPERSONATION_DOMAIN, IMPERSONATION_PASSWORD);
-    } catch (SystemException se) {
-        cout << se.GetMsgA() << endl;
-    }
-
 #endif /* _WIN32 */  // TODO PAM disabled
+
+    Process p1;
+#ifdef _WIN32
+    AssertNoException("Process::Create", p1.Create("notepad.exe"));
+    AssertNoException("Process::Terminate", p1.Terminate());
+#else /* _WIN32 */
+    AssertNoException("Process::Create", p1.Create("ps"));
+#endif /* _WIN32 */
+
+    Process p2;
+#ifdef _WIN32
+    AssertException("Process::Create (non-existing image)", p2.Create(".\\crowbar27.exe"), SystemException);
+#else /* _WIN32 */
+    AssertException("Process::Create (non-existing image)", p2.Create("./crowbar27"), SystemException);
+#endif /* _WIN32 */
+
+    //Process p2;
+    //p2.Create("notepad.exe", NULL, IMPERSONATION_USER, IMPERSONATION_DOMAIN, IMPERSONATION_PASSWORD);
 }
