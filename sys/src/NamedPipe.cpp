@@ -134,13 +134,6 @@ vislib::sys::NamedPipe::~NamedPipe(void) {
 void vislib::sys::NamedPipe::Close(void) {
 
 #ifdef _WIN32
-    if (this->overlapped.hEvent != NULL) {
-        ::CloseHandle(this->overlapped.hEvent);
-        this->overlapped.hEvent = NULL;
-    }
-#endif /* _WIN32 */
-
-#ifdef _WIN32
     if (this->handle != INVALID_HANDLE_VALUE) {
 #else /* _WIN32 */
     if (this->handle >= 0) {
@@ -156,7 +149,13 @@ void vislib::sys::NamedPipe::Close(void) {
             // flush server side pipe
             ::DisconnectNamedPipe(this->handle);
         }
+		::CancelIo(this->handle);
         ::CloseHandle(this->handle);
+
+		if (this->overlapped.hEvent != NULL) {
+			::CloseHandle(this->overlapped.hEvent);
+			this->overlapped.hEvent = NULL;
+		}
 
         this->handle = INVALID_HANDLE_VALUE;
 
