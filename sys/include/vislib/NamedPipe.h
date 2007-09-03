@@ -15,6 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/CriticalSection.h"
 #include "vislib/String.h"
 #ifndef _WIN32
 #include "vislib/Runnable.h"
@@ -317,6 +318,9 @@ namespace sys {
 
         /** The mode of the pipe */
         PipeMode mode;
+
+        /** The critical section of the pipe used to synchronise the cleanup */
+        CriticalSection cleanupLock;
 
     };
     

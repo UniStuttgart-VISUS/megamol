@@ -110,7 +110,7 @@ vislib::sys::NamedPipe::NamedPipe(void)
 #else /* _WIN32 */ 
         -1
 #endif /* _WIN32 */ 
-        ), mode(PIPE_MODE_NONE) {
+        ), mode(PIPE_MODE_NONE), cleanupLock() {
 
 #ifdef _WIN32
     ::ZeroMemory(&this->overlapped, sizeof(OVERLAPPED));
@@ -132,6 +132,8 @@ vislib::sys::NamedPipe::~NamedPipe(void) {
  * vislib::sys::NamedPipe::Close
  */
 void vislib::sys::NamedPipe::Close(void) {
+
+    this->cleanupLock.Lock();
 
 #ifdef _WIN32
     if (this->handle != INVALID_HANDLE_VALUE) {
@@ -167,6 +169,8 @@ void vislib::sys::NamedPipe::Close(void) {
 
         this->mode = PIPE_MODE_NONE;
     }
+
+    this->cleanupLock.Unlock();
 }
         
 
@@ -484,16 +488,20 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
                         ::Sleep(1);
                     } else if (le != NO_ERROR) {
                         // problem! (pipe broken)
+                        this->cleanupLock.Lock();
                         ::FlushFileBuffers(this->handle);
                         ::CancelIo(this->handle);
+                        this->cleanupLock.Unlock();
                         this->Close();
                         throw vislib::sys::SystemException(le, __FILE__, __LINE__);
                     }
                 }
             } else {
                 // problem! (pipe broken)
+                this->cleanupLock.Lock();
                 ::FlushFileBuffers(this->handle);
                 ::CancelIo(this->handle);
+                this->cleanupLock.Unlock();
                 this->Close();
                 throw vislib::sys::SystemException(le, __FILE__, __LINE__);
             }
@@ -513,9 +521,11 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
 
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
 
+            this->cleanupLock.Lock();
             ::close(this->handle);
             this->handle = -1;
             this->mode = PIPE_MODE_NONE;
+            this->cleanupLock.Unlock();
 
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");
 
@@ -611,16 +621,20 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
                         ::Sleep(1);
                     } else if (le != NO_ERROR) {
                         // problem! (pipe broken)
+                        this->cleanupLock.Lock();
                         ::FlushFileBuffers(this->handle);
                         ::CancelIo(this->handle);
+                        this->cleanupLock.Unlock();
                         this->Close();
                         throw vislib::sys::SystemException(le, __FILE__, __LINE__);
                     }
                 }
             } else {
                 // problem! (pipe broken)
+                this->cleanupLock.Lock();
                 ::FlushFileBuffers(this->handle);
                 ::CancelIo(this->handle);
+                this->cleanupLock.Unlock();
                 this->Close();
                 throw vislib::sys::SystemException(le, __FILE__, __LINE__);
             }
@@ -640,9 +654,11 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
 
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
 
+            this->cleanupLock.Lock();
             ::close(this->handle);
             this->handle = -1;
             this->mode = PIPE_MODE_NONE;
+            this->cleanupLock.Unlock();
 
             //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");
 
