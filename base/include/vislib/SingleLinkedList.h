@@ -16,6 +16,7 @@
 
 #include "vislib/memutils.h"
 #include "vislib/Iterator.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/NoSuchElementException.h"
 #include "vislib/assert.h"
@@ -75,6 +76,9 @@ namespace vislib {
 
             /** pointer to the next element store */
             Item *next;
+
+            /** pointer to the last element returned by 'Next' */
+            Item *prev;
 
         };
 
@@ -208,12 +212,25 @@ namespace vislib {
 
         /**
          * Removes an item from the list.
-         * This methode removes all items from the list that are equal to the
+         * This method removes all items from the list that are equal to the
          * provided item.
          *
          * @param item The item to be removed.
          */
         virtual void Remove(const T& item);
+
+        /**
+         * Removes an item from the list.
+         * This method removes the item the given iterator has returned the 
+         * last time 'Next' was called from the list. Items considered equal 
+         * to that item are not removed. 
+         *
+         * @param iter The iterator of the item to be removed.
+         *
+         * @throw IllegalParamException if the iterator has not returned any
+         *        item of this list at the last 'Next' call.
+         */
+        virtual void Remove(Iterator& iter);
 
         /**
          * Remove the first element from the collection. If the collection
@@ -270,7 +287,7 @@ namespace vislib {
      * SingleLinkedList<T>::Iterator::Iterator
      */
     template<class T>
-    SingleLinkedList<T>::Iterator::Iterator(void) : next(NULL) {
+    SingleLinkedList<T>::Iterator::Iterator(void) : next(NULL), prev(NULL) {
     }
 
 
@@ -279,7 +296,7 @@ namespace vislib {
      */
     template<class T>
     SingleLinkedList<T>::Iterator::Iterator(const typename SingleLinkedList<T>::Iterator& rhs) 
-        : next(rhs.next) {
+        : next(rhs.next), prev(rhs.prev) {
     }
 
 
@@ -305,12 +322,12 @@ namespace vislib {
      */
     template<class T>
     T& SingleLinkedList<T>::Iterator::Next(void) {
-        Item *retVal = this->next;
+        this->prev = this->next;
         if (!this->next) {
             throw IllegalStateException("No next element.", __FILE__, __LINE__);
         }
         this->next = this->next->next;
-        return retVal->item;
+        return this->prev->item;
     }
 
 
@@ -322,6 +339,7 @@ namespace vislib {
         SingleLinkedList<T>::Iterator::operator=(
             const typename SingleLinkedList<T>::Iterator& rhs) {
         this->next = rhs.next;
+        this->prev = rhs.prev;
         return *this;
     }
 
@@ -331,7 +349,7 @@ namespace vislib {
      */
     template<class T>
     SingleLinkedList<T>::Iterator::Iterator(SingleLinkedList<T> &parent) 
-        : next(parent.first) {
+        : next(parent.first), prev(NULL) {
     }
 
 
@@ -535,6 +553,38 @@ namespace vislib {
                 i = i->next;
             }
         }
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Remove
+     */
+    template<class T>
+    void SingleLinkedList<T>::Remove(
+            typename SingleLinkedList<T>::Iterator& iter) {
+        Item *i = this->first;
+        if (iter.prev == NULL) {
+            throw IllegalParamException("Invalid Iterator state", 
+                __FILE__, __LINE__);
+        }
+
+        if (this->first == iter.prev) {
+            this->first = this->first->next;
+            if (!this->first) this->last = NULL;
+            delete i;
+        } else {
+            while ((i->next) && (i->next != iter.prev)) {
+                i = i->next;
+            }
+            if (i->next == iter.prev) {
+                i->next = iter.next;
+                delete iter.prev;
+            } else {
+                throw IllegalParamException("Invalid Iterator", 
+                    __FILE__, __LINE__);
+            }
+        }
+        iter.prev = NULL;
     }
 
 
