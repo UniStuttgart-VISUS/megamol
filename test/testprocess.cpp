@@ -67,6 +67,9 @@ void TestProcess(void) {
     AssertException("Process::Create (non-existing image)", p2.Create("./crowbar27"), SystemException);
 #endif /* _WIN32 */
 
+    std::cout << "Owner of [" << Process::CurrentID() << "]: " << Process::OwnerA(Process::CurrentID()) << std::endl;
+    std::cout << "Owner of [" << Process::CurrentID() << "]: " << Process::OwnerA(Process::CurrentID(), true) << std::endl;
+
     //Process p2;
     //p2.Create("notepad.exe", NULL, IMPERSONATION_USER, IMPERSONATION_DOMAIN, IMPERSONATION_PASSWORD);
 }

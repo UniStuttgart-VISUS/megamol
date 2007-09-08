@@ -274,6 +274,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AutoHandle.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AutoLock.cpp"
 				>
 			</File>
@@ -320,13 +324,6 @@
 			<File
 				RelativePath=".\src\Environment.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\error.cpp"
@@ -438,6 +435,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\vislib\AutoHandle.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\vislib\AutoLock.h"
 				>

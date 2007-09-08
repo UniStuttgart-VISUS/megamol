@@ -16,6 +16,7 @@
 #endif /* !_WIN32 */
 
 #include "vislib/assert.h"
+#include "vislib/AutoHandle.h"
 #include "vislib/Console.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
@@ -29,6 +30,7 @@
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
+#include "vislib/MissingImplementationException.h"
 
 
 /*
@@ -69,6 +71,269 @@ void vislib::sys::Process::Exit(const DWORD exitCode) {
 #else /* _WIN32 */
     ::exit(exitCode);
 #endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::Owner
+ */
+void vislib::sys::Process::Owner(const PID processID, vislib::StringA& outUser,
+        vislib::StringA *outDomain) {
+#ifdef _WIN32
+    DWORD domainLen = 0;            // Length of domain name in characters.
+    DWORD error = NO_ERROR;         // Last system error code.
+    DWORD userInfoLen = 0;          // Size of 'userInfo' in bytes.
+    DWORD userLen = 0;              // Length of user name in characters.
+    AutoHandle hProcess(true);      // Process handle.
+    AutoHandle hToken(true);        // Process security token.
+    PSID sid = NULL;                // User SID.
+    SID_NAME_USE snu;               // Type of retrieved SID.
+    RawStorage tmpDomain;           // Storage for domain if discarded.
+    RawStorage userInfo;            // Receives user info of security token.
+    StringA::Char *user = NULL;     // Receives user name.
+    StringA::Char *domain = NULL;   // Receives domain name.
+
+    /* Clear return values. */
+    outUser.Clear();
+    if (outDomain != NULL) {
+        outDomain->Clear();
+    }
+
+    /* Acquire a process handle. */
+    if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, processID))
+            != NULL) {
+
+        /* Get security token of process. */
+        if (::OpenProcessToken(hProcess, TOKEN_QUERY, hToken)) {
+
+            /* Get user information of security token. */
+            if (::GetTokenInformation(hToken, TokenUser, NULL, 0, &userInfoLen)
+                    || ((error = ::GetLastError()) 
+                    == ERROR_INSUFFICIENT_BUFFER)) {
+
+                userInfo.AssertSize(userInfoLen);
+                if (::GetTokenInformation(hToken, TokenUser, userInfo, 
+                        userInfoLen, &userInfoLen)) {
+                    sid = userInfo.As<TOKEN_USER>()->User.Sid;
+                
+                    /* Lookup the user name of the SID. */
+                    if (::LookupAccountSidA(NULL, sid, NULL, &userLen, NULL, 
+                            &domainLen, &snu) || ((error = ::GetLastError())
+                            == ERROR_INSUFFICIENT_BUFFER)) {
+                        user = outUser.AllocateBuffer(userLen);
+                        if (outDomain != NULL) {
+                            domain = outDomain->AllocateBuffer(domainLen);
+                        } else {
+                            tmpDomain.AssertSize(domainLen);
+                            domain = tmpDomain.As<StringA::Char>();
+                        }
+
+                        if (!::LookupAccountSidA(NULL, sid, user, &userLen,
+                                domain, &domainLen, &snu)) {
+                            error = ::GetLastError();
+                            outUser.Clear();
+                            if (outDomain != NULL) {
+                                outDomain->Clear();
+                            }
+                            ::CloseHandle(hToken);
+                            ::CloseHandle(hProcess);
+                            throw SystemException(error, __FILE__, __LINE__);
+                        }
+
+                    } else {
+                        ::CloseHandle(hToken);
+                        ::CloseHandle(hProcess);
+                        throw SystemException(error, __FILE__, __LINE__);
+                    } /* end if (::LookupAccountSidA(NULL, sid, NULL, ... */
+
+                } else {
+                    error = ::GetLastError();
+                    throw SystemException(error, __FILE__, __LINE__);
+                } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
+
+            } else {
+                error = ::GetLastError();
+                throw SystemException(error, __FILE__, __LINE__);
+            } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
+
+        } else {
+            error = ::GetLastError();
+            throw SystemException(error, __FILE__, __LINE__);
+        } /* end if (::OpenProcessToken(hProcess, TOKEN_QUERY, &hToken)) */
+
+    } else {
+        error = ::GetLastError();
+        throw SystemException(error, __FILE__, __LINE__);
+    } /* end if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION ... */
+
+#else /* _WIN32 */
+    // TODO
+    throw MissingImplementationException("vislib::sys::Process::Owner", __FILE__, __LINE__);
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::Owner
+ */
+void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
+        vislib::StringW *outDomain) {
+#ifdef _WIN32
+    DWORD domainLen = 0;            // Length of domain name in characters.
+    DWORD error = NO_ERROR;         // Last system error code.
+    DWORD userInfoLen = 0;          // Size of 'userInfo' in bytes.
+    DWORD userLen = 0;              // Length of user name in characters.
+    AutoHandle hProcess(true);      // Process handle.
+    AutoHandle hToken(true);        // Process security token.
+    PSID sid = NULL;                // User SID.
+    SID_NAME_USE snu;               // Type of retrieved SID.
+    RawStorage tmpDomain;           // Storage for domain if discarded.
+    RawStorage userInfo;            // Receives user info of security token.
+    StringW::Char *user = NULL;     // Receives user name.
+    StringW::Char *domain = NULL;   // Receives domain name.
+
+    /* Clear return values. */
+    outUser.Clear();
+    if (outDomain != NULL) {
+        outDomain->Clear();
+    }
+
+    /* Acquire a process handle. */
+    if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, processID))
+            != NULL) {
+
+        /* Get security token of process. */
+        if (::OpenProcessToken(hProcess, TOKEN_QUERY, hToken)) {
+
+            /* Get user information of security token. */
+            if (::GetTokenInformation(hToken, TokenUser, NULL, 0, &userInfoLen)
+                    || ((error = ::GetLastError()) 
+                    == ERROR_INSUFFICIENT_BUFFER)) {
+
+                userInfo.AssertSize(userInfoLen);
+                if (::GetTokenInformation(hToken, TokenUser, userInfo, 
+                        userInfoLen, &userInfoLen)) {
+                    sid = userInfo.As<TOKEN_USER>()->User.Sid;
+                
+                    /* Lookup the user name of the SID. */
+                    if (::LookupAccountSidW(NULL, sid, NULL, &userLen, NULL, 
+                            &domainLen, &snu) || ((error = ::GetLastError())
+                            == ERROR_INSUFFICIENT_BUFFER)) {
+                        user = outUser.AllocateBuffer(userLen);
+                        if (outDomain != NULL) {
+                            domain = outDomain->AllocateBuffer(domainLen);
+                        } else {
+                            tmpDomain.AssertSize(domainLen);
+                            domain = tmpDomain.As<StringW::Char>();
+                        }
+
+                        if (!::LookupAccountSidW(NULL, sid, user, &userLen,
+                                domain, &domainLen, &snu)) {
+                            error = ::GetLastError();
+                            outUser.Clear();
+                            if (outDomain != NULL) {
+                                outDomain->Clear();
+                            }
+                            ::CloseHandle(hToken);
+                            ::CloseHandle(hProcess);
+                            throw SystemException(error, __FILE__, __LINE__);
+                        }
+
+                    } else {
+                        ::CloseHandle(hToken);
+                        ::CloseHandle(hProcess);
+                        throw SystemException(error, __FILE__, __LINE__);
+                    } /* end if (::LookupAccountSidW(NULL, sid, NULL, ... */
+
+                } else {
+                    error = ::GetLastError();
+                    throw SystemException(error, __FILE__, __LINE__);
+                } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
+
+            } else {
+                error = ::GetLastError();
+                throw SystemException(error, __FILE__, __LINE__);
+            } /* end if (::GetTokenInformation(hToken, TokenUser, ...  */
+
+        } else {
+            error = ::GetLastError();
+            throw SystemException(error, __FILE__, __LINE__);
+        } /* end if (::OpenProcessToken(hProcess, TOKEN_QUERY, &hToken)) */
+
+    } else {
+        error = ::GetLastError();
+        throw SystemException(error, __FILE__, __LINE__);
+    } /* end if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION ... */
+
+#else /* _WIN32 */
+    StringA u;
+    StringA d;
+
+    Process::Owner(processId, u, &d);
+    if (domain != NULL) {
+        *domain = d;
+    }
+#endif /* _WIN32 */
+}
+
+
+/* 
+ * vislib::sys::Process::OwnerA
+ */
+vislib::StringA vislib::sys::Process::OwnerA(const PID processID, 
+            const bool includeDomain, const bool isLenient) {
+    StringA retval;
+    
+    try {
+#ifdef _WIN32
+        if (includeDomain) {
+#else /* _WIN32 */
+        if (false) {
+#endif /* _WIN32 */
+            StringA user;
+            Process::Owner(processID, user, &retval);
+            retval += "\\";
+            retval += user;
+        } else {
+            Process::Owner(processID, retval, NULL);
+        }
+    } catch (SystemException) {
+        if (!isLenient) {
+            throw;
+        }
+    }
+
+    return retval;
+}
+
+
+/*
+ * vislib::sys::Process::OwnerW
+ */
+vislib::StringW vislib::sys::Process::OwnerW(const PID processID, 
+            const bool includeDomain, const bool isLenient) {
+    StringW retval;
+    
+    try {
+#ifdef _WIN32
+        if (includeDomain) {
+#else /* _WIN32 */
+        if (false) {
+#endif /* _WIN32 */
+            StringW user;
+            Process::Owner(processID, user, &retval);
+            retval += L"\\";
+            retval += user;
+        } else {
+            Process::Owner(processID, retval, NULL);
+        }
+    } catch (SystemException) {
+        if (!isLenient) {
+            throw;
+        }
+    }
+
+    return retval;
 }
 
 

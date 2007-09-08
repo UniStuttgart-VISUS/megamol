@@ -24,6 +24,10 @@
 #include "vislib/memutils.h"
 #include "vislib/types.h"
 
+#ifdef _WIN32
+#pragma comment(lib, "advapi32")
+#endif /* _WIN32 */
+
 
 namespace vislib {
 namespace sys {
@@ -75,6 +79,155 @@ namespace sys {
          * @param exitCode The exit code to return.
          */
         static void Exit(const DWORD exitCode);
+
+        /**
+         * Answer the owner of the process with process ID 'processID'.
+         *
+         * Note that it might not be possible to retrieve the owner of
+         * a process if the calling process has insufficient privileges.
+         * In that case, a SystemException is thrown. It is normally not
+         * possible to retrieve the owner of a process if this owner is
+         * SYSTEM on Windows.
+         *
+         * @param processID The ID of the process to retrieve the owner of.
+         * @param outUser   Receives the user name.
+         * @param outDomain Receives the domain name if not NULL.
+         *
+         * @throws SystemException If the user could not be retrieved, e. g.
+         *                         because the process with PID 'processID'
+         *                         does not exist or because the calling 
+         *                         process has insufficient privileges.
+         * @throws std::bad_alloc If there was insufficient memory to complete
+         *                        the request.
+         */
+        static void Owner(const PID processID, vislib::StringA& outUser, 
+            vislib::StringA *outDomain = NULL);
+
+        /**
+         * Answer the owner of the process with process ID 'processID'.
+         *
+         * Note that it might not be possible to retrieve the owner of
+         * a process if the calling process has insufficient privileges.
+         * In that case, a SystemException is thrown. It is normally not
+         * possible to retrieve the owner of a process if this owner is
+         * SYSTEM on Windows.
+         *
+         * @param processID The ID of the process to retrieve the owner of.
+         * @param outUser   Receives the user name.
+         * @param outDomain Receives the domain name if not NULL.
+         *
+         * @throws SystemException If the user could not be retrieved, e. g.
+         *                         because the process with PID 'processID'
+         *                         does not exist or because the calling 
+         *                         process has insufficient privileges.
+         * @throws std::bad_alloc If there was insufficient memory to complete
+         *                        the request.
+         */
+        static void Owner(const PID processID, vislib::StringW& outUser, 
+            vislib::StringW *outDomain = NULL);
+
+        /**
+         * Answer the name of the user that owns the process with ID 
+         * 'processID'. This is a convenience method.
+         *
+         * If 'includeDomain' is true, the domain of the user account is
+         * included in the returned string. The format of the string is 
+         * DOMAIN\USER in this case. On Linux, 'includeDomain' has no effect.
+         *
+         * If 'isLenient' is true, no SystemException will be thrown if the
+         * requested process does not exist or the user could not be determined.
+         * An empty string will be returned in that case. Note that 
+         * std::bad_alloc might be thrown even if 'isLenient' is set.
+         *
+         * @param processID     The ID of the process to retrieve the owner of.
+         * @param includeDomain If true, the domain of the user account is 
+         *                      included in the return value.
+         * @param isLenient     If true, an empty string will be returned 
+         *                      instead of throwing a SystemException.
+         * 
+         * @return The user name of the owner of 'processID'.
+         *
+         * @throws SystemException If (isLenient == false) and no process with
+         *                         ID 'processID' exists or if the calling 
+         *                         process has insufficient permissions to 
+         *                         retrieve the requested information or the 
+         *                         user name could not be determined.
+         * @throws std::bad_alloc If there was insufficient memory to complete
+         *                        the request.
+         */
+        static vislib::StringA OwnerA(const PID processID, 
+            const bool includeDomain = false, const bool isLenient = false);
+
+        /**
+         * Answer the name of the user that owns the process with ID 
+         * 'processID'. This is a convenience method.
+         *
+         * If 'includeDomain' is true, the domain of the user account is
+         * included in the returned string. The format of the string is 
+         * DOMAIN\USER in this case. On Linux, 'includeDomain' has no effect.
+         *
+         * If 'isLenient' is true, no SystemException will be thrown if the
+         * requested process does not exist or the user could not be determined.
+         * An empty string will be returned in that case. Note that 
+         * std::bad_alloc might be thrown even if 'isLenient' is set.
+         *
+         * @param processID     The ID of the process to retrieve the owner of.
+         * @param includeDomain If true, the domain of the user account is 
+         *                      included in the return value.
+         * @param isLenient     If true, an empty string will be returned 
+         *                      instead of throwing a SystemException.
+         * 
+         * @return The user name of the owner of 'processID'.
+         *
+         * @throws SystemException If (isLenient == false) and no process with
+         *                         ID 'processID' exists or if the calling 
+         *                         process has insufficient permissions to 
+         *                         retrieve the requested information or the 
+         *                         user name could not be determined.
+         * @throws std::bad_alloc If there was insufficient memory to complete
+         *                        the request.
+         */
+        static vislib::StringW OwnerW(const PID processID, 
+            const bool includeDomain = false, const bool isLenient = false);
+
+        /**
+         * Answer the name of the user that owns the process with ID 
+         * 'processID'. This is a convenience method.
+         *
+         * If 'includeDomain' is true, the domain of the user account is
+         * included in the returned string. The format of the string is 
+         * DOMAIN\USER in this case. On Linux, 'includeDomain' has no effect.
+         *
+         * If 'isLenient' is true, no SystemException will be thrown if the
+         * requested process does not exist or the user could not be determined.
+         * An empty string will be returned in that case. Note that 
+         * std::bad_alloc might be thrown even if 'isLenient' is set.
+         *
+         * @param processID     The ID of the process to retrieve the owner of.
+         * @param includeDomain If true, the domain of the user account is 
+         *                      included in the return value.
+         * @param isLenient     If true, an empty string will be returned 
+         *                      instead of throwing a SystemException.
+         * 
+         * @return The user name of the owner of 'processID'.
+         *
+         * @throws SystemException If (isLenient == false) and no process with
+         *                         ID 'processID' exists or if the calling 
+         *                         process has insufficient permissions to 
+         *                         retrieve the requested information or the 
+         *                         user name could not be determined.
+         * @throws std::bad_alloc If there was insufficient memory to complete
+         *                        the request.
+         */
+        inline static vislib::TString Owner(const PID processID, 
+                const bool includeDomain = false,
+                const bool isLenient = false) {
+#if defined(UNICODE) || defined(_UNICODE)
+            return Process::OwnerW(processID, includeDomain, isLenient);
+#else /* defined(UNICODE) || defined(_UNICODE) */
+            return Process::OwnerA(processID, includeDomain, isLenient);
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+        }
 
         /** 
          * This constant is an empty environment, which can be used to make a 
