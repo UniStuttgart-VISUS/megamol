@@ -496,7 +496,7 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
                 /* Message OK, look for its content. */
 
                 if ((msg.msgType == MSG_TYPE_IAMALIVE) 
-                        && (this->cds.name.Compare(msg.senderBody.name))) {
+                        && (this->cds.name.Equals(msg.senderBody.name))) {
                     /* Got a discovery request for own cluster. */
                     TRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
                         "MSG_TYPE_IAMALIVE from %s.\n", 
@@ -506,7 +506,7 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
                     this->cds.addPeerNode(peerAddr, msg.senderBody.sockAddr);
 
                 } else if ((msg.msgType == MSG_TYPE_IAMHERE) 
-                        && (this->cds.name.Compare(msg.senderBody.name))) {
+                        && (this->cds.name.Equals(msg.senderBody.name))) {
                     /* 
                      * Get an initial discovery request. This triggers an 
                      * immediate alive message, but without adding the sender to
@@ -534,7 +534,7 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
                     }
 
                 } else if ((msg.msgType == MSG_TYPE_SAYONARA)
-                        && (this->cds.name.Compare(msg.senderBody.name))) {
+                        && (this->cds.name.Equals(msg.senderBody.name))) {
                     /* Got an explicit disconnect. */
                     TRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
                         "MSG_TYPE_SAYONARA from %s.\n",

@@ -111,6 +111,12 @@ namespace vislib {
 
     protected:
 
+        /** Forbidden Ctor. */
+        inline CharTraits(void) {
+            throw UnsupportedOperationException(
+                "vislib::CharTraits<T>::CharTraits", __FILE__, __LINE__);
+        }
+
         /**
          * Copy the zero-terminated string 'src' to 'dst'.
          *
@@ -126,32 +132,6 @@ namespace vislib {
             Char *tmp = dst;
             while ((*tmp++ = *src++));
             return dst;
-        }
-
-        /**
-         * Answer whether 'lhs' and 'rhs' designate equal zero-terminated
-         * strings. Both must not be NULL pointers.
-         *
-         * @param lhs The left hand side operand.
-         * @param rhs The right hand side operand.
-         *
-         * @return true, if 'lhs' and 'rhs' are equal strings, false otherwise.
-         */
-        inline static bool StringEqual(const Char *lhs, const Char *rhs) {
-            ASSERT(lhs != NULL);
-            ASSERT(rhs != NULL);
-
-            if (lhs == rhs) {
-                /* 'lhs' is a shallow copy of 'rhs'. */
-                return true;
-            }
-
-            while ((*lhs == *rhs) && rhs) {
-                lhs++;
-                rhs++;
-            }
-
-            return (*lhs == *rhs);
         }
 
 #ifdef _WIN32
@@ -224,22 +204,16 @@ namespace vislib {
             
         }
 
-        /** Forbidden Ctor. */
-        inline CharTraits(void) {
-            throw UnsupportedOperationException(
-                "vislib::CharTraits<T>::CharTraits", __FILE__, __LINE__);
-        }
-
 #ifndef _WIN32
 
-		/** The code identifier for normal chars. */
-		static const char *ICONV_CODE_CHAR;
+        /** The code identifier for normal chars. */
+        static const char *ICONV_CODE_CHAR;
 
-		/**The code identifier for wide chars. */
-		static const char *ICONV_CODE_WCHAR;
+        /**The code identifier for wide chars. */
+        static const char *ICONV_CODE_WCHAR;
 
-		/** Constant identifying an invalid iconv_t. */
-		static const iconv_t INVALID_ICONV_T;
+        /** Constant identifying an invalid iconv_t. */
+        static const iconv_t INVALID_ICONV_T;
 #endif /* !_WIN32 */
 
     }; /* end class CharTraits */
@@ -254,27 +228,29 @@ namespace vislib {
 
 
 #ifndef _WIN32
-	/*
-	 * vislib::CharTraits<T, U>::ICONV_CODE_CHAR
-	 */
-	template<class T, CharType U>
-	const char *CharTraits<T, U>::ICONV_CODE_CHAR = "MS-ANSI";
+    /*
+     * vislib::CharTraits<T, U>::ICONV_CODE_CHAR
+     */
+    template<class T, CharType U>
+    const char *CharTraits<T, U>::ICONV_CODE_CHAR = "MS-ANSI";
 
-	
-	/*
-	 * vislib::CharTraits<T, U>::ICONV_CODE_WCHAR
-	 */
-	template<class T, CharType U>
-	const char *CharTraits<T, U>::ICONV_CODE_WCHAR = "WCHAR_T";
+    
+    /*
+     * vislib::CharTraits<T, U>::ICONV_CODE_WCHAR
+     */
+    template<class T, CharType U>
+    const char *CharTraits<T, U>::ICONV_CODE_WCHAR = "WCHAR_T";
 
 
-	/*
-	 * vislib::CharTraits<T, U>::INVALID_ICONV_T
-	 */
-	template<class T, CharType U> 
-	const iconv_t CharTraits<T, U>::INVALID_ICONV_T 
-		= reinterpret_cast<iconv_t>(-1);
+    /*
+     * vislib::CharTraits<T, U>::INVALID_ICONV_T
+     */
+    template<class T, CharType U> 
+    const iconv_t CharTraits<T, U>::INVALID_ICONV_T 
+        = reinterpret_cast<iconv_t>(-1);
 #endif /* !_WIN32 */
+
+
 
 
     /**
@@ -296,8 +272,8 @@ namespace vislib {
          *         'dst', false otherwise.
          */
         inline static bool Convert(char& dst, const Char src) {
-			dst = src;
-			return true;
+            dst = src;
+            return true;
         }
 
         /**
@@ -311,9 +287,9 @@ namespace vislib {
          */
         inline static bool Convert(wchar_t& dst, const Char src) {
 #ifdef _WIN32
-			return (::MultiByteToWideChar(CP_ACP, 0, &src, 1, &dst, 1) > 0);
+            return (::MultiByteToWideChar(CP_ACP, 0, &src, 1, &dst, 1) > 0);
 #else /* _WIN32 */
-			return Convert(&dst, 1, &src);
+            return Convert(&dst, 1, &src);
 #endif /* _WIN32 */
         }
 
@@ -322,10 +298,21 @@ namespace vislib {
          *
          * @param c A character.
          *
-         * @return true, if 'c' is a digit, false otherwise.
+         * @return true if 'c' is a digit, false otherwise.
          */
         inline static bool IsDigit(const Char c) {
             return (::isdigit(c) != 0);     // Explicit compare prevents C4800.
+        }
+
+        /**
+         * Answer whether the character 'c' is lower case.
+         *
+         * @param c A character.
+         *
+         * @return true if 'c' is lower case, false otherwise.
+         */
+        inline static bool IsLowerCase(const Char c) {
+            return (::islower(c) != 0);     // Explicit compare prevents C4800.
         }
 
         /**
@@ -333,11 +320,61 @@ namespace vislib {
          *
          * @param c A character.
          *
-         * @return true, if 'c' is a whitespace, false otherwise.
+         * @return true if 'c' is a whitespace, false otherwise.
          */
         inline static bool IsSpace(const Char c) {
             return (::isspace(c) != 0);     // Explicit compare prevents C4800.
         }
+
+        /**
+         * Answer whether the character 'c' is upper case.
+         *
+         * @param c A character.
+         *
+         * @return true if 'c' is upper case, false otherwise.
+         */
+        inline static bool IsUpperCase(const Char c) {
+            return (::isupper(c) != 0);     // Explicit compare prevents C4800.
+        }
+
+        /**
+         * Converts the string str to the returned boolean value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed boolean value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        boolean value.
+         */
+        static bool ParseBool(const Char *str);
+
+        /**
+         * Converts the string str to the returned floating point value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed floating point value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        floating point value.
+         */
+        static double ParseDouble(const Char *str);
+
+        /**
+         * Converts the string str to the returned integer value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed integer value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        integer value.
+         */
+        static int ParseInt(const Char *str);
 
         /**
          * Convert 'src' to an ANSI character.
@@ -368,10 +405,10 @@ namespace vislib {
          * @param defChar The character value that will be returned if any 
          *                error occures.
          */
-        inline static wchar_t ToUnicode(const Char src, const wchar_t defChar = L'?') {
+        inline static wchar_t ToUnicode(const Char src, 
+                const wchar_t defChar = L'?') {
             wchar_t o;
             return Convert(o, src) ? o : defChar;
-
         }
 
         /**
@@ -385,115 +422,13 @@ namespace vislib {
             return static_cast<Char>(::toupper(c));
         }
 
-        /**
-         * Converts the string str to the returned boolean value.
-         *
-         * @param str The input string.
-         *
-         * @return The parsed boolean value.
-         *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
-         *        boolean value.
-         */
-        inline static bool ParseBool(const Char *str) {
-            if (str == NULL) {
-                throw IllegalParamException("str", __FILE__, __LINE__);
-            }
-
-            if (
-#ifdef _WIN32
-                (_stricmp("true", str) == 0) || (_stricmp("t", str) == 0) || 
-                (_stricmp("yes", str) == 0) || (_stricmp("y", str) == 0) || 
-                (_stricmp("on", str) == 0)
-#else /* _WIN32 */
-                (strcasecmp("true", str) == 0) || (strcasecmp("t", str) == 0) || 
-                (strcasecmp("yes", str) == 0) || (strcasecmp("y", str) == 0) || 
-                (strcasecmp("on", str) == 0)
-#endif /* _WIN32 */
-                    ) {
-                return true;
-            }
-            if (
-#ifdef _WIN32
-                (_stricmp("false", str) == 0) || (_stricmp("f", str) == 0) || 
-                (_stricmp("no", str) == 0) || (_stricmp("n", str) == 0) || 
-                (_stricmp("off", str) == 0)
-#else /* _WIN32 */
-                (strcasecmp("false", str) == 0) || (strcasecmp("f", str) == 0) || 
-                (strcasecmp("no", str) == 0) || (strcasecmp("n", str) == 0) || 
-                (strcasecmp("off", str) == 0)
-#endif /* _WIN32 */
-                    ) {
-                return false;
-            }
-
-            try {
-                int i = ParseInt(str);
-                return (i != 0);
-            } catch (...) {
-            }
-
-            throw FormatException("Cannot convert String to Boolean", __FILE__, __LINE__);
-        };
-
-        /**
-         * Converts the string str to the returned integer value.
-         *
-         * @param str The input string.
-         *
-         * @return The parsed integer value.
-         *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
-         *        integer value.
-         */
-        inline static int ParseInt(const Char *str) {
-            int retval;
-            if (str == NULL) {
-                throw IllegalParamException("str", __FILE__, __LINE__);
-            }
-            if (
-#if (_MSC_VER >= 1400)
-                sscanf_s
-#else  /*(_MSC_VER >= 1400) */
-                sscanf
-#endif /*(_MSC_VER >= 1400) */
-                (str, "%d", &retval) != 1) {
-                throw FormatException("Cannot convert String to Integer", __FILE__, __LINE__);
-            }
-            return retval;
-        }
-
-        /**
-         * Converts the string str to the returned floating point value.
-         *
-         * @param str The input string.
-         *
-         * @return The parsed floating point value.
-         *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
-         *        floating point value.
-         */
-        inline static double ParseDouble(const Char *str) {
-            double retval;
-            if (str == NULL) {
-                throw IllegalParamException("str", __FILE__, __LINE__);
-            }
-            if (
-#if (_MSC_VER >= 1400)
-                sscanf_s
-#else  /*(_MSC_VER >= 1400) */
-                sscanf
-#endif /*(_MSC_VER >= 1400) */
-                (str, "%lf", &retval) != 1) {
-                throw FormatException("Cannot convert String to Double", __FILE__, __LINE__);
-            }
-            return retval;
-        }
-
     protected:
+
+        /** Forbidden Ctor. */
+        inline CharTraitsA(void) {
+            throw UnsupportedOperationException(
+                "vislib::CharTraitsA::CharTraitsA", __FILE__, __LINE__);
+        }
 
         /**
          * Convert 'src' to an ANSI string and store it to 'dst'. If the 
@@ -534,32 +469,33 @@ namespace vislib {
             ASSERT(src != NULL);
 
 #ifdef _WIN32
-			return (::MultiByteToWideChar(CP_ACP, 0, src, cnt, dst, cnt) > 0);
+            return (::MultiByteToWideChar(CP_ACP, 0, src, cnt, dst, cnt) > 0);
 #else /* _WIN32 */
-			iconv_t hIconv = INVALID_ICONV_T;
-			char *in = reinterpret_cast<char *>(const_cast<Char *>(src));
-			char *out = reinterpret_cast<char *>(dst);
-			size_t lenIn = cnt * sizeof(Char);
-			size_t lenOut = cnt * sizeof(wchar_t);
-			bool retval = false;
-			//char *li = NULL;
+            // TODO: Linux version surely is no inline-candidate
+            iconv_t hIconv = INVALID_ICONV_T;
+            char *in = reinterpret_cast<char *>(const_cast<Char *>(src));
+            char *out = reinterpret_cast<char *>(dst);
+            size_t lenIn = cnt * sizeof(Char);
+            size_t lenOut = cnt * sizeof(wchar_t);
+            bool retval = false;
+            //char *li = NULL;
 
-			
-			//if (strlen(li = nl_langinfo(CODESET)) < 1) {
-			//	return false;
-			//}
+            
+            //if (strlen(li = nl_langinfo(CODESET)) < 1) {
+            //	return false;
+            //}
 
-			if ((hIconv = ::iconv_open(ICONV_CODE_WCHAR, ICONV_CODE_CHAR))
-					!= INVALID_ICONV_T) {
-				if (::iconv(hIconv, &in, &lenIn, &out, &lenOut) 
-						!= static_cast<size_t>(-1)) {
-					retval = true;
-				}
+            if ((hIconv = ::iconv_open(ICONV_CODE_WCHAR, ICONV_CODE_CHAR))
+                    != INVALID_ICONV_T) {
+                if (::iconv(hIconv, &in, &lenIn, &out, &lenOut) 
+                        != static_cast<size_t>(-1)) {
+                    retval = true;
+                }
 
-				::iconv_close(hIconv);
-			}
+                ::iconv_close(hIconv);
+            }
 
-			return retval;
+            return retval;
 #endif /* _WIN32 */
         }
 
@@ -569,6 +505,9 @@ namespace vislib {
          *
          * If 'dst' is a NULL pointer or 'cnt' is 0, the method just counts how
          * large 'dst' should be for 'fmt' and the specified parameters.
+         *
+         * The number of characters returned does not include the terminating
+         * zero character.
          *
          * In case of an error, e. g. if 'dst' is too small or 'fmt' is a NULL
          * pointer, the method returns -1;
@@ -588,72 +527,60 @@ namespace vislib {
          *         zero, or -1 in case of an error like 'dst' being too small 
          *         or 'fmt' being a NULL pointer.
          */
-        inline static Size Format(Char *dst, const Size cnt, const Char *fmt, 
-                va_list argptr) {
-            int retval = -1;
+        static Size Format(Char *dst, const Size cnt, const Char *fmt, 
+            va_list argptr);
 
-#ifdef _WIN32
-            if ((dst == NULL) || (cnt <= 0)) {
-                /* Answer the prospective size of the string. */
-                retval = ::_vscprintf(fmt, argptr);
+        /**
+         * Convert all characters in 'str' to lower case. The currently active 
+         * locale is used for conversion.
+         *
+         * If 'dst' is a NULL pointer or 'cnt' is 0, the method just counts how
+         * large 'dst' should be for 'fmt' and the specified parameters.
+         *
+         * The number of characters returned does not include the terminating
+         * zero character.
+         *
+         * In case of an error, e. g. if 'dst' is too small or 'fmt' is a NULL
+         * pointer, the method returns -1;
+         *
+         * If 'dst' is not NULL and 'cnt' is greater than zero, the method 
+         * ensures that the resulting string in 'dst' is zero terminated, 
+         * regardless of its content.
+         *
+         * @param dst Receives the converted string.
+         * @param cnt The size of 'dst' in characters.
+         * @param str A zero-terminated string. Must not be NULL.
+         *
+         * @return The number of characters written to 'dst' or -1 in case of an
+         *         error.
+         */
+        static Size ToLower(Char *dst, const Size cnt, const Char *str);
 
-            } else {
-#if (_MSC_VER >= 1400)
-                retval = ::_vsnprintf_s(dst, cnt, cnt, fmt, argptr);
-#else /* (_MSC_VER >= 1400) */
-                retval = ::_vsnprintf(dst, cnt, fmt, argptr);
-#endif /* (_MSC_VER >= 1400) */
-            } /* end if ((dst == NULL) || (cnt <= 0)) */
-
-#else /* _WIN32 */
-            retval = ::vsnprintf(dst, cnt, fmt, argptr);
-
-            if ((dst != NULL) && (cnt > 0) && (retval > cnt - 1)) {
-                retval = -1;
-            }
-#endif /* _WIN32 */ 
-
-            /* Ensure string being terminated. */
-            if ((dst != NULL) && (cnt > 0)) {
-                dst[cnt - 1] = 0;
-            }
-            return static_cast<Size>(retval);
-        }
-
-// TODO: Problem with locale.
-//      /**
-//       * Convert all characters in 'str' to lower case.
-//       *
-//       * @param str A zero-terminated string. Must not be NULL.
-//       */
-//      inline static void ToLower(Char *str) {
-//          ASSERT(str != NULL);
-//#ifdef _WIN32
-//          ::_strlwr(str);
-//#else /* _WIN32 */
-//          assert(false);
-//#endif /* _WIN32 */
-//      }
-
-//      /**
-//       * Convert all characters in 'str' to upper case.
-//       *
-//       * @param str A zero-terminated string. Must not be NULL.
-//       */
-//      inline static void ToUpper(Char *str) {
-//          ASSERT(str != NULL);
-//#ifdef _WIN32
-//          ::_strupr(str);
-//#else /* _WIN32 */
-//          assert(false);
-//#endif /* _WIN32 */
-//      }
-
-        /** Forbidden Ctor. */
-        inline CharTraitsA(void) {
-            throw UnsupportedOperationException(
-                "vislib::CharTraitsA::CharTraitsA", __FILE__, __LINE__);
-        }
+        /**
+         * Convert all characters in 'str' to upper case. The currently
+         * active locale is used for conversion.
+         *
+         * If 'dst' is a NULL pointer or 'cnt' is 0, the method just counts how
+         * large 'dst' should be for 'fmt' and the specified parameters.
+         *
+         * The number of characters returned does not include the terminating
+         * zero character.
+         *
+         * In case of an error, e. g. if 'dst' is too small or 'fmt' is a NULL
+         * pointer, the method returns -1;
+         *
+         * If 'dst' is not NULL and 'cnt' is greater than zero, the method 
+         * ensures that the resulting string in 'dst' is zero terminated, 
+         * regardless of its content.
+         *
+         * @param dst Receives the converted string.
+         * @param cnt The size of 'dst' in characters.
+         * @param str A zero-terminated string. Must not be NULL.
+         *
+         * @return The number of characters written to 'dst' or -1 in case of an
+         *         error.
+         */
+        static Size ToUpper(Char *dst, const Size cnt, const Char *str);
 
         /* Declare our friends. */
         template<class T> friend class String;
@@ -661,6 +588,8 @@ namespace vislib {
         friend class vislib::sys::Log;
 
     }; /* end class CharTraitsA */
+
+
 
 
     /**
@@ -684,9 +613,9 @@ namespace vislib {
         inline static bool Convert(char& dst, const Char src) {
 #ifdef _WIN32
             return (::WideCharToMultiByte(CP_ACP, 0, &src, 1, &dst, 1, NULL,
-				NULL) > 0);
+                NULL) > 0);
 #else /* _WIN32 */
-			return Convert(&dst, 1, &src);
+            return Convert(&dst, 1, &src);
 #endif /* _WIN32 */
         }
 
@@ -700,8 +629,8 @@ namespace vislib {
          *         'dst', false otherwise.
          */
         inline static bool Convert(wchar_t& dst, const Char src) {
-			dst = src;
-			return true;
+            dst = src;
+            return true;
         }
 
         /**
@@ -716,6 +645,17 @@ namespace vislib {
         }
 
         /**
+         * Answer whether the character 'c' is lower case.
+         *
+         * @param c A character.
+         *
+         * @return true if 'c' is lower case, false otherwise.
+         */
+        inline static bool IsLowerCase(const Char c) {
+            return (::iswlower(c) != 0);    // Explicit compare prevents C4800.
+        }
+
+        /**
          * Answer whether the character 'c' is a whitespace character.
          *
          * @param c A character.
@@ -727,6 +667,56 @@ namespace vislib {
         }
 
         /**
+         * Answer whether the character 'c' is upper case.
+         *
+         * @param c A character.
+         *
+         * @return true if 'c' is upper case, false otherwise.
+         */
+        inline static bool IsUpperCase(const Char c) {
+            return (::iswupper(c) != 0);    // Explicit compare prevents C4800.
+        }
+
+        /**
+         * Converts the string str to the returned boolean value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed boolean value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        boolean value.
+         */
+        static bool ParseBool(const Char *str);
+
+        /**
+         * Converts the string str to the returned floating point value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed floating point value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        floating point value.
+         */
+        static double ParseDouble(const Char *str);
+
+        /**
+         * Converts the string str to the returned integer value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed integer value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        integer value.
+         */
+        static int ParseInt(const Char *str);
+
+        /**
          * Convert 'src' to an ANSI character.
          *
          * @param src The character to be converted.
@@ -736,7 +726,6 @@ namespace vislib {
         inline static char ToANSI(const Char src, char defChar = '?') {
             char o;
             return Convert(o, src) ? o : defChar;
-
         }
 
         /**
@@ -772,115 +761,13 @@ namespace vislib {
             return ::towupper(c);
         }
 
-        /**
-         * Converts the string str to the returned boolean value.
-         *
-         * @param str The input string.
-         *
-         * @return The parsed boolean value.
-         *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
-         *        boolean value.
-         */
-        inline static bool ParseBool(const Char *str) {
-            if (str == NULL) {
-                throw IllegalParamException("str", __FILE__, __LINE__);
-            }
-
-            if (
-#ifdef _WIN32
-                (_wcsicmp(L"true", str) == 0) || (_wcsicmp(L"t", str) == 0) || 
-                (_wcsicmp(L"yes", str) == 0) || (_wcsicmp(L"y", str) == 0) || 
-                (_wcsicmp(L"on", str) == 0)
-#else /* _WIN32 */
-                (wcscasecmp(L"true", str) == 0) || (wcscasecmp(L"t", str) == 0) || 
-                (wcscasecmp(L"yes", str) == 0) || (wcscasecmp(L"y", str) == 0) || 
-                (wcscasecmp(L"on", str) == 0)
-#endif /* _WIN32 */
-                    ) {
-                return true;
-            }
-            if (
-#ifdef _WIN32
-                (_wcsicmp(L"false", str) == 0) || (_wcsicmp(L"f", str) == 0) || 
-                (_wcsicmp(L"no", str) == 0) || (_wcsicmp(L"n", str) == 0) || 
-                (_wcsicmp(L"off", str) == 0)
-#else /* _WIN32 */
-                (wcscasecmp(L"false", str) == 0) || (wcscasecmp(L"f", str) == 0) || 
-                (wcscasecmp(L"no", str) == 0) || (wcscasecmp(L"n", str) == 0) || 
-                (wcscasecmp(L"off", str) == 0)
-#endif /* _WIN32 */
-                    ) {
-                return false;
-            }
-
-            try {
-                int i = ParseInt(str);
-                return (i != 0);
-            } catch (...) {
-            }
-
-            throw FormatException("Cannot convert String to Boolean", __FILE__, __LINE__);
-        };
-
-        /**
-         * Converts the string str to the returned integer value.
-         *
-         * @param str The input string.
-         *
-         * @return The parsed integer value.
-         *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
-         *        integer value.
-         */
-        inline static int ParseInt(const Char *str) {
-            int retval;
-            if (str == NULL) {
-                throw IllegalParamException("str", __FILE__, __LINE__);
-            }
-            if (
-#if (_MSC_VER >= 1400)
-                swscanf_s
-#else  /*(_MSC_VER >= 1400) */
-                swscanf
-#endif /*(_MSC_VER >= 1400) */
-                (str, L"%d", &retval) != 1) {
-                throw FormatException("Cannot convert String to Integer", __FILE__, __LINE__);
-            }
-            return retval;
-        }
-
-        /**
-         * Converts the string str to the returned floating point value.
-         *
-         * @param str The input string.
-         *
-         * @return The parsed floating point value.
-         *
-         * @throw IllegalParamException if str is NULL.
-         * @throw FormatException if the string could not be parsed to an
-         *        floating point value.
-         */
-        inline static double ParseDouble(const Char *str) {
-            double retval;
-            if (str == NULL) {
-                throw IllegalParamException("str", __FILE__, __LINE__);
-            }
-            if (
-#if (_MSC_VER >= 1400)
-                swscanf_s
-#else  /*(_MSC_VER >= 1400) */
-                swscanf
-#endif /*(_MSC_VER >= 1400) */
-                (str, L"%lf", &retval) != 1) {
-                throw FormatException("Cannot convert String to Double", __FILE__, __LINE__);
-            }
-            return retval;
-        }
-
     protected:
+
+        /** Forbidden Ctor. */
+        inline CharTraitsW(void) {
+            throw UnsupportedOperationException(
+                "vislib::CharTraitsW::CharTraitsW", __FILE__, __LINE__);
+        }
 
         /**
          * Convert 'src' to an ANSI string and store it to 'dst'.  'cnt' is the
@@ -902,31 +789,31 @@ namespace vislib {
 
 #ifdef _WIN32
             return (::WideCharToMultiByte(CP_ACP, 0, src, cnt, dst, cnt, NULL, 
-				NULL) > 0);
+                NULL) > 0);
 #else /* _WIN32 */
-			iconv_t hIconv = INVALID_ICONV_T;
-			char *in = reinterpret_cast<char *>(const_cast<Char *>(src));
-			char *out = reinterpret_cast<char *>(dst);
-			size_t lenIn = cnt * sizeof(Char);
-			size_t lenOut = cnt * sizeof(wchar_t);
-			bool retval = false;
-			//char *li = NULL;
+            iconv_t hIconv = INVALID_ICONV_T;
+            char *in = reinterpret_cast<char *>(const_cast<Char *>(src));
+            char *out = reinterpret_cast<char *>(dst);
+            size_t lenIn = cnt * sizeof(Char);
+            size_t lenOut = cnt * sizeof(wchar_t);
+            bool retval = false;
+            //char *li = NULL;
 
-			//if (strlen(li = nl_langinfo(CODESET)) < 1) {
-			//	return false;
-			//}
+            //if (strlen(li = nl_langinfo(CODESET)) < 1) {
+            //	return false;
+            //}
 
-			if ((hIconv = ::iconv_open(ICONV_CODE_CHAR, ICONV_CODE_WCHAR))
-					!= INVALID_ICONV_T) {
-				if (::iconv(hIconv, &in, &lenIn, &out, &lenOut) 
-						!= static_cast<size_t>(-1)) {
-					retval = true;
-				}
+            if ((hIconv = ::iconv_open(ICONV_CODE_CHAR, ICONV_CODE_WCHAR))
+                    != INVALID_ICONV_T) {
+                if (::iconv(hIconv, &in, &lenIn, &out, &lenOut) 
+                        != static_cast<size_t>(-1)) {
+                    retval = true;
+                }
 
-				::iconv_close(hIconv);
-			}
+                ::iconv_close(hIconv);
+            }
 
-			return retval;
+            return retval;
 #endif /* _WIN32 */
         }
 
@@ -977,96 +864,60 @@ namespace vislib {
          *         zero, or -1 in case of an error like 'dst' being too small 
          *         or 'fmt' being a NULL pointer.
          */
-        inline static Size Format(Char *dst, const Size cnt, const Char *fmt, 
-                va_list argptr) {
-            int retval = -1;
+        static Size Format(Char *dst, const Size cnt, const Char *fmt, 
+                va_list argptr);
 
-#ifdef _WIN32
-            if ((dst == NULL) || (cnt <= 0)) {
-                /* Answer the prospective size of the string. */
-                retval = ::_vscwprintf(fmt, argptr);
+        /**
+         * Convert all characters in 'str' to lower case. The currently active 
+         * locale is used for conversion.
+         *
+         * If 'dst' is a NULL pointer or 'cnt' is 0, the method just counts how
+         * large 'dst' should be for 'fmt' and the specified parameters.
+         *
+         * The number of characters returned does not include the terminating
+         * zero character.
+         *
+         * In case of an error, e. g. if 'dst' is too small or 'fmt' is a NULL
+         * pointer, the method returns -1;
+         *
+         * If 'dst' is not NULL and 'cnt' is greater than zero, the method 
+         * ensures that the resulting string in 'dst' is zero terminated, 
+         * regardless of its content.
+         *
+         * @param dst Receives the converted string.
+         * @param cnt The size of 'dst' in characters.
+         * @param str A zero-terminated string. Must not be NULL.
+         *
+         * @return The number of characters written to 'dst' or -1 in case of an
+         *         error.
+         */
+        static Size ToLower(Char *dst, const Size cnt, const Char *str);
 
-            } else {
-#if (_MSC_VER >= 1400)
-                retval = ::_vsnwprintf_s(dst, cnt, cnt, fmt, argptr);
-#else /* (_MSC_VER >= 1400) */
-                retval = ::_vsnwprintf(dst, cnt, fmt, argptr);
-#endif /* (_MSC_VER >= 1400) */
-            } /* end if ((dst == NULL) || (cnt <= 0)) */
-
-#else /* _WIN32 */
-            // Yes, you can trust your eyes: The char and wide char 
-            // implementations under Linux have a completely different 
-            // semantic. vswprintf cannot be used for determining the required
-            // size as vsprintf can.
-            SIZE_T bufferSize, bufferGrow;
-            Char *buffer = NULL;
-
-            if ((dst == NULL) || (cnt <= 0)) {
-                /* Just count. */
-                bufferSize = static_cast<SIZE_T>(1.1
-                    * static_cast<float>(::wcslen(fmt)) + 1);
-                bufferGrow = static_cast<SIZE_T>(0.5
-                    * static_cast<float>(bufferSize));
-                buffer = new Char[bufferSize];
-
-                while ((retval = ::vswprintf(buffer, bufferSize, fmt, argptr))
-                        == -1) {
-                    ARY_SAFE_DELETE(buffer);
-                    bufferSize += bufferGrow;
-                    buffer = new Char[bufferSize];
-                }
-
-                retval = ::wcslen(buffer);
-                ARY_SAFE_DELETE(buffer);
-                
-            } else {
-                /* Format the string. */
-                retval = ::vswprintf(dst, cnt, fmt, argptr);
-            }
-
-#endif /* _WIN32 */ 
-
-            /* Ensure string being terminated. */
-            if ((dst != NULL) && (cnt > 0)) {
-                dst[cnt - 1] = 0;
-            }
-            return static_cast<Size>(retval);
-        }
-
-//      /**
-//       * Convert all characters in 'str' to lower case.
-//       *
-//       * @param str A zero-terminated string. Must not be NULL.
-//       */
-//      inline static void ToLower(Char *str) {
-//          ASSERT(str != NULL);
-//#ifdef _WIN32
-//          ::_wcslwr(str);
-//#else /* _WIN32 */
-//          assert(false);
-//#endif /* _WIN32 */
-//      }
-
-//      /**
-//       * Convert all characters in 'str' to upper case.
-//       *
-//       * @param str A zero-terminated string. Must not be NULL.
-//       */
-//      inline static void ToUpper(Char *str) {
-//          ASSERT(str != NULL);
-//#ifdef _WIN32
-//          ::_wcsupr(str);
-//#else /* _WIN32 */
-//          assert(false);
-//#endif /* _WIN32 */
-//      }
-
-        /** Forbidden Ctor. */
-        inline CharTraitsW(void) {
-            throw UnsupportedOperationException(
-                "vislib::CharTraitsW::CharTraitsW", __FILE__, __LINE__);
-        }
+        /**
+         * Convert all characters in 'str' to lower case. The currently active 
+         * locale is used for conversion.
+         *
+         * If 'dst' is a NULL pointer or 'cnt' is 0, the method just counts how
+         * large 'dst' should be for 'fmt' and the specified parameters.
+         *
+         * The number of characters returned does not include the terminating
+         * zero character.
+         *
+         * In case of an error, e. g. if 'dst' is too small or 'fmt' is a NULL
+         * pointer, the method returns -1;
+         *
+         * If 'dst' is not NULL and 'cnt' is greater than zero, the method 
+         * ensures that the resulting string in 'dst' is zero terminated, 
+         * regardless of its content.
+         *
+         * @param dst Receives the converted string.
+         * @param cnt The size of 'dst' in characters.
+         * @param str A zero-terminated string. Must not be NULL.
+         *
+         * @return The number of characters written to 'dst' or -1 in case of an
+         *         error.
+         */
+        static Size ToUpper(Char *dst, const Size cnt, const Char *str);
 
         /* Declare our friends. */
         template<class T> friend class String;
@@ -1074,6 +925,9 @@ namespace vislib {
         friend class vislib::sys::Log;
 
     }; /* end class CharTraitsW */
+
+
+
 
     /* Typedef for TCHAR CharTraits. */
 #if defined(UNICODE) || defined(_UNICODE)

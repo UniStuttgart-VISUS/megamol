@@ -68,15 +68,15 @@ namespace vislib {
          */
         String(const Char *data, const Size& cnt);
 
-		/**
-		 * Craete a string with the initial data 'data'. This constructor 
-		 * performns the necessary conversions. It will only be available, if the
-		 * appropriate U::Convert() method is implemented in the U character traits
-		 * class.
-		 *
-		 * @param data A zero-terminated string used to initialise this object.
-		 */
-		template<class U> String(const String<U>& data);
+        /**
+         * Craete a string with the initial data 'data'. This constructor 
+         * performns the necessary conversions. It will only be available, if the
+         * appropriate U::Convert() method is implemented in the U character traits
+         * class.
+         *
+         * @param data A zero-terminated string used to initialise this object.
+         */
+        template<class U> String(const String<U>& data);
 
         /**
          * Create a string containing 'cnt' times the character 'c'.
@@ -142,13 +142,33 @@ namespace vislib {
         void Clear(void);
 
         /**
-         * Answer whether both strings have the same value.
+         * Compare this string and 'rhs'.
          *
-         * @param rhs The right hand side operand.
+         * @param rhs             The right hand side operand.
+         * @param isCaseSensitive If true, the string will be compared 
+         *                        case-sensitive, otherwise, the comparison
+         *                        will be case-insensitive.
          *
-         * @return true if both strings are equal, false otherwise.
+         * @return -1 if (this < 'rhs'), 0 if (this == 'rhs'), 
+         *         +1 if (this > 'rhs')
          */
-        inline bool Compare(const Char *rhs) const;
+        Size Compare(const Char *rhs, const bool isCaseSensitive) const;
+
+        /**
+         * Compare this string and 'rhs'.
+         *
+         * @param rhs A string.
+         * @param isCaseSensitive If true, the string will be compared 
+         *                        case-sensitive, otherwise, the comparison
+         *                        will be case-insensitive.
+         *
+         * @return -1 if (this < 'rhs'), 0 if (this == 'rhs'), 
+         *         +1 if (this > 'rhs')
+         */
+        inline Size Compare(const String& rhs, 
+                const bool isCaseSensitive) const {
+            return this->Compare(rhs.data);
+        }
 
         /**
          * Answer whether both strings have the same value.
@@ -157,7 +177,30 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        inline bool Compare(const String& rhs) const;
+//#pragma deprecated(Compare)
+        inline bool Compare(const Char *rhs) const {
+        // TODO: The semantics of this method is unintuitive and should be 
+        // changed to be similar to strcmp.
+        // TODO: Merge Compare and CompareInsensitive to one method and
+        // specify case-sensitivity via parameter.
+            return this->Equals(rhs, true);
+        }
+
+        /**
+         * Answer whether both strings have the same value.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true if both strings are equal, false otherwise.
+         */
+//#pragma deprecated(Compare)
+        inline bool Compare(const String& rhs) const {
+        // TODO: The semantics of this method is unintuitive and should be 
+        // changed to be similar to strcmp.
+        // TODO: Merge Compare and CompareInsensitive to one method and
+        // specify case-sensitivity via parameter.
+            return this->Equals(rhs, true);
+        }
 
         /**
          * Answer whether both strings have the same value, comparing them
@@ -167,7 +210,9 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        inline bool CompareInsensitive(const Char *rhs) const;
+        inline bool CompareInsensitive(const Char *rhs) const {
+            return this->Equals(rhs, false);
+        }
 
         /**
          * Answer whether both strings have the same value, comparing them
@@ -177,7 +222,9 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        inline bool CompareInsensitive(const String& rhs) const;
+        inline bool CompareInsensitive(const String& rhs) const {
+            return this->Equals(rhs, false);
+        }
 
         /**
          * Answer whether this string ends with the character 'c'.
@@ -208,6 +255,29 @@ namespace vislib {
          */
         inline bool EndsWith(const String& str) const {
             return this->EndsWith(str.data);
+        }
+
+        /**
+         * Answer whether this string and 'str' are equal.
+         *
+         * @param rhs A string.
+         * @param isCaseSensitive If true, the string will be compared 
+         *                        case-sensitive, otherwise, the comparison
+         *                        will be case-insensitive.
+         */
+        bool Equals(const Char *rhs, const bool isCaseSensitive = true) const;
+
+        /**
+         * Answer whether this string and 'str' are equal.
+         *
+         * @param rhs A string.
+         * @param isCaseSensitive If true, the string will be compared 
+         *                        case-sensitive, otherwise, the comparison
+         *                        will be case-insensitive.
+         */
+        inline bool Equals(const String& rhs, 
+                const bool isCaseSensitive = true) const {
+            return this->Equals(rhs.data, isCaseSensitive);
         }
 
         /**
@@ -319,6 +389,9 @@ namespace vislib {
          * @param ... Optional parameters.
          */
         void Format(const Char *fmt, va_list argptr);
+        // HAZARD: This method might get called instead of the one above (which
+        // would be correct) depending on the first format parameter. We must 
+        // change the name of this method e. g. to FormatVa
 
         /**
          * Answer a hash code of the string.
@@ -333,7 +406,7 @@ namespace vislib {
          * @return true, if this string is empty, false otherwise.
          */
         inline bool IsEmpty(void) const {
-            return (this->Length() < 1);
+            return (this->data[0] == static_cast<Char>(0));
         }
 
 #ifdef _WIN32
@@ -436,14 +509,14 @@ namespace vislib {
 
         /**
          * Replace all occurrences of 'oldChar' in the string with 'newChar'.
-		 *
-		 * @param oldChar The character that is to be replaced.
-		 * @param newChar The new character.
+         *
+         * @param oldChar The character that is to be replaced.
+         * @param newChar The new character.
          * @param limit   If this is a positive integer, at most 'limit' 
          *                replacements are made. Use NO_LIMIT for replacing all
          *                occurrences.
-		 *
-		 * @return The number of characters that have been replaced.
+         *
+         * @return The number of characters that have been replaced.
          */
         Size Replace(const Char oldChar, const Char newChar, 
             const Size limit = NO_LIMIT);
@@ -692,27 +765,21 @@ namespace vislib {
          */
         void Truncate(const Size size);
 
-        // TODO: ToLowerCase
-        ///**
-        // * Convert all characters to lower case.
-        // */
-//#pragma deprecated(ToLowerCase)
-//        inline void ToLowerCase(void) {
-//            //T::ToLower(this->data);
-//            // TODO: This is a quick hack and should not be used.
-//            Size len = this->Length();
-//            for (Size i = 0; i < len; i++) {
-//                this->data[i] = T::ToLower(this->data[i]);
-//            }
-//        }
+        /**
+         * Convert all characters to lower case.
+         */
+        inline void ToLowerCase(void) {
+            // TODO: This is still a hack.
+            T::ToLower(this->data, this->Length() + 1, this->data);
+        }
 
-        // TODO: ToUpperCase
-        ///**
-        // * Convert all characters to upper case.
-        // */
-        //inline void ToUpperCase(void) {
-        //    T::ToUpper(this->data);
-        //}
+        /**
+         * Convert all characters to upper case.
+         */
+        inline void ToUpperCase(void) {
+            // TODO: This is still a hack.
+            T::ToUpper(this->data, this->Length() + 1, this->data);
+        }
 
         /**
          * Assignment.
@@ -732,16 +799,16 @@ namespace vislib {
          */
         String& operator =(const Char *rhs);
 
-		/**
+        /**
          * Conversion assignment.
-		 * It will only be available, if the appropriate U::Convert() method 
+         * It will only be available, if the appropriate U::Convert() method 
          * is implemented in the U character traits class.
-		 *
-		 * @param rhs The right hand side operand.
+         *
+         * @param rhs The right hand side operand.
          *
          * @return This string.
-		 */
-		template<class U> String& operator =(const String<U>& rhs);
+         */
+        template<class U> String& operator =(const String<U>& rhs);
 
         /**
          * Test for equality.
@@ -750,7 +817,9 @@ namespace vislib {
          *
          * @return true, if 'rhs' and this string are equal, false otherwise.
          */
-        bool operator ==(const Char *rhs) const;
+        inline bool operator ==(const Char *rhs) const {
+            return this->Equals(rhs, true);
+        }
 
         /**
          * Test for equality.
@@ -760,7 +829,7 @@ namespace vislib {
          * @return true, if 'rhs' and this string are equal, false otherwise.
          */
         inline bool operator ==(const String& rhs) const {
-            return (*this == rhs.data);
+            return this->Equals(rhs.data, true);
         }
 
         /**
@@ -924,16 +993,16 @@ namespace vislib {
     }
 
 
-	/*
-	 * String<T>::String
-	 */
-	template<class T> 
-	template<class U> String<T>::String(const String<U>& data) {
-		Size newLen = data.Length() + 1;
-		this->data = new Char[newLen];
-		U::Convert(this->data, newLen, 
-			static_cast<const typename U::Char *>(data));
-	}
+    /*
+     * String<T>::String
+     */
+    template<class T> 
+    template<class U> String<T>::String(const String<U>& data) {
+        Size newLen = data.Length() + 1;
+        this->data = new Char[newLen];
+        U::Convert(this->data, newLen, 
+            static_cast<const typename U::Char *>(data));
+    }
 
 
     /*
@@ -994,50 +1063,38 @@ namespace vislib {
     /*
      * String<T>::Compare
      */
-    template<class T> bool String<T>::Compare(const Char *rhs) const {
-        return (*this == rhs);
-    }
-
-
-    /*
-     * String<T>::Compare
-     */
-    template<class T> bool String<T>::Compare(const String& rhs) const {
-        return (*this == rhs.data);
-    }
-
-
-    /*
-     * String<T>::CompareInsensitive
-     */
-    template<class T> bool String<T>::CompareInsensitive(const Char *rhs) const {
-        const Char *str = this->data;
+    template<class T>
+    typename String<T>::Size String<T>::Compare(const Char *rhs, 
+            const bool isCaseSensitive) const {
+        const Char *lhs = this->data;
+        Size retval = 0;
 
         if (rhs == NULL) {
-            /* 
-             * NULL pointer can never be equal as we have at least the terminating 
-             * zero in our strings. 
-             */
-            return false;
+            /* Assume NULL being less than everything else. */
+            return 1;
+        }
 
-        } else {
-            while ((T::ToLower(*str) == T::ToLower(*rhs)) && (*str != 0)) {
-                str++;
+        if (isCaseSensitive) {
+            while (((retval = *lhs - *rhs) == 0) && (*dst != 0)) {
+                lhs++;
                 rhs++;
             }
-
-            return (T::ToLower(*str) == T::ToLower(*rhs));
+        } else {
+            while (((retval = T::ToLower(*lhs) - T::ToLower(*rhs)) == 0) 
+                    && (*dst != 0)) {
+                lhs++;
+                rhs++;
+            }
         }
+
+        if (retval < 0) {
+            retval = -1;
+        } else if (retval > 0) {
+            retval = 1;
+        }
+
+        return retval;
     }
-
-
-    /*
-     * String<T>::CompareInsensitive
-     */
-    template<class T> bool String<T>::CompareInsensitive(const String& rhs) const {
-        return this->CompareInsensitive(rhs.data);
-    }
-
 
     /*
      * String<T>::EndsWith
@@ -1073,10 +1130,43 @@ namespace vislib {
 
 
     /*
+     * vislib::String<T>::Equals
+     */
+    template<class T>
+    bool String<T>::Equals(const Char *rhs, const bool isCaseSensitive) const {
+        const Char *lhs = this->data;
+
+        if (rhs == NULL) {
+            /* 
+             * NULL pointer can never be equal as we have at least the terminating 
+             * zero in our strings. 
+             */
+            return false;
+
+        } else if (isCaseSensitive) {
+            while ((*lhs == *rhs) && (*lhs != 0)) {
+                lhs++;
+                rhs++;
+            }
+
+            return (*lhs == *rhs);
+        } else {
+            while ((T::ToLower(*lhs) == T::ToLower(*rhs)) && (*lhs != 0)) {
+                lhs++;
+                rhs++;
+            }
+
+            return (T::ToLower(*lhs) == T::ToLower(*rhs));
+        }
+        ASSERT(false);
+    }
+
+
+    /*
      * String<T>::Find
      */
     template<class T> typename String<T>::Size String<T>::Find(const Char c,
-			const Size beginningAt) const {
+            const Size beginningAt) const {
         Size len = this->Length();
         
         for (Size i = beginningAt; i < len; i++) {
@@ -1354,23 +1444,23 @@ namespace vislib {
     }
 
 
-	/*
-	 * String<T>::Replace
-	 */
+    /*
+     * String<T>::Replace
+     */
     template<class T> typename String<T>::Size String<T>::Replace(
             const Char oldChar, const Char newChar, const Size limit) {
-		Size retval = 0;
-		Size len = this->Length();
-		
-		for (Size i = 0; (i < len) && ((limit < 0) || (retval < limit)); i++) {
-			if (this->data[i] == oldChar) {
-				this->data[i] = newChar;
-				retval++;
-			}
-		}
+        Size retval = 0;
+        Size len = this->Length();
+        
+        for (Size i = 0; (i < len) && ((limit < 0) || (retval < limit)); i++) {
+            if (this->data[i] == oldChar) {
+                this->data[i] = newChar;
+                retval++;
+            }
+        }
 
-		return retval;
-	}
+        return retval;
+    }
 
 
     /*
@@ -1714,37 +1804,13 @@ namespace vislib {
             delete[] this->data;
 
             Size newLen = rhs.Length() + 1;
-		    this->data = new Char[newLen];
+            this->data = new Char[newLen];
 
             U::Convert(this->data, newLen, 
                 static_cast<const typename U::Char *>(rhs));
         }
 
         return *this;
-    }
-
-
-    /*
-     * String<T>::operator ==
-     */
-    template<class T> bool String<T>::operator ==(const Char *rhs) const {
-        const Char *str = this->data;
-
-        if (rhs == NULL) {
-            /* 
-             * NULL pointer can never be equal as we have at least the terminating 
-             * zero in our strings. 
-             */
-            return false;
-
-        } else {
-            while ((*str == *rhs) && (*str != 0)) {
-                str++;
-                rhs++;
-            }
-
-            return (*str == *rhs);
-        }
     }
 
 

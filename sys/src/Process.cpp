@@ -167,7 +167,7 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringA& outUser,
     } /* end if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION ... */
 
 #else /* _WIN32 */
-    // TODO
+    // TODO: Try something like ps -p <pid> -o user
     throw MissingImplementationException("vislib::sys::Process::Owner", __FILE__, __LINE__);
 #endif /* _WIN32 */
 }

@@ -35,14 +35,14 @@ void TestString(void) {
     AssertTrue("assignment-conversion-test #3", !::strcmp(a1, "Hällo Wörld"));
     AssertTrue("assignment-conversion-test #4", !::wcscmp(w1, L"Hällo Wörld"));
 
-	wchar_t wc = L'ä';
-	char ac = 0;
-	CharTraitsW::Convert(ac, wc);
-	AssertEqual("Wide to ANSI character conversion.", ac, char('ä'));
+    wchar_t wc = L'ä';
+    char ac = 0;
+    CharTraitsW::Convert(ac, wc);
+    AssertEqual("Wide to ANSI character conversion.", ac, char('ä'));
 
-	ac = char('ö');
-	CharTraitsA::Convert(wc, ac);
-	AssertEqual("ANSI to wide character conversion.", wc, L'ö');
+    ac = char('ö');
+    CharTraitsA::Convert(wc, ac);
+    AssertEqual("ANSI to wide character conversion.", wc, L'ö');
 
     TestUTF8String();
 
@@ -144,6 +144,12 @@ void TestStringA(void) {
 
     s1.Format("Horst %S", L"Hugo");
     AssertTrue("Format \"Horst Hugo\"", !::strcmp(s1.PeekBuffer(), "Horst Hugo"));
+
+    s1 = "Horst";
+    s1.ToLowerCase();
+    AssertTrue("ToLowerCase", !::strcmp(s1.PeekBuffer(), "horst"));
+    s1.ToUpperCase();
+    AssertTrue("ToUpperCase", !::strcmp(s1.PeekBuffer(), "HORST"));
 
     s1 = "Horst";
     s1.TrimBegin("oH");
@@ -339,6 +345,12 @@ void TestStringW(void) {
 
     s1.Format(L"Horst %hs", "Hugo");
     AssertTrue("Format \"Horst Hugo\"", !::wcscmp(s1.PeekBuffer(), L"Horst Hugo"));
+
+    s1 = L"Horst";
+    s1.ToLowerCase();
+    AssertTrue("ToLowerCase", !::wcscmp(s1.PeekBuffer(), L"horst"));
+    s1.ToUpperCase();
+    AssertTrue("ToUpperCase", !::wcscmp(s1.PeekBuffer(), L"HORST"));
 
     s1 = L"Horst";
     s1.TrimBegin(L"oH");
