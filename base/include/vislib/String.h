@@ -1075,13 +1075,13 @@ namespace vislib {
         }
 
         if (isCaseSensitive) {
-            while (((retval = *lhs - *rhs) == 0) && (*dst != 0)) {
+            while (((retval = *lhs - *rhs) == 0) && (*lhs != 0)) {
                 lhs++;
                 rhs++;
             }
         } else {
             while (((retval = T::ToLower(*lhs) - T::ToLower(*rhs)) == 0) 
-                    && (*dst != 0)) {
+                    && (*lhs != 0)) {
                 lhs++;
                 rhs++;
             }
