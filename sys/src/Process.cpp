@@ -269,9 +269,9 @@ void vislib::sys::Process::Owner(const PID processID, vislib::StringW& outUser,
     StringA u;
     StringA d;
 
-    Process::Owner(processId, u, &d);
-    if (domain != NULL) {
-        *domain = d;
+    Process::Owner(processID, u, &d);
+    if (outDomain != NULL) {
+        *outDomain = d;
     }
 #endif /* _WIN32 */
 }
