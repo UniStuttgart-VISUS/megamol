@@ -43,7 +43,8 @@ void vislib::graphics::FpsCounter::FrameBegin(void) {
     }
 
     UINT64 newNow = vislib::sys::PerformanceCounter::Query();
-    this->timeValues[this->timeValuesPos].before = static_cast<unsigned int>(newNow - this->now);
+    unsigned int diff = (newNow > this->now) ? static_cast<unsigned int>(newNow - this->now) : 0;
+    this->timeValues[this->timeValuesPos].before = diff;
     this->now = newNow;
     this->frameRunning = true;
     this->fpsValuesValid = false;
@@ -59,7 +60,8 @@ void vislib::graphics::FpsCounter::FrameEnd(void) {
     }
 
     UINT64 newNow = vislib::sys::PerformanceCounter::Query();
-    this->timeValues[this->timeValuesPos++].frame = static_cast<unsigned int>(newNow - this->now);
+    unsigned int diff = (newNow > this->now) ? static_cast<unsigned int>(newNow - this->now) : 0;
+    this->timeValues[this->timeValuesPos++].frame = diff;
     if (this->timeValuesPos >= this->timeValuesCount) {
         this->timeValuesPos = 0;
         this->wholeBufferValid = true;
@@ -116,12 +118,12 @@ vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator =(
 /*
  * vislib::graphics::FpsCounter::evaluate
  */
-void vislib::graphics::FpsCounter::evaluate(void) {
+void vislib::graphics::FpsCounter::evaluate(void) const {
     unsigned int count = (this->wholeBufferValid ? this->timeValuesCount : this->timeValuesPos);
     unsigned int time;
     unsigned int allTime = 0;
     unsigned int maxTime = 0;
-    unsigned int minTime = UINT_MAX;
+    unsigned int minTime = (count == 0) ? 0 : UINT_MAX;
 
     /** summarise over the whole measurement buffer */
     for (unsigned int i = 0; i < count; i++) {

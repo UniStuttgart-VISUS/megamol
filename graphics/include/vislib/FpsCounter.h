@@ -46,7 +46,7 @@ namespace graphics {
          *
          * @return The averaged fps.
          */
-        inline float FPS(void) {
+        inline float FPS(void) const {
             if (!this->fpsValuesValid) {
                 this->evaluate();
             }
@@ -78,7 +78,7 @@ namespace graphics {
          *
          * @return The maximum fps.
          */
-        inline float MaxFPS(void) {
+        inline float MaxFPS(void) const {
             if (!this->fpsValuesValid) {
                 this->evaluate();
             }
@@ -90,7 +90,7 @@ namespace graphics {
          *
          * @return The minimum fps.
          */
-        inline float MinFPS(void) {
+        inline float MinFPS(void) const {
             if (!this->fpsValuesValid) {
                 this->evaluate();
             }
@@ -136,7 +136,7 @@ namespace graphics {
         /**
          * Performs lazy evaluation of the fps values
          */
-        void evaluate(void);
+        void evaluate(void) const;
 
 		/** marks the reset time */
 		UINT64 now;
@@ -163,16 +163,16 @@ namespace graphics {
 		bool frameRunning;
 
         /** flag indicating if lazy evaluation of the fps values is needed. */
-        bool fpsValuesValid;
+        mutable bool fpsValuesValid;
 
         /** the average fps */
-        float avrFPS;
+        mutable float avrFPS;
 
         /** the maximum fps */
-        float maxFPS;
+        mutable float maxFPS;
 
         /** the minimum fps */
-        float minFPS;
+        mutable float minFPS;
 
     };
     
