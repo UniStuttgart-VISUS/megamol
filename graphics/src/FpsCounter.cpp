@@ -8,6 +8,7 @@
 #include "vislib/FpsCounter.h"
 #include <climits>
 #include "vislib/assert.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -119,7 +120,8 @@ vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator =(
  * vislib::graphics::FpsCounter::evaluate
  */
 void vislib::graphics::FpsCounter::evaluate(void) const {
-    unsigned int count = (this->wholeBufferValid ? this->timeValuesCount : this->timeValuesPos);
+    unsigned int count = (this->wholeBufferValid ? this->timeValuesCount : 
+        vislib::math::Max<int>(this->timeValuesPos - 1, 0));
     unsigned int time;
     unsigned int allTime = 0;
     unsigned int maxTime = 0;
