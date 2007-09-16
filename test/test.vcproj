@@ -422,6 +422,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testsockets.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\teststring.cpp"
 				>
 			</File>
@@ -525,6 +529,10 @@
 			</File>
 			<File
 				RelativePath=".\testprocess.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testsockets.h"
 				>
 			</File>
 			<File

@@ -137,9 +137,9 @@ namespace net {
          * Windows, it calls WSACleanup. Call this method after you finished 
          * using sockets for releasing the resources associated with the 
          * Winsock-DLL.
-		 *
-		 * It is safe to call Cleanup multiple times as long as Startup has been
-		 * called multiple times before.
+         *
+         * It is safe to call Cleanup multiple times as long as Startup has been
+         * called multiple times before.
          *
          * @throws SocketException In case of an error.
          */
@@ -150,9 +150,9 @@ namespace net {
          * Windows, this method calls WSAStartup and initialises the 
          * Winsock-DLL. You must call this method once before using any sockets.
          * Call Cleanup() after you finished the use of sockets.
-		 *
-		 * It is safe to call Startup multiple times as long as the same number
-		 * of Cleanup calls is made afterwards.
+         *
+         * It is safe to call Startup multiple times as long as the same number
+         * of Cleanup calls is made afterwards.
          *
          * @throws SocketException In case of an error.
          */
@@ -347,8 +347,8 @@ namespace net {
          *                         returns, this variable will contain the 
          *                         number of bytes actually retrieved.
          */
-		void GetOption(const INT level, const INT optName, void *outValue,
-			SIZE_T& inOutValueLength) const;
+        void GetOption(const INT level, const INT optName, void *outValue,
+            SIZE_T& inOutValueLength) const;
 
         /**
          * Answer the total per-socket buffer space reserved for receives.
@@ -984,11 +984,11 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-		inline void setOption(const INT level, const INT optName, 
+        inline void setOption(const INT level, const INT optName, 
                 const bool value) {
-			INT tmp = value ? 1 : 0;
-			return this->SetOption(level, optName, &tmp, sizeof(INT));
-		}
+            INT tmp = value ? 1 : 0;
+            return this->SetOption(level, optName, &tmp, sizeof(INT));
+        }
 
         /** The socket handle. */
         SOCKET handle;
