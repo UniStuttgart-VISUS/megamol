@@ -53,6 +53,7 @@ DWORD SocketReader::Run(void *cntRepeat) {
         for (retval = 0; retval < cnt; retval++) {
             this->socket.Receive(&recvBuf, sizeof(DWORD));
             AssertEqual("Received expected data", retval, recvBuf);
+            vislib::sys::Thread::Reschedule();
         }
 
         Socket::Cleanup();

@@ -19,6 +19,7 @@
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
+#include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -153,7 +154,7 @@ void vislib::net::Socket::Create(const ProtocolFamily protocolFamily,
 #ifdef _WIN32
     this->handle = ::WSASocket(static_cast<const int>(protocolFamily), 
         static_cast<const int>(type), static_cast<const int>(protocol),
-        NULL, 0, 0);
+        NULL, 0, WSA_FLAG_OVERLAPPED);
 #else /* _WIN32 */
     this->handle = ::socket(static_cast<const int>(protocolFamily), 
         static_cast<const int>(type), static_cast<const int>(protocol));
@@ -480,8 +481,37 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
         const INT flags, const bool forceReceive) {
     SIZE_T totalReceived = 0;   // # of bytes totally received.
     INT lastReceived = 0;       // # of bytes received during last recv() call.
+#ifdef _WIN32
+    WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
+    WSABUF wsaBuf;              // Buffer for WSA output.
+    DWORD errorCode = 0;        // WSA error during last operation.
+    DWORD inOutFlags = flags;   // Flags for WSA.
+
+    if ((overlapped.hEvent = ::WSACreateEvent()) == WSA_INVALID_EVENT) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    wsaBuf.buf = static_cast<char *>(outData);
+    wsaBuf.len = static_cast<u_long>(cntBytes);
+#endif /* _WIN32 */
 
     do {
+#ifdef _WIN32
+        if (::WSARecv(this->handle, &wsaBuf, 1, reinterpret_cast<DWORD *>(
+                &lastReceived), &inOutFlags, &overlapped, NULL) != 0) {
+            if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                throw SocketException(errorCode, __FILE__, __LINE__);
+            }
+            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
+                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+                throw SocketException(__FILE__, __LINE__);
+            }
+
+            totalReceived += lastReceived;
+        }
+
+#else /* _WIN32 */
         lastReceived = ::recv(this->handle, static_cast<char *>(outData) 
             + totalReceived, static_cast<int>(cntBytes - totalReceived), flags);
 
@@ -494,7 +524,14 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
             throw SocketException(__FILE__, __LINE__);
         }
 
+#endif /* _WIN32 */
     } while (forceReceive && (totalReceived < cntBytes));
+
+#ifdef _WIN32
+    if (!::WSACloseEvent(overlapped.hEvent)) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+#endif /*_WIN32 */
 
     return totalReceived;
 }
@@ -510,12 +547,40 @@ SIZE_T vislib::net::Socket::receiveFrom(SocketAddress& outFromAddr,
     INT lastReceived = 0;       // # of bytes received during last recv() call.
     struct sockaddr from;
 #ifdef _WIN32
-    int fromLen = sizeof(from);
+    WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
+    WSABUF wsaBuf;              // Buffer for WSA output.
+    DWORD errorCode = 0;        // WSA error during last operation.
+    DWORD inOutFlags = flags;   // Flags for WSA.
+    INT fromLen = sizeof(from);
+
+    if ((overlapped.hEvent = ::WSACreateEvent()) == WSA_INVALID_EVENT) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    wsaBuf.buf = static_cast<char *>(outData);
+    wsaBuf.len = static_cast<u_long>(cntBytes);
 #else /* _WIN32 */
     socklen_t fromLen = sizeof(from);
 #endif /* _WIN32 */
 
     do {
+#ifdef _WIN32
+        if (::WSARecvFrom(this->handle, &wsaBuf, 1, reinterpret_cast<DWORD *>(
+                &lastReceived), &inOutFlags, &from, &fromLen, &overlapped, NULL) 
+                != 0) {
+            if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                throw SocketException(errorCode, __FILE__, __LINE__);
+            }
+            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
+                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+                throw SocketException(__FILE__, __LINE__);
+            }
+
+            totalReceived += lastReceived;
+        }
+
+#else /* _WIN32 */
         lastReceived = ::recvfrom(this->handle, static_cast<char *>(outData) 
             + totalReceived, static_cast<int>(cntBytes - totalReceived), flags,
             &from, &fromLen);
@@ -528,10 +593,17 @@ SIZE_T vislib::net::Socket::receiveFrom(SocketAddress& outFromAddr,
             /* Communication failed. */
             throw SocketException(__FILE__, __LINE__);
         }
+#endif /* _WIN32 */
 
     } while (forceReceive && (totalReceived < cntBytes));
 
     outFromAddr = from;
+
+#ifdef _WIN32
+    if (!::WSACloseEvent(overlapped.hEvent)) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+#endif /*_WIN32 */
 
     return totalReceived;
 }
@@ -544,8 +616,36 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
         const INT flags, const bool forceSend) {
     SIZE_T totalSent = 0;       // # of bytes totally sent.      
     INT lastSent = 0;           // # of bytes sent during last send() call.
+#ifdef _WIN32
+    WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
+    WSABUF wsaBuf;              // Buffer for WSA output.
+    DWORD errorCode = 0;        // WSA error during last operation.
+
+    if ((overlapped.hEvent = ::WSACreateEvent()) == WSA_INVALID_EVENT) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    wsaBuf.buf = const_cast<char *>(static_cast<const char *>(data));
+    wsaBuf.len = static_cast<u_long>(cntBytes);
+#endif /* _WIN32 */
 
     do {
+#ifdef _WIN32
+        if (::WSASend(this->handle, &wsaBuf, 1, reinterpret_cast<DWORD *>(
+                &lastSent), flags, &overlapped, NULL) != 0) {
+            if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                throw SocketException(errorCode, __FILE__, __LINE__);
+            }
+            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
+                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+                throw SocketException(__FILE__, __LINE__);
+            }
+
+            totalSent += lastSent;
+        }
+
+#else /* _WIN32 */
         lastSent = ::send(this->handle, static_cast<const char *>(data), 
             static_cast<int>(cntBytes - totalSent), flags);
 
@@ -555,9 +655,16 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
         } else {
             throw SocketException(__FILE__, __LINE__);
         }
+#endif /* _WIN32 */
 
     } while (forceSend && (totalSent < cntBytes));
-    
+
+#ifdef _WIN32
+    if (!::WSACloseEvent(overlapped.hEvent)) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+#endif /*_WIN32 */
+
     return totalSent;
 }
 
@@ -571,8 +678,36 @@ SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr,
     SIZE_T totalSent = 0;       // # of bytes totally sent.      
     INT lastSent = 0;           // # of bytes sent during last send() call.
     sockaddr to = static_cast<sockaddr>(toAddr);
+#ifdef _WIN32
+    WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
+    WSABUF wsaBuf;              // Buffer for WSA output.
+    DWORD errorCode = 0;        // WSA error during last operation.
+
+    if ((overlapped.hEvent = ::WSACreateEvent()) == WSA_INVALID_EVENT) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    wsaBuf.buf = const_cast<char *>(static_cast<const char *>(data));
+    wsaBuf.len = static_cast<u_long>(cntBytes);
+#endif /* _WIN32 */
 
     do {
+#ifdef _WIN32
+        if (::WSASendTo(this->handle, &wsaBuf, 1, reinterpret_cast<DWORD *>(
+                &lastSent), flags, &to, sizeof(to), &overlapped, NULL) != 0) {
+            if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                throw SocketException(errorCode, __FILE__, __LINE__);
+            }
+            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
+                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+                throw SocketException(__FILE__, __LINE__);
+            }
+
+            totalSent += lastSent;
+        }
+
+#else /* _WIN32 */
         lastSent = ::sendto(this->handle, static_cast<const char *>(data), 
             static_cast<int>(cntBytes - totalSent), flags, &to, sizeof(to));
 
@@ -582,8 +717,22 @@ SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr,
         } else {
             throw SocketException(__FILE__, __LINE__);
         }
+#endif /* _WIN32 */
 
     } while (forceSend && (totalSent < cntBytes));
-    
+
+#ifdef _WIN32
+    if (!::WSACloseEvent(overlapped.hEvent)) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+#endif /*_WIN32 */
+
     return totalSent;
 }
+
+
+/*
+ * vislib::net::Socket::DEBUG_TRACE_LEVEL 
+ */
+const int vislib::net::Socket::DEBUG_TRACE_LEVEL = vislib::Trace::LEVEL_VL_INFO 
+    + 1000;

@@ -992,6 +992,12 @@ namespace net {
 
         /** The socket handle. */
         SOCKET handle;
+
+    private:
+
+        /** The Trace level for socket debug messages. */
+        static const int DEBUG_TRACE_LEVEL;
+
     };
 
 } /* end namespace net */
