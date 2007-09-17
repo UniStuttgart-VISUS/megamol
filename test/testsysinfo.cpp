@@ -34,23 +34,32 @@ void TestSysInfo(void) {
         vislib::sys::SystemInformation::SystemVersion(verMajor, verMinor);
         std::cout << "System version " << verMajor << "." << verMinor << std::endl;
 
-        SystemInformation::MonitorDimArray monitorSizes;
-        DWORD cntMonitors = SystemInformation::MonitorSize(monitorSizes);
+        SystemInformation::MonitorRectArray monitorSizes;
+        DWORD cntMonitors = SystemInformation::MonitorRects(monitorSizes);
         std::cout << "Found " << cntMonitors << " monitors" << std::endl;
         for (DWORD i = 0; i < cntMonitors; i++) {
-            std::cout << "Monitor " << i << " has size [" 
+            std::cout << "Monitor " << i << " has origin ("
+                << monitorSizes[int(i)].Left() << ", " 
+                << monitorSizes[int(i)].Top() << ") and size [" 
                 << monitorSizes[int(i)].Width() << ", " 
                 << monitorSizes[int(i)].Height() << "]" 
                 << std::endl;
         }
 
-        SystemInformation::MonitorDim priMonSize = SystemInformation::PrimaryMonitorSize();
-        std::cout << "Primary monitor size: [" << priMonSize.Width() 
-            << ", " << priMonSize.Height() << "]" << std::endl;
+        SystemInformation::MonitorRect priMonSize = SystemInformation::PrimaryMonitorRect();
+        std::cout << "Pimary monitor origin: (" 
+            << priMonSize.Left() << ", "
+            << priMonSize.Top() << ")" << std::endl
+            << "Primary monitor size: [" 
+            << priMonSize.Width() << ", " 
+            << priMonSize.Height() << "]" << std::endl;
 
 
-    } catch (SystemException e) {
-        std::cout << "SystemException: " << e.GetErrorCode() << " " << e.GetMsgA() << std::endl;
+    } catch (SystemException se) {
+        std::cout << "SystemException: " << se.GetErrorCode() << " " << se.GetMsgA() << std::endl;
+
+    } catch (vislib::Exception e) {
+        std::cout << "Exception: " << e.GetMsgA() << std::endl;
 
     } catch(...) {
         std::cout << "Unexpected exception catched." << std::endl;

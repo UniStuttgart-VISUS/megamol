@@ -13,6 +13,8 @@
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
+#include "vislib/MissingImplementationException.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #include <Lmcons.h>
@@ -179,18 +181,21 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
 
 
 /*
- * vislib::sys::SystemInformation::MonitorSize
+ * vislib::sys::SystemInformation::MonitorRects
  */
-DWORD vislib::sys::SystemInformation::MonitorSize(
-        MonitorDimArray& outMonitorSizes) {
-    outMonitorSizes.Clear();
+DWORD vislib::sys::SystemInformation::MonitorRects(
+        MonitorRectArray& outMonitorRects) {
+    outMonitorRects.Clear();
 
 #ifdef _WIN32
     if (!::EnumDisplayMonitors(NULL, NULL, SystemInformation::monitorEnumProc,
-            reinterpret_cast<LPARAM>(&outMonitorSizes))) {
+            reinterpret_cast<LPARAM>(&outMonitorRects))) {
         throw SystemException(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
+    throw MissingImplementationException("MonitorRects", __FILE__, __LINE__);
+    // TODO: This implementation is nonsense!! Must determine origin.
+
     Display *dpy = NULL;
     StringA errorDesc;
     int cntScreens = 0;
@@ -203,7 +208,7 @@ DWORD vislib::sys::SystemInformation::MonitorSize(
 
     cntScreens = ScreenCount(dpy);
     for (int i = 0; i < cntScreens; i++) {
-        outMonitorSizes.Append(MonitorDim(DisplayWidth(dpy, i), 
+        outMonitorRects.Append(MonitorRect(0, 0, DisplayWidth(dpy, i), 
             DisplayHeight(dpy, i)));
     }
     
@@ -211,7 +216,7 @@ DWORD vislib::sys::SystemInformation::MonitorSize(
 
 #endif /* _WIN32 */
 
-    return static_cast<DWORD>(outMonitorSizes.Count());
+    return static_cast<DWORD>(outMonitorRects.Count());
 }
 
 
@@ -288,33 +293,30 @@ UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
 
 
 /*
- * vislib::sys::SystemInformation::PrimaryMonitorSize
+ * vislib::sys::SystemInformation::PrimaryMonitorRect
  */
-vislib::sys::SystemInformation::MonitorDim 
-vislib::sys::SystemInformation::PrimaryMonitorSize(void) {
-#ifdef _WIN32
-    RECT rect;
-    ::ZeroMemory(&rect, sizeof(RECT));  // Initialise as invalid.
+vislib::sys::SystemInformation::MonitorRect 
+vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
+    MonitorRect retval;
 
+#ifdef _WIN32
     if (!::EnumDisplayMonitors(NULL, NULL, 
             SystemInformation::findPrimaryMonitorProc,
-            reinterpret_cast<LPARAM>(&rect))) {
+            reinterpret_cast<LPARAM>(&retval))) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    if ((rect.left == 0) && (rect.right == 0) && (rect.top == 0) 
-            && (rect.bottom == 0)) {
+    if (retval.IsEmpty()) {
         /* Enumeration was not successful in finding primary display. */
         throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
-    return MonitorDim(math::Abs(rect.right - rect.left), 
-        math::Abs(rect.bottom - rect.top));
 #else /* _WIN32 */
+    throw MissingImplementationException("PrimaryMonitorRect", __FILE__, __LINE__);
+    // TODO: This implementation is nonsense!! Must determine origin.
     int dftScreen = 0;
     Display *dpy = NULL;
     StringA errorDesc;
-    MonitorDim retval;
 
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
         errorDesc.Format("Could not open display \"%s\".", 
@@ -323,10 +325,12 @@ vislib::sys::SystemInformation::PrimaryMonitorSize(void) {
     }
 
     dftScreen = DefaultScreen(dpy);
-    retval.Set(DisplayWidth(dpy, dftScreen), DisplayHeight(dpy, dftScreen));
+    retval.Set(0, 0, DisplayWidth(dpy, dftScreen), 
+        DisplayHeight(dpy, dftScreen));
     ::XCloseDisplay(dpy);
-    return retval;
 #endif /* _WIN32 */
+
+    return retval;
 }
 
 
@@ -595,10 +599,10 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
 BOOL CALLBACK vislib::sys::SystemInformation::monitorEnumProc(HMONITOR hMonitor,
         HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
     ASSERT(hdcMonitor == NULL);
-    MonitorDimArray *da = reinterpret_cast<MonitorDimArray *>(dwData);
+    MonitorRectArray *da = reinterpret_cast<MonitorRectArray *>(dwData);
     
-    da->Append(MonitorDim(math::Abs(lprcMonitor->right - lprcMonitor->left), 
-        math::Abs(lprcMonitor->bottom - lprcMonitor->top)));
+    da->Append(MonitorRect(lprcMonitor->left, lprcMonitor->bottom,
+        lprcMonitor->right, lprcMonitor->top));
 
     return TRUE;
 }
@@ -610,13 +614,15 @@ BOOL CALLBACK vislib::sys::SystemInformation::monitorEnumProc(HMONITOR hMonitor,
 BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
         HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
     MONITORINFO mi;
+    MonitorRect *ma = reinterpret_cast<MonitorRect *>(dwData);
 
     ::ZeroMemory(&mi, sizeof(MONITORINFO));
     mi.cbSize = sizeof(MONITORINFO);
     
     if (::GetMonitorInfo(hMonitor, &mi) != FALSE) {
         if ((mi.dwFlags & MONITORINFOF_PRIMARY) != 0) {
-            *reinterpret_cast<LPRECT>(dwData) = *lprcMonitor;
+            ma->Set(lprcMonitor->left, lprcMonitor->bottom, lprcMonitor->right, 
+                lprcMonitor->top);
             //return FALSE;
             // Stopping the enumeration by returning FALSE does not work at
             // least on Vista.
@@ -642,8 +648,10 @@ vislib::sys::SystemInformation::SystemInformation(void) {
 /*
  * vislib::sys::SystemInformation::SystemInformation
  */
-vislib::sys::SystemInformation::SystemInformation(const vislib::sys::SystemInformation& rhs) {
-    throw vislib::UnsupportedOperationException("SystemInformation copy ctor", __FILE__, __LINE__);
+vislib::sys::SystemInformation::SystemInformation(
+        const vislib::sys::SystemInformation& rhs) {
+    throw vislib::UnsupportedOperationException("SystemInformation copy ctor", 
+        __FILE__, __LINE__);
 }
 
 
@@ -651,5 +659,6 @@ vislib::sys::SystemInformation::SystemInformation(const vislib::sys::SystemInfor
  * vislib::sys::SystemInformation::~SystemInformation
  */
 vislib::sys::SystemInformation::~SystemInformation(void) {
-    throw vislib::UnsupportedOperationException("SystemInformation dtor", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("SystemInformation dtor", 
+        __FILE__, __LINE__);
 }

@@ -71,7 +71,7 @@ namespace math {
          */
         template<class Tp1, class Sp1, class Tp2, class Sp2>
         inline Rectangle(const AbstractPoint<Tp1, 2, Sp1>& origin, 
-                const AbstractDimension<Tp2, 3, Sp2> size) {
+                const AbstractDimension<Tp2, 2, Sp2> size) {
             this->bounds[Super::IDX_LEFT] = this->bounds[Super::IDX_RIGHT] 
                 = origin.X();
             this->bounds[Super::IDX_BOTTOM] = this->bounds[Super::IDX_TOP] 

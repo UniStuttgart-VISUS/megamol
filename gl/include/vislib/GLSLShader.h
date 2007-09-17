@@ -55,7 +55,7 @@ namespace gl {
          *
          * @return The extensions that are requiered for ARB shaders.
          */
-        static const char * RequiredExtensions(void);
+        static const char *RequiredExtensions(void);
 
         /** Vertex shader source for fixed function transformation. */
         static const char *FTRANSFORM_VERTEX_SHADER_SRC;

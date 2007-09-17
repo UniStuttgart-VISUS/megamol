@@ -422,6 +422,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testquaternion.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testsockets.cpp"
 				>
 			</File>
@@ -529,6 +533,10 @@
 			</File>
 			<File
 				RelativePath=".\testprocess.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testquaternion.h"
 				>
 			</File>
 			<File

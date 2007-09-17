@@ -15,7 +15,7 @@
 
 
 #include "vislib/Array.h"
-#include "vislib/Dimension.h"
+#include "vislib/Rectangle.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
 
@@ -38,10 +38,10 @@ namespace sys {
         };
 
         /** This dimension defines a monitor size. */
-        typedef vislib::math::Dimension<DWORD, 2> MonitorDim;
+        typedef vislib::math::Rectangle<DWORD> MonitorRect;
 
-        /** Array of MonitorDims. */
-        typedef vislib::Array<MonitorDim> MonitorDimArray;
+        /** Array of MonitorRects. */
+        typedef vislib::Array<MonitorRect> MonitorRectArray;
 
         /**
          * Answer the the granularity of page protection and 
@@ -120,18 +120,19 @@ namespace sys {
         }
 
         /**
-         * Answer the size of all monitors attached to the system.
+         * Answer the size and location in the virtual desktop of all monitors 
+         * attached to the system.
          *
-         * @param outMonitorSizes An array receiving the monitor sizes.
+         * @param outMonitorRects An array receiving the monitor sizes.
          *
-         * @return The number of entries in 'outMonitorSizes'.
+         * @return The number of entries in 'outMonitorRects'.
          *
          * @throws SystemException If a system call required for retrieving
          *                         the information failed.
          * @throws Exception       On Linux, if the X11 display could not be
          *                         opened.
          */
-        static DWORD MonitorSize(MonitorDimArray& outMonitorSizes);
+        static DWORD MonitorRects(MonitorRectArray& outMonitorRects);
 
         /**
          * Answer the page size
@@ -153,7 +154,7 @@ namespace sys {
         static UINT64 PhysicalMemorySize(void);
 
         /**
-         * Answer the sizeof the primary monitor. 
+         * Answer the size and origin of the primary monitor. 
          *
          * @return The dimension of the primary monitor.
          *
@@ -163,7 +164,7 @@ namespace sys {
          * @throws Exception       On Linux, if the X11 display could not be
          *                         opened.
          */
-        static MonitorDim PrimaryMonitorSize(void);
+        static MonitorRect PrimaryMonitorRect(void);
 
         /**
          * Return the number of processors in the local machine.
@@ -280,7 +281,7 @@ namespace sys {
          * @param hMonitor    Handle to display monitor.
          * @param hdcMonitor  Handle to monitor DC.
          * @param lprcMonitor Monitor intersection rectangle.
-         * @param dwData      Pointer to the MonitorDimArray to fill.
+         * @param dwData      Pointer to the MonitorRectArray to fill.
          *
          * @return TRUE if the enumeration should be continued, FALSE otherwise.
          */
@@ -293,9 +294,9 @@ namespace sys {
          * @param hMonitor    Handle to display monitor.
          * @param hdcMonitor  Handle to monitor DC.
          * @param lprcMonitor Monitor intersection rectangle.
-         * @param dwData      Pointer to a RECT to store the dimension to. 
-         *                    Nothing will be written, if the primary monitor
-         *                    could not be found.
+         * @param dwData      Pointer to a MonitorRect to store the dimension 
+         *                    to. Nothing will be written, if the primary 
+         *                    monitor could not be found.
          *
          * @return TRUE if the enumeration should be continued, FALSE otherwise.
          *

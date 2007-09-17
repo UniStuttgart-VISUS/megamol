@@ -33,10 +33,8 @@
 #include "testdirectoryiterator.h"
 #include "testhash.h"
 #include "testtrayicon.h"
-#include "testnamedpipe.h"
 #include "testenvironment.h"
-#include "testmultisz.h"
-#include "testsockets.h"
+#include "testnamedpipe.h"
 
 
 /* type for test functions */
@@ -62,7 +60,6 @@ VislibTest tests[] = {
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
-    {_T("MultiSz"), ::TestMultiSz, "Tests vislib::MultiSz"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("Float16"), ::TestFloat16, "Tests vislib::math::Float16"},
@@ -73,7 +70,6 @@ VislibTest tests[] = {
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
-    {_T("Sockets"), ::TestSockets, "Tests vislib::net::Socket"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},
@@ -86,8 +82,8 @@ VislibTest tests[] = {
     {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
+    {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
-    {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment and the nested Snapshot"},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };
@@ -173,12 +169,10 @@ int main(int argc, char **argv) {
 #else /* _WIN32 */
                     printf("%s\n", tests[j].testName);
 #endif /* _WIN32 */
-                    fflush(stdout);
 
                     tests[j].testFunc();
 
-                    printf("End of Test %d.\n", i);
-                    fflush(stdout);
+                    printf("\n");
                     break; // next argument
                 }
             }

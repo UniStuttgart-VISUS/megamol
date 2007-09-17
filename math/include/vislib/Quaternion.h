@@ -45,11 +45,8 @@ namespace math {
          * @param z The new z-component.
          * @param w The new w-component.
          */
-        inline Quaternion(const T& x, const T& y, const T& z, const T& w) {
-            this->components[Super::IDX_X] = x;
-            this->components[Super::IDX_Y] = y;
-            this->components[Super::IDX_Z] = z;
-            this->components[Super::IDX_W] = w;
+        inline Quaternion(const T& x, const T& y, const T& z, const T& w) 
+                : Super(x, y, z, w) {
         }
 
         /**
@@ -84,6 +81,12 @@ namespace math {
             ::memcpy(this->components, rhs.components, 4 * sizeof(T));
         }
 
+        /**
+         * Create a copy of 'rhs'. This ctor allows for arbitrary quaternion to
+         * quaternion conversions.
+         *
+         * @param rhs The quaternion to be cloned.
+         */
         template<class Tp, class Sp>
         explicit Quaternion(const AbstractQuaternion<Tp, Sp>& rhs);
 

@@ -449,6 +449,25 @@ namespace math {
          */
         inline AbstractQuaternion(void) {}
 
+        /**
+         * Create a new quaternion.
+         *
+         * WARNING: Do not call this ctor but on deep storage instantiations!
+         *
+         * @param x The new x-component.
+         * @param y The new y-component.
+         * @param z The new z-component.
+         * @param w The new w-component.
+         */
+        inline AbstractQuaternion(const T& x, const T& y, const T& z, 
+                const T& w) {
+            BECAUSE_I_KNOW(sizeof(this->components) == 4 * sizeof(T));
+            this->components[IDX_X] = x;
+            this->components[IDX_Y] = y;
+            this->components[IDX_Z] = z;
+            this->components[IDX_W] = w;
+        }
+
         /** 
          * The components of the quaterion. These are stored in the following
          * order: x, y, z (the vector), w.
@@ -660,7 +679,8 @@ namespace math {
     Vector<T, 3> AbstractQuaternion<T, S>::operator *(
             const AbstractVector<T, 3, Sp>& rhs) const {
         Vector<T, 3> u(this->components);
-        return ((static_cast<T>(2.0) * ((u.Dot(rhs) * u) + (this->W() * u.Cross(rhs))))
+        return ((static_cast<T>(2.0) * ((u.Dot(rhs) * u) 
+            + (this->W() * u.Cross(rhs))))
             + ((Sqr(this->W()) - u.Dot(u)) * rhs));
     }
 
