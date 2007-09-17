@@ -10,6 +10,6 @@ graphics::BeholderDistZoom2D: Class should also be able to change camera paramet
 BufferedFile: Tiny seeks (e.g. cur-1) should not perform a flush.
 Console: Windows implementation for Run. Currently not required as Windows has sufficient API for doing most things, but would be nice to have.
 Process: CreateProcessAsUser does not work under Windows
-Process: Must find a way to determine if exec succeeded in the forked process.
 String: Could use more efficient substring search.
 File: Access, Reading, Writing, Seeking in Files larger then 2 GB must be tested!!!
+Socket: Event for signaling overlapped I/O must be closed in case of a communication error.
