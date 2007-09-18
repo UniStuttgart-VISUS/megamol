@@ -139,12 +139,12 @@ namespace graphics {
         void evaluate(void) const;
 
 		/** marks the reset time */
-		UINT64 now;
+		double now;
 
 		/** type of internal data structure storing the measurements */
 		typedef struct TimeValues_t {
-			unsigned int before; /* time from last end to begin */
-			unsigned int frame; /* time from begin to end */
+            double before; /* time from last end to begin */
+			double frame; /* time from begin to end */
 		} TimeValues;
 
 		/** internal data structure storing the measurements */
@@ -161,6 +161,12 @@ namespace graphics {
 
 		/** flag indicating that "FrameBegin" was called */
 		bool frameRunning;
+
+        /** 
+         * maximum time in milliseconds to be used when calculating the 
+         * averaged fps.
+         */
+        double avrMillis;
 
         /** flag indicating if lazy evaluation of the fps values is needed. */
         mutable bool fpsValuesValid;

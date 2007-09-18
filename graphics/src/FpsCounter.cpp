@@ -21,7 +21,8 @@
  */
 vislib::graphics::FpsCounter::FpsCounter(unsigned int bufLength) 
         : now(0), timeValues(NULL), timeValuesCount(0), timeValuesPos(0), 
-        wholeBufferValid(false), frameRunning(false), fpsValuesValid(false) {
+        wholeBufferValid(false), frameRunning(false), avrMillis(FLT_MAX), 
+        fpsValuesValid(false) {
     this->SetBufferLength(bufLength);
 }
 
@@ -40,11 +41,12 @@ vislib::graphics::FpsCounter::~FpsCounter(void) {
  */
 void vislib::graphics::FpsCounter::FrameBegin(void) {
     if (this->frameRunning) {
-        throw IllegalStateException("Must call \"FrameEnd\" first.", __FILE__, __LINE__);
+        throw IllegalStateException("Must call \"FrameEnd\" first.", 
+            __FILE__, __LINE__);
     }
 
-    UINT64 newNow = vislib::sys::PerformanceCounter::Query();
-    unsigned int diff = (newNow > this->now) ? static_cast<unsigned int>(newNow - this->now) : 0;
+    double newNow = vislib::sys::PerformanceCounter::QueryMillis();
+    double diff = (newNow > this->now) ? (newNow - this->now) : 0.0;
     this->timeValues[this->timeValuesPos].before = diff;
     this->now = newNow;
     this->frameRunning = true;
@@ -57,11 +59,12 @@ void vislib::graphics::FpsCounter::FrameBegin(void) {
  */
 void vislib::graphics::FpsCounter::FrameEnd(void) {
     if (!this->frameRunning) {
-        throw IllegalStateException("Must call \"FrameBegin\" first.", __FILE__, __LINE__);
+        throw IllegalStateException("Must call \"FrameBegin\" first.", 
+            __FILE__, __LINE__);
     }
 
-    UINT64 newNow = vislib::sys::PerformanceCounter::Query();
-    unsigned int diff = (newNow > this->now) ? static_cast<unsigned int>(newNow - this->now) : 0;
+    double newNow = vislib::sys::PerformanceCounter::QueryMillis();
+    double diff = (newNow > this->now) ? (newNow - this->now) : 0.0;
     this->timeValues[this->timeValuesPos++].frame = diff;
     if (this->timeValuesPos >= this->timeValuesCount) {
         this->timeValuesPos = 0;
@@ -77,7 +80,7 @@ void vislib::graphics::FpsCounter::FrameEnd(void) {
  * vislib::graphics::FpsCounter::Reset
  */
 void vislib::graphics::FpsCounter::Reset(void) {
-    this->now = vislib::sys::PerformanceCounter::Query();
+    this->now = vislib::sys::PerformanceCounter::QueryMillis();
     this->timeValuesPos = 0;
     this->wholeBufferValid = false;
     this->frameRunning = false;
@@ -100,7 +103,8 @@ void vislib::graphics::FpsCounter::SetBufferLength(unsigned int bufLength) {
  * vislib::graphics::FpsCounter::FpsCounter
  */
 vislib::graphics::FpsCounter::FpsCounter(const FpsCounter& rhs) {
-    throw vislib::UnsupportedOperationException("Copy Ctor", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Copy Ctor", __FILE__, 
+        __LINE__);
 }
 
 
@@ -122,36 +126,52 @@ vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator =(
 void vislib::graphics::FpsCounter::evaluate(void) const {
     unsigned int count = (this->wholeBufferValid ? this->timeValuesCount : 
         vislib::math::Max<int>(this->timeValuesPos - 1, 0));
-    unsigned int time;
-    unsigned int allTime = 0;
-    unsigned int maxTime = 0;
-    unsigned int minTime = (count == 0) ? 0 : UINT_MAX;
+
+    if (count == 0) {
+        this->avrFPS = this->minFPS = this->maxFPS = 0.0f;
+        this->fpsValuesValid = true;
+        return;
+    }
+
+    unsigned int avrCount = count;
+    double time;
+    double allTime = 0.0;
+    double maxTime = 0.0;
+    double minTime = FLT_MAX;
 
     /** summarise over the whole measurement buffer */
     for (unsigned int i = 0; i < count; i++) {
         time = this->timeValues[i].before + this->timeValues[i].frame;
-        allTime += time;
+
+        if (allTime < this->avrMillis) {
+            allTime += time;
+            if (allTime >= this->avrMillis) {
+                avrCount = i + 1;
+            }
+        }
+
         if (maxTime < time) maxTime = time;
         if (minTime > time) minTime = time;
     }
 
     /** average fps */
     if (allTime > 0) {
-        this->avrFPS = static_cast<float>(count) * 1000.0f / static_cast<float>(allTime);
+        this->avrFPS = static_cast<float>(static_cast<double>(avrCount) 
+            * 1000.0 / allTime);
     } else {
         this->avrFPS = 0.0f;
     }
 
     /** maximum fps */
     if (minTime > 0) {
-        this->maxFPS = 1000.0f / static_cast<float>(minTime);
+        this->maxFPS = static_cast<float>(1000.0 / minTime);
     } else {
         this->maxFPS = 0.0f;
     }
 
     /** minimum fps */
     if (maxTime > 0) {
-        this->minFPS = 1000.0f / static_cast<float>(maxTime);
+        this->minFPS = static_cast<float>(1000.0 / maxTime);
     } else {
         this->minFPS = 0.0f;
     }
