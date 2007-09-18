@@ -35,6 +35,7 @@
 #include "testtrayicon.h"
 #include "testenvironment.h"
 #include "testnamedpipe.h"
+#include "testsockets.h"
 
 
 /* type for test functions */
@@ -70,6 +71,7 @@ VislibTest tests[] = {
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
+    {_T("Sockets"), ::TestSockets, "Tests the Sockets"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},

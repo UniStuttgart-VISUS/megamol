@@ -7,6 +7,7 @@
 
 #include "vislib/FpsCounter.h"
 #include <climits>
+#include <cfloat>
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"

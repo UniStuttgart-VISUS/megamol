@@ -73,6 +73,16 @@ namespace graphics {
 		 */
 		void FrameEnd(void);
 
+        /** 
+         * Answer the maximum time in milliseconds to be used when calculating
+         * the averaged fps.
+         *
+         * @return The maximum time used when calculating the averaged fps.
+         */
+        inline double MaxAveragingTime(void) const {
+            return this->avrMillis;
+        }
+
         /**
          * Answers the maximum fps of the whole measurement buffer.
          *
@@ -111,7 +121,16 @@ namespace graphics {
 		 */
 		void SetBufferLength(unsigned int bufLength);
 
-    protected:
+        /** 
+         * Sets the maximum time in milliseconds to be used when calculating
+         * the averaged fps.
+         *
+         * @param millis The maximum time used when calculating the averaged 
+         *               fps.
+         */
+        inline void SetMaxAveragingTime(double millis) {
+            this->avrMillis = millis;
+        }
 
     private:
 
