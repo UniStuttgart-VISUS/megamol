@@ -28,6 +28,13 @@ namespace sys {
     /**
      * Implements a platform independent interface for system threads.
      *
+     * On Linux, Threads are created joinable. Join() may only be called once. 
+     * See remarks on this method.
+     *
+     * On Linux, the thread is detached in the destructor. Any native API calls,
+     * in particular joining the thread, using the thread ID are illegal after 
+     * the thread object has been destroyed.
+     *
      * @author Christoph Mueller
      */
     class Thread {
@@ -62,12 +69,12 @@ namespace sys {
 //#endif /* _WIN32 */
 //        }
 
-		/**
-		 * Makes the calling thread sleep for 'millis' milliseconds.
-		 *
-		 * @param millis The milliseconds to block the calling thread.
-		 */
-		static void Sleep(const DWORD millis);
+        /**
+         * Makes the calling thread sleep for 'millis' milliseconds.
+         *
+         * @param millis The milliseconds to block the calling thread.
+         */
+        static void Sleep(const DWORD millis);
 
         /**
          * Causes the calling thread to yield execution to another thread that 
@@ -80,14 +87,14 @@ namespace sys {
         // Implementation note: Cannot be named Yield() because of macro with 
         // the same name in Windows API.
 
-		/** 
+        /** 
          * Create a thread that executes the given Runnable.
          *
          * @param runnable The Runnable to run in a thread. The caller must
          *                 guarantee that the object designated by 'runnable'
          *                 exists at least as long as the thread is running.
          */
-		explicit Thread(Runnable *runnable);
+        explicit Thread(Runnable *runnable);
 
         /**
          * Create a thread that executes the function designated by 
@@ -97,16 +104,16 @@ namespace sys {
          */
         explicit Thread(Runnable::Function runnableFunc);
 
-		/** Dtor. */
-		~Thread(void);
+        /** Dtor. */
+        ~Thread(void);
 
-		/**
-		 * Answer the exit code of the thread. 
-		 *
-		 * @return The thread exit code.
+        /**
+         * Answer the exit code of the thread. 
+         *
+         * @return The thread exit code.
          * 
          * @throws SystemException If the exit code could not be determined.
-		 */
+         */
         DWORD GetExitCode(void) const;
 
         /**
@@ -120,16 +127,21 @@ namespace sys {
             return this->runnable;
         }
 
-		/**
-		 * Answer whether the thread is currently running.
-		 *
-		 * @return true, if the thread is currently running, false otherwise.
-		 */
-		bool IsRunning(void) const;
+        /**
+         * Answer whether the thread is currently running.
+         *
+         * @return true, if the thread is currently running, false otherwise.
+         */
+        bool IsRunning(void) const;
 
         /**
          * Waits for the thread to finish. If the thread was not started, the
-         * method just returns.
+         * method returns immediately.
+         *
+         * On Linux, Join() can only be called by one other thread.
+         *
+         * On Linux, Join() detaches the thread. Any further call to join is
+         * illegal.
          *
          * @throws SystemException If waiting for the thread failed.
          */
@@ -149,7 +161,7 @@ namespace sys {
          *
          * @throws SystemException If the creation of the new thread failed.
          */
-		bool Start(void *userData = NULL);
+        bool Start(void *userData = NULL);
 
         /**
          * Terminate the thread. 
@@ -215,7 +227,7 @@ namespace sys {
          */
         bool TryTerminate(const bool doWait = false);
 
-	private:
+    private:
 
         /**
          * A pointer to this structure is passed to ThreadFunc. This consists of
@@ -237,40 +249,40 @@ namespace sys {
         static void CleanupFunc(void *param);
 #endif /* !_WIN32 */
 
-		/**
-		 * The thread function that is passed to the system API when starting a
-		 * new thread.
+        /**
+         * The thread function that is passed to the system API when starting a
+         * new thread.
          *
          * @param param The parameters for the thread which must be a pointer 
          *              to a ThreadFuncParam structure.
          * 
          * @return The thread's exit code.
-		 */
+         */
 #ifdef _WIN32
         static DWORD WINAPI ThreadFunc(void *param);
 #else /* _WIN32 */
         static void *ThreadFunc(void *param);
 #endif /* _WIN32 */
 
-		/**
-		 * Forbidden copy ctor.
-		 *
-		 * @param rhs The object to be cloned.
-		 *
-		 * @throws UnsupportedOperationException Unconditionally.
-		 */
-		Thread(const Thread& rhs);
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        Thread(const Thread& rhs);
 
-		/**
-		 * Forbidden assignment.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 *
-		 * @throws IllegalParamException If (this != &rhs).
-		 */
-		Thread& operator =(const Thread& rhs);
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        Thread& operator =(const Thread& rhs);
 
 #ifdef _WIN32 
         /** Handle of the thread. */
@@ -283,8 +295,8 @@ namespace sys {
         /** The thread attributes. */
         pthread_attr_t attribs;
 
-		/** The exit code of the thread. */
-		DWORD exitCode;
+        /** The exit code of the thread. */
+        DWORD exitCode;
 
         /** The thread ID. */
         pthread_t id;
@@ -299,7 +311,7 @@ namespace sys {
 
         /** This is the parameter for the actual system thread function. */
         ThreadFuncParam threadFuncParam;
-	};
+    };
 
 } /* end namespace sys */
 } /* end namespace vislib */

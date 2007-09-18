@@ -37,14 +37,14 @@
  */
 void vislib::sys::Thread::Sleep(const DWORD millis) {
 #ifdef _WIN32
-	::Sleep(millis);
+    ::Sleep(millis);
 #else /* _WIN32 */
-	if (millis >= 1000) {
-		/* At least one second to sleep. Use ::sleep() for full seconds. */
+    if (millis >= 1000) {
+        /* At least one second to sleep. Use ::sleep() for full seconds. */
         ::sleep(millis / 1000);
-	}
+    }
 
-	::usleep((millis % 1000) * 1000);
+    ::usleep((millis % 1000) * 1000);
 #endif /* _WIN32 */
 }
 
@@ -100,7 +100,7 @@ vislib::sys::Thread::Thread(Runnable *runnable)
 vislib::sys::Thread::Thread(Runnable::Function runnableFunc) 
         : id(0), runnable(NULL), runnableFunc(runnableFunc) {
 #ifdef _WIN32
-	this->handle = NULL;
+    this->handle = NULL;
 
 #else /* _WIN32 */
     ::pthread_attr_init(&this->attribs);
@@ -126,8 +126,7 @@ vislib::sys::Thread::~Thread(void) {
     }
 
 #else /* _WIIN32 */
-    // TODO: Must detach, iff not joined? How should we know this here?
-    //::pthread_detach(this->id);
+    ::pthread_detach(this->id);
     ::pthread_attr_destroy(&this->attribs);
 
 #endif /* _WIN32 */
@@ -218,13 +217,13 @@ bool vislib::sys::Thread::Start(void *userData) {
     }
 
 #else /* _WIN32 */
-	if (::pthread_create(&this->id, &this->attribs, Thread::ThreadFunc, 
+    if (::pthread_create(&this->id, &this->attribs, Thread::ThreadFunc, 
             static_cast<void *>(&this->threadFuncParam)) == 0) {
         this->exitCode = STILL_ACTIVE;  // Mark thread as running.
         return true;
 
     } else {
-		TRACE(Trace::LEVEL_VL_ERROR, "pthread_create() failed with error %d.\n", 
+        TRACE(Trace::LEVEL_VL_ERROR, "pthread_create() failed with error %d.\n", 
             ::GetLastError());
         throw SystemException(__FILE__, __LINE__);
     }
@@ -326,10 +325,10 @@ DWORD WINAPI vislib::sys::Thread::ThreadFunc(void *param) {
 #else /* _WIN32 */
 void *vislib::sys::Thread::ThreadFunc(void *param) {
 #endif /* _WIN32 */
-	ASSERT(param != NULL);
+    ASSERT(param != NULL);
 
-	int retval = 0;
-	ThreadFuncParam *tfp = static_cast<ThreadFuncParam *>(param);
+    int retval = 0;
+    ThreadFuncParam *tfp = static_cast<ThreadFuncParam *>(param);
     Thread *t = tfp->thread;
     ASSERT(t != NULL);
 
@@ -354,7 +353,7 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
         t->id, retval, retval);
 
 #ifdef _WIN32
-	return static_cast<DWORD>(retval);
+    return static_cast<DWORD>(retval);
 #else /* _WIN32 */
     return reinterpret_cast<void *>(retval);
 #endif /* _WIN32 */
