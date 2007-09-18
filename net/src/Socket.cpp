@@ -500,11 +500,14 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
         if (::WSARecv(this->handle, &wsaBuf, 1, reinterpret_cast<DWORD *>(
                 &lastReceived), &inOutFlags, &overlapped, NULL) != 0) {
             if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
             TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
-            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
-                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+            if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
+                    reinterpret_cast<DWORD *>(&lastReceived), TRUE, 
+                    &inOutFlags)) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(__FILE__, __LINE__);
             }
 
@@ -569,11 +572,14 @@ SIZE_T vislib::net::Socket::receiveFrom(SocketAddress& outFromAddr,
                 &lastReceived), &inOutFlags, &from, &fromLen, &overlapped, NULL) 
                 != 0) {
             if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
             TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
-            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
-                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+            if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
+                    reinterpret_cast<DWORD *>(&lastReceived), TRUE, 
+                    &inOutFlags)) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(__FILE__, __LINE__);
             }
 
@@ -620,6 +626,7 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
     WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
     WSABUF wsaBuf;              // Buffer for WSA output.
     DWORD errorCode = 0;        // WSA error during last operation.
+    DWORD inOutFlags = flags;   // Flags for WSA.
 
     if ((overlapped.hEvent = ::WSACreateEvent()) == WSA_INVALID_EVENT) {
         throw SocketException(__FILE__, __LINE__);
@@ -634,11 +641,13 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
         if (::WSASend(this->handle, &wsaBuf, 1, reinterpret_cast<DWORD *>(
                 &lastSent), flags, &overlapped, NULL) != 0) {
             if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
             TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
-            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
-                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+            if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
+                    reinterpret_cast<DWORD *>(&lastSent), TRUE, &inOutFlags)) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(__FILE__, __LINE__);
             }
 
@@ -682,6 +691,7 @@ SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr,
     WSAOVERLAPPED overlapped;   // Overlap structure for asynchronous recv().
     WSABUF wsaBuf;              // Buffer for WSA output.
     DWORD errorCode = 0;        // WSA error during last operation.
+    DWORD inOutFlags = flags;   // Flags for WSA.
 
     if ((overlapped.hEvent = ::WSACreateEvent()) == WSA_INVALID_EVENT) {
         throw SocketException(__FILE__, __LINE__);
@@ -696,11 +706,13 @@ SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr,
         if (::WSASendTo(this->handle, &wsaBuf, 1, reinterpret_cast<DWORD *>(
                 &lastSent), flags, &to, sizeof(to), &overlapped, NULL) != 0) {
             if ((errorCode = ::WSAGetLastError()) != WSA_IO_PENDING) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
             TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
-            if (::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, 
-                    INFINITE, FALSE) == WSA_WAIT_FAILED) {
+            if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
+                    reinterpret_cast<DWORD *>(&lastSent), TRUE, &inOutFlags)) {
+                ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(__FILE__, __LINE__);
             }
 

@@ -21,7 +21,7 @@
  * vislib::Trace::GetInstance
  */
 vislib::Trace& vislib::Trace::GetInstance(void) {
-	return vislib::Trace::instance;
+    return vislib::Trace::instance;
 }
 
 
@@ -159,15 +159,15 @@ bool vislib::Trace::EnableFileOutput(const char *filename) {
  * vislib::Trace::SetPrefix
  */
 void vislib::Trace::SetPrefix(const char *prefix) {
-	ARY_SAFE_DELETE(this->prefix);
-	ASSERT(this->prefix == NULL);		// Ensure potential disabling.
+    ARY_SAFE_DELETE(this->prefix);
+    ASSERT(this->prefix == NULL);		// Ensure potential disabling.
 
-	if (prefix != NULL) {
-		SIZE_T len = ::strlen(prefix) + 1;
-		this->prefix = new char[len];
-		ASSERT(this->prefix != NULL);	// std::bad_alloc or OK.
-		::memcpy(this->prefix, prefix, len * sizeof(char));	
-	}
+    if (prefix != NULL) {
+        SIZE_T len = ::strlen(prefix) + 1;
+        this->prefix = new char[len];
+        ASSERT(this->prefix != NULL);	// std::bad_alloc or OK.
+        ::memcpy(this->prefix, prefix, len * sizeof(char));	
+    }
 }
 
 
@@ -176,10 +176,10 @@ void vislib::Trace::SetPrefix(const char *prefix) {
  */
 void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) 
         throw() {
-	va_list list;
-	va_start(list, fmt);
-	this->trace(level, fmt, list);
-	va_end(list);
+    va_list list;
+    va_start(list, fmt);
+    this->trace(level, fmt, list);
+    va_end(list);
 }
 
 
@@ -213,7 +213,7 @@ vislib::Trace::Trace(void) : filename(NULL), fp(NULL), prefix(NULL),
 #if defined(DEBUG) || defined(_DEBUG)
     this->level = LEVEL_ALL;
 #endif /* defined(DEBUG) || defined(_DEBUG) */
-	this->SetPrefix(DEFAULT_PREFIX);
+    this->SetPrefix(DEFAULT_PREFIX);
 }
 
 
@@ -231,12 +231,12 @@ vislib::Trace::Trace(const Trace& rhs) {
  */
 void vislib::Trace::trace(const UINT level, const char *fmt, va_list list) 
         throw() {
-	if ((level <= this->level) && (level > 0) && (fmt != NULL)) {
-		if (this->prefix != NULL) {
-			::fprintf(stderr, this->prefix);
-		}
+    if ((level <= this->level) && (level > 0) && (fmt != NULL)) {
+        if (this->prefix != NULL) {
+            ::fprintf(stderr, this->prefix);
+        }
         ::vfprintf(stderr, fmt, list);
-		::fflush(stderr);
+        ::fflush(stderr);
 
         if (this->fp) {
             ::vfprintf(this->fp, fmt, list);
@@ -248,7 +248,7 @@ void vislib::Trace::trace(const UINT level, const char *fmt, va_list list)
             try {
                 int cnt = ::_vscprintf(fmt, list) + 1;
                 char *tmp = new char[cnt];
-#if 0 || (_MSC_VER >= 1400)
+#if (_MSC_VER >= 1400)
                 ::_vsnprintf_s(tmp, cnt, cnt, fmt, list);
 #else /* (_MSC_VER >= 1400) */
                 ::vsnprintf(tmp, cnt, fmt, list);
@@ -259,11 +259,11 @@ void vislib::Trace::trace(const UINT level, const char *fmt, va_list list)
             } catch (std::bad_alloc) {
                 ::fprintf(stderr, "OutputDebugStringA failed because of "
                     "insufficient system memory\n");
-		        ::fflush(stderr);
+                ::fflush(stderr);
             }
         }
 #endif /* _WIN32 */
-	}
+    }
 }
 
 
