@@ -42,7 +42,7 @@ UINT vislib::graphics::gl::FramebufferObject::GetMaxColorAttachments(void) {
  * vislib::graphics::gl::FramebufferObject::FramebufferObject
  */
 vislib::graphics::gl::FramebufferObject::FramebufferObject(void) 
-        : attachmentColor(NULL), cntColorAttachments(0), idFb(0), 
+        : attachmentColor(NULL), cntColorAttachments(0), idFb(UINT_MAX), 
         height(0), oldDrawBuffer(0), oldReadBuffer(0), width(0) {
     
     this->attachmentOther[0].state = ATTACHMENT_DISABLED;
@@ -102,8 +102,8 @@ GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
     USES_GL_VERIFY;
 
     if ((this->attachmentOther[ATTACH_IDX_DEPTH].state == ATTACHMENT_TEXTURE)
-			|| (this->attachmentOther[ATTACH_IDX_DEPTH].state 
-			== ATTACHMENT_EXTERNAL_TEXTURE))	{
+            || (this->attachmentOther[ATTACH_IDX_DEPTH].state 
+            == ATTACHMENT_EXTERNAL_TEXTURE))	{
         GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
             this->attachmentOther[ATTACH_IDX_DEPTH].id));
     } else {
@@ -171,8 +171,8 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
                 this->attachmentOther[ATTACH_IDX_DEPTH].id, 0));
             break;
 
-		case ATTACHMENT_EXTERNAL_TEXTURE:
-			this->attachmentOther[ATTACH_IDX_DEPTH].id = dap.externalID;
+        case ATTACHMENT_EXTERNAL_TEXTURE:
+            this->attachmentOther[ATTACH_IDX_DEPTH].id = dap.externalID;
             GL_VERIFY_THROW(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
                 GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, 
                 this->attachmentOther[ATTACH_IDX_DEPTH].id, 0));
@@ -228,16 +228,17 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
  * vislib::graphics::gl::FramebufferObject::DepthTextureID
  */
 GLuint vislib::graphics::gl::FramebufferObject::DepthTextureID(void) {
-	if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE)
-			&& (this->attachmentOther[ATTACH_IDX_DEPTH].state 
-			!= ATTACHMENT_EXTERNAL_TEXTURE)) {
-		throw vislib::IllegalStateException("The depth attachment must be a "
+    if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE)
+            && (this->attachmentOther[ATTACH_IDX_DEPTH].state 
+            != ATTACHMENT_EXTERNAL_TEXTURE)) {
+        throw vislib::IllegalStateException("The depth attachment must be a "
             "texture attachment in order to retrieve the texture id.",
-			__FILE__, __LINE__);
-	}
+            __FILE__, __LINE__);
+    }
 
-	return this->attachmentOther[ATTACH_IDX_DEPTH].id;
+    return this->attachmentOther[ATTACH_IDX_DEPTH].id;
 }
+
 
 /*
  * vislib::graphics::gl::FramebufferObject::Disable
@@ -335,7 +336,10 @@ bool vislib::graphics::gl::FramebufferObject::IsValid(void) const throw() {
 void vislib::graphics::gl::FramebufferObject::Release(void) {
     USES_GL_VERIFY;
 
-    if (::glDeleteRenderbuffersEXT == NULL) {
+    this->Disable();
+
+    if ((::glDeleteRenderbuffersEXT == NULL) 
+            || (::glDeleteFramebuffersEXT == NULL)) {
         /* 
          * Extensions might not have been initialised, but dtor will call 
          * Release anyway. 
@@ -357,9 +361,9 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
                     &this->attachmentOther[i].id));
                 break;
 
-			case ATTACHMENT_EXTERNAL_TEXTURE:
-				/* Nothing to do. */
-				break;
+            case ATTACHMENT_EXTERNAL_TEXTURE:
+                /* Nothing to do. */
+                break;
 
             default:
                 /* Nothing to do. */
@@ -386,9 +390,13 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     this->cntColorAttachments = 0;
     ARY_SAFE_DELETE(this->attachmentColor);
 
-	// set width and height to zero to indicate that the fbo is empty
-	this->width = 0;
-	this->height = 0;
+    /* Release framebuffer itself. */
+    ::glDeleteFramebuffersEXT(1, &this->idFb);
+    this->idFb = UINT_MAX;
+
+    // set width and height to zero to indicate that the fbo is empty
+    this->width = 0;
+    this->height = 0;
 }
 
 

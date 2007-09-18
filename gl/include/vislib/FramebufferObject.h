@@ -36,13 +36,13 @@ namespace gl {
             ATTACHMENT_DISABLED = 0,    // Disables the attachment.
             ATTACHMENT_RENDERBUFFER,    // Use a renderbuffer as attachment.
             ATTACHMENT_TEXTURE,         // Use a texture as attachment.
-			ATTACHMENT_EXTERNAL_TEXTURE // Use an external texture as 
-										// attachment. Use exteme care when 
-										// using this, because if the external
-										// texture is released before this
-										// framebuffer object is released and
-										// invalid texture id could be used 
-										// resulting in undefined behaviour.
+            ATTACHMENT_EXTERNAL_TEXTURE // Use an external texture as 
+                                        // attachment. Use exteme care when 
+                                        // using this, because if the external
+                                        // texture is released before this
+                                        // framebuffer object is released and
+                                        // invalid texture id could be used 
+                                        // resulting in undefined behaviour.
         };
 
         /** This structure specifies the properties of a color attachment. */
@@ -56,9 +56,9 @@ namespace gl {
         typedef struct DepthAttachParams_t {
             GLenum format;
             AttachmentState state;
-			GLuint externalID;			// The openGL ressource ID of the 
-										// external Texture, ignored if 
-										// state != ATTACHMENT_EXTERNAL_TEXTURE
+            GLuint externalID;			// The openGL ressource ID of the 
+                                        // external Texture, ignored if 
+                                        // state != ATTACHMENT_EXTERNAL_TEXTURE
         } DepthAttachParams;
 
         /** This structure specifies the properties of a stencil attachment. */
@@ -209,15 +209,15 @@ namespace gl {
             return this->Create(width, height, 1, &cap, dap, sap);
         }
 
-		/**
-		 * Answer the openGL depth texture ressource ID.
-		 *
-		 * @return The openGL depth texture ressource ID.
-		 *
-		 * @throw IllegalStateException if the depth attachment is not a 
-		 *        texture attachment.
-		 */
-		GLuint DepthTextureID(void);
+        /**
+         * Answer the openGL depth texture ressource ID.
+         *
+         * @return The openGL depth texture ressource ID.
+         *
+         * @throw IllegalStateException if the depth attachment is not a 
+         *        texture attachment.
+         */
+        GLuint DepthTextureID(void);
 
         /**
          * Disable the framebuffer object as render target and restore
