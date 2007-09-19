@@ -37,7 +37,7 @@
 #if defined(DEBUG) || defined(_DEBUG)
 #define GL_VERIFY_EXPR(expr) ASSERT(expr == GL_NO_ERROR) 
 #else /* defined(DEBUG) || defined(_DEBUG) */
-#define GL_VERIFY_EXPR(expr)
+#define GL_VERIFY_EXPR(expr) (expr)
 #endif /* defined(DEBUG) || defined(_DEBUG) */
 
 
