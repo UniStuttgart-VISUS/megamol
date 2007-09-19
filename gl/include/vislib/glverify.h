@@ -98,6 +98,111 @@
 // Note: Extra assignment prevent "unused variable" warning.
 
 
+/**
+ * Declare the '__glvDeferred_glError' and '__glvDeferred_Line' variables for 
+ * use with GL_DEFERRED_* macros. Add this macro at the begin of functions that
+ * use these macros.
+ */
+#define USES_GL_DEFERRED_VERIFY \
+    GLenum __glvDeferred_glError; __glvDeferred_glError = GL_NO_ERROR; \
+    int __glvDeferred_Line; __glvDeferred_Line = 0;
+
+
+/**
+ * Make OpenGL call 'call' at line 'line' (which always should be the builtin
+ * __LINE__ macro) and if no previous OpenGL error was stored and 'call' failed,
+ * store the error code and the line for throwing an exception later on.
+ *
+ * This macro requires local variables '__glvDeferred_glError' and 
+ * '__glvDeferred_Line' to be defined. Use USES_GL_DEFERRED_VERIFY at begin of 
+ * the enclosing function.
+ *
+ * @param call The OpenGL call to make.
+ * @param line The current line, which should be __LINE__.
+ */
+#define GL_DEFERRED_VERIFY(call, line) ::glGetError(); call;\
+    if ((__glvDeferred_glError == GL_NO_ERROR)\
+            && ((__glvDeferred_glError = ::glGetError()) != GL_NO_ERROR)) {\
+        __glvDeferred_Line = line;\
+    }
+
+
+/**
+ * Make the call 'call' and catch all OpenGLExceptions. If an exception was
+ * catched and the '__glvDeferred_glError' is not yet set, the error code and
+ * line of the exception will be preserved.
+ *
+ * This macro requires local variables '__glvDeferred_glError' and 
+ * '__glvDeferred_Line' to be defined. Use USES_GL_DEFERRED_VERIFY at begin of 
+ * the enclosing function.
+ */
+#define GL_DEFERRED_VERIFY_TRY(call)\
+    try {\
+        call;\
+    } catch (vislib::graphics::gl::OpenGLException __glvDeferredOGLe) {\
+        if (__glvDeferred_glError == GL_NO_ERROR) {\
+            __glvDeferred_glError = __glvDeferredOGLe.GetErrorCode();\
+            __glvDeferred_Line = __glvDeferredOGLe.GetLine();\
+        }\
+    }
+
+
+/**
+ * Return the first OpenGL error that was catched by a GL_DEFERRED_VERIFY call.
+ *
+ * This macro requires local variables '__glvDeferred_glError' and 
+ * '__glvDeferred_Line' to be defined. Use USES_GL_DEFERRED_VERIFY at begin of 
+ * the enclosing function.
+ */
+#define GL_DEFERRED_VERIFY_RETURN() return __glvDeferred_glError
+
+
+/**
+ * If an OpenGL error was stored to the local '__glvDeferred_glError' variable,
+ * throw an exception.
+ *
+ * Note that GL_DEFERRED* is only handling the first error that occurred in the
+ * current scope.
+ *
+ * This macro requires local variables '__glvDeferred_glError' and 
+ * '__glvDeferred_Line' to be defined. Use USES_GL_DEFERRED_VERIFY at begin of 
+ * the enclosing function.
+ *
+ * @param file The curren file, which should be __FILE__.
+ */
+#define GL_DEFERRED_VERIFY_THROW(file)\
+    if (__glvDeferred_glError != GL_NO_ERROR) {\
+        throw vislib::graphics::gl::OpenGLException(__glvDeferred_glError, \
+            file, __glvDeferred_Line);\
+    }
+
+
+/**
+ * Answers whether no error occurred during GL_DEFERRED* calls in the enclosing
+ * block.
+ *
+ * This macro requires local variables '__glvDeferred_glError' and 
+ * '__glvDeferred_Line' to be defined. Use USES_GL_DEFERRED_VERIFY at begin of 
+ * the enclosing function.
+ *
+ * @return true if no error was captured, false otherwise.
+ */
+#define GL_DEFERRED_SUCCEEDED() (__glvDeferred_glError == GL_NO_ERROR)
+
+
+/**
+ * Answers whether an error occurred during GL_DEFERRED* calls in the enclosing
+ * block.
+ *
+ * This macro requires local variables '__glvDeferred_glError' and 
+ * '__glvDeferred_Line' to be defined. Use USES_GL_DEFERRED_VERIFY at begin of 
+ * the enclosing function.
+ *
+ * @return true if an error was captured, false otherwise.
+ */
+#define GL_DEFERRED_FAILED() (__glvDeferred_glError != GL_NO_ERROR)
+
+
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */

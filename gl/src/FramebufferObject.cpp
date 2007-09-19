@@ -17,6 +17,7 @@
 #include "vislib/UnsupportedOperationException.h"
 
 
+
 /*
  * vislib::graphics::gl::FramebufferObject::RequiredExtensions
  */
@@ -60,8 +61,9 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
         this->Disable();
         this->Release();
     } catch (OpenGLException e) {
-        TRACE(Trace::LEVEL_WARN, "\"%s\" at line %d in \"%s\" when destroying "
-            "FramebufferObject", e.GetMsgA(), e.GetLine(), e.GetFile());
+        TRACE(Trace::LEVEL_VL_WARN, "\"%s\" at line %d in \"%s\" when "
+            "destroying FramebufferObject", e.GetMsgA(), e.GetLine(), 
+            e.GetFile());
     }
 
     // Dtor must ensure deallocation in any case!
@@ -103,7 +105,7 @@ GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
 
     if ((this->attachmentOther[ATTACH_IDX_DEPTH].state == ATTACHMENT_TEXTURE)
             || (this->attachmentOther[ATTACH_IDX_DEPTH].state 
-            == ATTACHMENT_EXTERNAL_TEXTURE))	{
+            == ATTACHMENT_EXTERNAL_TEXTURE)) {
         GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
             this->attachmentOther[ATTACH_IDX_DEPTH].id));
     } else {
@@ -123,11 +125,16 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
         const UINT height, const UINT cntColorAttachments, 
         const ColorAttachParams *cap, const DepthAttachParams& dap, 
         const StencilAttachParams& sap) {
-    USES_GL_VERIFY;
+    USES_GL_DEFERRED_VERIFY;
     bool retval = true;
 
     /* Release possible old FBO before doing anything else! */
-    this->Release();    // TODO: Could also return false instead of recreate.
+    try {
+        this->Release();    // TODO: Could also return false instead of recreate.
+    } catch (OpenGLException e) {
+        TRACE(Trace::LEVEL_VL_WARN, "Release() of old FBO failed in Create(). "
+            "This error is not critical.\n");
+    }
 
     /* Save state changes in attributes. */
     this->width = static_cast<GLsizei>(width);
@@ -138,44 +145,47 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
     this->saveState();
 
     /* Create FBO and make it active FBO. */
-    GL_VERIFY_THROW(::glGenFramebuffersEXT(1, &this->idFb));
-    GL_VERIFY_THROW(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->idFb));
+    GL_DEFERRED_VERIFY(::glGenFramebuffersEXT(1, &this->idFb), __LINE__);
+    GL_DEFERRED_VERIFY(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->idFb),
+        __LINE__);
 
     /* Create color buffers and attach it to FBO. */
     this->attachmentColor = new AttachmentProps[this->cntColorAttachments];
-
     for (UINT i = 0; i < cntColorAttachments; i++) {
         this->attachmentColor[i].state = ATTACHMENT_TEXTURE;
         this->createTexture(this->attachmentColor[i].id, cap[i].internalFormat,
             cap[i].format, cap[i].type);
-        GL_VERIFY_THROW(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, 
+        GL_DEFERRED_VERIFY(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, 
             GL_COLOR_ATTACHMENT0_EXT + i, GL_TEXTURE_2D, 
-            this->attachmentColor[i].id, 0));
+            this->attachmentColor[i].id, 0), __LINE__);
     }
 
     /* Create the depth buffer. */
     switch (dap.state) {
         case ATTACHMENT_RENDERBUFFER:
-            this->createRenderbuffer(this->attachmentOther[ATTACH_IDX_DEPTH].id,
-                dap.format);
-            GL_VERIFY_THROW(::glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT,
-                GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, 
-                this->attachmentOther[ATTACH_IDX_DEPTH].id));
+            GL_DEFERRED_VERIFY_TRY(this->createRenderbuffer(
+                this->attachmentOther[ATTACH_IDX_DEPTH].id, dap.format));
+            GL_DEFERRED_VERIFY(::glFramebufferRenderbufferEXT(
+                GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, 
+                GL_RENDERBUFFER_EXT,
+                this->attachmentOther[ATTACH_IDX_DEPTH].id), __LINE__);
             break;
 
         case ATTACHMENT_TEXTURE:
-            this->createTexture(this->attachmentOther[ATTACH_IDX_DEPTH].id,
-                dap.format, GL_DEPTH_COMPONENT, GL_FLOAT); // TODO: are other formats then GL_FLOAT supported?
-            GL_VERIFY_THROW(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+            GL_DEFERRED_VERIFY_TRY(this->createTexture(
+                this->attachmentOther[ATTACH_IDX_DEPTH].id,
+                dap.format, GL_DEPTH_COMPONENT, GL_FLOAT)); 
+            // TODO: are other formats than GL_FLOAT supported? Could not find one.
+            GL_DEFERRED_VERIFY(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
                 GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, 
-                this->attachmentOther[ATTACH_IDX_DEPTH].id, 0));
+                this->attachmentOther[ATTACH_IDX_DEPTH].id, 0), __LINE__);
             break;
 
         case ATTACHMENT_EXTERNAL_TEXTURE:
             this->attachmentOther[ATTACH_IDX_DEPTH].id = dap.externalID;
-            GL_VERIFY_THROW(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+            GL_DEFERRED_VERIFY(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
                 GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, 
-                this->attachmentOther[ATTACH_IDX_DEPTH].id, 0));
+                this->attachmentOther[ATTACH_IDX_DEPTH].id, 0), __LINE__);
             break;
 
         default:
@@ -217,9 +227,14 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
 
     /* Check for completeness and unbind FBO before returning. */
     retval = this->isComplete();
+    GL_DEFERRED_VERIFY(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0), __LINE__);
 
-    GL_VERIFY_THROW(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0));
-
+    /* Check for errors and revert in case one was captured before. */
+    if (GL_DEFERRED_FAILED()) {
+        GL_DEFERRED_VERIFY_TRY(this->Release());
+    }
+    
+    GL_DEFERRED_VERIFY_THROW(__FILE__);
     return retval;
 }
 
@@ -251,6 +266,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) {
          * Extensions might not have been initialised, but dtor will call
          * Disable anyway.
          */
+        TRACE(Trace::LEVEL_VL_WARN, "glBindFramebuffer is not available.\n");
         return GL_INVALID_OPERATION;
     }
 
@@ -275,11 +291,17 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
         const UINT colorAttachment) {
     USES_GL_VERIFY;
 
+    /* Ensure that we enable only valid FBOs. */
+    if (!this->IsValid()) {
+        TRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
+        return GL_INVALID_OPERATION;
+    }
+
     /* Preserve the state. */
     try {
         this->saveState();
     } catch (OpenGLException e) {
-        TRACE(Trace::LEVEL_ERROR, "Could not save OpenGL state before "
+        TRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
             "enabling FBO (\"%s\").\n", e.GetMsgA());
         return e.GetErrorCode();
     }
@@ -335,8 +357,12 @@ bool vislib::graphics::gl::FramebufferObject::IsValid(void) const throw() {
  */
 void vislib::graphics::gl::FramebufferObject::Release(void) {
     USES_GL_VERIFY;
+    USES_GL_DEFERRED_VERIFY;
 
-    this->Disable();
+    //if (GL_FAILED(this->Disable())) {
+    //    TRACE(Trace::LEVEL_VL_WARN, "Disabling FBO before release failed. "
+    //        "This is not a critical error.\n");
+    //}
 
     if ((::glDeleteRenderbuffersEXT == NULL) 
             || (::glDeleteFramebuffersEXT == NULL)) {
@@ -344,6 +370,8 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
          * Extensions might not have been initialised, but dtor will call 
          * Release anyway. 
          */
+        TRACE(Trace::LEVEL_VL_WARN, "glDeleteRenderbuffers or "
+            "glDeleteFramebuffers is not available.\n");
         return;
     }
 
@@ -352,13 +380,17 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
         switch (this->attachmentOther[i].state) {
 
             case ATTACHMENT_TEXTURE:
-                GL_VERIFY_THROW(::glDeleteTextures(1, 
-                    &this->attachmentOther[i].id));
+                if (::glIsTexture(this->attachmentOther[i].id)) {
+                    GL_DEFERRED_VERIFY(::glDeleteTextures(1, 
+                        &this->attachmentOther[i].id), __LINE__);
+                }
                 break;
 
             case ATTACHMENT_RENDERBUFFER:
-                GL_VERIFY_THROW(::glDeleteRenderbuffersEXT(1, 
-                    &this->attachmentOther[i].id));
+                if (::glIsRenderbufferEXT(this->attachmentOther[i].id)) {
+                    GL_DEFERRED_VERIFY(::glDeleteRenderbuffersEXT(1, 
+                        &this->attachmentOther[i].id), __LINE__);
+                }
                 break;
 
             case ATTACHMENT_EXTERNAL_TEXTURE:
@@ -377,8 +409,10 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
         switch (this->attachmentColor[i].state) {
     
             case ATTACHMENT_TEXTURE:
-                GL_VERIFY_THROW(::glDeleteTextures(1, 
-                    &this->attachmentColor[i].id));
+                if (::glIsTexture(this->attachmentColor[i].id)) {
+                    GL_DEFERRED_VERIFY(::glDeleteTextures(1, 
+                        &this->attachmentColor[i].id), __LINE__);
+                }
                 break;
 
             default:
@@ -391,12 +425,16 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     ARY_SAFE_DELETE(this->attachmentColor);
 
     /* Release framebuffer itself. */
-    ::glDeleteFramebuffersEXT(1, &this->idFb);
-    this->idFb = UINT_MAX;
+    if (::glIsFramebufferEXT(this->idFb)) {
+        GL_DEFERRED_VERIFY(::glDeleteFramebuffersEXT(1, &this->idFb), __LINE__);
+        this->idFb = UINT_MAX;
+    }
 
     // set width and height to zero to indicate that the fbo is empty
     this->width = 0;
     this->height = 0;
+
+    GL_DEFERRED_VERIFY_THROW(__FILE__);
 }
 
 
@@ -425,32 +463,54 @@ vislib::graphics::gl::FramebufferObject::FramebufferObject(
 /*
  * vislib::graphics::gl::FramebufferObject::createRenderbuffer
  */
-void vislib::graphics::gl::FramebufferObject::createRenderbuffer(GLuint& outID, 
-        const GLenum format) {
-    USES_GL_VERIFY;
+void vislib::graphics::gl::FramebufferObject::createRenderbuffer(
+        GLuint& outID, const GLenum format) {
+    USES_GL_DEFERRED_VERIFY;
 
-    GL_VERIFY_THROW(::glGenRenderbuffersEXT(1, &outID));
-    GL_VERIFY_THROW(::glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, outID));
-    GL_VERIFY_THROW(::glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, format, 
-        this->width, this->height));
+    GL_DEFERRED_VERIFY(::glGenRenderbuffersEXT(1, &outID), __LINE__);
+    GL_DEFERRED_VERIFY(::glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, outID), 
+        __LINE__);
+    GL_DEFERRED_VERIFY(::glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, format, 
+        this->width, this->height), __LINE__);
+
+    if (GL_DEFERRED_FAILED()) {
+        ::glDeleteRenderbuffersEXT(1, &outID);
+        outID = UINT_MAX;
+    }
+
+    GL_DEFERRED_VERIFY_THROW(__FILE__);
 }
 
 /*
  * vislib::graphics::gl::FramebufferObject::createTexture
  */
-void vislib::graphics::gl::FramebufferObject::createTexture(GLuint& outID, 
+void vislib::graphics::gl::FramebufferObject::createTexture(GLuint& outID,
         const GLenum internalFormat, const GLenum format, 
         const GLenum type) const {
-    USES_GL_VERIFY;
+    USES_GL_DEFERRED_VERIFY;
+    GLint oldID;                // Old texture bound for reverting state.
+    
+    ::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldID);
 
-    GL_VERIFY_THROW(::glGenTextures(1, &outID));
-    GL_VERIFY_THROW(::glBindTexture(GL_TEXTURE_2D, outID));
-    GL_VERIFY_THROW(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-        GL_NEAREST));
-    GL_VERIFY_THROW(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
-        GL_NEAREST));
-    GL_VERIFY_THROW(::glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 
-        this->width, this->height, 0, format, type, NULL));
+    GL_DEFERRED_VERIFY(::glGenTextures(1, &outID), __LINE__);
+    GL_DEFERRED_VERIFY(::glBindTexture(GL_TEXTURE_2D, outID), __LINE__);
+    GL_DEFERRED_VERIFY(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+        GL_NEAREST), __LINE__);
+    GL_DEFERRED_VERIFY(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
+        GL_NEAREST), __LINE__);
+    GL_DEFERRED_VERIFY(::glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 
+        this->width, this->height, 0, format, type, NULL), __LINE__);
+
+    if (::glIsTexture(oldID)) {
+        ::glBindTexture(GL_TEXTURE_2D, oldID);
+    }
+
+    if (GL_DEFERRED_FAILED()) {
+        ::glDeleteTextures(1, &outID);
+        outID = UINT_MAX;
+    }
+
+    GL_DEFERRED_VERIFY_THROW(__FILE__);
 }
 
 
@@ -486,14 +546,21 @@ bool vislib::graphics::gl::FramebufferObject::isComplete(void) const {
 void vislib::graphics::gl::FramebufferObject::saveState(void) {
     USES_GL_VERIFY;
     GLint tmp;
-    
+
     GL_VERIFY_THROW(::glGetIntegerv(GL_DRAW_BUFFER, &tmp));
     this->oldDrawBuffer = static_cast<GLenum>(tmp);
     
-    GL_VERIFY_THROW(::glGetIntegerv(GL_READ_BUFFER,&tmp));
+    GL_VERIFY_THROW(::glGetIntegerv(GL_READ_BUFFER, &tmp));
     this->oldReadBuffer = static_cast<GLenum>(tmp);
 
     GL_VERIFY_THROW(::glGetIntegerv(GL_VIEWPORT, this->oldVp));
+
+    TRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
+        "\tGL_DRAW_BUFFER = %d\n"
+        "\tGL_READ_BUFFER = %d\n"
+        "\tGL_VIEWPORT = %d %d %d %d\n",
+        this->oldDrawBuffer, this->oldReadBuffer, this->oldVp[0], 
+        this->oldVp[1], this->oldVp[2], this->oldVp[3]);
 }
 
 

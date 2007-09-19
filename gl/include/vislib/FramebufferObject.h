@@ -56,7 +56,7 @@ namespace gl {
         typedef struct DepthAttachParams_t {
             GLenum format;
             AttachmentState state;
-            GLuint externalID;			// The openGL ressource ID of the 
+            GLuint externalID;          // The openGL ressource ID of the 
                                         // external Texture, ignored if 
                                         // state != ATTACHMENT_EXTERNAL_TEXTURE
         } DepthAttachParams;
@@ -324,10 +324,13 @@ namespace gl {
          * Create a renderbuffer and allocate its storage using the current
          * dimensions of the FBO.
          *
+         * If the creation fails, the method will delete any created resources
+         * by itself before returning.
+         *
          * @param outID  Receives the ID of the render buffer created.
          * @param format The format of the render buffer storage to allocate.
          * 
-         * @throws OpenGLException If the creation fails.
+         * @throws OpenGLException In case of an error
          */
         void createRenderbuffer(GLuint& outID, const GLenum format);
 
@@ -335,12 +338,15 @@ namespace gl {
          * Creates a texture and sets the appropriate format. The size is
          * determines by the current dimensions of the FBO.
          *
+         * If the creation fails, the method will delete any created resources
+         * by itself before returning.
+         *
          * @param outID          Receives the ID of the texture.
          * @param internalFormat The internal texture format.
          * @param format         The format of the texture.
          * @param type           The type of the texels.
          *
-         * @throws OpenGLException If the creation fails.
+         * @throws OpenGLException In case of an error
          */
         void createTexture(GLuint& outID, const GLenum internalFormat,
             const GLenum format, const GLenum type) const;

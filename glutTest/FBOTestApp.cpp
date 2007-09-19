@@ -39,6 +39,7 @@ int FBOTestApp::GLInit(void) {
     ::VisLogoTwistLogo();
 
     ::glEnable(GL_DEPTH_TEST);
+    ::glDisable(GL_LIGHTING);
 
     if (!FramebufferObject::InitialiseExtensions()) {
         retval++;
@@ -56,6 +57,7 @@ int FBOTestApp::GLInit(void) {
             FramebufferObject::StencilAttachParams sap;
             sap.state = FramebufferObject::ATTACHMENT_DISABLED;
 
+            ::glDrawBuffer(GL_BACK);
             //if (!this->fbo.Create(512, 512, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 
             //        FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
             if (!this->fbo.Create(512, 512, 2, cap, dap, sap)) {
@@ -88,7 +90,7 @@ void FBOTestApp::GLDeinit(void) {
 void FBOTestApp::Render(void) {
     USES_GL_VERIFY;
     unsigned int cntVertices = ::VisLogoCountVertices();
-	unsigned int vIdx;
+    unsigned int vIdx;
    
     try {
         GL_VERIFY_EXPR(this->fbo.Enable(0));
@@ -101,35 +103,33 @@ void FBOTestApp::Render(void) {
 
         ::glMatrixMode(GL_PROJECTION);
         ::glLoadIdentity();
-        ::glOrtho(0.0, this->fbo.GetWidth(), this->fbo.GetHeight(), 0.0, 
-            -1.0, 1.0);
 
         ::glMatrixMode(GL_MODELVIEW);
         ::glLoadIdentity();
 
         ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         ::glBegin(GL_QUAD_STRIP);
-	    for (unsigned int i = 0; i < 20; i++) {
-		    for (unsigned int j = 0; j < cntVertices / 20; j++) {
-			    vIdx = (i + j * 20) % cntVertices;
+        for (unsigned int i = 0; i < 20; i++) {
+            for (unsigned int j = 0; j < cntVertices / 20; j++) {
+                vIdx = (i + j * 20) % cntVertices;
                 ::glColor3dv(VisLogoVertexColor(vIdx)->f);
                 ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
                 ::glVertex3dv(VisLogoVertex(vIdx)->f);
 
-			    vIdx = ((i + 1) % 20 + j * 20) % cntVertices;
+                vIdx = ((i + 1) % 20 + j * 20) % cntVertices;
                 ::glColor3dv(VisLogoVertexColor(vIdx)->f);
                 ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
                 ::glVertex3dv(VisLogoVertex(vIdx)->f);
-		    }
-	    }
+            }
+        }
 
         // Close strip.
-	    vIdx = 0;
+        vIdx = 0;
         ::glColor3dv(VisLogoVertexColor(vIdx)->f);
         ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
         ::glVertex3dv(VisLogoVertex(vIdx)->f);
 
-	    vIdx = 1;
+        vIdx = 1;
         ::glColor3dv(VisLogoVertexColor(vIdx)->f);
         ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
         ::glVertex3dv(VisLogoVertex(vIdx)->f);
@@ -140,7 +140,7 @@ void FBOTestApp::Render(void) {
 
         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        GL_VERIFY_EXPR(this->fbo.BindColorTexture(0));
+        //GL_VERIFY_EXPR(this->fbo.BindColorTexture(0));
         GL_VERIFY_EXPR(this->fbo.BindDepthTexture());
         ::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -169,7 +169,7 @@ void FBOTestApp::Render(void) {
         ::glEnd();  
 
         ::glDisable(GL_TEXTURE_2D);
-        ::glColor3f(1.0, 1.0, 1.0);
+        ::glColor4f(1.0, 1.0, 1.0, 1.0);
         ::glEnable(GL_POLYGON_OFFSET_LINE);
         ::glPolygonOffset(-1.0f, -1.0f);
         ::glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

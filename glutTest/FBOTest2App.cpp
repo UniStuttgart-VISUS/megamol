@@ -138,6 +138,7 @@ void FBOTest2App::Render(void) {
 	glEnable(GL_LIGHTING);
 
 	// render all 
+    ::glDrawBuffer(GL_BACK);
 	GL_VERIFY_EXPR(this->fboAll.Enable());
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
