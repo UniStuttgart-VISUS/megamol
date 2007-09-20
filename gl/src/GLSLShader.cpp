@@ -634,7 +634,7 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
                 powerMemory.As<const char*>()[i] = src[i / 2];
             } else {
                 unsigned int len;
-                tmp.Format("#line 0 %d\n", int((i + 1) / 2));
+                tmp.Format("\n#line 0 %d\n", int((i + 1) / 2));
                 len = (tmp.Length() + 1) * sizeof(char);
                 memcpy(ptr, tmp.PeekBuffer(), len);
                 powerMemory.As<char*>()[i] = ptr;
