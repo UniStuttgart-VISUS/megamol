@@ -388,10 +388,7 @@ namespace vislib {
          * @param fmt The format string.
          * @param ... Optional parameters.
          */
-        void Format(const Char *fmt, va_list argptr);
-        // HAZARD: This method might get called instead of the one above (which
-        // would be correct) depending on the first format parameter. We must 
-        // change the name of this method e. g. to FormatVa
+        void FormatVa(const Char *fmt, va_list argptr);
 
         /**
          * Answer a hash code of the string.
@@ -399,6 +396,47 @@ namespace vislib {
          * @return A hash code of the string-
          */
         UINT32 HashCode(void) const;
+
+        /**
+         * Insert 'c' at position 'pos' in the string. 'pos' must be a valid 
+         * index in the string or the length of the string. In the latter case, 
+         * the method behaves like Append().
+         *
+         * @param pos The position to insert the character at.
+         * @param c   The character to add.
+         *
+         * @throws OutOfRangeException If 'pos' is not within 
+         *                             [0, this->Length()].
+         */
+        void Insert(const Size pos, const Char c);
+
+        /**
+         * Insert 'str' at position 'pos' in the string. 'pos' must be a valid 
+         * index in the string or the length of the string. In the latter case, 
+         * the method behaves like Append().
+         *
+         * @param pos The position to insert the string at.
+         * @param c   The string to add. It is safe to pass a NULL pointer.
+         *
+         * @throws OutOfRangeException If 'pos' is not within 
+         *                             [0, this->Length()].
+         */
+        void Insert(const Size pos, const Char *str);
+
+        /**
+         * Insert 'str' at position 'pos' in the string. 'pos' must be a valid 
+         * index in the string or the length of the string. In the latter case, 
+         * the method behaves like Append().
+         *
+         * @param pos The position to insert the string at.
+         * @param c   The string to add.
+         *
+         * @throws OutOfRangeException If 'pos' is not within 
+         *                             [0, this->Length()].
+         */
+        inline void Insert(const Size pos, const String& str) {
+            this->Insert(pos, str.data);
+        }
 
         /**
          * Answer whether the string is empty.
@@ -1300,9 +1338,10 @@ namespace vislib {
 
 
     /*
-     * String<T>::Format
+     * vislib::String<T>::FormatVa
      */
-    template<class T> void String<T>::Format(const Char *fmt, va_list argptr) {
+    template<class T> void String<T>::FormatVa(const Char *fmt, 
+            va_list argptr) {
         va_list argptrtmp;
         Size size = 0;
 
@@ -1349,6 +1388,53 @@ namespace vislib {
         }
 
         return hash;
+    }
+
+
+    /*
+     * vislib::String<T>::Insert
+     */
+    template<class T> void String<T>::Insert(const Size pos, const Char c) {
+        Size len = this->Length();
+
+        if ((pos >= 0) && (pos <= len)) {
+            Char *str = new Char[len + 2];
+            ::memcpy(str, this->data, pos * T::CharSize());
+            str[pos] = c;
+            ::memcpy(str + pos + 1, this->data + pos, (len - pos + 1) 
+                * T::CharSize());
+
+            delete[] this->data;
+            this->data = str;
+        } else {
+            throw OutOfRangeException(pos, 0, static_cast<int>(len), __FILE__, 
+                __LINE__);
+        }
+    }
+
+
+    /*
+     * vislib::String<T>::Insert
+     */
+    template<class T> void String<T>::Insert(const Size pos, const Char *str) {
+        Size len = this->Length();
+        Size strLen = 0;
+
+        if ((pos >= 0) && (pos <= len)) {
+            if ((strLen = T::SafeStringLength(str)) > 0) {
+                Char *newData = new Char[len + strLen + 1];
+                ::memcpy(newData, this->data, pos * T::CharSize());
+                ::memcpy(newData + pos, str, strLen * T::CharSize());
+                ::memcpy(newData + pos + strLen, this->data + pos, 
+                    (len - pos + 1) * T::CharSize());
+
+                delete[] this->data;
+                this->data = newData;
+            }
+        } else {
+            throw OutOfRangeException(pos, 0, static_cast<int>(len), __FILE__, 
+                __LINE__);
+        }
     }
 
 

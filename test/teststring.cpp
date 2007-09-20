@@ -253,6 +253,30 @@ void TestStringA(void) {
     s1.Replace('o', 'i', StringA::NO_LIMIT);
     AssertTrue("Unlimited char replace", !::strcmp(s1.PeekBuffer(), "Hirst Hirst"));
 
+    s1 = "Hrst";
+    s1.Insert(1, 'o');
+    AssertTrue("Character insert at 1", !::strcmp(s1.PeekBuffer(), "Horst"));
+
+    s1 = "orst";
+    s1.Insert(0, 'H');
+    AssertTrue("Character insert at 0", !::strcmp(s1.PeekBuffer(), "Horst"));
+
+    s1 = "Hors";
+    s1.Insert(4, 't');
+    AssertTrue("Character insert at end", !::strcmp(s1.PeekBuffer(), "Horst"));
+
+    s1 = "Ht";
+    s1.Insert(1, "ors");
+    AssertTrue("String insert at 1", !::strcmp(s1.PeekBuffer(), "Horst"));
+
+    s1 = "rst";
+    s1.Insert(0, "Ho");
+    AssertTrue("String insert at 0", !::strcmp(s1.PeekBuffer(), "Horst"));
+
+    s1 = "Hor";
+    s1.Insert(3, "st");
+    AssertTrue("String insert at end", !::strcmp(s1.PeekBuffer(), "Horst"));
+
 }
 
 void TestStringW(void) {
@@ -461,6 +485,30 @@ void TestStringW(void) {
     s1 = L"Horst Horst";
     s1.Replace(L'o', L'i', StringW::NO_LIMIT);
     AssertTrue("Unlimited char replace", !::wcscmp(s1.PeekBuffer(), L"Hirst Hirst"));
+
+    s1 = L"Hrst";
+    s1.Insert(1, 'o');
+    AssertTrue("Character insert at 1", !::wcscmp(s1.PeekBuffer(), L"Horst"));
+
+    s1 = L"orst";
+    s1.Insert(0, L'H');
+    AssertTrue("Character insert at 0", !::wcscmp(s1.PeekBuffer(), L"Horst"));
+
+    s1 = L"Hors";
+    s1.Insert(4, L't');
+    AssertTrue("Character insert at end", !::wcscmp(s1.PeekBuffer(), L"Horst"));
+
+    s1 = L"Ht";
+    s1.Insert(1, L"ors");
+    AssertTrue("String insert at 1", !::wcscmp(s1.PeekBuffer(), L"Horst"));
+
+    s1 = L"rst";
+    s1.Insert(0, L"Ho");
+    AssertTrue("String insert at 0", !::wcscmp(s1.PeekBuffer(), L"Horst"));
+
+    s1 = L"Hor";
+    s1.Insert(3, L"st");
+    AssertTrue("String insert at end", !::wcscmp(s1.PeekBuffer(), L"Horst"));
 
 }
 
