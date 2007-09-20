@@ -400,7 +400,7 @@ void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
 
         va_list argptr;
         va_start(argptr, fmt);
-        txt.Format(fmt, argptr);
+        txt.FormatVa(fmt, argptr);
         va_end(argptr);
         if (!txt.EndsWith('\n')) txt += "\n";
 
@@ -491,7 +491,7 @@ void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
 
         va_list argptr;
         va_start(argptr, fmt);
-        txt.Format(fmt, argptr);
+        txt.FormatVa(fmt, argptr);
         va_end(argptr);
         if (!txt.EndsWith(L'\n')) txt += L"\n";
 
