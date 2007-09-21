@@ -5,8 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-
 #include "vislib/FramebufferObject.h"
+
+#include <climits>
 
 #include "vislib/glverify.h"
 #include "vislib/IllegalParamException.h"
