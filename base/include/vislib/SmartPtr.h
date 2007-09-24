@@ -29,18 +29,18 @@ namespace vislib {
      *
      * All memory that a smart pointer can point to must have been allocated on 
      * the heap using the a method compatible with the Allocator A. The user is
-	 * responsible for allocating the memory that is assigned to a SmartPtr with
-	 * a compatible method, i. e. with new when using the default 
-	 * SingleAllocator and with new[] when using the array allocator.
-	 *
-	 * The template parameter T specifies the static type of the memory 
-	 * designated by the pointer. 
-	 *
-	 * The template parameter A is the allocator that specifies the method for
-	 * freeing the memory. It must have a Deallocate method that calls the dtor
-	 * of the object(s) deallocated. The allocator must support the same static
-	 * type T as the SmartPtr. The valor of A defaults to SingleAllocator<T>,
-	 * i. e. the memory is assumed to be allocated using "new T".
+     * responsible for allocating the memory that is assigned to a SmartPtr with
+     * a compatible method, i. e. with new when using the default 
+     * SingleAllocator and with new[] when using the array allocator.
+     *
+     * The template parameter T specifies the static type of the memory 
+     * designated by the pointer. 
+     *
+     * The template parameter A is the allocator that specifies the method for
+     * freeing the memory. It must have a Deallocate method that calls the dtor
+     * of the object(s) deallocated. The allocator must support the same static
+     * type T as the SmartPtr. The valor of A defaults to SingleAllocator<T>,
+     * i. e. the memory is assumed to be allocated using "new T".
      */
     template <class T, class A = SingleAllocator<T> > class SmartPtr {
 
@@ -69,27 +69,55 @@ namespace vislib {
         ~SmartPtr(void);
 
         /**
+         * Returns a (non-smart) pointer to the object this pointer points to
+         * dynamically casted to the class specified as template parameter.
+         *
+         * WARNING: Do not manipulate the returned pointer (e. g.: Do not 
+         * call 'delete' with this pointer).
+         *
+         * @return A (non-smart) pointer to the object.
+         */
+        template<class Tp> Tp* DynamicCast(void) {
+            return (this->ptr == NULL) ? NULL 
+                : dynamic_cast<Tp*>(this->ptr->obj);
+        }
+
+        /**
+         * Returns a (non-smart) pointer to the object this pointer points to
+         * dynamically casted to the class specified as template parameter.
+         *
+         * WARNING: Do not manipulate the returned pointer (e. g.: Do not 
+         * call 'delete' with this pointer).
+         *
+         * @return A (non-smart) pointer to the object.
+         */
+        template<class Tp> const Tp* DynamicCast(void) const {
+            return (this->ptr == NULL) ? NULL 
+                : dynamic_cast<Tp*>(this->ptr->obj);
+        }
+
+        /**
          * Answer, whether the smart pointer is a NULL pointer.
          *
          * @return true, if the pointer is a NULL pointer, false otherwise.
          */
         inline bool IsNull(void) const {
-			ASSERT ((this->ptr == NULL) || (this->ptr->obj != NULL));
+            ASSERT ((this->ptr == NULL) || (this->ptr->obj != NULL));
             return (this->ptr == NULL);
         }
 
-		/**
-		 * Assignment operator.
-		 *
-		 * This operation makes decrements the reference count on the current
-		 * pointer and makes 'rhs' the new object with an reference count of 1.
-		 * If 'rhs' is NULL, the smart pointer is made the NULL pointer without
-		 * a special reference counting.
-		 *
+        /**
+         * Assignment operator.
+         *
+         * This operation makes decrements the reference count on the current
+         * pointer and makes 'rhs' the new object with an reference count of 1.
+         * If 'rhs' is NULL, the smart pointer is made the NULL pointer without
+         * a special reference counting.
+         *
          * @param rhs The right hand side operand.
          *
          * @return *this.
-		 */
+         */
         SmartPtr& operator =(T *rhs);
 
         /**
@@ -173,9 +201,9 @@ namespace vislib {
          *
          * @return The reference count.
          */
-		inline UINT _GetCnt(void) const {
-			return (this->ptr != NULL) ? this->ptr->cnt : 0;
-		}
+        inline UINT _GetCnt(void) const {
+            return (this->ptr != NULL) ? this->ptr->cnt : 0;
+        }
 #endif /* defined(DEBUG) || defined(_DEBUG) */
 
     private:
@@ -206,7 +234,7 @@ namespace vislib {
      * vislib::SmartPtr<T, A>::SmartPtr
      */
     template<class T, class A> SmartPtr<T, A>::SmartPtr(T *ptr) : ptr(NULL) {
-		*this = ptr;
+        *this = ptr;
     }
 
 
@@ -226,7 +254,7 @@ namespace vislib {
 
         /* Handle reference decrement on current object. */
         if ((this->ptr != NULL) && (--this->ptr->cnt == 0)) {
-			A::Deallocate(this->ptr->obj);
+            A::Deallocate(this->ptr->obj);
             SAFE_DELETE(this->ptr);
         }
 
