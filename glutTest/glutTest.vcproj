@@ -347,7 +347,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\BeholderRotatorTextApp.cpp"
+				RelativePath=".\CamRotatorTestApp.cpp"
 				>
 			</File>
 			<File
@@ -397,7 +397,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\BeholderRotatorTextApp.h"
+				RelativePath=".\CamRotatorTestApp.h"
 				>
 			</File>
 			<File

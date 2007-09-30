@@ -15,7 +15,9 @@
 
 
 #include "vislib/AbstractCursor.h"
+#include "vislib/CameraParameters.h"
 #include "vislib/graphicstypes.h"
+#include "vislib/SmartPtr.h"
 
 
 namespace vislib {
@@ -24,7 +26,6 @@ namespace graphics {
     /* forward declarations */
     class AbstractCursorEvent;
     class AbstractCursor2DEvent;
-    class Camera;
 
 
     /**
@@ -77,21 +78,19 @@ namespace graphics {
         virtual void RegisterCursorEvent(AbstractCursor2DEvent *cursorEvent);
 
         /**
-         * Associates a camera with this cursor. The ownership of the camera is
-         * not changed, so the caller must ensure that the camera objects lives
-         * as long as it is associated with this cursor.
+         * Associates a camera parameters object with this cursor.
          *
-         * @param camera The camera.
+         * @param cameraParams The camera parameters object.
          */
-        void SetCamera(Camera *camera);
+        void SetCameraParams(SmartPtr<CameraParameters> cameraParams);
 
         /**
-         * Returns the associated camera.
+         * Returns the associated camera parameters object.
          *
-         * @return the associated camera.
+         * @return The associated camera parameters object.
          */
-        inline Camera * GetCamera(void) {
-            return this->cam;
+        inline SmartPtr<CameraParameters> CameraParams(void) {
+            return this->camPams;
         }
 
         /**
@@ -146,8 +145,9 @@ namespace graphics {
         /** previous y position of the cursor space */
         ImageSpaceType prevY;
 
-        /** The associated camera */
-        Camera *cam;
+        /** The parameters object of the associated camera */
+        SmartPtr<CameraParameters> camPams;
+
 
     };
 

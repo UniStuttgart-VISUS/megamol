@@ -11,28 +11,25 @@
 #include <iostream>
 
 #include "vislib/glverify.h"
+#include "vislib/CameraParamsStore.h"
 
 
 /*
  * FBOTest2App::FBOTest2App
  */
-FBOTest2App::FBOTest2App(void) : AbstractGlutApp(), beholder(), camera(), camera2(), fboAll(), fboRed(), fboGreen() {
+FBOTest2App::FBOTest2App(void) : AbstractGlutApp(), camera(), camera2(), fboAll(), fboRed(), fboGreen() {
 
-    this->beholder.SetView(
-        vislib::math::Point<double, 3>(0.0, -4.0, 0.0),
-        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
-        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
+    this->camera.Parameters()->SetView(
+        vislib::math::Point<float, 3>(0.0, -4.0, 0.0),
+        vislib::math::Point<float, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<float, 3>(0.0, 0.0, 1.0));
+    this->camera.Parameters()->SetClip(1.0f, 10.0f);
+    this->camera.Parameters()->SetFocalDistance(4.0f);
+    this->camera.Parameters()->SetApertureAngle(50.0f);
+    this->camera.Parameters()->SetVirtualViewSize(512.0f, 512.0f);
+    this->camera.Parameters()->SetProjection(vislib::graphics::CameraParameters::MONO_PERSPECTIVE);
 
-    this->camera.SetBeholder(&this->beholder);
-    this->camera.SetNearClipDistance(1.0f);
-    this->camera.SetFarClipDistance(10.0f);
-    this->camera.SetFocalDistance(4.0f);
-    this->camera.SetApertureAngle(50.0f);
-    this->camera.SetVirtualWidth(512.0f);
-    this->camera.SetVirtualHeight(512.0f);
-    this->camera.SetProjectionType(vislib::graphics::Camera::MONO_PERSPECTIVE);
-
-	this->camera2 = this->camera;
+    this->camera2.Parameters()->CopyFrom(this->camera.Parameters());
 }
 
 
@@ -55,13 +52,13 @@ int FBOTest2App::GLInit(void) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
 
     glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glLoadIdentity();
     this->camera.glMultViewMatrix();
 
     float lp[4] = {-2.0f, -2.0f, 2.0f, 0.0f};
@@ -75,33 +72,33 @@ int FBOTest2App::GLInit(void) {
 
     glEnable(GL_COLOR_MATERIAL);
 
-	if (!this->fboAll.Create(512, 512, GL_RGB16F_ARB, GL_RGB, GL_FLOAT, FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
-		printf("fboAll was not created!");
-		return -2;
-	}
+    if (!this->fboAll.Create(512, 512, GL_RGB16F_ARB, GL_RGB, GL_FLOAT, FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
+        printf("fboAll was not created!");
+        return -2;
+    }
 
-	if (!this->fboRed.Create(512, 512, GL_RGB16F_ARB, GL_RGB, GL_FLOAT, FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
-		printf("fboRed was not created!");
-		return -3;
-	}
+    if (!this->fboRed.Create(512, 512, GL_RGB16F_ARB, GL_RGB, GL_FLOAT, FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
+        printf("fboRed was not created!");
+        return -3;
+    }
 
-	FramebufferObject::ColorAttachParams cap;
-	cap.internalFormat = GL_RGB16F_ARB;
-	cap.format = GL_RGB;
-	cap.type = GL_FLOAT;
+    FramebufferObject::ColorAttachParams cap;
+    cap.internalFormat = GL_RGB16F_ARB;
+    cap.format = GL_RGB;
+    cap.type = GL_FLOAT;
 
-	FramebufferObject::DepthAttachParams dap;
-	dap.format = GL_DEPTH_COMPONENT32;
-	dap.state = FramebufferObject::ATTACHMENT_EXTERNAL_TEXTURE;
-	dap.externalID = this->fboRed.DepthTextureID();
+    FramebufferObject::DepthAttachParams dap;
+    dap.format = GL_DEPTH_COMPONENT32;
+    dap.state = FramebufferObject::ATTACHMENT_EXTERNAL_TEXTURE;
+    dap.externalID = this->fboRed.DepthTextureID();
 
-	FramebufferObject::StencilAttachParams sap;
+    FramebufferObject::StencilAttachParams sap;
     sap.state = FramebufferObject::ATTACHMENT_DISABLED;
 
-	if (!this->fboGreen.Create(512, 512, 1, &cap, dap, sap)) {
-		printf("fboGreen was not created!");
-		return -4;
-	}
+    if (!this->fboGreen.Create(512, 512, 1, &cap, dap, sap)) {
+        printf("fboGreen was not created!");
+        return -4;
+    }
 
     return 0;
 }
@@ -112,8 +109,9 @@ int FBOTest2App::GLInit(void) {
  */
 void FBOTest2App::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
-    this->camera.SetVirtualWidth(static_cast<vislib::graphics::ImageSpaceType>(w));
-    this->camera.SetVirtualHeight(static_cast<vislib::graphics::ImageSpaceType>(h));
+    this->camera.Parameters()->SetVirtualViewSize(
+        static_cast<vislib::graphics::ImageSpaceType>(w),
+        static_cast<vislib::graphics::ImageSpaceType>(h));
 }
 
 
@@ -134,137 +132,136 @@ void FBOTest2App::GLDeinit(void) {
 void FBOTest2App::Render(void) {
     USES_GL_VERIFY;
 
-	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
 
-	// render all 
+    // render all 
     ::glDrawBuffer(GL_BACK);
-	GL_VERIFY_EXPR(this->fboAll.Enable());
+    GL_VERIFY_EXPR(this->fboAll.Enable());
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	this->camera2.glMultProjectionMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    this->camera2.glMultProjectionMatrix();
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	this->camera2.glMultViewMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    this->camera2.glMultViewMatrix();
 
-	glColor3ub(255, 0, 0);
-	glPushMatrix();
-	glRotatef(60.0, 1.0, 0.0, 0.0);
-	glRotatef(60.0, 0.0, 0.0, 1.0);
-	this->RenderTestBox(1.0f);
-	glPopMatrix();
+    glColor3ub(255, 0, 0);
+    glPushMatrix();
+    glRotatef(60.0, 1.0, 0.0, 0.0);
+    glRotatef(60.0, 0.0, 0.0, 1.0);
+    this->RenderTestBox(1.0f);
+    glPopMatrix();
 
-	glColor3ub(0, 255, 0);
-	glPushMatrix();
-	glRotatef(30.0, 1.0, 0.0, 0.0);
-	glRotatef(30.0, 0.0, 0.0, 1.0);
-	this->RenderTestBox(1.0f);
-	glPopMatrix();
+    glColor3ub(0, 255, 0);
+    glPushMatrix();
+    glRotatef(30.0, 1.0, 0.0, 0.0);
+    glRotatef(30.0, 0.0, 0.0, 1.0);
+    this->RenderTestBox(1.0f);
+    glPopMatrix();
 
-	this->fboAll.Disable();
+    this->fboAll.Disable();
 
-	// render red 
-	GL_VERIFY_EXPR(this->fboRed.Enable());
+    // render red 
+    GL_VERIFY_EXPR(this->fboRed.Enable());
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	this->camera2.glMultProjectionMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    this->camera2.glMultProjectionMatrix();
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	this->camera2.glMultViewMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    this->camera2.glMultViewMatrix();
 
-	glColor3ub(255, 0, 0);
-	glPushMatrix();
-	glRotatef(60.0, 1.0, 0.0, 0.0);
-	glRotatef(60.0, 0.0, 0.0, 1.0);
-	this->RenderTestBox(1.0f);
-	glPopMatrix();
+    glColor3ub(255, 0, 0);
+    glPushMatrix();
+    glRotatef(60.0, 1.0, 0.0, 0.0);
+    glRotatef(60.0, 0.0, 0.0, 1.0);
+    this->RenderTestBox(1.0f);
+    glPopMatrix();
 
-	this->fboRed.Disable();
+    this->fboRed.Disable();
 
-	// render green 
-	GL_VERIFY_EXPR(this->fboGreen.Enable());
+    // render green 
+    GL_VERIFY_EXPR(this->fboGreen.Enable());
 
-	glClear(GL_COLOR_BUFFER_BIT); /* do not clear depth */
-//	glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT); /* do not clear depth */
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	this->camera2.glMultProjectionMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    this->camera2.glMultProjectionMatrix();
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	this->camera2.glMultViewMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    this->camera2.glMultViewMatrix();
 
-	glColor3ub(0, 255, 0);
-	glPushMatrix();
-	glRotatef(30.0, 1.0, 0.0, 0.0);
-	glRotatef(30.0, 0.0, 0.0, 1.0);
-	this->RenderTestBox(1.0f);
-	glPopMatrix();
+    glColor3ub(0, 255, 0);
+    glPushMatrix();
+    glRotatef(30.0, 1.0, 0.0, 0.0);
+    glRotatef(30.0, 0.0, 0.0, 1.0);
+    this->RenderTestBox(1.0f);
+    glPopMatrix();
 
-	this->fboGreen.Disable();
+    this->fboGreen.Disable();
 
-	// render viewing
+    // render viewing
     glViewport(0, 0, this->GetWidth(), this->GetHeight());
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	this->camera.glMultProjectionMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    this->camera.glMultProjectionMatrix();
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	this->camera.glMultViewMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    this->camera.glMultViewMatrix();
 
-	glColor3ub(255, 255, 255);
-	glDisable(GL_LIGHTING);
-	glEnable(GL_TEXTURE_2D);
+    glColor3ub(255, 255, 255);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
 
-	glPushMatrix();
-	glTranslated(0.0, 3.0, 0.0);
-	this->fboRed.BindColorTexture();
-	glBegin(GL_QUADS);
-		glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
-		glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
-		glTexCoord2d(1.0, 1.0); ::glVertex3d(1.0, 0.0, 1.0);   // top right
-		glTexCoord2d(0.0, 1.0); ::glVertex3d(-1.0, 0.0, 1.0);   // top left
-	glEnd();  
-	glPopMatrix();
+    glPushMatrix();
+    glTranslated(0.0, 3.0, 0.0);
+    this->fboRed.BindColorTexture();
+    glBegin(GL_QUADS);
+        glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
+        glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
+        glTexCoord2d(1.0, 1.0); ::glVertex3d(1.0, 0.0, 1.0);   // top right
+        glTexCoord2d(0.0, 1.0); ::glVertex3d(-1.0, 0.0, 1.0);   // top left
+    glEnd();  
+    glPopMatrix();
 
-	glPushMatrix();
-	glRotated(38.0, 0.0, 0.0, 1.0);
-	glTranslated(0.0, 3.0, 0.0);
-	this->fboAll.BindColorTexture();
-	glBegin(GL_QUADS);
-		glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
-		glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
-		glTexCoord2d(1.0, 1.0); ::glVertex3d(1.0, 0.0, 1.0);   // top right
-		glTexCoord2d(0.0, 1.0); ::glVertex3d(-1.0, 0.0, 1.0);   // top left
-	glEnd();  
-	glPopMatrix();
+    glPushMatrix();
+    glRotated(38.0, 0.0, 0.0, 1.0);
+    glTranslated(0.0, 3.0, 0.0);
+    this->fboAll.BindColorTexture();
+    glBegin(GL_QUADS);
+        glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
+        glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
+        glTexCoord2d(1.0, 1.0); ::glVertex3d(1.0, 0.0, 1.0);   // top right
+        glTexCoord2d(0.0, 1.0); ::glVertex3d(-1.0, 0.0, 1.0);   // top left
+    glEnd();  
+    glPopMatrix();
 
-	glPushMatrix();
-	glRotated(-38.0, 0.0, 0.0, 1.0);
-	glTranslated(0.0, 3.0, 0.0);
-	this->fboGreen.BindColorTexture();
-	glBegin(GL_QUADS);
-		glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
-		glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
-		glTexCoord2d(1.0, 1.0); ::glVertex3d(1.0, 0.0, 1.0);   // top right
-		glTexCoord2d(0.0, 1.0); ::glVertex3d(-1.0, 0.0, 1.0);   // top left
-	glEnd();  
-	glPopMatrix();
+    glPushMatrix();
+    glRotated(-38.0, 0.0, 0.0, 1.0);
+    glTranslated(0.0, 3.0, 0.0);
+    this->fboGreen.BindColorTexture();
+    glBegin(GL_QUADS);
+        glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
+        glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
+        glTexCoord2d(1.0, 1.0); ::glVertex3d(1.0, 0.0, 1.0);   // top right
+        glTexCoord2d(0.0, 1.0); ::glVertex3d(-1.0, 0.0, 1.0);   // top left
+    glEnd();  
+    glPopMatrix();
 
-	glFlush();
-	glutSwapBuffers();
+    glFlush();
+    glutSwapBuffers();
 }
 
 

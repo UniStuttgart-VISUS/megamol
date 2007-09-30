@@ -1,19 +1,21 @@
 /*
  * AbstractCameraController.cpp
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
-
+#include <cstddef> // for NULL
 #include "vislib/AbstractCameraController.h"
-#include "vislib/memutils.h"
+#include "vislib/assert.h"
 
 
 /*
  * vislib::graphics::AbstractCameraController::AbstractCameraController
  */
-vislib::graphics::AbstractCameraController::AbstractCameraController(void) 
-        : camera(NULL) {
+vislib::graphics::AbstractCameraController::AbstractCameraController(
+        const SmartPtr<CameraParameters>& cameraParams) 
+        : cameraParams(cameraParams) {
 }
 
 
@@ -21,13 +23,34 @@ vislib::graphics::AbstractCameraController::AbstractCameraController(void)
  * vislib::graphics::AbstractCameraController::~AbstractCameraController
  */
 vislib::graphics::AbstractCameraController::~AbstractCameraController(void) {
-    // Do not delete camera !
+    // intentionally empty
 }
 
 
 /*
- * vislib::graphics::AbstractCameraController::SetCamera
+ * vislib::graphics::AbstractCameraController::CameraParams
  */
-void vislib::graphics::AbstractCameraController::SetCamera(vislib::graphics::Camera *camera) {
-    this->camera = camera;
+vislib::SmartPtr<vislib::graphics::CameraParameters>& 
+vislib::graphics::AbstractCameraController::CameraParams(void) {
+    ASSERT(this->IsCameraParamsValid());
+    return this->cameraParams;
+}
+
+
+/*
+ * vislib::graphics::AbstractCameraController::CameraParams
+ */
+const vislib::SmartPtr<vislib::graphics::CameraParameters>& 
+vislib::graphics::AbstractCameraController::CameraParams(void) const {
+    ASSERT(this->IsCameraParamsValid());
+    return this->cameraParams;
+}
+
+
+/*
+ * vislib::graphics::AbstractCameraController::
+ */
+void vislib::graphics::AbstractCameraController::SetCameraParams(
+        const SmartPtr<CameraParameters>& cameraParams) {
+    this->cameraParams = cameraParams;
 }

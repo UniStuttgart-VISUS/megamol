@@ -1,7 +1,8 @@
 /*
  * AbstractCameraController.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_ABSTRACTCAMERACONTROLLER_H_INCLUDED
@@ -14,49 +15,78 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/SmartPtr.h"
+#include "vislib/CameraParameters.h"
+
+
 namespace vislib {
 namespace graphics {
 
-    /* forward declaration */
-    class Camera;
-
     /**
-     * Abstract interface class for camera controller objects
+     * Abstract base class for camera controller classes
      */
     class AbstractCameraController {
-
     public:
 
-        /** Ctor. */
-        AbstractCameraController(void);
+        /** 
+         * Ctor. Initialises with a camera object. This controller object does
+         * not take ownership of the memory of the camera object. The caller 
+         * must therefore guarantee that the provided pointer remains valid 
+         * until it is no longer used by this object.
+         *
+         * @param cameraParams The camera parameters object to control.
+         */
+        AbstractCameraController(
+            const SmartPtr<CameraParameters>& cameraParams 
+            = SmartPtr<CameraParameters>());
 
         /** Dtor. */
         ~AbstractCameraController(void);
 
         /**
-         * Associates a beholder with this beholder controller. The ownership
-         * of the beholder is not changed, so the caller must ensure that the
-         * beholder lives as long as it is associated with this controller.
+         * Answer the parameters object of the associated camera object. Must
+         * not be called if 'IsCameraValid' returns 'false'.
          *
-         * @param beholder The beholder.
+         * @return The parameters object of the associated camera object.
          */
-        void SetCamera(Camera *camera);
+        SmartPtr<CameraParameters>& CameraParams(void);
 
         /**
-         * Returns the associated beholder.
+         * Answer the parameters object of the associated camera object. Must
+         * not be called if 'IsCameraValid' returns 'false'.
          *
-         * @return The associated beholder.
+         * @return The parameters object of the associated camera object.
          */
-        inline Camera * GetCamera(void) const {
-            return this->camera;
+        const SmartPtr<CameraParameters>& CameraParams(void) const;
+
+        /**
+         * Answer weather the associated 'Camera' object is valid.
+         *
+         * @return 'true' if the associated 'Camera' object is valid, 
+         *         'false' otherwise.
+         */
+        inline bool IsCameraParamsValid(void) const {
+            return !this->cameraParams.IsNull();
         }
+
+        /**
+         * Associates this controller with a new camera object. This 
+         * controller object does not take ownership of the memory of the 
+         * camera object. The caller must therefore guarantee that the 
+         * provided pointer remains valid until it is no longer used by this 
+         * object.
+         *
+         * @param cameraParams The camera parameters object to control.
+         */
+        void SetCameraParams(const SmartPtr<CameraParameters>& cameraParams);
 
     private:
 
-        /** The beholder hold */
-        Camera *camera;
+        /** The associated 'Camera' object. */
+        SmartPtr<CameraParameters> cameraParams;
+
     };
-    
+
 } /* end namespace graphics */
 } /* end namespace vislib */
 
@@ -64,3 +94,4 @@ namespace graphics {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTCAMERACONTROLLER_H_INCLUDED */
+

@@ -13,9 +13,6 @@
 
 #include "AbstractGlutApp.h"
 #include "vislib/types.h"
-#include "vislib/Beholder.h"
-#include "vislib/Camera.h"
-#define VISLIB_ENABLE_OPENGL
 #include "vislib/CameraOpenGL.h"
 
 
@@ -43,7 +40,10 @@ private:
         Lens(void);
         ~Lens(void);
 
-        void Update(float sec, vislib::graphics::gl::CameraOpenGL camera);
+        void SetCameraParameters(
+            const vislib::SmartPtr<vislib::graphics::CameraParameters>& params);
+
+        void Update(float sec);
 
         void BeginDraw(unsigned int ww, unsigned int wh, bool ortho);
         void EndDraw(void);
@@ -64,7 +64,6 @@ private:
     bool ortho;
     bool nativeFull;
 
-    vislib::graphics::Beholder beholder;
     vislib::graphics::gl::CameraOpenGL camera;
 };
 

@@ -1,7 +1,8 @@
 /*
  * Camera.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_CAMERA_H_INCLUDED
@@ -14,489 +15,102 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/graphicstypes.h"
-#include "vislib/Beholder.h"
-#include "vislib/mathtypes.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/memutils.h"
-#include "vislib/Rectangle.h"
-#include "vislib/Point.h"
-#include "vislib/Vector.h"
-#include "vislib/Cuboid.h"
-#include <float.h>
+#include "vislib/CameraParameters.h"
+#include "vislib/SmartPtr.h"
 
 
 namespace vislib {
 namespace graphics {
 
+
     /**
-     * class modelling a 3d scene camera
+     * Base class for all camera implementations
      */
     class Camera {
     public:
-        
-        /** possible values for the projection type */
-        enum ProjectionType {
-            MONO_PERSPECTIVE = 0,
-            MONO_ORTHOGRAPHIC,
-            STEREO_PARALLEL,
-            STEREO_OFF_AXIS,
-            STEREO_TOE_IN
-        };
 
-        /** possible values for stereo eyes */
-        enum StereoEye {
-            LEFT_EYE = 0,
-            RIGHT_EYE = 1
-        };
-
-        /**
-         * default ctor
-         */
+        /** Ctor. */
         Camera(void);
 
-        /**
-         * copy ctor
+        /** 
+         * Ctor. Initialises the camera with the given camera parameters.
          *
-         * @param rhs Camera values will be copied from.
+         * @param params The camera parameters to be used. Must not be NULL.
          */
-        Camera(const Camera &rhs);
+        Camera(const SmartPtr<CameraParameters>& params);
 
         /**
-         * ctor
-         * Associates this camera with the beholder specified.
-         * Ownership of the beholder is not changed, thus the caller must 
-         * ensure that the beholder object is valid as long as it is
-         * associated with this camera.
+         * Copy ctor.
          *
-         * @param beholder Pointer to the new beholder to be associated with 
-         *                 this camera
-         *
-         * @throws std::bad_alloc 
+         * @param rhs The right hand side operand.
          */
-        Camera(Beholder *beholder);
+        Camera(const Camera& rhs);
 
-        /**
-         * dtor
-         */
+        /** Dtor. */
         virtual ~Camera(void);
 
         /**
-         * Calculates the optimal clipping distances for the giving bounding
-         * box, based on the position of the associated beholder.
+         * Answers the parameters object.
          *
-         * @param box The bounding box of the scene content.
-         * @param minNear The minimal value for the near clipping plane
-         * @param maxFar The maximal value for the far clipping plane
+         * @return The parameters object.
          */
-        void CalcClipDistances(const vislib::math::Cuboid<SceneSpaceType> &box,
-            SceneSpaceType minNear = 0.01f, SceneSpaceType maxFar = FLT_MAX);
-
-        /** 
-         * Returns aperture Angle of the camera along the y axis.
-         *
-         * @return The aperture Angle
-         */
-        inline math::AngleDeg GetApertureAngle(void) { 
-            return math::AngleRad2Deg(this->halfApertureAngle * 2.0f);
-        }
+        SmartPtr<CameraParameters>& Parameters(void);
 
         /**
-         * Returns the half aperture Angle of the camera along the y axis.
+         * Sets the parameters object.
          *
-         * @return The half aperture Angel in radians.
+         * @param params The new parameters object.
          */
-        inline math::AngleRad GetHalfApertureAngleRad(void) {
-            return this->halfApertureAngle;
-        }
-
-        /** 
-         * Returns distance of the far clipping plane 
-         *
-         * @return distance of the far clipping plane
-         */
-        inline SceneSpaceType GetFarClipDistance(void) { 
-            return this->farClip;
-        }
-
-        /** 
-         * Returns focal distance for stereo images 
-         *
-         * @return The focal distance
-         */
-        inline SceneSpaceType GetFocalDistance(void) { 
-            return this->focalDistance;
-        }
-
-        /** 
-         * Returns distance of the near clipping plane 
-         *
-         * @return The distance of the near clipping plane
-         */
-        inline SceneSpaceType GetNearClipDistance(void) { 
-            return this->nearClip;
-        }
-
-        /** 
-         * Returns eye disparity value for stereo images 
-         *
-         * @return The eye disparity value
-         */
-        inline SceneSpaceType GetStereoDisparity(void) { 
-            return this->halfStereoDisparity * 
-                static_cast<SceneSpaceType>(2.0);
-        }
-
-        /** 
-         * Returns type of the projection 
-         *
-         * @return The type of the projection
-         */
-        inline ProjectionType GetProjectionType(void) { 
-            return this->projectionType;
-        }
-
-        /**
-         * Returns the eye for stereo projection
-         *
-         * @return The eye for stereo projection
-         */
-        inline StereoEye GetStereoEye(void) {
-            return this->eye;
-        }
-
-        /** 
-         * Returns Width of the virtual camera image 
-         *
-         * @return The width of the virtual camera image 
-         */
-        inline ImageSpaceType GetVirtualWidth(void) { 
-            return static_cast<ImageSpaceType>(this->virtualHalfWidth * 2.0);
-        }
-
-        /** 
-         * Returns Height of the virtual camera image 
-         *
-         * @return The height of the virtual camera image
-         */
-        inline ImageSpaceType GetVirtualHeight(void) { 
-            return static_cast<ImageSpaceType>(this->virtualHalfHeight * 2.0);
-        }
-
-        /**
-         * Sets the aperture angle and sets the memberChanged flag.
-         *
-         * @param apertureAngle the aperture angle.
-         *
-         * @throws IllegalParamException if the angle specified is not more 
-         *         then Zero, and less then 180.0 degree.
-         */
-        void SetApertureAngle(math::AngleDeg apertureAngle);
-
-        /**
-         * Sets the distance of the far clipping plane and sets the 
-         * memberChanged flag.
-         * Values equal or less to the distance of the current near clipping 
-         * plane will be clamped to the value of the current near clipping 
-         * plane + a positive delta.
-         *
-         * @param farClip the distance of the far clipping plane
-         */
-        void SetFarClipDistance(SceneSpaceType farClip);
-
-        /** 
-         * Sets the focal distance for stereo images and sets the 
-         * memberChanged flag.
-         * Values equal or less then Zero will be clamped to a small positive 
-         * value.
-         *
-         * @param focalDistance The focal distance
-         */
-        void SetFocalDistance(SceneSpaceType focalDistance);
-
-        /** 
-         * Sets distance of the near clipping plane and sets the memberChanged 
-         * flag.
-         * Values equal or less then Zero will be clamped to a small positive 
-         * value.
-         * If the new value is equal or larger then the distance of the corrent
-         * far clipping plane, the far clipping plane is moved to a distance
-         * slightly larger then the given value for the near clipping plane.
-         *
-         * @param nearClip The distance of the near clipping plane 
-         */
-        void SetNearClipDistance(SceneSpaceType nearClip);
-
-        /** 
-         * Sets the eye disparity value for stereo images and sets the 
-         * memberChanged flag.
-         * If a negative value is supplied, it's absolute value is used.
-         *
-         * @param stereoDisparity The eye disparity value
-         */
-        void SetStereoDisparity(SceneSpaceType stereoDisparity);
-
-        /**
-         * Sets the type of stereo projection and sets the memberChanged flag.
-         *
-         * @param stereoProjectionType The type of stereo projection
-         */
-        void SetProjectionType(ProjectionType projectionType);
-
-        /**
-         * Sets the eye for stereo projection and sets the memberChanged flag.
-         * This value has no effect if a mono projection is used.
-         *
-         * @param eye The new eye to be set.
-         */
-        void SetStereoEye(StereoEye eye);
-
-        /** 
-         * Sets the width of the virtual camera image and sets the 
-         * memberChanged flag.
-         * Values equal or less then Zero will be clamped to 1.
-         * If the left value of the tile rectangle is Zero and the right value
-         * is equal to the current virtual image width, the right value of the
-         * tile rectangle is also set to the virtual width parameter.
-         *
-         * @param virtualWidth The width of the virtual camera image
-         */
-        void SetVirtualWidth(ImageSpaceType virtualWidth);
-
-        /** 
-         * Sets the height of the virtual camera image and sets the 
-         * memberChanged flag.
-         * Values equal or less then Zero will be clamped to 1.
-         * If the bottom value of the tile rectangle is Zero and the top value
-         * is equal to the current virtual image height, the top value of the
-         * tile rectangle is also set to the virtual height parameter.
-         *
-         * @param virtualHeight The height of the virtual camera image 
-         */
-        void SetVirtualHeight(ImageSpaceType virtualHeight);
-
-        /**
-         * Return the tile rectangle of the camera.
-         *
-         * @return The tile rectangle.
-         */
-        inline const math::Rectangle<ImageSpaceType> & GetTileRectangle(void) const {
-            return this->tileRect;
-        }
-
-        /**
-         * Resets the tile rectangle of the camera to the size of the whole 
-         * virtual camera image.
-         * Left and bottom will be set to Zero, right will be set to the width
-         * of the virtual camera image, and top will be set to the height of 
-         * the virtual camera image.
-         */
-        inline void ResetTileRectangle(void) {
-            this->tileRect.Set(0, 0,
-                this->virtualHalfWidth * 2.0f, this->virtualHalfHeight * 2.0f);
-        }
-
-        /**
-         * Sets the tile rectangle of the camera and sets the memberChanged 
-         * flag.
-         *
-         * @param tileRect The new tile rectangle for the camera.
-         */
-        template <class Tp, class Sp > 
-        void SetTileRectangle(const math::AbstractRectangle<Tp, Sp> &tileRect);
-
-        /**
-         * Associates this camera with the beholder specified and resets the
-         * update counter value of this camera.
-         * Ownership of the beholder is not changed, thus the caller must 
-         * ensure that the beholder object is valid as long as it is
-         * associated with this camera.
-         *
-         * @param beholder Pointer to the new beholder to be associated with 
-         *                 this camera
-         *
-         * @throws std::bad_alloc 
-         */
-        void SetBeholder(Beholder *beholder);
-
-        /**
-         * Answer the associated beholder of this camera.
-         *
-         * @return Pointer to the associated beholder of this camera.
-         */
-        inline Beholder * GetBeholder(void) {
-            return this->beholder;
-        }
-
-        /**
-         * Answer the position of the eye. This point is based on the beholder
-         * position, but may be moved because of the eye disparity in case of
-         * stereo projection.
-         *
-         *
-         * @throws IllegalStateException if no beholder is associated with this
-         *         Camera.
-         * @return The position of the eye.
-         */
-        const math::Point<SceneSpaceType, 3> EyePosition(void) const;
-
-        /**
-         * Answer the eye front normal vector of the looking direction. This 
-         * vector is based on the beholder front vector, but may be rotated 
-         * because of stereo projection.
-         *
-         * @return The eye front vector.
-         *
-         * @throws IllegalStateException if no beholder is associated with this
-         *         Camera.
-         */
-        const math::Vector<SceneSpaceType, 3> EyeFrontVector(void) const;
-
-        /**
-         * Answer the eye right normal vector of the looking direction. This 
-         * vector is based on the beholder right vector, but may be rotated 
-         * because of stereo projection.
-         *
-         * @return The eye right vector.
-         *
-         * @throws IllegalStateException if no beholder is associated with this
-         *         Camera.
-         */
-        const math::Vector<SceneSpaceType, 3> EyeRightVector(void) const;
-
-        /**
-         * Answer the eye up normal vector of the looking direction. This 
-         * vector is identical to the beholder up vector.
-         *
-         * @return The eye up vector.
-         *
-         * @throws IllegalStateException if no beholder is associated with this
-         *         Camera.
-         */
-        const math::Vector<SceneSpaceType, 3> EyeUpVector(void) const;
+        void SetParameters(const SmartPtr<CameraParameters>& params);
 
         /**
          * Assignment operator
          *
-         * @param rhs Camera values will be copied from
+         * @param rhs The right hand side operand.
          *
          * @return Reference to this.
          */
-        Camera & operator=(const Camera &rhs);
+        Camera& operator=(const Camera &rhs);
+
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return 'true' if 'rhs' and 'this' are equal, 'false' otherwise.
+         */
+        bool operator==(const Camera &rhs) const;
 
     protected:
 
         /**
-         * Calculates and returns all parameters necessary to set up a 
-         * projection matrix modelling the viewing frustum of this camera.
+         * Answer whether an update of attributes derived from the camera 
+         * parameters is needed, or not.
          *
-         * @param outLeft Receives the minimal x value of the frustum on the 
-         *                near clipping plane.
-         * @param outRight Receives the maximal x value of the frustum on the 
-         *                 near clipping plane.
-         * @param outBottom Receives the minimal y value of the frustum on the 
-         *                  near clipping plane.
-         * @param outTop Receives the maximal y value of the frustum on the 
-         *               near clipping plane.
-         * @param outNearClip Receives the distance of the near clipping plane 
-         *                    from the camera position.
-         * @param outFraClip Receives the distance of the far clipping plane
-         *                   from the camera position.
-         *
-         * @throws IllegalStateException if this camera is not associated with a
-         *         Beholder.
+         * @return 'true' if an update is needed, 'false' otherwise.
          */
-        void CalcFrustumParameters(SceneSpaceType &outLeft,
-            SceneSpaceType &outRight, SceneSpaceType &outBottom,
-            SceneSpaceType &outTop, SceneSpaceType &outNearClip,
-            SceneSpaceType &outFarClip);
-
-        /**
-         * Answer wether the view or frustum parameters need to be recalculated.
-         *
-         * @return true if the parameters need to be recalculated, false 
-         *         otherwise.
-         */
-        inline bool NeedUpdate(void) {
-            return this->membersChanged || (this->updateCounter == 0)
-                || (this->beholder == NULL) 
-                || (this->updateCounter != this->beholder->GetUpdateCounterValue());
+        inline bool needUpdate(void) const {
+            return this->syncNumber != this->parameters->SyncNumber();
         }
 
         /**
-         * Clears all update flaggs.
+         * Clears the need-update flag. This should be called after an update
+         * of all attributes derived from the camera parameters was performed.
          */
-        inline void ClearUpdateFlaggs(void) {
-            this->membersChanged = false;
-            if (this->beholder) {
-                this->updateCounter = this->beholder->GetUpdateCounterValue();
-            }
+        inline void markAsUpdated(void) {
+            this->syncNumber = this->parameters->SyncNumber();
         }
 
     private:
 
-        /**
-         * Sets default values for all members, except updateCounter, and
-         * holder which are not changed.
-         */
-        void setDefaultValues(void);
+        /** the syncronisation number */
+        unsigned int syncNumber;
 
-        /** half aperture Angle in radians of the camera along the y axis */
-        math::AngleRad halfApertureAngle;
+        /** the parameters object of this camera */
+        SmartPtr<CameraParameters> parameters;
 
-        /** Pointer to the holder of the currently attached beholder */
-        Beholder *beholder;
-
-        /** distance of the far clipping plane */
-        SceneSpaceType farClip;
-
-        /** focal distance for stereo images */
-        SceneSpaceType focalDistance;
-
-        /** distance of the near clipping plane */
-        SceneSpaceType nearClip;
-
-        /** half eye disparity value for stereo images */
-        SceneSpaceType halfStereoDisparity;
-
-        /** type of stereo projection */
-        ProjectionType projectionType;
-
-        /** eye for stereo projections */
-        StereoEye eye;
-
-        /** Half width of the virtual camera image along the right vector*/
-        ImageSpaceType virtualHalfWidth;
-
-        /** Half height of the virtual camera image along the up vector */
-        ImageSpaceType virtualHalfHeight;
-
-        /** 
-         * The camera update counter value to be compared with the update 
-         * counter value of the beholder.
-         */
-        unsigned int updateCounter;
-
-        /** 
-         * Flag to indicate that the values of at least one member might have
-         * changed.
-         */
-        bool membersChanged;
-
-        /** The selected clip tile rectangle of the virtual camera image */
-        math::Rectangle<ImageSpaceType> tileRect;
     };
-
     
-    /*
-     * Camera::SetTileRectangle
-     */
-    template <class Tp, class Sp > 
-    void Camera::SetTileRectangle(const math::AbstractRectangle<Tp, Sp> &tileRect) {
-        this->tileRect = tileRect;
-        this->membersChanged = true;
-    }
-
 } /* end namespace graphics */
 } /* end namespace vislib */
 

@@ -1,35 +1,34 @@
 /*
- * CamTestApp.h
+ * CamRotatorTestApp.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006-2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIBTEST_BEHOLDERROTATORTESTAPP_H_INCLUDED
-#define VISLIBTEST_BEHOLDERROTATORTESTAPP_H_INCLUDED
+#ifndef VISLIBTEST_CAMROTATORTESTAPP_H_INCLUDED
+#define VISLIBTEST_CAMROTATORTESTAPP_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
 
 #include "AbstractGlutApp.h"
-#include "vislib/types.h"
-#include "vislib/Beholder.h"
 #include "vislib/Camera.h"
-#define VISLIB_ENABLE_OPENGL
 #include "vislib/CameraOpenGL.h"
-#include "vislib/InputModifiers.h"
+#include "vislib/CameraRotate2D.h"
+#include "vislib/CameraRotate2DLookAt.h"
 #include "vislib/Cursor2D.h"
-#include "vislib/BeholderRotator2D.h"
-#include "vislib/BeholderLookAtRotator2D.h"
+#include "vislib/InputModifiers.h"
+#include "vislib/types.h"
 
 
 /*
- * Test for mono tiled display frustrum generation
+ * Test application of camera rotations
  */
-class BeholderRotatorTextApp: public AbstractGlutApp {
+class CamRotatorTestApp: public AbstractGlutApp {
 public:
-    BeholderRotatorTextApp(void);
-    virtual ~BeholderRotatorTextApp(void);
+    CamRotatorTestApp(void);
+    virtual ~CamRotatorTestApp(void);
 
     virtual int GLInit(void);
     virtual void GLDeinit(void);
@@ -44,15 +43,14 @@ public:
 private:
     void RenderLogo(void);
 
-    vislib::graphics::Beholder beholder;
     vislib::graphics::gl::CameraOpenGL camera;
     vislib::graphics::InputModifiers modkeys;
     vislib::graphics::Cursor2D cursor;
-    vislib::graphics::BeholderRotator2D rotator1;
-    vislib::graphics::BeholderLookAtRotator2D rotator2;
+    vislib::graphics::CameraRotate2D rotator1;
+    vislib::graphics::CameraRotate2DLookAt rotator2;
 
     void SetupRotator1(void);
     void SetupRotator2(void);
 };
 
-#endif /* VISLIBTEST_BEHOLDERROTATORTESTAPP_H_INCLUDED */
+#endif /* VISLIBTEST_CAMROTATORTESTAPP_H_INCLUDED */

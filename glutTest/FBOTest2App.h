@@ -13,9 +13,6 @@
 
 #include "AbstractGlutApp.h"
 #include "vislib/FramebufferObject.h"
-#include "vislib/Beholder.h"
-#include "vislib/Camera.h"
-#define VISLIB_ENABLE_OPENGL
 #include "vislib/CameraOpenGL.h"
 
 
@@ -34,11 +31,11 @@ public:
 
 private:
 
-	void RenderTestBox(float s);
-    
-    vislib::graphics::Beholder beholder;
-    vislib::graphics::gl::CameraOpenGL camera;    
-	vislib::graphics::gl::CameraOpenGL camera2;
+    void RenderTestBox(float s);
+
+    vislib::graphics::gl::CameraOpenGL camera;
+    vislib::graphics::gl::CameraOpenGL camera2;
+
     vislib::graphics::gl::FramebufferObject fboAll;
     vislib::graphics::gl::FramebufferObject fboRed;
     vislib::graphics::gl::FramebufferObject fboGreen;

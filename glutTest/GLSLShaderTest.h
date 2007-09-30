@@ -13,14 +13,11 @@
 
 #include "AbstractGlutApp.h"
 #include "vislib/types.h"
-#include "vislib/Beholder.h"
-#include "vislib/Camera.h"
 #include "vislib/CameraOpenGL.h"
-#include "vislib/InputModifiers.h"
+#include "vislib/CameraRotate2DLookAt.h"
 #include "vislib/Cursor2D.h"
-#include "vislib/BeholderRotator2D.h"
-#include "vislib/BeholderLookAtRotator2D.h"
 #include "vislib/GLSLShader.h"
+#include "vislib/InputModifiers.h"
 
 
 /*
@@ -43,13 +40,12 @@ public:
 
 private:
 
-    vislib::graphics::Beholder beholder;
     vislib::graphics::gl::CameraOpenGL camera;
     vislib::graphics::InputModifiers modkeys;
     vislib::graphics::Cursor2D cursor;
-    vislib::graphics::BeholderLookAtRotator2D rotator2;
-
+    vislib::graphics::CameraRotate2DLookAt rotator;
     vislib::graphics::gl::GLSLShader schade;
+
 };
 
 #endif /* VISLIBTEST_GLSLSHADERTEST_H_INCLUDED */

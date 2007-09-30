@@ -6,7 +6,6 @@
 
 
 #include "vislib/Cursor2D.h"
-#include "vislib/Camera.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/AbstractCursor2DEvent.h"
 
@@ -18,8 +17,8 @@
  */
 vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(), 
         x(static_cast<ImageSpaceType>(0)), y(static_cast<ImageSpaceType>(0)), 
-        prevX(static_cast<ImageSpaceType>(0)), prevY(static_cast<ImageSpaceType>(0)), 
-        cam(NULL) {
+        prevX(static_cast<ImageSpaceType>(0)), 
+        prevY(static_cast<ImageSpaceType>(0)), camPams(NULL) { 
 }
 
 
@@ -27,7 +26,8 @@ vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(),
  * vislib::graphics::Cursor2D::Cursor2D
  */
 vislib::graphics::Cursor2D::Cursor2D(const Cursor2D& rhs) 
-: AbstractCursor(rhs), x(rhs.x), y(rhs.y), prevX(rhs.prevX), prevY(rhs.prevY), cam(rhs.cam) {
+        : AbstractCursor(rhs), x(rhs.x), y(rhs.y), prevX(rhs.prevX), 
+        prevY(rhs.prevY), camPams(rhs.camPams) {
 }
 
 
@@ -52,8 +52,9 @@ void vislib::graphics::Cursor2D::SetPosition(ImageSpaceType x, ImageSpaceType y,
     this->x = x;
     this->y = y;
 
-    if (flipY && this->cam) {
-        this->y = this->cam->GetVirtualHeight() - static_cast<ImageSpaceType>(1) - this->y;
+    if (flipY && !this->camPams.IsNull()) {
+        this->y = this->camPams->VirtualViewSize().Height()
+            - static_cast<ImageSpaceType>(1) - this->y;
     }
 
     if (moved) { // trigger move events
@@ -79,7 +80,7 @@ vislib::graphics::Cursor2D& vislib::graphics::Cursor2D::operator=(const Cursor2D
     this->y = rhs.y; 
     this->prevX = rhs.prevX;
     this->prevY = rhs.prevY;
-    this->cam = rhs.cam;
+    this->camPams = rhs.camPams;
     return *this;
 }
 
@@ -87,6 +88,7 @@ vislib::graphics::Cursor2D& vislib::graphics::Cursor2D::operator=(const Cursor2D
 /*
  * vislib::graphics::Cursor2D::SetCamera
  */
-void vislib::graphics::Cursor2D::SetCamera(Camera *camera) {
-    this->cam = camera;
+void vislib::graphics::Cursor2D::SetCameraParams(
+        vislib::SmartPtr<CameraParameters> cameraParams) {
+    this->camPams = cameraParams;
 }

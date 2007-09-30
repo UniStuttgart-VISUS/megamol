@@ -10,6 +10,7 @@
 #include <GL/glu.h>
 #include <cstdio>
 
+#include "vislib/CameraParamsTileRectOverride.h"
 #include "vislib/graphicstypes.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/Rectangle.h"
@@ -42,9 +43,19 @@ CamTestApp::Lens::~Lens(void) {
 
 
 /*
+ * CamTestApp::Lens::SetCameraParameters
+ */
+void CamTestApp::Lens::SetCameraParameters(
+        const vislib::SmartPtr<vislib::graphics::CameraParameters>& params) {
+    this->camera.SetParameters(
+        new vislib::graphics::CameraParamsTileRectOverride(params));
+}
+
+
+/*
  * CamTestApp::Lens::Update
  */
-void CamTestApp::Lens::Update(float sec, vislib::graphics::gl::CameraOpenGL camera) {
+void CamTestApp::Lens::Update(float sec) {
     bool pong = false;
 
     this->x += ax * sec;
@@ -66,7 +77,15 @@ void CamTestApp::Lens::Update(float sec, vislib::graphics::gl::CameraOpenGL came
         this->ay = float(sin(d));
     }
 
-    this->camera = camera;
+    vislib::graphics::CameraParamsTileRectOverride *params = 
+        this->camera.Parameters().DynamicCast<vislib::graphics::CameraParamsTileRectOverride>();
+    if (params) {
+        params->SetTileRect(vislib::math::Rectangle<vislib::graphics::ImageSpaceType>(
+            x * params->VirtualViewSize().Width(), 
+            y * params->VirtualViewSize().Height(), 
+            (x + w) * params->VirtualViewSize().Width(), 
+            (y + h) * params->VirtualViewSize().Height()));
+    }
 }
 
 
@@ -76,15 +95,15 @@ void CamTestApp::Lens::Update(float sec, vislib::graphics::gl::CameraOpenGL came
 void CamTestApp::Lens::BeginDraw(unsigned int ww, unsigned int wh, bool ortho) {
     glViewport(0, 0, ww, wh);
 
-    this->camera.SetTileRectangle(
-        vislib::math::Rectangle<vislib::graphics::ImageSpaceType>
-        (this->x * this->camera.GetVirtualWidth(), this->y * this->camera.GetVirtualHeight(), 
-        (this->x + this->w) * this->camera.GetVirtualWidth(), (this->y + this->h) * this->camera.GetVirtualHeight()));
+ //   this->camera.SetTileRectangle(
+ //       vislib::math::Rectangle<vislib::graphics::ImageSpaceType>
+ //       (this->x * this->camera.GetVirtualWidth(), this->y * this->camera.GetVirtualHeight(), 
+ //       (this->x + this->w) * this->camera.GetVirtualWidth(), (this->y + this->h) * this->camera.GetVirtualHeight()));
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
 
@@ -118,9 +137,9 @@ void CamTestApp::Lens::BeginDraw(unsigned int ww, unsigned int wh, bool ortho) {
  * CamTestApp::Lens::EndDraw
  */
 void CamTestApp::Lens::EndDraw(void) {
-	glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
-	glMatrixMode(GL_PROJECTION);
+    glMatrixMode(GL_PROJECTION);
     glPopMatrix();
 }
 
@@ -137,22 +156,23 @@ CamTestApp::CamTestApp(void) : AbstractGlutApp() {
     this->ortho = false;
     this->nativeFull = true;
 
-    this->beholder.SetView(
-        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
-        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
-        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
+    vislib::SmartPtr<vislib::graphics::CameraParameters> params
+        = this->camera.Parameters();
+    for (unsigned int I = 0; I < this->lensCount; I++) {
+        this->lenses[I].SetCameraParameters(params);
+    }
 
-    this->camera.SetBeholder(&this->beholder);
-    this->camera.SetNearClipDistance(1.0f);
-    this->camera.SetFarClipDistance(5.0f);
-    this->camera.SetFocalDistance(2.5f);
-    this->camera.SetApertureAngle(40.0f);
-    this->camera.SetVirtualWidth(10.0f);
-    this->camera.SetVirtualHeight(10.0f);
-
-    this->camera.SetProjectionType(this->ortho 
-        ? vislib::graphics::Camera::MONO_ORTHOGRAPHIC
-        : vislib::graphics::Camera::MONO_PERSPECTIVE);
+    params->SetView(
+        vislib::math::Point<float, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<float, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<float, 3>(0.0, 0.0, 1.0));
+    params->SetClip(1.0f, 5.0f);
+    params->SetFocalDistance(2.5f);
+    params->SetApertureAngle(40.0f);
+    params->SetVirtualViewSize(10.0f, 10.0f);
+    params->SetProjection(this->ortho 
+        ? vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC
+        : vislib::graphics::CameraParameters::MONO_PERSPECTIVE);
 }
 
 
@@ -188,8 +208,8 @@ void CamTestApp::GLDeinit(void) {
  */
 void CamTestApp::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
-    this->camera.SetVirtualWidth(float(w) / 500.0f);
-    this->camera.SetVirtualHeight(float(h) / 500.0f);
+    this->camera.Parameters()->SetVirtualViewSize(
+        float(w) / 500.0f, float(h) / 500.0f);
 }
 
 
@@ -200,9 +220,9 @@ bool CamTestApp::OnKeyPress(unsigned char key, int x, int y) {
     switch(key) {
         case 'o':
             this->ortho = !this->ortho;
-            this->camera.SetProjectionType(this->ortho 
-                ? vislib::graphics::Camera::MONO_ORTHOGRAPHIC
-                : vislib::graphics::Camera::MONO_PERSPECTIVE);
+            this->camera.Parameters()->SetProjection(this->ortho 
+                ? vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC
+                : vislib::graphics::CameraParameters::MONO_PERSPECTIVE);
             printf("Orthographic projection is %s\n", this->ortho ? "on" : "off");
             return true;
         case 'n':
@@ -246,33 +266,34 @@ void CamTestApp::Render(void) {
     this->angle = static_cast<float>(static_cast<int>(static_cast<float>(time) * this->rotSpeed) % 3600) * 0.1f;
 
     glViewport(0, 0, this->GetWidth(), this->GetHeight());
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
     if (this->nativeFull) {
         if (this->ortho) {
             double w, h;
-            w = 0.5 * this->camera.GetVirtualWidth();
-            h = 0.5 * this->camera.GetVirtualHeight();
+            w = 0.5 * this->camera.Parameters()->VirtualViewSize().Width();
+            h = 0.5 * this->camera.Parameters()->VirtualViewSize().Height();
             glOrtho(-w, w, -h, h,
-                this->camera.GetNearClipDistance(), this->camera.GetFarClipDistance());
+                this->camera.Parameters()->NearClip(), this->camera.Parameters()->FarClip());
         } else {
-            gluPerspective(this->camera.GetApertureAngle(), this->GetAspectRatio(),
-                this->camera.GetNearClipDistance(), this->camera.GetFarClipDistance());
+            gluPerspective(this->camera.Parameters()->ApertureAngle(), this->GetAspectRatio(),
+                this->camera.Parameters()->NearClip(), this->camera.Parameters()->FarClip());
         }
     } else {
         this->camera.glMultProjectionMatrix();
     }
 
     glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glLoadIdentity();
 
     if (this->nativeFull) {
-        const vislib::math::Point<double, 3> &pos = this->beholder.GetPosition();
-        const vislib::math::Point<double, 3> &lat = this->beholder.GetLookAt();
-        const vislib::math::Vector<double, 3> &up = this->beholder.GetUpVector();
+        const vislib::math::Point<double, 3> &pos = this->camera.Parameters()->Position();
+        const vislib::math::Point<double, 3> &lat = this->camera.Parameters()->LookAt();
+        const vislib::math::Vector<double, 3> &up = this->camera.Parameters()->Up();
         gluLookAt(pos.X(), pos.Y(), pos.Z(), lat.X(), lat.Y(), lat.Z(), up.X(), up.Y(), up.Z());
+
     } else {
         this->camera.glMultViewMatrix();
     }
@@ -281,18 +302,18 @@ void CamTestApp::Render(void) {
     this->RenderLogo();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     for (unsigned int i = 0; i < this->lensCount; i++) {
-        this->lenses[i].Update(sec, this->camera);
+        this->lenses[i].Update(sec/*, this->camera*/);
         this->lenses[i].BeginDraw(this->GetWidth(), this->GetHeight(), this->ortho);
         this->RenderLogo();
         this->lenses[i].EndDraw();
     }
 
-	glFlush();
+    glFlush();
 
-	glutSwapBuffers();
+    glutSwapBuffers();
     glutPostRedisplay();
 }
 
@@ -305,28 +326,28 @@ void CamTestApp::RenderLogo(void) {
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(this->angle, 0.0f, -1.0f, 0.0f);
     unsigned int vCount = VisLogoCountVertices();
-	unsigned int p;
-	glBegin(GL_QUAD_STRIP);
-	for (unsigned int i = 0; i < 20; i++) {
-		for (unsigned int j = 0; j < vCount / 20; j++) {
-			p = (i + j * 20) % vCount;
-			glColor3dv(VisLogoVertexColor(p)->f);
-			glNormal3dv(VisLogoVertexNormal(p)->f);
-			glVertex3dv(VisLogoVertex(p)->f);
-			p = ((i + 1) % 20 + j * 20) % vCount;
-			glColor3dv(VisLogoVertexColor(p)->f);
-			glNormal3dv(VisLogoVertexNormal(p)->f);
-			glVertex3dv(VisLogoVertex(p)->f);
-		}
-	}
-	p = 0; // closing strip
-	glColor3dv(VisLogoVertexColor(p)->f);
-	glNormal3dv(VisLogoVertexNormal(p)->f);
-	glVertex3dv(VisLogoVertex(p)->f);
-	p = 1;
-	glColor3dv(VisLogoVertexColor(p)->f);
-	glNormal3dv(VisLogoVertexNormal(p)->f);
-	glVertex3dv(VisLogoVertex(p)->f);
-	glEnd();    
+    unsigned int p;
+    glBegin(GL_QUAD_STRIP);
+    for (unsigned int i = 0; i < 20; i++) {
+        for (unsigned int j = 0; j < vCount / 20; j++) {
+            p = (i + j * 20) % vCount;
+            glColor3dv(VisLogoVertexColor(p)->f);
+            glNormal3dv(VisLogoVertexNormal(p)->f);
+            glVertex3dv(VisLogoVertex(p)->f);
+            p = ((i + 1) % 20 + j * 20) % vCount;
+            glColor3dv(VisLogoVertexColor(p)->f);
+            glNormal3dv(VisLogoVertexNormal(p)->f);
+            glVertex3dv(VisLogoVertex(p)->f);
+        }
+    }
+    p = 0; // closing strip
+    glColor3dv(VisLogoVertexColor(p)->f);
+    glNormal3dv(VisLogoVertexNormal(p)->f);
+    glVertex3dv(VisLogoVertex(p)->f);
+    p = 1;
+    glColor3dv(VisLogoVertexColor(p)->f);
+    glNormal3dv(VisLogoVertexNormal(p)->f);
+    glVertex3dv(VisLogoVertex(p)->f);
+    glEnd();    
     glPopMatrix();
 }

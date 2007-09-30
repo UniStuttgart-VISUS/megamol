@@ -1,7 +1,8 @@
 /*
  * CameraOpenGL.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_CAMERAOPENGL_H_INCLUDED
@@ -14,46 +15,38 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <GL/glu.h>
-
-#include "vislib/graphicstypes.h"
 #include "vislib/Camera.h"
-#include "vislib/Point.h"
-#include "vislib/Vector.h"
 
 
 namespace vislib {
 namespace graphics {
 namespace gl {
 
+
     /**
-     * camera class for openGL applications
+     * Class of the openGL implementation of 'Camera'
      */
-    class CameraOpenGL: public vislib::graphics::Camera {
+    class CameraOpenGL : public Camera {
     public:
-        /**
-         * default ctor
-         */
+
+        /** Ctor. */
         CameraOpenGL(void);
 
-        /**
-         * copy ctor
+        /** 
+         * Ctor. Initialises the camera with the given camera parameters.
          *
-         * @param rhs CameraOpenGL object to copy from.
+         * @param params The camera parameters to be used. Must not be NULL.
          */
-        CameraOpenGL(const CameraOpenGL& rhs);
+        CameraOpenGL(const SmartPtr<CameraParameters>& params);
 
         /**
-         * Initialization ctor
+         * Copy ctor.
          *
-         * @param beholder The beholder the new camera object will be 
-         *                 associated with.
+         * @param rhs The right hand side operand.
          */
-        CameraOpenGL(Beholder* beholder);
+        CameraOpenGL(const Camera& rhs);
 
-        /**
-         * dtor
-         */
+        /** Dtor. */
         virtual ~CameraOpenGL(void);
 
         /**
@@ -82,7 +75,7 @@ namespace gl {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void GetProjectionMatrix(float *mat);
+        void ProjectionMatrix(float *mat);
 
         /**
          * Answer the view matrix of the frustum of this camera.
@@ -92,17 +85,30 @@ namespace gl {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void GetViewMatrix(float *mat);
+        void ViewMatrix(float *mat);
 
         /**
          * Assignment operator
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return Reference to this.
          */
-        CameraOpenGL& operator=(const CameraOpenGL& rhs);
+        CameraOpenGL& operator=(const Camera &rhs);
+
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return 'true' if 'rhs' and 'this' are equal, 'false' otherwise.
+         */
+        bool operator==(const Camera &rhs) const;
 
     private:
 
-        /** Flaggs which members need updates */
-        bool viewNeedsUpdate, projNeedsUpdate;
+        /** Updates all members using the camera parameters */
+        void updateMembers(void);
 
         /** viewing frustum minimal x */
         SceneSpaceType left;
@@ -132,7 +138,7 @@ namespace gl {
         math::Vector<SceneSpaceType, 3> up;
 
     };
-
+    
 } /* end namespace gl */
 } /* end namespace graphics */
 } /* end namespace vislib */

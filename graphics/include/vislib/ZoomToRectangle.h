@@ -16,9 +16,10 @@
 
 
 #include "vislib/graphicstypes.h"
-#include "vislib/AbstractBeholderController.h"
 #include "vislib/AbstractCameraController.h"
+#include "vislib/CameraParameters.h"
 #include "vislib/Rectangle.h"
+#include "vislib/SmartPtr.h"
 
 
 namespace vislib {
@@ -26,23 +27,21 @@ namespace graphics {
 
 
     /**
-     * Utility class for zooming a view (consisting of one beholder and one 
-     * camera) to zoom to a user defined rectangular area on the virtual camera
-     * image. The zooming is performed by first, moving or rotating the 
-     * beholder and the by changing the aperture angle of the camera or further
-     * moving the beholder. The focal distance can be reduced to keep the focal
-     * plane constant. Neither the clipping distances nor the stereo parameters
-     * are changed. With cameras using orthographic projection, the beholder 
-     * will always be moved and the size of the virtual camera image can be
-     * changed (including the tile).
+     * Utility class for zooming a view to a user defined rectangular area on 
+     * the virtual view of the camera. The zooming is performed by first, 
+     * moving or rotating the camera, by then changing the aperture angle or 
+     * further moving the camera towards the look-at-point. The focal distance 
+     * can be reduced to keep the focal plane constant. Neither the clipping 
+     * distances nor the stereo parameters are changed. With cameras using 
+     * orthographic projection, the beholder will always be moved and the size 
+     * of the virtual camera image can be changed (including the tile).
      */
-    class ZoomToRectangle: public AbstractBeholderController, 
-            public AbstractCameraController {
+    class ZoomToRectangle: public AbstractCameraController {
 
     public:
 
-        /** possible values of zoom type */
-        enum ZoomType {
+        /** possible values of zoom mode */
+        enum ZoomModeType {
             ZOOM_PAN_DOLLY, // rotate and move beholder (default)
             ZOOM_PAN_ZOOM, // rotate beholder and change camera aperture angle
             ZOOM_TRACK_DOLLY, // move beholder twice
@@ -50,7 +49,8 @@ namespace graphics {
         };
 
         /** Ctor. */
-        ZoomToRectangle(void);
+        ZoomToRectangle(const SmartPtr<CameraParameters>& cameraParams 
+            = SmartPtr<CameraParameters>());
 
         /**
          * Copy ctor.
@@ -63,52 +63,27 @@ namespace graphics {
         ~ZoomToRectangle(void);
 
         /**
-         * Assignment operator
+         * Tells the object to resize the virtual view of cameras using 
+         * orthographic projection. This value does only apply to cameras
+         * with orthographic projection. The default value is false.
          *
-         * @param rhs The right hand side operand.
+         * @param canResize Indicates if the size of the virtual camera image
+         *                  can be changed (true) or not (false).
          */
-        ZoomToRectangle& operator=(const ZoomToRectangle& rhs);
-
-        /**
-         * Sets the zoom target rectangle in coordinates of the virtual camera 
-         * image.
-         *
-         * @param rect The zoom target rectangle.
-         */
-        inline void SetZoomTargetRect(
-                const vislib::math::Rectangle<ImageSpaceType> &rect) {
-            this->targetRect = rect;
+        inline void AllowResizeOrthoCamera(bool canResize = true) {
+            this->resizeOrthoCams = canResize;
         }
 
         /**
-         * Answers the zoom target rectangle in coordinates of the virtual 
-         * camera image.
+         * Answers whether the size of the virtual camera image of cameras
+         * using orthographic projection will be changed. This value does only
+         * apply to cameras with orthographic projection.
          *
-         * @return The zoom target rectangle.
+         * @return 'true' if the virtual camera image could be resized, 'false'
+         *         if the virtual camera image size will not be changed.
          */
-        inline const vislib::math::Rectangle<ImageSpaceType>& 
-                GetZoomTargetRect(void) const {
-            return this->targetRect;
-        }
-
-        /** 
-         * Sets the zoom type to perform. This type does not apply to zooming
-         * cameras with orthographic projection.
-         *
-         * @param type The new zoom type.
-         */
-        inline void SetZoomType(ZoomType type) {
-            this->type = type;
-        }
-
-        /**
-         * Answers the zoom type. This type does not apply to zooming cameras 
-         * with orthographic projection.
-         *
-         * @return The zoom type.
-         */
-        inline ZoomType GetZoomType(void) const {
-            return this->type;
+        inline bool CanResizeOrthoCamera(void) const {
+            return this->resizeOrthoCams;
         }
 
         /**
@@ -133,28 +108,25 @@ namespace graphics {
             return this->fixFocus;
         }
 
-        /**
-         * Tells the object to resize the virtual camera image of cameras
-         * using orthographic projection. This value does only apply to cameras
-         * with orthographic projection. The default value is false.
+        /** 
+         * Sets the zoom mode to perform. This type does not apply to zooming
+         * cameras with orthographic projection.
          *
-         * @param canResize Indicates if the size of the virtual camera image
-         *                  can be changed (true) or not (false).
+         * @param type The new zoom type.
          */
-        inline void ChangeOrthoCameraVirtualSize(bool canResize = true) {
-            this->resizeOrthoCams = canResize;
+        inline void SetZoomMode(ZoomModeType mode) {
+            this->mode = mode;
         }
 
         /**
-         * Answers whether the size of the virtual camera image of cameras
-         * using orthographic projection will be changed. This value does only
-         * apply to cameras with orthographic projection.
+         * Sets the zoom target rectangle in coordinates of the virtual camera 
+         * image.
          *
-         * @return True if the virtual camera image could be resized, false
-         *         if the virtual camera image size will not be changed.
+         * @param rect The zoom target rectangle.
          */
-        inline bool CanChangeOrthoCameraVirtualSize(void) const {
-            return this->resizeOrthoCams;
+        inline void SetZoomTargetRect(
+                const vislib::math::Rectangle<ImageSpaceType> &rect) {
+            this->targetRect = rect;
         }
 
         /**
@@ -168,28 +140,56 @@ namespace graphics {
          */
         void Zoom(void);
 
+        /**
+         * Answers the zoom mode. This type does not apply to zooming cameras 
+         * with orthographic projection.
+         *
+         * @return The zoom type.
+         */
+        inline ZoomModeType ZoomMode(void) const {
+            return this->mode;
+        }
+
+        /**
+         * Answers the zoom target rectangle in coordinates of the virtual 
+         * camera image.
+         *
+         * @return The zoom target rectangle.
+         */
+        inline const vislib::math::Rectangle<ImageSpaceType>& 
+                ZoomTargetRect(void) const {
+            return this->targetRect;
+        }
+
+        /**
+         * Assignment operator
+         *
+         * @param rhs The right hand side operand.
+         */
+        ZoomToRectangle& operator=(const ZoomToRectangle& rhs);
+
     private:
 
         /** Performs the zoom operation on an orthographic camera */
-        inline void ZoomOrthographicCamera(void);
+        inline void zoomOrthographicCamera(void);
 
         /** Performs the zoom operation on a projective camera */
-        inline void ZoomProjectiveCamera(void);
-
-        /** the zoom target rectangle */
-        vislib::math::Rectangle<ImageSpaceType> targetRect;
-
-        /** the zoom type to perform */
-        ZoomType type;
+        inline void zoomProjectiveCamera(void);
 
         /** flag indicating if the focal plane is fixed. */
         bool fixFocus;
+
+        /** the zoom type to perform */
+        ZoomModeType mode;
 
         /** 
          * flag indicating if the virtual camera image size of cameras with 
          * orthographic projection can be changes.
          */
         bool resizeOrthoCams;
+
+        /** the zoom target rectangle */
+        vislib::math::Rectangle<ImageSpaceType> targetRect;
 
     };
     

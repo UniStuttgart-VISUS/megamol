@@ -19242,16 +19242,23 @@ void calcVertexAttribs() {
 }
 
 void VisLogoDoStuff() {
+    static bool isCalced = false;
+    if (isCalced) return;
+    isCalced = true;
 //	printf("VisLogo ... Do Mega Super Giga Stuff!!!!111\n");
 	calcVertexAttribs();
 }
 
 void VisLogoTwistLogo() {
+    bool isTwisted = false;
 	unsigned int vC = VisLogoCountVertices();
 	double allAngle = (360.0 / 20.0);
 	unsigned int j;
 	VLVec3 *v, mp, v1, v2, v3;
 	double a, qr, qi, qj, qk;
+
+    if (isTwisted) return;
+    isTwisted = true;
 
 //	printf("Twisting Logo\n");
 

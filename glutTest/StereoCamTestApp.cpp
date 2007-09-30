@@ -6,6 +6,8 @@
 
 #include "StereoCamTestApp.h"
 
+#include "vislib/CameraParamsEyeOverride.h"
+#include "vislib/CameraParamsTileRectOverride.h"
 #include "vislib/PerformanceCounter.h"
 
 #include <GL/glut.h>
@@ -15,29 +17,63 @@
 
 #include "vislogo.h"
 
+
+// red-green-glasses
+#define COLOR_MASK_LEFT_RED     GL_TRUE
+#define COLOR_MASK_LEFT_GREEN   GL_FALSE
+#define COLOR_MASK_LEFT_BLUE    GL_FALSE
+#define COLOR_MASK_RIGHT_RED    GL_FALSE
+#define COLOR_MASK_RIGHT_GREEN  GL_TRUE
+#define COLOR_MASK_RIGHT_BLUE   GL_FALSE
+
+//// red-blue-glasses
+//#define COLOR_MASK_LEFT_RED     GL_TRUE
+//#define COLOR_MASK_LEFT_GREEN   GL_FALSE
+//#define COLOR_MASK_LEFT_BLUE    GL_FALSE
+//#define COLOR_MASK_RIGHT_RED    GL_FALSE
+//#define COLOR_MASK_RIGHT_GREEN  GL_TRUE
+//#define COLOR_MASK_RIGHT_BLUE   GL_TRUE
+
+
 StereoCamTestApp::StereoCamTestApp(void) : AbstractGlutApp() {
-    this->beholder.SetView(
+
+    this->parameters = this->cameraLeft.Parameters();
+    this->parameters->SetView(
         vislib::math::Point<float, 3>(0.0, -10.0, 0.0),
         vislib::math::Point<float, 3>(0.0, 0.0, 0.0),
         vislib::math::Vector<float, 3>(0.0, 0.0, 1.0));
+    this->parameters->SetClip(1.0f, 15.0f);
+    this->parameters->SetApertureAngle(20.0f);
+    this->parameters->SetVirtualViewSize(
+        vislib::math::Dimension<vislib::graphics::ImageSpaceType, 2>(1.0f, 1.0f));
+    this->parameters->SetStereoParameters(0.125f, 
+        vislib::graphics::CameraParameters::LEFT_EYE, 10.0f);
 
-    this->cameraLeft.SetBeholder(&this->beholder);
-    this->cameraLeft.SetNearClipDistance(1.0f);
-    this->cameraLeft.SetFarClipDistance(15.0f);
-    this->cameraLeft.SetFocalDistance(10.0f);
-    this->cameraLeft.SetApertureAngle(30.0f);
-    this->cameraLeft.SetVirtualWidth(10.0f);
-    this->cameraLeft.SetVirtualHeight(10.0f);
-    this->cameraLeft.SetStereoDisparity(0.125f);
-    this->cameraLeft.SetProjectionType(vislib::graphics::Camera::MONO_PERSPECTIVE);
+    vislib::graphics::CameraParamsEyeOverride *rightEyeParams 
+        = new vislib::graphics::CameraParamsEyeOverride(this->parameters);
+    rightEyeParams->SetEye(vislib::graphics::CameraParameters::RIGHT_EYE);
 
-    this->cameraRight = this->cameraLeft;
+#ifdef TILE_RIGHT_EYE
+    vislib::SmartPtr<vislib::graphics::CameraParameters> reParams = rightEyeParams;
+    for (int idx = 0; idx < TILE_RIGHT_EYE * TILE_RIGHT_EYE; idx++) {
+        vislib::graphics::CameraParamsTileRectOverride *cptro
+            = new vislib::graphics::CameraParamsTileRectOverride(reParams);
+        cptro->SetTileRect(vislib::math::Rectangle<vislib::graphics::ImageSpaceType>
+            (float((idx % TILE_RIGHT_EYE)) / float(TILE_RIGHT_EYE),
+            float((idx / TILE_RIGHT_EYE)) / float(TILE_RIGHT_EYE),
+            float((idx % TILE_RIGHT_EYE) + 1) / float(TILE_RIGHT_EYE),
+            float((idx / TILE_RIGHT_EYE) + 1) / float(TILE_RIGHT_EYE)));
+        this->cameraRight[idx].SetParameters(cptro);
+    }
+
+#else /* TILE_RIGHT_EYE */
+    this->cameraRight.SetParameters(rightEyeParams);
+
+#endif /* TILE_RIGHT_EYE */
 
     printf("Stereo Projection set to STEREO_PARALLEL\n");
-    this->cameraLeft.SetStereoEye(vislib::graphics::Camera::LEFT_EYE);
-    this->cameraRight.SetStereoEye(vislib::graphics::Camera::RIGHT_EYE);
+    this->parameters->SetProjection(vislib::graphics::CameraParameters::STEREO_PARALLEL);
 
-    this->UpdateCamTiles();
 }
 
 StereoCamTestApp::~StereoCamTestApp(void) {
@@ -46,10 +82,8 @@ StereoCamTestApp::~StereoCamTestApp(void) {
 int StereoCamTestApp::GLInit(void) {
     VisLogoDoStuff();
     VisLogoTwistLogo();
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
 
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
 
@@ -69,17 +103,28 @@ int StereoCamTestApp::GLInit(void) {
 }
 
 void StereoCamTestApp::GLDeinit(void) {
-    glDisable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHT0);
+    glDisable(GL_COLOR_MATERIAL);
 }
 
 void StereoCamTestApp::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
-    this->cameraRight.SetVirtualWidth(float(w));
-    this->cameraRight.SetVirtualHeight(float(h));
-    this->cameraLeft.SetVirtualWidth(float(w));
-    this->cameraLeft.SetVirtualHeight(float(h));
-    this->UpdateCamTiles();
+    this->parameters->SetVirtualViewSize(float(w), float(h));
+#ifdef TILE_RIGHT_EYE
+    float fw = float(w) / float(TILE_RIGHT_EYE);
+    float fh = float(h) / float(TILE_RIGHT_EYE);
+    for (int idx = 0; idx < TILE_RIGHT_EYE * TILE_RIGHT_EYE; idx++) {
+        vislib::graphics::CameraParamsTileRectOverride *cptro
+            = this->cameraRight[idx].Parameters()
+            .DynamicCast<vislib::graphics::CameraParamsTileRectOverride>();
+        cptro->SetTileRect(vislib::math::Rectangle<vislib::graphics::ImageSpaceType>
+            (float((idx % TILE_RIGHT_EYE)) * fw,
+            float((idx / TILE_RIGHT_EYE)) * fh,
+            float((idx % TILE_RIGHT_EYE) + 1) * fw,
+            float((idx / TILE_RIGHT_EYE) + 1) * fh));
+    }
+#endif /* TILE_RIGHT_EYE */
 }
 
 void StereoCamTestApp::Render(void) {
@@ -87,57 +132,59 @@ void StereoCamTestApp::Render(void) {
     this->lastTime = time;
     this->angle = static_cast<float>(static_cast<int>(static_cast<float>(time) * 0.5f) % 3600) * 0.1f;
 
-    // render left eye image
     glViewport(0, 0, this->GetWidth(), this->GetHeight());
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glColor3ub(255, 0, 0);
+    glColor4ub(255, 255, 255, 255);
 
-    /*
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+    // render left eye image
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glColorMask(COLOR_MASK_LEFT_RED, COLOR_MASK_LEFT_GREEN, COLOR_MASK_LEFT_BLUE, GL_TRUE);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
     this->cameraLeft.glMultProjectionMatrix();
     glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glLoadIdentity();
     this->cameraLeft.glMultViewMatrix();
 
     this->RenderTestBox();
-  */  
-    vislib::math::Rectangle<vislib::graphics::ImageSpaceType> rect;
-    for (int y = 0; y < SCTA_CY_TILES; y++)
-        for (int x = 0; x < SCTA_CX_TILES; x++) {
-            rect = this->camTilesLeft[x][y].GetTileRectangle();
-            glViewport(int(rect.Left() + 0.5f), 
-                int(rect.Bottom() + 0.5f), int(rect.Width() + 0.5f), 
-                int(rect.Height() + 0.5f));
-
-            glMatrixMode(GL_PROJECTION);
-	        glLoadIdentity();
-            this->camTilesLeft[x][y].glMultProjectionMatrix();
-            glMatrixMode(GL_MODELVIEW);
-	        glLoadIdentity();
-            this->camTilesLeft[x][y].glMultViewMatrix();
-
-            this->RenderTestBox();
-        }
-
 
     // render right eye image
-    glViewport(0, 0, this->GetWidth(), this->GetHeight());
-	glClear(GL_DEPTH_BUFFER_BIT);
-    glColor3ub(0, 255, 255);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glColorMask(COLOR_MASK_RIGHT_RED, COLOR_MASK_RIGHT_GREEN, COLOR_MASK_RIGHT_BLUE, GL_TRUE);
+#ifdef TILE_RIGHT_EYE
+    float w = float(this->GetWidth()) / float(TILE_RIGHT_EYE);
+    float h = float(this->GetHeight()) / float(TILE_RIGHT_EYE);
+    for (int idx = 0; idx < TILE_RIGHT_EYE * TILE_RIGHT_EYE; idx++) {
+        glViewport(
+            static_cast<GLint>(float((idx % TILE_RIGHT_EYE)) * w),
+            static_cast<GLint>(float((idx / TILE_RIGHT_EYE)) * h),
+            static_cast<GLsizei>(w), 
+            static_cast<GLsizei>(h));
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        this->cameraRight[idx].glMultProjectionMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        this->cameraRight[idx].glMultViewMatrix();
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+        this->RenderTestBox();
+    }
+#else /* TILE_RIGHT_EYE */
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
     this->cameraRight.glMultProjectionMatrix();
     glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glLoadIdentity();
     this->cameraRight.glMultViewMatrix();
 
     this->RenderTestBox();
+#endif /* TILE_RIGHT_EYE */
 
     // done rendering
+    glViewport(0, 0, this->GetWidth(), this->GetHeight());
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glFlush();
-	glutSwapBuffers();
+    glutSwapBuffers();
     glutPostRedisplay(); // because we do animation stuff
 }
 
@@ -145,52 +192,44 @@ bool StereoCamTestApp::OnKeyPress(unsigned char key, int x, int y) {
     switch(key) {
         case '1':
             printf("Stereo Projection set to STEREO_PARALLEL\n");
-            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL);
-            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_PARALLEL);
+            this->parameters->SetProjection(vislib::graphics::CameraParameters::STEREO_PARALLEL);
             break;
         case '2':
             printf("Stereo Projection set to STEREO_OFF_AXIS\n");
-            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_OFF_AXIS);
-            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_OFF_AXIS);
+            this->parameters->SetProjection(vislib::graphics::CameraParameters::STEREO_OFF_AXIS);
             break;
         case '3':
             printf("Stereo Projection set to STEREO_TOE_IN\n");
-            this->cameraLeft.SetProjectionType(vislib::graphics::Camera::STEREO_TOE_IN);
-            this->cameraRight.SetProjectionType(vislib::graphics::Camera::STEREO_TOE_IN);
+            this->parameters->SetProjection(vislib::graphics::CameraParameters::STEREO_TOE_IN);
             break;
         case 'a': {
-            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetStereoDisparity();
+            vislib::graphics::SceneSpaceType sd = this->parameters->StereoDisparity();
             sd /= 1.2f;
-            this->cameraLeft.SetStereoDisparity(sd);
-            this->cameraRight.SetStereoDisparity(sd);
+            this->parameters->SetStereoDisparity(sd);
             printf("Stereo Disparity set to %f\n", sd);
         } break;
         case 'y': {
-            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetStereoDisparity();
+            vislib::graphics::SceneSpaceType sd = this->parameters->StereoDisparity();
             sd *= 1.2f;
-            this->cameraLeft.SetStereoDisparity(sd);
-            this->cameraRight.SetStereoDisparity(sd);
+            this->parameters->SetStereoDisparity(sd);
             printf("Stereo Disparity set to %f\n", sd);
         } break;
         case 's': {
-            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetFocalDistance();
+            vislib::graphics::SceneSpaceType sd = this->parameters->FocalDistance();
             sd -= 0.1f;
-            this->cameraLeft.SetFocalDistance(sd);
-            this->cameraRight.SetFocalDistance(sd);
+            this->parameters->SetFocalDistance(sd);
             printf("Focal distance set to %f\n", sd);
         } break;
         case 'x': {
-            vislib::graphics::SceneSpaceType sd = this->cameraLeft.GetFocalDistance();
+            vislib::graphics::SceneSpaceType sd = this->parameters->FocalDistance();
             sd += 0.1f;
-            this->cameraLeft.SetFocalDistance(sd);
-            this->cameraRight.SetFocalDistance(sd);
+            this->parameters->SetFocalDistance(sd);
             printf("Focal distance set to %f\n", sd);
         } break;
 
         default:
             return AbstractGlutApp::OnKeyPress(key, x, y);
     }
-    this->UpdateCamTiles();
     glutPostRedisplay();
     return true;
 }
@@ -231,42 +270,24 @@ void StereoCamTestApp::RenderTestBox(void) {
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(this->angle, 0.0f, -1.0f, 0.0f);
     unsigned int vCount = VisLogoCountVertices();
-	unsigned int p;
-	glBegin(GL_QUAD_STRIP);
-	for (unsigned int i = 0; i < 20; i++) {
-		for (unsigned int j = 0; j < vCount / 20; j++) {
-			p = (i + j * 20) % vCount;
-			glNormal3dv(VisLogoVertexNormal(p)->f);
-			glVertex3dv(VisLogoVertex(p)->f);
-			p = ((i + 1) % 20 + j * 20) % vCount;
-			glNormal3dv(VisLogoVertexNormal(p)->f);
-			glVertex3dv(VisLogoVertex(p)->f);
-		}
-	}
-	p = 0; // closing strip
-	glNormal3dv(VisLogoVertexNormal(p)->f);
-	glVertex3dv(VisLogoVertex(p)->f);
-	p = 1;
-	glNormal3dv(VisLogoVertexNormal(p)->f);
-	glVertex3dv(VisLogoVertex(p)->f);
-	glEnd();    
-    glPopMatrix();
-}
-
-void StereoCamTestApp::UpdateCamTiles(void) {
-    vislib::math::Rectangle<vislib::graphics::ImageSpaceType> rect;
-    vislib::graphics::ImageSpaceType w, h;
-    for (int y = 0; y < SCTA_CY_TILES; y++)
-        for (int x = 0; x < SCTA_CX_TILES; x++) {
-            this->camTilesLeft[x][y] = this->cameraLeft;
-            rect = this->cameraLeft.GetTileRectangle();
-            w = rect.Width();
-            h = rect.Height();
-            rect.Set(
-                float(x) * float(w) / float(SCTA_CX_TILES),
-                float(y) * float(h) / float(SCTA_CY_TILES),
-                float(x + 1) * float(w) / float(SCTA_CX_TILES),
-                float(y + 1) * float(h) / float(SCTA_CY_TILES));
-            this->camTilesLeft[x][y].SetTileRectangle(rect);            
+    unsigned int p;
+    glBegin(GL_QUAD_STRIP);
+    for (unsigned int i = 0; i < 20; i++) {
+        for (unsigned int j = 0; j < vCount / 20; j++) {
+            p = (i + j * 20) % vCount;
+            glNormal3dv(VisLogoVertexNormal(p)->f);
+            glVertex3dv(VisLogoVertex(p)->f);
+            p = ((i + 1) % 20 + j * 20) % vCount;
+            glNormal3dv(VisLogoVertexNormal(p)->f);
+            glVertex3dv(VisLogoVertex(p)->f);
         }
+    }
+    p = 0; // closing strip
+    glNormal3dv(VisLogoVertexNormal(p)->f);
+    glVertex3dv(VisLogoVertex(p)->f);
+    p = 1;
+    glNormal3dv(VisLogoVertexNormal(p)->f);
+    glVertex3dv(VisLogoVertex(p)->f);
+    glEnd();    
+    glPopMatrix();
 }

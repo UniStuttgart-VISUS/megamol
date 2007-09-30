@@ -25,32 +25,30 @@
  */
 GLSLShaderTest::GLSLShaderTest(void) : AbstractGlutApp(), schade() {
 
-    this->beholder.SetView(
+    this->camera.Parameters()->SetClip(0.1f, 7.0f);
+    this->camera.Parameters()->SetFocalDistance(2.5f);
+    this->camera.Parameters()->SetApertureAngle(50.0f);
+    this->camera.Parameters()->SetView(
         vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
         vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
         vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
-
-    this->camera.SetBeholder(&this->beholder);
-    this->camera.SetNearClipDistance(0.1f);
-    this->camera.SetFarClipDistance(7.0f);
-    this->camera.SetFocalDistance(2.5f);
-    this->camera.SetApertureAngle(50.0f);
-    this->camera.SetVirtualWidth(10.0f);
-    this->camera.SetVirtualHeight(10.0f);
-    this->camera.SetProjectionType(vislib::graphics::Camera::MONO_PERSPECTIVE);
+    this->camera.Parameters()->SetVirtualViewSize(10.0f, 10.0f);
+    this->camera.Parameters()->SetProjection(
+        vislib::graphics::CameraParameters::MONO_PERSPECTIVE);
 
     this->modkeys.SetModifierCount(3);
     this->modkeys.RegisterObserver(&this->cursor);
 
-    this->rotator2.SetBeholder(&this->beholder);
-    this->rotator2.SetTestButton(0); // left button
-    this->rotator2.SetModifierTestCount(0);
-    this->rotator2.SetAltModifier(vislib::graphics::InputModifiers::MODIFIER_CTRL);
+    this->rotator.SetCameraParams(this->camera.Parameters());
+    this->rotator.SetTestButton(0); // left button
+    this->rotator.SetModifierTestCount(0);
+    this->rotator.SetAltModifier(
+        vislib::graphics::InputModifiers::MODIFIER_SHIFT);
 
     this->cursor.SetButtonCount(3);
     this->cursor.SetInputModifiers(&this->modkeys);
-    this->cursor.SetCamera(&this->camera);
-    this->cursor.RegisterCursorEvent(&this->rotator2);
+    this->cursor.SetCameraParams(this->camera.Parameters());
+    this->cursor.RegisterCursorEvent(&this->rotator);
 }
 
 
@@ -108,7 +106,7 @@ int GLSLShaderTest::GLInit(void) {
         return -13;
     }
 
-    this->beholder.SetView(
+    this->camera.Parameters()->SetView(
         vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
         vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
         vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
@@ -130,8 +128,9 @@ void GLSLShaderTest::GLDeinit(void) {
  */
 void GLSLShaderTest::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
-    this->camera.SetVirtualWidth(static_cast<vislib::graphics::ImageSpaceType>(w));
-    this->camera.SetVirtualHeight(static_cast<vislib::graphics::ImageSpaceType>(h));
+    this->camera.Parameters()->SetVirtualViewSize(
+        static_cast<vislib::graphics::ImageSpaceType>(w),
+        static_cast<vislib::graphics::ImageSpaceType>(h));
 }
 
 

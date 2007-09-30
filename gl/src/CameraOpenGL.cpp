@@ -1,41 +1,40 @@
 /*
  * CameraOpenGL.cpp
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#endif
 #include "vislib/CameraOpenGL.h"
-#include "vislib/memutils.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include "vislib/ShallowMatrix.h"
 
 
 /*
  * vislib::graphics::gl::CameraOpenGL::CameraOpenGL
  */
-vislib::graphics::gl::CameraOpenGL::CameraOpenGL(void) 
-    : Camera(), viewNeedsUpdate(true), projNeedsUpdate(true) {
+vislib::graphics::gl::CameraOpenGL::CameraOpenGL(void) : Camera() {
+    this->updateMembers();
 }
 
 
 /*
  * vislib::graphics::gl::CameraOpenGL::CameraOpenGL
  */
-vislib::graphics::gl::CameraOpenGL::CameraOpenGL(const vislib::graphics::gl::CameraOpenGL& rhs) 
-    : Camera(rhs), viewNeedsUpdate(true), projNeedsUpdate(true) {
+vislib::graphics::gl::CameraOpenGL::CameraOpenGL(
+        const vislib::SmartPtr<vislib::graphics::CameraParameters>& params) 
+        : Camera(params) {
+    this->updateMembers();
 }
 
 
 /*
  * vislib::graphics::gl::CameraOpenGL::CameraOpenGL
  */
-
-vislib::graphics::gl::CameraOpenGL::CameraOpenGL(vislib::graphics::Beholder* beholder) 
-    : Camera(beholder), viewNeedsUpdate(true), projNeedsUpdate(true) {
+vislib::graphics::gl::CameraOpenGL::CameraOpenGL(
+        const vislib::graphics::Camera& rhs) : Camera(rhs) {
+    *this = rhs;
 }
 
 
@@ -47,41 +46,30 @@ vislib::graphics::gl::CameraOpenGL::~CameraOpenGL(void) {
 
 
 /*
- * 
+ * vislib::graphics::gl::CameraOpenGL::glMultProjectionMatrix
  */
 void vislib::graphics::gl::CameraOpenGL::glMultProjectionMatrix(void) {
-    if (this->NeedUpdate()) {
-        this->viewNeedsUpdate = this->projNeedsUpdate = true;
-        this->ClearUpdateFlaggs();
-    }
-    
-    if (this->projNeedsUpdate) {
-        Camera::CalcFrustumParameters(left, right, bottom, top, nearClip, farClip);
-        this->projNeedsUpdate = false;
+    if (this->needUpdate()) {
+        this->updateMembers();
+        this->markAsUpdated();
     }
 
-    if (this->GetProjectionType() != Camera::MONO_ORTHOGRAPHIC) {
+    if (this->Parameters()->Projection() != CameraParameters::MONO_ORTHOGRAPHIC) {
         ::glFrustum(left, right, bottom, top, nearClip, farClip);
     } else {
+        // TODO: rewrite ortho to be more compatible with normal projection
         ::glOrtho(left, right, bottom, top, nearClip, farClip);
     }
 }
 
 
 /*
- * 
+ * vislib::graphics::gl::CameraOpenGL::glMultViewMatrix
  */
 void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) {
-    if (this->NeedUpdate()) {
-        this->viewNeedsUpdate = this->projNeedsUpdate = true;
-        this->ClearUpdateFlaggs();
-    }
-
-    if (this->viewNeedsUpdate) {
-        pos = this->EyePosition();
-        lookDir = this->EyeFrontVector();
-        up = this->EyeUpVector();
-        this->viewNeedsUpdate = false;
+    if (this->needUpdate()) {
+        this->updateMembers();
+        this->markAsUpdated();
     }
 
     ::gluLookAt(pos.X(), pos.Y(), pos.Z(), 
@@ -91,23 +79,18 @@ void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) {
 
 
 /*
- * vislib::graphics::gl::CameraOpenGL::GetProjectionMatrix
+ * vislib::graphics::gl::CameraOpenGL::ProjectionMatrix
  */
-void vislib::graphics::gl::CameraOpenGL::GetProjectionMatrix(float *mat) {
-    if (this->NeedUpdate()) {
-        this->viewNeedsUpdate = this->projNeedsUpdate = true;
-        this->ClearUpdateFlaggs();
-    }
-    
-    if (this->projNeedsUpdate) {
-        Camera::CalcFrustumParameters(left, right, bottom, top, nearClip, farClip);
-        this->projNeedsUpdate = false;
+void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) {
+    if (this->needUpdate()) {
+        this->updateMembers();
+        this->markAsUpdated();
     }
 
     ZeroMemory(mat, sizeof(float) * 16);
     vislib::math::ShallowMatrix<float, 4, vislib::math::COLUMN_MAJOR> matrix(mat);
 
-    if (this->GetProjectionType() != Camera::MONO_ORTHOGRAPHIC) {
+    if (this->Parameters()->Projection() != CameraParameters::MONO_ORTHOGRAPHIC) {
         matrix.SetAt(0, 0, (2.0f * this->nearClip) / (this->right - this->left));
         matrix.SetAt(1, 1, (2.0f * this->nearClip) / (this->top - this->bottom));
         matrix.SetAt(0, 2, (this->right + this->left) / (this->right - this->left));
@@ -116,6 +99,7 @@ void vislib::graphics::gl::CameraOpenGL::GetProjectionMatrix(float *mat) {
         matrix.SetAt(3, 2, -1.0f);
         matrix.SetAt(2, 3, - (2.0f * this->farClip * this->nearClip) / (this->farClip - this->nearClip));
     } else {
+        // TODO: rewrite ortho to be more compatible with normal projection
         matrix.SetAt(0, 0, 2.0f / (this->right - this->left));
         matrix.SetAt(1, 1, 2.0f / (this->top - this->bottom));
         matrix.SetAt(2, 2, -2.0f / (this->farClip - this->nearClip));
@@ -128,22 +112,16 @@ void vislib::graphics::gl::CameraOpenGL::GetProjectionMatrix(float *mat) {
 
 
 /*
- * vislib::graphics::gl::CameraOpenGL::GetViewMatrix
+ * vislib::graphics::gl::CameraOpenGL::ViewMatrix
  */
-void vislib::graphics::gl::CameraOpenGL::GetViewMatrix(float *mat) {
-    if (this->NeedUpdate()) {
-        this->viewNeedsUpdate = this->projNeedsUpdate = true;
-        this->ClearUpdateFlaggs();
+void vislib::graphics::gl::CameraOpenGL::ViewMatrix(float *mat) {
+    if (this->needUpdate()) {
+        this->updateMembers();
+        this->markAsUpdated();
     }
 
-    if (this->viewNeedsUpdate) {
-        pos = this->EyePosition();
-        lookDir = this->EyeFrontVector();
-        up = this->EyeUpVector();
-        this->viewNeedsUpdate = false;
-    }
-
-    vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> right = this->EyeRightVector();
+    vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> right 
+        = this->Parameters()->EyeRightVector();
 
     ZeroMemory(mat, sizeof(float) * 16);
     vislib::math::ShallowMatrix<float, 4, vislib::math::COLUMN_MAJOR> matrix(mat);
@@ -158,14 +136,110 @@ void vislib::graphics::gl::CameraOpenGL::GetViewMatrix(float *mat) {
     matrix.SetAt(2, 1, -lookDir.GetY());
     matrix.SetAt(2, 2, -lookDir.GetZ());
     matrix.SetAt(3, 3, 1.0f);
-
 }
 
 
 /*
- * 
+ * vislib::graphics::gl::CameraOpenGL::operator=
  */
-vislib::graphics::gl::CameraOpenGL& vislib::graphics::gl::CameraOpenGL::operator=(const vislib::graphics::gl::CameraOpenGL& rhs) {
+vislib::graphics::gl::CameraOpenGL& 
+vislib::graphics::gl::CameraOpenGL::operator=(
+        const vislib::graphics::Camera &rhs) {
     Camera::operator=(rhs);
+    this->updateMembers();
     return *this;
+}
+
+
+/*
+ * vislib::graphics::gl::CameraOpenGL::operator==
+ */
+bool vislib::graphics::gl::CameraOpenGL::operator==(
+        const vislib::graphics::Camera &rhs) const {
+    return Camera::operator==(rhs);
+}
+
+
+/*
+ * vislib::graphics::gl::CameraOpenGL::updateMembers
+ */
+void vislib::graphics::gl::CameraOpenGL::updateMembers(void) {
+    SceneSpaceType w, h;
+
+    // view
+    this->pos = this->Parameters()->EyePosition();
+    this->lookDir = this->Parameters()->EyeDirection();
+    this->up = this->Parameters()->EyeUpVector();
+
+    // clipping distances
+    this->nearClip = this->Parameters()->NearClip();
+    this->farClip = this->Parameters()->FarClip();
+
+    switch(this->Parameters()->Projection()) {
+        case CameraParameters::MONO_PERSPECTIVE: // no break
+        case CameraParameters::STEREO_PARALLEL: // no break
+        case CameraParameters::STEREO_TOE_IN: {
+            // symmetric main frustum
+            h = tan(this->Parameters()->HalfApertureAngle()) * this->nearClip;
+            w = h * this->Parameters()->VirtualViewSize().Width() 
+                / this->Parameters()->VirtualViewSize().Height();
+
+            // recalc tile rect on near clipping plane
+            this->left = this->Parameters()->TileRect().GetLeft() 
+                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
+            this->right = this->Parameters()->TileRect().GetRight() 
+                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
+            this->bottom = this->Parameters()->TileRect().GetBottom() 
+                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
+            this->top = this->Parameters()->TileRect().GetTop() 
+                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
+          
+            // cut out local frustum for tile rect
+            this->left -= w;
+            this->right -= w;
+            this->bottom -= h;
+            this->top -= h;
+        } break;
+        case CameraParameters::STEREO_OFF_AXIS: {
+            // symmetric main frustum
+            h = tan(this->Parameters()->HalfApertureAngle()) * this->nearClip;
+            w = h * this->Parameters()->VirtualViewSize().Width() 
+                / this->Parameters()->VirtualViewSize().Height();
+
+            // recalc tile rect on near clipping plane
+            this->left = this->Parameters()->TileRect().GetLeft() 
+                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
+            this->right = this->Parameters()->TileRect().GetRight() 
+                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
+            this->bottom = this->Parameters()->TileRect().GetBottom() 
+                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
+            this->top = this->Parameters()->TileRect().GetTop() 
+                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
+
+            // shear frustum
+            w += static_cast<SceneSpaceType>(((this->Parameters()->Eye() == CameraParameters::LEFT_EYE) ? -1.0 : 1.0))
+                * (this->nearClip * this->Parameters()->StereoDisparity() * 0.5f) 
+                / this->Parameters()->FocalDistance();
+
+            // cut out local frustum for tile rect
+            this->left -= w;
+            this->right -= w;
+            this->bottom -= h;
+            this->top -= h;
+        } break;
+        case CameraParameters::MONO_ORTHOGRAPHIC:
+            // return shifted tile
+            this->left = this->Parameters()->TileRect().GetLeft() 
+                - this->Parameters()->VirtualViewSize().Width() * 0.5f;
+            this->right = this->Parameters()->TileRect().GetRight() 
+                - this->Parameters()->VirtualViewSize().Width() * 0.5f;
+            this->bottom = this->Parameters()->TileRect().GetBottom() 
+                - this->Parameters()->VirtualViewSize().Height() * 0.5f;
+            this->top = this->Parameters()->TileRect().GetTop() 
+                - this->Parameters()->VirtualViewSize().Height() * 0.5f;
+            break;
+        default:
+            // projection parameter calculation still not implemeneted
+            ASSERT(false);
+    }
 }

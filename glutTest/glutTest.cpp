@@ -34,7 +34,7 @@
 
 #include "CamTestApp.h"
 #include "StereoCamTestApp.h"
-#include "BeholderRotatorTextApp.h"
+#include "CamRotatorTestApp.h"
 #include "FBOTestApp.h"
 #include "FBOTest2App.h"
 #include "GLSLShaderTest.h"
@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
     // register factories:
     GlutAppManager::InstallFactory<CamTestApp>("Camera Test");
     GlutAppManager::InstallFactory<StereoCamTestApp>("Stereo Camera Test");
-    GlutAppManager::InstallFactory<BeholderRotatorTextApp>("Beholder Rotator Test");
+    GlutAppManager::InstallFactory<CamRotatorTestApp>("Camera Rotation Test");
     GlutAppManager::InstallFactory<FBOTestApp>("Framebuffer Object Test");
 	GlutAppManager::InstallFactory<FBOTest2App>("Framebuffer Object Test #2");
     GlutAppManager::InstallFactory<GLSLShaderTest>("GLSLShader Test");

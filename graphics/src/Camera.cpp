@@ -1,438 +1,85 @@
 /*
  * Camera.cpp
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
 
 #include "vislib/Camera.h"
-
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
-#include "vislib/mathfunctions.h"
 #include "vislib/assert.h"
-
-
-#define CAMERA_SCENESPACE_DELTA static_cast<SceneSpaceType>(0.01)
+#include "vislib/CameraParamsStore.h"
 
 
 /*
  * vislib::graphics::Camera::Camera
  */
-vislib::graphics::Camera::Camera(void) : beholder(NULL), updateCounter(0) {
-    this->setDefaultValues();
+vislib::graphics::Camera::Camera(void) : syncNumber(), 
+        parameters(new CameraParamsStore()) {
+    this->syncNumber = this->parameters->SyncNumber() - 1; // force update
 }
 
 
-/**
- * copy ctor
+/*
+ * vislib::graphics::Camera::Camera
+ */
+vislib::graphics::Camera::Camera(
+        const vislib::SmartPtr<vislib::graphics::CameraParameters>& params) 
+        : syncNumber(params->SyncNumber() - 1), parameters(params) {
+    ASSERT(!this->parameters.IsNull());
+}
+
+
+/*
+ * vislib::graphics::Camera::Camera
  */
 vislib::graphics::Camera::Camera(const vislib::graphics::Camera &rhs) 
-        : beholder(NULL), updateCounter(0) {
+        : parameters() {
     *this = rhs;
 }
-
-
-/*
- * vislib::graphics::Camera::Camera
- */
-vislib::graphics::Camera::Camera(Beholder *beholder) : updateCounter(0) {
-    this->beholder = beholder;
-    this->setDefaultValues();
- }
 
 
 /*
  * vislib::graphics::Camera::~Camera
  */
 vislib::graphics::Camera::~Camera(void) {
-    this->beholder = NULL; // Do not delete!
 }
 
 
 /*
- * vislib::graphics::Camera::CalcClipDistances
+ * vislib::graphics::CameraParameters::Parameters
  */
-void vislib::graphics::Camera::CalcClipDistances(
-        const vislib::math::Cuboid<SceneSpaceType> &box,
-        SceneSpaceType minNear, SceneSpaceType maxFar) {
-
-    if (this->beholder == NULL) return;
-
-    // get important beholder vectors
-    vislib::math::Point<vislib::graphics::SceneSpaceType, 3> camPos = this->beholder->GetPosition();
-    vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> front = this->beholder->GetFrontVector();
-    vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> tmp;
-    vislib::graphics::SceneSpaceType dist;
-
-    // calculate depth of all 8 edges
-    tmp = box.GetLeftBottomBack() - camPos;
-    dist = tmp.Dot(front);
-    this->farClip = this->nearClip = dist;
-
-    tmp = box.GetLeftBottomFront() - camPos;
-    dist = tmp.Dot(front);
-    if (dist < this->nearClip) this->nearClip = dist;
-    if (dist > this->farClip) this->farClip = dist;
-
-    tmp = box.GetLeftTopFront() - camPos;
-    dist = tmp.Dot(front);
-    if (dist < this->nearClip) this->nearClip = dist;
-    if (dist > this->farClip) this->farClip = dist;
-
-    tmp = box.GetLeftTopBack() - camPos;
-    dist = tmp.Dot(front);
-    if (dist < this->nearClip) this->nearClip = dist;
-    if (dist > this->farClip) this->farClip = dist;
-
-    tmp = box.GetRightTopBack() - camPos;
-    dist = tmp.Dot(front);
-    if (dist < this->nearClip) this->nearClip = dist;
-    if (dist > this->farClip) this->farClip = dist;
-
-    tmp = box.GetRightTopFront() - camPos;
-    dist = tmp.Dot(front);
-    if (dist < this->nearClip) this->nearClip = dist;
-    if (dist > this->farClip) this->farClip = dist;
-
-    tmp = box.GetRightBottomFront() - camPos;
-    dist = tmp.Dot(front);
-    if (dist < this->nearClip) this->nearClip = dist;
-    if (dist > this->farClip) this->farClip = dist;
-
-    tmp = box.GetRightBottomBack() - camPos;
-    dist = tmp.Dot(front);
-    if (dist < this->nearClip) this->nearClip = dist;
-    if (dist > this->farClip) this->farClip = dist;
-
-    // add some epsilon because we want the bounding box to be visible all time.
-    dist = this->farClip - this->nearClip;
-    dist *= 0.001f;
-    this->nearClip -= dist;
-    this->farClip += dist;
-
-    // clamp the distances
-    if (this->nearClip < minNear) this->nearClip = minNear;
-    if (this->farClip > maxFar) this->farClip = maxFar;
-
-    // indicate that something changed
-    this->membersChanged = true;
+vislib::SmartPtr<vislib::graphics::CameraParameters>& 
+vislib::graphics::Camera::Parameters(void) {
+    return this->parameters;
 }
 
 
 /*
- * vislib::graphics::Camera::setDefaultValues
+ * vislib::graphics::Camera::SetParameters
  */
-void vislib::graphics::Camera::setDefaultValues(void) {
-    this->halfApertureAngle = math::AngleDeg2Rad(15.0);
-    this->farClip = static_cast<SceneSpaceType>(10.0); // some arbitrary values
-    this->focalDistance = static_cast<SceneSpaceType>(1.0); // some arbitrary values
-    this->nearClip = static_cast<SceneSpaceType>(0.1); // some arbitrary values
-    this->halfStereoDisparity = static_cast<SceneSpaceType>(0.01);
-    this->projectionType = vislib::graphics::Camera::MONO_PERSPECTIVE;
-    this->eye = vislib::graphics::Camera::LEFT_EYE;
-    this->virtualHalfWidth = static_cast<ImageSpaceType>(400); // some arbitrary values
-    this->virtualHalfHeight = static_cast<ImageSpaceType>(300); // some arbitrary values
-    this->ResetTileRectangle();
-    this->updateCounter = 0;
-    this->membersChanged = true;
+void vislib::graphics::Camera::SetParameters(const 
+        vislib::SmartPtr<vislib::graphics::CameraParameters>& params) {
+    this->parameters = params;
+    this->syncNumber = this->parameters->SyncNumber() - 1; // force update
 }
 
 
 /*
- * vislib::graphics::Camera::SetApertureAngle
+ * vislib::graphics::Camera::Camera
  */
-void vislib::graphics::Camera::SetApertureAngle(math::AngleDeg apertureAngle) {
-    if ((apertureAngle <= math::AngleDeg(0)) || (apertureAngle >= math::AngleDeg(180))) {
-        throw IllegalParamException("apertureAngle", __FILE__, __LINE__);
-    }
-    this->halfApertureAngle = math::AngleDeg2Rad(apertureAngle * static_cast<math::AngleDeg>(0.5));
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetFarClipDistance
- */
-void vislib::graphics::Camera::SetFarClipDistance(SceneSpaceType farClip) {
-    if (farClip <= this->nearClip) {
-        farClip = this->nearClip + CAMERA_SCENESPACE_DELTA;
-    }
-    this->farClip = farClip;
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetFocalDistance
- */
-void vislib::graphics::Camera::SetFocalDistance(SceneSpaceType focalDistance) {
-    if (focalDistance <= static_cast<SceneSpaceType>(0)) {
-        focalDistance = CAMERA_SCENESPACE_DELTA;
-    }
-    this->focalDistance = focalDistance;
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetNearClipDistance
- */
-void vislib::graphics::Camera::SetNearClipDistance(SceneSpaceType nearClip) {
-    if (nearClip <= static_cast<SceneSpaceType>(0)) {
-        nearClip = CAMERA_SCENESPACE_DELTA;
-    }
-    this->nearClip = nearClip;
-    if (this->farClip <= nearClip) {
-        this->farClip = nearClip + CAMERA_SCENESPACE_DELTA;
-    }
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetStereoDisparity
- */
-void vislib::graphics::Camera::SetStereoDisparity(SceneSpaceType stereoDisparity) {
-    this->halfStereoDisparity = stereoDisparity * static_cast<SceneSpaceType>(0.5);
-    if (this->halfStereoDisparity < static_cast<SceneSpaceType>(0)) {
-        this->halfStereoDisparity = -this->halfStereoDisparity;
-    }
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetProjectionType
- */
-void vislib::graphics::Camera::SetProjectionType(vislib::graphics::Camera::ProjectionType projectionType) {
-    this->projectionType = projectionType;
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetStereoEye
- */
-void vislib::graphics::Camera::SetStereoEye(StereoEye eye) {
-    this->eye = eye;
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetVirtualWidth
- */
-void vislib::graphics::Camera::SetVirtualWidth(ImageSpaceType virtualWidth) {
-    if ((math::IsEqual(this->tileRect.Left(), static_cast<ImageSpaceType>(0.0))) 
-            && (math::IsEqual(this->tileRect.Right(), this->virtualHalfWidth * static_cast<ImageSpaceType>(2.0)))) {
-        this->tileRect.SetRight(math::Max(virtualWidth, static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA)));
-    }
-    this->virtualHalfWidth = math::Max(virtualWidth * static_cast<ImageSpaceType>(0.5), 
-        static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA));
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::SetVirtualHeight
- */
-void vislib::graphics::Camera::SetVirtualHeight(ImageSpaceType virtualHeight) {
-    if ((math::IsEqual(this->tileRect.Bottom(), static_cast<ImageSpaceType>(0.0))) 
-            && (math::IsEqual(this->tileRect.Top(), this->virtualHalfHeight * static_cast<ImageSpaceType>(2.0)))) {
-        this->tileRect.SetTop(math::Max(virtualHeight, static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA)));
-    }
-    this->virtualHalfHeight = math::Max(virtualHeight * static_cast<ImageSpaceType>(0.5), 
-        static_cast<ImageSpaceType>(CAMERA_SCENESPACE_DELTA));
-    this->membersChanged = true;
-}
-
-
-/*
- * vislib::graphics::Camera::operator=
- */
-vislib::graphics::Camera & vislib::graphics::Camera::operator=(
+vislib::graphics::Camera& vislib::graphics::Camera::operator=(
         const vislib::graphics::Camera &rhs) {
-
-    this->beholder = rhs.beholder;
-    this->halfApertureAngle = rhs.halfApertureAngle;
-    this->farClip = rhs.farClip;
-    this->focalDistance = rhs.focalDistance;
-    this->nearClip = rhs.nearClip;
-    this->halfStereoDisparity = rhs.halfStereoDisparity;
-    this->projectionType = rhs.projectionType;
-    this->virtualHalfWidth = rhs.virtualHalfWidth;
-    this->virtualHalfHeight = rhs.virtualHalfHeight;
-    this->tileRect = rhs.tileRect;
-    this->updateCounter = 0;
-    this->membersChanged = true;
-
+    this->parameters = rhs.parameters;
+    this->syncNumber = this->parameters->SyncNumber() - 1; // force update
     return *this;
 }
 
 
 /*
- * vislib::graphics::Camera::SetBeholder
+ * vislib::graphics::Camera::Camera
  */
-void vislib::graphics::Camera::SetBeholder(Beholder *beholder) {
-    this->beholder = beholder;
-    this->updateCounter = 0;
-}
-
-
-/*
- * vislib::graphics::Camera::CalcFrustumParameters
- */
-void vislib::graphics::Camera::CalcFrustumParameters(SceneSpaceType &outLeft,
-        SceneSpaceType &outRight, SceneSpaceType &outBottom,
-        SceneSpaceType &outTop, SceneSpaceType &outNearClip,
-        SceneSpaceType &outFarClip) {
-    SceneSpaceType w, h;
-
-    if (!this->beholder) {
-        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
-    }
-
-    // clipping distances
-    outNearClip = this->nearClip;
-    outFarClip = this->farClip;
-
-    switch(this->projectionType) {
-        case MONO_PERSPECTIVE: // no break
-        case STEREO_PARALLEL: // no break
-        case STEREO_TOE_IN: {
-            // symmetric main frustum
-            h = tan(this->halfApertureAngle) * this->nearClip;
-            w = h * this->virtualHalfWidth / this->virtualHalfHeight;
-
-            // recalc tile rect on near clipping plane
-            outLeft = this->tileRect.GetLeft() * w / this->virtualHalfWidth;
-            outRight = this->tileRect.GetRight() * w/ this->virtualHalfWidth;
-            outBottom = this->tileRect.GetBottom() * h / this->virtualHalfHeight;
-            outTop = this->tileRect.GetTop() * h / this->virtualHalfHeight;
-          
-            // cut out local frustum for tile rect
-            outLeft -= w;
-            outRight -= w;
-            outBottom -= h;
-            outTop -= h;
-        } break;
-        case STEREO_OFF_AXIS: {
-            // symmetric main frustum
-            h = tan(this->halfApertureAngle) * this->nearClip;
-            w = h * this->virtualHalfWidth / this->virtualHalfHeight;
-
-            // recalc tile rect on near clipping plane
-            outLeft = this->tileRect.GetLeft() * w / this->virtualHalfWidth;
-            outRight = this->tileRect.GetRight() * w/ this->virtualHalfWidth;
-            outBottom = this->tileRect.GetBottom() * h / this->virtualHalfHeight;
-            outTop = this->tileRect.GetTop() * h / this->virtualHalfHeight;
-
-            // shear frustum
-            w += static_cast<SceneSpaceType>(((this->eye == LEFT_EYE) ? -1.0 : 1.0) 
-                * (this->nearClip * this->halfStereoDisparity) / this->focalDistance);
-
-            // cut out local frustum for tile rect
-            outLeft -= w;
-            outRight -= w;
-            outBottom -= h;
-            outTop -= h;
-        } break;
-        case MONO_ORTHOGRAPHIC:
-            // return shifted tile
-            outLeft = this->tileRect.GetLeft() - this->virtualHalfWidth;
-            outRight = this->tileRect.GetRight() - this->virtualHalfWidth;
-            outBottom = this->tileRect.GetBottom() - this->virtualHalfHeight;
-            outTop = this->tileRect.GetTop() - this->virtualHalfHeight;
-            break;
-        default:
-            // projection parameter calculation still not implemeneted
-            ASSERT(false);
-    }
-}
-
-
-/*
- * vislib::graphics::Camera::EyePosition
- */
-const vislib::math::Point<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyePosition(void) const {
-    if (!this->beholder) {
-        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
-    }
-    
-    if ((this->projectionType == STEREO_PARALLEL) 
-            || (this->projectionType == STEREO_OFF_AXIS) 
-            || (this->projectionType == STEREO_TOE_IN)) {
-
-        math::Point<SceneSpaceType, 3> pos = this->beholder->GetPosition();
-
-        // shift eye for stereo
-        math::Vector<SceneSpaceType, 3> right = this->beholder->GetRightVector() * this->halfStereoDisparity;
-
-        if (this->eye == LEFT_EYE) {
-            pos -= right; // left eye
-        } else {
-            pos += right; // right eye
-        }
-
-        return pos;
-    } else {
-        return this->beholder->GetPosition();
-    }
-
-}
-
-
-/*
- * vislib::graphics::Camera::EyeFrontVector
- */
-const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyeFrontVector(void) const {
-    if (!this->beholder) {
-        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
-    }
-
-    if (this->projectionType == STEREO_TOE_IN) {
-
-        math::Vector<SceneSpaceType, 3> front = (this->beholder->GetPosition() 
-            + (this->beholder->GetFrontVector() * this->focalDistance)) - this->EyePosition();
-        front.Normalise();
-        return front;
-
-    } else {
-        return this->beholder->GetFrontVector();
-    }
-}
-
-
-/*
- * vislib::graphics::Camera::EyeRightVector
- */
-const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyeRightVector(void) const {
-    if (!this->beholder) {
-        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
-    }
-
-    if ((this->projectionType == STEREO_PARALLEL) 
-            || (this->projectionType == STEREO_OFF_AXIS) 
-            || (this->projectionType == STEREO_TOE_IN)) {
-
-        math::Vector<SceneSpaceType, 3> right = this->EyeFrontVector().Cross(this->beholder->GetUpVector());
-        right.Normalise();
-        return right;
-
-    } else {
-        return this->beholder->GetRightVector();
-    }
-}
-
-
-/*
- * vislib::graphics::Camera::EyeUpVector
- */
-const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> vislib::graphics::Camera::EyeUpVector(void) const {
-    if (!this->beholder) {
-        throw IllegalStateException("Camera is not associated with a beholer", __FILE__, __LINE__);
-    }
-
-    return this->beholder->GetUpVector();
+bool vislib::graphics::Camera::operator==(
+        const vislib::graphics::Camera &rhs) const {
+    return ((this->parameters == rhs.parameters));
 }

@@ -1,11 +1,12 @@
 /*
- * BeholderRotator2D.h
+ * CameraRotate2DLookAt.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BEHOLDERROTATOR2D_H_INCLUDED
-#define VISLIB_BEHOLDERROTATOR2D_H_INCLUDED
+#ifndef VISLIB_CAMERAROTATE2DLOOKAT_H_INCLUDED
+#define VISLIB_CAMERAROTATE2DLOOKAT_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -14,10 +15,13 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractBeholderController.h"
+#include "vislib/AbstractCameraController.h"
 #include "vislib/AbstractCursor2DEvent.h"
-#include "vislib/graphicstypes.h"
+#include "vislib/Camera.h"
+#include "vislib/CameraParameters.h"
 #include "vislib/InputModifiers.h"
+#include "vislib/graphicstypes.h"
+#include "vislib/SmartPtr.h"
 
 
 namespace vislib {
@@ -25,22 +29,29 @@ namespace graphics {
 
 
     /**
-     * Controller class translating cursor 2D movement to Beholder rotations.
+     * Cursor2DEvent rotating the camera around its look-at-point based on the
+     * mouse movement.
+     *
      * You should set up a button test and you should set the alternative 
-     * rotation modifier if you use this class.
-     * Normal rotation schema modelles rotations about the pitch and yaw axes, 
-     * while the alternative rotation schema modelles rotations about the roll
-     * axis.
+     * rotation modifier if you use this class. Normal rotation schema 
+     * modelles pitch and yaw rotations, while the alternative rotation schema
+     * modelles roll rotation.
      */
-    class BeholderRotator2D: public AbstractCursor2DEvent, public AbstractBeholderController {
+    class CameraRotate2DLookAt : public AbstractCursor2DEvent, 
+        public AbstractCameraController {
 
     public:
 
-        /** ctor */
-        BeholderRotator2D(void);
+        /** 
+         * Ctor. 
+         *
+         * @param cameraParams The camera parameters object to be rotated.
+         */
+        CameraRotate2DLookAt(const SmartPtr<CameraParameters>& cameraParams 
+            = SmartPtr<CameraParameters>());
 
         /** Dtor. */
-        virtual ~BeholderRotator2D(void);
+        ~CameraRotate2DLookAt(void);
 
         /**
          * Callback methode called by a Cursor2D this event is registered to 
@@ -90,4 +101,5 @@ namespace graphics {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BEHOLDERROTATOR2D_H_INCLUDED */
+#endif /* VISLIB_CAMERAROTATE2DLOOKAT_H_INCLUDED */
+

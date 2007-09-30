@@ -12,13 +12,14 @@
 
 #include "AbstractGlutApp.h"
 
-#include "vislib/types.h"
-#include "vislib/Beholder.h"
-#define VISLIB_ENABLE_OPENGL
 #include "vislib/CameraOpenGL.h"
+#include "vislib/CameraParameters.h"
+#include "vislib/SmartPtr.h"
+#include "vislib/types.h"
 
-#define SCTA_CX_TILES 8
-#define SCTA_CY_TILES 8
+
+#define TILE_RIGHT_EYE 3
+
 
 class StereoCamTestApp: public AbstractGlutApp {
 public:
@@ -35,16 +36,16 @@ public:
 private:
     void RenderTestBox(void);
 
-    void UpdateCamTiles(void);
-
     float angle;
     UINT64 lastTime;
 
-    vislib::graphics::Beholder beholder;
+    vislib::SmartPtr<vislib::graphics::CameraParameters> parameters;
     vislib::graphics::gl::CameraOpenGL cameraLeft;
+#ifdef TILE_RIGHT_EYE
+    vislib::graphics::gl::CameraOpenGL cameraRight[TILE_RIGHT_EYE * TILE_RIGHT_EYE];
+#else /* TILE_RIGHT_EYE */
     vislib::graphics::gl::CameraOpenGL cameraRight;
-
-    vislib::graphics::gl::CameraOpenGL camTilesLeft[SCTA_CX_TILES][SCTA_CY_TILES];
+#endif /* TILE_RIGHT_EYE */
 };
 
 #endif /* VISLIBTEST_STEREOCAMTESTAPP_H_INCLUDED */

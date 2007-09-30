@@ -1,9 +1,10 @@
 /*
- * BeholderRotatorTextApp.cpp
+ * CamRotatorTestApp.cpp
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006-2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
-#include "BeholderRotatorTextApp.h"
+#include "CamRotatorTestApp.h"
 
 #include <GL/glut.h>
 #include <GL/gl.h>
@@ -20,56 +21,54 @@
 
 
 /*
- * BeholderRotatorTextApp::BeholderRotatorTextApp
+ * CamRotatorTestApp::CamRotatorTestApp
  */
-BeholderRotatorTextApp::BeholderRotatorTextApp(void) : AbstractGlutApp() {
-
-    this->beholder.SetView(
+CamRotatorTestApp::CamRotatorTestApp(void) : AbstractGlutApp() {
+    this->camera.Parameters()->SetClip(0.1f, 7.0f);
+    this->camera.Parameters()->SetFocalDistance(2.5f);
+    this->camera.Parameters()->SetApertureAngle(50.0f);
+    this->camera.Parameters()->SetView(
         vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
         vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
         vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
-
-    this->camera.SetBeholder(&this->beholder);
-    this->camera.SetNearClipDistance(0.1f);
-    this->camera.SetFarClipDistance(7.0f);
-    this->camera.SetFocalDistance(2.5f);
-    this->camera.SetApertureAngle(50.0f);
-    this->camera.SetVirtualWidth(10.0f);
-    this->camera.SetVirtualHeight(10.0f);
-    this->camera.SetProjectionType(vislib::graphics::Camera::MONO_PERSPECTIVE);
+    this->camera.Parameters()->SetVirtualViewSize(10.0f, 10.0f);
+    this->camera.Parameters()->SetProjection(
+        vislib::graphics::CameraParameters::MONO_PERSPECTIVE);
 
     this->modkeys.SetModifierCount(3);
     this->modkeys.RegisterObserver(&this->cursor);
 
     this->cursor.SetButtonCount(3);
     this->cursor.SetInputModifiers(&this->modkeys);
-    this->cursor.SetCamera(&this->camera);
+    this->cursor.SetCameraParams(this->camera.Parameters());
     
-    this->rotator1.SetBeholder(&this->beholder);
+    this->rotator1.SetCameraParams(this->camera.Parameters());
     this->rotator1.SetTestButton(0); // left button
     this->rotator1.SetModifierTestCount(0);
-    this->rotator1.SetAltModifier(vislib::graphics::InputModifiers::MODIFIER_CTRL);
+    this->rotator1.SetAltModifier(
+        vislib::graphics::InputModifiers::MODIFIER_SHIFT);
 
-    this->rotator2.SetBeholder(&this->beholder);
+    this->rotator2.SetCameraParams(this->camera.Parameters());
     this->rotator2.SetTestButton(0); // left button
     this->rotator2.SetModifierTestCount(0);
-    this->rotator2.SetAltModifier(vislib::graphics::InputModifiers::MODIFIER_CTRL);
+    this->rotator2.SetAltModifier(
+        vislib::graphics::InputModifiers::MODIFIER_SHIFT);
 
     this->SetupRotator2();
 }
 
 
 /*
- * BeholderRotatorTextApp::~BeholderRotatorTextApp
+ * CamRotatorTestApp::~CamRotatorTestApp
  */
-BeholderRotatorTextApp::~BeholderRotatorTextApp(void) {
+CamRotatorTestApp::~CamRotatorTestApp(void) {
 }
 
 
 /*
- * BeholderRotatorTextApp::GLInit
+ * CamRotatorTestApp::GLInit
  */
-int BeholderRotatorTextApp::GLInit(void) {
+int CamRotatorTestApp::GLInit(void) {
     VisLogoDoStuff();
     VisLogoTwistLogo();
     glEnable(GL_DEPTH_TEST);
@@ -97,27 +96,29 @@ int BeholderRotatorTextApp::GLInit(void) {
 
 
 /*
- * BeholderRotatorTextApp::GLDeinit
+ * CamRotatorTestApp::GLDeinit
  */
-void BeholderRotatorTextApp::GLDeinit(void) {
-    // Intentionally empty!
+void CamRotatorTestApp::GLDeinit(void) {
+    glDisable(GL_LIGHT0);
+    glDisable(GL_LIGHTING);
 }
 
 
 /*
- * BeholderRotatorTextApp::OnResize
+ * CamRotatorTestApp::OnResize
  */
-void BeholderRotatorTextApp::OnResize(unsigned int w, unsigned int h) {
+void CamRotatorTestApp::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
-    this->camera.SetVirtualWidth(static_cast<vislib::graphics::ImageSpaceType>(w));
-    this->camera.SetVirtualHeight(static_cast<vislib::graphics::ImageSpaceType>(h));
+    this->camera.Parameters()->SetVirtualViewSize(
+        static_cast<vislib::graphics::ImageSpaceType>(w),
+        static_cast<vislib::graphics::ImageSpaceType>(h));
 }
 
 
 /*
- * BeholderRotatorTextApp::OnKeyPress
+ * CamRotatorTestApp::OnKeyPress
  */
-bool BeholderRotatorTextApp::OnKeyPress(unsigned char key, int x, int y) {
+bool CamRotatorTestApp::OnKeyPress(unsigned char key, int x, int y) {
     bool retval = true;
     switch(key) {
         case '1': this->SetupRotator1(); break;
@@ -131,9 +132,9 @@ bool BeholderRotatorTextApp::OnKeyPress(unsigned char key, int x, int y) {
 
 
 /*
- * BeholderRotatorTextApp::OnMouseEvent
+ * CamRotatorTestApp::OnMouseEvent
  */
-void BeholderRotatorTextApp::OnMouseEvent(int button, int state, int x, int y) {
+void CamRotatorTestApp::OnMouseEvent(int button, int state, int x, int y) {
     unsigned int btn = 0;
     int modifiers = glutGetModifiers();
 
@@ -153,18 +154,18 @@ void BeholderRotatorTextApp::OnMouseEvent(int button, int state, int x, int y) {
 
 
 /*
- * BeholderRotatorTextApp::OnMouseMove
+ * CamRotatorTestApp::OnMouseMove
  */
-void BeholderRotatorTextApp::OnMouseMove(int x, int y) {
+void CamRotatorTestApp::OnMouseMove(int x, int y) {
     this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
         static_cast<vislib::graphics::ImageSpaceType>(y), true);
 }
 
 
 /*
- * BeholderRotatorTextApp::OnSpecialKey
+ * CamRotatorTestApp::OnSpecialKey
  */
-void BeholderRotatorTextApp::OnSpecialKey(int key, int x, int y) {
+void CamRotatorTestApp::OnSpecialKey(int key, int x, int y) {
     int modifiers = glutGetModifiers();
 
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
@@ -176,9 +177,9 @@ void BeholderRotatorTextApp::OnSpecialKey(int key, int x, int y) {
 
 
 /*
- * BeholderRotatorTextApp::Render
+ * CamRotatorTestApp::Render
  */
-void BeholderRotatorTextApp::Render(void) {
+void CamRotatorTestApp::Render(void) {
 
     glViewport(0, 0, this->GetWidth(), this->GetHeight());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -201,9 +202,9 @@ void BeholderRotatorTextApp::Render(void) {
 
 
 /*
- * BeholderRotatorTextApp::RenderLogo
+ * CamRotatorTestApp::RenderLogo
  */
-void BeholderRotatorTextApp::RenderLogo(void) {
+void CamRotatorTestApp::RenderLogo(void) {
     unsigned int vCount = VisLogoCountVertices();
 	unsigned int p;
 
@@ -269,10 +270,10 @@ void BeholderRotatorTextApp::RenderLogo(void) {
 
 
 /*
- * BeholderRotatorTextApp::SetupRotator1
+ * CamRotatorTestApp::SetupRotator1
  */
-void BeholderRotatorTextApp::SetupRotator1(void) {
-    this->beholder.SetView(
+void CamRotatorTestApp::SetupRotator1(void) {
+    this->camera.Parameters()->SetView(
         vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
         vislib::math::Point<double, 3>(0.0, 1.0, 0.0),
         vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
@@ -283,10 +284,10 @@ void BeholderRotatorTextApp::SetupRotator1(void) {
 
 
 /*
- * BeholderRotatorTextApp::SetupRotator2
+ * CamRotatorTestApp::SetupRotator2
  */
-void BeholderRotatorTextApp::SetupRotator2(void) {
-    this->beholder.SetView(
+void CamRotatorTestApp::SetupRotator2(void) {
+    this->camera.Parameters()->SetView(
         vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
         vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
         vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
