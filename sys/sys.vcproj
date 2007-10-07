@@ -342,6 +342,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Interlocked.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\IOException.cpp"
 				>
 			</File>
@@ -505,6 +509,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\ImpersonationContext.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Interlocked.h"
 				>
 			</File>
 			<File

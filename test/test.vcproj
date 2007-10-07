@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testinterlocked.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testmatrix.cpp"
 				>
 			</File>
@@ -509,6 +513,10 @@
 			</File>
 			<File
 				RelativePath=".\testhelper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testinterlocked.h"
 				>
 			</File>
 			<File

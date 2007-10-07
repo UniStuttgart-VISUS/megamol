@@ -36,6 +36,7 @@
 #include "testenvironment.h"
 #include "testnamedpipe.h"
 #include "testsockets.h"
+#include "testinterlocked.h"
 
 
 /* type for test functions */
@@ -86,6 +87,7 @@ VislibTest tests[] = {
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
+    {_T("Interlocked"), ::TestInterlocked, "Tests interlocked operations."},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };
