@@ -61,10 +61,10 @@ namespace net {
 
         /**
          * Create an IPAddress from the dotted string format.
-		 *
-		 * NOTE: The address might be invalid after construction, if 'address'
-		 * is not a valid host name or IP address in the dotted string format.
-		 * It is recommended to use the Lookup() method for finding a host or
+         *
+         * NOTE: The address might be invalid after construction, if 'address'
+         * is not a valid host name or IP address in the dotted string format.
+         * It is recommended to use the Lookup() method for finding a host or
          * creating the address by IPAddress::Create.
          *
          * @param address The IP address in the dotted string format.
@@ -174,7 +174,7 @@ namespace net {
          *
          * @return The in_addr that is represented by this object.
          */
-        inline operator struct in_addr&(void)  {
+        inline operator struct in_addr&(void) {
             return this->address;
         }
 
@@ -182,7 +182,7 @@ namespace net {
 
         /**
          * Create an IPAddress from its representation as a single integer.
-		 *
+         *
          * @param address The address as integer.
          */
         explicit IPAddress(const unsigned long address);

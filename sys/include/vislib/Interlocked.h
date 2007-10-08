@@ -72,9 +72,8 @@ namespace sys {
             return ::InterlockedCompareExchange(
                 reinterpret_cast<LONG *>(address), exchange, comparand);
 #else /* _WIN32 */
-        inline static INT32 CompareExchange(INT32 *address,
-                const INT32 exchange, const INT comparand) 
-                __attribute__((always_inline)) {
+        inline static INT32 CompareExchange(INT32 *address, 
+                const INT32 exchange, const INT comparand) {
 #ifdef atomic_cmpxchg
             INT32 retval = atomic_cmpxchg(reinterpret_cast<atomic_t *>(address),
                 comparand, exchange);
@@ -99,9 +98,13 @@ namespace sys {
         __forceinline static INT32 Decrement(INT32 *address) {
             return ::InterlockedDecrement(reinterpret_cast<LONG *>(address));
 #else /* _WIN32 */
-        inline INT32 static Decrement(INT32 *address) 
-                __attribute__((always_inline)) {
+        inline INT32 static Decrement(INT32 *address) {
+#ifdef atomic_dec_return
             return atomic_dec_return(reinterpret_cast<atomic_t *>(address));
+#else /* atomic_dec_return */
+            throw UnsupportedOperationException("TODO: Kernel does not support "
+                "atomic_dec_return.", __FILE__, __LINE__);
+#endif /* atomic_dec_return */
 #endif /* _WIN32 */
         }
 
@@ -118,8 +121,7 @@ namespace sys {
             return ::InterlockedExchange(reinterpret_cast<LONG *>(address), 
                 value);
 #else /* _WIN32 */
-        inline static INT32 Exchange(INT32 *address, const INT32 value) 
-                __attribute__((always_inline)) {
+        inline static INT32 Exchange(INT32 *address, const INT32 value) {
 #ifdef atomic_cmpxchg
             // TODO: This implementation is crazy. Search for a real solution. 
             // The problem is that Linux does not want us to know the old value
@@ -160,16 +162,20 @@ namespace sys {
             return ::InterlockedExchangeAdd(reinterpret_cast<LONG *>(address),
                 value);
 #else /* _WIN32 */
-        inline static INT32 ExchangeAdd(INT32 *address, const INT32 value)
-                __attribute__((always_inline)) {
+        inline static INT32 ExchangeAdd(INT32 *address, const INT32 value) {
+#ifdef atomic_add_return
             INT32 retval = atomic_add_return(value, 
                 reinterpret_cast<atomic_t *>(address));
             return (retval - value);
+#else /* atomic_add_return */
+            throw UnsupportedOperationException("TODO: Kernel does not support "
+                "atomic_add_return.", __FILE__, __LINE__);
+#endif /* atomic_add_return */
 #endif /* _WIN32 */
         }
 
         /**
-         * Perform an atomic subtraction of a 32-bit increment value to a 32-bit 
+         * Perform an atomic subtraction of a 32-bit increment value to a 32-bit
          * variable. 
          *
          * @param address Address of the variable to modify.
@@ -184,11 +190,15 @@ namespace sys {
             return ::InterlockedExchangeAdd(reinterpret_cast<LONG *>(address),
                 -value);
 #else /* _WIN32 */
-        inline static INT32 ExchangeSub(INT32 *address, const INT32 value)
-                __attribute__((always_inline)) {
+        inline static INT32 ExchangeSub(INT32 *address, const INT32 value) {
+#ifdef atomic_sub_return
             INT32 retval = atomic_sub_return(value,
                 reinterpret_cast<atomic_t *>(address));
             return (retval + value);
+#else /* atomic_sub_return */
+            throw UnsupportedOperationException("TODO: Kernel does not support "
+                "atomic_sub_return.", __FILE__, __LINE__);
+#endif /* atomic_sub_return */
 #endif /* _WIN32 */
         }
 
@@ -204,9 +214,13 @@ namespace sys {
         __forceinline static INT32 Increment(INT32 *address) {
             return ::InterlockedIncrement(reinterpret_cast<LONG *>(address));
 #else /* _WIN32 */
-        inline static INT32 Increment(INT32 *address) 
-                __attribute((always_inline)) {
+        inline static INT32 Increment(INT32 *address) {
+#ifdef atomic_inc_return
             return atomic_inc_return(reinterpret_cast<atomic_t *>(address));
+#else /* atomic_inc_return */
+            throw UnsupportedOperationException("TODO: Kernel does not support "
+                "atomic_inc_return.", __FILE__, __LINE__);
+#endif /* atomic_inc_return */
 #endif /* _WIN32 */
         }
 
