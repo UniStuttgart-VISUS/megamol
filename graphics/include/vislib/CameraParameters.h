@@ -16,6 +16,7 @@
 
 
 #include "vislib/CameraParameterLimits.h"
+#include "vislib/Cuboid.h"
 #include "vislib/Dimension.h"
 #include "vislib/graphicstypes.h"
 #include "vislib/mathtypes.h"
@@ -86,6 +87,18 @@ namespace graphics {
          * new values will not be set.
          */
         virtual void ApplyLimits(void) = 0;
+
+        /**
+         * Calculates the clipping distances based on a bounding box cuboid
+         * specified in world coordinates. (This methods implementation uses
+         * 'SetClip', 'Position', and 'Front'.)
+         *
+         * @param bbox The bounding box in world coordinates.
+         * @param border Additional distance of the clipping distances to the
+         *               bounding box.
+         */
+        void CalcClipping(const math::Cuboid<SceneSpaceType>& bbox, 
+            SceneSpaceType border);
 
         /**
          * Copies all values from 'src' into this object.

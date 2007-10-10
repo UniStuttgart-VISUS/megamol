@@ -54,6 +54,14 @@ vislib::graphics::Camera::Parameters(void) {
     return this->parameters;
 }
 
+/*
+ * vislib::graphics::CameraParameters::Parameters
+ */
+const vislib::SmartPtr<vislib::graphics::CameraParameters>&
+vislib::graphics::Camera::Parameters(void) const {
+    return this->parameters;
+}
+
 
 /*
  * vislib::graphics::Camera::SetParameters

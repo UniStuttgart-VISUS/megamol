@@ -57,6 +57,13 @@ namespace graphics {
         SmartPtr<CameraParameters>& Parameters(void);
 
         /**
+         * Answers the parameters object.
+         *
+         * @return The parameters object.
+         */
+        const SmartPtr<CameraParameters>& Parameters(void) const;
+
+        /**
          * Sets the parameters object.
          *
          * @param params The new parameters object.
