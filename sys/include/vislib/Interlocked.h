@@ -74,6 +74,12 @@ namespace sys {
 #else /* _WIN32 */
         inline static INT32 CompareExchange(INT32 *address, 
                 const INT32 exchange, const INT comparand) {
+            //INT32 retval;
+            //__asm__ __volatile__(lock; cmpxchgl %1,%2"
+            //                         : "=a"(prev)
+            //                         : "r"(new), "m"(*__xg(ptr)), "0"(old)
+            //                         : "memory");
+            //return retval;
 #ifdef atomic_cmpxchg
             INT32 retval = atomic_cmpxchg(reinterpret_cast<atomic_t *>(address),
                 comparand, exchange);
@@ -99,12 +105,7 @@ namespace sys {
             return ::InterlockedDecrement(reinterpret_cast<LONG *>(address));
 #else /* _WIN32 */
         inline INT32 static Decrement(INT32 *address) {
-#ifdef atomic_dec_return
-            return atomic_dec_return(reinterpret_cast<atomic_t *>(address));
-#else /* atomic_dec_return */
-            throw UnsupportedOperationException("TODO: Kernel does not support "
-                "atomic_dec_return.", __FILE__, __LINE__);
-#endif /* atomic_dec_return */
+            return (Interlocked::ExchangeAdd(address, -1) - 1);
 #endif /* _WIN32 */
         }
 
@@ -163,19 +164,13 @@ namespace sys {
                 value);
 #else /* _WIN32 */
         inline static INT32 ExchangeAdd(INT32 *address, const INT32 value) {
-#ifdef atomic_add_return
-            INT32 retval = atomic_add_return(value, 
-                reinterpret_cast<atomic_t *>(address));
-            return (retval - value);
-#else /* atomic_add_return */
             INT32 retval;
             __asm__ __volatile__("lock; xaddl %0, (%1)"
-                : "=r" (retval) : "r" (address), "0" (value) : "memory");
-            return retval;
-
-            throw UnsupportedOperationException("TODO: Kernel does not support "
-                "atomic_add_return.", __FILE__, __LINE__);
-#endif /* atomic_add_return */
+                : "=r" (retval)                 // output, write-only, register
+                : "r" (address), "0" (value)    // input, register
+                : "memory"                      // modify memory unpredictably
+                );
+            return (retval - value);
 #endif /* _WIN32 */
         }
 
@@ -196,14 +191,7 @@ namespace sys {
                 -value);
 #else /* _WIN32 */
         inline static INT32 ExchangeSub(INT32 *address, const INT32 value) {
-#ifdef atomic_sub_return
-            INT32 retval = atomic_sub_return(value,
-                reinterpret_cast<atomic_t *>(address));
-            return (retval + value);
-#else /* atomic_sub_return */
-            throw UnsupportedOperationException("TODO: Kernel does not support "
-                "atomic_sub_return.", __FILE__, __LINE__);
-#endif /* atomic_sub_return */
+            return Interlocked::ExchangeAdd(address, -value);
 #endif /* _WIN32 */
         }
 
@@ -220,12 +208,7 @@ namespace sys {
             return ::InterlockedIncrement(reinterpret_cast<LONG *>(address));
 #else /* _WIN32 */
         inline static INT32 Increment(INT32 *address) {
-#ifdef atomic_inc_return
-            return atomic_inc_return(reinterpret_cast<atomic_t *>(address));
-#else /* atomic_inc_return */
-            throw UnsupportedOperationException("TODO: Kernel does not support "
-                "atomic_inc_return.", __FILE__, __LINE__);
-#endif /* atomic_inc_return */
+            return (Interlocked::ExchangeAdd(address, 1) + 1);
 #endif /* _WIN32 */
         }
 

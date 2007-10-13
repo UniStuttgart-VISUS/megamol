@@ -301,6 +301,10 @@
 				RelativePath=".\src\SocketException.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\TcpServer.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -333,6 +337,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SocketException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\TcpServer.h"
 				>
 			</File>
 		</Filter>

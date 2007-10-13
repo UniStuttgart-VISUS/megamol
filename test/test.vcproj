@@ -442,6 +442,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testtcpserver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testthelog.cpp"
 				>
 			</File>
@@ -557,6 +561,10 @@
 			</File>
 			<File
 				RelativePath=".\testsysinfo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testtcpserver.h"
 				>
 			</File>
 			<File
