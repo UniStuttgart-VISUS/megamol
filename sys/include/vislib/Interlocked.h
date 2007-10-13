@@ -17,7 +17,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else /* _WIN32 */
-#include <asm/atomic.h>
+//#include <asm/atomic.h>
 #endif /* _WIN32 */
 
 #include "vislib/UnsupportedOperationException.h"
@@ -168,6 +168,11 @@ namespace sys {
                 reinterpret_cast<atomic_t *>(address));
             return (retval - value);
 #else /* atomic_add_return */
+            INT32 retval;
+            __asm__ __volatile__("lock; xaddl %0, (%1)"
+                : "=r" (retval) : "r" (address), "0" (value) : "memory");
+            return retval;
+
             throw UnsupportedOperationException("TODO: Kernel does not support "
                 "atomic_add_return.", __FILE__, __LINE__);
 #endif /* atomic_add_return */
