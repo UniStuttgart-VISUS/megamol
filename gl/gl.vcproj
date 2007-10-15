@@ -306,6 +306,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\glfunctions.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\GLSLGeometryShader.cpp"
 				>
 			</File>
@@ -349,6 +353,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\FramebufferObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\glfunctions.h"
 				>
 			</File>
 			<File

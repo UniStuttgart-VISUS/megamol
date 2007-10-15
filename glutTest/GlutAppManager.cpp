@@ -13,6 +13,9 @@
 #include <GL/gl.h>
 #include "GlutAppManager.h"
 #include "vislib/FpsCounter.h"
+#include "vislib/VersionNumber.h"
+#include "vislib/glfunctions.h"
+
 
 /** not nice! */
 extern vislib::graphics::FpsCounter fpsCounter;
@@ -226,7 +229,12 @@ void GlutAppManager::glRenderEmptyScreen(void) {
         "VISlib glutTest Application");
     glprintf(10.0f, float(This->height - 44), GLUT_BITMAP_HELVETICA_12,
         "Copyright  2007, Universität Stuttgart (VIS). Alle Rechte vorbehalten.");
-    glprintf(10.0f, float(This->height - 60), GLUT_BITMAP_HELVETICA_12,
+    vislib::StringA txt;
+    txt.Format("OpenGL Version: %s", 
+        vislib::graphics::gl::GLVersion().ToStringA(3));
+    glprintf(10.0f, float(This->height - 60), GLUT_BITMAP_HELVETICA_12, 
+        txt.PeekBuffer());
+    glprintf(10.0f, float(This->height - 76), GLUT_BITMAP_HELVETICA_12,
         "Use the right click context menu to select a test.");
 
 	glFlush();
