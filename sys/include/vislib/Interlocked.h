@@ -74,21 +74,8 @@ namespace sys {
 #else /* _WIN32 */
         inline static INT32 CompareExchange(INT32 *address, 
                 const INT32 exchange, const INT comparand) {
-            //INT32 retval;
-            //__asm__ __volatile__(lock; cmpxchgl %1,%2"
-            //                         : "=a"(prev)
-            //                         : "r"(new), "m"(*__xg(ptr)), "0"(old)
-            //                         : "memory");
-            //return retval;
-#ifdef atomic_cmpxchg
-            INT32 retval = atomic_cmpxchg(reinterpret_cast<atomic_t *>(address),
-                comparand, exchange);
+            INT32 retval = cmpxchg(address, comparand, exchange);
             return (retval == exchange) ? comparand : retval;
-#else /* atomic_cmpxchg */
-            throw UnsupportedOperationException("TODO: Kernel does not support "
-                "atomic_cmpxchg. Consider inline assembler in VISlib", 
-                __FILE__, __LINE__);
-#endif /* atomic_cmpxchg */
 #endif /* _WIN32 */
         }
 
@@ -123,7 +110,6 @@ namespace sys {
                 value);
 #else /* _WIN32 */
         inline static INT32 Exchange(INT32 *address, const INT32 value) {
-#ifdef atomic_cmpxchg
             // TODO: This implementation is crazy. Search for a real solution. 
             // The problem is that Linux does not want us to know the old value
             // at 'address' when using the libc xchg function.
@@ -131,20 +117,15 @@ namespace sys {
             
             old = retval = value;
             while (true) {
-                old = atomic_cmpxchg(reinterpret_cast<atomic_t *>(address),
-                    old, value);
+                old = cmpxchg(address, old, value);
                 if (old == value) {
                     return retval;
                 } else {
                     retval = old;
                 }
             }
-#else /* atomic_cmpxchg */
-            throw UnsupportedOperationException("TODO: Kernel does not support "
-                "atomic_cmpxchg. Consider inline assembler in VISlib", 
-                __FILE__, __LINE__);
-#endif /* atomic_cmpxchg */
-#endif /* _WIN32 */
+
+            return retval;
         }
 
         /**
