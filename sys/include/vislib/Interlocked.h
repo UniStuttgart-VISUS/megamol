@@ -74,8 +74,12 @@ namespace sys {
 #else /* _WIN32 */
         inline static INT32 CompareExchange(INT32 *address, 
                 const INT32 exchange, const INT comparand) {
-            INT32 retval = cmpxchg(address, comparand, exchange);
-            return (retval == exchange) ? comparand : retval;
+            INT32 retval;
+            __asm__ __volatile__ ("lock; cmpxchgl %2, %0"
+                : "=m" (*address), "=a" (retval)
+                : "r" (exchange), "m" (*address), "a" (comparand)
+                : "memory");
+            return retval;
 #endif /* _WIN32 */
         }
 
@@ -110,22 +114,19 @@ namespace sys {
                 value);
 #else /* _WIN32 */
         inline static INT32 Exchange(INT32 *address, const INT32 value) {
-            // TODO: This implementation is crazy. Search for a real solution. 
-            // The problem is that Linux does not want us to know the old value
-            // at 'address' when using the libc xchg function.
+            // TODO: This implementation is crazy.
             INT32 old, retval;
-            
-            old = retval = value;
+
+            old = *address;
             while (true) {
-                old = cmpxchg(address, old, value);
-                if (old == value) {
+                retval = Interlocked::CompareExchange(address, value, old);
+                if (retval == old) {
                     return retval;
                 } else {
-                    retval = old;
+                    old = retval;
                 }
             }
-
-            return retval;
+#endif /* _WIN32 */
         }
 
         /**
@@ -146,12 +147,11 @@ namespace sys {
 #else /* _WIN32 */
         inline static INT32 ExchangeAdd(INT32 *address, const INT32 value) {
             INT32 retval;
-            __asm__ __volatile__("lock; xaddl %0, (%1)"
-                : "=r" (retval)                 // output, write-only, register
-                : "r" (address), "0" (value)    // input, register
-                : "memory"                      // modify memory unpredictably
-                );
-            return (retval - value);
+            __asm__ __volatile__("lock; xaddl %0, %1"
+                : "=r" (retval), "=m" (*address)
+                : "0" (value), "m" (*address)
+                : "memory");
+            return retval;
 #endif /* _WIN32 */
         }
 

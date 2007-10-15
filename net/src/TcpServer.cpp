@@ -32,7 +32,7 @@ vislib::net::TcpServer::Listener::Listener(void) {
 /*
  * vislib::net::TcpServer::Listener::OnServerStopped
  */
-void vislib::net::TcpServer::Listener::OnServerStopped(void) {
+void vislib::net::TcpServer::Listener::OnServerStopped(void) throw() {
     // Nothing to do.
 }
 
