@@ -56,7 +56,7 @@ namespace gl {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void glMultProjectionMatrix(void);
+        void glMultProjectionMatrix(void) const;
 
         /**
          * Multiplies the current openGL matrix with the viewing matrix of this
@@ -65,7 +65,7 @@ namespace gl {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void glMultViewMatrix(void);
+        void glMultViewMatrix(void) const;
 
         /**
          * Answer the projection matrix of the frustum of this camera.
@@ -75,7 +75,7 @@ namespace gl {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void ProjectionMatrix(float *mat);
+        void ProjectionMatrix(float *mat) const;
 
         /**
          * Answer the view matrix of the frustum of this camera.
@@ -85,7 +85,7 @@ namespace gl {
          * throws IllegalStateException if no beholder is associated with this
          *        Camera.
          */
-        void ViewMatrix(float *mat);
+        void ViewMatrix(float *mat) const;
 
         /**
          * Assignment operator
@@ -108,34 +108,34 @@ namespace gl {
     private:
 
         /** Updates all members using the camera parameters */
-        void updateMembers(void);
+        void updateMembers(void) const;
 
         /** viewing frustum minimal x */
-        SceneSpaceType left;
+        mutable SceneSpaceType left;
 
         /** viewing frustum maximal x */
-        SceneSpaceType right;
+        mutable SceneSpaceType right;
 
         /** viewing frustum minimal y */
-        SceneSpaceType bottom;
+        mutable SceneSpaceType bottom;
 
         /** viewing frustum maximal y */
-        SceneSpaceType top;
+        mutable SceneSpaceType top;
 
         /** viewing frustum minimal z */
-        SceneSpaceType nearClip;
+        mutable SceneSpaceType nearClip;
 
         /** viewing frustum maximal z */
-        SceneSpaceType farClip;
+        mutable SceneSpaceType farClip;
 
         /** projection viewer position */
-        math::Point<SceneSpaceType, 3> pos;
+        mutable math::Point<SceneSpaceType, 3> pos;
 
         /** projection viewing direction */ 
-        math::Vector<SceneSpaceType, 3> lookDir;
+        mutable math::Vector<SceneSpaceType, 3> lookDir;
 
         /** projection up vector */
-        math::Vector<SceneSpaceType, 3> up;
+        mutable math::Vector<SceneSpaceType, 3> up;
 
     };
     

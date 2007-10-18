@@ -48,16 +48,15 @@ vislib::graphics::gl::CameraOpenGL::~CameraOpenGL(void) {
 /*
  * vislib::graphics::gl::CameraOpenGL::glMultProjectionMatrix
  */
-void vislib::graphics::gl::CameraOpenGL::glMultProjectionMatrix(void) {
+void vislib::graphics::gl::CameraOpenGL::glMultProjectionMatrix(void) const {
     if (this->needUpdate()) {
         this->updateMembers();
-        this->markAsUpdated();
     }
 
     if (this->Parameters()->Projection() != CameraParameters::MONO_ORTHOGRAPHIC) {
         ::glFrustum(left, right, bottom, top, nearClip, farClip);
     } else {
-        // TODO: rewrite ortho to be more compatible with normal projection
+        // TODO: write alternative ortho to be more compatible with normal projection
         ::glOrtho(left, right, bottom, top, nearClip, farClip);
     }
 }
@@ -66,10 +65,9 @@ void vislib::graphics::gl::CameraOpenGL::glMultProjectionMatrix(void) {
 /*
  * vislib::graphics::gl::CameraOpenGL::glMultViewMatrix
  */
-void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) {
+void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) const {
     if (this->needUpdate()) {
         this->updateMembers();
-        this->markAsUpdated();
     }
 
     ::gluLookAt(pos.X(), pos.Y(), pos.Z(), 
@@ -81,10 +79,9 @@ void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) {
 /*
  * vislib::graphics::gl::CameraOpenGL::ProjectionMatrix
  */
-void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) {
+void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) const {
     if (this->needUpdate()) {
         this->updateMembers();
-        this->markAsUpdated();
     }
 
     ZeroMemory(mat, sizeof(float) * 16);
@@ -99,7 +96,7 @@ void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) {
         matrix.SetAt(3, 2, -1.0f);
         matrix.SetAt(2, 3, - (2.0f * this->farClip * this->nearClip) / (this->farClip - this->nearClip));
     } else {
-        // TODO: rewrite ortho to be more compatible with normal projection
+        // TODO: write alternative ortho to be more compatible with normal projection
         matrix.SetAt(0, 0, 2.0f / (this->right - this->left));
         matrix.SetAt(1, 1, 2.0f / (this->top - this->bottom));
         matrix.SetAt(2, 2, -2.0f / (this->farClip - this->nearClip));
@@ -114,10 +111,9 @@ void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) {
 /*
  * vislib::graphics::gl::CameraOpenGL::ViewMatrix
  */
-void vislib::graphics::gl::CameraOpenGL::ViewMatrix(float *mat) {
+void vislib::graphics::gl::CameraOpenGL::ViewMatrix(float *mat) const {
     if (this->needUpdate()) {
         this->updateMembers();
-        this->markAsUpdated();
     }
 
     vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> right 
@@ -163,7 +159,7 @@ bool vislib::graphics::gl::CameraOpenGL::operator==(
 /*
  * vislib::graphics::gl::CameraOpenGL::updateMembers
  */
-void vislib::graphics::gl::CameraOpenGL::updateMembers(void) {
+void vislib::graphics::gl::CameraOpenGL::updateMembers(void) const {
     SceneSpaceType w, h;
 
     // view
@@ -242,4 +238,5 @@ void vislib::graphics::gl::CameraOpenGL::updateMembers(void) {
             // projection parameter calculation still not implemeneted
             ASSERT(false);
     }
+    const_cast<CameraOpenGL*>(this)->markAsUpdated();
 }
