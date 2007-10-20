@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
+ * Copyright (C) 2007, Sebastian Grottel. All rights reserved.
  */
 
 #include "vislib/CameraZoom2DAngle.h"
