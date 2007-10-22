@@ -157,6 +157,11 @@ namespace math {
         }
 
         /**
+         * Make this vector a null vector.
+         */
+        void SetNull(void);
+
+        /**
          * Answer the square of the length of the vector.
          *
          * @return The square of the length of the vector.
@@ -563,6 +568,17 @@ namespace math {
         }
 
         return length;
+    }
+
+    /*
+     * vislib::math::AbstractVectorImpl<T, D, S, C>::SetNull
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C>
+    void AbstractVectorImpl<T, D, S, C>::SetNull(void) {
+        for (unsigned int d = 0; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
     }
 
 
