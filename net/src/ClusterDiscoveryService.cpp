@@ -150,7 +150,7 @@ void vislib::net::ClusterDiscoveryService::RemoveListener(
     ASSERT(listener != NULL);
 
     this->critSect.Lock();
-    this->listeners.Remove(listener);
+    this->listeners.RemoveAll(listener);
     this->critSect.Unlock();
 }
 

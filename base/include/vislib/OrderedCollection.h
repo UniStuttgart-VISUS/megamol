@@ -89,6 +89,14 @@ namespace vislib {
         virtual void Prepend(const T& element) = 0;
 
         /**
+         * Remove the first occurrence of an element that is equal to 'element' 
+         * from the collection.
+         *
+         * @param element The element to be removed.
+         */
+        //virtual void Remove(const T& element) = 0;
+
+        /**
          * Remove the first element from the collection. If the collection
          * is empty, this method has no effect.
          */

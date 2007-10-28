@@ -93,5 +93,5 @@ void vislib::graphics::InputModifiers::RegisterObserver(Observer *observer) {
  * vislib::graphics::InputModifiers::UnregisterObserver
  */
 void vislib::graphics::InputModifiers::UnregisterObserver(Observer *observer) {
-    this->observers.Remove(observer);
+    this->observers.RemoveAll(observer);
 }

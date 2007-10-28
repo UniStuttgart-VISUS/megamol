@@ -185,7 +185,7 @@ namespace vislib {
          * @return A pointer to the local copy of 'element' or NULL, if no such
          *         element is found.
          */
-        virtual T *Find(const T& element) {
+        virtual inline T *Find(const T& element) {
             INT_PTR idx = this->IndexOf(element);
             return (idx >= 0) ? (this->elements + idx) : NULL;
         }
@@ -280,24 +280,37 @@ namespace vislib {
          */
         virtual void Prepend(const T& element);
 
+// The semantics of Remove will be changed in the future to remove the first 
+// occurrence of an object in an OrderedCollection. Use RemoveAll to erase all 
+// items. Remove will not be supported on unordered collections any more.
+#ifdef _WIN32
+__declspec(deprecated("Remove will change its semantics in future versions. Use RemoveAll instead."))
+#endif
+        inline void Remove(const T& element) {
+#ifndef _WIN32
+#warning "Remove will change its semantics in future versions. Use RemoveAll instead."
+#endif 
+            this->RemoveAll(element);
+        }
+
         /**
          * Remove all elements that are equal to 'element' from the array.
          *
          * @param element The element to be removed.
          */
-        virtual void Remove(const T& element);
+        virtual void RemoveAll(const T& element);
 
         /**
          * Remove the first element from the collection. 
          */
-        virtual void RemoveFirst(void) {
+        virtual inline void RemoveFirst(void) {
             this->Erase(0);
         }
 
         /**
          * Remove the last element from the collection.
          */
-        virtual void RemoveLast(void) {
+        virtual inline void RemoveLast(void) {
             this->Erase(this->count - 1);
         }
 
@@ -396,6 +409,36 @@ namespace vislib {
          * @return *this.
          */
         Array& operator =(const Array& rhs);
+
+    protected:
+
+        /**
+         * Construct element at 'inOutAddress'.
+         *
+         * Subclasses should override this method if necessary. This 
+         * implementation calls the default ctor of T on the memory
+         * designated by 'inOutAddress'.
+         *
+         * The caller must guarantee that 'inOutAddress' is valid. The method
+         * should not perform any sanity checks for performance reasons.
+         *
+         * @param inOutAddress Pointer to the object to construct.
+         */
+        virtual void ctor(T *inOutAddress) const;
+
+        /**
+         * Destruct element at 'inOutAddress'.
+         *
+         * Subclasses should override this method if necessary. This 
+         * implementation calls the destructor of T on the memory designated
+         * by 'inOutAddress'.
+         *
+         * The caller must guarantee that 'inOutAddress' is valid. The method
+         * should not perform any sanity checks for performance reasons.
+         *
+         * @param inOutAddress Pointer to the object to destruct.
+         */
+        virtual void dtor(T *inOutAddress) const;
 
     private:
 
@@ -512,7 +555,7 @@ namespace vislib {
             }
 
             this->count--;
-            this->elements[this->count].~T();   // Call dtor on erased element.
+            this->dtor(this->elements + this->count);   // Call dtor on erased.
         }
     }
 
@@ -541,7 +584,7 @@ namespace vislib {
 
             // Call dtors on erased elements. 
             for (SIZE_T i = this->count - cntRemoved; i < this->count; i++) {
-                this->elements[i].~T();
+                this->dtor(this->elements + i);
             }
 
             this->count -= cntRemoved;
@@ -606,10 +649,10 @@ namespace vislib {
 
 
     /*
-     * vislib::Array<T>::Remove
+     * vislib::Array<T>::RemoveAll
      */
     template<class T>
-    void Array<T>::Remove(const T& element) {
+    void Array<T>::RemoveAll(const T& element) {
 
         for (SIZE_T i = 0; i < this->count; i++) {
             if (this->elements[i] == element) {
@@ -618,8 +661,8 @@ namespace vislib {
                 }
 
                 this->count--;
-                this->elements[this->count].~T();   // Call dtor on erased elm.
-                i--;                                // Next element moved fwd.
+                this->dtor(this->elements + this->count);   // Dtor erased.
+                i--;                                        // Next moved fwd.
             }
         }
     }
@@ -639,7 +682,7 @@ namespace vislib {
          */
         if (capacity < this->capacity) {
             for (SIZE_T i = capacity; i < this->count; i++) {
-                this->elements[i].~T();
+                this->dtor(this->elements + i);
             }
 
             if (capacity < this->count) {
@@ -661,7 +704,7 @@ namespace vislib {
                 this->elements = static_cast<T *>(newPtr);
 
                 for (SIZE_T i = this->count; i < this->capacity; i++) {
-                    new (this->elements + i) T;
+                    this->ctor(this->elements + i);
                 }
             } else {
                 SAFE_FREE(this->elements);
@@ -727,6 +770,22 @@ namespace vislib {
         }
 
         return *this;
+    }
+
+
+    /*
+     * vislib::Array<T>::ctor
+     */
+    template<class T> void Array<T>::ctor(T *inOutAddress) const {
+        new (inOutAddress) T;
+    }
+
+
+    /*
+     * vislib::Array<T>::dtor
+     */
+    template<class T> void Array<T>::dtor(T *inOutAddress) const {
+        inOutAddress->~T();
     }
 
 } /* end namespace vislib */

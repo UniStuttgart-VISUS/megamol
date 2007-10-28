@@ -1810,7 +1810,7 @@ namespace sys {
             throw vislib::IllegalParamException("opt", __FILE__, __LINE__);
         }
 
-        this->options.Remove(const_cast<Option*>(opt));
+        this->options.RemoveAll(const_cast<Option*>(opt));
         const_cast<Option*>(opt)->parser = NULL;
         const_cast<Option*>(opt)->firstArg = NULL;
     }

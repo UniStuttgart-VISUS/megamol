@@ -181,9 +181,9 @@ namespace vislib {
          *
          * @return true, if the collection is empty, false otherwise.
          */
-		virtual inline bool IsEmpty(void) const {
-			return this->first == NULL;
-		}
+        virtual inline bool IsEmpty(void) const {
+            return this->first == NULL;
+        }
 
         /**
          * Answer the last element in the collection. Runtime complexity: O(1)
@@ -210,6 +210,19 @@ namespace vislib {
          */
         virtual void Prepend(const T& item);
 
+// The semantics of Remove will be changed in the future to remove the first 
+// occurrence of an object in an OrderedCollection. Use RemoveAll to erase all 
+// items. Remove will not be supported on unordered collections any more.
+#ifdef _WIN32
+__declspec(deprecated("Remove will change its semantics in future versions. Use RemoveAll instead."))
+#endif
+        inline void Remove(const T& item) {
+#ifndef _WIN32
+#warning "Remove will change its semantics in future versions. Use RemoveAll instead."
+#endif 
+            this->RemoveAll(item);
+        }
+
         /**
          * Removes an item from the list.
          * This method removes all items from the list that are equal to the
@@ -217,7 +230,7 @@ namespace vislib {
          *
          * @param item The item to be removed.
          */
-        virtual void Remove(const T& item);
+        virtual void RemoveAll(const T& item);
 
         /**
          * Removes an item from the list.
@@ -525,10 +538,10 @@ namespace vislib {
 
 
     /*
-     * SingleLinkedList<T>::Remove
+     * SingleLinkedList<T>::RemoveAll
      */
     template<class T>
-    void SingleLinkedList<T>::Remove(const T& item) {
+    void SingleLinkedList<T>::RemoveAll(const T& item) {
         Item *i = this->first, *j = NULL;
         while(i) {
             if (i->item == item) {
@@ -658,7 +671,7 @@ namespace vislib {
     template<class T>
     bool SingleLinkedList<T>::operator==(const SingleLinkedList<T>& rhs) {
         Item *i = this->first;
-		const Item *j = rhs.first;
+        const Item *j = rhs.first;
 
         while (i) {
             if ((!j) || (!(i->item == j->item))) return false;

@@ -121,7 +121,7 @@ void vislib::graphics::AbstractCursor::ModifierChanged(
  * vislib::graphics::AbstractCursor::UnregisterCursorEvent
  */
 void vislib::graphics::AbstractCursor::UnregisterCursorEvent(AbstractCursorEvent *cursorEvent) {
-    this->events.Remove(cursorEvent);
+    this->events.RemoveAll(cursorEvent);
     cursorEvent->Trigger(this, AbstractCursorEvent::REASON_REMOVED, 0);
 }
 

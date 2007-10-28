@@ -120,7 +120,7 @@ namespace vislib {
          *
          * @param element The element to be removed.
          */
-        virtual void Remove(const T& element) = 0;
+        virtual void RemoveAll(const T& element) = 0;
 
     protected:
 

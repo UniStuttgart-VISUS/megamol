@@ -71,10 +71,10 @@ void TestArray(void) {
     ::AssertEqual("Assignment copies all elements", intAry.Count(), SIZE_T(10));
     ::AssertTrue("Assignment copies correct elements", intAry.Contains(42));
     
-    intAry.Remove(43);
+    intAry.RemoveAll(43);
     ::AssertEqual("Removing non-exisiting element has no effect", intAry.Count(), SIZE_T(10));
     
-    intAry.Remove(42);
+    intAry.RemoveAll(42);
     ::AssertFalse("Remove element", intAry.Contains(42));
     ::AssertTrue("Remove affects all matching elements", intAry.IsEmpty());
 

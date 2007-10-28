@@ -71,7 +71,7 @@ void vislib::net::TcpServer::AddListener(Listener *listener) {
 void vislib::net::TcpServer::RemoveListener(Listener *listener) {
     if (listener != NULL) {
         this->lock.Lock();
-        this->listeners.Remove(listener);
+        this->listeners.RemoveAll(listener);
         this->lock.Unlock();
     }
 }

@@ -350,6 +350,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PtrArray.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\RawStorage.cpp"
 				>
 			</File>
@@ -497,6 +501,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Pair.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\PtrArray.h"
 				>
 			</File>
 			<File
