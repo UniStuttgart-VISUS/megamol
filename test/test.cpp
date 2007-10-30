@@ -38,6 +38,7 @@
 #include "testsockets.h"
 #include "testinterlocked.h"
 #include "testtcpserver.h"
+#include "testdimred.h"
 
 
 /* type for test functions */
@@ -69,6 +70,8 @@ VislibTest tests[] = {
     {_T("Matrix"), ::TestMatrix, "Tests vislib::math::Matrix"},
     {_T("Rectangle"), ::TestRectangle, "Tests vislib::math::Rectangle"},
     {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
+	{_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},
+	{_T("ForceDirected"), ::TestForceDirected, "Tests vislib::math::ForceDirected"},
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
