@@ -27,6 +27,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -65,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib vislibsys$(BitsD).lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -106,6 +107,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -144,7 +146,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib vislibsys$(BitsD).lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -186,6 +188,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -220,7 +223,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib vislibsys$(BitsD).lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -264,6 +267,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -299,7 +303,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib glut$(Bits).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibgraphics$(BitsD).lib opengl32.lib vislibsys$(BitsD).lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
@@ -425,6 +429,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\glutInclude.default.h"
+				>
+			</File>
+			<File
 				RelativePath=".\StereoCamTestApp.h"
 				>
 			</File>
@@ -439,6 +447,42 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\glutInclude.default.mk"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+		</File>
 		<File
 			RelativePath=".\Makefile"
 			>

@@ -21,7 +21,13 @@ CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -gg
 # removed: -pedantic 
 
 # Linker flags:
-LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lglut -lGLU -lGL
+LDFLAGS := -L/usr/X11R6/lib -L../lib -lm -lpthread -lGLU -lGL
+
+ifneq ($(MAKECMDGOALS), clean)
+ifneq ($(MAKECMDGOALS), sweep)
+-include glutInclude.mk
+endif
+endif
 
 
 ###############################################################################
@@ -81,7 +87,14 @@ $(IntDir)/%.o:
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	$(Q)$(CPP) -c $(CPPFLAGS) -o $@ $<
-	
+
+# glut inclusion
+glutInclude.h:
+	cp -T -u glutInclude.default.h glutInclude.h
+
+glutInclude.mk:
+	cp -T -u glutInclude.default.mk glutInclude.mk
+
 #tags:
 #	ctags *.c *.cpp *.h
 

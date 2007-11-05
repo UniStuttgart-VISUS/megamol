@@ -7,7 +7,7 @@
 #include "FBOTest2App.h"
 
 #include <GL/gl.h>
-#include <GL/glut.h>
+#include "glutInclude.h"
 #include <iostream>
 
 #include "vislib/glverify.h"

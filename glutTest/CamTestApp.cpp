@@ -5,7 +5,7 @@
  */
 #include "CamTestApp.h"
 
-#include <GL/glut.h>
+#include "glutInclude.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <cstdio>
