@@ -2,24 +2,44 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base", "base\base.vcproj", "{4F55D730-E9DE-4749-99C7-0285DA1D263D}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "math\math.vcproj", "{56E9117A-DD6C-42CA-8B65-6A4591B1E987}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{4F55D730-E9DE-4749-99C7-0285DA1D263D} = {4F55D730-E9DE-4749-99C7-0285DA1D263D}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sys", "sys\sys.vcproj", "{AC94966A-1E30-47A8-A503-0F9737FD1FE8}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{4F55D730-E9DE-4749-99C7-0285DA1D263D} = {4F55D730-E9DE-4749-99C7-0285DA1D263D}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "net", "net\net.vcproj", "{F082265B-1A1F-4DFC-BE5A-C775844C7B0D}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{AC94966A-1E30-47A8-A503-0F9737FD1FE8} = {AC94966A-1E30-47A8-A503-0F9737FD1FE8}
 		{4F55D730-E9DE-4749-99C7-0285DA1D263D} = {4F55D730-E9DE-4749-99C7-0285DA1D263D}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcproj", "{6CC64435-55B7-4AA2-A66C-61CDA2255733}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{56E9117A-DD6C-42CA-8B65-6A4591B1E987} = {56E9117A-DD6C-42CA-8B65-6A4591B1E987}
 		{AC94966A-1E30-47A8-A503-0F9737FD1FE8} = {AC94966A-1E30-47A8-A503-0F9737FD1FE8}
@@ -28,6 +48,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcproj", 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A9B41824-1F1C-42BC-AC16-CCCA32859BA5}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(SolutionItems) = preProject
 		checkdumpbin.ps1 = checkdumpbin.ps1
 		config.mk = config.mk
@@ -39,6 +63,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graphics", "graphics\graphics.vcproj", "{8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{4F55D730-E9DE-4749-99C7-0285DA1D263D} = {4F55D730-E9DE-4749-99C7-0285DA1D263D}
 		{AC94966A-1E30-47A8-A503-0F9737FD1FE8} = {AC94966A-1E30-47A8-A503-0F9737FD1FE8}
@@ -46,6 +74,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graphics", "graphics\graphi
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glutTest", "glutTest\glutTest.vcproj", "{C1127942-04CB-44E6-99AE-8A5108957861}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1} = {8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1}
 		{AC94966A-1E30-47A8-A503-0F9737FD1FE8} = {AC94966A-1E30-47A8-A503-0F9737FD1FE8}
@@ -55,11 +87,21 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glutTest", "glutTest\glutTe
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gl", "gl\gl.vcproj", "{7BD7E3DE-DA85-4B12-80A8-586DE5D2C709}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{4F55D730-E9DE-4749-99C7-0285DA1D263D} = {4F55D730-E9DE-4749-99C7-0285DA1D263D}
 		{AC94966A-1E30-47A8-A503-0F9737FD1FE8} = {AC94966A-1E30-47A8-A503-0F9737FD1FE8}
 		{8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1} = {8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1}
 		{56E9117A-DD6C-42CA-8B65-6A4591B1E987} = {56E9117A-DD6C-42CA-8B65-6A4591B1E987}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VISlibVS2005Project", "VSExtensibility\VISlibVS2005Project\VISlibVS2005Project.vcproj", "{4B50CAC8-32F2-405F-90A4-FC10C49A861E}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
 Global
@@ -134,6 +176,12 @@ Global
 		{7BD7E3DE-DA85-4B12-80A8-586DE5D2C709}.Release|Win32.Build.0 = Release|Win32
 		{7BD7E3DE-DA85-4B12-80A8-586DE5D2C709}.Release|Win64.ActiveCfg = Release|x64
 		{7BD7E3DE-DA85-4B12-80A8-586DE5D2C709}.Release|Win64.Build.0 = Release|x64
+		{4B50CAC8-32F2-405F-90A4-FC10C49A861E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4B50CAC8-32F2-405F-90A4-FC10C49A861E}.Debug|Win32.Build.0 = Debug|Win32
+		{4B50CAC8-32F2-405F-90A4-FC10C49A861E}.Debug|Win64.ActiveCfg = Debug|Win32
+		{4B50CAC8-32F2-405F-90A4-FC10C49A861E}.Release|Win32.ActiveCfg = Release|Win32
+		{4B50CAC8-32F2-405F-90A4-FC10C49A861E}.Release|Win32.Build.0 = Release|Win32
+		{4B50CAC8-32F2-405F-90A4-FC10C49A861E}.Release|Win64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
