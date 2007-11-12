@@ -91,8 +91,10 @@ $(IntDir)/%.o:
 # glut inclusion
 glutInclude.h:
 	cp -T -u glutInclude.default.h glutInclude.h
+	cp -T -u glutInclude.default.mk glutInclude.mk
 
 glutInclude.mk:
+	cp -T -u glutInclude.default.h glutInclude.h
 	cp -T -u glutInclude.default.mk glutInclude.mk
 
 #tags:

@@ -58,20 +58,20 @@ typedef struct _VislibTest_t {
 VislibTest tests[] = {
     // base
     {_T("Array"), ::TestArray, "Tests vislib::Array"},
-    {_T("Heap"), ::TestHeap, "Tests vislib::Heap"},
     {_T("ColumnFormatter"), ::TestColumnFormatter, "Tests vislib::ColumnFormatter"},
+    {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
+    {_T("Heap"), ::TestHeap, "Tests vislib::Heap"},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
-    {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
+    {_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},
     {_T("Float16"), ::TestFloat16, "Tests vislib::math::Float16"},
+    {_T("ForceDirected"), ::TestForceDirected, "Tests vislib::math::ForceDirected"},
     {_T("Matrix"), ::TestMatrix, "Tests vislib::math::Matrix"},
     {_T("Rectangle"), ::TestRectangle, "Tests vislib::math::Rectangle"},
     {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
-	{_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},
-	{_T("ForceDirected"), ::TestForceDirected, "Tests vislib::math::ForceDirected"},
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
@@ -83,16 +83,16 @@ VislibTest tests[] = {
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},
     {_T("DateTime"), ::TestDateTime, "Tests vislib::sys::DateTime"},
     {_T("DirIterator"), ::TestDirectoryIterator, "Test vislib::sys::DirectoryIterator"},
+    {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment"},
     {_T("File"), ::TestFile, "Tests vislib::sys::File and derived classes"},
+    {_T("Interlocked"), ::TestInterlocked, "Tests interlocked operations."},
     {_T("Log"), ::TestTheLogWithPhun, "Tests vislib::sys::Log"},
+    {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
     {_T("Path"), ::TestPath, "Tests vislib::sys::Path"},
     {_T("Process"), ::TestProcess, "Tests vislib::sys::Process"},
     {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
-    {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment"},
-    {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
-    {_T("Interlocked"), ::TestInterlocked, "Tests interlocked operations."},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };

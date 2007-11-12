@@ -210,7 +210,7 @@ void GlutAppManager::glRenderEmptyScreen(void) {
     GlutAppManager *This = GlutAppManager::GetInstance();
     glViewport(0, 0, This->width, This->height);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glDisable(GL_DEPTH_TEST);
 
@@ -231,13 +231,13 @@ void GlutAppManager::glRenderEmptyScreen(void) {
         "Copyright  2007, Universität Stuttgart (VIS). Alle Rechte vorbehalten.");
     vislib::StringA txt;
     txt.Format("OpenGL Version: %s", 
-        vislib::graphics::gl::GLVersion().ToStringA(3));
+        vislib::graphics::gl::GLVersion().ToStringA(3).PeekBuffer());
     glprintf(10.0f, float(This->height - 60), GLUT_BITMAP_HELVETICA_12, 
         txt.PeekBuffer());
     glprintf(10.0f, float(This->height - 76), GLUT_BITMAP_HELVETICA_12,
         "Use the right click context menu to select a test.");
 
-	glFlush();
+    glFlush();
 
-	glutSwapBuffers();
+    glutSwapBuffers();
 }

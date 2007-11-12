@@ -6,8 +6,8 @@
 # Include this file for the visglut library.
 #
 
-ifeq ($(PLATFORM), x86_64)
-	LDFLAGS += -l%visglutLinPath%/freeglut/lib/lin64d/libfreeglut.a
+ifeq ($(BITS), 64)
+	LDFLAGS += -L%visglutLinPath%/freeglut/lib/lin64d -lfreeglut
 else
-	LDFLAGS += -l%visglutLinPath%/freeglut/lib/lin32d/libfreeglut.a
+	LDFLAGS += -L%visglutLinPath%/freeglut/lib/lin32d -lfreeglut
 endif

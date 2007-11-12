@@ -1,9 +1,11 @@
+/*
+ * FastMap.cpp
+ *
+ * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ */
+
 #include "vislib/FastMap.h"
 
-namespace vislib {
-namespace math {
-
-
-
-} /* end namespace math */
-} /* end namespace vislib */
+/*
+ * This file is intentionally empty.
+ */
