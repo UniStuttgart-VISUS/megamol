@@ -77,9 +77,8 @@ namespace sys {
              * using the or operator "|".
              */
             enum Flags {
-                FLAG_NULL = 0,
                 /** Symbolic constant for no flags */
-                FLAG_UNIQUE = 1, 
+                FLAG_NULL = 0,
                 /**
                  * Flag indicating that this option must not appear more then 
                  * once in the command line. If the option appears more then 
@@ -87,19 +86,20 @@ namespace sys {
                  * option. The other appearences will be ignored and there will
                  * be a warning.
                  */
-                FLAG_REQUIRED = 2,
+                FLAG_UNIQUE = 1, 
                 /**
                  * Flag indicating that this option is required. If at least 
                  * one required option is missing in the command line there 
                  * will be an error.
                  */
-                FLAG_EXCLUSIVE = 4
+                FLAG_REQUIRED = 2,
                 /**
                  * Flag indicating that this option may only appear as first 
                  * option. Any following parameters will be classified as
                  * "TYPE_UNKNOWN". If this option is used not as first option,
                  * an error is generated. (This implies "FLAG_UNIQUE").
                  */
+                FLAG_EXCLUSIVE = 4
             };
 
             /** possible variable types */
