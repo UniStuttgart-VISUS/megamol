@@ -410,6 +410,16 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
          */
         Array& operator =(const Array& rhs);
 
+        /**
+         * Compare operator. Two arrays are equal if the elements in both 
+         * lists are equal and in same order. Runtime complexity: O(n)
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return if the lists are considered equal
+         */
+        bool operator ==(const Array& rhs) const;
+
     protected:
 
         /**
@@ -770,6 +780,26 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
         }
 
         return *this;
+    }
+
+
+    /*
+     * vislib::Array<T>::operator ==
+     */
+    template<class T>
+    bool Array<T>::operator ==(const Array& rhs) const {
+        if (this == &rhs) {
+            return true;
+        }
+        if (this->count != rhs.count) {
+            return false;
+        }
+        for (SIZE_T i = 0; i < this->count; i++) {
+            if (this->elements[i] != rhs.elements[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
 

@@ -282,7 +282,7 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
          *
          * @return if the lists are considered equal
          */
-        bool operator==(const SingleLinkedList<T>& rhs);
+        bool operator==(const SingleLinkedList<T>& rhs) const;
 
 
     private:
@@ -669,8 +669,8 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
      * SingleLinkedList<T>::operator==
      */
     template<class T>
-    bool SingleLinkedList<T>::operator==(const SingleLinkedList<T>& rhs) {
-        Item *i = this->first;
+    bool SingleLinkedList<T>::operator==(const SingleLinkedList<T>& rhs) const {
+        const Item *i = this->first;
         const Item *j = rhs.first;
 
         while (i) {
