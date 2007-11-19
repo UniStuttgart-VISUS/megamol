@@ -171,6 +171,28 @@ namespace math {
         }
 
         /**
+         * Increases the size of the cuboid to include the given point. 
+         * Implicitly calls 'EnforcePositiveSize'.
+         *
+         * @param p The point to be included.
+         */
+        template<class Tp, class Sp>
+        inline void GrowToPoint(const AbstractPoint<Tp, 3, Sp>& p) {
+            this->GrowToPoint(p.X(), p.Y(), p.Z());
+        }
+
+        /**
+         * Increases the size of the cuboid to include the given point.
+         * Implicitly calls 'EnforcePositiveSize'.
+         *
+         * @param x The x coordinate of the point to be included.
+         * @param y The y coordinate of the point to be included.
+         * @param z The z coordinate of the point to be included.
+         */
+        template<class Tp>
+        void GrowToPoint(const Tp& x, const Tp& y, const Tp& z);
+
+        /**
          * Answer the height of the cuboid.
          *
          * @return The height of the cuboid.
@@ -627,6 +649,33 @@ namespace math {
 
         if (this->bounds[IDX_BACK] > this->bounds[IDX_FRONT]) {
             Swap(this->bounds[IDX_FRONT], this->bounds[IDX_BACK]);
+        }
+    }
+
+
+    /*
+     * vislib::math::AbstractCuboid<T>::GrowToPoint
+     */
+    template<class T, class S> template<class Tp>
+    void AbstractCuboid<T, S>::GrowToPoint(const Tp& x, const Tp& y, const Tp& z) {
+        this->EnforcePositiveSize();
+        if (this->bounds[IDX_LEFT] > x) {
+            this->bounds[IDX_LEFT] = x;
+        }
+        if (this->bounds[IDX_BOTTOM] > y) {
+            this->bounds[IDX_BOTTOM] = y;
+        }
+        if (this->bounds[IDX_BACK] > z) {
+            this->bounds[IDX_BACK] = z;
+        }
+        if (this->bounds[IDX_RIGHT] < x) {
+            this->bounds[IDX_RIGHT] = x;
+        }
+        if (this->bounds[IDX_TOP] < y) {
+            this->bounds[IDX_TOP] = y;
+        }
+        if (this->bounds[IDX_FRONT] < z) {
+            this->bounds[IDX_FRONT] = z;
         }
     }
 

@@ -67,7 +67,7 @@ namespace math {
          * @param size   The dimension of the cuboid.
          */
         template<class Tp1, class Sp1, class Tp2, class Sp2>
-        inline Cuboid(const AbstractPoint<Tp1, 2, Sp1>& origin, 
+        inline Cuboid(const AbstractPoint<Tp1, 3, Sp1>& origin, 
                 const AbstractDimension<Tp2, 3, Sp2> size) {
             this->bounds[Super::IDX_LEFT] = this->bounds[Super::IDX_RIGHT] 
                 = origin.X();
@@ -119,6 +119,7 @@ namespace math {
      */
     template<class T> Cuboid<T>::~Cuboid(void) {
     }
+
 
 } /* end namespace math */
 } /* end namespace vislib */
