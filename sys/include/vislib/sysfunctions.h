@@ -66,6 +66,12 @@ namespace sys {
      */
     StringW ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
 
+#if defined(UNICODE) || defined(_UNICODE)
+#define ReadLineFromFile ReadLineFromFileW
+#else /* defined(UNICODE) || defined(_UNICODE) */
+#define ReadLineFromFile ReadLineFromFileA
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+
     /**
      * Read the content of the file 'filename' into 'outSrc'. 'outSrc' is 
      * being erased by this operation.
