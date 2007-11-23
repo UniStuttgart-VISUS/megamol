@@ -157,41 +157,47 @@ namespace math {
         float w, twi, twj, dl;
         float k = 1; // in theory 1/(4Pi epsilon_0)
 
-        for (SIZE_T i = 0; i < count; i++) {
-            currForce.SetNull();
-            twi = inData[i].TotalWeight();
-            for (SIZE_T j = 0; j < count; j++) {
-                if (i != j) {
-                    //diff = outData[j] - outData[i];
-                    diff = outData[i] - outData[j];
-                    if ((dl = diff.Length()) > 0.0000001) {
-                        normdiff = diff;
-                        normdiff.Normalise();
-                        w = inData[i].Weight(inData[j]);
-                        twj = inData[j].TotalWeight();
-                        // CCVisu stuff (meh?)
-                        //currForce += normdiff * ((twi / attractionFactor) * pow(dl, attractionFactor));
-                        //currForce += -normdiff * (pow(twi * twj, repulsionFactor) * log(dl));
-                        
-                        // coulomb repulsion
-                        currForce += normdiff * 1.0 / diff.Length();
-                        //currForce += normdiff * 1.0 / diff.Length();
-                        
-                        // hooke attraction scaled by connection weight
-                        currForce += -normdiff * inData[i].Weight(inData[j]) *(diff.Length() - 1.0f);
-                        //currForce += -normdiff * inData[i].Weight(inData[j]) *(diff.Length() - twi);
-                        //currForce += k * ((inData[i].Weight(inData[j]) * inData[i].Weight(inData[j]))
-                        //		/ (diff.Length() * diff.Length())) * normdiff;
-                    }
-                }
-            }
-            //(*tmpData)[i] += currForce;
-            (*currVelocity)[i] = ((*currVelocity)[i] + stepLen * currForce) * damping;
-            outData[i] = outData[i] + stepLen * (*currVelocity)[i];
-            energy += (*currVelocity)[i].Length() * (*currVelocity)[i].Length();
-        }
-        return energy;
-    }
+		for (SIZE_T i = 0; i < count; i++) {
+			currForce.SetNull();
+			twi = inData[i].TotalWeight();
+			for (SIZE_T j = 0; j < count; j++) {
+				if (i != j) {
+					//diff = outData[j] - outData[i];
+					diff = outData[i] - outData[j];
+					if ((dl = diff.Length()) > 0.0000001) {
+						normdiff = diff;
+						normdiff.Normalise();
+						w = inData[i].Weight(inData[j]);
+						twj = inData[j].TotalWeight();
+						// CCVisu stuff (meh?)
+						//currForce += normdiff * ((twi / attractionFactor) * pow(dl, attractionFactor));
+						//currForce += -normdiff * (pow(twi * twj, repulsionFactor) * log(dl));
+						
+						// coulomb repulsion
+						currForce += normdiff * 1.0 / diff.Length();
+						//currForce += normdiff * 1.0 / diff.Length();
+						
+						// hooke attraction scaled by connection weight
+						//currForce += -normdiff * w *(diff.Length() - 1.0f);
+						// rest length proportional to weight!
+						if (w > 0) {
+							currForce += -normdiff * w * (diff.Length() - 1.0f / w);
+						} else {
+							currForce += -normdiff * w * (diff.Length() - 1.0f);
+						}
+						//currForce += -normdiff * inData[i].Weight(inData[j]) *(diff.Length() - twi);
+						//currForce += k * ((inData[i].Weight(inData[j]) * inData[i].Weight(inData[j]))
+						//		/ (diff.Length() * diff.Length())) * normdiff;
+					}
+				}
+			}
+			//(*tmpData)[i] += currForce;
+			(*currVelocity)[i] = ((*currVelocity)[i] + stepLen * currForce) * damping;
+			outData[i] = outData[i] + stepLen * (*currVelocity)[i];
+			energy += (*currVelocity)[i].Length() * (*currVelocity)[i].Length();
+		}
+		return energy;
+	}
 
     /*
      * vislib::math::ForceDirected<TI, TO, D>::Compute
