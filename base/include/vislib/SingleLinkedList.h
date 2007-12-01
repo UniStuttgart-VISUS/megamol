@@ -204,6 +204,14 @@ namespace vislib {
         virtual T& Last(void);
 
         /**
+         * Merges a second single linked list 'from' into 'this' list. All 
+         * items will be moved from 'from' to 'this' list.
+         *
+         * @param from The list to be merged from
+         */
+        void Merge(SingleLinkedList<T> &from);
+
+        /**
          * Adds an item to the beginning of the list. Runtime complexity: O(1)
          *
          * @param item The item to be added.
@@ -519,6 +527,23 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
             throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
         }
         return this->last->item;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Merge
+     */
+    template<class T> void SingleLinkedList<T>::Merge(SingleLinkedList<T> &from) {
+        if ((this == &from) || (from.first == NULL)) {
+            return; // invalid pair of operands or from is empty
+        }
+        if (this->first == NULL) {
+            this->first = from.first;
+        } else {
+            this->last->next = from.first;
+        }
+        this->last = from.last;
+        from.first = from.last = NULL;
     }
 
 
