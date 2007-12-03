@@ -266,6 +266,17 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
         virtual void RemoveLast(void);
 
         /**
+         * Sorts the elements in the collection based on the results of the 
+         * 'comparator' function:
+         *   = 0 if lhs == rhs
+         *   < 0 if lhs < rhs
+         *   > 0 if lhs > rhs
+         *
+         * @param comparator The compare function defining the sort order.
+         */
+        void Sort(int (*comparator)(const T& lhs, const T& rhs));
+
+        /**
          * Returns an Iterator to the list, pointing before the first element.
          *
          * @return An iterator to the list.
@@ -294,6 +305,30 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
 
 
     private:
+
+        /**
+         * Performs a merge sort.
+         *
+         * @param list The unsorted list.
+         * @param comparator The compare function defining the sort order.
+         * 
+         * @return The sorted list.
+         */
+        Item *mergeSort(Item *list, int (*comparator)(
+            const T& lhs, const T& rhs));
+
+        /**
+         * Performs a merge sort merge operation
+         *
+         * @param left The left sorted list.
+         * @param right The right sorted list.
+         * @param comparator The compare function defining the sort order.
+         *
+         * @return The sorted list.
+         */
+        Item *mergeSortMerge(Item *left, Item *right, int (*comparator)(
+            const T& lhs, const T& rhs));
+
 
         /** anchor of the single linked list */
         Item *first;
@@ -661,6 +696,24 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
 
 
     /*
+     * SingleLinkedList<T>::Sort
+     */
+    template<class T>
+    void SingleLinkedList<T>::Sort(int (*comparator)(const T& lhs, const T& rhs)) {
+        if ((this->first == this->last) || (this->first == NULL)) {
+            return;
+        }
+
+        this->first = this->mergeSort(this->first, comparator);
+
+        this->last = this->first;
+        while (this->last->next != NULL) {
+            this->last = this->last->next;
+        }
+    }
+
+
+    /*
      * SingleLinkedList<T>::GetIterator
      */
     template<class T>
@@ -705,6 +758,92 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
         }
 
         return (j == NULL);
+    }
+
+
+    /*
+     * SingleLinkedList<T>::mergeSort
+     */
+    template<class T>
+    typename SingleLinkedList<T>::Item * SingleLinkedList<T>::mergeSort(
+            typename SingleLinkedList<T>::Item *list, 
+            int (*comparator)(const T& lhs, const T& rhs)) {
+        ASSERT(list != NULL);
+        if (list->next == NULL) {
+            return list;
+        }
+
+        // TODO: Optimise for small lists
+
+        // split list
+        Item *mid, *it;
+        mid = it = list;
+        int i = 0;
+        while (it->next != NULL) {
+            if (i % 2 != 0) {
+                mid++;
+            }
+            it++;
+        }
+        it = mid->next;
+        mid->next = NULL;
+        
+        return this->mergeSortMerge(this->mergeSort(list, comparator), this->mergeSort(it, comparator), comparator);
+    }
+
+
+    /*
+     * SingleLinkedList<T>::mergeSortMerge
+     */
+    template<class T>
+    typename SingleLinkedList<T>::Item *SingleLinkedList<T>::mergeSortMerge(
+            typename SingleLinkedList<T>::Item *left, 
+            typename SingleLinkedList<T>::Item *right, 
+            int (*comparator)(const T& lhs, const T& rhs)) {
+        Item *retval, *cur;
+
+        if (left != NULL) {
+            if (right != NULL) {
+                if (comparator(left->item, right->item) <= 0) {
+                    retval = left;
+                    left = left->next;
+                } else {
+                    retval = right;
+                    right = right->next;
+                }
+            } else {
+                return left;
+            }
+        } else {
+            if (right != NULL) {
+                return right;
+            } else {
+                return NULL;
+            }
+        }
+        cur = retval;
+
+        while ((left != NULL) && (right != NULL)) {
+            if (comparator(left->item, right->item) <= 0) {
+                cur->next = left;
+                left = left->next;
+            } else {
+                cur->next = right;
+                right = right->next;
+            }
+            cur = cur->next;
+        }
+
+        if (left != NULL) {
+            cur->next = left;
+        } else if (right != NULL) {
+            cur->next = right;
+        } else {
+            // should never happen
+            cur->next = NULL;
+        }
+
+        return retval;
     }
 
 

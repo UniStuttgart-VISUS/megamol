@@ -61,6 +61,7 @@ VislibTest tests[] = {
     {_T("ColumnFormatter"), ::TestColumnFormatter, "Tests vislib::ColumnFormatter"},
     {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
     {_T("Heap"), ::TestHeap, "Tests vislib::Heap"},
+    {_T("ListSort"), ::TestSingleLinkedListSort, "Tests the 'Sort' Method of vislib::SingleLinkedList"},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},

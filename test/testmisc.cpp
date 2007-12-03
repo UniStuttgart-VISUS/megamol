@@ -13,6 +13,7 @@
 #include <vislib/Exception.h>
 #include <vislib/SystemException.h>
 #include <vislib/PerformanceCounter.h>
+#include "vislib/SingleLinkedList.h"
 #include <vislib/StringConverter.h>
 #include <vislib/SystemMessage.h>
 #include <vislib/Path.h>
@@ -491,4 +492,49 @@ void TestPathManipulations(void) {
     //} catch(...) {
     //    fprintf(stderr, "Unknown Exception.\n");
     //}
+}
+
+
+int intSortCompare(const int& lhs, const int& rhs) {
+    return lhs - rhs;
+}
+
+
+void TestSingleLinkedListSort(void) {
+    vislib::SingleLinkedList<int> list;
+
+    list.Add(22);
+    list.Add(8);
+    list.Add(21);
+    list.Add(22);
+    list.Add(50);
+    list.Add(2);
+    list.Add(1);
+    list.Add(10);
+
+    AssertEqual<int>("List filled with 8 Elements", int(list.Count()), 8);
+
+    list.Sort(intSortCompare);
+
+    AssertEqual<int>("List still contains 8 Elements", int(list.Count()), 8);
+
+    vislib::SingleLinkedList<int>::Iterator iter = list.GetIterator();
+    AssertTrue("Iterator before Element 1", iter.HasNext());
+    AssertEqual("Element 1 = 1", iter.Next(), 1);
+    AssertTrue("Iterator before Element 2", iter.HasNext());
+    AssertEqual("Element 2 = 2", iter.Next(), 2);
+    AssertTrue("Iterator before Element 3", iter.HasNext());
+    AssertEqual("Element 3 = 8", iter.Next(), 8);
+    AssertTrue("Iterator before Element 4", iter.HasNext());
+    AssertEqual("Element 4 = 10", iter.Next(), 10);
+    AssertTrue("Iterator before Element 5", iter.HasNext());
+    AssertEqual("Element 5 = 21", iter.Next(), 21);
+    AssertTrue("Iterator before Element 6", iter.HasNext());
+    AssertEqual("Element 6 = 22", iter.Next(), 22);
+    AssertTrue("Iterator before Element 7", iter.HasNext());
+    AssertEqual("Element 7 = 22", iter.Next(), 22);
+    AssertTrue("Iterator before Element 8", iter.HasNext());
+    AssertEqual("Element 8 = 50", iter.Next(), 50);
+    AssertFalse("Iterator at end of list", iter.HasNext());
+
 }
