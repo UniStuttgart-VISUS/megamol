@@ -537,4 +537,27 @@ void TestSingleLinkedListSort(void) {
     AssertEqual("Element 8 = 50", iter.Next(), 50);
     AssertFalse("Iterator at end of list", iter.HasNext());
 
+    list.Clear();
+
+    const SIZE_T cnt = 10000000;
+    for (SIZE_T i = 0; i < cnt; i++) {
+        list.Add(rand());
+    }
+
+    AssertEqual("List filled with random Elements", list.Count(), cnt);
+    list.Sort(intSortCompare);
+    AssertEqual("List still contains random Elements", list.Count(), cnt);
+
+    bool growing = true;
+    int ov = -1;
+    iter = list.GetIterator();
+    while (iter.HasNext()) {
+        int v = iter.Next();
+        if (v < ov) {
+            growing = false;
+        }
+        ov = v;
+    }
+    AssertTrue("List sorted Accending", growing);
+
 }

@@ -309,13 +309,14 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
         /**
          * Performs a merge sort.
          *
-         * @param list The unsorted list.
+         * WARNING: Needs (Count / 2) * sizeof(void*) Bytes temporary memory
+         *          in one single block!
+         *
          * @param comparator The compare function defining the sort order.
          * 
          * @return The sorted list.
          */
-        Item *mergeSort(Item *list, int (*comparator)(
-            const T& lhs, const T& rhs));
+        Item *mergeSort(int (*comparator)(const T& lhs, const T& rhs));
 
         /**
          * Performs a merge sort merge operation
@@ -704,7 +705,7 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
             return;
         }
 
-        this->first = this->mergeSort(this->first, comparator);
+        this->first = this->mergeSort(comparator);
 
         this->last = this->first;
         while (this->last->next != NULL) {
@@ -766,29 +767,73 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
      */
     template<class T>
     typename SingleLinkedList<T>::Item * SingleLinkedList<T>::mergeSort(
-            typename SingleLinkedList<T>::Item *list, 
             int (*comparator)(const T& lhs, const T& rhs)) {
-        ASSERT(list != NULL);
-        if (list->next == NULL) {
-            return list;
-        }
+        SIZE_T cnt = this->Count();
+        ASSERT(cnt > 1);
+        if (cnt % 2) cnt++;
+        cnt /= 2;
+        Item **Array = new Item*[cnt];
+        Item *i1, *i2, *i3;
 
-        // TODO: Optimise for small lists
-
-        // split list
-        Item *mid, *it;
-        mid = it = list;
-        int i = 0;
-        while (it->next != NULL) {
-            if (i % 2 != 0) {
-                mid++;
+        cnt = 0;
+        i1 = this->first;
+        while (i1 != NULL) {
+            i2 = i1->next;
+            if (i2 == NULL) {
+                Array[cnt] = i1;
+                cnt++;
+                break;
             }
-            it++;
+            i3 = i2->next;
+
+            i1->next = NULL;
+            i2->next = NULL;
+            Array[cnt] = mergeSortMerge(i1, i2, comparator);
+            cnt++;
+
+            i1 = i3;
         }
-        it = mid->next;
-        mid->next = NULL;
-        
-        return this->mergeSortMerge(this->mergeSort(list, comparator), this->mergeSort(it, comparator), comparator);
+
+        int pos;
+        do {
+            pos = 0;
+            for (int i = 0; i < cnt; i += 2) {
+                if (i + 1 < cnt) {
+                    Array[pos] = mergeSortMerge(Array[i], Array[i + 1], 
+                        comparator);
+                } else {
+                    Array[pos] = Array[i];
+                }
+                pos++;
+            }
+            cnt = pos;
+        } while (cnt > 1);
+
+        i1 = Array[0];
+
+        delete[] Array;
+
+        return i1;
+
+        //// TODO: Optimise for small lists
+
+        //// split list
+        //Item *mid, *it;
+        //mid = it = list;
+        //int i = 0;
+        //while (it->next != NULL) {
+        //    if (i % 2 != 0) {
+        //        mid++;
+        //    }
+        //    it++;
+        //}
+        //it = mid->next;
+        //mid->next = NULL;
+        //
+        //return this->mergeSortMerge(
+        //    this->mergeSort(list, comparator), 
+        //    this->mergeSort(it, comparator), 
+        //    comparator);
     }
 
 
