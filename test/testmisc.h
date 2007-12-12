@@ -32,4 +32,6 @@ void TestPathManipulations(void);
 
 void TestSingleLinkedListSort(void);
 
+void TestArraySort(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

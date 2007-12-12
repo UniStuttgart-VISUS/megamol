@@ -23,6 +23,11 @@
 #include "vislib/OrderedCollection.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/memutils.h"
+#ifdef _WIN32
+#include <stdlib.h>
+#else /* _WIN32 */
+#include "vislib/Stack.h"
+#endif /* _WIN32 */
 #include "vislib/types.h"
 
 
@@ -337,6 +342,17 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
         void SetCount(const SIZE_T count);
 
         /**
+         * Sorts the elements in the collection based on the results of the 
+         * 'comparator' function:
+         *   = 0 if lhs == rhs
+         *   < 0 if lhs < rhs
+         *   > 0 if lhs > rhs
+         *
+         * @param comparator The compare function defining the sort order.
+         */
+        virtual void Sort(int (*comparator)(const T& lhs, const T& rhs));
+
+        /**
          * Trim the capacity of the array to match the current number of 
          * elements. This has the same effect as calling Resize(Count()).
          */
@@ -401,6 +417,43 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
             return (*this)[static_cast<SIZE_T>(idx)];
         }
 
+#if (defined _WIN32) || (defined _LIN64)
+        // this define is correct!
+        //  used on all windows plattforms 
+        //  and on 64 bit linux!
+
+        /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        inline T& operator [](const UINT idx) {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
+
+        /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        const T& operator [](const UINT idx) const {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
+
+#endif /* (defined _WIN32) || (defined _LIN64) */
+
         /**
          * Assignment.
          *
@@ -451,6 +504,20 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
         virtual void dtor(T *inOutAddress) const;
 
     private:
+
+#ifdef _WIN32
+        /**
+         * Helper function used by the quicksort algorithm.
+         *
+         * @param context The context of the comparison
+         * @param lhs The left hand side operand
+         * @param rhs The right hand side operand
+         *
+         * @return The compare value used by 'qsort_s'
+         */
+        static int qsortHelper(void * context, const void * lhs, 
+            const void * rhs);
+#endif /* _WIN32 */
 
         /** The number of actually allocated elements in 'elements'. */
         SIZE_T capacity;
@@ -738,6 +805,69 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
 
 
     /*
+     * vislib::Array<T>::Sort
+     */
+    template<class T>
+    void Array<T>::Sort(int (*comparator)(const T& lhs, const T& rhs)) {
+#ifdef _WIN32
+
+        qsort_s(this->elements, this->count, sizeof(T), qsortHelper, 
+            reinterpret_cast<void *>(comparator));
+
+#else /* _WIN32 */
+        // qsort by hand, because of frowsty ANSI api (based on Sedgewick)
+        INT64 l, r, i, j;
+        T tmp;
+        Stack<UINT64> stack;
+
+        l = 0;
+        r = this->count - 1;
+
+        stack.Push(l); 
+        stack.Push(r);
+
+        do {
+            if (r > l) {
+                // i = partition(l, r);
+                T value = this->elements[r];
+                i = l - 1;
+                j = r;
+                do {
+                    do { 
+                        i = i + 1;
+                    } while (comparator(this->elements[i], value) < 0);
+                    do { 
+                        j = j - 1;
+                    } while (comparator(this->elements[j], value) > 0);
+                    tmp = this->elements[i];
+                    this->elements[i] = this->elements[j];
+                    this->elements[j] = tmp;
+                } while (j > i);
+                this->elements[j] = this->elements[i];
+                this->elements[i] = this->elements[r];
+                this->elements[r] = tmp;
+
+                // recursion (unfold using the stack)
+                if ((i - l) > (r - i)) {
+                    stack.Push(l);
+                    stack.Push(i - 1);
+                    l = i + 1;
+                } else {
+                    stack.Push(i + 1);
+                    stack.Push(r);
+                    r = i - 1;
+                }
+            } else {
+                r = stack.Pop();
+                l = stack.Pop();
+            }
+        } while (!stack.IsEmpty());
+
+#endif /* _WIN32 */
+    }
+
+
+    /*
      * vislib::Array<T>::operator []
      */
     template<class T>
@@ -817,6 +947,24 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
     template<class T> void Array<T>::dtor(T *inOutAddress) const {
         inOutAddress->~T();
     }
+
+
+#ifdef _WIN32
+
+    /* 
+     * vislib::Array<T>::qsortHelper
+     */
+    template<class T> int Array<T>::qsortHelper(void * context, 
+            const void * lhs, const void * rhs) {
+
+        int (*comparator)(const T& lhs, const T& rhs) 
+            = reinterpret_cast<int (*)(const T& lhs, const T& rhs)>(context);
+
+        return comparator(*static_cast<const T*>(lhs), 
+            *static_cast<const T*>(rhs));
+    }
+
+#endif /* _WIN32 */
 
 } /* end namespace vislib */
 

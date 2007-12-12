@@ -8,6 +8,7 @@
 #include <vislib/NetworkInformation.h>
 #include "testhelper.h"
 
+#include "vislib/Array.h"
 #include <vislib/Console.h>
 #include <vislib/ColumnFormatter.h>
 #include <vislib/Exception.h>
@@ -544,9 +545,16 @@ void TestSingleLinkedListSort(void) {
         list.Add(rand());
     }
 
+#ifdef _WIN32
+    DWORD startTick = GetTickCount();
+#endif /* _WIN32 */
     AssertEqual("List filled with random Elements", list.Count(), cnt);
     list.Sort(intSortCompare);
     AssertEqual("List still contains random Elements", list.Count(), cnt);
+#ifdef _WIN32
+    DWORD duration = GetTickCount() - startTick;
+    printf("Sorted in %u milliseconds\n", duration);
+#endif /* _WIN32 */
 
     bool growing = true;
     int ov = -1;
@@ -559,5 +567,31 @@ void TestSingleLinkedListSort(void) {
         ov = v;
     }
     AssertTrue("List sorted Accending", growing);
+
+}
+
+
+/*
+ * TestArraySort
+ */
+void TestArraySort(void) {
+    vislib::Array<int> arr;
+    const unsigned int size = 10000000;
+    unsigned int i;
+    
+    arr.SetCount(size);
+    for (i = 0; i < size; i++) {
+        arr[i] = rand();
+    }
+
+    arr.Sort(intSortCompare);
+
+    bool growing = true;
+    for (i = 1; i < size; i++) {
+        if (arr[i - 1] > arr[i]) {
+            growing = false;
+        }
+    }
+    AssertTrue("Array sorted Accending", growing);
 
 }

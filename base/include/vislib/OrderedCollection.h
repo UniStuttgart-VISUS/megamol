@@ -109,10 +109,15 @@ namespace vislib {
         virtual void RemoveLast(void) = 0;
 
         /**
-         * Sort the collection.
+         * Sorts the elements in the collection based on the results of the 
+         * 'comparator' function:
+         *   = 0 if lhs == rhs
+         *   < 0 if lhs < rhs
+         *   > 0 if lhs > rhs
+         *
+         * @param comparator The compare function defining the sort order.
          */
-        //template<class C>
-        //virtual void Sort(void) = 0;
+        virtual void Sort(int (*comparator)(const T& lhs, const T& rhs)) = 0;
 
     protected:
 

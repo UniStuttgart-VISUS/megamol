@@ -58,6 +58,7 @@ typedef struct _VislibTest_t {
 VislibTest tests[] = {
     // base
     {_T("Array"), ::TestArray, "Tests vislib::Array"},
+    {_T("ArraySort"), ::TestArraySort, "Tests vislib::Array::Sort"}, 
     {_T("ColumnFormatter"), ::TestColumnFormatter, "Tests vislib::ColumnFormatter"},
     {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
     {_T("Heap"), ::TestHeap, "Tests vislib::Heap"},

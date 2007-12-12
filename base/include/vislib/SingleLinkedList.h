@@ -274,7 +274,7 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
          *
          * @param comparator The compare function defining the sort order.
          */
-        void Sort(int (*comparator)(const T& lhs, const T& rhs));
+        virtual void Sort(int (*comparator)(const T& lhs, const T& rhs));
 
         /**
          * Returns an Iterator to the list, pointing before the first element.
@@ -768,6 +768,64 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
     template<class T>
     typename SingleLinkedList<T>::Item * SingleLinkedList<T>::mergeSort(
             int (*comparator)(const T& lhs, const T& rhs)) {
+        //*
+
+        // sequential merge sort
+        unsigned int subListSize = 1;
+        unsigned int subListCount = 2; // to fool the main while loop at the first time.
+        Item *left, *lastLeft, *right, *lastRight, *remaining, *lastMerged, helphead;
+        unsigned int i;
+
+        helphead.next = this->first;        
+
+        while (subListCount > 1) {
+            
+            // initialise iteration
+            subListCount = 0;
+            remaining = helphead.next;
+            lastMerged = &helphead;
+
+            // Iteration on sublists
+            while (remaining != NULL) {
+
+                subListCount++;
+
+                // extract left sublist of 'subListSize' elements
+                lastLeft = left = remaining;
+                for (i = 1; (i < subListSize) && (lastLeft->next != NULL); 
+                        i++) {
+                    lastLeft = lastLeft->next;
+                }
+                if (lastLeft->next == NULL) {
+                    lastMerged->next = remaining;
+                    break;
+                }
+
+                // extract right sublist of 'subListSize' elements
+                lastRight = right = lastLeft->next;
+                lastLeft->next = NULL;
+                for (i = 1; (i < subListSize) && (lastRight->next != NULL); 
+                        i++) {
+                    lastRight = lastRight->next;
+                }
+                remaining = lastRight->next;
+                lastRight->next = NULL;
+
+                // merge sublists
+                lastMerged->next = mergeSortMerge(left, right, comparator);
+                lastMerged = (lastLeft->next == NULL) ? lastLeft : lastRight;
+                
+            }
+
+            // all sublists of current size are now sorted!
+            subListSize *= 2;
+        }
+
+        return helphead.next;
+
+        /*/
+
+        // sequential implementation with A LOT of temporary memory
         SIZE_T cnt = this->Count();
         ASSERT(cnt > 1);
         if (cnt % 2) cnt++;
@@ -814,26 +872,7 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
         delete[] Array;
 
         return i1;
-
-        //// TODO: Optimise for small lists
-
-        //// split list
-        //Item *mid, *it;
-        //mid = it = list;
-        //int i = 0;
-        //while (it->next != NULL) {
-        //    if (i % 2 != 0) {
-        //        mid++;
-        //    }
-        //    it++;
-        //}
-        //it = mid->next;
-        //mid->next = NULL;
-        //
-        //return this->mergeSortMerge(
-        //    this->mergeSort(list, comparator), 
-        //    this->mergeSort(it, comparator), 
-        //    comparator);
+        //*/
     }
 
 
@@ -879,14 +918,7 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
             cur = cur->next;
         }
 
-        if (left != NULL) {
-            cur->next = left;
-        } else if (right != NULL) {
-            cur->next = right;
-        } else {
-            // should never happen
-            cur->next = NULL;
-        }
+        cur->next = (left != NULL) ? left : right;
 
         return retval;
     }
