@@ -36,10 +36,11 @@ typedef CLParser::Argument CLPArgument;
 typedef CLParser::Error CLPError;
 typedef CLParser::Warning CLPWarning;
 
+
 /*
  * Test of the command line parser.
  */
-void TestCmdLineParser(void) {
+void TestCmdLineParser1(void) {
 
     { // subtest 1
         vislib::sys::CmdLineProviderA problemLine("\"Horst's stupid Programm\"");
@@ -383,4 +384,102 @@ void TestCmdLineParser(void) {
         }
 
     }
+}
+
+
+/*
+ * Test of the command line parser.
+ */
+void TestCmdLineParser2(void) {
+    /** the parser object */
+    vislib::sys::TCmdLineParser parser;
+    /** the parser help option */
+    vislib::sys::TCmdLineParser::Option help(_T('h'), _T("help"), _T("Prints this help message."),
+        vislib::sys::TCmdLineParser::Option::FLAG_EXCLUSIVE);
+    /** parser option of the amber input files */
+    vislib::sys::TCmdLineParser::Option inputFiles(_T('i'), _T("input"), 
+        _T("Required! Specifies the two input files (Amber topology, netcdf trajectory)."), 
+        vislib::sys::TCmdLineParser::Option::FLAG_UNIQUE | vislib::sys::TCmdLineParser::Option::FLAG_REQUIRED, 
+        vislib::sys::TCmdLineParser::Option::ValueDesc::ValueList(
+            vislib::sys::TCmdLineParser::Option::STRING_VALUE, _T("TopFile"), _T("The Amber topology file"))->Add(
+            vislib::sys::TCmdLineParser::Option::STRING_VALUE, _T("NetCDF"), _T("The netcdf trajectory file")));
+    /** parser option of the pathline output file */
+    vislib::sys::TCmdLineParser::Option outputFile(_T('o'), _T("output"), 
+        _T("Required! Specifies the output file (solvent pathlines)."),
+        vislib::sys::TCmdLineParser::Option::FLAG_UNIQUE | vislib::sys::TCmdLineParser::Option::FLAG_REQUIRED, 
+        vislib::sys::TCmdLineParser::Option::ValueDesc::ValueList(
+            vislib::sys::TCmdLineParser::Option::STRING_VALUE, _T("SolPathFile"), _T("The solvent pathlines file")));
+
+    parser.AddOption(&help);
+    parser.AddOption(&inputFiles);
+    parser.AddOption(&outputFile);
+
+    vislib::sys::TCmdLineProvider cmdLine(
+  _T("DUMMYAPP.exe -i //SFB716/Datensaetze/TEM1_wt.top //SFB716/Datensaetze/TEM1_wt-1001-rmsfit.bintrj --output //bossanova/bidmon/SFB716/Datensaetze/TEM1_wt-1001.solpath")
+  //_T("DUMMYAPP.exe -i 1 //i -o 2") // FAILS!
+  //_T("DUMMYAPP.exe -i 1 //o -o 2") // FAILS!
+  //_T("DUMMYAPP.exe -i 1 //h -o 2") // Works!
+  //_T("DUMMYAPP.exe -i \\\\bossanova\\bidmon\\SFB716\\Datensaetze\\TEM1_wt.top \\\\bossanova\\bidmon\\SFB716\\Datensaetze\\TEM1_wt-1001-rmsfit.bintrj --output \\\\bossanova\\bidmon\\SFB716\\Datensaetze\\TEM1_wt-1001.solpath")
+  //_T("DUMMYAPP.exe -i 1 \\\\i -o 2") // FAILS!
+  //_T("DUMMYAPP.exe -i 1 \\\\o -o 2") // FAILS!
+  //_T("DUMMYAPP.exe -i 1 \\\\h -o 2") // Works!
+  //_T("DUMMYAPP.exe -i 1 /io -o 2") // FAILS!
+  //_T("DUMMYAPP.exe -i 1 abi -o 2") // FAILS!
+        );
+
+    parser.Parse(cmdLine.ArgC(), cmdLine.ArgV(), false);
+
+    AssertTrue("No Parser Errors", parser.GetErrors().HasNext() == NULL);
+    vislib::sys::TCmdLineParser::ErrorIterator errorIter = parser.GetErrors();
+    while (errorIter.HasNext()) {
+        printf("%s\n", vislib::sys::TCmdLineParser::Error::GetErrorString(
+            errorIter.Next().GetErrorCode()));
+    }
+    printf("\n");
+
+    AssertTrue("No Parser Warnings", parser.GetWarnings().HasNext() == NULL);
+    vislib::sys::TCmdLineParser::WarningIterator warnIter = parser.GetWarnings();
+    while (warnIter.HasNext()) {
+        printf("%s\n", vislib::sys::TCmdLineParser::Warning::GetWarningString(
+            warnIter.Next().GetWarnCode()));
+    }
+    printf("\n");
+
+    printf("Arguments:\n");
+    for (unsigned int idx = 0; idx < parser.ArgumentCount(); idx++) {
+        vislib::sys::TCmdLineParser::Argument *arg = parser.GetArgument(idx);
+        if (arg == NULL) {
+            printf("NULL\n");
+            continue;
+        }
+        switch (arg->GetType()) {
+            case vislib::sys::TCmdLineParser::Argument::TYPE_UNKNOWN : 
+                printf("TYPE_UNKNOWN ");
+                break;
+            case vislib::sys::TCmdLineParser::Argument::TYPE_OPTION_LONGNAME : 
+                printf("TYPE_OPTION_LONGNAME ");
+                break;
+            case vislib::sys::TCmdLineParser::Argument::TYPE_OPTION_SHORTNAMES : 
+                printf("TYPE_OPTION_SHORTNAMES ");
+                break;
+            case vislib::sys::TCmdLineParser::Argument::TYPE_OPTION_VALUE : 
+                printf("TYPE_OPTION_VALUE ");
+                break;
+        }
+        printf("%s ", T2A(arg->GetInputString()));
+        if (arg->IsSelected()) {
+            printf("[Selected]");
+        }
+        printf("\n");
+    }
+
+}
+
+
+/*
+ * Test of the command line parser.
+ */
+void TestCmdLineParser(void) {
+    TestCmdLineParser1();
+    //TestCmdLineParser2();
 }

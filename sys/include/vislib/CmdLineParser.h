@@ -507,6 +507,182 @@ namespace sys {
                     description.PeekBuffer(), flags, valueList);
             }
 
+            /** 
+             * ctor.
+             * 
+             * @param shortName The single character name of the option, or 0
+             *                  if no short name should be used.
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char shortName, const Char *longName, 
+                    const Char *description, int flags, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName, description, 
+                    static_cast<Flags>(flags), valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param shortName The single character name of the option, or 0
+             *                  if no short name should be used.
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char shortName, const String<T>& longName, 
+                    const Char *description, int flags,
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName.PeekBuffer(), description,
+                    static_cast<Flags>(flags), valueList);
+            }            
+            
+            /** 
+             * ctor.
+             * 
+             * @param shortName The single character name of the option, or 0
+             *                  if no short name should be used.
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char shortName, const Char *longName, 
+                    const String<T>& description, int flags, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName, description.PeekBuffer(), 
+                    static_cast<Flags>(flags), valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param shortName The single character name of the option, or 0
+             *                  if no short name should be used.
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char shortName, const String<T>& longName, 
+                    const String<T>& description, int flags, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(shortName, longName.PeekBuffer(), 
+                    description.PeekBuffer(), static_cast<Flags>(flags), 
+                    valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char *longName, const Char *description, 
+                    int flags, ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName, description, 
+                    static_cast<Flags>(flags), valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const String<T>& longName, const Char *description, 
+                    int flags, ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
+                    description, static_cast<Flags>(flags), valueList);
+            }            
+            
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const Char *longName, const String<T>& description, 
+                    int flags, ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName, 
+                    description.PeekBuffer(), static_cast<Flags>(flags), 
+                    valueList);
+            }
+
+            /** 
+             * ctor.
+             * 
+             * @param longName The long name string of the option. Can be NULL
+             *                 if no long name should be used. Otherwise the
+             *                 string will be copied into an internal buffer.
+             * @param description The description string of the option. Can be
+             *                    NULL if no description string is provided.
+             *                    Otherwise the string will be copied into an
+             *                    internal buffer.
+             * @param flags The flags of the option.
+             * @param valueList The list of values expected to follow this 
+             *                  option directly in the command line.
+             */
+            inline Option(const String<T>& longName, 
+                    const String<T>& description, int flags, 
+                    ValueDesc *valueList = NULL) {
+                this->initObject(static_cast<Char>(0), longName.PeekBuffer(), 
+                    description.PeekBuffer(), static_cast<Flags>(flags), 
+                    valueList);
+            }
+
             /** dtor. */
             ~Option(void);
 
@@ -2045,7 +2221,8 @@ namespace sys {
                                                 for (int j2 = opt->GetValueCount() - 1; j2 >= 0; j2--) {
                                                     i++;
                                                     argTypes[i] = Argument::TYPE_OPTION_VALUE;
-                                                    multi++;
+                                                    multi++; // use multi to count the i skipped here
+                                                    j = multi; // break for the outer loop
                                                 }
                                             }
                                         } else {
