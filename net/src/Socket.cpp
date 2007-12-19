@@ -512,6 +512,8 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
             }
         }
         totalReceived += lastReceived;
+        wsaBuf.buf += lastReceived;
+        wsaBuf.len -= lastReceived;
 
 #else /* _WIN32 */
         lastReceived = ::recv(this->handle, static_cast<char *>(outData) 
@@ -583,6 +585,8 @@ SIZE_T vislib::net::Socket::receiveFrom(SocketAddress& outFromAddr,
             }
         }
         totalReceived += lastReceived;
+        wsaBuf.buf += lastReceived;
+        wsaBuf.len -= lastReceived;
 
 #else /* _WIN32 */
         lastReceived = ::recvfrom(this->handle, static_cast<char *>(outData) 
@@ -650,6 +654,8 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
             }
         }
         totalSent += lastSent;
+        wsaBuf.buf += lastSent;
+        wsaBuf.len -= lastSent;
 
 #else /* _WIN32 */
         lastSent = ::send(this->handle, static_cast<const char *>(data), 
@@ -714,6 +720,8 @@ SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr,
             }
         }
         totalSent += lastSent;
+        wsaBuf.buf += lastSent;
+        wsaBuf.len -= lastSent;
 
 #else /* _WIN32 */
         lastSent = ::sendto(this->handle, static_cast<const char *>(data), 
