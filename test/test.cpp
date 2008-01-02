@@ -39,6 +39,7 @@
 #include "testinterlocked.h"
 #include "testtcpserver.h"
 #include "testdimred.h"
+#include "testipc.h"
 
 
 /* type for test functions */
@@ -95,6 +96,8 @@ VislibTest tests[] = {
     {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
+    {_T("IPC"), ::TestIpc, "Tests inter-process communication"},
+    {_T("IPC2"), ::TestIpc2, "For internal use only. Do not call."},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };

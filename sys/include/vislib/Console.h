@@ -133,6 +133,11 @@ namespace sys {
         static void EnableColors(bool enable);
 
         /**
+         * Flush 'stdout', 'stderr' and 'stdin'.
+         */
+        static void Flush(void);
+
+        /**
          * Restores the console output colors to the default colors, if color
          * output is available and enabled. If the default colors are not 
          * available at program startup, this member will not set any colors.

@@ -60,12 +60,12 @@ namespace sys {
          * such a semaphore does not exist.
          *
          * @param name         The name of the semaphore.
-		 * @param initialCount The initial count for the semaphore object. This value
-		 *                     must be within [0, maxCount]. If the value is not 
-		 *                     within this range, it will be clamped to be valid.
-		 * @param maxCount     The maximum count for the semaphore object, which must
-		 *                     be greater than zero. If the value is less than 1, it
-		 *                     will be corrected to be 1.
+         * @param initialCount The initial count for the semaphore object. This value
+         *                     must be within [0, maxCount]. If the value is not 
+         *                     within this range, it will be clamped to be valid.
+         * @param maxCount     The maximum count for the semaphore object, which must
+         *                     be greater than zero. If the value is less than 1, it
+         *                     will be corrected to be 1.
          */
         IPCSemaphore(const char name, const long initialCount = 1, 
             const long maxCount = 1);
@@ -76,12 +76,12 @@ namespace sys {
          * such a semaphore does not exist.
          *
          * @param name         The name of the semaphore.
-		 * @param initialCount The initial count for the semaphore object. This value
-		 *                     must be within [0, maxCount]. If the value is not 
-		 *                     within this range, it will be clamped to be valid.
-		 * @param maxCount     The maximum count for the semaphore object, which must
-		 *                     be greater than zero. If the value is less than 1, it
-		 *                     will be corrected to be 1.
+         * @param initialCount The initial count for the semaphore object. This value
+         *                     must be within [0, maxCount]. If the value is not 
+         *                     within this range, it will be clamped to be valid.
+         * @param maxCount     The maximum count for the semaphore object, which must
+         *                     be greater than zero. If the value is less than 1, it
+         *                     will be corrected to be 1.
          */
         IPCSemaphore(const char *name, const long initialCount = 1, 
             const long maxCount = 1);
@@ -93,7 +93,7 @@ namespace sys {
 
         /**
          * Acquire a lock on the semaphore. This method blocks until the lock is
-		 * acquired.
+         * acquired.
          *
          * The lock can be acquired, if the state of the semaphore is signaled, 
          * i. e. the counter is greater than zero. If a lock has been 
@@ -144,25 +144,25 @@ namespace sys {
 
 #endif /* !_WIN32 */
 
-		/**
-		 * Forbidden copy ctor.
-		 *
-		 * @param rhs The object to be cloned.
-		 *
-		 * @throws UnsupportedOperationException Unconditionally.
-		 */
-		IPCSemaphore(const IPCSemaphore& rhs);
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        IPCSemaphore(const IPCSemaphore& rhs);
 
-		/**
-		 * Forbidden assignment.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 *
-		 * @throws IllegalParamException If (this != &rhs).
-		 */
-		IPCSemaphore& operator =(const IPCSemaphore& rhs);
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        IPCSemaphore& operator =(const IPCSemaphore& rhs);
 
         /**
          * Initialise the semaphore.
@@ -184,6 +184,9 @@ namespace sys {
 
         /** ID of the semaphore set we use for this semaphore. */
         int id;
+
+        /** Remember whether object is the owner that destroys the semaphore. */
+        bool isOwner;
 
         /** Maximum count the semaphore can get. */
         int maxCount;

@@ -11,14 +11,17 @@
 #else /* _WIN32 */
 #include <unistd.h>
 #include <time.h>
+#include <sys/ipc.h>
 #include <sys/time.h>
 #include <climits>
 #endif /* _WIN32 */
 
+#include "vislib/assert.h"
 #include "vislib/File.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IOException.h"
 #include "vislib/memutils.h"
+#include "vislib/Path.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
@@ -228,3 +231,33 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
     return dllGetVersion(&outVersion);
 }
 #endif /* _WIN32 */
+
+
+#ifndef _WIN32
+/*
+ * vislib::sys::TranslateIpcName
+ */
+key_t vislib::sys::TranslateIpcName(const char *name) {
+    StringA n(name);
+    key_t retval = -1;
+    
+    
+    /* Remove Windows kernel namespaces from the name. */
+    if (n.StartsWithInsensitive("global\\") 
+            || n.StartsWithInsensitive("local\\")) {
+        n.Remove(0, n.Find('\\'));
+    }
+    ASSERT(n.Length() > 0);
+
+    // TODO: Ist das Verzeichnis sinnvoll? Eher nicht ...
+    retval = ::ftok(Path::GetUserHomeDirectoryA().PeekBuffer(), n.HashCode());
+    if (retval == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    TRACE(Trace::LEVEL_VL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
+        retval);
+    return retval;
+}
+#endif /* !_WIN32 */
+

@@ -18,10 +18,10 @@ ifndef VISLIB_VERBOSE
 endif
 ifeq ($(VISLIB_VERBOSE), 1)
     Q =
-    ARFLAGS = -cvq
+    ARFLAGS = -cvr
 else
     Q = @
-    ARFLAGS = -cq
+    ARFLAGS = -cr
 endif
 
 

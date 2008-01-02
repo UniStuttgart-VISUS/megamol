@@ -18,7 +18,9 @@
 #include "vislib/assert.h"
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/sysfunctions.h"
 #include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -31,6 +33,7 @@ vislib::sys::IPCSemaphore::IPCSemaphore(const char name,
     this->handle = NULL;    // Do not call superclass ctor!
 #else /* _WIN32 */
     this->id = -1;
+    this->isOwner = false;
 #endif /* _WIN32 */
 
     char n[] = { name, 0 };
@@ -47,6 +50,7 @@ vislib::sys::IPCSemaphore::IPCSemaphore(const char *name,
     this->handle = NULL;    // Do not call superclass ctor!
 #else /* _WIN32 */
     this->id = -1;
+    this->isOwner = false;
 #endif /* _WIN32 */
 
     this->init(name, initialCount, maxCount);
@@ -58,7 +62,9 @@ vislib::sys::IPCSemaphore::IPCSemaphore(const char *name,
  */
 vislib::sys::IPCSemaphore::~IPCSemaphore(void) {
 #ifndef _WIN32
-	::semctl(this->id, MEMBER_IDX, IPC_RMID, 0);
+    if (this->isOwner) {
+        ::semctl(this->id, MEMBER_IDX, IPC_RMID, 0);
+    }
 #endif /* !_WIN32 */
 }
 
@@ -71,8 +77,6 @@ vislib::sys::IPCSemaphore::~IPCSemaphore(void) {
 void vislib::sys::IPCSemaphore::Lock(void) {
     struct sembuf lock = { MEMBER_IDX, -1, 0 };
 
-    lock.sem_num = MEMBER_IDX;
-        
     if ((::semop(this->id, &lock, 1)) == -1) {
         throw SystemException(__FILE__, __LINE__);
     }
@@ -90,8 +94,6 @@ bool vislib::sys::IPCSemaphore::TryLock(void) {
         return false;
     }
 
-    lock.sem_num = MEMBER_IDX;
-        
     if ((::semop(this->id, &lock, 1)) == -1) {
         if ((error = ::GetLastError()) == EAGAIN) {
             return false;
@@ -116,8 +118,6 @@ void vislib::sys::IPCSemaphore::Unlock(void) {
     //    return;
     //}
 
-    unlock.sem_num = MEMBER_IDX;
-
     if ((::semop(this->id, &unlock, 1)) == -1) {
         throw SystemException(__FILE__, __LINE__);
     }
@@ -141,7 +141,12 @@ const int vislib::sys::IPCSemaphore::MEMBER_IDX = 0;
  * vislib::sys::IPCSemaphore::getCount
  */
 int vislib::sys::IPCSemaphore::getCount(void) {
-    return ::semctl(this->id, MEMBER_IDX, GETVAL, 0);
+    int retval = ::semctl(this->id, MEMBER_IDX, GETVAL, 0);
+    if (retval == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return retval;
 }
 
 #endif /* !_WIN32 */
@@ -175,12 +180,12 @@ vislib::sys::IPCSemaphore& vislib::sys::IPCSemaphore::operator =(
  */
 void vislib::sys::IPCSemaphore::init(const char *name, const long initialCount,
           const long maxCount) {
-	long m = (maxCount > 0) ? maxCount : 1;
-	long i = (initialCount < 0) ? 0 : ((initialCount > m) ? m : initialCount);
+    long m = (maxCount > 0) ? maxCount : 1;
+    long i = (initialCount < 0) ? 0 : ((initialCount > m) ? m : initialCount);
 
-	ASSERT(m > 0);
-	ASSERT(i >= 0);
-	ASSERT(i <= m);
+    ASSERT(m > 0);
+    ASSERT(i >= 0);
+    ASSERT(i <= m);
 
 #ifdef _WIN32
     ASSERT(this->handle == NULL);
@@ -195,29 +200,25 @@ void vislib::sys::IPCSemaphore::init(const char *name, const long initialCount,
 #else /* _WIN32 */
 
     this->maxCount = m;
+    key_t key = TranslateIpcName(name);
 
-    /* Remove Windows kernel namespaces from the name. */
-    StringA n(name);
-    if (n.StartsWithInsensitive("global\\") 
-            || n.StartsWithInsensitive("local\\")) {
-        n.Remove(0, n.Find('\\'));
+    /* Try to create new semaphore. */
+    if ((this->id = ::semget(key, 1, IPC_CREAT | IPC_EXCL | DFT_PERMS)) != -1) {
+        /* Set initial count if new semaphore was created. */
+        TRACE(Trace::LEVEL_VL_INFO, "Semaphore %u created.\n", this->id);
+
+        this->isOwner = true;
+        ::semctl(this->id, MEMBER_IDX, SETVAL, i);
+        TRACE(Trace::LEVEL_VL_INFO, "Inital semaphore value: %d\n", 
+            this->getCount());
+
+    } else if (errno == EEXIST) {
+        /* Semaphore already exists, try to open it. */
+        this->id = ::semget(key, 1, DFT_PERMS);
+        this->isOwner = false;
+        TRACE(Trace::LEVEL_VL_INFO, "Semaphore %u opened.\n", this->id);
     }
-    ASSERT(n.Length() > 0);
-
-    key_t key = ::ftok("/", n[0]);   // TODO: Ist das sinnvoll? Eher nicht ...
-
-    /* Try to open existing semaphore. */
-    if ((this->id = ::semget(key, MEMBER_IDX, DFT_PERMS)) == -1) {
-        /* Semaphore does not exist, create a new one. */   
-
-        this->id = ::semget(key, 1, IPC_CREAT | IPC_EXCL | DFT_PERMS);
-        ASSERT(this->id != -1); // TODO: Throw exception here?
-
-        /* Set initial count. */
-        if (this->id != -1) {
-            ::semctl(this->id, MEMBER_IDX, SETVAL, i);
-        }
-    }
+    ASSERT(this->id != -1); // TODO: Throw exception here?
 
 #endif /* _WIN32 */
 }

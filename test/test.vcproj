@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="test"
 	ProjectGUID="{6CC64435-55B7-4AA2-A66C-61CDA2255733}"
 	RootNamespace="test"
@@ -406,6 +406,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testipc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testmatrix.cpp"
 				>
 			</File>
@@ -529,6 +533,10 @@
 			</File>
 			<File
 				RelativePath=".\testinterlocked.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testipc.h"
 				>
 			</File>
 			<File

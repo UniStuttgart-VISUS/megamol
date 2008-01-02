@@ -285,18 +285,13 @@ namespace vislib {
          */
         virtual void Prepend(const T& element);
 
-// The semantics of Remove will be changed in the future to remove the first 
-// occurrence of an object in an OrderedCollection. Use RemoveAll to erase all 
-// items. Remove will not be supported on unordered collections any more.
-#ifdef _WIN32
-__declspec(deprecated("Remove will change its semantics in future versions. Use RemoveAll instead."))
-#endif
-        inline void Remove(const T& element) {
-#ifndef _WIN32
-#warning "Remove will change its semantics in future versions. Use RemoveAll instead."
-#endif 
-            this->RemoveAll(element);
-        }
+        /**
+         * Remove the first occurrence of an element that is equal to 'element' 
+         * from the collection.
+         *
+         * @param element The element to be removed.
+         */
+        virtual void Remove(const T& element);
 
         /**
          * Remove all elements that are equal to 'element' from the array.
@@ -722,6 +717,26 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
 
         this->elements[0] = element;
         this->count++;
+    }
+
+
+    /*
+     * vislib::Array<T>::Remove
+     */
+    template<class T>
+    void Array<T>::Remove(const T& element) {
+
+        for (SIZE_T i = 0; i < this->count; i++) {
+            if (this->elements[i] == element) {
+                for (SIZE_T j = i + 1; j < this->count; j++) {
+                    this->elements[j - 1] = this->elements[j];
+                }
+
+                this->count--;
+                this->dtor(this->elements + this->count);   // Dtor erased.
+                break;                                      // Remove first.
+            }
+        }
     }
 
 

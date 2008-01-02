@@ -402,6 +402,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SharedMemory.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SyncObject.cpp"
 				>
 			</File>
@@ -569,6 +573,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Semaphore.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SharedMemory.h"
 				>
 			</File>
 			<File

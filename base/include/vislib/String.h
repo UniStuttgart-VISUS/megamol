@@ -393,7 +393,7 @@ namespace vislib {
         /**
          * Answer a hash code of the string.
          *
-         * @return A hash code of the string-
+         * @return A hash code of the string.
          */
         UINT32 HashCode(void) const;
 

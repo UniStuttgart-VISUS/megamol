@@ -32,12 +32,12 @@ namespace vislib {
 
     public:
 
-		/**
-		 * Answer the only instance of this class.
-		 *
-		 * @return A reference to the only instance of this class.
-		 */
-		static Trace& GetInstance(void);
+        /**
+         * Answer the only instance of this class.
+         *
+         * @return A reference to the only instance of this class.
+         */
+        static Trace& GetInstance(void);
 
         /** 
          * Set this level to display all tracing information. If you use this
@@ -118,83 +118,83 @@ namespace vislib {
          *
          * @return The current tracing level.
          */
-		inline UINT GetLevel(void) const {
-			return this->level;
-		}
+        inline UINT GetLevel(void) const {
+            return this->level;
+        }
 
         /**
          * Set a new tracing level. Messages above this level will be ignored.
          *
          * @param level The new tracing level.
          */
-		inline void SetLevel(const UINT level) {
-			this->level = level;
-		}
+        inline void SetLevel(const UINT level) {
+            this->level = level;
+        }
 
-		/**
-		 * Set the trace prefix for console output. If NULL, no prefix will be 
-		 * added.
-		 *
-		 * @param prefix The new prefix or NULL for disabling prefixing.
-		 */
-		void SetPrefix(const char *prefix);
+        /**
+         * Set the trace prefix for console output. If NULL, no prefix will be 
+         * added.
+         *
+         * @param prefix The new prefix or NULL for disabling prefixing.
+         */
+        void SetPrefix(const char *prefix);
 
-		/**
-		 * Trace the message 'fmt', if an appropriate tracing level was set.
-		 *
-		 * @param level The trace level for the message.
-		 * @param fmt   The format string for the trace message.
-		 */
-		void operator ()(const UINT level, const char *fmt, ...) throw();
+        /**
+         * Trace the message 'fmt', if an appropriate tracing level was set.
+         *
+         * @param level The trace level for the message.
+         * @param fmt   The format string for the trace message.
+         */
+        void operator ()(const UINT level, const char *fmt, ...) throw();
 
-		///**
-		// * Trace the message 'fmt'.
-		// *
-		// * @param fmt The format string for the trace message.
-		// */
-		//void operator ()(const char *fmt, ...);
+        ///**
+        // * Trace the message 'fmt'.
+        // *
+        // * @param fmt The format string for the trace message.
+        // */
+        //void operator ()(const char *fmt, ...);
 
     private:
 
-		/** The default prefix of the console output. */
-		static const char *DEFAULT_PREFIX;
+        /** The default prefix of the console output. */
+        static const char *DEFAULT_PREFIX;
 
-		/** The only instance of this class. */
-		static Trace instance;
+        /** The only instance of this class. */
+        static Trace instance;
 
-		/** 
+        /** 
          * Ctor.
          */
-		Trace(void);
+        Trace(void);
 
-		/**
-		 * Forbidden copy ctor.
-		 *
-		 * @param rhs The object to be cloned.
-		 *
-		 * @throws UnsupportedOperationException Unconditionally.
-		 */
-		Trace(const Trace& rhs);
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        Trace(const Trace& rhs);
 
-		/**
-		 * Does the actual tracing work.
-		 *
-		 * @param level The trace level for the message.
-		 * @param fmt   The format string for the trace message.
-		 * @param list  The variable argument list.
-		 */
-		void trace(const UINT level, const char *fmt, va_list list) throw();
+        /**
+         * Does the actual tracing work.
+         *
+         * @param level The trace level for the message.
+         * @param fmt   The format string for the trace message.
+         * @param list  The variable argument list.
+         */
+        void trace(const UINT level, const char *fmt, va_list list) throw();
 
-		/**
-		 * Forbidden assignment.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 *
-		 * @throws IllegalParamException If (this != &rhs).
-		 */
-		Trace& operator =(const Trace& rhs);
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        Trace& operator =(const Trace& rhs);
 
         /** Name of the output file. */
         char *filename;
@@ -202,19 +202,19 @@ namespace vislib {
         /** Handle for file output of tracer. */
         FILE *fp;
 
-		/** 
-		 * The prefix of the console output. Prefixing is disabled, if this pointer
-		 * is NULL.
-		 */
-		char *prefix;
+        /** 
+         * The prefix of the console output. Prefixing is disabled, if this pointer
+         * is NULL.
+         */
+        char *prefix;
 
-		/** The current trace level. */
-		UINT level;
+        /** The current trace level. */
+        UINT level;
 
         /** The the debugger API for writing strings. */
         bool useDebugger;
 
-	};
+    };
 
 } /* end namespace vislib */
 

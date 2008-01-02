@@ -39,7 +39,7 @@ namespace sys {
     class File {
 
     public:
-        
+
         /** This type is used for offsets when seeking in files. */
         typedef INT64 FileOffset;
 

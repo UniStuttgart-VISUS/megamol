@@ -1,7 +1,9 @@
 /*
  * Process.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_PROCESS_H_INCLUDED
@@ -34,7 +36,8 @@ namespace sys {
 
 
     /**
-     * TODO: comment class
+     * The process class encapsulates child processes of the current process. 
+     * It also provides static methods to retrieve information about processes.
      */
     class Process {
 
@@ -79,6 +82,102 @@ namespace sys {
          * @param exitCode The exit code to return.
          */
         static void Exit(const DWORD exitCode);
+
+        /**
+         * Answer the exectuable file of the process with the specified ID.
+         *
+         * Note for Linux users: The system is currently required to have a proc
+         * filesystem for this function to work.
+         *
+         * @param processID The ID of the process to retrieve the module of.
+         *
+         * @return The path to the executable file of the process.
+         *
+         * @throws SystemException If the module name could not be retrieved, 
+         *                         e.g. because the requested process does not
+         *                         exists.
+         */
+        static vislib::StringA ModuleFileNameA(const PID processID);
+
+        /**
+         * Answer the exectuable file of the calling process.
+         *
+         * Note for Linux users: The system is currently required to have a proc
+         * filesystem for this function to work.
+         *
+         * @return The path to the executable file of the calling process.
+         *
+         * @throws SystemException If the module name could not be retrieved.
+         */
+        static vislib::StringA ModuleFileNameA(void);
+
+        /**
+         * Answer the exectuable file of the process with the specified ID.
+         *
+         * Note for Linux users: The system is currently required to have a proc
+         * filesystem for this function to work.
+         *
+         * @param processID The ID of the process to retrieve the module of.
+         *
+         * @return The path to the executable file of the process.
+         *
+         * @throws SystemException If the module name could not be retrieved, 
+         *                         e.g. because the requested process does not
+         *                         exists.
+         */
+        static vislib::StringW ModuleFileNameW(const PID processID);
+
+        /**
+         * Answer the exectuable file of the calling process.
+         *
+         * Note for Linux users: The system is currently required to have a proc
+         * filesystem for this function to work.
+         *
+         * @return The path to the executable file of the calling process.
+         *
+         * @throws SystemException If the module name could not be retrieved.
+         */
+        static vislib::StringW ModuleFileNameW(void);
+
+        /**
+         * Answer the exectuable file of the process with the specified ID.
+         *
+         * Note for Linux users: The system is currently required to have a proc
+         * filesystem for this function to work.
+         *
+         * @param processID The ID of the process to retrieve the module of.
+         *
+         * @return The path to the executable file of the process.
+         *
+         * @throws SystemException If the module name could not be retrieved, 
+         *                         e.g. because the requested process does not
+         *                         exists.
+         */
+        inline static vislib::TString ModuleFileName(const PID processID) {
+#if defined(UNICODE) || defined(_UNICODE)
+            return Process::ModuleFileNameW(processID);
+#else /* defined(UNICODE) || defined(_UNICODE) */
+            return Process::ModuleFileNameA(processID);
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+        }
+
+        /**
+         * Answer the exectuable file of the calling process.
+         *
+         * Note for Linux users: The system is currently required to have a proc
+         * filesystem for this function to work.
+         *
+         * @return The path to the executable file of the calling process.
+         *
+         * @throws SystemException If the module name could not be retrieved.
+         */
+        inline static vislib::TString ModuleFileName(void) {
+#if defined(UNICODE) || defined(_UNICODE)
+            return Process::ModuleFileNameW();
+#else /* defined(UNICODE) || defined(_UNICODE) */
+            return Process::ModuleFileNameA();
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+        }
 
         /**
          * Answer the owner of the process with process ID 'processID'.

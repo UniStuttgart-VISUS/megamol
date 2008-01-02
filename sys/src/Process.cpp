@@ -1,17 +1,21 @@
 /*
  * Process.cpp
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2007 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
 
 #include "vislib/Process.h"
 
+#include <climits>
 #include <cstdarg>
 
 #ifndef _WIN32
 #include <fcntl.h>
 #include <signal.h>
+#include <unistd.h>
 #include <sys/types.h>
 #endif /* !_WIN32 */
 
@@ -51,6 +55,7 @@ bool vislib::sys::Process::Exists(const PID processID) {
             throw SystemException(__FILE__, __LINE__);
         }
 
+        ::CloseHandle(hProcess);
         return (exitCode == STILL_ACTIVE);
     } 
 
@@ -70,6 +75,111 @@ void vislib::sys::Process::Exit(const DWORD exitCode) {
     ::ExitProcess(exitCode);
 #else /* _WIN32 */
     ::exit(exitCode);
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::ModuleFileNameA
+ */
+vislib::StringA vislib::sys::Process::ModuleFileNameA(const PID processID) {
+#ifdef _WIN32
+    AutoHandle hProcess(true);
+    StringA retval;
+
+    if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
+            == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if (!GetModuleFileNameA(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
+            retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return retval;
+
+#else /* _WIN32 */
+    StringA procAddr;
+    StringA retval;
+    char *retvalPtr = NULL;
+    int len = -1;
+
+    procAddr.Format("/proc/%d/exe", processID);
+    retvalPtr = retval.AllocateBuffer(PATH_MAX + 1);
+    len = ::readlink(procAddr.PeekBuffer(), retvalPtr, PATH_MAX + 1);
+    if (len == -1) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+    retvalPtr[len] = 0;
+
+    return retval;
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::ModuleFileNameA
+ */
+vislib::StringA vislib::sys::Process::ModuleFileNameA(void) {
+#ifdef _WIN32
+    StringA retval;
+
+    if (!GetModuleFileNameA(NULL, retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return retval;
+
+#else /* _WIN32 */
+    return Process::ModuleFileNameA(Process::CurrentID());
+#endif /* _WIN32 */
+}
+
+
+
+
+/*
+ * vislib::sys::Process::ModuleFileNameW
+ */
+vislib::StringW vislib::sys::Process::ModuleFileNameW(const PID processID) {
+#ifdef _WIN32
+    AutoHandle hProcess(true);
+    StringW retval;
+
+    if ((hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, processID))
+            == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    if (!GetModuleFileNameW(static_cast<HMODULE>(static_cast<HANDLE>(hProcess)),
+            retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return retval;
+
+#else /* _WIN32 */
+    return StringW(Process::ModuleFileNameA(processID));
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Process::ModuleFileNameW
+ */
+vislib::StringW vislib::sys::Process::ModuleFileNameW(void) {
+#ifdef _WIN32
+    StringW retval;
+
+    if (!GetModuleFileNameW(NULL, retval.AllocateBuffer(MAX_PATH), MAX_PATH)) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    return retval;
+
+#else /* _WIN32 */
+    return Process::ModuleFileNameA(Process::CurrentID());
 #endif /* _WIN32 */
 }
 

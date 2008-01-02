@@ -608,6 +608,17 @@ void vislib::sys::Console::EnableColors(bool enable) {
     vislib::sys::Console::useColors = enable && vislib::sys::Console::ColorsAvailable();
 }
 
+
+/*
+ * vislib::sys::Console::Flush
+ */
+void vislib::sys::Console::Flush(void) {
+    ::fflush(stdout);
+    ::fflush(stderr);
+    ::fflush(stdin);
+}
+
+
 /*
  * vislib::sys::Console::RestoreDefaultColors
  */

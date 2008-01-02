@@ -16,6 +16,8 @@
 
 #ifdef _WIN32
 #include <shlwapi.h>
+#else /* _WIN32 */
+#include <sys/types.h>
 #endif /* _WIN32 */
 
 #include "vislib/File.h"
@@ -144,6 +146,20 @@ namespace sys {
     HRESULT GetDLLVersion(DLLVERSIONINFO& outVersion, 
         const wchar_t * moduleName);
 #endif /* _WIN32 */
+
+#ifndef _WIN32
+    /**
+     * Convert a IPC resource name 'name', which might start with a Windows 
+     * kernel namespace prefix, to a Linux IPC unique key.
+     *
+     * @param name The name of the resource.
+     *
+     * @return The Linux unique key for the name.
+     *
+     * @throws SystemException If the key could not be created.
+     */
+    key_t TranslateIpcName(const char *name);
+#endif /* !_WIN32 */
 
 } /* end namespace sys */
 } /* end namespace vislib */

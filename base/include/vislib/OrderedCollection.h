@@ -94,7 +94,7 @@ namespace vislib {
          *
          * @param element The element to be removed.
          */
-        //virtual void Remove(const T& element) = 0;
+        virtual void Remove(const T& element) = 0;
 
         /**
          * Remove the first element from the collection. If the collection

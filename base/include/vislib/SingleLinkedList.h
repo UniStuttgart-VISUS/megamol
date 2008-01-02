@@ -218,19 +218,13 @@ namespace vislib {
          */
         virtual void Prepend(const T& item);
 
-// The semantics of Remove will be changed in the future to remove the first 
-// occurrence of an object in an OrderedCollection. Use RemoveAll to erase all 
-// items. Remove will not be supported on unordered collections any more.
-#ifdef _WIN32
-__declspec(deprecated("Remove will change its semantics in future versions. Use RemoveAll instead."))
-#endif
-        inline void Remove(const T& item) {
-#ifndef _WIN32
-#warning "Remove will change its semantics in future versions. Use RemoveAll instead."
-#endif 
-            this->RemoveAll(item);
-        }
-
+        /**
+         * Remove the first occurrence of an element that is equal to 'element' 
+         * from the collection.
+         *
+         * @param item The element to be removed.
+         */
+        virtual void Remove(const T& item);
         /**
          * Removes an item from the list.
          * This method removes all items from the list that are equal to the
@@ -595,6 +589,39 @@ __declspec(deprecated("Remove will change its semantics in future versions. Use 
             this->last = this->first;
         }
         i->item = item;
+    }
+
+
+    /*
+     * SingleLinkedList<T>::Remove
+     */
+    template<class T>
+    void SingleLinkedList<T>::Remove(const T& item) {
+        Item *i = this->first, *j = NULL;
+        while(i) {
+            if (i->item == item) {
+                if (j) {
+                    j->next = i->next;
+                    if (this->last == i) {
+                        this->last = j;
+                    }
+                    delete i;
+                    i = j->next;
+                } else {
+                    ASSERT(this->first == i);
+                    this->first = i->next;
+                    if (this->last == i) {
+                        this->last = i->next;
+                    }
+                    delete i;
+                    i = this->first;
+                }
+                break;  // Only remove first.
+            } else {
+                j = i;
+                i = i->next;
+            }
+        }
     }
 
 
