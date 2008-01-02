@@ -19,7 +19,7 @@
 #else /* _WIN32 */
 #include <sys/sem.h>
 
-#include "SyncObject.h"
+#include "vislib/SyncObject.h"
 #endif /* _WIN32 */
 
 
@@ -28,6 +28,18 @@ namespace sys {
 
 
     /**
+     * NOTE: vislib::sys::IPCSemaphore has been superseded by the named version
+     * of vislib::sys:Semaphore. Users are stronly encouraged to use
+     * vislib::sys::Semaphore for both, thread and process synchronisation.
+     *
+     * Rationale: vislib::sys::Semaphore is implemented using POSIX semaphores
+     * while vislib::sys::IPCSemaphores use System V kernel semaphores. The
+     * naming mechanism and the destruction of abandoned semaphores is less
+     * reliable for System V semaphores. Additionally, POSIX semaphores are said
+     * to be more performant than System V semaphores.
+     *
+     * -------------------------------------------------------------------------
+     *
      * This class implements a semaphore which is suitable for inter-process
      * synchronisation on all platforms. 
      * 
@@ -42,7 +54,10 @@ namespace sys {
      * with Windows. If the name of the semaphore starts with the Windows kernel
      * namespaces "Global\" or "Local\", these will be removed and the first
      * character after the namespace is used for generating the name. The name
-     * of the semaphore is created using ftok and the root directory.
+     * of the semaphore is created using ftok and the user home directory.
+     *
+     * Note that the semaphore is removed from the system when the object that
+     * originally created it is destroyed!
      *
      * NOTE: YOU SHOULD NOT USE THESE SEMAPHORES FOR SYNCHRONISING THREADS!
      */
@@ -202,4 +217,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_IPCSEMAPHORE_H_INCLUDED */
-

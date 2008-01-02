@@ -303,7 +303,7 @@ void TestThread(void) {
 
 
     std::cout << std::endl << "Manual-reset event tests" << std::endl;
-    Semaphore resetSem(0);
+    Semaphore resetSem((long) 0);
     udSignal.evt = &evtManual;
     udSignal.resetSem = &resetSem;
     udWait.evt = &evtManual;

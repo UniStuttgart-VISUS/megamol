@@ -147,6 +147,28 @@ namespace sys {
         const wchar_t * moduleName);
 #endif /* _WIN32 */
 
+    /**
+     * Remove Windows kernel namespace prefixes "Global" and "Local" from 
+     * 'name'. The function is case-insensitive.
+     *
+     * @param name A string that potentially begins with a Windows kernel
+     *             namespace prefix.
+     *
+     * @return The name without kernel namespace prefix.
+     */
+    vislib::StringA RemoveKernelNamespace(const char *name);
+
+    /**
+     * Remove Windows kernel namespace prefixes "Global" and "Local" from 
+     * 'name'. The function is case-insensitive.
+     *
+     * @param name A string that potentially begins with a Windows kernel
+     *             namespace prefix.
+     *
+     * @return The name without kernel namespace prefix.
+     */
+    vislib::StringW RemoveKernelNamespace(const wchar_t *name);
+
 #ifndef _WIN32
     /**
      * Convert a IPC resource name 'name', which might start with a Windows 

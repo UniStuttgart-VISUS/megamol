@@ -11,6 +11,7 @@
 #include "vislib/Console.h"
 #include "vislib/IPCSemaphore.h"
 #include "vislib/Process.h"
+#include "vislib/Semaphore.h"
 #include "vislib/SharedMemory.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/Thread.h"
@@ -24,8 +25,8 @@
 
 void TestIpc(void) {
     using namespace vislib::sys;
-    IPCSemaphore sem(TEST_IPC_SEM_NAME);
-    IPCSemaphore endSem(TEST_IPC_END_SEM_NAME);
+    Semaphore sem(TEST_IPC_SEM_NAME);
+    Semaphore endSem(TEST_IPC_END_SEM_NAME);
     SharedMemory shMem;
     Process ipc2;
     const char *ipc2Params[] = { "ipc2", NULL };
@@ -57,8 +58,8 @@ void TestIpc(void) {
 
 void TestIpc2(void) {
     using namespace vislib::sys;
-    IPCSemaphore sem(TEST_IPC_SEM_NAME);
-    IPCSemaphore endSem(TEST_IPC_END_SEM_NAME);
+    Semaphore sem(TEST_IPC_SEM_NAME);
+    Semaphore endSem(TEST_IPC_END_SEM_NAME);
     SharedMemory shMem;
 
     AssertNoException("Open shared memory.", shMem.Open(TEST_IPC_SHMEM_NAME,

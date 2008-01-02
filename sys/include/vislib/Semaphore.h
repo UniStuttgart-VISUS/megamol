@@ -1,7 +1,9 @@
 /*
  * Semaphore.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
+ * Copyright (C) 2005 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_SEMAPHORE_H_INCLUDED
@@ -20,7 +22,8 @@
 #include <semaphore.h>
 #endif /* _WIN32 */
 
-#include "SyncObject.h"
+#include "vislib/SyncObject.h"
+#include "vislib/String.h"
 #include "vislib/types.h"
 
 
@@ -28,36 +31,68 @@ namespace vislib {
 namespace sys {
 
     /**
-     * A platform independent semaphore.
+     * A platform-independent semaphore.
+     *
+     * Named instances of these semaphores can be used for inter-process 
+     * synchronisation tasks. These system-wide semaphores are destroyed once
+     * the last object is destroyed.
      *
      * Note: Maximum count is not supported on Linux and ignored.
-     * Note: This semaphore cannot be used for inter-process synchronisation on 
-     * Linux.
      *
      * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
      */
-	class Semaphore : public SyncObject {
+    class Semaphore : public SyncObject {
 
     public:
 
         /**
          * Create a new semaphore. 
-		 *
-		 * @param initialCount The initial count for the semaphore object. This value
-		 *                     must be within [0, maxCount]. If the value is not 
-		 *                     within this range, it will be clamped to be valid.
-		 * @param maxCount     The maximum count for the semaphore object, which must
-		 *                     be greater than zero. If the value is less than 1, it
-		 *                     will be corrected to be 1.
+         *
+         * @param initialCount The initial count for the semaphore object. This value
+         *                     must be within [0, maxCount]. If the value is not 
+         *                     within this range, it will be clamped to be valid.
+         * @param maxCount     The maximum count for the semaphore object, which must
+         *                     be greater than zero. If the value is less than 1, it
+         *                     will be corrected to be 1.
          */
-        Semaphore(const long initialCount = 1, const long maxCount = 1);
+        Semaphore(long initialCount = 1, long maxCount = 1);
+
+        /** 
+         * Open or create a new semaphore with the specified name. The ctor 
+         * first tries to open an existing semaphore and creates a new one, if
+         * such a semaphore does not exist.
+         *
+         * @param name         The name of the semaphore.
+         * @param initialCount The initial count for the semaphore object. This value
+         *                     must be within [0, maxCount]. If the value is not 
+         *                     within this range, it will be clamped to be valid.
+         * @param maxCount     The maximum count for the semaphore object, which must
+         *                     be greater than zero. If the value is less than 1, it
+         *                     will be corrected to be 1.
+         */
+        Semaphore(const char *name, long initialCount = 1, long maxCount = 1);
+
+        /** 
+         * Open or create a new semaphore with the specified name. The ctor 
+         * first tries to open an existing semaphore and creates a new one, if
+         * such a semaphore does not exist.
+         *
+         * @param name         The name of the semaphore.
+         * @param initialCount The initial count for the semaphore object. This value
+         *                     must be within [0, maxCount]. If the value is not 
+         *                     within this range, it will be clamped to be valid.
+         * @param maxCount     The maximum count for the semaphore object, which must
+         *                     be greater than zero. If the value is less than 1, it
+         *                     will be corrected to be 1.
+         */
+        Semaphore(const wchar_t *name, long initialCount = 1, long maxCount = 1);
 
         /** Dtor. */
         ~Semaphore(void);
 
         /**
          * Acquire a lock on the semaphore. This method blocks until the lock is
-		 * acquired.
+         * acquired.
          *
          * The lock can be acquired, if the state of the semaphore is signaled, 
          * i. e. the counter is greater than zero. If a lock has been 
@@ -107,25 +142,39 @@ namespace sys {
 
     protected:
 
-		/**
-		 * Forbidden copy ctor.
-		 *
-		 * @param rhs The object to be cloned.
-		 *
-		 * @throws UnsupportedOperationException Unconditionally.
-		 */
-		Semaphore(const Semaphore& rhs);
+        /**
+         * Check the initialisation parameters and ensure that
+         *
+         * - 'inOutMaxCount' is at least 1
+         * - 'inOutInitialCount' is within [0, inOutMaxCount]
+         */
+        static void enforceParamAssertions(long& inOutInitialCount, 
+            long& inOutMaxCount);
 
-		/**
-		 * Forbidden assignment.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 *
-		 * @throws IllegalParamException If (this != &rhs).
-		 */
-		Semaphore& operator =(const Semaphore& rhs);
+#ifndef _WIN32
+        /** The default permissions assigned to the semaphore. */
+        static const int DFT_PERMS;
+#endif /* !_WIN32 */
+
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        Semaphore(const Semaphore& rhs);
+
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        Semaphore& operator =(const Semaphore& rhs);
 
 #ifdef _WIN32
 
@@ -133,11 +182,14 @@ namespace sys {
         HANDLE handle;
 
 #else /* _WIN32 */
-		/** The POSIX semaphore handle. */
-        sem_t handle;
+        /** The POSIX semaphore handle. */
+        sem_t *handle;
+
+        /** The name of the semaphore if it is named. */
+        vislib::StringA name;
 
 #endif /* _WIN32 */
-	};
+    };
 
 } /* end namespace sys */
 } /* end namespace vislib */

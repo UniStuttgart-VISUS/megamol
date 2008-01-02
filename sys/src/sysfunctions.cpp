@@ -233,20 +233,46 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
 #endif /* _WIN32 */
 
 
+/*
+ * vislib::sys::RemoveKernelNamespace
+ */
+vislib::StringA vislib::sys::RemoveKernelNamespace(const char *name) {
+    StringA n(name);
+
+    if (n.StartsWithInsensitive("global\\") 
+            || n.StartsWithInsensitive("local\\")) {
+        n.Remove(0, n.Find('\\') + 1);
+    }
+
+    return n;
+}
+
+
+/*
+ * vislib::sys::RemoveKernelNamespace
+ */
+vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
+    StringW n(name);
+
+    if (n.StartsWithInsensitive(L"global\\") 
+            || n.StartsWithInsensitive(L"local\\")) {
+        n.Remove(0, n.Find(L'\\') + 1);
+    }
+
+    return n;
+}
+
+
 #ifndef _WIN32
 /*
  * vislib::sys::TranslateIpcName
  */
 key_t vislib::sys::TranslateIpcName(const char *name) {
-    StringA n(name);
     key_t retval = -1;
     
     
     /* Remove Windows kernel namespaces from the name. */
-    if (n.StartsWithInsensitive("global\\") 
-            || n.StartsWithInsensitive("local\\")) {
-        n.Remove(0, n.Find('\\'));
-    }
+    StringA n = RemoveKernelNamespace(name);
     ASSERT(n.Length() > 0);
 
     // TODO: Ist das Verzeichnis sinnvoll? Eher nicht ...
