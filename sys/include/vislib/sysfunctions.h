@@ -169,14 +169,38 @@ namespace sys {
      */
     vislib::StringW RemoveKernelNamespace(const wchar_t *name);
 
+    /**
+     * Take a Windows IPC resource name and construct a POSIX name for Linux 
+     * it. This involves removing a possible kernel namespace and prepending
+     * a slash ('/').
+     *
+     * @param name A string that potentially begins with a Windows kernel
+     *             namespace prefix.
+     *
+     * @return The name in POSIX-compatible format without kernel namespace.
+     */
+    vislib::StringA TranslateWinIpc2PosixName(const char *name);
+
+    /**
+     * Take a Windows IPC resource name and construct a POSIX name for Linux 
+     * it. This involves removing a possible kernel namespace and prepending
+     * a slash ('/').
+     *
+     * @param name A string that potentially begins with a Windows kernel
+     *             namespace prefix.
+     *
+     * @return The name in POSIX-compatible format without kernel namespace.
+     */
+    vislib::StringW TranslateWinIpc2PosixName(const wchar_t *name);
+
 #ifndef _WIN32
     /**
      * Convert a IPC resource name 'name', which might start with a Windows 
-     * kernel namespace prefix, to a Linux IPC unique key.
+     * kernel namespace prefix, to a Linux System V IPC unique key.
      *
      * @param name The name of the resource.
      *
-     * @return The Linux unique key for the name.
+     * @return The System V unique key for the name.
      *
      * @throws SystemException If the key could not be created.
      */

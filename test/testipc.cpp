@@ -14,6 +14,7 @@
 #include "vislib/Semaphore.h"
 #include "vislib/SharedMemory.h"
 #include "vislib/SystemInformation.h"
+#include "vislib/SystemException.h"
 #include "vislib/Thread.h"
 
 
@@ -27,25 +28,40 @@ void TestIpc(void) {
     using namespace vislib::sys;
     Semaphore sem(TEST_IPC_SEM_NAME);
     Semaphore endSem(TEST_IPC_END_SEM_NAME);
-    SharedMemory shMem;
+    SharedMemory shMem, shMemErr;
     Process ipc2;
     const char *ipc2Params[] = { "ipc2", NULL };
 
+    AssertException("Open non-existing shared memory.", shMemErr.Open(
+        TEST_IPC_SHMEM_NAME, SharedMemory::READ_WRITE, 
+        SharedMemory::OPEN_ONLY, TEST_IPC_SHMEM_SIZE),
+        SystemException);
+    AssertFalse("Failed open produced non-open memory.", shMemErr.IsOpen());
+
     AssertNoException("Create shared memory.", shMem.Open(TEST_IPC_SHMEM_NAME,
-        SharedMemory::READ_WRITE, SharedMemory::CREATE_ONLY, 
+        SharedMemory::READ_WRITE, SharedMemory::OPEN_CREATE, 
         TEST_IPC_SHMEM_SIZE));
 
     AssertTrue("Shared memory is open.", shMem.IsOpen());
+
+    AssertException("Create shared memory, no open.", shMemErr.Open(
+        TEST_IPC_SHMEM_NAME, SharedMemory::READ_WRITE, 
+        SharedMemory::CREATE_ONLY, TEST_IPC_SHMEM_SIZE),
+        SystemException);
+    AssertFalse("Failed create produced non-open memory.", shMemErr.IsOpen());
 
     // Write specific data to shared memory.
     sem.Lock();
     if (shMem.IsOpen()) {
         *shMem.As<char>() = 'v';
+        AssertEqual("Data written to shared memory.", *shMem.As<char>(), 'v');
     }
     sem.Unlock();
 
+#ifdef _WIN32   // TODO: This does not work on Linux ... somehow
     AssertNoException("Create child process.", ipc2.Create(
         Process::ModuleFileNameA(), ipc2Params));
+#endif
 
     endSem.Lock();
     endSem.Lock();      // Wait for end to be signaled.

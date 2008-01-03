@@ -263,6 +263,26 @@ vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
 }
 
 
+/*
+ * vislib::sys::TranslateWinIpc2PosixName
+ */
+vislib::StringA vislib::sys::TranslateWinIpc2PosixName(const char *name) {
+    StringA retval = RemoveKernelNamespace(name);
+    retval.Prepend('/');
+    return retval;
+}
+
+
+/*
+ * vislib::sys::TranslateWinIpc2PosixName
+ */
+vislib::StringW vislib::sys::TranslateWinIpc2PosixName(const wchar_t *name) {
+    StringW retval = RemoveKernelNamespace(name);
+    retval.Prepend(L'/');
+    return retval;
+}
+
+
 #ifndef _WIN32
 /*
  * vislib::sys::TranslateIpcName

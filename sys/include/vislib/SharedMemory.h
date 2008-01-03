@@ -18,10 +18,12 @@
 #ifdef _WIN32
 #include <windows.h>
 #else /* _WIN32 */
+#include <sys/types.h>
 #endif /* _WIN32 */
 
 
 #include "vislib/File.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -47,7 +49,8 @@ namespace sys {
         /** The possible creation modes. */
         enum CreationMode { 
             CREATE_ONLY = 0,    // Fails, if the segment already exists.
-            OPEN_ONLY           // Fails, if the segment does not exist.
+            OPEN_ONLY,          // Fails, if the segment does not exist.
+            OPEN_CREATE         // Opens existing or creates new file as needed.
         };
 
         /** This type is used for offsets when seeking in shared memory. */
@@ -156,6 +159,11 @@ namespace sys {
 
     private:
 
+#ifndef _WIN32
+        /** The default permissions assigned to the shared memory segment. */
+        static const mode_t DFT_MODE;
+#endif /* !_WIN32 */
+
         /**
          * Forbidden copy ctor.
          *
@@ -181,8 +189,14 @@ namespace sys {
         HANDLE hSharedMem;
 
 #else /* _WIN32 */
-        /** ID of the shared memory segment. */
-        int id;
+        /** File descriptor of the shared memory segment. */
+        int hSharedMem;
+
+        /** Linux requires to preserve the name for unlinking the memory. */
+        StringA name;
+
+        /** Linux requires to preserve the mapping size for unmapping. */
+        size_t size;
 #endif /* _WIN32 */
 
         /** Pointer to the local mapping of the segment. */
