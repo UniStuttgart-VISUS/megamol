@@ -184,6 +184,7 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
     }
 
     this->size = static_cast<size_t>(size);
+    // TODO: This is problematic in conjunction with open
     if (::ftruncate(this->hSharedMem, this->size) == -1) {
         throw SystemException(__FILE__, __LINE__);
     }

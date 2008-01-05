@@ -11,6 +11,7 @@
 #include "vislib/Event.h"
 #include "vislib/Mutex.h"
 #include "vislib/Runnable.h"
+#include "vislib/RunnableThread.h"
 #include "vislib/Semaphore.h"
 #include "vislib/Thread.h"
 
@@ -28,7 +29,7 @@ class MyRunnable : public Runnable {
 
 public:
 
-    inline MyRunnable(const UINT id) : cnt(1), id(id) {};
+    inline MyRunnable(const UINT id = 0) : cnt(1), id(id) {};
 
     virtual DWORD Run(void *userData);
 
@@ -243,6 +244,33 @@ void TestThread(void) {
 
     ::AssertEqual("Exit code is number of loops", t1.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of loops", t2.GetExitCode(), cntLoops);
+
+
+    // RunnableThread tests
+    std::cout << std::endl << "RunnableThread tests" << std::endl;
+    RunnableThread<MyRunnable> rt1;
+    RunnableThread<MyRunnable> rt2;
+    
+    ::AssertFalse("Thread 1 is initially not running", rt1.IsRunning());
+    ::AssertFalse("Thread 2 is initially not running", rt2.IsRunning());
+
+    rt1.Start(&cntLoops);
+    rt2.Start(&cntLoops);
+
+    LOCK_COUT;
+    ::AssertTrue("Thread 1 is running", rt1.IsRunning());
+    ::AssertTrue("Thread 2 is running", rt2.IsRunning());
+    UNLOCK_COUT;
+
+    LOCK_COUT;
+    ::AssertFalse("Thread cannot be started twice", rt1.Start());
+    UNLOCK_COUT;
+
+    rt1.Join();
+    rt2.Join();
+
+    ::AssertEqual("Exit code is number of loops", rt1.GetExitCode(), cntLoops);
+    ::AssertEqual("Exit code is number of loops", rt2.GetExitCode(), cntLoops);
 
 
     // Synchronisation tests

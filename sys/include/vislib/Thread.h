@@ -105,7 +105,7 @@ namespace sys {
         explicit Thread(Runnable::Function runnableFunc);
 
         /** Dtor. */
-        ~Thread(void);
+        virtual ~Thread(void);
 
         /**
          * Answer the exit code of the thread. 

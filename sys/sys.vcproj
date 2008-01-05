@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\RunnableThread.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Semaphore.cpp"
 				>
 			</File>
@@ -569,6 +573,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Runnable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RunnableThread.h"
 				>
 			</File>
 			<File
