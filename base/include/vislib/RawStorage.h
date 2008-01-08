@@ -121,6 +121,11 @@ namespace vislib {
         }
 
         /**
+         * Sets the whole allocated memory to zero.
+         */
+        void ZeroAll(void);
+
+        /**
          * Assignment operation. This will deep copy the whole dynamic memory.
          *
          * @param rhs The right hand side operand.

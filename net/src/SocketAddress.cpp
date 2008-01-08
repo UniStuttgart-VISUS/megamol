@@ -43,8 +43,8 @@ vislib::net::SocketAddress vislib::net::SocketAddress::CreateInet(
  * vislib::net::SocketAddress::SocketAddress
  */
 vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
-										  const IPAddress& ipAddress, 
-										  const unsigned short port) {
+                                          const IPAddress& ipAddress, 
+                                          const unsigned short port) {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memset(&this->genericAddress, 0, sizeof(this->genericAddress));
     this->inetAddress.sin_family = static_cast<unsigned short>(addressFamily);
@@ -57,7 +57,7 @@ vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
  * vislib::net::SocketAddress::SocketAddress
  */
 vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
-										  const unsigned short port) {
+                                          const unsigned short port) {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memset(&this->genericAddress, 0, sizeof(this->genericAddress));
     this->inetAddress.sin_family = static_cast<unsigned short>(addressFamily);
@@ -158,7 +158,7 @@ vislib::StringW vislib::net::SocketAddress::ToStringW(void) const {
  * vislib::net::SocketAddress::operator =
  */ 
 vislib::net::SocketAddress& vislib::net::SocketAddress::operator =(
-		const SocketAddress& rhs) {
+        const SocketAddress& rhs) {
     if (this != &rhs) {
         ::memcpy(&this->genericAddress, &rhs.genericAddress, 
             sizeof(this->genericAddress));

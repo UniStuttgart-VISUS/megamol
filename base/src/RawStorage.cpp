@@ -86,6 +86,16 @@ void vislib::RawStorage::EnforceSize(const SIZE_T size,
 
 
 /*
+ * vislib::RawStorage::ZeroAll
+ */
+void vislib::RawStorage::ZeroAll(void) {
+    if (this->data != NULL) {
+        ::ZeroMemory(this->data, this->size);
+    }
+}
+
+
+/*
  * vislib::RawStorage::operator =
  */
 vislib::RawStorage& vislib::RawStorage::operator =(const RawStorage& rhs) {
