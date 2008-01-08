@@ -298,6 +298,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ConsoleProgressBar.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CriticalSection.cpp"
 				>
 			</File>
@@ -438,6 +442,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\VolatileIPCStringTable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\WindowsService.cpp"
 				>
 			</File>
@@ -469,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Console.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ConsoleProgressBar.h"
 				>
 			</File>
 			<File
@@ -613,6 +625,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\TrayIcon.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\VolatileIPCStringTable.h"
 				>
 			</File>
 			<File

@@ -10,6 +10,7 @@
 
 #include "vislib/Array.h"
 #include <vislib/Console.h>
+#include "vislib/ConsoleProgressBar.h"
 #include <vislib/ColumnFormatter.h>
 #include <vislib/Exception.h>
 #include <vislib/SystemException.h>
@@ -576,22 +577,30 @@ void TestSingleLinkedListSort(void) {
  */
 void TestArraySort(void) {
     vislib::Array<int> arr;
+    vislib::sys::ConsoleProgressBar progBar;
     const unsigned int size = 10000000;
     unsigned int i;
     
+    progBar.Start("Filling Array", size);
     arr.SetCount(size);
     for (i = 0; i < size; i++) {
         arr[i] = rand();
+        progBar.Set(i);
     }
+    progBar.Stop();
 
     arr.Sort(intSortCompare);
 
+    progBar.Start("Testing Sort output", size);
     bool growing = true;
     for (i = 1; i < size; i++) {
         if (arr[i - 1] > arr[i]) {
             growing = false;
         }
+        progBar.Set(i);
     }
+    progBar.Stop();
+
     AssertTrue("Array sorted Accending", growing);
 
 }
