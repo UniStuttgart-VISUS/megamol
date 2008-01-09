@@ -327,6 +327,10 @@ namespace sys {
         typedef GeneralSerialisable<DWORD, REG_DWORD, CharTraitsW> 
             SerialisableDwordW;
 
+        /** Serialisable specialisation for DWORD and TCHAR name. */
+        typedef GeneralSerialisable<DWORD, REG_DWORD, TCharTraits>
+            TSerialisableDword;
+
         /** Serialisable specialisation for int and ANSI charset name. */
         typedef GeneralSerialisable<float, REG_DWORD, CharTraitsA> 
             SerialisableFloatA;
@@ -335,6 +339,10 @@ namespace sys {
         typedef GeneralSerialisable<float, REG_DWORD, CharTraitsW> 
             SerialisableFloatW;
 
+        /** Serialisable specialisation for DWORD and TCHAR name. */
+        typedef GeneralSerialisable<float, REG_DWORD, TCharTraits>
+            TSerialisableFloat;
+
         /** Serialisable specialisation for int and ANSI charset name. */
         typedef GeneralSerialisable<int, REG_DWORD, CharTraitsA> 
             SerialisableIntA;
@@ -342,6 +350,10 @@ namespace sys {
         /** Serialisable specialisation for int and Unicode charset name. */
         typedef GeneralSerialisable<int, REG_DWORD, CharTraitsW> 
             SerialisableIntW;
+
+        /** Serialisable specialisation for DWORD and TCHAR name. */
+        typedef GeneralSerialisable<int, REG_DWORD, TCharTraits>
+            TSerialisableInt;
 
 
         /**
