@@ -155,6 +155,8 @@ namespace sys {
          */
         class EchoTargetDebugOutput : public EchoTarget {
 
+        public:
+
             /** ctor */
             EchoTargetDebugOutput() : EchoTarget() { }
 

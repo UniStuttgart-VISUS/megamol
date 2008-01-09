@@ -28,6 +28,8 @@ namespace sys {
 
     /**
      * TODO: comment class
+     *
+     * TODO: Think about a more general serialisation concept.
      */
     class RegistrySerialiser {
 
