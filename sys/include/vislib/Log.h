@@ -148,6 +148,30 @@ namespace sys {
             FILE *stream;
         };
 
+#ifdef _WIN32
+        /**
+         * Implementation of EchoTarget writing the messages using windows API 
+         * OutputDebugString
+         */
+        class EchoTargetDebugOutput : public EchoTarget {
+
+            /** ctor */
+            EchoTargetDebugOutput() : EchoTarget() { }
+
+            /** dtor */
+            virtual ~EchoTargetDebugOutput() { }
+
+            /**
+             * Writes a string to the echo output target. Implementations may 
+             * assume that message ends with a new line control sequence.
+             *
+             * @param level The message level.
+             * @param message The message ANSI string.
+             */
+            virtual void Write(UINT level, const char *message) const;
+
+        };
+#endif /* _WIN32 */
 
         /** 
          * Ctor. Constructs a new log file without a physical file. 
@@ -326,18 +350,18 @@ namespace sys {
          *
          * @return The current log level.
          */
-		inline UINT GetLevel(void) const {
-			return this->level;
-		}
+        inline UINT GetLevel(void) const {
+            return this->level;
+        }
 
         /**
          * Set a new log level. Messages above this level will be ignored.
          *
          * @param level The new log level.
          */
-		inline void SetLevel(const UINT level) {
-			this->level = level;
-		}
+        inline void SetLevel(const UINT level) {
+            this->level = level;
+        }
 
         /**
          * Answer the current echo level. Messages above this level will be
@@ -346,9 +370,9 @@ namespace sys {
          *
          * @return The current echo level.
          */
-		inline UINT GetEchoLevel(void) const {
-			return this->echoLevel;
-		}
+        inline UINT GetEchoLevel(void) const {
+            return this->echoLevel;
+        }
 
         /**
          * Set a new echo level. Messages above this level will be ignored, 
@@ -356,18 +380,18 @@ namespace sys {
          *
          * @param level The new echo level.
          */
-		inline void SetEchoLevel(const UINT level) {
-			this->echoLevel = level;
-		}
+        inline void SetEchoLevel(const UINT level) {
+            this->echoLevel = level;
+        }
         /**
          * Answer the current echo output target. This log object does not own
          * this target.
          *
          * @return The current echo level.
          */
-		inline const EchoTarget* GetEchoOutTarget(void) const {
-			return this->echoOut;
-		}
+        inline const EchoTarget* GetEchoOutTarget(void) const {
+            return this->echoOut;
+        }
 
         /**
          * Set a new echo output target. This Log object does not take 
@@ -377,9 +401,9 @@ namespace sys {
          *
          * @param level The new echo output stream.
          */
-		inline void SetEchoOutTarget(const EchoTarget* stream) {
-			this->echoOut = stream;
-		}
+        inline void SetEchoOutTarget(const EchoTarget* stream) {
+            this->echoOut = stream;
+        }
 
         /**
          * Writes a formatted messages with the specified log level to the log

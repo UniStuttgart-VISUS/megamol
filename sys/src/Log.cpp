@@ -16,19 +16,30 @@
 #include "vislib/SystemInformation.h"
 #include "vislib/Thread.h"
 #include <climits>
+#include <cstdio>
 #include <ctime>
+#include <fcntl.h>
+#ifdef _WIN32
+#include <io.h>
+#include <share.h>
+#include <sys/stat.h>
+#endif /* _WIN32 */
 
+
+/*****************************************************************************/
 
 /*
  * vislib::sys::Log::EchoTargetStream::StdOut
  */
-const vislib::sys::Log::EchoTargetStream vislib::sys::Log::EchoTargetStream::StdOut(stdout);
+const vislib::sys::Log::EchoTargetStream 
+vislib::sys::Log::EchoTargetStream::StdOut(stdout);
 
 
 /*
  * vislib::sys::Log::EchoTargetStream::StdErr
  */
-const vislib::sys::Log::EchoTargetStream vislib::sys::Log::EchoTargetStream::StdErr(stderr);
+const vislib::sys::Log::EchoTargetStream 
+vislib::sys::Log::EchoTargetStream::StdErr(stderr);
 
 
 /*
@@ -42,7 +53,8 @@ vislib::sys::Log::EchoTargetStream::EchoTargetStream(FILE *stream)
 /*
  * vislib::sys::Log::EchoTargetStream::Write
  */
-void vislib::sys::Log::EchoTargetStream::Write(UINT level, const char *message) const {
+void vislib::sys::Log::EchoTargetStream::Write(UINT level, 
+        const char *message) const {
     fprintf(this->stream, "%.4d|%s", level, message);
 }
 
@@ -53,6 +65,57 @@ void vislib::sys::Log::EchoTargetStream::Write(UINT level, const char *message) 
 vislib::sys::Log::EchoTargetStream::~EchoTargetStream() {
     // DO NOT CLOSE THE STREAM
 }
+
+
+/*****************************************************************************/
+
+#ifdef _WIN32
+
+/*
+ * vislib::sys::Log::EchoTargetDebugOutput::Write
+ */
+void vislib::sys::Log::EchoTargetDebugOutput::Write(UINT level, 
+        const char *message) const {
+    char tmp[21];
+    tmp[0] = tmp[20] = 0;
+    _snprintf_s(tmp, 20, 20, "%.4d|", level);
+    ::OutputDebugStringA(tmp);
+    ::OutputDebugStringA(message);
+}
+
+#endif /* _WIN32 */
+
+/*****************************************************************************/
+
+
+/*
+ * vislib::sys::Log::OfflineMessage::OfflineMessage
+ */
+vislib::sys::Log::OfflineMessage::OfflineMessage(void) : level(LEVEL_NONE) {
+    // only declared for paranoia purpose
+}
+
+
+/*
+ * vislib::sys::Log::OfflineMessage::~OfflineMessage
+ */
+vislib::sys::Log::OfflineMessage::~OfflineMessage(void) {
+    // only declared for paranoia purpose
+}
+
+
+/*
+ * vislib::sys::Log::OfflineMessage::operator=
+ */
+vislib::sys::Log::OfflineMessage& vislib::sys::Log::OfflineMessage::operator=(
+        const OfflineMessage& rhs) {
+    this->level = rhs.level;
+    this->time = rhs.time;
+    this->message = rhs.message;
+    return *this;
+}
+
+/*****************************************************************************/
 
 
 /*
@@ -99,42 +162,17 @@ const char *vislib::sys::Log::emptyLogMsg = "Empty log message\n";
 /*
  * vislib::sys::Log::emptyLogMsg
  */
-const char *vislib::sys::Log::omittedLogMsgs = "%d further offline log message omitted\n";
-
-
-/*
- * vislib::sys::Log::OfflineMessage::OfflineMessage
- */
-vislib::sys::Log::OfflineMessage::OfflineMessage(void) : level(LEVEL_NONE) {
-    // only declared for paranoia purpose
-}
-
-
-/*
- * vislib::sys::Log::OfflineMessage::~OfflineMessage
- */
-vislib::sys::Log::OfflineMessage::~OfflineMessage(void) {
-    // only declared for paranoia purpose
-}
-
-
-/*
- * vislib::sys::Log::OfflineMessage::operator=
- */
-vislib::sys::Log::OfflineMessage& vislib::sys::Log::OfflineMessage::operator=(const OfflineMessage& rhs) {
-    this->level = rhs.level;
-    this->time = rhs.time;
-    this->message = rhs.message;
-    return *this;
-}
+const char *vislib::sys::Log::omittedLogMsgs 
+    = "%d further offline log message omitted\n";
 
 
 /*
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(UINT level, unsigned int msgbufsize) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
-        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
+        : level(level), filename(), logfile(NULL), msgbufsize(0), 
+        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
+        echoLevel(LEVEL_ERROR), echoOut(NULL) {
     this->SetOfflineMessageBufferSize(msgbufsize);
 }
 
@@ -142,8 +180,9 @@ vislib::sys::Log::Log(UINT level, unsigned int msgbufsize)
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
-        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
+        : level(level), filename(), logfile(NULL), msgbufsize(0), 
+        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
+        echoLevel(LEVEL_ERROR), echoOut(NULL) {
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -152,8 +191,9 @@ vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix)
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
-        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
+        : level(level), filename(), logfile(NULL), msgbufsize(0), 
+        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
+        echoLevel(LEVEL_ERROR), echoOut(NULL) {
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -162,8 +202,9 @@ vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix)
  * vislib::sys::Log::Log
  */
 vislib::sys::Log::Log(const Log& source) 
-        : level(LEVEL_ERROR), filename(), logfile(NULL), msgbufsize(0), omittedMsgs(0), offlineMsgs(NULL), autoflush(true)
-        , echoLevel(LEVEL_ERROR), echoOut(NULL) {
+        : level(LEVEL_ERROR), filename(), logfile(NULL), msgbufsize(0), 
+        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
+        echoLevel(LEVEL_ERROR), echoOut(NULL) {
     *this = source;
 }
 
@@ -187,24 +228,32 @@ vislib::sys::Log::~Log(void) {
  * vislib::sys::Log::SetLogFileName
  */
 bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
-    FILE *nf = NULL;
-    vislib::StringA fileName = filename;
+    int newFile = -1;
+    vislib::StringA newFileName = filename;
+
     if (filename != NULL) {
+        // open the new file
 
         if (addSuffix) {
-            fileName += this->GetFileNameSuffix();
+            newFileName += this->GetFileNameSuffix();
         }
 
 #ifdef _WIN32
 #if (_MSC_VER >= 1400)
-        fopen_s(&nf, fileName, "at");
+        if (_sopen_s(&newFile, newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
+                | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
+            newFile = -1;
+        }
 #else /* (_MSC_VER >= 1400) */
-        nf = fopen(fileName, "at");
+        newFile = _sopen(newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
+            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif /* (_MSC_VER >= 1400) */
 #else /* _WIN32 */
-        nf = fopen(fileName, "at");
+        newFile = open(newFileName, O_APPEND | O_CREAT | O_LARGEFILE 
+            | O_WRONLY, S_IRWXU | S_IRWXG);
 #endif /* _WIN32 */
-        if (nf == NULL) {
+
+        if (newFile == -1) {
             // unable to open the new log file.
             // we keep the old one or keep offline mode
             return false;
@@ -215,30 +264,42 @@ bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
     if (this->logfile) {
         fclose(this->logfile);
     }
-    this->logfile = nf;
+    this->logfile = (newFile == -1) ? NULL : 
+#ifdef _WIN32
+        _fdopen(newFile, "ac");
+#else /* _WIN32 */
+        fdopen(newFile, "a");
+#endif /* _WIN32 */
+
     if (this->logfile) {
         this->filename = 
 #ifdef _WIN32
-            A2W(fileName);
+            A2W(newFileName);
 #else /* _WIN32 */
-            fileName;
+            newFileName;
 #endif /* _WIN32 */
 
         // flush offline messages if any available
-        // Do not echo offline messages, because they already had been echoed, if they are of the right level
+        // Do not echo offline messages, because they already had been echoed,
+        // if they are of the right level
         if (this->offlineMsgs) {
 
             for (unsigned int i = 0; i < this->msgbufsize; i++) {
                 if (this->offlineMsgs[i].level > 0) {
-                    this->WriteMsgPrefix(this->offlineMsgs[i].level, this->offlineMsgs[i].time);
-                    fprintf(this->logfile, "%s", this->offlineMsgs[i].message.PeekBuffer());
+                    this->WriteMsgPrefix(this->offlineMsgs[i].level, 
+                        this->offlineMsgs[i].time);
+                    fprintf(this->logfile, "%s", 
+                        this->offlineMsgs[i].message.PeekBuffer());
                 }
             }
         
             if (this->omittedMsgs > 0) {
-                // write a special log message for the summary of the omitted messages
-                this->WriteMsgPrefix(LEVEL_INFO, vislib::sys::Log::CurrentTimeStamp());
-                fprintf(this->logfile, vislib::sys::Log::omittedLogMsgs, this->omittedMsgs);
+                // write a special log message for the summary of the omitted 
+                // messages
+                this->WriteMsgPrefix(LEVEL_INFO, 
+                    vislib::sys::Log::CurrentTimeStamp());
+                fprintf(this->logfile, vislib::sys::Log::omittedLogMsgs, 
+                    this->omittedMsgs);
                 this->omittedMsgs = 0;
             }
 
@@ -265,24 +326,32 @@ bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
  * vislib::sys::Log::SetLogFileName
  */
 bool vislib::sys::Log::SetLogFileName(const wchar_t *filename, bool addSuffix) {
-    FILE *nf = NULL;
-    vislib::StringW fileName = filename;
+    int newFile = -1;
+    vislib::StringW newFileName = filename;
+
     if (filename != NULL) {
+        // open the new file
 
         if (addSuffix) {
-            fileName += A2W(this->GetFileNameSuffix());
+            newFileName += A2W(this->GetFileNameSuffix());
         }
 
 #ifdef _WIN32
 #if (_MSC_VER >= 1400)
-        _wfopen_s(&nf, fileName, L"at");
+        if (_wsopen_s(&newFile, newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
+                | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
+            newFile = -1;
+        }
 #else /* (_MSC_VER >= 1400) */
-        nf = _wfopen(fileName, L"at");
+        newFile = _wsopen(newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
+            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif /* (_MSC_VER >= 1400) */
 #else /* _WIN32 */
-        nf = fopen(W2A(fileName), "at");
+        newFile = open(W2A(newFileName), O_APPEND | O_CREAT | O_LARGEFILE 
+            | O_WRONLY, S_IRWXU | S_IRWXG);
 #endif /* _WIN32 */
-        if (nf == NULL) {
+
+        if (newFile == -1) {
             // unable to open the new log file.
             // we keep the old one or keep offline mode
             return false;
@@ -293,30 +362,42 @@ bool vislib::sys::Log::SetLogFileName(const wchar_t *filename, bool addSuffix) {
     if (this->logfile) {
         fclose(this->logfile);
     }
-    this->logfile = nf;
+    this->logfile = (newFile == -1) ? NULL : 
+#ifdef _WIN32
+        _fdopen(newFile, "ac");
+#else /* _WIN32 */
+        fdopen(newFile, "a");
+#endif /* _WIN32 */
+
     if (this->logfile) {
         this->filename = 
 #ifdef _WIN32
-            fileName;
+            newFileName;
 #else /* _WIN32 */
-            W2A(fileName);
+            W2A(newFileName);
 #endif /* _WIN32 */
 
         // flush offline messages if any available
-        // Do not echo offline messages, because they already had been echoed, if they are of the right level
+        // Do not echo offline messages, because they already had been echoed,
+        // if they are of the right level
         if (this->offlineMsgs) {
 
             for (unsigned int i = 0; i < this->msgbufsize; i++) {
                 if (this->offlineMsgs[i].level > 0) {
-                    this->WriteMsgPrefix(this->offlineMsgs[i].level, this->offlineMsgs[i].time);
-                    fprintf(this->logfile, "%s", this->offlineMsgs[i].message.PeekBuffer());
+                    this->WriteMsgPrefix(this->offlineMsgs[i].level, 
+                        this->offlineMsgs[i].time);
+                    fprintf(this->logfile, "%s", 
+                        this->offlineMsgs[i].message.PeekBuffer());
                 }
             }
         
             if (this->omittedMsgs > 0) {
-                // write a special log message for the summary of the omitted messages
-                this->WriteMsgPrefix(LEVEL_INFO, vislib::sys::Log::CurrentTimeStamp());
-                fprintf(this->logfile, vislib::sys::Log::omittedLogMsgs, this->omittedMsgs);
+                // write a special log message for the summary of the omitted 
+                // messages
+                this->WriteMsgPrefix(LEVEL_INFO, 
+                    vislib::sys::Log::CurrentTimeStamp());
+                fprintf(this->logfile, vislib::sys::Log::omittedLogMsgs, 
+                    this->omittedMsgs);
                 this->omittedMsgs = 0;
             }
 
@@ -408,7 +489,7 @@ void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
     }
 
     // write log message
-	if ((level <= this->level) && (level > 0)) {
+    if ((level <= this->level) && (level > 0)) {
         va_list argptr;
         if (this->logfile) {
             // physical log file available
@@ -499,7 +580,7 @@ void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
     }
 
     // write log message
-	if ((level <= this->level) && (level > 0)) {
+    if ((level <= this->level) && (level > 0)) {
         va_list argptr;
         if (this->logfile) {
             // physical log file available
@@ -669,8 +750,10 @@ vislib::StringA vislib::sys::Log::GetFileNameSuffix(void) {
 
     t->tm_mon += 1;
     t->tm_year += 1900;
-    suffix.Format("_%s.%.8x_%.2d.%.2d.%.4d_%.2d.%.2d", vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
-        vislib::sys::Thread::CurrentID(), t->tm_mday, t->tm_mon, t->tm_year, t->tm_hour, t->tm_min);
+    suffix.Format("_%s.%.8x_%.2d.%.2d.%.4d_%.2d.%.2d", 
+        vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
+        vislib::sys::Thread::CurrentID(), t->tm_mday, t->tm_mon, t->tm_year, 
+        t->tm_hour, t->tm_min);
 
     return suffix;
 }
