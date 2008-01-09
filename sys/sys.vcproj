@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\RegistrySerialiser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Runnable.cpp"
 				>
 			</File>
@@ -581,6 +585,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Process.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RegistrySerialiser.h"
 				>
 			</File>
 			<File
