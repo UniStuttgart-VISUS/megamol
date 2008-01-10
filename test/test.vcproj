@@ -469,6 +469,10 @@
 				RelativePath=".\testvector.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\testVIPCStrTab.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -597,6 +601,10 @@
 			</File>
 			<File
 				RelativePath=".\testvector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testVIPCStrTab.h"
 				>
 			</File>
 		</Filter>

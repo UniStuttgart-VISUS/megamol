@@ -16,6 +16,7 @@
 
 
 #include "vislib/String.h"
+#include "vislib/SmartPtr.h"
 
 
 namespace vislib {
@@ -23,20 +24,25 @@ namespace sys {
 
 
     /**
-     * This class represents a system-wide, volatile string table meant for
-     * configuration, nagotiation and publication purpose for IPC. Do not use
-     * this class to transfer larger data.
+     * This class represents a system-user-wide, volatile string table meant 
+     * for configuration, nagotiation and publication purpose for IPC. Do not 
+     * use this class to transfer larger data.
+     *
+     * System-user-wide means that each user logged into the local system has
+     * his own string table.
      *
      * This class cannot be instanciated. To create an entry in this string 
-     * table an application calls 'Create' with a unique name characterizing 
+     * table an application calls 'Create' with a unique name characterising 
      * the application. If this succeeds, the value of this string table entry 
      * can be changed using the returned 'Entry' object, and can be received 
-     * by any application running on the local computer using 'GetValue'. 
+     * by any application running on the local computer as the same user using 
+     * 'GetValue'. 
      *
      * The entry into the string table is only guaranteed to exist as long as 
      * the corresponding 'Entry' object exists. As soon as the 'Entry' object 
      * is deleted, the operating system should remove the entry from the 
-     * string table.
+     * string table. This is, however, not guaranteed. So your application must
+     * be aware that information from this table might be outdated.
      *
      * Remark:
      * The class supports ANSI and unicode strings for names and values. 
@@ -44,6 +50,87 @@ namespace sys {
      * strongly recommended to only use 7 bit ascii characters.
      */
     class VolatileIPCStringTable {
+    private:
+
+        /**
+         * private nested class implementing the functionality of 'Entry'
+         */
+        class EntryImplementation {
+        public:
+
+            /**
+             * Ctor.
+             *
+             * @param name The name of the entry
+             */
+            EntryImplementation(const char* name);
+
+            /**
+             * Ctor.
+             *
+             * @param name The name of the entry
+             */
+            EntryImplementation(const wchar_t* name);
+
+            /** Dtor. */
+            ~EntryImplementation(void);
+
+            /** 
+             * Creates the entry.
+             *
+             * @throw vislib::AlreadyExistsException if there already is an entry
+             *        in the string tabe with the specified name.
+             * @throw vislib::Exception in case of an generic error.
+             */
+            void Create(void);
+
+            /**
+             * Sets the value of the entry.
+             *
+             * @param value The new value of the entry.
+             */
+            void SetValue(const char* value);
+
+            /**
+             * Sets the value of the entry.
+             *
+             * @param value The new value of the entry.
+             */
+            void SetValue(const wchar_t* value);
+
+            /**
+             * Answer the name of the entry.
+             *
+             * @return The name of the entry.
+             */
+            void GetName(StringA& outName) const;
+
+            /**
+             * Answer the name of the entry.
+             *
+             * @return The name of the entry.
+             */
+            void GetName(StringW& outName) const;
+
+        private:
+
+#ifdef _WIN32
+
+            /** The name of the entry */
+            StringW name;
+
+            /** The registry key handle of the entry */
+            HKEY key;
+
+#else /* _WIN32 */
+
+            /** The name of the entry */
+            StringA name;
+
+#endif /* _WIN32 */
+
+        };
+
     public:
 
         /**
@@ -133,11 +220,16 @@ namespace sys {
 
             /** Ctor */
             Entry(void);
+
+            /** The implementing object */
+            vislib::SmartPtr<EntryImplementation> impl;
+
         };
 
         /**
          * Answer the value of the entry with the given name. If there is no
-         * entry with this name, an empty string is returned.
+         * entry with this name, an empty string is returned. These Nams are
+         * not case sensitive.
          *
          * @param name The name of the entry to be returned.
          *
@@ -147,7 +239,8 @@ namespace sys {
 
         /**
          * Answer the value of the entry with the given name. If there is no
-         * entry with this name, an empty string is returned.
+         * entry with this name, an empty string is returned. These Nams are
+         * not case sensitive.
          *
          * @param name The name of the entry to be returned.
          *
@@ -159,7 +252,8 @@ namespace sys {
 
         /**
          * Answer the value of the entry with the given name. If there is no
-         * entry with this name, an empty string is returned.
+         * entry with this name, an empty string is returned. These Nams are
+         * not case sensitive.
          *
          * @param name The name of the entry to be returned.
          *
@@ -169,7 +263,8 @@ namespace sys {
 
         /**
          * Answer the value of the entry with the given name. If there is no
-         * entry with this name, an empty string is returned.
+         * entry with this name, an empty string is returned. These Nams are
+         * not case sensitive.
          *
          * @param name The name of the entry to be returned.
          *
@@ -186,8 +281,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -205,8 +300,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -227,8 +322,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -248,8 +343,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -270,8 +365,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -289,8 +384,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -311,8 +406,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -332,8 +427,8 @@ namespace sys {
          * created using the copy ctor or assigned from the returned object 
          * exist.
          *
-         * @param name The name of the entry to be created. Must not be an
-         *             empty string or NULL.
+         * @param name The name of the entry to be created. These Nams are not
+         *             case sensitive. Must not be an empty string or NULL.
          * @param value The initial value for the entry. Can be NULL.
          *
          * @return An 'Entry' object representing the newly created entry.
@@ -355,7 +450,7 @@ namespace sys {
         VolatileIPCStringTable(void);
 
     };
-    
+
 } /* end namespace sys */
 } /* end namespace vislib */
 
@@ -363,4 +458,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_VOLATILEIPCSTRINGTABLE_H_INCLUDED */
-

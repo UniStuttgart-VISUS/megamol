@@ -40,6 +40,7 @@
 #include "testtcpserver.h"
 #include "testdimred.h"
 #include "testipc.h"
+#include "testVIPCStrTab.h"
 
 
 /* type for test functions */
@@ -89,6 +90,8 @@ VislibTest tests[] = {
     {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment"},
     {_T("File"), ::TestFile, "Tests vislib::sys::File and derived classes"},
     {_T("Interlocked"), ::TestInterlocked, "Tests interlocked operations."},
+    {_T("IPC"), ::TestIpc, "Tests inter-process communication"},
+    {_T("IPC2"), ::TestIpc2, "For internal use only. Do not call."},
     {_T("Log"), ::TestTheLogWithPhun, "Tests vislib::sys::Log"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
     {_T("Path"), ::TestPath, "Tests vislib::sys::Path"},
@@ -96,8 +99,8 @@ VislibTest tests[] = {
     {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
-    {_T("IPC"), ::TestIpc, "Tests inter-process communication"},
-    {_T("IPC2"), ::TestIpc2, "For internal use only. Do not call."},
+    {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
+    {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };
@@ -184,7 +187,25 @@ int main(int argc, char **argv) {
                     printf("%s\n", tests[j].testName);
 #endif /* _WIN32 */
 
-                    tests[j].testFunc();
+                    try {
+
+                        tests[j].testFunc();
+
+                    } catch (vislib::Exception e) {
+#ifdef _WIN32
+                        _tprintf(_T("\nUnexpected vislib::Exception: %s "), e.GetMsg());
+#else /* _WIN32 */
+                        printf("\nUnexpected vislib::Exception: %s ", e.GetMsgA());
+#endif /* _WIN32 */
+                        AssertOutputFail(); // add a generic fail
+                    } catch (...) {
+#ifdef _WIN32
+                        _tprintf(_T("\nUnexpected Exception "));
+#else /* _WIN32 */
+                        printf("\nUnexpected Exception ");
+#endif /* _WIN32 */
+                        AssertOutputFail(); // add a generic fail
+                    }
 
                     printf("\n");
                     break; // next argument
@@ -196,8 +217,10 @@ int main(int argc, char **argv) {
         ::OutputAssertTestSummary();
     }
 
-#ifdef _WIN32
-    ::_tsystem(_T("pause"));
+#if defined(_WIN32) && defined(_DEBUG) // VC Debugger Halt on Stop Crowbar
+#pragma warning(disable: 4996)
+    if (getenv("_ACP_LIB") != NULL) system("pause");
+#pragma warning(default: 4996)
 #endif
     return 0;
 }
