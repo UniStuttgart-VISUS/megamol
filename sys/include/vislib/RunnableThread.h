@@ -97,7 +97,13 @@ namespace sys {
      * vislib::sys::RunnableThread<T>::RunnableThread
      */
     template<class T> RunnableThread<T>::RunnableThread(void) 
+#ifdef _WIN32
+#pragma warning(disable: 4355)
+#endif /* _WIN32 */
             : Thread(&this->runnableInstance) {
+#ifdef _WIN32
+#pragma warning(default: 4355)
+#endif /* _WIN32 */
     }
 
 

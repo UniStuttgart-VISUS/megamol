@@ -25,7 +25,7 @@ namespace gl {
 
 
     /**
-     * 
+     * This class wraps an OpenGL framebuffer object.
      */
     class FramebufferObject : public ExtensionsDependent<FramebufferObject> {
 
@@ -45,12 +45,12 @@ namespace gl {
                                         // resulting in undefined behaviour.
         };
 
-        /** This structure specifies the properties of a color attachment. */
-        typedef struct ColorAttachParams_t {
+        /** This structure specifies the properties of a colour attachment. */
+        typedef struct ColourAttachParams_t {
             GLenum internalFormat;      // The internal texture format.
             GLenum format;              // The texture format.
             GLenum type;                // The type of the texture elements.
-        } ColorAttachParams;
+        } ColourAttachParams, ColorAttachParams;
 
         /** This structure specifies the properties of a depth attachment. */
         typedef struct DepthAttachParams_t {
@@ -73,18 +73,29 @@ namespace gl {
          *
          * @return The extensions that are requiered for framebuffer objects.
          */
-        static const char * RequiredExtensions(void);
+        static const char *RequiredExtensions(void);
 
         /**
-         * Answer the maximum number of color attachment the current hardware
+         * Answer the maximum number of colour attachments the current hardware
          * supports.
          *
-         * @return The number of color attachments the hardware allows.
+         * @return The number of colour attachments the hardware allows.
          *
          * @throws OpenGLException If the number of attachments cannot be 
          *                         retrieved.
          */
-        UINT GetMaxColorAttachments(void);
+        UINT GetMaxColourAttachments(void);
+#ifdef _MSC_VER
+        __declspec(deprecated("GetMaxColorAttachments() has been deprecated. "
+            "Use GetMaxColourAttachments() instead."))
+#endif /* _MSC_VER */
+        inline UINT GetMaxColorAttachments(void) {
+#ifndef _WIN32
+#warning "GetMaxColorAttachments() has been deprecated. "
+    "Use GetMaxColourAttachments() instead."
+#endif /* !_WIN32 */
+            return this->GetMaxColourAttachments();
+        }
 
         /** Ctor. */
         FramebufferObject(void);
@@ -93,7 +104,7 @@ namespace gl {
         ~FramebufferObject(void);
 
         /**
-         * Bind the texture that is used as render target for the colors.
+         * Bind the texture that is used as render target for the colours.
          * Note that the currently active texture unit is used.
          *
          * The framebuffer object must have been successfully created before 
@@ -104,17 +115,28 @@ namespace gl {
          * only binds the texture.
          *
          * @param which The index of the texture to bind, which must be within
-         *              [0, this->GetCntColorAttachments()[.
+         *              [0, this->GetCntColourAttachments()[.
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
          * @throws OutOfRangeException   If 'which' does not designate a valid
-         *                               color attachment.
+         *                               colour attachment.
          * @throws IllegalStateException If the attachment designated by 'which'
          *                               exists, but is not a texture 
          *                               attachment.
          */
-        GLenum BindColorTexture(const UINT which = 0);
+        GLenum BindColourTexture(const UINT which = 0);
+#ifdef _MSC_VER
+        __declspec(deprecated("BindColorTexture() has been deprecated. "
+            "Use BindColourTexture() instead."))
+#endif /* _MSC_VER */
+        inline GLenum BindColorTexture(const UINT which = 0) {
+#ifndef _WIN32
+#warning "BindColorTexture() has been deprecated. "
+    "Use BindColourTexture() instead."
+#endif /* !_WIN32 */
+            return this->BindColourTexture(which);
+        }
 
         /**
          * Bind the texture that is used as depth target.
@@ -137,17 +159,17 @@ namespace gl {
          * STENCIL ATTACHMENTS ARE CURRENTLY UNSUPPORTED. sap.state MUST BE
          * ATTACHMENT_DISABLED!
          *
-         * @param width               The width of the framebuffer.
-         * @param height              The height of the framebuffer.
-         * @param cntColorAttachments The number of color attachments to be 
-         *                            added. This must be within 
-         *                            [0, GetMaxColorAttachments()[.
-         * @param cap                 An array of 'cntColorAttachments' color
-         *                            attachment specifications.
-         * @param dap                 The depth attachment specification.
-         * @padam sap                 The stencil attachment specification. THE
-         *                            STATE OF 'sap' MUST BE 
-         *                            ATTACHMENT_DISABLED!
+         * @param width                The width of the framebuffer.
+         * @param height               The height of the framebuffer.
+         * @param cntColourAttachments The number of colour attachments to be 
+         *                             added. This must be within 
+         *                             [0, GetMaxColourAttachments()[.
+         * @param cap                  An array of 'cntColourAttachments' colour
+         *                             attachment specifications.
+         * @param dap                  The depth attachment specification.
+         * @padam sap                  The stencil attachment specification. THE
+         *                             STATE OF 'sap' MUST BE 
+         *                             ATTACHMENT_DISABLED!
          *
          * @return true in case of success, false if the framebuffer object 
          *         could be created, but is in incomplete state.
@@ -157,26 +179,26 @@ namespace gl {
          *                         the format of one of the buffers is invalid.
          */
         bool Create(const UINT width, const UINT height, 
-            const UINT cntColorAttachments, const ColorAttachParams *cap,
+            const UINT cntColourAttachments, const ColourAttachParams *cap,
             const DepthAttachParams& dap, const StencilAttachParams& sap);
 
         /**
          * Create a framebuffer object with the specified dimension having one
-         * color attachment and a depth attachment. The depth attachment is
+         * colour attachment and a depth attachment. The depth attachment is
          * realised as renderbuffer object.
          *
          * This is just a convenience method.
          *
-         * @param width               The width of the framebuffer.
-         * @param height              The height of the framebuffer.
-         * @param colorInternalFormat The internal format of the color 
-         *                            attachment.
-         * @param colorFormat         The format of the color attachment.
-         * @param colorType           The datatype of the color attachment.
-         * @param depthAttach         The state of the depth attachment.
-         * @param depthFormat         The format of the depth attachment.
-         * @param stencilAttach       Reserved. Must be ATTACHMENT_DISABLED.
-         * @param stencilFormat       Reserved.
+         * @param width                The width of the framebuffer.
+         * @param height               The height of the framebuffer.
+         * @param colourInternalFormat The internal format of the colour 
+         *                             attachment.
+         * @param colourFormat         The format of the colour attachment.
+         * @param colourType           The datatype of the colour attachment.
+         * @param depthAttach          The state of the depth attachment.
+         * @param depthFormat          The format of the depth attachment.
+         * @param stencilAttach        Reserved. Must be ATTACHMENT_DISABLED.
+         * @param stencilFormat        Reserved.
          *
          * @return true in case of success, false if the framebuffer object 
          *         could be created, but is in incomplete state.
@@ -186,17 +208,17 @@ namespace gl {
          *                         the format of one of the buffers is invalid.
          */
         inline bool Create(const UINT width, const UINT height, 
-                const GLenum colorInternalFormat = GL_RGBA8, 
-                const GLenum colorFormat = GL_RGBA, 
-                const GLenum colorType = GL_UNSIGNED_BYTE,
+                const GLenum colourInternalFormat = GL_RGBA8, 
+                const GLenum colourFormat = GL_RGBA, 
+                const GLenum colourType = GL_UNSIGNED_BYTE,
                 const AttachmentState depthAttach = ATTACHMENT_RENDERBUFFER,
                 const GLenum depthFormat = GL_DEPTH_COMPONENT24,
                 const AttachmentState stencilAttach = ATTACHMENT_DISABLED,
                 const GLenum stencilFormat = GL_STENCIL_INDEX) {
-            ColorAttachParams cap;
-            cap.internalFormat = colorInternalFormat;
-            cap.format = colorFormat;
-            cap.type = colorType;
+            ColourAttachParams cap;
+            cap.internalFormat = colourInternalFormat;
+            cap.format = colourFormat;
+            cap.type = colourType;
             
             DepthAttachParams dap;
             dap.format = depthFormat;
@@ -217,7 +239,9 @@ namespace gl {
          * @throw IllegalStateException if the depth attachment is not a 
          *        texture attachment.
          */
-        GLuint DepthTextureID(void);
+        inline GLuint DepthTextureID(void) const {
+            return this->GetDepthTextureID();
+        }
 
         /**
          * Disable the framebuffer object as render target and restore
@@ -230,6 +254,52 @@ namespace gl {
         GLenum Disable(void);
 
         /**
+         * Draw the 'colourAttachment'th colour attachment as screen-filling
+         * rectangle. The 'colourAttachment'th colour attachment must be a 
+         * texture attachment for this method to succeed.
+         *
+         * This method preserved the 2D texture state, the 2D texture binding 
+         * state and matrix stack contents.
+         *
+         * @param colourAttachment The colour attachment to retrieve the ID of.
+         * @param minFilter        The texture filtering used for minification.
+         * @param magFilter        The texture filtering used for magnification.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         *
+         * @throw IllegalStateException If no colour texture is attached.
+         * @throw OutOfRangeException If colour textures are attached, but the
+         *                            index 'colourAttachment' does not 
+         *                            designate a legal attachment.
+         */
+        inline GLenum DrawColourTexture(const UINT colourAttachment = 0,
+                const GLint minFilter = GL_LINEAR, 
+                const GLint magFilter = GL_LINEAR) const {
+            return this->drawTexture(this->GetColourTextureID(
+                colourAttachment), minFilter, magFilter);
+        }
+
+        /**
+         * Draw the depth attachment as screen-filling rectangle. The depth 
+         * attachment must be a texture attachment for this method to succeed.
+         *
+         * This method preserved the 2D texture state, the 2D texture binding 
+         * state and matrix stack contents.
+         *
+         * @param minFilter The texture filtering used for minification.
+         * @param magFilter The texture filtering used for magnification.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         *
+         * @throw IllegalStateException If no depth texture attachment exists.
+         */
+        inline GLenum DrawDepthTexture(const GLint minFilter = GL_LINEAR,
+                const GLint magFilter = GL_LINEAR) const {
+            return this->drawTexture(this->GetDepthTextureID(), minFilter, 
+                magFilter);
+        }
+
+        /**
          * Enable the framebuffer object for rendering to its textures. This
          * method can only be called, if the framebuffer object has been
          * successfully created.
@@ -240,27 +310,67 @@ namespace gl {
          * is disabled. The current draw buffer and read buffer will also be
          * preserved and restored.
          *
-         * @param colorAttachment The color attachment to set as render target.
-         *                        If no color attachment is attached to the FBO,
-         *                        this parameter has no effect.
+         * @param colourAttachment The colour attachment to set as render 
+         *                         target. If no color attachment is attached 
+         *                         to the FBO, this parameter has no effect.
          *
          * @return GL_NO_ERROR if the FBO has been enabled as render target,
          *         an error code otherwise.
          *
-         * @throw OutOfRangeException If an invalid color attachment index was
+         * @throw OutOfRangeException If an invalid colour attachment index was
          *                            specified.
          */
-        GLenum Enable(const UINT colorAttachment = 0);
+        GLenum Enable(const UINT colourAttachment = 0);
 
         /**
-         * Answer the number of color attachments attached to this framebuffer
+         * Answer the number of colour attachments attached to this framebuffer
          * object.
          *
-         * @return The number of color attachments.
+         * @return The number of colour attachments.
          */
-        inline UINT GetCntColorAttachments(void) const {
-            return this->cntColorAttachments;
+        inline UINT GetCntColourAttachments(void) const {
+            return this->cntColourAttachments;
         }
+#ifdef _MSC_VER
+        __declspec(deprecated("GetCntColorAttachments() has been deprecated. "
+            "Use GetCntColourAttachments() instead."))
+#endif /* _MSC_VER */
+        inline UINT GetCntColorAttachments(void) const {
+#ifndef _WIN32
+#warning "GetCntColorAttachments() has been deprecated. "
+    "Use GetCntColourAttachments() instead."
+#endif /* !_WIN32 */
+            return this->GetCntColourAttachments();
+        }
+
+        /**
+         * Answer the OpenGL resource ID of the 'colourAttachment'th colour
+         * attachment if one is attached.
+         *
+         * NOTE: IT IS UNSAFE TO MANIPULATE THE TEXTURE USING THE RETURNED ID!
+         *
+         * @param colourAttachment The colour attachment to retrieve the ID of.
+         *
+         * @return The OpenGL resource ID of the colour texture.
+         *
+         * @throw IllegalStateException If no colour texture is attached.
+         * @throw OutOfRangeException If colour textures are attached, but the
+         *                            index 'colourAttachment' does not 
+         *                            designate a legal attachment.
+         */
+        GLuint GetColourTextureID(const UINT colourAttachment = 0) const;
+
+        /**
+         * Answer the OpenGL resource ID of the depth texture if one is 
+         * attached.
+         *
+         * NOTE: IT IS UNSAFE TO MANIPULATE THE TEXTURE USING THE RETURNED ID!
+         *
+         * @return The OpenGL resource ID of the depth texture.
+         *
+         * @throw IllegalStateException If no depth texture is attached.
+         */
+        GLuint GetDepthTextureID(void) const;
 
         /**
          * Answer the height of the FBO.
@@ -269,6 +379,20 @@ namespace gl {
          */
         inline UINT GetHeight(void) const {
             return static_cast<UINT>(this->height);
+        }
+
+        /**
+         * Answer the OpenGL ID of the frame buffer object. This ID is only 
+         * valid if the frame buffer object has been successfully created 
+         * before.
+         *
+         * NOTE: IT IS UNSAFE TO MANIPULATE THE FRAME BUFFER OBJECT USING THE
+         * RETURNED ID!
+         *
+         * @return The OpenGL resource ID of the frame buffer object.
+         */
+        inline GLuint GetID(void) const {
+            return this->idFb;
         }
 
         /**
@@ -352,6 +476,22 @@ namespace gl {
             const GLenum format, const GLenum type) const;
 
         /**
+         * Draw a fullscreen rectangle showing the 2D texture with resource ID 
+         * 'id'.
+         *
+         * This method preserved the 2D texture state, the 2D texture binding 
+         * state and matrix stack contents.
+         *
+         * @param id        The ID of a 2D texture.
+         * @param minFilter The texture filtering used for minification.
+         * @param magFilter The texture filtering used for magnification.
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        GLenum drawTexture(const GLuint id, const GLint minFilter, 
+            const GLint magFilter) const;
+
+        /**
          * Check for completeness of the framebuffer. The framebuffer object 
          * must have been bound before calling this method.
          *
@@ -383,18 +523,18 @@ namespace gl {
         FramebufferObject& operator =(const FramebufferObject& rhs);
 
         /**
-         * The properties of the color attachments. This array has 
-         * 'cntColorAttachments' elements.
+         * The properties of the colour attachments. This array has 
+         * 'cntColourAttachments' elements.
          */
-        AttachmentProps *attachmentColor;
+        AttachmentProps *attachmentColour;
 
         /** The depth and stencil attachment properties (in this order). */
         AttachmentProps attachmentOther[2];
 
-        /** The number of color attachments created for this FBO. */
-        UINT cntColorAttachments;
+        /** The number of colour attachments created for this FBO. */
+        UINT cntColourAttachments;
 
-        /** The IDof the frame buffer. */
+        /** The ID of the frame buffer. */
         GLuint idFb;
 
         /** The height of the FBO in pixels. */

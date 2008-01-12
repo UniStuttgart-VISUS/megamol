@@ -42,6 +42,21 @@
 
 
 /** 
+ * Check whether 'expr' is an OpenGL error code other than GL_NO_ERROR and
+ * return this error code ('expr') in this case. Note, that 'expr' is 
+ * guaranteed to be evaluated only once.
+ *
+ * This macro requires a local variable '__glv_glError' to be defined. Use 
+ * USES_GL_VERIFY at begin of the enclosing function.
+ *
+ * @param expr The OpenGL call to make.
+ */
+#define GL_VERIFY_EXPR_RETURN(expr)\
+    if ((__glv_glError = (expr)) != GL_NO_ERROR) {\
+        return __glv_glError; }
+
+
+/** 
  * Make the call 'call' and if ::glGetError() returns any error code other than
  * GL_NO_ERROR, return this error code.
  *

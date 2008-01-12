@@ -28,9 +28,9 @@ const char * vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
 
 
 /*
- * vislib::graphics::gl::FramebufferObject::GetMaxColorAttachments
+ * vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments
  */
-UINT vislib::graphics::gl::FramebufferObject::GetMaxColorAttachments(void) {
+UINT vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
     USES_GL_VERIFY;
     GLint retval = 0;
     
@@ -44,7 +44,7 @@ UINT vislib::graphics::gl::FramebufferObject::GetMaxColorAttachments(void) {
  * vislib::graphics::gl::FramebufferObject::FramebufferObject
  */
 vislib::graphics::gl::FramebufferObject::FramebufferObject(void) 
-        : attachmentColor(NULL), cntColorAttachments(0), idFb(UINT_MAX), 
+        : attachmentColour(NULL), cntColourAttachments(0), idFb(UINT_MAX), 
         height(0), oldDrawBuffer(0), oldReadBuffer(0), width(0) {
     
     this->attachmentOther[0].state = ATTACHMENT_DISABLED;
@@ -68,29 +68,29 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
     }
 
     // Dtor must ensure deallocation in any case!
-    ARY_SAFE_DELETE(this->attachmentColor);
+    ARY_SAFE_DELETE(this->attachmentColour);
 }
 
 
 /*
- * vislib::graphics::gl::FramebufferObject::BindColorTexture
+ * vislib::graphics::gl::FramebufferObject::BindColourTexture
  */
-GLenum vislib::graphics::gl::FramebufferObject::BindColorTexture(
+GLenum vislib::graphics::gl::FramebufferObject::BindColourTexture(
         const UINT which) {
     USES_GL_VERIFY;
     
-    if (which < this->cntColorAttachments) {
-        if (this->attachmentColor[which].state == ATTACHMENT_TEXTURE) {
+    if (which < this->cntColourAttachments) {
+        if (this->attachmentColour[which].state == ATTACHMENT_TEXTURE) {
             GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
-                this->attachmentColor[which].id));
+                this->attachmentColour[which].id));
         } else {
-            throw IllegalStateException("The requested color attachment "
+            throw IllegalStateException("The requested colour attachment "
                 "must be a texture attachment in order to be bound as a "
                 "texture.", __FILE__, __LINE__);
         }
 
     } else {
-        throw OutOfRangeException(which, 0, this->cntColorAttachments, 
+        throw OutOfRangeException(which, 0, this->cntColourAttachments, 
             __FILE__, __LINE__);
     }
 
@@ -123,8 +123,8 @@ GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
  * vislib::graphics::gl::FramebufferObject::Create
  */
 bool vislib::graphics::gl::FramebufferObject::Create(const UINT width, 
-        const UINT height, const UINT cntColorAttachments, 
-        const ColorAttachParams *cap, const DepthAttachParams& dap, 
+        const UINT height, const UINT cntColourAttachments, 
+        const ColourAttachParams *cap, const DepthAttachParams& dap, 
         const StencilAttachParams& sap) {
     USES_GL_DEFERRED_VERIFY;
     bool retval = true;
@@ -140,7 +140,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
     /* Save state changes in attributes. */
     this->width = static_cast<GLsizei>(width);
     this->height = static_cast<GLsizei>(height);
-    this->cntColorAttachments = cntColorAttachments;
+    this->cntColourAttachments = cntColourAttachments;
 
     /* Initially save state. (In context with Disable TODO). */
     this->saveState();
@@ -150,15 +150,15 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
     GL_DEFERRED_VERIFY(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->idFb),
         __LINE__);
 
-    /* Create color buffers and attach it to FBO. */
-    this->attachmentColor = new AttachmentProps[this->cntColorAttachments];
-    for (UINT i = 0; i < cntColorAttachments; i++) {
-        this->attachmentColor[i].state = ATTACHMENT_TEXTURE;
-        this->createTexture(this->attachmentColor[i].id, cap[i].internalFormat,
+    /* Create colour buffers and attach it to FBO. */
+    this->attachmentColour = new AttachmentProps[this->cntColourAttachments];
+    for (UINT i = 0; i < cntColourAttachments; i++) {
+        this->attachmentColour[i].state = ATTACHMENT_TEXTURE;
+        this->createTexture(this->attachmentColour[i].id, cap[i].internalFormat,
             cap[i].format, cap[i].type);
         GL_DEFERRED_VERIFY(::glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, 
             GL_COLOR_ATTACHMENT0_EXT + i, GL_TEXTURE_2D, 
-            this->attachmentColor[i].id, 0), __LINE__);
+            this->attachmentColour[i].id, 0), __LINE__);
     }
 
     /* Create the depth buffer. */
@@ -241,22 +241,6 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
 
 
 /*
- * vislib::graphics::gl::FramebufferObject::DepthTextureID
- */
-GLuint vislib::graphics::gl::FramebufferObject::DepthTextureID(void) {
-    if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE)
-            && (this->attachmentOther[ATTACH_IDX_DEPTH].state 
-            != ATTACHMENT_EXTERNAL_TEXTURE)) {
-        throw vislib::IllegalStateException("The depth attachment must be a "
-            "texture attachment in order to retrieve the texture id.",
-            __FILE__, __LINE__);
-    }
-
-    return this->attachmentOther[ATTACH_IDX_DEPTH].id;
-}
-
-
-/*
  * vislib::graphics::gl::FramebufferObject::Disable
  */
 GLenum vislib::graphics::gl::FramebufferObject::Disable(void) {
@@ -289,7 +273,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) {
  * vislib::graphics::gl::FramebufferObject::Enable
  */
 GLenum vislib::graphics::gl::FramebufferObject::Enable(
-        const UINT colorAttachment) {
+        const UINT colourAttachment) {
     USES_GL_VERIFY;
 
     /* Ensure that we enable only valid FBOs. */
@@ -314,30 +298,70 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
     GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
         GL_NEAREST));
 
-    /* Set the appropriate color attachment as render target. */
-    if (this->cntColorAttachments < 1) {
-        /* No color attachment, disable draw and read. */
+    /* Set the appropriate colour attachment as render target. */
+    if (this->cntColourAttachments < 1) {
+        /* No colour attachment, disable draw and read. */
         GL_VERIFY_RETURN(::glDrawBuffer(GL_NONE));
         GL_VERIFY_RETURN(::glReadBuffer(GL_NONE));
 
-    } else if (colorAttachment < this->cntColorAttachments) {
-        /* Valid color attachment, set it as draw and read buffer. */
+    } else if (colourAttachment < this->cntColourAttachments) {
+        /* Valid colour attachment, set it as draw and read buffer. */
         GL_VERIFY_RETURN(::glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT 
-            + colorAttachment));
+            + colourAttachment));
         GL_VERIFY_RETURN(::glReadBuffer(GL_COLOR_ATTACHMENT0_EXT 
-            + colorAttachment));
+            + colourAttachment));
 
     } else {
-        /* Illegal color attachment id. */
-        ASSERT(colorAttachment >= this->cntColorAttachments);
-        throw OutOfRangeException(colorAttachment, 0, this->cntColorAttachments,
-            __FILE__, __LINE__);
+        /* Illegal colour attachment id. */
+        ASSERT(colourAttachment >= this->cntColourAttachments);
+        throw OutOfRangeException(colourAttachment, 0, 
+            this->cntColourAttachments, __FILE__, __LINE__);
     }
 
     /* Set viewport. */
     GL_VERIFY_RETURN(::glViewport(0, 0, this->width, this->height));
 
     return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::FramebufferObject::GetColourTextureID
+ */
+GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
+        const UINT colourAttachment) const {
+
+    if (this->cntColourAttachments < 1) {
+        /* No colour attachment, this request is illegal. */
+        throw vislib::IllegalStateException("The requested colour "
+            "attachment is not a texture attachment.", __FILE__, __LINE__);
+
+    } else if (colourAttachment < this->cntColourAttachments) {
+        /* Valid colour attachment, return the ID. */
+        return this->attachmentColour[colourAttachment].id;
+
+    } else {
+        /* Illegal colour attachment id. */
+        ASSERT(colourAttachment >= this->cntColourAttachments);
+        throw OutOfRangeException(colourAttachment, 0, 
+            this->cntColourAttachments, __FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::graphics::gl::FramebufferObject::GetDepthTextureID
+ */
+GLuint vislib::graphics::gl::FramebufferObject::GetDepthTextureID(void) const {
+    if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE)
+            && (this->attachmentOther[ATTACH_IDX_DEPTH].state 
+            != ATTACHMENT_EXTERNAL_TEXTURE)) {
+        throw vislib::IllegalStateException("The depth attachment must be a "
+            "texture attachment in order to retrieve the texture id.",
+            __FILE__, __LINE__);
+    }
+
+    return this->attachmentOther[ATTACH_IDX_DEPTH].id;
 }
 
 
@@ -405,14 +429,14 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
         this->attachmentOther[i].state = ATTACHMENT_DISABLED;
     }
 
-    /* Release color attachments, if any. */
-    for (UINT i = 0; i < this->cntColorAttachments; i++) {
-        switch (this->attachmentColor[i].state) {
+    /* Release colour attachments, if any. */
+    for (UINT i = 0; i < this->cntColourAttachments; i++) {
+        switch (this->attachmentColour[i].state) {
     
             case ATTACHMENT_TEXTURE:
-                if (::glIsTexture(this->attachmentColor[i].id)) {
+                if (::glIsTexture(this->attachmentColour[i].id)) {
                     GL_DEFERRED_VERIFY(::glDeleteTextures(1, 
-                        &this->attachmentColor[i].id), __LINE__);
+                        &this->attachmentColour[i].id), __LINE__);
                 }
                 break;
 
@@ -422,8 +446,8 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
                 break;
         }
     }
-    this->cntColorAttachments = 0;
-    ARY_SAFE_DELETE(this->attachmentColor);
+    this->cntColourAttachments = 0;
+    ARY_SAFE_DELETE(this->attachmentColour);
 
     /* Release framebuffer itself. */
     if (::glIsFramebufferEXT(this->idFb)) {
@@ -512,6 +536,58 @@ void vislib::graphics::gl::FramebufferObject::createTexture(GLuint& outID,
     }
 
     GL_DEFERRED_VERIFY_THROW(__FILE__);
+}
+
+
+/*
+ * vislib::graphics::gl::FramebufferObject::drawTexture
+ */
+GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
+        const GLuint id, const GLint minFilter, const GLint magFilter) const {
+    USES_GL_VERIFY;
+    GLint oldTexState = 0;
+    GLint oldTexId = 0;
+
+    GL_VERIFY_RETURN(::glGetIntegerv(GL_TEXTURE_2D, &oldTexState));
+    GL_VERIFY_RETURN(::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTexId));
+
+    GL_VERIFY_RETURN(::glEnable(GL_TEXTURE_2D));
+    GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, id));
+    ::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+    ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+
+    ::glMatrixMode(GL_PROJECTION);
+    ::glPushMatrix();
+    ::glLoadIdentity();
+
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glPushMatrix();
+    ::glLoadIdentity();
+
+    ::glBegin(GL_QUADS);
+    ::glTexCoord2d(0.0, 0.0);
+    ::glVertex3d(-1.0, -1.0, 0.5);
+    ::glTexCoord2d(1.0, 0.0);
+    ::glVertex3d(1.0, -1.0, 0.5);
+    ::glTexCoord2d(1.0, 1.0);
+    ::glVertex3d(1.0, 1.0, 0.5);
+    ::glTexCoord2d(0.0, 1.0);
+    ::glVertex3d(-1.0, 1.0, 0.5);
+    ::glEnd();
+
+    ::glPopMatrix();
+
+    ::glMatrixMode(GL_PROJECTION);
+    ::glPopMatrix();
+
+    if (oldTexState != 0) {
+        ::glBindTexture(GL_TEXTURE_2D, oldTexId);
+    } else {
+        ::glDisable(GL_TEXTURE_2D);
+    }
+
+    return ::glGetError();
 }
 
 

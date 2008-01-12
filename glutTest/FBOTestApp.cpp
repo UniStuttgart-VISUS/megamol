@@ -45,7 +45,7 @@ int FBOTestApp::GLInit(void) {
         retval++;
     } else {
         try {
-            FramebufferObject::ColorAttachParams cap[2];
+            FramebufferObject::ColourAttachParams cap[2];
             cap[0].internalFormat = cap[1].internalFormat = GL_RGBA8;
             cap[0].format = cap[1].format = GL_RGBA;
             cap[0].type = cap[1].type = GL_UNSIGNED_BYTE;
@@ -140,6 +140,7 @@ void FBOTestApp::Render(void) {
 
         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#if 1
         //GL_VERIFY_EXPR(this->fbo.BindColorTexture(0));
         GL_VERIFY_EXPR(this->fbo.BindDepthTexture());
         ::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -180,6 +181,10 @@ void FBOTestApp::Render(void) {
         ::glVertex3d(-1.0, 1.0, 0.0);   // top left
         ::glEnd();     
         ::glDisable(GL_POLYGON_OFFSET_LINE);
+#else
+        this->fbo.DrawColourTexture();
+        //this->fbo.DrawDepthTexture(GL_NEAREST, GL_NEAREST);
+#endif
 
         ::glutSwapBuffers();
 

@@ -82,7 +82,7 @@ int FBOTest2App::GLInit(void) {
         return -3;
     }
 
-    FramebufferObject::ColorAttachParams cap;
+    FramebufferObject::ColourAttachParams cap;
     cap.internalFormat = GL_RGB16F_ARB;
     cap.format = GL_RGB;
     cap.type = GL_FLOAT;
@@ -227,7 +227,7 @@ void FBOTest2App::Render(void) {
 
     glPushMatrix();
     glTranslated(0.0, 3.0, 0.0);
-    this->fboRed.BindColorTexture();
+    this->fboRed.BindColourTexture();
     glBegin(GL_QUADS);
         glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
         glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
@@ -239,7 +239,7 @@ void FBOTest2App::Render(void) {
     glPushMatrix();
     glRotated(38.0, 0.0, 0.0, 1.0);
     glTranslated(0.0, 3.0, 0.0);
-    this->fboAll.BindColorTexture();
+    this->fboAll.BindColourTexture();
     glBegin(GL_QUADS);
         glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
         glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
@@ -251,7 +251,7 @@ void FBOTest2App::Render(void) {
     glPushMatrix();
     glRotated(-38.0, 0.0, 0.0, 1.0);
     glTranslated(0.0, 3.0, 0.0);
-    this->fboGreen.BindColorTexture();
+    this->fboGreen.BindColourTexture();
     glBegin(GL_QUADS);
         glTexCoord2d(0.0, 0.0); ::glVertex3d(-1.0, 0.0, -1.0);  // bottom left
         glTexCoord2d(1.0, 0.0); ::glVertex3d(1.0, 0.0, -1.0);  // bottom right
