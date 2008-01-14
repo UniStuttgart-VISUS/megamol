@@ -33,19 +33,16 @@ const DWORD vislib::sys::Event::TIMEOUT_INFINITE = UINT_MAX;
  * vislib::sys::Event::Event
  */
 vislib::sys::Event::Event(const bool isManualReset, 
-                          const bool isInitiallySignaled) {
+                          const bool isInitiallySignaled) 
+#ifndef _WIN32
+        : isManualReset(isManualReset), 
+        semaphore(isInitiallySignaled ? 1 : 0, 1)
+#endif /* _WIN32 */
+{
 #ifdef _WIN32
     this->handle = ::CreateEvent(NULL, isManualReset ? TRUE : FALSE, FALSE, 
         NULL);
     ASSERT(this->handle != NULL);
-
-#else /* _WIN32 */
-    this->isManualReset = isManualReset;
-
-    if (!isInitiallySignaled) {
-        this->semaphore.TryLock();
-    }
-
 #endif /* _WIN32 */
 }
 
