@@ -429,7 +429,7 @@ void TestCmdLineParser2(void) {
 
     parser.Parse(cmdLine.ArgC(), cmdLine.ArgV(), false);
 
-    AssertTrue("No Parser Errors", parser.GetErrors().HasNext() == NULL);
+    AssertTrue("No Parser Errors", parser.GetErrors().HasNext());
     vislib::sys::TCmdLineParser::ErrorIterator errorIter = parser.GetErrors();
     while (errorIter.HasNext()) {
         printf("%s\n", vislib::sys::TCmdLineParser::Error::GetErrorString(
@@ -437,7 +437,7 @@ void TestCmdLineParser2(void) {
     }
     printf("\n");
 
-    AssertTrue("No Parser Warnings", parser.GetWarnings().HasNext() == NULL);
+    AssertTrue("No Parser Warnings", parser.GetWarnings().HasNext());
     vislib::sys::TCmdLineParser::WarningIterator warnIter = parser.GetWarnings();
     while (warnIter.HasNext()) {
         printf("%s\n", vislib::sys::TCmdLineParser::Warning::GetWarningString(

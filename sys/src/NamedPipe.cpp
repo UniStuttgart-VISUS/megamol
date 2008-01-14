@@ -151,13 +151,13 @@ void vislib::sys::NamedPipe::Close(void) {
             // flush server side pipe
             ::DisconnectNamedPipe(this->handle);
         }
-		::CancelIo(this->handle);
+        ::CancelIo(this->handle);
         ::CloseHandle(this->handle);
 
-		if (this->overlapped.hEvent != NULL) {
-			::CloseHandle(this->overlapped.hEvent);
-			this->overlapped.hEvent = NULL;
-		}
+        if (this->overlapped.hEvent != NULL) {
+            ::CloseHandle(this->overlapped.hEvent);
+            this->overlapped.hEvent = NULL;
+        }
 
         this->handle = INVALID_HANDLE_VALUE;
 
@@ -201,7 +201,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
         timeout = INFINITE;
     }
 
-    this->isClient = false;    
+    this->isClient = false;
 
     // create the overlapped structure allowing us to produce timeouts
     ::ZeroMemory(&this->overlapped, sizeof(OVERLAPPED));
@@ -279,12 +279,12 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     Exterminatus ext(timeout, pipeName.PeekBuffer(), (mode != PIPE_MODE_READ));
     vislib::sys::Thread tot(&ext);
 
+    mode_t oldMask = ::umask(0);
     if (!vislib::sys::File::IsDirectory(this->baseDir)) {
         vislib::sys::Path::MakeDirectory(this->baseDir);
     }
 
     // Create the FIFO if it does not exist
-    mode_t oldMask = ::umask(0);
     if (::mknod(pipeName.PeekBuffer(), S_IFIFO | 0666, 0) != 0) {
 
 //        TRACE(vislib::Trace::LEVEL_VL_INFO, "mknod failed\n");
