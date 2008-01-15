@@ -91,8 +91,7 @@ namespace gl {
 #endif /* _MSC_VER */
         inline UINT GetMaxColorAttachments(void) {
 #ifndef _WIN32
-#warning "GetMaxColorAttachments() has been deprecated. "
-    "Use GetMaxColourAttachments() instead."
+#warning "GetMaxColorAttachments() has been deprecated. Use GetMaxColourAttachments() instead."
 #endif /* !_WIN32 */
             return this->GetMaxColourAttachments();
         }
@@ -132,8 +131,7 @@ namespace gl {
 #endif /* _MSC_VER */
         inline GLenum BindColorTexture(const UINT which = 0) {
 #ifndef _WIN32
-#warning "BindColorTexture() has been deprecated. "
-    "Use BindColourTexture() instead."
+#warning "BindColorTexture() has been deprecated. Use BindColourTexture() instead."
 #endif /* !_WIN32 */
             return this->BindColourTexture(which);
         }
@@ -337,8 +335,7 @@ namespace gl {
 #endif /* _MSC_VER */
         inline UINT GetCntColorAttachments(void) const {
 #ifndef _WIN32
-#warning "GetCntColorAttachments() has been deprecated. "
-    "Use GetCntColourAttachments() instead."
+#warning "GetCntColorAttachments() has been deprecated. Use GetCntColourAttachments() instead."
 #endif /* !_WIN32 */
             return this->GetCntColourAttachments();
         }
