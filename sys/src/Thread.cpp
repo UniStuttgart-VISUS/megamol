@@ -126,8 +126,11 @@ vislib::sys::Thread::~Thread(void) {
     }
 
 #else /* _WIIN32 */
-    ::pthread_detach(this->id);
-    ::pthread_attr_destroy(&this->attribs);
+    // TODO: Dirty hack, don't know whether this is always working.
+    if (this->id != 0) {
+        ::pthread_detach(this->id);
+        ::pthread_attr_destroy(&this->attribs);
+    }
 
 #endif /* _WIN32 */
 }
