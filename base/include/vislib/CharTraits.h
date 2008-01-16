@@ -42,6 +42,7 @@ namespace vislib {
         class Log;
     }
 
+
     /**
      * This is an identifier for the currently supported char traits. It is used
      * to identify the char traits at runtime.
@@ -52,10 +53,11 @@ namespace vislib {
         UNICODE_CHAR
     };
 
+
     /**
      * This class is the basis class for character trait descriptor classes. The
      * character trait classes are used to instantiate the string template.
-     *    
+     *
      * Usage notes: Creating instances of this class is not allowed. There are
      * static methods that provide the required functionality. These methods are
      * either implemented in this superclass or in the specialisations for wide
@@ -64,10 +66,14 @@ namespace vislib {
      * Other classes should not be allowed to access these method as it may be
      * unsafe.
      *
+     * Rationale: The CharTraitsBase class is used to share implementation 
+     * between the partial template specialisations of CharTraits. It is the 
+     * same "crowbar pattern" as used for Vectors etc. in vislib::math.
+     *
      * @author Christoph Mueller
      */
-    template<class T, CharType U> class CharTraits {
-    
+    template<class T> class CharTraitsBase {
+
     public:
 
         /** Define an type-independent name for the char traits. */
@@ -86,15 +92,6 @@ namespace vislib {
         }
 
         /**
-         * Answer the type identifier of the characters.
-         *
-         * @return The type identifier.
-         */
-        inline static vislib::CharType CharType(void) {
-            return U;
-        }
-
-        /**
          * Answer the string length. 'str' can be a NULL pointer.
          *
          * @param str A zero-terminated string.
@@ -103,7 +100,7 @@ namespace vislib {
          *         terminating zero.
          */
         inline static Size SafeStringLength(const Char *str) {
-            return (str != NULL) ? CharTraits::StringLength(str) : 0;
+            return (str != NULL) ? CharTraitsBase::StringLength(str) : 0;
         }
 
         /** Empty character sequence constant. */
@@ -112,9 +109,9 @@ namespace vislib {
     protected:
 
         /** Forbidden Ctor. */
-        inline CharTraits(void) {
-            throw UnsupportedOperationException(
-                "vislib::CharTraits<T>::CharTraits", __FILE__, __LINE__);
+        inline CharTraitsBase(void) {
+            throw UnsupportedOperationException("CharTraitsBase", __FILE__, 
+                __LINE__);
         }
 
         /**
@@ -216,40 +213,57 @@ namespace vislib {
         static const iconv_t INVALID_ICONV_T;
 #endif /* !_WIN32 */
 
-    }; /* end class CharTraits */
+    }; /* end class CharTraitsImpl */
 
 
     /*
-     * vislib::CharTraits<T, U>::EMPTY_STRING
+     * vislib::CharTraitsBase<T>::EMPTY_STRING
      */
-    template<class T, CharType U> 
-    const typename CharTraits<T, U>::Char CharTraits<T, U>::EMPTY_STRING[]
+    template<class T> 
+    const typename CharTraitsBase<T>::Char CharTraitsBase<T>::EMPTY_STRING[]
         = { static_cast<Char>(0) };
 
 
 #ifndef _WIN32
     /*
-     * vislib::CharTraits<T, U>::ICONV_CODE_CHAR
+     * vislib::CharTraitsBase<T>::ICONV_CODE_CHAR
      */
-    template<class T, CharType U>
-    const char *CharTraits<T, U>::ICONV_CODE_CHAR = "MS-ANSI";
+    template<class T>
+    const char *CharTraitsBase<T>::ICONV_CODE_CHAR = "MS-ANSI";
 
     
     /*
-     * vislib::CharTraits<T, U>::ICONV_CODE_WCHAR
+     * vislib::CharTraitsBase<T>::ICONV_CODE_WCHAR
      */
-    template<class T, CharType U>
-    const char *CharTraits<T, U>::ICONV_CODE_WCHAR = "WCHAR_T";
+    template<class T>
+    const char *CharTraitsBase<T>::ICONV_CODE_WCHAR = "WCHAR_T";
 
 
     /*
-     * vislib::CharTraits<T, U>::INVALID_ICONV_T
+     * vislib::CharTraitsBase<T>::INVALID_ICONV_T
      */
-    template<class T, CharType U> 
-    const iconv_t CharTraits<T, U>::INVALID_ICONV_T 
+    template<class T> 
+    const iconv_t CharTraitsBase<T>::INVALID_ICONV_T 
         = reinterpret_cast<iconv_t>(-1);
 #endif /* !_WIN32 */
 
+
+
+    /**
+     * This is the general CharTraits implementation. Specialisations for 
+     * ANSI and Unicode charachter sets are realised via partial template
+     * specialisation in order to allow dynamic instantiation in the String
+     * class (required for conversion).
+     */
+    template<class T> class CharTraits : public CharTraitsBase<T> {
+
+    protected:
+        /** Forbidden Ctor. */
+        inline CharTraits(void) {
+            throw UnsupportedOperationException("CharTraits", __FILE__, 
+                __LINE__);
+        }
+    }; /* end class CharTraits */
 
 
 
@@ -258,9 +272,18 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    class CharTraitsA : public CharTraits<char, ANSI_CHAR> {
+    template<> class CharTraits<char> : public CharTraitsBase<char> {
 
     public:
+
+        /**
+         * Answer the type identifier of the characters.
+         *
+         * @return The type identifier.
+         */
+        inline static vislib::CharType CharType(void) {
+            return ANSI_CHAR;
+        }
 
         /**
          * Convert character 'src' to an ANSI character saved to 'dst'.
@@ -425,9 +448,9 @@ namespace vislib {
     protected:
 
         /** Forbidden Ctor. */
-        inline CharTraitsA(void) {
-            throw UnsupportedOperationException(
-                "vislib::CharTraitsA::CharTraitsA", __FILE__, __LINE__);
+        inline CharTraits(void) {
+            throw UnsupportedOperationException("CharTraits<char>", __FILE__, 
+                __LINE__);
         }
 
         /**
@@ -587,8 +610,7 @@ namespace vislib {
         template<class S, class T, INT32 B> friend class StringConverter;
         friend class vislib::sys::Log;
 
-    }; /* end class CharTraitsA */
-
+    }; /* end class CharTraits<char> */
 
 
 
@@ -597,9 +619,18 @@ namespace vislib {
      *
      * @author Christoph Mueller
      */
-    class CharTraitsW : public CharTraits<WCHAR, UNICODE_CHAR> {
+    template<> class CharTraits<WCHAR> : public CharTraitsBase<WCHAR> {
 
     public:
+
+        /**
+         * Answer the type identifier of the characters.
+         *
+         * @return The type identifier.
+         */
+        inline static vislib::CharType CharType(void) {
+            return UNICODE_CHAR;
+        }
 
         /**
          * Convert character 'src' to an ANSI character saved to 'dst'.
@@ -764,9 +795,9 @@ namespace vislib {
     protected:
 
         /** Forbidden Ctor. */
-        inline CharTraitsW(void) {
-            throw UnsupportedOperationException(
-                "vislib::CharTraitsW::CharTraitsW", __FILE__, __LINE__);
+        inline CharTraits(void) {
+            throw UnsupportedOperationException("CharTraits<WCHAR>", __FILE__, 
+                __LINE__);
         }
 
         /**
@@ -924,9 +955,12 @@ namespace vislib {
         template<class S, class T, INT32 B> friend class StringConverter;
         friend class vislib::sys::Log;
 
-    }; /* end class CharTraitsW */
+    }; /* end class CharTraits<WCHAR> */
 
 
+    /* Typedef for template specialisations. */
+    typedef CharTraits<char> CharTraitsA;
+    typedef CharTraits<WCHAR> CharTraitsW;
 
 
     /* Typedef for TCHAR CharTraits. */
@@ -941,4 +975,3 @@ namespace vislib {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_CHARTRAITS_H_INCLUDED */
-

@@ -63,20 +63,32 @@ namespace vislib {
          * safe to pass a zero-terminated string that is shorter than 'cnt'
          * characters. No padding occurs in this case.
          *
-         * @param data A string.
+         * @param data A string of at least 'cnt' characters.
          * @param cnt  The number of characters to read.
          */
         String(const Char *data, const Size& cnt);
 
         /**
-         * Craete a string with the initial data 'data'. This constructor 
-         * performns the necessary conversions. It will only be available, if the
+         * Create a string with the initial data 'data'. This constructor 
+         * performs the necessary conversions. It will only be available, if the
          * appropriate U::Convert() method is implemented in the U character traits
          * class.
          *
-         * @param data A zero-terminated string used to initialise this object.
+         * @param data A string.
          */
         template<class U> String(const String<U>& data);
+
+        /**
+         * Create a string with the initial data 'data'. This constructor performs
+         * the necessary conversions. It is only available if CharTraits<U> exists
+         * and has the appropriate Convert() method.
+         *
+         * Note: This ctor cannot be used for implict string conversion as it 
+         * would introduce a bunch of ambiguities.
+         *
+         * @param data A zero-terminated string used to initialise this object.
+         */
+        template<class U> explicit String(const U *data);
 
         /**
          * Create a string containing 'cnt' times the character 'c'.
@@ -849,6 +861,17 @@ namespace vislib {
         template<class U> String& operator =(const String<U>& rhs);
 
         /**
+         * Conversion assignment.
+         * It is only available if CharTraits<U> exists and has the appropriate 
+         * Convert() method.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return This string.
+         */
+        template<class U> String& operator =(const U *rhs);
+
+        /**
          * Test for equality.
          *
          * @param rhs The right hand side operand.
@@ -1040,6 +1063,17 @@ namespace vislib {
         this->data = new Char[newLen];
         U::Convert(this->data, newLen, 
             static_cast<const typename U::Char *>(data));
+    }
+
+
+    /*
+     * String<T>::String
+     */
+    template<class T> 
+    template<class U> String<T>::String(const U *data) {
+        Size newLen = CharTraits<U>::SafeStringLength(data) + 1;
+        this->data = new Char[newLen];
+        CharTraits<U>::Convert(this->data, newLen, data);
     }
 
 
@@ -1901,6 +1935,24 @@ namespace vislib {
 
 
     /*
+     * String<T>::operator =
+     */
+    template<class T> template<class U> 
+    String<T>& String<T>::operator =(const U *rhs) {
+        if (static_cast<void *>(this->data) != static_cast<const void *>(rhs)) {
+            delete[] this->data;
+
+            Size newLen = CharTraits<U>::SafeStringLength(rhs) + 1;
+            this->data = new Char[newLen];
+
+            CharTraits<U>::Convert(this->data, newLen, rhs);
+        }
+
+        return *this;
+    }
+
+
+    /*
      * String<T>::operator +
      */
     template<class T> String<T> String<T>::operator +(const Char rhs) const {
@@ -2002,7 +2054,7 @@ namespace vislib {
         }
     }
 
- 
+
     /** Template instantiation for ANSI strings. */
     typedef String<CharTraitsA> StringA;
 

@@ -18,6 +18,8 @@
 
 #include <windows.h>
 
+#include "vislib/assert.h"
+#include "vislib/Serialiser.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
 
@@ -31,332 +33,9 @@ namespace sys {
      *
      * TODO: Think about a more general serialisation concept.
      */
-    class RegistrySerialiser {
+    class RegistrySerialiser : public Serialiser {
 
     public:
-
-        /**
-         * This class defines the interface of serialisable variables. It is 
-         * abstract and only intended as superclass for integral, string, etc.
-         * serialisable data wrappers.
-         *
-         * This is part of the "crowbar pattern".
-         *
-         * The template parameters must be the following:
-         * C: A CharTrais implementation that is used for the value name 
-         *    string.
-         */
-        template<class C> class Serialisable {
-
-        public:
-
-            /** The string type for the value names. */
-            typedef String<C> String;
-
-            /** Dtor. */
-            virtual ~Serialisable(void);
-
-            /**
-             * Answer the name that is used for registry serialisation of the 
-             * wrapped variable.
-             *
-             * @return The value name.
-             */
-            inline const String& GetName(void) const {
-                return this->name;
-            }
-
-            /**
-             * Change the serialisation name of the wrapped variable.
-             *
-             * @param name The new serialisation value name.
-             */
-            inline void SetName(const String& name) {
-                this->name = name;
-            }
-
-        protected:
-
-            /** 
-             * Create a new instance with the specified value name.
-             *
-             * @param name The name of the value in the registry.
-             */
-            inline Serialisable(const String& name) : name(name) {}
-
-            /**
-             * Copy ctor.
-             *
-             * @param rhs The object to be cloned.
-             */
-            inline Serialisable(const Serialisable& rhs) : name(rhs.name) {}
-
-            /**
-             * Answer the size in bytes of the data.
-             *
-             * @return The size of the data in bytes.
-             */
-            virtual DWORD getSize(void) const = 0;
-
-            /**
-             * Answer the registry type that is to be used for serialisation.
-             *
-             * @return The registry type.
-             */
-            virtual DWORD getType(void) const = 0;
-
-            /**
-             * Answer a pointer to the data that are to be stored in the 
-             * registry.
-             *
-             * @return A pointer to GetSize() bytes of data to be stored in the
-             *         registry.
-             */
-            virtual BYTE *peekData(void) = 0;
-
-            /**
-             * Answer a pointer to the data that are to be stored in the 
-             * registry.
-             *
-             * @return A pointer to GetSize() bytes of data to be stored in the
-             *         registry.
-             */
-            virtual const BYTE *peekData(void) const = 0;
-
-            /**
-             * Assignment operator.
-             *
-             * THIS OPERATOR DOES NOT DO ANYTHING. THE VALUE NAME IS NOT PART OF
-             * AN ASSIGNMENT!
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return *this.
-             */
-            inline Serialisable& operator =(const Serialisable& rhs) {
-                // DO NOT COPY THE NAME!
-                return *this;
-            }
-
-        private:
-
-            /** The value name in the registry. */
-            String name;
-
-            /** The serialiser must access the data and the data size. */
-            friend class RegistrySerialiser;
-
-        }; /* end class Serialisable */
-
-
-        /**
-         * TODO documentation
-         * 
-         *
-         * The template parameters must be the following:
-         * T: 
-         * U:
-         * C: A CharTrais implementation that is used for the value name 
-         *    string.
-         * S:
-         */
-        template<class T, DWORD U, class C, DWORD S = sizeof(T)> 
-        class GeneralSerialisable : public Serialisable<C> {
-
-        public:
-
-            /** 
-             * Create a new instance with the specified value name.
-             *
-             * @param name The name of the value in the registry.
-             */
-            inline GeneralSerialisable(const String& name) : Super(name) {}
-
-            inline GeneralSerialisable(const String& name, const T& data)
-                : Super(name), data(data) {}
-
-            /**
-             * Copy ctor.
-             *
-             * @param rhs The object to be cloned.
-             */
-            inline GeneralSerialisable(const GeneralSerialisable& rhs) 
-                : Super(rhs), data(rhs.data) {}
-
-            /** Dtor. */
-            virtual ~GeneralSerialisable(void);
-
-            /**
-             * Assignment operator.
-             *
-             * THE VALUE NAME IS NOT PART OF AN ASSIGNMENT!
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return *this.
-             */
-            inline GeneralSerialisable& operator =(
-                    const GeneralSerialisable& rhs) {
-                Super::operator =(rhs);
-                this->data = rhs.data;
-            }
-
-            /**
-             * Assignment operator.
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return *this.
-             */
-            inline Serialisable& operator =(const T& rhs) {
-                this->data = rhs;
-            }
-
-            /**
-             * Test for equality.
-             *
-             * THE VALUE NAME IS NOT PART OF THE COMPARISON!
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return true if the data are equal, false otherwise.
-             */
-            inline bool operator ==(const Serialisable& rhs) {
-                return (this->data == rhs.data);
-            }
-
-            /**
-             * Test for equality.
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return true if the data are equal, false otherwise.
-             */
-            inline bool operator ==(const T& rhs) {
-                return (this->data == rhs);
-            }
-
-            /**
-             * Test for inequality.
-             *
-             * THE VALUE NAME IS NOT PART OF THE COMPARISON!
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return true if the data are not equal, false otherwise.
-             */
-            inline bool operator !=(const Serialisable& rhs) {
-                return (this->data != rhs.data);
-            }
-
-            /**
-             * Test for inequality.
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return true if the data are not equal, false otherwise.
-             */
-            inline bool operator !=(const T& rhs) {
-                return (this->data != rhs);
-            }
-
-            /**
-             * Cast to internal data.
-             *
-             * @return A reference to the data.
-             */
-            inline operator T&(void) {
-                return this->data;
-            }
-
-            /**
-             * Cast to internal data.
-             *
-             * @return A reference to the data.
-             */
-            inline operator const T&(void) const {
-                return this->data;
-            }
-
-        protected:
-
-            /** Superclass typedef. */
-            typedef Serialisable<C> Super;
-
-            /**
-             * Answer the size in bytes of the data.
-             *
-             * @return The size of the data in bytes.
-             */
-            virtual DWORD getSize(void) const;
-
-            /**
-             * Answer the registry type that is to be used for serialisation.
-             *
-             * @return The registry type.
-             */
-            virtual DWORD getType(void) const;
-
-            /**
-             * Answer a pointer to the data that are to be stored in the 
-             * registry.
-             *
-             * @return A pointer to GetSize() bytes of data to be stored in the
-             *         registry.
-             */
-            virtual BYTE *peekData(void);
-
-            /**
-             * Answer a pointer to the data that are to be stored in the 
-             * registry.
-             *
-             * @return A pointer to GetSize() bytes of data to be stored in the
-             *         registry.
-             */
-            virtual const BYTE *peekData(void) const;
-
-            /** The actual piece of data. */
-            T data;
-
-        }; /* end class GeneralSerialisable */
-
-
-        /** Serialisable specialisation for DWORD and ANSI charset name. */
-        typedef GeneralSerialisable<DWORD, REG_DWORD, CharTraitsA> 
-            SerialisableDwordA;
-
-        /** Serialisable specialisation for DWORD and Unicode charset name. */
-        typedef GeneralSerialisable<DWORD, REG_DWORD, CharTraitsW> 
-            SerialisableDwordW;
-
-        /** Serialisable specialisation for DWORD and TCHAR name. */
-        typedef GeneralSerialisable<DWORD, REG_DWORD, TCharTraits>
-            TSerialisableDword;
-
-        /** Serialisable specialisation for int and ANSI charset name. */
-        typedef GeneralSerialisable<float, REG_DWORD, CharTraitsA> 
-            SerialisableFloatA;
-
-        /** Serialisable specialisation for int and Unicode charset name. */
-        typedef GeneralSerialisable<float, REG_DWORD, CharTraitsW> 
-            SerialisableFloatW;
-
-        /** Serialisable specialisation for DWORD and TCHAR name. */
-        typedef GeneralSerialisable<float, REG_DWORD, TCharTraits>
-            TSerialisableFloat;
-
-        /** Serialisable specialisation for int and ANSI charset name. */
-        typedef GeneralSerialisable<int, REG_DWORD, CharTraitsA> 
-            SerialisableIntA;
-
-        /** Serialisable specialisation for int and Unicode charset name. */
-        typedef GeneralSerialisable<int, REG_DWORD, CharTraitsW> 
-            SerialisableIntW;
-
-        /** Serialisable specialisation for DWORD and TCHAR name. */
-        typedef GeneralSerialisable<int, REG_DWORD, TCharTraits>
-            TSerialisableInt;
-
 
         /**
          * TODO: documentation
@@ -372,25 +51,161 @@ namespace sys {
         /** Dtor. */
         ~RegistrySerialiser(void);
 
-        /**
-         * TODO: documentation
-         */
-        void Deserialise(Serialisable<CharTraitsA>& inOutSerialisable);
+        virtual void Deserialise(bool& outValue, 
+            const char *name = NULL);
 
-        /**
-         * TODO: documentation
-         */
-        void Deserialise(Serialisable<CharTraitsW>& inOutSerialisable);
+        virtual void Deserialise(bool& outValue, 
+            const wchar_t *name = NULL);
 
-        /**
-         * TODO: documentation
-         */
-        void Serialise(const Serialisable<CharTraitsA>& serialisable);
+        virtual void Deserialise(char& outValue, 
+            const char *name = NULL);
 
-        /**
-         * TODO: documentation
-         */
-        void Serialise(const Serialisable<CharTraitsW>& serialisable);
+        virtual void Deserialise(char& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(wchar_t& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(wchar_t& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(INT8& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(INT8& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(UINT8& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(UINT8& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(INT16& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(INT16& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(UINT16& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(UINT16& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(INT32& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(INT32& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(UINT32& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(UINT32& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(INT64& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(INT64& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(UINT64& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(UINT64& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(StringA& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(StringA& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(StringW& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(StringW& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const bool value, 
+            const char *name = NULL);
+
+        virtual void Serialise(const bool value, 
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const char value,
+            const char *name = NULL);
+
+        virtual void Serialise(const char value,
+            const wchar_t *name = NULL);
+
+        virtual bool Serialise(const wchar_t value,
+            const char *name = NULL);
+
+        virtual bool Serialise(const wchar_t value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const INT8 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const INT8 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const UINT8 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const UINT8 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const INT16 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const INT16 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const UINT16 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const UINT16 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const INT32 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const INT32 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const UINT32 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const UINT32 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const INT64 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const INT64 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const UINT64 value,
+            const char *name = NULL);
+
+        virtual void Serialise(const UINT64 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const StringA& value,
+            const char *name = NULL);
+
+        virtual void Serialise(const StringA& value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const StringW& value,
+            const char *name = NULL);
+
+        virtual void Serialise(const StringW& value,
+            const wchar_t *name = NULL);
 
     private:
 
@@ -402,6 +217,53 @@ namespace sys {
          * @throws UnsupportedOperationException Unconditionally.
          */
         RegistrySerialiser(const RegistrySerialiser& rhs);
+
+        /**
+         * Generic deserialisation of integral types that are at most as large
+         * as a DWORD. The method just delegates the job to the DWORD 
+         * deserialisation. The intent of this template is not to duplicate the
+         * implementation of serialisation methods for small types.
+         *
+         * The template parameters have the following meaning:
+         * T - An integral type of the target variable, which must be at most as
+         *     large as a DWORD.
+         * C - char or wchar_t
+         *
+         * @param outValue Recevies the deserialised value.
+         * @param name     The name of the stored value.
+         *
+         * @throws
+         */
+        template<class T, class C> 
+        inline void deserialiseAsDword(T& outValue, const C *name) {
+            ASSERT(sizeof(T) <= sizeof(DWORD));
+            UINT32 value;
+            this->Deserialise(value, name);
+            outValue = static_cast<T>(value);
+        }
+
+        /**
+         * Generic serialisation of integral types that are at most as large
+         * as a DWORD. The method just delegates the job to the DWORD 
+         * serialisation. The intent of this template is not to duplicate the
+         * implementation of serialisation methods for small types.
+         *
+         * The template parameters have the following meaning:
+         * T - An integral type of the target variable, which must be at most as
+         *     large as a DWORD.
+         * C - char or wchar_t
+         *
+         * @param value The value to save.
+         * @param name  The name of the stored value.
+         *
+         * @throws
+         */
+        template<class T, class C>
+        inline void serialiseAsDword(const T& value, const C *name) {
+            ASSERT(sizeof(T) <= sizeof(DWORD));
+            UINT32 v = static_cast<UINT32>(value);
+            this->Serialise(v, name);
+        }
 
         /**
          * Forbidden assignment operator.
@@ -416,62 +278,7 @@ namespace sys {
 
         /** Handle of the base key that is parent of the serialised elements. */
         HKEY hBaseKey;
-
     };
-
-    /*
-     * RegistrySerialiser::Serialisable<C>::~Serialisable
-     */
-    template<class C> RegistrySerialiser::Serialisable<C>::~Serialisable(void) {
-    }
-
-
-    /*
-     * RegistrySerialiser::GeneralSerialisable<T, U, C, S>::~GeneralSerialisable
-     */
-    template<class T, DWORD U, class C, DWORD S> 
-    RegistrySerialiser::GeneralSerialisable<T, U, C, S>::~GeneralSerialisable(
-            void) {
-    }
-
-
-    /*
-     * RegistrySerialiser::GeneralSerialisable<T, U, C, S>::getSize
-     */
-    template<class T, DWORD U, class C, DWORD S> 
-    DWORD RegistrySerialiser::GeneralSerialisable<T, U, C, S>::getSize(
-            void) const {
-        return S;
-    }
-
-    /*
-     * RegistrySerialiser::GeneralSerialisable<T, U, C, S>::getType
-     */
-    template<class T, DWORD U, class C, DWORD S> 
-    DWORD RegistrySerialiser::GeneralSerialisable<T, U, C, S>::getType(
-            void) const {
-        return U;
-    }
-
-
-    /*
-     * RegistrySerialiser::GeneralSerialisable<T, U, C, S>::peekData
-     */
-    template<class T, DWORD U, class C, DWORD S> 
-    BYTE *RegistrySerialiser::GeneralSerialisable<T, U, C, S>::peekData(
-            void) {
-        return reinterpret_cast<BYTE *>(&this->data);
-    }
-
-
-    /*
-     * RegistrySerialiser::GeneralSerialisable<T, U, C, S>::peekData
-     */
-    template<class T, DWORD U, class C, DWORD S> 
-    const BYTE *RegistrySerialiser::GeneralSerialisable<T, U, C, S>::peekData(
-            void) const {
-        return reinterpret_cast<const BYTE *>(&this->data);
-    }
 
 } /* end namespace sys */
 } /* end namespace vislib */

@@ -92,6 +92,7 @@ void vislib::sys::Event::Set(void) {
 #else /* _WIN32 */
     TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Set\n");
 
+    // TODO: This whole block is potentially unsafe.
     if (!this->semaphore.TryLock()) {
         /* Count is 0, i. e. semaphore is in non-signaled state. */
         this->semaphore.Unlock();

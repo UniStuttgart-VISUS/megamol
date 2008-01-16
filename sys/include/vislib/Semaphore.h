@@ -46,14 +46,18 @@ namespace sys {
     public:
 
         /**
-         * Create a new semaphore. 
+         * Create a new semaphore.
          *
-         * @param initialCount The initial count for the semaphore object. This value
-         *                     must be within [0, maxCount]. If the value is not 
-         *                     within this range, it will be clamped to be valid.
-         * @param maxCount     The maximum count for the semaphore object, which must
-         *                     be greater than zero. If the value is less than 1, it
-         *                     will be corrected to be 1.
+         * If no initial count it set, the semaphore is created with a count of 1, 
+         * i. e. the semaphore is initially in signaled state.
+         *
+         * @param initialCount The initial count for the semaphore object. This 
+         *                     value must be within [0, maxCount]. If the value 
+         *                     is not within this range, it will be clamped to 
+         *                     be valid.
+         * @param maxCount     The maximum count for the semaphore object, which
+         *                     must be greater than zero. If the value is less 
+         *                     than 1, it will be corrected to be 1.
          */
         Semaphore(long initialCount = 1, long maxCount = 1);
 
@@ -62,13 +66,17 @@ namespace sys {
          * first tries to open an existing semaphore and creates a new one, if
          * such a semaphore does not exist.
          *
+         * If no initial count it set, the semaphore is created with a count of 1, 
+         * i. e. the semaphore is initially in signaled state.
+         *
          * @param name         The name of the semaphore.
-         * @param initialCount The initial count for the semaphore object. This value
-         *                     must be within [0, maxCount]. If the value is not 
-         *                     within this range, it will be clamped to be valid.
-         * @param maxCount     The maximum count for the semaphore object, which must
-         *                     be greater than zero. If the value is less than 1, it
-         *                     will be corrected to be 1.
+         * @param initialCount The initial count for the semaphore object. This 
+         *                     value must be within [0, maxCount]. If the value 
+         *                     is not within this range, it will be clamped to 
+         *                     be valid.
+         * @param maxCount     The maximum count for the semaphore object, which
+         *                     must be greater than zero. If the value is less 
+         *                     than 1, it will be corrected to be 1.
          */
         Semaphore(const char *name, long initialCount = 1, long maxCount = 1);
 
@@ -77,13 +85,17 @@ namespace sys {
          * first tries to open an existing semaphore and creates a new one, if
          * such a semaphore does not exist.
          *
+         * If no initial count it set, the semaphore is created with a count of 1, 
+         * i. e. the semaphore is initially in signaled state.
+         *
          * @param name         The name of the semaphore.
-         * @param initialCount The initial count for the semaphore object. This value
-         *                     must be within [0, maxCount]. If the value is not 
-         *                     within this range, it will be clamped to be valid.
-         * @param maxCount     The maximum count for the semaphore object, which must
-         *                     be greater than zero. If the value is less than 1, it
-         *                     will be corrected to be 1.
+         * @param initialCount The initial count for the semaphore object. This 
+         *                     value must be within [0, maxCount]. If the value 
+         *                     is not within this range, it will be clamped to 
+         *                     be valid.
+         * @param maxCount     The maximum count for the semaphore object, which
+         *                     must be greater than zero. If the value is less 
+         *                     than 1, it will be corrected to be 1.
          */
         Semaphore(const wchar_t *name, long initialCount = 1, long maxCount = 1);
 

@@ -8,9 +8,9 @@
 
 
 /*
- * vislib::CharTraitsA::ParseBool
+ * vislib::CharTraitsA<char>::ParseBool
  */
-bool vislib::CharTraitsA::ParseBool(const Char *str) {
+bool vislib::CharTraits<char>::ParseBool(const Char *str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
@@ -55,9 +55,9 @@ bool vislib::CharTraitsA::ParseBool(const Char *str) {
 
 
 /*
- * vislib::CharTraitsA::ParseDouble
+ * vislib::CharTraits<char>::ParseDouble
  */
-double vislib::CharTraitsA::ParseDouble(const Char *str) {
+double vislib::CharTraits<char>::ParseDouble(const Char *str) {
     double retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -79,9 +79,9 @@ double vislib::CharTraitsA::ParseDouble(const Char *str) {
 
 
 /*
- * vislib::CharTraitsA::ParseInt
+ * vislib::CharTraits<char>::ParseInt
  */
-int vislib::CharTraitsA::ParseInt(const Char *str) {
+int vislib::CharTraits<char>::ParseInt(const Char *str) {
     int retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -103,10 +103,10 @@ int vislib::CharTraitsA::ParseInt(const Char *str) {
 
 
 /*
- * vislib::CharTraitsA::Format
+ * vislib::CharTraits<char>::Format
  */
-vislib::CharTraitsA::Size vislib::CharTraitsA::Format(Char *dst, const Size cnt,
-        const Char *fmt, va_list argptr) {
+vislib::CharTraits<char>::Size vislib::CharTraits<char>::Format(Char *dst,
+        const Size cnt, const Char *fmt, va_list argptr) {
     int retval = -1;
 
 #ifdef _WIN32
@@ -139,10 +139,10 @@ vislib::CharTraitsA::Size vislib::CharTraitsA::Format(Char *dst, const Size cnt,
 
 
 /*
- * vislib::CharTraitsA::ToLower
+ * vislib::CharTraits<char>::ToLower
  */
-vislib::CharTraitsA::Size vislib::CharTraitsA::ToLower(Char *dst, 
-        const Size cnt, const Char *str) {
+vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(
+        Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);
@@ -180,10 +180,10 @@ vislib::CharTraitsA::Size vislib::CharTraitsA::ToLower(Char *dst,
 
 
 /*
- * vislib::CharTraitsA::ToUpper
+ * vislib::CharTraits<char>::ToUpper
  */
-vislib::CharTraitsA::Size vislib::CharTraitsA::ToUpper(Char *dst, 
-        const Size cnt, const Char *str) {
+vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
+        Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);
@@ -224,9 +224,9 @@ vislib::CharTraitsA::Size vislib::CharTraitsA::ToUpper(Char *dst,
 
 
 /*
- * vislib::CharTraitsW::ParseBool
+ * vislib::CharTraits<WCHAR>::ParseBool
  */
-bool vislib::CharTraitsW::ParseBool(const Char *str) {
+bool vislib::CharTraits<WCHAR>::ParseBool(const Char *str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
@@ -271,9 +271,9 @@ bool vislib::CharTraitsW::ParseBool(const Char *str) {
 
 
 /*
- * vislib::CharTraitsW::ParseDouble
+ * vislib::CharTraits<WCHAR>::ParseDouble
  */
-double vislib::CharTraitsW::ParseDouble(const Char *str) {
+double vislib::CharTraits<WCHAR>::ParseDouble(const Char *str) {
     double retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -295,9 +295,9 @@ double vislib::CharTraitsW::ParseDouble(const Char *str) {
 
 
 /*
- * vislib::CharTraitsW::ParseInt
+ * vislib::CharTraits<WCHAR>::ParseInt
  */
-int vislib::CharTraitsW::ParseInt(const Char *str) {
+int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
     int retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -319,10 +319,10 @@ int vislib::CharTraitsW::ParseInt(const Char *str) {
 
 
 /*
- * vislib::CharTraitsW::Format
+ * vislib::CharTraits<WCHAR>::Format
  */
-vislib::CharTraitsW::Size vislib::CharTraitsW::Format(Char *dst, const Size cnt,
-        const Char *fmt, va_list argptr) {
+vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
+        Char *dst, const Size cnt, const Char *fmt, va_list argptr) {
     int retval = -1;
 
 #ifdef _WIN32
@@ -378,10 +378,10 @@ vislib::CharTraitsW::Size vislib::CharTraitsW::Format(Char *dst, const Size cnt,
 
 
 /*
-* vislib::CharTraitsW::ToLower
+* vislib::CharTraits<WCHAR>::ToLower
  */
-vislib::CharTraitsW::Size vislib::CharTraitsW::ToLower(Char *dst, 
-        const Size cnt, const Char *str) {
+vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
+        Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);
@@ -419,10 +419,10 @@ vislib::CharTraitsW::Size vislib::CharTraitsW::ToLower(Char *dst,
 
 
 /*
- * vislib::CharTraitsW::ToUpper
+ * vislib::CharTraits<WCHAR>::ToUpper
  */
-vislib::CharTraitsW::Size vislib::CharTraitsW::ToUpper(Char *dst,
-        const Size cnt, const Char *str) {
+vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(
+        Char *dst, const Size cnt, const Char *str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);

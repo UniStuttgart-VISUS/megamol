@@ -366,6 +366,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Serialisable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Serialiser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SHA1HashProvider.cpp"
 				>
 			</File>
@@ -521,6 +529,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\RegEx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Serialisable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Serialiser.h"
 				>
 			</File>
 			<File
