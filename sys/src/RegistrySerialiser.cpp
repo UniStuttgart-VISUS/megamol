@@ -111,7 +111,8 @@ namespace sys {
         DWORD, DWORD, const BYTE *, DWORD), class C>
     static void StringSerialise(const T& value, HKEY hKey, const C *name) {
         T tName(name);                  // Copy of name with correct charset.
-        LONG result = F(hKey, tName.PeekBuffer(), 0, REG_SZ, &value, 
+        LONG result = F(hKey, tName.PeekBuffer(), 0, REG_SZ,
+            reinterpret_cast<const BYTE *>(value.PeekBuffer()),
             value.Length() + 1);
 
         if (result != ERROR_SUCCESS) {
@@ -455,7 +456,7 @@ void vislib::sys::RegistrySerialiser::Serialise(const char value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-bool vislib::sys::RegistrySerialiser::Serialise(const wchar_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const wchar_t value,
         const char *name) {
     this->serialiseAsDword(value, name);
 }
@@ -464,7 +465,7 @@ bool vislib::sys::RegistrySerialiser::Serialise(const wchar_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-bool vislib::sys::RegistrySerialiser::Serialise(const wchar_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const wchar_t value,
         const wchar_t *name) {
     this->serialiseAsDword(value, name);
 }

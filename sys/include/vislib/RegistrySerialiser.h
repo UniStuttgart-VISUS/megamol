@@ -141,10 +141,10 @@ namespace sys {
         virtual void Serialise(const char value,
             const wchar_t *name = NULL);
 
-        virtual bool Serialise(const wchar_t value,
+        virtual void Serialise(const wchar_t value,
             const char *name = NULL);
 
-        virtual bool Serialise(const wchar_t value,
+        virtual void Serialise(const wchar_t value,
             const wchar_t *name = NULL);
 
         virtual void Serialise(const INT8 value,

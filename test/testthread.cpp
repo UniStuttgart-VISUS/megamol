@@ -353,4 +353,20 @@ void TestThread(void) {
     ::AssertEqual("Exit code is number of event being signaled", t11.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of event being signaled", t12.GetExitCode(), cntLoops);
 
+
+    // Event unit test
+    vislib::sys::Event evt1;
+    ::AssertFalse("Event is initially not signaled.", evt1.Wait(0));
+    evt1.Set();
+    ::AssertTrue("Event is now signaled.", evt1.Wait(0));
+    evt1.Set();
+    ::AssertTrue("Event remains signaled.", evt1.Wait(0));
+    evt1.Set();
+    ::AssertTrue("Event still remains signaled.", evt1.Wait(0));
+    evt1.Reset();
+    ::AssertFalse("Event is now non-signaled.", evt1.Wait(0));
+    evt1.Reset();
+    ::AssertFalse("Event remains non-signaled.", evt1.Wait(0));
+    evt1.Set();
+    ::AssertTrue("Event is now signaled.", evt1.Wait(0));
 }
