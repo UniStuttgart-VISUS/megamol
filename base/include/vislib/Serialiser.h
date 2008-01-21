@@ -23,10 +23,21 @@ namespace vislib {
 
     /**
      * This is the superclass for all serialisers. It defines the interface for 
-     * them. 
+     * them.
+     *
+     * The serialiser must implement the serialisation for built-in types and
+     * some commonly used VISlib types like string. Classes that implement the
+     * Serialisable interface can use these methods to serialise themselves into
+     * a given serialiser.
      *
      * Serialises may be stateful or stateless and use the variable names or 
-     * ignore them.
+     * ignore them. E.g. an implementing class could serialise and deserialise 
+     * the values solely depending on the order the bult-in types occur. The 
+     * caller is responsible for maintaining the order from serialisation to
+     * deserialisation in this case. Implementing classes must document this
+     * behaviour. Generally, classes implementing the serialisable interface
+     * should assume that the serialiser can be both, stateful and stateless, 
+     * and will use the name.
      */
     class Serialiser {
 
@@ -134,7 +145,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(UINT8& outValue, 
-            const char *name = NULL);
+            const char *name = NULL) = 0;
 
         /**
          * Deserialise the UINT8 element with name 'name' into 'outValue'.
@@ -148,7 +159,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(UINT8& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name = NULL) = 0;
 
         /**
          * Deserialise the INT16 element with name 'name' into 'outValue'.
@@ -430,96 +441,415 @@ namespace vislib {
         virtual void Deserialise(StringW& outValue, 
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the bool variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const bool value, 
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the bool variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const bool value, 
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the wchar_t variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const wchar_t value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the wchar_t variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const wchar_t value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the INT8 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT8 value,
-            const char *name = NULL);
+            const char *name = NULL) = 0;
 
+        /**
+         * Serialise the INT8 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT8 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT8 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT8 value,
-            const char *name = NULL);
+            const char *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT8 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT8 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the INT16 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT16 value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the INT16 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT16 value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT16 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT16 value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT16 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT16 value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the INT32 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT32 value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the INT32 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT32 value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT32 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT32 value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT32 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT32 value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the INT64 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT64 value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the INT64 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const INT64 value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT64 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT64 value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the UINT64 variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const UINT64 value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the float variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const float value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the float variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const float value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the double variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const double value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the double variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const double value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the StringA variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const StringA& value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the StringA variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const StringA& value,
             const wchar_t *name = NULL) = 0;
 
+        /**
+         * Serialise the StringW variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const StringW& value,
             const char *name = NULL) = 0;
 
+        /**
+         * Serialise the StringW variable using the name 'name'.
+         *
+         * @param value The value to be serialised.
+         * @param name  The name for this value.
+         *              Implementing classes may choose to ignore this value
+         *              and use the order of calls instead.
+         *
+         * @throws Exception Implementing classes may throw an exception to 
+         *                   indicated failure.
+         */
         virtual void Serialise(const StringW& value,
             const wchar_t *name = NULL) = 0;
 
     protected:
 
+        /**
+         * Copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         */
         Serialiser(const Serialiser& rhs);
 
+        /**
+         * Assignment operator.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
         Serialiser& operator =(const Serialiser& rhs);
-
     };
 
 } /* end namespace vislib */
@@ -528,4 +858,3 @@ namespace vislib {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_SERIALISER_H_INCLUDED */
-

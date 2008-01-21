@@ -41,6 +41,7 @@
 #include "testdimred.h"
 #include "testipc.h"
 #include "testVIPCStrTab.h"
+#include "testserialiser.h"
 
 
 /* type for test functions */
@@ -101,6 +102,7 @@ VislibTest tests[] = {
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
+    {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     // end guard. Do not remove. Must be last entry
     {NULL, NULL, NULL}
 };

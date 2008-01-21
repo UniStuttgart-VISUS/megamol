@@ -13,4 +13,4 @@ Process: CreateProcessAsUser does not work under Windows
 String: Could use more efficient substring search.
 File: Access, Reading, Writing, Seeking in Files larger then 2 GB must be tested!!!
 Socket: Event for signaling overlapped I/O must be closed in case of a communication error.
-Serialisation/RegistrySerialiser: Think about a more general serialisation concept.
+Serialisation/RegistrySerialiser: Implement signed versions as reinterpret_cast version of unsigned directly in Serialiser (faciliates child implementation)? Is this a good idea?

@@ -17,8 +17,26 @@ vislib::Serialisable::~Serialisable(void) {
 
 
 /*
- * vislib::Serialisable::OnSerialisationDataReceived
+ * vislib::Serialisable::Serialisable
  */
-bool vislib::Serialisable::OnSerialisationDataReceived(BYTE *data) {
-    return true;
+vislib::Serialisable::Serialisable(void) {
+    // Nothing to do.
+}
+
+
+/*
+ * vislib::Serialisable::Serialisable
+ */
+vislib::Serialisable::Serialisable(const Serialisable& rhs) {
+    // Nothing to do.
+}
+
+
+/*
+ * vislib::Serialisable::operator = 
+ */
+vislib::Serialisable& vislib::Serialisable::operator =(
+        const Serialisable& rhs) {
+    // Nothing to do.
+    return *this;
 }

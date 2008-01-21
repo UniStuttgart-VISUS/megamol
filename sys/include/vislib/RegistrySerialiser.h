@@ -117,6 +117,18 @@ namespace sys {
         virtual void Deserialise(UINT64& outValue, 
             const wchar_t *name = NULL);
 
+        virtual void Deserialise(float& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(float& outValue, 
+            const wchar_t *name = NULL);
+
+        virtual void Deserialise(double& outValue, 
+            const char *name = NULL);
+
+        virtual void Deserialise(double& outValue, 
+            const wchar_t *name = NULL);
+
         virtual void Deserialise(StringA& outValue, 
             const char *name = NULL);
 
@@ -193,6 +205,18 @@ namespace sys {
             const char *name = NULL);
 
         virtual void Serialise(const UINT64 value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const float value,
+            const char *name = NULL);
+
+        virtual void Serialise(const float value,
+            const wchar_t *name = NULL);
+
+        virtual void Serialise(const double value,
+            const char *name = NULL);
+
+        virtual void Serialise(const double value,
             const wchar_t *name = NULL);
 
         virtual void Serialise(const StringA& value,
@@ -219,49 +243,126 @@ namespace sys {
         RegistrySerialiser(const RegistrySerialiser& rhs);
 
         /**
-         * Generic deserialisation of integral types that are at most as large
-         * as a DWORD. The method just delegates the job to the DWORD 
-         * deserialisation. The intent of this template is not to duplicate the
-         * implementation of serialisation methods for small types.
+         * Generic convenience method for deserialisation of integral types 
+         * that are at most as large as a DWORD (UINT32). The method just 
+         * delegates the job to the UINT32 deserialisation. The intent of 
+         * this template is not to duplicate the implementation of 
+         * serialisation methods for small types. It can, however, not be used
+         * for all types. E.g. bool deserialisation produces a compiler warning
+         * if done via this method.
          *
          * The template parameters have the following meaning:
-         * T - An integral type of the target variable, which must be at most as
-         *     large as a DWORD.
-         * C - char or wchar_t
+         * T: An integral type of the target variable, which must be at most as
+         *    large as a DWORD.
+         * R: Before casting the returned DWORD to T, the address of the value
+         *    is reinterpret_casted to a pointer to R. This intent of this cast
+         *    is to perform singed/unsigned or integral/floating point 
+         *    conversions.
+         * C: char or wchar_t
          *
          * @param outValue Recevies the deserialised value.
          * @param name     The name of the stored value.
          *
-         * @throws
+         * @throws IllegalParamException If 'name' is NULL or the type of the 
+         *                               value parameter does not match the 
+         *                               type of the stored element.
+         * @throws SystemException If the registry access failed.
          */
-        template<class T, class C> 
+        template<class T, class R, class C>
         inline void deserialiseAsDword(T& outValue, const C *name) {
             ASSERT(sizeof(T) <= sizeof(DWORD));
+            ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            ASSERT(sizeof(DWORD) == sizeof(R));
             UINT32 value;
             this->Deserialise(value, name);
-            outValue = static_cast<T>(value);
+            outValue = static_cast<T>(*reinterpret_cast<R *>(&value));
         }
 
         /**
-         * Generic serialisation of integral types that are at most as large
-         * as a DWORD. The method just delegates the job to the DWORD 
-         * serialisation. The intent of this template is not to duplicate the
-         * implementation of serialisation methods for small types.
+         * Further simplification of deserialiseAsDword for use with signed 
+         * integer types of at most sizeof(DWORD) bytes.
          *
          * The template parameters have the following meaning:
-         * T - An integral type of the target variable, which must be at most as
-         *     large as a DWORD.
-         * C - char or wchar_t
+         * T: An integral type of the target variable, which must be at most as
+         *    large as a DWORD.
+         * C: char or wchar_t
+         *
+         * @param outValue Recevies the deserialised value.
+         * @param name     The name of the stored value.
+         *
+         * @throws IllegalParamException If 'name' is NULL or the type of the 
+         *                               value parameter does not match the 
+         *                               type of the stored element.
+         * @throws SystemException If the registry access failed.
+         */
+        template<class T, class C>
+        inline void deserialiseSignedAsDword(T& outValue, const C *name) {
+            this->deserialiseAsDword<T, INT32, C>(outValue, name);
+        }
+
+        /**
+         * Further simplification of deserialiseAsDword for use with unsigned 
+         * integer types of at most sizeof(DWORD) bytes.
+         *
+         * The template parameters have the following meaning:
+         * T: An integral type of the target variable, which must be at most as
+         *    large as a DWORD.
+         * C: char or wchar_t
+         *
+         * @param outValue Recevies the deserialised value.
+         * @param name     The name of the stored value.
+         *
+         * @throws IllegalParamException If 'name' is NULL or the type of the 
+         *                               value parameter does not match the 
+         *                               type of the stored element.
+         * @throws SystemException If the registry access failed.
+         */
+        template<class T, class C>
+        inline void deserialiseUnsignedAsDword(T& outValue, const C *name) {
+            this->deserialiseAsDword<T, UINT32, C>(outValue, name);
+        }
+
+        /**
+         * This is a simplified version of serialiseAsDword0 which assumes that
+         * no reinterpretation of the value is required. It should only be used
+         * for unsigned types.
          *
          * @param value The value to save.
          * @param name  The name of the stored value.
          *
-         * @throws
+         * @throws SystemException If the registry access failed.
          */
         template<class T, class C>
         inline void serialiseAsDword(const T& value, const C *name) {
+            this->serialiseAsDword0<T, T, C>(value, name);
+        }
+
+        /**
+         * Generic serialisation of integral types that are at most as large
+         * as a DWORD (UINT32). The method just delegates the job to the UINT32
+         * serialisation. The intent of this template is not to duplicate the
+         * implementation of serialisation methods for small types.
+         *
+         * The template parameters have the following meaning:
+         * T: An integral type of the target variable, which must be at most as
+         *    large as a UINT32.
+         * R: Before casting the value to UINT32, its address is 
+         *    reinterpret_casted to a pointer to R. This allows serialising
+         *    signed integral and floating point variables using this method.
+         * C: char or wchar_t
+         *
+         * @param value The value to save.
+         * @param name  The name of the stored value.
+         *
+         * @throws SystemException If the registry access failed.
+         */
+        template<class T, class R, class C>
+        inline void serialiseAsDword0(const T& value, const C *name) {
             ASSERT(sizeof(T) <= sizeof(DWORD));
-            UINT32 v = static_cast<UINT32>(value);
+            ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            ASSERT(sizeof(T) == sizeof(R));
+            UINT32 v = static_cast<UINT32>(*reinterpret_cast<const R *>(
+                &value));
             this->Serialise(v, name);
         }
 
