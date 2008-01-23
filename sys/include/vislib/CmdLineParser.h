@@ -1557,7 +1557,7 @@ namespace sys {
          * @return A single linked list of pointers to all missing required
          *         options.
          */
-        const OptionPtrList ListMissingRequiredOptions(void) const;
+        OptionPtrList ListMissingRequiredOptions(void);
 
     private:
 
@@ -2500,14 +2500,14 @@ namespace sys {
     /*
      * CmdLineParser<T>::ListMissingRequiredOptions
      */
-    template<class T> const typename CmdLineParser<T>::OptionPtrList 
-            CmdLineParser<T>::ListMissingRequiredOptions(void) const {
+    template<class T> typename CmdLineParser<T>::OptionPtrList 
+            CmdLineParser<T>::ListMissingRequiredOptions(void) {
         OptionPtrList newList;
         OptionPtrIterator opti = this->options.GetIterator();
         while (opti.HasNext()) {
             Option *opt = opti.Next();
             if (opt->required && (opt->firstArg == NULL)) {
-                newList->Append(opt);
+                newList.Append(opt);
             }
         }
 
