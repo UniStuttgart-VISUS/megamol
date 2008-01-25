@@ -15,4 +15,6 @@ void TestArray(void);
 
 void TestHeap(void);
 
+void TestMap(void);
+
 #endif /* VISLIBTEST_TESTCOLLECTION_H_INCLUDED */

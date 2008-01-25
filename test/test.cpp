@@ -66,6 +66,8 @@ VislibTest tests[] = {
     {_T("Hash"), ::TestHash, "Tests vislib hash providers"},
     {_T("Heap"), ::TestHeap, "Tests vislib::Heap"},
     {_T("ListSort"), ::TestSingleLinkedListSort, "Tests the 'Sort' Method of vislib::SingleLinkedList"},
+    {_T("Map"), ::TestMap, "Tests vislib::Map"},
+    {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
@@ -102,8 +104,7 @@ VislibTest tests[] = {
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
-    {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
-    // end guard. Do not remove. Must be last entry
+    // end guard. Do not remove. Must be last entry.
     {NULL, NULL, NULL}
 };
 

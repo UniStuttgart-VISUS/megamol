@@ -10,7 +10,9 @@
 
 #include "vislib/Array.h"
 #include "vislib/Heap.h"
+#include "vislib/Map.h"
 #include "vislib/Pair.h"
+#include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 
 
@@ -163,4 +165,44 @@ void TestHeap(void) {
     heap.Add(MyPair(4, 'o'));
     heap.Clear();
     ::AssertTrue("Heap is empty after Clear", heap.IsEmpty());
+}
+
+
+void TestMap(void) {
+    using vislib::Map;
+    using vislib::SingleLinkedList;
+
+    Map<int, float> map;
+
+    map.Set(12, 13.5f);
+    ::AssertEqual("Map contains one element", map.Count(), static_cast<SIZE_T>(1));
+    ::AssertEqual("Map element correct", map[12], 13.5f);
+    ::AssertEqual("New Map element correct", map[11], 0.0f);
+    ::AssertEqual("Map contains two elements", map.Count(), static_cast<SIZE_T>(2));
+    map[11] = 1.01f;
+    ::AssertEqual("New Map element correct", map[11], 1.01f);
+    map.Remove(11);
+    ::AssertEqual("Map contains one element", map.Count(), static_cast<SIZE_T>(1));
+    map[10] = 2.0f;
+    map[13] = 2.0f;
+    map[0] = 2.0f;
+    ::AssertEqual("Map contains four elements", map.Count(), static_cast<SIZE_T>(4));
+    SingleLinkedList<int> keys = map.FindKeys(2.0f);
+    ::AssertEqual("Three keys associate '2.0f'", keys.Count(), static_cast<SIZE_T>(3));
+    ::AssertTrue("Key 0 present", keys.Contains(0));
+    ::AssertTrue("Key 10 present", keys.Contains(10));
+    ::AssertTrue("Key 13 present", keys.Contains(13));
+    ::AssertTrue("Key 13 present", map.Contains(13));
+    ::AssertFalse("Key 14 not present", map.Contains(14));
+    ::AssertEqual<float*>("Key 14 not present", map.FindValue(14), NULL);
+    ::AssertEqual<float*>("Key 14 not present", map.FindValue(14), NULL);
+    ::AssertEqual("Map[10] correct", map[10], 2.0f);
+    ::AssertEqual("Map[13] correct", map[13], 2.0f);
+    map[10] = 4.0f;
+    ::AssertEqual("Map[10] correct", map[10], 4.0f);
+    ::AssertEqual("Map[13] correct", map[13], 2.0f);
+    map.Clear();
+    ::AssertEqual("Map is empty", map.Count(), static_cast<SIZE_T>(0));
+    ::AssertTrue("Map is empty", map.IsEmpty());
+
 }

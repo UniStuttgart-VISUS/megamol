@@ -286,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AssociativeCollection.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CharTraits.cpp"
 				>
 			</File>
@@ -323,6 +327,10 @@
 			</File>
 			<File
 				RelativePath=".\src\Iterator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Map.cpp"
 				>
 			</File>
 			<File
@@ -448,6 +456,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AssociativeCollection.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\CharTraits.h"
 				>
 			</File>
@@ -485,6 +497,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Iterator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Map.h"
 				>
 			</File>
 			<File
