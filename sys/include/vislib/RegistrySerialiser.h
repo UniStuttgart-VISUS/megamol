@@ -48,6 +48,16 @@ namespace sys {
         RegistrySerialiser(const wchar_t *subKey, 
             HKEY hKey = HKEY_CURRENT_USER);
 
+        /**
+         * Copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throw SystemException If the registry handle could not be 
+         *                        duplicated.
+         */
+        RegistrySerialiser(const RegistrySerialiser& rhs);
+
         /** Dtor. */
         ~RegistrySerialiser(void);
 
@@ -231,16 +241,19 @@ namespace sys {
         virtual void Serialise(const StringW& value,
             const wchar_t *name = NULL);
 
-    private:
-
         /**
-         * Forbidden copy ctor.
+         * Assignment operator.
          *
-         * @param rhs The object to be cloned.
+         * @param rhs The right hand side operand.
          *
-         * @throws UnsupportedOperationException Unconditionally.
+         * @return *this.
+         *
+         * @throw SystemException If the registry handle could not be 
+         *                        duplicated.
          */
-        RegistrySerialiser(const RegistrySerialiser& rhs);
+        RegistrySerialiser& operator =(const RegistrySerialiser& rhs);
+
+    private:
 
         /**
          * Generic convenience method for deserialisation of integral types 
@@ -365,17 +378,6 @@ namespace sys {
                 &value));
             this->Serialise(v, name);
         }
-
-        /**
-         * Forbidden assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         *
-         * @throw IllegalParamException If (this != &rhs).
-         */
-        RegistrySerialiser& operator =(const RegistrySerialiser& rhs);
 
         /** Handle of the base key that is parent of the serialised elements. */
         HKEY hBaseKey;

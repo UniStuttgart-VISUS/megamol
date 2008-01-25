@@ -217,6 +217,16 @@ vislib::sys::RegistrySerialiser::RegistrySerialiser(const wchar_t *subKey,
 
 
 /*
+ * vislib::sys::RegistrySerialiser::RegistrySerialiser
+ */
+vislib::sys::RegistrySerialiser::RegistrySerialiser(
+        const RegistrySerialiser& rhs) 
+        : vislib::Serialiser(rhs), hBaseKey(NULL) {
+    *this = rhs;
+}
+
+
+/*
  * vislib::sys::RegistrySerialiser::~RegistrySerialiser
  */
 vislib::sys::RegistrySerialiser::~RegistrySerialiser(void) {
@@ -807,16 +817,6 @@ void vislib::sys::RegistrySerialiser::Serialise(const StringW& value,
 
 
 /*
- * vislib::sys::RegistrySerialiser::RegistrySerialiser
- */
-vislib::sys::RegistrySerialiser::RegistrySerialiser(
-        const RegistrySerialiser& rhs) : vislib::Serialiser(rhs) {
-    throw UnsupportedOperationException("RegistrySerialiser", __FILE__, 
-        __LINE__);
-}
-
-
-/*
  * vislib::sys::RegistrySerialiser::operator =
  */
 vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
@@ -824,7 +824,25 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
     Serialiser::operator =(rhs);
 
     if (this != &rhs) {
-        throw IllegalParamException("rhs", __FILE__, __LINE__);
+        if (this->hBaseKey != NULL) {
+            ::RegCloseKey(this->hBaseKey);
+        }
+
+        // MSDN: DuplicateHandle can duplicate handles to the following types 
+        // of objects: The handle is returned by the RegCreateKey, 
+        // RegCreateKeyEx, RegOpenKey, or RegOpenKeyEx function. Note that 
+        // registry key handles returned by the RegConnectRegistry function 
+        // cannot be used in a call to DuplicateHandle. Windows Me/98/95: 
+        // You cannot use DuplicateHandle to duplicate registry key handles.
+
+        // Note: ::GetCurrentProcess() returns a pseudo-handle which needs not 
+        // to be closed.
+        if (!::DuplicateHandle(::GetCurrentProcess(), rhs.hBaseKey, 
+                ::GetCurrentProcess(), reinterpret_cast<HANDLE *>(
+                &this->hBaseKey), 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+            this->hBaseKey = NULL;
+            SystemException(__FILE__, __LINE__);
+        } 
     }
 
     return *this;
