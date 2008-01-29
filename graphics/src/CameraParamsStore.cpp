@@ -54,6 +54,16 @@ vislib::graphics::CameraParamsStore::CameraParamsStore(
 }
 
 
+/* 
+ * vislib::graphics::CameraParamsStore::CameraParamsStore 
+ */
+vislib::graphics::CameraParamsStore::CameraParamsStore(
+        const vislib::graphics::CameraParameters& rhs) 
+        : CameraParameters(), syncNumber(0) {
+    *this = rhs;
+}
+
+
 /*
  * vislib::graphics::CameraParamsStore::~CameraParamsStore
  */
@@ -624,6 +634,34 @@ vislib::graphics::CameraParamsStore::operator=(
     this->tileRect = rhs.tileRect;
     this->up = rhs.up;
     this->virtualViewSize = rhs.virtualViewSize;
+
+    return *this;
+}
+
+
+/*
+ * vislib::graphics::CameraParamsStore::operator=
+ */
+vislib::graphics::CameraParamsStore& 
+vislib::graphics::CameraParamsStore::operator=(
+        const vislib::graphics::CameraParameters& rhs) {
+    this->eye = rhs.Eye();
+    this->farClip = rhs.FarClip();
+    this->focalDistance = rhs.FocalDistance();
+    this->front = rhs.Front();
+    this->halfApertureAngle = rhs.HalfApertureAngle();
+    this->halfStereoDisparity = rhs.HalfStereoDisparity();
+    this->lookAt = rhs.LookAt();
+    this->nearClip = rhs.NearClip();
+    this->position = rhs.Position();
+    this->projectionType = rhs.Projection();
+    this->right = rhs.Right();
+    this->syncNumber++; // Do not copy syncNumber but indicate the change!
+    this->tileRect = rhs.TileRect();
+    this->up = rhs.Up();
+    this->virtualViewSize = rhs.VirtualViewSize();
+
+    this->SetLimits(rhs.Limits());
 
     return *this;
 }

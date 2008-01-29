@@ -39,6 +39,13 @@ namespace graphics {
          */
         CameraParamsStore(const CameraParamsStore& rhs);
 
+        /**
+         * Copy ctor. 
+         *
+         * @param rhs The right hand side operand.
+         */
+        CameraParamsStore(const CameraParameters& rhs);
+
         /** Dtor. */
         virtual ~CameraParamsStore(void);
 
@@ -358,6 +365,15 @@ namespace graphics {
          * @return Reference to this object.
          */
         CameraParamsStore& operator=(const CameraParamsStore& rhs);
+
+        /**
+         * Assignment operator
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return Reference to this object.
+         */
+        CameraParamsStore& operator=(const CameraParameters& rhs);
 
         /**
          * Test for equality
