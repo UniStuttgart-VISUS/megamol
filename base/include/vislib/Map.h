@@ -128,8 +128,8 @@ namespace vislib {
     /*
      * vislib::Map::Map
      */
-    template<class K, class V> Map<K, V>::Map(void) : AssociativeCollection(),
-            keys(), values() {
+    template<class K, class V> Map<K, V>::Map(void)
+            : AssociativeCollection<K, V>(), keys(), values() {
     }
 
 
