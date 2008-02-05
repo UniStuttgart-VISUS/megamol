@@ -154,7 +154,6 @@ namespace sys {
          * OutputDebugString
          */
         class EchoTargetDebugOutput : public EchoTarget {
-
         public:
 
             /** ctor */
@@ -174,6 +173,72 @@ namespace sys {
 
         };
 #endif /* _WIN32 */
+
+        /**
+         * Implementation of EchoTarget redirecting the messages to another
+         * Log object.
+         *
+         * Not precautions are made to prohibit cycles in the redirection!
+         */
+        class EchoTargetRedirect : public EchoTarget {
+        public:
+
+            /** ctor */
+            EchoTargetRedirect(void);
+
+            /** 
+             * ctor
+             *
+             * @param target The targeted log object to receive the echoed
+             *               messages. This redirection object does not take
+             *               ownership of the memory of the targeted log 
+             *               object. Therefore the caller must ensure that the
+             *               pointer to the targeted log object remains valid
+             *               as long as it is used by this object.
+             */
+            EchoTargetRedirect(Log *target);
+
+            /** dtor */
+            virtual ~EchoTargetRedirect(void);
+
+            /**
+             * Answers the targeted log object.
+             *
+             * @return The targeted log object.
+             */
+            inline Log* GetTarget(void) const {
+                return this->target;
+            }
+
+            /**
+             * Sets the targeted log object.
+             *
+             * The targeted log object to receive the echoed messages. This
+             * redirection object does not take ownership of the memory of the
+             * targeted log object. Therefore the caller must ensure that the
+             * pointer to the targeted log object remains valid as long as it
+             * is used by this object.
+             *
+             * @param target The targeted log object to receive the echoed
+             *               messages.
+             */
+            void SetTarget(Log *target);
+
+            /**
+             * Writes a string to the echo output target. Implementations may 
+             * assume that message ends with a new line control sequence.
+             *
+             * @param level The message level.
+             * @param message The message ANSI string.
+             */
+            virtual void Write(UINT level, const char *message) const;
+
+        public:
+
+            /** The targeted log object */
+            Log *target;
+
+        };
 
         /** 
          * Ctor. Constructs a new log file without a physical file. 
@@ -217,6 +282,15 @@ namespace sys {
 
         /** Dtor. */
         ~Log(void);
+
+        /**
+         * Writes all offline messages to the echo target.
+         *
+         * @param remove If 'true' the offline messages will be removed after
+         *               the operation returns. If 'false' the offline messages
+         *               remain in the offline buffer.
+         */
+        void EchoOfflineMessages(bool remove = false);
 
         /**
          * Answer the file name of the physical log file. Use this getter to
@@ -480,7 +554,7 @@ namespace sys {
          *
          * @return A time stamp representing NOW.
          */
-        static TimeStamp CurrentTimeStamp(void);
+        static TimeStamp currentTimeStamp(void);
 
         /**
          * Write a message prefix consisting of a time stamp and a log level 
@@ -489,7 +563,7 @@ namespace sys {
          * @param level The log level.
          * @param tiemstamp The time stamp.
          */
-        void WriteMsgPrefix(UINT level, const TimeStamp& timestamp);
+        void writeMsgPrefix(UINT level, const TimeStamp& timestamp);
 
         /**
          * Returns the next free offline message object.
@@ -497,14 +571,14 @@ namespace sys {
          * @return The next free offline message object, or NULL if there is 
          *         none.
          */
-        OfflineMessage *NextOfflineMessage(void);
+        OfflineMessage *nextOfflineMessage(void);
 
         /**
          * Returns the file name suffix.
          *
          * @return The file name suffix.
          */
-        vislib::StringA GetFileNameSuffix(void);
+        vislib::StringA getFileNameSuffix(void);
 
         /** the empty log message string const */
         static const char *emptyLogMsg;
