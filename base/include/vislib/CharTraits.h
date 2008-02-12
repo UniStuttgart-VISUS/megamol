@@ -324,7 +324,8 @@ namespace vislib {
          * @return true if 'c' is a digit, false otherwise.
          */
         inline static bool IsDigit(const Char c) {
-            return (::isdigit(c) != 0);     // Explicit compare prevents C4800.
+            // Explicit compare prevents C4800.
+            return (::isdigit(static_cast<const unsigned char>(c)) != 0);
         }
 
         /**
@@ -335,7 +336,8 @@ namespace vislib {
          * @return true if 'c' is lower case, false otherwise.
          */
         inline static bool IsLowerCase(const Char c) {
-            return (::islower(c) != 0);     // Explicit compare prevents C4800.
+            // Explicit compare prevents C4800.
+            return (::islower(static_cast<const unsigned char>(c)) != 0);
         }
 
         /**
@@ -346,7 +348,8 @@ namespace vislib {
          * @return true if 'c' is a whitespace, false otherwise.
          */
         inline static bool IsSpace(const Char c) {
-            return (::isspace(c) != 0);     // Explicit compare prevents C4800.
+            // Explicit compare prevents C4800.
+            return (::isspace(static_cast<const unsigned char>(c)) != 0);
         }
 
         /**
@@ -357,7 +360,8 @@ namespace vislib {
          * @return true if 'c' is upper case, false otherwise.
          */
         inline static bool IsUpperCase(const Char c) {
-            return (::isupper(c) != 0);     // Explicit compare prevents C4800.
+            // Explicit compare prevents C4800.
+            return (::isupper(static_cast<const unsigned char>(c)) != 0);
         }
 
         /**
@@ -418,7 +422,8 @@ namespace vislib {
          * @return The lower case version of 'c'.
          */
         inline static Char ToLower(const Char c) {
-            return static_cast<Char>(::tolower(c));
+            return static_cast<Char>(::tolower(
+                static_cast<const unsigned char>(c)));
         }
 
         /**
@@ -442,7 +447,8 @@ namespace vislib {
          * @return The upper case version of 'c'.
          */
         inline static Char ToUpper(const Char c) {
-            return static_cast<Char>(::toupper(c));
+            return static_cast<Char>(::toupper(
+                static_cast<const unsigned char>(c)));
         }
 
     protected:
