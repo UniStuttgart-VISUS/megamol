@@ -336,7 +336,7 @@ namespace vislib {
             const String<C>& input, const String<C>& separator,
             bool removeEmpty) {
         Array<String<C> > retval;
-        StringTokeniser<C>::explode(input.PeekBuffer(), separator.PeekBuffer(),
+        StringTokeniser<C>::split(input.PeekBuffer(), separator.PeekBuffer(),
             removeEmpty, retval);
         return retval;
     }
@@ -349,7 +349,7 @@ namespace vislib {
             const String<C>& input, const typename C::Char *separator,
             bool removeEmpty) {
         Array<String<C> > retval;
-        StringTokeniser<C>::explode(input.PeekBuffer(), separator,
+        StringTokeniser<C>::split(input.PeekBuffer(), separator,
             removeEmpty, retval);
         return retval;
     }
@@ -363,7 +363,7 @@ namespace vislib {
             bool removeEmpty) {
         typename C::Char sep[2] = { separator, 0 };
         Array<String<C> > retval;
-        StringTokeniser<C>::explode(input.PeekBuffer(), sep, removeEmpty, 
+        StringTokeniser<C>::split(input.PeekBuffer(), sep, removeEmpty, 
             retval);
         return retval;
     }
@@ -376,7 +376,7 @@ namespace vislib {
             const typename C::Char *input, const String<C>& separator,
             bool removeEmpty) {
         Array<String<C> > retval;
-        StringTokeniser<C>::explode(input, separator.PeekBuffer(), 
+        StringTokeniser<C>::split(input, separator.PeekBuffer(), 
             removeEmpty, retval);
         return retval;
     }
@@ -389,7 +389,7 @@ namespace vislib {
             const typename C::Char *input, const typename C::Char *separator,
             bool removeEmpty) {
         Array<String<C> > retval;
-        StringTokeniser<C>::explode(input, separator, removeEmpty, retval);
+        StringTokeniser<C>::split(input, separator, removeEmpty, retval);
         return retval;
     }
 
@@ -402,7 +402,7 @@ namespace vislib {
             bool removeEmpty) {
         typename C::Char sep[2] = { separator, 0 };
         Array<String<C> > retval;
-        StringTokeniser<C>::explode(input, sep, removeEmpty, retval);
+        StringTokeniser<C>::split(input, sep, removeEmpty, retval);
         return retval;
     }
 
