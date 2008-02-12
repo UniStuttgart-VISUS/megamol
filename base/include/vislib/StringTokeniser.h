@@ -34,7 +34,7 @@ namespace vislib {
     public:
 
         /**
-         * Explodes a string into an array of substrings based of a given
+         * Splits a string into an array of substrings based of a given
          * separator.
          *
          * @param input The input string to be separated.
@@ -44,17 +44,77 @@ namespace vislib {
          *
          * @return An array of the separated substrings.
          */
-        static Array<String<C> > Explode(const String<C>& input,
+        static Array<String<C> > Split(const String<C>& input,
             const String<C>& separator, bool removeEmpty = false);
-        static Array<String<C> > Explode(const String<C>& input,
+
+        /**
+         * Splits a string into an array of substrings based of a given
+         * separator.
+         *
+         * @param input The input string to be separated.
+         * @param separator The separator.
+         * @param removeEmpty If 'true' empty elements will be removed from
+         *                    the result array before it is returned.
+         *
+         * @return An array of the separated substrings.
+         */
+        static Array<String<C> > Split(const String<C>& input,
             const typename C::Char *separator, bool removeEmpty = false);
-        static Array<String<C> > Explode(const String<C>& input,
+
+        /**
+         * Splits a string into an array of substrings based of a given
+         * separator.
+         *
+         * @param input The input string to be separated.
+         * @param separator The separator.
+         * @param removeEmpty If 'true' empty elements will be removed from
+         *                    the result array before it is returned.
+         *
+         * @return An array of the separated substrings.
+         */
+        static Array<String<C> > Split(const String<C>& input,
             const typename C::Char separator, bool removeEmpty = false);
-        static Array<String<C> > Explode(const typename C::Char *input,
+
+        /**
+         * Splits a string into an array of substrings based of a given
+         * separator.
+         *
+         * @param input The input string to be separated.
+         * @param separator The separator.
+         * @param removeEmpty If 'true' empty elements will be removed from
+         *                    the result array before it is returned.
+         *
+         * @return An array of the separated substrings.
+         */
+        static Array<String<C> > Split(const typename C::Char *input,
             const String<C>& separator, bool removeEmpty = false);
-        static Array<String<C> > Explode(const typename C::Char *input,
+
+        /**
+         * Splits a string into an array of substrings based of a given
+         * separator.
+         *
+         * @param input The input string to be separated.
+         * @param separator The separator.
+         * @param removeEmpty If 'true' empty elements will be removed from
+         *                    the result array before it is returned.
+         *
+         * @return An array of the separated substrings.
+         */
+        static Array<String<C> > Split(const typename C::Char *input,
             const typename C::Char *separator, bool removeEmpty = false);
-        static Array<String<C> > Explode(const typename C::Char *input,
+
+        /**
+         * Splits a string into an array of substrings based of a given
+         * separator.
+         *
+         * @param input The input string to be separated.
+         * @param separator The separator.
+         * @param removeEmpty If 'true' empty elements will be removed from
+         *                    the result array before it is returned.
+         *
+         * @return An array of the separated substrings.
+         */
+        static Array<String<C> > Split(const typename C::Char *input,
             const typename C::Char separator, bool removeEmpty = false);
 
         /** 
@@ -240,14 +300,14 @@ namespace vislib {
     private:
 
         /**
-         * Implementation of explode.
+         * Implementation of split.
          *
          * @param input The input string.
          * @param separator The separator string.
          * @param removeEmpty The remove empty flag.
          * @param outArray The array receiving the generated strings.
          */
-        static void explode(const typename C::Char* input,
+        static void split(const typename C::Char* input,
             const typename C::Char* separator, bool removeEmpty,
             Array<String<C> >& outArray);
 
@@ -270,9 +330,9 @@ namespace vislib {
 
 
     /*
-     * StringTokeniser<C>::Explode
+     * StringTokeniser<C>::Split
      */
-    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+    template<class C> Array<String<C> > StringTokeniser<C>::Split(
             const String<C>& input, const String<C>& separator,
             bool removeEmpty) {
         Array<String<C> > retval;
@@ -283,9 +343,9 @@ namespace vislib {
 
 
     /*
-     * StringTokeniser<C>::Explode
+     * StringTokeniser<C>::Split
      */
-    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+    template<class C> Array<String<C> > StringTokeniser<C>::Split(
             const String<C>& input, const typename C::Char *separator,
             bool removeEmpty) {
         Array<String<C> > retval;
@@ -296,9 +356,9 @@ namespace vislib {
 
 
     /*
-     * StringTokeniser<C>::Explode
+     * StringTokeniser<C>::Split
      */
-    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+    template<class C> Array<String<C> > StringTokeniser<C>::Split(
             const String<C>& input, const typename C::Char separator,
             bool removeEmpty) {
         typename C::Char sep[2] = { separator, 0 };
@@ -310,9 +370,9 @@ namespace vislib {
 
 
     /*
-     * StringTokeniser<C>::Explode
+     * StringTokeniser<C>::Split
      */
-    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+    template<class C> Array<String<C> > StringTokeniser<C>::Split(
             const typename C::Char *input, const String<C>& separator,
             bool removeEmpty) {
         Array<String<C> > retval;
@@ -323,9 +383,9 @@ namespace vislib {
 
 
     /*
-     * StringTokeniser<C>::Explode
+     * StringTokeniser<C>::Split
      */
-    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+    template<class C> Array<String<C> > StringTokeniser<C>::Split(
             const typename C::Char *input, const typename C::Char *separator,
             bool removeEmpty) {
         Array<String<C> > retval;
@@ -335,9 +395,9 @@ namespace vislib {
 
 
     /*
-     * StringTokeniser<C>::Explode
+     * StringTokeniser<C>::Split
      */
-    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+    template<class C> Array<String<C> > StringTokeniser<C>::Split(
             const typename C::Char *input, const typename C::Char separator,
             bool removeEmpty) {
         typename C::Char sep[2] = { separator, 0 };
@@ -529,9 +589,9 @@ namespace vislib {
 
 
     /*
-     * StringTokeniser<C>::explode
+     * StringTokeniser<C>::split
      */
-    template<class C> void StringTokeniser<C>::explode(
+    template<class C> void StringTokeniser<C>::split(
             const typename C::Char* input, const typename C::Char* separator,
             bool removeEmpty, Array<String<C> >& outArray) {
         outArray.Clear();
