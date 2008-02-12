@@ -15,6 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
@@ -24,71 +25,103 @@ namespace vislib {
 
 
     /**
-     * Tokeniser class splitting a string into substrings based on a delimitor 
+     * Tokeniser class splitting a string into substrings based on a separator
      * string. The template parameter C must be the CharTraits class of the 
      * corresponding string type.
      */
-    template<class C> class StringTokeniser: public Iterator<const String<C> > {
+    template<class C>
+    class StringTokeniser : public Iterator<const String<C> > {
     public:
 
-        /** 
-         * Ctor. 
+        /**
+         * Explodes a string into an array of substrings based of a given
+         * separator.
          *
-         * @param input The input string to be tokenised.
-         * @param delimiter The delimiting string. Must not be Empty.
+         * @param input The input string to be separated.
+         * @param separator The separator.
+         * @param removeEmpty If 'true' empty elements will be removed from
+         *                    the result array before it is returned.
+         *
+         * @return An array of the separated substrings.
          */
-        StringTokeniser(const String<C>& input, const String<C>& delimiter);
+        static Array<String<C> > Explode(const String<C>& input,
+            const String<C>& separator, bool removeEmpty = false);
+        static Array<String<C> > Explode(const String<C>& input,
+            const typename C::Char *separator, bool removeEmpty = false);
+        static Array<String<C> > Explode(const String<C>& input,
+            const typename C::Char separator, bool removeEmpty = false);
+        static Array<String<C> > Explode(const typename C::Char *input,
+            const String<C>& separator, bool removeEmpty = false);
+        static Array<String<C> > Explode(const typename C::Char *input,
+            const typename C::Char *separator, bool removeEmpty = false);
+        static Array<String<C> > Explode(const typename C::Char *input,
+            const typename C::Char separator, bool removeEmpty = false);
 
         /** 
          * Ctor. 
          *
          * @param input The input string to be tokenised.
-         * @param delimiter The delimiting string. Must not be NULL.
+         * @param separator The separating string. Must not be Empty.
          */
-        StringTokeniser(const String<C>& input, const typename C::Char *delimiter);
+        StringTokeniser(const String<C>& input, const String<C>& separator);
 
         /** 
          * Ctor. 
          *
          * @param input The input string to be tokenised.
-         * @param delimiter The delimiting character.
+         * @param separator The separating string. Must not be NULL.
          */
-        StringTokeniser(const String<C>& input, const typename C::Char delimiter);
+        StringTokeniser(const String<C>& input, const typename C::Char *separator);
 
         /** 
          * Ctor. 
          *
          * @param input The input string to be tokenised.
-         * @param delimiter The delimiting string. Must not be Empty.
+         * @param separator The separating character.
          */
-        StringTokeniser(const typename C::Char *input, const String<C>& delimiter);
+        StringTokeniser(const String<C>& input, const typename C::Char separator);
 
         /** 
          * Ctor. 
          *
          * @param input The input string to be tokenised.
-         * @param delimiter The delimiting string. Must not be NULL.
+         * @param separator The separating string. Must not be Empty.
          */
-        StringTokeniser(const typename C::Char *input, const typename C::Char *delimiter);
+        StringTokeniser(const typename C::Char *input, const String<C>& separator);
 
         /** 
          * Ctor. 
          *
          * @param input The input string to be tokenised.
-         * @param delimiter The delimiting character.
+         * @param separator The separating string. Must not be NULL.
          */
-        StringTokeniser(const typename C::Char *input, const typename C::Char delimiter);
+        StringTokeniser(const typename C::Char *input, const typename C::Char *separator);
+
+        /** 
+         * Ctor. 
+         *
+         * @param input The input string to be tokenised.
+         * @param separator The separating character.
+         */
+        StringTokeniser(const typename C::Char *input, const typename C::Char separator);
 
         /** Dtor. */
         virtual ~StringTokeniser(void);
 
         /**
-         * Answers the delimiter string.
+         * Answers the separator string.
          *
-         * @return The delimiter string.
+         * @return The separator string.
          */
+#ifdef _MSC_VER
+        __declspec(deprecated("Delimiter() has been deprecated. "
+            "Use Separator() instead."))
+#endif /* _MSC_VER */
         inline const String<C>& Delimiter(void) const {
-            return this->delimiter;
+#ifndef _WIN32
+#warning "Delimiter() has been deprecated. Use Separator() instead."
+#endif /* !_WIN32 */
+            return this->separator;
         }
 
         /**
@@ -124,6 +157,15 @@ namespace vislib {
         void Reset(void);
 
         /**
+         * Answers the separator string.
+         *
+         * @return The separator string.
+         */
+        inline const String<C>& Separator(void) const {
+            return this->separator;
+        }
+
+        /**
          * Resets the StringTokeniser and sets a new input string to be
          * tokenised.
          *
@@ -141,59 +183,73 @@ namespace vislib {
 
         /**
          * Resets the StringTokeniser and sets a new input string to be
-         * tokenised and a new delimitor string.
+         * tokenised and a new separator string.
          *
          * @param input The new input string.
-         * @param delimitor The new delimitor string. Must not be Empty.
+         * @param separator The new separator string. Must not be Empty.
          */
-        void Set(const String<C>& input, const String<C>& delimitor);
+        void Set(const String<C>& input, const String<C>& separator);
 
         /**
          * Resets the StringTokeniser and sets a new input string to be
-         * tokenised and a new delimitor string.
+         * tokenised and a new separator string.
          *
          * @param input The new input string.
-         * @param delimitor The new delimitor string. Must not be NULL.
+         * @param separator The new separator string. Must not be NULL.
          */
-        void Set(const String<C>& input, const typename C::Char* delimitor);
+        void Set(const String<C>& input, const typename C::Char* separator);
 
         /**
          * Resets the StringTokeniser and sets a new input string to be
-         * tokenised and a new delimitor string.
+         * tokenised and a new separator string.
          *
          * @param input The new input string.
-         * @param delimitor The new delimitor string.
+         * @param separator The new separator string.
          */
-        void Set(const String<C>& input, const typename C::Char delimitor);
+        void Set(const String<C>& input, const typename C::Char separator);
 
         /**
          * Resets the StringTokeniser and sets a new input string to be
-         * tokenised and a new delimitor string.
+         * tokenised and a new separator string.
          *
          * @param input The new input string.
-         * @param delimitor The new delimitor string. Must not be Empty.
+         * @param separator The new separator string. Must not be Empty.
          */
-        void Set(const typename C::Char* input, const String<C>& delimitor);
+        void Set(const typename C::Char* input, const String<C>& separator);
 
         /**
          * Resets the StringTokeniser and sets a new input string to be
-         * tokenised and a new delimitor string.
+         * tokenised and a new separator string.
          *
          * @param input The new input string.
-         * @param delimitor The new delimitor string. Must not be NULL.
+         * @param separator The new separator string. Must not be NULL.
          */
-        void Set(const typename C::Char* input, const typename C::Char* delimitor);
+        void Set(const typename C::Char* input,
+            const typename C::Char* separator);
 
         /**
          * Resets the StringTokeniser and sets a new input string to be
-         * tokenised and a new delimitor string.
+         * tokenised and a new separator string.
          *
          * @param input The new input string.
-         * @param delimitor The new delimitor string.
+         * @param separator The new separator string.
          */
-        void Set(const typename C::Char* input, const typename C::Char delimitor);
+        void Set(const typename C::Char* input,
+            const typename C::Char separator);
 
     private:
+
+        /**
+         * Implementation of explode.
+         *
+         * @param input The input string.
+         * @param separator The separator string.
+         * @param removeEmpty The remove empty flag.
+         * @param outArray The array receiving the generated strings.
+         */
+        static void explode(const typename C::Char* input,
+            const typename C::Char* separator, bool removeEmpty,
+            Array<String<C> >& outArray);
 
         /** Prepares the next token */
         void prepareNextToken(void);
@@ -201,8 +257,8 @@ namespace vislib {
         /** the input string */
         String<C> input;
 
-        /** the delimiter string */
-        String<C> delimiter;
+        /** the separator string */
+        String<C> separator;
 
         /** the search position inside input */
         typename String<C>::Size inputPos;
@@ -214,11 +270,89 @@ namespace vislib {
 
 
     /*
+     * StringTokeniser<C>::Explode
+     */
+    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+            const String<C>& input, const String<C>& separator,
+            bool removeEmpty) {
+        Array<String<C> > retval;
+        StringTokeniser<C>::explode(input.PeekBuffer(), separator.PeekBuffer(),
+            removeEmpty, retval);
+        return retval;
+    }
+
+
+    /*
+     * StringTokeniser<C>::Explode
+     */
+    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+            const String<C>& input, const typename C::Char *separator,
+            bool removeEmpty) {
+        Array<String<C> > retval;
+        StringTokeniser<C>::explode(input.PeekBuffer(), separator,
+            removeEmpty, retval);
+        return retval;
+    }
+
+
+    /*
+     * StringTokeniser<C>::Explode
+     */
+    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+            const String<C>& input, const typename C::Char separator,
+            bool removeEmpty) {
+        typename C::Char sep[2] = { separator, 0 };
+        Array<String<C> > retval;
+        StringTokeniser<C>::explode(input.PeekBuffer(), sep, removeEmpty, 
+            retval);
+        return retval;
+    }
+
+
+    /*
+     * StringTokeniser<C>::Explode
+     */
+    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+            const typename C::Char *input, const String<C>& separator,
+            bool removeEmpty) {
+        Array<String<C> > retval;
+        StringTokeniser<C>::explode(input, separator.PeekBuffer(), 
+            removeEmpty, retval);
+        return retval;
+    }
+
+
+    /*
+     * StringTokeniser<C>::Explode
+     */
+    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+            const typename C::Char *input, const typename C::Char *separator,
+            bool removeEmpty) {
+        Array<String<C> > retval;
+        StringTokeniser<C>::explode(input, separator, removeEmpty, retval);
+        return retval;
+    }
+
+
+    /*
+     * StringTokeniser<C>::Explode
+     */
+    template<class C> Array<String<C> > StringTokeniser<C>::Explode(
+            const typename C::Char *input, const typename C::Char separator,
+            bool removeEmpty) {
+        typename C::Char sep[2] = { separator, 0 };
+        Array<String<C> > retval;
+        StringTokeniser<C>::explode(input, sep, removeEmpty, retval);
+        return retval;
+    }
+
+
+    /*
      * StringTokeniser<C>::StringTokeniser
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
-            const String<C>& input, const String<C>& delimiter)
-            : input(input), delimiter(delimiter), inputPos(0) {
+            const String<C>& input, const String<C>& separator)
+            : input(input), separator(separator), inputPos(0) {
         this->Reset();
     }
 
@@ -227,8 +361,8 @@ namespace vislib {
      * StringTokeniser<C>::StringTokeniser
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
-            const String<C>& input, const typename C::Char *delimiter)
-            : input(input), delimiter(delimiter), inputPos(0) {
+            const String<C>& input, const typename C::Char *separator)
+            : input(input), separator(separator), inputPos(0) {
         this->Reset();
     }
 
@@ -237,8 +371,8 @@ namespace vislib {
      * StringTokeniser<C>::StringTokeniser
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
-            const String<C>& input, const typename C::Char delimiter)
-            : input(input), delimiter(delimiter, 1), inputPos(0) {
+            const String<C>& input, const typename C::Char separator)
+            : input(input), separator(separator, 1), inputPos(0) {
         this->Reset();
     }
 
@@ -247,8 +381,8 @@ namespace vislib {
      * StringTokeniser<C>::StringTokeniser
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
-            const typename C::Char *input, const String<C>& delimiter)
-            : input(input), delimiter(delimiter), inputPos(0) {
+            const typename C::Char *input, const String<C>& separator)
+            : input(input), separator(separator), inputPos(0) {
         this->Reset();
     }
 
@@ -257,8 +391,8 @@ namespace vislib {
      * StringTokeniser<C>::StringTokeniser
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
-            const typename C::Char *input, const typename C::Char *delimiter)
-            : input(input), delimiter(delimiter), inputPos(0) {
+            const typename C::Char *input, const typename C::Char *separator)
+            : input(input), separator(separator), inputPos(0) {
         this->Reset();
     }
 
@@ -267,8 +401,8 @@ namespace vislib {
      * StringTokeniser<C>::StringTokeniser
      */
     template<class C> StringTokeniser<C>::StringTokeniser(
-            const typename C::Char *input, const typename C::Char delimiter)
-            : input(input), delimiter(delimiter, 1), inputPos(0) {
+            const typename C::Char *input, const typename C::Char separator)
+            : input(input), separator(separator, 1), inputPos(0) {
         this->Reset();
     }
 
@@ -301,7 +435,7 @@ namespace vislib {
      * StringTokeniser<C>::Reset
      */
     template<class C> void StringTokeniser<C>::Reset(void) {
-        ASSERT(delimiter.Length() > 0);
+        ASSERT(separator.Length() > 0);
         this->inputPos = 0;
         this->prepareNextToken();
         this->inputPos = 0;
@@ -311,7 +445,8 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const String<C>& input) {
+    template<class C> void StringTokeniser<C>::Set(
+            const String<C>& input) {
         this->input = input;
         this->Reset();
     }
@@ -320,7 +455,8 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const typename C::Char* input) {
+    template<class C> void StringTokeniser<C>::Set(
+            const typename C::Char* input) {
         this->input = input;
         this->Reset();
     }
@@ -329,9 +465,10 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const String<C>& input, const String<C>& delimitor) {
+    template<class C> void StringTokeniser<C>::Set(
+            const String<C>& input, const String<C>& separator) {
         this->input = input;
-        this->delimitor = delimitor;
+        this->separator = separator;
         this->Reset();
     }
     
@@ -339,9 +476,10 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const String<C>& input, const typename C::Char* delimitor) {
+    template<class C> void StringTokeniser<C>::Set(
+            const String<C>& input, const typename C::Char* separator) {
         this->input = input;
-        this->delimitor = delimitor;
+        this->separator = separator;
         this->Reset();
     }
     
@@ -349,9 +487,10 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const String<C>& input, const typename C::Char delimitor) {
+    template<class C> void StringTokeniser<C>::Set(
+            const String<C>& input, const typename C::Char separator) {
         this->input = input;
-        this->delimitor = String<C>(delimitor, 1);
+        this->separator = String<C>(separator, 1);
         this->Reset();
     }
     
@@ -359,9 +498,10 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const typename C::Char* input, const String<C>& delimitor) {
+    template<class C> void StringTokeniser<C>::Set(
+            const typename C::Char* input, const String<C>& separator) {
         this->input = input;
-        this->delimitor = delimitor;
+        this->separator = separator;
         this->Reset();
     }
     
@@ -369,9 +509,10 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const typename C::Char* input, const typename C::Char* delimitor) {
+    template<class C> void StringTokeniser<C>::Set(
+            const typename C::Char* input, const typename C::Char* separator) {
         this->input = input;
-        this->delimitor = delimitor;
+        this->separator = separator;
         this->Reset();
     }
     
@@ -379,10 +520,28 @@ namespace vislib {
     /*
      * StringTokeniser<C>::Set
      */
-    template<class C> void StringTokeniser<C>::Set(const typename C::Char* input, const typename C::Char delimitor) {
+    template<class C> void StringTokeniser<C>::Set(
+            const typename C::Char* input, const typename C::Char separator) {
         this->input = input;
-        this->delimitor = String<C>(delimitor, 1);
+        this->separator = String<C>(separator, 1);
         this->Reset();
+    }
+
+
+    /*
+     * StringTokeniser<C>::explode
+     */
+    template<class C> void StringTokeniser<C>::explode(
+            const typename C::Char* input, const typename C::Char* separator,
+            bool removeEmpty, Array<String<C> >& outArray) {
+        outArray.Clear();
+        StringTokeniser<C> tokeniser(input, separator);
+        while (tokeniser.HasNext()) {
+            const String<C>& el = tokeniser.Next();
+            if (!removeEmpty || !el.IsEmpty()) {
+                outArray.Append(el);
+            }
+        }
     }
 
 
@@ -390,10 +549,12 @@ namespace vislib {
      * StringTokeniser<C>::prepareNextToken
      */
     template<class C> void StringTokeniser<C>::prepareNextToken(void) {
-        typename String<C>::Size pos = this->input.Find(this->delimiter, this->inputPos);
+        typename String<C>::Size pos 
+            = this->input.Find(this->separator, this->inputPos);
         if (pos != String<C>::INVALID_POS) {
-            this->next = this->input.Substring(this->inputPos, pos - this->inputPos);
-            this->inputPos = pos + this->delimiter.Length();
+            this->next 
+                = this->input.Substring(this->inputPos, pos - this->inputPos);
+            this->inputPos = pos + this->separator.Length();
         } else {
             this->next = this->input.Substring(this->inputPos);
             this->inputPos = String<C>::INVALID_POS;
