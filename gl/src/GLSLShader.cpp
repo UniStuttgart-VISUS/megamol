@@ -39,7 +39,7 @@ bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
  * vislib::graphics::gl::GLSLShader::RequiredExtensions
  */
 const char * vislib::graphics::gl::GLSLShader::RequiredExtensions(void) {
-    return "GL_ARB_shader_objects ";
+    return "GL_ARB_shader_objects GL_ARB_vertex_shader ";
 }
 
 
