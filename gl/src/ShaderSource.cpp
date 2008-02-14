@@ -254,6 +254,20 @@ vislib::graphics::gl::ShaderSource::Set(
 
 
 /*
+ * vislib::graphics::gl::ShaderSource::WholeCode
+ */
+vislib::StringA vislib::graphics::gl::ShaderSource::WholeCode(void) const {
+    vislib::StringA retval;
+    SIZE_T cnt = this->snippets.Count();
+    for (SIZE_T i = 0; i < cnt; i++) {
+        retval.Append(const_cast<Snippet*>(this->snippets[i].operator->()
+            )->PeekCode());
+    }
+    return retval;
+}
+
+
+/*
  * vislib::graphics::gl::ShaderSource::operator[]
  */
 const vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>& 

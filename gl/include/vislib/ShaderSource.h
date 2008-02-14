@@ -255,6 +255,13 @@ namespace gl {
             const vislib::SmartPtr<Snippet>& code);
 
         /**
+         * Creates a single string containing the whole shader source code.
+         *
+         * @return The string containing the whole shader source code.
+         */
+        vislib::StringA WholeCode(void) const;
+
+        /**
          * Answers one snippet of the shader source.
          *
          * @param idx The zero based index of the snippet to return.
