@@ -22,7 +22,7 @@ namespace math {
     /**
      * A quaternion.
      */
-    template<class T> class ShallowQuaternion : AbstractQuaternion<T, T[4]> {
+    template<class T> class ShallowQuaternion : AbstractQuaternion<T, T*> {
 
     public:
 
@@ -36,7 +36,7 @@ namespace math {
          *
          * @param components The components of the quaternion.
          */
-        inline explicit ShallowQuaternion(const T *components) {
+        inline explicit ShallowQuaternion(T *components) {
             this->components = components;
         }
 
