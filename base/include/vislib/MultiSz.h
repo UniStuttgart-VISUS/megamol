@@ -148,7 +148,7 @@ namespace vislib {
          *                        not be allocated.
          */
         inline void Append(const String<T>& str) {
-            this->Append(str.PeekBuffer);
+            this->Append(str.PeekBuffer());
         }
 
         /**
