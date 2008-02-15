@@ -307,3 +307,36 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
 }
 #endif /* !_WIN32 */
 
+
+/*
+ * vislib::sys::WriteTextFile
+ */
+void vislib::sys::WriteTextFile(const StringA& filename, const StringA& text, 
+        bool force) {
+    File file;
+    if (file.Open(filename, File::WRITE_ONLY, File::SHARE_EXCLUSIVE,
+            force ? File::CREATE_OVERWRITE : File::CREATE_ONLY)) {
+        file.Write(text.PeekBuffer(), text.Length() * sizeof(char));
+        file.Close();
+    } else {
+        // works because the last error still contains the correct value
+        throw SystemException(__FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::sys::WriteTextFile
+ */
+void vislib::sys::WriteTextFile(const StringW& filename, const StringW& text, 
+        bool force) {
+    File file;
+    if (file.Open(filename, File::WRITE_ONLY, File::SHARE_EXCLUSIVE,
+            force ? File::CREATE_OVERWRITE : File::CREATE_ONLY)) {
+        file.Write(text.PeekBuffer(), text.Length() * sizeof(wchar_t));
+        file.Close();
+    } else {
+        // works because the last error still contains the correct value
+        throw SystemException(__FILE__, __LINE__);
+    }
+}

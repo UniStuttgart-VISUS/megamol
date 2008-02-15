@@ -207,6 +207,32 @@ namespace sys {
     key_t TranslateIpcName(const char *name);
 #endif /* !_WIN32 */
 
+    /**
+     * Writes a text to a file. If the file exists and force is 'true' the
+     * existing file is overwritten.
+     *
+     * @param filename The path to the file to be written.
+     * @param text The text to be written.
+     * @param force Flag whether or not to overwrite an existing file.
+     *
+     * @throws SystemException in case of an error.
+     */
+    void WriteTextFile(const StringA& filename, const StringA& text, 
+        bool force = false);
+
+    /**
+     * Writes a text to a file. If the file exists and force is 'true' the
+     * existing file is overwritten.
+     *
+     * @param filename The path to the file to be written.
+     * @param text The text to be written.
+     * @param force Flag whether or not to overwrite an existing file.
+     *
+     * @throws SystemException in case of an error.
+     */
+    void WriteTextFile(const StringW& filename, const StringW& text, 
+        bool force = false);
+
 } /* end namespace sys */
 } /* end namespace vislib */
 

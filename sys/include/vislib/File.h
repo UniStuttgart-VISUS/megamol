@@ -237,13 +237,15 @@ namespace sys {
          * If this object already holds an open file, this file is closed (like 
          * calling Close) and the new file is opened.
          *
-         * @param filename	   Path to the file to be opened
+         * @param filename     Path to the file to be opened
          * @param accessMode   The access mode for the file to be opened
          * @param shareMode    The share mode
-         *					   (Parameter is ignored on linux systems.)
+         *                     (Parameter is ignored on linux systems.)
          * @param creationMode Use your imagination on this one
          *
-         * @return true, if the file has been successfully opened, false otherwise.
+         * @return true, if the file has been successfully opened, false 
+         *         otherwise. In case of an error you can receive additional
+         *         information using 'GetLastError'.
          *
          * @throws IllegalParamException
          */
@@ -256,13 +258,15 @@ namespace sys {
          * If this object already holds an open file, this file is closed (like 
          * calling Close) and the new file is opened.
          *
-         * @param filename	   Path to the file to be opened
+         * @param filename     Path to the file to be opened
          * @param accessMode   The access mode for the file to be opened
          * @param shareMode    The share mode
-         *					   (Parameter is ignored on linux systems.)
+         *                     (Parameter is ignored on linux systems.)
          * @param creationMode Use your imagination on this one
          *
-         * @return true, if the file has been successfully opened, false otherwise.
+         * @return true, if the file has been successfully opened, false 
+         *         otherwise. In case of an error you can receive additional
+         *         information using 'GetLastError'.
          *
          * @throws IllegalParamException
          */
