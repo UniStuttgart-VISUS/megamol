@@ -65,181 +65,181 @@ namespace sys {
             const char *name = NULL);
 
         virtual void Deserialise(bool& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(char& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(char& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(wchar_t& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(wchar_t& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(INT8& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(INT8& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(UINT8& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(UINT8& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(INT16& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(INT16& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(UINT16& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(UINT16& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(INT32& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(INT32& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(UINT32& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(UINT32& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(INT64& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(INT64& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(UINT64& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(UINT64& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(float& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(float& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(double& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(double& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(StringA& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(StringA& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Deserialise(StringW& outValue, 
             const char *name = NULL);
 
         virtual void Deserialise(StringW& outValue, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const bool value, 
             const char *name = NULL);
 
         virtual void Serialise(const bool value, 
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const char value,
             const char *name = NULL);
 
         virtual void Serialise(const char value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const wchar_t value,
             const char *name = NULL);
 
         virtual void Serialise(const wchar_t value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const INT8 value,
             const char *name = NULL);
 
         virtual void Serialise(const INT8 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const UINT8 value,
             const char *name = NULL);
 
         virtual void Serialise(const UINT8 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const INT16 value,
             const char *name = NULL);
 
         virtual void Serialise(const INT16 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const UINT16 value,
             const char *name = NULL);
 
         virtual void Serialise(const UINT16 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const INT32 value,
             const char *name = NULL);
 
         virtual void Serialise(const INT32 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const UINT32 value,
             const char *name = NULL);
 
         virtual void Serialise(const UINT32 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const INT64 value,
             const char *name = NULL);
 
         virtual void Serialise(const INT64 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const UINT64 value,
             const char *name = NULL);
 
         virtual void Serialise(const UINT64 value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const float value,
             const char *name = NULL);
 
         virtual void Serialise(const float value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const double value,
             const char *name = NULL);
 
         virtual void Serialise(const double value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const StringA& value,
             const char *name = NULL);
 
         virtual void Serialise(const StringA& value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         virtual void Serialise(const StringW& value,
             const char *name = NULL);
 
         virtual void Serialise(const StringW& value,
-            const wchar_t *name = NULL);
+            const wchar_t *name);
 
         /**
          * Assignment operator.

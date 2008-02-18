@@ -75,7 +75,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(bool& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the wchar_t element with name 'name' into 'outValue'.
@@ -103,7 +103,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(wchar_t& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the INT8 element with name 'name' into 'outValue'.
@@ -131,7 +131,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(INT8& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the UINT8 element with name 'name' into 'outValue'.
@@ -159,7 +159,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(UINT8& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the INT16 element with name 'name' into 'outValue'.
@@ -187,7 +187,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(INT16& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the UINT16 element with name 'name' into 'outValue'.
@@ -215,7 +215,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(UINT16& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the INT32 element with name 'name' into 'outValue'.
@@ -243,7 +243,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(INT32& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the UINT32 element with name 'name' into 'outValue'.
@@ -271,7 +271,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(UINT32& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the INT64 element with name 'name' into 'outValue'.
@@ -299,7 +299,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(INT64& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the UINT64 element with name 'name' into 'outValue'.
@@ -327,7 +327,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(UINT64& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the float element with name 'name' into 'outValue'.
@@ -355,7 +355,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(float& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the double element with name 'name' into 'outValue'.
@@ -383,7 +383,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(double& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the StringA element with name 'name' into 'outValue'.
@@ -411,7 +411,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(StringA& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Deserialise the StringW element with name 'name' into 'outValue'.
@@ -439,7 +439,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Deserialise(StringW& outValue, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the bool variable using the name 'name'.
@@ -467,7 +467,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const bool value, 
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the wchar_t variable using the name 'name'.
@@ -495,7 +495,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const wchar_t value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the INT8 variable using the name 'name'.
@@ -523,7 +523,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const INT8 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the UINT8 variable using the name 'name'.
@@ -551,7 +551,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const UINT8 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the INT16 variable using the name 'name'.
@@ -579,7 +579,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const INT16 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the UINT16 variable using the name 'name'.
@@ -607,7 +607,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const UINT16 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the INT32 variable using the name 'name'.
@@ -635,7 +635,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const INT32 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the UINT32 variable using the name 'name'.
@@ -663,7 +663,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const UINT32 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the INT64 variable using the name 'name'.
@@ -691,7 +691,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const INT64 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the UINT64 variable using the name 'name'.
@@ -719,7 +719,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const UINT64 value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the float variable using the name 'name'.
@@ -747,7 +747,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const float value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the double variable using the name 'name'.
@@ -775,7 +775,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const double value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the StringA variable using the name 'name'.
@@ -803,7 +803,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const StringA& value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
         /**
          * Serialise the StringW variable using the name 'name'.
@@ -831,7 +831,7 @@ namespace vislib {
          *                   indicated failure.
          */
         virtual void Serialise(const StringW& value,
-            const wchar_t *name = NULL) = 0;
+            const wchar_t *name) = 0;
 
     protected:
 

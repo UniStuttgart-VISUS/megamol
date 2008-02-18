@@ -370,6 +370,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\RawStorageSerialiser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\RegEx.cpp"
 				>
 			</File>
@@ -541,6 +545,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\RawStorage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RawStorageSerialiser.h"
 				>
 			</File>
 			<File

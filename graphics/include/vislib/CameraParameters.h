@@ -23,6 +23,8 @@
 #include "vislib/mathtypes.h"
 #include "vislib/Point.h"
 #include "vislib/Rectangle.h"
+#include "vislib/Serialiser.h"
+#include "vislib/Serialisable.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/Vector.h"
 
@@ -34,7 +36,7 @@ namespace graphics {
     /**
      * Abstract base class of camera parameters used by the camera objects
      */
-    class CameraParameters {
+    class CameraParameters : public vislib::Serialisable {
     public:
         
         /** possible values for the projection type */
@@ -125,6 +127,20 @@ namespace graphics {
             this->SetTileRect(src->TileRect()); // set after virtual view size
             this->SetLimits(src->Limits()); // set as last
         }
+
+        /**
+         * Deserialise the object from 'serialiser'. The caller must ensure 
+         * that the Serialiser is in an acceptable state to deserialise from.
+         *
+         * The camera parameter limits are NOT deserialised!
+         *
+         * @param serialiser The Serialiser to deserialise the object from.
+         *
+         * @throws Exception Implementing classes may throw exceptions to 
+         *                   indicate an error or pass through exceptions thrown
+         *                   by the Serialiser.
+         */
+        virtual void Deserialise(Serialiser& serialiser);
 
         /**
          * Answer the eye for stereo projections.
@@ -258,6 +274,20 @@ namespace graphics {
          * @return The normalised right vector of the camera. 
          */
         virtual const math::Vector<SceneSpaceType, 3>& Right(void) const = 0;
+
+        /**
+         * Serialise the object to 'serialiser'. The caller must ensure that
+         * the Serialiser is in an acceptable state to serialise to.
+         *
+         * The camera parameter limits are NOT serialised!
+         *
+         * @param serialiser The Serialiser to serialise the object to.
+         *
+         * @throws Exception Implementing classes may throw exceptions to 
+         *                   indicate an error or pass through exceptions thrown
+         *                   by the Serialiser.
+         */
+        virtual void Serialise(Serialiser& serialiser) const;
 
         /**
          * Sets the aperture angle along the y-axis.
