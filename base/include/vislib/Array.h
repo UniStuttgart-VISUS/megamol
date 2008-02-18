@@ -168,6 +168,24 @@ namespace vislib {
         void Erase(const SIZE_T beginIdx, const SIZE_T cnt);
 
         /**
+         * Exposes the internal data pointer.
+         *
+         * Using this method is inherently unsafe as the pointer is only 
+         * guaranteed to be valid until an arbitrary method is called on the
+         * array. This is analogous to String::PeekBuffer.
+         *
+         * YOU SHOULD NEVER MODIFY THIS POINTER, ESPECIALLY NEVER RELEASE THE
+         * MEMORY!
+         *
+         * The data pointer might be NULL.
+         *
+         * @return The internal data pointer.
+         */
+        inline const T *PeekElements(void) const {
+            return this->elements;
+        }
+
+        /**
          * Answer a pointer to the first copy of 'element' in the array. If no
          * element equal to 'element' is found, a NULL pointer is returned.
          *

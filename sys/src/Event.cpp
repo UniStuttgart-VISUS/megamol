@@ -40,7 +40,7 @@ vislib::sys::Event::Event(const bool isManualReset,
 #endif /* _WIN32 */
 {
 #ifdef _WIN32
-    this->handle = ::CreateEvent(NULL, isManualReset ? TRUE : FALSE, FALSE, 
+    this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE, FALSE, 
         NULL);
     ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
