@@ -1,3 +1,8 @@
+BITTE ALLE NEUEN WÜNSCHE IN ZUKUNFT UNTER
+  vis-web.informatik.uni-stuttgart.de/trac/vislib
+ALS TICKET EINTRAGEN!
+
+
 Guido: Möglichkeit, plattformunabhängig (Fenster-)Botschaften zu versenden.
 Christoph: Thread-Pool
 Guido: Öffnen von Remote-Dateien in File-Wrappern vorsehen.

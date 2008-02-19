@@ -22,7 +22,7 @@
 /*
  * vislib::graphics::gl::FramebufferObject::RequiredExtensions
  */
-const char * vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
+const char *vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
     return "GL_EXT_framebuffer_object ";
 }
 
@@ -33,7 +33,7 @@ const char * vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
 UINT vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
     USES_GL_VERIFY;
     GLint retval = 0;
-    
+
     GL_VERIFY_THROW(::glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &retval));
 
     return static_cast<UINT>(retval);
@@ -46,7 +46,7 @@ UINT vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
 vislib::graphics::gl::FramebufferObject::FramebufferObject(void) 
         : attachmentColour(NULL), cntColourAttachments(0), idFb(UINT_MAX), 
         height(0), oldDrawBuffer(0), oldReadBuffer(0), width(0) {
-    
+
     this->attachmentOther[0].state = ATTACHMENT_DISABLED;
     this->attachmentOther[1].state = ATTACHMENT_DISABLED;
 

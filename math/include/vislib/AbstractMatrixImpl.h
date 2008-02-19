@@ -248,8 +248,8 @@ namespace math {
          */
         template<class Sp>
         inline DeepStorageMatrix operator +(const C<T, D, L, Sp>& rhs) const {
-            DeepStorageMatrix retval = rhs;
-            retval += *this;
+            DeepStorageMatrix retval = *this;
+            retval += rhs;
             return retval;
         }
 
