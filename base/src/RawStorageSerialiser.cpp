@@ -61,24 +61,6 @@ void vislib::RawStorageSerialiser::Deserialise(bool& outValue,
 /*
  * vislib::RawStorageSerialiser::Deserialise
  */
-void vislib::RawStorageSerialiser::Deserialise(char& outValue, 
-        const char *name) {
-    this->restore(&outValue, 1);
-}
-
-
-/*
- * vislib::RawStorageSerialiser::Deserialise
- */
-void vislib::RawStorageSerialiser::Deserialise(char& outValue, 
-        const wchar_t *name) {
-    this->restore(&outValue, 1);
-}
-
-
-/*
- * vislib::RawStorageSerialiser::Deserialise
- */
 void vislib::RawStorageSerialiser::Deserialise(wchar_t& outValue, 
         const char *name) {
     this->restore(&outValue, sizeof(wchar_t));
@@ -335,24 +317,6 @@ void vislib::RawStorageSerialiser::Serialise(const bool value,
         const wchar_t *name) {
     unsigned char c = value ? 1 : 0;
     this->store(&c, 1);
-}
-
-
-/*
- * vislib::RawStorageSerialiser::Serialise
- */
-void vislib::RawStorageSerialiser::Serialise(const char value, 
-        const char *name) {
-    this->store(&value, 1);
-}
-
-
-/*
- * vislib::RawStorageSerialiser::Serialise
- */
-void vislib::RawStorageSerialiser::Serialise(const char value, 
-        const wchar_t *name) {
-    this->store(&value, 1);
 }
 
 

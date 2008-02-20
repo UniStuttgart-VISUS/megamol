@@ -266,24 +266,6 @@ void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(char& outValue, 
-        const char *name) {
-    this->deserialiseSignedAsDword(outValue, name);
-}
-
-
-/*
- * vislib::sys::RegistrySerialiser::Deserialise
- */
-void vislib::sys::RegistrySerialiser::Deserialise(char& outValue, 
-        const wchar_t *name) {
-    this->deserialiseSignedAsDword(outValue, name);
-}
-
-
-/*
- * vislib::sys::RegistrySerialiser::Deserialise
- */
 void vislib::sys::RegistrySerialiser::Deserialise(wchar_t& outValue, 
         const char *name) {
     this->deserialiseSignedAsDword(outValue, name);
@@ -547,24 +529,6 @@ void vislib::sys::RegistrySerialiser::Serialise(const bool value,
 void vislib::sys::RegistrySerialiser::Serialise(const bool value, 
         const wchar_t *name) {
     this->serialiseAsDword(value, name);
-}
-
-
-/*
- * vislib::sys::RegistrySerialiser::Serialise
- */
-void vislib::sys::RegistrySerialiser::Serialise(const char value,
-        const char *name) {
-    this->serialiseAsDword0<char, unsigned char, char>(value, name);
-}
-
-
-/*
- * vislib::sys::RegistrySerialiser::Serialise
- */
-void vislib::sys::RegistrySerialiser::Serialise(const char value,
-        const wchar_t *name) {
-    this->serialiseAsDword0<char, unsigned char, wchar_t>(value, name);
 }
 
 

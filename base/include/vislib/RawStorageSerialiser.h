@@ -59,12 +59,6 @@ namespace vislib {
         virtual void Deserialise(bool& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(char& outValue, 
-            const char *name = NULL);
-
-        virtual void Deserialise(char& outValue, 
-            const wchar_t *name);
-
         virtual void Deserialise(wchar_t& outValue, 
             const char *name = NULL);
 
@@ -165,12 +159,6 @@ namespace vislib {
             const char *name = NULL);
 
         virtual void Serialise(const bool value, 
-            const wchar_t *name);
-
-        virtual void Serialise(const char value,
-            const char *name = NULL);
-
-        virtual void Serialise(const char value,
             const wchar_t *name);
 
         virtual void Serialise(const wchar_t value,
