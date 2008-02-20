@@ -769,7 +769,8 @@ namespace sys {
             }
 
             /**
-             * Compare operator.
+             * Compare operator. This is purely based on the short and the 
+             * long name of the option.
              *
              * @param rhs The right hand side operand
              *
@@ -777,8 +778,7 @@ namespace sys {
              */
             inline bool operator==(const Option& rhs) const {
                 return (this->shortName == rhs.shortName)
-                    && (this->longName == rhs.longName)
-                    && (this->valueType == rhs.valueType);
+                    && (this->longName == rhs.longName);
             }
 
         private:
