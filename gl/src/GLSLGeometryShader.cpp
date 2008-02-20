@@ -23,8 +23,10 @@
  */
 const char * 
 vislib::graphics::gl::GLSLGeometryShader::RequiredExtensions(void) {
-    // would be better if it would call the super class
-    return "GL_ARB_shader_objects GL_EXT_geometry_shader4 ";
+    static vislib::StringA exts = vislib::StringA(
+        vislib::graphics::gl::GLSLShader::RequiredExtensions())
+        + " GL_EXT_geometry_shader4 ";
+    return exts.PeekBuffer();
 }
 
 
