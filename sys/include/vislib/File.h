@@ -79,6 +79,25 @@ namespace sys {
         };
 
         /**
+         * Creates a temporary file. The file has 'AccessMode' 'READ_WRITE'.
+         * Because the name of the file is highly OS configuration dependent
+         * there is no way of opening the file a second time. Therefore the
+         * 'ShareMode' is 'SHARE_EXCLUSIVE'. The content of the temporary file
+         * will be held in memory as long as the cache size is sufficient. The
+         * file on secondary storage will be deleted when the file is closed.
+         * This will also happen if 'Open' is called on the returned object.
+         *
+         * @return A pointer to the 'File' object of the created temporary
+         *         file. This object is placed on the heap and the caller must
+         *         delete it when it is no longer needed (best practice is to
+         *         assign the returned pointer to a 'SmartPtr' object). The
+         *         return value is 'NULL' if there was an unexpected error.
+         *
+         * @throws SystemException in most error cases.
+         */
+        static File* CreateTempFile(void);
+
+        /**
          * Delete the file with the specified name.
          *
          * @param filename The name of the file to be deleted.

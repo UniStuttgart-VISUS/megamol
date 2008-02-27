@@ -31,9 +31,84 @@
 #include "vislib/IOException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
+#include "vislib/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
+
+#ifndef _WIN32
+namespace vislib {
+namespace sys {
+
+    /**
+     * Internal helper class for temporary files.
+     */
+    class TmpFile : public File {
+    public:
+        friend class vislib::sys::File;
+
+        /** Close the file, if open. */
+        virtual void Close(void) {
+            if (this->hFile != NULL) {
+                ::fclose(this->hFile);
+                this->hFile = NULL;
+                this->handle = -1;
+            } else {
+                File::Close();
+            }
+        }
+
+    private:
+
+        /** Ctor. */
+        TmpFile(void) : File(), hFile(NULL) {
+            // intentionally empty
+        }
+
+        /** file stream object handle */
+        FILE *hFile;
+
+    };
+
+} /* end namespace sys */
+} /* end namespace vislib */
+#endif /* !_WIN32 */
+
+
+/*
+ * vislib::sys::File::CreateTempFile
+ */
+vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
+#ifdef _WIN32
+    const DWORD BUFFER_SIZE = 4096;
+    DWORD bufSize=BUFFER_SIZE;
+    char tempName[MAX_PATH];
+    char tempPath[BUFFER_SIZE];
+
+    GetTempPathA(bufSize, tempPath);
+    GetTempFileNameA(tempPath, "VIS", 0, tempName);
+
+    File *retval = new File();
+    if ((retval->handle = ::CreateFileA(tempName, GENERIC_READ | GENERIC_WRITE,
+            0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY | 
+            FILE_FLAG_DELETE_ON_CLOSE, NULL)) == INVALID_HANDLE_VALUE) {
+        SAFE_DELETE(retval);
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+#else /* _WIN32 */
+    TmpFile *retval = new TmpFile();
+    if ((retval->hFile = ::tmpfile()) == NULL) {
+        SAFE_DELETE(retval);
+        throw SystemException(__FILE__, __LINE__);
+    } else {
+        retval->handle = ::fileno(retval->hFile);
+    }
+
+#endif /* _WIN32 */
+
+    return retval;
+}
 
 
 /*
