@@ -49,6 +49,7 @@ void vislib::sys::DynamicLinkLibrary::Free(void) {
             throw SystemException(errorCode, __FILE__, __LINE__);
         }
 #endif /* _WIN32 */
+        this->hModule = NULL;
     }
 }
 
