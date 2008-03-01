@@ -3,11 +3,9 @@
     <title>'Visual C++ 2005 Project with VISlib support'</title>
     <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5">
     <link id="LINKURL" rel="stylesheet" href="../../1033/NewStyles.css">
-    <!--  -->
-    <!-- The SYMBOL tag is used to set the default values for the user-defined symbols.-->
-    <!--  -->
+    
     <symbol name='WIZARD_DIALOG_TITLE' type="text" value='Visual C++ 2005 Project with VISlib support'></symbol>
-
+    
     <symbol name='CURRENT_DATE' type='text' value='' />
     <!--<symbol name='VISLIB_BASE' type='checkbox' value='true' />-->
     <symbol name='VISLIB_MATH' type='checkbox' value='false' />
@@ -17,14 +15,14 @@
     <symbol name='VISLIB_GL' type='checkbox' value='false' />
     <symbol name='VISLIB_D3D' type='checkbox' value='false' />
     <symbol name='VISLIB_CLUSTER' type='checkbox' value='false' />
-
+    
     <symbol name='PROPS_FILENAME' type="text" value='ExtLibs.vsprops'></symbol>
     <symbol name='ADDITIONAL_LIBRARIES' type='text' value='' />
-
+    
     <symbol name='LINUX_MAKEFILE' type='checkbox' value='false' />
     <symbol name='LIN_USE_GLOBBING' type='checkbox' value='false' />
     <symbol name='LIN_VISLIB_DIR' type='text' value='' />
-    <symbol name='LIN_PROPS_FILENAME' type='text' value='ExtLibs.mk'/>
+    <symbol name='LIN_PROPS_FILENAME' type='text' value='ExtLibs.mk' />
     <symbol name='LIN_ADDITIONAL_LIBRARIES' type='text' value='' />
 </head>
 <body bgcolor="BUTTONFACE" topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0"
@@ -51,7 +49,7 @@
                         </td>
                         <td class="IMAGE" valign="BOTTOM" width="110" rowspan="2">
                             <div class="SMALLA" id="Layer0">
-                                <img class="SMALLEST" src="../../Images/VISlibVS2005Project.gif" width="63" height="63" alt=""
+                                <img class="SMALLEST" src="..\..\Images\VISlibVS2005Project.gif" width="63" height="63" alt=""
                                     border="0">
                             </div>
                         </td>
@@ -67,7 +65,7 @@
                             <h4 class="HEAD" id="HEAD">
                                 Welcome to 'Visual C++ 2005 Project with VISlib support'</h4>
                             <p class="SUBHEAD" id="SUBHEAD">
-                                'TODO: Wizard Description.'</p>
+                                'TODO: Wizard Description.'.</p>
                         </td>
                         <td valign="TOP" height="65" width="12">
                             &nbsp;
@@ -108,6 +106,19 @@
                         </td>
                         <td valign="TOP" height="100%">
                             <!--OPEN OF NAVIGATIONAL LINKS//-->
+                            <div class="LINK">
+                                <table width="100%" height="28" border="0" cellpadding="0" cellspacing="0" class="LINKTEXT">
+                                    <tr valign="MIDDLE">
+                                        <td width="162">
+                                            <span class="ACTIVELINK" id="Default" title="" onclick="Next(document, 'default.htm');"
+                                                tabindex="1">Project Settings</span>
+                                        </td>
+                                        <td width="4">
+                                            <img src="../../Images/spacer.gif" height="1" width="4">
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
                             <div class="LINKSELECTED">
                                 <span class="VERTLINE1">
                                     <img src="../../Images/spacer.gif" width="1" height="1" alt="" border="0">
@@ -130,21 +141,8 @@
                                 </span>
                                 <table width="160" height="28" border="0" cellpadding="0" cellspacing="0" class="LINKTEXTSELECTED">
                                     <tr valign="MIDDLE">
-                                        <td width="100%">
-                                            <span id="Default" title="" onclick="Next(document, 'default.htm');" tabindex="1">Project Settings</span>
-                                        </td>
-                                        <td width="4">
-                                            <img src="../../Images/spacer.gif" height="1" width="4">
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div class="LINK">
-                                <table width="100%" height="28" border="0" cellpadding="0" cellspacing="0" class="LINKTEXT">
-                                    <tr valign="MIDDLE">
-                                        <td width="100%">
-                                            <span class="ACTIVELINK" id="linux" title="" onclick="Next(document, 'linux.htm');"
-                                                tabindex="1">Linux Makefile</span>
+                                        <td width="162">
+                                            <span id="linux" title="" onclick="Next(document, 'linux.htm');" tabindex="1">Linux Makefile</span>
                                         </td>
                                         <td width="4">
                                             <img src="../../Images/spacer.gif" height="1" width="4">
@@ -189,51 +187,36 @@
                                     </td>
                                     <td valign="TOP" colspan="3" style="height: 160px">
                                         <span class="itemTextTop">
-                                            <label for="VISLIB_DIR" title="Path to VISlib base directory" id="Label1">
+                                            <input id="LINUX_MAKEFILE" class="CheckBox" type="checkbox" accesskey="U" onpropertychange="OnLinuxChanged();" />
+                                            <div class="itemTextCheckboxA" id="Div2">
+                                                <label for="LINUX_MAKEFILE" title="Create Linux makefile" id="Label10">
+                                                    Create Lin<u>u</u>x makefile</label>
+                                            </div>
+                                        </span>
+                                        <p class="ElementSpacer">
+                                            &nbsp;</p>
+                                        <span class="itemText">
+                                            <label for="LIN_VISLIB_DIR" title="Path to VISlib base directory" id="Label1">
                                                 Path to VISlib base <u>d</u>irectory:</label>
-                                            <input id="VISLIB_DIR" type="text" size="40" title="Path to VISlib base directory"
-                                                accesskey="D">
+                                            <input id="LIN_VISLIB_DIR" type="text" size="40" title="Path to VISlib base directory"
+                                                accesskey="D"  disabled="disabled">
                                         </span>
                                         <p class="ElementSpacer">
                                             &nbsp;</p>
                                         <span class="itemText">
-                                            <label for="PROPS_FILENAME" title="Name of property file" id="Label3">
+                                            <label for="LIN_PROPS_FILENAME" title="Name of property file" id="Label3">
                                                 Name of property <u>f</u>ile:</label>
-                                            <input id="PROPS_FILENAME" type="text" size="40" title="Name of property file" text="ExtLibs.vsprops"
-                                                accesskey="P">
-                                            <p class="ElementSpacer">
-                                                &nbsp;</p>
-                                        </span><span class="itemText">
-                                            <input id="VISLIB_BASE" class="CheckBox" type="checkbox" accesskey="B" checked="checked"
-                                                contenteditable="false" disabled="disabled" unselectable="on" value="base" />
-                                            <label for="VISLIB_BASE" title="Use VISlib base" id="Label4">
-                                                Use VISlib <u>b</u>ase</label>&nbsp;
-                                            <input id="VISLIB_MATH" class="CheckBox" type="checkbox" accesskey="M" value="math" />
-                                            <label for="VISLIB_MATH" title="Use VISlib math" id="Label6">
-                                                Use VISlib <u>m</u>ath</label>&nbsp;
-                                            <input id="VISLIB_SYS" class="CheckBox" type="checkbox" accesskey="S" value="sys" />
-                                            <label for="VISLIB_SYS" title="Use VISlib sys" id="Label5">
-                                                Use VISlib <u>s</u>ys</label>&nbsp;
-                                            <input id="VISLIB_NET" class="CheckBox" type="checkbox" accesskey="M" value="net"
-                                                onpropertychange="OnNetChanged();" />
-                                            <label for="VISLIB_NET" title="Use VISlib net" id="Label7">
-                                                Use VISlib <u>n</u>et</label><br />
-                                            <input id="VISLIB_GRAPHICS" class="CheckBox" type="checkbox" accesskey="M" value="graphics"
-                                                onpropertychange="OnGraphicsChanged();" />
-                                            <label for="VISLIB_GRAPHICS" title="Use VISlib graphics" id="Label8">
-                                                Use VISlib <u>g</u>raphics</label>&nbsp;
-                                            <input id="VISLIB_GL" class="CheckBox" type="checkbox" accesskey="M" value="gl" onpropertychange="OnGlChanged();" />
-                                            <label for="VISLIB_GL" title="Use VISlib gl" id="Label9">
-                                                Use VISlib g<u>l</u></label>
-                                        </span>
+                                            <input id="LIN_PROPS_FILENAME" type="text" size="40" title="Name of property file"
+                                                text="ExtLibs.vsprops" accesskey="P" disabled="disabled">
                                         <p class="ElementSpacer">
                                             &nbsp;</p>
                                         <span class="itemText">
-                                            <input id="X64_SUPPORT" class="CheckBox" type="checkbox" accesskey="X" value="x64"
+                                            <input id="LIN_USE_GLOBBING" class="CheckBox" type="checkbox" accesskey="G"
                                                 disabled="disabled" />
-                                            <div class="itemTextCheckboxA" id="Div1">
-                                                <label for="X64_SUPPORT" title="Add x64 configuration to new project" id="Label2">
-                                                    Add <u>x</u>64 configuration to new project</label>
+                                            <div class="itemTextCheckboxA" id="Div3">
+                                                <label for="LIN_USE_GLOBBING" title="Collect source files via file globbing in makefile"
+                                                    id="Label11">
+                                                    Collect source files via file <u>g</u>lobbing in makefile</label>
                                             </div>
                                         </span>
                                     </td>
@@ -349,6 +332,8 @@ function InitDocument(document)
 	// with the appropriate symbol values
 	//
 	window.external.Load(document);
+	
+	OnLinuxChanged();   // Control disable hack
 }
 
 // If the wizard has more than 1 page, this 

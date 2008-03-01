@@ -7,10 +7,12 @@ function OnFinish(selProj, selObj)
         var now = new Date();
         var today = now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear();
         wizard.AddSymbol('CURRENT_DATE', today);
-        
+
         var additionalLibraries = '';
+        var linAdditionalLibraries = '';
         if (wizard.FindSymbol('VISLIB_GL')) {
             additionalLibraries += ' opengl32.lib';
+            linAdditionalLibraries += ' -lGL -lglut';
         }
         if (wizard.FindSymbol('VISLIB_NET')) {
             additionalLibraries += ' Ws2_32.lib Iphlpapi.lib';
@@ -19,7 +21,8 @@ function OnFinish(selProj, selObj)
             additionalLibraries += ' shlwapi.lib advapi32.lib';
         }
         wizard.AddSymbol('ADDITIONAL_LIBRARIES', additionalLibraries);
-        
+        wizard.AddSymbol('LIN_ADDITIONAL_LIBRARIES', linAdditionalLibraries);
+
 //        if (!wizard.FindSymbol('PROPS_FILENAME') 
 //                || (wizard.FindSymbol('PROPS_FILENAME') == '')) {
 //            wizard.AddSymbol('PROPS_FILENAME', 'ExtLibs.vsprops');

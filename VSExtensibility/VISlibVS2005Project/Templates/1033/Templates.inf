@@ -2,3 +2,7 @@ readme.txt
 ExtLibs.vsprops
 configure.ps1
 main.cpp
+[!if LINUX_MAKEFILE]
+Makefile
+configure.sh
+[!endif]

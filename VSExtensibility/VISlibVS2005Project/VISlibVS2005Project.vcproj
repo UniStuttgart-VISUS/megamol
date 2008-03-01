@@ -66,11 +66,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Templates\1033\configure.sh"
+				>
+			</File>
+			<File
 				RelativePath=".\Templates\1033\extlibs.vsprops"
 				>
 			</File>
 			<File
 				RelativePath=".\Templates\1033\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Templates\1033\Makefile"
 				>
 			</File>
 			<File
