@@ -95,6 +95,11 @@
 				DeploymentContent="true"
 				>
 			</File>
+			<File
+				RelativePath=".\HTML\1033\linux.htm"
+				DeploymentContent="true"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Image Files"

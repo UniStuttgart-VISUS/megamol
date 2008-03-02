@@ -33,19 +33,19 @@ namespace net {
 
     public:
 
-		/**
-		 * Possible reasons for an OnNodeLost notification:
-		 *
-		 * LOST_EXPLICITLY means that the peer node explicitly disconnected by
-		 * sending the sayonara message.
-		 *
-		 * LOST_IMLICITLY means that the peer node was removed because it did not
-		 * properly answer a alive request.
-		 */
-		enum NodeLostReason{
-			LOST_EXPLICITLY = 1,
-			LOST_IMLICITLY
-		};
+        /**
+         * Possible reasons for an OnNodeLost notification:
+         *
+         * LOST_EXPLICITLY means that the peer node explicitly disconnected by
+         * sending the sayonara message.
+         *
+         * LOST_IMLICITLY means that the peer node was removed because it did not
+         * properly answer a alive request.
+         */
+        enum NodeLostReason{
+            LOST_EXPLICITLY = 1,
+            LOST_IMLICITLY
+        };
 
         /** Ctor. */
         ClusterDiscoveryListener(void);
@@ -82,8 +82,8 @@ namespace net {
          * @param hPeer  The handle of the peer that was removed.
          * @param reason The reason why the node was removed from the cluster.
          */
-		virtual void OnNodeLost(const ClusterDiscoveryService& src,
-			const ClusterDiscoveryService::PeerHandle& hPeer, 
+        virtual void OnNodeLost(const ClusterDiscoveryService& src,
+            const ClusterDiscoveryService::PeerHandle& hPeer, 
             const NodeLostReason reason) = 0;
 
         /**

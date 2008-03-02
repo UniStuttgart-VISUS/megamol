@@ -26,10 +26,10 @@ $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName).a
 	
 $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName).a 
 	@mkdir -p $(OutDir)
-	cp $< $(OutDir)/lib$(TargetName)$(BITS).a	
+	cp $< $(OutDir)/lib$(TargetName)$(BITS).a
 	
 
-# Rules for intermediate archives:	
+# Rules for intermediate archives:
 $(IntDir)/$(DebugDir)/lib$(TargetName).a: $(OBJS_DEBUG)
 	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
 	@tput sgr0
@@ -38,7 +38,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName).a: $(OBJS_DEBUG)
 $(IntDir)/$(ReleaseDir)/lib$(TargetName).a: $(OBJS_RELEASE)
 	@echo -e '\E[1;32;40m'"AR "'\E[0;32;40m'"$@ "
 	@tput sgr0
-	$(Q)$(AR) $(ARFLAGS) $@ $^	
+	$(Q)$(AR) $(ARFLAGS) $@ $^
 	
 
 # Rules for dependencies:
@@ -54,7 +54,7 @@ $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 	@tput sgr0
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $(filter %.cpp, $^) | sed -e 's/\(..*\)\.o\s*\:/$(IntDir)\/$(ReleaseDir)\/\1.d $(IntDir)\/$(ReleaseDir)\/\1.o:/g' > $@
 
-	
+
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
 -include $(CPP_DEPS)

@@ -38,12 +38,12 @@ void MyListener::OnNodeFound(const vislib::net::ClusterDiscoveryService& src,
         const vislib::net::ClusterDiscoveryService::PeerHandle& hPeer) {
     const char *WELCOME_MESSAGE = "Okaerinasai";
     const char *SINGLE_MESSAGE = "Single message";
-    std::cout << src[hPeer].ToStringA() << " was found for \"" << src.GetName() 
-        << "\"" << std::endl;
+    std::cout << src[hPeer].ToStringA().PeekBuffer() << " was found for \"" 
+        << src.GetName().PeekBuffer() << "\"" << std::endl;
 
     std::cout << "Now I know ";
     for (SIZE_T i = 0; i < src.CountPeers(); i++) {
-        std::cout << std::endl << " " << src[i].ToStringA();
+        std::cout << std::endl << " " << src[i].ToStringA().PeekBuffer();
     }
     std::cout << std::endl;
 
@@ -68,7 +68,7 @@ void MyListener::OnNodeLost(const vislib::net::ClusterDiscoveryService& src,
         const NodeLostReason reason) {
     std::cout << src[hPeer].ToStringA() 
         << ((reason == LOST_EXPLICITLY) ? " disconnected" : " was lost")
-        << " from \"" << src.GetName() << "\"" << std::endl;
+        << " from \"" << src.GetName().PeekBuffer() << "\"" << std::endl;
 }
 
 /*
@@ -79,7 +79,7 @@ void MyListener::OnUserMessage(const vislib::net::ClusterDiscoveryService& src,
         const UINT16 msgType, const BYTE *msgBody) {
     std::cout << "Received user message " << msgType << " (\""
         << reinterpret_cast<const char *>(msgBody) << "\") from "
-        << src[hPeer].ToStringA() << std::endl;
+        << src[hPeer].ToStringA().PeekBuffer() << std::endl;
 }
 
 

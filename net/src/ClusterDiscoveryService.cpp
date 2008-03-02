@@ -372,7 +372,7 @@ DWORD vislib::net::ClusterDiscoveryService::Sender::Run(
     request.msgType = MSG_TYPE_IAMALIVE;
 
     while (this->isRunning) {
-        try {    
+        try {
 			/* Broadcast request. */
             this->cds.prepareRequest();
             socket.Send(this->cds.bcastAddr, &request, sizeof(Message));
@@ -480,7 +480,9 @@ DWORD vislib::net::ClusterDiscoveryService::Receiver::Run(
 
     /* Register myself as known node first (observer does not know itself). */
     if (!this->cds.isObserver) {
-        this->cds.addPeerNode(this->cds.responseAddr, this->cds.responseAddr);
+        SocketAddress discoveryAddr(this->cds.responseAddr);
+        discoveryAddr.SetPort(this->cds.bindAddr.GetPort());
+        this->cds.addPeerNode(discoveryAddr, this->cds.responseAddr);
         // TODO: Using the response address as discovery address is hugly.
     }
 
