@@ -274,7 +274,7 @@ namespace sys {
          *
          * @return The argument list. Might be NULL, if ArgC returned Zero.
          */
-        inline Char ** ArgV(void) {
+        inline Char **ArgV(void) {
             return this->arguments;
         }
 

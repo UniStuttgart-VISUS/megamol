@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="graphics"
-	ProjectGUID="{8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1}"
-	RootNamespace="graphics"
+	Name="d3d"
+	ProjectGUID="{85B5D3B1-1510-40A8-A4D6-42760493E1AE}"
+	RootNamespace="d3d"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -20,6 +20,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)\lib"
+			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug32.vsprops"
 			CharacterSet="1"
@@ -42,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,6 +65,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\vislib$(ProjectName)$(BitsD).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -82,6 +85,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)\lib"
+			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
 			CharacterSet="1"
@@ -105,7 +110,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -126,6 +131,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\vislib$(ProjectName)$(BitsD).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -145,6 +151,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)\lib"
+			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
 			CharacterSet="1"
@@ -167,7 +175,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -186,6 +194,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\vislib$(ProjectName)$(BitsD).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -205,6 +214,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)\lib"
+			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease64.vsprops"
 			CharacterSet="1"
@@ -228,7 +239,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -247,6 +258,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\vislib$(ProjectName)$(BitsD).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -274,87 +286,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\AbstractCameraController.cpp"
+				RelativePath=".\src\D3DCamera.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\AbstractCursor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AbstractCursor2DEvent.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AbstractCursorEvent.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Camera.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParameterLimits.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParameterObservable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParameterObserver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParameters.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsEyeOverride.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsOverride.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsStore.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsTileRectOverride.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraRotate2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraRotate2DLookAt.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraZoom2DAngle.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraZoom2DMove.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Cursor2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\FpsCounter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\InputModifiers.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ZoomToRectangle.cpp"
+				RelativePath=".\src\D3DMatrix.cpp"
 				>
 			</File>
 		</Filter>
@@ -364,91 +300,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\include\vislib\AbstractCameraController.h"
+				RelativePath=".\include\vislib\D3DCamera.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractCursor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractCursor2DEvent.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractCursorEvent.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Camera.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameterLimits.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameterObservable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameterObserver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameters.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsEyeOverride.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsOverride.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsStore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsTileRectOverride.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraRotate2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraRotate2DLookAt.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraZoom2DAngle.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraZoom2DMove.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Cursor2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\FpsCounter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\graphicstypes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\InputModifiers.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\ZoomToRectangle.h"
+				RelativePath=".\include\vislib\D3DMatrix.h"
 				>
 			</File>
 		</Filter>
@@ -458,42 +314,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-		<File
-			RelativePath=".\project.mk"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-				/>
-			</FileConfiguration>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

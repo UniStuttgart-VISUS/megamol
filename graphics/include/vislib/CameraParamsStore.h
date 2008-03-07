@@ -17,6 +17,7 @@
 
 
 #include "vislib/CameraParameters.h"
+#include "vislib/CameraParameterObservable.h"
 
 
 namespace vislib {
@@ -26,7 +27,9 @@ namespace graphics {
     /**
      * Implementation of 'CameraParameters' storing all values.
      */
-    class CameraParamsStore : public CameraParameters {
+    class CameraParamsStore : public CameraParameters, 
+            public CameraParameterObservable {
+
     public:
 
         /** Ctor. */

@@ -1,11 +1,12 @@
 /*
- * Matrix4.h
+ * D3DMatrix.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MATRIX4_H_INCLUDED
-#define VISLIB_MATRIX4_H_INCLUDED
+#ifndef VISLIB_D3DMATRIX_H_INCLUDED
+#define VISLIB_D3DMATRIX_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -14,25 +15,39 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/Matrix.h"
+#include <d3dx9math.h>
+
+#include "vislib/AbstractMatrix.h"
+#include "vislib/assert.h"
 
 
 namespace vislib {
-namespace math {
+namespace graphics {
+namespace d3d {
 
 
     /**
-     * A specialisation for a 4x4 matrix.
+     * Matrix specialisation that uses a D3DX matrix as storage class.
      */
-    template<class T, MatrixLayout L> 
-    class Matrix4 : public Matrix<T, 4, L> {
+    class D3DMatrix : public math::AbstractMatrix<FLOAT, 4, 
+            math::ROW_MAJOR, D3DXMATRIXA16> {
+
+    private:
+
+        /** Make storage class available. */
+        typedef D3DXMATRIXA16 S;
+
+        /** Make 'T' available. */
+        typedef FLOAT T;
 
     public:
 
         /** 
          * Create the identity matrix.
          */
-        inline Matrix4(void) : Super() {}
+        inline D3DMatrix(void) : Super() {
+            this->SetIdentity();
+        }
 
         /**
          * Create a matrix using the specified components.
@@ -40,14 +55,18 @@ namespace math {
          * @param components (D * D) components of the matrix. This must not be
          *                   NULL and according to the matrix layout L.
          */
-        inline Matrix4(const T *components) : Super(components) {}
+        inline D3DMatrix(const T *components) : Super() {
+            ASSERT(components != NULL);
+            ::memcpy(this->components, components, Super::CNT_COMPONENTS
+                * sizeof(T));
+        }
 
         /**
          * Create which has the same value for all components.
          *
          * @param value The initial value of all components.
          */
-        explicit inline Matrix4(const T& value) : Super(value) {}
+        explicit D3DMatrix(const T& value);
 
         /**
          * Create a matrix using the specified components. Note, that the first
@@ -70,7 +89,7 @@ namespace math {
          * @param m43 Element in row 4, column 3.
          * @param m44 Element in row 4, column 4.
          */
-        Matrix4(const T& m11, const T& m12, const T& m13, const T& m14, 
+        D3DMatrix(const T& m11, const T& m12, const T& m13, const T& m14, 
             const T& m21, const T& m22, const T& m23, const T& m24, 
             const T& m31, const T& m32, const T& m33, const T& m34, 
             const T& m41, const T& m42, const T& m43, const T& m44);
@@ -80,16 +99,21 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */
-        inline Matrix4(const Matrix4& rhs) : Super(rhs) {}
+        inline D3DMatrix(const D3DMatrix& rhs) : Super() {
+            ::memcpy(this->components, rhs.components, 
+                Super::CNT_COMPONENTS * sizeof(T));
+        }
 
         /**
          * Clone 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
-        inline Matrix4(const AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) 
-            : Super(rhs) {}
+        template<class Tp, unsigned int Dp, math::MatrixLayout Lp, class Sp>
+        inline D3DMatrix(const math::AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) 
+                : Super() {
+            this->assign(rhs);
+        }
 
         /**
          * Create a matrix that represents the rotation of the quaternion
@@ -98,15 +122,15 @@ namespace math {
          * @param rhs The quaterion to be converted.
          */
         template<class Tp, class Sp>
-        explicit inline Matrix4(const AbstractQuaternion<Tp, Sp>& rhs) {
+        explicit inline D3DMatrix(const math::AbstractQuaternion<Tp, Sp>& rhs) {
             // Implementation note: No superclass ctor called
             // Implementation note: quaternion assign does not check for
             // self assignment, so this works here.
-            AbstractMatrix<T, 4, L, T[4 * 4]>::operator =(rhs);
+            Super::operator =(rhs);
         }
 
         /** Dtor. */
-        ~Matrix4(void);
+        ~D3DMatrix(void);
 
         /**
          * Assignment operator.
@@ -117,7 +141,7 @@ namespace math {
          *
          * @return *this.
          */
-        inline Matrix4& operator =(const Matrix4& rhs) {
+        inline D3DMatrix& operator =(const D3DMatrix& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -141,62 +165,28 @@ namespace math {
          *
          * @return *this
          */
-        template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
-        inline Matrix4& operator =(const AbstractMatrix<Tp, Dp, Lp, Sp>& rhs) {
+        template<class Tp, unsigned int Dp, math::MatrixLayout Lp, class Sp>
+        inline D3DMatrix& operator =(const math::AbstractMatrix<Tp, Dp, Lp, Sp>&
+                rhs) {
             Super::operator =(rhs);
             return *this;
         }
 
-
     protected:
 
         /** A typedef for the super class. */
-        typedef Matrix<T, 4, L> Super;
+        typedef math::AbstractMatrix<T, 4, math::ROW_MAJOR, S> Super;
 
+        /** The number of dimensions. */
+        static const unsigned int D;
     };
-
-
-    /*
-     * vislib::math::Matrix4<T, L>::Matrix4
-     */
-    template<class T, MatrixLayout L>
-    Matrix4<T, L>::Matrix4(
-            const T& m11, const T& m12, const T& m13, const T& m14,
-            const T& m21, const T& m22, const T& m23, const T& m24, 
-            const T& m31, const T& m32, const T& m33, const T& m34, 
-            const T& m41, const T& m42, const T& m43, const T& m44) : Super() {
-        this->components[Super::indexOf(0, 0)] = m11;
-        this->components[Super::indexOf(0, 1)] = m12;
-        this->components[Super::indexOf(0, 2)] = m13;
-        this->components[Super::indexOf(0, 3)] = m14;
-
-        this->components[Super::indexOf(1, 0)] = m21;
-        this->components[Super::indexOf(1, 1)] = m22;
-        this->components[Super::indexOf(1, 2)] = m23;
-        this->components[Super::indexOf(1, 3)] = m24;
-
-        this->components[Super::indexOf(2, 0)] = m31;
-        this->components[Super::indexOf(2, 1)] = m32;
-        this->components[Super::indexOf(2, 2)] = m33;
-        this->components[Super::indexOf(2, 3)] = m34;
-
-        this->components[Super::indexOf(3, 0)] = m41;
-        this->components[Super::indexOf(3, 1)] = m42;
-        this->components[Super::indexOf(3, 2)] = m43;
-        this->components[Super::indexOf(3, 3)] = m44;
-    }
-
-    /*
-     * vislib::math::Matrix4<T, L>::~Matrix4
-     */
-    template<class T, MatrixLayout L>
-    Matrix4<T, L>::~Matrix4(void) {
-    }
-
-} /* end namespace math */
+    
+} /* end namespace d3d */
+} /* end namespace graphics */
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MATRIX4_H_INCLUDED */
+#endif /* VISLIB_D3DMATRIX_H_INCLUDED */
+
