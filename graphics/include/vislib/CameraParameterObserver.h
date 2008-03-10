@@ -68,8 +68,7 @@ namespace graphics {
          *
          * @param newValue The new look at point.
          */
-        virtual void OnLookAtChanged(
-            const math::Point<SceneSpaceType, 3>& newValue);
+        virtual void OnLookAtChanged(const SceneSpacePoint3D& newValue);
 
         /**
          * This method is called if the near clipping plane changed.
@@ -83,8 +82,7 @@ namespace graphics {
          *
          * @param newValue The new camera position.
          */
-        virtual void OnPositionChanged(
-            const math::Point<SceneSpaceType, 3>& newValue);
+        virtual void OnPositionChanged(const SceneSpacePoint3D& newValue);
 
         /**
          * This method is called if the projection type changed.
@@ -106,16 +104,14 @@ namespace graphics {
          *
          * @param newValue The new screen tile.
          */
-        virtual void OnTileRectChanged(
-            const math::Rectangle<ImageSpaceType>& newValue);
+        virtual void OnTileRectChanged(const ImageSpaceRectangle& newValue);
 
         /**
          * This method is called if the camera up vector changed.
          *
          * @param newValue The new camera up vector.
          */
-        virtual void OnUpChanged(
-            const math::Vector<SceneSpaceType, 3>& newValue);
+        virtual void OnUpChanged(const SceneSpaceVector3D& newValue);
 
         /**
          * This method is called if the virtual screen size changed.
@@ -123,7 +119,7 @@ namespace graphics {
          * @param newValue The new virtual screen size.
          */
         virtual void OnVirtualViewSizeChanged(
-            const math::Dimension<ImageSpaceType, 2>& newValue);
+            const ImageSpaceDimension& newValue);
 
     protected:
 

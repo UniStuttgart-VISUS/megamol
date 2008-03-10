@@ -56,7 +56,7 @@ void vislib::graphics::CameraParameterObserver::OnFocalDistanceChanged(
  * vislib::graphics::CameraParameterObserver::OnLookAtChanged
  */
 void vislib::graphics::CameraParameterObserver::OnLookAtChanged(
-        const math::Point<SceneSpaceType, 3>& newValue) {
+        const SceneSpacePoint3D& newValue) {
     // Nothing to do.
 }
 
@@ -74,7 +74,7 @@ void vislib::graphics::CameraParameterObserver::OnNearClipChanged(
  * vislib::graphics::CameraParameterObserver::OnPositionChanged
  */
 void vislib::graphics::CameraParameterObserver::OnPositionChanged(
-        const math::Point<SceneSpaceType, 3>& newValue) {
+        const SceneSpacePoint3D& newValue) {
     // Nothing to do.
 }
 
@@ -101,7 +101,7 @@ void vislib::graphics::CameraParameterObserver::OnStereoDisparityChanged(
  * vislib::graphics::CameraParameterObserver::OnTileRectChanged
  */
 void vislib::graphics::CameraParameterObserver::OnTileRectChanged(
-        const math::Rectangle<ImageSpaceType>& newValue) {
+        const ImageSpaceRectangle& newValue) {
     // Nothing to do.
 }
 
@@ -110,7 +110,7 @@ void vislib::graphics::CameraParameterObserver::OnTileRectChanged(
  * vislib::graphics::CameraParameterObserver::OnUpChanged
  */
 void vislib::graphics::CameraParameterObserver::OnUpChanged(
-        const math::Vector<SceneSpaceType, 3>& newValue) {
+        const SceneSpaceVector3D& newValue) {
     // Nothing to do.
 }
 
@@ -119,7 +119,7 @@ void vislib::graphics::CameraParameterObserver::OnUpChanged(
  * vislib::graphics::CameraParameterObserver::OnVirtualViewSizeChanged
  */
 void vislib::graphics::CameraParameterObserver::OnVirtualViewSizeChanged(
-       const math::Dimension<ImageSpaceType, 2>& newValue) {
+       const ImageSpaceDimension& newValue) {
     // Nothing to do.
 }
 

@@ -298,10 +298,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\CameraParameterObservable.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\CameraParameterObserver.cpp"
 				>
 			</File>
@@ -354,6 +350,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ObservableCameraParams.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ZoomToRectangle.cpp"
 				>
 			</File>
@@ -389,10 +389,6 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\CameraParameterObservable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameterObserver.h"
 				>
 			</File>
 			<File
@@ -445,6 +441,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\InputModifiers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ObservableCameraParams.h"
 				>
 			</File>
 			<File

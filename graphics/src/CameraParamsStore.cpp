@@ -262,33 +262,21 @@ vislib::graphics::CameraParamsStore::Projection(void) const {
  */
 void vislib::graphics::CameraParamsStore::Reset(void) {
     this->eye = DEFAULT_EYE;
-    this->fireEyeChanged(this->eye);
     this->farClip = DEFAULT_FAR_CLIP;
-    this->fireFarClipChanged(this->farClip);
     this->focalDistance = DEFAULT_FOCAL_DIST;
-    this->fireFocalDistanceChanged(this->focalDistance);
     this->front = DEFAULT_FRONT;
     this->halfApertureAngle = DEFAULT_HALF_AP_ANGLE;
-    this->fireApertureAngleChanged(2.0f * this->halfApertureAngle);
     this->halfStereoDisparity = DEFAULT_HALF_DISPARITY;
-    this->fireStereoDisparityChanged(2.0f * this->halfStereoDisparity);
     this->limits = CameraParameterLimits::DefaultLimits();
     this->lookAt = DEFAULT_LOOK_AT;
-    this->fireLookAtChanged(this->lookAt);
     this->nearClip = DEFAULT_NEAR_CLIP;
-    this->fireNearClipChanged(this->nearClip);
     this->position = DEFAULT_POSITION;
-    this->firePositionChanged(this->position);
     this->projectionType = DEFAULT_PROJECTION_TYPE;
-    this->fireProjectionChanged(this->projectionType);
     this->right = DEFAULT_RIGHT;
     this->syncNumber++; // Do not reset syncNumber but indicate the change!
     this->tileRect = DEFAULT_TILE_RECT;
-    this->fireTileRectChanged(this->tileRect);
     this->up = DEFAULT_UP;
-    this->fireUpChanged(this->up);
     this->virtualViewSize = DEFAULT_VIEW_SIZE;
-    this->fireVirtualViewSizeChanged(this->virtualViewSize);
 }
 
 
@@ -298,7 +286,6 @@ void vislib::graphics::CameraParamsStore::Reset(void) {
 void vislib::graphics::CameraParamsStore::ResetTileRect(void) {
     this->tileRect.SetNull();
     this->tileRect.SetSize(this->virtualViewSize);
-    this->fireTileRectChanged(this->tileRect);
     this->syncNumber++;
 }
 
@@ -327,7 +314,6 @@ void vislib::graphics::CameraParamsStore::SetApertureAngle(
         apertureAngle = this->limits->MaxApertureAngle();
     }
     this->halfApertureAngle = apertureAngle * 0.5f;
-    this->fireApertureAngleChanged(apertureAngle);
     this->syncNumber++;
 
 }
@@ -350,9 +336,7 @@ void vislib::graphics::CameraParamsStore::SetClip(
     }
 
     this->nearClip = nearClip;
-    this->fireNearClipChanged(this->nearClip);
     this->farClip = farClip;
-    this->fireFarClipChanged(this->farClip);
 
     this->syncNumber++;
 }
@@ -364,7 +348,6 @@ void vislib::graphics::CameraParamsStore::SetClip(
 void vislib::graphics::CameraParamsStore::SetEye(
         vislib::graphics::CameraParameters::StereoEye eye) {
     this->eye = eye; // no need to adjust anything else
-    this->fireEyeChanged(this->eye);
     this->syncNumber++;
 }
 
@@ -378,7 +361,6 @@ void vislib::graphics::CameraParamsStore::SetFarClip(
 
     if (this->nearClip < this->limits->MinNearClipDist()) {
         this->nearClip = this->limits->MinNearClipDist();
-        this->fireNearClipChanged(this->nearClip);
     }
 
     if (farClip < this->nearClip + this->limits->MinClipPlaneDist()) {
@@ -386,7 +368,6 @@ void vislib::graphics::CameraParamsStore::SetFarClip(
     }
 
     this->farClip = farClip;
-    this->fireFarClipChanged(this->farClip);
 
     this->syncNumber++;
 }
@@ -403,7 +384,6 @@ void vislib::graphics::CameraParamsStore::SetFocalDistance(
         focalDistance = this->limits->MinFocalDist();
     }
     this->focalDistance = focalDistance;
-    this->fireFocalDistanceChanged(this->focalDistance);
     this->syncNumber++;
 }
 
@@ -426,7 +406,6 @@ void vislib::graphics::CameraParamsStore::SetLimits(
 void vislib::graphics::CameraParamsStore::SetLookAt(const 
         vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& lookAt) {
     this->SetView(this->position, lookAt, this->up);
-    // fire event by SFX
     // syncNumber increase per SFX
 }
 
@@ -447,11 +426,9 @@ void vislib::graphics::CameraParamsStore::SetNearClip(
     } 
 
     this->nearClip = nearClip;
-    this->fireNearClipChanged(this->nearClip);
 
     if (this->nearClip + this->limits->MinNearClipDist() > this->farClip) {
         this->farClip = this->nearClip + this->limits->MinNearClipDist();
-        this->fireFarClipChanged(this->farClip);
     }
 
     this->syncNumber++;
@@ -464,7 +441,6 @@ void vislib::graphics::CameraParamsStore::SetNearClip(
 void vislib::graphics::CameraParamsStore::SetPosition(const 
         vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& position) {
     this->SetView(position, this->lookAt, this->up);
-    // fire event by SFX
     // syncNumber increase per SFX
 }
 
@@ -475,7 +451,6 @@ void vislib::graphics::CameraParamsStore::SetPosition(const
 void vislib::graphics::CameraParamsStore::SetProjection(
         vislib::graphics::CameraParameters::ProjectionType projectionType) {
     this->projectionType = projectionType; // no need to adjust anything else
-    this->fireProjectionChanged(this->projectionType);
     this->syncNumber++;
 }
 
@@ -488,7 +463,6 @@ void vislib::graphics::CameraParamsStore::SetStereoDisparity(
     // This also allows negative values *wtf*
     // no need to adjust anything else
     this->halfStereoDisparity = stereoDisparity * 0.5f; 
-    this->fireStereoDisparityChanged(stereoDisparity);
     this->syncNumber++;
 }
 
@@ -503,16 +477,11 @@ void vislib::graphics::CameraParamsStore::SetStereoParameters(
     ASSERT(!this->limits.IsNull());
 
     this->halfStereoDisparity = stereoDisparity * 0.5f; 
-    this->fireStereoDisparityChanged(stereoDisparity);
-
     this->eye = eye;
-    this->fireEyeChanged(this->eye);
-
     if (this->limits->MinFocalDist() > focalDistance) {
         focalDistance = this->limits->MinFocalDist();
     }
     this->focalDistance = focalDistance;
-    this->fireFocalDistanceChanged(this->focalDistance);
     this->syncNumber++;
 }
 
@@ -523,7 +492,6 @@ void vislib::graphics::CameraParamsStore::SetStereoParameters(
 void vislib::graphics::CameraParamsStore::SetTileRect(const 
         vislib::math::Rectangle<vislib::graphics::ImageSpaceType>& tileRect) {    
     this->tileRect = tileRect; // no need to adjust anything else
-    this->fireTileRectChanged(this->tileRect);
     this->syncNumber++;
 }
 
@@ -542,10 +510,8 @@ void vislib::graphics::CameraParamsStore::SetUp(const
     
     this->right = this->front.Cross(up);
     this->right.Normalise();
-
     this->up = this->right.Cross(this->front);
     this->up.Normalise();
-    this->fireUpChanged(this->up);
 
     this->syncNumber++;
 }
@@ -574,8 +540,6 @@ void vislib::graphics::CameraParamsStore::SetView(const
     }
 
     this->position = position;
-    this->firePositionChanged(this->position);
-
     this->front = dir / dirLen;
 
     if (dirLen < this->limits->MinLookAtDist()) {
@@ -584,14 +548,10 @@ void vislib::graphics::CameraParamsStore::SetView(const
     }
 
     this->lookAt = this->position + dir;
-    this->fireLookAtChanged(this->lookAt);
-
     this->right = this->front.Cross(up);
     this->right.Normalise();
-
     this->up = this->right.Cross(this->front);
     this->up.Normalise(); // should not be neccessary, but to be sure (inaccuracy)
-    this->fireUpChanged(this->up);
 
     this->syncNumber++;
 }
@@ -604,16 +564,14 @@ void vislib::graphics::CameraParamsStore::SetVirtualViewSize(const
         vislib::math::Dimension<vislib::graphics::ImageSpaceType, 2>& 
         viewSize) {
     if (math::IsEqual(this->tileRect.GetLeft(), 0.0f)
-            && math::IsEqual(this->tileRect.GetBottom(), 0.0f)
-            && math::IsEqual(this->tileRect.GetRight(), 
-                this->virtualViewSize.Width())
-            && math::IsEqual(this->tileRect.GetTop(), 
-                this->virtualViewSize.Height())) {
+        && math::IsEqual(this->tileRect.GetBottom(), 0.0f)
+        && math::IsEqual(this->tileRect.GetRight(), 
+            this->virtualViewSize.Width())
+        && math::IsEqual(this->tileRect.GetTop(), 
+            this->virtualViewSize.Height())) {
         this->tileRect.SetSize(viewSize);
-        this->fireTileRectChanged(this->tileRect);
     }
     this->virtualViewSize = viewSize;
-    this->fireVirtualViewSizeChanged(this->virtualViewSize);
     this->syncNumber++;
 }
 
@@ -660,34 +618,22 @@ vislib::graphics::CameraParamsStore&
 vislib::graphics::CameraParamsStore::operator=(
         const vislib::graphics::CameraParamsStore& rhs) {
     this->eye = rhs.eye;
-    this->fireEyeChanged(this->eye);
     this->farClip = rhs.farClip;
-    this->fireFarClipChanged(this->farClip);
     this->focalDistance = rhs.focalDistance;
-    this->fireFocalDistanceChanged(this->focalDistance);
     this->front = rhs.front;
     this->halfApertureAngle = rhs.halfApertureAngle;
-    this->fireApertureAngleChanged(2.0f * this->halfApertureAngle);
     this->halfStereoDisparity = rhs.halfStereoDisparity;
-    this->fireStereoDisparityChanged(2.0f * this->halfStereoDisparity);
     this->limits = rhs.limits; // we dont have to apply limits because rhs is
                                // using the same limits as we will from now on.
     this->lookAt = rhs.lookAt;
-    this->fireLookAtChanged(this->lookAt);
     this->nearClip = rhs.nearClip;
-    this->fireNearClipChanged(this->nearClip);
     this->position = rhs.position;
-    this->firePositionChanged(this->position);
     this->projectionType = rhs.projectionType;
-    this->fireProjectionChanged(this->projectionType);
     this->right = rhs.right;
     this->syncNumber++; // Do not copy syncNumber but indicate the change!
     this->tileRect = rhs.tileRect;
-    this->fireTileRectChanged(this->tileRect);
     this->up = rhs.up;
-    this->fireUpChanged(this->up);
     this->virtualViewSize = rhs.virtualViewSize;
-    this->fireVirtualViewSizeChanged(this->virtualViewSize);
 
     return *this;
 }
@@ -700,32 +646,20 @@ vislib::graphics::CameraParamsStore&
 vislib::graphics::CameraParamsStore::operator=(
         const vislib::graphics::CameraParameters& rhs) {
     this->eye = rhs.Eye();
-    this->fireEyeChanged(this->eye);
     this->farClip = rhs.FarClip();
-    this->fireFarClipChanged(this->farClip);
     this->focalDistance = rhs.FocalDistance();
-    this->fireFocalDistanceChanged(this->focalDistance);
     this->front = rhs.Front();
     this->halfApertureAngle = rhs.HalfApertureAngle();
-    this->fireApertureAngleChanged(2.0f * this->halfApertureAngle);
     this->halfStereoDisparity = rhs.HalfStereoDisparity();
-    this->fireStereoDisparityChanged(2.0f * this->halfStereoDisparity);
     this->lookAt = rhs.LookAt();
-    this->fireLookAtChanged(this->lookAt);
     this->nearClip = rhs.NearClip();
-    this->fireNearClipChanged(this->nearClip);
     this->position = rhs.Position();
-    this->firePositionChanged(this->position);
     this->projectionType = rhs.Projection();
-    this->fireProjectionChanged(this->projectionType);
     this->right = rhs.Right();
     this->syncNumber++; // Do not copy syncNumber but indicate the change!
     this->tileRect = rhs.TileRect();
-    this->fireTileRectChanged(this->tileRect);
     this->up = rhs.Up();
-    this->fireUpChanged(this->up);
     this->virtualViewSize = rhs.VirtualViewSize();
-    this->fireVirtualViewSizeChanged(this->virtualViewSize);
 
     this->SetLimits(rhs.Limits());
 
