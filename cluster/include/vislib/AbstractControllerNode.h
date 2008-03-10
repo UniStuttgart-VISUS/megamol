@@ -14,9 +14,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
 #include "vislib/Socket.h"  // Must be first
 #include "vislib/CameraParameterObserver.h"
+#include "vislib/ObservableCameraParams.h"
 #include "vislib/types.h"
 
 
@@ -152,43 +152,6 @@ namespace cluster {
         AbstractControllerNode(void);
 
     private:
-
-        static const UINT32 DIRTY_APERTUREANGLE;
-
-        static const UINT32 DIRTY_EYE;
-
-        static const UINT32 DIRTY_FARCLIP;
-
-        static const UINT32 DIRTY_FOCALDISTANCE;
-
-        static const UINT32 DIRTY_LIMITS;
-
-        static const UINT32 DIRTY_LOOKAT;
-
-        static const UINT32 DIRTY_NEARCLIP;
-
-        static const UINT32 DIRTY_POSITION;
-        
-        static const UINT32 DIRTY_PROJECTION;
-
-        static const UINT32 DIRTY_STEREODISPARITY;
-
-        static const UINT32 DIRTY_TILERECT;
-
-        static const UINT32 DIRTY_UP;
-        
-        static const UINT32 DIRTY_VIRTUALVIEWSIZE;
-
-        /**
-         * This bitmask accumulates the dirty fields that are updated within a
-         * BeginBatchInteraction/EndBatchInteraction block. Once 
-         * EndBatchInteraction is called, all dirty fields are communicated to 
-         * the clients.
-         */
-        UINT32 batchDirtyFields;
-
-        /** Enables or disables accumulation of interaction operations. */
-        bool isBatchInteraction;
 
     };
     

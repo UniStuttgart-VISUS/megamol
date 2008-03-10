@@ -388,7 +388,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\CameraParameterObservable.h"
+				RelativePath=".\include\vislib\CameraParameterObserver.h"
 				>
 			</File>
 			<File

@@ -52,8 +52,8 @@ namespace cluster {
     /** The magic number which must be at the begin of all network messages. */
     const UINT32 MAGIC_NUMBER = static_cast<UINT32>('v')
         | static_cast<UINT32>('l') << 8
-        | static_cast<UINT32>('v') << 16
-        | static_cast<UINT32>('c') << 24;
+        | static_cast<UINT32>('c') << 16
+        | 1 << 24;
 
     
     /** This is the first message a client must send to a server node. */

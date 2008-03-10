@@ -17,6 +17,7 @@
 
 #include "vislib/AbstractClusterNode.h"
 #include "vislib/Array.h"
+#include "vislib/CriticalSection.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/TcpServer.h"
 
@@ -38,6 +39,34 @@ namespace cluster {
         /** Dtor. */
         ~AbstractServerNode(void);
 
+        /**
+         * Initialise the node.
+         *
+         * Implementing subclasses should build an initialisation chain by 
+         * calling their parent class implementation first.
+         *
+         * @param inOutCmdLine The command line passed to the containing
+         *                     application. The method might alter the command
+         *                     line and remove consumed options.
+         *
+         * @throws
+         */
+        virtual void Initialise(sys::CmdLineProviderA& inOutCmdLine);
+
+        /**
+         * Initialise the node.
+         *
+         * Implementing subclasses should build an initialisation chain by 
+         * calling their parent class implementation first.
+         *
+         * @param inOutCmdLine The command line passed to the containing
+         *                     application. The method might alter the command
+         *                     line and remove consumed options.
+         *
+         * @throws
+         */
+        virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
+
         virtual bool OnNewConnection(Socket& socket, 
             const SocketAddress& addr) throw();
 
@@ -58,6 +87,15 @@ namespace cluster {
         AbstractServerNode(const AbstractServerNode& rhs);
 
         /**
+         * Call 'func' for each known client socket.
+         *
+         * @param func The function to be executed for each peer node.
+         *
+         * @return The number of calls to 'func' that have been made.
+         */
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context = NULL);
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand side operand.
@@ -68,6 +106,12 @@ namespace cluster {
 
         /** The TCP server waiting for clients. */
         sys::RunnableThread<TcpServer> server;
+
+        /** The client sockets. */
+        Array<Socket> sockets;
+
+        /** Lock for protecting the 'sockets' member. */
+        sys::CriticalSection socketsLock;
 
     };
     

@@ -31,7 +31,7 @@ namespace graphics {
     public:
 
         /** Dtor. */
-        ~CameraParameterObserver(void);
+        virtual ~CameraParameterObserver(void);
 
         /**
          * This method is called if the aperture angle changed.

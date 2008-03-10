@@ -16,7 +16,7 @@
 
 
 #include "vislib/CameraParameterObserver.h"
-#include "vislib/CameraParamsOverride.h"
+#include "vislib/CameraParameters.h"
 #include "vislib/SingleLinkedList.h"
 
 
@@ -25,26 +25,30 @@ namespace graphics {
 
 
     /**
-     * This class implements a specialised CameraParamsStore that fires events
+     * This class implements a specialised CameraParameters that fires events
      * every time it was changed.
      *
-     * Note: THE CURRENT IMPLEMENTATION IS NOT THREAD-SAFE!
+     * ObservableCameraParams is implemented as a pass-through wrapper that 
+     * fires events and lets the observed actual parameter store or override
+     * do the rest of the job.
      *
-     * Note: This is not a CameraParamsOverride! It only inherits from this class
-     * because I am so lazy. The observer is implemented via a loop-through
-     * in the setters. Therefore, it is not safe against manipulations using
-     * static_casts.
+     * Note: THE CURRENT IMPLEMENTATION IS NOT THREAD-SAFE!
      */
-    class ObservableCameraParams : public CameraParamsOverride {
+    class ObservableCameraParams : public CameraParameters {
 
     public:
 
         /**
-         * Ctor. 
-         *
-         * @param base The underlying camera parameters that are observed.
+         * Create new ObservableCameraParams using a new CameraParamsStore.
          */
-        ObservableCameraParams(SmartPtr<CameraParameters>& base);
+        ObservableCameraParams(void);
+
+        /**
+         * Create new ObservableCameraParams wrapping the specified parameters.
+         *
+         * @param observed The underlying camera parameters that are observed.
+         */
+        ObservableCameraParams(SmartPtr<CameraParameters>& observed);
 
         /**
          * Copy ctor. 
@@ -96,6 +100,126 @@ namespace graphics {
         virtual void EndBatchInteraction(void);
 
         /**
+         * Answer the eye for stereo projections.
+         *
+         * @return The eye for stereo projections.
+         */
+        virtual StereoEye Eye(void) const;
+
+        /**
+         * Calculates and returns the real eye looking direction taking stereo
+         * projection mode and stereo disparity into account.
+         *
+         * @return The real eye looking direction.
+         */
+        virtual math::Vector<SceneSpaceType, 3> EyeDirection(void) const;
+
+        /**
+         * Calculates and returns the real eye looking direction taking stereo
+         * projection mode and stereo disparity into account.
+         *
+         * @return The real eye looking direction.
+         */
+        virtual math::Vector<SceneSpaceType, 3> EyeUpVector(void) const;
+
+        /**
+         * Calculates and returns the real eye looking direction taking stereo
+         * projection mode and stereo disparity into account.
+         *
+         * @return The real eye looking direction.
+         */
+        virtual math::Vector<SceneSpaceType, 3> EyeRightVector(void) const;
+
+        /**
+         * Calculates and returns the real eye position taking stereo 
+         * projection mode and stereo disparity into account.
+         *
+         * @return The real eye position.
+         */
+        virtual math::Point<SceneSpaceType, 3> EyePosition(void) const;
+
+        /** 
+         * Answer the distance of the far clipping plane 
+         *
+         * @return The distance of the far clipping plane 
+         */
+        virtual SceneSpaceType FarClip(void) const;
+
+        /** 
+         * Answer the focal distance for stereo images 
+         *
+         * @return The focal distance for stereo images 
+         */
+        virtual SceneSpaceType FocalDistance(void) const;
+
+        /** 
+         * Answer the normalised front vector of the camera. 
+         *
+         * @return The normalised front vector of the camera. 
+         */
+        virtual const math::Vector<SceneSpaceType, 3>& Front(void) const;
+
+        /**
+         * Answer the half aperture angle in radians.
+         *
+         * @return The half aperture angle in radians.
+         */
+        virtual math::AngleRad HalfApertureAngle(void) const;
+
+        /**
+         * Answer the half stereo disparity.
+         *
+         * @return The half stereo disparity.
+         */
+        virtual SceneSpaceType HalfStereoDisparity(void) const;
+
+        /**
+         * Answer whether this camera parameters object is similar with the
+         * specified one. Similarity is given if the objects are equal or are
+         * based on equal objects.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return 'true' if both objects are similar, 'false' otherwise.
+         */
+        virtual bool IsSimilar(const SmartPtr<CameraParameters> rhs) const;
+
+        /**
+         * Answer the limits object used by this object.
+         *
+         * @return The limits object.
+         */
+        virtual SmartPtr<CameraParameterLimits> Limits(void) const;
+
+        /** 
+         * Asnwer the look-at-point of the camera in world coordinates 
+         *
+         * @return The look-at-point of the camera in world coordinates 
+         */
+        virtual const math::Point<SceneSpaceType, 3>& LookAt(void) const;
+
+        /** 
+         * Answer the distance of the near clipping plane 
+         *
+         * @return The distance of the near clipping plane 
+         */
+        virtual SceneSpaceType NearClip(void) const;
+
+        /** 
+         * Answer the position of the camera in world coordinates 
+         *
+         * @return The position of the camera in world coordinates 
+         */
+        virtual const math::Point<SceneSpaceType, 3>& Position(void) const;
+
+        /** 
+         * Answer the type of stereo projection 
+         *
+         * @return The type of stereo projection 
+         */
+        virtual ProjectionType Projection(void) const;
+
+        /**
          * Removes the observer 'observer' from the list ob registered 
          * camera parameter observers. It is safe to remove non-registered
          * observers.
@@ -114,6 +238,13 @@ namespace graphics {
          * Resets the clip tile rectangle to the whole virtual view size.
          */
         virtual void ResetTileRect(void);
+
+        /** 
+         * Answer the normalised right vector of the camera. 
+         *
+         * @return The normalised right vector of the camera. 
+         */
+        virtual const math::Vector<SceneSpaceType, 3>& Right(void) const;
 
        /**
          * Sets the aperture angle along the y-axis.
@@ -150,6 +281,14 @@ namespace graphics {
          * @param focalDistance The focal distance.
          */
         virtual void SetFocalDistance(SceneSpaceType focalDistance);
+
+        /**
+         * Sets the limits object limiting the values of all values. This also
+         * implicitly calls 'ApplyLimits'.
+         *
+         * @param limits The new limits object.
+         */
+        virtual void SetLimits(const SmartPtr<CameraParameterLimits>& limits);
 
         /**
          * Sets the look-at-point of the camera in world coordinates.
@@ -239,6 +378,39 @@ namespace graphics {
         virtual void SetVirtualViewSize(
             const math::Dimension<ImageSpaceType, 2>& viewSize);
 
+        /** 
+         * Answer the synchronisation number used to update camera objects 
+         * using this parameters object.
+         *
+         * @return The synchronisation number.
+         */
+        virtual unsigned int SyncNumber(void) const;
+
+        /** 
+         * Answer the selected clip tile rectangle of the virtual view. (E. g.
+         * this should be used as rendering viewport).
+         *
+         * @return The selected clip tile rectangle 
+         */
+        virtual const math::Rectangle<ImageSpaceType>& TileRect(void) const;
+
+        /** 
+         * Answer the normalised up vector of the camera. The vector 
+         * (lookAt - position) and this vector must not be parallel.
+         *
+         * @return The normalised up vector of the camera. 
+         */
+        virtual const math::Vector<SceneSpaceType, 3>& Up(void) const;
+
+        /** 
+         * Answer the size of the full virtual view.
+         *
+         * @return The size of the full virtual view.
+         */
+        virtual const math::Dimension<ImageSpaceType, 2>& VirtualViewSize(
+            void) const;
+
+
         /**
          * Assignment operator.
          *
@@ -265,7 +437,7 @@ namespace graphics {
     protected:
 
         /** Direct superclass. */
-        typedef CameraParamsOverride Super;
+        typedef CameraParameters Super;
 
         /** Set all parameters dirty. */
         static const UINT32 DIRTY_ALL;
@@ -334,6 +506,18 @@ namespace graphics {
             const bool andAllDirty = true);
 
         /**
+         * Indicates that a new base object is about to be set.
+         *
+         * @param params The new base object to be set.
+         */
+        virtual void preBaseSet(const SmartPtr<CameraParameters>& params);
+
+        /**
+         * Resets the override.
+         */
+        virtual void resetOverride(void);
+
+        /**
          * Resumes firing of events. No events are actually fired.
          */
         inline void resumeFire(void) {
@@ -359,6 +543,9 @@ namespace graphics {
 
         /** Enables or disables accumulation of interaction operations. */
         bool isBatchInteraction;
+
+        /** The wrapped camera parameters that actually store the data. */
+        SmartPtr<CameraParameters> observed;
 
     private:
 

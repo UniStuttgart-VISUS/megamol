@@ -12,6 +12,7 @@
 #include <cstdio>
 
 #include "vislib/graphicstypes.h"
+#include "vislib/ObservableCameraParams.h"
 #include "vislib/Rectangle.h"
 
 #define _USE_MATH_DEFINES
@@ -23,7 +24,8 @@
 /*
  * CamRotatorTestApp::CamRotatorTestApp
  */
-CamRotatorTestApp::CamRotatorTestApp(void) : AbstractGlutApp() {
+CamRotatorTestApp::CamRotatorTestApp(void) : AbstractGlutApp(),
+        camera(new vislib::graphics::ObservableCameraParams()) {
     this->camera.Parameters()->SetClip(0.1f, 7.0f);
     this->camera.Parameters()->SetFocalDistance(2.5f);
     this->camera.Parameters()->SetApertureAngle(50.0f);
