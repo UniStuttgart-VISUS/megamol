@@ -20,12 +20,20 @@
 #include "vislogo.h"
 #include <cstdlib>
 
+//#define REGISTER_TEST_OBSERVER
+
 
 /*
  * CamRotatorTestApp::CamRotatorTestApp
  */
 CamRotatorTestApp::CamRotatorTestApp(void) : AbstractGlutApp(),
         camera(new vislib::graphics::ObservableCameraParams()) {
+    using namespace vislib::graphics;
+
+#ifdef REGISTER_TEST_OBSERVER
+    this->camera.Parameters().DynamicCast<ObservableCameraParams>()
+        ->AddCameraParameterObserver(&this->testObserver);
+#endif /* REGISTER_TEST_OBSERVER */
     this->camera.Parameters()->SetClip(0.1f, 7.0f);
     this->camera.Parameters()->SetFocalDistance(2.5f);
     this->camera.Parameters()->SetApertureAngle(50.0f);

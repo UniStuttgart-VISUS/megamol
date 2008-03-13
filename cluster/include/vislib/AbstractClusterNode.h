@@ -27,15 +27,15 @@ namespace cluster {
 
 
     /**
-     * This is the superclass for all specialised VISlib graphics cluster
-     * application nodes.
+     * This class defines the interface for all all specialised VISlib graphics 
+     * cluster application nodes.
      */
     class AbstractClusterNode {
 
     public:
 
         /** Dtor. */
-        ~AbstractClusterNode(void);
+        virtual ~AbstractClusterNode(void);
 
         /**
          * Initialise the node.
@@ -49,7 +49,7 @@ namespace cluster {
          *
          * @throws
          */
-        virtual void Initialise(sys::CmdLineProviderA& inOutCmdLine);
+        virtual void Initialise(sys::CmdLineProviderA& inOutCmdLine) = 0;
 
         /**
          * Initialise the node.
@@ -63,7 +63,7 @@ namespace cluster {
          *
          * @throws
          */
-        virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
+        virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine) = 0;
 
         /**
          * Run the node. Initialise must have been called before.
@@ -75,6 +75,25 @@ namespace cluster {
 
     protected:
 
+        /**
+         * This function pointer type is used as a callback for the forEachPeer
+         * method. Such a function is executed for each peer node that the
+         * client or server node knowns.
+         *
+         * Functions that are used here may throw any exception. This exception
+         * must be caught by the enumerator method. The enumerator method 
+         * continues with the next peer node after an exception.
+         *
+         * @param thisPtr    The pointer to the node object calling the 
+         *                   callback function, which allows the callback to 
+         *                   access instance members.
+         * @param peerSocket The socket representing the peer node.
+         * @param context    A user-defined value passed to forEachPeer().
+         *
+         * @return The function returns true in order to indicate that the 
+         *         enumeration should continue, or false in order to stop after 
+         *         the current node.
+         */
         typedef bool (* ForeachPeerFunc)(AbstractClusterNode *thisPtr, 
             Socket& peerSocket, void *context);
 
@@ -90,6 +109,13 @@ namespace cluster {
         AbstractClusterNode(const AbstractClusterNode& rhs);
 
         /**
+         * Answer the number of known peer nodes.
+         *
+         * @return The number of known peer nodes.
+         */
+        virtual SIZE_T countPeers(void) const = 0;
+
+        /**
          * Call 'func' for each known peer node (socket).
          *
          * On server nodes, the function is usually called for all the client
@@ -99,9 +125,24 @@ namespace cluster {
          * @param func    The function to be executed for each peer node.
          * @param context This is an additional pointer that is passed 'func'.
          *
-         * @return The number of calls to 'func' that have been made.
+         * @return The number of sucessful calls to 'func' that have been made.
          */
         virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context) = 0;
+
+        /**
+         * Send 'cntData' bytes of data beginning at 'data' to each known peer
+         * node.
+         *
+         * This is a blocking call, which returns after all messages have been
+         * successfully delivered or the communication has eventually failed.
+         *
+         * @param data    Pointer to the data to be sent.
+         * @param cntData The number of bytes to be sent.
+         *
+         * @return The number of messages successfully delivered.
+         */
+        virtual SIZE_T sendToEachPeer(const BYTE *data, const SIZE_T cntData) 
+            = 0;
 
         /**
          * Assignment.

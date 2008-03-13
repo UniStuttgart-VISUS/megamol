@@ -1,12 +1,12 @@
 /*
- * AbstractServerNode.h
+ * AbstractClientNode.h
  *
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTSERVERNODE_H_INCLUDED
-#define VISLIB_ABSTRACTSERVERNODE_H_INCLUDED
+#ifndef VISLIB_ABSTRACTCLIENTNODE_H_INCLUDED
+#define VISLIB_ABSTRACTCLIENTNODE_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
@@ -16,7 +16,6 @@
 
 
 #include "vislib/AbstractClusterNode.h"
-#include "vislib/TcpServer.h"
 
 
 namespace vislib {
@@ -25,31 +24,30 @@ namespace cluster {
 
 
     /**
-     * This class defines the interface of a server node. 
-     * 
-     * Classes that want to implement a server node should inherit from 
-     * ServerNodeAdapter, which implements all the required server 
-     * functionality.
+     * This class defines additional functionality that a cluster client node
+     * must provide.
+     *
+     * Classes that want to implement a client node should inherit from 
+     * ClientNodeAdapter, which implements all the required functionality.
      */
-    class AbstractServerNode : public AbstractClusterNode, 
-            public TcpServer::Listener {
+    class AbstractClientNode : public AbstractClusterNode {
 
     public:
 
         /** Dtor. */
-        ~AbstractServerNode(void);
+        ~AbstractClientNode(void);
 
     protected:
 
         /** Ctor. */
-        AbstractServerNode(void);
+        AbstractClientNode(void);
 
         /**
          * Forbidden copy ctor.
          *
          * @param rhs The object to be cloned.
          */
-        AbstractServerNode(const AbstractServerNode& rhs);
+        AbstractClientNode(const AbstractClientNode& rhs);
 
         /**
          * Assignment.
@@ -58,7 +56,8 @@ namespace cluster {
          *
          * @return *this.
          */
-        AbstractServerNode& operator =(const AbstractServerNode& rhs);
+        AbstractClientNode& operator =(const AbstractClientNode& rhs);
+
 
     };
     
@@ -69,5 +68,5 @@ namespace cluster {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTSERVERNODE_H_INCLUDED */
+#endif /* VISLIB_ABSTRACTCLIENTNODE_H_INCLUDED */
 

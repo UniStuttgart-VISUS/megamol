@@ -15,10 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractClusterNode.h"
-#include "vislib/Array.h"
-#include "vislib/RunnableThread.h"
-#include "vislib/TcpServer.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -49,15 +46,21 @@ namespace cluster {
     } MessageHeader;
 
 
-    /** The magic number which must be at the begin of all network messages. */
-    const UINT32 MAGIC_NUMBER = static_cast<UINT32>('v')
-        | static_cast<UINT32>('l') << 8
-        | static_cast<UINT32>('c') << 16
-        | 1 << 24;
+    /**
+     * Initialises the message header 'inOutHeader'.
+     *
+     * Actually, the magic number is set.
+     *
+     * @param inOutHeader The header to be initialised.
+     */
+    void InitialiseMessageHeader(MessageHeader& inOutHeader);
 
-    
+
+    /** The magic number which must be at the begin of all network messages. */
+    extern const UINT32 MAGIC_NUMBER;
+
     /** This is the first message a client must send to a server node. */
-    const UINT32 MSGID_INTRODUCE = 1;
+    extern const UINT32 MSGID_INTRODUCE;
 
     /** 
      * This message ID indicates that the message consists of multiple other
@@ -66,35 +69,33 @@ namespace cluster {
      * specified for MSGID_MULTIPLE is the size of all messages to follow in
      * bytes.
      */
-    const UINT32 MSGID_MULTIPLE = 2;
+    extern const UINT32 MSGID_MULTIPLE;
 
-    const UINT32 FIRST_CAMERAPARAMETER_MSGID = 64;
+    extern const UINT32 MSGID_APERTUREANGLE;
 
-    const UINT32 MSGID_APERTUREANGLE = FIRST_CAMERAPARAMETER_MSGID + 0;
+    extern const UINT32 MSGID_EYE;
 
-    const UINT32 MSGID_EYE = FIRST_CAMERAPARAMETER_MSGID + 1;
+    extern const UINT32 MSGID_FARCLIP;
 
-    const UINT32 MSGID_FARCLIP = FIRST_CAMERAPARAMETER_MSGID + 2;
+    extern const UINT32 MSGID_FOCALDISTANCE;
 
-    const UINT32 MSGID_FOCALDISTANCE = FIRST_CAMERAPARAMETER_MSGID + 3;
+    extern const UINT32 MSGID_LIMITS;
 
-    const UINT32 MSGID_LIMITS = FIRST_CAMERAPARAMETER_MSGID + 4;
+    extern const UINT32 MSGID_LOOKAT;
 
-    const UINT32 MSGID_LOOKAT = FIRST_CAMERAPARAMETER_MSGID + 5;
+    extern const UINT32 MSGID_NEARCLIP;
 
-    const UINT32 MSGID_NEARCLIP = FIRST_CAMERAPARAMETER_MSGID + 6;
-
-    const UINT32 MSGID_POSITION = FIRST_CAMERAPARAMETER_MSGID + 7;
+    extern const UINT32 MSGID_POSITION;
     
-    const UINT32 MSGID_PROJECTION = FIRST_CAMERAPARAMETER_MSGID + 8;
+    extern const UINT32 MSGID_PROJECTION;
 
-    const UINT32 MSGID_STEREODISPARITY = FIRST_CAMERAPARAMETER_MSGID + 9;
+    extern const UINT32 MSGID_STEREODISPARITY;
 
-    const UINT32 MSGID_TILERECT = FIRST_CAMERAPARAMETER_MSGID + 10;
+    extern const UINT32 MSGID_TILERECT;
 
-    const UINT32 MSGID_UP = FIRST_CAMERAPARAMETER_MSGID + 11;
+    extern const UINT32 MSGID_UP;
     
-    const UINT32 MSGID_VIRTUALVIEWSIZE = FIRST_CAMERAPARAMETER_MSGID + 12;
+    extern const UINT32 MSGID_VIRTUALVIEWSIZE;
     
 } /* end namespace cluster */
 } /* end namespace net */

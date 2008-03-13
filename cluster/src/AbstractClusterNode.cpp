@@ -16,22 +16,6 @@ vislib::net::cluster::AbstractClusterNode::~AbstractClusterNode(void) {
 
 
 /*
- * vislib::net::cluster::AbstractClusterNode::Initialise
- */
-void vislib::net::cluster::AbstractClusterNode::Initialise(
-        sys::CmdLineProviderA& inOutCmdLine) {
-}
-
-
-/*
- * vislib::net::cluster::AbstractClusterNode::Initialise
- */
-void vislib::net::cluster::AbstractClusterNode::Initialise(
-        sys::CmdLineProviderW& inOutCmdLine) {
-}
-
-
-/*
  * vislib::net::cluster::AbstractClusterNode::AbstractClusterNode
  */
 vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(void) {

@@ -351,6 +351,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CamParamObserver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CamRotatorTestApp.cpp"
 				>
 			</File>
@@ -398,6 +402,10 @@
 			>
 			<File
 				RelativePath=".\AbstractGlutApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CamParamObserver.h"
 				>
 			</File>
 			<File

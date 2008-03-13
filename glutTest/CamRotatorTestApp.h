@@ -20,6 +20,8 @@
 #include "vislib/Cursor2D.h"
 #include "vislib/InputModifiers.h"
 #include "vislib/types.h"
+#include "CamParamObserver.h"
+
 
 
 /*
@@ -48,6 +50,7 @@ private:
     vislib::graphics::Cursor2D cursor;
     vislib::graphics::CameraRotate2D rotator1;
     vislib::graphics::CameraRotate2DLookAt rotator2;
+    CamParamObserver testObserver;
 
     void SetupRotator1(void);
     void SetupRotator2(void);

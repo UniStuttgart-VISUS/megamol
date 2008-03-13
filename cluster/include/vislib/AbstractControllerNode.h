@@ -15,7 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/Socket.h"  // Must be first
+#include "vislib/AbstractClusterNode.h"
 #include "vislib/CameraParameterObserver.h"
+#include "vislib/clustermessages.h"
 #include "vislib/ObservableCameraParams.h"
 #include "vislib/types.h"
 
@@ -30,26 +32,13 @@ namespace cluster {
      * controlling node that propagates the camera settings to all other nodes
      * in the cluster application.
      */
-    class AbstractControllerNode : public graphics::CameraParameterObserver {
+    class AbstractControllerNode : public AbstractClusterNode, 
+            public graphics::CameraParameterObserver {
 
     public:
 
         /** Dtor. */
         ~AbstractControllerNode(void);
-
-        /**
-         * Begin a batch interaction that accumulates all changes to the camera
-         * parameters instead of transferring it directly. All change events 
-         * that the object receives until a call to EndBatchInteraction will be
-         * accumulated and not directly transferred to the client nodes.
-         */
-        virtual void BeginBatchInteraction(void);
-
-        /**
-         * Ends a batch interaction and transfers all changes to the client 
-         * nodes.
-         */
-        virtual void EndBatchInteraction(void);
 
         /**
          * This method is called if the aperture angle changed.
@@ -151,7 +140,64 @@ namespace cluster {
         /** Ctor. */
         AbstractControllerNode(void);
 
+        /**
+         * Copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         */
+        AbstractControllerNode(const AbstractControllerNode& rhs);
+
+        /**
+         * Assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        AbstractControllerNode& operator =(const AbstractControllerNode& rhs);
+
     private:
+
+        /**
+         * Send a camera parameter that consists of an integral variable of 
+         * type T.
+         *
+         * @param msgId The message ID.
+         * @param value The value.
+         */
+        template<class T> 
+        inline void sendIntegralCamParam(const UINT32 msgId, const T value) {
+            BYTE msg[sizeof(MessageHeader) + sizeof(T)];
+            MessageHeader *header = reinterpret_cast<MessageHeader *>(msg);
+            T *body = reinterpret_cast<T *>(msg + sizeof(MessageHeader));
+
+            InitialiseMessageHeader(*header);
+            header->Header.BlockId = msgId;
+            header->Header.BlockLength = sizeof(T);
+            *body = value;
+
+            this->sendToEachPeer(msg, sizeof(msg));
+        }
+
+        /**
+         * Send a camera parameter that is an array of D elements of type T.
+         *
+         * @param msgId The message ID.
+         * @param value Pointer to the value.
+         */
+        template<class T, UINT D>
+        inline void sendVectorialCamParam(const UINT32 msgId, const T *value) {
+            BYTE msg[sizeof(MessageHeader) + D * sizeof(T)];
+            MessageHeader *header = reinterpret_cast<MessageHeader *>(msg);
+            T *body = reinterpret_cast<T *>(msg + sizeof(MessageHeader));
+
+            InitialiseMessageHeader(*header);
+            header->Header.BlockId = msgId;
+            header->Header.BlockLength = sizeof(T);
+            ::memcpy(body, value, D * sizeof(T));
+
+            this->sendToEachPeer(msg, sizeof(msg));
+        }
 
     };
     

@@ -282,6 +282,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractClientNode.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractClusterNode.cpp"
 				>
 			</File>
@@ -293,12 +297,32 @@
 				RelativePath=".\src\AbstractServerNode.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\ClientNodeAdapter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\clustermessages.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ClusterNodeAdapter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ServerNodeAdapter.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\vislib\AbstractClientNode.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractClusterNode.h"
 				>
@@ -312,7 +336,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\ClientNodeAdapter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\clustermessages.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ClusterNodeAdapter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ServerNodeAdapter.h"
 				>
 			</File>
 		</Filter>

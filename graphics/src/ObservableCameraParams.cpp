@@ -211,7 +211,9 @@ vislib::graphics::ObservableCameraParams::Limits(void) const {
 bool vislib::graphics::ObservableCameraParams::IsSimilar(
         const SmartPtr<CameraParameters> rhs) const {
     ASSERT(!this->observed.IsNull());
-    return this->observed->IsSimilar(rhs);
+// TODO: MUST IMPLEMENT THIS!
+//    return this->observed->IsSimilar(rhs);
+    return true;
 }
 
 
@@ -672,7 +674,7 @@ void vislib::graphics::ObservableCameraParams::fireChanged(
 #define IMPLEMENT_FIRE_EX(name, flag, value)                                   \
             if (((which & (flag)) != 0)                                        \
                     || (andAllDirty && ((this->dirtyFields & (flag)) != 0))) { \
-                TRACE(Trace::LEVEL_VL_INFO, "Firing On" #name "Changed ...");  \
+                TRACE(Trace::LEVEL_VL_INFO, "Firing On" #name "Changed ...\n");\
                 observer->On##name##Changed(value);                            \
             } 
 #define IMPLEMENT_FIRE(name, flag) IMPLEMENT_FIRE_EX(name, flag, this->name())
