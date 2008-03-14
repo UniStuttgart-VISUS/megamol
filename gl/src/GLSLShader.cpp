@@ -337,7 +337,7 @@ GLenum vislib::graphics::gl::GLSLShader::Release(void) {
 
         if (GL_SUCCEEDED(::glGetObjectParameterivARB(this->hProgObj, 
                 GL_OBJECT_ATTACHED_OBJECTS_ARB, &objCnt))) {
-            GLhandleARB *objs = new GLhandleARB(objCnt);
+            GLhandleARB *objs = new GLhandleARB[objCnt];
 
             if (GL_SUCCEEDED(::glGetAttachedObjectsARB(this->hProgObj, 
                     objCnt, &objCnt, objs))) {
@@ -345,7 +345,8 @@ GLenum vislib::graphics::gl::GLSLShader::Release(void) {
                     ::glDeleteObjectARB(objs[i]);
                 }
             }
-        }            
+            delete[] objs;
+        }
 
         GL_VERIFY_RETURN(::glDeleteObjectARB(this->hProgObj));
     }
@@ -619,22 +620,23 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     USES_GL_VERIFY;
     GLhandleARB shader;
     RawStorage powerMemory;
+    const char lineStr[] = "\n#line 0 %d\n";
 
     if (insertLineDirective && (cnt > 1)) {
         StringA tmp;
         char *ptr;
-        tmp.Format("%d", cnt);
+        tmp.Format(lineStr, cnt);
 
         // very tricky:
         powerMemory.AssertSize((sizeof(char*) * (cnt * 2 - 1)) 
-            + ((cnt - 1) * sizeof(char) * (11 + tmp.Length())));
+            + ((cnt - 1) * sizeof(char) * (tmp.Length() + 1)));
         ptr = powerMemory.As<char>() + (sizeof(char*) * (cnt = cnt * 2 - 1));
         for (GLsizei i = 0; i < cnt; i++) {
             if (i % 2 == 0) {
                 powerMemory.As<const char*>()[i] = src[i / 2];
             } else {
                 unsigned int len;
-                tmp.Format("\n#line 0 %d\n", int((i + 1) / 2));
+                tmp.Format(lineStr, int((i + 1) / 2));
                 len = (tmp.Length() + 1) * sizeof(char);
                 memcpy(ptr, tmp.PeekBuffer(), len);
                 powerMemory.As<char*>()[i] = ptr;

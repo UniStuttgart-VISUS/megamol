@@ -25,7 +25,7 @@ const char *
 vislib::graphics::gl::GLSLGeometryShader::RequiredExtensions(void) {
     static vislib::StringA exts = vislib::StringA(
         vislib::graphics::gl::GLSLShader::RequiredExtensions())
-        + " GL_EXT_geometry_shader4 ";
+        + " GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 ";
     return exts.PeekBuffer();
 }
 
@@ -78,6 +78,7 @@ bool vislib::graphics::gl::GLSLGeometryShader::Compile(
 
     USES_GL_VERIFY;
     ASSERT(vertexShaderSrc != NULL);
+    ASSERT(geometryShaderSrc != NULL);
     ASSERT(fragmentShaderSrc != NULL);
 
     this->Release();
