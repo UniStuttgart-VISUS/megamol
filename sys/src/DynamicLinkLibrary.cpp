@@ -14,7 +14,6 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
-#include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -40,13 +39,13 @@ void vislib::sys::DynamicLinkLibrary::Free(void) {
     if (this->hModule != NULL) {
 #ifdef _WIN32
         if (::FreeLibrary(this->hModule) != TRUE) {
-            throw SystemException(__FILE__, __LINE__);
+            throw DLLException(__FILE__, __LINE__);
         }
 #else /* _WIN32 */
         int errorCode = ::dlclose(this->hModule);
 
         if (errorCode != 0) {
-            throw SystemException(errorCode, __FILE__, __LINE__);
+            throw DLLException(::dlerror(), __FILE__, __LINE__);
         }
 #endif /* _WIN32 */
         this->hModule = NULL;
@@ -66,6 +65,8 @@ FARPROC vislib::sys::DynamicLinkLibrary::GetProcAddress(
 void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
         const CHAR *procName) const {
     // TODO: Error handling using dlerror
+    // Using an exception is probably not useful because of the error-code
+    // incompatibility.
     return ::dlsym(this->hModule, procName);
 }
 #endif /* _WIN32 */
@@ -85,6 +86,8 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName, bool dontReso
         (dontResolveReferences) ? DONT_RESOLVE_DLL_REFERENCES : 0)) != NULL);
 #else /* _WIN32 */
     // TODO: Error handling using dlerror
+    // Using an exception is probably not useful because of the error-code
+    // incompatibility.
     return ((this->hModule = ::dlopen(moduleName, RTLD_LAZY)) != NULL);
 #endif /* _WIN32 */
 }

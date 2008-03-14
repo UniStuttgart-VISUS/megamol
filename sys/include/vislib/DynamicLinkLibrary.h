@@ -18,11 +18,28 @@
 #include "vislib/memutils.h"
 #endif /* _WIN32 */
 
+#include "vislib/SystemException.h"
 #include "vislib/types.h"
 
 
 namespace vislib {
 namespace sys {
+
+    /**
+     * DLLException is thrown if a DynamicLinkLibrary load operation fails.
+     * 
+     * Implementation note: This is a hack because Linux does not support any
+     * machine-usable error code, not to mention an error code that is 
+     * compatible with the system-defined error constants. The only error 
+     * information we can get is a string. Therefore, DLLException is a normal
+     * Exception on Linux.
+     */
+#ifdef _WIN32
+    typedef SystemException DLLException;
+#else /* _WIN32 */
+    typedef Exception DLLException;
+#endif /* _WIN32 */
+
 
     /**
      * This class wraps dynamic link libraries or shared objects.
@@ -45,8 +62,7 @@ namespace sys {
          * Frees the current library, if there is one. It is safe to call
          * the method, if no library has been loaded.
          *
-         * @throws SystemException If a library was loaded and cannot be
-         *                         released.
+         * @throws DLLException If a library was loaded and cannot be released.
          */
         void Free(void);
 
@@ -55,9 +71,8 @@ namespace sys {
          *
          * @param procName The name of the function to be seached.
          *
-         * @return A pointer to the function.
-         *
-         // TODO: Exception handling
+         * @return A pointer to the function. If the function was not found,
+         *         NULL is returned.
          */
 #ifdef _WIN32
         FARPROC GetProcAddress(const CHAR *procName) const;
