@@ -181,8 +181,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
+			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
 			CharacterSet="1"
@@ -208,9 +208,9 @@
 				AdditionalIncludeDirectories="&quot;.\DXUT\Core&quot;;&quot;.\DXUT\Optional&quot;;&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\d3d\include&quot;;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="1"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="DXUT.h"
-				WarningLevel="3"
+				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
@@ -372,6 +372,22 @@
 			<File
 				RelativePath=".\DXUT\Core\DXUT.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\DXUT\Core\DXUT.h"
