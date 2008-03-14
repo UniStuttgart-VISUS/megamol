@@ -46,6 +46,12 @@ namespace vislib {
      * of a elements is released, just like the array delete operator.
      *
      * No memory is allocated, if the capacity is forced to zero.
+     *
+     * Implementation note: The construction/destruction policy of the array is 
+     * that all elements within the current capacity must have beeb constructed.
+     * In order to prevent memory leaks in the derived PtrArray class, elements
+     * that are erased are immediately dtored and the free element(s) is/are
+     * reconstructed using the default ctor after that.
      */
     template <class T> class Array : public OrderedCollection<T> {
 
@@ -640,12 +646,17 @@ namespace vislib {
     template<class T>
     void Array<T>::Erase(const SIZE_T idx) {
         if (idx < this->count) {
+            /* Destruct element to erase. */
+            this->dtor(this->elements + idx);
+
+            /* Move elements forward. */
             for (SIZE_T i = idx + 1; i < this->count; i++) {
                 this->elements[i - 1] = this->elements[i];
             }
-
             this->count--;
-            this->dtor(this->elements + this->count);   // Call dtor on erased.
+
+            /* Element after valid range must now be reconstructed. */
+            this->ctor(this->elements + this->count);
         }
     }
 
@@ -659,11 +670,19 @@ namespace vislib {
         SIZE_T range = cnt;
 
         if (beginIdx < this->count) {
+
+            /* Sanity check. */
             if (beginIdx + range >= this->count) {
                 cntRemoved = range = this->count - beginIdx;
             }
             ASSERT(beginIdx + range <= this->count);
 
+            /* Dtor element range to erase. */
+            for (SIZE_T i = beginIdx; i < beginIdx + range; i++) {
+                this->dtor(this->elements + i);
+            }
+
+            /* Fill empty range. */
             for (SIZE_T i = beginIdx + range; i < this->count; i += range) {
                 if (i + range >= this->count) {
                     range = this->count - i;
@@ -671,13 +690,12 @@ namespace vislib {
                 ::memcpy(this->elements + (i - range - 1), this->elements + i, 
                     range * sizeof(T));
             }
-
-            // Call dtors on erased elements. 
-            for (SIZE_T i = this->count - cntRemoved; i < this->count; i++) {
-                this->dtor(this->elements + i);
-            }
-
             this->count -= cntRemoved;
+
+            /* 'cntRemoved' elements after valid range must be reconstructed. */
+            for (SIZE_T i = this->count; i < this->count + cntRemoved; i++) {
+                this->ctor(this->elements + i);
+            }
         }
     }
 
@@ -746,13 +764,19 @@ namespace vislib {
 
         for (SIZE_T i = 0; i < this->count; i++) {
             if (this->elements[i] == element) {
+                /* Dtor element to remove. */
+                this->dtor(this->elements + i);
+
+                /* Move elements forward. */
                 for (SIZE_T j = i + 1; j < this->count; j++) {
                     this->elements[j - 1] = this->elements[j];
                 }
-
                 this->count--;
-                this->dtor(this->elements + this->count);   // Dtor erased.
-                break;                                      // Remove first.
+
+                /* Reconstruct invalid element at end. */
+                this->ctor(this->elements + this->count);
+
+                break;          // Remove first element only.
             }
         }
     }
@@ -766,13 +790,19 @@ namespace vislib {
 
         for (SIZE_T i = 0; i < this->count; i++) {
             if (this->elements[i] == element) {
+                /* Dtor element to remove. */
+                this->dtor(this->elements + i);
+
+                /* Move elements forward. */
                 for (SIZE_T j = i + 1; j < this->count; j++) {
                     this->elements[j - 1] = this->elements[j];
                 }
-
                 this->count--;
-                this->dtor(this->elements + this->count);   // Dtor erased.
-                i--;                                        // Next moved fwd.
+
+                /* Reconstruct invalid element at end. */
+                this->ctor(this->elements + this->count);
+
+                i--;            // One index was lost, so next moved forward.
             }
         }
     }
