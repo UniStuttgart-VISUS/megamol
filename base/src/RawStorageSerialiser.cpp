@@ -13,7 +13,8 @@
  * vislib::RawStorageSerialiser::RawStorageSerialiser
  */
 vislib::RawStorageSerialiser::RawStorageSerialiser(RawStorage* storage, 
-        unsigned int offset) : storage(storage), offset(offset) {
+        unsigned int offset) : Serialiser(SERIALISER_REQUIRES_ORDER), 
+        storage(storage), offset(offset) {
     // Intentionally empty
 }
 
@@ -22,7 +23,8 @@ vislib::RawStorageSerialiser::RawStorageSerialiser(RawStorage* storage,
  * vislib::RawStorageSerialiser::RawStorageSerialiser
  */
 vislib::RawStorageSerialiser::RawStorageSerialiser(
-        const RawStorageSerialiser& src) : storage(NULL), offset(0) {
+        const RawStorageSerialiser& src) 
+        : Serialiser(src), storage(NULL), offset(0) {
     *this = src;
 }
 

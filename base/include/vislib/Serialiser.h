@@ -43,8 +43,23 @@ namespace vislib {
 
     public:
 
-        /** Ctor. */
-        Serialiser(void);
+        /**
+         * Flag for signaling that the serialiser supports the use of names for
+         * values to be identified.
+         */
+        static const UINT32 SERIALISER_SUPPORTS_NAMES;
+
+        /**
+         * Flag for signaling that the serialiser requires the use of names. 
+         * This implies that it also supports names.
+         */
+        static const UINT32 SERIALISER_REQUIRES_NAMES;
+
+        /**
+         * Flag for signaling that the serialiser requires the serialisation 
+         * and deserialisation calls to be made in the same order.
+         */
+        static const UINT32 SERIALISER_REQUIRES_ORDER;
 
         /** Dtor. */
         virtual ~Serialiser(void);
@@ -442,6 +457,15 @@ namespace vislib {
             const wchar_t *name) = 0;
 
         /**
+         * Answer the characteristics of the serialiser.
+         *
+         * @return The properties bitmask of the serialiser.
+         */
+        inline UINT32 GetProperties(void) const {
+            return this->properties;
+        }
+
+        /**
          * Serialise the bool variable using the name 'name'.
          *
          * @param value The value to be serialised.
@@ -835,6 +859,13 @@ namespace vislib {
 
     protected:
 
+        /** 
+         * Ctor.
+         *
+         * @param properties The properties of the serialiser.
+         */
+        Serialiser(const UINT32 properties);
+
         /**
          * Copy ctor.
          *
@@ -850,6 +881,11 @@ namespace vislib {
          * @return *this.
          */
         Serialiser& operator =(const Serialiser& rhs);
+
+    private:
+
+        /** The behaviour properties of the serialiser. */
+        UINT32 properties;
     };
 
 } /* end namespace vislib */

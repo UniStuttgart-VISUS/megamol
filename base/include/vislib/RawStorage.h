@@ -70,6 +70,30 @@ namespace vislib {
         }
 
         /**
+         * Answer the raw memory block at and offset of 'offset' bytes as 
+         * pointer to T. The object remains owner of the memory designated 
+         * by the pointer returned.
+         *
+         * @return A pointer to the begin of the memory block + 'offset' bytes.
+         */
+        template<class T> inline T *AsAt(const SIZE_T offset) {
+            return reinterpret_cast<T *>(static_cast<BYTE *>(this->data) 
+                + offset);
+        }
+
+        /**
+         * Answer the raw memory block at and offset of 'offset' bytes as 
+         * pointer to T. The object remains owner of the memory designated 
+         * by the pointer returned.
+         *
+         * @return A pointer to the begin of the memory block + 'offset' bytes.
+         */
+        template<class T> inline const T *AsAt(const SIZE_T offset) const {
+            return reinterpret_cast<T *>(static_cast<BYTE *>(this->data) 
+                + offset);
+        }
+
+        /**
          * Ensures that the dynamic memory consists of at least 'size' bytes.
          * If the memory block already has the requested size or is even larger,
          * nothing is done. If 'keepContent' is true, the content of the 
