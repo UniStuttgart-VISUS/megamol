@@ -357,6 +357,21 @@ function OnFinish(document)
 /*
  * Functions for checking inter-vislib dependencies:
  */
+function OnClusterChanged() {
+    if (VISLIB_CLUSTER.checked && !VISLIB_D3D.checked) {
+        VISLIB_D3D.checked = true;
+    }       
+    if (VISLIB_CLUSTER.checked && !VISLIB_GL.checked) {
+        VISLIB_GL.checked = true;
+    }   
+}
+
+function OnD3DChanged() {
+    if (VISLIB_D3D.checked && !VISLIB_GRAPHICS.checked) {
+        VISLIB_GRAPHICS.checked = true;
+    }
+}
+
 function OnGraphicsChanged() {
     if (VISLIB_GRAPHICS.checked && !VISLIB_MATH.checked) {
         VISLIB_MATH.checked = true;
@@ -364,6 +379,7 @@ function OnGraphicsChanged() {
 
     //VISLIB_MATH.disabled = VISLIB_GRAPHICS.checked;
 }
+
 function OnGlChanged() {
     if (VISLIB_GL.checked && !VISLIB_GRAPHICS.checked) {
         VISLIB_GRAPHICS.checked = true;
@@ -371,6 +387,7 @@ function OnGlChanged() {
 
     //VISLIB_GRAPHICS.disabled = VISLIB_GL.checked;
 }
+
 function OnNetChanged() {
     if (VISLIB_NET.checked && !VISLIB_SYS.checked) {
         VISLIB_SYS.checked = true;
@@ -378,6 +395,7 @@ function OnNetChanged() {
 
     //VISLIB_SYS.disabled = VISLIB_NET.checked;
 }
+
 function OnLinuxChanged() {
     LIN_VISLIB_DIR.disabled = !LINUX_MAKEFILE.checked;
     LIN_PROPS_FILENAME.disabled = !LINUX_MAKEFILE.checked;

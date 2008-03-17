@@ -213,16 +213,23 @@
                                                 Use VISlib <u>m</u>ath</label>&nbsp;
                                             <input id="VISLIB_SYS" class="CheckBox" type="checkbox" accesskey="S" value="sys" />
                                             <label for="VISLIB_SYS" title="Use VISlib sys" id="Label5">
-                                                Use VISlib <u>s</u>ys</label>&nbsp;
-                                            <input id="VISLIB_NET" class="CheckBox" type="checkbox" accesskey="M" value="net"
+                                                Use VISlib <u>s</u>ys</label><br />
+                                            <input id="VISLIB_NET" class="CheckBox" type="checkbox" accesskey="N" value="net"
                                                 onpropertychange="OnNetChanged();" />
                                             <label for="VISLIB_NET" title="Use VISlib net" id="Label7">
-                                                Use VISlib <u>n</u>et</label><br />
-                                            <input id="VISLIB_GRAPHICS" class="CheckBox" type="checkbox" accesskey="M" value="graphics"
+                                                Use VISlib <u>n</u>et</label>&nbsp;
+                                            <input id="VISLIB_CLUSTER" class="CheckBox" type="checkbox" accesskey="C" value="cluster"
+                                                onpropertychange="OnClusterChanged();" />
+                                            <label for="VISLIB_CLUSTER" title="Use VISlib cluster" id="Label11">
+                                                Use VISlib <u>c</u>luster</label><br />
+                                            <input id="VISLIB_GRAPHICS" class="CheckBox" type="checkbox" accesskey="G" value="graphics"
                                                 onpropertychange="OnGraphicsChanged();" />
                                             <label for="VISLIB_GRAPHICS" title="Use VISlib graphics" id="Label8">
                                                 Use VISlib <u>g</u>raphics</label>&nbsp;
-                                            <input id="VISLIB_GL" class="CheckBox" type="checkbox" accesskey="M" value="gl" onpropertychange="OnGlChanged();" />
+                                            <input id="VISLIB_D3D" class="CheckBox" type="checkbox" accesskey="D" value="d3d" onpropertychange="OnD3DChanged();" />
+                                            <label for="VISLIB_D3D" title="Use VISlib d3d" id="Label10">
+                                                Use VISlib <u>d</u>3d</label>&nbsp;                                                
+                                            <input id="VISLIB_GL" class="CheckBox" type="checkbox" accesskey="L" value="gl" onpropertychange="OnGlChanged();" />
                                             <label for="VISLIB_GL" title="Use VISlib gl" id="Label9">
                                                 Use VISlib g<u>l</u></label>
                                         </span>
@@ -372,6 +379,24 @@ function OnFinish(document)
 /*
  * Functions for checking inter-vislib dependencies:
  */
+function OnClusterChanged() {
+    if (VISLIB_CLUSTER.checked && !VISLIB_NET.checked) {
+        VISLIB_NET.checked = true;
+    }
+    if (VISLIB_CLUSTER.checked && !VISLIB_D3D.checked) {
+        VISLIB_D3D.checked = true;
+    }       
+    if (VISLIB_CLUSTER.checked && !VISLIB_GL.checked) {
+        VISLIB_GL.checked = true;
+    }    
+}
+
+function OnD3DChanged() {
+    if (VISLIB_D3D.checked && !VISLIB_GRAPHICS.checked) {
+        VISLIB_GRAPHICS.checked = true;
+    }
+}
+
 function OnGraphicsChanged() {
     if (VISLIB_GRAPHICS.checked && !VISLIB_MATH.checked) {
         VISLIB_MATH.checked = true;
@@ -379,6 +404,7 @@ function OnGraphicsChanged() {
 
     //VISLIB_MATH.disabled = VISLIB_GRAPHICS.checked;
 }
+
 function OnGlChanged() {
     if (VISLIB_GL.checked && !VISLIB_GRAPHICS.checked) {
         VISLIB_GRAPHICS.checked = true;
@@ -386,6 +412,7 @@ function OnGlChanged() {
 
     //VISLIB_GRAPHICS.disabled = VISLIB_GL.checked;
 }
+
 function OnNetChanged() {
     if (VISLIB_NET.checked && !VISLIB_SYS.checked) {
         VISLIB_SYS.checked = true;
@@ -393,6 +420,7 @@ function OnNetChanged() {
 
     //VISLIB_SYS.disabled = VISLIB_NET.checked;
 }
+
 function OnLinuxChanged() {
     LIN_VISLIB_DIR.disabled = !LINUX_MAKEFILE.checked;
     LIN_PROPS_FILENAME.disabled = !LINUX_MAKEFILE.checked;

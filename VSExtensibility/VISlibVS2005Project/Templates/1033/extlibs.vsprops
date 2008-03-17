@@ -5,11 +5,11 @@
     >
     <Tool
         Name="VCCLCompilerTool"
-        AdditionalIncludeDirectories="&quot;$(VISlibDir)\base\include&quot;[!if VISLIB_GL]; &quot;$(VISlibDir)\gl\include&quot;[!endif][!if VISLIB_GRAPHICS]; &quot;$(VISlibDir)\graphics\include&quot;[!endif][!if VISLIB_MATH]; &quot;$(VISlibDir)\math\include&quot;[!endif][!if VISLIB_NET]; &quot;$(VISlibDir)\net\include&quot;[!endif][!if VISLIB_SYS]; &quot;$(VISlibDir)\sys\include&quot;[!endif]"
+        AdditionalIncludeDirectories="&quot;$(VISlibDir)\base\include&quot;[!if VISLIB_CLUSTER]; &quot;$(VISlibDir)\cluster\include&quot;[!endif][!if VISLIB_D3D]; &quot;$(VISlibDir)\d3d\include&quot;[!endif][!if VISLIB_GL]; &quot;$(VISlibDir)\gl\include&quot;[!endif][!if VISLIB_GRAPHICS]; &quot;$(VISlibDir)\graphics\include&quot;[!endif][!if VISLIB_MATH]; &quot;$(VISlibDir)\math\include&quot;[!endif][!if VISLIB_NET]; &quot;$(VISlibDir)\net\include&quot;[!endif][!if VISLIB_SYS]; &quot;$(VISlibDir)\sys\include&quot;[!endif]"
     />
     <Tool
         Name="VCLinkerTool"
-        AdditionalDependencies="vislibbase$(BitsD).lib[!if VISLIB_GL] vislibgl$(BitsD).lib[!endif][!if VISLIB_GRAPHICS] vislibgraphics$(BitsD).lib[!endif][!if VISLIB_MATH] vislibmath$(BitsD).lib[!endif][!if VISLIB_NET] vislibnet$(BitsD).lib[!endif][!if VISLIB_SYS] vislibsys$(BitsD).lib[!endif][!output ADDITIONAL_LIBRARIES]"
+        AdditionalDependencies="vislibbase$(BitsD).lib[!if VISLIB_CLUSTER] vislibcluster$(BitsD).lib[!endif][!if VISLIB_D3D] vislibd3d$(BitsD).lib[!endif][!if VISLIB_GL] vislibgl$(BitsD).lib[!endif][!if VISLIB_GRAPHICS] vislibgraphics$(BitsD).lib[!endif][!if VISLIB_MATH] vislibmath$(BitsD).lib[!endif][!if VISLIB_NET] vislibnet$(BitsD).lib[!endif][!if VISLIB_SYS] vislibsys$(BitsD).lib[!endif][!output ADDITIONAL_LIBRARIES]"
         AdditionalLibraryDirectories="&quot;$(VISlibDir)\lib&quot;"
     />
     <UserMacro
