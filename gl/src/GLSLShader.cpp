@@ -309,7 +309,7 @@ bool vislib::graphics::gl::GLSLShader::Link() {
     GL_VERIFY_THROW(::glLinkProgramARB(this->hProgObj));
     if (!this->isLinked(this->hProgObj)) {
         throw CompileException(this->getProgramInfoLog(this->hProgObj), 
-            __FILE__, __LINE__);
+            CompileException::ACTION_LINK, __FILE__, __LINE__);
     }
 
     return true;
@@ -652,7 +652,9 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     GL_VERIFY_THROW(::glCompileShaderARB(shader));
 
     if (!isCompiled(shader)) {
-        throw CompileException(getProgramInfoLog(shader), __FILE__, __LINE__);
+        throw CompileException(getProgramInfoLog(shader), 
+            CompileException::CompilationFailedAction(type), 
+            __FILE__, __LINE__);
     }
 
     return shader;

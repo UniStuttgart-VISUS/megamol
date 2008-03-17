@@ -39,6 +39,36 @@ namespace gl {
 
         public:
 
+            /** possible values for failed compile action */
+            enum CompileAction {
+                ACTION_UNKNOWN,
+                ACTION_COMPILE_UNKNOWN,
+                ACTION_COMPILE_VERTEX_CODE,
+                ACTION_COMPILE_FRAGMENT_CODE,
+                ACTION_COMPILE_GEOMETRY_CODE,
+                ACTION_LINK
+            };
+
+            /**
+             * Answer the correct 'CompileAction' value of a compilation failed
+             * exception of a shader object of the type 'type'.
+             *
+             * @param type Specifies the type of shader object.
+             *
+             * @return The requested 'CompileAction' value.
+             */
+            static CompileAction CompilationFailedAction(GLenum type);
+
+            /**
+             * Answers a human readable name string for the given 
+             * 'CompileAction' value.
+             *
+             * @param action The 'CompileAction' value.
+             *
+             * @return A human readable name string.
+             */
+            static const char* CompileActionName(CompileAction action);
+
             /**
              * Ctor.
              *
@@ -68,6 +98,28 @@ namespace gl {
                 const int line);
 
             /**
+             * Ctor.
+             *
+             * @param msg  The exception detail message.
+             * @param action The failed compile action.
+             * @param file The file the exception was thrown in.
+             * @param line The line the exception was thrown in.
+             */
+            CompileException(const char *msg, CompileAction action, 
+                const char *file, const int line);
+
+            /**
+             * Ctor.
+             *
+             * @param msg  The exception detail message.
+             * @param action The failed compile action.
+             * @param file The file the exception was thrown in.
+             * @param line The line the exception was thrown in.
+             */
+            CompileException(const wchar_t *msg, CompileAction action, 
+                const char *file, const int line);
+
+            /**
              * Create a clone of 'rhs'.
              *
              * @param rhs The object to be cloned.
@@ -78,6 +130,15 @@ namespace gl {
             virtual ~CompileException(void);
 
             /**
+             * Answer the failed compile action.
+             *
+             * @return The failed compile action.
+             */
+            inline CompileAction FailedAction(void) {
+                return this->action;
+            }
+
+            /**
              * Assignment operator.
              *
              * @param rhs The right hand side operand.
@@ -85,6 +146,11 @@ namespace gl {
              * @return *this.
              */
             virtual CompileException& operator =(const CompileException& rhs);
+
+        private:
+
+            /** The failed compile action */
+            CompileAction action;
 
         }; /* end class CompileException */
 

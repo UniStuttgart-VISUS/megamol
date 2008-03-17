@@ -869,7 +869,7 @@ namespace gl {
         /**
          * Creates and compiles a new shader.
          *
-         * @param shaderType Specifies the type of shader to be created.
+         * @param type Specifies the type of shader to be created.
          * @param src The shader source code elements.
          * @param cnt The number of source code elements.
          * @param insertLineDirective Indicates whether to insert '#line' 
