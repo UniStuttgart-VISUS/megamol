@@ -184,7 +184,7 @@ namespace sys {
  * vislib::sys::RegistrySerialiser::RegistrySerialiser
  */
 vislib::sys::RegistrySerialiser::RegistrySerialiser(const char *subKey, 
-        HKEY hKey) : hBaseKey(NULL) {
+        HKEY hKey) : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
     DWORD createDisp = 0;
     LONG result = ::RegCreateKeyExA(hKey, subKey, 0, NULL, 
         REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->hBaseKey, 
@@ -202,7 +202,7 @@ vislib::sys::RegistrySerialiser::RegistrySerialiser(const char *subKey,
  * vislib::sys::RegistrySerialiser::RegistrySerialiser
  */
 vislib::sys::RegistrySerialiser::RegistrySerialiser(const wchar_t *subKey, 
-        HKEY hKey) : hBaseKey(NULL) {
+        HKEY hKey) : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
     DWORD createDisp = 0;
     LONG result = ::RegCreateKeyExW(hKey, subKey, 0, NULL, 
         REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->hBaseKey, 
