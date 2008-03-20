@@ -22,7 +22,7 @@ namespace math {
     /**
      * A quaternion.
      */
-    template<class T> class ShallowQuaternion : AbstractQuaternion<T, T*> {
+    template<class T> class ShallowQuaternion : public AbstractQuaternion<T, T*> {
 
     public:
 
