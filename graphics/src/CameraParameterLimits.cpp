@@ -9,6 +9,7 @@
 
 #include "vislib/CameraParameterLimits.h"
 #include "vislib/Float16.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
 
 
@@ -64,6 +65,37 @@ vislib::graphics::CameraParameterLimits::CameraParameterLimits(
  * vislib::graphics::CameraParameterLimits::~CameraParameterLimits
  */
 vislib::graphics::CameraParameterLimits::~CameraParameterLimits(void) {
+}
+
+
+/*
+ * vislib::graphics::CameraParameterLimits::Deserialise
+ */
+void vislib::graphics::CameraParameterLimits::Deserialise(
+        Serialiser& serialiser) {
+    float f;
+
+    if (serialiser.GetProperties() & Serialiser::SERIALISER_REQUIRES_NAMES) {
+        throw IllegalParamException("serialiser", __FILE__, __LINE__);
+    }
+
+    serialiser.Deserialise(f);
+    this->maxHalfApertureAngle = f;
+
+    serialiser.Deserialise(f);
+    this->minClipPlaneDist = f;
+
+    serialiser.Deserialise(f);
+    this->minFocalDist = f;
+
+    serialiser.Deserialise(f);
+    this->minHalfApertureAngle = f;
+
+    serialiser.Deserialise(f);
+    this->minLookAtDist = f;
+
+    serialiser.Deserialise(f);
+    this->minNearClipDist = f;
 }
 
 
@@ -139,6 +171,24 @@ void vislib::graphics::CameraParameterLimits::Reset(void) {
     this->minHalfApertureAngle = DEFAULT_MIN_HALF_APERTURE_ANGLE;
     this->minLookAtDist = DEFAULT_MIN_LOOK_AT_DIST;
     this->minNearClipDist = DEFAULT_MIN_NEAR_CLIP_DIST;
+}
+
+
+/*
+ * vislib::graphics::CameraParameterLimits::Serialise
+ */
+void vislib::graphics::CameraParameterLimits::Serialise(
+        Serialiser& serialiser) const {
+    if (serialiser.GetProperties() & Serialiser::SERIALISER_REQUIRES_NAMES) {
+        throw IllegalParamException("serialiser", __FILE__, __LINE__);
+    }
+
+    serialiser.Serialise(static_cast<float>(this->maxHalfApertureAngle));
+    serialiser.Serialise(static_cast<float>(this->minClipPlaneDist));
+    serialiser.Serialise(static_cast<float>(this->minFocalDist));
+    serialiser.Serialise(static_cast<float>(this->minHalfApertureAngle));
+    serialiser.Serialise(static_cast<float>(this->minLookAtDist));
+    serialiser.Serialise(static_cast<float>(this->minNearClipDist));
 }
 
 

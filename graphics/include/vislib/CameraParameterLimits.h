@@ -18,6 +18,7 @@
 
 #include "vislib/graphicstypes.h"
 #include "vislib/mathtypes.h"
+#include "vislib/Serialisable.h"
 #include "vislib/SmartPtr.h"
 
 
@@ -29,7 +30,7 @@ namespace graphics {
      * Class of limit values to camera parameters used by CameraParameter
      * objects.
      */
-    class CameraParameterLimits {
+    class CameraParameterLimits : public vislib::Serialisable {
     public:
 
         /** 
@@ -50,7 +51,18 @@ namespace graphics {
         CameraParameterLimits(const CameraParameterLimits& rhs);
 
         /** Dtor. */
-        ~CameraParameterLimits(void);
+        virtual ~CameraParameterLimits(void);
+
+        /**
+         * Deserialise the object from 'serialiser'. The caller must ensure that
+         * the Serialiser is in an acceptable state to deserialise from.
+         *
+         * @param serialiser The serialiser to deserialise the object from.
+         *
+         * @throws IllegalParamException If 'serialiser' requires the use of 
+         *                               names.
+         */
+        virtual void Deserialise(Serialiser& serialiser);
 
         /**
          * Sets the limit values for the aperture angle. The function will
@@ -175,6 +187,16 @@ namespace graphics {
 
         /** Resets all values to the default values. */
         void Reset(void);
+
+        /**
+         * Serialise the object to 'serialiser'. The caller must ensure that
+         * the Serialiser is in an acceptable state to serialise to.
+         *
+         * @param serialiser The serialiser to serialise the object to.
+         *
+         * @throws IllegalParamException If 'serialiser' requires the use of 
+         *                               names.         */
+        virtual void Serialise(Serialiser& serialiser) const;
 
         /**
          * Assignment operator

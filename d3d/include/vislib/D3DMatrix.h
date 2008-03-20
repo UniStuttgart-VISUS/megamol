@@ -15,6 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include <d3d9.h>
 #include <d3dx9math.h>
 
 #include "vislib/AbstractMatrix.h"

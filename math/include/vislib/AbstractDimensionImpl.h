@@ -319,4 +319,3 @@ namespace math {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTDIMENSIONIMPL_H_INCLUDED */
-

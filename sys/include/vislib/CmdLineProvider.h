@@ -88,6 +88,16 @@ namespace sys {
         CmdLineProvider(const String<T>& cmdLine);
 
         /**
+         * Create command line provider from C style parameters.
+         *
+         * @param argc An integer that contains the count of arguments that 
+         *             follow in 'argv'. 
+         * @param argv An array of null-terminated strings representing 
+         *             command-line arguments entered by the user of the program. 
+         */
+        CmdLineProvider(int argc, Char **argv);
+
+        /**
          * Ctor with initialization
          * See: CreateCmdLine for further Information
          *
@@ -445,6 +455,24 @@ namespace sys {
 
 
     /*
+     * vislib::sys::CmdLineProvider<T>::CmdLineProvider
+     */
+    template<class T> 
+    CmdLineProvider<T>::CmdLineProvider(int argc, Char **argv) {
+        this->argCount = this->storeCount = argc;
+        this->arguments = new Char *[this->argCount];
+        this->memoryAnchor = new Char *[this->storeCount];
+
+        BECAUSE_I_KNOW(this->argCount == this->storeCount);
+        for (int i = 0; i < this->argCount; i++) {
+            T::Size len = T::SafeStringLength(argv[i]) + 1;
+            this->arguments[i] = this->memoryAnchor[i] = new Char[len];
+            ::memcpy(this->memoryAnchor[i], argv[i], len * T::CharSize());
+        }
+    }
+
+
+    /*
      * CmdLineProvider<T>::CmdLineProvider
      */
     template<class T> CmdLineProvider<T>::CmdLineProvider(const Char *appName, const Char *cmdLine) 
@@ -519,7 +547,7 @@ namespace sys {
 
 
     /*
-     * CmdLineProvider<T>::CreateCmdLine
+     * CmdLineProvider<T>::Line
      */
     template<class T> void CmdLineProvider<T>::CreateCmdLine(const Char *appName, const Char *cmdLine) {
         Char *ci;
