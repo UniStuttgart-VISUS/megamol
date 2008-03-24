@@ -8,4 +8,4 @@ TargetName := vislibsys
 
 IncludeDir += ../base/include ../math/include
 
-ExcludeFromBuild += ./src/DynamicFunctionPointer.cpp ./src/PAMException.cpp ./src/ImpersonationContext.cpp
+ExcludeFromBuild += ./src/DynamicFunctionPointer.cpp ./src/PAMException.cpp

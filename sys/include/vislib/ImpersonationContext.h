@@ -17,8 +17,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else /* _WIN32 */
-#include <security/pam_appl.h>
-#include <security/pam_misc.h>
+#include <sys/types.h>
 #endif /* _WIN32 */
 
 
@@ -33,11 +32,9 @@ namespace sys {
      *
      * On Windows, the new user is logged on and then impersonated.
      *
-     * On Linux, the user is logged on using PAM and the effective UID is 
-     * changed to the one of the user, if logon succeeded. PAM itself obviousely
-     * does not change the UID, if a new session is started.
-     * Note, that only the effective UID is changed as otherwise, returning to
-     * the root user is not possible.
+     * On Linux, the impersonation is done by chaning the effective user and 
+     * group ID of the process. The caller must therefore run as root.
+     * Link -lcrypt on Linux.
      */
     class ImpersonationContext {
 
@@ -68,8 +65,6 @@ namespace sys {
          *                         logging on or impersonation failed.
          *                         On Linux, this exception is only thrown, if 
          *                         the effective UID could not be changed.
-         * @throws PAMException    Only on Linux, if the PAM module could not be
-         *                         initialised.
          */
         void Impersonate(const char *username, const char *domain, 
             const char *password);
@@ -89,11 +84,6 @@ namespace sys {
          *         failed.
          *
          * @throws SystemException If the impersonation failed.
-         *                         On Windows, this exception is throws, if 
-         *                         logging on or impersonation failed.
-         *                         On Linux, this exception is only thrown, if 
-         *                         the effective UID could not be changed.
-         * @throws PAMException    Only on Linux, if the PAM module could not be
          */
         void Impersonate(const wchar_t *username, const wchar_t *domain,
             const wchar_t *password);
@@ -101,44 +91,13 @@ namespace sys {
         /**
          * Revert to original user.
          *
-         * @throws SystemException On Windows, if reverting to own user failed.
-         *                         On Linux, if setting the prior UID failed.
-         * @throws PAMException    Only on Linux, if ending the PAM session 
-         *                         failed.
+         * @throws SystemException If reverting to own user failed.
          */
         inline void Revert(void) {
             this->revert(false);
         }
 
     private:
-
-#ifndef _WIN32
-        /**
-         * This is the PAM conversation callback that provides the user 
-         * password, if requested.
-         *
-         * @param cntMsg
-         * @param msg
-         * @param response
-         * @param userData
-         *
-         * @return
-         */
-        static int logonUserConversation(int cntMsg, 
-            const struct pam_message **msg, struct pam_response **response,
-            void *userData);
-
-        /**
-         * Answer the UID of the user with name 'username'.
-         *
-         * @param username A user name.
-         *
-         * @return The UID of the user on this system.
-         *
-         * @throws SystemException If resolving the user name failed.
-         */
-        static int resolveUID(const char *username);
-#endif /* _WIN32 */
 
         /**
          * Forbidden copy ctor.
@@ -155,8 +114,7 @@ namespace sys {
          *
          * @param isSilent Supress exceptions in case of an error.
          *
-         * @throws SystemException
-         * @throws PAMException
+         * @throws SystemException If the operation failed.
          */
         void revert(const bool isSilent);
 
@@ -173,11 +131,11 @@ namespace sys {
         /** The logon token of the user which for LogonUser was called. */
         HANDLE hToken;
 #else /* _WIN32 */
-        /** PAM handle. If this handle is NULL, no impersonation was done. */
-        pam_handle_t *hPAM;
+        /** The UID of the group to revert to. */
+        gid_t revertToGid;
 
-        /** UID to revert to. */
-        int origUID;
+        /** The UID of the user to revert to. */
+        uid_t revertToUid;
 #endif /* _WIN32 */
     };
     

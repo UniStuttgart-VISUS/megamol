@@ -39,6 +39,21 @@ namespace math {
 
     public:
 
+        /** A bitmask representing all rectangle borders. */
+        static const UINT32 BORDER_ALL;
+
+        /** A bitmask representing the bottom border of the rectangle. */
+        static const UINT32 BORDER_BOTTOM;
+
+        /** A bitmask representing the left border of the rectangle. */
+        static const UINT32 BORDER_LEFT;
+
+        /** A bitmask representing the right border of the rectangle. */
+        static const UINT32 BORDER_RIGHT;
+
+        /** A bitmask representing the top border of the rectangle. */
+        static const UINT32 BORDER_TOP;
+
         /** Dtor. */
         ~AbstractRectangle(void);
 
@@ -78,6 +93,23 @@ namespace math {
          * @return The center point of the rectangle.
          */
         Point<T, 2> CalcCenter(void) const;
+
+        /**
+         * Answer whether the point 'point' lies within the rectangle.
+         *
+         * @param point         The point to be tested.
+         * @param includeBorder An arbitrary combination of the BORDER_LEFT, 
+         *                      BORDER_BOTTOM, BORDER_RIGHT and BORDER_TOP 
+         *                      bitmasks. If the border bit is set, points lying 
+         *                      on the respective border are regarded as in the
+         *                      rectangle, otherwise they are out. Defaults to
+         *                      zero, i. e. no border is included.
+         *
+         * @return True if the point lies within the rectangle, false otherwise.
+         */
+        template<class Sp>
+        bool Contains(const AbstractPoint<T, 2, Sp>& point, 
+            const UINT32 includeBorder = 0) const;
 
         /**
          * Answer the height of the rectangle.
@@ -474,14 +506,55 @@ namespace math {
          * right, top. 
          */
         S bounds;
-
     };
+
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::BORDER_ALL
+     */
+    template<class T, class S>
+    const UINT32 AbstractRectangle<T, S>::BORDER_ALL
+        = AbstractRectangle<T, S>::BORDER_LEFT
+        | AbstractRectangle<T, S>::BORDER_BOTTOM
+        | AbstractRectangle<T, S>::BORDER_RIGHT
+        | AbstractRectangle<T, S>::BORDER_TOP;
+
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::BORDER_BOTTOM
+     */
+    template<class T, class S>
+    const UINT32 AbstractRectangle<T, S>::BORDER_BOTTOM 
+        = 1 << AbstractRectangle<T, S>::IDX_BOTTOM;
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::BORDER_LEFT
+     */
+    template<class T, class S>
+    const UINT32 AbstractRectangle<T, S>::BORDER_LEFT 
+        = 1 << AbstractRectangle<T, S>::IDX_LEFT;
+
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::BORDER_RIGHT
+     */
+    template<class T, class S>
+    const UINT32 AbstractRectangle<T, S>::BORDER_RIGHT 
+        = 1 << AbstractRectangle<T, S>::IDX_RIGHT;
+
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::BORDER_TOP
+     */
+    template<class T, class S>
+    const UINT32 AbstractRectangle<T, S>::BORDER_TOP
+        = 1 << AbstractRectangle<T, S>::IDX_TOP;
 
 
     /*
      * vislib::math::AbstractRectangle<T, S>::~AbstractRectangle
      */
-    template<class T, class S> 
+    template<class T, class S>
     AbstractRectangle<T, S>::~AbstractRectangle(void) {
     }
 
@@ -494,6 +567,46 @@ namespace math {
         return Point<T, 2>(
             this->bounds[IDX_LEFT] + this->Width() / static_cast<T>(2),
             this->bounds[IDX_BOTTOM] + this->Height() / static_cast<T>(2));
+    }
+
+
+    /*
+     * AbstractRectangle<T, S>::Contains
+     */
+    template<class T, class S> 
+    template<class Sp>
+    bool AbstractRectangle<T, S>::Contains(const AbstractPoint<T, 2, Sp>& point,
+            const UINT32 includeBorder) const {
+
+        if ((point.X() < this->bounds[IDX_LEFT])
+                || ((((includeBorder & BORDER_LEFT) == 0))
+                && (point.X() == this->bounds[IDX_LEFT]))) {
+            /* Point is left of rectangle. */
+            return false;
+        }
+
+        if ((point.Y() < this->bounds[IDX_BOTTOM])
+                || ((((includeBorder & BORDER_BOTTOM) == 0))
+                && (point.Y() == this->bounds[IDX_BOTTOM]))) {
+            /* Point is below rectangle. */
+            return false;
+        }
+
+        if ((point.X() > this->bounds[IDX_RIGHT])
+                || ((((includeBorder & BORDER_RIGHT) == 0))
+                && (point.X() == this->bounds[IDX_RIGHT]))) {
+            /* Point is right of rectangle. */
+            return false;
+        }
+
+        if ((point.Y() > this->bounds[IDX_TOP])
+                || ((((includeBorder & BORDER_TOP) == 0))
+                && (point.Y() == this->bounds[IDX_TOP]))) {
+            /* Point is above rectangle. */
+            return false;
+        }
+
+        return true;
     }
 
 

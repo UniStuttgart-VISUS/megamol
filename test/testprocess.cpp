@@ -13,27 +13,43 @@
 #endif /* !_WIN32 */
 
 #include "testhelper.h"
-#ifdef _WIN32
 #include "vislib/ImpersonationContext.h"
-#include "vislib/PAMException.h"
-#endif  // TODO PAM disabled
 #include "vislib/Process.h"
 #include "vislib/SystemException.h"
-
-#define IMPERSONATION_USER "mueller"
-#define IMPERSONATION_DOMAIN "VISNEW"
-#define IMPERSONATION_PASSWORD "mueller"
 
 
 void TestProcess(void) {
     using namespace std;
     using namespace vislib::sys;
+    char impersonationUser[256];
+    char impersonationDomain[256];
+    char impersonationPassword[256];
 
-#ifdef _WIN32   // TODO PAM disabled
+    ::printf("Domain: ");
+    ::fgets(impersonationDomain, sizeof(impersonationDomain), stdin);
+    for (int i = 0; impersonationDomain[i] != 0; i++) {
+        if (impersonationDomain[i] == '\n') {
+            impersonationDomain[i] = '\0';
+        }
+    }
+    ::printf("User: ");
+    ::fgets(impersonationUser, sizeof(impersonationUser), stdin);
+    for (int i = 0; impersonationUser[i] != 0; i++) {
+        if (impersonationUser[i] == '\n') {
+            impersonationUser[i] = '\0';
+        }
+    }
+    ::printf("Password: ");
+    ::fgets(impersonationPassword, sizeof(impersonationPassword), stdin);
+        for (int i = 0; impersonationPassword[i] != 0; i++) {
+        if (impersonationPassword[i] == '\n') {
+            impersonationPassword[i] = '\0';
+        }
+    }
 
     ImpersonationContext i;
     try {
-        i.Impersonate(IMPERSONATION_USER, IMPERSONATION_DOMAIN, IMPERSONATION_PASSWORD);
+        i.Impersonate(impersonationUser, impersonationDomain, impersonationPassword);
 #ifndef _WIN32
         cout << "Impersonated as " << ::getuid() << endl;
         cout << "Impersonated as " << ::geteuid() << endl;
@@ -46,11 +62,7 @@ void TestProcess(void) {
 #endif /* !_WIN32 */
     } catch (SystemException se) {
         cout << se.GetMsgA() << endl;
-    } catch (PAMException pe) {
-        cout << pe.GetMsgA() << endl;
     }
-
-#endif /* _WIN32 */  // TODO PAM disabled
 
     Process p1;
 #ifdef _WIN32

@@ -128,6 +128,7 @@ void TestRectangle(void) {
     typedef vislib::math::Rectangle<float> FloatRectangle;
     typedef vislib::math::Rectangle<int> IntRectangle;
     typedef vislib::math::ShallowRectangle<int> ShallowIntRectangle;
+    typedef vislib::math::Point<int, 2> IntPoint;
 
     FloatRectangle frect1;
     FloatRectangle frect2(1.0, 1.0, 2.0, 2.0);
@@ -196,5 +197,27 @@ void TestRectangle(void) {
     ::AssertEqual("Shallow conversion assignment Top().", irect3.Top(), int(frect3.Top()));
 
     ::AssertTrue("Shallow assignment aliasing", irect3 == irect2);
+
+
+    IntRectangle irect4(1, 1, 10, 10);
+    ::AssertTrue("Inside on left border.", irect4.Contains(IntPoint(1, 1), IntRectangle::BORDER_ALL));
+    ::AssertTrue("Inside on bottom border.", irect4.Contains(IntPoint(1, 1), IntRectangle::BORDER_ALL));
+    ::AssertTrue("Inside on right border.", irect4.Contains(IntPoint(10, 10), IntRectangle::BORDER_ALL));
+    ::AssertTrue("Inside on top border.", irect4.Contains(IntPoint(10, 10), IntRectangle::BORDER_ALL));
+
+    ::AssertFalse("Outside on left border.", irect4.Contains(IntPoint(1, 1)));
+    ::AssertFalse("Outside on bottom border.", irect4.Contains(IntPoint(1, 1)));
+    ::AssertFalse("Outside on right border.", irect4.Contains(IntPoint(10, 10)));
+    ::AssertFalse("Outside on top border.", irect4.Contains(IntPoint(10, 10)));
+
+    ::AssertFalse("Outside left.", irect4.Contains(IntPoint(0, 1)));
+    ::AssertFalse("Outside bottom.", irect4.Contains(IntPoint(1, 0)));
+    ::AssertFalse("Outside right.", irect4.Contains(IntPoint(11, 10)));
+    ::AssertFalse("Outside top.", irect4.Contains(IntPoint(10, 11)));
+
+    ::AssertFalse("Outside left including border.", irect4.Contains(IntPoint(0, 1), IntRectangle::BORDER_ALL));
+    ::AssertFalse("Outside bottom including border.", irect4.Contains(IntPoint(1, 0), IntRectangle::BORDER_ALL));
+    ::AssertFalse("Outside right including border.", irect4.Contains(IntPoint(11, 10), IntRectangle::BORDER_ALL));
+    ::AssertFalse("Outside top including border.", irect4.Contains(IntPoint(10, 11), IntRectangle::BORDER_ALL));
 }
 

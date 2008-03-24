@@ -2,20 +2,26 @@
  * ImpersonationContext.cpp
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
-
 
 #include "vislib/ImpersonationContext.h"
 
 #include <stdexcept>
 
+#ifndef _WIN32
+#include <pwd.h>
+#include <unistd.h>
+#include <shadow.h>
+#endif /* !_WIN32 */
+
 #include "vislib/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
-#include "vislib/PAMException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -27,8 +33,8 @@ vislib::sys::ImpersonationContext::ImpersonationContext(void) {
 #ifdef _WIN32
     this->hToken = INVALID_HANDLE_VALUE;
 #else /* _WIN32 */
-    this->hPAM = NULL;
-    this->origUID = 0;
+    this->revertToUid = 0;
+    this->revertToGid = 0;
 #endif /* _WIN32 */
 }
 
@@ -46,64 +52,107 @@ vislib::sys::ImpersonationContext::~ImpersonationContext(void) {
  */
 void vislib::sys::ImpersonationContext::Impersonate(const char *username,
         const char *domain, const char *password) {
-#ifdef _WIN32
+
+    /* Do not allow impersonation chains. */
     this->revert(false);
 
+#ifdef _WIN32
     if (::LogonUserA(username, domain, password, LOGON32_LOGON_INTERACTIVE,
             LOGON32_PROVIDER_DEFAULT, &this->hToken) == FALSE) {
         throw SystemException(__FILE__, __LINE__);
     }
     
     if (::ImpersonateLoggedOnUser(this->hToken) == FALSE) {
+        DWORD errorCode = ::GetLastError();
         ::CloseHandle(this->hToken);
         this->hToken = NULL;
-        throw SystemException(__FILE__, __LINE__);
+        throw SystemException(errorCode, __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
-    struct pam_conv conv;                   // PAM conversation context.
-    int pamResult = PAM_SUCCESS;            // Result of last PAM operation.
+    struct passwd pw;               // Receives password data.
+    struct passwd *ppw = NULL;      // Pointer to password data if found.
+    struct spwd spw;                // Receives shadow password data.
+    struct spwd *pspw = NULL;       // Pointer to shadow data if found.
+    char *buf = NULL;               // Recevies strings of 'pw' and 'spw'.
+    int bufLen = 0;                 // Size of 'buf' and in bytes.
+    int errorCode = 0;              // Preserves last API error code.
 
-    /* End open transaction, if there is a prior one. */
-    this->revert(true);
+    /* First, determine the user to revert to. */
+    this->revertToUid = ::geteuid();
+    this->revertToGid = ::getegid();
 
-    /* Start PAM transaction. */
-    conv.conv = logonUserConversation;
-    conv.appdata_ptr = const_cast<char *>(password);
-
-    // Note: It is an evil cheat to pretend being "login" ...
-    if ((pamResult = ::pam_start("login", username, &conv, &this->hPAM))
-            != PAM_SUCCESS) {
-        throw PAMException(hPAM, pamResult, __FILE__, __LINE__);
-    }
-
-    /* Try to authenticate the user. */
-    if ((pamResult = ::pam_authenticate(this->hPAM, PAM_SILENT)) 
-            != PAM_SUCCESS) {
-        throw PAMException(this->hPAM, pamResult, __FILE__, __LINE__);
-    }
-
-    /* Check whether account is still active. */
-    if ((pamResult = ::pam_acct_mgmt(this->hPAM, PAM_SILENT)) != PAM_SUCCESS) {
-        throw PAMException(this->hPAM, pamResult, __FILE__, __LINE__);
-    }
-
-    /* Set credentials. */
-    if (::seteuid(ImpersonationContext::resolveUID(username)) != 0) {
-    //if (::setuid(ImpersonationContext::resolveUID(username)) != 0) {
+    /* Allocate buffer for password data. */
+    if ((bufLen = ::sysconf(_SC_GETPW_R_SIZE_MAX)) == -1) {
+        errorCode = ::GetLastError();
+        TRACE(Trace::LEVEL_VL_ERROR, "::sysconf(_SC_GETPW_R_SIZE_MAX) "
+            "failed.\n");
         throw SystemException(__FILE__, __LINE__);
     }
-    if ((pamResult = ::pam_setcred(this->hPAM, PAM_ESTABLISH_CRED)) 
-            != PAM_SUCCESS) {
-        throw PAMException(this->hPAM, pamResult, __FILE__, __LINE__);
+    buf = new char[bufLen];
+    ASSERT(buf != NULL);
+    /* From now on, 'buf' must be deallocated before leaving. */
+
+    /* Get the UID and GID first (string fields will not be used!). */
+    if (::getpwnam_r(username, &pw, buf, bufLen, &ppw) != 0) {
+        errorCode = ::GetLastError();
+        ARY_SAFE_DELETE(buf);
+        TRACE(Trace::LEVEL_VL_ERROR, "::getpwnam_r failed.\n");
+        throw SystemException(errorCode, __FILE__, __LINE__);
+    }
+    if (ppw == NULL) {
+        /* User was not found. */
+        ARY_SAFE_DELETE(buf);
+        TRACE(Trace::LEVEL_VL_ERROR, "Cannot impersonate, because the "
+            "user \"%s\" does not exist.\n", username);
+        throw SystemException(ENOENT, __FILE__, __LINE__);
     }
 
-    /* Start session as logged on user. */
-    if ((pamResult = ::pam_open_session(this->hPAM, PAM_SILENT)) 
-            != PAM_SUCCESS) {
-        throw PAMException(this->hPAM, pamResult, __FILE__, __LINE__);
+    /* Get shadow password of target user (pw.passwd is not valid!). */
+    if (::getspnam_r(username, &spw, buf, bufLen, &pspw) != 0) {
+        errorCode = ::GetLastError();
+        ARY_SAFE_DELETE(buf);
+        TRACE(Trace::LEVEL_VL_ERROR, "::getspnam_r failed.\n");
+        throw SystemException(errorCode, __FILE__, __LINE__);
+    }
+    ASSERT(pspw != NULL);
+    if (pspw == NULL) {
+        /* User was not found. */
+        ARY_SAFE_DELETE(buf);
+        TRACE(Trace::LEVEL_VL_ERROR, "Cannot impersonate, because the "
+            "user \"%s\" does not exist.\n", username);
+        throw SystemException(ENOENT, __FILE__, __LINE__);
     }
 
+    /* Check login data using passwd we retrieved. */
+    if (spw.sp_pwdp != NULL) {
+        if ((password == NULL) || (::strcmp(spw.sp_pwdp, ::crypt(password,
+                spw.sp_pwdp)) != 0)) {
+            ARY_SAFE_DELETE(buf);
+            TRACE(Trace::LEVEL_VL_ERROR, "Cannot impersonate, because the "
+                "password is invalid: Expected \"%s\", but got \"%s\".\n",
+                spw.sp_pwdp, ::crypt(password, spw.sp_pwdp));
+            throw SystemException(EPERM, __FILE__, __LINE__);
+        }
+    }
+    /* Authentication OK when here. */
+
+    /* Switch effective user and group ID. */
+    if (::seteuid(pw.pw_uid) != 0) {
+        errorCode = ::GetLastError();
+        ARY_SAFE_DELETE(buf);
+        TRACE(Trace::LEVEL_VL_ERROR, "::seteuid failed.\n");
+        throw SystemException(errorCode, __FILE__, __LINE__);
+    }
+    if (::setegid(pw.pw_gid) != 0) {
+        errorCode = ::GetLastError();
+        ::seteuid(this->revertToUid);
+        ARY_SAFE_DELETE(buf);
+        TRACE(Trace::LEVEL_VL_ERROR, "::setegid failed.\n");
+        throw SystemException(errorCode, __FILE__, __LINE__);
+    }
+
+    ARY_SAFE_DELETE(buf);
 #endif /* _WIN32 */
 }
 
@@ -114,76 +163,25 @@ void vislib::sys::ImpersonationContext::Impersonate(const char *username,
 void vislib::sys::ImpersonationContext::Impersonate(const wchar_t *username, 
         const wchar_t *domain, const wchar_t *password) {
 #ifdef _WIN32
+    /* Do not allow impersonation chains. */
+    this->revert(false);
+
     if (::LogonUserW(username, domain, password, LOGON32_LOGON_INTERACTIVE,
             LOGON32_PROVIDER_DEFAULT, &this->hToken) == FALSE) {
         throw SystemException(__FILE__, __LINE__);
     }
 
     if (::ImpersonateLoggedOnUser(this->hToken) == FALSE) {
+        DWORD errorCode = ::GetLastError();
         ::CloseHandle(this->hToken);
         this->hToken = NULL;
-        throw SystemException(__FILE__, __LINE__);
+        throw SystemException(errorCode, __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     return this->Impersonate(W2A(username), NULL, W2A(password));
 #endif /* _WIN32 */
 }
-
-
-#ifndef _WIN32
-/*
- * vislib::sys::ImpersonationContext::logonUserConversation
- */
-int vislib::sys::ImpersonationContext::logonUserConversation(int cntMsg, 
-        const struct pam_message **msg, struct pam_response **response, 
-        void *userData) {
-    struct pam_response *r = NULL;
-    
-    r = static_cast<pam_response *>(::malloc(cntMsg 
-        * sizeof(struct pam_response)));
-    if (r == NULL) {
-        return PAM_BUF_ERR;
-    }
-
-    ::memset(r, 0, cntMsg * sizeof (struct pam_response));
-    for (int i = 0; i < cntMsg; i++) {
-        if (msg[i]->msg_style == PAM_PROMPT_ECHO_OFF) {
-            r[i].resp = ::strdup(reinterpret_cast<char *>(userData));
-            break;
-        }
-    }
-
-    *response = r;
-    // TODO: Search for some documentation.
-    // PAM will release the memory using free(). I hope so, at least.
-    return PAM_SUCCESS;
-}
-
-
-/*
- * vislib::sys::ImpersonationContext::resolveUID
- */
-int vislib::sys::ImpersonationContext::resolveUID(const char *username) {
-    FILE *fp = NULL;
-    StringA idQuery;
-    int retval = 0;
-
-    // TODO: Use some shell abstraction class instead of popen.
-    idQuery.Format("id -u %s", username);
-    if ((fp = ::popen(idQuery.PeekBuffer(), "r")) == NULL) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    if (::fscanf(fp, "%d", &retval) != 1) {
-        ::pclose(fp);
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    ::pclose(fp);
-    return retval;
-}
-#endif /* _WIN32 */
 
 
 /*
@@ -211,25 +209,15 @@ void vislib::sys::ImpersonationContext::revert(const bool isSilent) {
     }
 
 #else /* _WIN32 */
-    int pamResult = PAM_SUCCESS;            // Result of last PAM operation.
-
-    if (this->hPAM != NULL) {
-        /* Close our session. */
-        if (((pamResult = ::pam_close_session(this->hPAM, PAM_SILENT)) 
-                != PAM_SUCCESS) && !isSilent) {
-            throw PAMException(this->hPAM, pamResult, __FILE__, __LINE__);
-        }
-
-        /* Restore original UID. */
-        if ((::seteuid(this->origUID) != 0) && !isSilent) {
-        //if ((::setuid(this->origUID) != 0) && !isSilent) {
-            throw SystemException(__FILE__, __LINE__);
-        }
-        
-        /* End PAM transaction. */
-        ::pam_end(this->hPAM, PAM_SUCCESS);
-        this->hPAM = NULL;
+    if ((::seteuid(this->revertToUid) != 0) && !isSilent) {
+        throw SystemException(__FILE__, __LINE__);
     }
+    if ((::setegid(this->revertToGid) != 0) && !isSilent) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    this->revertToUid = 0;
+    this->revertToGid = 0;
 #endif /* _WIN32 */
 }
 
