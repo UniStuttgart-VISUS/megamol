@@ -522,7 +522,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(StringW& outValue,
  * vislib::sys::RegistrySerialiser::PopKey
  */
 void vislib::sys::RegistrySerialiser::PopKey(const bool isSilent) {
-    HKEY hKey = this->keyStack.Top();
+    HKEY hKey = this->keyStack.Pop();
 
     if (!this->keyStack.IsEmpty()) {
         ::RegCloseKey(hKey);
