@@ -20,6 +20,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/Serialiser.h"
+#include "vislib/Stack.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
 
@@ -50,6 +51,9 @@ namespace sys {
 
         /**
          * Copy ctor.
+         *
+         * The key stack state of the serialiser is not cloned. The serialiser 
+         * is is the well-defined inital state after construction.
          *
          * @param rhs The object to be cloned.
          *
@@ -145,6 +149,21 @@ namespace sys {
         virtual void Deserialise(StringW& outValue, 
             const wchar_t *name);
 
+        /**
+         * Remove a registry key from the stack and use the next one. It is only
+         * possible to pop all user-added keys, i.e. the base key defined in the
+         * ctor must remain.
+         *
+         * @param isSilent If set true, do not throw an exception if the stack
+         *                 underflows, i.e. the call would remove the base key
+         *                 from the stack.
+         */
+        void PopKey(const bool isSilent = false);
+
+        void PushKey(const char *name);
+
+        void PushKey(const wchar_t *name);
+
         virtual void Serialise(const bool value, 
             const char *name = NULL);
 
@@ -232,6 +251,10 @@ namespace sys {
         /**
          * Assignment operator.
          *
+         * Assignment does not include the state of the key stack, but only the
+         * base key. The serialiser is in the well-defined base state after 
+         * assignment.
+         *
          * @param rhs The right hand side operand.
          *
          * @return *this.
@@ -242,6 +265,11 @@ namespace sys {
         RegistrySerialiser& operator =(const RegistrySerialiser& rhs);
 
     private:
+
+        /**
+         * Close the whole stack of registry keys.
+         */
+        void closeAllRegistry(void);
 
         /**
          * Generic convenience method for deserialisation of integral types 
@@ -367,8 +395,15 @@ namespace sys {
             this->Serialise(v, name);
         }
 
-        /** Handle of the base key that is parent of the serialised elements. */
+        /**
+         * Handle of the base key that is parent of the serialised elements.
+         * This is a duplicate of the bottom element in the 'keyStack'. It is
+         * required to duplicate a serialiser instance.
+         */
         HKEY hBaseKey;
+
+        /** The stack of recursive registry keys opened by the user. */
+        vislib::Stack<HKEY> keyStack;
     };
 
 } /* end namespace sys */

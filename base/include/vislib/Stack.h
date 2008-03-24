@@ -41,7 +41,7 @@ namespace vislib {
          *
          * @param element.
          */
-        Stack(const T& element);
+        explicit Stack(const T& element);
 
         /** Dtor. */
         ~Stack(void);
