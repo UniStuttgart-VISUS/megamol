@@ -236,9 +236,6 @@ namespace graphics {
         /** the minimal near clipping distance */
         SceneSpaceType minNearClipDist;
 
-        /** the default object */
-        static SmartPtr<CameraParameterLimits> defaultObj;
-
     };
     
 } /* end namespace graphics */

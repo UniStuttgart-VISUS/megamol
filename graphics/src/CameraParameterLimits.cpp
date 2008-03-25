@@ -23,19 +23,13 @@
 
 
 /*
- * vislib::graphics::CameraParameterLimits::defaultObj
- */
-vislib::SmartPtr<vislib::graphics::CameraParameterLimits> 
-vislib::graphics::CameraParameterLimits::defaultObj(
-    new vislib::graphics::CameraParameterLimits());
-
-
-/*
  * vislib::graphics::CameraParameterLimits::DefaultLimits
  */
 vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& 
 vislib::graphics::CameraParameterLimits::DefaultLimits(void) {
-    return defaultObj;
+    static vislib::SmartPtr<vislib::graphics::CameraParameterLimits> obj(
+        new vislib::graphics::CameraParameterLimits());
+    return obj;
 }
 
 
