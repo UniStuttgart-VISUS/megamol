@@ -103,6 +103,64 @@ namespace vislib {
             return (str != NULL) ? CharTraitsBase::StringLength(str) : 0;
         }
 
+        /**
+         * Converts the string str to the returned 64 bit integer value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed integer value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        integer value.
+         */
+        inline static INT64 ParseInt64(const Char *str) {
+            INT64 sig = 1;
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+            if (*str == static_cast<Char>('-')) {
+                sig = -1;
+                str++;
+            }
+            INT64 value = static_cast<INT64>(ParseUInt64(str));
+            if (value < 0) {
+                throw FormatException("Overflow parsing Int64", 
+                    __FILE__, __LINE__);
+            }
+            return sig;
+        }
+
+        /**
+         * Converts the string str to the returned 64 bit unsigned integer 
+         * value.
+         *
+         * @param str The input string.
+         *
+         * @return The parsed integer value.
+         *
+         * @throw IllegalParamException if str is NULL.
+         * @throw FormatException if the string could not be parsed to an
+         *        integer value.
+         */
+        inline static UINT64 ParseUInt64(const Char *str) {
+            UINT64 value = 0;
+            UINT64 v;
+            if (str == NULL) {
+                throw IllegalParamException("str", __FILE__, __LINE__);
+            }
+            while ((*str != 0) && (*str >= static_cast<Char>('0')) 
+                    && (*str <= static_cast<Char>('9'))) {
+                v = value * 10 + (*str - static_cast<Char>('0'));
+                if (v < value) {
+                    throw FormatException("Overflow parsing Int64", 
+                        __FILE__, __LINE__);
+                }
+                value = v;
+            }
+            return value;
+        }
+
         /** Empty character sequence constant. */
         static const Char EMPTY_STRING[];
 

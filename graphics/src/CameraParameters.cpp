@@ -93,35 +93,35 @@ void vislib::graphics::CameraParameters::Deserialise(
     float f0, f1, f2, f3, f4, f5, f6, f7, f8;
     INT32 i;
     // TODO: Add name parameters
-    serialiser.Deserialise(f0);
+    serialiser.Deserialise(f0, "ApertureAngle");
     this->SetApertureAngle(f0);
-    serialiser.Deserialise(f0);
-    serialiser.Deserialise(f1);
+    serialiser.Deserialise(f0, "NearClip");
+    serialiser.Deserialise(f1, "FarClip");
     this->SetClip(f0, f1);
-    serialiser.Deserialise(i);
+    serialiser.Deserialise(i, "Projection");
     this->SetProjection(static_cast<ProjectionType>(i));
-    serialiser.Deserialise(f0);
-    serialiser.Deserialise(i);
-    serialiser.Deserialise(f1);
+    serialiser.Deserialise(f0, "StereoDisparity");
+    serialiser.Deserialise(i, "StereoEye");
+    serialiser.Deserialise(f1, "FocalDistance");
     this->SetStereoParameters(f0, static_cast<StereoEye>(i), f1);
-    serialiser.Deserialise(f0);
-    serialiser.Deserialise(f1);
-    serialiser.Deserialise(f2);
-    serialiser.Deserialise(f3);
-    serialiser.Deserialise(f4);
-    serialiser.Deserialise(f5);
-    serialiser.Deserialise(f6);
-    serialiser.Deserialise(f7);
-    serialiser.Deserialise(f8);
+    serialiser.Deserialise(f0, "PositionX");
+    serialiser.Deserialise(f1, "PositionY");
+    serialiser.Deserialise(f2, "PositionZ");
+    serialiser.Deserialise(f3, "LookAtX");
+    serialiser.Deserialise(f4, "LookAtY");
+    serialiser.Deserialise(f5, "LookAtZ");
+    serialiser.Deserialise(f6, "UpX");
+    serialiser.Deserialise(f7, "UpY");
+    serialiser.Deserialise(f8, "UpZ");
     this->SetView(vislib::math::Point<SceneSpaceType, 3>(f0, f1, f2),
         vislib::math::Point<SceneSpaceType, 3>(f3, f4, f5),
         vislib::math::Vector<SceneSpaceType, 3>(f6, f7, f8));
-    serialiser.Deserialise(f0);
-    serialiser.Deserialise(f1);
-    serialiser.Deserialise(f2);
-    serialiser.Deserialise(f3);
-    serialiser.Deserialise(f4);
-    serialiser.Deserialise(f5);
+    serialiser.Deserialise(f0, "TileLeft");
+    serialiser.Deserialise(f1, "TileBottom");
+    serialiser.Deserialise(f2, "TileRight");
+    serialiser.Deserialise(f3, "TileTop");
+    serialiser.Deserialise(f4, "VirtualViewWidth");
+    serialiser.Deserialise(f5, "VirtualViewHeight");
     this->SetVirtualViewSize(f4, f5);
     this->SetTileRect(vislib::math::Rectangle<ImageSpaceType>(f0, f1, f2, f3));
 }
@@ -132,29 +132,28 @@ void vislib::graphics::CameraParameters::Deserialise(
  */
 void vislib::graphics::CameraParameters::Serialise(
         vislib::Serialiser& serialiser) const {
-    // TODO: Add name parameters
-    serialiser.Serialise((float)this->ApertureAngle());
-    serialiser.Serialise((float)this->NearClip());
-    serialiser.Serialise((float)this->FarClip());
-    serialiser.Serialise((INT32)this->Projection());
-    serialiser.Serialise((float)this->StereoDisparity());
-    serialiser.Serialise((INT32)this->Eye());
-    serialiser.Serialise((float)this->FocalDistance());
-    serialiser.Serialise((float)this->Position().X());
-    serialiser.Serialise((float)this->Position().Y());
-    serialiser.Serialise((float)this->Position().Z());
-    serialiser.Serialise((float)this->LookAt().X());
-    serialiser.Serialise((float)this->LookAt().Y());
-    serialiser.Serialise((float)this->LookAt().Z());
-    serialiser.Serialise((float)this->Up().X());
-    serialiser.Serialise((float)this->Up().Y());
-    serialiser.Serialise((float)this->Up().Z());
-    serialiser.Serialise((float)this->TileRect().Left());
-    serialiser.Serialise((float)this->TileRect().Bottom());
-    serialiser.Serialise((float)this->TileRect().Right());
-    serialiser.Serialise((float)this->TileRect().Top());
-    serialiser.Serialise((float)this->VirtualViewSize().Width());
-    serialiser.Serialise((float)this->VirtualViewSize().Height());
+    serialiser.Serialise((float)this->ApertureAngle(), "ApertureAngle");
+    serialiser.Serialise((float)this->NearClip(), "NearClip");
+    serialiser.Serialise((float)this->FarClip(), "FarClip");
+    serialiser.Serialise((INT32)this->Projection(), "Projection");
+    serialiser.Serialise((float)this->StereoDisparity(), "StereoDisparity");
+    serialiser.Serialise((INT32)this->Eye(), "StereoEye");
+    serialiser.Serialise((float)this->FocalDistance(), "FocalDistance");
+    serialiser.Serialise((float)this->Position().X(), "PositionX");
+    serialiser.Serialise((float)this->Position().Y(), "PositionY");
+    serialiser.Serialise((float)this->Position().Z(), "PositionZ");
+    serialiser.Serialise((float)this->LookAt().X(), "LookAtX");
+    serialiser.Serialise((float)this->LookAt().Y(), "LookAtY");
+    serialiser.Serialise((float)this->LookAt().Z(), "LookAtZ");
+    serialiser.Serialise((float)this->Up().X(), "UpX");
+    serialiser.Serialise((float)this->Up().Y(), "UpY");
+    serialiser.Serialise((float)this->Up().Z(), "UpZ");
+    serialiser.Serialise((float)this->TileRect().Left(), "TileLeft");
+    serialiser.Serialise((float)this->TileRect().Bottom(), "TileBottom");
+    serialiser.Serialise((float)this->TileRect().Right(), "TileRight");
+    serialiser.Serialise((float)this->TileRect().Top(), "TileTop");
+    serialiser.Serialise((float)this->VirtualViewSize().Width(), "VirtualViewWidth");
+    serialiser.Serialise((float)this->VirtualViewSize().Height(), "VirtualViewHeight");
 }
 
 

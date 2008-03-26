@@ -58,9 +58,6 @@ namespace graphics {
          * the Serialiser is in an acceptable state to deserialise from.
          *
          * @param serialiser The serialiser to deserialise the object from.
-         *
-         * @throws IllegalParamException If 'serialiser' requires the use of 
-         *                               names.
          */
         virtual void Deserialise(Serialiser& serialiser);
 
@@ -193,9 +190,7 @@ namespace graphics {
          * the Serialiser is in an acceptable state to serialise to.
          *
          * @param serialiser The serialiser to serialise the object to.
-         *
-         * @throws IllegalParamException If 'serialiser' requires the use of 
-         *                               names.         */
+         */
         virtual void Serialise(Serialiser& serialiser) const;
 
         /**

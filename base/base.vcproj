@@ -414,6 +414,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\StringSerialiser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\StringTokeniser.cpp"
 				>
 			</File>
@@ -589,6 +593,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\StringConverter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\StringSerialiser.h"
 				>
 			</File>
 			<File

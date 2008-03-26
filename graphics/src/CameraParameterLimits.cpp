@@ -9,7 +9,6 @@
 
 #include "vislib/CameraParameterLimits.h"
 #include "vislib/Float16.h"
-#include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
 
 
@@ -69,26 +68,22 @@ void vislib::graphics::CameraParameterLimits::Deserialise(
         Serialiser& serialiser) {
     float f;
 
-    if (serialiser.GetProperties() & Serialiser::SERIALISER_REQUIRES_NAMES) {
-        throw IllegalParamException("serialiser", __FILE__, __LINE__);
-    }
-
-    serialiser.Deserialise(f);
+    serialiser.Deserialise(f, "maxHalfApertureAngle");
     this->maxHalfApertureAngle = f;
 
-    serialiser.Deserialise(f);
+    serialiser.Deserialise(f, "minClipPlaneDist");
     this->minClipPlaneDist = f;
 
-    serialiser.Deserialise(f);
+    serialiser.Deserialise(f, "minFocalDist");
     this->minFocalDist = f;
 
-    serialiser.Deserialise(f);
+    serialiser.Deserialise(f, "minHalfApertureAngle");
     this->minHalfApertureAngle = f;
 
-    serialiser.Deserialise(f);
+    serialiser.Deserialise(f, "minLookAtDist");
     this->minLookAtDist = f;
 
-    serialiser.Deserialise(f);
+    serialiser.Deserialise(f, "minNearClipDist");
     this->minNearClipDist = f;
 }
 
@@ -173,16 +168,19 @@ void vislib::graphics::CameraParameterLimits::Reset(void) {
  */
 void vislib::graphics::CameraParameterLimits::Serialise(
         Serialiser& serialiser) const {
-    if (serialiser.GetProperties() & Serialiser::SERIALISER_REQUIRES_NAMES) {
-        throw IllegalParamException("serialiser", __FILE__, __LINE__);
-    }
 
-    serialiser.Serialise(static_cast<float>(this->maxHalfApertureAngle));
-    serialiser.Serialise(static_cast<float>(this->minClipPlaneDist));
-    serialiser.Serialise(static_cast<float>(this->minFocalDist));
-    serialiser.Serialise(static_cast<float>(this->minHalfApertureAngle));
-    serialiser.Serialise(static_cast<float>(this->minLookAtDist));
-    serialiser.Serialise(static_cast<float>(this->minNearClipDist));
+    serialiser.Serialise(static_cast<float>(this->maxHalfApertureAngle),
+        "maxHalfApertureAngle");
+    serialiser.Serialise(static_cast<float>(this->minClipPlaneDist),
+        "minClipPlaneDist");
+    serialiser.Serialise(static_cast<float>(this->minFocalDist),
+        "minFocalDist");
+    serialiser.Serialise(static_cast<float>(this->minHalfApertureAngle),
+        "minHalfApertureAngle");
+    serialiser.Serialise(static_cast<float>(this->minLookAtDist),
+        "minLookAtDist");
+    serialiser.Serialise(static_cast<float>(this->minNearClipDist),
+        "minNearClipDist");
 }
 
 
