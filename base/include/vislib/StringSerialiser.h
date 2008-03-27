@@ -356,14 +356,14 @@ namespace vislib {
         virtual void Serialise(const double value,
                 const char *name = NULL) {
             vislib::StringA s;
-            s.Format("%g", value);
+            s.Format("%.32g", value);
             this->Serialise(s, name);
         }
 
         virtual void Serialise(const double value,
                 const wchar_t *name) {
             vislib::StringA s;
-            s.Format("%g", value);
+            s.Format("%.32g", value);
             this->Serialise(s, name);
         }
 
@@ -614,8 +614,6 @@ namespace vislib {
                 static_cast<typename T::Char>('\n'));
             key.Replace(vislib::String<T>("\\r"),
                 static_cast<typename T::Char>('\r'));
-            key.Replace(vislib::String<T>("\\t"),
-                static_cast<typename T::Char>('\t'));
             key.Replace(vislib::String<T>("\\\\"),
                 static_cast<typename T::Char>('\\'));
             key.Replace(vislib::String<T>("\\="),
@@ -625,8 +623,6 @@ namespace vislib {
                 static_cast<typename T::Char>('\n'));
             value.Replace(vislib::String<T>("\\r"),
                 static_cast<typename T::Char>('\r'));
-            value.Replace(vislib::String<T>("\\t"),
-                static_cast<typename T::Char>('\t'));
             value.Replace(vislib::String<T>("\\\\"),
                 static_cast<typename T::Char>('\\'));
             value.Replace(vislib::String<T>("\\="),
@@ -653,8 +649,6 @@ namespace vislib {
                 vislib::String<T>("\\n"));
             str.Replace(static_cast<typename T::Char>('\r'),
                 vislib::String<T>("\\r"));
-            str.Replace(static_cast<typename T::Char>('\t'),
-                vislib::String<T>("\\t"));
             str.Replace(static_cast<typename T::Char>('\\'),
                 vislib::String<T>("\\\\"));
             str.Replace(static_cast<typename T::Char>('='),
@@ -668,8 +662,6 @@ namespace vislib {
                 vislib::String<T>("\\n"));
             str.Replace(static_cast<typename T::Char>('\r'),
                 vislib::String<T>("\\r"));
-            str.Replace(static_cast<typename T::Char>('\t'),
-                vislib::String<T>("\\t"));
             str.Replace(static_cast<typename T::Char>('\\'),
                 vislib::String<T>("\\\\"));
             str.Replace(static_cast<typename T::Char>('='),
