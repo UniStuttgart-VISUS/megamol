@@ -589,44 +589,31 @@ namespace vislib {
         this->data.Clear();
         this->nextDePos = 0;
 
-        if ((str == NULL) || (*str == static_cast<typename T::Char>(0))) {
+        if ((str == NULL) || (*str == static_cast<T::Char>(0))) {
             return;
         }
 
         vislib::String<T> key;
         vislib::String<T> value;
         vislib::StringTokeniser<T> tokeniser(str, 
-            static_cast<typename T::Char>('\n'));
+            static_cast<T::Char>('\n'));
 
         while (tokeniser.HasNext()) {
             const vislib::String<T>& line = tokeniser.Next();
             vislib::String<T>::Size pos;
 
             do {
-                pos = line.Find(static_cast<typename T::Char>('='));
+                pos = line.Find(static_cast<T::Char>('='));
             } while ((pos != vislib::String<T>::INVALID_POS) && (pos > 0)
-                && (line[pos - 1] == static_cast<typename T::Char>('\\')));
+                && (line[pos - 1] == static_cast<T::Char>('\\')));
 
             key = line.Substring(0, pos);
             value = line.Substring(pos + 1);
 
-            key.Replace(vislib::String<T>("\\n"),
-                static_cast<typename T::Char>('\n'));
-            key.Replace(vislib::String<T>("\\r"),
-                static_cast<typename T::Char>('\r'));
-            key.Replace(vislib::String<T>("\\\\"),
-                static_cast<typename T::Char>('\\'));
-            key.Replace(vislib::String<T>("\\="),
-                static_cast<typename T::Char>('='));
-
-            value.Replace(vislib::String<T>("\\n"),
-                static_cast<typename T::Char>('\n'));
-            value.Replace(vislib::String<T>("\\r"),
-                static_cast<typename T::Char>('\r'));
-            value.Replace(vislib::String<T>("\\\\"),
-                static_cast<typename T::Char>('\\'));
-            value.Replace(vislib::String<T>("\\="),
-                static_cast<typename T::Char>('='));
+            key.UnescapeCharacters(static_cast<T::Char>('\\'), 
+                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
+            value.UnescapeCharacters(static_cast<T::Char>('\\'), 
+                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
 
             this->data.Append(
                 vislib::Pair<vislib::String<T>, vislib::String<T> >(
@@ -644,28 +631,14 @@ namespace vislib {
         vislib::String<T> str;
         for (unsigned int i = 0; i < this->data.Count(); i++) {
             str = this->data[i].Key();
-
-            str.Replace(static_cast<typename T::Char>('\n'),
-                vislib::String<T>("\\n"));
-            str.Replace(static_cast<typename T::Char>('\r'),
-                vislib::String<T>("\\r"));
-            str.Replace(static_cast<typename T::Char>('\\'),
-                vislib::String<T>("\\\\"));
-            str.Replace(static_cast<typename T::Char>('='),
-                vislib::String<T>("\\="));
+            str.EscapeCharacters(static_cast<T::Char>('\\'), 
+                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
 
             outStr.Append(str);
             outStr.Append(vislib::String<T>("="));
             str = this->data[i].Value();
-
-            str.Replace(static_cast<typename T::Char>('\n'),
-                vislib::String<T>("\\n"));
-            str.Replace(static_cast<typename T::Char>('\r'),
-                vislib::String<T>("\\r"));
-            str.Replace(static_cast<typename T::Char>('\\'),
-                vislib::String<T>("\\\\"));
-            str.Replace(static_cast<typename T::Char>('='),
-                vislib::String<T>("\\="));
+            str.EscapeCharacters(static_cast<T::Char>('\\'), 
+                vislib::String<T>("\n\r="), vislib::String<T>("nr="));
 
             outStr.Append(str);
             outStr.Append(vislib::String<T>("\n"));

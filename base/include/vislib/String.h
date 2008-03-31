@@ -293,6 +293,57 @@ namespace vislib {
         }
 
         /**
+         * Escapes a set of characters within the string with a given escape
+         * character.
+         *
+         * Example:
+         *  EscapeCharacters('\\', "\n\r\t", "nrt");
+         *
+         * @param ec The escape character. Must not be present in the 
+         *           parameters 'normChars' and 'escpdChars'. Must not be zero.
+         * @param normChars This string represents the list of characters to
+         *                  be escaped. The character 'ec' must not be
+         *                  included, since it is implicitly included. Each
+         *                  character must only be present once.
+         * @param escpdChars This string represents the list of escaped 
+         *                   characters. The string must be of same length
+         *                   as 'normChars', must not contain any character
+         *                   more than once, and must not contain 'ec'.
+         *
+         * @return 'true' if the string was successfully escaped.
+         *         'false' if there was an error.
+         */
+        inline bool EscapeCharacters(const Char ec, const String& normChars, 
+                const String& escpdChars) {
+            return this->EscapeCharacters(ec, normChars.PeekBuffer(),
+                escpdChars.PeekBuffer());
+        }
+
+        /**
+         * Escapes a set of characters within the string with a given escape
+         * character.
+         *
+         * Example:
+         *  EscapeCharacters('\\', "\n\r\t", "nrt");
+         *
+         * @param ec The escape character. Must not be present in the 
+         *           parameters 'normChars' and 'escpdChars'. Must not be zero.
+         * @param normChars This string represents the list of characters to
+         *                  be escaped. The character 'ec' must not be
+         *                  included, since it is implicitly included. Each
+         *                  character must only be present once.
+         * @param escpdChars This string represents the list of escaped 
+         *                   characters. The string must be of same length
+         *                   as 'normChars', must not contain any character
+         *                   more than once, and must not contain 'ec'.
+         *
+         * @return 'true' if the string was successfully escaped.
+         *         'false' if there was an error.
+         */
+        bool EscapeCharacters(const Char ec, const Char *normChars, 
+            const Char *escpdChars);
+
+        /**
          * Answer the index of the first occurrence of 'c' in the string. The 
          * search begins with the 'beginningAt'th character. If the character
          * was not found, INVALID_POS is returned.
@@ -832,6 +883,57 @@ namespace vislib {
         }
 
         /**
+         * Unescapes a set of characters within the escaped string with a 
+         * given escape character.
+         *
+         * Example:
+         *  UnescapeCharacters('\\', "\n\r\t", "nrt");
+         *
+         * @param ec The escape character. Must not be present in the 
+         *           parameters 'normChars' and 'escpdChars'. Must not be zero.
+         * @param normChars This string represents the list of characters to
+         *                  be restored by unescaping. The character 'ec' must
+         *                  not be included, since it is implicitly included.
+         *                  Each character must only be present once.
+         * @param escpdChars This string represents the list of escaped 
+         *                   characters. The string must be of same length
+         *                   as 'normChars', must not contain any character
+         *                   more than once, and must not contain 'ec'.
+         *
+         * @return 'true' if the string was successfully unescaped.
+         *         'false' if there was an error.
+         */
+        inline bool UnescapeCharacters(const Char ec, const String& normChars, 
+                const String& escpdChars) {
+            return this->UnescapeCharacters(ec, normChars.PeekBuffer(),
+                escpdChars.PeekBuffer());
+        }
+
+        /**
+         * Unescapes a set of characters within the escaped string with a 
+         * given escape character.
+         *
+         * Example:
+         *  UnescapeCharacters('\\', "\n\r\t", "nrt");
+         *
+         * @param ec The escape character. Must not be present in the 
+         *           parameters 'normChars' and 'escpdChars'. Must not be zero.
+         * @param normChars This string represents the list of characters to
+         *                  be restored by unescaping. The character 'ec' must
+         *                  not be included, since it is implicitly included.
+         *                  Each character must only be present once.
+         * @param escpdChars This string represents the list of escaped 
+         *                   characters. The string must be of same length
+         *                   as 'normChars', must not contain any character
+         *                   more than once, and must not contain 'ec'.
+         *
+         * @return 'true' if the string was successfully unescaped.
+         *         'false' if there was an error.
+         */
+        bool UnescapeCharacters(const Char ec, const Char *normChars, 
+            const Char *escpdChars);
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand side operand.
@@ -1231,6 +1333,60 @@ namespace vislib {
             return (T::ToLower(*lhs) == T::ToLower(*rhs));
         }
         ASSERT(false);
+    }
+
+
+    /*
+     * String<T>::EscapeCharacters
+     */
+    template<class T> bool String<T>::EscapeCharacters(const Char ec, 
+            const Char *normChars, const Char *escpdChars) {
+        String<T>::Size ncLen = T::SafeStringLength(normChars);
+
+        // checking preconditions
+        ASSERT(T::SafeStringLength(escpdChars) == ncLen);
+#if (defined(DEBUG) || defined(_DEBUG))
+        for (String<T>::Size i = 0; i < ncLen; i++) {
+            ASSERT(normChars[i] != ec);
+            ASSERT(escpdChars[i] != ec);
+            for (String<T>::Size j = i + 1; j < ncLen; j++) {
+                ASSERT(normChars[i] != normChars[j]);
+                ASSERT(escpdChars[i] != escpdChars[j]);
+            }
+        }
+#endif /* (defined(DEBUG) || defined(_DEBUG)) */
+
+        // counting number of characters to be escaped
+        unsigned int cntC2E = 0;
+        String<T>::Size dataLen = this->Length();
+        for (String<T>::Size i = 0; i < dataLen; i++) {
+            for (String<T>::Size j = 0; j < ncLen; j++) {
+                if (this->data[i] == normChars[j]) {
+                    cntC2E++;
+                    break;
+                }
+            }
+        }
+
+        // escaping the characters
+        Char *newData = new Char[dataLen + cntC2E + 1];
+        cntC2E = 0;
+        for (String<T>::Size i = 0; i < dataLen; i++, cntC2E++) {
+            newData[cntC2E] = this->data[i];
+            for (String<T>::Size j = 0; j < ncLen; j++) {
+                if (this->data[i] == normChars[j]) {
+                    newData[cntC2E++] = ec;
+                    newData[cntC2E] = escpdChars[j];
+                    break;
+                }
+            }
+        }
+        newData[cntC2E] = 0;
+
+        delete[] this->data;
+        this->data = newData;
+
+        return true;
     }
 
 
@@ -1872,6 +2028,65 @@ namespace vislib {
             delete[] this->data;
             this->data = str;
         }
+    }
+
+    /*
+     * String<T>::UnescapeCharacters
+     */
+    template<class T> bool String<T>::UnescapeCharacters(const Char ec, 
+            const Char *normChars, const Char *escpdChars) {
+        String<T>::Size ncLen = T::SafeStringLength(normChars);
+
+        // checking preconditions
+        ASSERT(T::SafeStringLength(escpdChars) == ncLen);
+#if (defined(DEBUG) || defined(_DEBUG))
+        for (String<T>::Size i = 0; i < ncLen; i++) {
+            ASSERT(normChars[i] != ec);
+            ASSERT(escpdChars[i] != ec);
+            for (String<T>::Size j = i + 1; j < ncLen; j++) {
+                ASSERT(normChars[i] != normChars[j]);
+                ASSERT(escpdChars[i] != escpdChars[j]);
+            }
+        }
+#endif /* (defined(DEBUG) || defined(_DEBUG)) */
+
+        // Checking for unrecognised escape sequences.
+        String<T>::Size dataLen = this->Length();
+        bool ok;
+        for (String<T>::Size i = 0; i < dataLen; i++) {
+            if (this->data[i] == ec) {
+                i++;
+                ok = false;
+                for (String<T>::Size j = 0; j < ncLen; j++) {
+                    if (this->data[i] == escpdChars[j]) {
+                        ok = true;
+                        break;
+                    }
+                }
+                if (!ok) {
+                    return false; // unrecognised escape sequence.
+                }
+            }
+        }
+
+        // unescaping the characters
+        String<T>::Size k = 0;
+        for (String<T>::Size i = 0; i < dataLen; i++, k++) {
+            if (this->data[i] == ec) {
+                i++;
+                for (String<T>::Size j = 0; j < ncLen; j++) {
+                    if (this->data[i] == escpdChars[j]) {
+                        this->data[k] = normChars[j];
+                        break;
+                    }
+                }
+            } else {
+                this->data[k] = this->data[i];
+            }
+        }
+        this->data[k] = 0;
+
+        return true;
     }
 
 
