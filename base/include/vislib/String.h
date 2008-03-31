@@ -1361,7 +1361,7 @@ namespace vislib {
         String<T>::Size dataLen = this->Length();
         for (String<T>::Size i = 0; i < dataLen; i++) {
             for (String<T>::Size j = 0; j < ncLen; j++) {
-                if (this->data[i] == normChars[j]) {
+                if ((this->data[i] == normChars[j]) || (this->data[i] == ec)) {
                     cntC2E++;
                     break;
                 }
@@ -1373,11 +1373,15 @@ namespace vislib {
         cntC2E = 0;
         for (String<T>::Size i = 0; i < dataLen; i++, cntC2E++) {
             newData[cntC2E] = this->data[i];
-            for (String<T>::Size j = 0; j < ncLen; j++) {
-                if (this->data[i] == normChars[j]) {
-                    newData[cntC2E++] = ec;
-                    newData[cntC2E] = escpdChars[j];
-                    break;
+            if (this->data[i] == ec) {
+                newData[++cntC2E] = ec;
+            } else {
+                for (String<T>::Size j = 0; j < ncLen; j++) {
+                    if (this->data[i] == normChars[j]) {
+                        newData[cntC2E++] = ec;
+                        newData[cntC2E] = escpdChars[j];
+                        break;
+                    }
                 }
             }
         }
@@ -2056,15 +2060,17 @@ namespace vislib {
         for (String<T>::Size i = 0; i < dataLen; i++) {
             if (this->data[i] == ec) {
                 i++;
-                ok = false;
-                for (String<T>::Size j = 0; j < ncLen; j++) {
-                    if (this->data[i] == escpdChars[j]) {
-                        ok = true;
-                        break;
+                if (this->data[i] != ec) {
+                    ok = false;
+                    for (String<T>::Size j = 0; j < ncLen; j++) {
+                        if (this->data[i] == escpdChars[j]) {
+                            ok = true;
+                            break;
+                        }
                     }
-                }
-                if (!ok) {
-                    return false; // unrecognised escape sequence.
+                    if (!ok) {
+                        return false; // unrecognised escape sequence.
+                    }
                 }
             }
         }
@@ -2074,10 +2080,14 @@ namespace vislib {
         for (String<T>::Size i = 0; i < dataLen; i++, k++) {
             if (this->data[i] == ec) {
                 i++;
-                for (String<T>::Size j = 0; j < ncLen; j++) {
-                    if (this->data[i] == escpdChars[j]) {
-                        this->data[k] = normChars[j];
-                        break;
+                if (this->data[i] == ec) {
+                    this->data[k] = ec;
+                } else {
+                    for (String<T>::Size j = 0; j < ncLen; j++) {
+                        if (this->data[i] == escpdChars[j]) {
+                            this->data[k] = normChars[j];
+                            break;
+                        }
                     }
                 }
             } else {
