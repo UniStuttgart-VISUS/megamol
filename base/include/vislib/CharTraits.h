@@ -152,6 +152,7 @@ namespace vislib {
             while ((*str != 0) && (*str >= static_cast<Char>('0')) 
                     && (*str <= static_cast<Char>('9'))) {
                 v = value * 10 + (*str - static_cast<Char>('0'));
+                str++;
                 if (v < value) {
                     throw FormatException("Overflow parsing Int64", 
                         __FILE__, __LINE__);
