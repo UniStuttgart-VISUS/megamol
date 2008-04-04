@@ -84,27 +84,33 @@ namespace sys {
         /**
          * behaves like File::Open
          */
-        virtual bool Open(const char *filename, const File::AccessMode accessMode, 
-            const File::ShareMode shareMode, const File::CreationMode creationMode);
+        virtual bool Open(const char *filename,
+            const File::AccessMode accessMode,
+            const File::ShareMode shareMode,
+            const File::CreationMode creationMode);
 
         /**
          * behaves like File::Open
          */
-        virtual bool Open(const wchar_t *filename, const File::AccessMode accessMode, 
-            const File::ShareMode shareMode, const File::CreationMode creationMode);
+        virtual bool Open(const wchar_t *filename,
+            const File::AccessMode accessMode,
+            const File::ShareMode shareMode,
+            const File::CreationMode creationMode);
 
         /**
          * behaves like File::Read
          * Performs an implicite flush if the buffer is not in read mode.
          * Ensures that the buffer is in read mode.
          */
-        virtual File::FileSize Read(void *outBuf, const File::FileSize bufSize);
+        virtual File::FileSize Read(void *outBuf,
+            const File::FileSize bufSize);
 
         /**
          * behaves like File::Seek
          * Performs an implicite flush if the buffer is in write mode.
          */
-        virtual File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from);
+        virtual File::FileSize Seek(const File::FileOffset offset,
+            const File::SeekStartPoint from);
 
         /**
          * Sets the size of the current buffer.
@@ -129,12 +135,13 @@ namespace sys {
          * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
          *                    could not be flushed to disk.
          */
-        virtual File::FileSize Write(const void *buf, const File::FileSize bufSize);
+        virtual File::FileSize Write(const void *buf,
+            const File::FileSize bufSize);
 
     private:
 
-        /** Possible values for the buffer mode */
-        enum BufferMode { VOID_BUFFER, READ_BUFFER, WRITE_BUFFER };
+        /** the default buffer size when creating new buffers */
+        static File::FileSize defaultBufferSize;
 
         /**
          * Forbidden copy-ctor.
@@ -156,29 +163,39 @@ namespace sys {
          */
         BufferedFile& operator =(const BufferedFile& rhs);
 
-        /** the default buffer size when creating new buffers */
-        static File::FileSize defaultBufferSize;
+        /**
+         * behaves like File::Flush
+         *
+         * @param fileFlush Flag whether or not to flush the file.
+         *
+         * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
+         *                    could not be flushed to disk.
+         */
+        void flush(bool fileFlush);
+
+        /** Resets the buffer. */
+        void resetBuffer();
 
         /** the buffer for IO */
         unsigned char *buffer;
 
-        /** 
-         * the starting position of the buffer in bytes from the beginning of 
-         * the file 
-         */
-        File::FileSize bufferStart;
+        /** the position inside the buffer */
+        File::FileSize bufferOffset;
 
         /** the size of the buffer in bytes */
         File::FileSize bufferSize;
 
-        /** the mode of the current buffer */
-        BufferMode bufferMode;
+        /** 
+         * the starting position of the buffer inside the file in bytes from 
+         * the beginning of the file.
+         */
+        File::FileSize bufferStart;
+
+        /** flag wether or not the buffer is dirty. */
+        bool dirtyBuffer;
 
         /** the access mode the file has been opened with */
         File::AccessMode fileMode;
-
-        /** the position inside the buffer */
-        File::FileSize bufferOffset;
 
         /** the number of bytes of the buffer which hold valid informations */
         File::FileSize validBufferSize;

@@ -12,7 +12,6 @@ SystemMessage: Linux implementation for casts is possibly a problem.
 Thread: Linux members must possibly be protected by a mutex.
 graphics::BeholderDistZoom2D: Class should also be able to change camera parameters (near-clip, far-clip, focal distance).
     Implement Zooming-Speed-Attribute.
-BufferedFile: Tiny seeks (e.g. cur-1) should not perform a flush.
 Console: Windows implementation for Run. Currently not required as Windows has sufficient API for doing most things, but would be nice to have.
 Process: CreateProcessAsUser does not work under Windows
 String: Could use more efficient substring search.
