@@ -479,7 +479,7 @@ namespace vislib {
          * @return The string holding the serialised data.
          */
         inline String<T> String(void) const {
-            String<T> tmp;
+            vislib::String<T> tmp;
             this->GetString(tmp);
             return tmp;
         }
@@ -589,30 +589,30 @@ namespace vislib {
         this->data.Clear();
         this->nextDePos = 0;
 
-        if ((str == NULL) || (*str == static_cast<T::Char>(0))) {
+        if ((str == NULL) || (*str == static_cast<typename T::Char>(0))) {
             return;
         }
 
         vislib::String<T> key;
         vislib::String<T> value;
         vislib::StringTokeniser<T> tokeniser(str, 
-            static_cast<T::Char>('\n'));
+            static_cast<typename T::Char>('\n'));
 
         while (tokeniser.HasNext()) {
             const vislib::String<T>& line = tokeniser.Next();
-            vislib::String<T>::Size pos;
+            typename vislib::String<T>::Size pos;
 
             do {
-                pos = line.Find(static_cast<T::Char>('='));
+                pos = line.Find(static_cast<typename T::Char>('='));
             } while ((pos != vislib::String<T>::INVALID_POS) && (pos > 0)
-                && (line[pos - 1] == static_cast<T::Char>('\\')));
+                && (line[pos - 1] == static_cast<typename T::Char>('\\')));
 
             key = line.Substring(0, pos);
             value = line.Substring(pos + 1);
 
-            key.UnescapeCharacters(static_cast<T::Char>('\\'), 
+            key.UnescapeCharacters(static_cast<typename T::Char>('\\'), 
                 vislib::String<T>("\n\r="), vislib::String<T>("nr="));
-            value.UnescapeCharacters(static_cast<T::Char>('\\'), 
+            value.UnescapeCharacters(static_cast<typename T::Char>('\\'), 
                 vislib::String<T>("\n\r="), vislib::String<T>("nr="));
 
             this->data.Append(
@@ -631,13 +631,13 @@ namespace vislib {
         vislib::String<T> str;
         for (unsigned int i = 0; i < this->data.Count(); i++) {
             str = this->data[i].Key();
-            str.EscapeCharacters(static_cast<T::Char>('\\'), 
+            str.EscapeCharacters(static_cast<typename T::Char>('\\'), 
                 vislib::String<T>("\n\r="), vislib::String<T>("nr="));
 
             outStr.Append(str);
             outStr.Append(vislib::String<T>("="));
             str = this->data[i].Value();
-            str.EscapeCharacters(static_cast<T::Char>('\\'), 
+            str.EscapeCharacters(static_cast<typename T::Char>('\\'), 
                 vislib::String<T>("\n\r="), vislib::String<T>("nr="));
 
             outStr.Append(str);

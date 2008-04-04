@@ -465,7 +465,7 @@ namespace sys {
 
         BECAUSE_I_KNOW(this->argCount == this->storeCount);
         for (int i = 0; i < this->argCount; i++) {
-            T::Size len = T::SafeStringLength(argv[i]) + 1;
+            typename T::Size len = T::SafeStringLength(argv[i]) + 1;
             this->arguments[i] = this->memoryAnchor[i] = new Char[len];
             ::memcpy(this->memoryAnchor[i], argv[i], len * T::CharSize());
         }

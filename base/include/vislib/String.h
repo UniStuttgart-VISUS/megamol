@@ -1341,15 +1341,15 @@ namespace vislib {
      */
     template<class T> bool String<T>::EscapeCharacters(const Char ec, 
             const Char *normChars, const Char *escpdChars) {
-        String<T>::Size ncLen = T::SafeStringLength(normChars);
+        Size ncLen = T::SafeStringLength(normChars);
 
         // checking preconditions
         ASSERT(T::SafeStringLength(escpdChars) == ncLen);
 #if (defined(DEBUG) || defined(_DEBUG))
-        for (String<T>::Size i = 0; i < ncLen; i++) {
+        for (Size i = 0; i < ncLen; i++) {
             ASSERT(normChars[i] != ec);
             ASSERT(escpdChars[i] != ec);
-            for (String<T>::Size j = i + 1; j < ncLen; j++) {
+            for (Size j = i + 1; j < ncLen; j++) {
                 ASSERT(normChars[i] != normChars[j]);
                 ASSERT(escpdChars[i] != escpdChars[j]);
             }
@@ -1358,9 +1358,9 @@ namespace vislib {
 
         // counting number of characters to be escaped
         unsigned int cntC2E = 0;
-        String<T>::Size dataLen = this->Length();
-        for (String<T>::Size i = 0; i < dataLen; i++) {
-            for (String<T>::Size j = 0; j < ncLen; j++) {
+        Size dataLen = this->Length();
+        for (Size i = 0; i < dataLen; i++) {
+            for (Size j = 0; j < ncLen; j++) {
                 if ((this->data[i] == normChars[j]) || (this->data[i] == ec)) {
                     cntC2E++;
                     break;
@@ -1371,12 +1371,12 @@ namespace vislib {
         // escaping the characters
         Char *newData = new Char[dataLen + cntC2E + 1];
         cntC2E = 0;
-        for (String<T>::Size i = 0; i < dataLen; i++, cntC2E++) {
+        for (Size i = 0; i < dataLen; i++, cntC2E++) {
             newData[cntC2E] = this->data[i];
             if (this->data[i] == ec) {
                 newData[++cntC2E] = ec;
             } else {
-                for (String<T>::Size j = 0; j < ncLen; j++) {
+                for (Size j = 0; j < ncLen; j++) {
                     if (this->data[i] == normChars[j]) {
                         newData[cntC2E++] = ec;
                         newData[cntC2E] = escpdChars[j];
@@ -2039,15 +2039,15 @@ namespace vislib {
      */
     template<class T> bool String<T>::UnescapeCharacters(const Char ec, 
             const Char *normChars, const Char *escpdChars) {
-        String<T>::Size ncLen = T::SafeStringLength(normChars);
+        Size ncLen = T::SafeStringLength(normChars);
 
         // checking preconditions
         ASSERT(T::SafeStringLength(escpdChars) == ncLen);
 #if (defined(DEBUG) || defined(_DEBUG))
-        for (String<T>::Size i = 0; i < ncLen; i++) {
+        for (Size i = 0; i < ncLen; i++) {
             ASSERT(normChars[i] != ec);
             ASSERT(escpdChars[i] != ec);
-            for (String<T>::Size j = i + 1; j < ncLen; j++) {
+            for (Size j = i + 1; j < ncLen; j++) {
                 ASSERT(normChars[i] != normChars[j]);
                 ASSERT(escpdChars[i] != escpdChars[j]);
             }
@@ -2055,14 +2055,14 @@ namespace vislib {
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
 
         // Checking for unrecognised escape sequences.
-        String<T>::Size dataLen = this->Length();
+        Size dataLen = this->Length();
         bool ok;
-        for (String<T>::Size i = 0; i < dataLen; i++) {
+        for (Size i = 0; i < dataLen; i++) {
             if (this->data[i] == ec) {
                 i++;
                 if (this->data[i] != ec) {
                     ok = false;
-                    for (String<T>::Size j = 0; j < ncLen; j++) {
+                    for (Size j = 0; j < ncLen; j++) {
                         if (this->data[i] == escpdChars[j]) {
                             ok = true;
                             break;
@@ -2076,14 +2076,14 @@ namespace vislib {
         }
 
         // unescaping the characters
-        String<T>::Size k = 0;
-        for (String<T>::Size i = 0; i < dataLen; i++, k++) {
+        Size k = 0;
+        for (Size i = 0; i < dataLen; i++, k++) {
             if (this->data[i] == ec) {
                 i++;
                 if (this->data[i] == ec) {
                     this->data[k] = ec;
                 } else {
-                    for (String<T>::Size j = 0; j < ncLen; j++) {
+                    for (Size j = 0; j < ncLen; j++) {
                         if (this->data[i] == escpdChars[j]) {
                             this->data[k] = normChars[j];
                             break;

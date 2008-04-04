@@ -310,6 +310,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\functioncast.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\HashAlgorithm.cpp"
 				>
 			</File>
@@ -485,6 +489,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\FormatException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\functioncast.h"
 				>
 			</File>
 			<File

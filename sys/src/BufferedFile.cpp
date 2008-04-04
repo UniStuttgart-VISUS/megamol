@@ -220,6 +220,8 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Seek(
         case File::END :
             pos = this->GetSize() + offset;
             break;
+        default:
+            throw vislib::IllegalParamException("from", __FILE__, __LINE__);
     }
 
     if ((pos >= this->bufferStart) 
