@@ -1,7 +1,8 @@
 /*
  * RegEx.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2007 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_REGEX_H_INCLUDED
@@ -13,93 +14,486 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-//#include "vislib/assert.h"
-//#include "vislib/memutils.h"
-//#include "vislib/OutOfRangeException.h"
-//#include "vislib/String.h"
-//#include "vislib/Trace.h"
-//#include "vislib/types.h"
+
+#include "vislib/assert.h"
+#include "vislib/Exception.h"
+#include "vislib/PtrArray.h"
+#include "vislib/RegExCharTraits.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
+
+
 //
+// RegEx IS WORK IN PROGRESS AN CANNOT YET BE USED!
 //
-//#define REGEX_TRACE_LEVEL (vislib::Trace::LEVEL_INFO + 1000)
-//
-//
-//namespace vislib {
-//
-//    class RECharTraitsA : public CharTraitsA {
-//    
-//    protected:
-//
-//        static const char *ABBREVIATIONS[];
-//
-//        static const char TOKEN_BACKSLASH;
-//        static const char TOKEN_BRACE_CLOSE;
-//        static const char TOKEN_BRACE_OPEN;
-//        static const char TOKEN_BRACKET_CLOSE;
-//        static const char TOKEN_BRACKET_OPEN;
-//        static const char TOKEN_CARET;
-//        static const char TOKEN_COMMA;
-//        static const char TOKEN_DOLLAR;
-//        static const char TOKEN_DOT;
-//        static const char TOKEN_MINUS;
-//        static const char TOKEN_PAREN_CLOSE;
-//        static const char TOKEN_PAREN_OPEN;
-//        static const char TOKEN_PLUS;
-//        static const char TOKEN_QUESTION;
-//        static const char TOKEN_STAR;
-//        static const char TOKEN_VERTICAL_BAR;
-//        
-//
-//        /* Declare our friends. */
-//        template<class T> friend class RegEx;
-//
-//    }; /* end class RECharTraitsA */
-//
-//    const char *RECharTraitsA::ABBREVIATIONS[] =  {
-//		"a([a-zA-Z0-9])",                   // Alpha numeric
-//		"b([ \\t])",		                // Whitespace
-//		"c([a-zA-Z])",	                    // Characters
-//		"d([0-9])",		                    // Digits
-//		"h([0-9a-fA-F])",	                // Hex digit
-//		"n(\r|(\r?\n))",	                // Newline
-//		//"q(\"[^\"]*\")|(\'[^\']*\')",	    // Quoted string
-//		//"w([a-zA-Z]+)",	                    // Simple word
-//		"z([0-9]+)",		                // Integer
-//		NULL
-//    };
-//
-//    const char RECharTraitsA::TOKEN_BACKSLASH = '\\';
-//    const char RECharTraitsA::TOKEN_BRACE_CLOSE = '}';
-//    const char RECharTraitsA::TOKEN_BRACE_OPEN = '{';
-//    const char RECharTraitsA::TOKEN_BRACKET_CLOSE = ']';
-//    const char RECharTraitsA::TOKEN_BRACKET_OPEN = '[';
-//    const char RECharTraitsA::TOKEN_CARET = '^';
-//    const char RECharTraitsA::TOKEN_COMMA = ',';
-//    const char RECharTraitsA::TOKEN_DOLLAR = '$';
-//    const char RECharTraitsA::TOKEN_DOT = '.';
-//    const char RECharTraitsA::TOKEN_MINUS = '-';
-//    const char RECharTraitsA::TOKEN_PAREN_CLOSE = ')';
-//    const char RECharTraitsA::TOKEN_PAREN_OPEN = '(';
-//    const char RECharTraitsA::TOKEN_PLUS = '+';
-//    const char RECharTraitsA::TOKEN_QUESTION = '?';
-//    const char RECharTraitsA::TOKEN_STAR = '*';
-//    const char RECharTraitsA::TOKEN_VERTICAL_BAR = '|'; 
-//
-//
-//
-//    /**
-//     * This class implements a regular expression. It must be instantiated with
-//     * one of the RECharTrait classes.
-//     */
-//    template<class T> class RegEx {
-//
-//    public:
-//
-//        /** Define a local name for the character type. */
-//        typedef typename T::Char Char;
-//
-//        /** Define a local name for the string size. */
-//        typedef typename T::Size Size;
+
+
+namespace vislib {
+
+    /**
+     * This class implements a regular expression. It must be instantiated with
+     * one of the RECharTrait classes.
+     */
+    template<class T> class RegEx {
+
+    public:
+
+        /** Define a local name for the character type. */
+        typedef typename T::Char Char;
+
+        /** Define a local name for the string size. */
+        typedef typename T::Size Size;
+
+        /**
+         *
+         */
+        class ParseException : public vislib::Exception {
+
+        public:
+
+            /** Possible types of parse errors. */
+            enum ErrorType {
+                UNEXPECTED = 0,
+                EMPTY_EXPRESSION,
+                BRACE_CLOSE_EXPECTED,
+                BRACKET_CLOSE_EXPECTED,
+                PAREN_CLOSE_EXPECTED,
+                INTEGER_EXPECTED,
+                UNKNOWN_ESCAPE
+            };
+
+            ParseException(const ErrorType errorType, const Char *vicinity,
+                const char *file, const int line);
+
+            ParseException(const ParseException& rhs);
+
+            virtual ~ParseException(void);
+
+            inline ErrorType GetErrorType(void) const {
+                return this->errorType;
+            }
+
+            inline const String<typename T::Super>& GetVicinity(void) const {
+                return this->vicinity;
+            }
+
+            ParseException& operator =(const ParseException& rhs);
+
+        private:
+
+            /** The type of parse error to signal. */
+            ErrorType errorType;
+
+            /** The string in whose vicinity the error occurred. */
+            String<typename T::Super> vicinity;
+        }; /* end class ParseException */
+
+    protected:
+
+        /**
+         * This is the abstract superclass for nodes in the RE automaton. It
+         * implements the functionality of a sequence by providing a pointer
+         * to the next node.
+         */
+        class Expression {
+
+        public:
+
+            /** Dtor. */
+            virtual ~Expression(void);
+
+            /**
+             * Consumes a part of the input string.
+             *
+             * @param input
+             *
+             * @return
+             */
+            virtual const Char *Consume(const Char *input) = 0;
+
+            /**
+             * Dump the expression into the specified stream and prepent 
+             * 'indent' tabs before each line.
+             *
+             * This method is intended solely for debugging purposes.
+             *
+             * @parm stream The stream to dump the expression to.
+             */
+            virtual void Dump(FILE *stream, const UINT indent = 0) = 0;
+
+            /**
+             * Gets the next expression in the RE sequence.
+             *
+             * @return The next expression in the sequence or NULL if this is
+             *         the last node.
+             */
+            inline const Expression *GetNext(void) const {
+                return this->next;
+            }
+
+            /**
+             * Gets the next expression in the RE sequence.
+             *
+             * @return The next expression in the sequence or NULL if this is
+             *         the last node.
+             */
+            inline Expression *GetNext(void) {
+                return this->next;
+            }
+
+            /**
+             * Set the next expression in the sequence. 
+             *
+             * The current next pointer will be overwritten by the operation 
+             * and must therefore be NULL. THIS METHOD IS SOME KIND OF UNSAFE, 
+             * but this is no major problem as the class is not visible outside.
+             *
+             * @param next The new next node.
+             */
+            inline void SetNext(Expression *next) {
+                ASSERT((this->next == NULL) || (next == NULL));
+                this->next = next;
+            }
+
+        protected:
+
+            /**
+             * Create a new instance followed by the specified next node.
+             *
+             * @param next The next node. Defaults to NULL.
+             */
+            Expression(Expression *next = NULL);
+
+            /** The next expression in the automaton. */
+            Expression *next;
+
+        }; /* end class Expression */
+
+
+        /**
+         * This abstract expression is used as base for recursive 
+         * expressions that need additional sub-expressions like a choice
+         * or the Kleene star.
+         */
+        class RecursiveExpression : public Expression {
+
+        public:
+
+            /** Dtor. */
+            virtual ~RecursiveExpression(void);
+
+            /**
+             * Append 'child' to the collection of children. If 'child' is 
+             * NULL, nothing happens. 
+             *
+             * 'child' MUST HAVE BEEN ALLOCATED ON THE HEAP USING new! The 
+             * object takes ownership of 'child'.
+             *
+             * @param child The child to be added. This object must have been
+             *              allocated on the heap using new.
+             */
+            void AppendChild(Expression *child);
+
+            /**
+             * Answer the number of child nodes the expression has.
+             *
+             * @return The number of children.
+             */
+            inline SIZE_T CountChildren(void) const {
+                return this->children.Count();
+            }
+
+            /**
+             * Dump the expression into the specified stream and prepent 
+             * 'indent' tabs before each line.
+             *
+             * @parm stream The stream to dump the expression to.
+             */
+            virtual void Dump(FILE *stream, const UINT indent = 0);
+
+            /**
+             * Get the 'which'th child node.
+             *
+             * @param which The index of the child node to retrieve. This must
+             *              must be within [0, this->CountChildren()[.
+             *
+             * @return A pointer to the child node. This pointer is guaranteed
+             *         to be non-NULL as long as the collection of children has
+             *         not been manipulated with a const_cast or any other dirty
+             *         hack. The object remains owner of the returned object.
+             *
+             * @throws OutOfRangeException If 'which' is not a valid child 
+             *                             index.
+             */
+            inline const Expression *GetChild(const SIZE_T which) const {
+                return this->children[which];
+            }
+
+            /**
+             * Get the 'which'th child node.
+             *
+             * @param which The index of the child node to retrieve. This must
+             *              must be within [0, this->CountChildren()[.
+             *
+             * @return A pointer to the child node. This pointer is guaranteed
+             *         to be non-NULL as long as the collection of children has
+             *         not been manipulated with a const_cast or any other dirty
+             *         hack. The object remains owner of the returned object.
+             *
+             * @throws OutOfRangeException If 'which' is not a valid child 
+             *                             index.
+             */
+            inline Expression *GetChild(const SIZE_T which) {
+                return this->children[which];
+            }
+
+            /**
+             * Answer the children collection.
+             *
+             * You should never const_cast this collection and manipulate it
+             * directly.
+             *
+             * @return A reference to the collection of children.
+             */
+            inline const PtrArray<Expression>& GetChildren(void) const {
+                return this->children;
+            }
+
+        protected:
+
+            /**
+             * Create a new instance followed by the specified next node.
+             *
+             * 'firstChild' is added as the first child node. THIS OBJECT MUST
+             * HAVE BEEN ALLOCATED ON THE HEAP USING new! The object takes 
+             * ownership of 'firstChild'.
+             *
+             * @param firstChild The first child node. This object must have 
+             *                   been allocated on the heap using new. Defaults
+             *                   to NULL. The object takes ownership of the
+             *                   parameter.
+             * @param next       The next node. Defaults to NULL.
+             */
+            RecursiveExpression(Expression *firstChild = NULL, 
+                Expression *next = NULL);
+
+            /** The next expression in the automaton. */
+            PtrArray<Expression> children;
+
+        }; /* end class RecursiveExpression */
+
+
+        /**
+         * This expression matches any character.
+         */
+        class AnyExpression : public Expression {
+
+        public:
+
+            AnyExpression(void);
+
+            virtual ~AnyExpression(void);
+
+            virtual const Char *Consume(const Char *input);
+
+        }; /* class AnyExpression */
+
+
+        /**
+         * Implements the choice (OR operator).
+         */
+        class ChoiceExpression: public RecursiveExpression {
+
+            /**
+             * Create a new choice expression that matches 'expr0' or 'expr1'.
+             *
+             * 'expr0' and 'expr1' MUST HAVE BEEN ALLOCATED ON THE HEAP USING 
+             * new! The object takes ownership of 'expr0' and 'expr1'.
+             *
+             * 'expr0' and 'expr1' MUST NOT BE NULL!
+             *
+             * @param expr0 The left-hand-side operand of OR. This must not be
+             *              NULL. The object takes ownership of the parameter.
+             * @param expr1 The right-hand-side operand of OR. This must not be
+             *              NULL. The object takes ownership of the parameter.
+             */
+            ChoiceExpression(Expression *expr0, Expression *expr1);
+
+            /** Dtor. */
+            virtual ~ChoiceExpression(void);
+
+            virtual const Char *Consume(const Char *input);
+
+            /**
+             * Dump the expression into the specified stream and prepent 
+             * 'indent' tabs before each line.
+             *
+             * @parm stream The stream to dump the expression to.
+             */
+            virtual void Dump(FILE *stream, const UINT indent = 0);
+
+            /**
+             * Get the left-hand-side expression (child 0).
+             *
+             * @return The left child.
+             */
+            inline const Expression *GetLeftChild(void) const {
+                ASSERT(this->CountChildren() == 2);
+                return this->GetChild(0);
+            }
+
+            /**
+             * Get the left-hand-side expression (child 0).
+             *
+             * @return The left child.
+             */
+            inline Expression *GetLeftChild(void) {
+                ASSERT(this->CountChildren() == 2);
+                return this->GetChild(0);
+            }
+
+            /**
+             * Get the right-hand-side expression (child 1).
+             *
+             * @return The right child.
+             */
+            inline const Expression *GetRightChild(void) const {
+                ASSERT(this->CountChildren() == 2);
+                return this->GetChild(1);
+            }
+
+            /**
+             * Get the right-hand-side expression (child 1).
+             *
+             * @return The right child.
+             */
+            inline Expression *GetRightChild(void) {
+                ASSERT(this->CountChildren() == 2);
+                return this->GetChild(1);
+            }
+
+        }; /* end KleeneExpression */
+
+
+        /**
+         * This class implements an automaton for the Kleene star operator, 
+         * the plus (at least one) operator and the question mark (zero or one)
+         * operator. It can also be used for specific repeat counts in braces.
+         */
+        class RepeatExpression : public RecursiveExpression {
+
+        public:
+
+            /** Symbolic constant for specifying unbounded repeat. */
+            static const int UNBOUNDED;
+
+            /**
+             * Create a new repeat expression that matches 'expr'.
+             *
+             * 'expr' MUST HAVE BEEN ALLOCATED ON THE HEAP USING new! The object
+             * takes ownership of 'expr'.
+             *
+             * 'expr' MUST NOT BE NULL!
+             *
+             * The default values for 'minOccur' and 'maxOccur' are 0 and 
+             * UNBOUNDED, which produces a repeat node for the Kleene star
+             * operator.
+             *
+             * @param expr     The sub-expression to match multiple times with 
+             *                 the Kleene star. This must have been allocated 
+             *                 using new. This must not be NULL. The object 
+             *                 takes ownership of 'expr'.
+             * @param minOccur The minimum occurrence of 'expr' for the repeat
+             *                 expression to succeed. Defaults to 0.
+             * @param maxOccur The maximum occurrence of 'expr' for the repeat
+             *                 expression to succeed. Defaults to UNBOUNDED.
+             */
+            RepeatExpression(Expression *expr, const int minOccur = 0,
+                const int maxOccur = UNBOUNDED);
+
+            /** Dtor. */
+            virtual ~RepeatExpression(void);
+
+            virtual const Char *Consume(const Char *input);
+
+            /**
+             * Dump the expression into the specified stream and prepent 
+             * 'indent' tabs before each line.
+             *
+             * @parm stream The stream to dump the expression to.
+             */
+            virtual void Dump(FILE *stream, const UINT indent = 0);
+
+            /**
+             * Answer the maximum occurrence to be matched.
+             *
+             * @return The maximum occurence to be matched.
+             */
+            inline int GetMaxOccur(void) const {
+                return this->maxOccur;
+            }
+
+            /**
+             * Answer the minimum occurrence that must be found.
+             *
+             * @return The minimum occurence that must be found.
+             */
+            inline int GetMinOccur(void) const {
+                return this->minOccur;
+            }
+
+        private:
+
+            /** The maximum occurrence count. Unbounded if negative. */
+            int maxOccur;
+
+            /** The minimum occurrence count. Unbounded if negative. */
+            int minOccur;
+
+        }; /* end KleeneExpression */
+
+
+        /**
+         * This expression matches a literal string.
+         */
+        class LiteralExpression : public Expression {
+
+        public:
+
+            LiteralExpression(const Char *lit);
+
+            LiteralExpression(const Char lit);
+
+            inline void Append(const Char *lit) {
+                this->lit += lit;
+            }
+
+            inline void Append(const Char lit) {
+                this->lit += lit;
+            }
+
+            inline void Append(const LiteralExpression *expr) {
+                this->lit += expr->lit;
+            }
+
+            virtual ~LiteralExpression(void);
+
+            virtual const Char *Consume(const Char *input);
+
+            /**
+             * Dump the expression into the specified stream and prepent 
+             * 'indent' tabs before each line.
+             *
+             * @parm stream The stream to dump the expression to.
+             */
+            virtual void Dump(FILE *stream, const UINT indent = 0);
+
+            /** The literal expression to match. */
+            vislib::String<T> lit;
+
+        }; /* class LiteralExpression */
+
+
 //
 //        /**
 //         *
@@ -167,103 +561,76 @@
 //            friend class RegEx;
 //        }; /* end class MatchContext */
 //
-//
-//        /** Possible types of parse errors. */
-//        enum ParseErrorType {
-//            PARSE_ERROR_UNEXPECTED = 0,
-//            PARSE_ERROR_EMPTY_EXPRESSION,
-//            PARSE_ERROR_BRACE_CLOSE_EXPECTED,
-//            PARSE_ERROR_BRACKET_CLOSE_EXPECTED,
-//            PARSE_ERROR_PAREN_CLOSE_EXPECTED,
-//            PARSE_ERROR_INTEGER_EXPECTED,
-//            PARSE_ERROR_UNKNOWN_ESCAPE
-//        };
-//
-//        /** This structure is used to report parse errors. */
-//        typedef struct ParseError_t {
-//            const Char *position;           // The erroneous substring.
-//            ParseErrorType type;            // The type of error.
-//        } ParseError;
-//
-//        /** Ctor. */
-//        RegEx(void);
-//
-//        /** Dtor. */
-//        ~RegEx(void);
-//
-//        /**
-//         * Match 'str' against this regular expression. The regular epxression
-//         * must have been compiled using Parse() before.
-//         *
-//         * @param str        The string to be matched.
-//         * @param outMatches If not NULL, all match groups in the expression 
-//         *                   will be stored into this match context.
-//         *
-//         * @return true, if 'str' matches the regular expression, false 
-//         *         otherwise.
-//         */
-//        bool Match(const Char *str, MatchContext *outMatches = NULL) const;
-//
-//        /**
-//         * Parse the regular expression 'expr', and prepare the object for
-//         * matching strings against this epxression.
-//         *
-//         * @param expr A string containing the regular expression to be parsed.
-//         *
-//         * @return PARSE_OK in case of success, other values for indicating an
-//         *         error.
-//         */
-//        bool Parse(const Char *expr, ParseError *outError = NULL);
-//
-//    private:
-//
-//        /** Parse abbreviation. */
-//        bool parseAbbreviation(Char *& inOutStr);
-//
-//        /** Parse a wildcard sequence. */
-//        bool parseAny(Char *& inOutStr);
-//
-//        /** Parse a escape sequence. */
-//        bool parseEscape(Char *& inOutStr);
-//
-//        /** Parse a literal. */
-//        bool parseLiteral(Char *& inOutStr);
-//        
-//        /** Parse a top-level regular expression. */
-//        bool parseRegEx(Char *& inOutStr);
-//
-//        /** Parse repeat between 'minRep' and 'maxRep'. */
-//        bool parseRepeat(Char *& inOutStr, const UINT minRep, 
-//            const UINT maxRep);
-//
-//        /** Parse a repeat expression in braces. */
-//        bool parseRepeatEx(Char *& inOutStr);
-//        
-//        /** Parse a plus (non-empty closure). */
-//        bool parsePlus(Char *& inOutStr);
-//
-//        /** Parse a option (one or no occurrence). */
-//        bool parseQuestion(Char *& inOutStr);
-//
-//        /** Parse a character set. */
-//        bool parseSet(Char *& inOutStr);
-//
-//        /** Parse a star (Kleene closure). */
-//        bool parseStar(Char *& inOutStr);
-//
-//        /**
-//         * Report an error to the ParseError structure designated by 
-//         * 'this->error', if this pointer is not NULL.
-//         *
-//         * @param type     The type of error that occurred.
-//         * @param position Pointer to the substring where the erroneous part
-//         *                 begins.
-//         */
-//        void raiseError(const ParseErrorType type, const Char *position);
-//
-//        /** Provides access to the error for the raiseError method. */
-//        ParseError *error;
-//    };
+
+        public:
+        /** Ctor. */
+        RegEx(void);
+
+        /** Dtor. */
+        ~RegEx(void);
+
+        /**
+         * Match 'str' against this regular expression. The regular epxression
+         * must have been compiled using Parse() before.
+         *
+         * @param str        The string to be matched.
+         * @param outMatches If not NULL, all match groups in the expression 
+         *                   will be stored into this match context.
+         *
+         * @return true, if 'str' matches the regular expression, false 
+         *         otherwise.
+         */
+        //bool Match(const Char *str, MatchContext *outMatches = NULL) const;
+
+        /**
+         * Parse the regular expression 'expr', and prepare the object for
+         * matching strings against this epxression.
+         *
+         * @param expr A string containing the regular expression to be parsed.
+         *
+         * @throws ParseException In case 'expr' has a syntax error.
+         */
+        void Parse(const Char *expr);
+
+    private:
+
+        /** Parse abbreviation. */
+        Expression *parseAbbreviation(const Char *& inOutStr);
+
+        /** Parse a wildcard sequence. */
+        Expression *parseAny(const Char *& inOutStr);
+
+        /** Parse a escape sequence. */
+        Expression *parseEscape(const Char *& inOutStr);
+
+        /** Parse a literal. */
+        Expression *parseLiteral(const Char *& inOutStr);
+
+        /** Parse a top-level regular expression. */
+        Expression *parseRegEx(const Char *& inOutStr);
+
+        /** Parse repeat between 'minRep' and 'maxRep'. */
+        Expression *parseRepeat(const Char *& inOutStr, const int minRep,
+            const int maxRep);
+
+        /** Parse a repeat expression in braces. */
+        Expression *parseRepeatEx(const Char *& inOutStr);
+
+        /** Parse a plus (non-empty closure). */
+        Expression *parsePlus(const Char *& inOutStr);
+
+        /** Parse a option (one or no occurrence). */
+        Expression *parseQuestion(const Char *& inOutStr);
+
+        /** Parse a character set. */
+        Expression *parseSet(const Char *& inOutStr);
+
+        /** Parse a star (Kleene closure). */
+        Expression *parseStar(const Char *& inOutStr);
+
+        /** The root node of the automaton. */
+        Expression *start;
+    };
 //
 //
 //    /*
@@ -333,314 +700,19 @@
 //                                                       const UINT end) {
 //        ASSERT(end > begin);
 //        this->matches = new Match(begin, end, this->matches);
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::~RegEx
-//     */
-//    template<class T> RegEx<T>::RegEx(void) : error(NULL) {
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::~RegEx
-//     */
-//    template<class T> RegEx<T>::~RegEx(void) {
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::Match
-//     */
-//    template<class T> 
-//    bool RegEx<T>::Match(const Char *str, MatchContext *outMatches) const {
-//        // TODO: Implementation missing.
-//        return false;
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::Parse
-//     */
-//    template<class T> 
-//    bool RegEx<T>::Parse(const Char *expr, ParseError *outError) {
-//        const Char *s = expr;
-//        bool retval = true;
-//        this->error = outError;
-//
-//        /* Disallow empty expressions and NULL pointers. */
-//        if ((s == NULL) || (s[0] == 0)) {
-//            this->raiseError(PARSE_ERROR_EMPTY_EXPRESSION, s);
-//            return false;
-//        }
-//
-//        /* Process the input. */
-//        while ((s != 0) && (retval = this->parseRegEx(s)));
-//
-//        return retval;
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::parseAbbreviation
-//     */
-//    template<class T> bool RegEx<T>::parseAbbreviation(Char *& inOutStr) {
-//        ASSERT(inOutStr != NULL);
-//        ASSERT(*inOutStr == T::TOKEN_BACKSLASH);
-//        TRACE(REGEX_TRACE_LEVEL, "RegEx<T>::parseAbbreviation\n");
-//
-//        const Char **current = T::ABBREVIATIONS;
-//
-//        inOutStr++;                         // Consume backslash.
-//
-//        while (*current != NULL) {
-//            if (*inOutStr == **current) {
-//                inOutStr++;                 
-//                // TODO: Call appropriate method and return result.
-//                return false;
-//            } else {
-//                current++;
-//            }
-//        }
-//
-//        this->raiseError(PARSE_ERROR_UNKNOWN_ESCAPE, inOutStr);
-//        return false;
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::parseAny
-//     */
-//    template<class T> bool RegEx<T>::parseAny(Char *& inOutStr) {
-//        // TODO: Implementation missing.
-//        return false;
-//    }
-//
-//    /*
-//     * vislib::RegEx<T>::parseEscape
-//     */
-//    template<class T> bool RegEx<T>::parseEscape(Char *& inOutStr) {
-//        ASSERT(inOutStr != NULL);
-//        ASSERT(*inOutStr == T::TOKEN_BACKSLASH);
-//        TRACE(REGEX_TRACE_LEVEL, "RegEx<T>::parseEscape\n");
-//
-//        /* Check for abbreviations first. */
-//        if (this->parseAbbreviation(inOutStr)) {
-//            return true;
-//        }
-//
-//
-//        // TODO: Implementation missing.
-//        return false;
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::parseLiteral
-//     */
-//    template<class T> bool RegEx<T>::parseLiteral(Char *& inOutStr) {
-//        // TODO: Implementation missing.
-//        return false;
-//    }
-//
-//    
-//    /*
-//     * vislib::RegEx<T>::parseRegEx
-//     */
-//    template<class T> bool RegEx<T>::parseRegEx(Char *& inOutStr) {
-//        ASSERT(inOutStr != 0);
-//        
-//        switch (*inOutStr) {
-//
-//            case T::TOKEN_CARET:        // Match begin of line.
-//                // push begin
-//                break;
-//
-//            case T::TOKEN_DOLLAR:       // Match end of line.
-//                // push end
-//                break;
-//
-//            case T::TOKEN_BRACE_OPEN:   // Begin of repeat expression.
-//                return this->parseRepeatEx(inOutStr);
-//
-//            case T::TOKEN_STAR:         // Kleene closure.
-//                return this->parseRepeat(inOutStr, 0, -1);  // TODO
-//
-//            case T::TOKEN_PLUS:         // Non-empty closure.
-//                return this->parseRepeat(inOutStr, 1, -1); // TODO
-//
-//            case T::TOKEN_QUESTION:     // Optional sequence.
-//                return this->parseRepeat(inOutStr, 0, 1);
-//
-//            case T::TOKEN_BACKSLASH:    // Escaped text.
-//                return this->parseEscape(inOutStr);
-//
-//            case T::TOKEN_DOT:          // Wildcard character.
-//                return this->parseAny(inOutStr);
-//
-//            case T::TOKEN_BRACKET_OPEN: // Begin of character set.
-//                return this->parseSet(inOutStr);
-//
-//            case T::TOKEN_PAREN_OPEN:   // Begin of grouping.
-//                // Push match group
-//                break;
-//
-//            default:                    // Must be normal literal.
-//                return this->parseLiteral(inOutStr);
-//        }
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::parseRepeat
-//     */
-//    template<class T> 
-//    bool RegEx<T>::parseRepeat(Char *& inOutStr, const UINT minRep, const UINT maxRep) {
-//        // TODO: Implementation missing.
-//        return false;
-//    }
-//
-//    
-//    /*
-//     * vislib::RegEx<T>::parseRepeatEx
-//     */
-//    template<class T> bool RegEx<T>::parseRepeatEx(Char *& inOutStr) {
-//        ASSERT(inOutStr != NULL);
-//        ASSERT(*inOutStr == T::TOKEN_BRACE_OPEN);
-//        TRACE(REGEX_TRACE_LEVEL, "RegEx<T>::parseRepeatEx\n");
-//
-//        Char *begin = NULL;                 // Begin of a number to parse. 
-//        UINT minRep = 0;                    // Minimum repeat value.
-//        UINT maxRep = 0;                    // Maximum repeat value.
-//        
-//        inOutStr++;                         // Consume opening brace.
-//    
-//        /* Recognise and convert first number. */
-//        while (T::IsDigit(*inOutStr)) {
-//            minRep *= 10;
-//            minRep += static_cast<UINT>(*inOutStr);
-//            inOutStr++;
-//        }
-//
-//        /* Check whether at least one digit was consumed. */
-//        if (inOutStr == begin) {
-//            this->raiseError(PARSE_ERROR_INTEGER_EXPECTED, begin);
-//            return false;
-//        }
-//
-//        /* Check for end of expression or begin of maximum repeat. */
-//        switch (*inOutStr) {
-//
-//            case T::TOKEN_COMMA:
-//                inOutStr++;                 // Consume comma and proceed.
-//                break;
-//
-//            case T::TOKEN_BRACE_CLOSE:
-//                inOutStr++;                 // Consume brace and return.
-//                maxRep = minRep;
-//                return this->parseRepeat(inOutStr, minRep, maxRep);
-//
-//            default:
-//                this->raiseError(PARSE_ERROR_BRACE_CLOSE_EXPECTED, inOutStr);
-//                return false;
-//        }
-//
-//        /* Recognise and convert first number. */
-//        begin = inOutStr;
-//        while (T::IsDigit(*inOutStr)) {
-//            maxRep *= 10;
-//            maxRep += static_cast<UINT>(*inOutStr);
-//            inOutStr++;
-//        }
-//
-//        /* Check whether at least one digit was consumed. */
-//        if (inOutStr == begin) {
-//            this->raiseError(PARSE_ERROR_INTEGER_EXPECTED, begin);
-//            return false;
-//        }
-//        
-//        /* Check for closing brace. */
-//        if (inOutStr == T::TOKEN_BRACE_CLOSE) {
-//            inOutStr++;
-//            return this->parseRepeat(inOutStr, minRep, maxRep);
-//
-//        } else {
-//            this->raiseError(PARSE_ERROR_BRACE_CLOSE_EXPECTED, inOutStr);
-//            return false;
-//        }
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::parseSet
-//     */
-//    template<class T> bool RegEx<T>::parseSet(Char *& inOutStr) {
-//        ASSERT(inOutStr != NULL);
-//        ASSERT(*inOutStr == T::TOKEN_BRACKET_OPEN);
-//
-//        inOutStr++;
-//
-//        while ((*inOutStr != 0) && (*inOutStr != T::TOKEN_BRACKET_CLOSE)) {
-//
-//            switch (*inOutStr) {
-//
-//                case T::TOKEN_MINUS: 
-//                    // TODO
-//                    break;
-//
-//                case T::TOKEN_BACKSLASH:
-//                    // TODO
-//                    //this->parseEscape(inOutStr);
-//                    break;
-//
-//                default:
-//                    // TODO
-//                    break;
-//            }
-//            
-//            inOutStr++;
-//            // TODO: Implementation missing.
-//        }
-//
-//        if (inOutStr == NULL) {
-//            this->raiseError(PARSE_ERROR_BRACKET_CLOSE_EXPECTED, inOutStr - 1);
-//            return false;
-//        } else {
-//            return true;
-//        }
-//    }
-//
-//
-//    /*
-//     * vislib::RegEx<T>::parseStar
-//     */
-//    template<class T> bool RegEx<T>::parseStar(Char *& inOutStr) {
-//        // TODO: Implementation missing.
-//        return false;
-//    }
-//    
-//
-//    /*
-//     * vislib::RegEx<T>::raiseError
-//     */
-//    template<class T>
-//    void RegEx<T>::raiseError(const ParseErrorType type, const Char *position) {
-//        if (this->error != NULL) {
-//            this->error->type = type;
-//            this->error->position = position;
-//        }
-//    }
-//
-//    /** Template instantiation for ANSI strings. */
-//    typedef RegEx<RECharTraitsA> RegExA;
-//
-//    ///** Template instantiation for wide strings. */
-//    //typedef RegEx<CharTraitsW> StringW;
-//
-//    ///** Template instantiation for TCHARs. */
-//    //typedef String<TCharTraits> TString;
-//} /* end namespace vislib */
+
+
+    /** Template instantiation for ANSI strings. */
+    typedef RegEx<RegExCharTraitsA> RegExA;
+
+    /** Template instantiation for wide strings. */
+    typedef RegEx<RegExCharTraitsA> RegExW;
+
+    /** Template instantiation for TCHARs. */
+    typedef RegEx<TRegExCharTraits> TRegEx;
+} /* end namespace vislib */
+
+#include "RegEx.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

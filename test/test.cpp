@@ -42,6 +42,7 @@
 #include "testipc.h"
 #include "testVIPCStrTab.h"
 #include "testserialiser.h"
+#include "testregex.h"
 
 
 /* type for test functions */
@@ -71,6 +72,7 @@ VislibTest tests[] = {
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
+    {_T("RegEx"), ::TestRegEx, "Tests VISlib regular expressions"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},

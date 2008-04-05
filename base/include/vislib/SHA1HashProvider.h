@@ -97,7 +97,6 @@ namespace vislib {
             UINT32 Length_Low;          // Message length in bits
             UINT32 Length_High;         // Message length in bits
 
-                                       
             UINT16 Message_Block_Index; // Index into message block array
             BYTE Message_Block[64];     // 512-bit message blocks
 

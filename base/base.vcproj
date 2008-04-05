@@ -382,6 +382,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\RegExCharTraits.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Serialisable.cpp"
 				>
 			</File>
@@ -565,6 +569,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\RegEx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RegEx.inl"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RegExCharTraits.h"
 				>
 			</File>
 			<File
