@@ -59,7 +59,8 @@ namespace vislib {
                 BRACKET_CLOSE_EXPECTED,
                 PAREN_CLOSE_EXPECTED,
                 INTEGER_EXPECTED,
-                UNKNOWN_ESCAPE
+                UNKNOWN_ESCAPE,
+                LEFT_HAND_EXPECTED
             };
 
             ParseException(const ErrorType errorType, const Char *vicinity,
@@ -493,6 +494,17 @@ namespace vislib {
 
         }; /* class LiteralExpression */
 
+        /**
+         * This is the context structure for the parsing method. The idea behind 
+         * it is to allow easy extensibility for new information that might 
+         * become form parsing without modifying the method signatures.
+         */
+        typedef struct ParseContext_t {
+            const Char *input;
+            int pos;
+            Expression *predecessor;
+        } ParseContext;
+
 
 //
 //        /**
@@ -595,38 +607,80 @@ namespace vislib {
     private:
 
         /** Parse abbreviation. */
-        Expression *parseAbbreviation(const Char *& inOutStr);
+        Expression *parseAbbreviation(ParseContext& inOutCtx);
 
         /** Parse a wildcard sequence. */
-        Expression *parseAny(const Char *& inOutStr);
+        Expression *parseAny(ParseContext& inOutCtx);
 
         /** Parse a escape sequence. */
-        Expression *parseEscape(const Char *& inOutStr);
+        Expression *parseEscape(ParseContext& inOutCtx);
 
         /** Parse a literal. */
-        Expression *parseLiteral(const Char *& inOutStr);
+        Expression *parseLiteral(ParseContext& inOutCtx);
 
         /** Parse a top-level regular expression. */
-        Expression *parseRegEx(const Char *& inOutStr);
+        Expression *parseRegEx(ParseContext& inOutCtx);
 
-        /** Parse repeat between 'minRep' and 'maxRep'. */
-        Expression *parseRepeat(const Char *& inOutStr, const int minRep,
+        /**
+         * Parse repeat between 'minRep' and 'maxRep'.
+         *
+         * The current parse state must be one of
+         * - On a Kleene closure (star) operator
+         * - On a non-empty Kleene closure (plus) operator
+         * - On a Option operator (question mark)
+         * - On the end of a repeat expression (closing brace)
+         *
+         * The caller must ensure that these preconditions are met. They are not
+         * checked within this method! However, they are asserted in the debug
+         * build.
+         *
+         * If the predecessor in 'inOutCtx' is NULL, this is a syntax error,
+         * but a legal precondition for the method.
+         *
+         * @param inOutCtx
+         * @param minRep
+         * @param maxRep
+         * 
+         * @return
+         *
+         * @throws
+         */
+        Expression *parseRepeat(ParseContext& inOutCtx, const int minRep,
             const int maxRep);
 
-        /** Parse a repeat expression in braces. */
-        Expression *parseRepeatEx(const Char *& inOutStr);
+        /** 
+         * Parse a repeat expression in braces, and create a repeat node for
+         * the expression.
+         *
+         * The current parse state must be
+         * - On an opening brace
+         *
+         * The caller must ensure that this precondition is met. It is not
+         * checked within this method! However, it is asserted in the debug
+         * build.
+         *
+         * If the predecessor in 'inOutCtx' is NULL, this is a syntax error,
+         * but a legal precondition for the method.
+         *
+         * @param inOutCtx
+         *
+         * @return
+         *
+         * @throws ParseException If there is a syntax error in the repeat
+         *                        expression.
+         * @throws ParseException Additionally, in the same situations as 
+         *                        RegEx<T>::parseRepeat().
+         */
+        Expression *parseRepeatEx(ParseContext& inOutCtx);
 
         /** Parse a plus (non-empty closure). */
-        Expression *parsePlus(const Char *& inOutStr);
+        Expression *parsePlus(ParseContext& inOutCtx);
 
         /** Parse a option (one or no occurrence). */
-        Expression *parseQuestion(const Char *& inOutStr);
+        Expression *parseQuestion(ParseContext& inOutCtx);
 
         /** Parse a character set. */
-        Expression *parseSet(const Char *& inOutStr);
-
-        /** Parse a star (Kleene closure). */
-        Expression *parseStar(const Char *& inOutStr);
+        Expression *parseSet(ParseContext& inOutCtx);
 
         /** The root node of the automaton. */
         Expression *start;

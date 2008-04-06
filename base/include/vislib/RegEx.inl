@@ -17,6 +17,43 @@
 
 #define VISLIB_REGEX_TRACE_LEVEL (vislib::Trace::LEVEL_VL_INFO + 1000)
 
+/**
+ * Answer the active character from ParseContext 'ctx'.
+ */
+#define VRECTX_CUR_CHAR(ctx) ((ctx).input[(ctx).pos])
+
+/**
+ * Answer remaining string from ParseContext 'ctx'.
+ */
+#define VRECTX_CUR_STR(ctx) ((ctx).input + (ctx).pos)
+
+/**
+ * Advance active character by one in ParseContext 'ctx'.
+ */
+#define VRECTX_NEXT_POS(ctx) (++((ctx).pos))
+
+/**
+ * Move active character one back in ParseContext 'ctx'.
+ */
+#define VRECTX_PREV_POS(ctx) (--((ctx).pos)); ASSERT((ctx).pos >= 0)
+
+/**
+ * Initialise ParseContext 'ctx' with input string 'str' and predecessor node
+ * 'pre'. The position is initialised to zero (first character).
+ */
+#define VRECTX_INIT(ctx, str, pre)                                             \
+    (ctx).input = (str); ASSERT((ctx).input != NULL);                          \
+    (ctx).pos = 0;                                                             \
+    (ctx).predecessor = (pre)
+
+/**
+ * Throw a ParseException with the specified error code and using the state from
+ * the specified context 'ctx'.
+ */
+#define VRE_RAISE_ERROR(ctx, err)                                              \
+    throw ParseException((err), VRECTX_CUR_STR(ctx), __FILE__, __LINE__)
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Nested class ParseException
@@ -57,6 +94,11 @@ vislib::RegEx<T>::ParseException::ParseException(const ErrorType errorType,
 
         case UNKNOWN_ESCAPE:
             msg.Format("Unknown escape sequence found at \"%s\".", 
+                n.PeekBuffer());
+            break;
+
+        case LEFT_HAND_EXPECTED:
+            msg.Format("A valid regular expression was expected before \"%s\".",
                 n.PeekBuffer());
             break;
 
@@ -290,8 +332,8 @@ template<class T>
 vislib::RegEx<T>::RepeatExpression::RepeatExpression(Expression *expr, 
             const int minOccur, const int maxOccur)
         : RecursiveExpression(expr), maxOccur(maxOccur), minOccur(minOccur) {
-    ASSERT(this->CountChilren() == 1);
-    ASSERT(this->chilren[0] != NULL);
+    ASSERT(this->CountChildren() == 1);
+    ASSERT(this->children[0] != NULL);
 
     this->children.Trim();  // A RepeatExpression has exactly one child.
 
@@ -481,11 +523,14 @@ template<class T> void vislib::RegEx<T>::Parse(const Char *expr) {
     }
 
     /* Process the input. */
-    while (*s != 0) {
-        this->start = this->parseRegEx(s);
-    }
+    ParseContext ctx;
+    VRECTX_INIT(ctx, expr, NULL);
+    //while (*s != 0) {
+        this->start = this->parseRegEx(ctx);
+    //}
 
     if (this->start != NULL) {
+        ::fprintf(stdout, "\nRegular Expression:\n");
         this->start->Dump(stdout);
     }
 }
@@ -496,29 +541,30 @@ template<class T> void vislib::RegEx<T>::Parse(const Char *expr) {
  */
 template<class T>
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseAbbreviation(
-        const Char *& inOutStr) {
-    ASSERT(inOutStr != NULL);
-    ASSERT(*inOutStr == T::TOKEN_BACKSLASH);
+        ParseContext& inOutCtx) {
+    ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
+    ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BACKSLASH);
     TRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseAbbreviation\n");
 
     /* Consume backslash, we are optimistic. */
-    inOutStr++;
+    VRECTX_NEXT_POS(inOutCtx);
 
     for (int i = 0; T::ABBREVIATIONS[i] != NULL; i++) {
-        if (T::ABBREVIATIONS[i][0] == *inOutStr) {
-            const Char *abbr = T::ABBREVIATIONS[i] + 1;
+        if (T::ABBREVIATIONS[i][0] == VRECTX_CUR_CHAR(inOutCtx)) {
+            ParseContext ctx;
+            VRECTX_INIT(ctx, T::ABBREVIATIONS[i] + 1, inOutCtx.predecessor);
             TRACE(VISLIB_REGEX_TRACE_LEVEL, "Replace abbreviation '\\%s' "
-                "with expression \"%s\".\n", StringA(inOutStr, 1).PeekBuffer(),
-                StringA(abbr).PeekBuffer());
-            inOutStr++;
-            return this->parseRegEx(abbr);
+                "with expression \"%s\".\n", 
+                StringA(VRECTX_CUR_STR(inOutCtx), 1).PeekBuffer(),
+                StringA(VRECTX_CUR_STR(ctx)).PeekBuffer());
+            VRECTX_NEXT_POS(inOutCtx);     // Consume escaped character.
+            return this->parseRegEx(ctx);
         }
     }
     /* Nothing found here, that is an error. */
 
-    inOutStr--;
-    throw ParseException(ParseException::UNKNOWN_ESCAPE, inOutStr,
-        __FILE__, __LINE__);
+    VRECTX_PREV_POS(inOutCtx);
+    VRE_RAISE_ERROR(inOutCtx, ParseException::UNKNOWN_ESCAPE);
 }
 
 
@@ -527,7 +573,7 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseAbbreviation(
  */
 template<class T> 
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseAny(
-        const Char *& inOutStr) {
+        ParseContext& inOutCtx) {
     throw MissingImplementationException("RegEx<T>::parseAny", 
         __FILE__, __LINE__);
 }
@@ -538,38 +584,40 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseAny(
  */
 template<class T>
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseEscape(
-        const Char *& inOutStr) {
-    ASSERT(inOutStr != NULL);
-    ASSERT(*inOutStr == T::TOKEN_BACKSLASH);
+        ParseContext& inOutCtx) {
+    ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
+    ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BACKSLASH);
     TRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseEscape\n");
 
     /* Check for abbreviation first. */
     try {
-        return this->parseAbbreviation(inOutStr);
+        return this->parseAbbreviation(inOutCtx);
     } catch (ParseException) {
         TRACE(VISLIB_REGEX_TRACE_LEVEL, "Parsing escape sequence '%s' as "
-            "abbreviation failed.\n", StringA(inOutStr, 2).PeekBuffer());
+            "abbreviation failed.\n", 
+            StringA(VRECTX_CUR_STR(inOutCtx), 2).PeekBuffer());
     }
 
     /* Consume backslash as erroneous abbreviation parse should have reset. */
-    ASSERT(*inOutStr == T::TOKEN_BACKSLASH);
-    inOutStr++;
+    ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BACKSLASH);
+    VRECTX_NEXT_POS(inOutCtx);
 
     Size cntEscaped = T::SafeStringLength(T::ESCAPED_CHARS);
     for (Size i = 0; i < cntEscaped; i++) {
-        if (T::ESCAPED_CHARS[i] == *inOutStr) {
+        if (T::ESCAPED_CHARS[i] == VRECTX_CUR_CHAR(inOutCtx)) {
             TRACE(VISLIB_REGEX_TRACE_LEVEL, "Insert literal for escape "
-                "sequence '\\%s'.\n", StringA(inOutStr, 1).PeekBuffer());
-            LiteralExpression *retval = new LiteralExpression(*inOutStr);
-            inOutStr++;
+                "sequence '\\%s'.\n", 
+                StringA(VRECTX_CUR_STR(inOutCtx), 1).PeekBuffer());
+            LiteralExpression *retval = new LiteralExpression(
+                VRECTX_CUR_CHAR(inOutCtx));
+            VRECTX_NEXT_POS(inOutCtx);
             return retval;
         }
     }
     /* Nothing found here, that is an error. */
 
-    inOutStr--;
-    throw ParseException(ParseException::UNKNOWN_ESCAPE, inOutStr,
-        __FILE__, __LINE__);
+    VRECTX_PREV_POS(inOutCtx);
+    VRE_RAISE_ERROR(inOutCtx, ParseException::UNKNOWN_ESCAPE);
 }
 
 
@@ -578,11 +626,12 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseEscape(
  */
 template<class T> 
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseLiteral(
-        const Char *& inOutStr) {
-    ASSERT(inOutStr != NULL);
+        ParseContext& inOutCtx) {
+    ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
 
-    throw MissingImplementationException("RegEx<T>::parseLiteral", 
-        __FILE__, __LINE__);
+    Expression *retval = new LiteralExpression(VRECTX_CUR_CHAR(inOutCtx));
+    VRECTX_NEXT_POS(inOutCtx);
+    return retval;
 }
 
 
@@ -591,53 +640,80 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseLiteral(
  */
 template<class T> 
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRegEx(
-        const Char *& inOutStr) {
-    ASSERT(inOutStr != 0);
-    
-    switch (*inOutStr) {
+        ParseContext& inOutCtx) {
+    ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
 
-        case T::TOKEN_CARET:        // Match begin of line.
-            // push begin
-            throw MissingImplementationException("RegEx<T>::parseRegEx",
-                __FILE__, __LINE__);
-            break;
+    Expression *retval = NULL;          // The final expression.
+    bool isSeqExpr = true;              // Is current 'retval' sequenced?
+    // TODO: Move this into the expressions ...
 
-        case T::TOKEN_DOLLAR:       // Match end of line.
-            // push end
-            throw MissingImplementationException("RegEx<T>::parseRegEx",
-                __FILE__, __LINE__);
-            break;
+    while (VRECTX_CUR_CHAR(inOutCtx) != 0) {
+        isSeqExpr = true;               // Assume sequence as default.
 
-        case T::TOKEN_BRACE_OPEN:   // Begin of repeat expression.
-            return this->parseRepeatEx(inOutStr);
+        switch (VRECTX_CUR_CHAR(inOutCtx)) {
 
-        case T::TOKEN_STAR:         // Kleene closure.
-            return this->parseRepeat(inOutStr, 0, RepeatExpression::UNBOUNDED);  // TODO
+            case T::TOKEN_CARET:        // Match begin of line.
+                // push begin
+                throw MissingImplementationException("RegEx<T>::parseRegEx",
+                    __FILE__, __LINE__);
+                break;
 
-        case T::TOKEN_PLUS:         // Non-empty closure.
-            return this->parseRepeat(inOutStr, 1, RepeatExpression::UNBOUNDED); // TODO
+            case T::TOKEN_DOLLAR:       // Match end of line.
+                // push end
+                throw MissingImplementationException("RegEx<T>::parseRegEx",
+                    __FILE__, __LINE__);
+                break;
 
-        case T::TOKEN_QUESTION:     // Optional sequence.
-            return this->parseRepeat(inOutStr, 0, 1);
+            case T::TOKEN_BRACE_OPEN:   // Begin of repeat expression.
+                retval = this->parseRepeatEx(inOutCtx);
+                isSeqExpr = false;
+                break;
 
-        case T::TOKEN_BACKSLASH:    // Escaped text.
-            return this->parseEscape(inOutStr);
+            case T::TOKEN_STAR:         // Kleene closure.
+                retval = this->parseRepeat(inOutCtx, 0, RepeatExpression::UNBOUNDED);  // TODO
+                isSeqExpr = false;
+                break;
 
-        case T::TOKEN_DOT:          // Wildcard character.
-            return this->parseAny(inOutStr);
+            case T::TOKEN_PLUS:         // Non-empty closure.
+                retval = this->parseRepeat(inOutCtx, 1, RepeatExpression::UNBOUNDED); // TODO
+                isSeqExpr = false;
+                break;
 
-        case T::TOKEN_BRACKET_OPEN: // Begin of character set.
-            return this->parseSet(inOutStr);
+            case T::TOKEN_QUESTION:     // Optional sequence.
+                retval = this->parseRepeat(inOutCtx, 0, 1);
+                isSeqExpr = false;
+                break;
 
-        case T::TOKEN_PAREN_OPEN:   // Begin of grouping.
-            // Push match group
-            throw MissingImplementationException("RegEx<T>::parseRegEx",
-                __FILE__, __LINE__);
-            break;
+            case T::TOKEN_BACKSLASH:    // Escaped text.
+                retval = this->parseEscape(inOutCtx);
+                break;
 
-        default:                    // Must be normal literal.
-            return this->parseLiteral(inOutStr);
+            case T::TOKEN_DOT:          // Wildcard character.
+                retval = this->parseAny(inOutCtx);
+                break;
+
+            case T::TOKEN_BRACKET_OPEN: // Begin of character set.
+                retval = this->parseSet(inOutCtx);
+                break;
+
+            case T::TOKEN_PAREN_OPEN:   // Begin of grouping.
+                // Push match group
+                throw MissingImplementationException("RegEx<T>::parseRegEx",
+                    __FILE__, __LINE__);
+                break;
+
+
+            default:                    // Must be normal literal.
+                retval = this->parseLiteral(inOutCtx);
+                break;
+        }
+
+        // TODO: Das ist kriminell.
+        inOutCtx.predecessor = retval;
+        // TODO: Sequenz von Knoten.
+        // TODO: Sequenz erzeugt Speicherleck im Moment!
     }
+    return retval;
 }
 
 
@@ -646,11 +722,23 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRegEx(
  */
 template<class T> 
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRepeat(
-        const Char *& inOutStr, const int minRep, const int maxRep) {
-    ASSERT(inOutStr != NULL);
-    throw MissingImplementationException("RegEx<T>::parseRepeat",
-        __FILE__, __LINE__);
-    return false;
+        ParseContext& inOutCtx, const int minRep, const int maxRep) {
+    ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
+    ASSERT((VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_STAR)
+        || (VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_PLUS)
+        || (VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_QUESTION)
+        || (VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BRACE_CLOSE));
+
+    /*
+     * There must be a valid RE before Kleene closure or other repeat
+     * expressions.
+     */
+    if (inOutCtx.predecessor == NULL) {
+        VRE_RAISE_ERROR(inOutCtx, ParseException::LEFT_HAND_EXPECTED);
+    }
+
+    VRECTX_NEXT_POS(inOutCtx);
+    return new RepeatExpression(inOutCtx.predecessor, minRep, maxRep);
 }
 
 
@@ -659,68 +747,67 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRepeat(
  */
 template<class T>
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRepeatEx(
-        const Char *& inOutStr) {
-    ASSERT(inOutStr != NULL);
-    ASSERT(*inOutStr == T::TOKEN_BRACE_OPEN);
+        ParseContext& inOutCtx) {
+    ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
+    ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BRACE_OPEN);
     TRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseRepeatEx\n");
 
     const Char *begin = NULL;           // Begin of a number to parse. 
     int minRep = 0;                     // Minimum repeat value.
     int maxRep = 0;                     // Maximum repeat value.
 
-    inOutStr++;                         // Consume opening brace.
+    VRECTX_NEXT_POS(inOutCtx);             // Consume opening brace.
 
     /* Recognise and convert first number. */
-    begin = inOutStr;
-    while (T::IsDigit(*inOutStr)) {
-        inOutStr++;
+    begin = VRECTX_CUR_STR(inOutCtx);
+    while (T::IsDigit(VRECTX_CUR_CHAR(inOutCtx))) {
+        VRECTX_NEXT_POS(inOutCtx);
     }
     try {
-        minRep = T::ParseInt(String<T>(begin, inOutStr - begin));
-        ASSERT(inOutStr != begin);
+        minRep = T::ParseInt(String<T>(begin, 
+            VRECTX_CUR_STR(inOutCtx) - begin));
+        ASSERT(VRECTX_CUR_STR(inOutCtx) != begin);
     } catch (...) {
         throw ParseException(ParseException::INTEGER_EXPECTED, begin, __FILE__,
             __LINE__);
     }
 
     /* Check for end of expression or begin of maximum repeat. */
-    switch (*inOutStr) {
+    switch (VRECTX_CUR_CHAR(inOutCtx)) {
 
         case T::TOKEN_COMMA:
-            inOutStr++;                 // Consume comma and proceed.
+            VRECTX_NEXT_POS(inOutCtx);     // Consume comma and proceed.
             break;
 
         case T::TOKEN_BRACE_CLOSE:
-            inOutStr++;                 // Consume brace and return.
-            maxRep = minRep;
-            return this->parseRepeat(inOutStr, minRep, maxRep);
+            maxRep = minRep;            // Maximum is minimum in this case.
+            // Do not consume the closing brace, this is done by parseRepeat!
+            return this->parseRepeat(inOutCtx, minRep, maxRep);
 
         default:
-            throw ParseException(ParseException::BRACE_CLOSE_EXPECTED, inOutStr,
-                __FILE__, __LINE__);
+            VRE_RAISE_ERROR(inOutCtx, ParseException::BRACE_CLOSE_EXPECTED);
     }
 
     /* Recognise and convert first number. */
-    begin = inOutStr;
-    while (T::IsDigit(*inOutStr)) {
-        inOutStr++;
+    begin = VRECTX_CUR_STR(inOutCtx);
+    while (T::IsDigit(VRECTX_CUR_CHAR(inOutCtx))) {
+        VRECTX_NEXT_POS(inOutCtx);
     }
     try {
-        maxRep = T::ParseInt(String<T>(begin, inOutStr - begin));
-        ASSERT(inOutStr != begin);
+        maxRep = T::ParseInt(String<T>(begin, 
+            VRECTX_CUR_STR(inOutCtx) - begin));
+        ASSERT(VRECTX_CUR_STR(inOutCtx) != begin);
     } catch (...) {
         throw ParseException(ParseException::INTEGER_EXPECTED, begin, __FILE__,
             __LINE__);
     }
     
     /* Check for closing brace. */
-    if (*inOutStr == T::TOKEN_BRACE_CLOSE) {
-        inOutStr++;
-        return this->parseRepeat(inOutStr, minRep, maxRep);
-
+    if (VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BRACE_CLOSE) {
+        // Do not consume the closing brace, this is done by parseRepeat!
+        return this->parseRepeat(inOutCtx, minRep, maxRep);
     } else {
-        throw ParseException(ParseException::BRACE_CLOSE_EXPECTED, inOutStr,
-            __FILE__, __LINE__);
+        VRE_RAISE_ERROR(inOutCtx, ParseException::BRACE_CLOSE_EXPECTED);
     }
 }
 
@@ -730,19 +817,20 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRepeatEx(
  */
 template<class T> 
 typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseSet(
-        const Char *& inOutStr) {
-    ASSERT(inOutStr != NULL);
-    ASSERT(*inOutStr == T::TOKEN_BRACKET_OPEN);
+        ParseContext& inOutCtx) {
+    ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
+    ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BRACKET_OPEN);
 
     /* Consume opening bracket. */
-    inOutStr++;
+    VRECTX_NEXT_POS(inOutCtx);
 
     throw MissingImplementationException("RegEx<T>::parseSet",
         __FILE__, __LINE__);
 
-    while ((*inOutStr != 0) && (*inOutStr != T::TOKEN_BRACKET_CLOSE)) {
+    while ((VRECTX_CUR_CHAR(inOutCtx) != 0) 
+            && (VRECTX_CUR_CHAR(inOutCtx) != T::TOKEN_BRACKET_CLOSE)) {
 
-        switch (*inOutStr) {
+        switch (VRECTX_CUR_CHAR(inOutCtx)) {
 
             case T::TOKEN_MINUS: 
                 // TODO
@@ -757,26 +845,21 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseSet(
                 // TODO
                 break;
         }
-        
-        inOutStr++;
+
+        VRECTX_NEXT_POS(inOutCtx);
         // TODO: Implementation missing.
     }
 
-    if (inOutStr == NULL) {
-        throw ParseException(ParseException::BRACKET_CLOSE_EXPECTED, 
-            inOutStr - 1, __FILE__, __LINE__);
+    if (VRECTX_CUR_CHAR(inOutCtx) == 0) {
+        VRECTX_PREV_POS(inOutCtx);
+        VRE_RAISE_ERROR(inOutCtx, ParseException::BRACKET_CLOSE_EXPECTED);
     }
 }
 
-
-/*
- * vislib::RegEx<T>::parseStar
- */
-template<class T> 
-typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseStar(
-        const Char *& inOutStr) {
-    ASSERT(*inOutStr == T::TOKEN_STAR);
-    // TODO: Implementation missing.
-    throw MissingImplementationException("RegEx<T>::parseStar",
-        __FILE__, __LINE__);
-}
+#undef VISLIB_REGEX_TRACE_LEVEL
+#undef VRECTX_CUR_CHAR
+#undef VRECTX_CUR_STR
+#undef VRECTX_NEXT_POS
+#undef VRECTX_PREV_POS
+#undef VRECTX_INIT
+#undef VRE_RAISE_ERROR

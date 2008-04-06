@@ -43,4 +43,16 @@ void TestRegEx(void) {
     //AssertNoException("Abbreviation '\\d'", reA.Parse("\\d"));
     //AssertNoException("Abbreviation '\\D'", reA.Parse("\\D"));
 
+    AssertException("Illegal Kleene star as first character", reA.Parse("*"), RegExA::ParseException);
+    AssertNoException("Legal Kleene star as second character", reA.Parse("a*"));
+
+    AssertException("Illegal Kleene plus as first character", reA.Parse("+"), RegExA::ParseException);
+    AssertNoException("Legal Kleene plus as second character", reA.Parse("a+"));
+
+    AssertException("Illegal repeat expression as start", reA.Parse("{3}"), RegExA::ParseException);
+    AssertException("Illegal repeat expression as start", reA.Parse("{3,5}"), RegExA::ParseException);
+    AssertNoException("Legal repeat expression after character", reA.Parse("a{3}"));
+    AssertNoException("Legal repeat expression after character", reA.Parse("a{3,5}"));
+
+
 }
