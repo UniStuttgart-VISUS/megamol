@@ -321,7 +321,8 @@ namespace sys {
          *                     because the file was not open or the offset was
          *                     invalid.
          */
-        virtual FileSize Seek(const FileOffset offset, const SeekStartPoint from);
+        virtual FileSize Seek(const FileOffset offset, 
+            const SeekStartPoint from = BEGIN);
 
         /**
          * Move the file pointer to the begin of the file.

@@ -110,7 +110,7 @@ namespace sys {
          * Performs an implicite flush if the buffer is in write mode.
          */
         virtual File::FileSize Seek(const File::FileOffset offset,
-            const File::SeekStartPoint from);
+            const File::SeekStartPoint from = File::BEGIN);
 
         /**
          * Sets the size of the current buffer.
