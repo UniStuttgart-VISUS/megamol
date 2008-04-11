@@ -72,6 +72,16 @@ namespace math {
         }
 
         /**
+         * Answer the square of the distance from this point to 'toPoint'.
+         *
+         * @param toPoint The point to calculate the distance to.
+         *
+         * @return The distance between the two points.
+         */
+        template<class Tp, class Sp>
+        T SquareDistance(const C<Tp, D, Sp>& toPoint) const;
+
+        /**
          * Assignment operator.
          *
          * This operation does <b>not</b> create aliases.
@@ -266,14 +276,26 @@ namespace math {
     template<class Tp, class Sp>
     T AbstractPointImpl<T, D, S, C>::Distance(
             const C<Tp, D, Sp>& toPoint) const {
-        double retval = 0.0;
+        return static_cast<T>(::sqrt(static_cast<double>(
+            this->SquareDistance(toPoint))));
+    }
+
+
+    /*
+     * vislib::math::AbstractPointImpl<T, D, S>::SquareDistance
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C> 
+    template<class Tp, class Sp>
+    T AbstractPointImpl<T, D, S, C>::SquareDistance(
+            const C<Tp, D, Sp>& toPoint) const {
+        T retval = static_cast<T>(0);
 
         for (unsigned int i = 0; i < D; i++) {
-            retval += static_cast<double>(Sqr(toPoint.coordinates[i] 
-                - this->coordinates[i]));
+            retval += Sqr(toPoint.coordinates[i] - this->coordinates[i]);
         }
 
-        return static_cast<T>(::sqrt(retval));
+        return retval;
     }
 
 

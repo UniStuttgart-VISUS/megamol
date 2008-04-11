@@ -303,6 +303,20 @@ namespace math {
         }
 
         /**
+         * Sets the components of the quaternion by performing a slerp 
+         * interpolation between 'a' and 'b' using 'alpha' as interpolation
+         * parameter [0, 1]. If 'alpha' is zero 'a' is used; if 'alpha is one
+         * 'b' is used.
+         *
+         * @param alpha The interpolation parameter [0, 1]
+         * @param a The first interpolation value, used if 'alpha' is zero.
+         * @param b The second interpolation value, used if 'alpha' is one.
+         */
+        template<class Sp1, class Sp2>
+        void Slerp(float alpha, const AbstractQuaternion<T, Sp1>& a, 
+            const AbstractQuaternion<T, Sp2>& b);
+
+        /**
          * Answer the w-component of the quaternion.
          *
          * @return The w-component.
@@ -568,15 +582,59 @@ namespace math {
 
         if (!IsEqual(len, static_cast<T>(0))){
             len = static_cast<T>(::sin(halfAngle) / len);
-            this->components[0] = axis.X() * len;
-            this->components[1] = axis.Y() * len;
-            this->components[2] = axis.Z() * len;
-            this->components[3] = static_cast<T>(::cos(halfAngle));
+            this->components[IDX_X] = axis.X() * len;
+            this->components[IDX_Y] = axis.Y() * len;
+            this->components[IDX_Z] = axis.Z() * len;
+            this->components[IDX_W] = static_cast<T>(::cos(halfAngle));
 
         } else {
-            this->components[0] = this->components[1] 
-                = this->components[2] = static_cast<T>(0);
-            this->components[3] = static_cast<T>(1);
+            this->components[IDX_X] = this->components[IDX_Y] 
+                = this->components[IDX_Z] = static_cast<T>(0);
+            this->components[IDX_W] = static_cast<T>(1);
+        }
+    }
+
+
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::Slerp
+     */
+    template<class T, class S>
+    template<class Sp1, class Sp2>
+    void AbstractQuaternion<T, S>::Slerp(float alpha, 
+            const AbstractQuaternion<T, Sp1>& a, 
+            const AbstractQuaternion<T, Sp2>& b) {
+
+        if (alpha < FLOAT_EPSILON) {
+            *this = a;
+        } else if (alpha > (1.0f - FLOAT_EPSILON)) {
+            *this = b;
+        } else {
+            bool flipT;
+            float slerpFrom, slerpTo, omega, sinOmega;
+            float cosOmega = a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() 
+                + a.W() * b.W();
+
+            if ((flipT = (cosOmega < 0.0f))) {
+                cosOmega = -cosOmega;
+            }
+
+            if ((1.0f - cosOmega) > 0.0001f) {
+                omega = acosf(cosOmega);
+                sinOmega = sinf(omega);
+                slerpFrom = sinf((1.0f - alpha) * omega) / sinOmega;
+                slerpTo = sinf(alpha * omega) / sinOmega;
+                if (flipT) {
+                    slerpTo = -slerpTo;
+                }
+            } else {
+                slerpFrom = 1.0f - alpha;
+                slerpTo = alpha;
+            }
+
+            for (unsigned int i = 0; i < 4; i++) {
+                this->components[i] = slerpFrom * a.components[i]
+                    + slerpTo * b.components[i];
+            }
         }
     }
 
