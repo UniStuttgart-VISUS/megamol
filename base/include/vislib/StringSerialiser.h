@@ -71,12 +71,12 @@ namespace vislib {
 
         virtual void Deserialise(bool& outValue, 
                 const char *name = NULL) {
-            outValue = typename T::ParseBool(this->value(name));
+            outValue = T::ParseBool(this->value(name));
         }
 
         virtual void Deserialise(bool& outValue, 
                 const wchar_t *name) {
-            outValue = typename T::ParseBool(this->value(name));
+            outValue = T::ParseBool(this->value(name));
         }
 
         virtual void Deserialise(wchar_t& outValue, 
@@ -95,116 +95,102 @@ namespace vislib {
 
         virtual void Deserialise(INT8& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<INT8>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<INT8>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(INT8& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<INT8>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<INT8>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(UINT8& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<UINT8>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<UINT8>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(UINT8& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<UINT8>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<UINT8>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(INT16& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<INT16>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<INT16>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(INT16& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<INT16>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<INT16>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(UINT16& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<UINT16>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<UINT16>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(UINT16& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<UINT16>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<UINT16>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(INT32& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<INT32>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<INT32>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(INT32& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<INT32>(
-                typename T::ParseInt(this->value(name)));
+            outValue = static_cast<INT32>(T::ParseInt(this->value(name)));
         }
 
         virtual void Deserialise(UINT32& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<UINT32>(
-                typename T::ParseUInt64(this->value(name)));
+            outValue = static_cast<UINT32>(T::ParseUInt64(this->value(name)));
         }
 
         virtual void Deserialise(UINT32& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<UINT32>(
-                typename T::ParseUInt64(this->value(name)));
+            outValue = static_cast<UINT32>(T::ParseUInt64(this->value(name)));
         }
 
         virtual void Deserialise(INT64& outValue, 
                 const char *name = NULL) {
-            outValue = typename T::ParseInt64(this->value(name));
+            outValue = T::ParseInt64(this->value(name));
         }
 
         virtual void Deserialise(INT64& outValue, 
                 const wchar_t *name) {
-            outValue = typename T::ParseInt64(this->value(name));
+            outValue = T::ParseInt64(this->value(name));
         }
 
         virtual void Deserialise(UINT64& outValue, 
                 const char *name = NULL) {
-            outValue = typename T::ParseUInt64(this->value(name));
+            outValue = T::ParseUInt64(this->value(name));
         }
 
         virtual void Deserialise(UINT64& outValue, 
                 const wchar_t *name) {
-            outValue = typename T::ParseUInt64(this->value(name));
+            outValue = T::ParseUInt64(this->value(name));
         }
 
         virtual void Deserialise(float& outValue, 
                 const char *name = NULL) {
-            outValue = static_cast<float>(
-                typename T::ParseDouble(this->value(name)));
+            outValue = static_cast<float>(T::ParseDouble(this->value(name)));
         }
 
         virtual void Deserialise(float& outValue, 
                 const wchar_t *name) {
-            outValue = static_cast<float>(
-                typename T::ParseDouble(this->value(name)));
+            outValue = static_cast<float>(T::ParseDouble(this->value(name)));
         }
 
         virtual void Deserialise(double& outValue, 
                 const char *name = NULL) {
-            outValue = typename T::ParseDouble(this->value(name));
+            outValue = T::ParseDouble(this->value(name));
         }
 
         virtual void Deserialise(double& outValue, 
                 const wchar_t *name) {
-            outValue = typename T::ParseDouble(this->value(name));
+            outValue = T::ParseDouble(this->value(name));
         }
 
         virtual void Deserialise(StringA& outValue, 
