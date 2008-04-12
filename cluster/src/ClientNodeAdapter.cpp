@@ -7,6 +7,7 @@
 
 #include "vislib/ClientNodeAdapter.h"
 
+#include "vislib/assert.h"
 #include "vislib/CmdLineParser.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
@@ -105,11 +106,16 @@ DWORD vislib::net::cluster::ClientNodeAdapter::Run(void) {
     /* Start the message receiver. */
     this->receiver = new sys::Thread(ReceiveMessages);
 
-    ReceiveMessagesCtx rmc;
-    rmc.Receiver = this;
-    rmc.Socket = this->socket;
+    ReceiveMessagesCtx *rmc = new ReceiveMessagesCtx;
+    rmc->Receiver = this;
+    rmc->Socket = &this->socket;
 
-    this->receiver->Start(static_cast<void *>(&rmc));
+    try {
+        VERIFY(this->receiver->Start(static_cast<void *>(rmc)));
+    } catch (Exception e) {
+        SAFE_DELETE(rmc);
+        throw e;
+    }
 
     return 0;
 }

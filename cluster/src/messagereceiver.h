@@ -14,6 +14,7 @@
 
 #include "vislib/Socket.h"      // Must be first.
 #include "vislib/AbstractClusterNode.h"
+#include "vislib/Event.h"
 
 
 namespace vislib {
@@ -28,7 +29,7 @@ namespace cluster {
      */
     typedef struct ReceiveMessagesCtx_t {
         AbstractClusterNode *Receiver;
-        Socket Socket;
+        Socket *Socket;
     } ReceiveMessagesCtx;
 
 
@@ -37,7 +38,12 @@ namespace cluster {
      * and calls the onMessageReceived callback method on the owner every time
      * a message was received and recognised on the specified socket.
      *
+     * WARNING: 'receiveMessagesCtx' must be allocated on the heap using new!
+     * The function takes ownership and will delete it before returning.
+     *
      * @param receiveMessagesCtx A pointer to a ReceiveMessagesCtx structure.
+     *                           THE FUNCTION TAKES OWNERSHIP OVER THE OBJECT 
+     *                           AND RELEASES IT USING delete!
      *
      * @return The socket error code that caused the function to end or -1 in 
      *         case of an unexpected error.

@@ -7,6 +7,7 @@
 
 #include "vislib/ServerNodeAdapter.h"
 
+#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/SocketException.h"
@@ -75,11 +76,16 @@ bool vislib::net::cluster::ServerNodeAdapter::OnNewConnection(Socket& socket,
         peerNode->Socket = socket;
         peerNode->Receiver = new sys::Thread(ReceiveMessages);
 
-        ReceiveMessagesCtx rmc;
-        rmc.Receiver = this;
-        rmc.Socket = peerNode->Socket;
+        ReceiveMessagesCtx *rmc = new ReceiveMessagesCtx;
+        rmc->Receiver = this;
+        rmc->Socket = &peerNode->Socket;
 
-        peerNode->Receiver->Start(static_cast<void *>(&rmc));
+        try {
+            VERIFY(peerNode->Receiver->Start(static_cast<void *>(rmc)));
+        } catch (Exception e) {
+            SAFE_DELETE(rmc);
+            throw e;
+        }
 
         this->peersLock.Lock();
         this->peers.Add(peerNode);

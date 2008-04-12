@@ -171,6 +171,11 @@ namespace cluster {
 
     private:
 
+        /**
+         * This structure represents a client peer node with its socket for
+         * communication and the receiver thread that waits for incoming 
+         * messages on this socket.
+         */
         typedef struct PeerNode_t {
             SocketAddress Address;
             Socket Socket;
