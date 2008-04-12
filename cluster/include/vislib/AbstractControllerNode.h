@@ -32,14 +32,17 @@ namespace cluster {
      * By inheriting from this class, it is possible to make a cluster node the 
      * controlling node that propagates the camera settings to all other nodes
      * in the cluster application.
+     *
+     * This class uses virtual inheritance from AbstractClusterNode to implement
+     * the "delegate to sister" pattern.
      */
-    class AbstractControllerNode : public AbstractClusterNode,
+    class AbstractControllerNode : public virtual AbstractClusterNode,
             public graphics::CameraParameterObserver {
 
     public:
 
         /** Dtor. */
-        ~AbstractControllerNode(void);
+        virtual ~AbstractControllerNode(void);
 
         /**
          * This method is called if the aperture angle changed.
@@ -178,8 +181,17 @@ namespace cluster {
          *
          * @return A pointer to the parameters.
          */
-        inline const SmartPtr<graphics::CameraParameters> getParameters(
+        inline const SmartPtr<graphics::CameraParameters>& getParameters(
                 void) const {
+            return this->parameters;
+        }
+
+        /**
+         * Answer the camera parameters.
+         *
+         * @return A pointer to the parameters.
+         */
+        inline SmartPtr<graphics::CameraParameters>& getParameters(void) {
             return this->parameters;
         }
 
@@ -231,6 +243,7 @@ namespace cluster {
             this->sendToEachPeer(msg, sizeof(msg));
         }
 
+
         /**
          * Send a camera parameter that is an array of D elements of type T.
          *
@@ -245,7 +258,7 @@ namespace cluster {
 
             InitialiseMessageHeader(*header);
             header->Header.BlockId = msgId;
-            header->Header.BlockLength = sizeof(T);
+            header->Header.BlockLength = D * sizeof(T);
             ::memcpy(body, value, D * sizeof(T));
 
             this->sendToEachPeer(msg, sizeof(msg));

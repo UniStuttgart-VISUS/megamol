@@ -346,7 +346,6 @@ namespace cluster {
     }
 
 
-
     /*
      * vislib::net::cluster::GlutClusterNode<T>::onMouseButton
      */

@@ -26,19 +26,17 @@ namespace cluster {
     /**
      * TODO: comment class
      */
-    class AbstractControlledNode : public AbstractClusterNode {
+    class AbstractControlledNode : public virtual AbstractClusterNode {
 
     public:
 
-        /** Ctor. */
-        AbstractControlledNode(void);
-
         /** Dtor. */
-        ~AbstractControlledNode(void);
+        virtual ~AbstractControlledNode(void);
 
     protected:
 
-    private:
+        /** Ctor. */
+        AbstractControlledNode(void);
 
     };
     

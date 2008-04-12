@@ -18,35 +18,6 @@ vislib::net::cluster::AbstractClusterNode::~AbstractClusterNode(void) {
 
 
 /*
- * vislib::net::cluster::AbstractClusterNode::Initialise
- */
-void vislib::net::cluster::AbstractClusterNode::Initialise(
-        sys::CmdLineProviderA& inOutCmdLine) {
-    throw MissingImplementationException("AbstractClusterNode::Initialise",
-        __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::cluster::AbstractClusterNode::Initialise
- */
-void vislib::net::cluster::AbstractClusterNode::Initialise(
-        sys::CmdLineProviderW& inOutCmdLine) {
-    throw MissingImplementationException("AbstractClusterNode::Initialise",
-        __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::cluster::AbstractClusterNode::Run
- */
-DWORD vislib::net::cluster::AbstractClusterNode::Run(void) {
-    throw MissingImplementationException("AbstractClusterNode::Run",
-        __FILE__, __LINE__);
-}
-
-
-/*
  * vislib::net::cluster::AbstractClusterNode::AbstractClusterNode
  */
 vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(void) {
@@ -58,25 +29,6 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(void) {
  */
 vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
         const AbstractClusterNode& rhs) {
-}
-
-
-/*
- * vislib::net::cluster::AbstractClusterNode::countPeers
- */
-SIZE_T vislib::net::cluster::AbstractClusterNode::countPeers(void) const {
-    throw MissingImplementationException("AbstractClusterNode::countPeers",
-        __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::cluster::AbstractClusterNode::forEachPeer
- */
-SIZE_T vislib::net::cluster::AbstractClusterNode::forEachPeer(
-        ForeachPeerFunc func, void *context) {
-    throw MissingImplementationException("AbstractClusterNode::forEachPeer",
-        __FILE__, __LINE__);
 }
 
 

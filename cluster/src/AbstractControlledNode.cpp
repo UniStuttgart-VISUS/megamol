@@ -9,16 +9,16 @@
 
 
 /*
- * vislib::net::cluster::AbstractControlledNode::AbstractControlledNode
+ * vislib::net::cluster::AbstractControlledNode::~AbstractControlledNode
  */
-vislib::net::cluster::AbstractControlledNode::AbstractControlledNode(void) {
+vislib::net::cluster::AbstractControlledNode::~AbstractControlledNode(void) {
     // TODO: Implement
 }
 
 
 /*
- * vislib::net::cluster::AbstractControlledNode::~AbstractControlledNode
+ * vislib::net::cluster::AbstractControlledNode::AbstractControlledNode
  */
-vislib::net::cluster::AbstractControlledNode::~AbstractControlledNode(void) {
+vislib::net::cluster::AbstractControlledNode::AbstractControlledNode(void) {
     // TODO: Implement
 }

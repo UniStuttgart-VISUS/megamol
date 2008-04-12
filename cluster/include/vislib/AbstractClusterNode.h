@@ -33,14 +33,12 @@ namespace cluster {
      * The class is required to provide a constistent networking interface to all
      * implementing classes, both server and client node implementations.
      *
-     * However, the multiple inheritance of the non-abstract subclasses
-     * requires implementors to resolve ambiguities in some cases.
-     * In order to alleviate this problem, this class acutally does not have any
-     * pure virtual method as one would expect from an abstract class. Instead,
-     * it provides empty implementations for all methods. This enables dynamic
-     * binding in many cases. The default implementations throw a 
-     * MissingImplementationException, so if a subclass does not implement such
-     * a required method, an exception is thrown instead of silenty failing.
+     * The direct children server and client adapter classes are used to 
+     * implement the "delegate to sister" pattern, i.e. they do the communication
+     * work for all classes that inherit from AbstractClusterNode in order to use
+     * the communication function (e.g. AbstractControllerNode uses the sending
+     * methods, which are implemented in ServerNodeAdapter ). Therefore, all 
+     * direct children of AbstractClusterNode must use virtual inheritance.
      */
     class AbstractClusterNode {
 
@@ -69,7 +67,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual void Initialise(sys::CmdLineProviderA& inOutCmdLine);
+        virtual void Initialise(sys::CmdLineProviderA& inOutCmdLine) = 0;
 
         /**
          * Initialise the node.
@@ -85,7 +83,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
+        virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine) = 0;
 
         /**
          * Run the node. Initialise must have been called before.
@@ -97,7 +95,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual DWORD Run(void);
+        virtual DWORD Run(void) = 0;
 
     protected:
 
@@ -144,7 +142,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual SIZE_T countPeers(void) const;
+        virtual SIZE_T countPeers(void) const = 0;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -162,7 +160,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context) = 0;
 
         /**
          * This method is called when data have been received and a valid 
@@ -173,7 +171,7 @@ namespace cluster {
          * @param body    Pointer to the message body.
          * @param cntBody The number of bytes designated by 'body'.
          */
-        virtual void onMessageReceived(const Socket& src, const UINT msgId, 
+        virtual void onMessageReceived(const Socket& src, const UINT msgId,
             const BYTE *body, const SIZE_T cntBody);
 
         /**

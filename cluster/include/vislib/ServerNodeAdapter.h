@@ -39,7 +39,7 @@ namespace cluster {
     public:
 
         /** Dtor. */
-        ~ServerNodeAdapter(void);
+        virtual ~ServerNodeAdapter(void);
 
         /**
          * Answer the socket address the server is binding to.
@@ -77,10 +77,22 @@ namespace cluster {
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
 
-        virtual bool OnNewConnection(Socket& socket, 
+        /**
+         * This is the callback method that the TCP server uses to add a new 
+         * node. It adds the peer node identified by 'addr' and using the socket
+         * 'socket' to the client list and starts a message receiver thread for 
+         * it.
+         *
+         * @aram socket The socket used for communication with the client.
+         * @param addr  The address of the peer node.
+         */
+        virtual bool OnNewConnection(Socket& socket,
             const SocketAddress& addr) throw();
 
-
+        /**
+         * This method is used by the TCP server to notify the object that no
+         * further connections will be accepted.
+         */
         virtual void OnServerStopped(void) throw();
 
         /**
@@ -195,7 +207,7 @@ namespace cluster {
         mutable sys::CriticalSection peersLock;
 
     };
-    
+
 } /* end namespace cluster */
 } /* end namespace net */
 } /* end namespace vislib */
@@ -204,4 +216,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_SERVERNODEADAPTER_H_INCLUDED */
-

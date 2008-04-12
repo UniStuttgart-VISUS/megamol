@@ -27,6 +27,10 @@ namespace net {
 namespace cluster {
 
 
+#ifdef _WIN32
+#pragma warning(disable: 4250)  // I know what I am doing ...
+#endif /* _WIN32 */
+
     /**
      * TODO: comment class
      */
@@ -57,6 +61,9 @@ namespace cluster {
         graphics::gl::CameraOpenGL camera;
 
     };
+#ifdef _WIN32
+#pragma warning(default: 4250)
+#endif /* _WIN32 */
 
 
     /*

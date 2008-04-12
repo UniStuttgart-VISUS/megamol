@@ -41,7 +41,7 @@ namespace graphics {
             = SmartPtr<CameraParameters>());
 
         /** Dtor. */
-        ~AbstractCameraController(void);
+        virtual ~AbstractCameraController(void);
 
         /**
          * Answer the parameters object of the associated camera object. Must

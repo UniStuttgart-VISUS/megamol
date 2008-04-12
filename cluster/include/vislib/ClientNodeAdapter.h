@@ -32,8 +32,13 @@ namespace cluster {
     public:
 
         /** Dtor. */
-        ~ClientNodeAdapter(void);
+        virtual ~ClientNodeAdapter(void);
 
+        /**
+         * Answer the address of the server to connect to.
+         *
+         * @return The address of the server to connect to.
+         */
         virtual const SocketAddress& GetServerAddress(void) const;
 
         /**
@@ -82,6 +87,12 @@ namespace cluster {
          */
         virtual DWORD Run(void);
 
+        /**
+         * Set the address of the server to connect to. This must be done 
+         * before the node connects to the server.
+         *
+         * @param serverAddress The new server added.
+         */
         virtual void SetServerAddress(const SocketAddress& serverAddress);
 
     protected:
@@ -151,4 +162,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_CLIENTNODEADAPTER_H_INCLUDED */
-

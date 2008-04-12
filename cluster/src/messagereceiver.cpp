@@ -51,6 +51,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
 
             /* Sanity check. */
             ASSERT(recvBuf.GetSize() >= sizeof(MessageHeader));
+            //ASSERT(msgHdr->MagicNumber == MAGIC_NUMBER);
             if (msgHdr->MagicNumber != MAGIC_NUMBER) {
                 TRACE(Trace::LEVEL_WARN, "Discarding data packet without valid "
                     "magic number. Expected %u, but received %u.\n",
@@ -86,7 +87,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
                     d += blkHdr->BlockLength;
                     remBody -= blkHdr->BlockLength;
                 }
-                
+
             } else {
                 /* Receive single message. */
                 const BlockHeader *blkHdr = &msgHdr->Header;

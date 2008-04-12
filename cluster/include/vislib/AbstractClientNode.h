@@ -29,16 +29,30 @@ namespace cluster {
      *
      * Classes that want to implement a client node should inherit from 
      * ClientNodeAdapter, which implements all the required functionality.
+     *
+     * AbstractClientNodes uses virtual inheritance to implement the "delegate
+     * to sister" pattern.
      */
-    class AbstractClientNode : public AbstractClusterNode {
+    class AbstractClientNode : public virtual AbstractClusterNode {
 
     public:
 
         /** Dtor. */
         ~AbstractClientNode(void);
 
+        /**
+         * Answer the address of the server to connect to.
+         *
+         * @return The address of the server to connect to.
+         */
         virtual const SocketAddress& GetServerAddress(void) const = 0;
 
+        /**
+         * Set the address of the server to connect to. This must be done 
+         * before the node connects to the server.
+         *
+         * @param serverAddress The new server added.
+         */
         virtual void SetServerAddress(const SocketAddress& serverAddress) = 0;
 
     protected:
@@ -61,10 +75,8 @@ namespace cluster {
          * @return *this.
          */
         AbstractClientNode& operator =(const AbstractClientNode& rhs);
-
-
     };
-    
+
 } /* end namespace cluster */
 } /* end namespace net */
 } /* end namespace vislib */
@@ -73,4 +85,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTCLIENTNODE_H_INCLUDED */
-

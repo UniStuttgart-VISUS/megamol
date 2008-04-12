@@ -348,6 +348,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AbstractControlledNode.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractControllerNode.h"
 				>
 			</File>

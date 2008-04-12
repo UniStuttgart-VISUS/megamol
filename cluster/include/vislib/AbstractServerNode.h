@@ -25,13 +25,16 @@ namespace cluster {
 
 
     /**
-     * This class defines the interface of a server node. 
+     * This class defines the interface of a server node.
      * 
      * Classes that want to implement a server node should inherit from 
      * ServerNodeAdapter, which implements all the required server 
      * functionality.
+     *
+     * This class uses virtual inheritance to implement the "delegate to 
+     * sister" pattern.
      */
-    class AbstractServerNode : public AbstractClusterNode, 
+    class AbstractServerNode : public virtual AbstractClusterNode,
             public TcpServer::Listener {
 
     public:
@@ -95,4 +98,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTSERVERNODE_H_INCLUDED */
-
