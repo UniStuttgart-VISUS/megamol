@@ -19,6 +19,7 @@
 #include "vislib/CameraParameterObserver.h"
 #include "vislib/clustermessages.h"
 #include "vislib/ObservableCameraParams.h"
+#include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 
 
@@ -32,7 +33,7 @@ namespace cluster {
      * controlling node that propagates the camera settings to all other nodes
      * in the cluster application.
      */
-    class AbstractControllerNode : public AbstractClusterNode, 
+    class AbstractControllerNode : public AbstractClusterNode,
             public graphics::CameraParameterObserver {
 
     public:
@@ -137,8 +138,12 @@ namespace cluster {
 
     protected:
 
-        /** Ctor. */
-        AbstractControllerNode(void);
+        /** 
+         * Ctor. 
+         *
+         * @param params The camera parameters that are to be observed.
+         */
+        AbstractControllerNode(SmartPtr<graphics::CameraParameters> params);
 
         /**
          * Copy ctor.
@@ -146,6 +151,53 @@ namespace cluster {
          * @param rhs The object to be cloned.
          */
         AbstractControllerNode(const AbstractControllerNode& rhs);
+
+        /**
+         * Answer the camera parameters that are observed.
+         *
+         * @return A pointer to the parameters that are observed.
+         */
+        inline const graphics::ObservableCameraParams *
+                getObservableParameters(void) const {
+            return this->parameters.DynamicCast<
+                graphics::ObservableCameraParams>();
+        }
+
+        /**
+         * Answer the camera parameters that are observed.
+         *
+         * @return A pointer to the parameters that are observed.
+         */
+        inline graphics::ObservableCameraParams *getObservableParameters(void) {
+            return this->parameters.DynamicCast<
+                graphics::ObservableCameraParams>();
+        }
+
+        /**
+         * Answer the camera parameters.
+         *
+         * @return A pointer to the parameters.
+         */
+        inline const SmartPtr<graphics::CameraParameters> getParameters(
+                void) const {
+            return this->parameters;
+        }
+
+        /**
+         * Send all parameters to all peer nodes.
+         * This method fails silently.
+         */
+        void sendAllParameters(void);
+
+        /**
+         * Set new camera parameters to observe. 
+         * This method unregisters as listener of a possible old set of 
+         * parameters and registers as listener of the new one.
+         *
+         * @param params The new camera parameters to be observed.
+         */
+        void setParameters(const SmartPtr<graphics::CameraParameters>& 
+            params);
 
         /**
          * Assignment.
@@ -199,6 +251,9 @@ namespace cluster {
             this->sendToEachPeer(msg, sizeof(msg));
         }
 
+        /** The camera parameters that are to be observed. */
+        SmartPtr<graphics::CameraParameters> parameters;
+
     };
     
 } /* end namespace cluster */
@@ -209,4 +264,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTCONTROLLERNODE_H_INCLUDED */
-

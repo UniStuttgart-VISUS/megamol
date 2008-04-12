@@ -16,8 +16,8 @@
 
 
 #include "vislib/AbstractServerNode.h"
-#include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
+#include "vislib/PtrArray.h"
 #include "vislib/RunnableThread.h"
 
 
@@ -40,6 +40,13 @@ namespace cluster {
 
         /** Dtor. */
         ~ServerNodeAdapter(void);
+
+        /**
+         * Answer the socket address the server is binding to.
+         *
+         * @return The address the server is binding to.
+         */
+        virtual const SocketAddress& GetBindAddress(void) const;
 
         /**
          * Initialise the node.
@@ -69,15 +76,44 @@ namespace cluster {
          */
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
+
         virtual bool OnNewConnection(Socket& socket, 
             const SocketAddress& addr) throw();
 
+
         virtual void OnServerStopped(void) throw();
 
-    protected:
+        /**
+         * Starts the server thread and returns afterwards.
+         *
+         * You should call this Run() method first in subclasses as your own 
+         * operations will probably not return immediately.
+         *
+         * @return 0 in case of success, an error code otherwise.
+         *
+         * @throws SystemException If the server thread could not be started.
+         */
+        virtual DWORD Run(void);
 
-        /** Superclass typedef. */
-        typedef AbstractServerNode Super;
+        /**
+         * Set a new socket address the server should bind to. 
+         * 
+         * This has only an effect if the server is not yet running.
+         *
+         * @param bindAddress The address to bind to.
+         */
+        virtual void SetBindAddress(const SocketAddress& bindAddress);
+
+        /**
+         * Make the server bind to any adapter, but use the specified port.
+         *
+         * This has only an effect if the server is not yet running.
+         *
+         * @param port The port to bind to.
+         */
+        virtual void SetBindAddress(const unsigned short port);
+
+    protected:
 
         /** Ctor. */
         ServerNodeAdapter(void);
@@ -95,6 +131,20 @@ namespace cluster {
          * @return The number of known peer nodes.
          */
         virtual SIZE_T countPeers(void) const;
+
+        /**
+         * Remove the 'idx'th peer node. 
+         *
+         * This operation includes closing the socket and stopping the receiver
+         * thread.
+         *
+         * It is safe to pass an invalid index, i.e. to disconnect from a 
+         * non-connected node. All exceptions regarding communication and thread
+         * errors will be caught.
+         *
+         * @param idx The index of the peer node to be removed.
+         */
+        void disconnectPeer(const SIZE_T idx);
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -121,14 +171,23 @@ namespace cluster {
 
     private:
 
+        typedef struct PeerNode_t {
+            SocketAddress Address;
+            Socket Socket;
+            sys::Thread *Receiver;
+        } PeerNode;
+
+        /** The address to bind the server to. */
+        SocketAddress bindAddress;
+
         /** The TCP server waiting for clients. */
         sys::RunnableThread<TcpServer> server;
 
         /** The client sockets. */
-        Array<Socket> sockets;
+        PtrArray<PeerNode> peers;
 
-        /** Lock for protecting the 'sockets' member. */
-        mutable sys::CriticalSection socketsLock;
+        /** Lock for protecting the 'peers' member. */
+        mutable sys::CriticalSection peersLock;
 
     };
     

@@ -44,12 +44,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\gl\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;VISLIB_CLUSTER_WITH_OPENGL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -115,6 +116,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -173,10 +175,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\gl\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;VISLIB_CLUSTER_WITH_OPENGL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -240,6 +243,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -290,6 +294,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractControlledNode.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractControllerNode.cpp"
 				>
 			</File>
@@ -306,7 +314,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ClusterNodeAdapter.cpp"
+				RelativePath=".\src\GlutClientNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\GlutClusterNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\GlutServerNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\messagereceiver.cpp"
 				>
 			</File>
 			<File
@@ -344,7 +364,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\ClusterNodeAdapter.h"
+				RelativePath=".\include\vislib\GlutClientNode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\GlutClusterNode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\GlutServerNode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\messagereceiver.h"
 				>
 			</File>
 			<File

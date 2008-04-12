@@ -15,7 +15,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "AbstractClientNode.h"
+#include "vislib/AbstractClientNode.h"
+#include "vislib/Thread.h"
 
 
 namespace vislib {
@@ -32,6 +33,8 @@ namespace cluster {
 
         /** Dtor. */
         ~ClientNodeAdapter(void);
+
+        virtual const SocketAddress& GetServerAddress(void) const;
 
         /**
          * Initialise the node.
@@ -60,6 +63,26 @@ namespace cluster {
          * @throws
          */
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
+
+        /**
+         * Connect to the server address specified before and starts the message
+         * receiver thread. Afterwards, the method returns.
+         *
+         * You should call this Run() method first in subclasses as your own 
+         * operations will probably not return immediately.
+         *
+         * @return 0 in case of success.
+         *
+         * @throws IllegalStateException If the client node is already 
+         *                               connected.
+         * @throws SocketException If it was not possible to connect to the 
+         *                         server.
+         * @throws SystemException If the message receiver thread could not be
+         *                         started.
+         */
+        virtual DWORD Run(void);
+
+        virtual void SetServerAddress(const SocketAddress& serverAddress);
 
     protected:
 
@@ -108,6 +131,12 @@ namespace cluster {
         ClientNodeAdapter& operator =(const ClientNodeAdapter& rhs);
 
     private:
+
+        /** The receiver thread that generates the message events. */
+        sys::Thread *receiver;
+
+        /** The address of the server node to connect to. */
+        SocketAddress serverAddress;
 
         /** The socket for communicating with the server. */
         Socket socket;

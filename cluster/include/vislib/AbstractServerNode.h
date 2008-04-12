@@ -39,6 +39,31 @@ namespace cluster {
         /** Dtor. */
         ~AbstractServerNode(void);
 
+        /**
+         * Answer the socket address the server is binding to.
+         *
+         * @return The address the server is binding to.
+         */
+        virtual const SocketAddress& GetBindAddress(void) const = 0;
+
+        /**
+         * Set a new socket address the server should bind to. 
+         * 
+         * This has only an effect if the server is not yet running.
+         *
+         * @param bindAddress The address to bind to.
+         */
+        virtual void SetBindAddress(const SocketAddress& bindAddress) = 0;
+
+        /**
+         * Make the server bind to any adapter, but use the specified port.
+         *
+         * This has only an effect if the server is not yet running.
+         *
+         * @param port The port to bind to.
+         */
+        virtual void SetBindAddress(const unsigned short port) = 0;
+
     protected:
 
         /** Ctor. */

@@ -37,6 +37,10 @@ namespace cluster {
         /** Dtor. */
         ~AbstractClientNode(void);
 
+        virtual const SocketAddress& GetServerAddress(void) const = 0;
+
+        virtual void SetServerAddress(const SocketAddress& serverAddress) = 0;
+
     protected:
 
         /** Ctor. */

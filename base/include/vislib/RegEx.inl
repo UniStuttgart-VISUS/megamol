@@ -765,7 +765,7 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRepeatEx(
     }
     try {
         minRep = T::ParseInt(String<T>(begin, 
-            VRECTX_CUR_STR(inOutCtx) - begin));
+            static_cast<int>(VRECTX_CUR_STR(inOutCtx) - begin)));
         ASSERT(VRECTX_CUR_STR(inOutCtx) != begin);
     } catch (...) {
         throw ParseException(ParseException::INTEGER_EXPECTED, begin, __FILE__,
@@ -795,7 +795,7 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRepeatEx(
     }
     try {
         maxRep = T::ParseInt(String<T>(begin, 
-            VRECTX_CUR_STR(inOutCtx) - begin));
+            static_cast<int>(VRECTX_CUR_STR(inOutCtx) - begin)));
         ASSERT(VRECTX_CUR_STR(inOutCtx) != begin);
     } catch (...) {
         throw ParseException(ParseException::INTEGER_EXPECTED, begin, __FILE__,

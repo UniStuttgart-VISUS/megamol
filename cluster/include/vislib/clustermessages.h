@@ -96,6 +96,11 @@ namespace cluster {
     extern const UINT32 MSGID_UP;
     
     extern const UINT32 MSGID_VIRTUALVIEWSIZE;
+
+    extern const UINT32 MSGID_SERIALISEDCAMPARAMS;
+
+    extern const UINT32 MSGID_SERIALISEDCAMPARAMLIMITS;
+
     
 } /* end namespace cluster */
 } /* end namespace net */

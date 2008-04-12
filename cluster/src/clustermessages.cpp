@@ -66,3 +66,9 @@ const UINT32 vislib::net::cluster::MSGID_UP = VLC1_CAMPARAM_MSG(11);
 
 const UINT32 vislib::net::cluster::MSGID_VIRTUALVIEWSIZE 
     = VLC1_CAMPARAM_MSG(12);
+
+const UINT32 vislib::net::cluster::MSGID_SERIALISEDCAMPARAMS
+    = VLC1_CAMPARAM_MSG(13);
+
+const UINT32 vislib::net::cluster::MSGID_SERIALISEDCAMPARAMLIMITS
+    = VLC1_CAMPARAM_MSG(13);

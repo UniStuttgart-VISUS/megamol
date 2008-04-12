@@ -7,6 +7,9 @@
 
 #include "vislib/AbstractControllerNode.h"
 
+#include "vislib/RawStorage.h"
+#include "vislib/RawStorageSerialiser.h"
+
 
 /*
  * vislib::net::cluster::AbstractControllerNode::~AbstractControllerNode
@@ -131,9 +134,10 @@ void vislib::net::cluster::AbstractControllerNode::OnVirtualViewSizeChanged(
 /*
  * vislib::net::cluster::AbstractControllerNode::AbstractControllerNode
  */
-vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(void) 
+vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
+        SmartPtr<graphics::CameraParameters> params) 
         : AbstractClusterNode(), graphics::CameraParameterObserver() {
-    // Nothing to do.
+    this->setParameters(params);
 }
 
 
@@ -143,7 +147,86 @@ vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(void)
 vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
         const AbstractControllerNode& rhs) 
         : AbstractClusterNode(rhs), graphics::CameraParameterObserver(rhs) {
-    // Nothing to do.
+    this->setParameters(rhs.parameters);
+}
+
+
+/*
+ * vislib::net::cluster::AbstractControllerNode::sendAllParameters
+ */
+void vislib::net::cluster::AbstractControllerNode::sendAllParameters(void) {
+    RawStorage msg;
+    RawStorageSerialiser serialiser(&msg);
+
+    /* 
+     * Build a parameter message into 'msg' that looks like this:
+     *
+     * |-----------------------------------------|
+     * | MsgHeader                               |
+     * |-----------------------------------------|
+     * | BlockHeader for camera parameters       |
+     * |-----------------------------------------|
+     * | Serialised camera parameters            |
+     * |-----------------------------------------|
+     * | BlockHeader for camera parameter limits |
+     * |-----------------------------------------|
+     * | Serialiser camera parameter limits      |
+     * |-----------------------------------------|
+     */
+
+    /* Serialise the camera parameters. */
+    msg.EnforceSize(0);
+    ASSERT(msg.GetSize() == 0);
+    serialiser.SetOffset(sizeof(MessageHeader) + sizeof(BlockHeader));
+    this->parameters->Serialise(serialiser);
+    
+    BlockHeader *blkHdr1 = msg.AsAt<BlockHeader>(sizeof(MessageHeader));
+    blkHdr1->BlockId = MSGID_SERIALISEDCAMPARAMS;
+    blkHdr1->BlockLength = static_cast<UINT32>(msg.GetSize() 
+        - sizeof(MessageHeader) - sizeof(BlockHeader));
+    
+    /* Serialise the parameter limits as a second block. */
+    ASSERT(msg.GetSize() > serialiser.Offset());
+    serialiser.SetOffset(static_cast<UINT32>(msg.GetSize() 
+        + sizeof(BlockHeader)));
+    this->parameters->Limits()->Serialise(serialiser);
+
+    BlockHeader *blkHdr2 = msg.AsAt<BlockHeader>(sizeof(MessageHeader)
+        + sizeof(BlockHeader) + blkHdr1->BlockLength);
+    blkHdr2->BlockId = MSGID_SERIALISEDCAMPARAMLIMITS;
+    blkHdr2->BlockLength = static_cast<UINT32>(msg.GetSize() 
+        - sizeof(MessageHeader) - 2 * sizeof(BlockHeader) 
+        - blkHdr1->BlockLength);
+
+    /* Fill in the message header for a compound message. */
+    MessageHeader *msgHdr = msg.As<MessageHeader>();
+    InitialiseMessageHeader(*msgHdr);
+    msgHdr->Header.BlockId = MSGID_MULTIPLE;
+    msgHdr->Header.BlockLength = static_cast<UINT32>(msg.GetSize() 
+        - sizeof(MessageHeader));
+    ASSERT(msgHdr->Header.BlockLength == sizeof(MessageHeader)
+        + sizeof(BlockHeader) + blkHdr1->BlockLength
+        + sizeof(BlockHeader) + blkHdr2->BlockLength);
+
+    /* Post the message. */
+    this->sendToEachPeer(msg.As<BYTE>(), msg.GetSize());
+}
+
+
+/*
+ * vislib::net::cluster::AbstractControllerNode::setParameters
+ */
+void vislib::net::cluster::AbstractControllerNode::setParameters(
+        const SmartPtr<graphics::CameraParameters>& params) {
+    if (!this->parameters.IsNull()) {
+        this->getObservableParameters()->RemoveCameraParameterObserver(this);
+    }
+    if (params.DynamicCast<graphics::ObservableCameraParams>() == NULL) {
+        throw IllegalParamException("params", __FILE__, __LINE__);
+    }
+
+    this->parameters = params;
+    this->getObservableParameters()->AddCameraParameterObserver(this);
 }
 
 
@@ -153,7 +236,10 @@ vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
 vislib::net::cluster::AbstractControllerNode& 
 vislib::net::cluster::AbstractControllerNode::operator =(
         const AbstractControllerNode& rhs) {
-    AbstractClusterNode::operator =(rhs);
-    graphics::CameraParameterObserver::operator =(rhs);
+    if (this != &rhs) {
+        AbstractClusterNode::operator =(rhs);
+        graphics::CameraParameterObserver::operator =(rhs);
+        this->setParameters(rhs.parameters);
+    }
     return *this;
 }
