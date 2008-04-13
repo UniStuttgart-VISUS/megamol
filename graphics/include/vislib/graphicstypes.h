@@ -18,6 +18,10 @@
 #include "vislib/Point.h"
 #include "vislib/Rectangle.h"
 #include "vislib/Vector.h"
+//#include "vislib/ShallowDimension.h"
+#include "vislib/ShallowPoint.h"
+#include "vislib/ShallowRectangle.h"
+#include "vislib/ShallowVector.h"
 
 
 namespace vislib {
@@ -33,8 +37,15 @@ namespace graphics {
     /** A type for specifying image space dimensions. */
     typedef math::Dimension<ImageSpaceType, 2> ImageSpaceDimension;
 
+    /** A shallow type for specifying image space dimensions. */
+    //typedef math::ShallowDimension<ImageSpaceType, 2> 
+    //    ShallowImageSpaceDimension;
+
     /** A type for specifying image space rectangle. */
     typedef math::Rectangle<ImageSpaceType> ImageSpaceRectangle;
+
+    /** A shallow type for specifying image space rectangle. */
+    typedef math::ShallowRectangle<ImageSpaceType> ShallowImageSpaceRectangle;
 
     /** This type is used for values in scene space. */
     typedef float SceneSpaceType;
@@ -42,15 +53,33 @@ namespace graphics {
     /** A 2D scene space point. */
     typedef math::Point<SceneSpaceType, 2> SceneSpacePoint2D;
 
+    /** A shallow 2D scene space point. */
+    typedef math::ShallowPoint<SceneSpaceType, 2> ShallowSceneSpacePoint2D;
+
     /** A 3D scene space point. */
     typedef math::Point<SceneSpaceType, 3> SceneSpacePoint3D;
+
+    /** A shallow 3D scene space point. */
+    typedef math::ShallowPoint<SceneSpaceType, 3> ShallowSceneSpacePoint3D;
 
     /** A 2D scene space vector. */
     typedef math::Vector<SceneSpaceType, 2> SceneSpaceVector2D;
 
+    /** A shallow 2D scene space vector. */
+    typedef math::ShallowVector<SceneSpaceType, 2> ShallowSceneSpaceVector2D;
+
+    /** A 3D scene space point. */
+    typedef math::Point<SceneSpaceType, 3> SceneSpacePoint3D;
+
+    /** A shallow 3D scene space point. */
+    typedef math::ShallowPoint<SceneSpaceType, 3> ShallowSceneSpacePoint3D;
+
     /** A 3D scene space vector. */
     typedef math::Vector<SceneSpaceType, 3> SceneSpaceVector3D;
-    
+
+    /** A shallow 3D scene space vector. */
+    typedef math::ShallowVector<SceneSpaceType, 3> ShallowSceneSpaceVector3D;
+
 } /* end namespace graphics */
 } /* end namespace vislib */
 

@@ -15,7 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/Socket.h"  // Must be first
 #include "vislib/AbstractClusterNode.h"
+#include "vislib/assert.h"
+#include "vislib/Camera.h"
 
 
 namespace vislib {
@@ -35,8 +38,75 @@ namespace cluster {
 
     protected:
 
-        /** Ctor. */
+        /**
+         * Ctor.
+         */
         AbstractControlledNode(void);
+
+        /**
+         * Answer the camera parameters.
+         *
+         * @return A pointer to the parameters.
+         */
+        inline const SmartPtr<graphics::CameraParameters>& getParameters(
+                void) const {
+            return this->parameters;
+        }
+
+        /**
+         * Answer the camera parameters.
+         *
+         * @return A pointer to the parameters.
+         */
+        inline SmartPtr<graphics::CameraParameters>& getParameters(void) {
+            return this->parameters;
+        }
+
+        /**
+         * This method is called when data have been received and a valid 
+         * message has been found in the packet.
+         *
+         * @param src     The socket the message has been received from.
+         * @param msgId   The message ID.
+         * @param body    Pointer to the message body.
+         * @param cntBody The number of bytes designated by 'body'.
+         */
+        virtual void onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody);
+
+        /**
+         * Set new camera parameters to update.
+         *
+         * @param params The new parameters.
+         */
+        inline void setParameters(
+                const SmartPtr<graphics::CameraParameters>& params) {
+            ASSERT(!params.IsNull());
+            this->parameters = params;
+        }
+
+        /**
+         * Set new camera parameters to update.
+         *
+         * @param camera The camera whose parameters should be udpated.
+         */
+        inline void setParameters(const graphics::Camera& camera) {
+            this->parameters = camera.Parameters();
+        }
+
+        /**
+         * Assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        AbstractControlledNode& operator =(const AbstractControlledNode& rhs);
+
+    private:
+
+        /** The camera parameters that are to be updated via the network. */
+        SmartPtr<graphics::CameraParameters> parameters;
 
     };
     
@@ -48,4 +118,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTCONTROLLEDNODE_H_INCLUDED */
-

@@ -328,6 +328,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\OpenGLVISLogo.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ShaderSource.cpp"
 				>
 			</File>
@@ -375,6 +379,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\OpenGLException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\OpenGLVISLogo.h"
 				>
 			</File>
 			<File

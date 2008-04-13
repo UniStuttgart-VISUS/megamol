@@ -12,6 +12,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include "vislib/GlutClientNode.h"
+#include "vislib/OpenGLVISLogo.h"
 
 
 class GlutClient : public vislib::net::cluster::GlutClientNode<GlutClient> {
@@ -23,6 +24,12 @@ public:
 protected:
 
     GlutClient(void);
+
+    virtual void onFrameRender(void);
+
+    virtual void onInitialise(void);
+
+    vislib::graphics::gl::OpenGLVISLogo logo;
 
     friend class vislib::net::cluster::GlutClusterNode<GlutClient>;
 

@@ -99,6 +99,17 @@ namespace cluster {
         virtual void onMouseMove(const int x, const int y);
 
         /**
+         * This method is called when the window was resized.
+         *
+         * This implementation in GlutServerNode calls the parent method and 
+         * updates the virtual view dimensions of the camera.
+         *
+         * @param width  The new width of the window.
+         * @param height The new height of the window.
+         */
+        virtual void onResize(const int width, const int height);
+
+        /**
          * This method is called when a special key was pressed.
          *
          * The implementation in GlutServerNode updates the input modifiers for
@@ -229,9 +240,9 @@ namespace cluster {
 
         /* Reset the view. */
         this->camera.Parameters()->SetView(
-            math::Point<double, 3>(0.0, -1.0, 0.0),
-            math::Point<double, 3>(0.0, 0.0, 0.0),
-            math::Vector<double, 3>(0.0, 0.0, 1.0));
+            graphics::SceneSpacePoint3D(0.0, -5.0, 0.0),
+            graphics::SceneSpacePoint3D(0.0, 0.0, 0.0),
+            graphics::SceneSpaceVector3D(0.0, 0.0, 1.0));
 
         /* Connect controller with cursor device. */
         this->cursor.RegisterCursorEvent(ctrl);
@@ -275,6 +286,7 @@ namespace cluster {
 
         this->updateInputModifiers();
         this->updateCursorPosition(x, y);
+        ::glutPostRedisplay();
     }
 
 
@@ -284,6 +296,19 @@ namespace cluster {
     template<class T> 
     void GlutServerNode<T>::onMouseMove(const int x, const int y) {
         this->updateCursorPosition(x, y);
+        ::glutPostRedisplay();
+    }
+
+
+    /*
+     * vislib::net::cluster::GlutServerNode<T>::onResize
+     */
+    template<class T> 
+    void GlutServerNode<T>::onResize(const int width, const int height) {
+        GlutClusterNode<T>::onResize(width, height);
+        this->camera.Parameters()->SetVirtualViewSize(
+            static_cast<graphics::ImageSpaceType>(width),
+            static_cast<graphics::ImageSpaceType>(height));
     }
 
 

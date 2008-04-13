@@ -10,10 +10,32 @@
 #include "vislib/assert.h"
 #include "vislib/clustermessages.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/memutils.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
 
+
+/*
+ * vislib::net::cluster::AllocateRecvMsgCtx
+ */
+vislib::net::cluster::ReceiveMessagesCtx *
+vislib::net::cluster::AllocateRecvMsgCtx(AbstractClusterNode *receiver,
+        Socket *socket) {
+    ReceiveMessagesCtx *retval = new ReceiveMessagesCtx;
+    retval->Receiver = receiver;
+    retval->Socket = socket;
+
+    return retval;
+}
+
+
+/*
+ * vislib::net::cluster::FreeRecvMsgCtx
+ */
+void vislib::net::cluster::FreeRecvMsgCtx(ReceiveMessagesCtx *& ctx) {
+    SAFE_DELETE(ctx);
+}
 
 
 /*
@@ -111,6 +133,6 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
         retval = -1;
     }
 
-    SAFE_DELETE(ctx);
+    ctx->Receiver->onMessageReceiverExiting(*ctx->Socket, ctx);
     return retval;
 }

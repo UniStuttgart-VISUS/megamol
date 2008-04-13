@@ -12,6 +12,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include "vislib/GlutServerNode.h"
+#include "vislib/OpenGLVISLogo.h"
 
 
 class GlutServer : public vislib::net::cluster::GlutServerNode<GlutServer> {
@@ -23,6 +24,15 @@ public:
 protected:
 
     GlutServer(void);
+
+    virtual void initialiseController(
+        vislib::graphics::AbstractCameraController *& inOutController);
+
+    virtual void onFrameRender(void);
+
+    virtual void onInitialise(void);
+
+    vislib::graphics::gl::OpenGLVISLogo logo;
 
     friend class vislib::net::cluster::GlutClusterNode<GlutServer>;
 

@@ -300,7 +300,11 @@ namespace cluster {
      * vislib::net::cluster::GlutClusterNode<T>::Run
      */
     template<class T> DWORD GlutClusterNode<T>::Run(void) {
+        // TODO: Additional initialisation callback (format, title, ...) req.
+        ::glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
         ::glutCreateWindow("");
+
+        this->onInitialise();
 
         ::glutDisplayFunc(frameRender);
         ::glutIdleFunc(idle);
@@ -327,7 +331,8 @@ namespace cluster {
      * vislib::net::cluster::GlutClusterNode<T>::onFrameRender
      */
     template<class T> void GlutClusterNode<T>::onFrameRender(void) {
-        ::glClear(GL_COLOR_BUFFER_BIT);
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        ::glFlush();
         ::glutSwapBuffers();
     }
 
@@ -337,6 +342,7 @@ namespace cluster {
      */
     template<class T> void GlutClusterNode<T>::onIdle(void) {
     }
+
 
     /*
      * vislib::net::cluster::GlutClusterNode<T>::onInitialise

@@ -76,14 +76,11 @@ bool vislib::net::cluster::ServerNodeAdapter::OnNewConnection(Socket& socket,
         peerNode->Socket = socket;
         peerNode->Receiver = new sys::Thread(ReceiveMessages);
 
-        ReceiveMessagesCtx *rmc = new ReceiveMessagesCtx;
-        rmc->Receiver = this;
-        rmc->Socket = &peerNode->Socket;
-
+        ReceiveMessagesCtx *rmc = AllocateRecvMsgCtx(this, &peerNode->Socket);
         try {
             VERIFY(peerNode->Receiver->Start(static_cast<void *>(rmc)));
         } catch (Exception e) {
-            SAFE_DELETE(rmc);
+            FreeRecvMsgCtx(rmc);
             throw e;
         }
 

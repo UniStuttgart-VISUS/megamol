@@ -292,6 +292,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractVISLogo.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Camera.cpp"
 				>
 			</File>
@@ -379,6 +383,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractCursorEvent.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractVISLogo.h"
 				>
 			</File>
 			<File

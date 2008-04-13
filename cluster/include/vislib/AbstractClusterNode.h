@@ -25,9 +25,12 @@ namespace vislib {
 namespace net {
 namespace cluster {
 
+    /** Forward declaration of an opaque, internal context structure. */
+    typedef struct ReceiveMessagesCtx_t *PReceiveMessagesCtx;
+
 
     /**
-     * This class defines the interface for all all specialised VISlib graphics 
+     * This class defines the interface for all all specialised VISlib graphics
      * cluster application nodes.
      *
      * The class is required to provide a constistent networking interface to all
@@ -37,8 +40,8 @@ namespace cluster {
      * implement the "delegate to sister" pattern, i.e. they do the communication
      * work for all classes that inherit from AbstractClusterNode in order to use
      * the communication function (e.g. AbstractControllerNode uses the sending
-     * methods, which are implemented in ServerNodeAdapter ). Therefore, all 
-     * direct children of AbstractClusterNode must use virtual inheritance.
+     * methods, which are implemented by the server node implementation). Therefore,
+     * all direct children of AbstractClusterNode must use virtual inheritance.
      */
     class AbstractClusterNode {
 
@@ -175,6 +178,23 @@ namespace cluster {
             const BYTE *body, const SIZE_T cntBody);
 
         /**
+         * The message receiver thread calls this method once it exists.
+         *
+         * The default implementation here releases 'recvCtx' using 
+         * FreeRecvMsgCtx(). You should call this implementation if you want to 
+         * do this, or provide your own implementation if you want to reuse 
+         * the context.
+         *
+         * @param socket The socket that was used from communication with the
+         *               peer node.
+         * @param rmc    The receive context that was used by the receiver 
+         *               thread. The method takes ownership of the context and
+         *               should release if not needed any more.
+         */
+        virtual void onMessageReceiverExiting(Socket& socket,
+            PReceiveMessagesCtx rmc);
+
+        /**
          * Send 'cntData' bytes of data beginning at 'data' to each known peer
          * node.
          *
@@ -244,4 +264,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTCLUSTERNODE_H_INCLUDED */
-

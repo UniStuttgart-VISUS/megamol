@@ -306,10 +306,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ClientNodeAdapter.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\clustermessages.cpp"
 				>
 			</File>
@@ -357,10 +353,6 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractServerNode.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\ClientNodeAdapter.h"
 				>
 			</File>
 			<File

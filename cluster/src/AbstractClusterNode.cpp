@@ -8,6 +8,9 @@
 #include "vislib/AbstractClusterNode.h"
 
 #include "vislib/MissingImplementationException.h"
+#include "vislib/Trace.h"
+
+#include "messagereceiver.h"
 
 
 /*
@@ -40,6 +43,17 @@ void vislib::net::cluster::AbstractClusterNode::onMessageReceived(
         const SIZE_T cntBody) {
     // Do nothing. Implementing subclasses override this method if they are
     // interested in messages.
+}
+
+
+/*
+ * vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting
+ */
+void vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting(
+        vislib::net::Socket& socket, PReceiveMessagesCtx rmc) {
+    TRACE(Trace::LEVEL_VL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
+        "releasing receive context ...\n");
+    FreeRecvMsgCtx(rmc);
 }
 
 
