@@ -9,7 +9,7 @@
 	<Tool
 		Name="VCCLCompilerTool"
 		AdditionalIncludeDirectories="&quot;$(ProjectDir)\include&quot;;..\"
-		ProgramDataBaseFileName="$(SolutionDir)\pdb\vislib$(BitsD).pdb"
+		ProgramDataBaseFileName="$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb"
 	/>
 	<Tool
 		Name="VCLibrarianTool"
