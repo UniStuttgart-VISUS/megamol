@@ -243,7 +243,7 @@ vislib::RegEx<T>::AnyExpression::~AnyExpression(void) {
 /*
  * vislib::RegEx<T>::AnyExpression::Consume
  */
-template<class T> typename const vislib::RegEx<T>::Char *
+template<class T> const typename vislib::RegEx<T>::Char *
 vislib::RegEx<T>::AnyExpression::Consume(const Char *input) {
     TRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming AnyExpression on \"%s\" ...\n", 
         StringA(input).PeekBuffer());
@@ -283,7 +283,7 @@ template<class T> vislib::RegEx<T>::ChoiceExpression::~ChoiceExpression(void) {
 /*
  * vislib::RegEx<T>::ChoiceExpression::Consume
  */
-template<class T> typename const vislib::RegEx<T>::Char *
+template<class T> const typename vislib::RegEx<T>::Char *
 vislib::RegEx<T>::ChoiceExpression::Consume(const Char *input) {
     ASSERT(this->CountChildren() == 2);
     const Char *retval = NULL;
@@ -363,7 +363,7 @@ vislib::RegEx<T>::RepeatExpression::~RepeatExpression(void) {
 /*
  * vislib::RegEx<T>::RepeatExpression::Consume
  */
-template<class T> typename const vislib::RegEx<T>::Char *
+template<class T> const typename vislib::RegEx<T>::Char *
 vislib::RegEx<T>::RepeatExpression::Consume(const Char *input) {
     ASSERT(this->CountChildren() == 1);
     int cntMatches = 0;         // The number of subsequent matches found.
@@ -447,7 +447,7 @@ vislib::RegEx<T>::LiteralExpression::~LiteralExpression(void) {
 /*
  * vislib::RegEx<T>::LiteralExpression::Consume
  */
-template<class T> typename const vislib::RegEx<T>::Char *
+template<class T> const typename vislib::RegEx<T>::Char *
 vislib::RegEx<T>::LiteralExpression::Consume(const Char *input) {
     const Char *litChar = this->lit.PeekBuffer();
     Size litLen = this->lit.Length();

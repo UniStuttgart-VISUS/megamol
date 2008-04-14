@@ -17,7 +17,7 @@
  */
 vislib::graphics::ObservableCameraParams::ObservableCameraParams(void) 
         : Super(), dirtyFields(0), isBatchInteraction(false), 
-        isSuspendFire(false), observed(new CameraParamsStore()) {
+        observed(new CameraParamsStore()), isSuspendFire(false) {
     // No one can have registered here, so it is unnecessary to fire the event.
 }
 
@@ -28,7 +28,7 @@ vislib::graphics::ObservableCameraParams::ObservableCameraParams(void)
 vislib::graphics::ObservableCameraParams::ObservableCameraParams(
         SmartPtr<CameraParameters>& observed) 
         : Super(), dirtyFields(0), isBatchInteraction(false), 
-        isSuspendFire(false), observed(observed) {
+        observed(observed), isSuspendFire(false) {
     // No one can have registered here, so it is unnecessary to fire the event.
 }
 

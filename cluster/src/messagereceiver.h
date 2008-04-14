@@ -29,7 +29,7 @@ namespace cluster {
      */
     typedef struct ReceiveMessagesCtx_t {
         AbstractClusterNode *Receiver;
-        Socket *Socket;
+        vislib::net::Socket *Socket;
     } ReceiveMessagesCtx;
 
 

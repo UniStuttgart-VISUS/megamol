@@ -190,7 +190,7 @@ namespace cluster {
          */
         typedef struct PeerNode_t {
             SocketAddress Address;
-            Socket Socket;
+            vislib::net::Socket Socket;
             sys::Thread *Receiver;
         } PeerNode;
 
