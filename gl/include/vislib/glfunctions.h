@@ -21,6 +21,24 @@ namespace vislib {
 namespace graphics {
 namespace gl {
 
+    /**
+     * Enables or disables VSync. This method can only be used when there is a
+     * current open gl context.
+     *
+     * @param enabled Flag whether to enable (a value of 'true') or disable (a
+     *                value of 'false') VSync.
+     */
+    void EnableVSync(bool enable = true);
+
+    /**
+     * Disables VSync. This is identically to calling 'EnableVSync(false)'.
+     * This method can only be used when there is a current open gl context.
+     */
+    inline void DisableVSync(void) {
+        // Note: not ordered correctly because we would need a forward 
+        //       declaration
+        EnableVSync(false);
+    }
 
     /**
      * Answer the open gl version number. Note that the version number uses 
@@ -30,6 +48,14 @@ namespace gl {
      * @return The open gl version number.
      */
     const VersionNumber& GLVersion(void);
+
+    /**
+     * Answer whether VSync is enabled or not. This method can only be used 
+     * when there is a current open gl context.
+     *
+     * @return 'true' if VSync is enabled, 'false' if not.
+     */
+    bool IsVSyncEnabled(void);
 
 } /* end namespace gl */
 } /* end namespace graphics */

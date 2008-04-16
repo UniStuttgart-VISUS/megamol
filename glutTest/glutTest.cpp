@@ -42,6 +42,7 @@
 
 #include "vislib/FpsCounter.h"
 #include "vislib/Thread.h"
+#include "vislib/glfunctions.h"
 
 /** the startup test selection */
 static int startupTest;
@@ -79,14 +80,14 @@ void reshape(int w, int h) {
 
 void display(void) {
     fpsCounter.FrameBegin();
-	if (GlutAppManager::CurrentApp()) {
+    if (GlutAppManager::CurrentApp()) {
         GlutAppManager::CurrentApp()->Render();
     } else {
         GlutAppManager::GetInstance()->glRenderEmptyScreen();
-		if (startupTest >= 0) {
-			GlutAppManager::OnMenuItemClicked(startupTest);
-			startupTest = -1;
-		}
+        if (startupTest >= 0) {
+            GlutAppManager::OnMenuItemClicked(startupTest);
+            startupTest = -1;
+        }
     }
     fpsCounter.FrameEnd();
 }
@@ -129,14 +130,14 @@ int main(int argc, char* argv[]) {
     vislib::sys::Thread fpsOutputThread((vislib::sys::Runnable::Function)OutputFps);
 
     printf("VISlib glut test program\n");
-	startupTest = -1;
+    startupTest = -1;
 
     // register factories:
     GlutAppManager::InstallFactory<CamTestApp>("Camera Test");
     GlutAppManager::InstallFactory<StereoCamTestApp>("Stereo Camera Test");
     GlutAppManager::InstallFactory<CamRotatorTestApp>("Camera Rotation Test");
     GlutAppManager::InstallFactory<FBOTestApp>("Framebuffer Object Test");
-	GlutAppManager::InstallFactory<FBOTest2App>("Framebuffer Object Test #2");
+    GlutAppManager::InstallFactory<FBOTest2App>("Framebuffer Object Test #2");
     GlutAppManager::InstallFactory<GLSLShaderTest>("GLSLShader Test");
     GlutAppManager::InstallFactory<GLSLGeomShaderTest>("GLSLGeometryShader Test");
 
@@ -149,8 +150,12 @@ int main(int argc, char* argv[]) {
     glutInitWindowPosition(128, 128);                           // TODO: should be configured by AbstractGlutApp
     glutCreateWindow("VISlib Glut Test");                       // TODO: should be configured by AbstractGlutApp
 
+    printf("VSync is %s\n", vislib::graphics::gl::IsVSyncEnabled() ? "Enabled" : "Disabled");
+    vislib::graphics::gl::DisableVSync();
+    printf("VSync is %s\n", vislib::graphics::gl::IsVSyncEnabled() ? "Enabled" : "Disabled");
+
     glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
+    glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
@@ -161,26 +166,26 @@ int main(int argc, char* argv[]) {
 
     fpsOutputThread.Start();
 
-	// start a glut application
-	if (argc > 1) {
-		int id;
+    // start a glut application
+    if (argc > 1) {
+        int id;
 #if (_MSC_VER >= 1400)
 #pragma warning(disable: 4996)
 #endif
-		if (sscanf(argv[1], "%d", &id) == 1) {
+        if (sscanf(argv[1], "%d", &id) == 1) {
 #if (_MSC_VER >= 1400)
 #pragma warning(default: 4996)
 #endif
-			printf("Trying to start Test %d\n", id);
-			startupTest = id;
-		}
-	}
+            printf("Trying to start Test %d\n", id);
+            startupTest = id;
+        }
+    }
 
     // glutFullScreen();
     // app->GLInit();
 
     glutMainLoop();
 
-	return 0;
+    return 0;
 }
 

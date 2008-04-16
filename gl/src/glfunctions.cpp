@@ -7,6 +7,50 @@
 #include "vislib/glfunctions.h"
 #include <GL/gl.h>
 
+#ifdef _WIN32
+// TODO: change or check implementation
+#include "GL/wglext.h"
+
+bool WGLExtensionSupported(const char *extension_name) {
+    // this is pointer to function which returns pointer to string with list of all wgl extensions
+    PFNWGLGETEXTENSIONSSTRINGEXTPROC _wglGetExtensionsStringEXT = NULL;
+
+    // determine pointer to wglGetExtensionsStringEXT function
+    _wglGetExtensionsStringEXT = (PFNWGLGETEXTENSIONSSTRINGEXTPROC) wglGetProcAddress("wglGetExtensionsStringEXT");
+
+    if (strstr(_wglGetExtensionsStringEXT(), extension_name) == NULL) {
+        // string was not found
+        return false;
+    }
+
+    // extension is supported
+    return true;
+}
+#endif
+
+
+/*
+ * vislib::graphics::gl::EnableVSync
+ */
+void vislib::graphics::gl::EnableVSync(bool enable) {
+#ifdef _WIN32
+    static PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
+    static bool initialised = false;
+    if (!initialised) {
+        initialised = true;
+        if (WGLExtensionSupported("WGL_EXT_swap_control")) {
+            // this is another function from WGL_EXT_swap_control extension
+            wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+        }
+    }
+    if (wglSwapIntervalEXT != NULL) {
+        wglSwapIntervalEXT(enable ? 1 : 0);
+    }
+#else /* _WIN32 */
+    // TODO: Implement
+#endif /* _WIN32 */
+}
+
 
 /*
  * vislib::graphics::gl::GLVersion
@@ -54,4 +98,26 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
 
     }
     return number;
+}
+
+
+/*
+ * vislib::graphics::gl::IsVSyncEnabled
+ */
+bool vislib::graphics::gl::IsVSyncEnabled(void) {
+#ifdef _WIN32
+    static PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT = NULL;
+    static bool initialised = false;
+    if (!initialised) {
+        initialised = true;
+        if (WGLExtensionSupported("WGL_EXT_swap_control")) {
+            // this is another function from WGL_EXT_swap_control extension
+            wglGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC)wglGetProcAddress("wglGetSwapIntervalEXT");
+        }
+    }
+    return (wglGetSwapIntervalEXT != NULL) ? (wglGetSwapIntervalEXT() == 1) : false;
+#else /* _WIN32 */
+    // TODO: Implement
+    return false;
+#endif /* _WIN32 */
 }
