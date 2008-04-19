@@ -35,15 +35,15 @@ namespace math {
          * 'bounds' holds in this order to following borders of the rectangle:
          * left, bottom, right, top.
          *
-         * @return The left, bottom, right and top border of the rectangle in
-         *         a consecutive order.
+         * @param bounds The left, bottom, right and top border of the 
+         *               rectangle in a consecutive order.
          */
         explicit inline ShallowRectangle(T *bounds) {
             this->bounds = bounds;
         }
 
         /**
-         * Copy ctor.
+         * Copy ctor. This ctor creates an alias!
          *
          * @param rhs The object to clone.
          */

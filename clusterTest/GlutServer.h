@@ -26,7 +26,8 @@ protected:
     GlutServer(void);
 
     virtual void initialiseController(
-        vislib::graphics::AbstractCameraController *& inOutController);
+        vislib::graphics::AbstractCameraController *& inOutRotateController,
+        vislib::graphics::AbstractCameraController *& inOutZoomController);
 
     virtual void onFrameRender(void);
 

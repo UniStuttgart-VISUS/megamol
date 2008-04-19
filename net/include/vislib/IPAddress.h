@@ -47,6 +47,9 @@ namespace net {
          */
         static const IPAddress ANY;
 
+        /** Constant loopback address (127.0.0.1). */
+        static const IPAddress LOCALHOST;
+
         /** Constant invalid IP address. */
         static const IPAddress NONE;
 
@@ -61,7 +64,7 @@ namespace net {
          * @throws IllegalParamException If 'address' is not a valid IP address 
          *                               or host name.
          */
-        static IPAddress Create(const char *address = "127.0.01");
+        static IPAddress Create(const char *address = "127.0.0.1");
 
         /**
          * Create an IPAddress from the dotted string format.

@@ -23,7 +23,7 @@ vislib::net::cluster::AbstractControllerNode::~AbstractControllerNode(void) {
  */
 void vislib::net::cluster::AbstractControllerNode::OnApertureAngleChanged(
         const math::AngleDeg newValue) {
-    this->sendIntegralCamParam(MSGID_APERTUREANGLE, newValue);
+    this->sendIntegralCamParam(MSGID_CAM_APERTUREANGLE, newValue);
 }
 
 
@@ -32,7 +32,7 @@ void vislib::net::cluster::AbstractControllerNode::OnApertureAngleChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnEyeChanged(
        const graphics::CameraParameters::StereoEye newValue) {
-    this->sendIntegralCamParam(MSGID_EYE, newValue);
+    this->sendIntegralCamParam(MSGID_CAM_EYE, newValue);
 }
 
 
@@ -41,7 +41,7 @@ void vislib::net::cluster::AbstractControllerNode::OnEyeChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnFarClipChanged(
         const graphics::SceneSpaceType newValue) {
-    this->sendIntegralCamParam(MSGID_FARCLIP, newValue);
+    this->sendIntegralCamParam(MSGID_CAM_FARCLIP, newValue);
 }
 
 
@@ -50,7 +50,7 @@ void vislib::net::cluster::AbstractControllerNode::OnFarClipChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnFocalDistanceChanged(
         const graphics::SceneSpaceType newValue) {
-    this->sendIntegralCamParam(MSGID_FOCALDISTANCE, newValue);
+    this->sendIntegralCamParam(MSGID_CAM_FOCALDISTANCE, newValue);
 }
 
 
@@ -59,7 +59,7 @@ void vislib::net::cluster::AbstractControllerNode::OnFocalDistanceChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnLookAtChanged(
         const graphics::SceneSpacePoint3D& newValue) {
-    this->sendVectorialCamParam<graphics::SceneSpaceType, 3>(MSGID_LOOKAT, 
+    this->sendVectorialCamParam<graphics::SceneSpaceType, 3>(MSGID_CAM_LOOKAT,
         newValue.PeekCoordinates());
 }
 
@@ -69,7 +69,7 @@ void vislib::net::cluster::AbstractControllerNode::OnLookAtChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnNearClipChanged(
         const graphics::SceneSpaceType newValue) {
-    this->sendIntegralCamParam(MSGID_NEARCLIP, newValue);
+    this->sendIntegralCamParam(MSGID_CAM_NEARCLIP, newValue);
 }
 
 
@@ -78,7 +78,7 @@ void vislib::net::cluster::AbstractControllerNode::OnNearClipChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnPositionChanged(
         const graphics::SceneSpacePoint3D& newValue) {
-    this->sendVectorialCamParam<graphics::SceneSpaceType, 3>(MSGID_POSITION,
+    this->sendVectorialCamParam<graphics::SceneSpaceType, 3>(MSGID_CAM_POSITION,
         newValue.PeekCoordinates());
 }
 
@@ -88,7 +88,7 @@ void vislib::net::cluster::AbstractControllerNode::OnPositionChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnProjectionChanged(
         const graphics::CameraParameters::ProjectionType newValue) {
-    this->sendIntegralCamParam(MSGID_PROJECTION, newValue);
+    this->sendIntegralCamParam(MSGID_CAM_PROJECTION, newValue);
 }
 
 
@@ -97,7 +97,7 @@ void vislib::net::cluster::AbstractControllerNode::OnProjectionChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnStereoDisparityChanged(
         const graphics::SceneSpaceType newValue) {
-    this->sendIntegralCamParam(MSGID_STEREODISPARITY, newValue);
+    this->sendIntegralCamParam(MSGID_CAM_STEREODISPARITY, newValue);
 }
 
 
@@ -106,7 +106,7 @@ void vislib::net::cluster::AbstractControllerNode::OnStereoDisparityChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnTileRectChanged(
         const graphics::ImageSpaceRectangle& newValue) {
-    this->sendVectorialCamParam<graphics::ImageSpaceType, 4>(MSGID_TILERECT,
+    this->sendVectorialCamParam<graphics::ImageSpaceType, 4>(MSGID_CAM_TILERECT,
         newValue.PeekBounds());
 }
 
@@ -116,7 +116,7 @@ void vislib::net::cluster::AbstractControllerNode::OnTileRectChanged(
  */
 void vislib::net::cluster::AbstractControllerNode::OnUpChanged(
         const graphics::SceneSpaceVector3D& newValue) {
-    this->sendVectorialCamParam<graphics::SceneSpaceType, 3>(MSGID_UP,
+    this->sendVectorialCamParam<graphics::SceneSpaceType, 3>(MSGID_CAM_UP,
         newValue.PeekComponents());
 }
 
@@ -127,7 +127,7 @@ void vislib::net::cluster::AbstractControllerNode::OnUpChanged(
 void vislib::net::cluster::AbstractControllerNode::OnVirtualViewSizeChanged(
         const graphics::ImageSpaceDimension& newValue) {
     this->sendVectorialCamParam<graphics::ImageSpaceType, 2>(
-        MSGID_VIRTUALVIEWSIZE, newValue.PeekDimension());
+        MSGID_CAM_VIRTUALVIEWSIZE, newValue.PeekDimension());
 }
 
 
@@ -181,7 +181,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(void) {
     this->parameters->Serialise(serialiser);
     
     BlockHeader *blkHdr1 = msg.AsAt<BlockHeader>(sizeof(MessageHeader));
-    blkHdr1->BlockId = MSGID_SERIALISEDCAMPARAMS;
+    blkHdr1->BlockId = MSGID_CAM_SERIALISEDCAMPARAMS;
     blkHdr1->BlockLength = static_cast<UINT32>(msg.GetSize() 
         - sizeof(MessageHeader) - sizeof(BlockHeader));
     
@@ -193,7 +193,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(void) {
 
     BlockHeader *blkHdr2 = msg.AsAt<BlockHeader>(sizeof(MessageHeader)
         + sizeof(BlockHeader) + blkHdr1->BlockLength);
-    blkHdr2->BlockId = MSGID_SERIALISEDCAMPARAMLIMITS;
+    blkHdr2->BlockId = MSGID_CAM_LIMITS;
     blkHdr2->BlockLength = static_cast<UINT32>(msg.GetSize() 
         - sizeof(MessageHeader) - 2 * sizeof(BlockHeader) 
         - blkHdr1->BlockLength);

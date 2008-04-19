@@ -25,6 +25,12 @@ const vislib::net::IPAddress vislib::net::IPAddress::ANY(
 
 
 /*
+ * vislib::net::IPAddress::LOCALHOST
+ */
+const vislib::net::IPAddress vislib::net::IPAddress::LOCALHOST("127.0.0.1");
+
+
+/*
  * vislib::net::IPAddress::NONE
  */
 const vislib::net::IPAddress vislib::net::IPAddress::NONE(

@@ -267,10 +267,14 @@ namespace cluster {
             if ((arg = optServer.GetFirstOccurrence()) != NULL) {
                 this->serverAddress.SetIPAddress(IPAddress::Create(
                     StringA(arg->GetValueString())));
+            } else {
+                this->serverAddress.SetIPAddress(IPAddress::LOCALHOST);
             }
 
             if ((arg = optPort.GetFirstOccurrence()) != NULL) {
                 this->serverAddress.SetPort(arg->GetValueInt());
+            } else {
+                this->serverAddress.SetPort(DEFAULT_PORT);
             }
         }
     }

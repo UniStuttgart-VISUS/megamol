@@ -19,6 +19,7 @@
 #include "vislib/AbstractControllerNode.h"
 #include "vislib/CameraOpenGL.h"
 #include "vislib/CameraRotate2DLookAt.h"
+#include "vislib/CameraZoom2DMove.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/GlutClusterNode.h"
 #include "vislib/InputModifiers.h"
@@ -65,8 +66,32 @@ namespace cluster {
         /** Ctor. */
         GlutServerNode(void);
 
+        /**
+         * This method creates and initialises the controllers. The controllers
+         * are allocated using new and stored to the in-out-parameters.
+         *
+         * The method deletes any exisiting controller if the in-out-parameters
+         * are not NULL.
+         *
+         * Subclasses have the following two possibilites:
+         * 1. Call this implementation and possibly modify the controllers 
+         *    afterwards. The 'inOutRotateController' created by this method is
+         *    a CameraRotate2DLookAt, the 'inOutZoomController' a 
+         *    CameraZoom2DMove.
+         * 2. Completely overwrite the method. In this case, the implementation
+         *    must perform the following steps: (i) Check, whether the pointers
+         *    already designate an object and optionally unregister there from
+         *    this->camera and then delete it using delete, (ii) create new 
+         *    controller instances using new and store their pointers to the 
+         *    in-out-parameters, and (iii) finally register the events to the
+         *    camera this->camera.
+         *
+         * @param inOutRotateController
+         * @param inOutZoomController
+         */
         virtual void initialiseController(
-            graphics::AbstractCameraController *& inOutController);
+            graphics::AbstractCameraController *& inOutRotateController,
+            graphics::AbstractCameraController *& inOutZoomController);
 
         virtual void initialiseCursor(graphics::Cursor2D& inOutCursor);
 
@@ -148,14 +173,17 @@ namespace cluster {
 
     private:
 
-        /** The controller that manipulates the camera. */
-        graphics::AbstractCameraController *controller;
-
         /** The 2D cursor that manipulates the camera. */
         graphics::Cursor2D cursor;
 
         /** The input modifiers for 'cursor'. */
         graphics::InputModifiers inputModifiers;
+
+        /** The controller that manipulates the rotation of the camera. */
+        graphics::AbstractCameraController *rotateController;
+
+        /** The controller that manipulates the aperture of the camera. */
+        graphics::AbstractCameraController *zoomController;
 
     };
 #ifdef _WIN32
@@ -167,7 +195,8 @@ namespace cluster {
      * vislib::net::cluster::GlutServerNode<T>::~GlutServerNode
      */
     template<class T> GlutServerNode<T>::~GlutServerNode(void) {
-        SAFE_DELETE(this->controller);
+        SAFE_DELETE(this->rotateController);
+        SAFE_DELETE(this->zoomController);
     }
 
 
@@ -206,11 +235,12 @@ namespace cluster {
     template<class T> GlutServerNode<T>::GlutServerNode(void) 
             : GlutClusterNode<T>(), ServerNodeAdapter(), 
             AbstractControllerNode(new graphics::ObservableCameraParams()),
-            controller(NULL) {
+            rotateController(NULL), zoomController(NULL) {
         this->camera.SetParameters(this->getParameters());
         this->initialiseCursor(this->cursor);
         this->initialiseInputModifiers(this->inputModifiers);
-        this->initialiseController(this->controller);
+        this->initialiseController(this->rotateController,
+            this->zoomController);
     }
 
 
@@ -218,24 +248,40 @@ namespace cluster {
      * vislib::net::cluster::GlutServerNode<T>::initialiseController
      */
     template<class T> void GlutServerNode<T>::initialiseController(
-            graphics::AbstractCameraController *& inOutController) {
-        graphics::CameraRotate2DLookAt *ctrl = NULL;
+            graphics::AbstractCameraController *& inOutRotateController,
+            graphics::AbstractCameraController *& inOutZoomController) {
+        graphics::CameraRotate2DLookAt *rotCtrl = NULL;
+        graphics::CameraZoom2DMove *zoomCtrl = NULL;
 
-        /* Clean up possible old controller. */
-        if (inOutController != NULL) {
+        /* Clean up possible old controllers. */
+        if (inOutRotateController != NULL) {
             BECAUSE_I_KNOW(dynamic_cast<graphics::AbstractCursorEvent *>(
-                inOutController) != NULL);
+                inOutRotateController) != NULL);
             this->cursor.UnregisterCursorEvent(dynamic_cast<
-                graphics::AbstractCursorEvent *>(inOutController));
+                graphics::AbstractCursorEvent *>(inOutRotateController));
         }
-        SAFE_DELETE(inOutController);
+        SAFE_DELETE(inOutRotateController);
 
-        /* Create new controller. */
-        inOutController = ctrl = new graphics::CameraRotate2DLookAt(
+        if (inOutZoomController != NULL) {
+            BECAUSE_I_KNOW(dynamic_cast<graphics::AbstractCursorEvent *>(
+                inOutZoomController) != NULL);
+            this->cursor.UnregisterCursorEvent(dynamic_cast<
+                graphics::AbstractCursorEvent *>(inOutZoomController));
+        }
+
+        /* Create new controllers. */
+        inOutRotateController = rotCtrl = new graphics::CameraRotate2DLookAt(
             this->camera.Parameters());
-        ctrl->SetTestButton(0);          // left
-        ctrl->SetModifierTestCount(0);
-        ctrl->SetAltModifier(graphics::InputModifiers::MODIFIER_SHIFT);
+        rotCtrl->SetTestButton(GLUT_LEFT_BUTTON);
+        rotCtrl->SetModifierTestCount(0);
+        rotCtrl->SetAltModifier(graphics::InputModifiers::MODIFIER_SHIFT);
+
+        inOutZoomController = zoomCtrl = new graphics::CameraZoom2DMove(
+            this->camera.Parameters());
+        zoomCtrl->SetTestButton(GLUT_MIDDLE_BUTTON);
+        zoomCtrl->SetModifierTestCount(0);
+        zoomCtrl->SetSpeed(10.0f);
+        zoomCtrl->SetZoomBehaviour(graphics::CameraZoom2DMove::MOVE_IF_CLOSE);
 
         /* Reset the view. */
         this->camera.Parameters()->SetView(
@@ -243,8 +289,9 @@ namespace cluster {
             graphics::SceneSpacePoint3D(0.0, 0.0, 0.0),
             graphics::SceneSpaceVector3D(0.0, 0.0, 1.0));
 
-        /* Connect controller with cursor device. */
-        this->cursor.RegisterCursorEvent(ctrl);
+        /* Connect controllers with cursor device. */
+        this->cursor.RegisterCursorEvent(zoomCtrl);
+        this->cursor.RegisterCursorEvent(rotCtrl);
     }
 
 
@@ -274,14 +321,9 @@ namespace cluster {
      */
     template<class T> void GlutServerNode<T>::onMouseButton(const int button,
             const int state, const int x, const int y) {
-        unsigned int btn = 0;
-
-        switch (button) {
-            case GLUT_LEFT_BUTTON: btn = 0; break;
-            case GLUT_RIGHT_BUTTON: btn = 1; break;
-            case GLUT_MIDDLE_BUTTON: btn = 2; break;
-        }
-        this->cursor.SetButtonState(btn, (state == GLUT_DOWN));
+        BECAUSE_I_KNOW(GLUT_LEFT_BUTTON < 3);
+        BECAUSE_I_KNOW(GLUT_MIDDLE_BUTTON < 3);
+        this->cursor.SetButtonState(button, (state == GLUT_DOWN));
 
         this->updateInputModifiers();
         this->updateCursorPosition(x, y);

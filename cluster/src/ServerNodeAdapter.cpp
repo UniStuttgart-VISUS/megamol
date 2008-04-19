@@ -142,7 +142,8 @@ void vislib::net::cluster::ServerNodeAdapter::SetBindAddress(
  * vislib::net::cluster::ServerNodeAdapter::ServerNodeAdapter
  */
 vislib::net::cluster::ServerNodeAdapter::ServerNodeAdapter(void) 
-        : AbstractServerNode() {
+        : AbstractServerNode(), 
+        bindAddress(SocketAddress::FAMILY_INET, DEFAULT_PORT) {
     this->server.GetRunnableInstance().AddListener(this);
 }
 

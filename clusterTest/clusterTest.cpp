@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
             vislib::TString val = arg->GetValueString();
             if (val.Compare(_T("glutserver"), false) == 0) {
                 GlutServer::GetInstance().Initialise(cmdLine);
-                GlutServer::GetInstance().SetBindAddress(12345);
+                //GlutServer::GetInstance().SetBindAddress(12345);
                 return GlutServer::GetInstance().Run();
             } else if (val.Compare(_T("glutclient"), false) == 0) {
                 GlutClient::GetInstance().Initialise(cmdLine);

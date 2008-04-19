@@ -26,6 +26,9 @@ namespace vislib {
      * Implementation of serialiser operating on a raw storage. This 
      * serialiser uses the order of the elements to serialise or deserialise
      * 'Serialisable' objects.
+     *
+     * The serialiser is also able to deserialise from a naked data pointer.
+     * However, it is not possible to serialise to a naked pointer.
      */
     class RawStorageSerialiser : public Serialiser {
     public:
@@ -37,16 +40,31 @@ namespace vislib {
          *                serialiser does not become owner of the memory of the
          *                RawStorage object. The caller must ensure that the
          *                object remains valid as long as it is used by this
-         *                serialiser.
+         *                serialiser or a copy of it.
          * @param offset The starting offset inside the RawStorage.
          */
-        RawStorageSerialiser(RawStorage* storage = NULL, 
+        RawStorageSerialiser(RawStorage *storage = NULL, 
             unsigned int offset = 0);
+
+        /**
+         * Construct a serialiser that uses a naked data pointer. Such a 
+         * serialiser is only good for deserialisation and cannot serialise.
+         * Use a serialiser with RawStorage object for serialisation.
+         *
+         * @param storage     A pointer to 'storageSize' bytes of data that 
+         *                    should be deserialised. The serialiser does not
+         *                    take ownership of the object. The caller must 
+         *                    ensure that the data remain valid as long as they
+         *                    are used by this serialiser or a copy of it.
+         * @param storageSize The number of bytes designated by 'storage'.
+         */
+        RawStorageSerialiser(const BYTE *storage, const SIZE_T storageSize,
+            const unsigned int offset = 0);
 
         /**
          * Copy Ctor.
          *
-         * @param src The source object to be cloned from
+         * @param src The source object to be cloned from.
          */
         RawStorageSerialiser(const RawStorageSerialiser& src);
 
@@ -285,6 +303,12 @@ namespace vislib {
          * @param size The number of bytes to be restored.
          */
         void restore(void *data, unsigned int size);
+
+        /** Naked pointer to data to deserialise from. */
+        const BYTE *nakedStorage;
+
+        /** Number of bytes designated by 'nakedStorage'. */
+        SIZE_T nakedStorageSize;
 
         /** Pointer to the raw storage object */
         RawStorage *storage;

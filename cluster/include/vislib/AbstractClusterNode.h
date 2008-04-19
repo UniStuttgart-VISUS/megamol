@@ -53,6 +53,13 @@ namespace cluster {
          */
         typedef SocketAddress PeerIdentifier;
 
+        /** 
+         * The default port used by the default communication implementation, if
+         * no other value is provided either via the command line or via the 
+         * API.
+         */
+        static const SHORT DEFAULT_PORT;
+
         /** Dtor. */
         virtual ~AbstractClusterNode(void);
 

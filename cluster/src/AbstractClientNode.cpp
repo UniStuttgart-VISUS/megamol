@@ -70,7 +70,8 @@ DWORD vislib::net::cluster::AbstractClientNode::Run(void) {
  * vislib::net::cluster::AbstractClientNode::AbstractClientNode
  */
 vislib::net::cluster::AbstractClientNode::AbstractClientNode(void) 
-        : Super(), reconnectAttempts(0), receiver(ReceiveMessages) {
+        : Super(), reconnectAttempts(0), receiver(ReceiveMessages), 
+        serverAddress(SocketAddress::FAMILY_INET, DEFAULT_PORT) {
     try {
         Socket::Startup();
     } catch (SocketException e) {
@@ -87,7 +88,7 @@ vislib::net::cluster::AbstractClientNode::AbstractClientNode(void)
 vislib::net::cluster::AbstractClientNode::AbstractClientNode(
         const AbstractClientNode& rhs) 
         : Super(rhs), reconnectAttempts(rhs.reconnectAttempts), 
-        receiver(ReceiveMessages) {
+        receiver(ReceiveMessages), serverAddress(rhs.serverAddress) {
     try {
         Socket::Startup();
     } catch (SocketException e) {

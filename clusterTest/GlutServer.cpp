@@ -28,9 +28,11 @@ GlutServer::GlutServer(void) : GlutServerNode<GlutServer>() {
  * GlutServer::initialiseController
  */
 void GlutServer::initialiseController(
-        vislib::graphics::AbstractCameraController *& inOutController) {
+        vislib::graphics::AbstractCameraController *& inOutRotateController,
+        vislib::graphics::AbstractCameraController *& inOutZoomController) {
     // TODO: warum funktioniert das dynamische binden nicht?
-    GlutServerNode<GlutServer>::initialiseController(inOutController);
+    GlutServerNode<GlutServer>::initialiseController(inOutRotateController,
+        inOutZoomController);
     this->camera.Parameters()->SetView(
         vislib::graphics::SceneSpacePoint3D(0.0, -3.0, 0.0),
         vislib::graphics::SceneSpacePoint3D(0.0, 0.0, 0.0),

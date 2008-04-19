@@ -6,16 +6,31 @@
  */
 
 #include "vislib/RawStorageSerialiser.h"
+
+#include "vislib/assert.h"
 #include "vislib/IllegalStateException.h"
 
 
 /*
  * vislib::RawStorageSerialiser::RawStorageSerialiser
  */
-vislib::RawStorageSerialiser::RawStorageSerialiser(RawStorage* storage, 
-        unsigned int offset) : Serialiser(SERIALISER_REQUIRES_ORDER), 
-        storage(storage), offset(offset) {
+vislib::RawStorageSerialiser::RawStorageSerialiser(RawStorage *storage, 
+        unsigned int offset) 
+        : Serialiser(SERIALISER_REQUIRES_ORDER), nakedStorage(NULL), 
+        nakedStorageSize(0), storage(storage), offset(offset) {
     // Intentionally empty
+}
+
+
+/*
+ * vislib::RawStorageSerialiser::RawStorageSerialiser
+ */
+vislib::RawStorageSerialiser::RawStorageSerialiser(const BYTE *storage, 
+        const SIZE_T storageSize, const unsigned int offset) 
+        : Serialiser(SERIALISER_REQUIRES_ORDER), nakedStorage(storage),
+        nakedStorageSize(storageSize), storage(NULL), offset(offset) {
+    // Intentionally empty
+    ASSERT(storage != NULL);
 }
 
 
@@ -24,7 +39,8 @@ vislib::RawStorageSerialiser::RawStorageSerialiser(RawStorage* storage,
  */
 vislib::RawStorageSerialiser::RawStorageSerialiser(
         const RawStorageSerialiser& src) 
-        : Serialiser(src), storage(NULL), offset(0) {
+        : Serialiser(src), nakedStorage(NULL), nakedStorageSize(0), 
+        storage(NULL), offset(0) {
     *this = src;
 }
 
@@ -33,7 +49,9 @@ vislib::RawStorageSerialiser::RawStorageSerialiser(
  * vislib::RawStorageSerialiser::~RawStorageSerialiser
  */
 vislib::RawStorageSerialiser::~RawStorageSerialiser(void) {
-    this->storage = NULL; // DO NOT DELETE!
+    this->nakedStorage = NULL;  // DO NOT DELETE!
+    this->nakedStorageSize = 0;
+    this->storage = NULL;       // DO NOT DELETE!
     this->offset = 0;
 }
 
@@ -583,8 +601,10 @@ void vislib::RawStorageSerialiser::SetStorage(vislib::RawStorage *storage) {
 /*
  * vislib::RawStorageSerialiser::operator=
  */
-vislib::RawStorageSerialiser& vislib::RawStorageSerialiser::operator=(
-    const vislib::RawStorageSerialiser& rhs) {
+vislib::RawStorageSerialiser& vislib::RawStorageSerialiser::operator =(
+        const vislib::RawStorageSerialiser& rhs) {
+    this->nakedStorage = rhs.nakedStorage;
+    this->nakedStorageSize = rhs.nakedStorageSize;
     this->storage = rhs.storage;
     this->offset = rhs.offset;
     return *this;
@@ -596,7 +616,7 @@ vislib::RawStorageSerialiser& vislib::RawStorageSerialiser::operator=(
  */
 void vislib::RawStorageSerialiser::store(const void *data, unsigned int size) {
     if (this->storage == NULL) {
-        throw vislib::IllegalStateException("No Storage object set",
+        throw vislib::IllegalStateException("No RawStorage object set",
             __FILE__, __LINE__);
     }
     this->storage->AssertSize(this->offset + size, true);
@@ -609,15 +629,23 @@ void vislib::RawStorageSerialiser::store(const void *data, unsigned int size) {
  * vislib::RawStorageSerialiser::restore
  */
 void vislib::RawStorageSerialiser::restore(void *data, unsigned int size) {
-    if (this->storage == NULL) {
-        throw vislib::IllegalStateException("No Storage object set", 
+    /* Consolidate pointers. */
+    if (this->storage != NULL) {
+        this->nakedStorage = this->storage->As<BYTE>();
+        this->nakedStorageSize = this->storage->GetSize();
+    }
+
+    /* Sanity checks. */
+    if (this->nakedStorage == NULL) {
+        throw vislib::IllegalStateException("Either a RawStorage object or a "
+            "naked data pointer must be provided for deserialisation.",
             __FILE__, __LINE__);
     }
-    if (this->storage->GetSize() < this->offset + size) {
-        throw vislib::Exception(
-            "Not enought data in storage object to deserialise", 
-            __FILE__, __LINE__);
+    if (this->nakedStorageSize < this->offset + size) {
+        throw vislib::Exception("Not enough data in storage object to "
+            "deserialise", __FILE__, __LINE__);
     }
-    memcpy(data, this->storage->As<char>() + this->offset, size);
+
+    ::memcpy(data, this->nakedStorage + this->offset, size);
     this->offset += size;
 }

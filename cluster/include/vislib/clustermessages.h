@@ -57,10 +57,38 @@ namespace cluster {
 
 
     /** The magic number which must be at the begin of all network messages. */
-    extern const UINT32 MAGIC_NUMBER;
+    const UINT32 MAGIC_NUMBER = static_cast<UINT32>('v')
+        | static_cast<UINT32>('l') << 8
+        | static_cast<UINT32>('c') << 16
+        | 1 << 24;
+
+
+    /** 
+     * Create a message ID of the base message set used for establishing a 
+     * a connection etc.
+     */
+    #define VLC1_BASE_MSG_ID(id) (0 + (id))
+
+    /**
+     * Declare and define a variable 'name' that has the base message ID 'id'.
+     * The string "MSGID_" is prepended to the name.
+     */
+    #define DEFINE_VLC1_BASE_MSG(name, id)                                     \
+        const UINT32 MSGID_##name = VLC1_BASE_MSG_ID(id)
+
+    /**
+     * Declare and define a variable 'name' that has the camera parameter 
+     * message ID 'id'.
+     * This macro adds the default offset for camera parameter messages to 'id', 
+     * i.e. the first camera parameter message should pass 0 here.
+     * The string "MSGID_CAM_" is prepended to the name.
+     */
+    #define DEFINE_VLC1_CAM_MSG(name, id)                                      \
+        DEFINE_VLC1_BASE_MSG(CAM_##name, 64 + (id))
+
 
     /** This is the first message a client must send to a server node. */
-    extern const UINT32 MSGID_INTRODUCE;
+    DEFINE_VLC1_BASE_MSG(INTRODUCE, 1);
 
     /** 
      * This message ID indicates that the message consists of multiple other
@@ -69,39 +97,36 @@ namespace cluster {
      * specified for MSGID_MULTIPLE is the size of all messages to follow in
      * bytes.
      */
-    extern const UINT32 MSGID_MULTIPLE;
+    DEFINE_VLC1_BASE_MSG(MULTIPLE, 2);
 
-    extern const UINT32 MSGID_APERTUREANGLE;
+    DEFINE_VLC1_CAM_MSG(APERTUREANGLE, 0);
 
-    extern const UINT32 MSGID_EYE;
+    DEFINE_VLC1_CAM_MSG(EYE, 1);
 
-    extern const UINT32 MSGID_FARCLIP;
+    DEFINE_VLC1_CAM_MSG(FARCLIP, 2);
 
-    extern const UINT32 MSGID_FOCALDISTANCE;
+    DEFINE_VLC1_CAM_MSG(FOCALDISTANCE, 3);
 
-    extern const UINT32 MSGID_LIMITS;
+    DEFINE_VLC1_CAM_MSG(LIMITS, 4);
 
-    extern const UINT32 MSGID_LOOKAT;
+    DEFINE_VLC1_CAM_MSG(LOOKAT, 5);
 
-    extern const UINT32 MSGID_NEARCLIP;
+    DEFINE_VLC1_CAM_MSG(NEARCLIP, 6);
 
-    extern const UINT32 MSGID_POSITION;
+    DEFINE_VLC1_CAM_MSG(POSITION, 7);
+
+    DEFINE_VLC1_CAM_MSG(PROJECTION, 8);
+
+    DEFINE_VLC1_CAM_MSG(STEREODISPARITY, 9);
+
+    DEFINE_VLC1_CAM_MSG(TILERECT, 10);
+
+    DEFINE_VLC1_CAM_MSG(UP, 11);
     
-    extern const UINT32 MSGID_PROJECTION;
+    DEFINE_VLC1_CAM_MSG(VIRTUALVIEWSIZE, 12);
 
-    extern const UINT32 MSGID_STEREODISPARITY;
+    DEFINE_VLC1_CAM_MSG(SERIALISEDCAMPARAMS, 13);
 
-    extern const UINT32 MSGID_TILERECT;
-
-    extern const UINT32 MSGID_UP;
-    
-    extern const UINT32 MSGID_VIRTUALVIEWSIZE;
-
-    extern const UINT32 MSGID_SERIALISEDCAMPARAMS;
-
-    extern const UINT32 MSGID_SERIALISEDCAMPARAMLIMITS;
-
-    
 } /* end namespace cluster */
 } /* end namespace net */
 } /* end namespace vislib */
@@ -110,4 +135,3 @@ namespace cluster {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_CLUSTERMESSAGES_H_INCLUDED */
-

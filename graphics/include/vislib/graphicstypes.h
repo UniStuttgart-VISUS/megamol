@@ -18,7 +18,7 @@
 #include "vislib/Point.h"
 #include "vislib/Rectangle.h"
 #include "vislib/Vector.h"
-//#include "vislib/ShallowDimension.h"
+#include "vislib/ShallowDimension.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/ShallowRectangle.h"
 #include "vislib/ShallowVector.h"
@@ -38,8 +38,8 @@ namespace graphics {
     typedef math::Dimension<ImageSpaceType, 2> ImageSpaceDimension;
 
     /** A shallow type for specifying image space dimensions. */
-    //typedef math::ShallowDimension<ImageSpaceType, 2> 
-    //    ShallowImageSpaceDimension;
+    typedef math::ShallowDimension<ImageSpaceType, 2> 
+        ShallowImageSpaceDimension2D;
 
     /** A type for specifying image space rectangle. */
     typedef math::Rectangle<ImageSpaceType> ImageSpaceRectangle;

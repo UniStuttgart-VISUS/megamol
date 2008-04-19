@@ -9,6 +9,8 @@
 
 #include "vislib/CameraParamsStore.h"
 #include "vislib/clustermessages.h"
+#include "vislib/RawStorage.h"
+#include "vislib/RawStorageSerialiser.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/ShallowVector.h"
 #include "vislib/Trace.h"
@@ -19,7 +21,7 @@
  * vislib::net::cluster::AbstractControlledNode::~AbstractControlledNode
  */
 vislib::net::cluster::AbstractControlledNode::~AbstractControlledNode(void) {
-    // TODO: Implement
+    // Nothing to do.
 }
 
 
@@ -38,18 +40,81 @@ vislib::net::cluster::AbstractControlledNode::AbstractControlledNode(void)
 void vislib::net::cluster::AbstractControlledNode::onMessageReceived(
         const Socket& src, const UINT msgId, const BYTE *body, 
         const SIZE_T cntBody) {
-    TRACE(Trace::LEVEL_VL_INFO, "TODO: cam ctrl received %u\n", msgId);
-
-    if (msgId == MSGID_POSITION) {
-        graphics::ShallowSceneSpacePoint3D pt(
-            (graphics::SceneSpaceType *)(body));
-        this->parameters->SetPosition(pt);
-
-    } else if (msgId == MSGID_UP) {
-        graphics::ShallowSceneSpaceVector3D vec(
-            (graphics::SceneSpaceType *)(body));
-        this->parameters->SetUp(vec);
+#define SET_AS_INTEGRAL_PARAM(type, name)                                      \
+    this->parameters->Set##name(*reinterpret_cast<const type *>(body))
+#define SET_AS_SHALLOW_PARAM(type, space, name) {                              \
+    graphics::Shallow##space##type sh(                                         \
+        reinterpret_cast<graphics::space##Type *>(const_cast<BYTE *>(body)));  \
+    this->parameters->Set##name(sh);                                           \
     }
+
+    switch (msgId) {
+
+        case MSGID_CAM_APERTUREANGLE:
+            SET_AS_INTEGRAL_PARAM(math::AngleDeg, ApertureAngle);
+            break;
+
+        case MSGID_CAM_EYE:
+            SET_AS_INTEGRAL_PARAM(graphics::CameraParameters::StereoEye, Eye);
+            break;
+
+        case MSGID_CAM_FARCLIP:
+            SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, FarClip);
+            break;
+
+        case MSGID_CAM_FOCALDISTANCE:
+            SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, FocalDistance);
+            break;
+
+        case MSGID_CAM_LIMITS: {
+            RawStorageSerialiser serialiser(body, cntBody);
+            this->parameters->Limits()->Deserialise(serialiser);
+            } break;
+
+        case MSGID_CAM_LOOKAT:
+            SET_AS_SHALLOW_PARAM(Point3D, SceneSpace, LookAt);
+            break;
+
+        case MSGID_CAM_NEARCLIP:
+            SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, NearClip);
+            break;
+
+        case MSGID_CAM_POSITION:
+            SET_AS_SHALLOW_PARAM(Point3D, SceneSpace, Position);
+            break;
+
+        case MSGID_CAM_PROJECTION:
+            SET_AS_INTEGRAL_PARAM(graphics::CameraParameters::ProjectionType,
+                Projection);
+            break;
+
+        case MSGID_CAM_STEREODISPARITY:
+            SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, StereoDisparity);
+            break;
+
+        case MSGID_CAM_TILERECT:
+            SET_AS_SHALLOW_PARAM(Rectangle, ImageSpace, TileRect);
+            break;
+
+        case MSGID_CAM_UP:
+            SET_AS_SHALLOW_PARAM(Vector3D, SceneSpace, Up);
+            break;
+
+        case MSGID_CAM_VIRTUALVIEWSIZE:
+            SET_AS_SHALLOW_PARAM(Dimension2D, ImageSpace, VirtualViewSize);
+            break;
+
+        case MSGID_CAM_SERIALISEDCAMPARAMS: {
+            RawStorageSerialiser serialiser(body, cntBody);
+            this->parameters->Deserialise(serialiser);
+            } break;
+
+        default:
+            break;
+    }
+
+#undef SET_AS_INTEGRAL_PARAM
+#undef SET_AS_SHALLOW_PARAM
 }
 
 
