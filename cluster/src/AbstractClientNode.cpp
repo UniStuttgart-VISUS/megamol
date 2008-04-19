@@ -180,12 +180,12 @@ SIZE_T vislib::net::cluster::AbstractClientNode::forEachPeer(
     try {
         func(this, this->serverAddress, this->socket, context);
         retval = 1;
-    } catch (Exception e) {
+    } catch (Exception& e) {
         TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
-            "with an exception: %s", e.GetMsgA());
+            "with an exception: %s\n", e.GetMsgA());
     } catch (...) {
         TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
-            "with a non-VISlib exception.");
+            "with a non-VISlib exception.\n");
     }
 
     return retval;

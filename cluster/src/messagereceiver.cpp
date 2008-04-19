@@ -115,8 +115,8 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
                 const BlockHeader *blkHdr = &msgHdr->Header;
                 const BYTE *body = recvBuf.As<BYTE>() + sizeof(MessageHeader);
 
-                TRACE(Trace::LEVEL_VL_INFO, "Received message %u.\n", 
-                    blkHdr->BlockId);
+                TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Cluster service "
+                    "received message %u.\n", blkHdr->BlockId);
                 ctx->Receiver->onMessageReceived(*ctx->Socket,
                     blkHdr->BlockId, 
                     (blkHdr->BlockLength > 0) ? body : NULL,

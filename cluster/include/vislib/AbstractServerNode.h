@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_ABSTRACTSERVERNODE_H_INCLUDED
@@ -16,6 +17,8 @@
 
 
 #include "vislib/AbstractClusterNode.h"
+#include "vislib/PtrArray.h"
+#include "vislib/RunnableThread.h"
 #include "vislib/TcpServer.h"
 
 
@@ -25,11 +28,8 @@ namespace cluster {
 
 
     /**
-     * This class defines the interface of a server node.
-     * 
-     * Classes that want to implement a server node should inherit from 
-     * ServerNodeAdapter, which implements all the required server 
-     * functionality.
+     * This class defines the interface of a server node and implements the
+     * basic communication facilities using TCP/IP sockets.
      *
      * This class uses virtual inheritance to implement the "delegate to 
      * sister" pattern.
@@ -47,7 +47,69 @@ namespace cluster {
          *
          * @return The address the server is binding to.
          */
-        virtual const SocketAddress& GetBindAddress(void) const = 0;
+        virtual const SocketAddress& GetBindAddress(void) const;
+
+        /**
+         * Initialise the node.
+         *
+         * Subclasses should build an initialisation chain by calling their 
+         * parent class implementation first, or must provide all 
+         * initialisation information that this implementation draws from the
+         * command line by other means.
+         *
+         * @param inOutCmdLine The command line passed to the containing
+         *                     application. The method might alter the command
+         *                     line and remove consumed options.
+         *
+         * @throws
+         */
+        virtual void Initialise(sys::CmdLineProviderA& inOutCmdLine);
+
+        /**
+         * Initialise the node.
+         *
+         * Subclasses should build an initialisation chain by calling their 
+         * parent class implementation first, or must provide all 
+         * initialisation information that this implementation draws from the
+         * command line by other means.
+         *
+         * @param inOutCmdLine The command line passed to the containing
+         *                     application. The method might alter the command
+         *                     line and remove consumed options.
+         *
+         * @throws
+         */
+        virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
+
+        /**
+         * This is the callback method that the TCP server uses to add a new 
+         * node. It adds the peer node identified by 'addr' and using the socket
+         * 'socket' to the client list and starts a message receiver thread for 
+         * it.
+         *
+         * @aram socket The socket used for communication with the client.
+         * @param addr  The address of the peer node.
+         */
+        virtual bool OnNewConnection(Socket& socket,
+            const SocketAddress& addr) throw();
+
+        /**
+         * This method is used by the TCP server to notify the object that no
+         * further connections will be accepted.
+         */
+        virtual void OnServerStopped(void) throw();
+
+        /**
+         * Starts the server thread and returns afterwards.
+         *
+         * You should call this Run() method first in subclasses as your own 
+         * operations will probably not return immediately.
+         *
+         * @return 0 in case of success, an error code otherwise.
+         *
+         * @throws SystemException If the server thread could not be started.
+         */
+        virtual DWORD Run(void);
 
         /**
          * Set a new socket address the server should bind to. 
@@ -56,7 +118,7 @@ namespace cluster {
          *
          * @param bindAddress The address to bind to.
          */
-        virtual void SetBindAddress(const SocketAddress& bindAddress) = 0;
+        virtual void SetBindAddress(const SocketAddress& bindAddress);
 
         /**
          * Make the server bind to any adapter, but use the specified port.
@@ -65,7 +127,7 @@ namespace cluster {
          *
          * @param port The port to bind to.
          */
-        virtual void SetBindAddress(const unsigned short port) = 0;
+        virtual void SetBindAddress(const unsigned short port);
 
     protected:
 
@@ -80,6 +142,53 @@ namespace cluster {
         AbstractServerNode(const AbstractServerNode& rhs);
 
         /**
+         * Answer the number of known peer nodes.
+         *
+         * @return The number of known peer nodes.
+         */
+        virtual SIZE_T countPeers(void) const;
+
+        /**
+         * Remove the 'idx'th peer node. 
+         *
+         * This operation includes closing the socket and stopping the receiver
+         * thread.
+         *
+         * It is safe to pass an invalid index, i.e. to disconnect from a 
+         * non-connected node. All exceptions regarding communication and thread
+         * errors will be caught.
+         *
+         * @param idx The index of the peer node to be removed.
+         */
+        void disconnectPeer(const SIZE_T idx);
+
+        /**
+         * Call 'func' for each known peer node (socket).
+         *
+         * On server nodes, the function is usually called for all the client
+         * nodes, on client nodes only once (for the server). However, 
+         * implementations in subclasses may differ.
+         *
+         * @param func    The function to be executed for each peer node.
+         * @param context This is an additional pointer that is passed 'func'.
+         *
+         * @return The number of sucessful calls to 'func' that have been made.
+         */
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+
+        /**
+         * The message receiver thread calls this method once it exists.
+         *
+         * @param socket The socket that was used from communication with the
+         *               peer node.
+         * @param rmc    The receive context that was used by the receiver 
+         *               thread. The method takes ownership of the context and
+         *               should release if not needed any more.
+         */
+        virtual void onMessageReceiverExiting(Socket& socket,
+            PReceiveMessagesCtx rmc);
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand side operand.
@@ -87,6 +196,31 @@ namespace cluster {
          * @return *this.
          */
         AbstractServerNode& operator =(const AbstractServerNode& rhs);
+
+    private:
+
+        /**
+         * This structure represents a client peer node with its socket for
+         * communication and the receiver thread that waits for incoming 
+         * messages on this socket.
+         */
+        typedef struct PeerNode_t {
+            SocketAddress Address;
+            vislib::net::Socket Socket;
+            sys::Thread *Receiver;
+        } PeerNode;
+
+        /** The address to bind the server to. */
+        SocketAddress bindAddress;
+
+        /** The TCP server waiting for clients. */
+        sys::RunnableThread<TcpServer> server;
+
+        /** The client sockets. */
+        PtrArray<PeerNode> peers;
+
+        /** Lock for protecting the 'peers' member. */
+        mutable sys::CriticalSection peersLock;
 
     };
     

@@ -503,7 +503,8 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+                "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastReceived), TRUE, 
                     &inOutFlags)) {
@@ -576,7 +577,8 @@ SIZE_T vislib::net::Socket::receiveFrom(SocketAddress& outFromAddr,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+                "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastReceived), TRUE, 
                     &inOutFlags)) {
@@ -646,7 +648,8 @@ SIZE_T vislib::net::Socket::send(const void *data, const SIZE_T cntBytes,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+                "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastSent), TRUE, &inOutFlags)) {
                 ::WSACloseEvent(overlapped.hEvent);
@@ -712,7 +715,8 @@ SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr,
                 ::WSACloseEvent(overlapped.hEvent);
                 throw SocketException(errorCode, __FILE__, __LINE__);
             }
-            TRACE(DEBUG_TRACE_LEVEL, "Overlapped socket I/O pending.\n");
+            TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Overlapped socket I/O "
+                "pending.\n");
             if (!::WSAGetOverlappedResult(this->handle, &overlapped, 
                     reinterpret_cast<DWORD *>(&lastSent), TRUE, &inOutFlags)) {
                 ::WSACloseEvent(overlapped.hEvent);
@@ -745,10 +749,3 @@ SIZE_T vislib::net::Socket::sendTo(const SocketAddress& toAddr,
 
     return totalSent;
 }
-
-
-/*
- * vislib::net::Socket::DEBUG_TRACE_LEVEL 
- */
-const int vislib::net::Socket::DEBUG_TRACE_LEVEL = vislib::Trace::LEVEL_VL_INFO 
-    + 1000;

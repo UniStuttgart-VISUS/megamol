@@ -62,6 +62,12 @@ const UINT vislib::Trace::LEVEL_VL_ERROR = vislib::Trace::LEVEL_VL;
 
 
 /*
+ * vislib::Trace::LEVEL_VL_ANNOYINGLY_VERBOSE
+ */
+const UINT vislib::Trace::LEVEL_VL_ANNOYINGLY_VERBOSE = UINT_MAX;
+
+
+/*
  * vislib::Trace::LEVEL_VL_INFO
  */
 const UINT vislib::Trace::LEVEL_VL_INFO = vislib::Trace::LEVEL_VL + 200;
@@ -71,6 +77,12 @@ const UINT vislib::Trace::LEVEL_VL_INFO = vislib::Trace::LEVEL_VL + 200;
  * vislib::Trace::LEVEL_VL_WARN
  */
 const UINT vislib::Trace::LEVEL_VL_WARN = vislib::Trace::LEVEL_VL + 100;
+
+
+/*
+ * vislib::Trace::LEVEL_VL_VERBOSE
+ */
+const UINT vislib::Trace::LEVEL_VL_VERBOSE = vislib::Trace::LEVEL_VL + 10000;
 
 
 /*

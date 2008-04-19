@@ -68,11 +68,23 @@ namespace vislib {
         /** Messages above this level are used for VISlib internal tracing. */
         static const UINT LEVEL_VL;
 
+        /**
+         * Messages with this level are used for VISlib internal output of
+         * frequently recurring tasks.
+         */
+        static const UINT LEVEL_VL_ANNOYINGLY_VERBOSE;
+
         /** Messages with this level represent a VISlib internal error. */
         static const UINT LEVEL_VL_ERROR;
 
         /** Messages with this level represent a VISlib internal message. */
         static const UINT LEVEL_VL_INFO;
+
+        /** 
+        * Messages with this level represent a VISlib less important internal
+        * message.
+        */
+        static const UINT LEVEL_VL_VERBOSE;
 
         /** Messages with this level represent a VISlib internal warning. */
         static const UINT LEVEL_VL_WARN;

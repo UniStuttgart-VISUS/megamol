@@ -325,6 +325,16 @@ namespace vislib {
         virtual void RemoveAll(const T& element);
 
         /**
+         * Erase the element at position 'idx' from the array. If 'idx' is out
+         * of range, this method has no effect.
+         *
+         * @param idx The index of the element to be removed.
+         */
+        inline void RemoveAt(const SIZE_T idx) {
+            this->Erase(idx);
+        }
+
+        /**
          * Remove the first element from the collection. 
          */
         virtual inline void RemoveFirst(void) {

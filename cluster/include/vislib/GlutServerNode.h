@@ -17,13 +17,13 @@
 #if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
 
 #include "vislib/AbstractControllerNode.h"
+#include "vislib/AbstractServerNode.h"
 #include "vislib/CameraOpenGL.h"
 #include "vislib/CameraRotate2DLookAt.h"
 #include "vislib/CameraZoom2DMove.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/GlutClusterNode.h"
 #include "vislib/InputModifiers.h"
-#include "vislib/ServerNodeAdapter.h"
 
 
 namespace vislib {
@@ -47,7 +47,7 @@ namespace cluster {
      * functionality.
      */
     template<class T> class GlutServerNode 
-            : public GlutClusterNode<T>, public ServerNodeAdapter,
+            : public GlutClusterNode<T>, public AbstractServerNode,
             public AbstractControllerNode {
 
     public:
@@ -206,7 +206,7 @@ namespace cluster {
     template<class T> 
     void GlutServerNode<T>::Initialise(sys::CmdLineProviderA& inOutCmdLine) {
         GlutClusterNode<T>::Initialise(inOutCmdLine);
-        ServerNodeAdapter::Initialise(inOutCmdLine);
+        AbstractServerNode::Initialise(inOutCmdLine);
     }
 
 
@@ -216,7 +216,7 @@ namespace cluster {
     template<class T> 
     void GlutServerNode<T>::Initialise(sys::CmdLineProviderW& inOutCmdLine) {
         GlutClusterNode<T>::Initialise(inOutCmdLine);
-        ServerNodeAdapter::Initialise(inOutCmdLine);
+        AbstractServerNode::Initialise(inOutCmdLine);
     }
 
 
@@ -224,7 +224,7 @@ namespace cluster {
      *  vislib::net::cluster::GlutServerNode<T>::Run
      */
     template<class T> DWORD GlutServerNode<T>::Run(void) {
-        ServerNodeAdapter::Run();           // First, start the server.
+        AbstractServerNode::Run();          // First, start the server.
         return GlutClusterNode<T>::Run();   // Afterwards, enter message loop.
     }
 
@@ -233,7 +233,7 @@ namespace cluster {
      * vislib::net::cluster::GlutServerNode<T>::GlutServerNode
      */
     template<class T> GlutServerNode<T>::GlutServerNode(void) 
-            : GlutClusterNode<T>(), ServerNodeAdapter(), 
+            : GlutClusterNode<T>(), AbstractServerNode(),
             AbstractControllerNode(new graphics::ObservableCameraParams()),
             rotateController(NULL), zoomController(NULL) {
         this->camera.SetParameters(this->getParameters());

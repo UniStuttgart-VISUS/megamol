@@ -321,10 +321,6 @@
 				RelativePath=".\src\messagereceiver.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\src\ServerNodeAdapter.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -369,10 +365,6 @@
 			</File>
 			<File
 				RelativePath=".\src\messagereceiver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\ServerNodeAdapter.h"
 				>
 			</File>
 		</Filter>
