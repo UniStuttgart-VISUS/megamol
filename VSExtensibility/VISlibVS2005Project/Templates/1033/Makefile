@@ -73,8 +73,8 @@ CPPFLAGS_DEBUG := $(CPPFLAGS) $(CompilerFlagsDebug) -DDEBUG -D_DEBUG -DLIN$(VISl
 CPPFLAGS_RELEASE := $(CPPFLAGS) $(CompilerFlagsRelease) -DNDEBUG -D_NDEBUG -DLIN$(VISlibBits)
 
 LDFLAGS := $(LinkerFlags) -L$(VISlibLibDir)
-LDFLAGS_DEBUG := $(LDFLAGS) $(LinkerFlagsDebug) $(addprefix -l, $(VISlibsDebug))
-LDFLAGS_RELEASE := $(LDFLAGS) $(LinkerFlagsRelease) $(addprefix -l, $(VISlibsRelease))
+LDFLAGS_DEBUG := $(LDFLAGS) $(addprefix -l, $(VISlibsDebug)) $(LinkerFlagsDebug)
+LDFLAGS_RELEASE := $(LDFLAGS) $(addprefix -l, $(VISlibsRelease)) $(LinkerFlagsRelease) 
 
 [!if LIN_USE_GLOBBING]
 CPPSRCS := $(filter-out $(ExcludeFromBuild), $(wildcard $(InputDir)/*.cpp))
@@ -114,10 +114,10 @@ $(OutDir)/$(ReleaseDir)/$(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)
 
 # Rules for intermediate binaries:
 $(IntDir)/$(DebugDir)/$(TargetName): $(CPPOBJS_DEBUG)
-	$(LINK) $(LDFLAGS_DEBUG) -o $@ $^
+	$(LINK) $^ $(LDFLAGS_DEBUG) -o $@
 
 $(IntDir)/$(ReleaseDir)/$(TargetName): $(CPPOBJS_RELEASE)
-	$(LINK) $(LDFLAGS_RELEASE) -o $@ $^
+	$(LINK) $^ $(LDFLAGS_RELEASE) -o $@
 
 
 # Rules for dependencies:

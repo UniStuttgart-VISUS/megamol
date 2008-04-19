@@ -41,7 +41,7 @@ VISlibIncludeDirs := \$(VISlibDir)/base/include[!if VISLIB_CLUSTER] \$(VISlibDir
 
 VISlibLibDir := \$(VISlibDir)/lib
 
-VISlibsRelease := [!if VISLIB_CLUSTER] vislibcluster\$(VISlibBits)[!endif][!if VISLIB_GL] vislibgl\$(VISlibBits)[!endif][!if VISLIB_GRAPHICS] vislibgraphics\$(VISlibBits)[!endif][!if VISLIB_SYS] vislibsys\$(VISlibBits)[!endif][!if VISLIB_NET] vislibnet\$(VISlibBits)[!endif][!if VISLIB_MATH] vislibmath\$(VISlibBits)[!endif] vislibbase\$(VISlibBits)
+VISlibsRelease := [!if VISLIB_CLUSTER] vislibcluster\$(VISlibBits)[!endif][!if VISLIB_GL] vislibgl\$(VISlibBits)[!endif][!if VISLIB_GRAPHICS] vislibgraphics\$(VISlibBits)[!endif][!if VISLIB_NET] vislibnet\$(VISlibBits)[!endif][!if VISLIB_SYS] vislibsys\$(VISlibBits)[!endif][!if VISLIB_MATH] vislibmath\$(VISlibBits)[!endif] vislibbase\$(VISlibBits)
 
 VISlibsDebug := \$(addsuffix d, \$(VISlibsRelease))
 
