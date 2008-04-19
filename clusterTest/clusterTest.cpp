@@ -82,8 +82,6 @@ int main(int argc, char **argv) {
                 return GlutServer::GetInstance().Run();
             } else if (val.Compare(_T("glutclient"), false) == 0) {
                 GlutClient::GetInstance().Initialise(cmdLine);
-                GlutClient::GetInstance().SetServerAddress(
-                    vislib::net::SocketAddress::CreateInet("127.0.0.1", 12345));
                 return GlutClient::GetInstance().Run();
             }
         } catch (vislib::Exception& e) {

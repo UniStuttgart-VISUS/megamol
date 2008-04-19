@@ -24,10 +24,11 @@ include ExtLibs.mk
 TargetName := clusterTest
 
 # Output directory
-OutDir := ./$(VISlibPlatform)
+OutDir := ../$(VISlibPlatform)
 
 #Intermediate directory
-IntDir := $(OutDir)
+IntDir := ./$(VISlibPlatform)
+ #$(OutDir)
 
 # Output subdirectory name for Release files
 ReleaseDir := Release
@@ -43,12 +44,12 @@ IncludeDirs := .
 SystemIncludeDirs := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
 
 # Additional compiler flags
-CompilerFlags := -fPIC
+CompilerFlags := -fPIC -DVISLIB_CLUSTER_WITH_OPENGL -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY
 CompilerFlagsDebug := -ggdb
 CompilerFlagsRelease := -O3 -g0
 
 # Additional linker flags
-LinkerFlags := -L/usr/X11R6/lib -lm  -lGL -lglut
+LinkerFlags := -L/usr/X11R6/lib -lm -lpthread -lGL -lGL -lglut -lncurses
 LinkerFlagsDebug :=
 LinkerFlagsRelease :=
 
@@ -68,8 +69,8 @@ CPPFLAGS_DEBUG := $(CPPFLAGS) $(CompilerFlagsDebug) -DDEBUG -D_DEBUG -DLIN$(VISl
 CPPFLAGS_RELEASE := $(CPPFLAGS) $(CompilerFlagsRelease) -DNDEBUG -D_NDEBUG -DLIN$(VISlibBits)
 
 LDFLAGS := $(LinkerFlags) -L$(VISlibLibDir)
-LDFLAGS_DEBUG := $(LDFLAGS) $(LinkerFlagsDebug) $(addprefix -l, $(VISlibsDebug))
-LDFLAGS_RELEASE := $(LDFLAGS) $(LinkerFlagsRelease) $(addprefix -l, $(VISlibsRelease))
+LDFLAGS_DEBUG := $(addprefix -l, $(VISlibsDebug)) $(LDFLAGS) $(LinkerFlagsDebug)
+LDFLAGS_RELEASE := $(addprefix -l, $(VISlibsRelease)) $(LDFLAGS) $(LinkerFlagsRelease)
 
 CPPSRCS := $(filter-out $(ExcludeFromBuild), $(wildcard $(InputDir)/*.cpp))
 
@@ -103,10 +104,10 @@ $(OutDir)/$(ReleaseDir)/$(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)
 
 # Rules for intermediate binaries:
 $(IntDir)/$(DebugDir)/$(TargetName): $(CPPOBJS_DEBUG)
-	$(LINK) $(LDFLAGS_DEBUG) -o $@ $^
+	$(LINK) $^ $(LDFLAGS_DEBUG) -o $@
 
 $(IntDir)/$(ReleaseDir)/$(TargetName): $(CPPOBJS_RELEASE)
-	$(LINK) $(LDFLAGS_RELEASE) -o $@ $^
+	$(LINK) $^ $(LDFLAGS_RELEASE) -o $@
 
 
 # Rules for dependencies:
@@ -138,7 +139,8 @@ $(IntDir)/$(ReleaseDir)/%.o:
 # Cleanup rules:
 clean: sweep
 	rm -rf $(IntDir)/*
-	rm -rf $(OutDir)/*
+	rm -f $(OutDir)/$(DebugDir)/$(TargetName)
+	rm -f $(OutDir)/$(ReleaseDir)/$(TargetName)
 
 
 sweep:
