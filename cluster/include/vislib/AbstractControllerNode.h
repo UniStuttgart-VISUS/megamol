@@ -208,7 +208,7 @@ namespace cluster {
          *
          * @param params The new camera parameters to be observed.
          */
-        void setParameters(const SmartPtr<graphics::CameraParameters>& 
+        void setParameters(const SmartPtr<graphics::CameraParameters>&
             params);
 
         /**

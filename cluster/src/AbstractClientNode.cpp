@@ -8,7 +8,6 @@
 #include "vislib/AbstractClientNode.h"
 
 #include "vislib/assert.h"
-#include "vislib/CmdLineParser.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
 #include "vislib/SocketException.h"
@@ -37,25 +36,7 @@ vislib::net::cluster::AbstractClientNode::~AbstractClientNode(void) {
  */
 void vislib::net::cluster::AbstractClientNode::Initialise(
         sys::CmdLineProviderA& inOutCmdLine) {
-    // TODO: Get client parameters
-
-    //typedef vislib::sys::CmdLineParserA Parser;
-    //typedef Parser::Option Option;
-    //typedef Option::ValueDesc ValueDesc;
-
-
-    //Parser parser;
-
-    //Option optServer("server-address", 
-    //    "Specifies the address of the server node.",
-    //    Option::FLAG_UNIQUE, 
-    //    ValueDesc::ValueList(Option::STRING_VALUE, 
-    //    "server", "Specifies the server host name or IP address.")
-    //    ->Add(Option::INT_VALUE, 
-    //    "port", "Specifies the server port."));
-    //parser.AddOption(&optServer);
-
-
+    return this->initialise(inOutCmdLine);
 }
 
 
@@ -64,7 +45,7 @@ void vislib::net::cluster::AbstractClientNode::Initialise(
  */
 void vislib::net::cluster::AbstractClientNode::Initialise(
         sys::CmdLineProviderW& inOutCmdLine) {
-    // TODO: Get client parameters
+    return this->initialise(inOutCmdLine);
 }
 
 
@@ -131,6 +112,8 @@ void vislib::net::cluster::AbstractClientNode::connect(
     }
 
     /* Connect to the server. */
+    TRACE(Trace::LEVEL_VL_INFO, "Connecting to server node %s ...\n", 
+        this->serverAddress.ToStringA().PeekBuffer());
     this->socket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
         Socket::PROTOCOL_TCP);
     this->socket.Connect(this->serverAddress);

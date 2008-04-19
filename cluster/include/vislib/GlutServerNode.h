@@ -205,8 +205,7 @@ namespace cluster {
      */
     template<class T> GlutServerNode<T>::GlutServerNode(void) 
             : GlutClusterNode<T>(), ServerNodeAdapter(), 
-            AbstractControllerNode(
-            new vislib::graphics::ObservableCameraParams()),
+            AbstractControllerNode(new graphics::ObservableCameraParams()),
             controller(NULL) {
         this->camera.SetParameters(this->getParameters());
         this->initialiseCursor(this->cursor);

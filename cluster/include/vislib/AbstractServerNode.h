@@ -40,7 +40,7 @@ namespace cluster {
     public:
 
         /** Dtor. */
-        ~AbstractServerNode(void);
+        virtual ~AbstractServerNode(void);
 
         /**
          * Answer the socket address the server is binding to.

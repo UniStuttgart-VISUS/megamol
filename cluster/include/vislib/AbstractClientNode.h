@@ -16,6 +16,7 @@
 
 
 #include "vislib/AbstractClusterNode.h"
+#include "vislib/CmdLineParser.h"
 #include "vislib/Thread.h"
 
 
@@ -36,7 +37,7 @@ namespace cluster {
     public:
 
         /** Dtor. */
-        ~AbstractClientNode(void);
+        virtual ~AbstractClientNode(void);
 
         /**
          * Answer the address of the server to connect to.
@@ -205,6 +206,18 @@ namespace cluster {
         /** Superclass typedef. */
         typedef AbstractClusterNode Super;
 
+        /**
+         * Character type agnostic initialiser that does the actual work.
+         *
+         * @param inOutCmdLine The command line passed to the containing
+         *                     application. The method might alter the command
+         *                     line and remove consumed options.
+         *
+         * @throws
+         */
+        template<class T> void initialise(
+            sys::CmdLineProvider<T>& inOutCmdLine);
+
         /** The number of reconnect attempts to make if disconnected. */
         UINT reconnectAttempts;
 
@@ -218,6 +231,49 @@ namespace cluster {
         Socket socket;
 
     };
+
+
+    /*
+     * vislib::net::cluster::AbstractClientNode::initialise
+     */
+    template<class T>
+    void AbstractClientNode::initialise(sys::CmdLineProvider<T>& inOutCmdLine) {
+        typedef vislib::String<T> String;
+        typedef vislib::sys::CmdLineParser<T> Parser;
+        typedef typename Parser::Argument Argument;
+        typedef typename Parser::Option Option;
+        typedef typename Option::ValueDesc ValueDesc;
+
+        Parser parser;
+        Argument *arg = NULL;
+
+        Option optServer(String(_T("server-node")), 
+            String(_T("Specifies the name of the server node.")),
+            Option::FLAG_UNIQUE, 
+            ValueDesc::ValueList(Option::STRING_VALUE, 
+                String(_T("host")), 
+                String(_T("The host name or IP address of the server node."))));
+        parser.AddOption(&optServer);
+
+        Option optPort(String(_T("server-port")), 
+            String(_T("Specifies the post of the server node.")),
+            Option::FLAG_UNIQUE, 
+            ValueDesc::ValueList(Option::INT_VALUE, 
+                String(_T("port")), 
+                String(_T("The port the server node is listening on."))));
+        parser.AddOption(&optPort);
+
+        if (parser.Parse(inOutCmdLine.ArgC(), inOutCmdLine.ArgV()) >= 0) {
+            if ((arg = optServer.GetFirstOccurrence()) != NULL) {
+                this->serverAddress.SetIPAddress(IPAddress::Create(
+                    StringA(arg->GetValueString())));
+            }
+
+            if ((arg = optPort.GetFirstOccurrence()) != NULL) {
+                this->serverAddress.SetPort(arg->GetValueInt());
+            }
+        }
+    }
 
 } /* end namespace cluster */
 } /* end namespace net */
