@@ -18,12 +18,13 @@
 /**
  * The 'function_cast' is used to cast between function pointers and void 
  * pointers. If a non-void, non-function pointer is used the behaviour is
- * undefined.
+ * undefined. Be sure not to cast away any specifications of calling 
+ * conventions or this might result in stack corruption.
  */
 
 #ifdef _WIN32
 
-#define function_cast static_cast
+#define function_cast reinterpret_cast
 
 #else /* _WIN32 */
 
