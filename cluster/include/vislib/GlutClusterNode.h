@@ -16,7 +16,7 @@
 
 #if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
 
-#include <GL/glut.h>
+#include "../../glutTest/glutInclude.h"
 
 #include "vislib/AbstractClusterNode.h"
 #include "vislib/UnsupportedOperationException.h"
