@@ -7,9 +7,9 @@
 
 #ifndef VISLIB_GLUTCLIENTNODE_H_INCLUDED
 #define VISLIB_GLUTCLIENTNODE_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -55,6 +55,35 @@ namespace cluster {
         GlutClientNode(void);
 
         /**
+         * Answer the number of known peer nodes.
+         *
+         * @return The number of known peer nodes.
+         *
+         * @throws MissingImplementation If not overwritten by subclasses.
+         *                               Calling this interface implementation
+         *                               is a severe logic error.
+         */
+        virtual SIZE_T countPeers(void) const;
+
+        /**
+         * Call 'func' for each known peer node (socket).
+         *
+         * On server nodes, the function is usually called for all the client
+         * nodes, on client nodes only once (for the server). However, 
+         * implementations in subclasses may differ.
+         *
+         * @param func    The function to be executed for each peer node.
+         * @param context This is an additional pointer that is passed 'func'.
+         *
+         * @return The number of sucessful calls to 'func' that have been made.
+         *
+         * @throws MissingImplementation If not overwritten by subclasses.
+         *                               Calling this interface implementation
+         *                               is a severe logic error.
+         */
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+
+        /**
          * This method is called when data have been received and a valid 
          * message has been found in the packet.
          *
@@ -62,9 +91,24 @@ namespace cluster {
          * @param msgId   The message ID.
          * @param body    Pointer to the message body.
          * @param cntBody The number of bytes designated by 'body'.
+         *
+         * @return true in order to signal that the message has been processed, 
+         *         false if the implementation did ignore it.
          */
-        virtual void onMessageReceived(const Socket& src, const UINT msgId,
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
             const BYTE *body, const SIZE_T cntBody);
+
+        /**
+         * The message receiver thread calls this method once it exists.
+         *
+         * @param socket The socket that was used from communication with the
+         *               peer node.
+         * @param rmc    The receive context that was used by the receiver 
+         *               thread. The method takes ownership of the context and
+         *               should release if not needed any more.
+         */
+        virtual void onMessageReceiverExiting(Socket& socket,
+            PReceiveMessagesCtx rmc);
 
         /** 
          * The camera subclasses should use in order to synchronise its 
@@ -127,13 +171,46 @@ namespace cluster {
 
 
     /*
+     * vislib::net::cluster::GlutClientNode<T>::countPeers
+     */
+    template<class T> SIZE_T GlutClientNode<T>::countPeers(void) const {
+        // GCC cannot resolve this conflict via dominance, even if it is obvious
+        // that we do not want to inherit the pure virtual implementation.
+        return AbstractClientNode::countPeers();
+    }
+
+
+    /*
+     * vislib::net::cluster::GlutClientNode<T>::forEachPeer
+     */
+    template<class T> 
+    SIZE_T GlutClientNode<T>::forEachPeer(ForeachPeerFunc func, void *context) {
+        // GCC cannot resolve this conflict via dominance, even if it is obvious
+        // that we do not want to inherit the pure virtual implementation.
+        return AbstractClientNode::forEachPeer(func, context);
+    }
+
+
+    /*
      *  vislib::net::cluster::GlutClientNode<T>::onMessageReceived
      */
-    template<class T> void GlutClientNode<T>::onMessageReceived(
+    template<class T> bool GlutClientNode<T>::onMessageReceived(
             const Socket& src, const UINT msgId, const BYTE *body, 
             const SIZE_T cntBody) {
-        AbstractControlledNode::onMessageReceived(src, msgId, body, cntBody);
+        bool retval = AbstractControlledNode::onMessageReceived(src, msgId, 
+            body, cntBody);
         ::glutPostRedisplay();
+        return retval;
+    }
+
+
+    /*
+     * GlutClientNode<T>::onMessageReceiverExiting
+     */
+    template<class T> 
+    void GlutClientNode<T>::onMessageReceiverExiting(Socket& socket, 
+            PReceiveMessagesCtx rmc) {
+        AbstractClientNode::onMessageReceiverExiting(socket, rmc);
     }
 
 } /* end namespace cluster */

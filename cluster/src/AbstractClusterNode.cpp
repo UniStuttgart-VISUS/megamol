@@ -44,12 +44,12 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
 /*
  * vislib::net::cluster::AbstractClusterNode::onMessageReceived
  */
-void vislib::net::cluster::AbstractClusterNode::onMessageReceived(
-        const Socket& src, const UINT msgId, const BYTE *body, 
-        const SIZE_T cntBody) {
-    // Do nothing. Implementing subclasses override this method if they are
-    // interested in messages.
-}
+//void vislib::net::cluster::AbstractClusterNode::onMessageReceived(
+//        const Socket& src, const UINT msgId, const BYTE *body, 
+//        const SIZE_T cntBody) {
+//    // Do nothing. Implementing subclasses override this method if they are
+//    // interested in messages.
+//}
 
 
 /*

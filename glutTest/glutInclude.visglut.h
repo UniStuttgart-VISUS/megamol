@@ -8,9 +8,9 @@
 
 #ifndef VISLIBTEST_GLUTINCLUDE_H_INCLUDED
 #define VISLIBTEST_GLUTINCLUDE_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #ifdef _MSC_VER
 #ifdef _WIN32

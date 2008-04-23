@@ -39,7 +39,7 @@ vislib::graphics::ObservableCameraParams::ObservableCameraParams(
 vislib::graphics::ObservableCameraParams::ObservableCameraParams(
         const ObservableCameraParams& rhs) 
         : Super(rhs), dirtyFields(0), isBatchInteraction(false), 
-        isSuspendFire(false) {
+        observed(rhs.observed), isSuspendFire(false) {
     // No one can have registered here, so it is unnecessary to fire the event.
 }
 

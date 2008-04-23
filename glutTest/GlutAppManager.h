@@ -6,9 +6,9 @@
 
 #ifndef VISLIBTEST_GLUTAPPMANAGER_H_INCLUDED
 #define VISLIBTEST_GLUTAPPMANAGER_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractGlutApp.h"
 #include "vislib/String.h"

@@ -7,21 +7,21 @@
 
 #ifndef VISLIB_EXTENSIONSDEPENDENT_H_INCLUDED
 #define VISLIB_EXTENSIONSDEPENDENT_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #include "glh/glh_extensions.h"
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 

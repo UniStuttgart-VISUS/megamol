@@ -7,9 +7,9 @@
 
 #ifndef VISLIB_ABSTRACTCONTROLLERNODE_H_INCLUDED
 #define VISLIB_ABSTRACTCONTROLLERNODE_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -194,6 +194,21 @@ namespace cluster {
         inline SmartPtr<graphics::CameraParameters>& getParameters(void) {
             return this->parameters;
         }
+
+        /**
+         * This method is called when data have been received and a valid 
+         * message has been found in the packet.
+         *
+         * @param src     The socket the message has been received from.
+         * @param msgId   The message ID.
+         * @param body    Pointer to the message body.
+         * @param cntBody The number of bytes designated by 'body'.
+         *
+         * @return true in order to signal that the message has been processed, 
+         *         false if the implementation did ignore it.
+         */
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody);
 
         /**
          * Send all parameters to all peer nodes.

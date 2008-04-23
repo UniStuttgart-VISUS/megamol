@@ -6,9 +6,9 @@
 
 #ifndef VISLIB_TYPES_H_INCLUDED
 #define VISLIB_TYPES_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,6 +19,7 @@
 
 #else /* _WIN32 */
 
+#include <cstddef>
 #include <inttypes.h>
 
 typedef char CHAR;
@@ -62,7 +63,7 @@ typedef INT32 INT_PTR;
 typedef UINT32 UINT_PTR;
 #endif /* _LIN64 */
 
-typedef UINT_PTR SIZE_T;
+typedef size_t SIZE_T;
 
 #endif /* _WIN32 */
 

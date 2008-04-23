@@ -43,8 +43,7 @@ unsigned int vislib::net::NetworkInformation::countNetAdapters = 0;
 /*
  * vislib::net::NetworkInformation::netAdapters
  */
-vislib::SmartPtr<vislib::net::NetworkInformation::Adapter, 
-    vislib::ArrayAllocator<vislib::net::NetworkInformation::Adapter> > 
+vislib::net::NetworkInformation::AdapterArray
     vislib::net::NetworkInformation::netAdapters;
 
 

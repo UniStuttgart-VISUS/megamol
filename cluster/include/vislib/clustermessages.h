@@ -7,9 +7,9 @@
 
 #ifndef VISLIB_CLUSTERMESSAGES_H_INCLUDED
 #define VISLIB_CLUSTERMESSAGES_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -53,7 +53,8 @@ namespace cluster {
      *
      * @param inOutHeader The header to be initialised.
      */
-    void InitialiseMessageHeader(MessageHeader& inOutHeader);
+    void InitialiseMessageHeader(MessageHeader& inOutHeader, 
+        const UINT32 blockId = 0, const UINT32 blockLength = 0);
 
 
     /** The magic number which must be at the begin of all network messages. */
@@ -126,6 +127,12 @@ namespace cluster {
     DEFINE_VLC1_CAM_MSG(VIRTUALVIEWSIZE, 12);
 
     DEFINE_VLC1_CAM_MSG(SERIALISEDCAMPARAMS, 13);
+
+    /** 
+     * Create a message ID in the non-reserved user message range of VISlib
+     * cluster message IDs. The 'id' is just offset.
+     */
+    #define VLC1_USER_MSG_ID(id) ((id) + 0x80000000)
 
 } /* end namespace cluster */
 } /* end namespace net */

@@ -7,9 +7,9 @@
 
 #ifndef VISLIB_ABSTRACTCLUSTERNODE_H_INCLUDED
 #define VISLIB_ABSTRACTCLUSTERNODE_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -180,9 +180,12 @@ namespace cluster {
          * @param msgId   The message ID.
          * @param body    Pointer to the message body.
          * @param cntBody The number of bytes designated by 'body'.
+         *
+         * @return true in order to signal that the message has been processed, 
+         *         false if the implementation did ignore it.
          */
-        virtual void onMessageReceived(const Socket& src, const UINT msgId,
-            const BYTE *body, const SIZE_T cntBody);
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody) = 0;
 
         /**
          * The message receiver thread calls this method once it exists.

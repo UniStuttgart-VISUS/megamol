@@ -37,7 +37,7 @@ vislib::net::cluster::AbstractControlledNode::AbstractControlledNode(void)
 /*
  * vislib::net::cluster::AbstractControlledNode::onMessageReceived
  */
-void vislib::net::cluster::AbstractControlledNode::onMessageReceived(
+bool vislib::net::cluster::AbstractControlledNode::onMessageReceived(
         const Socket& src, const UINT msgId, const BYTE *body, 
         const SIZE_T cntBody) {
 #define SET_AS_INTEGRAL_PARAM(type, name)                                      \
@@ -52,65 +52,67 @@ void vislib::net::cluster::AbstractControlledNode::onMessageReceived(
 
         case MSGID_CAM_APERTUREANGLE:
             SET_AS_INTEGRAL_PARAM(math::AngleDeg, ApertureAngle);
-            break;
+            return true;
 
         case MSGID_CAM_EYE:
             SET_AS_INTEGRAL_PARAM(graphics::CameraParameters::StereoEye, Eye);
-            break;
+            return true;
 
         case MSGID_CAM_FARCLIP:
             SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, FarClip);
-            break;
+            return true;
 
         case MSGID_CAM_FOCALDISTANCE:
             SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, FocalDistance);
-            break;
+            return true;
 
         case MSGID_CAM_LIMITS: {
             RawStorageSerialiser serialiser(body, cntBody);
             this->parameters->Limits()->Deserialise(serialiser);
-            } break;
+            } 
+            return true;
 
         case MSGID_CAM_LOOKAT:
             SET_AS_SHALLOW_PARAM(Point3D, SceneSpace, LookAt);
-            break;
+            return true;
 
         case MSGID_CAM_NEARCLIP:
             SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, NearClip);
-            break;
+            return true;
 
         case MSGID_CAM_POSITION:
             SET_AS_SHALLOW_PARAM(Point3D, SceneSpace, Position);
-            break;
+            return true;
 
         case MSGID_CAM_PROJECTION:
             SET_AS_INTEGRAL_PARAM(graphics::CameraParameters::ProjectionType,
                 Projection);
-            break;
+            return true;
 
         case MSGID_CAM_STEREODISPARITY:
             SET_AS_INTEGRAL_PARAM(graphics::SceneSpaceType, StereoDisparity);
-            break;
+            return true;
 
         case MSGID_CAM_TILERECT:
             SET_AS_SHALLOW_PARAM(Rectangle, ImageSpace, TileRect);
-            break;
+            return true;
 
         case MSGID_CAM_UP:
             SET_AS_SHALLOW_PARAM(Vector3D, SceneSpace, Up);
-            break;
+            return true;
 
         case MSGID_CAM_VIRTUALVIEWSIZE:
             SET_AS_SHALLOW_PARAM(Dimension2D, ImageSpace, VirtualViewSize);
-            break;
+            return true;
 
         case MSGID_CAM_SERIALISEDCAMPARAMS: {
             RawStorageSerialiser serialiser(body, cntBody);
             this->parameters->Deserialise(serialiser);
-            } break;
+            } 
+            return true;
 
         default:
-            break;
+            return false;
     }
 
 #undef SET_AS_INTEGRAL_PARAM

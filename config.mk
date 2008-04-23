@@ -6,7 +6,7 @@
 
 # Applications
 AR = ar
-CPP = g++
+CPP = g++ 
 LINK = g++
 MAKE = make
 SHELL = /bin/bash
@@ -73,7 +73,7 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -L/usr/X11R6/lib -lm
+LinkerFlags := -L/usr/X11R6/lib -lm 
 
 # Additional linker flags for special configurations
 DebugLinkerFlags :=

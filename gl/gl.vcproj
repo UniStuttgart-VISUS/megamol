@@ -402,7 +402,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h..."
+					Description="Generating glh\glh_genext.h ..."
 					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
 					Outputs="$(ProjectDir)\include\glh\glh_genext.h"
@@ -413,7 +413,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h..."
+					Description="Generating glh\glh_genext.h ..."
 					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
 					Outputs="$(ProjectDir)\include\glh\glh_genext.h"
@@ -424,7 +424,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h..."
+					Description="Generating glh\glh_genext.h ..."
 					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
 					Outputs="$(ProjectDir)\include\glh\glh_genext.h"
@@ -435,7 +435,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h..."
+					Description="Generating glh\glh_genext.h ..."
 					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
 					Outputs="$(ProjectDir)\include\glh\glh_genext.h"

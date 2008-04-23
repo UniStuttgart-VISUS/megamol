@@ -23,14 +23,14 @@
 #include <GL/glx.h>
 #endif /* _WIN32 */
 
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #define GLH_EXT_SINGLE_FILE
 #include "glh/glh_extensions.h"
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CamTestApp.h"
 #include "StereoCamTestApp.h"

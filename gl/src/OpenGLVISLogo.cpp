@@ -39,9 +39,9 @@ typedef struct VLVec3_ {
 
 #if 1 /* data definition */
 
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable : 4305)
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 static VLQuad faces[] = {
     {{0, 1, 21, 20}},
@@ -19184,9 +19184,9 @@ VLVec3 normals[] = {
 VLVec3 *vNorm;
 VLVec3 *vCol;
 
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default : 4305)
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 static unsigned int VisLogoCountFaces() {
     /*

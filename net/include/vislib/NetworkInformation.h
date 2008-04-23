@@ -7,9 +7,9 @@
 
 #ifndef VISLIB_NETWORKINFORMATION_H_INCLUDED
 #define VISLIB_NETWORKINFORMATION_H_INCLUDED
-#if (_MSC_VER > 1000)
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (_MSC_VER > 1000) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -207,6 +207,10 @@ namespace net {
 
     private:
 
+        /** The array used for storing all known network adapters. */
+        typedef vislib::SmartPtr<Adapter, ArrayAllocator<Adapter> >
+            AdapterArray;
+
         /**
          * Initializes the list of network adapter objects
          */
@@ -225,7 +229,7 @@ namespace net {
         static unsigned int countNetAdapters;
 
         /** list of network adapters */
-        static vislib::SmartPtr<Adapter, vislib::ArrayAllocator<Adapter> > netAdapters;
+        static AdapterArray netAdapters;
 
     };
     

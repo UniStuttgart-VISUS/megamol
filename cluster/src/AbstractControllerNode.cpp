@@ -152,6 +152,23 @@ vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
 
 
 /*
+ * vislib::net::cluster::AbstractControllerNode::onMessageReceived
+ */
+bool vislib::net::cluster::AbstractControllerNode::onMessageReceived(
+        const Socket& src, const UINT msgId, const BYTE *body, 
+        const SIZE_T cntBody) {
+    switch (msgId) {
+        case MSGID_INTRODUCE:
+            // TODO: Send all parameters to specified client.
+            return false;
+
+        default:
+            return false;
+    }
+}
+
+
+/*
  * vislib::net::cluster::AbstractControllerNode::sendAllParameters
  */
 void vislib::net::cluster::AbstractControllerNode::sendAllParameters(void) {
