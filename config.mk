@@ -11,6 +11,15 @@ LINK = g++
 MAKE = make
 SHELL = /bin/bash
 
+# Experimental support for ICC
+ifndef VISLIB_ICC
+	VISLIB_ICC = 0
+endif
+ifneq ($(VISLIB_ICC), 0)
+CPP = icpc
+LINK = icpc
+endif
+
 
 # Set Verbosity
 ifndef VISLIB_VERBOSE
@@ -66,6 +75,10 @@ ReleaseDir := Release
 
 # Common compiler flags
 CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic -fPIC
+ifneq ($VISLIB_ICC, 0)
+	# ICC does not support "-pedantic"
+	CompilerFlags := $(filter-out -pedantic, $(CompilerFlags))
+endif
 
 # Additional compiler flags for special configurations
 DebugCompilerFlags := -DDEBUG -D_DEBUG -ggdb
@@ -74,6 +87,10 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 # Common linker flags
 LinkerFlags := -L/usr/X11R6/lib -lm 
+ifneq ($(VISLIB_ICC), 0)
+	# Katrin says this is required ...
+	LinkerFlags += -lstdc++
+endif
 
 # Additional linker flags for special configurations
 DebugLinkerFlags :=

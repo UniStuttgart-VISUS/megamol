@@ -64,11 +64,11 @@ double vislib::CharTraits<char>::ParseDouble(const Char *str) {
     }
     
     if (
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
             sscanf_s
-#else  /*(_MSC_VER >= 1400) */
+#else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             sscanf
-#endif /*(_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, "%lf", &retval) != 1) {
         throw FormatException("Cannot convert String to Double", __FILE__, 
             __LINE__);
@@ -88,11 +88,11 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
     }
 
     if (
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
             sscanf_s
-#else  /*(_MSC_VER >= 1400) */
+#else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             sscanf
-#endif /*(_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, "%d", &retval) != 1) {
         throw FormatException("Cannot convert String to Integer", __FILE__, 
             __LINE__);
@@ -115,11 +115,11 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::Format(Char *dst,
         retval = ::_vscprintf(fmt, argptr);
 
     } else {
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
         retval = ::_vsnprintf_s(dst, cnt, cnt, fmt, argptr);
-#else /* (_MSC_VER >= 1400) */
+#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
         retval = ::_vsnprintf(dst, cnt, fmt, argptr);
-#endif /* (_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
     } /* end if ((dst == NULL) || (cnt <= 0)) */
 
 #else /* _WIN32 */
@@ -148,14 +148,14 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(
     ASSERT(str != NULL);
     Size retval = static_cast<Size>(::strlen(str));
 
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
     if (::strncpy_s(dst, cnt, str, _TRUNCATE) != 0) {
         retval = -1;
     } else if (::_strlwr_s(dst, cnt) != 0) {
         retval = -1;
     }
 
-#else /* (_MSC_VER >= 1400) */
+#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
     if (cnt >= retval + 1) {
 
 #ifdef _WIN32
@@ -169,7 +169,7 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(
     } else {
         retval = -1;
     }
-#endif /* (_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
 
     /* Ensure string being terminated. */
     if ((dst != NULL) && (cnt > 0)) {
@@ -189,14 +189,14 @@ vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
     ASSERT(str != NULL);
     Size retval = static_cast<Size>(::strlen(str));
 
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
     if (::strncpy_s(dst, cnt, str, _TRUNCATE) != 0) {
         retval = -1;
     } else if (::_strupr_s(dst, cnt) != 0) {
         retval = -1;
     }
 
-#else /* (_MSC_VER >= 1400) */
+#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
     if (cnt >= retval + 1) {
 
 #ifdef _WIN32
@@ -210,7 +210,7 @@ vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
     } else {
         retval = -1;
     }
-#endif /* (_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
 
     /* Ensure string being terminated. */
     if ((dst != NULL) && (cnt > 0)) {
@@ -280,11 +280,11 @@ double vislib::CharTraits<WCHAR>::ParseDouble(const Char *str) {
     }
 
     if (
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
             swscanf_s
-#else  /*(_MSC_VER >= 1400) */
+#else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             swscanf
-#endif /*(_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, L"%lf", &retval) != 1) {
         throw FormatException("Cannot convert String to Double", __FILE__, 
             __LINE__);
@@ -304,11 +304,11 @@ int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
     }
 
     if (
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
             swscanf_s
-#else  /*(_MSC_VER >= 1400) */
+#else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             swscanf
-#endif /*(_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
             (str, L"%d", &retval) != 1) {
         throw FormatException("Cannot convert String to Integer", __FILE__, 
             __LINE__);
@@ -331,11 +331,11 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
         retval = ::_vscwprintf(fmt, argptr);
 
     } else {
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
         retval = ::_vsnwprintf_s(dst, cnt, cnt, fmt, argptr);
-#else /* (_MSC_VER >= 1400) */
+#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
         retval = ::_vsnwprintf(dst, cnt, fmt, argptr);
-#endif /* (_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
     } /* end if ((dst == NULL) || (cnt <= 0)) */
 
 #else /* _WIN32 */
@@ -387,14 +387,14 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
     ASSERT(str != NULL);
     Size retval = static_cast<Size>(::wcslen(str));
 
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
     if (::wcsncpy_s(dst, cnt, str, _TRUNCATE) != 0) {
         retval = -1;
     } else if (::_wcslwr_s(dst, cnt) != 0) {
         retval = -1;
     }
 
-#else /* (_MSC_VER >= 1400) */
+#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
     if (cnt >= retval + 1) {
 
 #ifdef _WIN32
@@ -408,7 +408,7 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
     } else {
         retval = -1;
     }
-#endif /* (_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
 
     /* Ensure string being terminated. */
     if ((dst != NULL) && (cnt > 0)) {
@@ -428,14 +428,14 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(
     ASSERT(str != NULL);
     Size retval = static_cast<Size>(::wcslen(str));
 
-#if (_MSC_VER >= 1400)
+#if (defined(_MSC_VER) && (_MSC_VER >= 1400))
     if (::wcsncpy_s(dst, cnt, str, _TRUNCATE) != 0) {
         retval = -1;
     } else if (::_wcsupr_s(dst, cnt) != 0) {
         retval = -1;
     }
 
-#else /* (_MSC_VER >= 1400) */
+#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
     if (cnt >= retval + 1) {
 
 #ifdef _WIN32
@@ -449,7 +449,7 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(
     } else {
         retval = -1;
     }
-#endif /* (_MSC_VER >= 1400) */
+#endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
 
     /* Ensure string being terminated. */
     if ((dst != NULL) && (cnt > 0)) {
