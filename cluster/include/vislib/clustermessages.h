@@ -128,6 +128,8 @@ namespace cluster {
 
     DEFINE_VLC1_CAM_MSG(SERIALISEDCAMPARAMS, 13);
 
+    DEFINE_VLC1_CAM_MSG(REQUEST_ALL, 14);
+
     /** 
      * Create a message ID in the non-reserved user message range of VISlib
      * cluster message IDs. The 'id' is just offset.

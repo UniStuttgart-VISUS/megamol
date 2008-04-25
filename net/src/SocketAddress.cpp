@@ -49,7 +49,7 @@ vislib::net::SocketAddress::SocketAddress(const AddressFamily addressFamily,
     ::memset(&this->genericAddress, 0, sizeof(this->genericAddress));
     this->inetAddress.sin_family = static_cast<unsigned short>(addressFamily);
     this->inetAddress.sin_port = htons(port);
-    this->inetAddress.sin_addr = static_cast<struct in_addr>(ipAddress);
+    this->inetAddress.sin_addr = ipAddress.operator in_addr();
 }
 
 
@@ -127,7 +127,7 @@ vislib::net::SocketAddress::~SocketAddress(void) {
  * vislib::net::SocketAddress::SetIPAddress
  */
 void vislib::net::SocketAddress::SetIPAddress(const IPAddress& ipAddress) {
-    this->inetAddress.sin_addr = static_cast<struct in_addr>(ipAddress);
+    this->inetAddress.sin_addr = ipAddress.operator in_addr();
 }
 
 

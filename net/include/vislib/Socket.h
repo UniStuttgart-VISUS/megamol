@@ -253,7 +253,7 @@ namespace net {
          * after the WSAAccept condition function is called. This method returns
          * always false on Linux.
          *
-         * @return The current value of the option, false on Linux.
+        * @return The current value of the option, false on Linux.
          *
          * @throws SocketException If the operation fails.
          */
@@ -283,7 +283,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline bool GetDontRoute(const bool enable) const {
+        inline bool GetDontRoute(void) const {
             return this->getOption(SOL_SOCKET, SO_DONTROUTE);
         }
 
