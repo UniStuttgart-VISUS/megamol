@@ -104,7 +104,7 @@ namespace net {
         inline IPAddress(const IPAddress& rhs) : address(rhs.address) { };
 
         /** Dtor. */
-        virtual ~IPAddress(void);
+        ~IPAddress(void);
 
         /**
          * Lookup and set the IP address of the specified host. If the host is
@@ -119,7 +119,7 @@ namespace net {
          * @return true, if the hostname could be resolved or the IP address was
          *         valid, false otherwise.
          */
-        virtual bool Lookup(const char *hostname);
+        bool Lookup(const char *hostname);
 
         /**
          * Convert the IP address into dotted string format.
@@ -151,7 +151,7 @@ namespace net {
          *
          * @param rhs The right hand side operand.
          *
-         * @param true, if 'rhs' and this vector are equal, false otherwise.
+         * @param true, if 'rhs' and this IP address are equal, false otherwise.
          */
         bool operator ==(const IPAddress& rhs) const;
 
@@ -160,7 +160,8 @@ namespace net {
          *
          * @param rhs The right hand side operand.
          *
-         * @param true, if 'rhs' and this vector are not equal, false otherwise.
+         * @param true, if 'rhs' and this IP address are not equal, 
+         *        false otherwise.
          */
         inline bool operator !=(const IPAddress& rhs) const {
             return !(*this == rhs);
@@ -185,7 +186,7 @@ namespace net {
             return this->address;
         }
 
-    protected:
+    private:
 
         /**
          * Create an IPAddress from its representation as a single integer.

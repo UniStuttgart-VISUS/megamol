@@ -282,7 +282,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DNS.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\IPAddress.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\IPAddress6.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\IPHostEntry.cpp"
 				>
 			</File>
 			<File
@@ -320,7 +332,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\DNS.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\IPAddress.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\IPAddress6.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\IPHostEntry.h"
 				>
 			</File>
 			<File
