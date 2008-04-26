@@ -410,6 +410,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testipv6.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testmatrix.cpp"
 				>
 			</File>
@@ -549,6 +553,10 @@
 			</File>
 			<File
 				RelativePath=".\testipc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testipv6.h"
 				>
 			</File>
 			<File

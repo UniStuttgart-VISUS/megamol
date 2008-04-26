@@ -43,6 +43,7 @@
 #include "testVIPCStrTab.h"
 #include "testserialiser.h"
 #include "testregex.h"
+#include "testipv6.h"
 
 
 /* type for test functions */
@@ -87,6 +88,7 @@ VislibTest tests[] = {
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
     {_T("Sockets"), ::TestSockets, "Tests the sockets"},
     {_T("TcpServer"), ::TestTcpServer, "Tests the TCP server"},
+    {_T("IPv6"), ::TestIPv6, "Tests VISlib IPv6 support"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},

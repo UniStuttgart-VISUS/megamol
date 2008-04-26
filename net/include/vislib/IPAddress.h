@@ -186,6 +186,28 @@ namespace net {
             return this->address;
         }
 
+        /**
+         * Cast to pointer to struct in_addr. The operation exposes the 
+         * internal in6_addr structure.
+         *
+         * @return Pointer to the internal in6_addr that is represented by this 
+         *         object.
+         */
+        inline operator const struct in_addr *(void) const {
+            return &this->address;
+        }
+
+        /**
+         * Cast to pointer to struct in_addr. The operation exposes the 
+         * internal in6_addr structure.
+         *
+         * @return Pointer to the internal in_addr that is represented by this 
+         *         object.
+         */
+        inline operator struct in_addr *(void) {
+            return &this->address;
+        }
+
     private:
 
         /**

@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_IPADDRESS6_H_INCLUDED
@@ -18,7 +19,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else /* _WIN32 */
-#include <netinet/in.h> 
+#include <netinet/in.h>
 #endif /* _WIN32 */
 
 #include "vislib/IPAddress.h"
@@ -30,16 +31,160 @@ namespace net {
 
     /**
      * This class represents an IPv6 address.
+     *
+     * In contrast to the IPv4 class IPAddress, IPAddress6 does not provide
+     * DNS lookup capabilities. Use the static methods of vislib::net::DNS
+     * instead.
      */
     class IPAddress6 {
 
     public:
 
-        /** Ctor. */
+        /** 
+         * Constant special IP address that allows receiving from all available
+         * adapters and sending from the default (lowest-numbered adapter)
+         * interface.
+         */
+        static const IPAddress6 ANY;
+
+        /** 
+         * Constant loopback address (alias for LOOPBACK because of old 
+         * IPAddress class usage compatibility).
+         */
+        static const IPAddress6& LOCALHOST;
+
+        /** Constant loopback address. */
+        static const IPAddress6 LOOPBACK;
+
+        /** Alias for ANY. */
+        static const IPAddress6& UNSPECIFIED;
+
+        /**
+         * Create a new loopback IPAddress6.
+         */
         IPAddress6(void);
+
+        /**
+         * Create an IPAddress6 that represents the specified struct in6_addr.
+         *
+         * @param address The address value.
+         */
+        IPAddress6(const struct in6_addr& address);
+
+        /**
+         * Create an IPAddress6 from individual bytes.
+         *
+         * @param b1  Byte number 1 of the IP address.
+         * @param b2  Byte number 2 of the IP address.
+         * @param b3  Byte number 3 of the IP address.
+         * @param b4  Byte number 4 of the IP address.
+         * @param b5  Byte number 5 of the IP address.
+         * @param b6  Byte number 6 of the IP address.
+         * @param b7  Byte number 7 of the IP address.
+         * @param b8  Byte number 8 of the IP address.
+         * @param b9  Byte number 9 of the IP address.
+         * @param b10 Byte number 10 of the IP address.
+         * @param b11 Byte number 11 of the IP address.
+         * @param b12 Byte number 12 of the IP address.
+         * @param b13 Byte number 13 of the IP address.
+         * @param b14 Byte number 14 of the IP address.
+         * @param b15 Byte number 15 of the IP address.
+         * @param b16 Byte number 16 of the IP address.
+         */
+        IPAddress6(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
+            const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
+            const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
+            const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16);
+
+        /**
+         * Create an IPv4 mapped address.
+         *
+         * @param address The IPv4 address to be mapped.
+         */
+        explicit IPAddress6(const IPAddress& address);
+
+        /**
+         * Clone 'rhs'.
+         *
+         * @param rhs The object to be cloned.
+         */
+        IPAddress6(const IPAddress6& rhs);
 
         /** Dtor. */
         ~IPAddress6(void);
+
+        /**
+         * Determines whether the address is a link local address.
+         *
+         * @return true if the address is a link local address, false otherwise.
+         */
+        inline bool IsLinkLocal(void) const {
+            return (IN6_IS_ADDR_LINKLOCAL(&this->address) != 0);
+        }
+
+        /**
+         * Answer whether the address is the loopback address.
+         *
+         * @return true if the address is the loopback address, false otherwise.
+         */
+        inline bool IsLoopback(void) const {
+            return (IN6_IS_ADDR_LOOPBACK(&this->address) != 0);
+        }
+
+        /**
+         * Answer whether the IP address is an IPv6 multicast global address.
+         *
+         * @return true if the IP address is multicast global address,
+         *         false otherwise.
+         */
+        inline bool IsMulticast(void) const {
+            return (IN6_IS_ADDR_MULTICAST(&this->address) != 0);
+        }
+
+        /**
+         * Answer whether the IP address is an IPv6 site local address.
+         *
+         * @return true if the address is a site local address, false otherwise.
+         */
+        inline bool IsSiteLocal(void) const {
+            return (IN6_IS_ADDR_SITELOCAL(&this->address) != 0);
+        }
+
+        /**
+         * Answer whether the address is unspecified, i.e. ANY.
+         *
+         * @return true if the address is unspecified, false otherwise.
+         */
+        inline bool IsUnspecified(void) const {
+            return (IN6_IS_ADDR_UNSPECIFIED(&this->address) != 0);
+        }
+
+        /**
+         * Answer whether the IP address is an IPv4-compatible IPv6 address.
+         *
+         * @return true if the IPv6 address is an IPv4-compatible address,
+         *         false otherwise.
+         */
+        inline bool IsV4Compatible(void) const {
+            return (IN6_IS_ADDR_V4COMPAT(&this->address) != 0);
+        }
+
+        /**
+         * Answer thether the IP address is an IPv4-mapped IPv6 address.
+         *
+         * @return true if the IPv6 address is an IPv4-mapped address,
+         *         false otherwise.
+         */
+        inline bool IsV4Mapped(void) const {
+            return (IN6_IS_ADDR_V4MAPPED(&this->address) != 0);
+        }
+
+        /**
+         * Set this IP address to be the mapped IPv4 address 'address'.
+         *
+         * @param address The IPv4 address to map.
+         */
+        void MapV4Address(const IPAddress& address);
 
         /**
          * Assignment operator.
@@ -48,7 +193,28 @@ namespace net {
          *
          * @return *this.
          */
-        IPAddress6& operator =(const IPAddress6& rhs);
+        inline IPAddress6& operator =(const IPAddress6& rhs) {
+            return (*this = rhs.address);
+        }
+
+        /**
+         * Assignment operator.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        IPAddress6& operator =(const struct in6_addr& rhs);
+
+        /**
+         * Assignment operator for IPv4 addresses. 'rhs' will be mapped to an 
+         * IPv6 address. This operator is equal to calling MapV4Address(rhs).
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        IPAddress6& operator =(const IPAddress& rhs);
 
         /**
          * Test for equality.
@@ -57,7 +223,9 @@ namespace net {
          *
          * @param true, if 'rhs' and this IP address are equal, false otherwise.
          */
-        bool operator ==(const IPAddress6& rhs) const;
+        inline bool operator ==(const IPAddress6& rhs) const {
+            return (*this == rhs.address);
+        }
 
         /**
          * Test for inequality.
@@ -68,6 +236,27 @@ namespace net {
          *        false otherwise.
          */
         inline bool operator !=(const IPAddress6& rhs) const {
+            return !(*this == rhs);
+        }
+
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @param true, if 'rhs' and this IP address are equal, false otherwise.
+         */
+        bool operator ==(const struct in6_addr& rhs) const;
+
+        /**
+         * Test for inequality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @param true, if 'rhs' and this IP address are not equal, 
+         *        false otherwise.
+         */
+        inline bool operator !=(const struct in6_addr& rhs) const {
             return !(*this == rhs);
         }
 
@@ -90,6 +279,28 @@ namespace net {
             return this->address;
         }
 
+        /**
+         * Cast to pointer to struct in6_addr. The operation exposes the 
+         * internal in6_addr structure.
+         *
+         * @return Pointer to the internal in6_addr that is represented by this 
+         *         object.
+         */
+        inline operator const struct in6_addr *(void) const {
+            return &this->address;
+        }
+
+        /**
+         * Cast to pointer to struct in6_addr. The operation exposes the 
+         * internal in6_addr structure.
+         *
+         * @return Pointer to the internal in6_addr that is represented by this 
+         *         object.
+         */
+        inline operator struct in6_addr *(void) {
+            return &this->address;
+        }
+
     private:
 
         /** The acutal IPv6 address. */
@@ -104,4 +315,3 @@ namespace net {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_IPADDRESS6_H_INCLUDED */
-
