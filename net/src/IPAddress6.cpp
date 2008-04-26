@@ -94,6 +94,14 @@ vislib::net::IPAddress6::IPAddress6(const IPAddress& address) {
 /*
  * vislib::net::IPAddress6::IPAddress6
  */
+vislib::net::IPAddress6::IPAddress6(const struct in_addr& address) {
+    this->MapV4Address(address);
+}
+
+
+/*
+ * vislib::net::IPAddress6::IPAddress6
+ */
 vislib::net::IPAddress6::IPAddress6(const IPAddress6& rhs) {
     *this = rhs;
 }
@@ -109,7 +117,7 @@ vislib::net::IPAddress6::~IPAddress6(void) {
 /*
  * vislib::net::IPAddress6::MapV4Address
  */
-void vislib::net::IPAddress6::MapV4Address(const IPAddress& address) {
+void vislib::net::IPAddress6::MapV4Address(const struct in_addr& address) {
     /* Zero out first 80 bits. */
     for (int i = 0; i < 10; i++) {
         this->address.s6_addr[i] = 0;
@@ -122,8 +130,7 @@ void vislib::net::IPAddress6::MapV4Address(const IPAddress& address) {
 
     /* Embed IPv4 in the last 32 bits. */
     ASSERT(sizeof(in_addr) == 4);
-    ::memcpy(this->address.s6_addr + 12, static_cast<const in_addr *>(address),
-        sizeof(in_addr));
+    ::memcpy(this->address.s6_addr + 12, &address, sizeof(in_addr));
 
     ASSERT(this->IsV4Mapped());
 }

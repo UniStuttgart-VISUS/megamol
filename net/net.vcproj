@@ -294,6 +294,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\IPEndPoint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\IPHostEntry.cpp"
 				>
 			</File>
@@ -341,6 +345,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\IPAddress6.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\IPEndPoint.h"
 				>
 			</File>
 			<File

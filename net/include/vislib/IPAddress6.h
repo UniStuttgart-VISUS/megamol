@@ -104,6 +104,14 @@ namespace net {
         explicit IPAddress6(const IPAddress& address);
 
         /**
+         * Create a mapped IPv4 address. This ctor is equal to creating a new
+         * IPAddress and calling MapV4Address(address) on it.
+         *
+         * @param address The IPv4 address to be mapped.
+         */
+        explicit IPAddress6(const struct in_addr& address);
+
+        /**
          * Clone 'rhs'.
          *
          * @param rhs The object to be cloned.
@@ -184,7 +192,16 @@ namespace net {
          *
          * @param address The IPv4 address to map.
          */
-        void MapV4Address(const IPAddress& address);
+        inline void MapV4Address(const struct in_addr& address);
+
+        /**
+         * Set this IP address to be the mapped IPv4 address 'address'.
+         *
+         * @param address The IPv4 address to map.
+         */
+        inline void MapV4Address(const IPAddress& address) {
+            this->MapV4Address(static_cast<const struct in_addr&>(address));
+        }
 
         /**
          * Assignment operator.

@@ -163,7 +163,7 @@ namespace net {
                       const unsigned short newPort); 
   
         /** Dtor. */
-        virtual ~SocketAddress(void);
+        ~SocketAddress(void);
 
         /**
          * Answer the address family of the socket address.
@@ -284,7 +284,7 @@ namespace net {
             return &this->genericAddress;
         }
 
-    protected:
+    private:
 
         /** The wrapped socket address. */
         union {

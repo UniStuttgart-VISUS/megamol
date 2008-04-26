@@ -22,7 +22,7 @@ namespace net {
 
 
     /**
-     * The IPHostEntry class is used as a helper to return answers from DNS. It 
+     * The IPHostEntry class is used as a helper to return answers from DNS. It
      * associates DNS host names with their respective IP addresses.
      */
     class IPHostEntry {
@@ -40,6 +40,9 @@ namespace net {
         IPHostEntry& operator =(const IPHostEntry& rhs);
 
     private:
+
+        /* Allow DNS creating IPHostEntry objects with actual data. */
+        friend class DNS;
 
     };
     
