@@ -7,6 +7,7 @@
 
 #include "testipv6.h"
 
+#include "vislib/DNS.h"
 #include "vislib/IPAddress6.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
@@ -15,6 +16,8 @@
 
 void TestIPv6(void) {
     using namespace vislib::net;
+
+    Socket::Startup();
 
     AssertTrue("LOOPBACK constant", IPAddress6::LOOPBACK.IsLoopback());
     AssertTrue("LOCALHOST constant", IPAddress6::LOCALHOST.IsLoopback());
@@ -37,4 +40,9 @@ void TestIPv6(void) {
     ipAddr2 = ipV4Addr;
     AssertTrue("IPv4 assignment", ipAddr2.IsV4Mapped());
 
+
+    IPHostEntryA hostEntryA;
+    AssertNoException("Looking up google.de", DNS::GetHostEntry(hostEntryA, "google.de"));
+
+    Socket::Cleanup();
 }

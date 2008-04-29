@@ -31,11 +31,41 @@ namespace net {
 
     public:
 
-        static IPHostEntry GetHostEntry(const IPAddress& hostAddress);
+        //static void GetHostEntry(IPHostEntryA& outEntry, 
+        //    const IPAddress& hostAddress);
 
-        static IPHostEntry GetHostEntry(const IPAddress6& hostAddress);
+        //static void GetHostEntry(IPHostEntryA& outEntry,
+        //    const IPAddress6& hostAddress);
 
-        static IPHostEntry GetHostEntry(const char *hostName);
+        //static void GetHostEntry(IPHostEntryW& outEntry,
+        //    const IPAddress& hostAddress);
+
+        //static void GetHostEntry(IPHostEntryW& outEntry, 
+        //    const IPAddress6& hostAddress);
+
+        /**
+         * Answer the IPHostEntry for the specified host name.
+         *
+         * @param outEntry Receives the host entry.
+         * @param hostName The host name to search.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostEntry(IPHostEntryA& outEntry, 
+            const char *hostName);
+
+        /**
+         * Answer the IPHostEntry for the specified host name.
+         *
+         * @param outEntry Receives the host entry.
+         * @param hostName The host name to search.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostEntry(IPHostEntryW& outEntry,
+            const wchar_t *hostName);
 
         /** Dtor. */
         ~DNS(void);

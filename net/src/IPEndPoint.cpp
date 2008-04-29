@@ -64,6 +64,30 @@ vislib::net::IPEndPoint::IPEndPoint(const AddressFamily addressFamily,
 /*
  * vislib::net::IPEndPoint::IPEndPoint
  */
+vislib::net::IPEndPoint::IPEndPoint(const SocketAddress& address) {
+    *this = address;
+}
+
+
+/*
+ * vislib::net::IPEndPoint::IPEndPoint
+ */
+vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in& address) {
+    *this = address;
+}
+
+
+/*
+ * vislib::net::IPEndPoint::IPEndPoint
+ */
+vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in6& address) {
+    *this = address;
+}
+
+
+/*
+ * vislib::net::IPEndPoint::IPEndPoint
+ */
 vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& rhs) {
     *this = rhs;
 }
@@ -193,6 +217,32 @@ vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
         const SocketAddress& rhs) {
     this->SetIPAddress(rhs.GetIPAddress());
     this->SetPort(rhs.GetPort());
+    return *this;
+}
+
+
+/*
+ * vislib::net::IPEndPoint::operator =
+ */
+vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
+        const struct sockaddr_in& rhs) {
+    if (reinterpret_cast<struct sockaddr_in *>(&this->address) != &rhs) {
+        ::ZeroMemory(&this->address, sizeof(struct sockaddr_storage));
+        ::memcpy(&this->address, &rhs, sizeof(struct sockaddr_in));
+    }
+    return *this;
+}
+
+
+/*
+ * vislib::net::IPEndPoint::operator =
+ */
+vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
+        const struct sockaddr_in6& rhs) {
+    if (reinterpret_cast<struct sockaddr_in6 *>(&this->address) != &rhs) {
+        ::ZeroMemory(&this->address, sizeof(struct sockaddr_storage));
+        ::memcpy(&this->address, &rhs, sizeof(struct sockaddr_in6));
+    }
     return *this;
 }
 

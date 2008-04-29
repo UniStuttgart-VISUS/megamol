@@ -38,6 +38,7 @@ namespace net {
          * valid for IPEndPoints.
          */
         enum AddressFamily {
+            FAMILY_UNSPECIFIED = SocketAddress::FAMILY_UNSPEC,
             FAMILY_INET = SocketAddress::FAMILY_INET,
             FAMILY_INET6 = SocketAddress::FAMILY_INET6
         };
@@ -48,7 +49,8 @@ namespace net {
          * @param ipAddress The IP address of the end point.
          * @param port      The port number of the end point.
          */
-        IPEndPoint(const IPAddress& ipAddress, const unsigned short port);
+        IPEndPoint(const IPAddress& ipAddress = IPAddress::ANY, 
+            const unsigned short port = 0);
 
         /**
          * Creates a new IPv6 end point using the specified address and port.
@@ -71,6 +73,27 @@ namespace net {
          */
         IPEndPoint(const AddressFamily addressFamily,
             const unsigned short port);
+
+        /**
+         * Create an IPEndPoint from a legacy SocketAddress.
+         *
+         * @param address The socket address to convert.
+         */
+        IPEndPoint(const SocketAddress& address);
+
+        /**
+         * Create an IPEndPoint from an OS IPv4 structure.
+         *
+         * @param address The IPv4 address to set.
+         */
+        IPEndPoint(const struct sockaddr_in& address);
+
+        /**
+         * Create an IPEndPoint from an OS IPv4 structure.
+         *
+         * @param address The IPv6 address to set.
+         */
+        IPEndPoint(const struct sockaddr_in6& address);
 
         /**
          * Clone 'rhs'
@@ -156,6 +179,24 @@ namespace net {
          * @return *this.
          */
         IPEndPoint& operator =(const SocketAddress& rhs);
+
+        /**
+         * Create an IPEndPoint that represents the specified IPv4 address.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        IPEndPoint& operator =(const struct sockaddr_in& rhs);
+
+        /**
+         * Create an IPEndPoint that represents the specified IPv6 address.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         */
+        IPEndPoint& operator =(const struct sockaddr_in6& rhs);
 
         /**
          * Test for equality.

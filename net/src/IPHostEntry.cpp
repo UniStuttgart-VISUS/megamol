@@ -7,39 +7,6 @@
 
 #include "vislib/IPHostEntry.h"
 
-
 /*
- * vislib::net::IPHostEntry::IPHostEntry
+ * This file is intentionally empty.
  */
-vislib::net::IPHostEntry::IPHostEntry(void) {
-    // TODO: Implement
-}
-
-
-/*
- * vislib::net::IPHostEntry::IPHostEntry
- */
-vislib::net::IPHostEntry::IPHostEntry(const IPHostEntry& rhs) {
-    // TODO: Implement
-}
-
-
-/*
- * vislib::net::IPHostEntry::~IPHostEntry
- */
-vislib::net::IPHostEntry::~IPHostEntry(void) {
-    // TODO: Implement
-}
-
-
-/*
- * vislib::net::IPHostEntry::operator =
- */
-vislib::net::IPHostEntry& vislib::net::IPHostEntry::operator =(
-        const IPHostEntry& rhs) {
-    if (this != &rhs) {
-        // TODO: Implement
-    }
-
-    return *this;
-}
