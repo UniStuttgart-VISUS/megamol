@@ -51,6 +51,12 @@ typedef char TCHAR;
 
 #endif /* _WIN32 */
 
+#if defined(UNICODE) || defined(_UNICODE)
+#define ToTString ToStringW
+#else /* defined(UNICODE) || defined(_UNICODE) */
+#define ToTString ToStringA
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
