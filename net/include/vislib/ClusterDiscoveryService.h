@@ -120,7 +120,6 @@ namespace net {
          * @param cntResponseChances  The number of requests that another node 
          *                            may not answer before being removed from
          *                            this nodes list of known peers.
-         *                            operations must timeout.
          */
         ClusterDiscoveryService(const StringA& name, 
             const SocketAddress& responseAddr, 
