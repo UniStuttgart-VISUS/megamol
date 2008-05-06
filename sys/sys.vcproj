@@ -374,6 +374,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\MessageBox.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Mutex.cpp"
 				>
 			</File>
@@ -561,6 +565,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\MemmappedFile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\MessageBox.h"
 				>
 			</File>
 			<File

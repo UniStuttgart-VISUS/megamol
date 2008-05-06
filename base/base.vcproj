@@ -449,6 +449,10 @@
 				RelativePath=".\src\VersionNumber.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\xmlUtils.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -649,6 +653,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\VersionNumber.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\xmlUtils.h"
 				>
 			</File>
 		</Filter>
