@@ -2026,12 +2026,15 @@ namespace sys {
      * CmdLineParser<T>::FindOption
      */
     template<class T>
-    const typename CmdLineParser<T>::Option* CmdLineParser<T>::FindOption(const Char *longname) const {
-        OptionPtrIterator it = const_cast<CmdLineParser<T>*>(this)->options.GetIterator();
+    const typename CmdLineParser<T>::Option* CmdLineParser<T>::FindOption(
+            const Char *longname) const {
+        OptionPtrIterator it 
+            = const_cast<CmdLineParser<T>*>(this)->options.GetIterator();
 
         while(it.HasNext()) {
             Option *o = it.Next();
-            if (o->longName.CompareInsensitive(longname)) return o;
+            if (!o->longName.IsEmpty()
+                    && o->longName.CompareInsensitive(longname)) return o;
         }
 
         return NULL;
@@ -2042,12 +2045,15 @@ namespace sys {
      * CmdLineParser<T>::FindOption
      */
     template<class T>
-    const typename CmdLineParser<T>::Option* CmdLineParser<T>::FindOption(const String<T>& longname) const {
-        OptionPtrIterator it = const_cast<CmdLineParser<T>*>(this)->options.GetIterator();
+    const typename CmdLineParser<T>::Option* CmdLineParser<T>::FindOption(
+            const String<T>& longname) const {
+        OptionPtrIterator it 
+            = const_cast<CmdLineParser<T>*>(this)->options.GetIterator();
 
         while(it.HasNext()) {
             Option *o = it.Next();
-            if (o->longName.CompareInsensitive(longname)) return o;
+            if (!o->longName.IsEmpty()
+                    && o->longName.CompareInsensitive(longname)) return o;
         }
 
         return NULL;
