@@ -15,6 +15,9 @@
 
 
 void TestIPv6(void) {
+#ifndef _WIN32
+#define IN6_ADDR_EQUAL IN6_ARE_ADDR_EQUAL
+#endif /* !_WIN32 */
     using namespace vislib::net;
 
     Socket::Startup();
