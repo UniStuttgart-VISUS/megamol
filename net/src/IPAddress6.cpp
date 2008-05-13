@@ -163,5 +163,8 @@ vislib::net::IPAddress6& vislib::net::IPAddress6::operator =(
  * vislib::net::IPAddress6::operator ==
  */
 bool vislib::net::IPAddress6::operator ==(const struct in6_addr& rhs) const {
+#ifndef _WIN32
+#define IN6_ADDR_EQUAL IN6_ARE_ADDR_EQUAL
+#endif /* !_WIN32 */
     return (IN6_ADDR_EQUAL(&this->address, &rhs) != 0);
 }

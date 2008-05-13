@@ -200,7 +200,7 @@ namespace net {
          * @param address The IPv4 address to map.
          */
         inline void MapV4Address(const IPAddress& address) {
-            this->MapV4Address(static_cast<const struct in_addr&>(address));
+            this->MapV4Address(*static_cast<const struct in_addr *>(address));
         }
 
         /**

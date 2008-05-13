@@ -7,7 +7,9 @@
 
 #include "vislib/DNS.h"
 
+#ifdef _WIN32
 #include <ws2tcpip.h>
+#endif /* _WIN32 */
 
 #include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
