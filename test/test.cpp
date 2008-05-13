@@ -11,6 +11,7 @@
 #include <cstring>
 #include <iostream>
 #include "vislib/Console.h"
+#include "vislib/MessageBox.h"
 
 /* include test implementations */
 #include "testhelper.h"
@@ -133,7 +134,25 @@ int main(int argc, char **argv) {
 
     /* check command line arguments*/
     if (argc <= 1) {
-        fprintf(stderr, "You must specify at least on test to perform.\n\n");
+
+        //try {
+        //    vislib::sys::MessageBox::ReturnValue rv 
+        //        = vislib::sys::MessageBox::Show(
+        //        "You must specify at least one test to be performed.",
+        //        "VISlib Test",
+        //        vislib::sys::MessageBox::BTNS_CANCELRETRYCONTINUE,
+        //        vislib::sys::MessageBox::ICON_ERROR));
+
+        //    if (rv == vislib::sys::MessageBox::RET_CANCEL) {
+        //        exit(0);
+        //    } else if (rv == vislib::sys::MessageBox::RET_RETRY) {
+        //        printf("There is nothing to be retried!");
+        //    }
+        //} catch(vislib::Exception e) {
+        //    fprintf(stderr, "Exception: %s\n", e.GetMsgA());
+        //}
+
+        fprintf(stderr, "You must specify at least one test to be performed.\n\n");
         fprintf(stderr, "Syntax:\n\t%s testname [testname] ...\n\n", argv[0]);
         fprintf(stderr, "Available Testnames are:\n");
         for (unsigned int i = 0; i < countTests; i++) {

@@ -34,15 +34,15 @@ namespace xml {
      */
     template<class T> void EncodeEntities(vislib::String<T>& inOutStr) {
         // TODO: Rewrite as soon as multi-replace is supported
-        inOutStr.Replace(static_cast<typename t::Char>('&'),
+        inOutStr.Replace(static_cast<typename T::Char>('&'),
             vislib::String<T>("&amp;"));
-        inOutStr.Replace(static_cast<typename t::Char>('<'),
+        inOutStr.Replace(static_cast<typename T::Char>('<'),
             vislib::String<T>("&lt;"));
-        inOutStr.Replace(static_cast<typename t::Char>('>'),
+        inOutStr.Replace(static_cast<typename T::Char>('>'),
             vislib::String<T>("&gt;"));
-        inOutStr.Replace(static_cast<typename t::Char>('\"'),
+        inOutStr.Replace(static_cast<typename T::Char>('\"'),
             vislib::String<T>("&quot;"));
-        inOutStr.Replace(static_cast<typename t::Char>('\''),
+        inOutStr.Replace(static_cast<typename T::Char>('\''),
             vislib::String<T>("&apos;"));
     }
 
@@ -65,15 +65,15 @@ namespace xml {
         //   (e.g. &#x3E; &62; also with leading zeros!)
         //   This will need to do all the replaceings by hand!
         inOutStr.Replace(vislib::String<T>("&apos;"),
-            static_cast<typename t::Char>('\''));
+            static_cast<typename T::Char>('\''));
         inOutStr.Replace(vislib::String<T>("&quot;"),
-            static_cast<typename t::Char>('\"'));
+            static_cast<typename T::Char>('\"'));
         inOutStr.Replace(vislib::String<T>("&gt;"),
-            static_cast<typename t::Char>('>'));
+            static_cast<typename T::Char>('>'));
         inOutStr.Replace(vislib::String<T>("&lt;"),
-            static_cast<typename t::Char>('<'));
+            static_cast<typename T::Char>('<'));
         inOutStr.Replace(vislib::String<T>("&amp;"),
-            static_cast<typename t::Char>('&'));
+            static_cast<typename T::Char>('&'));
     }
 
 

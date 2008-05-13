@@ -26,6 +26,28 @@
 
 
 /*
+ * vislib::sys::MessageBox::Show
+ */
+vislib::sys::MessageBox::ReturnValue 
+vislib::sys::MessageBox::Show(const vislib::StringA& msg,
+        const vislib::StringA& title, MsgButtons btns, MsgIcon icon,
+        DefButton defBtn) {
+    return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
+}
+
+
+/*
+ * vislib::sys::MessageBox::Show
+ */
+vislib::sys::MessageBox::ReturnValue 
+vislib::sys::MessageBox::Show(const vislib::StringW& msg,
+        const vislib::StringW& title, MsgButtons btns, MsgIcon icon,
+        DefButton defBtn) {
+    return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
+}
+
+
+/*
  * vislib::sys::MessageBox::ShowDialog
  */
 vislib::sys::MessageBox::ReturnValue 
@@ -165,13 +187,13 @@ vislib::sys::MessageBox::ShowDialog(void) {
         // simple ok message boxes are handled separatly
         if (this->btns == BTNS_OK) {
             fprintf(out, "Hit \"Return\" to continue\n");
-            int i;
+            char i;
             fscanf(stdin, "%c", &i);
             return this->retval = RET_OK;
         }
 
         // construct button captions
-        const char *btn1, *btn2, *btn3 = NULL;
+        const char *btn1 = NULL, *btn2 = NULL, *btn3 = NULL;
         switch (this->btns) {
             case BTNS_OKCANCEL: btn1 = "OK"; btn2 = "Cancel"; break;
             case BTNS_RETRYCANCEL: btn1 = "Retry"; btn2 = "Cancel"; break;

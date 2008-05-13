@@ -92,6 +92,36 @@ namespace sys {
          *
          * @return The return value of the dialog.
          */
+        static ReturnValue Show(const vislib::StringA& msg,
+            const vislib::StringA& title, MsgButtons btns = BTNS_OK,
+            MsgIcon icon = ICON_NONE, DefButton defBtn = DEFBTN_1);
+
+        /**
+         * Shows the modal message box dialog.
+         *
+         * @param msg The message to be shown.
+         * @param title The title of the message box.
+         * @param btns The buttons to be shown.
+         * @param icon The icon to be shown.
+         * @param defBtn The default button.
+         *
+         * @return The return value of the dialog.
+         */
+        static ReturnValue Show(const vislib::StringW& msg,
+            const vislib::StringW& title, MsgButtons btns = BTNS_OK,
+            MsgIcon icon = ICON_NONE, DefButton defBtn = DEFBTN_1);
+
+        /**
+         * Shows the modal message box dialog.
+         *
+         * @param msg The message to be shown.
+         * @param title The title of the message box.
+         * @param btns The buttons to be shown.
+         * @param icon The icon to be shown.
+         * @param defBtn The default button.
+         *
+         * @return The return value of the dialog.
+         */
         static ReturnValue ShowDialog(const vislib::StringA& msg,
             const vislib::StringA& title, MsgButtons btns = BTNS_OK,
             MsgIcon icon = ICON_NONE, DefButton defBtn = DEFBTN_1);
@@ -246,6 +276,16 @@ namespace sys {
          */
         inline void SetTitle(const vislib::StringW& title) {
             this->title = title;
+        }
+
+        /**
+         * Shows the modal message box dialog. This method will not return
+         * until the user clicks on one of the shown buttons.
+         *
+         * @return The return value of the dialog.
+         */
+        inline ReturnValue Show(void) {
+            return this->ShowDialog();
         }
 
         /**

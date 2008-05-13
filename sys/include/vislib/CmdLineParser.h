@@ -1456,7 +1456,7 @@ namespace sys {
          *
          * @return The number of arguments in the command line list.
          */
-        inline unsigned int ArgumentCount(void) {
+        inline unsigned int ArgumentCount(void) const {
             return this->arglistSize;
         }
 
@@ -1467,7 +1467,7 @@ namespace sys {
          * @return A pointer to the i-th argument, or NULL if i is out of 
          *         range.
          */
-        inline Argument * GetArgument(unsigned int i) {
+        inline Argument * GetArgument(unsigned int i) const {
             return (i < this->arglistSize) ? &this->arglist[i] : NULL;
         }
 
