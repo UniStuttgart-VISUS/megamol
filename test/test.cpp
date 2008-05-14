@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     /* setting console title and icon. */
     /* could be in testmisc, but i like it here, running always. ;-) */
 #ifdef _WIN32
-    vislib::sys::Console::SetTitle(L"VISlib™ Test Application");
+    vislib::sys::Console::SetTitle(L"VISlibï¿½ Test Application");
 #else  /* _WIN32 */
     vislib::sys::Console::SetTitle("VISlib Test Application");
 #endif /* _WIN32 */
@@ -140,13 +140,21 @@ int main(int argc, char **argv) {
         //        = vislib::sys::MessageBox::Show(
         //        "You must specify at least one test to be performed.",
         //        "VISlib Test",
-        //        vislib::sys::MessageBox::BTNS_CANCELRETRYCONTINUE,
-        //        vislib::sys::MessageBox::ICON_ERROR));
-
+        //        vislib::sys::MessageBox::BTNS_OK,
+        //        //vislib::sys::MessageBox::BTNS_OKCANCEL,
+        //        //vislib::sys::MessageBox::BTNS_CANCELRETRYCONTINUE,
+        //        //vislib::sys::MessageBox::ICON_NONE);
+        //        //vislib::sys::MessageBox::ICON_ERROR);
+        //        //vislib::sys::MessageBox::ICON_WARNING);
+        //        //vislib::sys::MessageBox::ICON_INFO);
+        //        vislib::sys::MessageBox::ICON_QUESTION);
+        //    exit(0);
+        //
         //    if (rv == vislib::sys::MessageBox::RET_CANCEL) {
+        //        printf("Canceled\n");
         //        exit(0);
         //    } else if (rv == vislib::sys::MessageBox::RET_RETRY) {
-        //        printf("There is nothing to be retried!");
+        //        printf("There is nothing to be retried!\n");
         //    }
         //} catch(vislib::Exception e) {
         //    fprintf(stderr, "Exception: %s\n", e.GetMsgA());
