@@ -82,18 +82,25 @@ namespace net {
         IPEndPoint(const SocketAddress& address);
 
         /**
+         * Create an IPEndPoint from an OS IP-agnostic address structure.
+         *
+         * @param address The address storage.
+         */
+        explicit IPEndPoint(const struct sockaddr_storage& address);
+
+        /**
          * Create an IPEndPoint from an OS IPv4 structure.
          *
          * @param address The IPv4 address to set.
          */
-        IPEndPoint(const struct sockaddr_in& address);
+        explicit IPEndPoint(const struct sockaddr_in& address);
 
         /**
          * Create an IPEndPoint from an OS IPv4 structure.
          *
          * @param address The IPv6 address to set.
          */
-        IPEndPoint(const struct sockaddr_in6& address);
+        explicit IPEndPoint(const struct sockaddr_in6& address);
 
         /**
          * Clone 'rhs'
@@ -163,6 +170,22 @@ namespace net {
         void SetPort(const unsigned int port);
 
         /**
+         * Convert the socket address into a human readable format.
+         *
+         * @return The string representation of the IP address.
+         */
+        StringA ToStringA(void) const;
+
+        /**
+         * Convert the socket address into a human readable format.
+         *
+         * @return The string representation of the IP address.
+         */
+        StringW ToStringW(void) const {
+            return StringW(this->ToStringA());
+        }
+
+        /**
          * Assignment.
          *
          * @param rhs The right hand side operand.
@@ -217,6 +240,74 @@ namespace net {
         inline bool operator !=(const IPEndPoint& rhs) {
             return !(*this == rhs);
         }
+
+        /**
+         * Access the internal storage member as generic sockaddr pointer.
+         *
+         * @return Pointer to the sockaddr_storage used for the end point.
+         */
+        inline operator const struct sockaddr *const(void) const {
+            return reinterpret_cast<const sockaddr *>(&this->address);
+        }
+
+        /**
+         * Access the internal storage member as generic sockaddr pointer.
+         *
+         * @return Pointer to the sockaddr_storage used for the end point.
+         */
+        inline operator struct sockaddr *(void) {
+            return reinterpret_cast<sockaddr *>(&this->address);
+        }
+
+        /**
+         * Access the internal storage member.
+         *
+         * @return Reference to the sockaddr_storage used for the end point.
+         */
+        inline operator const struct sockaddr_storage&(void) const {
+            return this->address;
+        }
+
+        /**
+         * Access the internal storage member.
+         *
+         * @return Reference to the sockaddr_storage used for the end point.
+         */
+        inline operator struct sockaddr_storage&(void) {
+            return this->address;
+        }
+
+        /**
+         * Access the internal storage member.
+         *
+         * @return Pointer to the sockaddr_storage used for the end point.
+         */
+        inline operator const struct sockaddr_storage *const(void) const {
+            return &this->address;
+        }
+
+        /**
+         * Access the internal storage member.
+         *
+         * @return Pointer to the sockaddr_storage used for the end point.
+         */
+        inline operator struct sockaddr_storage *(void) {
+            return &this->address;
+        }
+
+        /**
+         * Convert the IPEndPoint to a legacy SocketAddress.
+         *
+         * Note that this operation can fail if the end point is not an IPv4
+         * end point.
+         *
+         * @return The legacy SocketAdddress that is equivalent to this 
+         *         IPEndPoint.
+         *
+         * @throws IllegalStateException If the end point cannot be converted
+         *                               into an IPv4 SocketAddress.
+         */
+        operator SocketAddress(void) const;
 
     private:
 

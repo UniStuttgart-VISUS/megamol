@@ -173,7 +173,7 @@ namespace net {
         mutable vislib::sys::CriticalSection lock;
 
     };
-    
+
 } /* end namespace net */
 } /* end namespace vislib */
 

@@ -28,14 +28,31 @@ namespace net {
     public:
 
         /**
-         * Ctor.
+         * Create a new exception using the system message for the given
+         * error code as exception message.
          *
-		 * @param errorCode A socket error code.
+         * @param errorCode A socket error code.
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
         SocketException(const DWORD errorCode, const char *file,
             const int line);
+
+        /**
+         * Create a new exception using the specified error code, but
+         * overwrite the message with the specified value. If 'msg' is
+         * NULL, this ctor behaves exactly as SocketException(
+         * const DWORD errorCode, const char *file, const int line).
+         *
+         * @param errorCode A socket error code.
+         * @param msg       A user-defined message to be used instead of
+         *                  the system message associated with the given
+         *                  error code.
+         * @param file      The file the exception was thrown in.
+         * @param line      The line the exception was thrown in.
+         */
+        SocketException(const DWORD errorCode, const char *msg, 
+            const char *file, const int line);
 
         /**
          * Create a new exception using the last socket error code, i. e.

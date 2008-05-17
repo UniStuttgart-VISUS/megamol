@@ -12,8 +12,20 @@
  * vislib::net::SocketException::SocketException
  */
 vislib::net::SocketException::SocketException(const DWORD errorCode, 
-        const char *file, const int line) 
-		: SystemException(errorCode, file, line) {
+        const char *file, const int line)
+        : SystemException(errorCode, file, line) {
+}
+
+
+/*
+ * vislib::net::SocketException::SocketException
+ */
+vislib::net::SocketException::SocketException(const DWORD errorCode,
+        const char *msg, const char *file, const int line)
+        : SystemException(errorCode, file, line) {
+    if (msg != NULL) {
+        this->setMsg(msg);
+    }
 }
 
 
@@ -48,7 +60,7 @@ vislib::net::SocketException::~SocketException(void) {
  * vislib::net::SocketException::operator =
  */
 vislib::net::SocketException& vislib::net::SocketException::operator =(
-		const SocketException& rhs) {
+        const SocketException& rhs) {
     SystemException::operator =(rhs);
     return *this;
 }
@@ -64,4 +76,3 @@ bool vislib::net::SocketException::IsTimeout(void) const {
     return (this->GetErrorCode() == ETIMEDOUT);
 #endif /* _WIN32 */
 }
-

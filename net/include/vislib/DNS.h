@@ -31,6 +31,74 @@ namespace net {
 
     public:
 
+        /**
+         * Answer any of the IP addresses of the host identified by the given
+         * host name or human readable IP address.
+         *
+         * @param outAddress        Receives the IP address.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostAddress(IPAddress& outAddress,
+            const char *hostNameOrAddress);
+
+        /**
+         * Answer any of the IP addresses of the host identified by the given
+         * host name or human readable IP address.
+         *
+         * @param outAddress        Receives the IP address.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostAddress(IPAddress& outAddress,
+            const wchar_t *hostNameOrAddress);
+
+        /**
+         * Answer any of the IP addresses of the host identified by the given
+         * host name or human readable IP address.
+         *
+         * @param outAddress        Receives the IP address.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostAddress(IPAddress6& outAddress,
+            const char *hostNameOrAddress);
+
+        /**
+         * Answer any of the IP addresses of the host identified by the given
+         * host name or human readable IP address.
+         *
+         * @param outAddress        Receives the IP address.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostAddress(IPAddress6& outAddress,
+            const wchar_t *hostNameOrAddress);
+
+        //static void GetHostAddresses(vislib::Array<IPAddress>& outAddresses,
+        //    const char *hostNameOrAddress);
+
+        //static void GetHostAddresses(vislib::Array<IPAddress>& outAddresses,
+        //    const wchar_t *hostNameOrAddress);
+
+        //static void GetHostAddresses(vislib::Array<IPAddress6>& outAddresses,
+        //    const char *hostNameOrAddress);
+
+        //static void GetHostAddresses(vislib::Array<IPAddress6>& outAddresses,
+        //    const wchar_t *hostNameOrAddress);
+
         //static void GetHostEntry(IPHostEntryA& outEntry, 
         //    const IPAddress& hostAddress);
 
@@ -44,33 +112,86 @@ namespace net {
         //    const IPAddress6& hostAddress);
 
         /**
-         * Answer the IPHostEntry for the specified host name.
+         * Answer the IPHostEntry for the specified host name or IP address 
+         * string.
          *
-         * @param outEntry Receives the host entry.
-         * @param hostName The host name to search.
+         * @param outEntry          Receives the host entry.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
          *
-         * @throws SocketException In case the operation fails, e.g. the host 
-         *                         could not be found.
+         * @throws SocketException       In case the operation fails, e.g. the
+         *                               host could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryA& outEntry, 
-            const char *hostName);
+            const char *hostNameOrAddress);
 
         /**
-         * Answer the IPHostEntry for the specified host name.
+         * Answer the IPHostEntry for the specified host name or IP address
+         * string.
          *
-         * @param outEntry Receives the host entry.
-         * @param hostName The host name to search.
+         * @param outEntry          Receives the host entry.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
          *
          * @throws SocketException In case the operation fails, e.g. the host 
          *                         could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
          */
         static void GetHostEntry(IPHostEntryW& outEntry,
-            const wchar_t *hostName);
+            const wchar_t *hostNameOrAddress);
 
         /** Dtor. */
         ~DNS(void);
 
      private:
+
+        /**
+         * Retrieve the addrinfo list for the specified host name of IP address
+         * string.
+         *
+         * The caller takes the ownership of the returned list and must release
+         * it using the appropriate API function.
+         *
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         * @param addressFamily     The address familiy to limit the search to.
+         *
+         * @returns The addrinfo list if the host was found. The caller must 
+         *          free this list.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static struct addrinfo *getAddrInfo(const char *hostNameOrAddress,
+            const int addressFamily);
+
+        /**
+         * Retrieve the addrinfo list for the specified host name of IP address
+         * string.
+         *
+         * The caller takes the ownership of the returned list and must release
+         * it using the appropriate API function.
+         *
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         * @param addressFamily     The address familiy to limit the search to.
+         *
+         * @returns The addrinfo list if the host was found. The caller must 
+         *          free this list.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
+        static ADDRINFOW *getAddrInfo(const wchar_t *hostNameOrAddress,
+            const int addressFamily);
+#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+        static struct addrinfo *getAddrInfo(const wchar_t *hostNameOrAddress,
+            const int addressFamily);
+#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 
         /** 
          * Disallow instances.

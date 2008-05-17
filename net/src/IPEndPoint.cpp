@@ -11,6 +11,8 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
+#include "vislib/SystemMessage.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -72,6 +74,14 @@ vislib::net::IPEndPoint::IPEndPoint(const SocketAddress& address) {
 /*
  * vislib::net::IPEndPoint::IPEndPoint
  */
+vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_storage& address) {
+    ::memcpy(&this->address, &address, sizeof(struct sockaddr_storage));
+}
+
+
+/*
+ * vislib::net::IPEndPoint::IPEndPoint
+ */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in& address) {
     *this = address;
 }
@@ -109,9 +119,17 @@ vislib::net::IPAddress vislib::net::IPEndPoint::GetIPAddress4(void) const {
         case AF_INET:
             return IPAddress(this->asV4().sin_addr);
 
-        case AF_INET6:
-            // TODO
-            throw 1;
+        case AF_INET6: {
+            const struct in6_addr *addr = &this->asV6().sin6_addr;
+            if (IN6_IS_ADDR_V4MAPPED(addr) || IN6_IS_ADDR_V4COMPAT(addr)) {
+                const BYTE *bytes = reinterpret_cast<const BYTE *>(addr);
+                return IPAddress(bytes[12], bytes[13], bytes[14], bytes[15]);
+            } else {
+                throw IllegalStateException("The IPEndPoint is an IPv6 end "
+                    "point which has no IPv4-mapped or -compatible address.",
+                    __FILE__, __LINE__);
+            }
+            } break;
 
         default:
             throw IllegalStateException("The address family of the IPEndPoint "
@@ -198,6 +216,33 @@ void vislib::net::IPEndPoint::SetPort(const unsigned int port) {
 
 
 /*
+ * vislib::net::IPEndPoint::ToStringA
+ */
+vislib::StringA vislib::net::IPEndPoint::ToStringA(void) const {
+    StringA retval;
+
+    switch (this->address.ss_family) {
+        case AF_INET:
+            retval.Format("%s:%u", 
+                this->GetIPAddress4().ToStringA().PeekBuffer(),
+                this->GetPort());
+            break;
+
+        case AF_INET6:
+            retval.Format("[%s]:%u", 
+                this->GetIPAddress6().ToStringA().PeekBuffer(),
+                this->GetPort());
+            break;
+
+        default:
+            ASSERT(false);          // This should be unreachable.
+    }
+
+    return retval;
+}
+
+
+/*
  * vislib::net::IPEndPoint::operator =
  */
 vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
@@ -253,4 +298,23 @@ vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
 bool vislib::net::IPEndPoint::operator ==(const IPEndPoint& rhs) {
     return (::memcpy(&this->address, &rhs.address, sizeof(sockaddr_storage))
         == 0);
+}
+
+
+/*
+ * vislib::net::IPEndPoint::operator vislib::net::SocketAddress
+ */
+vislib::net::IPEndPoint::operator vislib::net::SocketAddress(void) const {
+    switch (this->address.ss_family) {
+        case AF_INET:
+            return SocketAddress(this->asV4());
+
+        case AF_INET6:
+            return SocketAddress(SocketAddress::FAMILY_INET, this->GetIPAddress4(),
+                this->GetPort());
+
+        default:
+            throw IllegalStateException("The address family of the IPEndPoint "
+                "is not in the expected range.", __FILE__, __LINE__);
+    }
 }

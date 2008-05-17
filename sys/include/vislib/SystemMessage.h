@@ -33,7 +33,7 @@ namespace sys {
         /**
          * Ctor.
          *
-		 * @param errorCode A system dependent error code.
+         * @param errorCode A system dependent error code.
          */
         SystemMessage(const DWORD errorCode);
 
@@ -84,20 +84,20 @@ namespace sys {
          */
         operator const wchar_t *(void) const;
 
-		/**
-		 * Answer the system dependent error code associated with this 
-		 * message.
-		 *
-		 * @return The system error code.
-		 */
-		inline DWORD GetErrorCode(void) const {
-			return this->errorCode;
-		}
+        /**
+         * Answer the system dependent error code associated with this 
+         * message.
+         *
+         * @return The system error code.
+         */
+        inline DWORD GetErrorCode(void) const {
+            return this->errorCode;
+        }
 
-	private:
+    private:
 
-		/** A system dependent error code. */
-		DWORD errorCode;
+        /** A system dependent error code. */
+        DWORD errorCode;
 
         /** Remember whether 'msg' points to a Unicode or ANSI string. */
         mutable bool isMsgUnicode;

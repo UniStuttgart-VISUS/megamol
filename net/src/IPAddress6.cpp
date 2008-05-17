@@ -9,6 +9,32 @@
 #include "vislib/IPAddress6.h"
 
 #include "vislib/assert.h"
+#include "vislib/DNS.h"
+#include "vislib/OutOfRangeException.h"
+#include "vislib/SocketException.h"
+#include "vislib/Trace.h"
+
+
+/*
+ * vislib::net::IPAddress6::Create
+ */
+vislib::net::IPAddress6 vislib::net::IPAddress6::Create(
+        const char *hostNameOrAddress) {
+    IPAddress6 retval;
+    DNS::GetHostAddress(retval, hostNameOrAddress);
+    return retval;
+}
+
+
+/*
+ * vislib::net::IPAddress6::Create
+ */
+vislib::net::IPAddress6 vislib::net::IPAddress6::Create(
+        const wchar_t *hostNameOrAddress) {
+    IPAddress6 retval;
+    DNS::GetHostAddress(retval, hostNameOrAddress);
+    return retval;
+}
 
 
 /*
@@ -133,6 +159,48 @@ void vislib::net::IPAddress6::MapV4Address(const struct in_addr& address) {
     ::memcpy(this->address.s6_addr + 12, &address, sizeof(in_addr));
 
     ASSERT(this->IsV4Mapped());
+}
+
+
+/*
+ * vislib::net::IPAddress6::ToStringA
+ */
+vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
+    struct sockaddr_in6 addr;   // Dummy socket address used for lookup.
+    char buffer[NI_MAXHOST];    // Receives the stringised address.
+    int err = 0;                // OS operation return value.
+
+    ::ZeroMemory(&addr, sizeof(addr));
+    addr.sin6_family = AF_INET6;
+    ::memcpy(&addr.sin6_addr, &this->address, sizeof(struct in_addr6));
+
+    if ((err = ::getnameinfo(reinterpret_cast<struct sockaddr *>(&addr),
+            sizeof(struct sockaddr_in6), buffer, sizeof(buffer), NULL, 0,
+            NI_NUMERICHOST)) != 0) {
+        TRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
+            "IPAddress6::ToStringA(): %s\n",
+#ifdef _WIN32
+            ::gai_strerrorA(err));
+#else /* _WIN32 */
+            ::gai_strerror(err));
+#endif /* _WIN32 */
+        buffer[0] = 0;
+    }
+
+    return StringA(buffer);
+}
+
+
+/*
+ * vislib::net::IPAddress6::operator []
+ */
+BYTE vislib::net::IPAddress6::operator [](const int i) const {
+    if ((i > 0) && (i < sizeof(this->address))) {
+        return reinterpret_cast<const BYTE *>(&this->address)[i];
+    } else {
+        throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
+            __LINE__);
+    }
 }
 
 

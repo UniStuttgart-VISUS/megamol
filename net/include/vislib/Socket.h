@@ -30,6 +30,7 @@
 #endif /* _MSC_VER */
 
 
+#include "vislib/IPEndPoint.h"
 #include "vislib/SocketAddress.h"
 #include "vislib/types.h"
 
@@ -49,8 +50,8 @@ namespace net {
 
         /** The supported protocols. */
         enum Protocol {
-            PROTOCOL_IP = IPPROTO_IP,				// IPv4.
-            PROTOCOL_HOPOPTS = IPPROTO_HOPOPTS,		// IPv6 hop-by-hop options.
+            PROTOCOL_IP = IPPROTO_IP,               // IPv4.
+            PROTOCOL_HOPOPTS = IPPROTO_HOPOPTS,     // IPv6 hop-by-hop options.
             PROTOCOL_ICMP = IPPROTO_ICMP,           // Control message protocol.
             PROTOCOL_IGMP = IPPROTO_IGMP,           // Internet group mgmnt.
             //PROTOCOL_GGP = IPPROTO_GGP,             // Gateway^2 (deprecated).
@@ -77,9 +78,9 @@ namespace net {
 
         /** The supported protocol families. */
         enum ProtocolFamily {
-            FAMILY_UNSPEC = PF_UNSPEC,		// Unspecified.
+            FAMILY_UNSPEC = PF_UNSPEC,      // Unspecified.
             //FAMILY_UNIX = PF_UNIX,
-            FAMILY_INET = PF_INET,			// UDP, TCP etc. version 4.
+            FAMILY_INET = PF_INET,          // UDP, TCP etc. version 4.
             //FAMILY_IMPLINK = PF_IMPLINK,
             //FAMILY_PUP = PF_PUP,
             //FAMILY_CHAOS = PF_CHAOS,
@@ -101,7 +102,7 @@ namespace net {
             //FAMILY_UNKNOWN1 = PF_UNKNOWN1,
             //FAMILY_BAN = PF_BAN,
             //FAMILY_ATM = PF_ATM,
-            FAMILY_INET6 = PF_INET6			// Internet version 6.
+            FAMILY_INET6 = PF_INET6     // Internet version 6.
         };
 
 
@@ -128,7 +129,7 @@ namespace net {
             TYPE_DGRAM = SOCK_DGRAM,        // Datagram socket.
             TYPE_RAW = SOCK_RAW,            // Raw socket.
             TYPE_RDM = SOCK_RDM,            // Reliably-delivered message.
-            TYPE_SEQPACKET = SOCK_SEQPACKET	// Sequenced packet stream.
+            TYPE_SEQPACKET = SOCK_SEQPACKET // Sequenced packet stream.
         };
 
 
@@ -187,7 +188,7 @@ namespace net {
         /**
          * Permit incoming connection attempt on the socket.
          *
-         * @param outConnAddr Optional pointer to a SocketAddress that receives 
+         * @param outConnAddr Optional pointer to an IPEndPoint that receives 
          *                    the address of the connecting entity, as known to 
          *                    the communications layer. The exact format of the 
          *                    address is determined by the address family 
@@ -196,24 +197,52 @@ namespace net {
          *
          * @return The accepted socket.
          *
-         * @throws SocketException If the operation fails
+         * @throws SocketException If the operation fails.
          */
-        virtual Socket Accept(SocketAddress *outConnAddr = NULL);
+        virtual Socket Accept(IPEndPoint *outConnAddr = NULL);
+
+        /**
+         * Permit incoming connection attempt on the socket.
+         *
+         * This operation is only allowed on IPv4 sockets. It is recommended 
+         * to use an IPEndPoint instead of a SocketAddress in order to support
+         * both, IPv4 and IPv6 addresses.
+         *
+         * @param outConnAddr Optional pointer to a SocketAddress that receives 
+         *                    the address of the connecting entity, as known to 
+         *                    the communications layer. This parameter can be 
+         *                    NULL.
+         *
+         * @return The accepted socket.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        virtual Socket Accept(SocketAddress *outConnAddr);
 
         /**
          * Bind the socket to the specified address.
          *
          * @param address The address to bind.
          *
-         * @throws
+         * @throws SocketException If the operation fails.
+         */
+        virtual void Bind(const IPEndPoint& address);
+
+        /**
+         * Bind the socket to the specified address.
+         *
+         * This method is only allowed on IPv4 sockets. Use the version with the
+         * IP-agnostic IPEndPoint on IPv6 sockets.
+         *
+         * @param address The address to bind.
+         *
+         * @throws SocketException If the operation fails.
          */
         virtual void Bind(const SocketAddress& address);
 
         /**
          * Close the socket. If the socket is not open, i. e. not valid, this 
          * method succeeds, too.
-         *
-         * @
          */
         virtual void Close(void);
 
@@ -221,6 +250,20 @@ namespace net {
          * Connect to the specified socket address using this socket.
          *
          * @param address The address to connect to.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        virtual void Connect(const IPEndPoint& address);
+
+        /**
+         * Connect to the specified socket address using this socket.
+         *
+         * This method is only allowed on IPv4 sockets. Use the version with the
+         * IP-agnostic IPEndPoint on IPv6 sockets.
+         *
+         * @param address The address to connect to.
+         *
+         * @throws SocketException If the operation fails.
          */
         virtual void Connect(const SocketAddress& address);
 
@@ -525,6 +568,40 @@ namespace net {
          * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
+        virtual SIZE_T Receive(IPEndPoint& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceReceive = false);
+
+        /**
+         * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
+         * 'outData' must be large enough to receive at least 'cntBytes'. 
+         *
+         * This method can only be used on datagram sockets.
+         *
+         * This method is for backward compatibilty and is only supported on 
+         * IPv4 sockets. Use IPEndPoint instead of SocketAddress for IPv6 
+         * support and better performance.
+         *
+         * @param outFromAddr  The socket address the datagram was received 
+         *                     from. This variable is only valid upon successful
+         *                     return from the method.
+         * @param outData      The buffer to receive the data. The caller must
+         *                     allocate this memory and remains owner.
+         * @param cntBytes     The number of bytes to receive.
+         * @param timeout      A timeout in milliseconds. A value less than 1 
+         *                     specifies an infinite timeout. If the operation 
+         *                     timeouts, an exception will be thrown.
+         * @param flags        The flags that specify the way in which the call 
+         *                     is made.
+         * @param forceReceive If this flag is set, the method will not return
+         *                     until 'cntBytes' have been read.
+         *
+         * @return The number of bytes actually received.
+         *
+         * @throws SocketException       If the operation fails or timeouts.
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         *                               and 'forceReceive' is true.
+         */
         virtual SIZE_T Receive(SocketAddress& outFromAddr, void *outData, 
             const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
             const INT flags = 0, const bool forceReceive = false);
@@ -593,9 +670,43 @@ namespace net {
          * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        virtual SIZE_T Send(const SocketAddress& toAddr, const void *data, 
+        virtual SIZE_T Send(const IPEndPoint& toAddr, const void *data, 
             const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
             const INT flags = 0, const bool forceSend = false);
+
+        /**
+         * Send a datagram of 'cntBytes' bytes from the location designated by 
+         * 'data' using this socket to the socket 'toAddr'.
+         *
+         * This method can only be used on datagram sockets.
+         *
+         * This method is for backward compatibilty and is only supported on 
+         * IPv4 sockets. Use IPEndPoint instead of SocketAddress for IPv6 
+         * support and better performance.
+         *
+         * @param toAddr    Socket address of the destination host.
+         * @param data      The data to be sent. The caller remains owner of the
+         *                  memory.
+         * @param cntBytes  The number of bytes to be sent. 'data' must contain
+         *                  at least this number of bytes.
+         * @param timeout   A timeout in milliseconds. A value less than 1 
+         *                  specifies an infinite timeout. If the operation 
+         *                  timeouts, an exception will be thrown.
+         * @param flags     The flags that specify the way in which the call is 
+         *                  made.
+         *
+         * @return The number of bytes acutally sent.
+         *
+         * @throws SocketException       If the operation fails.
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
+         *                               and 'forceSend' is true.
+         */
+        inline SIZE_T Send(const SocketAddress& toAddr, const void *data,
+                const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE,
+                const INT flags = 0, const bool forceSend = false) {
+            return this->Send(IPEndPoint(toAddr), data, cntBytes, timeout, 
+                flags, forceSend);
+        }
 
         ///**
         // * Sends an object of type T.
@@ -927,7 +1038,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        SIZE_T receiveFrom(SocketAddress& outFromAddr, void *outData, 
+        SIZE_T receiveFrom(IPEndPoint& outFromAddr, void *outData, 
             const SIZE_T cntBytes, const INT flags, const bool forceReceive);
 
         /**
@@ -972,7 +1083,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        SIZE_T sendTo(const SocketAddress& toAddr, const void *data, 
+        SIZE_T sendTo(const IPEndPoint& toAddr, const void *data, 
             const SIZE_T cntBytes, const INT flags, const bool forceSend);
 
         /**

@@ -33,12 +33,43 @@ namespace net {
      * This class represents an IPv6 address.
      *
      * In contrast to the IPv4 class IPAddress, IPAddress6 does not provide
-     * DNS lookup capabilities. Use the static methods of vislib::net::DNS
-     * instead.
+     * Lookup() capabilities. Use the static methods of vislib::net::DNS
+     * instead. There is, however, the same static Create convenience method
+     * that uses the DNS class for performing the lookup.
      */
     class IPAddress6 {
 
     public:
+
+        /**
+         * This method tries to lookup the specified host name or human readable
+         * IP address via DNS and creates an IPAddress6 for it in case of
+         * success.
+         *
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         *
+         * @return One of the IP addresses that are assigned to the host.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static IPAddress6 Create(const char *hostNameOrAddress);
+
+        /**
+         * This method tries to lookup the specified host name or human readable
+         * IP address via DNS and creates an IPAddress6 for it in case of
+         * success.
+         *
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         *
+         * @return One of the IP addresses that are assigned to the host.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static IPAddress6 Create(const wchar_t *hostNameOrAddress);
 
         /** 
          * Constant special IP address that allows receiving from all available
@@ -72,7 +103,8 @@ namespace net {
         IPAddress6(const struct in6_addr& address);
 
         /**
-         * Create an IPAddress6 from individual bytes.
+         * Create an IPAddress6 from individual bytes. The bytes must be 
+         * specified in network byte order.
          *
          * @param b1  Byte number 1 of the IP address.
          * @param b2  Byte number 2 of the IP address.
@@ -202,6 +234,34 @@ namespace net {
         inline void MapV4Address(const IPAddress& address) {
             this->MapV4Address(*static_cast<const struct in_addr *>(address));
         }
+
+        /**
+         * Convert the IP address into a human readable format.
+         *
+         * @return The string representation of the IP address.
+         */
+        StringA ToStringA(void) const;
+
+        /**
+         * Convert the IP address into a human readable format.
+         *
+         * @return The string representation of the IP address.
+         */
+        inline StringW ToStringW(void) const {
+            return StringW(this->ToStringA());
+        }
+
+        /**
+         * Provides access to the single bytes of the IP address.
+         *
+         * @param i The index of the byte to access, which must be within 
+         *          [0, 15].
+         *
+         * @return The 'i'th byte of the address.
+         *
+         * @throws OutOfRangeException If 'i' is not a legal byte number.
+         */
+        BYTE operator [](const int i) const;
 
         /**
          * Assignment operator.

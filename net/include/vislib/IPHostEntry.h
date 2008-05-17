@@ -166,13 +166,13 @@ namespace net {
         while (ai != NULL) {
             switch (ai->ai_family) {
                 case AF_INET:
-                    this->addresses.Add(*reinterpret_cast<const sockaddr_in *>(
-                        ai->ai_addr));
+                    this->addresses.Add(IPEndPoint(
+                        *reinterpret_cast<const sockaddr_in *>(ai->ai_addr)));
                     break;
 
                 case AF_INET6:
-                    this->addresses.Add(*reinterpret_cast<const sockaddr_in6 *>(
-                        ai->ai_addr));
+                    this->addresses.Add(IPEndPoint(
+                        *reinterpret_cast<const sockaddr_in6 *>(ai->ai_addr)));
                     break;
 
                 default:
@@ -242,4 +242,3 @@ namespace net {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_IPHOSTENTRY_H_INCLUDED */
-
