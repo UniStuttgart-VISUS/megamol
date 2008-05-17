@@ -172,7 +172,7 @@ vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
 
     ::ZeroMemory(&addr, sizeof(addr));
     addr.sin6_family = AF_INET6;
-    ::memcpy(&addr.sin6_addr, &this->address, sizeof(struct in_addr6));
+    ::memcpy(&addr.sin6_addr, &this->address, sizeof(struct in6_addr));
 
     if ((err = ::getnameinfo(reinterpret_cast<struct sockaddr *>(&addr),
             sizeof(struct sockaddr_in6), buffer, sizeof(buffer), NULL, 0,
