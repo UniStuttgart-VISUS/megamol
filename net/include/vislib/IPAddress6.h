@@ -224,7 +224,7 @@ namespace net {
          *
          * @param address The IPv4 address to map.
          */
-        inline void MapV4Address(const struct in_addr& address);
+        void MapV4Address(const struct in_addr& address);
 
         /**
          * Set this IP address to be the mapped IPv4 address 'address'.
