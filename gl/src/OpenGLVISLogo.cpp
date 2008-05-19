@@ -19423,7 +19423,7 @@ static void VisLogoTwistLogo() {
 /*
  * vislib::graphics::gl::OpenGLVISLogo::OpenGLVISLogo
  */
-vislib::graphics::gl::OpenGLVISLogo::OpenGLVISLogo(void) {
+vislib::graphics::gl::OpenGLVISLogo::OpenGLVISLogo(void) : AbstractVISLogo() {
     // Nothing to do.
 }
 

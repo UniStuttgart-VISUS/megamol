@@ -12,10 +12,7 @@
  * vislib::graphics::AbstractVISLogo::~AbstractVISLogo
  */
 vislib::graphics::AbstractVISLogo::~AbstractVISLogo(void) {
-    try {
-        this->Release();
-    } catch (...) {
-    }
+    // Nothing to do.
 }
 
 

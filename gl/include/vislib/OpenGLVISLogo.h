@@ -15,6 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/AbstractVISLogo.h"
+
+
 namespace vislib {
 namespace graphics {
 namespace gl {
@@ -22,7 +25,7 @@ namespace gl {
     /**
      * Helper for rendering a VIS logo in OpenGL.
      */
-    class OpenGLVISLogo {
+    class OpenGLVISLogo : public AbstractVISLogo {
 
     public:
 
