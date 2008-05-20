@@ -679,6 +679,7 @@ namespace vislib {
             }
             if (i->next == iter.prev) {
                 i->next = iter.next;
+                if (i->next == NULL) this->last = i;
                 delete iter.prev;
             } else {
                 throw IllegalParamException("Invalid Iterator", 
