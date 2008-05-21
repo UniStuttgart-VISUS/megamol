@@ -429,7 +429,7 @@ void TestColumnFormatter(void) {
 
 }
 
-char *TestNIHelper1(vislib::net::NetworkInformation::Adapter::ValidityType v) {
+const char *TestNIHelper1(vislib::net::NetworkInformation::Adapter::ValidityType v) {
     switch (v) {
         case vislib::net::NetworkInformation::Adapter::NOT_VALID : return "NOT_VALID"; break;
         case vislib::net::NetworkInformation::Adapter::VALID : return "VALID"; break;

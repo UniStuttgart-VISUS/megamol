@@ -52,9 +52,9 @@ typedef void (*VislibTestFunction)(void);
 
 /* type for test manager structure */
 typedef struct _VislibTest_t {
-    TCHAR *testName; // the tests name. Used as command line argument to select this test.
+    const TCHAR *testName; // the tests name. Used as command line argument to select this test.
     VislibTestFunction testFunc; // the function called when this test is selected.
-    char *testDesc; // the description of this test. Used for the online help.
+    const char *testDesc; // the description of this test. Used for the online help.
 } VislibTest;
 
 

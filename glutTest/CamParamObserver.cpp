@@ -183,7 +183,7 @@ std::ostream& CamParamObserver::dump(std::ostream& out,
 std::ostream& CamParamObserver::dump(std::ostream& out, 
         const vislib::graphics::CameraParameters::StereoEye& obj) {
     using namespace vislib::graphics;
-    out << (obj == CameraParameters::LEFT_EYE) ? "LEFT_EYE" : "RIGHT_EYE";
+    out << ((obj == CameraParameters::LEFT_EYE) ? "LEFT_EYE" : "RIGHT_EYE");
     return out;
 }
 
@@ -217,7 +217,7 @@ std::ostream& CamParamObserver::dump(std::ostream& out,
             break;
 
         default:
-            out << "<???>"; 
+            out << "<???"">"; 
             break;
     }
 

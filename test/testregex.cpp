@@ -8,6 +8,13 @@
 #include "testregex.h"
 #include "testhelper.h"
 
+#if 1
+
+void TestRegEx(void) {
+}
+
+#else
+
 #include "vislib/RegEx.h"
 
 
@@ -56,3 +63,5 @@ void TestRegEx(void) {
 
 
 }
+
+#endif

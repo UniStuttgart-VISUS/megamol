@@ -78,7 +78,7 @@ static void generateBigOne(File& f1) {
 			rate = (float)numWritten/1024.0f / perf;
 			if (rate < minrate) minrate = rate;
 			if (rate > maxrate) maxrate = rate;
-			splitPos = ++splitPos % BUF_SIZE;
+			splitPos = (++splitPos) % BUF_SIZE;
 		}
 		AssertTrue("Generate big testfile", true);
 		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear writing: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize() / 1024.0f / ptotal);

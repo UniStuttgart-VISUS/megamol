@@ -30,7 +30,9 @@ void TestIpc(void) {
     Semaphore endSem(TEST_IPC_END_SEM_NAME);
     SharedMemory shMem, shMemErr;
     Process ipc2;
+#ifdef _WIN32   // TODO: This does not work on Linux ... somehow
     const char *ipc2Params[] = { "ipc2", NULL };
+#endif /* _WIN32 */
 
     AssertException("Open non-existing shared memory.", shMemErr.Open(
         TEST_IPC_SHMEM_NAME, SharedMemory::READ_WRITE, 

@@ -19,7 +19,7 @@ void TestMD5(void) {
     std::cout << std::endl << "MD5 ..." << std::endl;
     
     MD5HashProvider hash;
-    char *TEXT = "Horst";
+    const char *TEXT = "Horst";
     BYTE hashValue[16];
     SIZE_T hashSize = 16;
 
@@ -94,13 +94,13 @@ void TestSHA1(void) {
     SIZE_T hashSize = 20;
 
     // SHA-1 tests from RFC 3174
-    char *TEST1 = "abc";
-    char *TEST2 = "abcdbcdecdefdefgefghfghighijhi""jkijkljklmklmnlmnomnopnopq";
-    char *TEST3 = "a";
-    char *TEST4 = "01234567012345670123456701234567" "01234567012345670123456701234567";
-    char *testarray[4] = { TEST1, TEST2, TEST3, TEST4 };
+    const char *TEST1 = "abc";
+    const char *TEST2 = "abcdbcdecdefdefgefghfghighijhi""jkijkljklmklmnlmnomnopnopq";
+    const char *TEST3 = "a";
+    const char *TEST4 = "01234567012345670123456701234567" "01234567012345670123456701234567";
+    const char *testarray[4] = { TEST1, TEST2, TEST3, TEST4 };
     long int repeatcount[4] = { 1, 1, 1000000, 10 };
-    char *resultarray[4] = { 
+    const char *resultarray[4] = { 
         "A9993E364706816ABA3E25717850C26C9CD0D89D",
         "84983E441C3BD26EBAAE4AA1F95129E5E54670F1",
         "34AA973CD4C4DAA4F61EEB2BDBAD27316534016F",
@@ -112,7 +112,7 @@ void TestSHA1(void) {
 
         for (int i = 0; i < repeatcount[j]; ++i) {
             //AssertNoException("Transform block", hash.TransformBlock(reinterpret_cast<BYTE *>(testarray[j]), ::strlen(testarray[j])));
-            hash.TransformBlock(reinterpret_cast<BYTE *>(testarray[j]), ::strlen(testarray[j]));
+            hash.TransformBlock(reinterpret_cast<const BYTE *>(testarray[j]), ::strlen(testarray[j]));
         }
 
         AssertNoException("Transform final NULL block", hash.TransformFinalBlock(hashValue, hashSize, NULL, 0));
