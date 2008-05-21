@@ -169,22 +169,6 @@ namespace vislib {
         virtual ~StringTokeniser(void);
 
         /**
-         * Answers the separator string.
-         *
-         * @return The separator string.
-         */
-#ifdef _MSC_VER
-        __declspec(deprecated("Delimiter() has been deprecated. "
-            "Use Separator() instead."))
-#endif /* _MSC_VER */
-        inline const String<C>& Delimiter(void) const {
-#ifndef _WIN32
-#warning "Delimiter() has been deprecated. Use Separator() instead."
-#endif /* !_WIN32 */
-            return this->separator;
-        }
-
-        /**
          * Answer whether there is a next element to iterator to.
          *
          * @return true if there is a next element, false otherwise.

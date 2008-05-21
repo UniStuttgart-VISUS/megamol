@@ -1055,8 +1055,8 @@ namespace sys {
              *
              * @return A human readable ansi string for the specified error code.
              */
-            static char * GetErrorString(ErrorCode errorcode) {
-                char *retval;
+            static const char * GetErrorString(ErrorCode errorcode) {
+                const char *retval;
                 switch(errorcode) {
                     case NONE: 
                         retval = "No Error"; 
@@ -1161,8 +1161,8 @@ namespace sys {
              *
              * @return A human readable ansi string for the specified warning code.
              */
-            static char * GetWarningString(WarnCode warncode) {
-                char *retval;
+            static const char * GetWarningString(WarnCode warncode) {
+                const char *retval;
                 switch(warncode) {
                     case NONE: 
                         retval = "No Warning"; 

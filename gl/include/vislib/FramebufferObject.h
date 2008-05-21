@@ -85,16 +85,6 @@ namespace gl {
          *                         retrieved.
          */
         UINT GetMaxColourAttachments(void);
-#ifdef _MSC_VER
-        __declspec(deprecated("GetMaxColorAttachments() has been deprecated. "
-            "Use GetMaxColourAttachments() instead."))
-#endif /* _MSC_VER */
-        inline UINT GetMaxColorAttachments(void) {
-#ifndef _WIN32
-#warning "GetMaxColorAttachments() has been deprecated. Use GetMaxColourAttachments() instead."
-#endif /* !_WIN32 */
-            return this->GetMaxColourAttachments();
-        }
 
         /** Ctor. */
         FramebufferObject(void);
@@ -125,16 +115,6 @@ namespace gl {
          *                               attachment.
          */
         GLenum BindColourTexture(const UINT which = 0);
-#ifdef _MSC_VER
-        __declspec(deprecated("BindColorTexture() has been deprecated. "
-            "Use BindColourTexture() instead."))
-#endif /* _MSC_VER */
-        inline GLenum BindColorTexture(const UINT which = 0) {
-#ifndef _WIN32
-#warning "BindColorTexture() has been deprecated. Use BindColourTexture() instead."
-#endif /* !_WIN32 */
-            return this->BindColourTexture(which);
-        }
 
         /**
          * Bind the texture that is used as depth target.
@@ -328,16 +308,6 @@ namespace gl {
          */
         inline UINT GetCntColourAttachments(void) const {
             return this->cntColourAttachments;
-        }
-#ifdef _MSC_VER
-        __declspec(deprecated("GetCntColorAttachments() has been deprecated. "
-            "Use GetCntColourAttachments() instead."))
-#endif /* _MSC_VER */
-        inline UINT GetCntColorAttachments(void) const {
-#ifndef _WIN32
-#warning "GetCntColorAttachments() has been deprecated. Use GetCntColourAttachments() instead."
-#endif /* !_WIN32 */
-            return this->GetCntColourAttachments();
         }
 
         /**
