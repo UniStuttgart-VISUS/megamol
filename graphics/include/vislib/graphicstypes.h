@@ -14,6 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/Cuboid.h"
 #include "vislib/Dimension.h"
 #include "vislib/Point.h"
 #include "vislib/Rectangle.h"
@@ -50,6 +51,9 @@ namespace graphics {
     /** This type is used for values in scene space. */
     typedef float SceneSpaceType;
 
+    /** A 3D scene space cuboid. */
+    typedef math::Cuboid<SceneSpaceType> SceneSpaceCuboid;
+
     /** A 2D scene space point. */
     typedef math::Point<SceneSpaceType, 2> SceneSpacePoint2D;
 
@@ -67,12 +71,6 @@ namespace graphics {
 
     /** A shallow 2D scene space vector. */
     typedef math::ShallowVector<SceneSpaceType, 2> ShallowSceneSpaceVector2D;
-
-    /** A 3D scene space point. */
-    typedef math::Point<SceneSpaceType, 3> SceneSpacePoint3D;
-
-    /** A shallow 3D scene space point. */
-    typedef math::ShallowPoint<SceneSpaceType, 3> ShallowSceneSpacePoint3D;
 
     /** A 3D scene space vector. */
     typedef math::Vector<SceneSpaceType, 3> SceneSpaceVector3D;
