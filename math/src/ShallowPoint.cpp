@@ -7,6 +7,7 @@
 
 #include "vislib/ShallowPoint.h"
 
+
 /*
  * This file is intentionally empty.
  */

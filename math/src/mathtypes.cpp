@@ -6,11 +6,14 @@
 
 #include "vislib/mathtypes.h"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 
 /*
  * vislib::math::PI_DOUBLE
  */
-const double vislib::math::PI_DOUBLE = 3.14159265358979323846;
+const double vislib::math::PI_DOUBLE = M_PI;
 
 
 /*
