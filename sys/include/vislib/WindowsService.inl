@@ -11,8 +11,8 @@
 #define VALNAMEDESCW L"Description"
 
 #define IMPLEMENT_WINDOWS_SERVICE_INSTALL1(strType)                            \
-	SC_HANDLE hSCMgr = NULL;                                                   \
-	SC_HANDLE hSvc = NULL;		                                               \
+    SC_HANDLE hSCMgr = NULL;                                                   \
+    SC_HANDLE hSvc = NULL;                                                     \
                                                                                \
     if ((hSCMgr = ::OpenSCManager##strType(NULL, NULL, SC_MANAGER_ALL_ACCESS)) \
             == NULL) {                                                         \
@@ -68,8 +68,8 @@
 
 
 #define IMPLEMENT_WINDOWS_SERVICE_UNINSTALL(strType)                           \
-	SC_HANDLE hSCMgr = NULL;                                                   \
-	SC_HANDLE hSvc = NULL;                                                     \
+    SC_HANDLE hSCMgr = NULL;                                                   \
+    SC_HANDLE hSvc = NULL;                                                     \
                                                                                \
     if ((hSCMgr = ::OpenSCManager##strType(NULL, NULL, SC_MANAGER_ALL_ACCESS)) \
             == NULL) {                                                         \
@@ -241,7 +241,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
         ::SetServiceStatus(hStatus, &status);                                  \
                                                                                \
         status.dwServiceSpecificExitCode                                       \
-            = WindowsService::instance->OnRun(argc, argv);                     \
+            = WindowsService::instance->OnRun(argc,                            \
+            const_cast<const Char **>(argv));                                  \
         if (status.dwServiceSpecificExitCode == 0) {                           \
             status.dwWin32ExitCode = 0;                                        \
         } else {                                                               \
@@ -444,7 +445,7 @@ DWORD WINAPI vislib::sys::WindowsService<vislib::CharTraitsA>::handlerEx(
  * vislib::sys::WindowsService<vislib::CharTraitsA>::serviceMain
  */
 void WINAPI vislib::sys::WindowsService<vislib::CharTraitsA>::serviceMain(
-        DWORD argc, Char *argv) {
+        DWORD argc, Char **argv) {
     IMPLEMENT_WINDOWS_SERVICE_SERVICE_MAIN(A);
 }
 
@@ -661,7 +662,7 @@ DWORD WINAPI vislib::sys::WindowsService<vislib::CharTraitsW>::handlerEx(
  * vislib::sys::WindowsService<vislib::CharTraitsW>::serviceMain
  */
 void WINAPI vislib::sys::WindowsService<vislib::CharTraitsW>::serviceMain(
-        DWORD argc, Char *argv) {
+        DWORD argc, Char **argv) {
     IMPLEMENT_WINDOWS_SERVICE_SERVICE_MAIN(W);
 }
 

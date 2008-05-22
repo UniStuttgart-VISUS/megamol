@@ -237,7 +237,7 @@ namespace sys {
          *             service.
          * @param argv The command line arguments passed to the service.
          */
-        virtual DWORD OnRun(const DWORD argc, const Char *argv) = 0;
+        virtual DWORD OnRun(const DWORD argc, const Char **argv) = 0;
 
         /**
          * Notifies a service of system power events.
@@ -365,7 +365,7 @@ namespace sys {
          * @param argc The size of the 'argv' array.
          * @param argv The array of command line arguments.
          */
-        static void WINAPI serviceMain(DWORD argc, Char *argv);
+        static void WINAPI serviceMain(DWORD argc, Char **argv);
 
         /**
          * Forbidden copy ctor.
@@ -610,7 +610,7 @@ namespace sys {
          *
          * @return The exit code of the service.
          */
-        virtual DWORD OnRun(const DWORD argc, const Char *argv) = 0;
+        virtual DWORD OnRun(const DWORD argc, const Char **argv) = 0;
 
         /**
          * Notifies a service of system power events.
@@ -738,7 +738,7 @@ namespace sys {
          * @param argc The size of the 'argv' array.
          * @param argv The array of command line arguments.
          */
-        static void WINAPI serviceMain(DWORD argc, Char *argv);
+        static void WINAPI serviceMain(DWORD argc, Char **argv);
 
         /**
          * Forbidden copy ctor.
