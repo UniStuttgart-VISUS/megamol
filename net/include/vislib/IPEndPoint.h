@@ -44,12 +44,44 @@ namespace net {
         };
 
         /**
+         * Create an IPEndPoint by looking up the specified host or IP 
+         * address and using FAMILY_INET.
+         *
+         * @param hostNameOrAddress An IP address in the dotted string format 
+         *                          or a host name.
+         * @param port              The port of the address.
+         * 
+         * @return The IPEndPoint if all parameters are valid.
+         *
+         * @throws IllegalParamException If 'host' is not a valid host name or
+         *                               IP address.
+         */
+        static IPEndPoint CreateIPv4(const char *hostNameOrAddress,
+            const unsigned short port);
+
+        /**
+         * Create an IPEndPoint by looking up the specified host or IP 
+         * address and using FAMILY_INET6.
+         *
+         * @param hostNameOrAddress An IP address in the dotted string format 
+         *                          or a host name.
+         * @param port              The port of the address.
+         * 
+         * @return The IPEndPoint if all parameters are valid.
+         *
+         * @throws IllegalParamException If 'host' is not a valid host name or
+         *                               IP address.
+         */
+        static IPEndPoint CreateIPv6(const char *hostNameOrAddress,
+            const unsigned short port);
+
+        /**
          * Creates a new IPv4 end point using the specified address and port.
          *
          * @param ipAddress The IP address of the end point.
          * @param port      The port number of the end point.
          */
-        IPEndPoint(const IPAddress& ipAddress = IPAddress::ANY, 
+        IPEndPoint(const IPAddress& ipAddress = IPAddress::ANY,
             const unsigned short port = 0);
 
         /**

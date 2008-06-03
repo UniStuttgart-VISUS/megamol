@@ -69,9 +69,10 @@ DWORD vislib::net::cluster::AbstractClientNode::Run(void) {
 /*
  * vislib::net::cluster::AbstractClientNode::AbstractClientNode
  */
-vislib::net::cluster::AbstractClientNode::AbstractClientNode(void) 
-        : Super(), reconnectAttempts(0), receiver(ReceiveMessages), 
-        serverAddress(SocketAddress::FAMILY_INET, DEFAULT_PORT) {
+vislib::net::cluster::AbstractClientNode::AbstractClientNode(void)
+        : Super(), reconnectAttempts(0), receiver(ReceiveMessages),
+        // TODO: IPv6
+        serverAddress(IPAddress::ANY, DEFAULT_PORT) {
     try {
         Socket::Startup();
     } catch (SocketException e) {
@@ -132,6 +133,8 @@ void vislib::net::cluster::AbstractClientNode::connect(
         FreeRecvMsgCtx(rmc);
         throw e;
     }
+
+    this->onPeerConnected(this->serverAddress);
 }
 
 
@@ -190,6 +193,30 @@ SIZE_T vislib::net::cluster::AbstractClientNode::forEachPeer(
 
     return retval;
 }
+
+/*
+ * vislib::net::cluster::AbstractClientNode::forPeer
+ */
+bool vislib::net::cluster::AbstractClientNode::forPeer(
+        const PeerIdentifier& peerId, ForeachPeerFunc func, void *context) {
+    bool retval = false;
+
+    if (this->serverAddress == peerId) {
+        try {
+            func(this, this->serverAddress, this->socket, context);
+            retval = true;
+        } catch (Exception& e) {
+            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
+                "with an exception: %s\n", e.GetMsgA());
+        } catch (...) {
+            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
+                "with a non-VISlib exception.\n");
+        }
+    }
+
+    return retval;
+}
+
 
 
 /*

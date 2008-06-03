@@ -394,6 +394,15 @@ namespace net {
             SIZE_T& inOutValueLength) const;
 
         /**
+         * Answer the address of the peer to which a socket is connected.
+         *
+         * @return The address of the peer end point.
+         *
+         * @throw SocketException If the operation fails.
+         */
+        IPEndPoint GetPeerEndPoint(void);
+
+        /**
          * Answer the total per-socket buffer space reserved for receives.
          *
          * @return The current value of the option.

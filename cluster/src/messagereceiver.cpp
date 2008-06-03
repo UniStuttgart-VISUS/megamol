@@ -46,9 +46,10 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
         receiveMessagesCtx);            // Receive context.
     const MessageHeader *msgHdr = NULL; // Pointer to header area of 'recvBuf'.
     const BlockHeader *blkHdr = NULL;   // Pointer to a block header.
-    SIZE_T msgSize = 0;                 // Total message size (header + body);
+    SIZE_T msgSize = 0;                 // Total message size (header + body).
     RawStorage recvBuf;                 // Receives data from network.
     DWORD retval = 0;                   // Function return value.
+    AbstractClusterNode::PeerIdentifier peerId; // Peer address of socket.
 
     /* Sanity checks. */
     ASSERT(ctx != NULL);
@@ -56,6 +57,13 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     ASSERT(ctx->Socket != NULL);
     if ((ctx == NULL) || (ctx->Receiver == NULL) || (ctx->Socket == NULL)) {
         throw IllegalParamException("receiveMessagesCtx", __FILE__, __LINE__);
+    }
+
+    try {
+        peerId = ctx->Socket->GetPeerEndPoint();
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_VL_ERROR, "Message receiver thread could not "
+            "retrieve identifier of peer node: %s\n", e.GetMsgA());
     }
 
     try {
@@ -97,7 +105,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
 
                 while (remBody > 0) {
                     blkHdr = reinterpret_cast<const BlockHeader *>(d);
-                    const BYTE *body = d + sizeof(MessageHeader);
+                    const BYTE *body = d + sizeof(BlockHeader);
 
                     TRACE(Trace::LEVEL_VL_INFO, "Received message %u.\n", 
                         blkHdr->BlockId);
@@ -106,8 +114,8 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
                         (blkHdr->BlockLength > 0) ? body : NULL,
                         blkHdr->BlockLength);
 
-                    d += blkHdr->BlockLength;
-                    remBody -= blkHdr->BlockLength;
+                    d += (sizeof(BlockHeader)+ blkHdr->BlockLength);
+                    remBody -= (sizeof(BlockHeader)+ blkHdr->BlockLength);
                 }
 
             } else {
@@ -126,6 +134,8 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_VL_ERROR, "vislib::net::cluster::ReceiveMessages "
             "exits because of communication error: %s\n", e.GetMsgA());
+        ctx->Receiver->onCommunicationError(peerId, 
+            AbstractClusterNode::RECEIVE_COMMUNICATION_ERROR, e);
         retval = e.GetErrorCode();
     } catch (...) {
         TRACE(Trace::LEVEL_VL_ERROR, "Unexpected exception caught in "

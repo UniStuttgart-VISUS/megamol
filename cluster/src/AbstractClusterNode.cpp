@@ -9,6 +9,7 @@
 
 #include "vislib/MissingImplementationException.h"
 #include "vislib/Trace.h"
+#include "vislib/types.h"
 
 #include "messagereceiver.h"
 
@@ -30,6 +31,7 @@ vislib::net::cluster::AbstractClusterNode::~AbstractClusterNode(void) {
  * vislib::net::cluster::AbstractClusterNode::AbstractClusterNode
  */
 vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(void) {
+    // Nothing to do.
 }
 
 
@@ -38,6 +40,7 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(void) {
  */
 vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
         const AbstractClusterNode& rhs) {
+    // Nothing to do.
 }
 
 
@@ -53,6 +56,17 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
 
 
 /*
+ * vislib::net::cluster::AbstractClusterNode::onCommunicationError
+ */
+void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
+        const PeerIdentifier& peerId, const ComErrorSource src,
+        const SocketException& err) throw() {
+    TRACE(Trace::LEVEL_VL_ERROR, "A communication error occurred while talking "
+        "to %s: %s\n", peerId.ToStringA().PeekBuffer(), err.GetMsgA());
+}
+
+
+/*
  * vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting
  */
 void vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting(
@@ -60,6 +74,15 @@ void vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting(
     TRACE(Trace::LEVEL_VL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
         "releasing receive context ...\n");
     FreeRecvMsgCtx(rmc);
+}
+
+
+/*
+ * vislib::net::cluster::AbstractClusterNode::onPeerConnected
+ */
+void vislib::net::cluster::AbstractClusterNode::onPeerConnected(
+        const PeerIdentifier& peerId) throw() {
+    // Nothing to do.
 }
 
 
@@ -73,6 +96,19 @@ SIZE_T vislib::net::cluster::AbstractClusterNode::sendToEachPeer(
     context.CntData = cntData;
 
     return this->forEachPeer(sendToPeerFunc, &context);
+}
+
+
+/*
+ * vislib::net::cluster::AbstractClusterNode::sendToPeer
+ */
+bool vislib::net::cluster::AbstractClusterNode::sendToPeer(
+        const PeerIdentifier& peerId, const BYTE *data, const SIZE_T cntData) {
+    SendToPeerCtx context;
+    context.Data = data;
+    context.CntData = cntData;
+
+    return this->forPeer(peerId, sendToPeerFunc, &context);
 }
 
 
@@ -93,6 +129,14 @@ bool vislib::net::cluster::AbstractClusterNode::sendToPeerFunc(
         AbstractClusterNode *thisPtr, const PeerIdentifier& peerId,
         Socket& peerSocket, void *context) {
     SendToPeerCtx *ctx = static_cast<SendToPeerCtx *>(context);
-    peerSocket.Send(ctx->Data, ctx->CntData, Socket::TIMEOUT_INFINITE, 0, true);
+
+    try {
+        peerSocket.Send(ctx->Data, ctx->CntData, Socket::TIMEOUT_INFINITE, 0,
+            true);
+    } catch (SocketException e) {
+        thisPtr->onCommunicationError(peerId, SEND_COMMUNICATION_ERROR, e);
+        throw e;
+    }
+
     return true;
 }

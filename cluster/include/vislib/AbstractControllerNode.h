@@ -211,10 +211,23 @@ namespace cluster {
             const BYTE *body, const SIZE_T cntBody);
 
         /**
+         * If a peer node connects, send initial camera configuration to it.
+         *
+         * This method and all overriding implementations must not throw
+         * an exception!
+         *
+         * @param peerId The identifier of the new peer node.
+         */
+        virtual void onPeerConnected(const PeerIdentifier& peerId) throw();
+
+        /**
          * Send all parameters to all peer nodes.
          * This method fails silently.
+         *
+         * @param peerId If not NULL, send the parameters only to the specified
+         *               node. Otherwise, send it to all.
          */
-        void sendAllParameters(void);
+        void sendAllParameters(const PeerIdentifier *peerId = NULL);
 
         /**
          * Set new camera parameters to observe. 

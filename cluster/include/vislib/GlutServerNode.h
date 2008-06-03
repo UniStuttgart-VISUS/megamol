@@ -95,6 +95,24 @@ namespace cluster {
          */
         virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
 
+        /**
+         * Call 'func' for the peer node that has the specified ID 'peerId'. If
+         * such a peer node is not known, nothing should be done.
+         *
+         * On server nodes, the function should check for a client with the
+         * specified ID; on client nodes the implementation should check whether
+         * 'peerId' references the server node.
+         *
+         * @param peerId  The identifier of the node to run 'func' for.
+         * @param func    The function to be execured for the specified peer 
+         *                node.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
+         *
+         * @return true if 'func' was executed, false otherwise.
+         */
+        virtual bool forPeer(const PeerIdentifier& peerId, ForeachPeerFunc func,
+            void *context);
 
         /**
          * This method creates and initialises the controllers. The controllers
@@ -179,6 +197,16 @@ namespace cluster {
          * @param y The new y-coordiantes of the mouse cursor.
          */
         virtual void onMouseMove(const int x, const int y);
+
+        /**
+         * If a peer node connects, send initial camera configuration to it.
+         *
+         * This method and all overriding implementations must not throw
+         * an exception!
+         *
+         * @param peerId The identifier of the new peer node.
+         */
+        virtual void onPeerConnected(const PeerIdentifier& peerId) throw();
 
         /**
          * This method is called when the window was resized.
@@ -323,6 +351,16 @@ namespace cluster {
 
 
     /*
+     * vislib::net::cluster::GlutServerNode<T>::forPeer
+     */
+    template<class T> 
+    bool GlutServerNode<T>::forPeer(const PeerIdentifier& peerId, 
+            ForeachPeerFunc func, void *context) {
+        return AbstractServerNode::forPeer(peerId, func, context);
+    }
+
+
+    /*
      * vislib::net::cluster::GlutServerNode<T>::initialiseController
      */
     template<class T> void GlutServerNode<T>::initialiseController(
@@ -439,6 +477,16 @@ namespace cluster {
     void GlutServerNode<T>::onMouseMove(const int x, const int y) {
         this->updateCursorPosition(x, y);
         ::glutPostRedisplay();
+    }
+
+
+    /*
+     * vislib::net::cluster::GlutServerNode<T>::onPeerConnected
+     */
+    template<class T> 
+    void GlutServerNode<T>::onPeerConnected(
+            const PeerIdentifier& peerId) throw() {
+        AbstractControllerNode::onPeerConnected(peerId);
     }
 
 

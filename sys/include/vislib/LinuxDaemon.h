@@ -149,7 +149,7 @@ template<class T> bool vislib::sys::LinuxDaemon<T>::Run(void) {
 /*
  * vislib::sys::LinuxDaemon<T>::LinuxDaemon
  */
-template<class T> vislib::sys::LinuxDaemon<T>::LinuxDaemon(void) {
+template<class T> vislib::sys::LinuxDaemon<T>::LinuxDaemon(const String& name) {
 }
 
 #endif /* !_WIN32 */

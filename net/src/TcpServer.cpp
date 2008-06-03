@@ -38,9 +38,21 @@ void vislib::net::TcpServer::Listener::OnServerStopped(void) throw() {
 
 
 /*
+ * vislib::net::TcpServer::FLAGS_SHARE_ADDRESS
+ */
+const UINT32 vislib::net::TcpServer::FLAGS_SHARE_ADDRESS = 0x0001;
+
+
+/*
+ * vislib::net::TcpServer::FLAGS_USE_IPV6
+ */
+const UINT32 vislib::net::TcpServer::FLAGS_USE_IPV6 = 0x0002;
+
+
+/*
  * vislib::net::TcpServer::TcpServer
  */
-vislib::net::TcpServer::TcpServer(void) {
+vislib::net::TcpServer::TcpServer(const UINT32 flags) : flags(flags) {
     // Nothing to do.
 }
 
@@ -83,7 +95,7 @@ void vislib::net::TcpServer::RemoveListener(Listener *listener) {
 DWORD vislib::net::TcpServer::Run(void *userData) {
     ASSERT(userData != NULL);
     if (userData != NULL) {
-        SocketAddress serverAddr = *static_cast<SocketAddress *>(userData);
+        IPEndPoint serverAddr = *static_cast<IPEndPoint *>(userData);
         return this->Run(serverAddr);
     } else {
         throw IllegalParamException("userData", __FILE__, __LINE__);
@@ -94,8 +106,8 @@ DWORD vislib::net::TcpServer::Run(void *userData) {
 /*
  * vislib::net::TcpServer::Run
  */
-DWORD vislib::net::TcpServer::Run(const SocketAddress& serverAddr) {
-    SocketAddress peerAddr;
+DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
+    IPEndPoint peerAddr;
     Socket peerSocket;
     DWORD retval = 0;
 
@@ -120,8 +132,12 @@ DWORD vislib::net::TcpServer::Run(const SocketAddress& serverAddr) {
 
     /* Create socket and bind it to specified address. */
     try {
-        this->socket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
-            Socket::PROTOCOL_TCP);
+        this->socket.Create(
+            this->IsUsingIPv6() ? Socket::FAMILY_INET6 : Socket::FAMILY_INET,
+            Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
+        if (this->IsSharingAddress()) {
+            this->socket.SetExclusiveAddrUse(false);
+        }
         this->socket.Bind(serverAddr);
     } catch (SocketException e) {
         TRACE(VISLIB_TRCELVL_ERROR, "Creating or binding server socket of "
@@ -192,7 +208,7 @@ bool vislib::net::TcpServer::Terminate(void) {
  * vislib::net::TcpServer::fireNewConnection
  */
 bool vislib::net::TcpServer::fireNewConnection(Socket& socket, 
-        const SocketAddress& addr) {
+         const IPEndPoint& addr) {
     bool retval = false;
 
     this->lock.Lock();

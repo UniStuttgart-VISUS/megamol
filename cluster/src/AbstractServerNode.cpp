@@ -11,6 +11,7 @@
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/NoSuchElementException.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
@@ -39,7 +40,7 @@ vislib::net::cluster::AbstractServerNode::~AbstractServerNode(void) {
 /*
  * vislib::net::cluster::AbstractServerNode::GetBindAddress
  */
-const vislib::net::SocketAddress& 
+const vislib::net::IPEndPoint& 
 vislib::net::cluster::AbstractServerNode::GetBindAddress(void) const {
     return this->bindAddress;
 }
@@ -69,10 +70,9 @@ void vislib::net::cluster::AbstractServerNode::Initialise(
  * vislib::net::cluster::AbstractServerNode::OnNewConnection
  */
 bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
-        const SocketAddress& addr) throw() {
+        const IPEndPoint& addr) throw() {
     try {
         PeerNode *peerNode = new PeerNode;
-        peerNode->Address = addr;
         peerNode->Socket = socket;
         peerNode->Receiver = new sys::Thread(ReceiveMessages);
 
@@ -87,6 +87,9 @@ bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
         this->peersLock.Lock();
         this->peers.Add(peerNode);
         this->peersLock.Unlock();
+
+        this->onPeerConnected(addr);
+
         return true;
     } catch (Exception e) {
         TRACE(Trace::LEVEL_VL_ERROR, "Could not accept peer node %s in "
@@ -115,6 +118,9 @@ void vislib::net::cluster::AbstractServerNode::OnServerStopped(void) throw() {
  */
 DWORD vislib::net::cluster::AbstractServerNode::Run(void) {
     bool isStarted = this->server.Start(&this->bindAddress);
+#ifndef _WIN32
+    isStarted = isStarted;
+#endif /* !_WIN32 */
     // TODO: generate error here for restart?
     return 0;
 }
@@ -124,7 +130,7 @@ DWORD vislib::net::cluster::AbstractServerNode::Run(void) {
  * vislib::net::cluster::AbstractServerNode::SetBindAddress
  */
 void vislib::net::cluster::AbstractServerNode::SetBindAddress(
-        const SocketAddress& bindAddress) {
+        const IPEndPoint& bindAddress) {
     this->bindAddress = bindAddress;
 }
 
@@ -134,7 +140,8 @@ void vislib::net::cluster::AbstractServerNode::SetBindAddress(
  */
 void vislib::net::cluster::AbstractServerNode::SetBindAddress(
         const unsigned short port) {
-    this->bindAddress = SocketAddress::CreateInet(port);
+    // TODO: IPv6
+    this->bindAddress = IPEndPoint(IPAddress::ANY, port);
 }
 
 
@@ -143,7 +150,8 @@ void vislib::net::cluster::AbstractServerNode::SetBindAddress(
  */
 vislib::net::cluster::AbstractServerNode::AbstractServerNode(void) 
         : AbstractClusterNode(), TcpServer::Listener(),
-        bindAddress(SocketAddress::FAMILY_INET, DEFAULT_PORT) {
+        // TODO: IPv6
+        bindAddress(IPAddress::ANY, DEFAULT_PORT) {
     this->server.GetRunnableInstance().AddListener(this);
 }
 
@@ -206,13 +214,15 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
  */
 SIZE_T vislib::net::cluster::AbstractServerNode::forEachPeer(
         ForeachPeerFunc func, void *context) {
+    PeerIdentifier peerId;
     SIZE_T retval = 0;
 
     this->peersLock.Lock();
     for (SIZE_T i = 0; i < this->peers.Count(); i++) {
         try {
-            bool isContinue = func(this, this->peers[i]->Address, 
-                this->peers[i]->Socket, context);
+            peerId = this->peers[i]->Socket.GetPeerEndPoint();
+            bool isContinue = func(this, peerId, this->peers[i]->Socket, 
+                context);
             retval++;
 
             if (!isContinue) {
@@ -220,20 +230,59 @@ SIZE_T vislib::net::cluster::AbstractServerNode::forEachPeer(
             }
         } catch (Exception& e) {
             TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
-                "with an exception: %s\n", i, e.GetMsgA());
+                "(%s) with an exception: %s\n", i, 
+                peerId.ToStringA().PeekBuffer(), e.GetMsgA());
             // TODO: second chance??????
-            this->peers.Erase(i);
+            this->disconnectPeer(i);
             i--;
         } catch (...) {
             TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
-                "with a non-VISlib exception.\n", i);
+                "(%s) with a non-VISlib exception.\n", i,
+                peerId.ToStringA().PeekBuffer());
             // TODO: second chance??????
-            this->peers.Erase(i);
+            this->disconnectPeer(i);
             i--;
         }
     }
     this->peersLock.Unlock();
 
+    return retval;
+}
+
+
+/*
+ * vislib::net::cluster::AbstractServerNode::forPeer
+ */
+bool vislib::net::cluster::AbstractServerNode::forPeer(
+        const PeerIdentifier& peerId, ForeachPeerFunc func, void *context) {
+    SIZE_T i = 0;
+    bool retval = false;
+
+    this->peersLock.Lock();
+    try {
+        i = this->findPeerNode(peerId);
+
+        try {
+            func(this, peerId, this->peers[i]->Socket, context);
+            retval = true;
+        } catch (Exception& e) {
+            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
+                "(%s) with an exception: %s\n", i,
+                peerId.ToStringA().PeekBuffer(), e.GetMsgA());
+            // TODO: second chance??????
+            this->disconnectPeer(i);
+        } catch (...) {
+            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
+                "(%s) with a non-VISlib exception.\n", i,
+                peerId.ToStringA().PeekBuffer());
+            // TODO: second chance??????
+            this->disconnectPeer(i);
+        }
+    } catch (NoSuchElementException e) {
+        TRACE(Trace::LEVEL_VL_WARN, e.GetMsgA());
+    }
+
+    this->peersLock.Unlock();
     return retval;
 }
 
@@ -260,4 +309,30 @@ vislib::net::cluster::AbstractServerNode::operator =(
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
     return *this;
+}
+
+
+/*
+ * vislib::net::cluster::AbstractServerNode::findPeerNode
+ */
+SIZE_T vislib::net::cluster::AbstractServerNode::findPeerNode(
+        const PeerIdentifier& peerId) {
+    PeerIdentifier addr;
+
+    this->peersLock.Lock();
+    for (SIZE_T i = 0; i < this->peers.Count(); i++) {
+        try {
+            if (this->peers[i]->Socket.GetPeerEndPoint() == peerId) {
+                this->peersLock.Unlock();
+                return i;
+            }
+        } catch (SocketException e) {
+            TRACE(Trace::LEVEL_VL_WARN, "Could not determine identifier of "
+                "peer node for a client socket: %s\n", e.GetMsgA());
+        }
+    }
+    this->peersLock.Unlock();
+
+    throw NoSuchElementException("The requested peer node is not known", 
+        __FILE__, __LINE__);
 }

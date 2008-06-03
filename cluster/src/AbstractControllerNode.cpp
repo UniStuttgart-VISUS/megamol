@@ -9,6 +9,7 @@
 
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -157,13 +158,23 @@ vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
 bool vislib::net::cluster::AbstractControllerNode::onMessageReceived(
         const Socket& src, const UINT msgId, const BYTE *body, 
         const SIZE_T cntBody) {
-    switch (msgId) {
-        case MSGID_INTRODUCE:
-            // TODO: Send all parameters to specified client.
-            return false;
+    return false;
+}
 
-        default:
-            return false;
+
+/*
+ * vislib::net::cluster::AbstractControllerNode::onPeerConnected
+ */
+void vislib::net::cluster::AbstractControllerNode::onPeerConnected(
+        const PeerIdentifier& peerId) throw() {
+    try {
+        this->sendAllParameters(&peerId);
+    } catch (Exception& e) {
+        TRACE(Trace::LEVEL_VL_ERROR, "Sending camera parameters to newly "
+            "connected node failed: %s\n", e.GetMsgA());
+    } catch (...) {
+        TRACE(Trace::LEVEL_VL_ERROR, "Sending camera parameters to newly "
+            "connected node failed for a unknown reason\n");
     }
 }
 
@@ -171,7 +182,8 @@ bool vislib::net::cluster::AbstractControllerNode::onMessageReceived(
 /*
  * vislib::net::cluster::AbstractControllerNode::sendAllParameters
  */
-void vislib::net::cluster::AbstractControllerNode::sendAllParameters(void) {
+void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
+        const PeerIdentifier *peerId) {
     RawStorage msg;
     RawStorageSerialiser serialiser(&msg);
 
@@ -181,52 +193,69 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(void) {
      * |-----------------------------------------|
      * | MsgHeader                               |
      * |-----------------------------------------|
-     * | BlockHeader for camera parameters       |
-     * |-----------------------------------------|
-     * | Serialised camera parameters            |
-     * |-----------------------------------------|
      * | BlockHeader for camera parameter limits |
      * |-----------------------------------------|
      * | Serialiser camera parameter limits      |
      * |-----------------------------------------|
+     * | BlockHeader for camera parameters       |
+     * |-----------------------------------------|
+     * | Serialised camera parameters            |
+     * |-----------------------------------------|
      */
 
-    /* Serialise the camera parameters. */
+    /* Serialise the camera parameter limits first. */
     msg.EnforceSize(0);
-    ASSERT(msg.GetSize() == 0);
+    ASSERT(msg.GetSize() == 0);     // Storage must be empty!
     serialiser.SetOffset(sizeof(MessageHeader) + sizeof(BlockHeader));
-    this->parameters->Serialise(serialiser);
-    
-    BlockHeader *blkHdr1 = msg.AsAt<BlockHeader>(sizeof(MessageHeader));
-    blkHdr1->BlockId = MSGID_CAM_SERIALISEDCAMPARAMS;
-    blkHdr1->BlockLength = static_cast<UINT32>(msg.GetSize() 
-        - sizeof(MessageHeader) - sizeof(BlockHeader));
-    
-    /* Serialise the parameter limits as a second block. */
-    ASSERT(msg.GetSize() > serialiser.Offset());
-    serialiser.SetOffset(static_cast<UINT32>(msg.GetSize() 
-        + sizeof(BlockHeader)));
     this->parameters->Limits()->Serialise(serialiser);
 
+    BlockHeader *blkHdr1 = msg.AsAt<BlockHeader>(sizeof(MessageHeader));
+    blkHdr1->BlockId = MSGID_CAM_LIMITS;
+    blkHdr1->BlockLength = static_cast<UINT32>(msg.GetSize()
+        - sizeof(MessageHeader)
+        - sizeof(BlockHeader));
+    TRACE(Trace::LEVEL_VL_VERBOSE, "Packaged %u B serialised camera parameter "
+        "limits (Message %u).\n", blkHdr1->BlockLength, blkHdr1->BlockId);
+
+    /* 
+     * Serialise the parameters as a second block (deserialisation of parameters
+     * will trigger evaluation against limits on client side).
+     */
+    ASSERT(msg.GetSize() >= serialiser.Offset());
+    serialiser.SetOffset(static_cast<UINT32>(msg.GetSize()
+        + sizeof(BlockHeader)));
+    this->parameters->Serialise(serialiser);
+
+    blkHdr1 = msg.AsAt<BlockHeader>(sizeof(MessageHeader));
     BlockHeader *blkHdr2 = msg.AsAt<BlockHeader>(sizeof(MessageHeader)
         + sizeof(BlockHeader) + blkHdr1->BlockLength);
-    blkHdr2->BlockId = MSGID_CAM_LIMITS;
-    blkHdr2->BlockLength = static_cast<UINT32>(msg.GetSize() 
-        - sizeof(MessageHeader) - 2 * sizeof(BlockHeader) 
+    blkHdr2->BlockId = MSGID_CAM_SERIALISEDCAMPARAMS;
+    blkHdr2->BlockLength = static_cast<UINT32>(msg.GetSize()
+        - sizeof(MessageHeader)
+        - 2 * sizeof(BlockHeader)
         - blkHdr1->BlockLength);
+    TRACE(Trace::LEVEL_VL_VERBOSE, "Packaged %u B serialised camera parameters "
+        "(Message %u).\n", blkHdr2->BlockLength, blkHdr2->BlockId);
 
     /* Fill in the message header for a compound message. */
+    ASSERT(blkHdr1->BlockId == MSGID_CAM_LIMITS);
+    ASSERT(blkHdr2->BlockId == MSGID_CAM_SERIALISEDCAMPARAMS);
+
     MessageHeader *msgHdr = msg.As<MessageHeader>();
     InitialiseMessageHeader(*msgHdr);
     msgHdr->Header.BlockId = MSGID_MULTIPLE;
     msgHdr->Header.BlockLength = static_cast<UINT32>(msg.GetSize() 
         - sizeof(MessageHeader));
-    ASSERT(msgHdr->Header.BlockLength == sizeof(MessageHeader)
-        + sizeof(BlockHeader) + blkHdr1->BlockLength
+    ASSERT(msgHdr->Header.BlockLength 
+        == sizeof(BlockHeader) + blkHdr1->BlockLength
         + sizeof(BlockHeader) + blkHdr2->BlockLength);
 
     /* Post the message. */
-    this->sendToEachPeer(msg.As<BYTE>(), msg.GetSize());
+    if (peerId != NULL) {
+        this->sendToPeer(*peerId, msg.As<BYTE>(), msg.GetSize());
+    } else {
+        this->sendToEachPeer(msg.As<BYTE>(), msg.GetSize());
+    }
 }
 
 

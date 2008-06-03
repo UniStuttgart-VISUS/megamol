@@ -161,6 +161,12 @@ namespace cluster {
          */
         virtual void onSpecialKeyDown(const int key, const int x, const int y);
 
+        /** 
+         * Remember whether the windows was opened and the GL context is 
+         * available. 
+         */
+        bool isWindowReady;
+
     private:
 
         /**
@@ -315,6 +321,8 @@ namespace cluster {
         ::glutReshapeFunc(resize);
         ::glutSpecialFunc(specialKeyDown);
 
+        this->isWindowReady = true;
+
         ::glutMainLoop();
         return 0;
     }
@@ -323,7 +331,8 @@ namespace cluster {
     /*
      * vislib::net::cluster::GlutClusterNode<T>::GlutClusterNode
      */
-    template<class T> GlutClusterNode<T>::GlutClusterNode(void) {
+    template<class T> GlutClusterNode<T>::GlutClusterNode(void) 
+            : isWindowReady(false) {
     }
 
 

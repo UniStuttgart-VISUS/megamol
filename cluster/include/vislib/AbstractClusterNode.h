@@ -15,9 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/SocketAddress.h"       // Must be first.
-#include "vislib/Socket.h"              // Must be first.
+#include "vislib/IPEndPoint.h"          // Must be first.
 #include "vislib/CmdLineProvider.h"
+#include "vislib/Socket.h"
+#include "vislib/SocketException.h"
 #include "vislib/types.h"
 
 
@@ -51,7 +52,7 @@ namespace cluster {
          * This type is used as a unique identified for peer nodes. This 
          * identifier is the address of the peer node.
          */
-        typedef SocketAddress PeerIdentifier;
+        typedef IPEndPoint PeerIdentifier;
 
         /** 
          * The default port used by the default communication implementation, if
@@ -129,9 +130,22 @@ namespace cluster {
          *         enumeration should continue, or false in order to stop after 
          *         the current node.
          */
-        typedef bool (* ForeachPeerFunc)(AbstractClusterNode *thisPtr, 
+        typedef bool (* ForeachPeerFunc)(AbstractClusterNode *thisPtr,
             const PeerIdentifier& peerId, Socket& peerSocket, void *context);
 
+        /**
+         * This enumeration defines possible sources of communication errors.
+         *
+         * RECEIVE_COMMUNICATION_ERROR indicates that a communication error 
+         * occurred while receiving data from a peer node.
+         *
+         * SEND_COMMUNICATION_ERROR indicates that a communication error 
+         * occurred while sending data to a peer node.
+         */
+        typedef enum {
+            RECEIVE_COMMUNICATION_ERROR = 1,
+            SEND_COMMUNICATION_ERROR
+        } ComErrorSource;
 
         /** Ctor. */
         AbstractClusterNode(void);
@@ -147,10 +161,6 @@ namespace cluster {
          * Answer the number of known peer nodes.
          *
          * @return The number of known peer nodes.
-         *
-         * @throws MissingImplementation If not overwritten by subclasses.
-         *                               Calling this interface implementation
-         *                               is a severe logic error.
          */
         virtual SIZE_T countPeers(void) const = 0;
 
@@ -162,15 +172,44 @@ namespace cluster {
          * implementations in subclasses may differ.
          *
          * @param func    The function to be executed for each peer node.
-         * @param context This is an additional pointer that is passed 'func'.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
          *
          * @return The number of sucessful calls to 'func' that have been made.
-         *
-         * @throws MissingImplementation If not overwritten by subclasses.
-         *                               Calling this interface implementation
-         *                               is a severe logic error.
          */
         virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context) = 0;
+
+        /**
+         * Call 'func' for the peer node that has the specified ID 'peerId'. If
+         * such a peer node is not known, nothing should be done.
+         *
+         * On server nodes, the function should check for a client with the
+         * specified ID; on client nodes the implementation should check whether
+         * 'peerId' references the server node.
+         *
+         * @param peerId  The identifier of the node to run 'func' for.
+         * @param func    The function to be execured for the specified peer 
+         *                node.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
+         *
+         * @return true if 'func' was executed, false otherwise.
+         */
+        virtual bool forPeer(const PeerIdentifier& peerId, ForeachPeerFunc func,
+            void *context) = 0;
+
+        /**
+         * This method is called when a communication error occurs.
+         *
+         * This method and all overridded implementations must not throw any
+         * exception.
+         *
+         * @param peerId The node that caused the communication error.
+         * @param src    The type of communication that caused the error.
+         * @param err    The exception that identifies the error.
+         */
+        virtual void onCommunicationError(const PeerIdentifier& peerId,
+            const ComErrorSource src, const SocketException& err) throw();
 
         /**
          * This method is called when data have been received and a valid 
@@ -181,7 +220,7 @@ namespace cluster {
          * @param body    Pointer to the message body.
          * @param cntBody The number of bytes designated by 'body'.
          *
-         * @return true in order to signal that the message has been processed, 
+         * @return true in order to signal that the message has been processed,
          *         false if the implementation did ignore it.
          */
         virtual bool onMessageReceived(const Socket& src, const UINT msgId,
@@ -205,6 +244,22 @@ namespace cluster {
             PReceiveMessagesCtx rmc);
 
         /**
+         * This method is called once a connection with a peer node was 
+         * established.
+         *
+         * Subclasses must call this method once a new connection was 
+         * established and all resources for the connection have been allocated,
+         * i. e. the connection is ready to be used if the callback method is
+         * executed.
+         *
+         * This method and all overriding implementations must not throw
+         * an exception!
+         *
+         * @param peerId The identifier of the new peer node.
+         */
+        virtual void onPeerConnected(const PeerIdentifier& peerId) throw();
+
+        /**
          * Send 'cntData' bytes of data beginning at 'data' to each known peer
          * node.
          *
@@ -217,6 +272,24 @@ namespace cluster {
          * @return The number of messages successfully delivered.
          */
         virtual SIZE_T sendToEachPeer(const BYTE *data, const SIZE_T cntData);
+
+        /**
+         * Send 'cntData' bytes of data beginning at 'data' to the peer node
+         * identified by 'peerId'. If such a node is not known, this is an 
+         * error.
+         *
+         * The method makes best efforts to send the complete data packet and
+         * blocks until everything has been sent.
+         *
+         * @param peerId
+         * @param data
+         * @param cntData
+         *
+         * @return true if the message was delivered, false if the peer node was
+         *         not found or a communication error occurred.
+         */
+        virtual bool sendToPeer(const PeerIdentifier& peerId,
+            const BYTE *data, const SIZE_T cntData);
 
         /**
          * Assignment.
@@ -244,6 +317,9 @@ namespace cluster {
          *
          * The function blocks until all of the context->CntData bytes have
          * been sent.
+         *
+         * The function calls the onCommunicationError() callback method on
+         * 'thisPtr' before throwing SocketExceptions.
          *
          * @param thisPtr    The pointer to the node object calling the 
          *                   callback function, which allows the callback to 

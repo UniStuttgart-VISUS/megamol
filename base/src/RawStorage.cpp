@@ -65,13 +65,13 @@ void vislib::RawStorage::EnforceSize(const SIZE_T size,
     if ((this->size = size) > 0) {
                                          
         if (keepContent) {
-            TRACE(Trace::LEVEL_VL_INFO, "RawStorage::AssertSize reallocates %u "
-                "bytes.\n", this->size);
+            TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+                "RawStorage::AssertSize reallocates %u bytes.\n", this->size);
             this->data = ::realloc(this->data, this->size);
 
         } else {
-            TRACE(Trace::LEVEL_VL_INFO, "RawStorage::AssertSize allocates %u "
-                "bytes.\n", this->size);
+            TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "RawStorage::AssertSize "
+                "allocates %u bytes.\n", this->size);
             SAFE_FREE(this->data);
             this->data = ::malloc(this->size);
         }

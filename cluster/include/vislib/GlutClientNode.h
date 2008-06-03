@@ -84,6 +84,25 @@ namespace cluster {
         virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
+         * Call 'func' for the peer node that has the specified ID 'peerId'. If
+         * such a peer node is not known, nothing should be done.
+         *
+         * On server nodes, the function should check for a client with the
+         * specified ID; on client nodes the implementation should check whether
+         * 'peerId' references the server node.
+         *
+         * @param peerId  The identifier of the node to run 'func' for.
+         * @param func    The function to be execured for the specified peer 
+         *                node.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
+         *
+         * @return true if 'func' was executed, false otherwise.
+         */
+        virtual bool forPeer(const PeerIdentifier& peerId, ForeachPeerFunc func,
+            void *context);
+
+        /**
          * This method is called when data have been received and a valid 
          * message has been found in the packet.
          *
@@ -192,14 +211,26 @@ namespace cluster {
 
 
     /*
+     * vislib::net::cluster::GlutClientNode<T>::forPeer
+     */
+    template<class T> 
+    bool GlutClientNode<T>::forPeer(const PeerIdentifier& peerId, 
+            ForeachPeerFunc func, void *context) {
+        return AbstractClientNode::forPeer(peerId, func, context);
+    }
+
+
+    /*
      *  vislib::net::cluster::GlutClientNode<T>::onMessageReceived
      */
     template<class T> bool GlutClientNode<T>::onMessageReceived(
             const Socket& src, const UINT msgId, const BYTE *body, 
             const SIZE_T cntBody) {
-        bool retval = AbstractControlledNode::onMessageReceived(src, msgId, 
+        bool retval = AbstractControlledNode::onMessageReceived(src, msgId,
             body, cntBody);
-        ::glutPostRedisplay();
+        if (this->isWindowReady) {
+            ::glutPostRedisplay();
+        }
         return retval;
     }
 

@@ -47,7 +47,7 @@ namespace cluster {
          *
          * @return The address the server is binding to.
          */
-        virtual const SocketAddress& GetBindAddress(void) const;
+        virtual const IPEndPoint& GetBindAddress(void) const;
 
         /**
          * Initialise the node.
@@ -91,7 +91,7 @@ namespace cluster {
          * @param addr  The address of the peer node.
          */
         virtual bool OnNewConnection(Socket& socket,
-            const SocketAddress& addr) throw();
+            const IPEndPoint& addr) throw();
 
         /**
          * This method is used by the TCP server to notify the object that no
@@ -118,7 +118,7 @@ namespace cluster {
          *
          * @param bindAddress The address to bind to.
          */
-        virtual void SetBindAddress(const SocketAddress& bindAddress);
+        virtual void SetBindAddress(const IPEndPoint& bindAddress);
 
         /**
          * Make the server bind to any adapter, but use the specified port.
@@ -170,11 +170,31 @@ namespace cluster {
          * implementations in subclasses may differ.
          *
          * @param func    The function to be executed for each peer node.
-         * @param context This is an additional pointer that is passed 'func'.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
          *
          * @return The number of sucessful calls to 'func' that have been made.
          */
         virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+
+        /**
+         * Call 'func' for the peer node that has the specified ID 'peerId'. If
+         * such a peer node is not known, nothing should be done.
+         *
+         * On server nodes, the function should check for a client with the
+         * specified ID; on client nodes the implementation should check whether
+         * 'peerId' references the server node.
+         *
+         * @param peerId  The identifier of the node to run 'func' for.
+         * @param func    The function to be execured for the specified peer 
+         *                node.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
+         *
+         * @return true if 'func' was executed, false otherwise.
+         */
+        virtual bool forPeer(const PeerIdentifier& peerId, ForeachPeerFunc func,
+            void *context);
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -205,13 +225,24 @@ namespace cluster {
          * messages on this socket.
          */
         typedef struct PeerNode_t {
-            SocketAddress Address;
             vislib::net::Socket Socket;
             sys::Thread *Receiver;
         } PeerNode;
 
+        /**
+         * Answer the node with the specified identifier.
+         *
+         * @param peerId Identifier of the node to search.
+         *
+         * @return The index if the peer node with the specified identifier.
+         *
+         * @throws NoSuchElementException If no peer with the specified ID is
+         *                                known.
+         */
+        SIZE_T findPeerNode(const PeerIdentifier& peerId);
+
         /** The address to bind the server to. */
-        SocketAddress bindAddress;
+        IPEndPoint bindAddress;
 
         /** The TCP server waiting for clients. */
         sys::RunnableThread<TcpServer> server;

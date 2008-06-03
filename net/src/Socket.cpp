@@ -208,9 +208,9 @@ void vislib::net::Socket::Create(const ProtocolFamily protocolFamily,
 void vislib::net::Socket::GetOption(const INT level, const INT optName, 
         void *outValue, SIZE_T& inOutValueLength) const {
 #ifdef _WIN32
-	int len = static_cast<INT>(inOutValueLength);
+    int len = static_cast<int>(inOutValueLength);
 #else /* _WIN32 */
-	socklen_t len = static_cast<socklen_t>(inOutValueLength);
+    socklen_t len = static_cast<socklen_t>(inOutValueLength);
 #endif /* _WIN32 */
 
     if (::getsockopt(this->handle, level, optName, 
@@ -218,7 +218,28 @@ void vislib::net::Socket::GetOption(const INT level, const INT optName,
         throw SocketException(__FILE__, __LINE__);
     }
 
-	inOutValueLength = static_cast<SIZE_T>(len);
+    inOutValueLength = static_cast<SIZE_T>(len);
+}
+
+
+/*
+ * vislib::net::Socket::GetPeerEndPoint
+ */
+vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint(void) {
+    IPEndPoint retval;
+#ifdef _WIN32
+    int len = static_cast<int>(sizeof(struct sockaddr_storage));
+#else /* _WIN32 */
+    socklen_t len = static_cast<socklen_t>(sizeof(struct sockaddr_storage));
+#endif /* _WIN32 */
+
+    if (::getpeername(this->handle, reinterpret_cast<sockaddr *>(
+            static_cast<struct sockaddr_storage *>(retval)), &len)
+            == SOCKET_ERROR) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    return retval;
 }
 
 

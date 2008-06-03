@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/Socket.h"          // Must be first.
-#include "vislib/SocketAddress.h"
+#include "vislib/IPEndPoint.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Runnable.h"
@@ -76,8 +76,8 @@ namespace net {
              *         returns false, the listener should not use the socket, 
              *         because the server remains its owner.
              */
-            virtual bool OnNewConnection(Socket& socket, 
-                const SocketAddress& addr) throw() = 0;
+            virtual bool OnNewConnection(Socket& socket,
+                const IPEndPoint& addr) throw() = 0;
 
             /**
              * The server will call this method when it left the server loop and
@@ -95,8 +95,18 @@ namespace net {
             Listener(void);
         }; /* end class Listener */
 
+        /** 
+         * If this flag is set, the server address is not used exclusively, but
+         * can be used by different sockets. Setting this flag is a possible 
+         * security issue for the application.
+         */
+        static const UINT32 FLAGS_SHARE_ADDRESS;
+
+        /** If this flag is set, the server socket will use IPv6. */
+        static const UINT32 FLAGS_USE_IPV6;
+
         /** Ctor. */
-        TcpServer(void);
+        TcpServer(const UINT32 flags = 0);
 
         /** Dtor. */
         ~TcpServer(void);
@@ -114,6 +124,25 @@ namespace net {
         void AddListener(Listener *listener);
 
         /**
+         * Answer whether the server socket does not use its address 
+         * exclusively, but can share it with other sockets.
+         *
+         * @return true if the server address is shared, false otherwise.
+         */
+        inline bool IsSharingAddress(void) const {
+            return ((this->flags & FLAGS_SHARE_ADDRESS) != 0);
+        }
+
+        /**
+         * Answer whether the server socket is using IPv6.
+         *
+         * @return true if the server socket is using IPv6, false otherwise.
+         */
+        inline bool IsUsingIPv6(void) const {
+            return ((this->flags & FLAGS_USE_IPV6) != 0);
+        }
+
+        /**
          * Remove 'listener' from the list of objects informed about new 
          * connections. Possible multiple instances of 'listener' registered
          * will all be removed. The TcpServer will therefore not use the object
@@ -127,7 +156,7 @@ namespace net {
         /**
          * Start the server. 'userData' must be a pointer to the server address.
          *
-         * @param userData Pointer to a SocketAddress.
+         * @param userData Pointer to an IPEndPoint.
          *
          * @return 0 in case of success, an error code otherwise.
          *
@@ -142,7 +171,7 @@ namespace net {
          *
          * @return 0 in case of success, an error code otherwise.
          */
-        virtual DWORD Run(const SocketAddress& serverAddr);
+        virtual DWORD Run(const IPEndPoint& serverAddr);
 
         /**
          * Terminate the server.
@@ -156,9 +185,26 @@ namespace net {
         /** List of potential listeners. */
         typedef SingleLinkedList<Listener *> ListenerList;
 
-        bool fireNewConnection(Socket& socket, const SocketAddress& addr);
+        /**
+         * Call the OnNewConnection() handler on all registered listeners. This
+         * method is thread-safe.
+         *
+         * @param socket The client socket of the new connection.
+         * @param addr   The address of the peer node.
+         *
+         * @return true if one of the listeners accepted the connection, 
+         *         false otherwise.
+         */
+        bool fireNewConnection(Socket& socket, const IPEndPoint& addr);
 
+        /**
+         * Call the OnServerStopped() handler on all registered listeners. This
+         * method is thread-safe.
+         */
         void fireServerStopped(void);
+
+        /** The server flags. */
+        UINT32 flags;
 
         /** The server socket. */
         Socket socket;

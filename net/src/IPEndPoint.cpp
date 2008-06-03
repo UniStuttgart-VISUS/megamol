@@ -8,11 +8,49 @@
 #include "vislib/IPEndPoint.h"
 
 #include "vislib/assert.h"
+#include "vislib/DNS.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
+#include "vislib/SocketException.h"
 #include "vislib/SystemMessage.h"
 #include "vislib/Trace.h"
+
+
+/*
+ * vislib::net::IPEndPoint::CreateIPv4
+ */
+vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv4(
+        const char *hostNameOrAddress, const unsigned short port) {
+    IPAddress addr;
+    try {
+        DNS::GetHostAddress(addr, hostNameOrAddress);
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
+            hostNameOrAddress, e.GetMsgA());
+        throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
+    }
+
+    return IPEndPoint(addr, port);
+}
+
+
+/*
+ * vislib::net::IPEndPoint::CreateIPv6
+ */
+vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv6(
+        const char *hostNameOrAddress, const unsigned short port) {
+    IPAddress6 addr;
+    try {
+        DNS::GetHostAddress(addr, hostNameOrAddress);
+    } catch (SocketException e) {
+        TRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
+            hostNameOrAddress, e.GetMsgA());
+        throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
+    }
+
+    return IPEndPoint(addr, port);
+}
 
 
 /*
@@ -43,6 +81,8 @@ vislib::net::IPEndPoint::IPEndPoint(const IPAddress6& ipAddress,
  */
 vislib::net::IPEndPoint::IPEndPoint(const AddressFamily addressFamily,
                                     const unsigned short port) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
+
     switch (addressFamily) {
 
         case FAMILY_INET:
@@ -67,6 +107,7 @@ vislib::net::IPEndPoint::IPEndPoint(const AddressFamily addressFamily,
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const SocketAddress& address) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
     *this = address;
 }
 
@@ -75,6 +116,7 @@ vislib::net::IPEndPoint::IPEndPoint(const SocketAddress& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_storage& address) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
     ::memcpy(&this->address, &address, sizeof(struct sockaddr_storage));
 }
 
@@ -83,6 +125,7 @@ vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_storage& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in& address) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
     *this = address;
 }
 
@@ -91,6 +134,7 @@ vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in6& address) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
     *this = address;
 }
 
@@ -99,6 +143,7 @@ vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_in6& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& rhs) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
     *this = rhs;
 }
 
@@ -296,8 +341,23 @@ vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
  * vislib::net::IPEndPoint::operator ==
  */
 bool vislib::net::IPEndPoint::operator ==(const IPEndPoint& rhs) {
-    return (::memcpy(&this->address, &rhs.address, sizeof(sockaddr_storage))
-        == 0);
+    size_t size  = 0;
+
+    switch (this->address.ss_family) {
+        case AF_INET: 
+            size = sizeof(struct sockaddr_in);
+            break;
+
+        case AF_INET6: 
+            size = sizeof(struct sockaddr_in6);
+            break;
+
+        default:
+            size = sizeof(struct sockaddr_storage);
+            break;
+    }
+
+    return (::memcmp(&this->address, &rhs.address, size) == 0);
 }
 
 

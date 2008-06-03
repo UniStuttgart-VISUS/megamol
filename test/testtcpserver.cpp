@@ -26,7 +26,7 @@ public:
     inline ConnectionListener(void) : cntConnections(0) {}
     virtual ~ConnectionListener(void);
     virtual bool OnNewConnection(vislib::net::Socket& socket, 
-        const vislib::net::SocketAddress& addr) throw();
+        const vislib::net::IPEndPoint& addr) throw();
     virtual void OnServerStopped(void) throw();
 
     int cntConnections;
@@ -36,7 +36,7 @@ ConnectionListener::~ConnectionListener(void) {
 }
 
 bool ConnectionListener::OnNewConnection(vislib::net::Socket& socket,
-        const vislib::net::SocketAddress& addr) throw() {
+        const vislib::net::IPEndPoint& addr) throw() {
     std::cout << "The TCP server accepted the connection from "
         << addr.ToStringA().PeekBuffer() << std::endl;
     this->cntConnections++;
@@ -52,19 +52,18 @@ void TestTcpServer(void) {
     using namespace vislib::net;
     using namespace vislib::sys;
 
+    AssertNoException("Socket startup", Socket::Startup());
+
     ConnectionListener cl1, cl2, cl3;
     TcpServer server;
     Thread serverThread(&server);
-    SocketAddress serverAddr = SocketAddress::CreateInet("127.0.0.1", 
-        TEST_PORT);
+    IPEndPoint serverAddr = IPEndPoint::CreateIPv4("127.0.0.1", TEST_PORT);
 
     server.AddListener(&cl1);
     server.AddListener(&cl2);
     server.AddListener(&cl3);
 
     serverThread.Start(&serverAddr);
-
-    AssertNoException("Socket startup", Socket::Startup());
 
     Socket socket;
     AssertNoException("Create client socket", socket.Create(

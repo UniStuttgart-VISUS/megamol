@@ -17,6 +17,7 @@
 
 #include "vislib/AbstractClusterNode.h"
 #include "vislib/CmdLineParser.h"
+#include "vislib/DNS.h"
 #include "vislib/Thread.h"
 
 
@@ -44,7 +45,7 @@ namespace cluster {
          *
          * @return The address of the server to connect to.
          */
-        inline const SocketAddress& GetServerAddress(void) const {
+        inline const IPEndPoint& GetServerAddress(void) const {
             return this->serverAddress;
         }
 
@@ -105,7 +106,7 @@ namespace cluster {
          *
          * @param serverAddress The new server added.
          */
-        inline void SetServerAddress(const SocketAddress& serverAddress) {
+        inline void SetServerAddress(const IPEndPoint& serverAddress) {
             this->serverAddress = serverAddress;
         }
 
@@ -170,12 +171,32 @@ namespace cluster {
          * implementations in subclasses may differ.
          *
          * @param func    The function to be executed for each peer node.
-         * @param context This is an additional pointer that is passed 'func'.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
          *
          * @return The number of sucessful calls to 'func' that have been made.
          *         This is at most 1 for a client node.
          */
         virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
+
+        /**
+         * Call 'func' for the peer node that has the specified ID 'peerId'. If
+         * such a peer node is not known, nothing should be done.
+         *
+         * On server nodes, the function should check for a client with the
+         * specified ID; on client nodes the implementation should check whether
+         * 'peerId' references the server node.
+         *
+         * @param peerId  The identifier of the node to run 'func' for.
+         * @param func    The function to be execured for the specified peer 
+         *                node.
+         * @param context This is an additional pointer that is passed to 
+         *                'func'.
+         *
+         * @return true if 'func' was executed, false otherwise.
+         */
+        virtual bool forPeer(const PeerIdentifier& peerId, ForeachPeerFunc func,
+            void *context);
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -225,7 +246,7 @@ namespace cluster {
         sys::Thread receiver;
 
         /** The address of the server node to connect to. */
-        SocketAddress serverAddress;
+        IPEndPoint serverAddress;
 
         /** The socket for communicating with the server. */
         Socket socket;
@@ -265,9 +286,11 @@ namespace cluster {
 
         if (parser.Parse(inOutCmdLine.ArgC(), inOutCmdLine.ArgV()) >= 0) {
             if ((arg = optServer.GetFirstOccurrence()) != NULL) {
+                // TODO: IPv6
                 this->serverAddress.SetIPAddress(IPAddress::Create(
                     StringA(arg->GetValueString())));
             } else {
+                // TODO: IPv6
                 this->serverAddress.SetIPAddress(IPAddress::LOCALHOST);
             }
 

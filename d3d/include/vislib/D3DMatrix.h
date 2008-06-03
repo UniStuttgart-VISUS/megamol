@@ -190,4 +190,3 @@ namespace d3d {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_D3DMATRIX_H_INCLUDED */
-
