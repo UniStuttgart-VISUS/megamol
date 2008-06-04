@@ -479,7 +479,7 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\project.mk"
+			RelativePath=".\Makefile"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"

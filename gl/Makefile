@@ -1,7 +1,8 @@
 #
 # Makefile  13.09.2006 (mueller)
 #
-# Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+# Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VISUS).
+# Alle Rechte vorbehalten.
 #
 
 #
@@ -16,8 +17,22 @@
 # Include project default configuration.
 -include ../config.mk
 
-# Include user settings and override.
--include project.mk
+
+# user settings
+TargetName := vislibgl
+
+IncludeDir += ../base/include ../math/include ../sys/include ../graphics/include
+
 
 # Include common build rules.
 -include ../librules.mk
+
+
+# add dependancy to glh
+$(CPP_DEPS_DEBUG): ./include/glh/glh_genext.h
+
+$(CPP_DEPS_RELEASE): ./include/glh/glh_genext.h
+
+# build target for glh
+./include/glh/glh_genext.h:
+	$(Q)$(MAKE) -C ./include/glh glh_genext.h
