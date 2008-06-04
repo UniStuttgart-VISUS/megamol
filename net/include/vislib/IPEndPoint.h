@@ -21,6 +21,17 @@
 namespace vislib {
 namespace net {
 
+#ifdef _WIN32
+    // Crowbar to work around windows naming conflict
+#ifdef _MSC_VER
+#pragma push_macro("SetPort")
+#undef SetPort
+#else /* _MSC_VER */
+#ifdef SetPort
+#error SetPort Macro defined!
+#endif /* SetPort */
+#endif /* _MSC_VER */
+#endif /* _WIN32 */
 
     /**
      * The IPEndPoint class represents a socket address that is IP-agnostic,
@@ -200,6 +211,24 @@ namespace net {
          * @param port The new port number.
          */
         void SetPort(const unsigned int port);
+
+        /**
+         * Set a new port number.
+         *
+         * @param port The new port number.
+         */
+        inline void SetPortA(const unsigned int port) {
+            this->SetPort(port);
+        }
+
+        /**
+         * Set a new port number.
+         *
+         * @param port The new port number.
+         */
+        inline void SetPortW(const unsigned int port) {
+            this->SetPort(port);
+        }
 
         /**
          * Convert the socket address into a human readable format.
@@ -383,7 +412,14 @@ namespace net {
         struct sockaddr_storage address;
 
     };
-    
+
+#ifdef _WIN32
+    // Crowbar to work around windows naming conflict
+#ifdef _MSC_VER
+#pragma pop_macro("SetPort")
+#endif /* _MSC_VER */
+#endif /* _WIN32 */
+
 } /* end namespace net */
 } /* end namespace vislib */
 

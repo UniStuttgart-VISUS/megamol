@@ -17,6 +17,19 @@
 #include "vislib/Trace.h"
 
 
+#ifdef _WIN32
+    // Crowbar to work around windows naming conflict
+#ifdef _MSC_VER
+#pragma push_macro("SetPort")
+#undef SetPort
+#else /* _MSC_VER */
+#ifdef SetPort
+#error SetPort Macro defined!
+#endif /* SetPort */
+#endif /* _MSC_VER */
+#endif /* _WIN32 */
+
+
 /*
  * vislib::net::IPEndPoint::CreateIPv4
  */
@@ -378,3 +391,11 @@ vislib::net::IPEndPoint::operator vislib::net::SocketAddress(void) const {
                 "is not in the expected range.", __FILE__, __LINE__);
     }
 }
+
+
+#ifdef _WIN32
+    // Crowbar to work around windows naming conflict
+#ifdef _MSC_VER
+#pragma pop_macro("SetPort")
+#endif /* _MSC_VER */
+#endif /* _WIN32 */
