@@ -164,7 +164,7 @@ struct addrinfo *vislib::net::DNS::getAddrInfo(const char *hostNameOrAddress,
      * - Return the addresses for any protocol family.
      */
     ::ZeroMemory(&hints, sizeof(hints));
-    hints.ai_flags = AI_CANONNAME | AI_NUMERICHOST;
+    hints.ai_flags = 0; //AI_CANONNAME | AI_NUMERICHOST;
     hints.ai_family = addressFamily;
 
     if ((err = ::getaddrinfo(hostNameOrAddress, NULL, &hints, &retval)) != 0) {
@@ -195,7 +195,7 @@ ADDRINFOW *vislib::net::DNS::getAddrInfo(const wchar_t *hostNameOrAddress,
      * - Return the addresses for any protocol family.
      */
     ::ZeroMemory(&hints, sizeof(hints));
-    hints.ai_flags = AI_CANONNAME | AI_NUMERICHOST;
+    hints.ai_flags = 0; //AI_CANONNAME | AI_NUMERICHOST;
     hints.ai_family = addressFamily;
 
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
