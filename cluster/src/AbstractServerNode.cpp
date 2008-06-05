@@ -25,6 +25,8 @@
  */
 vislib::net::cluster::AbstractServerNode::~AbstractServerNode(void) {
     try {
+        this->server.Terminate(false);
+
         while (this->countPeers() > 0) {
             this->disconnectPeer(0);
         }
