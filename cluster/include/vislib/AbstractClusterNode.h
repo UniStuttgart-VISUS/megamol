@@ -260,6 +260,40 @@ namespace cluster {
         virtual void onPeerConnected(const PeerIdentifier& peerId) throw();
 
         /**
+         * Send a message to all known peer nodes. 
+         *
+         * This method is similar to sendToEachPeer(), but also performs 
+         * packaging of messages. The caller must only provide the message ID,
+         * message body and size of the body.
+         *
+         * @param msgId   The message ID.
+         * @param data    The message body data.
+         * @param cntData The size of 'data'.
+         *
+         * @return The number of messages successfully delivered.
+         */
+        virtual SIZE_T sendMessage(const UINT32 msgId, const BYTE *data, 
+            const UINT32 cntData);
+
+        /**
+         * Send a message to a specific peer node.
+         *
+         * This method is similar to sendToEachPeer(), but also performs 
+         * packaging of messages. The caller must only provide the message ID,
+         * message body and size of the body.
+         *
+         * @param msgId   The message ID.
+         * @param data    The message body data.
+         * @param cntData The size of 'data'.
+         *
+         * @return true if the message was delivered, false if the peer node was
+         *         not found or a communication error occurred.
+         */
+        virtual bool sendMessage(const PeerIdentifier& peerId, 
+            const UINT32 msgId, const BYTE *data, const UINT32 cntData);
+
+
+        /**
          * Send 'cntData' bytes of data beginning at 'data' to each known peer
          * node.
          *

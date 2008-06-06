@@ -7,7 +7,9 @@
 
 #include "vislib/AbstractClusterNode.h"
 
+#include "vislib/clustermessages.h"
 #include "vislib/MissingImplementationException.h"
+#include "vislib/RawStorage.h"
 #include "vislib/Trace.h"
 #include "vislib/types.h"
 
@@ -83,6 +85,35 @@ void vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting(
 void vislib::net::cluster::AbstractClusterNode::onPeerConnected(
         const PeerIdentifier& peerId) throw() {
     // Nothing to do.
+}
+
+
+/*
+ * vislib::net::cluster::AbstractClusterNode::sendMessage
+ */
+SIZE_T vislib::net::cluster::AbstractClusterNode::sendMessage(
+        const UINT32 msgId, const BYTE *data, const UINT32 cntData) {
+    RawStorage msg(sizeof(MessageHeader) + cntData);
+
+    InitialiseMessageHeader(*msg.As<MessageHeader>(), msgId, cntData);
+    ::memcpy(msg.At(sizeof(MessageHeader)), data, cntData);
+
+    return this->sendToEachPeer(msg.As<BYTE>(), msg.GetSize());
+}
+
+
+/*
+ * vislib::net::cluster::AbstractClusterNode::sendMessage
+ */
+bool vislib::net::cluster::AbstractClusterNode::sendMessage(
+        const PeerIdentifier& peerId, const UINT32 msgId, const BYTE *data, 
+        const UINT32 cntData) {
+    RawStorage msg(sizeof(MessageHeader) + cntData);
+
+    InitialiseMessageHeader(*msg.As<MessageHeader>(), msgId, cntData);
+    ::memcpy(msg.At(sizeof(MessageHeader)), data, cntData);
+
+    return this->sendToPeer(peerId, msg.As<BYTE>(), msg.GetSize());
 }
 
 

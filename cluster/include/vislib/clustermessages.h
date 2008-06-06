@@ -52,6 +52,8 @@ namespace cluster {
      * Actually, the magic number is set.
      *
      * @param inOutHeader The header to be initialised.
+     * @param blockId     The message ID of the first (required) block.
+     * @param blockLength The size of the first (required) block.
      */
     void InitialiseMessageHeader(MessageHeader& inOutHeader, 
         const UINT32 blockId = 0, const UINT32 blockLength = 0);

@@ -98,6 +98,8 @@ namespace vislib {
          * pointer to T. The object remains owner of the memory designated 
          * by the pointer returned.
          *
+         * Note that the method does not perform any range checks!
+         *
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
         template<class T> inline T *AsAt(const SIZE_T offset) {
@@ -109,6 +111,8 @@ namespace vislib {
          * Answer the raw memory block at and offset of 'offset' bytes as 
          * pointer to T. The object remains owner of the memory designated 
          * by the pointer returned.
+         *
+         * Note that the method does not perform any range checks!
          *
          * @return A pointer to the begin of the memory block + 'offset' bytes.
          */
@@ -134,6 +138,30 @@ namespace vislib {
          * @throws std::bad_alloc If the requested memory could not be allocated.
          */
         bool AssertSize(const SIZE_T size, const bool keepContent = false);
+
+        /**
+         * Answer a pointer to the data at 'offset' byte distance from the 
+         * beginning of the raw storage.
+         *
+         * Note that the method does not perform any range checks!
+         *
+         * @return A pointer to the begin of the memory block + 'offset' bytes.
+         */
+        inline void *At(const SIZE_T offset) {
+            return (static_cast<BYTE *>(this->data) + offset);
+        }
+
+        /**
+         * Answer a pointer to the data at 'offset' byte distance from the 
+         * beginning of the raw storage.
+         *
+         * Note that the method does not perform any range checks!
+         *
+         * @return A pointer to the begin of the memory block + 'offset' bytes.
+         */
+        inline const void *At(const SIZE_T offset) const {
+            return (static_cast<BYTE *>(this->data) + offset);
+        }
 
         /**
          * Enforces the dynamic memory to contain exactly 'size' bytes. If
