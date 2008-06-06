@@ -225,7 +225,7 @@ void vislib::net::Socket::GetOption(const INT level, const INT optName,
 /*
  * vislib::net::Socket::GetPeerEndPoint
  */
-vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint(void) {
+vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint(void) const {
     IPEndPoint retval;
 #ifdef _WIN32
     int len = static_cast<int>(sizeof(struct sockaddr_storage));

@@ -80,7 +80,11 @@ void vislib::graphics::CameraParameters::CalcClipping(
     minDist -= border;
     maxDist += border;
 
-    this->SetClip(minDist, maxDist);
+    if (!vislib::math::IsEqual(this->NearClip(), minDist)
+            || !vislib::math::IsEqual(this->FarClip(), maxDist)) {
+
+        this->SetClip(minDist, maxDist);
+    }
 
 }
 

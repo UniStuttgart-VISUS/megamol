@@ -400,7 +400,7 @@ namespace net {
          *
          * @throw SocketException If the operation fails.
          */
-        IPEndPoint GetPeerEndPoint(void);
+        IPEndPoint GetPeerEndPoint(void) const;
 
         /**
          * Answer the total per-socket buffer space reserved for receives.
