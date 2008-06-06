@@ -19,6 +19,8 @@
 
 #include "GlutClient.h"
 #include "GlutServer.h"
+#include "PlainClient.h"
+#include "PlainServer.h"
 
 
 void usage(const TCHAR *app, vislib::sys::TCmdLineParser& parser) {
@@ -65,6 +67,7 @@ int main(int argc, char **argv) {
         Option::FLAG_UNIQUE | Option::FLAG_REQUIRED,
         ValueDesc::ValueList(Option::STRING_VALUE, _T("name"), 
         _T("The name of the test mode to run. This can be one of ")
+        _T("\"plainserver\", \"plainclient\",")
         _T("\"glutserver\" or \"glutclient\".")));
     parser.AddOption(&optTest);
 
@@ -79,13 +82,19 @@ int main(int argc, char **argv) {
     if ((arg = optTest.GetFirstOccurrence()) != NULL) {
         try {
             vislib::TString val = arg->GetValueString();
-            if (val.Compare(_T("glutserver"), false) == 0) {
+            if (val.Equals(_T("glutserver"), false)) {
                 GlutServer::GetInstance().Initialise(cmdLine);
                 //GlutServer::GetInstance().SetBindAddress(12345);
                 return GlutServer::GetInstance().Run();
-            } else if (val.Compare(_T("glutclient"), false) == 0) {
+            } else if (val.Equals(_T("glutclient"), false)) {
                 GlutClient::GetInstance().Initialise(cmdLine);
                 return GlutClient::GetInstance().Run();
+            } else if (val.Equals(_T("plainserver"), false)) {
+                PlainServer::GetInstance().Initialise(cmdLine);
+                return PlainServer::GetInstance().Run();
+            } else if (val.Equals(_T("plainclient"), false)) {
+                PlainClient::GetInstance().Initialise(cmdLine);
+                return PlainClient::GetInstance().Run();
             }
         } catch (vislib::Exception& e) {
             std::cerr << e.GetMsgA() << " @ " << e.GetFile() << ":" 
