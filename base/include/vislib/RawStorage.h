@@ -50,6 +50,30 @@ namespace vislib {
         ~RawStorage(void);
 
         /**
+         * Append 'cntData' bytes of data beginning at 'data' to the end of the
+         * raw storage. The object ensures that the specified amount of data can
+         * be appended by enlarging the raw storage.
+         *
+         * The existing this->GetSize() bytes in the raw storage will not be
+         * touched.
+         *
+         * The caller remains owner of the memory designated by 'data'. The 
+         * object will create a deep copy in this method.
+         *
+         * @param data    The data to be appended. It is safe to pass a NULL 
+         *                pointer for 'data'. In this case, nothing will be
+         *                copied, but the size is adjusted like calling
+         *                AssertSize(this->GetSize() + cntData, true).
+         * @param cntData The number of bytes starting at 'data' to be added.
+         *
+         * @return A pointer to the copy of 'data' in the raw storage. The 
+         *         object remains owner of this data.
+         *
+         * @throws std::bad_alloc If the requested memory could not be allocated.
+         */
+        void *Append(const void *data, const SIZE_T cntData);
+
+        /**
          * Answer the raw memory block as pointer to T. The object remains
          * owner of the memory designated by the pointer returned.
          *

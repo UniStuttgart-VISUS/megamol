@@ -43,6 +43,24 @@ vislib::RawStorage::~RawStorage(void) {
 
 
 /*
+ * vislib::RawStorage::Append
+ */
+void *vislib::RawStorage::Append(const void *data, const SIZE_T cntData) {
+    SIZE_T offset = this->size;
+    void *retval = NULL;
+
+    this->EnforceSize(this->size + cntData, true);
+    retval = static_cast<BYTE *>(this->data) + offset;
+
+    if (data != NULL) {
+        ::memcpy(retval, data, cntData);
+    }
+
+    return retval;
+}
+
+
+/*
  * vislib::RawStorage::AssertSize
  */
 bool vislib::RawStorage::AssertSize(const SIZE_T size, const bool keepContent) {
