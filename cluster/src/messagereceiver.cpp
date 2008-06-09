@@ -134,8 +134,9 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     } catch (SocketException e) {
         TRACE(Trace::LEVEL_VL_ERROR, "vislib::net::cluster::ReceiveMessages "
             "exits because of communication error: %s\n", e.GetMsgA());
-        ctx->Receiver->onCommunicationError(peerId, 
-            AbstractClusterNode::RECEIVE_COMMUNICATION_ERROR, e);
+        // TODO: Remove HOTFIX
+        //ctx->Receiver->onCommunicationError(peerId, 
+        //    AbstractClusterNode::RECEIVE_COMMUNICATION_ERROR, e);
         retval = e.GetErrorCode();
     } catch (...) {
         TRACE(Trace::LEVEL_VL_ERROR, "Unexpected exception caught in "
