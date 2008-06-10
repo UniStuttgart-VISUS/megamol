@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include "vislib/clustermessages.h"
+
 
 /*
  * PlainServer::GetInstance
@@ -72,5 +74,19 @@ bool PlainServer::onMessageReceived(const vislib::net::Socket& src,
         const UINT msgId, const BYTE *body, const SIZE_T cntBody) {
     std::cout << "PlainServer received message " << msgId << " with " 
         << cntBody << " Bytes of body data" << std::endl;
+
+    switch (msgId) {
+        case VLC1_USER_MSG_ID(1): {
+            char *str = const_cast<char *>(reinterpret_cast<const char *>(
+                body));
+            str[cntBody - 1] = 0;
+            std::cout << str << std::endl;
+            }
+            return true;
+
+        default:
+            break;
+    }
+
     return false;   
 }

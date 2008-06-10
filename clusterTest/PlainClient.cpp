@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include "vislib/clustermessages.h"
+
 
 /*
  * PlainClient::GetInstance
@@ -50,7 +52,20 @@ void PlainClient::Initialise(vislib::sys::CmdLineProviderW& inOutCmdLine) {
  * PlainClient::Run
  */
 DWORD PlainClient::Run(void) {
-    return vislib::net::cluster::AbstractClientNode::Run();
+    DWORD retval = vislib::net::cluster::AbstractClientNode::Run();
+    char input[1024];
+
+    std::cout << "Input some stuff and press enter to send. "
+        << "Ctrl+C to exit." << std::endl;
+
+    do {
+        *input = 0;
+        std::cin >> input;
+        this->sendMessage(VLC1_USER_MSG_ID(1), reinterpret_cast<BYTE *>(input),
+            static_cast<UINT32>(strlen(input) + 1));
+    } while ((*input != 0) && (*input != '\r') && (*input != '\n'));
+
+    return retval;
 }
 
 
