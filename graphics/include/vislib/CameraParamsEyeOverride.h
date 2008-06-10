@@ -54,38 +54,6 @@ namespace graphics {
         virtual StereoEye Eye(void) const;
 
         /**
-         * Calculates and returns the real eye looking direction taking stereo
-         * projection mode and stereo disparity into account.
-         *
-         * @return The real eye looking direction.
-         */
-        virtual math::Vector<SceneSpaceType, 3> EyeDirection(void) const;
-
-        /**
-         * Calculates and returns the real eye looking direction taking stereo
-         * projection mode and stereo disparity into account.
-         *
-         * @return The real eye looking direction.
-         */
-        virtual math::Vector<SceneSpaceType, 3> EyeUpVector(void) const;
-
-        /**
-         * Calculates and returns the real eye looking direction taking stereo
-         * projection mode and stereo disparity into account.
-         *
-         * @return The real eye looking direction.
-         */
-        virtual math::Vector<SceneSpaceType, 3> EyeRightVector(void) const;
-
-        /**
-         * Calculates and returns the real eye position taking stereo 
-         * projection mode and stereo disparity into account.
-         *
-         * @return The real eye position.
-         */
-        virtual math::Point<SceneSpaceType, 3> EyePosition(void) const;
-
-        /**
          * Sets the eye for stereo projection.
          *
          * @param eye The eye for stereo projection.

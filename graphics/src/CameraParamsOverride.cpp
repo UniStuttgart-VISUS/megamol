@@ -60,8 +60,15 @@ vislib::graphics::CameraParamsOverride::Eye(void) const {
  */
 vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::CameraParamsOverride::EyeDirection(void) const {
-    ASSERT(!this->base.IsNull());
-    return this->base->EyeDirection();
+    if (this->Projection() != STEREO_TOE_IN) {
+        return this->Front();
+    } else {
+        math::Vector<SceneSpaceType, 3> eyefront = (this->Position()
+            + (this->Front() * this->FocalDistance())) 
+            - this->EyePosition();
+        eyefront.Normalise();
+        return eyefront;
+    }
 }
 
 
@@ -71,7 +78,7 @@ vislib::graphics::CameraParamsOverride::EyeDirection(void) const {
 vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::CameraParamsOverride::EyeUpVector(void) const {
     ASSERT(!this->base.IsNull());
-    return this->base->EyeUpVector();
+    return this->base->EyeUpVector(); // until we get upper and lower eyes
 }
 
 
@@ -80,8 +87,10 @@ vislib::graphics::CameraParamsOverride::EyeUpVector(void) const {
  */
 vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::CameraParamsOverride::EyeRightVector(void) const {
-    ASSERT(!this->base.IsNull());
-    return this->base->EyeRightVector();
+    math::Vector<SceneSpaceType, 3> eyeright 
+        = this->EyeDirection().Cross(this->EyeUpVector());
+    eyeright.Normalise();
+    return eyeright;
 }
 
 
@@ -91,7 +100,14 @@ vislib::graphics::CameraParamsOverride::EyeRightVector(void) const {
 vislib::math::Point<vislib::graphics::SceneSpaceType, 3> 
 vislib::graphics::CameraParamsOverride::EyePosition(void) const {
     ASSERT(!this->base.IsNull());
-    return this->base->EyePosition();
+    if ((this->Projection() == MONO_PERSPECTIVE) 
+            || (this->Projection() == MONO_ORTHOGRAPHIC)) {
+        return this->Position();
+    } else {
+        return this->Position() + (this->Right() 
+            * (this->HalfStereoDisparity()
+            * ((this->Eye() == RIGHT_EYE) ? 1.0f : -1.0f) ));
+    }
 }
 
 

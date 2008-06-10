@@ -45,62 +45,6 @@ vislib::graphics::CameraParamsEyeOverride::Eye(void) const {
 
 
 /*
- * vislib::graphics::CameraParamsEyeOverride::EyeDirection
- */
-vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
-vislib::graphics::CameraParamsEyeOverride::EyeDirection(void) const {
-    if (this->paramsBase()->Projection() != STEREO_TOE_IN) {
-        return this->paramsBase()->Front();
-    } else {
-        math::Vector<SceneSpaceType, 3> eyefront = (this->paramsBase()->Position()
-            + (this->paramsBase()->Front() * this->paramsBase()->FocalDistance())) 
-            - this->EyePosition();
-        eyefront.Normalise();
-        return eyefront;
-    }
-}
-
-
-
-/*
- * vislib::graphics::CameraParamsEyeOverride::EyeUpVector
- */
-vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
-vislib::graphics::CameraParamsEyeOverride::EyeUpVector(void) const {
-    return this->paramsBase()->Up(); // until we get upper and lower eyes
-}
-
-
-
-/*
- * vislib::graphics::CameraParamsEyeOverride::EyeRightVector
- */
-vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> 
-vislib::graphics::CameraParamsEyeOverride::EyeRightVector(void) const {
-    math::Vector<SceneSpaceType, 3> eyeright 
-        = this->EyeDirection().Cross(this->EyeUpVector());
-    eyeright.Normalise();
-    return eyeright;
-}
-
-
-/*
- * vislib::graphics::CameraParamsEyeOverride::EyePosition
- */
-vislib::math::Point<vislib::graphics::SceneSpaceType, 3> 
-vislib::graphics::CameraParamsEyeOverride::EyePosition(void) const {
-    if ((this->paramsBase()->Projection() == MONO_PERSPECTIVE) 
-            || (this->paramsBase()->Projection() == MONO_ORTHOGRAPHIC)) {
-        return this->paramsBase()->Position();
-    } else {
-        return this->paramsBase()->Position() + (this->paramsBase()->Right() 
-            * (this->paramsBase()->HalfStereoDisparity()
-            * ((this->eye == RIGHT_EYE) ? 1.0f : -1.0f) ));
-    }
-}
-
-
-/*
  * vislib::graphics::CameraParamsEyeOverride::SetEye
  */
 void vislib::graphics::CameraParamsEyeOverride::SetEye(
