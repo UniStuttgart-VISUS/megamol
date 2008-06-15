@@ -15,13 +15,20 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/String.h"
+
+
 class AbstractTest {
 
 public:
 
     virtual ~AbstractTest(void);
 
-    virtual HRESULT CALLBACK OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice, 
+    const vislib::TString& GetName(void) const {
+        return this->name;
+    }
+
+    virtual HRESULT OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice, 
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc);
 
     virtual void OnD3D9DestroyDevice(void);
@@ -40,7 +47,11 @@ public:
 
 protected:
 
-    AbstractTest(void);
+    AbstractTest(const vislib::StringW& name);
+
+    float aspectRatio;
+
+    vislib::StringW name;
 };
 
 #if defined(_WIN32) && defined(_MANAGED)

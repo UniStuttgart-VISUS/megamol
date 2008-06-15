@@ -19,8 +19,14 @@ AbstractTest::~AbstractTest(void) {
 /*
  * AbstractTest::OnD3D9CreateDevice
  */
-HRESULT CALLBACK AbstractTest::OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice, 
+HRESULT AbstractTest::OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice,
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc) {
+    if (pBackBufferSurfaceDesc->Height != 0) {
+        this->aspectRatio = static_cast<float>(pBackBufferSurfaceDesc->Width)
+            / static_cast<float>(pBackBufferSurfaceDesc->Height);
+    } else {
+        this->aspectRatio = 1.0f;
+    }
     return D3D_OK;
 }
 
@@ -42,8 +48,14 @@ void AbstractTest::OnD3D9LostDevice(void) {
 /*
  * AbstractTest::OnD3D9ResetDevice
  */
-HRESULT AbstractTest::OnD3D9ResetDevice(PDIRECT3DDEVICE9 pd3dDevice, 
+HRESULT AbstractTest::OnD3D9ResetDevice(PDIRECT3DDEVICE9 pd3dDevice,
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc) {
+    if (pBackBufferSurfaceDesc->Height != 0) {
+        this->aspectRatio = static_cast<float>(pBackBufferSurfaceDesc->Width)
+            / static_cast<float>(pBackBufferSurfaceDesc->Height);
+    } else {
+        this->aspectRatio = 1.0f;
+    }
     return D3D_OK;
 }
 
@@ -65,5 +77,6 @@ void AbstractTest::OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown) {
 /*
  * AbstractTest::AbstractTest
  */
-AbstractTest::AbstractTest(void) {
+AbstractTest::AbstractTest(const vislib::StringW& name) 
+        : aspectRatio(1.0f), name(name){
 }

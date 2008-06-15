@@ -11,6 +11,11 @@ s//-----------------------------------------------------------------------------
 #include "SDKmisc.h"
 #include "SDKmesh.h"
 
+#include "AbstractTest.h"
+#include "D3D9VisLogoTest.h"
+#include "TestManager.h"
+
+
 //#define DEBUG_VS   // Uncomment this line to debug D3D9 vertex shaders 
 //#define DEBUG_PS   // Uncomment this line to debug D3D9 pixel shaders 
 
@@ -27,7 +32,10 @@ CDXUTDialog             g_SampleUI;             // dialog for sample specific co
 
 // Direct3D 9 resources
 ID3DXFont *font = NULL;        
-ID3DXSprite*            g_pSprite9 = NULL;      
+ID3DXSprite*            g_pSprite9 = NULL;
+
+TestManager testMgr;
+
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -35,6 +43,7 @@ ID3DXSprite*            g_pSprite9 = NULL;
 #define IDC_TOGGLEFULLSCREEN    1
 #define IDC_TOGGLEREF           2
 #define IDC_CHANGEDEVICE        3
+#define IDC_CHANGETEST (4)
 
 
 //--------------------------------------------------------------------------------------
@@ -63,6 +72,7 @@ void    RenderText();
  */
 HRESULT CALLBACK OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice, 
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc, void *pUserContext) {
+    TestManager *testMgr = static_cast<TestManager *>(pUserContext);
     HRESULT hr = D3D_OK;
 
     V_RETURN(::dlgResMgr.OnD3D9CreateDevice(pd3dDevice));
@@ -72,6 +82,8 @@ HRESULT CALLBACK OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
         DEFAULT_PITCH | FF_DONTCARE, L"Verdana", &::font));
 
+    testMgr->OnD3D9CreateDevice(pd3dDevice, pBackBufferSurfaceDesc);
+
     return hr;
 }
 
@@ -80,6 +92,8 @@ HRESULT CALLBACK OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice,
  * Release D3D9 resources created in the OnD3D9CreateDevice callback.
  */
 void CALLBACK OnD3D9DestroyDevice(void *pUserContext) {
+    TestManager *testMgr = static_cast<TestManager *>(pUserContext);
+    testMgr->OnD3D9DestroyDevice();
     ::dlgResMgr.OnD3D9DestroyDevice();
     ::dlg.OnD3D9DestroyDevice();
     SAFE_RELEASE(::font);
@@ -91,11 +105,12 @@ void CALLBACK OnD3D9DestroyDevice(void *pUserContext) {
  */
 void CALLBACK OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice, double fTime,
         float fElapsedTime, void *pUserContext) {
+    TestManager *testMgr = static_cast<TestManager *>(pUserContext);
     HRESULT hr = D3D_OK;
-    D3DXMATRIXA16 mWorld;
-    D3DXMATRIXA16 mView;
-    D3DXMATRIXA16 mProj;
-    D3DXMATRIXA16 mWorldViewProjection;
+    //D3DXMATRIXA16 mWorld;
+    //D3DXMATRIXA16 mView;
+    //D3DXMATRIXA16 mProj;
+    //D3DXMATRIXA16 mWorldViewProjection;
     
     // If the settings dialog is being shown, then render it instead of rendering the app's scene
     if (::dlg.IsActive()) {
@@ -107,14 +122,19 @@ void CALLBACK OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice, double fTime,
     V( pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(0, 45, 50, 170), 1.0f, 0) );
 
     // Render the scene
-    if( SUCCEEDED( pd3dDevice->BeginScene() ) )
-    {
+    if (SUCCEEDED(pd3dDevice->BeginScene())) {
         // Get the projection & view matrix from the camera class
-        mWorld = *g_Camera.GetWorldMatrix();
-        mProj = *g_Camera.GetProjMatrix();
-        mView = *g_Camera.GetViewMatrix();
+        //mWorld = *g_Camera.GetWorldMatrix();
+        //mProj = *g_Camera.GetProjMatrix();
+        //mView = *g_Camera.GetViewMatrix();
 
-        mWorldViewProjection = mWorld * mView * mProj;
+        //mWorldViewProjection = mWorld * mView * mProj;
+
+        //pd3dDevice->SetTransform(D3DTS_WORLD, &mWorld);
+        //pd3dDevice->SetTransform(D3DTS_PROJECTION, &mProj);
+        //pd3dDevice->SetTransform(D3DTS_VIEW, &mView);
+
+        testMgr->OnD3D9FrameRender(pd3dDevice, fTime, fElapsedTime);
 
         // Update the effect's variables.  Instead of using strings, it would 
         // be more efficient to cache a handle to the parameter by calling 
@@ -135,6 +155,9 @@ void CALLBACK OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice, double fTime,
  * Release D3D9 resources created in the OnD3D9ResetDevice callback.
  */
 void CALLBACK OnD3D9LostDevice(void *pUserContext) {
+    TestManager *testMgr = static_cast<TestManager *>(pUserContext);
+    testMgr->OnD3D9LostDevice();
+
     ::dlgResMgr.OnD3D9LostDevice();
     ::dlg.OnD3D9LostDevice();
     if (::font) {
@@ -151,8 +174,10 @@ void CALLBACK OnD3D9LostDevice(void *pUserContext) {
  * Handle updates to the scene.  
  * This is called regardless of which D3D API is used.
  */
-void CALLBACK OnFrameMove(double fTime, float fElapsedTime, 
+void CALLBACK OnFrameMove(double fTime, float fElapsedTime,
         void *pUserContext) {
+    TestManager *testMgr = static_cast<TestManager *>(pUserContext);
+    testMgr->OnFrameMove(fTime, fElapsedTime);
 }
 
 
@@ -165,6 +190,9 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl *pControl,
         case IDC_TOGGLEFULLSCREEN: DXUTToggleFullScreen(); break;
         case IDC_TOGGLEREF:        DXUTToggleREF(); break;
         case IDC_CHANGEDEVICE:     ::dlg.SetActive( !::dlg.IsActive() ); break;
+        case IDC_CHANGETEST:
+            ::testMgr.SetActiveTest(reinterpret_cast<SIZE_T>(pUserContext));
+            break;
     }
 }
 
@@ -172,8 +200,10 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl *pControl,
 /**
  * Handle key presses.
  */
-void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, 
+void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown,
         void *pUserContext) {
+    TestManager *testMgr = static_cast<TestManager *>(pUserContext);
+    testMgr->OnKeyboard(nChar, bKeyDown, bAltDown);
 }
 
 
@@ -191,18 +221,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     // DXUT will create and use the best device (either D3D9 or D3D10) 
     // that is available on the system depending on which D3D callbacks are set below
 
+
     // Set DXUT callbacks
     ::DXUTSetCallbackMsgProc(MsgProc);
-    ::DXUTSetCallbackKeyboard(OnKeyboard);
-    ::DXUTSetCallbackFrameMove(OnFrameMove);
+    ::DXUTSetCallbackKeyboard(OnKeyboard, &::testMgr);
+    ::DXUTSetCallbackFrameMove(OnFrameMove, &::testMgr);
     ::DXUTSetCallbackDeviceChanging(ModifyDeviceSettings);
 
     ::DXUTSetCallbackD3D9DeviceAcceptable(IsD3D9DeviceAcceptable);
-    ::DXUTSetCallbackD3D9DeviceCreated(OnD3D9CreateDevice);
-    ::DXUTSetCallbackD3D9DeviceReset(OnD3D9ResetDevice);
-    ::DXUTSetCallbackD3D9DeviceLost(OnD3D9LostDevice);
-    ::DXUTSetCallbackD3D9DeviceDestroyed(OnD3D9DestroyDevice);
-    ::DXUTSetCallbackD3D9FrameRender(OnD3D9FrameRender);
+    ::DXUTSetCallbackD3D9DeviceCreated(OnD3D9CreateDevice, &::testMgr);
+    ::DXUTSetCallbackD3D9DeviceReset(OnD3D9ResetDevice, &::testMgr);
+    ::DXUTSetCallbackD3D9DeviceLost(OnD3D9LostDevice, &::testMgr);
+    ::DXUTSetCallbackD3D9DeviceDestroyed(OnD3D9DestroyDevice, &::testMgr);
+    ::DXUTSetCallbackD3D9FrameRender(OnD3D9FrameRender, &::testMgr);
+
+    ::testMgr.AddTest(new D3D9VisLogoTest());
+    ::testMgr.SetActiveTest(0);
 
     ::InitApp();
     ::DXUTInit(true, true, NULL); // Parse the command line, show msgboxes on error, no extra command line params
@@ -229,6 +263,10 @@ void InitApp()
     g_HUD.AddButton( IDC_TOGGLEFULLSCREEN, L"Toggle full screen", 35, iY, 125, 22 );
     g_HUD.AddButton( IDC_TOGGLEREF, L"Toggle REF (F3)", 35, iY += 24, 125, 22, VK_F3 );
     g_HUD.AddButton( IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2 );
+
+    CDXUTComboBox *cb = NULL;
+    g_HUD.AddComboBox(IDC_CHANGETEST, 35, iY += 24, 125, 22, 0, false, &cb);
+    ::testMgr.RegisterTests(cb);
 
     g_SampleUI.SetCallback( OnGUIEvent ); iY = 10; 
 }

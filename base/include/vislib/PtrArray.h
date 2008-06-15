@@ -102,6 +102,7 @@ namespace vislib {
      * vislib::PtrArray<T, A>::~PtrArray
      */
     template<class T, class A> PtrArray<T, A>::~PtrArray(void) {
+        // TODO: DTOR DOES NOT WORK AT ALL! CTOR METHOD NEITHER
     }
 
 

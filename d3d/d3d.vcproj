@@ -297,6 +297,18 @@
 				RelativePath=".\src\D3DMatrix.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\d3dutils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\d3dverify.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\D3DVISLogo.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -313,6 +325,18 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\D3DMatrix.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\d3dutils.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\d3dverify.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\D3DVISLogo.h"
 				>
 			</File>
 		</Filter>

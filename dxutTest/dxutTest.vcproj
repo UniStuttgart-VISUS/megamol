@@ -354,7 +354,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\D3D9VisLogoTest.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dxutTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TestManager.cpp"
 				>
 			</File>
 		</Filter>
@@ -365,6 +373,14 @@
 			>
 			<File
 				RelativePath=".\AbstractTest.h"
+				>
+			</File>
+			<File
+				RelativePath=".\D3D9VisLogoTest.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TestManager.h"
 				>
 			</File>
 		</Filter>
