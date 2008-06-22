@@ -34,4 +34,6 @@ void TestSingleLinkedListSort(void);
 
 void TestArraySort(void);
 
+void TestFileNameSequence(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

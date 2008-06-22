@@ -342,6 +342,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\FileNameSequence.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ImpersonationContext.cpp"
 				>
 			</File>
@@ -533,6 +537,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\File.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\FileNameSequence.h"
 				>
 			</File>
 			<File

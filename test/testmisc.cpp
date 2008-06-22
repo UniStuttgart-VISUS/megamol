@@ -20,6 +20,7 @@
 #include <vislib/SystemMessage.h>
 #include <vislib/Path.h>
 #include <vislib/Trace.h>
+#include "vislib/FileNameSequence.h"
 
 // #define USE_UNICODE_COLUMNFORMATTER
 
@@ -603,4 +604,87 @@ void TestArraySort(void) {
 
     AssertTrue("Array sorted Accending", growing);
 
+}
+
+
+/*
+ * TestFileNameSequence
+ */
+void TestFileNameSequence(void) {
+    using vislib::sys::FileNameSequence;
+    using vislib::SmartPtr;
+
+    FileNameSequence seq;
+    FileNameSequence::FileNameStringElementA *s1
+        = new FileNameSequence::FileNameStringElementA();
+    FileNameSequence::FileNameCountElement *c1
+        = new FileNameSequence::FileNameCountElement();
+    FileNameSequence::FileNameStringElementA *s2
+        = new FileNameSequence::FileNameStringElementA();
+    FileNameSequence::FileNameCountElement *c2
+        = new FileNameSequence::FileNameCountElement();
+    FileNameSequence::FileNameStringElementA *s3
+        = new FileNameSequence::FileNameStringElementA();
+
+    s1->SetText("C:\\Some\\Directory\\AndFileName");
+    c1->SetRange(1, 2);
+    c1->SetDigits(2);
+    c1->ResetCounter();
+    AssertEqual<unsigned int>("counter1::count == 2", c1->Count(), 2);
+    s2->SetText("_");
+    c2->SetRange(0, 10, 3);
+    c2->SetDigits(4);
+    c2->ResetCounter();
+    AssertEqual<unsigned int>("counter2::count == 4", c2->Count(), 4);
+    s3->SetText(".dmy");
+
+    seq.SetElementCount(5);
+    AssertFalse("Sequence is not valid yet", seq.IsValid());
+    seq.SetElement(0, s1);
+    seq.SetElement(1, c1);
+    seq.SetElement(2, s2);
+    seq.SetElement(3, c2);
+    seq.SetElement(4, s3);
+    AssertTrue("Sequence is valid", seq.IsValid());
+    AssertEqual<unsigned int>("Sequence::count == 8", seq.Count(), 8);
+
+    AssertFalse("Sequence is in normal order", seq.ReversedCounterPriority());
+
+    AssertEqual("File 0 is correct", seq.FileNameA(0), "C:\\Some\\Directory\\AndFileName01_0000.dmy");
+    AssertEqual("File 0 is correct", seq.FileNameW(0), L"C:\\Some\\Directory\\AndFileName01_0000.dmy");
+    AssertEqual("File 1 is correct", seq.FileNameA(1), "C:\\Some\\Directory\\AndFileName01_0003.dmy");
+    AssertEqual("File 2 is correct", seq.FileNameA(2), "C:\\Some\\Directory\\AndFileName01_0006.dmy");
+    AssertEqual("File 3 is correct", seq.FileNameA(3), "C:\\Some\\Directory\\AndFileName01_0009.dmy");
+    AssertEqual("File 4 is correct", seq.FileNameA(4), "C:\\Some\\Directory\\AndFileName02_0000.dmy");
+    AssertEqual("File 5 is correct", seq.FileNameA(5), "C:\\Some\\Directory\\AndFileName02_0003.dmy");
+    AssertEqual("File 6 is correct", seq.FileNameA(6), "C:\\Some\\Directory\\AndFileName02_0006.dmy");
+    AssertEqual("File 7 is correct", seq.FileNameA(7), "C:\\Some\\Directory\\AndFileName02_0009.dmy");
+
+    seq.SetReversedCounterPriority(true);
+    AssertTrue("Sequence is in reversed order", seq.ReversedCounterPriority());
+
+    AssertEqual("File 0 is correct", seq.FileNameA(0), "C:\\Some\\Directory\\AndFileName01_0000.dmy");
+    AssertEqual("File 1 is correct", seq.FileNameA(1), "C:\\Some\\Directory\\AndFileName02_0000.dmy");
+    AssertEqual("File 2 is correct", seq.FileNameA(2), "C:\\Some\\Directory\\AndFileName01_0003.dmy");
+    AssertEqual("File 3 is correct", seq.FileNameA(3), "C:\\Some\\Directory\\AndFileName02_0003.dmy");
+    AssertEqual("File 4 is correct", seq.FileNameA(4), "C:\\Some\\Directory\\AndFileName01_0006.dmy");
+    AssertEqual("File 5 is correct", seq.FileNameA(5), "C:\\Some\\Directory\\AndFileName02_0006.dmy");
+    AssertEqual("File 6 is correct", seq.FileNameA(6), "C:\\Some\\Directory\\AndFileName01_0009.dmy");
+    AssertEqual("File 7 is correct", seq.FileNameA(7), "C:\\Some\\Directory\\AndFileName02_0009.dmy");
+
+    // no need to clean up s1, s2, s3, c1, and c2 because they have been
+    // assigned to smart pointers ;-)
+
+    /*
+    seq.Autodetect("T:\\grottel\\Photos\\HotelRoom1\\DSC00004.JPG");
+    if (seq.IsValid()) {
+        unsigned int cnt = seq.Count();
+        printf("Autodetected %u files:\n", cnt);
+        for (unsigned int i = 0; i < cnt; i++) {
+            printf("  %s\n", seq.FileNameA(i).PeekBuffer());
+        }
+    } else {
+        printf("Autodetection failed (Sequence is invalid).\n");
+    }
+    //*/
 }

@@ -97,6 +97,7 @@ VislibTest tests[] = {
     {_T("DirIterator"), ::TestDirectoryIterator, "Test vislib::sys::DirectoryIterator"},
     {_T("Environment"), ::TestEnvironment, "Tests vislib::sys::Environment"},
     {_T("File"), ::TestFile, "Tests vislib::sys::File and derived classes"},
+    {_T("FileNameSequence"), ::TestFileNameSequence, "Tests FileNameSequence."},
     {_T("Interlocked"), ::TestInterlocked, "Tests interlocked operations."},
     {_T("IPC"), ::TestIpc, "Tests inter-process communication"},
     {_T("IPC2"), ::TestIpc2, "For internal use only. Do not call."},
