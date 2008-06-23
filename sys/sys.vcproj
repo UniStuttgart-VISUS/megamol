@@ -446,6 +446,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\TextFileReader.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Thread.cpp"
 				>
 			</File>
@@ -641,6 +645,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SystemMessage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\TextFileReader.h"
 				>
 			</File>
 			<File
