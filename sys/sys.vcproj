@@ -454,6 +454,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ThreadPool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\TrayIcon.cpp"
 				>
 			</File>
@@ -463,6 +467,10 @@
 			</File>
 			<File
 				RelativePath=".\src\WindowsService.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\WorkItemCompletedListener.cpp"
 				>
 			</File>
 		</Filter>
@@ -656,6 +664,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\ThreadPool.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\TrayIcon.h"
 				>
 			</File>
@@ -669,6 +681,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\WindowsService.inl"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\WorkItemCompletedListener.h"
 				>
 			</File>
 		</Filter>

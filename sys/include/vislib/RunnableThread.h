@@ -34,7 +34,7 @@ namespace sys {
      * The template parameter T must be a Runnable-derived class with a default
      * constructor.
      */
-    template<class T> class RunnableThread : public Thread {
+    template<class T> class RunnableThread : public Thread, public T {
 
     public:
 
@@ -45,22 +45,36 @@ namespace sys {
         virtual ~RunnableThread(void);
 
         /**
-         * Answer the Runnable instance the thread is running.
+         * Ask the runnable to abort as soon as possible.
          *
-         * @return The runnable the thread is running.
+         * @return true to acknowledge that the Runnable will finish as soon
+         *         as possible, false if termination is not possible.
          */
-        inline T& GetRunnableInstance(void) {
-            return this->runnableInstance;
-        }
+        virtual bool Terminate(void);
 
         /**
-         * Answer the Runnable instance the thread is running.
+         * Terminate the thread. See documentation of Thread::Terminate
          *
-         * @return The runnable the thread is running.
+         * @param forceTerminate If true, the thread is terminated immediately,
+         *                       if false, the thread has the possibility to do
+         *                       some cleanup and finish in a controllend 
+         *                       manner. 'forceTerminate' must be true, if the
+         *                       thread has been constructed using a 
+         *                       RunnableFunc.
+         * @param exitCode       If 'forceTerminate' is true, this value will be
+         *                       used as exit code of the thread. If 
+         *                       'forceTerminate' is false, this value will be
+         *                       ignored.
+         * 
+         * @returns true, if the thread has been terminated, false, otherwise.
+         *
+         * @throws IllegalStateException If 'forceTerminate' is false and the
+         *                               thread has been constructed using a 
+         *                               RunnableFunc.
+         * @throws SystemException       If terminating the thread forcefully
+         *                               failed.
          */
-        inline const T& GetRunnableInstance(void) const {
-            return this->runnableInstance;
-        }
+        bool Terminate(const bool forceTerminate, const int exitCode = 0);
 
     private:
 
@@ -84,12 +98,6 @@ namespace sys {
          */
         RunnableThread& operator =(const RunnableThread& rhs);
 
-        /** 
-         * The instance of the runnable to start. The 'runnable' member in the
-         * superclass will point to this variable.
-         */
-        T runnableInstance;
-
     };
 
 
@@ -100,7 +108,7 @@ namespace sys {
 #ifdef _WIN32
 #pragma warning(disable: 4355)
 #endif /* _WIN32 */
-            : Thread(&this->runnableInstance) {
+            : Thread(this) {
 #ifdef _WIN32
 #pragma warning(default: 4355)
 #endif /* _WIN32 */
@@ -118,7 +126,26 @@ namespace sys {
      * vislib::sys::RunnableThread<T>::RunnableThread
      */
     template<class T> 
-    RunnableThread<T>::RunnableThread(const RunnableThread& rhs) : Thread(rhs) {
+    RunnableThread<T>::RunnableThread(const RunnableThread& rhs) 
+            : Thread(rhs), T(rhs) {
+    }
+
+    /*
+     * RunnableThread<T>::Terminate
+     */
+    template<class T> 
+    bool RunnableThread<T>::Terminate(void) {
+        return T::Terminate();
+    }
+
+
+    /*
+     * RunnableThread<T>::Terminate
+     */
+    template<class T> 
+    bool RunnableThread<T>::Terminate(const bool forceTerminate, 
+            const int exitCode) {
+        return Thread::Terminate(forceTerminate, exitCode);
     }
 
 
@@ -128,6 +155,7 @@ namespace sys {
     template<class T> RunnableThread<T>& RunnableThread<T>::operator =(
             const RunnableThread& rhs) {
         Thread::operator =(rhs);
+        T::operator =(rhs);
         return *this;
     }
 

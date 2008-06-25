@@ -154,7 +154,7 @@ vislib::net::cluster::AbstractServerNode::AbstractServerNode(void)
         : AbstractClusterNode(), TcpServer::Listener(),
         // TODO: IPv6
         bindAddress(IPAddress::ANY, DEFAULT_PORT) {
-    this->server.GetRunnableInstance().AddListener(this);
+    this->server.AddListener(this);
 }
 
 

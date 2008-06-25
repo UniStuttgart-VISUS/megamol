@@ -45,6 +45,7 @@
 #include "testserialiser.h"
 #include "testregex.h"
 #include "testipv6.h"
+#include "testthreadpool.h"
 
 
 /* type for test functions */
@@ -110,6 +111,7 @@ VislibTest tests[] = {
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
+    {_T("ThreadPool"), ::TestThreadPool, "Tests the thread pool"},
     // end guard. Do not remove. Must be last entry.
     {NULL, NULL, NULL}
 };
@@ -117,6 +119,9 @@ VislibTest tests[] = {
 
 #ifdef _WIN32
 int _tmain(int argc, TCHAR **argv) {
+#if defined(DEBUG) | defined(_DEBUG)
+    ::_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif /* defined(DEBUG) | defined(_DEBUG) */
 #else
 int main(int argc, char **argv) {
 #endif

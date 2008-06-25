@@ -474,6 +474,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testthreadpool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testtrayicon.cpp"
 				>
 			</File>
@@ -617,6 +621,10 @@
 			</File>
 			<File
 				RelativePath=".\testthread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testthreadpool.h"
 				>
 			</File>
 			<File
