@@ -339,7 +339,7 @@ void vislib::sys::FileNameSequence::autodetect(const vislib::String<T>& filename
     typename String<T>::Size i = filename.FindLast(
         static_cast<typename T::Char>(Path::SEPARATOR_A));
     unsigned int len, start = 0;
-    typename const String<T>::Char * buffer;
+    const typename String<T>::Char * buffer;
     if (i == String<T>::INVALID_POS) {
         // it seams there is no path
         len = filename.Length();

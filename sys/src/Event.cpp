@@ -71,7 +71,7 @@ void vislib::sys::Event::Reset(void) {
     }
 
 #else /* _WIN32 */
-    TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Reset\n");
+    TRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Reset\n");
     
     this->semaphore.TryLock();
     ASSERT(!this->semaphore.TryLock());
@@ -90,7 +90,7 @@ void vislib::sys::Event::Set(void) {
     }
 
 #else /* _WIN32 */
-    TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Set\n");
+    TRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Set\n");
 
     this->semaphore.TryLock();
     this->semaphore.Unlock();
@@ -122,7 +122,7 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
     }
 
 #else /* _WIN32 */
-    TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Wait\n");
+    TRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Wait\n");
     bool retval = false;
 
     if (timeout == TIMEOUT_INFINITE) {
@@ -134,7 +134,7 @@ bool vislib::sys::Event::Wait(const DWORD timeout) {
     }
 
     if (retval && this->isManualReset) {
-        TRACE(vislib::Trace::LEVEL_VL_INFO, "Event::Wait signal again\n");
+        TRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Wait signal again\n");
         this->semaphore.Unlock();
     }
 
