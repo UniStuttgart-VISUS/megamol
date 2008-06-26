@@ -51,8 +51,7 @@ namespace vislib {
          *
          * @param capacity The initial capacity of the array.
          */
-        inline PtrArray(const SIZE_T capacity = Super::DEFAULT_CAPACITY) 
-                : Super(capacity) {}
+        PtrArray(const SIZE_T capacity = Super::DEFAULT_CAPACITY);
 
         /**
          * Create a new array with the specified initial capacity and
@@ -84,7 +83,7 @@ namespace vislib {
          *
          * @param inOutAddress Pointer to the object to construct.
          */
-        virtual void ctor(T *inOutAddress) const;
+        virtual void ctor(T **inOutAddress) const;
 
         /**
          * Destruct element at 'inOutAddress'.
@@ -94,15 +93,32 @@ namespace vislib {
          *
          * @param inOutAddress Pointer to the object to destruct.
          */
-        virtual void dtor(T *inOutAddress) const;
+        virtual void dtor(T **inOutAddress) const;
     };
+
+
+    /*
+     * PtrArray<T, A>::PtrArray
+     */
+    template<class T, class A> PtrArray<T, A>::PtrArray(const SIZE_T capacity) 
+            : Super(capacity) {
+        // No dynamic binding within ctor, so initialise all elements with
+        // NULL pointer by hand.
+        ::memset(this->elements, 0, this->capacity * sizeof(T));
+    }
 
 
     /*
      * vislib::PtrArray<T, A>::~PtrArray
      */
     template<class T, class A> PtrArray<T, A>::~PtrArray(void) {
-        // TODO: DTOR DOES NOT WORK AT ALL! CTOR METHOD NEITHER
+        // dtor() method does not work in dtor, because there is no dynamic
+        // binding within the dtor. Therefore, we deallocate the elements
+        // ourselves before the parent dtor deallocates the element array.
+        for (SIZE_T i = 0; i < this->count; i++) {
+            this->dtor(this->elements + i);
+        }
+        this->count = 0;
     }
 
 
@@ -110,7 +126,7 @@ namespace vislib {
      * vislib::PtrArray<T, A>::ctor
      */
     template<class T, class A> 
-    void PtrArray<T, A>::ctor(T *inOutAddress) const {
+    void PtrArray<T, A>::ctor(T **inOutAddress) const {
         inOutAddress = NULL;
     }
 
@@ -119,8 +135,8 @@ namespace vislib {
      * vislib::PtrArray<T, A>::dtor
      */
     template<class T, class A> 
-    void PtrArray<T, A>::dtor(T *inOutAddress) const {
-        A::Deallocate(inOutAddress);
+    void PtrArray<T, A>::dtor(T **inOutAddress) const {
+        A::Deallocate(*inOutAddress);
         inOutAddress = NULL;
     }
 

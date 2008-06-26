@@ -532,7 +532,11 @@ namespace vislib {
          */
         virtual void dtor(T *inOutAddress) const;
 
-    private:
+        
+        /** The actual array (PtrArray must have access). */
+        T *elements;
+
+    protected:
 
 #ifdef _WIN32
         /**
@@ -553,9 +557,6 @@ namespace vislib {
 
         /** The number of used elements in 'elements'. */
         SIZE_T count;
-
-        /** The actual array. */
-        T *elements;
 
     };
 

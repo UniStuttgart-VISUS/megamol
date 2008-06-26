@@ -12,12 +12,14 @@
 #include "vislib/Heap.h"
 #include "vislib/Map.h"
 #include "vislib/Pair.h"
+#include "vislib/PtrArray.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 
 
 void TestArray(void) {
     using vislib::Array;
+    using vislib::PtrArray;
 
     Array<int> intAry;
 
@@ -102,6 +104,12 @@ void TestArray(void) {
     Array<vislib::StringA> strAry;
     strAry.Append("Horst");
     AssertTrue("Contains \"Horst\"", strAry.Contains("Horst"));
+
+
+    PtrArray<int> intPtrAry;
+    intPtrAry.Add(new int(5));
+    intPtrAry.Add(new int(4));
+    intPtrAry.Resize(1);
 }
 
 
