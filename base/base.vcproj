@@ -314,6 +314,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\GUID.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\HashAlgorithm.cpp"
 				>
 			</File>
@@ -661,6 +665,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\functioncast.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\GUID.h"
 				>
 			</File>
 			<File
