@@ -15,6 +15,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
+#include "vislib/StringConverter.h"
 
 
 /*
@@ -155,7 +156,7 @@ bool vislib::GUID::Create(const bool doNotUseMacAddress) {
         return ((status == RPC_S_OK) || (status == RPC_S_UUID_LOCAL_ONLY));
 
 #else /* _WIN32 */
-        ::uuid_generate_random(&this->guid);
+        ::uuid_generate_random(this->guid);
         return true;
 #endif /* _WIN32 */
 
@@ -166,7 +167,7 @@ bool vislib::GUID::Create(const bool doNotUseMacAddress) {
         return ((status == RPC_S_OK) || (status == RPC_S_UUID_LOCAL_ONLY));
 
 #else /* _WIN32 */
-        ::uuid_generatre_time(&this->guid);
+        ::uuid_generate_time(this->guid);
         return true;
 #endif /* _WIN32 */
     }
@@ -180,7 +181,7 @@ bool vislib::GUID::IsZero(void) const {
 #ifdef _WIN32
     const BYTE *g = reinterpret_cast<const BYTE *>(&this->guid);
 #else /* _WIN32 */
-    const BYTE * = this->guid;
+    const BYTE *g = this->guid;
 #endif /* _WIN32 */
 
     for (SIZE_T i = 0; i < sizeof(this->guid); i++) {
@@ -201,7 +202,7 @@ bool vislib::GUID::Parse(const StringA& str) {
     return (::UuidFromStringA(reinterpret_cast<RPC_CSTR>(const_cast<char *>(
         str.PeekBuffer())), &this->guid) == RPC_S_OK);
 #else /* _WIN32 */
-    return ::uuid_parse(str.PeekBuffer(), this->guid) == 0);
+    return (::uuid_parse(str.PeekBuffer(), this->guid) == 0);
 #endif /* _WIN32 */
 }
 
@@ -338,7 +339,7 @@ vislib::GUID& vislib::GUID::operator =(const ::GUID *rhs) {
  * vislib::GUID::operator =
  */
 vislib::GUID& vislib::GUID::operator =(const uuid_t& rhs) {
-    if (&this->guid != rhs) {
+    if (this->guid != rhs) {
         ::memcpy(&this->guid, rhs, sizeof(this->guid));
     }
 
