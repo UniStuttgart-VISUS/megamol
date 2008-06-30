@@ -580,7 +580,7 @@ namespace vislib {
      */
     template<class T>
     Array<T>::Array(const SIZE_T capacity) 
-            : OrderedCollection<T>(), capacity(0), count(0), elements(NULL) {
+            : OrderedCollection<T>(), elements(NULL), capacity(0), count(0) {
         this->AssertCapacity(capacity);
     }
 
@@ -590,8 +590,8 @@ namespace vislib {
      */
     template<class T>
     Array<T>::Array(const SIZE_T capacity, const T& element) 
-            : OrderedCollection<T>(), capacity(0), count(capacity), 
-            elements(NULL) {
+            : OrderedCollection<T>(), elements(NULL), capacity(0), 
+            count(capacity) {
         this->AssertCapacity(capacity);
         for (SIZE_T i = 0; i < this->count; i++) {
             this->elements[i] = element;
@@ -604,7 +604,7 @@ namespace vislib {
      */
     template<class T>
     Array<T>::Array(const Array& rhs) 
-            : OrderedCollection<T>(), capacity(0), count(0), elements(NULL) {
+            : OrderedCollection<T>(), elements(NULL), capacity(0), count(0) {
         *this = rhs;
     }
 
