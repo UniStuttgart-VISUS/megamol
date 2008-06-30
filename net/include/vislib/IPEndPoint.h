@@ -289,7 +289,7 @@ namespace net {
          *
          * @return true if this object and rhs are equal, false otherwise.
          */
-        bool operator ==(const IPEndPoint& rhs);
+        bool operator ==(const IPEndPoint& rhs) const;
 
         /**
          * Test for inequality.
@@ -298,7 +298,7 @@ namespace net {
          *
          * @return true if this object and rhs are not equal, false otherwise.
          */
-        inline bool operator !=(const IPEndPoint& rhs) {
+        inline bool operator !=(const IPEndPoint& rhs) const {
             return !(*this == rhs);
         }
 

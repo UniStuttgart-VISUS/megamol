@@ -353,7 +353,7 @@ vislib::net::IPEndPoint& vislib::net::IPEndPoint::operator =(
 /*
  * vislib::net::IPEndPoint::operator ==
  */
-bool vislib::net::IPEndPoint::operator ==(const IPEndPoint& rhs) {
+bool vislib::net::IPEndPoint::operator ==(const IPEndPoint& rhs) const {
     size_t size  = 0;
 
     switch (this->address.ss_family) {
