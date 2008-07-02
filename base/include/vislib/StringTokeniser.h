@@ -19,6 +19,7 @@
 #include "vislib/assert.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
+#include "vislib/NoSuchElementException.h"
 
 
 namespace vislib {
@@ -192,6 +193,51 @@ namespace vislib {
          *         calling this methode.
          */
         virtual const String<C>& Next(void);
+
+        /**
+         * Iterates to the next nonempty element and returns this element. If
+         * all remaining elements are empty an exception is thrown.
+         *
+         * @return The next non empty element if there is one, which becomes
+         *         the current element after calling this method.
+         *
+         * @throws NoSuchElementException If all remaining elements are empty.
+         */
+        inline const String<C>& NextNonEmpty(void) {
+            while(this->HasNext()) {
+                const String<C>& str = this->Next();
+                if (!str.IsEmpty()) {
+                    return str;
+                }
+            }
+            throw NoSuchElementException("End of Token Sequence",
+                __FILE__, __LINE__);
+        }
+
+        /**
+         * Iterates to the next nonempty element and returns this element. If
+         * all remaining elements are empty 'outValid' is set to 'false' and
+         * the value of the returned String is undefined.
+         *
+         * @param outValid Variable to receive the info whether or not the
+         *                 returned element is valid or if the end of the
+         *                 sequence has been reached.
+         *
+         * @return The next non empty element if there is one, which becomes
+         *         the current element after calling this method.
+         */
+        inline const String<C>& NextNonEmpty(bool& outValid) {
+            outValid = false;
+            while(this->HasNext()) {
+                const String<C>& str = this->Next();
+                if (!str.IsEmpty()) {
+                    outValid = true;
+                    return str;
+                }
+            }
+            static String<C> empty; // I really do not like this!
+            return empty;
+        }
 
         /** 
          * Resets the StringTokeniser. The iterating methods "HasNext" and 
