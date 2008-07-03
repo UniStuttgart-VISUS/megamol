@@ -174,6 +174,12 @@ unsigned int vislib::VersionNumber::Parse(const wchar_t *verStr) {
  */
 vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
     vislib::StringA tmp;
+    if (num == 0) {
+        num = 1;
+        if (this->minorNumber > 0) num = 2;
+        if (this->buildNumber > 0) num = 3;
+        if (this->revisionNumber > 0) num = 4;
+    }
     if (num == 1) {
         tmp.Format("%u", static_cast<unsigned int>(this->majorNumber));
     } else if (num == 2) {
@@ -199,6 +205,12 @@ vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
 vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
 #ifdef _WIN32
     vislib::StringW tmp;
+    if (num == 0) {
+        num = 1;
+        if (this->minorNumber > 0) num = 2;
+        if (this->buildNumber > 0) num = 3;
+        if (this->revisionNumber > 0) num = 4;
+    }
     if (num == 1) {
         tmp.Format(L"%u", static_cast<unsigned int>(this->majorNumber));
     } else if (num == 2) {

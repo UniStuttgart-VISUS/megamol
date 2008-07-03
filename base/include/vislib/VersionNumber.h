@@ -170,15 +170,18 @@ namespace vislib {
          *
          * @see vislib::VersionNumber::Parse
          *
-         * @param num The number of version number to output. A value of zero
-         *            will produce an empty string, a value of one a string 
-         *            only containing the major version number, ... a value of
-         *            four or more will produce a string containing all four
-         *            version numbers.
+         * @param num The number of version number to output. A value of one 
+         *            will produce a string containing only the major version
+         *            number, a value of two a string with the major and minor
+         *            version numbers, ... a value of four or above will 
+         *            produce a string containing all four version numbers. A
+         *            value of Zero will produce a string with at least the
+         *            major version and will stop as soon as the remaining
+         *            values all are zero.
          *
          * @return The string holding the version number.
          */
-        vislib::StringA ToStringA(unsigned int num = 4) const;
+        vislib::StringA ToStringA(unsigned int num = 0) const;
 
         /**
          * Creates and returns a string holding the version numbers. The string
@@ -186,15 +189,18 @@ namespace vislib {
          *
          * @see vislib::VersionNumber::Parse
          *
-         * @param num The number of version number to output. A value of zero
-         *            will produce an empty string, a value of one a string 
-         *            only containing the major version number, ... a value of
-         *            four or more will produce a string containing all four
-         *            version numbers.
+         * @param num The number of version number to output. A value of one 
+         *            will produce a string containing only the major version
+         *            number, a value of two a string with the major and minor
+         *            version numbers, ... a value of four or above will 
+         *            produce a string containing all four version numbers. A
+         *            value of Zero will produce a string with at least the
+         *            major version and will stop as soon as the remaining
+         *            values all are zero.
          *
          * @return The string holding the version number.
          */
-        vislib::StringW ToStringW(unsigned int num = 4) const;
+        vislib::StringW ToStringW(unsigned int num = 0) const;
 
         /**
          * assignment operator
