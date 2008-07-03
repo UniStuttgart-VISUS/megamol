@@ -14,8 +14,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
-
 #include "vislib/AbstractClientNode.h"
 #include "vislib/AbstractControlledNode.h"
 #include "vislib/CameraOpenGL.h"
@@ -248,7 +246,6 @@ namespace cluster {
 } /* end namespace net */
 } /* end namespace vislib */
 
-#endif /* defined(VISLIB_CLUSTER_WITH_OPENGL) ... */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

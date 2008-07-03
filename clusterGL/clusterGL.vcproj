@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="graphics"
-	ProjectGUID="{8B747271-1CB1-4F2A-99A3-D1DC1C30FBA1}"
-	RootNamespace="graphics"
+	Name="clusterGL"
+	ProjectGUID="{A223DAF1-F6AF-4288-B17D-1E88CEB7FB2D}"
+	RootNamespace="clusterGL"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug32.vsprops"
+			InheritedPropertySheets="..\VSProps\TargetDebug32.vsprops;..\vislib.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -42,7 +42,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -51,6 +50,65 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			ConfigurationType="4"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -105,71 +163,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -228,7 +225,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -274,15 +270,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\AbstractCameraController.cpp"
+				RelativePath=".\src\dummy.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\AbstractCursor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AbstractCursor2DEvent.cpp"
+				RelativePath=".\src\GlutClientNode.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -293,7 +285,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -301,7 +293,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -318,80 +310,76 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\AbstractCursorEvent.cpp"
+				RelativePath=".\src\GlutClusterNode.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\AbstractVISLogo.cpp"
+				RelativePath=".\src\GlutServerNode.cpp"
 				>
-			</File>
-			<File
-				RelativePath=".\src\Camera.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParameterLimits.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParameterObserver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParameters.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsEyeOverride.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsOverride.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsStore.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraParamsTileRectOverride.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraRotate2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraRotate2DLookAt.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraZoom2DAngle.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CameraZoom2DMove.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Cursor2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\FpsCounter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\InputModifiers.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ObservableCameraParams.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ZoomToRectangle.cpp"
-				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -400,95 +388,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\include\vislib\AbstractCameraController.h"
+				RelativePath=".\include\vislib\GlutClientNode.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractCursor.h"
+				RelativePath=".\include\vislib\GlutClusterNode.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractCursor2DEvent.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractCursorEvent.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractVISLogo.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Camera.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameterLimits.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameterObserver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParameters.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsEyeOverride.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsOverride.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsStore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraParamsTileRectOverride.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraRotate2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraRotate2DLookAt.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraZoom2DAngle.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\CameraZoom2DMove.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Cursor2D.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\FpsCounter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\graphicstypes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\InputModifiers.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\ObservableCameraParams.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\ZoomToRectangle.h"
+				RelativePath=".\include\vislib\GlutServerNode.h"
 				>
 			</File>
 		</Filter>
@@ -510,7 +418,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -518,7 +426,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
