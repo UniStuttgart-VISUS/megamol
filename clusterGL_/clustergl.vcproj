@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="clusterGL"
+	Name="clustergl"
 	ProjectGUID="{A223DAF1-F6AF-4288-B17D-1E88CEB7FB2D}"
-	RootNamespace="clusterGL"
+	RootNamespace="clustergl"
 	Keyword="Win32Proj"
 	>
 	<Platforms>

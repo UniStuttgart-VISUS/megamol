@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="clusterD3D"
+	Name="clusterd3d"
 	ProjectGUID="{3A4B421C-3070-495C-AA88-D89DBE723808}"
-	RootNamespace="clusterD3D"
+	RootNamespace="clusterd3d"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
