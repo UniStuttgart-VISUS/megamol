@@ -25,6 +25,8 @@
 namespace vislib {
 namespace sys {
 
+    /* forward declaration of CmdLineParser */
+    template<class T> class CmdLineParser;
 
     /**
      * Helper class to split a single string command line into an array of zero
@@ -39,7 +41,7 @@ namespace sys {
          * structures compatible with CmdLineProvider.
          *  <Tf> should only be used when equal with <T>
          */
-        template<class Tf> friend class CmdLineParser;
+        template<class Tf> friend class vislib::sys::CmdLineParser;
 
         /** Define a local name for the character type. */
         typedef typename T::Char Char;
