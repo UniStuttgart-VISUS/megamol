@@ -215,23 +215,41 @@ namespace sys {
      * @param text The text to be written.
      * @param force Flag whether or not to overwrite an existing file.
      *
+     * @return true if the data was written successfully, false otherwise.
+     *
      * @throws SystemException in case of an error.
      */
-    void WriteTextFile(const StringA& filename, const StringA& text, 
-        bool force = false);
+    template<class tp1, class tp2>
+    bool WriteTextFile(const String<tp1>& filename, const String<tp2>& text, 
+            bool force = false) {
+        bool retval = false;
+        File file;
+        if (file.Open(filename, File::WRITE_ONLY, File::SHARE_EXCLUSIVE,
+                force ? File::CREATE_OVERWRITE : File::CREATE_ONLY)) {
+            retval = WriteTextFile(file, text);
+            file.Close();
+        } else {
+            // works because the last error still contains the correct value
+            throw SystemException(__FILE__, __LINE__);
+        }
+        return retval;
+    }
 
     /**
-     * Writes a text to a file. If the file exists and force is 'true' the
-     * existing file is overwritten.
+     * Writes a text to a file.
      *
-     * @param filename The path to the file to be written.
+     * @param filename The file to be written.
      * @param text The text to be written.
-     * @param force Flag whether or not to overwrite an existing file.
+     *
+     * @return true if the data was written successfully, false otherwise.
      *
      * @throws SystemException in case of an error.
      */
-    void WriteTextFile(const StringW& filename, const StringW& text, 
-        bool force = false);
+    template<class tp>
+    bool WriteTextFile(File& file, const String<tp>& text) {
+        unsigned int len = text.Length() * sizeof(tp::Char);
+        return (file.Write(text.PeekBuffer(), len) == len);
+    }
 
 } /* end namespace sys */
 } /* end namespace vislib */
