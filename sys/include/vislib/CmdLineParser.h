@@ -1885,7 +1885,14 @@ namespace sys {
             : formatter(withValues ? 3 : 2), output(NULL), withValues(withValues) {
         this->options = &opts;
         this->formatter.SetSeparator(vislib::String<T>(static_cast<Char>(' '), withValues ? 1 : 2));
-        this->formatter.SetMaxWidth(vislib::sys::Console::GetWidth() - 1);
+        UINT consoleWidth = vislib::sys::Console::GetWidth();
+        if (consoleWidth > 0) {
+            this->formatter.SetMaxWidth(consoleWidth - 1);
+        } else {
+            // If retrieving the console width fails, the code above would
+            // create an overflow and the formatter would consequently crash.
+            this->formatter.SetMaxWidth(80);
+        }
         this->formatter[1].SetWidth(0);
         if (this->withValues) {
             this->formatter[2].SetWidth(0);

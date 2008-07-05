@@ -486,7 +486,7 @@ namespace vislib {
         
         String bufStr;
         Char *linebuf = bufStr.AllocateBuffer(this->maxWidth + 10); // 10 is a paranoia value
-        linebuf[0] = '\n';
+        linebuf[0] = static_cast<Char>('\n');
         Char *buffer = linebuf + 1;
 
         while(true) {
