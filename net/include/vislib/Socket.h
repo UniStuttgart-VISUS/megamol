@@ -64,7 +64,7 @@ namespace net {
             PROTOCOL_IDP = IPPROTO_IDP,             // XNS IDP.
             PROTOCOL_IPV6 = IPPROTO_IPV6,           // IPv6.
             PROTOCOL_ROUTING = IPPROTO_ROUTING,     // IPv6 routing header.
-            PROTOCOL_FRAGMENT = IPPROTO_FRAGMENT,	// IPv6 fragmentation hdr.
+            PROTOCOL_FRAGMENT = IPPROTO_FRAGMENT,   // IPv6 fragmentation hdr.
             PROTOCOL_ESP = IPPROTO_ESP,             // IPsec ESP header.
             PROTOCOL_AH = IPPROTO_AH,               // IPsec AH.
             PROTOCOL_ICMPV6 = IPPROTO_ICMPV6,       // ICMPv6.
@@ -1112,6 +1112,9 @@ namespace net {
 
         /** The socket handle. */
         SOCKET handle;
+
+        /** The asynchronous sender must be able to access the handle. */
+        friend class AsyncSocketSender;
     };
 
 } /* end namespace net */

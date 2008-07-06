@@ -442,6 +442,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\RawStoragePool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\RawStorageSerialiser.cpp"
 				>
 			</File>
@@ -733,6 +737,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\RawStorage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RawStoragePool.h"
 				>
 			</File>
 			<File
