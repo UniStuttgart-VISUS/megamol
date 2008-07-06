@@ -35,13 +35,10 @@ vislib::RawStoragePool::~RawStoragePool(void) {
  * vislib::RawStoragePool::Clear
  */
 void vislib::RawStoragePool::Clear(void) {
-    RawStorageList::Iterator it = this->storageList.GetIterator();
-
-    while (it.HasNext()) {
-        SAFE_DELETE(it.Next().storage);
+    while (!this->storageList.IsEmpty()) {
+        SAFE_DELETE(this->storageList.First().storage);
+        this->storageList.RemoveFirst();
     }
-
-    this->storageList.Clear();
 }
 
 

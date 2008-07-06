@@ -211,7 +211,7 @@ void vislib::net::AsyncSocketSender::Send(const void *data,
 
     /* Queue the task. */
     this->lockQueue.Lock();
-    this->queue.Add(task);
+    this->queue.Append(task);
     this->semBlockSender.Unlock();
     this->lockQueue.Unlock();
 }
