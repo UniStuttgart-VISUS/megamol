@@ -10,6 +10,7 @@
 #include <climits>
 
 #include "vislib/assert.h"
+#include "vislib/memutils.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/UnsupportedOperationException.h"
 
@@ -26,7 +27,21 @@ vislib::RawStoragePool::RawStoragePool(void) {
  * vislib::RawStoragePool::~RawStoragePool
  */
 vislib::RawStoragePool::~RawStoragePool(void) {
-    // Nothing to do.
+    this->Clear();
+}
+
+
+/*
+ * vislib::RawStoragePool::Clear
+ */
+void vislib::RawStoragePool::Clear(void) {
+    RawStorageList::Iterator it = this->storageList.GetIterator();
+
+    while (it.HasNext()) {
+        SAFE_DELETE(it.Next().storage);
+    }
+
+    this->storageList.Clear();
 }
 
 
@@ -37,7 +52,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
     PooledRawStorage *bestFit = NULL;
     PooledRawStorage *firstUnused = NULL;
     SIZE_T bestDist = SIZE_MAX;
-    RawStorageList::Iterator it = this->storage.GetIterator();
+    RawStorageList::Iterator it = this->storageList.GetIterator();
 
     while (it.HasNext()) {
         PooledRawStorage& n = it.Next();
@@ -46,36 +61,36 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
             firstUnused = &n;
         }
 
-        if ((n.storage.GetSize() > size) && (n.storage.GetSize() < bestDist)) {
+        if ((n.storage->GetSize() > size)
+                && (n.storage->GetSize() < bestDist)) {
             bestFit = &n;
-            bestDist = n.storage.GetSize() - size;
+            bestDist = n.storage->GetSize() - size;
 
-        } else if (n.storage.GetSize() == 0) {
+        } else if (n.storage->GetSize() == 0) {
             bestFit = &n;
             break;  // Cannot find any better fit.
         }
     }
 
     if (bestFit != NULL) {
-        ASSERT(bestFit->storage.GetSize() >= size);
+        ASSERT(bestFit->storage->GetSize() >= size);
         bestFit->isInUse = true;
-        return &(bestFit->storage);
+        return bestFit->storage;
 
     } else if (firstUnused != NULL) {
-        ASSERT(firstUnused->storage.GetSize() < size);
+
         firstUnused->isInUse = true;
-        firstUnused->storage.AssertSize(size);
-        return &(firstUnused->storage);
+        firstUnused->storage->AssertSize(size);
+        return firstUnused->storage;
 
     } else {
         PooledRawStorage n;
-        this->storage.Append(n);
-        ASSERT(this->storage.Last() == n);
-        ASSERT(&(this->storage.Last().storage) == &n.storage);
+        n.isInUse = true;
+        n.storage = new RawStorage(size);
+        this->storageList.Append(n);
 
-        this->storage.Last().isInUse = true;
-        this->storage.Last().storage.AssertSize(size);
-        return &(this->storage.Last().storage);
+        ASSERT(this->storageList.Last().storage->GetSize() == size);
+        return this->storageList.Last().storage;
     }
 
 }
@@ -85,12 +100,13 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
  * vislib::RawStoragePool::Return
  */
 void vislib::RawStoragePool::Return(RawStorage *storage) {
-    RawStorageList::Iterator it = this->storage.GetIterator();
+    RawStorageList::Iterator it = this->storageList.GetIterator();
 
     while (it.HasNext()) {
         PooledRawStorage& n = it.Next();
-        if (&(n.storage) == storage) {
+        if (n.storage == storage) {
             n.isInUse = false;
+            return;
         }
     }
     /* 'storage' was not found at this point. */

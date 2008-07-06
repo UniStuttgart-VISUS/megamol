@@ -7,6 +7,7 @@
 
 #include "testsockets.h"
 
+#include "vislib/AsyncSocketSender.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
@@ -221,6 +222,36 @@ DWORD SocketClient::Run(void *cntRepeat) {
 }
 
 
+void TestAsyncSocketSender(void) {
+    using namespace vislib::net;
+    using namespace vislib::sys;
+
+    DWORD cntRepeat = 10;
+    Socket socket;
+    AsyncSocketSender sender;
+    Thread senderThread(&sender);
+    SocketServer server;
+    Thread serverThread(&server);
+
+    Socket::Startup();
+
+    serverThread.Start(&cntRepeat);
+
+    socket.Create(Socket::FAMILY_INET, Socket::TYPE_STREAM,
+        Socket::PROTOCOL_TCP);
+    socket.Connect(SocketAddress::CreateInet("127.0.0.1", TEST_PORT));
+    senderThread.Start(&socket);
+
+    for (DWORD i = 0; i < cntRepeat; i++) {
+        sender.Send(&i, sizeof(DWORD));
+    }
+
+    serverThread.Join();
+    senderThread.Terminate(false);
+    Socket::Cleanup();
+
+    AssertEqual("Server got expected number of asynchronously sent messages", serverThread.GetExitCode(), 2 * cntRepeat);
+}
 
 
 void TestSockets(void) {
@@ -239,4 +270,6 @@ void TestSockets(void) {
 
     AssertEqual("Server processed expected number of messages", serverThread.GetExitCode(), 2 * cntRepeat);
     AssertEqual("Client processed expected number of messages", serverThread.GetExitCode(), 2 * cntRepeat);
+
+    TestAsyncSocketSender();
 }

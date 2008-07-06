@@ -45,6 +45,11 @@ namespace vislib {
         ~RawStoragePool(void);
 
         /**
+         * Remove all elements from the pool.
+         */
+        void Clear(void);
+
+        /**
          * Return an unused RawStorage of at least 'size' bytes.
          *
          * The object returned remains owned by the RawStoragePool. The user
@@ -82,11 +87,11 @@ namespace vislib {
 
         /** RawStorage instances with in-use marker. */
         typedef struct PooledRawStorage_t {
-            RawStorage storage;
+            RawStorage *storage;
             bool isInUse;
 
             bool operator ==(const struct PooledRawStorage_t& rhs) const {
-                return (&this->storage == &rhs.storage);
+                return (this->storage == rhs.storage);
             }
         } PooledRawStorage;
 
@@ -114,7 +119,7 @@ namespace vislib {
         RawStoragePool& operator =(const RawStoragePool& rhs);
 
         /** The pooled RawStorage instances. */
-        RawStorageList storage;
+        RawStorageList storageList;
 
     };
 

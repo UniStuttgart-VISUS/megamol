@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
 
                         tests[j].testFunc();
 
-                    } catch (vislib::Exception e) {
+                    } catch (vislib::Exception& e) {
 #ifdef _WIN32
                         _tprintf(_T("\nUnexpected vislib::Exception: %s "), e.GetMsg());
 #else /* _WIN32 */
