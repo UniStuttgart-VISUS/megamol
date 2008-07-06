@@ -96,6 +96,7 @@ const UINT vislib::Trace::LEVEL_WARN = 100;
  */
 vislib::Trace::~Trace(void) {
     ARY_SAFE_DELETE(this->filename);
+    this->SetPrefix(NULL);
 
     if (this->fp != NULL) {
         ::fclose(this->fp);
