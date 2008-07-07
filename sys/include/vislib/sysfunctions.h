@@ -22,6 +22,7 @@
 
 #include "vislib/File.h"
 #include "vislib/String.h"
+#include "vislib/SystemException.h"
 #include "vislib/types.h"
 
 

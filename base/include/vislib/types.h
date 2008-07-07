@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <inttypes.h>
+#include <stdint.h>
 
 typedef char CHAR;
 typedef char INT8;
@@ -64,6 +65,10 @@ typedef UINT32 UINT_PTR;
 #endif /* _LIN64 */
 
 typedef size_t SIZE_T;
+
+#ifndef SIZE_MAX
+#define SIZE_MAX (static_cast<size_t>(-1))
+#endif /* !SIZE_MAX */
 
 #endif /* _WIN32 */
 

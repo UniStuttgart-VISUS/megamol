@@ -125,7 +125,7 @@ void TestThreadPool(void) {
     ::AssertEqual("No active threads initially.", pool.GetActiveThreads(), SIZE_T(0));
     ::AssertEqual("No idle threads initially.", pool.GetAvailableThreads(), SIZE_T(0));
 
-    for (UINT_PTR i = 0; i < CNT_DOWELERS; i++) {
+    for (INT_PTR i = 0; i < CNT_DOWELERS; i++) {
         pool.QueueUserWorkItem(&dowelers[i], reinterpret_cast<void *>(i), false);
     }
     pool.SetThreadCount(CNT_THREADS);
@@ -139,7 +139,7 @@ void TestThreadPool(void) {
 
     a6.cntAborted = 0;
     a6.cntCompleted = 0;
-    for (UINT_PTR i = 0; i < CNT_CROWBARERS; i++) {
+    for (INT_PTR i = 0; i < CNT_CROWBARERS; i++) {
         pool.QueueUserWorkItem(crowbarers + i, reinterpret_cast<void *>(i), false);
     }
 
