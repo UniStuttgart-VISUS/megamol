@@ -203,6 +203,26 @@ void vislib::net::Socket::Create(const ProtocolFamily protocolFamily,
 
 
 /*
+ * vislib::net::Socket::Create
+ */
+void vislib::net::Socket::Create(const IPEndPoint& familySpecAddr, 
+            const Type type, const Protocol protocol) {
+    switch (familySpecAddr.GetAddressFamily()) {
+        case IPEndPoint::FAMILY_INET:
+            this->Create(FAMILY_INET, type, protocol);
+            break;
+
+        case IPEndPoint::FAMILY_INET6:
+            this->Create(FAMILY_INET6, type, protocol);
+            break;
+
+        default:
+            throw IllegalParamException("familySpecAddr", __FILE__, __LINE__);
+    }
+}
+
+
+/*
  * vislib::net::Socket::GetOption
  */
 void vislib::net::Socket::GetOption(const INT level, const INT optName, 

@@ -162,6 +162,17 @@ vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& rhs) {
 
 
 /*
+ * vislib::net::IPEndPoint::IPEndPoint
+ */
+vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& address, 
+                                    const unsigned short newPort) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
+    *this = address;
+    this->SetPort(newPort);
+}
+
+
+/*
  * vislib::net::IPEndPoint::~IPEndPoint
  */
 vislib::net::IPEndPoint::~IPEndPoint(void) {

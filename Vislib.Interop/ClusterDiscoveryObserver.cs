@@ -96,7 +96,7 @@ namespace Vislib.Interop {
         /// <summary>
         /// The first message ID that can be used for a user message.
         /// </summary>
-        protected const UInt16 MSG_TYPE_USER = 16;
+        protected const UInt32 MSG_TYPE_USER = 16;
 
         #endregion
 
@@ -270,7 +270,7 @@ namespace Vislib.Interop {
         /// <param name="msgType">The message ID.</param>
         /// <param name="msgBody">The message body.</param>
         public delegate void UserMessageHandler(ClusterDiscoveryObserver src,
-            PeerNode hPeer, UInt16 msgType, byte[] msgBody);
+            PeerNode hPeer, UInt32 msgType, byte[] msgBody);
 
         /// <summary>
         /// Event for being notified about new nodes.
@@ -308,7 +308,7 @@ namespace Vislib.Interop {
         /// The total message size is always the size of the header plus the 
         /// maximum user message size.
         /// </summary>
-        protected const uint HEADER_LENGTH = 2 * sizeof(UInt16);
+        protected const uint HEADER_LENGTH = 2 * sizeof(UInt32);
 
         /// <summary>
         /// The maximum user message length in bytes.
@@ -321,23 +321,23 @@ namespace Vislib.Interop {
         /// <summary>
         /// The magic number at the begin of each message.
         /// </summary>
-        protected const UInt16 MAGIC_NUMBER = (UInt16) ('v') << 8 
-            | (UInt16) ('l');
+        protected const UInt32 MAGIC_NUMBER = ((UInt32) ('v') << 24)
+            | ((UInt32)('c') << 16) | ((UInt32)('d') << 8) | ((UInt32)('s'));
 
         /// <summary>
         /// Message type ID of a repeated discovery request.
         /// </summary>
-        protected const UInt16 MSG_TYPE_IAMALIVE = 2;
+        protected const UInt32 MSG_TYPE_IAMALIVE = 2;
 
         /// <summary>
         /// Message type ID of an initial discovery request.
         /// </summary>
-        protected const UInt16 MSG_TYPE_IAMHERE = 1;
+        protected const UInt32 MSG_TYPE_IAMHERE = 1;
 
         /// <summary>
         /// Message type ID of the explicit disconnect notification.
         /// </summary>
-        protected const UInt16 MSG_TYPE_SAYONARA = 3;
+        protected const UInt32 MSG_TYPE_SAYONARA = 3;
 
         #endregion
 
@@ -387,7 +387,7 @@ namespace Vislib.Interop {
         }
 
 
-        protected void fireUserMessage(EndPoint peerAddr, UInt16 msgType, 
+        protected void fireUserMessage(EndPoint peerAddr, UInt32 msgType, 
                 byte[] msgBody, uint bodyOffset) {
             UserMessageHandler evt = this.UserMessage;
             IPEndPoint addr = peerAddr as IPEndPoint;
@@ -443,8 +443,8 @@ namespace Vislib.Interop {
                     // Message header consists of
                     // - 2 byte magic number
                     // - 2 byte message type ID.
-                    if (BitConverter.ToUInt16(recvBuffer, 0) == MAGIC_NUMBER) {
-                        UInt16 msgType = BitConverter.ToUInt16(recvBuffer, 2);
+                    if (BitConverter.ToUInt32(recvBuffer, 0) == MAGIC_NUMBER) {
+                        UInt32 msgType = BitConverter.ToUInt32(recvBuffer, 2);
                         Debug.WriteLine("Type of message received is "
                             + msgType.ToString());
 
@@ -498,7 +498,7 @@ namespace Vislib.Interop {
                                 }
                                 break;
                         }
-                    } /* end if (BitConverter.ToUInt16(recvBuffer, 0) ... */
+                    } /* end if (BitConverter.ToUInt32(recvBuffer, 0) ... */
                 } catch (SocketException e) {
                     Debug.WriteLine("A communication error occurred in the "
                         + "cluster discovery listener thread: " + e.Message);

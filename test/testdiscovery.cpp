@@ -27,7 +27,7 @@ class MyListener : public vislib::net::ClusterDiscoveryListener {
 
     virtual void OnUserMessage(const vislib::net::ClusterDiscoveryService& src,
         const vislib::net::ClusterDiscoveryService::PeerHandle& hPeer, 
-        const UINT16 msgType, const BYTE *msgBody);
+        const UINT32 msgType, const BYTE *msgBody);
 };
 
 
@@ -76,7 +76,7 @@ void MyListener::OnNodeLost(const vislib::net::ClusterDiscoveryService& src,
  */
 void MyListener::OnUserMessage(const vislib::net::ClusterDiscoveryService& src,
         const vislib::net::ClusterDiscoveryService::PeerHandle& hPeer, 
-        const UINT16 msgType, const BYTE *msgBody) {
+        const UINT32 msgType, const BYTE *msgBody) {
     std::cout << "Received user message " << msgType << " (\""
         << reinterpret_cast<const char *>(msgBody) << "\") from "
         << src[hPeer].ToStringA().PeekBuffer() << std::endl;

@@ -125,6 +125,14 @@ namespace net {
         IPEndPoint(const SocketAddress& address);
 
         /**
+         * Create a copy of 'address' but change the port to 'newPort'.
+         *
+         * @param address The address to be cloned.
+         * @param newPort The new port.
+         */
+        IPEndPoint(const IPEndPoint& address, const unsigned short newPort); 
+
+        /**
          * Create an IPEndPoint from an OS IP-agnostic address structure.
          *
          * @param address The address storage.

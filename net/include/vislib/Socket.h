@@ -280,6 +280,24 @@ namespace net {
             const Protocol protocol);
 
         /**
+         * Create a new socket.
+         *
+         * @param familySpecAddr An IPEndPoint which specifies the protocol 
+         *                       family. The socket will be created either for 
+         *                       IPv4 or IPv6 depending on the type of endpoint
+         *                       specified here
+         * @param type           The type of the socket.
+         * @param protocol       The protocol to use.
+         *
+         * @throws IllegalParamException If 'familiySpecAddr' does not specify a
+         *                               supported address family, i.e. IPv4 or
+         *                               IPv6.
+         * @throws SocketException If the operation fails.
+         */
+        void Create(const IPEndPoint& familySpecAddr, const Type type, 
+            const Protocol protocol);
+
+        /**
          * Retrieve status of transmission and receipt of broadcast messages on 
          * the socket.
          *

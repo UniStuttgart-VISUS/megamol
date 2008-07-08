@@ -16,13 +16,14 @@
 
 
 #include "vislib/IPAddress.h"   // Must be included at begin!
-#include "vislib/Socket.h"      // Must be included at begin!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
+#include "vislib/IPAddress6.h"
+#include "vislib/RunnableThread.h"
 #include "vislib/SingleLinkedList.h"
+#include "vislib/Socket.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
-#include "vislib/Thread.h"
 #include "vislib/types.h"
 
 
@@ -42,6 +43,11 @@ namespace net {
      * and the object creates an array of all nodes that respond to a request
      * whether they are also members of this cluster. The object also anwers
      * requests of other nodes.
+     *
+     * Remarks concerning IPv6 support: The broadcast address determines 
+     * whether the cluster discovery service is running in IPv4 or IPv6 mode.
+     * The response address that is used as node identifier is independent from
+     * the mode the discovery service is running in.
      */
     class ClusterDiscoveryService {
 
@@ -52,8 +58,8 @@ namespace net {
          * during the discovery process.
          */
         typedef struct PeerNode_t {
-            SocketAddress address;          // User communication address (ID).
-            SocketAddress discoveryAddr;    // Discovery service address.
+            IPEndPoint address;             // User communication address (ID).
+            IPEndPoint discoveryAddr;       // Discovery service address.
             UINT cntResponseChances;        // Implicit disconnect detector.
 
             inline bool operator ==(const PeerNode_t& rhs) const {
@@ -68,6 +74,12 @@ namespace net {
         /** The default port number used by the discovery service. */
         static const USHORT DEFAULT_PORT;
 
+        /** The default request interval in milliseconds. */
+        static const UINT DEFAULT_REQUEST_INTERVAL;
+
+        /** The default number of chances to respond before disconnect. */
+        static const UINT DEFAULT_RESPONSE_CHANCES;
+
         /**
          * The maximum size of user data that can be sent via the cluster
          * discovery service in bytes.
@@ -79,10 +91,10 @@ namespace net {
          * trailing zero. 
          */
         static const SIZE_T MAX_NAME_LEN = MAX_USER_DATA 
-            - sizeof(struct sockaddr_in);
+            - sizeof(struct sockaddr_storage);
 
         /** The first message ID that can be used for a user message. */
-        static const UINT16 MSG_TYPE_USER;
+        static const UINT32 MSG_TYPE_USER;
 
         /**
          * Create a new instance.
@@ -122,12 +134,57 @@ namespace net {
          *                            this nodes list of known peers.
          */
         ClusterDiscoveryService(const StringA& name, 
-            const SocketAddress& responseAddr, 
+            const IPEndPoint& responseAddr, 
             const IPAddress& bcastAddr,
             const USHORT bindPort = DEFAULT_PORT,
             const bool discoveryOnly = false,
-            const UINT requestInterval = 10 * 1000,
-            const UINT cntResponseChances = 1);
+            const UINT requestInterval = DEFAULT_REQUEST_INTERVAL,
+            const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
+
+        /**
+         * Create a new instance.
+         *
+         * @param name                This is the name of the cluster to 
+         *                            detect. It is used to ensure that nodes
+         *                            answering a discovery request want to 
+         *                            join the same cluster. The name must have 
+         *                            at most MAX_NAME_LEN characters.
+         * @param responseAddr        This is the "call back address" of the 
+         *                            current node, on which user-defined 
+         *                            communication should be initiated. The 
+         *                            ClusterDiscoveryService does not use this 
+         *                            address itself, but justcommunicates it to
+         *                            all other nodes which then can use it. 
+         *                            These addresses should uniquely identify
+         *                            each process in the cluster, i. e. no node
+         *                            should specify the same 'responseAddr' as
+         *                            some other does.
+         * @param bcastAddr           The broadcast address of the network. All
+         *                            requests will be sent to this address. The
+         *                            destination port of messages is derived 
+         *                            from 'bindAddr'. 
+         *                            You can use the NetworkInformation to 
+         *                            obtain the broadcast address of your 
+         *                            subnet.
+         * @param bindPort            The port to bind the receiver thread to.
+         *                            All discovery requests must be directed to
+         *                            this port.
+         * @param isObserver          If this flag is set, the discovery service 
+         *                            will only discover nodes, but not request
+         *                            membership in the cluster.
+         * @param requestInterval     The interval between two discovery 
+         *                            requests in milliseconds.
+         * @param cntResponseChances  The number of requests that another node 
+         *                            may not answer before being removed from
+         *                            this nodes list of known peers.
+         */
+        ClusterDiscoveryService(const StringA& name, 
+            const IPEndPoint& responseAddr, 
+            const IPAddress6& bcastAddr,
+            const USHORT bindPort = DEFAULT_PORT,
+            const bool discoveryOnly = false,
+            const UINT requestInterval = DEFAULT_REQUEST_INTERVAL,
+            const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
 
         /** 
          * Dtor.
@@ -174,7 +231,7 @@ namespace net {
          *
          * @return The address the listening socket is bound to.
          */
-        inline const SocketAddress& GetBindAddr(void) const {
+        inline const IPEndPoint& GetBindAddr(void) const {
             return this->bindAddr;
         }
 
@@ -197,7 +254,19 @@ namespace net {
          *
          * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
-        IPAddress GetDiscoveryAddress(const PeerHandle& hPeer) const;
+        IPAddress GetDiscoveryAddress4(const PeerHandle& hPeer) const;
+
+        /**
+         * Answer the source IP address 'hPeer' uses for discovery communication. 
+         *
+         * @param hPeer The handle of the peer node.
+         *
+         * @return The IP address of the adapter that is used by 'hPeer' for the
+         *         discovery communication.
+         *
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         */
+        IPAddress6 GetDiscoveryAddress6(const PeerHandle& hPeer) const;
 
         /**
          * Answer the call back socket address that is sent to peer nodes 
@@ -206,7 +275,7 @@ namespace net {
          *
          * @return The address sent as response.
          */
-        const SocketAddress& GetResponseAddr(void) const {
+        const IPEndPoint& GetResponseAddr(void) const {
             return this->responseAddr;
         }
 
@@ -220,7 +289,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
-        inline SocketAddress GetUserComAddress(const PeerHandle& hPeer) const {
+        inline IPEndPoint GetUserComAddress(const PeerHandle& hPeer) const {
             return (*this)[hPeer];
         }
 
@@ -273,7 +342,7 @@ namespace net {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        UINT SendUserMessage(const UINT16 msgType, const void *msgBody, 
+        UINT SendUserMessage(const UINT32 msgType, const void *msgBody, 
             const SIZE_T msgSize);
 
         /**
@@ -301,7 +370,7 @@ namespace net {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        UINT SendUserMessage(const PeerHandle& hPeer, const UINT16 msgType,
+        UINT SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
             const void *msgBody, const SIZE_T msgSize);
 
         /**
@@ -343,9 +412,9 @@ namespace net {
          *
          * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline SocketAddress operator [](const INT idx) const {
+        inline IPEndPoint operator [](const INT idx) const {
             this->critSect.Lock();
-            SocketAddress retval = this->peerNodes[idx]->address;
+            IPEndPoint retval = this->peerNodes[idx]->address;
             this->critSect.Unlock();
             return retval;
         }
@@ -361,9 +430,9 @@ namespace net {
          *
          * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline SocketAddress operator [](const SIZE_T idx) const {
+        inline IPEndPoint operator [](const SIZE_T idx) const {
             this->critSect.Lock();
-            SocketAddress retval = this->peerNodes[idx]->address;
+            IPEndPoint retval = this->peerNodes[idx]->address;
             this->critSect.Unlock();
             return retval;
         }
@@ -378,7 +447,7 @@ namespace net {
          *
          * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
-        SocketAddress operator [](const PeerHandle& hPeer) const;
+        IPEndPoint operator [](const PeerHandle& hPeer) const;
 
     protected:
 
@@ -389,15 +458,11 @@ namespace net {
         class Sender : public vislib::sys::Runnable {
 
         public:
-
+            
             /**
              * Create a new instance that is working for 'cds'.
-             *
-             * @param cds The ClusterDiscoveryService that determines the 
-             *            communication parameters and receives the peer nodes
-             *            that have been detected.
              */
-            Sender(ClusterDiscoveryService& cds);
+            Sender(void);
 
             /** Dtor. */
             virtual ~Sender(void);
@@ -405,12 +470,14 @@ namespace net {
             /**
              * Performs the discovery.
              *
-             * @param reserved Reserved. Must be NULL.
+             * @param discSvc The ClusterDiscoveryService that determines the 
+             *                communication parameters and receives the peer nodes
+             *                that have been detected.
              *
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(void *reserved = NULL);
+            virtual DWORD Run(void *discSvc);
 
             /**
              * Ask the thread to terminate.
@@ -421,11 +488,9 @@ namespace net {
 
         private:
 
-            /** The discovery service the thread is working for. */
-            ClusterDiscoveryService& cds;
-
             /** Flag for terminating the thread safely. */
             bool isRunning;
+
         }; /* end class Sender */
 
 
@@ -441,10 +506,8 @@ namespace net {
             /**
              * Create a new instance answering discovery requests directed to
              * 'cds'.
-             *
-             * @param cds The ClusterDiscoveryService to work for.
              */
-            Receiver(ClusterDiscoveryService& cds);
+            Receiver(void);
 
             /** Dtor. */
             virtual ~Receiver(void);
@@ -452,12 +515,14 @@ namespace net {
             /**
              * Answers the discovery requests.
              *
-             * @param reserved Reserved. Must be NULL.
+             * @param discSvc The ClusterDiscoveryService that determines the 
+             *                communication parameters and receives the peer nodes
+             *                that have been detected.
              *
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual DWORD Run(void *reserved = NULL);
+            virtual DWORD Run(void *discSvc);
 
             /**
              * Ask the thread to terminate.
@@ -468,11 +533,12 @@ namespace net {
 
         private:
 
-            /** The discovery service the thread is working for. */
-            ClusterDiscoveryService& cds;
-
             /** Flag for terminating the thread safely. */
             bool isRunning;
+
+            /** The socket used for the broadcast. */
+            Socket socket;
+
         }; /* end class Receiver */
 
         /* 
@@ -480,8 +546,8 @@ namespace net {
          * MSG_TYPE_SAYONARA in the sender thread.
          */
         typedef struct SenderBody_t {
-            struct sockaddr_in sockAddr;	// Peer address to use.
-            char name[MAX_NAME_LEN];		// Name of cluster.	
+            struct sockaddr_storage sockAddr;   // Peer address to use.
+            char name[MAX_NAME_LEN];		    // Name of cluster.
         } SenderMessageBody;
 
         /**
@@ -490,12 +556,14 @@ namespace net {
          * UDP datagrams in advance.
          */
         typedef struct Message_t {
-            UINT16 magicNumber;						// Must be MAGIC_NUMBER.
-            UINT16 msgType;							// The type identifier.
+            UINT32 magicNumber;						    // Must be MAGIC_NUMBER.
+            UINT32 msgType;							    // The type identifier.
+            // Note: 'magicNumber' and 'msgType' can be 32 bit now, because 
+            // struct sockaddr_storage must be 64 bit aligned any way.
             union {
-                SenderMessageBody senderBody;       // I am here messages.
-                struct sockaddr_in responseAddr;    // Resonse peer address.
-                BYTE userData[MAX_USER_DATA];		// User defined data.
+                SenderMessageBody senderBody;           // I am here messages.
+                struct sockaddr_storage responseAddr;   // Resonse peer address.
+                BYTE userData[MAX_USER_DATA];		    // User defined data.
             };
         } Message;
 
@@ -521,8 +589,8 @@ namespace net {
          * @param address       The user communication address the peer node 
          *                      reported.
          */
-        void addPeerNode(const SocketAddress& discoveryAddr, 
-            const SocketAddress& address);
+        void addPeerNode(const IPEndPoint& discoveryAddr, 
+            const IPEndPoint& address);
 
         /**
          * Inform all registered ClusterDiscoveryListeners about a a user 
@@ -544,7 +612,7 @@ namespace net {
          * @param msgType The message type.
          * @param msgBody The body of the message.
          */
-        void fireUserMessage(const SocketAddress& sender, const UINT16 msgType, 
+        void fireUserMessage(const IPEndPoint& sender, const UINT32 msgType, 
             const BYTE *msgBody) const;
 
         /**
@@ -567,7 +635,7 @@ namespace net {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromAddress(const SocketAddress& addr) const;
+        INT_PTR peerFromAddress(const IPEndPoint& addr) const;
 
         /**
          * Answer the index of the peer node that runs its discovery 
@@ -582,7 +650,7 @@ namespace net {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        INT_PTR peerFromDiscoveryAddr(const SocketAddress& addr) const;
+        INT_PTR peerFromDiscoveryAddr(const IPEndPoint& addr) const;
 
         /**
          * Prepares the list of known peer nodes for a new request. 
@@ -630,7 +698,7 @@ namespace net {
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        void prepareUserMessage(Message& outMsg, const UINT16 msgType,
+        void prepareUserMessage(Message& outMsg, const UINT32 msgType,
             const void *msgBody, const SIZE_T msgSize);
 
         /**
@@ -643,28 +711,28 @@ namespace net {
          * @param address The socket address that the peer node reported as its
          *                user communication port.
          */
-        void removePeerNode(const SocketAddress& address);
+        void removePeerNode(const IPEndPoint& address);
 
         /** The magic number at the begin of each message. */
-        static const UINT16 MAGIC_NUMBER;
+        static const UINT32 MAGIC_NUMBER;
 
         /** Message type ID of a repeated discovery request. */
-        static const UINT16 MSG_TYPE_IAMALIVE;
+        static const UINT32 MSG_TYPE_IAMALIVE;
 
         /** Message type ID of an initial discovery request. */
-        static const UINT16 MSG_TYPE_IAMHERE;
+        static const UINT32 MSG_TYPE_IAMHERE;
 
         /** Message type ID of the explicit disconnect notification. */
-        static const UINT16 MSG_TYPE_SAYONARA;
+        static const UINT32 MSG_TYPE_SAYONARA;
 
         /** This is the broadcast address to send requests to. */
-        SocketAddress bcastAddr;
+        IPEndPoint bcastAddr;
 
         /** The address that the response thread binds to. */
-        SocketAddress bindAddr;
+        IPEndPoint bindAddr;
 
         /** The address we send in a response message. */
-        SocketAddress responseAddr;
+        IPEndPoint responseAddr;
 
         /**
          * Critical section protecting access to the 'peerNodes' array and the
@@ -693,17 +761,11 @@ namespace net {
         /** The name of the cluster this discovery service should form. */
         StringA name;
 
-        /** The worker object of 'requestThread'. */
-        Sender *sender;
-
-        /** The worder object of 'responseThread'. */
-        Receiver *receiver;
-
         /** The thread receiving discovery requests. */
-        sys::Thread *receiverThread;
+        sys::RunnableThread<Receiver> receiverThread;
 
         /** The thread performing the node discovery. */
-        sys::Thread *senderThread;
+        sys::RunnableThread<Sender> senderThread;
 
         /** This array holds the peer nodes. */
         PeerNodeList peerNodes;

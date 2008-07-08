@@ -101,7 +101,7 @@ namespace net {
          */
         virtual void OnUserMessage(const ClusterDiscoveryService& src,
             const ClusterDiscoveryService::PeerHandle& hPeer, 
-            const UINT16 msgType, const BYTE *msgBody);
+            const UINT32 msgType, const BYTE *msgBody);
     };
     
 } /* end namespace net */

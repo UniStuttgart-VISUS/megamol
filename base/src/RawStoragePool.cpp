@@ -75,7 +75,6 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
         return bestFit->storage;
 
     } else if (firstUnused != NULL) {
-
         firstUnused->isInUse = true;
         firstUnused->storage->AssertSize(size);
         return firstUnused->storage;
