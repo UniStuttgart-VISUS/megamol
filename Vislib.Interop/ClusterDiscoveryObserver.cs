@@ -321,8 +321,10 @@ namespace Vislib.Interop {
         /// <summary>
         /// The magic number at the begin of each message.
         /// </summary>
-        protected const UInt32 MAGIC_NUMBER = ((UInt32) ('v') << 24)
-            | ((UInt32)('c') << 16) | ((UInt32)('d') << 8) | ((UInt32)('s'));
+        protected const UInt32 MAGIC_NUMBER = ((UInt32) ('v') << 0)
+            | ((UInt32)('c') << 8) 
+            | ((UInt32)('d') << 16) 
+            | ((UInt32)('s') << 24);
 
         /// <summary>
         /// Message type ID of a repeated discovery request.

@@ -848,8 +848,8 @@ void vislib::net::ClusterDiscoveryService::removePeerNode(
  * vislib::net::ClusterDiscoveryService::MAGIC_NUMBER
  */
 const UINT32 vislib::net::ClusterDiscoveryService::MAGIC_NUMBER 
-    = (static_cast<UINT32>('v') << 24) | (static_cast<UINT32>('c') << 16)
-    | (static_cast<UINT32>('d') << 8) | static_cast<UINT32>('s');
+    = (static_cast<UINT32>('v') << 0) | (static_cast<UINT32>('c') << 8)
+    | (static_cast<UINT32>('d') << 16) | (static_cast<UINT32>('s') << 24);
 
 
 /*
