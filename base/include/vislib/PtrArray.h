@@ -104,7 +104,7 @@ namespace vislib {
             : Super(capacity) {
         // No dynamic binding within ctor, so initialise all elements with
         // NULL pointer by hand.
-        ::memset(this->elements, 0, this->capacity * sizeof(T));
+        ::memset(this->elements, 0, this->capacity * sizeof(T *));
     }
 
 
