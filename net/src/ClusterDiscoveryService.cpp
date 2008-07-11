@@ -626,11 +626,13 @@ void vislib::net::ClusterDiscoveryService::addPeerNode(
     if ((idx = this->peerFromAddress(address)) >= 0) {
         /* Already known, reset disconnect chance. */
         TRACE(Trace::LEVEL_VL_INFO, "Peer node %s is already known.\n", 
-            static_cast<const char *>(address.ToStringA()));
+            address.ToStringA().PeekBuffer());
         hPeer = this->peerNodes[static_cast<INT>(idx)];
 
     } else {
         /* Not known, so add it and fire event. */
+        TRACE(Trace::LEVEL_VL_INFO, "I learned about node %s.\n",
+            address.ToStringA().PeekBuffer());
         hPeer = new PeerNode;
         hPeer->address = address;
         hPeer->discoveryAddr = IPEndPoint(discoveryAddr, 

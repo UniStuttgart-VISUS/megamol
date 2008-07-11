@@ -129,7 +129,7 @@ vislib::net::IPEndPoint::IPEndPoint(const SocketAddress& address) {
  * vislib::net::IPEndPoint::IPEndPoint
  */
 vislib::net::IPEndPoint::IPEndPoint(const struct sockaddr_storage& address) {
-    ::ZeroMemory(&this->address, sizeof(this->address));
+    //::ZeroMemory(&this->address, sizeof(this->address));
     ::memcpy(&this->address, &address, sizeof(struct sockaddr_storage));
 }
 

@@ -8,6 +8,15 @@
 do
     -- VISlib CDS protocol definition
     local protocolVislibCds = Proto("VISlibCDS", "VISlib Cluster Discovery Service Postdissector");
+    
+    -- Names of magic numbers
+    -- Note: Must be network byte order
+    local magicNumber = {
+		[27766] = "OK (Version 1)"
+    }
+    local magicNumber2 = {
+		[1986225267] = "OK (Version 2)"
+    }
 
     -- Names of builtin messages
     -- Note: Must convert IDs (1, 2, 3, ...) to network byte order in order to work
@@ -16,11 +25,19 @@ do
         [512] = "MSG_TYPE_IAMALIVE",
         [768] = "MSG_TYPE_SAYONARA"
     }
+    local msgIds2 = {
+        [16777216] = "MSG_TYPE_IAMHERE",
+        [33554432] = "MSG_TYPE_IAMALIVE",
+        [768] = "MSG_TYPE_SAYONARA"
+    }    
 
     -- Fields of a message
-    local fieldMagicNumber = ProtoField.uint16("vislibcds.magicnumber", "Magic Number", base.DEC)
+    local fieldMagicNumber = ProtoField.uint16("vislibcds.magicnumber", "Magic Number", base.DEC, magicNumber)
+    local fieldMagicNumber2 = ProtoField.uint32("vislibcds.magicnumber", "Magic Number Version 2", base.DEC, magicNumber2)
     local fieldMsgId = ProtoField.uint16("vislibcds.msgid", "Message Type", base.DEC, msgIds)
+    local fieldMsgId2 = ProtoField.uint32("vislibcds.msgid", "Message Type", base.DEC, msgIds2)
     local fieldResponseAddr = ProtoField.ipv4("vislibcds.responseaddress", "Response Address (Node ID)")
+    local fieldResponseAddr6 = ProtoField.ipv6("vislibcds.responseaddress6", "Response Address (Node ID)")
     local fieldResponsePort = ProtoField.uint16("vislibcds.responseport", "Respone Address Port")
     --local fieldSinFamily = ProtoField.int8("vislibcds.sockaddr.family", "Socket Address Family")
     --local fieldSinPort = ProtoField.uint8("vislibcds.sockaddr.port", "Socket Address Port")
@@ -30,7 +47,9 @@ do
 
     protocolVislibCds.fields = {
         fieldMagicNumber,
+        fieldMagicNumber2,
         fieldMsgId,
+        fieldMsgId2,
         fieldResponseAddr,
         fieldResponsePort,
         fieldName
@@ -46,14 +65,36 @@ do
         pinfo.cols.protocol = "VISlibCDS"
         local subtree = tree:add(protocolVislibCds, buffer(), "VISlib Cluster Discovery Service Packet")
         subtree:add(fieldMagicNumber, buffer(0, 2))
-        subtree:add(fieldMsgId, buffer(2, 2))
-
-        local msgId = buffer(2, 2):uint()
-        if ((msgId == 256) or (msgId == 512) or (msgId == 768)) then
-            subtree:add(fieldResponsePort, buffer(4 + 2, 2))
-            subtree:add(fieldResponseAddr, buffer(4 + 4, 4))
-            subtree:add(fieldName, buffer(4 + 16, 256 - 16))
-        end
+        subtree:add(fieldMagicNumber2, buffer(0, 4))
+        
+        local magicNumber = buffer(0, 4):uint()
+		if (magicNumber == 1986225267) then
+		    -- CDS version 2 (IPv6-compatible)
+			subtree:add(fieldMsgId2, buffer(4, 4))
+			local msgId = buffer(4, 4):uint()
+			local ipVer = buffer(4 + 4, 2):uint()
+			
+			if (ipVer == 23) then
+				subtree:add(fieldResponsePort, buffer(4 + 4 + 2, 2))
+				subtree:add(fieldResponseAddr6, buffer(4 + 4 + 8, 16))
+			else 
+				subtree:add(fieldResponsePort, buffer(4 + 4 + 2, 2))
+				subtree:add(fieldResponseAddr, buffer(4 + 4 + 4, 4))
+			end
+			
+			subtree:add(fieldName, buffer(4 + 4 + 128, 256 - 128))
+			
+		else
+			-- CDS version 1 (IPv4 only)
+			subtree:add(fieldMsgId, buffer(2, 2))
+			local msgId = buffer(2, 2):uint()
+        
+			if ((msgId == 256) or (msgId == 512) or (msgId == 768)) then
+				subtree:add(fieldResponsePort, buffer(4 + 2, 2))
+				subtree:add(fieldResponseAddr, buffer(4 + 4, 4))
+				subtree:add(fieldName, buffer(4 + 16, 256 - 16))
+			end
+		end  -- if (magicNumber == 1986225267)
 --        local t = root:add(protocolVislibCds, buf(0, 2))
 --        t:add(fieldMagicNumber, buf(0, 2))
 --        t:add(fieldMsgId, buf(0, 2))
@@ -72,15 +113,9 @@ do
 --                        data_dis:call(buf(2):tvb(),pkt,root)
 --                end 
 
-    end  -- function trivial_proto.dissector
+    end  -- function protocolVislibCds.dissector
 
     -- Register the protocol on VISlib CDS default port 28181
     tableUdpPorts = DissectorTable.get("udp.port")
     tableUdpPorts:add(28181, protocolVislibCds)
-
---local wtap_encap_table = DissectorTable.get("wtap_encap")
---local udp_encap_table = DissectorTable.get("udp.port")
---wtap_encap_table:add(wtap.USER15,p_multi)
---wtap_encap_table:add(wtap.USER12,p_multi)
---udp_encap_table:add(7555,p_multi)
 end

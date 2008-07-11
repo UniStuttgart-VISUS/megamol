@@ -126,6 +126,19 @@ namespace vislib {
         virtual void Clear(void);
 
         /**
+         * Erase all elements from the array.
+         *
+         * @param doTrim If true, the array is trimmed to have zero size, 
+         *               otherwise the memory remains allocated.
+         */
+        inline void Clear(const bool doTrim) {
+            this->Clear();
+            if (doTrim) {
+                this->Trim();
+            }
+        }
+
+        /**
          * Answer the capacity of the array.
          *
          * @return The number of elements that are currently allocated.
@@ -657,8 +670,7 @@ namespace vislib {
     /*
      * vislib::Array<T>::Clear
      */
-    template<class T>
-    void Array<T>::Clear(void) {
+    template<class T> void Array<T>::Clear(void) {
         this->count = 0;
     }
 

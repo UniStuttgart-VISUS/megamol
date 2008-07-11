@@ -302,6 +302,26 @@ namespace net {
         bool IsRunning(void) const;
 
         /**
+         * Answer whether the 'idx'th known peer node is this node. 
+         *
+         * Note: Only node 0 should answer true here. Otherwise, the system is
+         * probably misconfigured.
+         *
+         * @param idx The index of the node to answer, which must be within 
+         *            [0, CountPeers()[.
+         *
+         * @return true if the specified node is this node, false otherwise.
+         *
+         * @throws OutOfRangeException If 'idx' is not a valid node index.
+         */
+        inline bool IsSelf(const INT idx) const {
+            this->critSect.Lock();
+            bool retval = (this->peerNodes[idx]->address == this->responseAddr);
+            this->critSect.Unlock();
+            return retval;
+        }
+
+        /**
          * Answer whether the discovery service is stopped. This is the case, if 
          * none of the threads is running, i. e. neither the sender nor the
          * receiver thread.
