@@ -31,6 +31,17 @@ namespace net {
     /**
      * This is a Runnable that manages a queue for sending data asynchronously
      * using a Socket.
+     *
+     * There are several flags configuring the behaviour of the sender:
+     *
+     * - If the isLinger property is set true (which is the default), the thread
+     *   will perform a graceful shutdown on Terminate(), i.e. it will try to 
+     *   process all pending requests. Otherwise, all pending requests are 
+     *   discarded.
+     * - If the isCloseSocket property is set true (which is the default), the
+     *   thread will close the socket that it used for communication when it 
+     *   exists. Otherwise, the socket will remain untouched and can possibly
+     *   be reused for other tasks as long as it is still open.
      */
     class AsyncSocketSender : public vislib::sys::Runnable {
 
@@ -59,6 +70,26 @@ namespace net {
 
         /** Dtor. */
         virtual ~AsyncSocketSender(void);
+
+        /**
+         * Answer whether the thread should close its socket when exiting.
+         *
+         * @param true If the thread should close the socket, false otherwise.
+         */
+        inline bool IsCloseSocket(void) const {
+            return ((this->flags & FLAG_IS_CLOSE_SOCKET) != 0);
+        }
+
+        /**
+         * Answer whether terminating the thread causes all pending messages to
+         * be sent or to be discarded.
+         *
+         * @return true If all pending messages are sent, false if they are
+         *         discarded.
+         */
+        inline bool IsLinger(void) const {
+            return ((this->flags & FLAG_IS_LINGER) != 0);
+        }
 
         /**
          * Start sending data on the specified socket.
@@ -124,6 +155,26 @@ namespace net {
         }
 
         /**
+         * Change the behaviour of the thread when exiting: When setting 
+         * 'isCloseSocket' true, the thread will close the socket that is used
+         * for communciation once it exits. Otherwise, the socket will remain 
+         * untouched and you can possibly resue it.
+         *
+         * @param isCloseSocket The new value of the flag.
+         */
+        void SetIsCloseSocket(const bool isCloseSocket);
+
+        /**
+         * Change the termination behaviour of the thread: If 'isLinger' is true,
+         * the queue is emptied by sending all the data when terminating the 
+         * thread. Otherwise, the queue is immediately emptied and all queued 
+         * send operations are discarded.
+         * 
+         * @param isLinger The new value of the flag.
+         */
+        void SetIsLinger(const bool isLinger);
+
+        /**
          * Terminate the thread by emptying the queue.
          *
          * @return true to acknowledge that the Runnable will finish as soon
@@ -181,11 +232,44 @@ namespace net {
         static void onSendCompleted(const DWORD result, const void *data,
             const SIZE_T cntBytesSent, void *userContext);
 
+        /**
+         * Call the completion callback of 'task', if there is one, and return
+         * any RawStorage to the pool.
+         *
+         * @param result       The return code passed to the completion callback.
+         * @param cntBytesSent The number of bytes sent passed to the completion
+         *                     callback.
+         */
+        void finaliseSendTask(SendTask& task, const DWORD result, 
+            const SIZE_T cntBytesSent);
+
+        /**
+         * This flag determines whether the thread should close the socket when
+         * it exits.
+         */
+        static const UINT32 FLAG_IS_CLOSE_SOCKET;
+
+        /**
+         * This flag determines the termination behaviour of the thread: If set
+         * true, the queue is closed and the thread runs as long as there are
+         * still tasks in the queue. If false, the queue is emptied immediately
+         * on calling terminate.
+         */
+        static const UINT32 FLAG_IS_LINGER;
+
+        /** A bitmask of behaviour flags. */
+        UINT32 flags;
+
+        /** 
+         * This flag determines whether it is possible to add new tasks in
+         * the 'queue'. When terminating the thread, 'isQueueOpen' is set
+         * false for making the queue run empty.
+         * When accessing this attribute, 'lockQueue' must be held.
+         */
+        bool isQueueOpen;
+
         /** Critical section for protecting 'queue'. */
         sys::CriticalSection lockQueue;
-
-        /** Critical section for protecting 'socket'. */
-        sys::CriticalSection lockSocket;
 
         /** Critical section for protecting 'storagePool'. */
         sys::CriticalSection lockStoragePool;
@@ -195,9 +279,6 @@ namespace net {
 
         /** Blocks the sender if the queue is empty. */
         sys::Semaphore semBlockSender;
-
-        /** The socket used for sending the data. */
-        Socket *socket;
 
         /** Pool of raw storage objects for buffering data to send. */
         RawStoragePool *storagePool;
