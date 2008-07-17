@@ -21,6 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug32.vsprops"
 			CharacterSet="1"

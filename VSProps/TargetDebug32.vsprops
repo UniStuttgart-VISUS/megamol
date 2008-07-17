@@ -19,4 +19,8 @@
 		Value="32d"
 		PerformEnvironmentSet="true"
 	/>
+	<UserMacro
+		Name="ArchName"
+		Value="x86"
+	/>
 </VisualStudioPropertySheet>

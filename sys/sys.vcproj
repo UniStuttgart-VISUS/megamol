@@ -20,6 +20,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug32.vsprops"
 			CharacterSet="1"
