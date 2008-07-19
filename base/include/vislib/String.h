@@ -140,6 +140,15 @@ namespace vislib {
         }
 
         /**
+         * Append 'cnt' characters starting at 'rhs' to the string. This string 
+         * will hold the result.
+         *
+         * @param rhs The string to be appended.
+         * @param cnt The number of characters to be appended.
+         */
+        void Append(const Char *rhs, const Size cnt);
+
+        /**
          * Concatenate this string and 'rhs'. This string will hold the result.
          *
          * @param rhs The right hand side operand.
@@ -1215,12 +1224,28 @@ namespace vislib {
     /*
      * String<T>::AllocateBuffer
      */
-    template<class T>  
+    template<class T>
     typename String<T>::Char * String<T>::AllocateBuffer(const Size newLen) {
         ARY_SAFE_DELETE(this->data);
         this->data = new Char[newLen + 1];
         this->data[newLen] = 0;
         return this->data;
+    }
+
+
+    /*
+     * String<T>::Append
+     */
+    template<class T> void String<T>::Append(const Char *rhs, const Size cnt) {
+        Size len = this->Length();
+        Char *str = new Char[len + cnt + 1];
+
+        ::memcpy(str, this->data, len * T::CharSize());
+        ::memcpy(str + len, rhs, cnt * T::CharSize());
+        str[len + cnt] = 0;
+
+        delete[] this->data;
+        this->data = str;
     }
 
 
