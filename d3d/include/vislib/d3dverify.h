@@ -23,7 +23,7 @@
  * Declare the variable 'hr' for use in the D3D_VERIFY_* macros. Add
  * this macro at the begin of functions that use these macros.
  */
-#define USES_D3D_VERIFY HRESULT hr; hr = D3D_OK;
+#define USES_D3D_VERIFY HRESULT __d3dv_hr; __d3dv_hr = D3D_OK;
 // Note: Extra assignment prevent "unused variable" warning.
 
 
@@ -63,7 +63,7 @@
 #ifdef V
 #define D3D_VERIFY(call) V(call)
 #else /* V */
-#define D3D_VERIFY(call) VERIFY(D3D_SUCCEEDED(hr = (call)))
+#define D3D_VERIFY(call) VERIFY(D3D_SUCCEEDED(__d3dv_hr = (call)))
 #endif /* V */
 
 
@@ -71,14 +71,14 @@
 #ifdef V_RETURN
 #define D3D_VERIFY_RETURN(call) V_RETURN(call)
 #else /* V_RETURN */
-#define D3D_VERIFY_RETURN(call) if (D3D_FAILED(hr = (call))) {                 \
+#define D3D_VERIFY_RETURN(call) if (D3D_FAILED(__d3dv_hr = (call))) {          \
     return __d3dv_hr;                                                          \
 }
 #endif /* V_RETURN */
 
 
-#define D3D_VERIFY_THROW(call) if (D3D_FAILED(hr = (call))) {                  \
-    throw vislib::graphics::d3d::D3DException(hr, __FILE__, __LINE__);         \
+#define D3D_VERIFY_THROW(call) if (D3D_FAILED(__d3dv_hr = (call))) {           \
+    throw vislib::graphics::d3d::D3DException(__d3dv_hr, __FILE__, __LINE__);  \
 }
 
 #if defined(_WIN32) && defined(_MANAGED)
