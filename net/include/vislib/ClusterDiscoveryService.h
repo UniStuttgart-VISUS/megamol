@@ -18,6 +18,7 @@
 #include "vislib/IPAddress.h"   // Must be included at begin!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
+#include "vislib/Interlocked.h"
 #include "vislib/IPAddress6.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/SingleLinkedList.h"
@@ -235,13 +236,14 @@ namespace net {
             return this->bindAddr;
         }
 
-        /**
-         * Answer the cluster identifier that is used for discovery.
+        /** 
+         * Answer the number of chances a node gets to respond before it is
+         * implicitly disconnected from the cluster.
          *
-         * @return The name.
+         * @return The number of chances for a node to answer.
          */
-        inline const StringA& GetName(void) const {
-            return this->name;
+        inline UINT GetCntResponseChances(void) const {
+            return this->cntResponseChances;
         }
 
         /**
@@ -269,13 +271,31 @@ namespace net {
         IPAddress6 GetDiscoveryAddress6(const PeerHandle& hPeer) const;
 
         /**
+         * Answer the cluster identifier that is used for discovery.
+         *
+         * @return The name.
+         */
+        inline const StringA& GetName(void) const {
+            return this->name;
+        }
+
+        /**
+         * Answer the interval between two discovery requests in milliseconds.
+         *
+         * @return The interval between two discovery  requests in milliseconds.
+         */
+        inline UINT GetRequestInterval(void) const {
+            return this->requestInterval;
+        }
+
+        /**
          * Answer the call back socket address that is sent to peer nodes 
          * when they are discovered. This address can be used to establish a
          * connection to our node in a application defined manner.
          *
          * @return The address sent as response.
          */
-        const IPEndPoint& GetResponseAddr(void) const {
+        inline const IPEndPoint& GetResponseAddr(void) const {
             return this->responseAddr;
         }
 
@@ -291,6 +311,17 @@ namespace net {
          */
         inline IPEndPoint GetUserComAddress(const PeerHandle& hPeer) const {
             return (*this)[hPeer];
+        }
+
+        /**
+         * Answer whether the discovery service will not send MSG_TYPE_IAMALIVE 
+         * for being added to the peer list of other nodes.
+         *
+         * @return true if the node is only observing other ones, false if it 
+         *         sending alive messages.
+         */
+        inline bool IsObserver(void) const {
+            return this->isObserver;
         }
 
         /**
@@ -392,6 +423,21 @@ namespace net {
          */
         UINT SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
             const void *msgBody, const SIZE_T msgSize);
+
+        /**
+         * Change the interval between two discovery requests.
+         *
+         * This method is thread-safe by means of interlocked access to the
+         * member.
+         *
+         * @param requestInterval The interval between two discovery  requests 
+         *                        in milliseconds.
+         */
+        inline void SetRequestInterval(const UINT requestInterval) {
+            sys::Interlocked::Exchange(
+                reinterpret_cast<INT32 *>(&this->requestInterval),
+                static_cast<INT32>(requestInterval));
+        }
 
         /**
          * Start the discovery service. The service starts broadcasting requests

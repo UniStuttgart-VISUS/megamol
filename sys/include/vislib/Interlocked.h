@@ -20,6 +20,7 @@
 //#include <asm/atomic.h>
 #endif /* _WIN32 */
 
+#include "vislib/assert.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/types.h"
 
@@ -45,6 +46,10 @@ namespace sys {
      * PAGE_NOCACHE modifier, as this may cause hardware faults on some 
      * processor architectures. To ensure ordering between reads and writer 
      * to PAGE_NOCACHE memory, use explicit memory barriers in your code.
+     *
+     * x64: The Windows version of 64-bit Interlocked functions required Windows
+     * XP SP2 or above (_WIN32_WINNT >= 0x0502). On Linux, there is currently no
+     * 64-bit support.
      */
     class Interlocked {
 
@@ -57,7 +62,7 @@ namespace sys {
          * Perform an atomic comparison of the specified 32-bit values and 
          * exchange them, based on the outcome of the comparison. If the 
          * variable at 'address' and 'comparand' are equal, the variable at
-         * 'address' is exchanged with 'exchange'. Otherwise, nothing is node.
+         * 'address' is exchanged with 'exchange'. Otherwise, nothing is done.
          *
          * @param address   Pointer to the destination value. The sign is 
          *                  ignored.
@@ -68,19 +73,59 @@ namespace sys {
          */
 #ifdef _WIN32
         __forceinline static INT32 CompareExchange(volatile INT32 *address, 
-                const INT32 exchange, const INT comparand) {
+                const INT32 exchange, const INT32 comparand) {
+            ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedCompareExchange(
-                reinterpret_cast<volatile LONG *>(address), exchange, 
-                comparand);
+                reinterpret_cast<volatile LONG *>(address), 
+                static_cast<LONG>(exchange),
+                static_cast<LONG>(comparand));
 #else /* _WIN32 */
         inline static INT32 CompareExchange(volatile INT32 *address, 
-                const INT32 exchange, const INT comparand) {
+                const INT32 exchange, const INT32 comparand) {
             INT32 retval;
             __asm__ __volatile__ ("lock; cmpxchgl %2, %0"
                 : "=m" (*address), "=a" (retval)
                 : "r" (exchange), "m" (*address), "a" (comparand)
                 : "memory");
             return retval;
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Perform an atomic comparison of the specified 64-bit values and 
+         * exchange them, based on the outcome of the comparison. If the 
+         * variable at 'address' and 'comparand' are equal, the variable at
+         * 'address' is exchanged with 'exchange'. Otherwise, nothing is done.
+         *
+         * @param address   Pointer to the destination value. The sign is 
+         *                  ignored.
+         * @param exchange  Exchange value. The sign is ignored. 
+         * @param comparand Value to compare to 'address'. The sign is ignored.
+         *
+         * @return The initial value of the variable designated by 'address'.
+         *
+         * @throws UnsupportedOperationException If the platform does not 
+         *                                       support 64 bit interlocked
+         *                                       operations.
+         */
+#ifdef _WIN32
+        __forceinline static INT64 CompareExchange(volatile INT64 *address, 
+                const INT64 exchange, const INT64 comparand) {
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
+            return ::InterlockedCompareExchange64(
+                reinterpret_cast<volatile LONGLONG *>(address),
+                static_cast<LONGLONG>(exchange),
+                static_cast<LONGLONG>(comparand));
+#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+            throw UnsupportedOperationException("Interlocked::CompareExchange",
+                __FILE__, __LINE__);
+#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+#else /* _WIN32 */
+        inline static INT64 CompareExchange(volatile INT64 *address, 
+                const INT64 exchange, const INT64 comparand) {
+            throw UnsupportedOperationException("Interlocked::CompareExchange",
+                __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
 
@@ -94,11 +139,41 @@ namespace sys {
          */
 #ifdef _WIN32
         __forceinline static INT32 Decrement(volatile INT32 *address) {
-            return ::InterlockedDecrement(reinterpret_cast<volatile LONG *>(
-                address));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
+            return ::InterlockedDecrement(
+                reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */
         inline INT32 static Decrement(volatile INT32 *address) {
             return (Interlocked::ExchangeAdd(address, -1) - 1);
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Decrement the value of the specified 64-bit variable designated by 
+         * and return the resulting value.
+         *
+         * @param address Pointer to the variable to be decremented.
+         *
+         * @return The new value of the variable.
+         *
+         * @throws UnsupportedOperationException If the platform does not 
+         *                                       support 64 bit interlocked
+         *                                       operations.
+         */
+#ifdef _WIN32
+        __forceinline static INT64 Decrement(volatile INT64 *address) {
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
+            return ::InterlockedDecrement64(
+                reinterpret_cast<volatile LONGLONG *>(address));
+#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+            throw UnsupportedOperationException("Interlocked::Decrement",
+                __FILE__, __LINE__);
+#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+#else /* _WIN32 */
+        inline INT64 static Decrement(volatile INT64 *address) {
+            throw UnsupportedOperationException("Interlocked::Decrement",
+                __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
 
@@ -113,23 +188,85 @@ namespace sys {
 #ifdef _WIN32
         __forceinline static INT32 Exchange(volatile INT32 *address, 
                 const INT32 value) {
-            return ::InterlockedExchange(reinterpret_cast<volatile LONG *>(
-                address), value);
+            ASSERT(sizeof(INT32) == sizeof(LONG));
+            return ::InterlockedExchange(
+                reinterpret_cast<volatile LONG *>(address),
+                static_cast<INT32>(value));
 #else /* _WIN32 */
-        inline static INT32 Exchange(volatile INT32 *address, 
+        inline static INT32 Exchange(volatile INT32 *address,
                 const INT32 value) {
-            // TODO: This implementation is crazy.
-            INT32 old, retval;
+            INT32 old;
+            do {
+                old = *address;
+            } while (Interlocked::CompareExchange(address, value, old) != old);
+            return old;
+#endif /* _WIN32 */
+        }
 
-            old = *address;
-            while (true) {
-                retval = Interlocked::CompareExchange(address, value, old);
-                if (retval == old) {
-                    return retval;
-                } else {
-                    old = retval;
-                }
-            }
+        /**
+         * Atomically exchange a pair of 64-bit values.
+         *
+         * @param address Address of the target variable.
+         * @param value   The new value of the variable.
+         *
+         * @return The old value of the variable designated by 'address'.
+         *
+         * @throws UnsupportedOperationException If the platform does not 
+         *                                       support 64 bit interlocked
+         *                                       operations.
+         */
+#ifdef _WIN32
+        __forceinline static INT64 Exchange(volatile INT64 *address,
+                const INT64 value) {
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
+            return ::InterlockedExchange(
+                reinterpret_cast<volatile LONGLONG *>(address),
+                static_cast<LONGLONG>(value));
+#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+            throw UnsupportedOperationException("Interlocked::Exchange",
+                __FILE__, __LINE__);
+#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+#else /* _WIN32 */
+        inline static INT64 Exchange(volatile INT64 *address,
+                const INT64 value) {
+            INT64 old;
+            do {
+                old = *address;
+            } while (Interlocked::CompareExchange(address, value, old) != old);
+            return old;
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Atomically exchange a pair of pointers.
+         *
+         * @param address Address of the target variable.
+         * @param value   The new value of the variable.
+         *
+         * @return The old value of the variable designated by 'address'.
+         */
+#ifdef _WIN32
+        __forceinline static void *Exchange(void *volatile *address,
+                const void *value) {
+#pragma warning(disable: 4311)
+#pragma warning(disable: 4312)
+            return InterlockedExchangePointer(address, value);
+#pragma warning(default: 4312)
+#pragma warning(default: 4311)
+#else /* _WIN32 */
+        inline static void *Exchange(void *volatile *address,
+                const void *value) {
+#if ((defined(__LP64__) || defined(_LP64) || defined(__x86_64__)) \
+&& ((__LP64__ != 0) || (_LP64 != 0) || (__x86_64__ != 0)))
+            return reinterpret_cast<void *>(Interlocked::Exchange(
+                reinterpret_cast<volatile INT64 *>(address), 
+                reinterpret_cast<INT64>(value)));
+#else /* #if ((defined(__LP64__) || defined(_LP64) || ... */
+            return reinterpret_cast<void *>(Interlocked::Exchange(
+                reinterpret_cast<volatile INT32 *>(address), 
+                reinterpret_cast<INT32>(value)));
+#endif /* #if ((defined(__LP64__) || defined(_LP64) || ... */
 #endif /* _WIN32 */
         }
 
@@ -146,10 +283,12 @@ namespace sys {
 #ifdef _WIN32
         __forceinline static INT32 ExchangeAdd(volatile INT32 *address, 
                 const INT32 value) {
-            return ::InterlockedExchangeAdd(reinterpret_cast<volatile LONG *>(
-                address), value);
+            ASSERT(sizeof(INT32) == sizeof(LONG));
+            return ::InterlockedExchangeAdd(
+                reinterpret_cast<volatile LONG *>(address),
+                static_cast<LONG>(value));
 #else /* _WIN32 */
-        inline static INT32 ExchangeAdd(volatile INT32 *address, 
+        inline static INT32 ExchangeAdd(volatile INT32 *address,
                 const INT32 value) {
             INT32 retval;
             __asm__ __volatile__("lock; xaddl %0, %1"
@@ -161,7 +300,41 @@ namespace sys {
         }
 
         /**
-         * Perform an atomic subtraction of a 32-bit increment value to a 32-bit
+         * Perform an atomic addition of a 64-bit increment value to a 64-bit 
+         * addend variable. 
+         *
+         * @param address Address of the addend variable.
+         * @param value   Value to be added to the variable at 'address'.
+         *
+         * @return Value of variable designated by 'address' prior to the 
+         *         operation.
+         *
+         * @throws UnsupportedOperationException If the platform does not 
+         *                                       support 64 bit interlocked
+         *                                       operations.
+         */
+#ifdef _WIN32
+        __forceinline static INT64 ExchangeAdd(volatile INT64 *address, 
+                const INT64 value) {
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
+            return ::InterlockedExchangeAdd64(
+                reinterpret_cast<volatile LONGLONG *>(address),
+                static_cast<LONGLONG>(value));
+#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+            throw UnsupportedOperationException("Interlocked::ExchangeAdd",
+                __FILE__, __LINE__);
+#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+#else /* _WIN32 */
+        inline static INT64 ExchangeAdd(volatile INT64 *address, 
+                const INT64 value) {
+            throw UnsupportedOperationException("Interlocked::ExchangeAdd",
+                __FILE__, __LINE__);
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Perform an atomic subtraction of a 32-bit decrement value to a 32-bit
          * variable. 
          *
          * @param address Address of the variable to modify.
@@ -173,11 +346,38 @@ namespace sys {
 #ifdef _WIN32
         __forceinline static INT32 ExchangeSub(volatile INT32 *address, 
                 const INT32 value) {
-            return ::InterlockedExchangeAdd(reinterpret_cast<volatile LONG *>(
-                address), -value);
+            ASSERT(sizeof(INT32) == sizeof(LONG));
+            return ::InterlockedExchangeAdd(
+                reinterpret_cast<volatile LONG *>(address), 
+                static_cast<LONG>(-value));
 #else /* _WIN32 */
         inline static INT32 ExchangeSub(volatile INT32 *address, 
                 const INT32 value) {
+            return Interlocked::ExchangeAdd(address, -value);
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Perform an atomic subtraction of a 64-bit decrement value to a 64-bit
+         * variable. 
+         *
+         * @param address Address of the variable to modify.
+         * @param value   Value to be subtracted from the variable at 'address'.
+         *
+         * @return Value of variable designated by 'address' prior to the 
+         *         operation.
+         *
+         * @throws UnsupportedOperationException If the platform does not 
+         *                                       support 64 bit interlocked
+         *                                       operations.
+         */
+#ifdef _WIN32
+        __forceinline static INT64 ExchangeSub(volatile INT64 *address,
+                const INT64 value) {
+            return Interlocked::ExchangeAdd(address, -value);
+#else /* _WIN32 */
+        inline static INT64 ExchangeAdd(volatile INT64 *address,
+                const INT64 value) {
             return Interlocked::ExchangeAdd(address, -value);
 #endif /* _WIN32 */
         }
@@ -192,10 +392,39 @@ namespace sys {
          */
 #ifdef _WIN32
         __forceinline static INT32 Increment(volatile INT32 *address) {
-            return ::InterlockedIncrement(reinterpret_cast<volatile LONG *>(
-                address));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
+            return ::InterlockedIncrement(
+                reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */
         inline static INT32 Increment(volatile INT32 *address) {
+            return (Interlocked::ExchangeAdd(address, 1) + 1);
+#endif /* _WIN32 */
+        }
+
+        /**
+         * Increment the value of the specified 64-bit variable designated by 
+         * and return the resulting value.
+         *
+         * @param address Pointer to the variable to be incremented.
+         *
+         * @return The new value of the variable.
+         *
+         * @throws UnsupportedOperationException If the platform does not 
+         *                                       support 64 bit interlocked
+         *                                       operations.
+         */
+#ifdef _WIN32
+        __forceinline static INT64 Increment(volatile INT64 *address) {
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
+#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
+            return ::InterlockedIncrement64(
+                reinterpret_cast<volatile LONGLONG *>(address));
+#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+            throw UnsupportedOperationException("Interlocked::Increment",
+                __FILE__, __LINE__);
+#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+#else /* _WIN32 */
+        inline static INT64 Increment(volatile INT64 *address) {
             return (Interlocked::ExchangeAdd(address, 1) + 1);
 #endif /* _WIN32 */
         }
@@ -203,7 +432,7 @@ namespace sys {
     private:
 
         /**
-         * Disallow instances. 
+         * Disallow instances.
          *
          * @throws UnsupportedOperationException Unconditionally.
          */

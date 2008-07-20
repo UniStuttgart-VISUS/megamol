@@ -14,6 +14,8 @@
 void TestInterlocked(void) {
     using vislib::sys::Interlocked;
     INT32 hugo = 0;
+    void *heinz = NULL;
+    void *horst = &hugo;
 
     hugo = 5;
     AssertEqual("Interlocked::Increment", Interlocked::Increment(&hugo), 6);
@@ -36,5 +38,8 @@ void TestInterlocked(void) {
 
     AssertEqual("Interlocked::Exchange", Interlocked::Exchange(&hugo, 10), 2);
     AssertEqual("Exchanged", hugo, 10);
+
+    AssertEqual("Interlocked::Exchange", Interlocked::Exchange(&heinz, horst), (void *) NULL);
+    AssertEqual("Exchanged", heinz, horst);
 }
 
