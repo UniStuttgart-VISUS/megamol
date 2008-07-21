@@ -57,6 +57,11 @@ namespace math {
         void AngleAndAxis(T& outAngle, Vector<T, 3>& outAxis) const;
 
         /**
+         * Conjugate the quaternion.
+         */
+        void Conjugate(void);
+
+        /**
          * Answer the i-component (= x-component) of the quaternion.
          *
          * @return The i-component.
@@ -161,6 +166,17 @@ namespace math {
          * Invert the quaternion.
          */
         void Invert(void);
+
+        /**
+         * Answer whether the quaternion is pure imaginary.
+         *
+         * This operation uses an epsilon compare for T.
+         *
+         * @return true If the real part is zero, false otherwise.
+         */
+        inline bool IsPure(void) const {
+            return IsEqual<T>(this->components[IDX_W], static_cast<T>(0));
+        }
 
         /**
          * Answer the norm of the quaternion.
@@ -320,6 +336,11 @@ namespace math {
             const AbstractQuaternion<T, Sp2>& b);
 
         /**
+         * Make this quaternion the square of itself.
+         */
+        void Square(void);
+
+        /**
          * Answer the w-component of the quaternion.
          *
          * @return The w-component.
@@ -438,6 +459,10 @@ namespace math {
          * Multiplies a quaternion and a vector. The result is the vector 'rhs'
          * rotated by the rotation that is defined through this quaternion.
          *
+         * Note: This multiplication does not compute the quaternion 
+         * multiplication *this * (rhs, 0), but the actual vector transformation
+         * that is equivalent to *this * (rhs, 0) * *this->Conjugate().
+         *
          * @param rhs The right hand side operand.
          *
          * @return The resulting vector.
@@ -527,6 +552,16 @@ namespace math {
         } 
 
         ASSERT(outAxis.IsNormalised());
+    }
+
+
+    /*
+     * vislib::math::AbstractQuaternion<T, S>::Conjugate
+     */
+    template<class T, class S> void AbstractQuaternion<T, S>::Conjugate(void) {
+        this->components[IDX_X] *= static_cast<T>(-1);
+        this->components[IDX_Y] *= static_cast<T>(-1);
+        this->components[IDX_Z] *= static_cast<T>(-1);
     }
 
 
@@ -643,6 +678,20 @@ namespace math {
 
 
     /*
+     * vislib::math::AbstractQuaternion<T, S>::Square
+     */
+    template<class T, class S> void AbstractQuaternion<T, S>::Square(void) {
+        T tmp = 2 * this->components[IDX_W];
+        this->components[IDX_W] = Sqr(this->components[IDX_W])
+            -(Sqr(this->components[IDX_X] + Sqr(this->components[IDX_Y]) 
+            + Sqr(this->components[IDX_Z])));
+        this->components[IDX_X] *= tmp;
+        this->components[IDX_Y] *= tmp;
+        this->components[IDX_Z] *= tmp;
+    }
+
+
+    /*
      * vislib::math::AbstractQuaternion<T, S>::operator =
      */
     template<class T, class S>
@@ -713,12 +762,12 @@ namespace math {
             this->components[IDX_W] * rhs.X() 
             + rhs.W() * this->components[IDX_X]
             + this->components[IDX_Y] * rhs.Z() 
-                - this->components[IDX_Z] * rhs.Y(),
+            - this->components[IDX_Z] * rhs.Y(),
 
             this->components[IDX_W] * rhs.Y() 
             + rhs.W() * this->components[IDX_Y] 
             + this->components[IDX_Z] * rhs.X() 
-                - this->components[IDX_X] * rhs.Z(),
+            - this->components[IDX_X] * rhs.Z(),
 
             this->components[IDX_W] * rhs.Z() 
             + rhs.W() * this->components[IDX_Z] 

@@ -220,7 +220,7 @@ namespace sys {
                 const INT64 value) {
             ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
-            return ::InterlockedExchange(
+            return ::InterlockedExchange64(
                 reinterpret_cast<volatile LONGLONG *>(address),
                 static_cast<LONGLONG>(value));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
@@ -251,7 +251,8 @@ namespace sys {
                 const void *value) {
 #pragma warning(disable: 4311)
 #pragma warning(disable: 4312)
-            return InterlockedExchangePointer(address, value);
+            return InterlockedExchangePointer(address, 
+                const_cast<void *>(value));
 #pragma warning(default: 4312)
 #pragma warning(default: 4311)
 #else /* _WIN32 */
@@ -376,7 +377,7 @@ namespace sys {
                 const INT64 value) {
             return Interlocked::ExchangeAdd(address, -value);
 #else /* _WIN32 */
-        inline static INT64 ExchangeAdd(volatile INT64 *address,
+        inline static INT64 ExchangeSub(volatile INT64 *address,
                 const INT64 value) {
             return Interlocked::ExchangeAdd(address, -value);
 #endif /* _WIN32 */
