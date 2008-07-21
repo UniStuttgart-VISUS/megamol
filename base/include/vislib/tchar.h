@@ -32,6 +32,9 @@ typedef wchar_t TCHAR;
 #define _vsntprintf vswprintf
 #define _tcscpy wcscpy
 #define _tsystem wsystem
+#define _tcscmp wcscmp
+#define _tcsicmp wcscasecmp
+#define _ttoi assert(false)
 
 #else /* defined(UNICODE) || defined(_UNICODE) */
 
@@ -46,6 +49,9 @@ typedef char TCHAR;
 #define _vsntprintf vsnprintf
 #define _tcscpy strcpy
 #define _tsystem system
+#define _tcscmp strcmp
+#define _tcsicmp strcasecmp
+#define _ttoi atoi
 
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 
