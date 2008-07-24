@@ -15,6 +15,7 @@
 #include "vislib/PtrArray.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
+#include "vislib/SynchronisedArray.h"
 
 
 void TestArray(void) {
@@ -110,6 +111,9 @@ void TestArray(void) {
     intPtrAry.Add(new int(5));
     intPtrAry.Add(new int(4));
     intPtrAry.Resize(1);
+
+
+    vislib::sys::SynchronisedArray<int> syncedIntArray;
 }
 
 

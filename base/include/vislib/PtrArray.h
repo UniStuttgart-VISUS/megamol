@@ -16,7 +16,7 @@
 
 
 #include "vislib/Array.h"
-#include "vislib/SingleAllocator.h"
+#include "vislib/ArrayElementPtrCtor.h"
 
 
 namespace vislib {
@@ -29,6 +29,9 @@ namespace vislib {
      * STORING OBJECTS ON THE HEAP THAT CAN BE DEALLOCATED BY THE GIVEN
      * ALLOCATOR!
      *
+     * For synchronisation of the PtrArray using the L template parameter,
+     * read the documentation of vislib::Array.
+     *
      * If you want to store pointers to single objects in the array, use 
      * SingleAllocator for A and allocate the objects using new. This is the 
      * default.
@@ -36,13 +39,13 @@ namespace vislib {
      * If you want to store pointers to arrays of objects in the array, use
      * ArrayAllocator for A and allocate the array using new[].
      */
-    template<class T, class A = SingleAllocator<T> > class PtrArray 
-            : public Array<T *> {
+    template<class T, class L = NullLockable, class A = SingleAllocator<T> >
+            class PtrArray : public Array<T *, L, ArrayElementPtrCtor<T, A> > {
 
     protected:
 
         /** Immediate superclass. */
-        typedef Array<T *> Super;
+        typedef Array<T *, L, ArrayElementPtrCtor<T, A> > Super;
 
     public:
 
@@ -72,72 +75,25 @@ namespace vislib {
 
         /** Dtor. */
         virtual ~PtrArray(void);
-
-    protected:
-
-        /**
-         * Construct element at 'inOutAddress'.
-         *
-         * This implementation sets the pointer designated by 'inOutAddress' 
-         * NULL.
-         *
-         * @param inOutAddress Pointer to the object to construct.
-         */
-        virtual void ctor(T **inOutAddress) const;
-
-        /**
-         * Destruct element at 'inOutAddress'.
-         *
-         * This implementation calls A::Deallocate on the pointer designated
-         * by 'inOutAddress'.
-         *
-         * @param inOutAddress Pointer to the object to destruct.
-         */
-        virtual void dtor(T **inOutAddress) const;
     };
 
 
     /*
-     * PtrArray<T, A>::PtrArray
+     * vislib::PtrArray<T, L, A>::PtrArray
      */
-    template<class T, class A> PtrArray<T, A>::PtrArray(const SIZE_T capacity) 
-            : Super(capacity) {
-        // No dynamic binding within ctor, so initialise all elements with
-        // NULL pointer by hand.
-        ::memset(this->elements, 0, this->capacity * sizeof(T *));
+    template<class T, class L , class A>
+    PtrArray<T, L, A>::PtrArray(const SIZE_T capacity) : Super(capacity) {
+        // Nothing to do. The constructor/destructor functor also works in
+        // ctor and dtor as it is not dependent on the virtual table.
     }
 
 
     /*
-     * vislib::PtrArray<T, A>::~PtrArray
+     * vislib::PtrArray<T, L, A>::~PtrArray
      */
-    template<class T, class A> PtrArray<T, A>::~PtrArray(void) {
-        // dtor() method does not work in dtor, because there is no dynamic
-        // binding within the dtor. Therefore, we deallocate the elements
-        // ourselves before the parent dtor deallocates the element array.
-        for (SIZE_T i = 0; i < this->count; i++) {
-            this->dtor(this->elements + i);
-        }
-        this->count = 0;
-    }
-
-
-    /*
-     * vislib::PtrArray<T, A>::ctor
-     */
-    template<class T, class A> 
-    void PtrArray<T, A>::ctor(T **inOutAddress) const {
-        inOutAddress = NULL;
-    }
-
-
-    /*
-     * vislib::PtrArray<T, A>::dtor
-     */
-    template<class T, class A> 
-    void PtrArray<T, A>::dtor(T **inOutAddress) const {
-        A::Deallocate(*inOutAddress);
-        inOutAddress = NULL;
+    template<class T, class L , class A> PtrArray<T, L, A>::~PtrArray(void) {
+        // Nothing to do. The constructor/destructor functor also works in
+        // ctor and dtor as it is not dependent on the virtual table.
     }
 
 } /* end namespace vislib */

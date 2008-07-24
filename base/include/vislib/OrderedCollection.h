@@ -130,7 +130,7 @@ namespace vislib {
     protected:
 
         /** Ctor. */
-        inline OrderedCollection(void) : Collection<T>() {}
+        inline OrderedCollection(void) : Collection<T, L>() {}
 
     };
     

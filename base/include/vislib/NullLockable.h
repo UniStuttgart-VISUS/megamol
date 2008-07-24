@@ -15,8 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace vislib {
+#include "vislib/forceinline.h"
 
+
+namespace vislib {
 
     /**
      * This class implements a 'Lockable' interface without any locking
@@ -24,6 +26,7 @@ namespace vislib {
      * but do not have to be threadsafe for performance reasons.
      */
     class NullLockable {
+
     public:
 
         /** Ctor. */
@@ -39,12 +42,7 @@ namespace vislib {
          * This implementation does nothing and therefore object using this
          * lockable are not threadsafe.
          */
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-        __forceinline 
-#else /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-        inline 
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-        void Lock(void) const {
+        VISLIB_FORCEINLINE void Lock(void) const {
             // intentionally empty
         }
 
@@ -55,12 +53,7 @@ namespace vislib {
          * This implementation does nothing and therefore object using this
          * lockable are not threadsafe.
          */
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-        __forceinline 
-#else /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-        inline 
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-        void Unlock(void) const {
+        VISLIB_FORCEINLINE void Unlock(void) const {
             // intentionally empty
         }
 

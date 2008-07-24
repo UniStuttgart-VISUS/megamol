@@ -286,6 +286,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ArrayElementDftCtor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ArrayElementPtrCtor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AssociativeCollection.cpp"
 				>
 			</File>
@@ -303,6 +311,10 @@
 			</File>
 			<File
 				RelativePath=".\src\Exception.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\forceinline.cpp"
 				>
 			</File>
 			<File
@@ -644,6 +656,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\ArrayElementDftCtor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ArrayElementPtrCtor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\assert.h"
 				>
 			</File>
@@ -669,6 +689,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Exception.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\forceinline.h"
 				>
 			</File>
 			<File
@@ -813,6 +837,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\StringTokeniser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\sys\include\vislib\SynchronisedArray.h"
 				>
 			</File>
 			<File

@@ -431,6 +431,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SynchronisedArray.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SyncObject.cpp"
 				>
 			</File>
@@ -642,6 +646,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SharedMemory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SynchronisedArray.h"
 				>
 			</File>
 			<File
