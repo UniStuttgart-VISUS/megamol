@@ -19,6 +19,8 @@
 #else /* _WIN32 */
 #include <sys/types.h>
 #endif /* _WIN32 */
+#include <stdio.h>
+#include <stdarg.h>
 
 #include "vislib/File.h"
 #include "vislib/String.h"
@@ -207,6 +209,46 @@ namespace sys {
      */
     key_t TranslateIpcName(const char *name);
 #endif /* !_WIN32 */
+
+    /**
+     * Writes a formatted string to a file. 'format' uses 'printf' syntax.
+     *
+     * @param out The file to which the formatted text line is written to.
+     * @param format The text line format string, similar to 'printf'.
+     *
+     * @return 'true' on success, 'false' it not all the data has been
+     *         written.
+     *
+     * @throws SystemException If there was an IO error.
+     */
+    template<class T>
+    bool WriteFormattedLineToFile(File &out,
+            const typename T::Char *format, ...) {
+        vislib::String<T> tmp;
+        va_list argptr;
+        va_start(argptr, format);
+        tmp.FormatVa(format, argptr);
+        va_end(argptr);
+        SIZE_T len = tmp.Length();
+        return file.Write(tmp.PeekBuffer(), len) == len;
+    }
+
+    /**
+     * Writes a string to a file.
+     *
+     * @param out The file to which the text line is written to.
+     * @param text The text line to be written.
+     *
+     * @return 'true' on success, 'false' it not all the data has been
+     *         written.
+     *
+     * @throws SystemException If there was an IO error.
+     */
+    template<class T>
+    bool WriteLineToFile(File &out, const typename T::Char *text) {
+        SIZE_T len = text.Length();
+        return file.Write(text.PeekBuffer(), len) == len;
+    }
 
     /**
      * Writes a text to a file. If the file exists and force is 'true' the
