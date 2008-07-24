@@ -371,6 +371,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Lockable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Log.cpp"
 				>
 			</File>
@@ -578,6 +582,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\LinuxDaemon.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Lockable.h"
 				>
 			</File>
 			<File

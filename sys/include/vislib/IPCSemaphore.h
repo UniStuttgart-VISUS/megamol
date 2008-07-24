@@ -21,6 +21,7 @@
 
 #include "vislib/SyncObject.h"
 #endif /* _WIN32 */
+#include "Lockable.h"
 
 
 namespace vislib {
@@ -209,7 +210,12 @@ namespace sys {
 #endif /* !_WIN32 */
 
     };
-    
+
+
+    /** name typedef for Lockable with this SyncObject */
+    typedef Lockable<IPCSemaphore> IPCSemaphoreLockable;
+
+
 } /* end namespace sys */
 } /* end namespace vislib */
 

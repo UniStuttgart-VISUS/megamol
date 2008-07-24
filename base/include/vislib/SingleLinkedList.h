@@ -21,15 +21,18 @@
 #include "vislib/NoSuchElementException.h"
 #include "vislib/assert.h"
 #include "vislib/OrderedCollection.h"
+#include "vislib/NullLockable.h"
 
 
 namespace vislib {
 
 
     /**
-     * class of a single linked list of object from type T
+     * class of a single linked list of object from type T. Class L is a
+     * 'Lockable' for synchronisation of all commands.
      */
-    template <class T> class SingleLinkedList : public OrderedCollection<T> {
+    template <class T, class L = NullLockable> class SingleLinkedList
+        : public OrderedCollection<T, L> {
     private:
 
         /** Type for storing items */
@@ -45,13 +48,18 @@ namespace vislib {
          */
         class Iterator: public vislib::Iterator<T> {
         public:
-            friend class SingleLinkedList<T>;
+            friend class SingleLinkedList<T, L>;
 
             /** default ctor */
             Iterator(void);
 
-            /** copy ctor for assignment */
-            Iterator(const Iterator& rhs);
+            /**
+             * copy ctor for assignment
+             *
+             * @param rhs The source object to clone from.
+             */
+            template<class Lp>
+            Iterator(const typename SingleLinkedList<T, Lp>::Iterator& rhs);
 
             /** Dtor. */
             virtual ~Iterator(void);
@@ -66,8 +74,15 @@ namespace vislib {
              */
             virtual T& Next(void);
 
-            /** assignment operator */
-            Iterator& operator=(const Iterator& rhs);
+            /**
+             * assignment operator
+             *
+             * @param rhs The right hand side operand.
+             *
+             * @return A reference to 'this'.
+             */
+            template<class Lp>
+            Iterator& operator=(const typename SingleLinkedList<T, Lp>::Iterator& rhs);
 
         private:
 
@@ -91,7 +106,8 @@ namespace vislib {
          *
          * @param rhs The linked list to copy from.
          */
-        SingleLinkedList(const SingleLinkedList<T>& rhs);
+        template<class Lp>
+        SingleLinkedList(const SingleLinkedList<T, Lp>& rhs);
 
         /** Dtor. */
         virtual ~SingleLinkedList(void);
@@ -182,6 +198,7 @@ namespace vislib {
          * @return true, if the collection is empty, false otherwise.
          */
         virtual inline bool IsEmpty(void) const {
+            // no need to sync here (this race condition is acceptable)
             return this->first == NULL;
         }
 
@@ -209,7 +226,8 @@ namespace vislib {
          *
          * @param from The list to be merged from
          */
-        void Merge(SingleLinkedList<T> &from);
+        template<class Lp>
+        void Merge(SingleLinkedList<T, Lp> &from);
 
         /**
          * Adds an item to the beginning of the list. Runtime complexity: O(1)
@@ -272,6 +290,9 @@ namespace vislib {
 
         /**
          * Returns an Iterator to the list, pointing before the first element.
+         * Note that iterators are never threadsafe! You should manually lock
+         * the collection if you use an iterator in a multithreading
+         * environment.
          *
          * @return An iterator to the list.
          */
@@ -285,7 +306,8 @@ namespace vislib {
          *
          * @return Reference to this list.
          */
-        SingleLinkedList<T>& operator=(const SingleLinkedList<T>& rhs);
+        template<class Lp>
+        SingleLinkedList<T, L>& operator=(const SingleLinkedList<T, Lp>& rhs);
 
         /**
          * Compare operator. Two single linked lists are equal if the elements
@@ -295,8 +317,8 @@ namespace vislib {
          *
          * @return if the lists are considered equal
          */
-        bool operator==(const SingleLinkedList<T>& rhs) const;
-
+        template<class Lp>
+        bool operator==(const SingleLinkedList<T, Lp>& rhs) const;
 
     private:
 
@@ -335,47 +357,53 @@ namespace vislib {
 
 
     /*
-     * SingleLinkedList<T>::Iterator::Iterator
+     * SingleLinkedList<T, L>::Iterator::Iterator
      */
-    template<class T>
-    SingleLinkedList<T>::Iterator::Iterator(void) : next(NULL), prev(NULL) {
+    template<class T, class L>
+    SingleLinkedList<T, L>::Iterator::Iterator(void)
+            : next(NULL), prev(NULL) {
+        // intentionally empty
     }
 
 
     /*
-     * SingleLinkedList<T>::Iterator::Iterator
+     * SingleLinkedList<T, L>::Iterator::Iterator
      */
-    template<class T>
-    SingleLinkedList<T>::Iterator::Iterator(const typename SingleLinkedList<T>::Iterator& rhs) 
-        : next(rhs.next), prev(rhs.prev) {
+    template<class T, class L> template<class Lp>
+    SingleLinkedList<T, L>::Iterator::Iterator(
+            const typename SingleLinkedList<T, Lp>::Iterator& rhs) 
+            : next(rhs.next), prev(rhs.prev) {
+        // intentionally empty
     }
 
 
     /*
-     * SingleLinkedList<T>::Iterator::~Iterator
+     * SingleLinkedList<T, L>::Iterator::~Iterator
      */
-    template<class T>
-    SingleLinkedList<T>::Iterator::~Iterator(void) {
+    template<class T, class L>
+    SingleLinkedList<T, L>::Iterator::~Iterator(void) {
+        // intentionally empty
     }
 
 
     /*
-     * SingleLinkedList<T>::Iterator::HasNext
+     * SingleLinkedList<T, L>::Iterator::HasNext
      */
-    template<class T>
-    bool SingleLinkedList<T>::Iterator::HasNext(void) const {
+    template<class T, class L>
+    bool SingleLinkedList<T, L>::Iterator::HasNext(void) const {
         return (this->next != NULL);
     }
 
 
     /*
-     * SingleLinkedList<T>::Iterator::HasNext
+     * SingleLinkedList<T, L>::Iterator::HasNext
      */
-    template<class T>
-    T& SingleLinkedList<T>::Iterator::Next(void) {
+    template<class T, class L>
+    T& SingleLinkedList<T, L>::Iterator::Next(void) {
         this->prev = this->next;
         if (!this->next) {
-            throw IllegalStateException("No next element.", __FILE__, __LINE__);
+            throw IllegalStateException("No next element.",
+                __FILE__, __LINE__);
         }
         this->next = this->next->next;
         return this->prev->item;
@@ -383,12 +411,12 @@ namespace vislib {
 
 
     /*
-     * SingleLinkedList<T>::Iterator::operator=
+     * SingleLinkedList<T, L>::Iterator::operator=
      */
-    template<class T>
-    typename SingleLinkedList<T>::Iterator& 
-        SingleLinkedList<T>::Iterator::operator=(
-            const typename SingleLinkedList<T>::Iterator& rhs) {
+    template<class T, class L> template<class Lp>
+    typename SingleLinkedList<T, L>::Iterator& 
+        SingleLinkedList<T, L>::Iterator::operator=(
+            const typename SingleLinkedList<T, Lp>::Iterator& rhs) {
         this->next = rhs.next;
         this->prev = rhs.prev;
         return *this;
@@ -396,46 +424,51 @@ namespace vislib {
 
 
     /*
-     * SingleLinkedList<T>::Iterator::Iterator
+     * SingleLinkedList<T, L>::Iterator::Iterator
      */
-    template<class T>
-    SingleLinkedList<T>::Iterator::Iterator(SingleLinkedList<T> &parent) 
-        : next(parent.first), prev(NULL) {
+    template<class T, class L>
+    SingleLinkedList<T, L>::Iterator::Iterator(SingleLinkedList<T, L> &parent)
+            : next(parent.first), prev(NULL) {
+        // intentionally empty
     }
 
 
     /*
-     * SingleLinkedList<T>::SingleLinkedList
+     * SingleLinkedList<T, L>::SingleLinkedList
      */
-    template<class T>
-    SingleLinkedList<T>::SingleLinkedList(void) : OrderedCollection<T>(), first(NULL), last(NULL) {
+    template<class T, class L>
+    SingleLinkedList<T, L>::SingleLinkedList(void)
+            : OrderedCollection<T, L>(), first(NULL), last(NULL) {
+        // intentionally empty
     }
 
 
     /*
-     * SingleLinkedList<T>::SingleLinkedList
+     * SingleLinkedList<T, L>::SingleLinkedList
      */
-    template<class T>
-    SingleLinkedList<T>::SingleLinkedList(const SingleLinkedList<T>& rhs)
-        : OrderedCollection<T>(), first(NULL), last(NULL) {
+    template<class T, class L> template<class Lp>
+    SingleLinkedList<T, L>::SingleLinkedList(
+            const SingleLinkedList<T, Lp>& rhs)
+            : OrderedCollection<T, L>(), first(NULL), last(NULL) {
         *this = rhs;
     }
 
 
     /*
-     * SingleLinkedList<T>::~SingleLinkedList
+     * SingleLinkedList<T, L>::~SingleLinkedList
      */
-    template<class T>
-    SingleLinkedList<T>::~SingleLinkedList(void) {
+    template<class T, class L>
+    SingleLinkedList<T, L>::~SingleLinkedList(void) {
         this->Clear();
     }
 
 
     /*
-     * SingleLinkedList<T>::Append
+     * SingleLinkedList<T, L>::Append
      */
-    template<class T>
-    void SingleLinkedList<T>::Append(const T& item) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::Append(const T& item) {
+        this->Lock();
         if (this->last) {
             this->last->next = new Item;
             this->last = this->last->next;
@@ -444,127 +477,175 @@ namespace vislib {
         }
         this->last->next = NULL;
         this->last->item = item;
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::Clear
+     * SingleLinkedList<T, L>::Clear
      */
-    template<class T>
-    void SingleLinkedList<T>::Clear(void) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::Clear(void) {
+        this->Lock();
         while (first) {
             last = first->next;
             delete first;
             first = last;
         }
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::Contains
+     * SingleLinkedList<T, L>::Contains
      */
-    template<class T>
-    bool SingleLinkedList<T>::Contains(const T& item) const {
+    template<class T, class L>
+    bool SingleLinkedList<T, L>::Contains(const T& item) const {
+        this->Lock();
         const Item *i = this->first;
         while(i) {
-            if (i->item == item) return true;
+            if (i->item == item) {
+                this->Unlock();
+                return true;
+            }
             i = i->next;
         }
+        this->Unlock();
         return false;
     }
 
 
     /*
-     * SingleLinkedList<T>::Count 
+     * SingleLinkedList<T, L>::Count 
      */
-    template<class T>
-    SIZE_T SingleLinkedList<T>::Count(void) const {
+    template<class T, class L>
+    SIZE_T SingleLinkedList<T, L>::Count(void) const {
         unsigned int c = 0;
+        this->Lock();
         Item *i = this->first;
         while (i) {
             c++;
             i = i->next;
         }
+        this->Unlock();
         return c;
     }
 
 
     /*
-     * SingleLinkedList<T>::Find
+     * SingleLinkedList<T, L>::Find
      */
-    template<class T>
-    const T *SingleLinkedList<T>::Find(const T& element) const {
+    template<class T, class L>
+    const T *SingleLinkedList<T, L>::Find(const T& element) const {
+        this->Lock();
         const Item *i = this->first;
         while(i) {
-            if (i->item == element) return &i->item;
+            if (i->item == element) {
+                this->Unlock();
+                return &i->item;
+            }
             i = i->next;
         }
+        this->Unlock();
         return NULL;
     }
 
 
     /*
-     * SingleLinkedList<T>::Find
+     * SingleLinkedList<T, L>::Find
      */
-    template<class T> T *SingleLinkedList<T>::Find(const T& element) {
+    template<class T, class L>
+    T *SingleLinkedList<T, L>::Find(const T& element) {
+        this->Lock();
         Item *i = this->first;
         while(i) {
-            if (i->item == element) return &i->item;
+            if (i->item == element) {
+                this->Unlock();
+                return &i->item;
+            }
             i = i->next;
         }
+        this->Unlock();
         return NULL;
     }
 
 
     /*
-     * SingleLinkedList<T>::First
+     * SingleLinkedList<T, L>::First
      */
-    template<class T> const T& SingleLinkedList<T>::First(void) const {
+    template<class T, class L>
+    const T& SingleLinkedList<T, L>::First(void) const {
+        this->Lock();
         if (this->first == NULL) {
-            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+            this->Unlock();
+            throw vislib::NoSuchElementException("List is empty",
+                __FILE__, __LINE__);
         }
-        return this->first->item;
+        const T& retval = this->first->item;
+        this->Unlock();
+        return retval;
     }
 
 
     /*
-     * SingleLinkedList<T>::First
+     * SingleLinkedList<T, L>::First
      */
-    template<class T> T& SingleLinkedList<T>::First(void) {
+    template<class T, class L> T& SingleLinkedList<T, L>::First(void) {
+        this->Lock();
         if (this->first == NULL) {
-            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+            this->Unlock();
+            throw vislib::NoSuchElementException("List is empty",
+                __FILE__, __LINE__);
         }
-        return this->first->item;
+        T& retval = this->first->item;
+        this->Unlock();
+        return retval;
     }
 
 
     /*
-     * SingleLinkedList<T>::Last
+     * SingleLinkedList<T, L>::Last
      */
-    template<class T> const T& SingleLinkedList<T>::Last(void) const {
+    template<class T, class L>
+    const T& SingleLinkedList<T, L>::Last(void) const {
+        this->Lock();
         if (this->last == NULL) {
-            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+            this->Unlock();
+            throw vislib::NoSuchElementException("List is empty",
+                __FILE__, __LINE__);
         }
-        return this->last->item;
+        const T& retval = this->last->item;
+        this->Unlock();
+        return retval;
     }
 
 
     /*
-     * SingleLinkedList<T>::Last
+     * SingleLinkedList<T, L>::Last
      */
-    template<class T> T& SingleLinkedList<T>::Last(void) {
+    template<class T, class L> T& SingleLinkedList<T, L>::Last(void) {
+        this->Lock();
         if (this->last == NULL) {
-            throw vislib::NoSuchElementException("List is empty", __FILE__, __LINE__);
+            this->Unlock();
+            throw vislib::NoSuchElementException("List is empty",
+                __FILE__, __LINE__);
         }
-        return this->last->item;
+        T& retval = this->last->item;
+        this->Unlock();
+        return retval;
     }
 
 
     /*
-     * SingleLinkedList<T>::Merge
+     * SingleLinkedList<T, L>::Merge
      */
-    template<class T> void SingleLinkedList<T>::Merge(SingleLinkedList<T> &from) {
+    template<class T, class L> template<class Lp>
+    void SingleLinkedList<T, L>::Merge(SingleLinkedList<T, Lp> &from) {
+        this->Lock();
+        from->Lock();
         if ((this == &from) || (from.first == NULL)) {
+            this->Unlock();
+            from->Unlock();
             return; // invalid pair of operands or from is empty
         }
         if (this->first == NULL) {
@@ -574,29 +655,34 @@ namespace vislib {
         }
         this->last = from.last;
         from.first = from.last = NULL;
+        this->Unlock();
+        from->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::Prepend
+     * SingleLinkedList<T, L>::Prepend
      */
-    template<class T>
-    void SingleLinkedList<T>::Prepend(const T& item) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::Prepend(const T& item) {
         Item *i = new Item;
+        this->Lock();
         i->next = this->first;
         this->first = i;
         if (!this->last) {
             this->last = this->first;
         }
         i->item = item;
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::Remove
+     * SingleLinkedList<T, L>::Remove
      */
-    template<class T>
-    void SingleLinkedList<T>::Remove(const T& item) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::Remove(const T& item) {
+        this->Lock();
         Item *i = this->first, *j = NULL;
         while(i) {
             if (i->item == item) {
@@ -622,14 +708,16 @@ namespace vislib {
                 i = i->next;
             }
         }
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::RemoveAll
+     * SingleLinkedList<T, L>::RemoveAll
      */
-    template<class T>
-    void SingleLinkedList<T>::RemoveAll(const T& item) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::RemoveAll(const T& item) {
+        this->Lock();
         Item *i = this->first, *j = NULL;
         while(i) {
             if (i->item == item) {
@@ -654,20 +742,23 @@ namespace vislib {
                 i = i->next;
             }
         }
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::Remove
+     * SingleLinkedList<T, L>::Remove
      */
-    template<class T>
-    void SingleLinkedList<T>::Remove(
-            typename SingleLinkedList<T>::Iterator& iter) {
-        Item *i = this->first;
+    template<class T, class L>
+    void SingleLinkedList<T, L>::Remove(
+            typename SingleLinkedList<T, L>::Iterator& iter) {
         if (iter.prev == NULL) {
             throw IllegalParamException("Invalid Iterator state", 
                 __FILE__, __LINE__);
         }
+
+        this->Lock();
+        Item *i = this->first;
 
         if (this->first == iter.prev) {
             this->first = this->first->next;
@@ -682,31 +773,38 @@ namespace vislib {
                 if (i->next == NULL) this->last = i;
                 delete iter.prev;
             } else {
+                this->Unlock();
                 throw IllegalParamException("Invalid Iterator", 
                     __FILE__, __LINE__);
             }
         }
         iter.prev = NULL;
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::RemoveFirst
+     * SingleLinkedList<T, L>::RemoveFirst
      */
-    template<class T> void SingleLinkedList<T>::RemoveFirst(void) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::RemoveFirst(void) {
+        this->Lock();
         if (this->first) {
             Item *i = this->first;
             this->first = this->first->next;
             if (!this->first) this->last = NULL;
             delete i;
         }
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::RemoveLast
+     * SingleLinkedList<T, L>::RemoveLast
      */
-    template<class T> void SingleLinkedList<T>::RemoveLast(void) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::RemoveLast(void) {
+        this->Lock();
         if (this->last) {
             Item *newlast = NULL;
             if (this->first != this->last) {
@@ -721,14 +819,16 @@ namespace vislib {
             delete this->last;
             this->last = newlast;
         }
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::Sort
+     * SingleLinkedList<T, L>::Sort
      */
-    template<class T>
-    void SingleLinkedList<T>::Sort(int (*comparator)(const T& lhs, const T& rhs)) {
+    template<class T, class L>
+    void SingleLinkedList<T, L>::Sort(int (*comparator)(const T& lhs, const T& rhs)) {
+        this->Lock();
         if ((this->first == this->last) || (this->first == NULL)) {
             return;
         }
@@ -739,62 +839,76 @@ namespace vislib {
         while (this->last->next != NULL) {
             this->last = this->last->next;
         }
+        this->Unlock();
     }
 
 
     /*
-     * SingleLinkedList<T>::GetIterator
+     * SingleLinkedList<T, L>::GetIterator
      */
-    template<class T>
-    typename SingleLinkedList<T>::Iterator SingleLinkedList<T>::GetIterator(void) {
+    template<class T, class L>
+    typename SingleLinkedList<T, L>::Iterator
+    SingleLinkedList<T, L>::GetIterator(void) {
         return Iterator(*this);
     }
 
 
     /*
-     * SingleLinkedList<T>::operator=
+     * SingleLinkedList<T, L>::operator=
      */
-    template<class T>
-    SingleLinkedList<T>& SingleLinkedList<T>::operator=(const SingleLinkedList<T>& rhs) {
+    template<class T, class L> template<class Lp>
+    SingleLinkedList<T, L>& SingleLinkedList<T, L>::operator=(
+            const SingleLinkedList<T, Lp>& rhs) {
         if (this == &rhs) {
             return *this;
         }
 
+        this->Lock();
+
         // might be implemented more intelligent reusing the item object 
         //  already present in this
         this->Clear();
-        Iterator it = const_cast<SingleLinkedList<T>&>(rhs).GetIterator();
+        SingleLinkedList<T, Lp>::Iterator it
+            = const_cast<SingleLinkedList<T, Lp>&>(rhs).GetIterator();
         while(it.HasNext()) {
             this->Append(it.Next());
         }
+
+        this->Unlock();
 
         return *this;
     }
 
 
     /*
-     * SingleLinkedList<T>::operator==
+     * SingleLinkedList<T, L>::operator==
      */
-    template<class T>
-    bool SingleLinkedList<T>::operator==(const SingleLinkedList<T>& rhs) const {
+    template<class T, class L> template<class Lp>
+    bool SingleLinkedList<T, L>::operator==(
+            const SingleLinkedList<T, Lp>& rhs) const {
+        this->Lock();
         const Item *i = this->first;
         const Item *j = rhs.first;
 
         while (i) {
-            if ((!j) || (!(i->item == j->item))) return false;
+            if ((!j) || (!(i->item == j->item))) {
+                this->Unlock();
+                return false;
+            }
             i = i->next;
             j = j->next;
         }
+        this->Unlock();
 
         return (j == NULL);
     }
 
 
     /*
-     * SingleLinkedList<T>::mergeSort
+     * SingleLinkedList<T, L>::mergeSort
      */
-    template<class T>
-    typename SingleLinkedList<T>::Item * SingleLinkedList<T>::mergeSort(
+    template<class T, class L>
+    typename SingleLinkedList<T, L>::Item * SingleLinkedList<T, L>::mergeSort(
             int (*comparator)(const T& lhs, const T& rhs)) {
         //*
 
@@ -905,12 +1019,13 @@ namespace vislib {
 
 
     /*
-     * SingleLinkedList<T>::mergeSortMerge
+     * SingleLinkedList<T, L>::mergeSortMerge
      */
-    template<class T>
-    typename SingleLinkedList<T>::Item *SingleLinkedList<T>::mergeSortMerge(
-            typename SingleLinkedList<T>::Item *left, 
-            typename SingleLinkedList<T>::Item *right, 
+    template<class T, class L>
+    typename SingleLinkedList<T, L>::Item *
+        SingleLinkedList<T, L>::mergeSortMerge(
+            typename SingleLinkedList<T, L>::Item *left, 
+            typename SingleLinkedList<T, L>::Item *right, 
             int (*comparator)(const T& lhs, const T& rhs)) {
         Item *retval, *cur;
 

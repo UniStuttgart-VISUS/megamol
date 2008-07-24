@@ -390,6 +390,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\NullLockable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\OrderedCollection.cpp"
 				>
 			</File>
@@ -648,6 +652,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AutoLock.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\CharTraits.h"
 				>
 			</File>
@@ -717,6 +725,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\NoSuchElementException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\NullLockable.h"
 				>
 			</File>
 			<File

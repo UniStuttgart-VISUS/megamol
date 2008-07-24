@@ -16,6 +16,7 @@
 
 
 #include "vislib/Collection.h"
+#include "vislib/NullLockable.h"
 
 
 namespace vislib {
@@ -26,8 +27,15 @@ namespace vislib {
      * elements in a specific order. Therefore, it is possible to access the 
      * first and the last element and append and prepend new elements. The 
      * ordered collection can also be sorted.
+     * The template parameter L specifies a Lockable class which is used for
+     * synchronisation in a multi-thread environment. If 'NullLockable' is
+     * used, the collections must be considdered to be not threadsafe.
+     *
+     * TODO: Remove default use of 'NullLockable' as soon as all collections
+     *       have been fixed.
      */
-    template<class T> class OrderedCollection : public Collection<T> {
+    template<class T, class L = NullLockable> class OrderedCollection
+        : public Collection<T, L> {
 
     public:
 
@@ -128,9 +136,10 @@ namespace vislib {
     
 
     /*
-     * vislib::OrderedCollection<T>::~OrderedCollection
+     * vislib::OrderedCollection<T, L>::~OrderedCollection
      */
-    template<class T> OrderedCollection<T>::~OrderedCollection(void) {
+    template<class T, class L>
+    OrderedCollection<T, L>::~OrderedCollection(void) {
     }
 
 } /* end namespace vislib */

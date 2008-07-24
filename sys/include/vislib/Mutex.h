@@ -21,6 +21,7 @@
 #include <pthread.h>
 #endif /* _WIN32 */
 
+#include "Lockable.h"
 #include "SyncObject.h"
 
 
@@ -113,6 +114,11 @@ namespace sys {
 
 #endif /* _WIN32 */
 	};
+
+
+    /** name typedef for Lockable with this SyncObject */
+    typedef Lockable<Mutex> MutexLockable;
+
 
 } /* end namespace sys */
 } /* end namespace vislib */

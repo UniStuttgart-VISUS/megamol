@@ -16,6 +16,7 @@
 
 
 #include "vislib/memutils.h"
+#include "vislib/NullLockable.h"
 #include "vislib/types.h"
 
 
@@ -25,8 +26,14 @@ namespace vislib {
 
     /**
      * This is the abstract superclass of collections in the vislib.
+     * The template parameter L specifies a Lockable class which is used for
+     * synchronisation in a multi-thread environment. If 'NullLockable' is
+     * used, the collections must be considdered to be not threadsafe.
+     *
+     * TODO: Remove default use of 'NullLockable' as soon as all collections
+     *       have been fixed.
      */
-    template<class T> class Collection {
+    template<class T, class L = NullLockable> class Collection: public L {
 
     public:
 
@@ -125,15 +132,15 @@ namespace vislib {
     protected:
 
         /** Ctor. */
-        inline Collection(void) {}
+        inline Collection(void) : L() {}
 
     };
 
 
     /*
-     * vislib::Collection<T>::~Collection
+     * vislib::Collection<T, L>::~Collection
      */
-    template<class T> Collection<T>::~Collection(void) {
+    template<class T, class L> Collection<T, L>::~Collection(void) {
     }
 
 } /* end namespace vislib */

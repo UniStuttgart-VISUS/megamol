@@ -22,6 +22,7 @@
 #include <semaphore.h>
 #endif /* _WIN32 */
 
+#include "Lockable.h"
 #include "vislib/SyncObject.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
@@ -202,6 +203,11 @@ namespace sys {
 
 #endif /* _WIN32 */
     };
+
+
+    /** name typedef for Lockable with this SyncObject */
+    typedef Lockable<Semaphore> SemaphoreLockable;
+
 
 } /* end namespace sys */
 } /* end namespace vislib */
