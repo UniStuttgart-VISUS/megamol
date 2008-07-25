@@ -32,9 +32,9 @@ namespace sys {
 
         /** possible values of operating system types */
         enum OSType {
-            OS_UNKNOWN,
-            OS_WINDOWS,
-            OS_LINUX
+            OSTYPE_UNKNOWN,
+            OSTYPE_WINDOWS,
+            OSTYPE_LINUX
         };
 
         /** This dimension defines a monitor size. */

@@ -425,9 +425,9 @@ unsigned int vislib::sys::SystemInformation::SelfWordSize(void) {
 vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemType(void) {
     /* I'm currently very sure that the system type can be determined by the application type */
 #ifdef _WIN32
-    return OS_WINDOWS;
+    return OSTYPE_WINDOWS;
 #else
-    return OS_LINUX;
+    return OSTYPE_LINUX;
 #endif
 }
 
