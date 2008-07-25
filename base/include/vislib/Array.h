@@ -963,7 +963,7 @@ namespace vislib {
          * array.
          */
         if (capacity < this->capacity) {
-            for (SIZE_T i = capacity; i < this->count; i++) {
+            for (SIZE_T i = capacity; i < this->capacity; i++) {
                 C::Dtor(this->elements + i);
             }
 

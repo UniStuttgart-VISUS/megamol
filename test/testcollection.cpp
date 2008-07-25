@@ -109,8 +109,18 @@ void TestArray(void) {
 
     PtrArray<int> intPtrAry;
     intPtrAry.Add(new int(5));
+    AssertEqual("Added pointer to 5", *(intPtrAry[0]), 5);
+    
     intPtrAry.Add(new int(4));
+    AssertEqual("Added pointer to 4", *(intPtrAry[1]), 4);
+    
     intPtrAry.Resize(1);
+    AssertEqual("Removed all but first element", intPtrAry.Count(), SIZE_T(1));
+    AssertEqual("First element was not changed", *(intPtrAry[0]), 5);
+
+    intPtrAry.Clear(true);
+    AssertEqual("Removed all elements", intPtrAry.Count(), SIZE_T(0));
+    AssertEqual("Deallocated whole array", intPtrAry.Capacity(), SIZE_T(0));
 
 
     vislib::sys::SynchronisedArray<int> syncedIntArray;
