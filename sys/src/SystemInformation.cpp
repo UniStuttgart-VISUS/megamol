@@ -391,9 +391,9 @@ unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
  */
 vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SelfSystemType(void) {
 #ifdef _WIN32
-    return OS_WINDOWS;
+    return OSTYPE_WINDOWS;
 #else
-    return OS_LINUX;
+    return OSTYPE_LINUX;
 #endif
 }
 
