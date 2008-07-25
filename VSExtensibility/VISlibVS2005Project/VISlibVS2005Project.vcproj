@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="VISlibVS2005Project"
 	ProjectGUID="{4B50CAC8-32F2-405F-90A4-FC10C49A861E}"
 	RootNamespace="VISlibVS2005Project"
 	Keyword="CustomAppWizProj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform

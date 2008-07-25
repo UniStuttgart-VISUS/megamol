@@ -34,7 +34,7 @@ if ($Bits -eq "32") {
     # @echo Generating $(InputDir)\include\glh\glh_genext.h" from "$(InputDir)\include\glh\extfile.txt" ...
     # "$(InputDir)\include\glh\$(ConfigurationName)\glh.exe" "$(InputDir)\include\glh\glh_genext.h" "$(InputDir)\include\glh\extfile.txt"
 
-    & "$VCInstallDir\vcpackages\vcbuild.exe" "$InputDir\include\glh\glh.vcproj" "$ConfigurationName" /useenv /nologo /override:"$InputDir\glhSettings.vsprops"
+    & "$VCInstallDir\vcpackages\vcbuild.exe" "$InputDir\include\glh\glh.vcproj" "$ConfigurationName" /useenv /nologo /upgrade /override:"$InputDir\glhSettings.vsprops"
 }
 
 if ($Bits -eq "64") {
@@ -53,7 +53,7 @@ if ($Bits -eq "64") {
     };
     $proj.Save("$InputDir\include\glh\glh64crowbar.vcproj");
 
-    & "$VCInstallDir\vcpackages\vcbuild.exe" "$InputDir\include\glh\glh64crowbar.vcproj" "$ConfigurationName" /nologo /platform:Win32 /override:"$InputDir\glhSettings.vsprops"
+    & "$VCInstallDir\vcpackages\vcbuild.exe" "$InputDir\include\glh\glh64crowbar.vcproj" "$ConfigurationName" /nologo /upgrade /platform:Win32 /override:"$InputDir\glhSettings.vsprops"
 
     del "$InputDir\include\glh\glh64crowbar.vcproj"
 }
