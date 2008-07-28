@@ -33,6 +33,13 @@ namespace vislib {
 
     public:
 
+        /** The type of the object handled by the allocator.*/
+        typedef T TargetType;
+
+        /** The pointer type that is handled by the allocator. */
+        typedef T *TargetPtrType;
+
+
         /**
          * Allocates 'cnt' contiguous objects of type T.
          *
@@ -42,7 +49,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc If the memory could not be allocated.
          */
-        static inline T *Allocate(const SIZE_T cnt) {
+        static inline TargetPtrType Allocate(const SIZE_T cnt) {
             return new T[cnt];
         }
 
@@ -52,7 +59,7 @@ namespace vislib {
          * @param inOutPtr The pointer to the memory. The pointer will be set 
          *                 NULL when the method returns.
          */
-        static inline void Deallocate(T *& inOutPtr) {
+        static inline void Deallocate(TargetPtrType& inOutPtr) {
             delete[] inOutPtr;
             inOutPtr = NULL;
         }

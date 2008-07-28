@@ -34,6 +34,12 @@ namespace vislib {
 
     public:
 
+        /** The type of the object handled by the allocator.*/
+        typedef T TargetType;
+
+        /** The pointer type that is handled by the allocator. */
+        typedef T *TargetPtrType;
+
         /**
          * Allocate an object of type T.
          *
@@ -42,7 +48,7 @@ namespace vislib {
          * @throws std::bad_alloc If there was not enough memory to allocate the
          *                        object.
          */
-        static inline T *Allocate(void) {
+        static inline TargetPtrType Allocate(void) {
             return new T;
         }
 
@@ -52,7 +58,7 @@ namespace vislib {
          * @param inOutPtr The pointer to be deallocated. The pointer will be 
          *                 set NULL before the method returns.
          */
-        static inline void Deallocate(T *& inOutPtr) {
+        static inline void Deallocate(TargetPtrType& inOutPtr) {
             delete inOutPtr;
             inOutPtr = NULL;
         }
