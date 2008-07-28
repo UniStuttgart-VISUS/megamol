@@ -230,7 +230,7 @@ namespace sys {
         tmp.FormatVa(format, argptr);
         va_end(argptr);
         SIZE_T len = tmp.Length();
-        return file.Write(tmp.PeekBuffer(), len) == len;
+        return out.Write(tmp.PeekBuffer(), len) == len;
     }
 
     /**
@@ -247,7 +247,7 @@ namespace sys {
     template<class T>
     bool WriteLineToFile(File &out, const typename T::Char *text) {
         SIZE_T len = text.Length();
-        return file.Write(text.PeekBuffer(), len) == len;
+        return out.Write(text.PeekBuffer(), len) == len;
     }
 
     /**
