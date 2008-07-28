@@ -463,6 +463,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ReferenceCounted.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\RegEx.cpp"
 				>
 				<FileConfiguration
@@ -778,6 +782,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\RawStorageSerialiser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ReferenceCounted.h"
 				>
 			</File>
 			<File
