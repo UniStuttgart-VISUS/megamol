@@ -247,8 +247,6 @@ namespace sys {
 #pragma warning(default: 4312)
 #pragma warning(default: 4311)
 #else /* _WIN32 */
-        inline static void *Exchange(void *volatile *address,
-                const void *value) {
 #if ((defined(__LP64__) || defined(_LP64) || defined(__x86_64__)) \
 && ((__LP64__ != 0) || (_LP64 != 0) || (__x86_64__ != 0)))
             return reinterpret_cast<void *>(Interlocked::Exchange(

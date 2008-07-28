@@ -34,7 +34,7 @@ typedef wchar_t TCHAR;
 #define _tsystem wsystem
 #define _tcscmp wcscmp
 #define _tcsicmp wcscasecmp
-#define _ttoi assert(false)
+#define _ttoi vislib::CharTraitsW::ParseInt
 
 #else /* defined(UNICODE) || defined(_UNICODE) */
 
