@@ -53,6 +53,15 @@ namespace vislib {
          */
         SmartRef(T *obj = NULL, const bool addRef = true);
 
+        /**
+         * Create a new reference pointing to the same object as 'rhs'.
+         *
+         * @param rhs The object to be cloned.
+         */
+        inline SmartRef(const SmartRef& rhs) : obj(NULL) {
+            *this = rhs;
+        }
+
         /** 
          * Dtor. 
          *
@@ -222,7 +231,7 @@ namespace vislib {
             if (this->obj != NULL) {
                 this->obj->Release();
             }
-            this->obj = rhs;
+            this->obj = rhs.obj;
         }
         return *this;
     }

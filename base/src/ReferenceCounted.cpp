@@ -8,6 +8,50 @@
 #include "vislib/ReferenceCounted.h"
 
 
+#include "vislib/assert.h"
+
+
 /*
- * This file is intentionally empty.
+ * vislib::ReferenceCounted::Release
  */
+UINT32 vislib::ReferenceCounted::Release(void) {
+    ASSERT(this->cntRefs > 0);
+    UINT32 retval = --this->cntRefs;
+    if (this->cntRefs == 0) {
+        delete this;
+    }
+    return retval;
+}
+
+
+/*
+ * vislib::ReferenceCounted::ReferenceCounted
+ */
+vislib::ReferenceCounted::ReferenceCounted(void) : cntRefs(1) {
+}
+
+
+/*
+ * ReferenceCounted::ReferenceCounted
+ */
+vislib::ReferenceCounted::ReferenceCounted(const ReferenceCounted& rhs) 
+        : cntRefs(1) {
+}
+
+
+/*
+ * vislib::ReferenceCounted::~ReferenceCounted
+ */
+vislib::ReferenceCounted::~ReferenceCounted(void) {
+    ASSERT(this->cntRefs == 0);
+}
+
+
+/*
+ * vislib::ReferenceCounted::operator =
+ */
+vislib::ReferenceCounted& vislib::ReferenceCounted::operator =(
+        const ReferenceCounted& rhs) {
+    // Nothing to be done! No not modify the reference count!
+    return *this;
+}

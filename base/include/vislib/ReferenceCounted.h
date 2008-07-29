@@ -16,8 +16,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/assert.h"
-#include "vislib/SingleAllocator.h"
 #include "vislib/types.h"
 
 
@@ -28,19 +26,12 @@ namespace vislib {
      * This class adds a reference counting mechanism to a class.
      *
      * Objects that inherit from ReferenceCounted must always be allocated on
-     * the heap.
-     *
-     * The template parameter A is the allocator used for releasing the
-     * object once its reference count falls to zero. The allocator specified 
-     * here must match for all instances of the object and all derived objects.
-     * The default allocator is a SingleAllocator for ReferenceCounted that will
-     * release the object using delete (Note: Instantiation requires <> template
-     * argument list for default parameter).
+     * the heap and must always use the C++ new operator for allocation, as 
+     * ReferenceCounted will free itself using delete.
      *
      * The reference count of a newly created object is 1.
      */
-    //template<class A = SingleAllocator<ReferenceCounted<A> > > 
-    template<class A> class ReferenceCounted {
+    class ReferenceCounted {
 
     public:
 
@@ -97,62 +88,7 @@ namespace vislib {
         
         /** The current reference count. */
         UINT32 cntRefs;
-
-        /* Allow the allocator deleting the object. */
-        typedef A _A;
-        typedef typename A::TargetPtrType _P;
-        friend void _A::Deallocate(_P& inOutPtr);
-        friend typename A;
-
     };
-
-
-    /*
-     * vislib::ReferenceCounted<A>::Release
-     */
-    template<class A> UINT32 ReferenceCounted<A>::Release(void) {
-        ASSERT(this->cntRefs > 0);
-        UINT32 retval = --this->cntRefs;
-        if (this->cntRefs == 0) {
-            A::TargetPtrType r = reinterpret_cast<A::TargetPtrType>(this);
-            A::Deallocate(r);
-        }
-        return retval;
-    }
-
-
-    /*
-     * vislib::ReferenceCounted<A>::ReferenceCounted
-     */
-    template<class A> ReferenceCounted<A>::ReferenceCounted(void) : cntRefs(1) {
-    }
-
-
-    /*
-     * ReferenceCounted<A>::ReferenceCounted
-     */
-    template<class A> ReferenceCounted<A>::ReferenceCounted(
-            const ReferenceCounted& rhs) : cntRefs(1) {
-    }
-
-
-    /*
-     * vislib::ReferenceCounted<A>::~ReferenceCounted
-     */
-    template<class A> ReferenceCounted<A>::~ReferenceCounted(void) {
-        ASSERT(this->cntRefs == 0);
-    }
-
-
-    /*
-     * vislib::ReferenceCounted<A>::operator =
-     */
-    template<class A> ReferenceCounted<A>& ReferenceCounted<A>::operator =(
-            const ReferenceCounted& rhs) {
-        // Nothing to be done! No not modify the reference count!
-        return *this;
-    }
-
     
 } /* end namespace vislib */
 

@@ -77,7 +77,7 @@ VislibTest tests[] = {
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RegEx"), ::TestRegEx, "Tests VISlib regular expressions"},
-    {_T("RefCount"), ::TestRegEx, "Tests VISlib ReferenceCounted and SmartRef"},
+    {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},
