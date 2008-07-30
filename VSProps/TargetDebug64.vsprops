@@ -4,6 +4,10 @@
 	Version="8.00"
 	Name="TargetDebug64"
 	>
+	<Tool
+		Name="VCCLCompilerTool"
+		RuntimeLibrary="3"
+	/>
 	<UserMacro
 		Name="Bits"
 		Value="64"
@@ -22,5 +26,9 @@
 	<UserMacro
 		Name="ArchName"
 		Value="x64"
+	/>
+	<UserMacro
+		Name="RuntimeLib"
+		Value="MD"
 	/>
 </VisualStudioPropertySheet>

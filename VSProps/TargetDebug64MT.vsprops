@@ -2,11 +2,11 @@
 <VisualStudioPropertySheet
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="TargetRelease64"
+	Name="TargetDebugMT64"
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		RuntimeLibrary="2"
+		RuntimeLibrary="1"
 	/>
 	<UserMacro
 		Name="Bits"
@@ -15,12 +15,12 @@
 	/>
 	<UserMacro
 		Name="DebugD"
-		Value=""
+		Value="d"
 		PerformEnvironmentSet="true"
 	/>
 	<UserMacro
 		Name="BitsD"
-		Value="64"
+		Value="64dmt"
 		PerformEnvironmentSet="true"
 	/>
 	<UserMacro
@@ -29,6 +29,6 @@
 	/>
 	<UserMacro
 		Name="RuntimeLib"
-		Value="MD"
+		Value="MT"
 	/>
 </VisualStudioPropertySheet>
