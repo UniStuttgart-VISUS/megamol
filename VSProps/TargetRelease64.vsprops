@@ -27,7 +27,11 @@
 		Name="ArchName"
 		Value="x64"
 	/>
-	<UserMacro
+    <UserMacro
+		Name="RuntimeMT"
+		Value=""
+	/>
+    <UserMacro
 		Name="RuntimeLib"
 		Value="MD"
 	/>
