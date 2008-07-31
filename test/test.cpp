@@ -47,6 +47,7 @@
 #include "testipv6.h"
 #include "testthreadpool.h"
 #include "testrefcount.h"
+#include "testpoolallocator.h"
 
 
 /* type for test functions */
@@ -72,11 +73,11 @@ VislibTest tests[] = {
     {_T("Heap"), ::TestHeap, "Tests vislib::Heap"},
     {_T("ListSort"), ::TestSingleLinkedListSort, "Tests the 'Sort' Method of vislib::SingleLinkedList"},
     {_T("Map"), ::TestMap, "Tests vislib::Map"},
+    {_T("RegEx"), ::TestRegEx, "Tests VISlib regular expressions"},
     {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
-    {_T("RegEx"), ::TestRegEx, "Tests VISlib regular expressions"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
@@ -89,10 +90,10 @@ VislibTest tests[] = {
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
+    {_T("IPv6"), ::TestIPv6, "Tests VISlib IPv6 support"},
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
     {_T("Sockets"), ::TestSockets, "Tests the sockets"},
     {_T("TcpServer"), ::TestTcpServer, "Tests the TCP server"},
-    {_T("IPv6"), ::TestIPv6, "Tests VISlib IPv6 support"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},
@@ -107,13 +108,14 @@ VislibTest tests[] = {
     {_T("Log"), ::TestTheLogWithPhun, "Tests vislib::sys::Log"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
     {_T("Path"), ::TestPath, "Tests vislib::sys::Path"},
+    {_T("PoolAllocator"), ::TestPoolAllocator, "Tests vislib::sys::PoolAllocator"},
     {_T("Process"), ::TestProcess, "Tests vislib::sys::Process"},
     {_T("SysInfo"), ::TestSysInfo, "Tests vislib::sys::SystemInformation"},
     {_T("Thread"), ::TestThread, "Tests vislib::sys::Thread"},
+    {_T("ThreadPool"), ::TestThreadPool, "Tests the thread pool"},
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
-    {_T("ThreadPool"), ::TestThreadPool, "Tests the thread pool"},
     // end guard. Do not remove. Must be last entry.
     {NULL, NULL, NULL}
 };

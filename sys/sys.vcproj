@@ -404,6 +404,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PoolAllocator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Process.cpp"
 				>
 			</File>
@@ -651,6 +655,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\PerformanceCounter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\PoolAllocator.h"
 				>
 			</File>
 			<File

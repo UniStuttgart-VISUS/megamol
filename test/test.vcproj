@@ -428,6 +428,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testpoolallocator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testprocess.cpp"
 				>
 			</File>
@@ -579,6 +583,10 @@
 			</File>
 			<File
 				RelativePath=".\testpointers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testpoolallocator.h"
 				>
 			</File>
 			<File

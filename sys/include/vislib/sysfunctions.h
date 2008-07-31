@@ -18,6 +18,7 @@
 #include <shlwapi.h>
 #else /* _WIN32 */
 #include <sys/types.h>
+#include <stddef.h>
 #endif /* _WIN32 */
 #include <stdio.h>
 #include <stdarg.h>
@@ -31,6 +32,27 @@
 namespace vislib {
 namespace sys {
 
+    /**
+     * powered by miniport.h:
+     * Returns the containing struct for the address of a given field.
+     *
+     * @param address The address of the field.
+     * @param type    The type of the containing struct.
+     * @param field   The name of the field of address.
+     *
+     * @return The address of the containing struct.
+     */
+    #ifndef CONTAINING_RECORD
+#ifdef _WIN32
+    #define CONTAINING_RECORD(address, type, field) \
+        ((type *)((PCHAR)(address) - (ULONG_PTR)(&((type *)0)->field)))
+#else /* _WIN32 */
+    #define CONTAINING_RECORD(address, type, field) \
+        ((type *)((PCHAR)(address) - ((ULONG_PTR)(&((type *)4)->field) - 4)))
+#endif /* _WIN32 */
+    #endif /* CONTAINING_RECORD */
+    #define CONTAINING_STRUCT(address, type, field) \
+        CONTAINING_RECORD(address, type, field)
 
     /** Default maximal line size to be read by the read line functions. */
     const unsigned int defMaxLineSize = 1024;

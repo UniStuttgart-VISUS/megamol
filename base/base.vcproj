@@ -399,6 +399,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\NullAllocator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\NullLockable.cpp"
 				>
 			</File>
@@ -754,6 +758,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\NoSuchElementException.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\NullAllocator.h"
 				>
 			</File>
 			<File
