@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		config.mk = config.mk
 		createclass.ps1 = createclass.ps1
 		librules.mk = librules.mk
+		Makefile = Makefile
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base", "base\base.vcproj", "{4F55D730-E9DE-4749-99C7-0285DA1D263D}"

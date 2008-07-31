@@ -35,7 +35,7 @@ endif
 
 
 # Determine the plaform architecture
-ifeq ($(shell uname -p), x86_64)
+ifeq ($(shell uname -m), x86_64)
 	PLATFORM := x64
 	BITS := 64
 else

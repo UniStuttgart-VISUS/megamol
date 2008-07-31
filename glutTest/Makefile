@@ -4,7 +4,7 @@
 # Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
 #
 
--include ../config.mk
+include ../config.mk
 
 TargetName := vislibgluttest
 
@@ -32,10 +32,7 @@ endif
 
 ###############################################################################
 
-# Determine the current platform:
-PLATFORM := $(shell uname -p)
-
-ifeq ($(PLATFORM), x86_64)
+ifeq ($(PLATFORM), x64)
 	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
@@ -68,11 +65,11 @@ $(IntDir)/$(OutName): $(CPP_OBJS)
 	@tput sgr0
 	$(Q)$(LINK) -o $@ $^ $(LDFLAGS)
 
-$(IntDir)/%.d: $(InputDir)/%.cpp
+$(IntDir)/%.d: $(InputDir)/%.cpp glutInclude.h glutInclude.mk
 	@mkdir -p $(IntDir)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(Q)$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $< | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
 
 ifneq ($(MAKECMDGOALS), clean)
@@ -87,6 +84,7 @@ $(IntDir)/%.o:
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	$(Q)$(CPP) -c $(CPPFLAGS) -o $@ $<
+
 
 # glut inclusion
 glutInclude.h:

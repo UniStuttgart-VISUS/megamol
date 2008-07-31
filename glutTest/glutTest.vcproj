@@ -29,7 +29,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
+				CommandLine="IF NOT EXIST &quot;$(InputDir)glutInclude.h&quot; copy /V /Y /B &quot;$(InputDir)glutInclude.default.h&quot; &quot;$(InputDir)glutInclude.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -107,7 +107,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
+				CommandLine="IF NOT EXIST &quot;$(InputDir)glutInclude.h&quot; copy /V /Y /B &quot;$(InputDir)glutInclude.default.h&quot; &quot;$(InputDir)glutInclude.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -186,7 +186,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
+				CommandLine="IF NOT EXIST &quot;$(InputDir)glutInclude.h&quot; copy /V /Y /B &quot;$(InputDir)glutInclude.default.h&quot; &quot;$(InputDir)glutInclude.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -263,7 +263,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="IF NOT EXIST $(InputDir)glutInclude.h copy /V /Y /B $(InputDir)glutInclude.default.h $(InputDir)glutInclude.h"
+				CommandLine="IF NOT EXIST &quot;$(InputDir)glutInclude.h&quot; copy /V /Y /B &quot;$(InputDir)glutInclude.default.h&quot; &quot;$(InputDir)glutInclude.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"

@@ -30,10 +30,7 @@ LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -ldl -lncurses  -lrt -lcrypt
 
 ###############################################################################
 
-# Determine the current platform:
-PLATFORM := $(shell uname -p)
-
-ifeq ($(PLATFORM), x86_64)
+ifeq ($(PLATFORM), x64)
 	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
