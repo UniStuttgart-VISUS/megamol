@@ -148,6 +148,9 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     /* Enter server loop if no error so far. */
     if (retval == 0) {
         try {
+            TRACE(Trace::LEVEL_VL_INFO, "The TcpServer is listening on "
+                "%s ...\n", serverAddr.ToStringA().PeekBuffer());
+
             while (true) {
                 this->socket.Listen();
                 peerSocket = this->socket.Accept(&peerAddr);

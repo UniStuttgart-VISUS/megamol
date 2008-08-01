@@ -27,7 +27,13 @@ namespace cluster {
 
 
     /**
-     * TODO: comment class
+     * This class implements the behaviour of a remote controlled camera. It
+     * accepts a reference counted pointer to CameraParameters and updates 
+     * those once it receives messages from an AbstractControllerNode.
+     *
+     * Subclasses must ensure that they call onMessageReceived() in order to
+     * give AbstractControlledNode the possibility to filter out camera-related
+     * messages.
      */
     class AbstractControlledNode : public virtual AbstractClusterNode {
 

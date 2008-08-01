@@ -17,6 +17,7 @@
 
 
 #include "vislib/AbstractClusterNode.h"
+#include "vislib/CmdLineParser.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/TcpServer.h"
@@ -33,6 +34,17 @@ namespace cluster {
      *
      * This class uses virtual inheritance to implement the "delegate to 
      * sister" pattern.
+     *
+     * The Initialise() method of AbstractServerNode parses the given command
+     * line for the adapter to bind the server to ("--bind-address") and the
+     * port to bind the server to ("--bind-port"). If a subclass does not call
+     * the parent Initialise(), it can set the bind address using the
+     * SetBindAddress() method. If no bind address is set, the server will 
+     * bind to an arbitrary network adapter (IPEndPoint::ANY) and use the
+     * DEFAULT_PORT.
+     *
+     * The Run() method of AbstractServerNode starts the TCP server on a
+     * separate thread and returns immediately.
      */
     class AbstractServerNode : public virtual AbstractClusterNode,
             public TcpServer::Listener {
@@ -241,6 +253,18 @@ namespace cluster {
          */
         SIZE_T findPeerNode(const PeerIdentifier& peerId);
 
+        /**
+         * Character type agnostic initialiser that does the actual work.
+         *
+         * @param inOutCmdLine The command line passed to the containing
+         *                     application. The method might alter the command
+         *                     line and remove consumed options.
+         *
+         * @throws
+         */
+        template<class T> void initialise(
+            sys::CmdLineProvider<T>& inOutCmdLine);
+
         /** The address to bind the server to. */
         IPEndPoint bindAddress;
 
@@ -254,6 +278,55 @@ namespace cluster {
         mutable sys::CriticalSection peersLock;
 
     };
+
+
+    /*
+     * vislib::net::cluster::AbstractServerNode::initialise
+     */
+    template<class T>
+    void AbstractServerNode::initialise(sys::CmdLineProvider<T>& inOutCmdLine) {
+        typedef vislib::String<T> String;
+        typedef vislib::sys::CmdLineParser<T> Parser;
+        typedef typename Parser::Argument Argument;
+        typedef typename Parser::Option Option;
+        typedef typename Option::ValueDesc ValueDesc;
+
+        Parser parser;
+        Argument *arg = NULL;
+
+        Option optServer(String(_T("bind-address")), 
+            String(_T("Specifies the address (adapter) to bind the server to.")),
+            Option::FLAG_UNIQUE, 
+            ValueDesc::ValueList(Option::STRING_VALUE, 
+                String(_T("adapter")), 
+                String(_T("The IP address to bind the server to."))));
+        parser.AddOption(&optServer);
+
+        Option optPort(String(_T("bind-port")), 
+            String(_T("Specifies the post to bind the server to.")),
+            Option::FLAG_UNIQUE, 
+            ValueDesc::ValueList(Option::INT_VALUE, 
+                String(_T("port")), 
+                String(_T("The port the server node will listen on."))));
+        parser.AddOption(&optPort);
+
+        if (parser.Parse(inOutCmdLine.ArgC(), inOutCmdLine.ArgV()) >= 0) {
+            if ((arg = optServer.GetFirstOccurrence()) != NULL) {
+                // TODO: IPv6
+                this->bindAddress.SetIPAddress(IPAddress::Create(
+                    StringA(arg->GetValueString())));
+            } else {
+                // TODO: IPv6
+                this->bindAddress.SetIPAddress(IPAddress::ANY);
+            }
+
+            if ((arg = optPort.GetFirstOccurrence()) != NULL) {
+                this->bindAddress.SetPort(arg->GetValueInt());
+            } else {
+                this->bindAddress.SetPort(DEFAULT_PORT);
+            }
+        }
+    }
     
 } /* end namespace cluster */
 } /* end namespace net */

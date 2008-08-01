@@ -35,6 +35,11 @@ namespace net {
          * Answer any of the IP addresses of the host identified by the given
          * host name or human readable IP address.
          *
+         * The method first tries to retrieve the address by using the rather 
+         * new getaddrinfo function. If this fails, it tries to recover using
+         * the older gethostbyname function. If this fails either, the exception
+         * raised by the first try is rethrown.
+         *
          * @param outAddress        Receives the IP address.
          * @param hostNameOrAddress The host name or stringised IP address to 
          *                          search.
@@ -48,6 +53,11 @@ namespace net {
         /**
          * Answer any of the IP addresses of the host identified by the given
          * host name or human readable IP address.
+         *
+         * The method first tries to retrieve the address by using the rather 
+         * new getaddrinfo function. If this fails, it tries to recover using
+         * the older gethostbyname function. If this fails either, the exception
+         * raised by the first try is rethrown.
          *
          * @param outAddress        Receives the IP address.
          * @param hostNameOrAddress The host name or stringised IP address to 

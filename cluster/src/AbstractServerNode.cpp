@@ -54,7 +54,7 @@ vislib::net::cluster::AbstractServerNode::GetBindAddress(void) const {
 void vislib::net::cluster::AbstractServerNode::Initialise(
         sys::CmdLineProviderA& inOutCmdLine) {
     // Do not call superclass method as it is not initalised.
-    // TODO: Get server parameters
+    this->initialise(inOutCmdLine);
 }
 
 
@@ -64,7 +64,7 @@ void vislib::net::cluster::AbstractServerNode::Initialise(
 void vislib::net::cluster::AbstractServerNode::Initialise(
         sys::CmdLineProviderW& inOutCmdLine) {
     // Do not call superclass method as it is not initalised.
-    // TODO: Get server parameters
+    this->initialise(inOutCmdLine);
 }
 
 

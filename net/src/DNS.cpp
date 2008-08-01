@@ -32,10 +32,24 @@
  */
 void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
                                       const char *hostNameOrAddress) {
-    struct addrinfo *entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET);
-    ASSERT(entries != NULL);
-    outAddress = reinterpret_cast<sockaddr_in *>(entries->ai_addr)->sin_addr;
-    ::freeaddrinfo(entries);
+    struct addrinfo *entries = NULL;
+
+    try {
+        entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET);
+        ASSERT(entries != NULL);
+        outAddress = reinterpret_cast<sockaddr_in *>(
+            entries->ai_addr)->sin_addr;
+        ::freeaddrinfo(entries);
+    } catch (...) {
+        /* 
+         * Try to use the old implementation (gethostbyname) as fallback and 
+         * fail, if this does not work either.
+         */
+        ASSERT(entries == NULL);
+        if (!outAddress.Lookup(hostNameOrAddress)) {
+            throw;
+        }
+    }
 }
 
 
@@ -44,10 +58,24 @@ void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
  */
 void vislib::net::DNS::GetHostAddress(IPAddress& outAddress,
                                       const wchar_t *hostNameOrAddress) {
-    ADDRINFOW *entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET);
-    ASSERT(entries != NULL);
-    outAddress = reinterpret_cast<sockaddr_in *>(entries->ai_addr)->sin_addr;
-    ::FreeAddrInfoW(entries);
+    ADDRINFOW *entries = NULL;
+
+    try {
+        entries = DNS::getAddrInfo(hostNameOrAddress, AF_INET);
+        ASSERT(entries != NULL);
+        outAddress = reinterpret_cast<sockaddr_in *>(
+            entries->ai_addr)->sin_addr;
+        ::FreeAddrInfoW(entries);
+    } catch (...) {
+        /* 
+         * Try to use the old implementation (gethostbyname) as fallback and 
+         * fail, if this does not work either.
+         */
+        ASSERT(entries == NULL);
+        if (!outAddress.Lookup(W2A(hostNameOrAddress))) {
+            throw;
+        }
+    }
 }
 
 

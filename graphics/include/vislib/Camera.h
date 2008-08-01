@@ -25,9 +25,45 @@ namespace graphics {
 
 
     /**
-     * Base class for all camera implementations
+     * Base class for all camera implementations.
+     *
+     * This camera base class should not be used directly. There are 
+     * specialisations for Direct3D and OpenGL which can apply the current
+     * camera transformation directly to the transformation state of the 
+     * underlying graphics API.
+     *
+     * The behaviour of the camera is basically determined by its 
+     * CameraParameters. CameraParameters can be shared between different
+     * cameras, which behave in the same way then. Sharing is implemented via
+     * reference counting. The shared parameters can be overwritten on a 
+     * per-camera basis in order to make each camera behave slightly different.
+     * Consider the following example: A set of cameras shares the same 
+     * camera parameters. They therefore cover the same virtual viewport, which
+     * is the complete viewport of a tiled display. Each camera then uses a
+     * CameraParamsTileRectOverride to overwrite its tile such that the camera
+     * covers only a part of the display. One camera could also specify the 
+     * whole virtual viewport as its tile and would therefore generate an 
+     * overview image, e. g. for the head node. Overwriting some of the camera
+     * parameters works by wrapping the exising parameters of the camera with
+     * an *Override class, e. g. somthing like <code>camera.SetParameters(new 
+     * CameraParamsTileRectOverride(camera.GetParameters()));</code>.
+     *
+     * In order to implement the above-mentioned tiled-display pattern, the
+     * camera parameters must be communicated to different render nodes. This
+     * is not anchored in the Camera/CameraParameters architecture directly, but
+     * implemented in the cluster VISlib. The two classes
+     * vislib::net::cluster::AbstractControllerNode and 
+     * vislib::net::cluster::AbstractControlledNode can be used to distribute
+     * camera parameters to a cluster of render nodes.
+     *
+     * The parameters of a camera can be manipulated by a set of manipulators
+     * that translate e. g. mouse motion into a rotation or translation. Such
+     * manipluators are e. g. CameraRotate2D or CameraZoom2DAngle. They are 
+     * derived from AbstractCursorEvent. Read the respective documentation for
+     * more information about cursor events.
      */
     class Camera {
+
     public:
 
         /** Ctor. */

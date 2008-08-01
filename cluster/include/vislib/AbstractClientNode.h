@@ -32,6 +32,16 @@ namespace cluster {
      *
      * AbstractClientNodes uses virtual inheritance to implement the "delegate
      * to sister" pattern.
+     *
+     * The Initialise() method parses the specified command line for the server 
+     * IP address or name ("--server-name") and the server port 
+     * ("--server-port"). If an implementing class does not call its parent
+     * Initialise() method, it must set the server address manually using the
+     * SetServerAddress() method.
+     *
+     * The Run() method connects to the server specified by the command line or
+     * via SetServerAddress() and starts the message receiver thread for the
+     * new connection. Afterwards, it returns.
      */
     class AbstractClientNode : public virtual AbstractClusterNode {
 
@@ -78,7 +88,7 @@ namespace cluster {
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
         /**
-         * Connect to the server address specified before and starts the message
+         * Connect to the server address specified before and start the message
          * receiver thread. Afterwards, the method returns.
          *
          * You should call this Run() method first in subclasses as your own 

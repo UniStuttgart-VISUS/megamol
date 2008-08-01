@@ -33,6 +33,14 @@ namespace cluster {
      * controlling node that propagates the camera settings to all other nodes
      * in the cluster application.
      *
+     * It is recommended to combine this behaviour with a server node that runs
+     * as the master of a set of slave machines controlled by the reference
+     * camera of the master node.
+     *
+     * Subclasses must pass messages received in their onMessageReceived() 
+     * method to the AbstractControllerNode in order to allow the controller to
+     * check for camera messages and process them.
+     *
      * This class uses virtual inheritance from AbstractClusterNode to implement
      * the "delegate to sister" pattern.
      */
@@ -144,7 +152,9 @@ namespace cluster {
         /** 
          * Ctor. 
          *
-         * @param params The camera parameters that are to be observed.
+         * @param params The camera parameters that are to be observed. 
+         *               This must be an instance of ObservableCameraParams 
+         *               or a derived class.
          */
         AbstractControllerNode(SmartPtr<graphics::CameraParameters> params);
 
@@ -235,6 +245,8 @@ namespace cluster {
          * parameters and registers as listener of the new one.
          *
          * @param params The new camera parameters to be observed.
+         *               This must be an instance of ObservableCameraParams 
+         *               or a derived class.
          */
         void setParameters(const SmartPtr<graphics::CameraParameters>&
             params);
