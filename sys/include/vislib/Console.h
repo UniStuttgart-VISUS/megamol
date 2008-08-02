@@ -77,8 +77,28 @@ namespace sys {
         /** The log echo output target of the console. */
         static const ConsoleLogEchoTarget LogEchoOutTarget;
 
-        // TODO: documentation
-        // TODO: Windows implementation.
+        /**
+         * Runs a console command in a common system command interpreter. On
+         * windows 'cmd.exe' is used, on linux '/bin/sh' is used. The output
+         * of the command to 'stdout' and 'stderr' are returned in the two
+         * optional parameters.
+         *
+         * WARNING: There is no handling or timeout when the started command
+         * requests user input on stdin. In this case the method will not
+         * return!
+         *
+         * Note: On windows the called command must not use '259' as exit code
+         * because this value is reserved for internal use. If a command
+         * returns this value the program will lock up.
+         *
+         * @param command The command to be run in the console.
+         * @param outStdOut Optional parameter to receive the output of the
+         *                  command to its 'stdout'.
+         * @param outStdErr Optional parameter to receive the output of the
+         *                  command to its 'stderr'.
+         *
+         * @return The exit code of the command.
+         */
         static int Run(const char *command, StringA *outStdOut = NULL, 
             StringA *outStdErr = NULL);
 

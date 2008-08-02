@@ -11,6 +11,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include "vislib/Path.h"
 
 #include "DynamicFunctionPointer.h"
 
@@ -98,6 +99,48 @@ public:
     }
 
 #ifdef _WIN32
+
+    /**
+     * Data struct used for the 'ReadFromPipe' thread function
+     */
+    typedef struct _PipeReaderInfo_t {
+
+        /** The pipe to read from */
+        HANDLE pipe;
+
+        /** The target string to receive the read data */
+        vislib::StringA *target;
+
+    } PipeReaderInfo;
+
+    /**
+     * Thread function used to read all data from a pipe as long as the pipe
+     * is open and the 'active' flag in the 'PipeReaderInfo' struct pointed to
+     * by 'userData' is set to 'true'.
+     *
+     * @param userDatat Points to a 'PipeReaderInfo' struct holding all
+     *                  information
+     *
+     * @return 0 on success, nonzero on failure.
+     */
+    static DWORD ReadFromPipe(void *userData) {
+        PipeReaderInfo *info = static_cast<PipeReaderInfo* >(userData);
+        const DWORD bufferSize = 1024;
+        char buffer[bufferSize];
+        DWORD read;
+
+        while (true) {
+            if (::ReadFile(info->pipe, buffer, bufferSize, &read, NULL) == 0) {
+                break;
+            }
+            if (GetLastError() == ERROR_BROKEN_PIPE) {
+                break;
+            }
+            *info->target += vislib::StringA(buffer, read);
+        }
+
+        return 0;
+    }
 
     /**
      * Keeps record of the old window icons for restoration at program 
@@ -440,13 +483,118 @@ private:
  */
 int vislib::sys::Console::Run(const char *command, StringA *outStdOut, 
         StringA *outStdErr) {
+    // TODO: Could use some of the timeout mechanisms?
 #ifdef _WIN32
-    assert(false);
-    return -1;
+    HANDLE hErrorRead, hErrorWrite;
+    HANDLE hInputRead, hInputWrite;
+    HANDLE hOutputRead, hOutputWrite;
+    STARTUPINFOA startInfo;
+    SECURITY_ATTRIBUTES sa;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.lpSecurityDescriptor = NULL; 
+    sa.bInheritHandle = TRUE;
+
+    // Create pipes
+    if (!::CreatePipe(&hErrorRead, &hErrorWrite, &sa, 0)) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+    if (!::CreatePipe(&hInputRead, &hInputWrite, &sa, 0)) {
+        ::CloseHandle(hErrorRead);
+        ::CloseHandle(hErrorWrite);
+        throw SystemException(__FILE__, __LINE__);
+    }
+    if (!::CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0)) {
+        ::CloseHandle(hErrorRead);
+        ::CloseHandle(hErrorWrite);
+        ::CloseHandle(hInputRead);
+        ::CloseHandle(hInputWrite);
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    ::ZeroMemory(&startInfo, sizeof(STARTUPINFO));
+    startInfo.cb = sizeof(STARTUPINFO);
+    startInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+    startInfo.wShowWindow = SW_HIDE;
+    startInfo.hStdInput = hInputRead;
+    startInfo.hStdOutput = hOutputWrite;
+    startInfo.hStdError = hErrorWrite;
+
+    ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+    vislib::StringA cmd = vislib::sys::Path::FindExecutablePath("cmd.exe");
+    vislib::StringA cmdLine;
+    cmdLine.Format("/A /C \"%s\"", command);
+
+    BOOL cp = ::CreateProcessA(cmd, const_cast<char *>(cmdLine.PeekBuffer()), 
+        NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &startInfo, &pi);
+
+    if (cp == FALSE) {
+        ::CloseHandle(hErrorRead);
+        ::CloseHandle(hErrorWrite);
+        ::CloseHandle(hInputRead);
+        ::CloseHandle(hInputWrite);
+        ::CloseHandle(hOutputRead);
+        ::CloseHandle(hOutputWrite);
+        throw SystemException(__FILE__, __LINE__);
+    }
+
+    DWORD exitCode = STILL_ACTIVE;
+
+    vislib::sys::Thread outputReader(
+        vislib::sys::Console::ConsoleHelper::ReadFromPipe);
+    vislib::sys::Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
+    vislib::sys::Thread errorReader(
+        vislib::sys::Console::ConsoleHelper::ReadFromPipe);
+    vislib::sys::Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
+
+    if (outStdOut != NULL) {
+        outputReaderInfo.pipe = hOutputRead;
+        outputReaderInfo.target = outStdOut;
+        outStdOut->Clear();
+        outputReader.Start(&outputReaderInfo);
+    }
+
+    if (outStdErr != NULL) {
+        errorReaderInfo.pipe = hErrorRead;
+        errorReaderInfo.target = outStdErr;
+        outStdErr->Clear();
+        errorReader.Start(&errorReaderInfo);
+    }
+
+    // WARNING: There is no control of input handling!!!
+    while (exitCode == STILL_ACTIVE) {
+        if (::GetExitCodeProcess(pi.hProcess, &exitCode) == FALSE) {
+            // forcefully terminate child process
+            ::TerminateProcess(pi.hProcess, -1);
+            exitCode = -1;
+        }
+    }
+
+    // closing the write ends of the pipes will exit the reading threads.
+    ::CloseHandle(hOutputWrite);
+    ::CloseHandle(hErrorWrite);
+
+    if (outStdOut != NULL) {
+        outputReader.Join();
+    }
+    if (outStdErr != NULL) {
+        errorReader.Join();
+    }
+
+    ::CloseHandle(hErrorRead);
+    ::CloseHandle(hInputRead);
+    ::CloseHandle(hInputWrite);
+    ::CloseHandle(hOutputRead);
+    ::CloseHandle(pi.hThread);
+    ::CloseHandle(pi.hProcess);
+
+    return exitCode;
 #else /* _WIN32 */
     // TODO: This whole thing is an extremely large crowbar. I think it is
     // inherently unsafe to read the program output in the current manner.
-    // TODO: Could use some of the timeout mechanisms?
 
     pid_t pid;                      // PID of child process executing 'command'.
     int stdErrPipe[2];              // Pipe descriptors for stderr redirect.
