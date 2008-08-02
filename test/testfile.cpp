@@ -450,4 +450,37 @@ void TestPath(void) {
     } catch (SystemException e) {
         cout << e.GetMsgA() << endl;
     }
+
+#ifdef _WIN32
+    vislib::StringA p = vislib::sys::Path::FindExecutablePath("cmd.exe");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    p = vislib::sys::Path::FindExecutablePath("notepad.exe");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    p = vislib::sys::Path::FindExecutablePath("iexplore.exe");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    p = vislib::sys::Path::FindExecutablePath("calc.exe");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    p = vislib::sys::Path::FindExecutablePath("subwcrev.exe");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    p = vislib::sys::Path::FindExecutablePath("test.exe");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    vislib::StringW w = vislib::sys::Path::FindExecutablePath(L"cmd.exe");
+    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    w = vislib::sys::Path::FindExecutablePath(L"notepad.exe");
+    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    w = vislib::sys::Path::FindExecutablePath(L"iexplore.exe");
+    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    w = vislib::sys::Path::FindExecutablePath(L"calc.exe");
+    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    w = vislib::sys::Path::FindExecutablePath(L"subwcrev.exe");
+    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+    w = vislib::sys::Path::FindExecutablePath(L"test.exe");
+    cout << "Executable found at: " << vislib::StringA(w).PeekBuffer() << endl;
+#else /* _WIN32 */
+    vislib::StringA p = vislib::sys::Path::FindExecutablePath("xterm");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+    p = vislib::sys::Path::FindExecutablePath("bash");
+    cout << "Executable found at: " << p.PeekBuffer() << endl;
+#endif /* _WIN32 */
+
 }

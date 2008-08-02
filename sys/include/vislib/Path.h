@@ -134,6 +134,34 @@ namespace sys {
         static void DeleteDirectory(const StringW& path, bool recursive);
 
         /**
+         * Answer the fully qualified path to a given executable. This method
+         * searches for the requested executable in a operating system
+         * dependent way, usually checking the current working directory and
+         * a system environment search path.
+         *
+         * @param filename The file name of the executable to search for. Do
+         *                 not specify any path information.
+         *
+         * @return The fully qualified path to the executable or an empty
+         *         string if the executable was not found.
+         */
+        static StringA FindExecutablePath(const StringA& filename);
+
+        /**
+         * Answer the fully qualified path to a given executable. This method
+         * searches for the requested executable in a operating system
+         * dependent way, usually checking the current working directory and
+         * a system environment search path.
+         *
+         * @param filename The file name of the executable to search for. Do
+         *                 not specify any path information.
+         *
+         * @return The fully qualified path to the executable or an empty
+         *         string if the executable was not found.
+         */
+        static StringW FindExecutablePath(const StringW& filename);
+
+        /**
          * Answer the current working directory.
          *
          * The returned string is guaranteed to end with a path separator.

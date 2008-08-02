@@ -260,6 +260,172 @@ void vislib::sys::Path::DeleteDirectory(const StringW& path, bool recursive) {
 
 
 /*
+ * vislib::sys::Path::FindExecutablePath
+ */
+vislib::StringA vislib::sys::Path::FindExecutablePath(
+        const vislib::StringA& filename) {
+#ifdef _WIN32
+    bool found = false;
+    DWORD bufSize = MAX_PATH;
+    char *buffer = new char[bufSize];
+
+    // first try: "SearchPath"
+    DWORD rv = ::SearchPathA(NULL, filename.PeekBuffer(), NULL, bufSize,
+        buffer, NULL);
+    if (rv > 0) {
+        found = true;
+        if (rv + 1 > bufSize) {
+            bufSize = rv + 1;
+            delete[] buffer;
+            buffer = new char[bufSize];
+            rv = ::SearchPathA(NULL, filename.PeekBuffer(), NULL, bufSize,
+                buffer, NULL);
+            if (rv == 0) { // failed
+                found = false;
+            }
+        }
+    }
+
+    if (!found) {
+        // second try: "AssocQueryString"
+        // NOTE:
+        //  AssocQueryString does not work as specified! It is not possible to ask
+        // for the size of the string buffer holding the value returned. Therefore
+        // this implementation increases the buffersize until the returned strings
+        // no longer grow.
+        DWORD bufLen = MAX_PATH;
+        HRESULT hr;
+        bufSize = MAX_PATH;
+        
+        do {
+            hr = ::AssocQueryStringA(ASSOCF_INIT_BYEXENAME, ASSOCSTR_EXECUTABLE,
+                filename.PeekBuffer(), NULL, buffer, &bufSize);
+            if ((hr != E_POINTER) && (hr != S_OK)) { // error
+                break;
+            }
+            if (bufSize == bufLen) {
+                bufLen += MAX_PATH;
+                bufSize = bufLen;
+                delete[] buffer;
+                buffer = new char[bufSize];
+            } else {
+                found = true;
+            }
+        } while (bufSize == bufLen);
+    }
+
+    if (found) {
+        vislib::StringA retval(buffer);
+        delete[] buffer;
+        return retval;
+    } else {
+        return "";
+    }
+#else /* _WIN32 */
+
+    // Note:
+    //  Do not use "Console::Run" or "Process" methods because they might use
+    // this method to determine the full path of their binaries. So we avoid
+    // calling cycles by just using "popen" directly
+    vislib::StringA cmd("which ");
+    vislib::StringA ret;
+    cmd += filename;
+    cmd += " 2> /dev/null";
+    const int bufferSize = 1024;
+    char buffer[bufferSize];
+    FILE *which = ::popen(cmd.PeekBuffer(), "r");
+    if (which == NULL) {
+        return "";
+    }
+    while (!::feof(which)) {
+        ret += fgets(buffer, bufferSize, which);
+    }
+    ::pclose(which);
+
+    vislib::StringA::Size end = ret.Find('\n');
+    if (end != vislib::StringA::INVALID_POS) {
+        ret.Truncate(end);
+    }
+    if (ret.EndsWith(filename)) {
+        return ret;
+    } else {
+        return "";
+    }
+
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::FindExecutablePath
+ */
+vislib::StringW vislib::sys::Path::FindExecutablePath(
+        const vislib::StringW& filename) {
+#ifdef _WIN32
+    bool found = false;
+    DWORD bufSize = MAX_PATH;
+    wchar_t *buffer = new wchar_t[bufSize];
+
+    // first try: "SearchPath"
+    DWORD rv = ::SearchPathW(NULL, filename.PeekBuffer(), NULL, bufSize,
+        buffer, NULL);
+    if (rv > 0) {
+        found = true;
+        if (rv + 1 > bufSize) {
+            bufSize = rv + 1;
+            delete[] buffer;
+            buffer = new wchar_t[bufSize];
+            rv = ::SearchPathW(NULL, filename.PeekBuffer(), NULL, bufSize,
+                buffer, NULL);
+            if (rv == 0) { // failed
+                found = false;
+            }
+        }
+    }
+
+    if (!found) {
+        // second try: "AssocQueryString"
+        // NOTE:
+        //  AssocQueryString does not work as specified! It is not possible to ask
+        // for the size of the string buffer holding the value returned. Therefore
+        // this implementation increases the buffersize until the returned strings
+        // no longer grow.
+        DWORD bufLen = MAX_PATH;
+        HRESULT hr;
+        bufSize = MAX_PATH;
+        
+        do {
+            hr = ::AssocQueryStringW(ASSOCF_INIT_BYEXENAME, ASSOCSTR_EXECUTABLE,
+                filename.PeekBuffer(), NULL, buffer, &bufSize);
+            if ((hr != E_POINTER) && (hr != S_OK)) { // error
+                break;
+            }
+            if (bufSize == bufLen) {
+                bufLen += MAX_PATH;
+                bufSize = bufLen;
+                delete[] buffer;
+                buffer = new wchar_t[bufSize];
+            } else {
+                found = true;
+            }
+        } while (bufSize == bufLen);
+    }
+
+    if (found) {
+        vislib::StringW retval(buffer);
+        delete[] buffer;
+        return retval;
+    } else {
+        return L"";
+    }
+#else /* _WIN32 */
+    // linux is stupid
+    return A2W(FindExecutablePath(W2A(filename)));
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::Path::GetCurrentDirectoryA
  */
 vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
