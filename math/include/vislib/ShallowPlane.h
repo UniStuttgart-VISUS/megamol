@@ -61,7 +61,7 @@ namespace math {
          *
          * @return *this.
          */
-        ShallowPlane& operator =(const ShallowPlane& rhs) {
+        inline ShallowPlane& operator =(const ShallowPlane& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -75,7 +75,7 @@ namespace math {
          * @return *this.
          */
         template<class Tp, class Sp>
-        ShallowPlane& operator =(const AbstractPlane<Tp, Sp>& rhs) {
+        inline ShallowPlane& operator =(const AbstractPlane<Tp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }

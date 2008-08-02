@@ -556,22 +556,22 @@ namespace math {
         AbstractCuboid& operator =(const AbstractCuboid<Tp, Sp>& rhs);
 
         /**
-         * Test for equality. The operator uses the == operator for T for each
-         * member.
+         * Test for equality. The operator uses the IsEqual method for T for 
+         * each member.
          *
          * @param rhs The right hand side operand.
          *
-         * @param true, if 'rhs' and this vector are equal, false otherwise.
+         * @param true, if 'rhs' and this cuboid are equal, false otherwise.
          */
         bool operator ==(const AbstractCuboid& rhs) const;
 
         /**
-         * Test for inequality. The operator uses the == operator for T for each
-         * member.
+         * Test for inequality. The operator uses the IsEqual method for T for 
+         * each member.
          *
          * @param rhs The right hand side operand.
          *
-         * @param true, if 'rhs' and this vector are not equal, false otherwise.
+         * @param true, if 'rhs' and this cuboid are not equal, false otherwise.
          */
         inline bool operator !=(const AbstractCuboid& rhs) const {
             return !(*this == rhs);
