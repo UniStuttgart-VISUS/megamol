@@ -34,7 +34,13 @@ if ($Bits -eq "32") {
     # @echo Generating $(InputDir)\include\glh\glh_genext.h" from "$(InputDir)\include\glh\extfile.txt" ...
     # "$(InputDir)\include\glh\$(ConfigurationName)\glh.exe" "$(InputDir)\include\glh\glh_genext.h" "$(InputDir)\include\glh\extfile.txt"
 
-    & "$VCInstallDir\vcpackages\vcbuild.exe" "$InputDir\include\glh\glh.vcproj" "$ConfigurationName" /useenv /nologo /upgrade /override:"$InputDir\glhSettings.vsprops"
+    # Create a copy to prevent in-place upgrade of svn-external project
+    [xml]$proj = gc "$InputDir\include\glh\glh.vcproj";
+    $proj.Save("$InputDir\include\glh\glh32crowbar.vcproj");
+    
+    & "$VCInstallDir\vcpackages\vcbuild.exe" "$InputDir\include\glh\glh32crowbar.vcproj" "$ConfigurationName" /useenv /nologo /upgrade /override:"$InputDir\glhSettings.vsprops"
+    
+    del "$InputDir\include\glh\glh32crowbar.vcproj"
 }
 
 if ($Bits -eq "64") {
