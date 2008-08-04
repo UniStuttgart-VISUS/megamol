@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "vislib/CharTraits.h"
 #include "vislib/File.h"
 #include "vislib/String.h"
 #include "vislib/SystemException.h"
@@ -234,6 +235,8 @@ namespace sys {
 
     /**
      * Writes a formatted string to a file. 'format' uses 'printf' syntax.
+     * The template parameter should be automatically chosen to be 'char' or 
+     * 'wchar_t'.
      *
      * @param out The file to which the formatted text line is written to.
      * @param format The text line format string, similar to 'printf'.
@@ -245,18 +248,19 @@ namespace sys {
      */
     template<class T>
     bool WriteFormattedLineToFile(File &out,
-            const typename T::Char *format, ...) {
-        vislib::String<T> tmp;
+            const T *format, ...) {
+        vislib::String<vislib::CharTraits<T> > tmp;
         va_list argptr;
         va_start(argptr, format);
         tmp.FormatVa(format, argptr);
         va_end(argptr);
-        SIZE_T len = tmp.Length();
+        SIZE_T len = tmp.Length() * sizeof(T);
         return out.Write(tmp.PeekBuffer(), len) == len;
     }
 
     /**
-     * Writes a string to a file.
+     * Writes a string to a file. The template parameter should be
+     * automatically chosen to be 'char' or 'wchar_t'.
      *
      * @param out The file to which the text line is written to.
      * @param text The text line to be written.
@@ -267,9 +271,10 @@ namespace sys {
      * @throws SystemException If there was an IO error.
      */
     template<class T>
-    bool WriteLineToFile(File &out, const typename T::Char *text) {
-        SIZE_T len = text.Length();
-        return out.Write(text.PeekBuffer(), len) == len;
+    bool WriteLineToFile(File &out, const T *text) {
+        SIZE_T len = vislib::CharTraits<T>::SafeStringLength(text)
+            * sizeof(T);
+        return out.Write(text, len) == len;
     }
 
     /**
@@ -312,7 +317,7 @@ namespace sys {
      */
     template<class tp>
     bool WriteTextFile(File& file, const String<tp>& text) {
-        unsigned int len = text.Length() * sizeof(tp::Char);
+        SIZE_T len = text.Length() * sizeof(tp::Char);
         return (file.Write(text.PeekBuffer(), len) == len);
     }
 
