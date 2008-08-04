@@ -254,6 +254,8 @@ bool vislib::sys::Thread::Terminate(const bool forceTerminate,
         return true;
 
 #else /* _WIN32 */
+        this->exitCode = exitCode;
+
         if (::pthread_cancel(this->id) != 0) {
             TRACE(Trace::LEVEL_VL_ERROR, "pthread_cancel() failed with error "
                 "%d.\n", ::GetLastError());

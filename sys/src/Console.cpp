@@ -98,15 +98,17 @@ public:
         return &helper;
     }
 
-#ifdef _WIN32
-
     /**
      * Data struct used for the 'ReadFromPipe' thread function
      */
     typedef struct _PipeReaderInfo_t {
 
         /** The pipe to read from */
+#ifdef _WIN32
         HANDLE pipe;
+#else /* _WIN32 */
+        int pipe;
+#endif /* _WIN32 */
 
         /** The target string to receive the read data */
         vislib::StringA *target;
@@ -126,21 +128,30 @@ public:
     static DWORD ReadFromPipe(void *userData) {
         PipeReaderInfo *info = static_cast<PipeReaderInfo* >(userData);
         const DWORD bufferSize = 1024;
-        char buffer[bufferSize];
-        DWORD read;
+        char buffer[bufferSize + 1];
+        DWORD bytesRead;
 
         while (true) {
-            if (::ReadFile(info->pipe, buffer, bufferSize, &read, NULL) == 0) {
+#ifdef _WIN32
+            if (::ReadFile(info->pipe, buffer, bufferSize, &bytesRead, NULL)
+                    == 0) {
                 break;
             }
             if (GetLastError() == ERROR_BROKEN_PIPE) {
                 break;
             }
-            *info->target += vislib::StringA(buffer, read);
+#else /* _WIN32 */
+            if ((bytesRead = ::read(info->pipe, buffer, bufferSize)) == 0) {
+                break;
+            }
+#endif /* _WIN32 */
+            buffer[bytesRead] = 0;
+            *info->target += buffer;
         }
-
         return 0;
     }
+
+#ifdef _WIN32
 
     /**
      * Keeps record of the old window icons for restoration at program 
@@ -199,19 +210,6 @@ private:
 
 #else /* _WIN32 */
 
-#define READER_DATA_BUFFER_SIZE 1024
-
-    /** helper data struct for the stdin reader */
-    struct ReaderData {
-
-        /** The buffer */
-        char buffer[READER_DATA_BUFFER_SIZE];
-
-        /** The length of the valid buffer content */
-        unsigned int len;
-
-    };
-
     /** getter to colorsAvailable */
     inline bool AreColorsAvailable(void) {
         return this->colorsAvailable;
@@ -258,26 +256,6 @@ private:
         }
 
         tputs(tparm(foreground ? set_a_foreground : set_a_background, colType), 1, outputChar);
-    }
-
-    /** helper function to aviod linux stdin read lock */
-    static DWORD AskStdin(void *userData) {
-        struct ReaderData *rd = static_cast<struct ReaderData*>(const_cast<void*>(userData));
-        rd->len = 0;
-        rd->buffer[0] = 0;
-
-        int n;
-                    //char s[1024];
-        n = read(STDIN_FILENO, rd->buffer, READER_DATA_BUFFER_SIZE - 1);
-        rd->buffer[READER_DATA_BUFFER_SIZE - 1] = 0;
-        rd->len = n;
-
-        //while(true) {
-        //    printf(".");
-        //    vislib::sys::Thread::Sleep(500);
-        //}
-
-        return 0;
     }
 
     /** sets the console title, if possible */
@@ -344,27 +322,25 @@ private:
                     fflush(stdout);
 
                     {
-                        struct ReaderData rd;
-                        rd.len = 0;
+                        StringA rd;
+                        PipeReaderInfo pri;
+                        pri.pipe = STDIN_FILENO;
+                        pri.target = &rd;
 
-                        vislib::sys::Thread stdinreader(AskStdin);
-                        stdinreader.Start(&rd);
+                        vislib::sys::Thread stdinreader(ReadFromPipe);
+                        stdinreader.Start(&pri);
                         unsigned int cnt = 0;
                         while(cnt < 1000) {
                             vislib::sys::Thread::Sleep(50);
                             cnt += 50;
-                            if (rd.len > 0) {
+                            if (rd.Length() > 0) {
                                 break;
                             }
                         }
-                        if (rd.len == 0) {                       
-                            stdinreader.Terminate(true);
-                            rd.len = 0;
-                        }
+                        stdinreader.Terminate(true);
 
-                        if (rd.len > 5) {
-                            rd.buffer[rd.len - 2] = 0;
-                            oldName = &rd.buffer[3];
+                        if (rd.Length() > 5) {
+                            oldName = rd.Substring(3, rd.Length() - 4);
                         }
 
                     }
@@ -472,8 +448,6 @@ private:
     /** old console title stored, which should be restored on exit */
     char *oldConsoleTitle;
 
-#undef READER_DATA_BUFFER_SIZE
-
 #endif
 };
 
@@ -554,14 +528,18 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
         outputReaderInfo.pipe = hOutputRead;
         outputReaderInfo.target = outStdOut;
         outStdOut->Clear();
-        outputReader.Start(&outputReaderInfo);
+        if (!outputReader.Start(&outputReaderInfo)) {
+            outStdOut = NULL; // avoid join
+        }
     }
 
     if (outStdErr != NULL) {
         errorReaderInfo.pipe = hErrorRead;
         errorReaderInfo.target = outStdErr;
         outStdErr->Clear();
-        errorReader.Start(&errorReaderInfo);
+        if (!errorReader.Start(&errorReaderInfo)) {
+            outStdErr = NULL; // avoid join
+        }
     }
 
     // WARNING: There is no control of input handling!!!
@@ -592,18 +570,13 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
     ::CloseHandle(pi.hProcess);
 
     return exitCode;
-#else /* _WIN32 */
-    // TODO: This whole thing is an extremely large crowbar. I think it is
-    // inherently unsafe to read the program output in the current manner.
 
+#else /* _WIN32 */
     pid_t pid;                      // PID of child process executing 'command'.
     int stdErrPipe[2];              // Pipe descriptors for stderr redirect.
     int stdOutPipe[2];              // Pipe descriptors for stdout redirect.
-    int cntRead;                    // # of bytes read from redirect pipe.
     int status;                     // Exit status of 'command'.
-    const int BUFFER_SIZE = 128;    // Size of 'buffer'.
-    char buffer[BUFFER_SIZE];       // Buffer for reading console.
-    
+
     /* Create two pipes for redirecting the child console output. */
     if (::pipe(stdOutPipe) == -1) {
         throw SystemException(__FILE__, __LINE__);
@@ -645,44 +618,49 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 
     } else {
         /* Subprocess created, I am in parent process. */
-        
+        vislib::sys::Thread outputReader(
+            vislib::sys::Console::ConsoleHelper::ReadFromPipe);
+        vislib::sys::Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
+        vislib::sys::Thread errorReader(
+            vislib::sys::Console::ConsoleHelper::ReadFromPipe);
+        vislib::sys::Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
+
+        if (outStdOut != NULL) {
+            outputReaderInfo.pipe = stdOutPipe[0];
+            outputReaderInfo.target = outStdOut;
+            outStdOut->Clear();
+            if (!outputReader.Start(&outputReaderInfo)) {
+                outStdOut = NULL; // avoid join
+            }
+        }
+
+        if (outStdErr != NULL) {
+            errorReaderInfo.pipe = stdErrPipe[0];
+            errorReaderInfo.target = outStdErr;
+            outStdErr->Clear();
+            if (!errorReader.Start(&errorReaderInfo)) {
+                outStdErr = NULL; // avoid join
+            }
+        }
+
         /* Close the write end of the pipe, we do not need it. */
         ::close(stdOutPipe[1]);
         ::close(stdErrPipe[1]);
 
-        /* Read the console output, if requested. */
+        /* Wait for the child to finish. */
+        int retval =  (::wait(&status) != -1) ? WEXITSTATUS(status) : -1;
+
         if (outStdOut != NULL) {
-            outStdOut->Clear();
-
-            while ((cntRead = ::read(stdOutPipe[0], buffer, BUFFER_SIZE - 1))
-                    > 0) {
-                buffer[cntRead] = 0;
-                *outStdOut += buffer;
-
-                if (cntRead < BUFFER_SIZE - 1) {
-                    break;
-                }
-            }
+            outputReader.Join();
         }
-        ::close(stdOutPipe[0]);
-
         if (outStdErr != NULL) {
-            outStdErr->Clear();
-
-            while ((cntRead = ::read(stdErrPipe[0], buffer, BUFFER_SIZE - 1))
-                    > 0) {
-                buffer[cntRead] = 0;
-                *outStdErr += buffer;
-
-                if (cntRead < BUFFER_SIZE - 1) {
-                    break;
-                }
-            }
+            errorReader.Join();
         }
+
+        ::close(stdOutPipe[0]);
         ::close(stdErrPipe[0]);
 
-        /* Wait for the child to finish. */
-        return (::wait(&status) != -1) ? WEXITSTATUS(status) : -1;
+        return retval;
     } /* end if (pid < 0) */
 #endif /* _WIN32 */
 }
