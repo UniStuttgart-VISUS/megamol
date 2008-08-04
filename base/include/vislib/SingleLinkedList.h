@@ -642,10 +642,10 @@ namespace vislib {
     template<class T, class L> template<class Lp>
     void SingleLinkedList<T, L>::Merge(SingleLinkedList<T, Lp> &from) {
         this->Lock();
-        from->Lock();
+        from.Lock();
         if ((this == &from) || (from.first == NULL)) {
             this->Unlock();
-            from->Unlock();
+            from.Unlock();
             return; // invalid pair of operands or from is empty
         }
         if (this->first == NULL) {
@@ -656,7 +656,7 @@ namespace vislib {
         this->last = from.last;
         from.first = from.last = NULL;
         this->Unlock();
-        from->Unlock();
+        from.Unlock();
     }
 
 
