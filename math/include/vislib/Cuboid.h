@@ -86,7 +86,7 @@ namespace math {
          * @param rhs The object to clone.
          */
         inline Cuboid(const Cuboid& rhs) {
-            ::memcpy(this->bounds, rhs.bounds, 4 * sizeof(T));
+            ::memcpy(this->bounds, rhs.bounds, 6 * sizeof(T));
         }
 
         /**
