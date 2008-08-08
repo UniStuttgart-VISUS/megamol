@@ -48,6 +48,18 @@ namespace math {
         T Distance(const C<Tp, D, Sp>& toPoint) const;
 
         /**
+         * Interpolates a position between 'this' and 'rhs' based on the value
+         * of 't'.
+         *
+         * @param rhs The right hand side operand.
+         * @param t   The interpolation value. (Should be [0, 1])
+         *
+         * @return The interpolated position.
+         */
+        template<class Tp, class Sp>
+        C<T, D, T[D]> Interpolate(const C<Tp, D, Sp>& rhs, float t) const;
+
+        /**
          * Answer whether the point is the coordinate system origin (0, ..., 0).
          *
          * @return true, if the point is the origin, false otherwise.
@@ -281,6 +293,26 @@ namespace math {
             const C<Tp, D, Sp>& toPoint) const {
         return static_cast<T>(::sqrt(static_cast<double>(
             this->SquareDistance(toPoint))));
+    }
+
+
+    /*
+     * vislib::math::AbstractPointImpl<T, D, S>::Interpolate
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C> 
+    template<class Tp, class Sp>
+    C<T, D, T[D]> AbstractPointImpl<T, D, S, C>::Interpolate(
+            const C<Tp, D, Sp>& rhs, float t) const {
+        C<T, D, T[D]> retval;
+        float at = 1.0f - t;
+
+        for (unsigned int d = 0; d < D; d++) {
+            retval.coordinates[d] = this->coordinates[d] * at
+                + static_cast<T>(rhs[d]) * t;
+        }
+
+        return retval;
     }
 
 
