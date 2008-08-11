@@ -75,6 +75,12 @@ ReleaseDir := Release
 
 # Common compiler flags
 CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic -fPIC
+ifneq (,$(findstring gcc,$(shell $(CPP) --version)))
+ifneq (,$(findstring 4.3,$(shell $(CPP) --version)))
+	# Add -fpermissive to gcc 4.3.* flags because they fail at name resolution
+	CompilerFlags := $(CompilerFlags) -fpermissive
+endif
+endif
 ifneq ($VISLIB_ICC, 0)
 	# ICC does not support "-pedantic"
 	CompilerFlags := $(filter-out -pedantic, $(CompilerFlags))

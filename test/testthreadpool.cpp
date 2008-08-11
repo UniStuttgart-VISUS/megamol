@@ -8,6 +8,7 @@
 
 #include "vislib/ThreadPool.h"
 #include "testhelper.h"
+#include <climits>
 
 
 using namespace vislib::sys;
