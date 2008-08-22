@@ -149,7 +149,6 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
         balloonTimeout);
 }
 
-
 /*
  * vislib::sys::TrayIcon::Create
  */
@@ -176,6 +175,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
         balloonTitle, 
         balloonIcon, 
         balloonTimeout);
+	DestroyIcon(icon);
 }
 
 /*
@@ -196,7 +196,7 @@ void vislib::sys::TrayIcon::Create(HWND targetWnd, const UINT callbackMessage,
         (balloonText != NULL) ? A2W(balloonText) : NULL, 
         (balloonTitle != NULL) ? A2W(balloonTitle) : NULL, 
         balloonIcon,
-        balloonTimeout);    
+        balloonTimeout);
 }
 
 
@@ -255,6 +255,19 @@ void vislib::sys::TrayIcon::Hide(void) {
         }
     } /* end if (this->iconState == ICON_VISIBLE) */
     ASSERT(this->iconState != ICON_VISIBLE);
+}
+
+
+/*
+ * vislib::sys::TrayIcon::SetIcon
+ */
+void vislib::sys::TrayIcon::SetIcon(HINSTANCE hResourceModule,
+									const UINT iconID) {
+    HINSTANCE hInst = (hResourceModule != NULL) 
+        ? hResourceModule : ::GetModuleHandleW(NULL);
+    HICON icon = ::LoadIconW(hResourceModule, MAKEINTRESOURCEW(iconID));
+	this->SetIcon(icon);
+	DestroyIcon(icon);
 }
 
 
