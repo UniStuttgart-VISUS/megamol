@@ -578,6 +578,7 @@ void vislib::sys::TrayIcon::notify(const DWORD message) {
     if (!::Shell_NotifyIconW(message, &this->nid)) {
         throw SystemException(__FILE__, __LINE__);
     }
+	this->nid.uFlags = 0;
 }
 
 
