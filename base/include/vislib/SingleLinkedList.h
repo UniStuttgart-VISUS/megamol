@@ -58,6 +58,13 @@ namespace vislib {
              *
              * @param rhs The source object to clone from.
              */
+            Iterator(const typename SingleLinkedList<T, L>::Iterator& rhs);
+
+            /**
+             * copy ctor for assignment
+             *
+             * @param rhs The source object to clone from.
+             */
             template<class Lp>
             Iterator(const typename SingleLinkedList<T, Lp>::Iterator& rhs);
 
@@ -73,6 +80,15 @@ namespace vislib {
              * @throw IllegalStateException if there is no next element
              */
             virtual T& Next(void);
+
+            /**
+             * assignment operator
+             *
+             * @param rhs The right hand side operand.
+             *
+             * @return A reference to 'this'.
+             */
+            Iterator& operator=(const typename SingleLinkedList<T, L>::Iterator& rhs);
 
             /**
              * assignment operator
@@ -99,6 +115,14 @@ namespace vislib {
 
         /** ctor */
         SingleLinkedList(void);
+
+        /**
+         * copy ctor 
+         * the created list creates items identical to the items of rhs.
+         *
+         * @param rhs The linked list to copy from.
+         */
+        SingleLinkedList(const SingleLinkedList<T, L>& rhs);
 
         /**
          * copy ctor 
@@ -302,12 +326,35 @@ namespace vislib {
          * Assignment operator. This list removes all items and then creates 
          * new items identical to the items of rhs.
          *
+         * THIS OPERATOR IS NEEDED because otherwise a default assignment
+         * operator is created.
+         *
+         * @param rhs The linked list to copy from.
+         *
+         * @return Reference to this list.
+         */
+        SingleLinkedList<T, L>& operator=(const SingleLinkedList<T, L>& rhs);
+
+        /**
+         * Assignment operator. This list removes all items and then creates 
+         * new items identical to the items of rhs.
+         *
          * @param rhs The linked list to copy from.
          *
          * @return Reference to this list.
          */
         template<class Lp>
         SingleLinkedList<T, L>& operator=(const SingleLinkedList<T, Lp>& rhs);
+
+        /**
+         * Compare operator. Two single linked lists are equal if the elements
+         * in both lists are equal and in same order. Runtime complexity: O(n)
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return if the lists are considered equal
+         */
+        bool operator==(const SingleLinkedList<T, L>& rhs) const;
 
         /**
          * Compare operator. Two single linked lists are equal if the elements
@@ -369,6 +416,17 @@ namespace vislib {
     /*
      * SingleLinkedList<T, L>::Iterator::Iterator
      */
+    template<class T, class L>
+    SingleLinkedList<T, L>::Iterator::Iterator(
+            const typename SingleLinkedList<T, L>::Iterator& rhs) 
+            : next(rhs.next), prev(rhs.prev) {
+        // intentionally empty
+    }
+
+
+    /*
+     * SingleLinkedList<T, L>::Iterator::Iterator
+     */
     template<class T, class L> template<class Lp>
     SingleLinkedList<T, L>::Iterator::Iterator(
             const typename SingleLinkedList<T, Lp>::Iterator& rhs) 
@@ -413,6 +471,19 @@ namespace vislib {
     /*
      * SingleLinkedList<T, L>::Iterator::operator=
      */
+    template<class T, class L>
+    typename SingleLinkedList<T, L>::Iterator& 
+        SingleLinkedList<T, L>::Iterator::operator=(
+            const typename SingleLinkedList<T, L>::Iterator& rhs) {
+        this->next = rhs.next;
+        this->prev = rhs.prev;
+        return *this;
+    }
+
+
+    /*
+     * SingleLinkedList<T, L>::Iterator::operator=
+     */
     template<class T, class L> template<class Lp>
     typename SingleLinkedList<T, L>::Iterator& 
         SingleLinkedList<T, L>::Iterator::operator=(
@@ -440,6 +511,17 @@ namespace vislib {
     SingleLinkedList<T, L>::SingleLinkedList(void)
             : OrderedCollection<T, L>(), first(NULL), last(NULL) {
         // intentionally empty
+    }
+
+
+    /*
+     * SingleLinkedList<T, L>::SingleLinkedList
+     */
+    template<class T, class L>
+    SingleLinkedList<T, L>::SingleLinkedList(
+            const SingleLinkedList<T, L>& rhs)
+            : OrderedCollection<T, L>(), first(NULL), last(NULL) {
+        *this = rhs;
     }
 
 
@@ -856,6 +938,33 @@ namespace vislib {
     /*
      * SingleLinkedList<T, L>::operator=
      */
+    template<class T, class L>
+    SingleLinkedList<T, L>& SingleLinkedList<T, L>::operator=(
+            const SingleLinkedList<T, L>& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
+
+        this->Lock();
+
+        // might be implemented more intelligent reusing the item object 
+        //  already present in this
+        this->Clear();
+        typename SingleLinkedList<T, L>::Iterator it
+            = const_cast<SingleLinkedList<T, L>&>(rhs).GetIterator();
+        while(it.HasNext()) {
+            this->Append(it.Next());
+        }
+
+        this->Unlock();
+
+        return *this;
+    }
+
+
+    /*
+     * SingleLinkedList<T, L>::operator=
+     */
     template<class T, class L> template<class Lp>
     SingleLinkedList<T, L>& SingleLinkedList<T, L>::operator=(
             const SingleLinkedList<T, Lp>& rhs) {
@@ -877,6 +986,30 @@ namespace vislib {
         this->Unlock();
 
         return *this;
+    }
+
+
+    /*
+     * SingleLinkedList<T, L>::operator==
+     */
+    template<class T, class L>
+    bool SingleLinkedList<T, L>::operator==(
+            const SingleLinkedList<T, L>& rhs) const {
+        this->Lock();
+        const Item *i = this->first;
+        const Item *j = rhs.first;
+
+        while (i) {
+            if ((!j) || (!(i->item == j->item))) {
+                this->Unlock();
+                return false;
+            }
+            i = i->next;
+            j = j->next;
+        }
+        this->Unlock();
+
+        return (j == NULL);
     }
 
 
