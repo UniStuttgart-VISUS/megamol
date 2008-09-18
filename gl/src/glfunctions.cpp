@@ -18,6 +18,10 @@ bool WGLExtensionSupported(const char *extension_name) {
     // determine pointer to wglGetExtensionsStringEXT function
     _wglGetExtensionsStringEXT = (PFNWGLGETEXTENSIONSSTRINGEXTPROC) wglGetProcAddress("wglGetExtensionsStringEXT");
 
+    if (_wglGetExtensionsStringEXT == NULL) {
+        return false;
+    }
+
     if (strstr(_wglGetExtensionsStringEXT(), extension_name) == NULL) {
         // string was not found
         return false;
