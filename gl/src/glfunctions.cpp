@@ -11,24 +11,33 @@
 // TODO: change or check implementation
 #include "GL/wglext.h"
 
-bool WGLExtensionSupported(const char *extension_name) {
+/**
+ * Answers whether or not a given wgl extension is supported.
+ *
+ * @param extensionName The name of the extension to search for.
+ *
+ * @return 0 if the extension is not supported,
+ *         1 if the extension is supported, or
+ *         -1 if there was an error while asking for the extension strings.
+ */
+int WGLExtensionSupported(const char *extensionName) {
     // this is pointer to function which returns pointer to string with list of all wgl extensions
-    PFNWGLGETEXTENSIONSSTRINGEXTPROC _wglGetExtensionsStringEXT = NULL;
+    PFNWGLGETEXTENSIONSSTRINGEXTPROC wglGetExtensionsStringEXT = NULL;
 
     // determine pointer to wglGetExtensionsStringEXT function
-    _wglGetExtensionsStringEXT = (PFNWGLGETEXTENSIONSSTRINGEXTPROC) wglGetProcAddress("wglGetExtensionsStringEXT");
+    wglGetExtensionsStringEXT = (PFNWGLGETEXTENSIONSSTRINGEXTPROC) wglGetProcAddress("wglGetExtensionsStringEXT");
 
-    if (_wglGetExtensionsStringEXT == NULL) {
-        return false;
+    if (wglGetExtensionsStringEXT == NULL) {
+        return -1;
     }
 
-    if (strstr(_wglGetExtensionsStringEXT(), extension_name) == NULL) {
+    if (strstr(wglGetExtensionsStringEXT(), extensionName) == NULL) {
         // string was not found
-        return false;
+        return 0;
     }
 
     // extension is supported
-    return true;
+    return 1;
 }
 #endif
 
@@ -36,20 +45,25 @@ bool WGLExtensionSupported(const char *extension_name) {
 /*
  * vislib::graphics::gl::EnableVSync
  */
-void vislib::graphics::gl::EnableVSync(bool enable) {
+bool vislib::graphics::gl::EnableVSync(bool enable) {
 #ifdef _WIN32
     static PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
     static bool initialised = false;
     if (!initialised) {
         initialised = true;
-        if (WGLExtensionSupported("WGL_EXT_swap_control")) {
-            // this is another function from WGL_EXT_swap_control extension
-            wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+        int support = WGLExtensionSupported("WGL_EXT_swap_control");
+        if (support == 1) {
+            wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)
+                wglGetProcAddress("wglSwapIntervalEXT");
         }
     }
     if (wglSwapIntervalEXT != NULL) {
         wglSwapIntervalEXT(enable ? 1 : 0);
+        bool rvError = false;
+        bool rvI = IsVSyncEnabled(&rvError);
+        if (!rvError) return (rvI == enable);
     }
+    return false;
 #else /* _WIN32 */
     // TODO: Implement
 #endif /* _WIN32 */
@@ -108,18 +122,22 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
 /*
  * vislib::graphics::gl::IsVSyncEnabled
  */
-bool vislib::graphics::gl::IsVSyncEnabled(void) {
+bool vislib::graphics::gl::IsVSyncEnabled(bool *error) {
 #ifdef _WIN32
     static PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT = NULL;
-    static bool initialised = false;
-    if (!initialised) {
-        initialised = true;
-        if (WGLExtensionSupported("WGL_EXT_swap_control")) {
-            // this is another function from WGL_EXT_swap_control extension
-            wglGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC)wglGetProcAddress("wglGetSwapIntervalEXT");
+    if (wglGetSwapIntervalEXT == NULL) {
+        if (WGLExtensionSupported("WGL_EXT_swap_control") == 1) {
+            wglGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC)
+                wglGetProcAddress("wglGetSwapIntervalEXT");
         }
     }
-    return (wglGetSwapIntervalEXT != NULL) ? (wglGetSwapIntervalEXT() == 1) : false;
+    if (wglGetSwapIntervalEXT != NULL) {
+        if (error != NULL) *error = false;
+        return (wglGetSwapIntervalEXT() == 1);
+    } else {
+        if (error != NULL) *error = true;
+        return false;
+    }
 #else /* _WIN32 */
     // TODO: Implement
     return false;

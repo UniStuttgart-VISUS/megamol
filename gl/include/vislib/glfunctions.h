@@ -27,17 +27,21 @@ namespace gl {
      *
      * @param enabled Flag whether to enable (a value of 'true') or disable (a
      *                value of 'false') VSync.
+     *
+     * @return true if the operation completed successfully, false otherwise.
      */
-    void EnableVSync(bool enable = true);
+    bool EnableVSync(bool enable = true);
 
     /**
      * Disables VSync. This is identically to calling 'EnableVSync(false)'.
      * This method can only be used when there is a current open gl context.
+     *
+     * @return true if the operation completed successfully, false otherwise.
      */
-    inline void DisableVSync(void) {
+    inline bool DisableVSync(void) {
         // Note: not ordered correctly because we would need a forward 
         //       declaration
-        EnableVSync(false);
+        return EnableVSync(false);
     }
 
     /**
@@ -53,9 +57,13 @@ namespace gl {
      * Answer whether VSync is enabled or not. This method can only be used 
      * when there is a current open gl context.
      *
+     * @param error Pointer to an bool receiving whether the function resulted
+     *              in an error (returning 'true' and setting 'error' to
+     *              'true').
+     *
      * @return 'true' if VSync is enabled, 'false' if not.
      */
-    bool IsVSyncEnabled(void);
+    bool IsVSyncEnabled(bool *error = NULL);
 
 } /* end namespace gl */
 } /* end namespace graphics */
