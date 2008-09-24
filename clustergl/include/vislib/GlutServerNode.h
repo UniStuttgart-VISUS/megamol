@@ -320,6 +320,8 @@ namespace cluster {
             AbstractControllerNode(new graphics::ObservableCameraParams()),
             rotateController(NULL), zoomController(NULL) {
         this->camera.SetParameters(this->getParameters());
+        // TODO: This (below) does not work as intended and must be fixed. 
+        // Move to Initialise or onInitialise
         this->initialiseCursor(this->cursor);
         this->initialiseInputModifiers(this->inputModifiers);
         this->initialiseController(this->rotateController,

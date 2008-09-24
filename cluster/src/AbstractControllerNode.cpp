@@ -195,7 +195,7 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
      * |-----------------------------------------|
      * | BlockHeader for camera parameter limits |
      * |-----------------------------------------|
-     * | Serialiser camera parameter limits      |
+     * | Serialised camera parameter limits      |
      * |-----------------------------------------|
      * | BlockHeader for camera parameters       |
      * |-----------------------------------------|

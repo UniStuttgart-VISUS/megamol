@@ -7,6 +7,8 @@
 
 #include "vislib/AbstractCursor.h"
 #include "vislib/memutils.h"
+#include "vislib/Trace.h"
+
 #include <memory.h>
 
 
@@ -68,9 +70,18 @@ void vislib::graphics::AbstractCursor::SetButtonCount(unsigned int btnCnt) {
 /*
  * vislib::graphics::AbstractCursor::SetButtonState
  */
-void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn, bool down) {
+void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn, 
+                                                      bool down) {
+    // mueller: Some of our Linux-gluts report button 4 for scrolling using the
+    //          mouse wheel. This causes the application to crash, because no 
+    //          one checks for this error here. Therefore, I think it is better
+    //          to fail silently.
+    //if (btn >= this->btnCnt) {
+    //    throw IllegalParamException("btn", __FILE__, __LINE__);
+    //}
     if (btn >= this->btnCnt) {
-        throw IllegalParamException("btn", __FILE__, __LINE__);
+        TRACE(Trace::LEVEL_VL_WARN, "%d is an illegal value for \"btn\".\n");
+        return;
     }
 
     if (down) {
