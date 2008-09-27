@@ -46,6 +46,23 @@ namespace sys {
         /** Define a local name for the character type. */
         typedef typename T::Char Char;
 
+        /**
+         * Convenience method for creating a command line provider from 
+         * standard main ANSI input parameters regardless of the type of the
+         * command line parser.
+         *
+         * This is primarily intended for Linux where the Unicode support is 
+         * sh*** and Unicode applications will get ANSI input.
+         *
+         * @param argc The number of elements in 'argv'.
+         * @param argv The array of command line arguments. The first should be
+         *             the application name.
+         *
+         * @return A template CmdLineProvider representing the specified command
+         *         line arguments.
+         */
+        static CmdLineProvider Create(int argc, char **argv);
+
 #ifdef _WIN32
         /**
          * Receives the modules file name of the current processes.
@@ -389,6 +406,23 @@ namespace sys {
     };
 
 
+    /*
+     * vislib::sys::CmdLineProvider<T>::Create
+     */
+    template<class T>
+    CmdLineProvider<T> CmdLineProvider<T>::Create(int argc, char **argv) {
+        // TODO: This is not very efficient.
+        String<T> tmpLine;
+
+        for (int i = 0; i < argc; i++) {
+            tmpLine += String<T>(argv[i]);
+            tmpLine += static_cast<Char>(' ');
+        }
+
+        return CmdLineProvider(tmpLine.PeekBuffer());
+    }
+
+
 #ifdef _WIN32
     /*
      * CmdLineProvider<T>::GetModuleName
@@ -549,7 +583,7 @@ namespace sys {
 
 
     /*
-     * CmdLineProvider<T>::Line
+     * CmdLineProvider<T>::CreateCmdLine
      */
     template<class T> void CmdLineProvider<T>::CreateCmdLine(const Char *appName, const Char *cmdLine) {
         Char *ci;
