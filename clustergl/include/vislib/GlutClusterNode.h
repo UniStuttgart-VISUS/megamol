@@ -141,6 +141,11 @@ namespace cluster {
             const int y);
 
         /**
+         * This method is called before the GLUT window is created.
+         */
+        virtual void onPreCreateWindow(void);
+
+        /**
          * This method is called when the window was resized.
          *
          * @param width  The new width of the window.
@@ -305,6 +310,7 @@ namespace cluster {
      */
     template<class T> DWORD GlutClusterNode<T>::Run(void) {
         // TODO: Additional initialisation callback (format, title, ...) req.
+        this->onPreCreateWindow();
         ::glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
         ::glutCreateWindow("");
 
@@ -390,6 +396,14 @@ namespace cluster {
     template<class T> 
     void GlutClusterNode<T>::onResize(const int width, const int height) {
         ::glViewport(0, 0, width, height);
+    }
+
+
+    /*
+     * vislib::net::cluster::GlutClusterNode<T>::onResize
+     */
+    template<class T> 
+    void GlutClusterNode<T>::onPreCreateWindow(void) {
     }
 
 
