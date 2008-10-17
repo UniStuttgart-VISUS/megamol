@@ -17,11 +17,11 @@
 
 #include "vislib/Array.h"
 #include "vislib/AssociativeCollection.h"
+#include "vislib/Iterator.h"
 #include "vislib/SingleLinkedList.h"
 
 
 namespace vislib {
-
 
     /**
      * This map implementation of the associative collection uses 
@@ -30,6 +30,178 @@ namespace vislib {
      */
     template<class K, class V> class Map : public AssociativeCollection<K, V> {
     public:
+
+        /** Helper class for pair iteration */
+        class ElementPair {
+        public:
+            friend class ::vislib::Map<K, V>;
+            friend class ::vislib::Map<K, V>::Iterator;
+
+            /**
+             * Copy ctor.
+             *
+             * @param src The object to clone from.
+             */
+            ElementPair(const ElementPair& src) {
+                *this = src;
+            }
+
+            /**
+             * Dtor.
+             */
+            ~ElementPair(void) {
+                // DO NOT DELETE THE ARRAYS!
+                this->key = NULL;
+                this->value = NULL;
+            }
+
+            /**
+             * Gets the key of this element pair.
+             *
+             * @return The key of this element pair.
+             */
+            const K& Key(void) const {
+                return *this->key;
+            }
+
+            /**
+             * Gets the key of this element pair
+             */
+            const V& Value(void) const {
+                return *this->value;
+            }
+
+            /**
+             * Assignment operator
+             *
+             * @param rhs The right hand side operand.
+             *
+             * @return A reference to 'this' object.
+             */
+            ElementPair& operator=(const ElementPair& rhs) {
+                this->key = rhs.key;
+                this->value = rhs.value;
+                return *this;
+            }
+
+            /**
+             * Test for equality.
+             *
+             * @param rhs The right hand side operand.
+             *
+             * @return 'true' if 'rhs' and 'this' are equal, 'false' otherwise.
+             */
+            bool operator==(const ElementPair& rhs) const {
+                return (this->key == rhs.key)
+                    && (this->value == rhs.value);
+            }
+
+
+        private:
+
+            /**
+             * Private ctor.
+             *
+             * @param key The key.
+             * @param value The value.
+             */
+            ElementPair(K *key, V *value)
+                    : key(key), value(value) {
+                // intentionally empty
+            }
+
+            /** the key */
+            K *key;
+
+            /** the value */
+            V *value;
+
+        };
+
+        /**
+         * Iterator class
+         */
+        class Iterator : public ::vislib::Iterator<ElementPair> {
+        public:
+            friend class Map<K, V>;
+
+            /** default ctor */
+            Iterator(void) : owner(NULL), idx(0), retval(NULL, NULL) {
+                // intentionally empty
+            }
+
+            /**
+             * copy ctor for assignment
+             *
+             * @param rhs The source object to clone from.
+             */
+            Iterator(const typename Map<K, V>::Iterator& rhs)
+                    : retval(NULL, NULL) {
+                *this = rhs;
+            }
+
+            /** Dtor. */
+            virtual ~Iterator(void) {
+                this->owner = NULL; // DO NOT DELETE
+            }
+
+            /** Behaves like Iterator<T>::HasNext */
+            virtual bool HasNext(void) const {
+                if (this->owner == NULL) return false;
+                return this->owner->keys.Count() > this->idx;
+            }
+
+            /** 
+             * Behaves like Iterator<T>::Next 
+             *
+             * @throw IllegalStateException if there is no next element
+             */
+            virtual ElementPair& Next(void) {
+                if (!this->HasNext()) {
+                    throw IllegalStateException("There is no next element",
+                        __FILE__, __LINE__);
+                }
+                this->retval.key = &this->owner->keys[this->idx];
+                this->retval.value = &this->owner->values[this->idx];
+                this->idx++;
+                return this->retval;
+            }
+
+            /**
+             * assignment operator
+             *
+             * @param rhs The right hand side operand.
+             *
+             * @return A reference to 'this'.
+             */
+            Iterator& operator=(const typename Map<K, V>::Iterator& rhs) {
+                this->owner = rhs.owner;
+                this->idx = rhs.idx;
+                return *this;
+            }
+
+        private:
+
+            /**
+             * Ctor.
+             *
+             * @param owner The owning map object.
+             */
+            Iterator(Map<K, V> &owner) : owner(&owner), idx(0),
+                    retval(NULL, NULL) {
+                // intentionally empty
+            }
+
+            /** The owning map object */
+            Map<K, V>* owner;
+
+            /** The next index */
+            unsigned int idx;
+
+            /** The returned value */
+            ElementPair retval;
+
+        };
 
         /** Ctor. */
         Map(void);
@@ -99,6 +271,15 @@ namespace vislib {
          *         present in the map.
          */
         virtual V * FindValue(const K &key);
+
+        /**
+         * Gets an iterator for all entries in the map.
+         *
+         * @return The iterator to all entries in the map.
+         */
+        virtual Iterator GetIterator(void) {
+            return Iterator(*this);
+        }
 
         /**
          * Answers whether the map is empty or not.
