@@ -17,6 +17,7 @@
 
 #include "vislib/Array.h"
 #include "vislib/AssociativeCollection.h"
+#include "vislib/ConstIterator.h"
 #include "vislib/Iterator.h"
 #include "vislib/SingleLinkedList.h"
 
@@ -271,6 +272,15 @@ namespace vislib {
          *         present in the map.
          */
         virtual V * FindValue(const K &key);
+
+        /**
+         * Gets a const iterator for all entries in the map.
+         *
+         * @return The const iterator to all entries in the map.
+         */
+        virtual ConstIterator<Iterator> GetConstIterator(void) const {
+            return ConstIterator<Iterator>(Iterator(*const_cast<Map*>(this)));
+        }
 
         /**
          * Gets an iterator for all entries in the map.
