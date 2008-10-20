@@ -16,8 +16,12 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 #include "vislib/SynchronisedArray.h"
+#include "vislib/ConsoleProgressBar.h"
 
 
+/*
+ * TestArray
+ */
 void TestArray(void) {
     using vislib::Array;
     using vislib::PtrArray;
@@ -127,6 +131,44 @@ void TestArray(void) {
 }
 
 
+/*
+ * TestSingleLinkedList
+ */
+void TestSingleLinkedList(void) {
+    typedef vislib::SingleLinkedList<int> IntList;
+
+    IntList list;
+
+    list.Append(12);
+    list.Add(7);
+    list.Prepend(6);
+
+    AssertEqual("List contains 3 elements", list.Count(), SIZE_T(3));
+
+    IntList::Iterator i = list.GetIterator();
+    AssertTrue("Iterator valid", i.HasNext());
+    AssertEqual("Element[1] = 6", i.Next(), 6);
+    AssertTrue("Iterator valid", i.HasNext());
+    AssertEqual("Element[2] = 12", i.Next(), 12);
+    AssertTrue("Iterator valid", i.HasNext());
+    AssertEqual("Element[3] = 7", i.Next(), 7);
+    AssertFalse("Iterator at end", i.HasNext());
+
+    vislib::ConstIterator<IntList::Iterator> ci = list.GetConstIterator();
+    AssertTrue("Iterator valid", ci.HasNext());
+    AssertEqual("Element[1] = 6", ci.Next(), 6);
+    AssertTrue("Iterator valid", ci.HasNext());
+    AssertEqual("Element[2] = 12", ci.Next(), 12);
+    AssertTrue("Iterator valid", ci.HasNext());
+    AssertEqual("Element[3] = 7", ci.Next(), 7);
+    AssertFalse("Iterator at end", ci.HasNext());
+
+}
+
+
+/*
+ * TestHeap
+ */
 void TestHeap(void) {
     using vislib::Array;
     using vislib::Heap;
@@ -190,6 +232,9 @@ void TestHeap(void) {
 }
 
 
+/*
+ * TestMap
+ */
 void TestMap(void) {
     using vislib::Map;
     using vislib::SingleLinkedList;
@@ -226,5 +271,120 @@ void TestMap(void) {
     map.Clear();
     ::AssertEqual("Map is empty", map.Count(), static_cast<SIZE_T>(0));
     ::AssertTrue("Map is empty", map.IsEmpty());
+
+}
+
+
+/*
+ * intSortCompare
+ */
+int intSortCompare(const int& lhs, const int& rhs) {
+    return lhs - rhs;
+}
+
+
+/*
+ * TestSingleLinkedListSort
+ */
+void TestSingleLinkedListSort(void) {
+    vislib::SingleLinkedList<int> list;
+
+    list.Add(22);
+    list.Add(8);
+    list.Add(21);
+    list.Add(22);
+    list.Add(50);
+    list.Add(2);
+    list.Add(1);
+    list.Add(10);
+
+    AssertEqual<int>("List filled with 8 Elements", int(list.Count()), 8);
+
+    list.Sort(intSortCompare);
+
+    AssertEqual<int>("List still contains 8 Elements", int(list.Count()), 8);
+
+    vislib::SingleLinkedList<int>::Iterator iter = list.GetIterator();
+    AssertTrue("Iterator before Element 1", iter.HasNext());
+    AssertEqual("Element 1 = 1", iter.Next(), 1);
+    AssertTrue("Iterator before Element 2", iter.HasNext());
+    AssertEqual("Element 2 = 2", iter.Next(), 2);
+    AssertTrue("Iterator before Element 3", iter.HasNext());
+    AssertEqual("Element 3 = 8", iter.Next(), 8);
+    AssertTrue("Iterator before Element 4", iter.HasNext());
+    AssertEqual("Element 4 = 10", iter.Next(), 10);
+    AssertTrue("Iterator before Element 5", iter.HasNext());
+    AssertEqual("Element 5 = 21", iter.Next(), 21);
+    AssertTrue("Iterator before Element 6", iter.HasNext());
+    AssertEqual("Element 6 = 22", iter.Next(), 22);
+    AssertTrue("Iterator before Element 7", iter.HasNext());
+    AssertEqual("Element 7 = 22", iter.Next(), 22);
+    AssertTrue("Iterator before Element 8", iter.HasNext());
+    AssertEqual("Element 8 = 50", iter.Next(), 50);
+    AssertFalse("Iterator at end of list", iter.HasNext());
+
+    list.Clear();
+
+    const SIZE_T cnt = 10000000;
+    for (SIZE_T i = 0; i < cnt; i++) {
+        list.Add(rand());
+    }
+
+#ifdef _WIN32
+    DWORD startTick = GetTickCount();
+#endif /* _WIN32 */
+    AssertEqual("List filled with random Elements", list.Count(), cnt);
+    list.Sort(intSortCompare);
+    AssertEqual("List still contains random Elements", list.Count(), cnt);
+#ifdef _WIN32
+    DWORD duration = GetTickCount() - startTick;
+    printf("Sorted in %u milliseconds\n", duration);
+#endif /* _WIN32 */
+
+    bool growing = true;
+    int ov = -1;
+    iter = list.GetIterator();
+    while (iter.HasNext()) {
+        int v = iter.Next();
+        if (v < ov) {
+            growing = false;
+        }
+        ov = v;
+    }
+    AssertTrue("List sorted Accending", growing);
+
+}
+
+
+/*
+ * TestArraySort
+ */
+void TestArraySort(void) {
+    vislib::Array<int> arr;
+    vislib::sys::ConsoleProgressBar progBar;
+    const unsigned int size = 10000000;
+    unsigned int i;
+    
+    progBar.Start("Filling Array", size);
+    arr.SetCount(size);
+    for (i = 0; i < size; i++) {
+        arr[i] = rand();
+        progBar.Set(i);
+    }
+    progBar.Stop();
+
+    arr.Sort(intSortCompare);
+
+    progBar.Start("Testing Sort output", size);
+    bool growing = true;
+    for (i = 1; i < size; i++) {
+        if (arr[i - 1] > arr[i]) {
+            growing = false;
+        }
+        progBar.Set(i);
+    }
+    progBar.Stop();
+
+    AssertTrue("Array sorted Accending", growing);
 
 }

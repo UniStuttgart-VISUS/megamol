@@ -13,8 +13,14 @@
 
 void TestArray(void);
 
+void TestSingleLinkedList(void);
+
 void TestHeap(void);
 
 void TestMap(void);
+
+void TestSingleLinkedListSort(void);
+
+void TestArraySort(void);
 
 #endif /* VISLIBTEST_TESTCOLLECTION_H_INCLUDED */

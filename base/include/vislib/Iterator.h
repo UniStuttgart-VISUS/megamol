@@ -23,6 +23,9 @@ namespace vislib {
     template<class T> class Iterator {
     public:
 
+        /** The type returned by the iterator */
+        typedef T Type;
+
         /** Dtor. */
         virtual ~Iterator(void);
 

@@ -97,20 +97,28 @@ $(OutDir)/$(ReleaseDir)/$(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)
 
 # Rules for intermediate binaries:
 $(IntDir)/$(DebugDir)/$(TargetName): $(CPPOBJS_DEBUG)
-	$(LINK) $^ $(LDFLAGS_DEBUG) -o $@
+	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
+	@tput sgr0
+	$(Q)$(LINK) $^ $(LDFLAGS_DEBUG) -o $@
 
 $(IntDir)/$(ReleaseDir)/$(TargetName): $(CPPOBJS_RELEASE)
-	$(LINK) $^ $(LDFLAGS_RELEASE) -o $@
+	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
+	@tput sgr0
+	$(Q)$(LINK) $^ $(LDFLAGS_RELEASE) -o $@
 
 
 # Rules for dependencies:
 $(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CPP) -MM $(CPPFLAGS_DEBUG) $^ | sed -e 's/..*\.o\s*[:]/$(subst .,\.,$(subst /,\/,$(dir $@)))\0/g' > $@
+	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	$(Q)$(CPP) -MM $(CPPFLAGS_DEBUG) $^ | sed -e 's/..*\.o\s*[:]/$(subst .,\.,$(subst /,\/,$(dir $@)))\0/g' > $@
 
 $(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CPP) -MM $(CPPFLAGS_RELEASE) $^ | sed -e 's/..*\.o\s*[:]/$(subst .,\.,$(subst /,\/,$(dir $@)))\0/g' > $@
+	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	$(Q)$(CPP) -MM $(CPPFLAGS_RELEASE) $^ | sed -e 's/..*\.o\s*[:]/$(subst .,\.,$(subst /,\/,$(dir $@)))\0/g' > $@
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
@@ -122,11 +130,15 @@ endif
 # Rules for object files:
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
-	$(CPP) -c $(CPPFLAGS_DEBUG) -o $@ $<
+	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	$(Q)$(CPP) -c $(CPPFLAGS_DEBUG) -o $@ $<
 
 $(IntDir)/$(ReleaseDir)/%.o:
 	@mkdir -p $(dir $@)
-	$(CPP) -c $(CPPFLAGS_RELEASE) -o $@ $<
+	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
+	@tput sgr0
+	$(Q)$(CPP) -c $(CPPFLAGS_RELEASE) -o $@ $<
 
 
 # Cleanup rules:

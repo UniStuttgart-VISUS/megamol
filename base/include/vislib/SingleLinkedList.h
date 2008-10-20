@@ -15,6 +15,7 @@
 
 
 #include "vislib/memutils.h"
+#include "vislib/ConstIterator.h"
 #include "vislib/Iterator.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -320,7 +321,17 @@ namespace vislib {
          *
          * @return An iterator to the list.
          */
-        class Iterator GetIterator(void);
+        Iterator GetIterator(void);
+
+        /**
+         * Returns a const iterator to the list, pointing before the first
+         * element. Note that iterators are never threadsafe! You should
+         * manually lock the collection if you use an iterator in a
+         * multithreading environment.
+         *
+         * @return A const iterator to the list.
+         */
+        ConstIterator<Iterator> GetConstIterator(void) const;
 
         /**
          * Assignment operator. This list removes all items and then creates 
@@ -932,6 +943,17 @@ namespace vislib {
     typename SingleLinkedList<T, L>::Iterator
     SingleLinkedList<T, L>::GetIterator(void) {
         return Iterator(*this);
+    }
+
+
+    /*
+     * SingleLinkedList<T, L>::GetConstIterator
+     */
+    template<class T, class L>
+    ConstIterator<typename SingleLinkedList<T, L>::Iterator>
+    SingleLinkedList<T, L>::GetConstIterator(void) const {
+        return ConstIterator<Iterator>(Iterator(
+            *const_cast<SingleLinkedList<T, L>* >(this)));
     }
 
 

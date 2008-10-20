@@ -30,10 +30,6 @@ void TestPerformanceCounter(void);
 
 void TestPathManipulations(void);
 
-void TestSingleLinkedListSort(void);
-
-void TestArraySort(void);
-
 void TestFileNameSequence(void);
 
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */
