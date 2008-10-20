@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_D3DMATRIX_H_INCLUDED
@@ -28,15 +29,18 @@ namespace d3d {
 
 
     /**
-     * Matrix specialisation that uses a D3DX matrix as storage class.
+     * Matrix specialisation that uses a D3DXMATRIX as storage class.
+     *
+     * Implementation note: We require a D3DXMATRIX rather than a D3DMATRIX
+     * because of the cast to FLOAT.
      */
     class D3DMatrix : public math::AbstractMatrix<FLOAT, 4, 
-            math::ROW_MAJOR, D3DXMATRIXA16> {
+            math::ROW_MAJOR, D3DXMATRIX> {
 
     private:
 
         /** Make storage class available. */
-        typedef D3DXMATRIXA16 S;
+        typedef D3DXMATRIX S;
 
         /** Make 'T' available. */
         typedef FLOAT T;
@@ -58,7 +62,7 @@ namespace d3d {
          */
         inline D3DMatrix(const T *components) : Super() {
             ASSERT(components != NULL);
-            ::memcpy(this->components, components, Super::CNT_COMPONENTS
+            ::memcpy(this->components.m, components, Super::CNT_COMPONENTS
                 * sizeof(T));
         }
 
@@ -101,7 +105,7 @@ namespace d3d {
          * @param rhs The object to be cloned.
          */
         inline D3DMatrix(const D3DMatrix& rhs) : Super() {
-            ::memcpy(this->components, rhs.components, 
+            ::memcpy(this->components.m, rhs.components.m,
                 Super::CNT_COMPONENTS * sizeof(T));
         }
 
@@ -171,6 +175,42 @@ namespace d3d {
                 rhs) {
             Super::operator =(rhs);
             return *this;
+        }
+
+        /**
+         * Provide access to the underlying Direct3D matrix structure.
+         *
+         * @return A pointer to the underlying Direct3D matrix structure.
+         */
+        inline operator D3DXMATRIX&(void) {
+            return this->components;
+        }
+
+        /**
+         * Provide access to the underlying Direct3D matrix structure.
+         *
+         * @return A pointer to the underlying Direct3D matrix structure.
+         */
+        inline operator const D3DXMATRIX&(void) const {
+            return this->components;
+        }
+
+        /**
+         * Provide access to the underlying Direct3D matrix structure.
+         *
+         * @return A pointer to the underlying Direct3D matrix structure.
+         */
+        inline operator D3DXMATRIX *(void) {
+            return &this->components;
+        }
+
+        /**
+         * Provide access to the underlying Direct3D matrix structure.
+         *
+         * @return A pointer to the underlying Direct3D matrix structure.
+         */
+        inline operator const D3DXMATRIX *(void) const {
+            return &this->components;
         }
 
     protected:

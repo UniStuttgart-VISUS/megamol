@@ -53,6 +53,10 @@ public:
 
     void OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown);
 
+    void OnMouse(bool bLeftButtonDown, bool bRightButtonDown, 
+        bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
+        INT nMouseWheelDelta, INT xPos, INT yPos);
+
     void RegisterTests(CDXUTComboBox *comboBox);
 
     bool SetActiveTest(const SIZE_T activeTest);

@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
 #include "vislib/D3DMatrix.h"
@@ -14,7 +15,9 @@
  */
 vislib::graphics::d3d::D3DMatrix::D3DMatrix(const T& value) : Super() {
     for (unsigned int i = 0; i < D; i++) {
-        this->components[i] = value;
+        for (unsigned int j = 0; j < D; j++) {
+            this->components.m[i][j] = value;
+        }
     }
 }
 
@@ -53,7 +56,6 @@ vislib::graphics::d3d::D3DMatrix::D3DMatrix(
  * vislib::graphics::d3d::D3DMatrix::~D3DMatrix
  */
 vislib::graphics::d3d::D3DMatrix::~D3DMatrix(void) {
-    // TODO: Implement
 }
 
 

@@ -92,7 +92,7 @@ namespace math {
          *
          * @return *this.
          */
-        Plane& operator =(const Plane& rhs) {
+        inline Plane& operator =(const Plane& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -106,7 +106,7 @@ namespace math {
          * @return *this.
          */
         template<class Tp, class Sp>
-        Plane& operator =(const AbstractPlane<Tp, Sp>& rhs) {
+        inline Plane& operator =(const AbstractPlane<Tp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }

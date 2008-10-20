@@ -1,12 +1,13 @@
 /*
- * AbstractTest.h
+ * D3D9SimpleCameraTest.h
  *
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIBTEST_ABSTRACTEST_H_INCLUDED
-#define VISLIBTEST_ABSTRACTEST_H_INCLUDED
+#ifndef VISLIBTEST_D3DSIMPLECAMERATEST_H_INCLUDED
+#define VISLIBTEST_D3DSIMPLECAMERATEST_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -15,33 +16,31 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/String.h"
+#include "vislib/D3DCamera.h"
+#include "vislib/D3DVISLogo.h"
+#include "vislib/MouseInteractionAdapter.h"
+
+#include "AbstractTest.h"
 
 
-class AbstractTest {
+class D3D9SimpleCameraTest : public AbstractTest {
 
 public:
 
-    virtual ~AbstractTest(void);
+    D3D9SimpleCameraTest(void);
 
-    const vislib::TString& GetName(void) const {
-        return this->name;
-    }
+    virtual ~D3D9SimpleCameraTest(void);
 
-    virtual HRESULT OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice, 
+    virtual HRESULT OnD3D9CreateDevice(PDIRECT3DDEVICE9 pd3dDevice,
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc);
 
     virtual void OnD3D9DestroyDevice(void);
 
-    virtual void OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice, double fTime, 
-        float fElapsedTime) = 0;
-
-    virtual void OnD3D9LostDevice(void);
+    virtual void OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice, double fTime,
+        float fElapsedTime);
 
     virtual HRESULT OnD3D9ResetDevice(PDIRECT3DDEVICE9 pd3dDevice, 
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc);
-
-    virtual void OnFrameMove(double fTime, float fElapsedTime);
 
     virtual void OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown);
 
@@ -49,16 +48,17 @@ public:
         bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
         INT nMouseWheelDelta, INT xPos, INT yPos);
 
-protected:
+private:
 
-    AbstractTest(const vislib::StringW& name);
+    vislib::graphics::d3d::D3DCamera camera;
 
-    float aspectRatio;
+    vislib::graphics::d3d::D3DVISLogo *logo;
 
-    vislib::StringW name;
+    vislib::graphics::MouseInteractionAdapter *mia;
 };
+
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTDIMENSIONIMPL_H_INCLUDED */
+#endif /* VISLIBTEST_D3DSIMPLECAMERATEST_H_INCLUDED */

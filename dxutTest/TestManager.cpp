@@ -114,6 +114,20 @@ void TestManager::OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown) {
 
 
 /*
+ * TestManager::OnMouse
+ */
+void TestManager::OnMouse(bool bLeftButtonDown, bool bRightButtonDown, 
+        bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
+        INT nMouseWheelDelta, INT xPos, INT yPos) {
+    if (this->activeTest < this->tests.Count()) {
+        this->tests[this->activeTest]->OnMouse(bLeftButtonDown, 
+            bRightButtonDown, bMiddleButtonDown, bSideButton1Down, 
+            bSideButton2Down, nMouseWheelDelta, xPos, yPos);
+    }
+}
+
+
+/*
  * TestManager::RegisterTests
  */
 void TestManager::RegisterTests(CDXUTComboBox *comboBox) {

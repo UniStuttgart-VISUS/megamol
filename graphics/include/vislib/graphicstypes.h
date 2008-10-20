@@ -16,6 +16,7 @@
 
 #include "vislib/Cuboid.h"
 #include "vislib/Dimension.h"
+#include "vislib/Frustum.h"
 #include "vislib/Point.h"
 #include "vislib/Rectangle.h"
 #include "vislib/Vector.h"
@@ -53,6 +54,9 @@ namespace graphics {
 
     /** A 3D scene space cuboid. */
     typedef math::Cuboid<SceneSpaceType> SceneSpaceCuboid;
+
+    /** A scene space view frustum. */
+    typedef math::Frustum<SceneSpaceType> SceneSpaceFrustum;
 
     /** A 2D scene space point. */
     typedef math::Point<SceneSpaceType, 2> SceneSpacePoint2D;

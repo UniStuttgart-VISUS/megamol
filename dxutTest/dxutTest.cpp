@@ -12,6 +12,7 @@ s//-----------------------------------------------------------------------------
 #include "SDKmesh.h"
 
 #include "AbstractTest.h"
+#include "D3D9SimpleCameraTest.h"
 #include "D3D9VisLogoTest.h"
 #include "TestManager.h"
 
@@ -54,6 +55,9 @@ void    CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUs
 void    CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext );
 void    CALLBACK OnFrameMove( double fTime, float fElapsedTime, void* pUserContext );
 bool    CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* pUserContext );
+void CALLBACK OnMouse(bool bLeftButtonDown, bool bRightButtonDown, 
+        bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
+        INT nMouseWheelDelta, INT xPos, INT yPos, void *pUserContext);
 
 bool    CALLBACK IsD3D9DeviceAcceptable( D3DCAPS9* pCaps, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat, bool bWindowed, void* pUserContext );
 HRESULT CALLBACK OnD3D9CreateDevice( IDirect3DDevice9* pd3dDevice, const D3DSURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext );
@@ -190,9 +194,12 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl *pControl,
         case IDC_TOGGLEFULLSCREEN: DXUTToggleFullScreen(); break;
         case IDC_TOGGLEREF:        DXUTToggleREF(); break;
         case IDC_CHANGEDEVICE:     ::dlg.SetActive( !::dlg.IsActive() ); break;
-        case IDC_CHANGETEST:
-            ::testMgr.SetActiveTest(reinterpret_cast<SIZE_T>(pUserContext));
-            break;
+        case IDC_CHANGETEST: {
+            CDXUTComboBox *comboBox = dynamic_cast<CDXUTComboBox *>(pControl);
+            ::testMgr.SetActiveTest(comboBox->GetSelectedIndex());
+            // TODO: User ctx does not work ... somehow ...
+            //::testMgr.SetActiveTest(reinterpret_cast<SIZE_T>(pUserContext));
+            } break;
     }
 }
 
@@ -204,6 +211,18 @@ void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown,
         void *pUserContext) {
     TestManager *testMgr = static_cast<TestManager *>(pUserContext);
     testMgr->OnKeyboard(nChar, bKeyDown, bAltDown);
+}
+
+
+/** 
+ * Handle mouse events.
+ */
+void CALLBACK OnMouse(bool bLeftButtonDown, bool bRightButtonDown, 
+        bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
+        INT nMouseWheelDelta, INT xPos, INT yPos, void *pUserContext) {
+    TestManager *testMgr = static_cast<TestManager *>(pUserContext);
+    testMgr->OnMouse(bLeftButtonDown, bRightButtonDown, bMiddleButtonDown,
+        bSideButton1Down, bSideButton2Down, nMouseWheelDelta, xPos, yPos);
 }
 
 
@@ -225,6 +244,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     // Set DXUT callbacks
     ::DXUTSetCallbackMsgProc(MsgProc);
     ::DXUTSetCallbackKeyboard(OnKeyboard, &::testMgr);
+    ::DXUTSetCallbackMouse(OnMouse, TRUE, &::testMgr);
     ::DXUTSetCallbackFrameMove(OnFrameMove, &::testMgr);
     ::DXUTSetCallbackDeviceChanging(ModifyDeviceSettings);
 
@@ -236,6 +256,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     ::DXUTSetCallbackD3D9FrameRender(OnD3D9FrameRender, &::testMgr);
 
     ::testMgr.AddTest(new D3D9VisLogoTest());
+    ::testMgr.AddTest(new D3D9SimpleCameraTest());
     ::testMgr.SetActiveTest(0);
 
     ::InitApp();
@@ -255,17 +276,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 //--------------------------------------------------------------------------------------
 void InitApp()
 {
-    ::dlg.Init( &::dlgResMgr );
+    ::dlg.Init(&::dlgResMgr);
     g_HUD.Init( &::dlgResMgr );
-    g_SampleUI.Init( &::dlgResMgr );
+    g_SampleUI.Init(&::dlgResMgr);
 
-    g_HUD.SetCallback( OnGUIEvent ); int iY = 10; 
-    g_HUD.AddButton( IDC_TOGGLEFULLSCREEN, L"Toggle full screen", 35, iY, 125, 22 );
-    g_HUD.AddButton( IDC_TOGGLEREF, L"Toggle REF (F3)", 35, iY += 24, 125, 22, VK_F3 );
-    g_HUD.AddButton( IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2 );
+    g_HUD.SetCallback(::OnGUIEvent); int iY = 10; 
+    g_HUD.AddButton(IDC_TOGGLEFULLSCREEN, L"Toggle full screen", 10, iY, 150, 22);
+    g_HUD.AddButton(IDC_TOGGLEREF, L"Toggle REF (F3)", 10, iY += 24, 150, 22, VK_F3);
+    g_HUD.AddButton(IDC_CHANGEDEVICE, L"Change device (F2)", 10, iY += 24, 150, 22, VK_F2);
 
     CDXUTComboBox *cb = NULL;
-    g_HUD.AddComboBox(IDC_CHANGETEST, 35, iY += 24, 125, 22, 0, false, &cb);
+    g_HUD.AddComboBox(IDC_CHANGETEST, 10, iY += 24, 150, 22, 0, false, &cb);
     ::testMgr.RegisterTests(cb);
 
     g_SampleUI.SetCallback( OnGUIEvent ); iY = 10; 

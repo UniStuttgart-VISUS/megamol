@@ -75,6 +75,15 @@ void AbstractTest::OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown) {
 
 
 /*
+ * AbstractTest::OnMouse
+ */
+void AbstractTest::OnMouse(bool bLeftButtonDown, bool bRightButtonDown, 
+        bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
+        INT nMouseWheelDelta, INT xPos, INT yPos) {
+}
+
+
+/*
  * AbstractTest::AbstractTest
  */
 AbstractTest::AbstractTest(const vislib::StringW& name) 

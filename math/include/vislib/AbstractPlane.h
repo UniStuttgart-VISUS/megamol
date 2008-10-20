@@ -201,8 +201,7 @@ namespace math {
          * @param c The parameter c in the equation ax + by + cz + d = 0.
          * @param d The parameter d in the equation ax + by + cz + d = 0.
          */
-        inline void Set(const float a, const float b, const float c, 
-                const float d) {
+        inline void Set(const T a, const T b, const T c, const T d) {
             this->parameters[IDX_A] = a;
             this->parameters[IDX_B] = b;
             this->parameters[IDX_C] = c;

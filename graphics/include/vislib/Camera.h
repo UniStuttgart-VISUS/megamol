@@ -4,6 +4,7 @@
  * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  * Copyright (C) 2007, Sebastian Grottel. All rights reserved.
+ * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_CAMERA_H_INCLUDED
@@ -85,6 +86,18 @@ namespace graphics {
 
         /** Dtor. */
         virtual ~Camera(void);
+
+        /**
+         * Compute the view frustum of the camera.
+         *
+         * @param outFrustum A frustum object to receive the view frustum.
+         *
+         * @return 'outFrustum'. The out parameter is returned for convenience.
+         *
+         * @throws IllegalStateException If the projection type of the camera 
+         *                               is not supported.
+         */
+        SceneSpaceFrustum& CalcViewFrustum(SceneSpaceFrustum& outFrustum) const;
 
         /**
          * Answers the parameters object.

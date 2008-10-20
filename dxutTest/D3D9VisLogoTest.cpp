@@ -7,7 +7,6 @@
  */
 
 #include "DXUT.h"
-
 #include "D3D9VisLogoTest.h"
 
 #include "vislib/assert.h"
