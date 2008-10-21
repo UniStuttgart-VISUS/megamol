@@ -34,12 +34,12 @@ namespace math {
          * Create a degenerate frustum that has collapsed to a point.
          */
         inline Frustum(void) {
-            this->bounds[IDX_BOTTOM] = static_cast<T>(0);
-            this->bounds[IDX_TOP] = static_cast<T>(0);
-            this->bounds[IDX_LEFT] = static_cast<T>(0);
-            this->bounds[IDX_RIGHT] = static_cast<T>(0);
-            this->bounds[IDX_NEAR] = static_cast<T>(0);
-            this->bounds[IDX_FAR] = static_cast<T>(0);
+            this->bounds[Super::IDX_BOTTOM] = static_cast<T>(0);
+            this->bounds[Super::IDX_TOP] = static_cast<T>(0);
+            this->bounds[Super::IDX_LEFT] = static_cast<T>(0);
+            this->bounds[Super::IDX_RIGHT] = static_cast<T>(0);
+            this->bounds[Super::IDX_NEAR] = static_cast<T>(0);
+            this->bounds[Super::IDX_FAR] = static_cast<T>(0);
         }
 
         /** 
@@ -143,12 +143,12 @@ namespace math {
     template <class T> 
     template<class Tp, class Sp>
     Frustum<T>::Frustum(const AbstractFrustum<Tp, Sp>& rhs) {
-        this->bounds[IDX_BOTTOM] = static_cast<T>(rhs.Bottom());
-        this->bounds[IDX_TOP] = static_cast<T>(rhs.Top());
-        this->bounds[IDX_LEFT] = static_cast<T>(rhs.Left());
-        this->bounds[IDX_RIGHT] = static_cast<T>(rhs.Right());
-        this->bounds[IDX_NEAR] = static_cast<T>(rhs.Near());
-        this->bounds[IDX_FAR] = static_cast<T>(rhs.Far());
+        this->bounds[Super::IDX_BOTTOM] = static_cast<T>(rhs.Bottom());
+        this->bounds[Super::IDX_TOP] = static_cast<T>(rhs.Top());
+        this->bounds[Super::IDX_LEFT] = static_cast<T>(rhs.Left());
+        this->bounds[Super::IDX_RIGHT] = static_cast<T>(rhs.Right());
+        this->bounds[Super::IDX_NEAR] = static_cast<T>(rhs.Near());
+        this->bounds[Super::IDX_FAR] = static_cast<T>(rhs.Far());
     }
 
 

@@ -317,7 +317,7 @@ namespace sys {
      */
     template<class tp>
     bool WriteTextFile(File& file, const String<tp>& text) {
-        SIZE_T len = text.Length() * sizeof(tp::Char);
+        SIZE_T len = text.Length() * sizeof(typename tp::Char);
         return (file.Write(text.PeekBuffer(), len) == len);
     }
 
