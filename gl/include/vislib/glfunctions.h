@@ -55,11 +55,12 @@ namespace gl {
 
     /**
      * Answer whether VSync is enabled or not. This method can only be used 
-     * when there is a current open gl context.
+     * when there is a current open gl context. If an error is returned the
+     * status of VSync could not be read. However, enabling or disabling
+     * VSync might still be possible using 'EnableVSync'.
      *
      * @param error Pointer to an bool receiving whether the function resulted
-     *              in an error (returning 'true' and setting 'error' to
-     *              'true').
+     *              in an error.
      *
      * @return 'true' if VSync is enabled, 'false' if not.
      */

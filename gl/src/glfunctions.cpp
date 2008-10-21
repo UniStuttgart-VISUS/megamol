@@ -7,10 +7,15 @@
 #include "vislib/glfunctions.h"
 #include <GL/gl.h>
 
-#ifdef _WIN32
-// TODO: change or check implementation
-#include "GL/wglext.h"
+#include <stdlib.h>
 
+#ifdef _WIN32
+#include "GL/wglext.h"
+#else /* _WIN32 */
+// HAHA!
+#endif /* _WIN32 */
+
+#ifdef _WIN32
 /**
  * Answers whether or not a given wgl extension is supported.
  *
@@ -39,7 +44,9 @@ int WGLExtensionSupported(const char *extensionName) {
     // extension is supported
     return 1;
 }
-#endif
+#else /* _WIN32 */
+// HAHA!
+#endif /* _WIN32 */
 
 
 /*
@@ -65,7 +72,14 @@ bool vislib::graphics::gl::EnableVSync(bool enable) {
     }
     return false;
 #else /* _WIN32 */
-    // TODO: Implement
+
+    // LINUX DOES NOT WORK AT ALL!!!
+    //  GLX_SGI_swap_control cannot be disabled!
+    //  __GL_SYNC_TO_VBLANK cannot be changed on runtime (at least not while context exists)
+    //  GLX_MESA_fuckup is no longer supported
+    //  nvidia-settings does not seem to have any effect
+
+    return false;
 #endif /* _WIN32 */
 }
 
@@ -130,16 +144,21 @@ bool vislib::graphics::gl::IsVSyncEnabled(bool *error) {
             wglGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC)
                 wglGetProcAddress("wglGetSwapIntervalEXT");
         }
+        if (wglGetSwapIntervalEXT == NULL) {
+            if (error != NULL) *error = true;
+            return false;
+        }
     }
-    if (wglGetSwapIntervalEXT != NULL) {
-        if (error != NULL) *error = false;
-        return (wglGetSwapIntervalEXT() == 1);
-    } else {
-        if (error != NULL) *error = true;
-        return false;
-    }
+    if (error != NULL) *error = false;
+    return (wglGetSwapIntervalEXT() == 1);
 #else /* _WIN32 */
-    // TODO: Implement
+    // LINUX DOES NOT WORK AT ALL!!!
+    //  GLX_SGI_swap_control cannot be disabled!
+    //  __GL_SYNC_TO_VBLANK cannot be changed on runtime (at least not while context exists)
+    //  GLX_MESA_fuckup is no longer supported
+    //  nvidia-settings does not seem to have any effect
+
+    if (error != NULL) *error = true;
     return false;
 #endif /* _WIN32 */
 }
