@@ -16,6 +16,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/mathtypes.h"
 #include "vislib/Point.h"
 #include "vislib/types.h"
 #include "vislib/Vector.h"
@@ -34,9 +35,9 @@ namespace math {
 
         /** Enumeration for halfspaces of the plane. */
         enum HalfSpace { 
-            NEGATIVE_HALFSPACE = -1,    // Halfspace opposite of normal.
-            IN_PLANE = 0,               // No halfspace, but plane itself.
-            POSITIVE_HALFSPACE = 1      // Halfspace in normal direction.
+            NEGATIVE_HALFSPACE = HALFSPACE_NEGATIVE,
+            IN_PLANE           = HALFSPACE_IN_PLANE,
+            POSITIVE_HALFSPACE = HALFSPACE_POSITIVE
         };
 
         /** Result for intersection tests. */

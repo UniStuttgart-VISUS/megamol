@@ -17,6 +17,7 @@
 #include "vislib/AbstractVector.h"
 #include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/mathtypes.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Vector.h"
 
@@ -46,6 +47,19 @@ namespace math {
          */
         template<class Tp, class Sp>
         T Distance(const C<Tp, D, Sp>& toPoint) const;
+
+        /**
+         * Answer in which halfspace 'point' lies in respect to the plane
+         * defined by 'this' point and the 'normal' vector.
+         *
+         * @param normal The normal vector defining the plane.
+         * @param point The point to be tested.
+         *
+         * @return The halfspace the point lies in.
+         */
+        template<class Tpp, class Spp, class Tpv, class Spv>
+        HalfSpace Halfspace(const AbstractVector<Tpv, D, Spv>& normal,
+            const C<Tpp, D, Spp>& point) const;
 
         /**
          * Interpolates a position between 'this' and 'rhs' based on the value
@@ -293,6 +307,38 @@ namespace math {
             const C<Tp, D, Sp>& toPoint) const {
         return static_cast<T>(::sqrt(static_cast<double>(
             this->SquareDistance(toPoint))));
+    }
+
+
+    /*
+     * vislib::math::AbstractPointImpl<T, D, S, C>::Halfspace
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C> 
+    template<class Tpp, class Spp, class Tpv, class Spv>
+    HalfSpace AbstractPointImpl<T, D, S, C>::Halfspace(
+            const AbstractVector<Tpv, D, Spv>& normal,
+            const C<Tpp, D, Spp>& point) const {
+
+        T val = static_cast<T>(0);
+        for (unsigned int d = 0; d < D; d++) {
+            val += static_cast<T>(normal[d]) * (static_cast<T>(point[d])
+                - this->coordinates[d]);
+        }
+
+        if (IsEqual(val, static_cast<T>(0))) {
+            return HALFSPACE_IN_PLANE;
+
+        } else if (val > static_cast<T>(0)) {
+            return HALFSPACE_NEGATIVE;
+
+        } else if (val < static_cast<T>(0)) {
+            return HALFSPACE_POSITIVE;
+    
+        } else {
+            ASSERT(false);      // Should never happen.
+            return HALFSPACE_IN_PLANE;
+        }        
     }
 
 

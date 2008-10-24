@@ -32,6 +32,13 @@ namespace math {
     /** type for angles in radians */
     typedef float AngleRad;
 
+    /** Enumeration for halfspaces. */
+    enum HalfSpace { 
+        HALFSPACE_NEGATIVE = -1, // Halfspace opposite of normal.
+        HALFSPACE_IN_PLANE = 0,  // No halfspace, but plane itself.
+        HALFSPACE_POSITIVE = 1   // Halfspace in normal direction.
+    };
+
 
 } /* end namespace math */
 } /* end namespace vislib */
