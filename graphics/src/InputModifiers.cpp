@@ -67,6 +67,9 @@ void vislib::graphics::InputModifiers::SetModifierState(Modifier modifier, bool 
         throw IllegalParamException("modifier", __FILE__, __LINE__);
     }
 
+    // no update message required
+    if (this->modState[modifier] == down) return;
+
     if (down) this->modState[modifier] = true;
 
     vislib::SingleLinkedList<Observer*>::Iterator iter = this->observers.GetIterator();

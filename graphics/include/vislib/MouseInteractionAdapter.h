@@ -130,7 +130,7 @@ namespace graphics {
          * @param isDown
          */
         inline void SetMouseButtonState(const Button button, bool isDown) {
-            this->cursor.SetButtonState(static_cast<unsigned int>(0), isDown);
+            this->cursor.SetButtonState(static_cast<unsigned int>(button), isDown);
         }
 
         /**

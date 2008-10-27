@@ -84,6 +84,9 @@ void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn,
         return;
     }
 
+    // no update message required
+    if (this->btnStates[btn] == down) return;
+
     if (down) {
         this->btnStates[btn] = true;
         this->TestTriggerAllEvents(true, true, 
