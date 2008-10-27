@@ -330,10 +330,10 @@ namespace math {
             return HALFSPACE_IN_PLANE;
 
         } else if (val > static_cast<T>(0)) {
-            return HALFSPACE_NEGATIVE;
+            return HALFSPACE_POSITIVE;//HALFSPACE_NEGATIVE;
 
         } else if (val < static_cast<T>(0)) {
-            return HALFSPACE_POSITIVE;
+            return HALFSPACE_NEGATIVE;//HALFSPACE_POSITIVE;
     
         } else {
             ASSERT(false);      // Should never happen.
@@ -359,6 +359,22 @@ namespace math {
         }
 
         return retval;
+    }
+
+
+    /*
+     * vislib::math::AbstractPointImpl<T, D, S, C>::IsOrigin
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C> 
+    bool AbstractPointImpl<T, D, S, C>::IsOrigin(void) const {
+        for (unsigned int i = 0; i < D; i++) {
+            if (!IsEqual<T>(this->coordinates[i], 0)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 

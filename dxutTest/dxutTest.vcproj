@@ -54,6 +54,7 @@
 				PrecompiledHeaderThrough="DXUT.h"
 				WarningLevel="3"
 				DebugInformationFormat="4"
+				DisableSpecificWarnings="4995"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -130,6 +131,7 @@
 				PrecompiledHeaderThrough="DXUT.h"
 				WarningLevel="4"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4995"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

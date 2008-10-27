@@ -48,6 +48,7 @@
 #include "testthreadpool.h"
 #include "testrefcount.h"
 #include "testpoolallocator.h"
+#include "testpoint.h"
 
 
 /* type for test functions */
@@ -88,6 +89,7 @@ VislibTest tests[] = {
     {_T("Matrix"), ::TestMatrix, "Tests vislib::math::Matrix"},
     {_T("Rectangle"), ::TestRectangle, "Tests vislib::math::Rectangle"},
     {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
+    {_T("Point"), ::TestPoint, "Tests vislib::math::Point"},
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
