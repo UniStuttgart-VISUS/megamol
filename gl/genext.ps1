@@ -42,26 +42,17 @@ if (($Bits -ne "32") -and ($Bits -ne "64"))  {
 & "$InputDir\include\glh\genextfile.ps1" "$InputDir\include\GL\glext.h" "$InputDir\include\glh\extfile.txt"
 
 
-# Include the path to wglext.h in the environment INCLUDE variable.
-$incPath = "`"$InputDir\include\glh`";" 
-$incPath += gc Env:INCLUDE
-si -path Env:INCLUDE -value "$incPath"
-echo $Env:INCLUDE
-
-
 # compile 'glh.exe'
 $projName = "$InputDir\" + "include\glh\glh$Bits" + "crowbar.vcproj"
 
 [xml]$proj = gc "$InputDir\include\glh\glh.vcproj";
-if ($Bits -eq "64") {
-    $proj.GetElementsByTagName('Tool') | where { $_.Name -eq 'VCCLCompilerTool' } | foreach {
-        $_.SetAttribute('AdditionalIncludeDirectories', '$InputDir\include\;$InputDir\include\glh\;' + $_.AdditionalIncludeDirectories);
-    };
-}
+$proj.GetElementsByTagName("Tool") | where { $_.Name -eq "VCCLCompilerTool" } | foreach {
+	$_.SetAttribute("AdditionalIncludeDirectories", "$InputDir\include; $InputDir\include\glh; " + $_.AdditionalIncludeDirectories);
+};
 $proj.Save($projName);
 
 & "$VCInstallDir\vcpackages\vcbuild.exe" $projName /upgrade
-& "$VCInstallDir\vcpackages\vcbuild.exe" $projName "$ConfigurationName" /useenv /nologo /platform:Win32
+& "$VCInstallDir\vcpackages\vcbuild.exe" $projName "$ConfigurationName" /nologo /rebuild /platform:Win32
 
 del $projName
 
