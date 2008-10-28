@@ -897,6 +897,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\vislibversion.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\xmlUtils.h"
 				>
 			</File>
