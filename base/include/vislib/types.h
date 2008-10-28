@@ -1,7 +1,8 @@
 /*
  * types.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_TYPES_H_INCLUDED
@@ -12,6 +13,8 @@
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
+
+#include "vislib/vislibversion.h"
 
 
 #ifdef _WIN32
