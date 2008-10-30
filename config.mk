@@ -40,8 +40,13 @@ ifeq ($(shell uname -m), x86_64)
 	BITS := 64
 else
 	PLATFORM := x86
-	BITS = 32
+	BITS := 32
 endif
+
+
+# Add clib version to the bits field for binary compatibility
+CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
+BITSEX := $(BITS)_clib$(CLIBVER)
 
 
 # The default input directory
@@ -61,11 +66,7 @@ ExcludeFromBuild :=
 
 
 # The intermediate directory
-ifeq ($(PLATFORM), x64)
-	IntDir := Lin64
-else
-	IntDir := Lin32
-endif	
+IntDir := Lin$(BITSEX)
 
 
 # The configuration intermetidate directories

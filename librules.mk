@@ -23,10 +23,12 @@ all: $(TargetName)d $(TargetName)
 $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName).a
 	@mkdir -p $(OutDir)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS)d.a
+	cp $< $(OutDir)/lib$(TargetName)$(BITSEX)d.a
 	
 $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName).a 
 	@mkdir -p $(OutDir)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS).a
+	cp $< $(OutDir)/lib$(TargetName)$(BITSEX).a
 	
 
 # Rules for intermediate archives:
@@ -78,7 +80,8 @@ $(IntDir)/$(ReleaseDir)/%.o:
 	
 # Cleanup rules:	
 clean: sweep
-	rm -f $(OutDir)/lib$(TargetName)$(BITS).a $(OutDir)/lib$(TargetName)$(BITS)d.a
+	rm -f $(OutDir)/lib$(TargetName)$(BITS).a $(OutDir)/lib$(TargetName)$(BITS)d.a \
+		$(OutDir)/lib$(TargetName)$(BITSEX).a $(OutDir)/lib$(TargetName)$(BITSEX)d.a
 
 sweep:
 	rm -rf $(IntDir)/*

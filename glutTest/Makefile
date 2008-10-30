@@ -32,13 +32,12 @@ endif
 
 ###############################################################################
 
+IntDir := Lin$(BITSEX)
 ifeq ($(PLATFORM), x64)
-	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
 	LDFLAGS += -lvislibgl64 -lvislibgraphics64 -lvislibmath64 -lvislibsys64 -lvislibbase64
 else
-	IntDir := Lin32
 	OutDir := ../Lin32
 	LDFLAGS += -lvislibgl32 -lvislibgraphics32 -lvislibmath32 -lvislibsys32 -lvislibbase32
 endif

@@ -30,14 +30,13 @@ LDFLAGS := -L$(VISlibDir) -lX11 -lm -lpthread -ldl -lncurses  -lrt -lcrypt
 
 ###############################################################################
 
+IntDir := Lin$(BITSEX)
 ifeq ($(PLATFORM), x64)
-	IntDir := Lin64
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
 	LDFLAGS += -L/usr/X11R6/lib64
 	VISlibs := $(addsuffix 64d, $(addprefix vislib, $(VISlibs)))
 else
-	IntDir := Lin32
 	OutDir := ../Lin32
 	LDFLAGS += -L/usr/X11R6/lib
 	VISlibs := $(addsuffix 32d, $(addprefix vislib, $(VISlibs)))

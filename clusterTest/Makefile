@@ -20,7 +20,7 @@ TargetName := clusterTest
 OutDir := ../$(VISlibPlatform)
 
 #Intermediate directory
-IntDir := ./$(VISlibPlatform)
+IntDir := ./Lin$(BITSEX)
  #$(OutDir)
 
 # Output subdirectory name for Release files
