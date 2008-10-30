@@ -19,7 +19,8 @@
 #include "vislib/Array.h"
 #include "vislib/Vector.h"
 
-/** Number of iterations for choosing the maximally distant points. The original paper suggests 5. */
+/** Number of iterations for choosing the maximally distant points. The
+    original paper suggests 5. */
 #define MAX_PIVOT_ITERATIONS 5
 
 namespace vislib {
@@ -29,24 +30,29 @@ namespace math {
     /**
      * A simple dimensionality reduction Algorithm.
      * C. Faloutsos, K. Lin,
-     * "FastMap: A Fast Algorithm for Indexing, Data-Mining and Visualization of Tr additional and Multimedia Datasets,"
-     * in Proceedings of 1995 ACM SIGMOD, SIGMOD RECORD (June 1995), vol.24, no.2, p 163-174.
+     * "FastMap: A Fast Algorithm for Indexing, Data-Mining and Visualization
+     * of Tradditional and Multimedia Datasets,"
+     * in Proceedings of 1995 ACM SIGMOD, SIGMOD RECORD (June 1995), vol.24,
+     * no.2, p 163-174.
      * http://citeseer.ist.psu.edu/faloutsos95fastmap.htm
      *
      * Background: Find maximally distant pivot points in high-D space,
-     * project all points onto that line (first coordinate). After that, measure distance
-     * on a hyperplane perpendicular to the pivot line, select additional pivots,
-     * and project again. Repeat until desired number of dimensions is reached.
+     * project all points onto that line (first coordinate). After that,
+     * measure distance on a hyperplane perpendicular to the pivot line,
+     * select additional pivots, and project again. Repeat until desired
+     * number of dimensions is reached.
      *
-     * TI needs to support a float TI::Distance(TI &other) method, results will be returned
-     * as a vislib::Array<vislib::math::Vector<TO, D>>.
+     * TI needs to support a float TI::Distance(TI &other) method, results
+     * will be returned as a vislib::Array<vislib::math::Vector<TO, D>>.
      *
-     * One of the strengths of FastMap is the ability to just project additional
-     * points in O(1) without having to recompute pivots.
+     * One of the strengths of FastMap is the ability to just project
+     * additional points in O(1) without having to recompute pivots.
      *
-     * The main weakness of FastMap is that only distances to the pivots are used for
-     * the projection. The choice of pivots considers all inter-object distances though.
-     * Thus sparse distance matrices almost necessarily yield unsatisfactory results.
+     * The main weakness of FastMap is that only distances to the pivots are
+     * used for the projection. The choice of pivots considers all
+     * inter-object distances though.
+     * Thus sparse distance matrices almost necessarily yield unsatisfactory
+     * results.
      */
     template<class TI, class TO, unsigned int D>
     class FastMap {
@@ -62,11 +68,13 @@ namespace math {
          * Compute reduced-dimensionality positions for inData.
          *
          * @param inputData The high-dimensional dataset.
-         * @param[out] out  A pre-allocated vislib::Array<vislib::math::Vector<TO, D>>
+         * @param[out] out  A pre-allocated
+         * vislib::Array<vislib::math::Vector<TO, D>>
          *                  for the reduced coordinates.
          */
-        FastMap(Array<TI> &inputData, ResultType &out) : inData(inputData), outData(out) {
-            this->compute();			
+        FastMap(Array<TI> &inputData, ResultType &out) :
+            inData(inputData), outData(out) {
+            this->compute();
         }
 
         /** dtor. */
@@ -74,8 +82,8 @@ namespace math {
         }
 
         /**
-         * Reduce an additional item based on the already chosen pivots. out must
-         * again have this index already allocated.
+         * Reduce an additional item based on the already chosen pivots. out
+         * must again have this index already allocated.
          *
          * @param index The index of the new element in the inputData array.
          */
@@ -101,7 +109,8 @@ namespace math {
     private:
 
         /**
-         * Calculate the distance in high-D (dim = 0) or on the corresponding hyperplane
+         * Calculate the distance in high-D (dim = 0) or on the corresponding
+         * hyperplane
          * (dim > 0) between the two points inputData[x] and inputData[y].
          *
          * @param dim The dimension for which to calculate the distance.
@@ -111,8 +120,9 @@ namespace math {
         float calcDistanceSquared(unsigned int dim, SIZE_T x, SIZE_T y);
 
         /**
-         * Heuristically choose two maximally distant pivot points using the distance calculated according to
-         * dim. a, b, dab, and dasSq are set accordingly.
+         * Heuristically choose two maximally distant pivot points using the
+         * distance calculated according to dim. a, b, dab, and dasSq are set
+         * accordingly.
          *
          * This takes O(N) (exactly N * MAX_PIVOT_ITERATIONS).
          *
@@ -121,8 +131,8 @@ namespace math {
         void chooseDistant(unsigned int dim);
 
         /**
-         * Executes the mapping from inData into outData. It calls chooseDistant once per destination
-         * dimension.
+         * Executes the mapping from inData into outData. It calls
+         * chooseDistant once per destination dimension.
          */
         void compute(void);
 
@@ -147,7 +157,8 @@ namespace math {
      * vislib::math::FastMap<TI, TO, D>::calcDistanceSquared
      */
     template<class TI, class TO, unsigned int D>
-    float FastMap<TI, TO, D>::calcDistanceSquared(unsigned int dim, SIZE_T x, SIZE_T y) {
+    float FastMap<TI, TO, D>::calcDistanceSquared(
+        unsigned int dim, SIZE_T x, SIZE_T y) {
         float d;
         if (dim == 0) {
             d = inData[x].Distance(inData[y]);
@@ -163,12 +174,14 @@ namespace math {
      */
     template<class TI, class TO, unsigned int D>
     void FastMap<TI, TO, D>::chooseDistant(unsigned int dim) {
-        SIZE_T a, b;
+        SIZE_T a = 0;
+        SIZE_T b;
         float dist, tmpDist;
 
-        srand((unsigned)time(NULL));
+        // This should be done outside to give more control to the application
+        // srand(static_cast<unsigned>(time(NULL)));
 
-        b = SIZE_T ((rand() / RAND_MAX) * inData.Count());
+        b = SIZE_T ((rand() / static_cast<double>(RAND_MAX)) * inData.Count());
         for (unsigned int j = 0; j <= MAX_PIVOT_ITERATIONS; j++) {
             dist = 0;
             for (SIZE_T i = 0; i < inData.Count(); i++) {
