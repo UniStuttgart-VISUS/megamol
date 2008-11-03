@@ -311,6 +311,26 @@ namespace gl {
         }
 
         /**
+         * Read the pixel data from the 'colourAttachment''th colour attachment.
+         *
+         * @param outData          Receives the texture data. The caller is 
+         *                         responsible for ensuring that the buffer is
+         *                         large enough. The caller remains owner of the
+         *                         buffer.
+         * @param colourAttachment The colour attachment to retrieve the ID of.
+         * @param format           A pixel format for the returned data. 
+         * @param type             A pixel type for the returned data. 
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        inline GLenum GetColourTexture(void *outData, 
+                const UINT colourAttachment = 0, const GLenum format = GL_RGBA, 
+                const GLenum type = GL_UNSIGNED_BYTE) {
+            return this->readTexture(outData, this->GetColourTextureID(
+                colourAttachment), format, type);
+        }
+
+        /**
          * Answer the OpenGL resource ID of the 'colourAttachment'th colour
          * attachment if one is attached.
          *
@@ -326,6 +346,25 @@ namespace gl {
          *                            designate a legal attachment.
          */
         GLuint GetColourTextureID(const UINT colourAttachment = 0) const;
+
+        /**
+         * Read the pixel data from the depth attachment.
+         *
+         * @param outData          Receives the texture data. The caller is 
+         *                         responsible for ensuring that the buffer is
+         *                         large enough. The caller remains owner of the
+         *                         buffer.
+         * @param format           A pixel format for the returned data. 
+         * @param type             A pixel type for the returned data. 
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        inline GLenum GetDepthTexture(void *outData, 
+                const GLenum format = GL_RGBA, 
+                const GLenum type = GL_UNSIGNED_BYTE) {
+            return this->readTexture(outData, this->GetDepthTextureID(),
+                format, type);
+        }
 
         /**
          * Answer the OpenGL resource ID of the depth texture if one is 
@@ -469,6 +508,20 @@ namespace gl {
          *                         e. g. because no valid FBO is bound.
          */
         bool isComplete(void) const;
+
+        /**
+         * Read the pixel data as pixels with format 'format' and elements of
+         * type 'type' into 'outData'.
+         *
+         * @param outData Receives the texture data.
+         * @param id      The ID of the texture to retrieve.
+         * @param format  A pixel format for the returned data. 
+         * @param type    A pixel type for the returned data. 
+         *
+         * @return GL_NO_ERROR in case of success, an error code otherwise.
+         */
+        GLenum readTexture(void *outData, const GLuint id, const GLenum format,
+            const GLenum type);
 
         /**
          * Save all state changes that are made when enabling the FBO in
