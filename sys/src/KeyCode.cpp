@@ -11,6 +11,14 @@
 /*
  * vislib::sys::KeyCode::KeyCode
  */
+vislib::sys::KeyCode::KeyCode(void) : key() {
+    this->normalise();
+}
+
+
+/*
+ * vislib::sys::KeyCode::KeyCode
+ */
 vislib::sys::KeyCode::KeyCode(WORD key) : key(key) {
     this->normalise();
 }
@@ -57,6 +65,14 @@ vislib::sys::KeyCode& vislib::sys::KeyCode::operator=(
  */
 bool vislib::sys::KeyCode::operator==(const vislib::sys::KeyCode& rhs) const {
     return this->key == rhs.key;
+}
+
+
+/*
+ * vislib::sys::KeyCode::operator WORD
+ */
+vislib::sys::KeyCode::operator WORD(void) const {
+    return this->key;
 }
 
 

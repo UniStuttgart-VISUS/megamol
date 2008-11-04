@@ -140,7 +140,14 @@ namespace sys {
          *
          * @param key The key code to be stored.
          */
-        KeyCode(WORD key = 0);
+        KeyCode(void);
+
+        /**
+         * Ctor.
+         *
+         * @param key The key code to be stored.
+         */
+        explicit KeyCode(WORD key);
 
         /**
          * Ctor.
@@ -223,6 +230,13 @@ namespace sys {
          * @return 'true' if 'this' and 'rhs' are equal, 'false' if not.
          */
         bool operator==(const KeyCode& rhs) const;
+
+        /**
+         * Casts the key code to its numeric representation.
+         *
+         * @return The numeric value of the key code.
+         */
+        operator WORD(void) const;
 
     private:
 
