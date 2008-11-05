@@ -906,6 +906,7 @@ namespace vislib {
                     newlast = newlast->next;
                     ASSERT(newlast);
                 }
+                newlast->next = NULL;
             } else {
                 this->first = NULL;
             }
