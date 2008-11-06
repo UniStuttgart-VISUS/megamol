@@ -111,8 +111,8 @@ namespace sys {
          *                                 values are normalised to represent
          *                                 milliseconds.
          */
-        inline PerformanceCounter(const bool isUsingFullPrecisionMark = false) 
-                : isUsingFullPrecisionMark(isUsingFullPrecisionMark),
+        explicit inline PerformanceCounter(const bool isUsingFullPrecisionMark 
+                = false) : isUsingFullPrecisionMark(isUsingFullPrecisionMark),
                 mark(Query(isUsingFullPrecisionMark)) {}
 
         /**
