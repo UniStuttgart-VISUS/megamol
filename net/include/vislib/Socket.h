@@ -372,6 +372,16 @@ namespace net {
         }
 
         /**
+         * Answer the address the socket is locally bound to (this equals to the
+         * socket API function getsockname()).
+         *
+         * @return The address of the local end point.
+         *
+         * @throw SocketException If the operation fails.
+         */
+        IPEndPoint GetLocalEndPoint(void) const;
+
+        /**
          * Answer the deactivation state of the Nagle algorithm for send 
          * coalescing.
          *

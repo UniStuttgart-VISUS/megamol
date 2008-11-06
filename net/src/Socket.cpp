@@ -223,6 +223,27 @@ void vislib::net::Socket::Create(const IPEndPoint& familySpecAddr,
 
 
 /*
+ * vislib::net::Socket::GetLocalEndPoint
+ */
+vislib::net::IPEndPoint vislib::net::Socket::GetLocalEndPoint(void) const {
+    IPEndPoint retval;
+#ifdef _WIN32
+    int len = static_cast<int>(sizeof(struct sockaddr_storage));
+#else /* _WIN32 */
+    socklen_t len = static_cast<socklen_t>(sizeof(struct sockaddr_storage));
+#endif /* _WIN32 */
+
+    if (::getsockname(this->handle, reinterpret_cast<sockaddr *>(
+            static_cast<struct sockaddr_storage *>(retval)), &len)
+            == SOCKET_ERROR) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+
+    return retval;
+}
+
+
+/*
  * vislib::net::Socket::GetOption
  */
 void vislib::net::Socket::GetOption(const INT level, const INT optName, 
