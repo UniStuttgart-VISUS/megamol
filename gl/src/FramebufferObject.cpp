@@ -370,7 +370,14 @@ GLuint vislib::graphics::gl::FramebufferObject::GetDepthTextureID(void) const {
  */
 bool vislib::graphics::gl::FramebufferObject::IsValid(void) const throw() {
     try {
-        return this->isComplete();
+        if (this->cntColourAttachments > 0) {
+            // TODO: This might not be sufficient. It could be required to 
+            // check for valid texture and renderbuffer IDs, too.
+            return this->isComplete();
+        } else {
+            // FBO without colour attachment cannot be valid.
+            return false;
+        }
     } catch (...) {
         return false;
     }
