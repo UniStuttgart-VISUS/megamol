@@ -16,6 +16,7 @@
 
 
 #include "vislib/tchar.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -124,6 +125,27 @@ namespace vislib {
         virtual const wchar_t *GetMsgW(void) const;
 
         /**
+         * Answer the call stack trace from where the exception was thrown. If
+         * no call stack is available an empty string is returned.
+         *
+         * @return The call stack trace from where the exception was thrown.
+         */
+        inline const char *GetStack(void) const {
+            return (this->stack == NULL) ? "" : this->stack;
+        }
+
+        /**
+         * Answer whether the exception knows the call stack trace from where
+         * it was thrown.
+         *
+         * @return 'true' if a call stack trace is available,
+         *         'false' otherwise.
+         */
+        inline bool HasStack(void) const {
+            return this->stack != NULL;
+        }
+
+        /**
          * Assignment operator.
          *
          * @param rhs The right hand side operand.
@@ -133,6 +155,11 @@ namespace vislib {
         virtual Exception& operator =(const Exception& rhs);
 
     protected:
+
+        /**
+         * Tries to fetch the current call stack trace.
+         */
+        void fetchStack(void);
 
         /**
          * Set a new detail message.
@@ -184,6 +211,9 @@ namespace vislib {
 
         /** The exception message. */
         mutable void *msg;
+
+        /** The stack trace, if available */
+        char *stack;
 
     };
 }

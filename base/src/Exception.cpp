@@ -12,6 +12,7 @@
 #include <cstdarg>
 
 #include "vislib/memutils.h"
+#include "vislib/StackTrace.h"
 #include "vislib/StringConverter.h"
 
 
@@ -20,9 +21,10 @@
  */
 vislib::Exception::Exception(const char *msg, const char *file, 
         const int line)
-        : file(NULL), line(line), msg(NULL) {
+        : file(NULL), line(line), msg(NULL), stack(NULL) {
     this->setFile(file);
     this->setMsg(msg);
+    this->fetchStack();
 }
 
 
@@ -31,9 +33,10 @@ vislib::Exception::Exception(const char *msg, const char *file,
  */
 vislib::Exception::Exception(const wchar_t *msg, const char *file, 
         const int line)
-        : file(NULL), line(line), msg(NULL) {
+        : file(NULL), line(line), msg(NULL), stack(NULL) {
     this->setFile(file);
     this->setMsg(msg);
+    this->fetchStack();
 }
 
 
@@ -41,8 +44,9 @@ vislib::Exception::Exception(const wchar_t *msg, const char *file,
  * vislib::Exception::Exception
  */
 vislib::Exception::Exception(const char *file, const int line) 
-        : file(NULL), line(line), msg(NULL) {
+        : file(NULL), line(line), msg(NULL), stack(NULL) {
     this->setFile(file);
+    this->fetchStack();
 }
 
 
@@ -50,13 +54,19 @@ vislib::Exception::Exception(const char *file, const int line)
  * vislib::Exception::Exception
  */
 vislib::Exception::Exception(const Exception& rhs) 
-        : file(NULL), line(rhs.line), msg(NULL) {
+        : file(NULL), line(rhs.line), msg(NULL), stack(NULL) {
     this->setFile(rhs.file);
 
     if (rhs.isMsgUnicode) {
         this->setMsg(static_cast<const wchar_t *>(rhs.msg));
     } else {
         this->setMsg(static_cast<const char *>(rhs.msg));
+    }
+
+    if (rhs.stack != NULL) {
+        SIZE_T len = ::strlen(rhs.stack) + 1;
+        this->stack = new char[len];
+        ::memcpy(this->stack, rhs.stack, len);
     }
 }
 
@@ -67,6 +77,7 @@ vislib::Exception::Exception(const Exception& rhs)
 vislib::Exception::~Exception(void) {
     ARY_SAFE_DELETE(this->file);
     SAFE_OPERATOR_DELETE(this->msg);
+    ARY_SAFE_DELETE(this->stack);
 }
 
 
@@ -117,9 +128,33 @@ vislib::Exception& vislib::Exception::operator =(const Exception& rhs) {
         } else {
             this->setMsg(rhs.GetMsgA());
         }
+
+        ARY_SAFE_DELETE(this->stack);
+        if (rhs.stack != NULL) {
+            SIZE_T len = ::strlen(rhs.stack) + 1;
+            this->stack = new char[len];
+            ::memcpy(this->stack, rhs.stack, len);
+        }
     }
 
     return *this;
+}
+
+
+/*
+ * vislib::Exception::fetchStack
+ */
+void vislib::Exception::fetchStack(void) {
+    unsigned int size;
+    vislib::StackTrace::GetStackString((char*)NULL, size);
+    if (size <= 1) {
+        //ARY_SAFE_DELETE(this->stack);
+        this->stack = NULL;
+        return;
+    }
+
+    this->stack = new char[size];
+    vislib::StackTrace::GetStackString(this->stack, size);
 }
 
 

@@ -508,6 +508,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ThreadSafeStackTrace.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\TrayIcon.cpp"
 				>
 			</File>
@@ -731,6 +735,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\ThreadPoolListener.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ThreadSafeStackTrace.h"
 				>
 			</File>
 			<File
