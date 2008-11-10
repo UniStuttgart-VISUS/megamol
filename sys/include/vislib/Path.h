@@ -188,6 +188,34 @@ namespace sys {
         static StringW GetCurrentDirectoryW(void);
 
         /**
+         * Answer the current temp directory.
+         *
+         * Windows: On Windows, the %TEMP% environment variable is evaluated and
+         * returned.
+         *
+         * Linux: The result is always "/tmp"
+         *
+         * @return The current temp directory.
+         *
+         * @throws SystemException if an error occured.
+         */
+        static StringA GetTempDirectoryA(void);
+
+        /**
+         * Answer the current temp directory.
+         *
+         * Windows: On Windows, the %TEMP% environment variable is evaluated and
+         * returned.
+         *
+         * Linux: The result is always "/tmp"
+         *
+         * @return The current temp directory.
+         *
+         * @throws SystemException if an error occured.
+         */
+        static StringW GetTempDirectoryW(void);
+
+        /**
          * Answer the home directory of the user. On windows the 'My Documents'
          * folder is returned.
          *

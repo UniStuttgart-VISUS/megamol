@@ -21,6 +21,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/error.h"
+#include "vislib/Environment.h"
 #include "vislib/memutils.h"
 #include "vislib/SystemException.h"
 #include "vislib/MissingImplementationException.h"
@@ -495,6 +496,31 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
     return StringW(GetCurrentDirectoryA());
 #endif /* _WIN32 */
 }
+
+
+/*
+ * vislib::sys::Path::GetTempDirectoryA
+ */
+vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
+#ifdef _WIN32
+    return Environment::GetVariable("%TEMP%", false);
+#else /* _WIN32 */
+    return StringA("/tmp");
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::GetTempDirectoryW
+ */
+vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
+#ifdef _WIN32
+    return Environment::GetVariable(L"%TEMP%", false);
+#else /* _WIN32 */
+    return StringW(L"/tmp");
+#endif /* _WIN32 */
+}
+
 
 
 /*
