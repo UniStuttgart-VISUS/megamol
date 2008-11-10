@@ -503,7 +503,7 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
  */
 vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
 #ifdef _WIN32
-    return Environment::GetVariable("%TEMP%", false);
+    return Environment::GetVariable("TEMP", false);
 #else /* _WIN32 */
     return StringA("/tmp");
 #endif /* _WIN32 */
@@ -515,7 +515,7 @@ vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
  */
 vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
 #ifdef _WIN32
-    return Environment::GetVariable(L"%TEMP%", false);
+    return Environment::GetVariable(L"TEMP", false);
 #else /* _WIN32 */
     return StringW(L"/tmp");
 #endif /* _WIN32 */
