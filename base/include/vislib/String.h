@@ -455,12 +455,30 @@ namespace vislib {
         void Format(const Char *fmt, ...);
 
         /**
+         * Prints into this string like sprintf.
+         *
+         * @param fmt The format string.
+         * @param ... Optional parameters.
+         */
+        void Format(const String& format, ...);
+
+        /**
          * Prints into this string like vsprintf.
          *
          * @param fmt The format string.
          * @param ... Optional parameters.
          */
         void FormatVa(const Char *fmt, va_list argptr);
+
+        /**
+         * Prints into this string like vsprintf.
+         *
+         * @param fmt The format string.
+         * @param ... Optional parameters.
+         */
+        inline void FormatVa(const String& fmt, va_list argptr) {
+            this->FormatVa(fmt.PeekBuffer(), argptr);
+        }
 
         /**
          * Answer a hash code of the string.
@@ -1555,6 +1573,16 @@ namespace vislib {
         va_end(argptr);
     }
 
+
+    /*
+     * String<T>::Format
+     */
+    template<class T> void String<T>::Format(const String& fmt, ...) {
+        va_list argptr;
+        va_start(argptr, fmt);
+        this->Format(fmt.PeekBuffer(), argptr);        
+        va_end(argptr);
+    }
 
     /*
      * vislib::String<T>::FormatVa

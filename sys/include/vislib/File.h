@@ -23,6 +23,7 @@
 #endif /* _MSC_VER */
 
 
+#include "vislib/String.h"
 #include "vislib/types.h"
 
 
@@ -289,8 +290,56 @@ namespace sys {
          *
          * @throws IllegalParamException
          */
+        inline bool Open(const StringA& filename, const AccessMode accessMode, 
+                const ShareMode shareMode, const CreationMode creationMode) {
+            return this->Open(filename.PeekBuffer(), accessMode, shareMode, 
+                creationMode);
+        }
+
+        /**
+         * Opens a file.
+         *
+         * If this object already holds an open file, this file is closed (like 
+         * calling Close) and the new file is opened.
+         *
+         * @param filename     Path to the file to be opened
+         * @param accessMode   The access mode for the file to be opened
+         * @param shareMode    The share mode
+         *                     (Parameter is ignored on linux systems.)
+         * @param creationMode Use your imagination on this one
+         *
+         * @return true, if the file has been successfully opened, false 
+         *         otherwise. In case of an error you can receive additional
+         *         information using 'GetLastError'.
+         *
+         * @throws IllegalParamException
+         */
         virtual bool Open(const wchar_t *filename, const AccessMode accessMode, 
             const ShareMode shareMode, const CreationMode creationMode);
+
+        /**
+         * Opens a file.
+         *
+         * If this object already holds an open file, this file is closed (like 
+         * calling Close) and the new file is opened.
+         *
+         * @param filename     Path to the file to be opened
+         * @param accessMode   The access mode for the file to be opened
+         * @param shareMode    The share mode
+         *                     (Parameter is ignored on linux systems.)
+         * @param creationMode Use your imagination on this one
+         *
+         * @return true, if the file has been successfully opened, false 
+         *         otherwise. In case of an error you can receive additional
+         *         information using 'GetLastError'.
+         *
+         * @throws IllegalParamException
+         */
+        inline bool Open(const StringW& filename, const AccessMode accessMode, 
+                const ShareMode shareMode, const CreationMode creationMode) {
+            return this->Open(filename.PeekBuffer(), accessMode, shareMode, 
+                creationMode);
+        }
 
         /**
          * Read at most 'bufSize' bytes from the file into 'outBuf'.
