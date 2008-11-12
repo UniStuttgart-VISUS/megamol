@@ -460,7 +460,7 @@ namespace vislib {
          * @param fmt The format string.
          * @param ... Optional parameters.
          */
-        void Format(const String& format, ...);
+        void Format(const String *format, ...);
 
         /**
          * Prints into this string like vsprintf.
@@ -1577,11 +1577,18 @@ namespace vislib {
     /*
      * String<T>::Format
      */
-    template<class T> void String<T>::Format(const String& fmt, ...) {
-        va_list argptr;
-        va_start(argptr, fmt);
-        this->Format(fmt.PeekBuffer(), argptr);        
-        va_end(argptr);
+    template<class T> void String<T>::Format(const String *fmt, ...) {
+        // Implementation note: Using a reference as input to va_start is 
+        // illegal according to the C++ standard. Therefore, we must use a
+        // pointer here.
+        if (fmt != NULL) {
+            va_list argptr;
+            va_start(argptr, fmt);
+            this->FormatVa(fmt->PeekBuffer(), argptr);        
+            va_end(argptr);
+        } else {
+            this->Clear();
+        }
     }
 
     /*

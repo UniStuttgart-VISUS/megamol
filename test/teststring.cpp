@@ -277,6 +277,10 @@ void TestStringA(void) {
     s1.Insert(3, "st");
     AssertTrue("String insert at end", !::strcmp(s1.PeekBuffer(), "Horst"));
 
+    s1 = "Hugo %d";
+    s2.Format(&s1, 3);
+    AssertTrue("Format with vislib format string", !::strcmp(s2.PeekBuffer(), "Hugo 3"));
+
 }
 
 void TestStringW(void) {
@@ -510,6 +514,9 @@ void TestStringW(void) {
     s1.Insert(3, L"st");
     AssertTrue("String insert at end", !::wcscmp(s1.PeekBuffer(), L"Horst"));
 
+    s1 = L"Hugo %d";
+    s2.Format(&s1, 3);
+    AssertTrue("Format with vislib format string", !::wcscmp(s2.PeekBuffer(), L"Hugo 3"));
 }
 
 void TestUTF8String(void) {
