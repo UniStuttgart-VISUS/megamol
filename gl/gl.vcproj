@@ -362,6 +362,14 @@
 				RelativePath=".\src\ShaderSource.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\SimpleFont.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SimpleFontData.inc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -414,6 +422,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\ShaderSource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SimpleFont.h"
 				>
 			</File>
 		</Filter>

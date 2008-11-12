@@ -160,8 +160,8 @@ void vislib::StackTrace::getStackString(char *str, unsigned int &strSize) {
     unsigned int l1, l2, l3;
     char buf[1024];
     while (e != NULL) {
-        s += ::strlen(e->func);
-        s += ::strlen(e->file);
+        s += static_cast<unsigned int>(::strlen(e->func));
+        s += static_cast<unsigned int>(::strlen(e->file));
         s += static_cast<int>(ceilf(log10f(static_cast<float>(e->line + 1))));
         if (e->line == 0) s++;
         s += 5; // '%func [%file:%line]\n' => five additional characters
@@ -187,8 +187,8 @@ void vislib::StackTrace::getStackString(char *str, unsigned int &strSize) {
     e = stck;
     while (e != NULL) {
 
-        l1 = ::strlen(e->func);
-        l2 = ::strlen(e->file);
+        l1 = static_cast<unsigned int>(::strlen(e->func));
+        l2 = static_cast<unsigned int>(::strlen(e->file));
         l3 = static_cast<int>(ceilf(log10f(static_cast<float>(e->line + 1))));
         if (e->line == 0) l3++;
 

@@ -381,6 +381,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleFontTest.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\StereoCamTestApp.cpp"
 				>
 			</File>
@@ -436,6 +440,10 @@
 			</File>
 			<File
 				RelativePath=".\glutInclude.visglut.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleFontTest.h"
 				>
 			</File>
 			<File

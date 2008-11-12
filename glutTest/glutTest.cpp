@@ -39,6 +39,7 @@
 #include "FBOTest2App.h"
 #include "GLSLShaderTest.h"
 #include "GLSLGeomShaderTest.h"
+#include "SimpleFontTest.h"
 
 #include "vislib/FpsCounter.h"
 #include "vislib/Thread.h"
@@ -140,6 +141,7 @@ int main(int argc, char* argv[]) {
     GlutAppManager::InstallFactory<FBOTest2App>("Framebuffer Object Test #2");
     GlutAppManager::InstallFactory<GLSLShaderTest>("GLSLShader Test");
     GlutAppManager::InstallFactory<GLSLGeomShaderTest>("GLSLGeometryShader Test");
+    GlutAppManager::InstallFactory<SimpleFontTest>("SimpleFont Test");
 
     // run test application
     glutInit(&argc, argv);
