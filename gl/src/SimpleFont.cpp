@@ -82,6 +82,10 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
         case ALIGN_RIGHT_BOTTOM:
             y -= this->LineHeight() * lineCnt;
             break;
+#ifndef _WIN32
+        default:
+            break;
+#endif /* !_win32 */
     }
 
     this->drawText(x, y, lines, lineCnt, size, align);
@@ -113,6 +117,10 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
         case ALIGN_RIGHT_BOTTOM:
             x += w;
             break;
+#ifndef _WIN32
+        default:
+            break;
+#endif /* !_win32 */
     }
 
     switch (align) {
@@ -126,6 +134,10 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
         case ALIGN_RIGHT_BOTTOM:
             y += h - this->LineHeight(size) * lineCnt;
             break;
+#ifndef _WIN32
+        default:
+            break;
+#endif /* !_win32 */
     }
 
     this->drawText(x, y, lines, lineCnt, size, align);
@@ -265,6 +277,10 @@ void vislib::graphics::gl::SimpleFont::drawText(float x, float y,
         case ALIGN_RIGHT_BOTTOM:
             xo = -1.0f;
             break;
+#ifndef _WIN32
+        default:
+            break;
+#endif /* !_win32 */
     }
 
     glBegin(GL_QUADS);
