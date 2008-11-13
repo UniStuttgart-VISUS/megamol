@@ -615,6 +615,11 @@ void vislib::sys::Path::MakeDirectory(const StringA& path) {
         StringA::Size pos = curPath.FindLast(SEPARATOR_A);
         if (pos != StringA::INVALID_POS) {
             missingParts.Push(curPath.Substring(pos + 1));
+            if (missingParts.Peek()->IsEmpty()) {
+                // Remove empty directories as the incremental directory 
+                // creation later on will fail for these.
+                missingParts.Pop();
+            }
             curPath.Truncate(pos);
 
         } else {
@@ -680,6 +685,11 @@ void vislib::sys::Path::MakeDirectory(const StringW& path) {
         StringW::Size pos = curPath.FindLast(SEPARATOR_W);
         if (pos != StringW::INVALID_POS) {
             missingParts.Push(curPath.Substring(pos + 1));
+            if (missingParts.Peek()->IsEmpty()) {
+                // Remove empty directories as the incremental directory 
+                // creation later on will fail for these.
+                missingParts.Pop();
+            }
             curPath.Truncate(pos);
 
         } else {
