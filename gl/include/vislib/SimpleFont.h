@@ -70,11 +70,12 @@ namespace gl {
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, const char *txt,
-            Alignment align = ALIGN_LEFT_TOP) const;
+        virtual void DrawString(float x, float y, float size, bool flipY,
+            const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
          * Draws a text into a specified rectangular area, and performs
@@ -85,11 +86,13 @@ namespace gl {
          * @param w The width of the rectangle.
          * @param h The height of the rectangle.
          * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
         virtual void DrawString(float x, float y, float w, float h, float size,
-            const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+            bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP)
+            const;
 
         /**
          * Draws a text at the specified position.
@@ -97,10 +100,11 @@ namespace gl {
          * @param x The x coordinate of the position.
          * @param y The y coordinate of the position.
          * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size,
+        virtual void DrawString(float x, float y, float size, bool flipY,
             const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
 
         /**
@@ -112,11 +116,13 @@ namespace gl {
          * @param w The width of the rectangle.
          * @param h The height of the rectangle.
          * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
         virtual void DrawString(float x, float y, float w, float h, float size,
-            const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+            bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP)
+            const;
 
         /**
          * Answers the width of the line 'txt' in logical units.
@@ -182,10 +188,11 @@ namespace gl {
          * @param lines The text lines
          * @param lineCnt The number of text lines
          * @param size The font size
+         * @param flipY Flag controlling the direction of the y-axis
          * @param halign The horizontal alignment
          */
         void drawText(float x, float y, TextLine *lines, unsigned int lineCnt,
-            float size, Alignment halign) const;
+            float size, bool flipY, Alignment halign) const;
 
         /**
          * Enters text mode

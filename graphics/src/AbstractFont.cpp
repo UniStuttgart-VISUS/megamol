@@ -7,6 +7,7 @@
 
 #include "vislib/AbstractFont.h"
 #include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 
 
 /*
@@ -52,9 +53,20 @@ float vislib::graphics::AbstractFont::LineHeight(float size) const {
 
 
 /*
+ * vislib::graphics::AbstractFont::SetFlipY
+ */
+void vislib::graphics::AbstractFont::SetFlipY(bool flipY) {
+    this->flipY = flipY;
+}
+
+
+/*
  * vislib::graphics::AbstractFont::SetSize
  */
 void vislib::graphics::AbstractFont::SetSize(float size) {
+    if (size < 0.0f) {
+        throw vislib::IllegalParamException("size", __FILE__, __LINE__);
+    }
     this->size = size;
 }
 
@@ -63,6 +75,6 @@ void vislib::graphics::AbstractFont::SetSize(float size) {
  * vislib::graphics::AbstractFont::AbstractFont
  */
 vislib::graphics::AbstractFont::AbstractFont(void) : initialised(false),
-        size(1.0f) {
+        size(1.0f), flipY(false) {
     // intentionally empty
 }

@@ -27,6 +27,12 @@ namespace graphics {
      * in the object space x-y-plane. The class also contains metric
      * functions.
      *
+     * The planes are defined as follows:
+     *  The positive direction of the x-axis is to the right.
+     *  The positive direction of the y-axis is downwards.
+     * However, you can change the direction of the y-axis to upwards by
+     * setting the 'flipY' flag.
+     *
      * There are two types of 'DrawString' methods, which perform a different
      * text alignment. When using the methods using a single point for
      * positioning the text the alignment specifies in which corner of the
@@ -48,7 +54,9 @@ namespace graphics {
      *
      * When using the methods which use a rectangle to specify the text
      * position the alignment specifies in which corner of that rectangle the
-     * text should be placed.
+     * text should be placed. The positions (x, y) specifies the minimum values
+     * on both axis (regardless 'flipY' flag) and the size (w, h) should always
+     * be positive.
      */
     class AbstractFont {
     public:
@@ -204,7 +212,7 @@ namespace graphics {
          */
         inline void DrawString(float x, float y, const char *txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, txt, align);
+            this->DrawString(x, y, this->size, this->flipY, txt, align);
         }
 
         /**
@@ -217,7 +225,8 @@ namespace graphics {
          */
         inline void DrawString(float x, float y, const vislib::StringA& txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, txt.PeekBuffer(), align);
+            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(),
+                align);
         }
 
         /**
@@ -233,7 +242,7 @@ namespace graphics {
          */
         inline void DrawString(float x, float y, float w, float h,
                 const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, txt, align);
+            this->DrawString(x, y, w, h, this->size, this->flipY, txt, align);
         }
 
         /**
@@ -250,7 +259,8 @@ namespace graphics {
         inline void DrawString(float x, float y, float w, float h,
                 const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, w, h, this->size, txt, align);
+            this->DrawString(x, y, w, h, this->size, this->flipY,
+                txt.PeekBuffer(), align);
         }
 
         /**
@@ -265,7 +275,7 @@ namespace graphics {
         inline void DrawString(float x, float y, float size,
                 const vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, size, txt.PeekBuffer(), align);
+            this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -277,8 +287,10 @@ namespace graphics {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float size, const char *txt,
-            Alignment align = ALIGN_LEFT_TOP) const = 0;
+        inline void DrawString(float x, float y, float size, const char *txt,
+                Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, size, this->flipY, txt, align);
+        }
 
         /**
          * Draws a text into a specified rectangular area, and performs
@@ -295,7 +307,8 @@ namespace graphics {
         inline void DrawString(float x, float y, float w, float h, float size,
                 const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, w, h, size, txt.PeekBuffer(), align);
+            this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
+                align);
         }
 
         /**
@@ -310,8 +323,139 @@ namespace graphics {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size,
+        inline void DrawString(float x, float y, float w, float h, float size,
+                const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, w, h, size, this->flipY, txt, align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        inline void DrawString(float x, float y, bool flipY, const char *txt,
+                Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, this->size, flipY, txt, align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        inline void DrawString(float x, float y, bool flipY,
+                const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
+                const {
+            this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        inline void DrawString(float x, float y, float w, float h, bool flipY,
+                const char *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        }
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        inline void DrawString(float x, float y, float w, float h, bool flipY,
+                const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
+                const {
+            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        inline void DrawString(float x, float y, float size, bool flipY,
+                const vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP)
+                const {
+            this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        virtual void DrawString(float x, float y, float size, bool flipY,
             const char *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        inline void DrawString(float x, float y, float w, float h, float size,
+                bool flipY, const vislib::StringA& txt,
+                Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        virtual void DrawString(float x, float y, float w, float h, float size,
+            bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP)
+            const = 0;
 
         /**
          * Draws a text at the specified position.
@@ -323,7 +467,7 @@ namespace graphics {
          */
         inline void DrawString(float x, float y, const wchar_t *txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, txt, align);
+            this->DrawString(x, y, this->size, this->flipY, txt, align);
         }
 
         /**
@@ -336,7 +480,8 @@ namespace graphics {
          */
         inline void DrawString(float x, float y, const vislib::StringW& txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, txt.PeekBuffer(), align);
+            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(),
+                align);
         }
 
         /**
@@ -352,7 +497,7 @@ namespace graphics {
          */
         inline void DrawString(float x, float y, float w, float h,
                 const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, this->size, txt, align);
+            this->DrawString(x, y, w, h, this->size, this->flipY, txt, align);
         }
 
         /**
@@ -369,20 +514,9 @@ namespace graphics {
         inline void DrawString(float x, float y, float w, float h,
                 const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, w, h, this->size, txt.PeekBuffer(), align);
+            this->DrawString(x, y, w, h, this->size, this->flipY,
+                txt.PeekBuffer(), align);
         }
-
-        /**
-         * Draws a text at the specified position.
-         *
-         * @param x The x coordinate of the position.
-         * @param y The y coordinate of the position.
-         * @param size The size to use.
-         * @param txt The zero-terminated string to draw.
-         * @param align The alignment of the text.
-         */
-        virtual void DrawString(float x, float y, float size,
-            const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
 
         /**
          * Draws a text at the specified position.
@@ -394,25 +528,24 @@ namespace graphics {
          * @param align The alignment of the text.
          */
         inline void DrawString(float x, float y, float size,
-                const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, size, txt.PeekBuffer(), align);
+            this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
-         * Draws a text into a specified rectangular area, and performs
-         * soft-breaks if necessary.
+         * Draws a text at the specified position.
          *
-         * @param x The left coordinate of the rectangle.
-         * @param y The upper coordinate of the rectangle.
-         * @param w The width of the rectangle.
-         * @param h The height of the rectangle.
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
          * @param size The size to use.
          * @param txt The zero-terminated string to draw.
-         * @param align The alignment of the text inside the area.
+         * @param align The alignment of the text.
          */
-        virtual void DrawString(float x, float y, float w, float h, float size,
-            const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+        inline void DrawString(float x, float y, float size,
+                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, size, this->flipY, txt, align);
+        }
 
         /**
          * Draws a text into a specified rectangular area, and performs
@@ -429,8 +562,156 @@ namespace graphics {
         inline void DrawString(float x, float y, float w, float h, float size,
                 const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, w, h, size, txt.PeekBuffer(), align);
+            this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
+                align);
         }
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param size The size to use.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        inline void DrawString(float x, float y, float w, float h, float size,
+                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, w, h, size, this->flipY, txt, align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        inline void DrawString(float x, float y, bool flipY,
+                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, this->size, flipY, txt, align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        inline void DrawString(float x, float y, bool flipY,
+                const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
+                const {
+            this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        inline void DrawString(float x, float y, float w, float h, bool flipY,
+                const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        }
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        inline void DrawString(float x, float y, float w, float h, bool flipY,
+                const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
+                const {
+            this->DrawString(x, y, w, h, this->size, flipY, txt, align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        inline void DrawString(float x, float y, float size, bool flipY,
+                const vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP)
+                const {
+            this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text at the specified position.
+         *
+         * @param x The x coordinate of the position.
+         * @param y The y coordinate of the position.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text.
+         */
+        virtual void DrawString(float x, float y, float size, bool flipY,
+            const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const = 0;
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        inline void DrawString(float x, float y, float w, float h, float size,
+                bool flipY, const vislib::StringW& txt,
+                Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
+        }
+
+        /**
+         * Draws a text into a specified rectangular area, and performs
+         * soft-breaks if necessary.
+         *
+         * @param x The left coordinate of the rectangle.
+         * @param y The upper coordinate of the rectangle.
+         * @param w The width of the rectangle.
+         * @param h The height of the rectangle.
+         * @param size The size to use.
+         * @param flipY The flag controlling the direction of the y-axis.
+         * @param txt The zero-terminated string to draw.
+         * @param align The alignment of the text inside the area.
+         */
+        virtual void DrawString(float x, float y, float w, float h, float size,
+            bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP)
+            const = 0;
+
 
         /**
          * Gets the default size of the font. The size is specified in logical
@@ -451,6 +732,16 @@ namespace graphics {
         bool Initialise(void);
 
         /**
+         * Answer the flag 'flipY'. If 'flipY' is true, the direction of the
+         * y-axis is upward, otherwise the direction is downward.
+         *
+         * @return The flag 'flipY'
+         */
+        inline bool IsFlipY(void) const {
+            return this->flipY;
+        }
+
+        /**
          * Answers whether the font object is initialised. If the method
          * returns 'false' the font object is not initialised. You must call
          * 'Initialise' (and the method must return 'true') in order to
@@ -463,7 +754,7 @@ namespace graphics {
 
         /**
          * Answers the height of a single line with the default font size in
-         * logical units.
+         * logical units. The line height is always positive.
          *
          * @return The height of a single line in logical units.
          */
@@ -474,7 +765,7 @@ namespace graphics {
         /**
          * Answers the height of a single line in logical units. This default
          * implementation returns 'size', since this is the value representing
-         * a line height.
+         * a line height. The line height is always positive.
          *
          * @param size The font size to use.
          *
@@ -484,7 +775,7 @@ namespace graphics {
 
         /**
          * Answers the width of the line 'txt' with the default font size in
-         * logical units.
+         * logical units. The line width is always positive.
          *
          * @param txt The text to measure.
          *
@@ -496,7 +787,7 @@ namespace graphics {
 
         /**
          * Answers the width of the line 'txt' with the default font size in
-         * logical units.
+         * logical units. The line width is always positive.
          *
          * @param txt The text to measure.
          *
@@ -507,7 +798,8 @@ namespace graphics {
         }
 
         /**
-         * Answers the width of the line 'txt' in logical units.
+         * Answers the width of the line 'txt' in logical units. The line
+         * width is always positive.
          *
          * @param size The font size to use.
          * @param txt The text to measure.
@@ -517,7 +809,8 @@ namespace graphics {
         virtual float LineWidth(float size, const char *txt) const = 0;
 
         /**
-         * Answers the width of the line 'txt' in logical units.
+         * Answers the width of the line 'txt' in logical units. The line
+         * width is always positive.
          *
          * @param size The font size to use.
          * @param txt The text to measure.
@@ -530,7 +823,7 @@ namespace graphics {
 
         /**
          * Answers the width of the line 'txt' with the default font size in
-         * logical units.
+         * logical units. The line width is always positive.
          *
          * @param txt The text to measure.
          *
@@ -542,7 +835,7 @@ namespace graphics {
 
         /**
          * Answers the width of the line 'txt' with the default font size in
-         * logical units.
+         * logical units. The line width is always positive.
          *
          * @param txt The text to measure.
          *
@@ -553,7 +846,8 @@ namespace graphics {
         }
 
         /**
-         * Answers the width of the line 'txt' in logical units.
+         * Answers the width of the line 'txt' in logical units. The line
+         * width is always positive.
          *
          * @param size The font size to use.
          * @param txt The text to measure.
@@ -563,7 +857,8 @@ namespace graphics {
         virtual float LineWidth(float size, const wchar_t *txt) const = 0;
 
         /**
-         * Answers the width of the line 'txt' in logical units.
+         * Answers the width of the line 'txt' in logical units. The line
+         * width is always positive.
          *
          * @param size The font size to use.
          * @param txt The text to measure.
@@ -575,10 +870,20 @@ namespace graphics {
         }
 
         /**
+         * Sets the flag 'flipY'. If the flag is set, the direction of the
+         * y-axis is upward, otherwise it is downward.
+         *
+         * @param flipY The new value for the 'flipY' flag.
+         */
+        virtual void SetFlipY(bool flipY);
+
+        /**
          * Sets the default size of the font. The size is specified in logical
          * units used to measure the text in object space.
          *
          * @param size The new default size of the font.
+         *
+         * @throw IllegalParamException if size is less than zero.
          */
         virtual void SetSize(float size);
 
@@ -610,6 +915,9 @@ namespace graphics {
 
         /** The default size of the font */
         float size;
+
+        /** flag whether to flip the y-axis */
+        bool flipY;
 
     };
     

@@ -62,9 +62,10 @@ unsigned int vislib::graphics::gl::SimpleFont::BlockLines(float maxWidth,
  * vislib::graphics::gl::SimpleFont::DrawString
  */
 void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
-        float size, const char *txt,
+        float size, bool flipY, const char *txt,
         vislib::graphics::AbstractFont::Alignment align) const {
     unsigned int lineCnt = 0;
+    const float lh = (flipY ? -1.0f : 1.0f) * this->LineHeight(size);
     TextLine *lines = this->layoutText(txt, FLT_MAX, lineCnt);
     if ((lines == NULL) || (lineCnt == 0)) {
         // unexpected. Maybe 'txt' was NULL? Better fail silently.
@@ -75,12 +76,12 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
         case ALIGN_LEFT_MIDDLE:
         case ALIGN_CENTER_MIDDLE:
         case ALIGN_RIGHT_MIDDLE:
-            y -= 0.5f * this->LineHeight() * lineCnt;
+            y -= 0.5f * lh * lineCnt;
             break;
         case ALIGN_LEFT_BOTTOM:
         case ALIGN_CENTER_BOTTOM:
         case ALIGN_RIGHT_BOTTOM:
-            y -= this->LineHeight() * lineCnt;
+            y -= lh * lineCnt;
             break;
 #ifndef _WIN32
         default:
@@ -88,7 +89,7 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
 #endif /* !_win32 */
     }
 
-    this->drawText(x, y, lines, lineCnt, size, align);
+    this->drawText(x, y, lines, lineCnt, size, flipY, align);
 
     delete[] lines;
 }
@@ -98,7 +99,7 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
  * vislib::graphics::gl::SimpleFont::DrawString
  */
 void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
-        float w, float h, float size, const char *txt,
+        float w, float h, float size, bool flipY, const char *txt,
         vislib::graphics::AbstractFont::Alignment align) const {
     unsigned int lineCnt = 0;
     TextLine *lines = this->layoutText(txt, w / (size * 16.0f), lineCnt);
@@ -123,24 +124,43 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
 #endif /* !_win32 */
     }
 
-    switch (align) {
-        case ALIGN_LEFT_MIDDLE:
-        case ALIGN_CENTER_MIDDLE:
-        case ALIGN_RIGHT_MIDDLE:
-            y += 0.5f * (h - this->LineHeight(size) * lineCnt);
-            break;
-        case ALIGN_LEFT_BOTTOM:
-        case ALIGN_CENTER_BOTTOM:
-        case ALIGN_RIGHT_BOTTOM:
-            y += h - this->LineHeight(size) * lineCnt;
-            break;
+    if (flipY) {
+        y += h;
+        switch (align) {
+            case ALIGN_LEFT_MIDDLE:
+            case ALIGN_CENTER_MIDDLE:
+            case ALIGN_RIGHT_MIDDLE:
+                y -= 0.5f * (h - this->LineHeight(size) * lineCnt);
+                break;
+            case ALIGN_LEFT_BOTTOM:
+            case ALIGN_CENTER_BOTTOM:
+            case ALIGN_RIGHT_BOTTOM:
+                y -= h - this->LineHeight(size) * lineCnt;
+                break;
 #ifndef _WIN32
-        default:
-            break;
+            default:
+                break;
 #endif /* !_win32 */
+        }
+    } else {
+        switch (align) {
+            case ALIGN_LEFT_MIDDLE:
+            case ALIGN_CENTER_MIDDLE:
+            case ALIGN_RIGHT_MIDDLE:
+                y += 0.5f * (h - this->LineHeight(size) * lineCnt);
+                break;
+            case ALIGN_LEFT_BOTTOM:
+            case ALIGN_CENTER_BOTTOM:
+            case ALIGN_RIGHT_BOTTOM:
+                y += h - this->LineHeight(size) * lineCnt;
+                break;
+#ifndef _WIN32
+            default:
+                break;
+#endif /* !_win32 */
+        }
     }
-
-    this->drawText(x, y, lines, lineCnt, size, align);
+    this->drawText(x, y, lines, lineCnt, size, flipY, align);
 
     delete[] lines;
 }
@@ -150,9 +170,9 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
  * vislib::graphics::gl::SimpleFont::DrawString
  */
 void vislib::graphics::gl::SimpleFont::DrawString(float x, float y, float size,
-        const wchar_t *txt, vislib::graphics::AbstractFont::Alignment align)
-        const {
-    this->DrawString(x, y, size, W2A(txt), align);
+        bool flipY, const wchar_t *txt,
+        vislib::graphics::AbstractFont::Alignment align) const {
+    this->DrawString(x, y, size, flipY, W2A(txt), align);
 }
 
 
@@ -160,9 +180,9 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y, float size,
  * vislib::graphics::gl::SimpleFont::DrawString
  */
 void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
-        float w, float h, float size, const wchar_t *txt,
+        float w, float h, float size, bool flipY, const wchar_t *txt,
         vislib::graphics::AbstractFont::Alignment align) const {
-    this->DrawString(x, y, w, h, size, W2A(txt), align);
+    this->DrawString(x, y, w, h, size, flipY, W2A(txt), align);
 }
 
 
@@ -258,10 +278,10 @@ void vislib::graphics::gl::SimpleFont::deinitialise(void) {
  */
 void vislib::graphics::gl::SimpleFont::drawText(float x, float y,
         vislib::graphics::gl::SimpleFont::TextLine *lines,
-        unsigned int lineCnt, float size,
+        unsigned int lineCnt, float size, bool flipY,
         vislib::graphics::AbstractFont::Alignment halign) const {
     const float texOff = 1.0f / 512.0f;
-    const float lh = this->LineHeight(size);
+    const float lh = (flipY ? -1.0f : 1.0f) * this->LineHeight(size);
     this->enterTextMode();
 
     float xp, yp = y;

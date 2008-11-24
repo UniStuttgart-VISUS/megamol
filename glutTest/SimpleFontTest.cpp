@@ -179,7 +179,7 @@ void SimpleFontTest::Render(void) {
     this->camera.glMultViewMatrix();
 
     glScalef(0.7f, 0.7f, 0.7f);
-    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(float(vislib::sys::GetTicksOfDay() % 3600) * 0.1f, 0.0f, 1.0f, 0.0f);
 
     glColor3ub(128, 128, 128);
@@ -242,17 +242,17 @@ void SimpleFontTest::Render(void) {
         glBegin(GL_LINE_LOOP);
             glVertex2f(0.0f, 0.0f);
             glVertex2f(w, 0.0f);
-            glVertex2f(w, h);
-            glVertex2f(0.0f, h);
+            glVertex2f(w, -h);
+            glVertex2f(0.0f, -h);
         glEnd();
 
-        this->font->DrawString(0.0f, 0.0f, text1
+        this->font->DrawString(0.0f, 0.0f, true, text1
             //, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE
             //, vislib::graphics::AbstractFont::ALIGN_RIGHT_BOTTOM
             );
 
         glColor3ub(0, 255, 0);
-        this->font->DrawString(-1.0f, -1.0f, 2.0f, 2.0f, 0.15f, text2
+        this->font->DrawString(-1.0f, -1.0f, 2.0f, 2.0f, 0.15f, true, text2
             , vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE
             //, vislib::graphics::AbstractFont::ALIGN_RIGHT_BOTTOM
             );
