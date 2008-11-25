@@ -99,6 +99,7 @@ void vislib::sys::ThreadSafeStackTrace::pop(int id) {
             this->stack = r->stack;
             StackTrace::pop(id);
             r->stack = this->stack;
+            this->stack = NULL;
 
             if (r->stack == NULL) {
                 if (this->stacks == r) {
@@ -152,6 +153,7 @@ int vislib::sys::ThreadSafeStackTrace::push(const char* func, const char* file, 
     this->stack = root->stack;
     retval = StackTrace::push(func, file, line);
     root->stack = this->stack;
+    this->stack = NULL;
 
     this->critSect.Unlock();
     return retval;
