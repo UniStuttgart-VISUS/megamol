@@ -59,6 +59,10 @@ namespace vislib {
             /**
              * Gets the key of this element pair.
              *
+             * Note: there is no way to change the key using an iterator,
+             * because this could corrupt the internal data structure of the
+             * map.
+             *
              * @return The key of this element pair.
              */
             const K& Key(void) const {
@@ -66,7 +70,18 @@ namespace vislib {
             }
 
             /**
-             * Gets the key of this element pair
+             * Gets the value of this element pair for read write access.
+             *
+             * @return The value of this element pair for read write access.
+             */
+            V& Value(void) {
+                return *this->value;
+            }
+
+            /**
+             * Gets the value of this element pair.
+             *
+             * @return The value of this element pair.
              */
             const V& Value(void) const {
                 return *this->value;
@@ -96,7 +111,6 @@ namespace vislib {
                 return (this->key == rhs.key)
                     && (this->value == rhs.value);
             }
-
 
         private:
 
