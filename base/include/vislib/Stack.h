@@ -35,6 +35,14 @@ namespace vislib {
         Stack(void);
 
         /**
+         * Copy ctor.
+         * Makes a deep copy of 'src'
+         *
+         * @param src The object to clone from.
+         */
+        Stack(const Stack& src);
+
+        /**
          * Create a new stack initially containing 'element'. This has the same
          * effect as creating an empty stack and calling Push(element) 
          * afterwards.
@@ -108,6 +116,16 @@ namespace vislib {
          */
         const T& Top(void) const;
 
+        /**
+         * Assignment operator.
+         * Makes a deep copy from 'rhs'.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return A reference to 'this' object.
+         */
+        Stack& operator=(const Stack& rhs);
+
     private:
 
         /** The storage for the stack elements. */
@@ -127,6 +145,15 @@ namespace vislib {
      */
     template<class T>
     Stack<T>::Stack(void) : top(NULL) {
+    }
+
+
+    /*
+     * vislib::Stack<T>::Stack
+     */
+    template<class T>
+    Stack<T>::Stack(const Stack& src) : top(NULL) {
+        *this = src;
     }
 
 
@@ -237,6 +264,7 @@ namespace vislib {
         }
     }
 
+
     /*
      * vislib::Stack<T>::Top
      */
@@ -248,7 +276,30 @@ namespace vislib {
             throw NoSuchElementException("Empty stack.", __FILE__, __LINE__);
         }
     }
-    
+
+    /*
+     * vislib::Stack<T>::operator=
+     */
+    template<class T>
+    Stack<T>& Stack<T>::operator=(const Stack<T> &rhs) {
+        if (this != &rhs) {
+            this->Clear();
+
+            if (rhs.top != NULL) {
+                Element *ed = this->top = new Element(), *es = rhs.top;
+                ed->element = es->element;
+                while (es->next) {
+                    ed->next = new Element();
+                    ed = ed->next;
+                    es = es->next;
+                    ed->element = es->element;
+                }
+                ed->next = NULL;
+            }
+        }
+        return *this;
+    }
+
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
