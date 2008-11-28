@@ -190,6 +190,7 @@ vislib::graphics::gl::ShaderSource::Append(
     if (this->names.Contains(name)) {
         throw AlreadyExistsException(name, __FILE__, __LINE__);
     }
+    this->names[name] = this->snippets.Count();
     this->snippets.Append(code);
     ARY_SAFE_DELETE(this->code);
     return this->snippets.Last();
