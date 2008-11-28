@@ -345,6 +345,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CamGlMatrixTest.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CamParamObserver.cpp"
 				>
 			</File>
@@ -400,6 +404,10 @@
 			>
 			<File
 				RelativePath=".\AbstractGlutApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CamGlMatrixTest.h"
 				>
 			</File>
 			<File

@@ -7,8 +7,11 @@
  */
 
 #include "vislib/CameraOpenGL.h"
+
 #include <GL/gl.h>
 #include <GL/glu.h>
+
+#include "vislib/assert.h"
 #include "vislib/ShallowMatrix.h"
 
 
@@ -117,22 +120,34 @@ void vislib::graphics::gl::CameraOpenGL::ViewMatrix(float *mat) const {
         this->updateMembers();
     }
 
-    vislib::math::Vector<vislib::graphics::SceneSpaceType, 3> right 
-        = this->Parameters()->EyeRightVector();
+    SceneSpacePoint3D eye = this->Parameters()->EyePosition();
 
-    ZeroMemory(mat, sizeof(float) * 16);
-    vislib::math::ShallowMatrix<float, 4, vislib::math::COLUMN_MAJOR> matrix(mat);
+    SceneSpaceVector3D zAxis(eye - this->Parameters()->LookAt());
+    zAxis.Normalise();
 
-    matrix.SetAt(0, 0, right.GetX());
-    matrix.SetAt(0, 1, right.GetY());
-    matrix.SetAt(0, 2, right.GetZ());
-    matrix.SetAt(1, 0, up.GetX());
-    matrix.SetAt(1, 1, up.GetY());
-    matrix.SetAt(1, 2, up.GetZ());
-    matrix.SetAt(2, 0, -lookDir.GetX());
-    matrix.SetAt(2, 1, -lookDir.GetY());
-    matrix.SetAt(2, 2, -lookDir.GetZ());
+    SceneSpaceVector3D xAxis = this->Parameters()->EyeUpVector().Cross(zAxis);
+    xAxis.Normalise();
+
+    SceneSpaceVector3D yAxis = zAxis.Cross(xAxis);
+    yAxis.Normalise();
+
+    ::ZeroMemory(mat, sizeof(float) * 16);
+    math::ShallowMatrix<float, 4, math::COLUMN_MAJOR> matrix(mat);
+
+    matrix.SetAt(0, 0, xAxis.GetX());
+    matrix.SetAt(0, 1, xAxis.GetY());
+    matrix.SetAt(0, 2, xAxis.GetZ());
+    matrix.SetAt(1, 0, yAxis.GetX());
+    matrix.SetAt(1, 1, yAxis.GetY());
+    matrix.SetAt(1, 2, yAxis.GetZ());
+    matrix.SetAt(2, 0, zAxis.GetX());
+    matrix.SetAt(2, 1, zAxis.GetY());
+    matrix.SetAt(2, 2, zAxis.GetZ());
     matrix.SetAt(3, 3, 1.0f);
+
+    matrix.SetAt(0, 3, -xAxis.Dot(eye));
+    matrix.SetAt(1, 3, -yAxis.Dot(eye));
+    matrix.SetAt(2, 3, -zAxis.Dot(eye));
 }
 
 
