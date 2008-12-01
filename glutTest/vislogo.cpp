@@ -10,7 +10,7 @@
 #pragma warning(disable : 4305)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-VLQuad faces[] = {
+static VLQuad faces[] = {
 	{0, 1, 21, 20},
 	{1, 2, 22, 21},
 	{2, 3, 23, 22},
@@ -4794,7 +4794,7 @@ VLQuad faces[] = {
 	{0, 0, 0, 0}
 };
 
-VLVec3 coords[] = {
+static VLVec3 coords[] = {
 	{-0.0303973, 0.68242, 0.48709},
 	{-0.0307229, 0.656938, 0.471793},
 	{-0.0402049, 0.63303, 0.456896},
@@ -9578,7 +9578,7 @@ VLVec3 coords[] = {
 	{0.0, 0.0, 0.0}
 };
 
-VLVec3 colors[] = {
+static VLVec3 colors[] = {
 	{0.351472, 0.351472, 0.497918},
 	{0.351472, 0.351472, 0.497918},
 	{0.351472, 0.351472, 0.497918},
@@ -14362,7 +14362,7 @@ VLVec3 colors[] = {
 	{0.0, 0.0, 0.0}
 };
 
-VLVec3 normals[] = {
+static VLVec3 normals[] = {
 	{0.988071, 0.0990633, 0.117908},
 	{0.984644, -0.169164, -0.0431172},
 	{0.884834, -0.420833, -0.199922},
@@ -19146,8 +19146,8 @@ VLVec3 normals[] = {
 	{0.0, 0.0, 0.0}
 };
 
-VLVec3 *vNorm;
-VLVec3 *vCol;
+static VLVec3 *vNorm;
+static VLVec3 *vCol;
 
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default : 4305)
