@@ -1,7 +1,7 @@
 #include "CamGlMatrixTest.h"
 
 #include <iostream>
-#include <GL/glut.h>
+#include "glutInclude.h"
 
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
@@ -121,8 +121,7 @@ void CamGlMatrixTest::Render(void) {
  */
 bool CamGlMatrixTest::OnKeyPress(unsigned char key, int x, int y) {
     using namespace vislib::graphics;
-    this->mia->SetMousePosition(static_cast<ImageSpaceType>(x), 
-        static_cast<ImageSpaceType>(y), true);
+    this->mia->SetMousePosition(x, y, true);
 
     static float lightCol[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -149,8 +148,7 @@ bool CamGlMatrixTest::OnKeyPress(unsigned char key, int x, int y) {
  */
 void CamGlMatrixTest::OnMouseEvent(int button, int state, int x, int y) {
     using namespace vislib::graphics;
-    this->mia->SetMousePosition(static_cast<ImageSpaceType>(x), 
-        static_cast<ImageSpaceType>(y), true);
+    this->mia->SetMousePosition(x, y, true);
 
     this->mia->SetMouseButtonState(
         static_cast<MouseInteractionAdapter::Button>(button), 
@@ -171,8 +169,7 @@ void CamGlMatrixTest::OnMouseEvent(int button, int state, int x, int y) {
  */
 void CamGlMatrixTest::OnMouseMove(int x, int y) {
     using namespace vislib::graphics;
-    this->mia->SetMousePosition(static_cast<ImageSpaceType>(x), 
-        static_cast<ImageSpaceType>(y), true);
+    this->mia->SetMousePosition(x, y, true);
     ::glutPostRedisplay();
 }
 
@@ -182,8 +179,7 @@ void CamGlMatrixTest::OnMouseMove(int x, int y) {
  */
 void CamGlMatrixTest::OnSpecialKey(int key, int x, int y) {
     using namespace vislib::graphics;
-    this->mia->SetMousePosition(static_cast<ImageSpaceType>(x), 
-        static_cast<ImageSpaceType>(y), true);
+    this->mia->SetMousePosition(x, y, true);
 
     int modifiers = glutGetModifiers();
     this->mia->SetModifierState(InputModifiers::MODIFIER_SHIFT,

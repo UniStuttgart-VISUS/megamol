@@ -64,38 +64,6 @@ namespace vislib {
         virtual SIZE_T Count(void) const = 0;
 
         /**
-         * Finds a key which a given value is associated to. If multiple
-         * keys are associated with this value, it is not defined which key
-         * is returned. You should use 'FindKeys' to avoid this problem. This
-         * call might be very slow!
-         *
-         * @param value The value to search the key for.
-         *
-         * @return The found key associated with this value or NULL if no key
-         *         is associated with this value.
-         */
-        virtual inline const K * FindKey(const V &value) const {
-            SingleLinkedList<K> keys = this->FindKeys(value);
-            return (keys.Count() > 0) ? &keys.First() : NULL;
-        }
-
-        /**
-         * Finds a key which a given value is associated to. If multiple
-         * keys are associated with this value, it is not defined which key
-         * is returned. You should use 'FindKeys' to avoid this problem. This
-         * call might be very slow!
-         *
-         * @param value The value to search the key for.
-         *
-         * @return The found key associated with this value or NULL if no key
-         *         is associated with this value.
-         */
-        virtual inline K * FindKey(const V &value) {
-            SingleLinkedList<K> keys = this->FindKeys(value);
-            return (keys.Count() > 0) ? &keys.First() : NULL;
-        }
-
-        /**
          * Finds all keys which are associated to a given value. The order of
          * the keys is not defined. This call might be very slow!
          *
