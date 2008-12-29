@@ -156,6 +156,7 @@ vislib::graphics::Camera::Parameters(void) {
     return this->parameters;
 }
 
+
 /*
  * vislib::graphics::CameraParameters::Parameters
  */

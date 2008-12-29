@@ -26,11 +26,12 @@ D3D9SimpleCameraTest::D3D9SimpleCameraTest(void)
     this->camera.Parameters()->SetApertureAngle(D3DX_PI / 2.0f);
     this->camera.Parameters()->SetVirtualViewSize(1.0f, 1.0f);
     this->camera.Parameters()->SetView(
-        SceneSpacePoint3D(0.0f, 0.0f, -2.0f),
+        SceneSpacePoint3D(0.0f, -0.0f, -10.0f),
         SceneSpacePoint3D(0.0f, 0.0f, 0.0f),
         SceneSpaceVector3D(0.0f, 1.0f, 0.0f));
 
     this->mia = new MouseInteractionAdapter(this->camera.Parameters());
+    //this->mia->ConfigureRotation(MouseInteractionAdapter::ROTATION_FREE);
 }
 
 
@@ -92,9 +93,9 @@ void D3D9SimpleCameraTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice,
 
     D3D_VERIFY_THROW(this->camera.ApplyViewTransform(pd3dDevice));
 
-    //D3D_VERIFY_THROW(pd3dDevice->SetTransform(D3DTS_PROJECTION, 
-    //    static_cast<D3DXMATRIX *>(this->camera.CalcProjectionMatrix(
-    //    projMatrix))));
+    D3D_VERIFY_THROW(pd3dDevice->SetTransform(D3DTS_PROJECTION, 
+        static_cast<D3DXMATRIX *>(this->camera.CalcProjectionMatrix(
+        projMatrix))));
 
     D3D_VERIFY_THROW(pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE));
     D3D_VERIFY_THROW(pd3dDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE));

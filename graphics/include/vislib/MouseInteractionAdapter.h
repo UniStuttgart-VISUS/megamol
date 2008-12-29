@@ -71,10 +71,14 @@ namespace graphics {
         ~MouseInteractionAdapter(void);
 
         /**
+         * Configure the behaviour of the rotation controller.
          *
-         * @param type
-         * @param button
-         * @param altModifier
+         * @param type        The type of rotation controller, which can be one 
+         *                    of RotationType's members.
+         * @param button      The button that should trigger a rotation.
+         * @param altModifier The modifiert for the alternative rotation 
+         *                    behaviour. See CameraRotate2DLookAt and 
+         *                    CameraRotate2D for more information.
          */
         void ConfigureRotation(const RotationType type = ROTATION_LOOKAT, 
             const Button button = BUTTON_LEFT,
@@ -82,9 +86,10 @@ namespace graphics {
             = InputModifiers::MODIFIER_SHIFT);
 
         /**
+         * Configure the behaviour of the zoom controller.
          *
-         * @param type
-         * @param button
+         * @param type      Specify how the zoom should be implemented.
+         * @param button    The button that should trigger the zoom.
          * @param speed     The motion speed of the zoom. This is only 
          *                  meaningful if 'type' is ZOOM_MOVE.
          * @param behaviour The proximity move behaviour of the zoom. This
@@ -95,6 +100,14 @@ namespace graphics {
             const SceneSpaceType speed = 10.0f,
             const CameraZoom2DMove::ZoomBehaviourType behaviour
             = CameraZoom2DMove::FIX_LOOK_AT);
+
+        /**
+         * Answer the camera parameters that are modified.
+         *
+         * @return A smart pointer to the camera parameters being modified by
+         *         this interaction adapter.
+         */
+        SmartPtr<CameraParameters> GetCamera(void);
 
         /**
          * Change the camera parameters to be modfied.

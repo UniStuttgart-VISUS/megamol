@@ -131,6 +131,14 @@ void vislib::graphics::MouseInteractionAdapter::ConfigureZoom(
 
 
 /*
+ * vislib::graphics::MouseInteractionAdapter::GetCamera
+ */
+vislib::SmartPtr<vislib::graphics::CameraParameters> 
+vislib::graphics::MouseInteractionAdapter::GetCamera(void) {
+    return this->cursor.CameraParams();
+}
+
+/*
  * vislib::graphics::MouseInteractionAdapter::SetCamera
  */
 void vislib::graphics::MouseInteractionAdapter::SetCamera(

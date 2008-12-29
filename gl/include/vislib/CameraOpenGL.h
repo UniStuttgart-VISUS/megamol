@@ -68,6 +68,38 @@ namespace gl {
          */
         void glMultViewMatrix(void) const;
 
+
+        /**
+         * Replace the current projection matrix and the current modelview 
+         * matrix with the projection matrix respectively view matrixx of 
+         * this camera. Note, that the current matrices will not be pushed onto
+         * the stack, but replaced.
+         *
+         * The matrix mode after calling this method is GL_MODELVIEW.
+         */
+        inline void glSetMatrices(void) const {
+            this->glSetProjectionMatrix();
+            this->glSetViewMatrix();
+        }
+
+        /**
+         * Replace the current projection matrix with the projection matrix of 
+         * this camera. Note, that the current matrix will not be pushed onto
+         * the stack, but replaced.
+         *
+         * The matrix mode after calling this method is GL_PROJECTION.
+         */
+        void glSetProjectionMatrix(void) const;
+
+        /**
+         * Replace the current modelview matrix with the view matrix of 
+         * this camera. Note, that the current matrix will not be pushed onto
+         * the stack, but replaced.
+         *
+         * The matrix mode after calling this method is GL_MODELVIEW.
+         */
+        void glSetViewMatrix(void) const;
+
         /**
          * Answer the projection matrix of the frustum of this camera.
          *

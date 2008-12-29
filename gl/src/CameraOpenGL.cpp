@@ -81,6 +81,26 @@ void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) const {
 
 
 /*
+ * vislib::graphics::gl::CameraOpenGL::glSetProjectionMatrix
+ */
+void vislib::graphics::gl::CameraOpenGL::glSetProjectionMatrix(void) const {
+    ::glMatrixMode(GL_PROJECTION);
+    ::glLoadIdentity();
+    this->glMultProjectionMatrix();
+}
+
+
+/*
+ * vislib::graphics::gl::CameraOpenGL::glSetViewMatrix
+ */
+void vislib::graphics::gl::CameraOpenGL::glSetViewMatrix(void) const {
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glLoadIdentity();
+    this->glMultViewMatrix();
+}
+
+
+/*
  * vislib::graphics::gl::CameraOpenGL::ProjectionMatrix
  */
 void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) const {
