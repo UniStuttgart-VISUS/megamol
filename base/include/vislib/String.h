@@ -39,6 +39,9 @@ namespace vislib {
         /** Define a local name for the string size. */
         typedef typename T::Size Size;
 
+        /** An empty string instance. */
+        static const String EMPTY;
+
         /** Index of not found substrings. */
         static const Size INVALID_POS;
 
@@ -1125,6 +1128,13 @@ namespace vislib {
         Char *data;
 
     }; /* end class String */
+
+
+    /*
+     * vislib::String<T>::EMPTY
+     */
+    template<class T>
+    const String<T> String<T>::EMPTY(CharTraits<T>::EMPTY_STRING);
 
 
     /*
