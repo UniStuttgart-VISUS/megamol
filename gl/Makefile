@@ -21,7 +21,7 @@
 # user settings
 TargetName := vislibgl
 
-IncludeDir += ../base/include ../math/include ../sys/include ../graphics/include
+IncludeDir += ../base/include ../math/include ../sys/include ../graphics/include ../glutInclude
 
 
 # Include common build rules.

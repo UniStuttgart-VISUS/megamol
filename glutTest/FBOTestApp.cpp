@@ -6,7 +6,7 @@
 
 #include "FBOTestApp.h"
 
-#include "glutInclude.h"
+#include "vislibGlutInclude.h"
 #include <iostream>
 
 #include "vislib/glverify.h"

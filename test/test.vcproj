@@ -65,7 +65,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -143,7 +143,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -220,7 +220,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
-				LinkIncremental="0"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="false"
 				SubSystem="1"
@@ -299,7 +299,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib"
-				LinkIncremental="0"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				GenerateDebugInformation="false"
 				SubSystem="1"

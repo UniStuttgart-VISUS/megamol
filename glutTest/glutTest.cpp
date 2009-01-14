@@ -13,7 +13,7 @@
 #endif /* _WIN32 */
 
 #include <stdio.h>
-#include "glutInclude.h"
+#include "vislibGlutInclude.h"
 #include <GL/gl.h>
 #include <cassert>
 #include <stdlib.h>

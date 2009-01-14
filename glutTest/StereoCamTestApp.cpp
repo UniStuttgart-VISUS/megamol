@@ -10,7 +10,7 @@
 #include "vislib/CameraParamsTileRectOverride.h"
 #include "vislib/PerformanceCounter.h"
 
-#include "glutInclude.h"
+#include "vislibGlutInclude.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <cstdio>

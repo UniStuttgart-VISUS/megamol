@@ -54,6 +54,16 @@ InputDir := .
 ExcludeFromBuild :=
 
 
+#glutInclude
+IncludeDirs += ../glutInclude
+
+ifneq ($(MAKECMDGOALS), clean)
+ifneq ($(MAKECMDGOALS), sweep)
+include ../glutInclude/vislibGlutInclude.mk
+endif
+endif
+
+
 #
 # USE VARIABLES ABOVE TO MODIFY COMPILER AND LINKER FLAGS AS WELL AS IN- AND OUTPUT!
 #

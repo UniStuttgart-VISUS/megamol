@@ -5,7 +5,7 @@
  */
 #include "GLSLShaderTest.h"
 
-#include "glutInclude.h"
+#include "vislibGlutInclude.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <cstdio>

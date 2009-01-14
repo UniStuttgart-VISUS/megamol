@@ -6,7 +6,7 @@
 
 #include "AbstractGlutApp.h"
 
-#include "glutInclude.h"
+#include "vislibGlutInclude.h"
 #include <GL/gl.h>
 
 

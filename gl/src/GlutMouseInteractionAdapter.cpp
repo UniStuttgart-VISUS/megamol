@@ -7,7 +7,7 @@
 
 #include "vislib/GlutMouseInteractionAdapter.h"
 
-#include <GL/glut.h>
+#include "vislibGlutInclude.h"
 
 
 /*

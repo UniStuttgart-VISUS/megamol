@@ -1,13 +1,14 @@
 /*
- * glutInclude.h
+ * glutInclude.system.h
  *
- * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2007 - 2009 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
  *
  * Include this file for a system glut library.
  */
 
-#ifndef VISLIBTEST_GLUTINCLUDE_H_INCLUDED
-#define VISLIBTEST_GLUTINCLUDE_H_INCLUDED
+#ifndef VISLIBTEST_GLUTINCLUDE_SYSTEM_H_INCLUDED
+#define VISLIBTEST_GLUTINCLUDE_SYSTEM_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -24,4 +25,4 @@
 
 #include <GL/glut.h>
 
-#endif /* VISLIBTEST_GLUTINCLUDE_H_INCLUDED */
+#endif /* VISLIBTEST_GLUTINCLUDE_SYSTEM_H_INCLUDED */
