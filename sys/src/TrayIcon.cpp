@@ -39,7 +39,7 @@ vislib::sys::TrayIcon::~TrayIcon(void) {
     try {
         this->Destroy();
     } catch (SystemException e) {
-        TRACE(Trace::LEVEL_VL_WARN, "Unexpected exception in dtor "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Unexpected exception in dtor "
             "of tray icon. The exception message is: %s\n", e.GetMsgA());
     }
 
@@ -552,7 +552,7 @@ bool vislib::sys::TrayIcon::init(HINSTANCE hInstance) {
             return false;
         }
     } catch (SystemException e) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Retrieving shell version failed: "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Retrieving shell version failed: "
             "%s (%u).\n", e.GetMsgA(), e.GetErrorCode());
         return false;
     }

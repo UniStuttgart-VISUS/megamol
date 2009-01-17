@@ -261,7 +261,7 @@ void vislib::StackTrace::getStackString(wchar_t *str,
 void vislib::StackTrace::pop(int id) {
     StackElement *e = this->stack;
     if (e == NULL) {
-        TRACE(VISLIB_TRCELVL_ERROR, "Unable to Pop: Trace Stack is empty.\n");
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unable to Pop: Trace Stack is empty.\n");
         return;
     }
 
@@ -269,7 +269,7 @@ void vislib::StackTrace::pop(int id) {
     e->next = NULL;
 
     if (id != static_cast<int>((SIZE_T)e)) {
-        TRACE(VISLIB_TRCELVL_WARN, "StackTrace::pop: Stack seems corrupted.\n");
+        VLTRACE(VISLIB_TRCELVL_WARN, "StackTrace::pop: Stack seems corrupted.\n");
     }
 
     e->func = NULL; // DO NOT DELETE

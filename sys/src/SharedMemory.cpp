@@ -42,7 +42,7 @@ vislib::sys::SharedMemory::~SharedMemory(void) {
     try {
         this->Close();
     } catch (...) {
-        TRACE(Trace::LEVEL_VL_WARN, "Exception in SharedMemory dtor.\n");
+        VLTRACE(Trace::LEVEL_VL_WARN, "Exception in SharedMemory dtor.\n");
     }
 }
 
@@ -176,7 +176,7 @@ void vislib::sys::SharedMemory::Open(const char *name, const AccessMode accessMo
     }
 
     this->name = TranslateWinIpc2PosixName(name);
-    TRACE(Trace::LEVEL_VL_INFO, "Open POSIX shared memory \"%s\"\n", 
+    VLTRACE(Trace::LEVEL_VL_INFO, "Open POSIX shared memory \"%s\"\n", 
         this->name.PeekBuffer());
     this->hSharedMem = ::shm_open(this->name.PeekBuffer(), oflags, DFT_MODE);
     if (this->hSharedMem == -1) {

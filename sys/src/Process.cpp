@@ -587,7 +587,7 @@ void vislib::sys::Process::create(const char *command, const char *arguments[],
         cmd = Path::Resolve(command);
     }
     ASSERT(Path::IsAbsolute(cmd));
-    TRACE(Trace::LEVEL_VL_INFO, "CreateProcess: command is \"%s\"\n",
+    VLTRACE(Trace::LEVEL_VL_INFO, "CreateProcess: command is \"%s\"\n",
         cmd.PeekBuffer());
 
     /* Open a pipe to get the exec error codes. */

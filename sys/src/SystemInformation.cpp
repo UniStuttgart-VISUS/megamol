@@ -469,7 +469,7 @@ void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor,
     }
 
     if (::sscanf(buffer, "%d.%d", &majorVersion, &minorVersion) != 2) {
-        TRACE(Trace::LEVEL_ERROR, "sscanf on version string failed.");
+        VLTRACE(Trace::LEVEL_ERROR, "sscanf on version string failed.");
         throw SystemException(ENOTSUP, __FILE__, __LINE__);
     }
 

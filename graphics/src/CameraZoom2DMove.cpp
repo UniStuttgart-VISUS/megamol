@@ -73,7 +73,7 @@ void vislib::graphics::CameraZoom2DMove::Trigger(
             ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
             if (!this->IsCameraParamsValid()) {
-                TRACE(vislib::Trace::LEVEL_WARN, 
+                VLTRACE(vislib::Trace::LEVEL_WARN, 
                     "CameraZoom2DMove::Trigger camera missing.");
                 return;
             }

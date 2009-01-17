@@ -48,7 +48,7 @@ void vislib::graphics::CameraRotate2D::Trigger(
     ImageSpaceType preX, preY;
 
     if (!this->IsCameraParamsValid()) {
-        TRACE(vislib::Trace::LEVEL_WARN, 
+        VLTRACE(vislib::Trace::LEVEL_WARN, 
             "CameraRotate2D::Trigger camera missing.");
         return;
     }

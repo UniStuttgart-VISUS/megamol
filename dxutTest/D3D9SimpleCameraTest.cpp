@@ -152,7 +152,7 @@ void D3D9SimpleCameraTest::OnMouse(bool bLeftButtonDown, bool bRightButtonDown,
         bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
         INT nMouseWheelDelta, INT xPos, INT yPos) {
     using vislib::graphics::MouseInteractionAdapter;
-    TRACE(VISLIB_TRCELVL_INFO, "left = %d, right = %d, middle = %d\n", 
+    VLTRACE(VISLIB_TRCELVL_INFO, "left = %d, right = %d, middle = %d\n", 
         bLeftButtonDown, bRightButtonDown, bMiddleButtonDown);
 
     this->mia->SetMouseButtonState(MouseInteractionAdapter::BUTTON_LEFT, 

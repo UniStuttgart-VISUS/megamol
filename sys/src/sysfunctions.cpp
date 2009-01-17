@@ -129,7 +129,7 @@ bool vislib::sys::ReadTextFile(vislib::StringA& outStr, const char *filename) {
     File file;
     if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, 
             File::OPEN_ONLY)) {
-        TRACE(Trace::LEVEL_ERROR, "Text file \"%s\" could not be opened.", 
+        VLTRACE(Trace::LEVEL_ERROR, "Text file \"%s\" could not be opened.", 
             filename);
         return false;
     }
@@ -301,7 +301,7 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    TRACE(Trace::LEVEL_VL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
+    VLTRACE(Trace::LEVEL_VL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
         retval);
     return retval;
 }

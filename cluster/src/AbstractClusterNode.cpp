@@ -63,7 +63,7 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
 void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
         const PeerIdentifier& peerId, const ComErrorSource src,
         const SocketException& err) throw() {
-    TRACE(Trace::LEVEL_VL_ERROR, "A communication error occurred while talking "
+    VLTRACE(Trace::LEVEL_VL_ERROR, "A communication error occurred while talking "
         "to %s: %s\n", peerId.ToStringA().PeekBuffer(), err.GetMsgA());
 }
 
@@ -73,7 +73,7 @@ void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
  */
 void vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting(
         vislib::net::Socket& socket, PReceiveMessagesCtx rmc) {
-    TRACE(Trace::LEVEL_VL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
+    VLTRACE(Trace::LEVEL_VL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
         "releasing receive context ...\n");
     FreeRecvMsgCtx(rmc);
 }

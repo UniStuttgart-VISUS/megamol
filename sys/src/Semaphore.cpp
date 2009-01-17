@@ -58,7 +58,7 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
 #else /* _WIN32 */
     if (name != NULL) {
         this->name = TranslateWinIpc2PosixName(name);
-        TRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%s\"\n", 
+        VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%s\"\n", 
             this->name.PeekBuffer());
         this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, DFT_PERMS,
             initialCount);
@@ -90,7 +90,7 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
 #else /* _WIN32 */
     if (name != NULL) {
         this->name = TranslateWinIpc2PosixName(name);
-        TRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
+        VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
             this->name.PeekBuffer());
         this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, DFT_PERMS,
             initialCount);

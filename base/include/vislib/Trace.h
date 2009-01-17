@@ -232,10 +232,17 @@ namespace vislib {
 
 
 #if defined(DEBUG) || defined(_DEBUG)
-#define TRACE vislib::Trace::GetInstance()
+#define VLTRACE(level, fmt, ...) vislib::Trace::GetInstance()(level, fmt,\
+    __VA_ARGS__)
 #else /* defined(DEBUG) || defined(_DEBUG) */
-#define TRACE if (0) vislib::Trace::GetInstance()
+#define VLTRACE(level, fmt, ...)
 #endif /* defined(DEBUG) || defined(_DEBUG) */
+
+
+#if defined(VISLIB_LEGACY_TRACE)
+#define TRACE VLTRACE
+#endif /* VISLIB_LEGACY_TRACE */
+
 
 /* Short names for the predefined trace levels. */
 #define VISLIB_TRCELVL_ERROR (vislib::Trace::LEVEL_ERROR)

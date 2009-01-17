@@ -31,10 +31,10 @@ vislib::net::cluster::AbstractServerNode::~AbstractServerNode(void) {
             this->disconnectPeer(0);
         }
     } catch (Exception e) {
-        TRACE(Trace::LEVEL_VL_WARN, "Exception while releasing "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Exception while releasing "
             "ServerNodeAdapter: %s\n", e.GetMsgA());
     } catch (...) {
-        TRACE(Trace::LEVEL_VL_WARN, "Unexpected exception whie releasing "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Unexpected exception whie releasing "
             "ServerNodeAdapter.\n");
     }
 }
@@ -94,11 +94,11 @@ bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
 
         return true;
     } catch (Exception e) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Could not accept peer node %s in "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not accept peer node %s in "
             "ServerNodeAdapter because of an exception: %s\n", 
             addr.ToStringA().PeekBuffer(), e.GetMsgA());
     } catch (...) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Could not accept peer node %s in "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not accept peer node %s in "
             "ServerNodeAdapter because of an unexpected exception.\n", 
             addr.ToStringA().PeekBuffer());
     }
@@ -197,13 +197,13 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
         this->peers.Erase(idx);
 
     } catch (SocketException se) {
-        TRACE(Trace::LEVEL_VL_WARN, "SocketException occurred when "
+        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException occurred when "
             "disconnecting node %u: %s\n", idx, se.GetMsgA());
     } catch (sys::SystemException sye) {
-        TRACE(Trace::LEVEL_VL_WARN, "SystemException occurred when "
+        VLTRACE(Trace::LEVEL_VL_WARN, "SystemException occurred when "
             "disconnecting node %u: %s\n", idx, sye.GetMsgA());
     } catch (OutOfRangeException oore) {
-        TRACE(Trace::LEVEL_VL_WARN, "OutOfRangeException occurred when "
+        VLTRACE(Trace::LEVEL_VL_WARN, "OutOfRangeException occurred when "
             "disconnecting node %u: %s\n", idx, oore.GetMsgA());
     }
 
@@ -231,14 +231,14 @@ SIZE_T vislib::net::cluster::AbstractServerNode::forEachPeer(
                 break;
             }
         } catch (Exception& e) {
-            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with an exception: %s\n", i, 
                 peerId.ToStringA().PeekBuffer(), e.GetMsgA());
             // TODO: second chance??????
             this->disconnectPeer(i);
             i--;
         } catch (...) {
-            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with a non-VISlib exception.\n", i,
                 peerId.ToStringA().PeekBuffer());
             // TODO: second chance??????
@@ -268,20 +268,20 @@ bool vislib::net::cluster::AbstractServerNode::forPeer(
             func(this, peerId, this->peers[i]->Socket, context);
             retval = true;
         } catch (Exception& e) {
-            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with an exception: %s\n", i,
                 peerId.ToStringA().PeekBuffer(), e.GetMsgA());
             // TODO: second chance??????
             this->disconnectPeer(i);
         } catch (...) {
-            TRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with a non-VISlib exception.\n", i,
                 peerId.ToStringA().PeekBuffer());
             // TODO: second chance??????
             this->disconnectPeer(i);
         }
     } catch (NoSuchElementException e) {
-        TRACE(Trace::LEVEL_VL_WARN, e.GetMsgA());
+        VLTRACE(Trace::LEVEL_VL_WARN, e.GetMsgA());
     }
 
     this->peersLock.Unlock();
@@ -329,7 +329,7 @@ SIZE_T vislib::net::cluster::AbstractServerNode::findPeerNode(
                 return i;
             }
         } catch (SocketException e) {
-            TRACE(Trace::LEVEL_VL_WARN, "Could not determine identifier of "
+            VLTRACE(Trace::LEVEL_VL_WARN, "Could not determine identifier of "
                 "peer node for a client socket: %s\n", e.GetMsgA());
         }
     }

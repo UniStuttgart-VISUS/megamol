@@ -28,7 +28,7 @@ UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 	LARGE_INTEGER timerCount;
 
     if (!::QueryPerformanceCounter(&timerCount)) {
-        TRACE(Trace::LEVEL_ERROR, "QueryPerformanceCounter failed in "
+        VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceCounter failed in "
             "vislib::sys::PerformanceCounter::Query\n");
         throw SystemException(__FILE__, __LINE__);
     }
@@ -63,7 +63,7 @@ UINT64 vislib::sys::PerformanceCounter::QueryFrequency(void) {
     LARGE_INTEGER timerFreq;
 
     if (!::QueryPerformanceFrequency(&timerFreq)) {
-        TRACE(Trace::LEVEL_ERROR, "QueryPerformanceFrequency failed in "
+        VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceFrequency failed in "
             "vislib::sys::PerformanceCounter::Query\n");
         throw SystemException(__FILE__, __LINE__);
 	}

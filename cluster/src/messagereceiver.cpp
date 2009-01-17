@@ -62,13 +62,13 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     try {
         peerId = ctx->Socket->GetPeerEndPoint();
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Message receiver thread could not "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Message receiver thread could not "
             "retrieve identifier of peer node: %s\n", e.GetMsgA());
     }
 
     try {
 
-        TRACE(Trace::LEVEL_VL_INFO, "The cluster message receiver thread is "
+        VLTRACE(Trace::LEVEL_VL_INFO, "The cluster message receiver thread is "
             "starting ...\n");
 
         while (true) {
@@ -83,7 +83,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             ASSERT(recvBuf.GetSize() >= sizeof(MessageHeader));
             //ASSERT(msgHdr->MagicNumber == MAGIC_NUMBER);
             if (msgHdr->MagicNumber != MAGIC_NUMBER) {
-                TRACE(Trace::LEVEL_WARN, "Discarding data packet without valid "
+                VLTRACE(Trace::LEVEL_WARN, "Discarding data packet without valid "
                     "magic number. Expected %u, but received %u.\n",
                     MAGIC_NUMBER, msgHdr->MagicNumber);
                 break;
@@ -99,7 +99,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             /* Call the handler method to process the message. */
             if (msgHdr->Header.BlockId == MSGID_MULTIPLE) {
                 /* Received a compound message, so split it. */
-                TRACE(Trace::LEVEL_VL_INFO, "Splitting compond message ...\n");
+                VLTRACE(Trace::LEVEL_VL_INFO, "Splitting compond message ...\n");
                 INT remBody = static_cast<INT>(msgHdr->Header.BlockLength);
                 const BYTE *d = recvBuf.As<BYTE>() + sizeof(MessageHeader);
 
@@ -107,7 +107,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
                     blkHdr = reinterpret_cast<const BlockHeader *>(d);
                     const BYTE *body = d + sizeof(BlockHeader);
 
-                    TRACE(Trace::LEVEL_VL_INFO, "Received message %u.\n", 
+                    VLTRACE(Trace::LEVEL_VL_INFO, "Received message %u.\n", 
                         blkHdr->BlockId);
                     ctx->Receiver->onMessageReceived(*ctx->Socket,
                         blkHdr->BlockId, 
@@ -123,7 +123,7 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
                 const BlockHeader *blkHdr = &msgHdr->Header;
                 const BYTE *body = recvBuf.As<BYTE>() + sizeof(MessageHeader);
 
-                TRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Cluster service "
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Cluster service "
                     "received message %u.\n", blkHdr->BlockId);
                 ctx->Receiver->onMessageReceived(*ctx->Socket,
                     blkHdr->BlockId, 
@@ -132,14 +132,14 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             }
         } /* end while (true) */
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_VL_ERROR, "vislib::net::cluster::ReceiveMessages "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "vislib::net::cluster::ReceiveMessages "
             "exits because of communication error: %s\n", e.GetMsgA());
         // TODO: Remove HOTFIX
         //ctx->Receiver->onCommunicationError(peerId, 
         //    AbstractClusterNode::RECEIVE_COMMUNICATION_ERROR, e);
         retval = e.GetErrorCode();
     } catch (...) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Unexpected exception caught in "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Unexpected exception caught in "
             "vislib::net::cluster::ReceiveMessages.\n");
         retval = -1;
     }

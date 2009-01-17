@@ -245,7 +245,7 @@ vislib::RegEx<T>::AnyExpression::~AnyExpression(void) {
  */
 template<class T> const typename vislib::RegEx<T>::Char *
 vislib::RegEx<T>::AnyExpression::Consume(const Char *input) {
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming AnyExpression on \"%s\" ...\n", 
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming AnyExpression on \"%s\" ...\n", 
         StringA(input).PeekBuffer());
     return (input + 1);
 }
@@ -288,7 +288,7 @@ vislib::RegEx<T>::ChoiceExpression::Consume(const Char *input) {
     ASSERT(this->CountChildren() == 2);
     const Char *retval = NULL;
 
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming ChoiceExpression on "
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming ChoiceExpression on "
         "\"%s\" ...\n", StringA(input).PeekBuffer());
 
     if ((retval = this->GetLeftChild()->Consume(input)) == NULL) {
@@ -339,12 +339,12 @@ vislib::RegEx<T>::RepeatExpression::RepeatExpression(Expression *expr,
 
     /* Sanity checks. */
     if (this->minOccur < 0) {
-        TRACE(VISLIB_REGEX_TRACE_LEVEL, "Insane 'minOccur' (%d) fixed.\n", 
+        VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Insane 'minOccur' (%d) fixed.\n", 
             this->minOccur);
         this->maxOccur = 0;
     }
     if ((this->maxOccur >= 0) && (this->maxOccur < this->minOccur)) {
-        TRACE(VISLIB_REGEX_TRACE_LEVEL, "Insane 'maxOccur' (%d) fixed.\n",
+        VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Insane 'maxOccur' (%d) fixed.\n",
             this->maxOccur);
         this->maxOccur = this->minOccur;
     }
@@ -370,7 +370,7 @@ vislib::RegEx<T>::RepeatExpression::Consume(const Char *input) {
     const Char *in = input;     // Input for next recursive/sequence expression.
     const Char *next = NULL;    // Result of recursive call (== next input).
 
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming RepeatExpression on "
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming RepeatExpression on "
         "\"%s\" ...\n", StringA(input).PeekBuffer());
 
     /* Match as long as possible. */
@@ -379,13 +379,13 @@ vislib::RegEx<T>::RepeatExpression::Consume(const Char *input) {
         cntMatches++;
         in = next;
     }
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "RepeatExpression matched %d times.\n",
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "RepeatExpression matched %d times.\n",
         cntMatches);
 
     /* Signal failure if match count was not matched. */
     if ((cntMatches < this->minOccur) || (cntMatches > this->maxOccur)) {
         // TODO: Ich bin mir nicht sicher ob das bzgl. maxOccur die richtige Semantik implementiert.
-        TRACE(VISLIB_REGEX_TRACE_LEVEL, "Repeat count is not within "
+        VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Repeat count is not within "
             "[%d, %d].\n", this->minOccur, this->maxOccur);
         in = NULL;
     }
@@ -452,7 +452,7 @@ vislib::RegEx<T>::LiteralExpression::Consume(const Char *input) {
     const Char *litChar = this->lit.PeekBuffer();
     Size litLen = this->lit.Length();
 
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming LiteralExpression \"%s\" on "
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Consuming LiteralExpression \"%s\" on "
         "\"%s\" ...\n", StringA(this->lit).PeekBuffer(), 
         StringA(input).PeekBuffer());
 
@@ -544,7 +544,7 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseAbbreviation(
         ParseContext& inOutCtx) {
     ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
     ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BACKSLASH);
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseAbbreviation\n");
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseAbbreviation\n");
 
     /* Consume backslash, we are optimistic. */
     VRECTX_NEXT_POS(inOutCtx);
@@ -553,7 +553,7 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseAbbreviation(
         if (T::ABBREVIATIONS[i][0] == VRECTX_CUR_CHAR(inOutCtx)) {
             ParseContext ctx;
             VRECTX_INIT(ctx, T::ABBREVIATIONS[i] + 1, inOutCtx.predecessor);
-            TRACE(VISLIB_REGEX_TRACE_LEVEL, "Replace abbreviation '\\%s' "
+            VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Replace abbreviation '\\%s' "
                 "with expression \"%s\".\n", 
                 StringA(VRECTX_CUR_STR(inOutCtx), 1).PeekBuffer(),
                 StringA(VRECTX_CUR_STR(ctx)).PeekBuffer());
@@ -587,13 +587,13 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseEscape(
         ParseContext& inOutCtx) {
     ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
     ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BACKSLASH);
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseEscape\n");
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseEscape\n");
 
     /* Check for abbreviation first. */
     try {
         return this->parseAbbreviation(inOutCtx);
     } catch (ParseException) {
-        TRACE(VISLIB_REGEX_TRACE_LEVEL, "Parsing escape sequence '%s' as "
+        VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Parsing escape sequence '%s' as "
             "abbreviation failed.\n", 
             StringA(VRECTX_CUR_STR(inOutCtx), 2).PeekBuffer());
     }
@@ -605,7 +605,7 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseEscape(
     Size cntEscaped = T::SafeStringLength(T::ESCAPED_CHARS);
     for (Size i = 0; i < cntEscaped; i++) {
         if (T::ESCAPED_CHARS[i] == VRECTX_CUR_CHAR(inOutCtx)) {
-            TRACE(VISLIB_REGEX_TRACE_LEVEL, "Insert literal for escape "
+            VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "Insert literal for escape "
                 "sequence '\\%s'.\n", 
                 StringA(VRECTX_CUR_STR(inOutCtx), 1).PeekBuffer());
             LiteralExpression *retval = new LiteralExpression(
@@ -750,7 +750,7 @@ typename vislib::RegEx<T>::Expression *vislib::RegEx<T>::parseRepeatEx(
         ParseContext& inOutCtx) {
     ASSERT(VRECTX_CUR_STR(inOutCtx) != NULL);
     ASSERT(VRECTX_CUR_CHAR(inOutCtx) == T::TOKEN_BRACE_OPEN);
-    TRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseRepeatEx\n");
+    VLTRACE(VISLIB_REGEX_TRACE_LEVEL, "RegEx<T>::parseRepeatEx\n");
 
     const Char *begin = NULL;           // Begin of a number to parse. 
     int minRep = 0;                     // Minimum repeat value.

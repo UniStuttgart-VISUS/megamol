@@ -39,7 +39,7 @@ vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv4(
     try {
         DNS::GetHostAddress(addr, hostNameOrAddress);
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
             hostNameOrAddress, e.GetMsgA());
         throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
     }
@@ -57,7 +57,7 @@ vislib::net::IPEndPoint vislib::net::IPEndPoint::CreateIPv6(
     try {
         DNS::GetHostAddress(addr, hostNameOrAddress);
     } catch (SocketException e) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not lookup \"%s\": %s\n", 
             hostNameOrAddress, e.GetMsgA());
         throw IllegalParamException("hostNameOrAddress", __FILE__, __LINE__);
     }

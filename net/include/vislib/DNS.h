@@ -195,13 +195,13 @@ namespace net {
          * @throws SocketException In case the operation fails, e.g. the host 
          *                         could not be found.
          */
-#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
+#if (defined(_WIN32) && defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
         static ADDRINFOW *getAddrInfo(const wchar_t *hostNameOrAddress,
             const int addressFamily);
-#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+#else /* (defined(_WIN32) && defined(_WIN32_WINNT) && ... */
         static struct addrinfo *getAddrInfo(const wchar_t *hostNameOrAddress,
             const int addressFamily);
-#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
+#endif /* (defined(_WIN32) && defined(_WIN32_WINNT) && ... */
 
         /** 
          * Disallow instances.

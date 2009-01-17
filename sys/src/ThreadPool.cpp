@@ -242,13 +242,13 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
     ASSERT(pool != NULL);
     this->pool = static_cast<ThreadPool *>(pool);
 
-    TRACE(Trace::LEVEL_VL_INFO, "Worker thread [%u] started.\n", 
+    VLTRACE(Trace::LEVEL_VL_INFO, "Worker thread [%u] started.\n", 
         Thread::CurrentID());
 
     while (true) {
 
         /* Wait for work. */
-        TRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is waiting for "
+        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is waiting for "
             "work ...\n", Thread::CurrentID());
         this->pool->semBlockWorker.Lock();
 
@@ -261,7 +261,7 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
          * thread and it does not find any work to do, it should exit.
          */
         if (this->pool->queue.IsEmpty()) {
-            TRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is "
+            VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is "
                 "exiting ...\n", Thread::CurrentID());
             if (--this->pool->cntTotalThreads == 0) {
                 this->pool->evtAllCompleted.Set();
@@ -283,10 +283,10 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
         this->pool->lockQueue.Unlock();
 
         /* Do the work. */
-        TRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n",
+        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n",
             Thread::CurrentID());
         DWORD exitCode = workItem.runnable->Run(workItem.userData);
-        TRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] completed work "
+        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] completed work "
             "item with exit code %u\n", Thread::CurrentID(), exitCode);
 
         this->pool->fireUserWorkItemCompleted(workItem.runnable, 

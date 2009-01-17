@@ -62,7 +62,7 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
         this->Disable();
         this->Release();
     } catch (OpenGLException e) {
-        TRACE(Trace::LEVEL_VL_WARN, "\"%s\" at line %d in \"%s\" when "
+        VLTRACE(Trace::LEVEL_VL_WARN, "\"%s\" at line %d in \"%s\" when "
             "destroying FramebufferObject", e.GetMsgA(), e.GetLine(), 
             e.GetFile());
     }
@@ -133,7 +133,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const UINT width,
     try {
         this->Release();    // TODO: Could also return false instead of recreate.
     } catch (OpenGLException e) {
-        TRACE(Trace::LEVEL_VL_WARN, "Release() of old FBO failed in Create(). "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Release() of old FBO failed in Create(). "
             "This error is not critical.\n");
     }
 
@@ -251,7 +251,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) {
          * Extensions might not have been initialised, but dtor will call
          * Disable anyway.
          */
-        TRACE(Trace::LEVEL_VL_WARN, "glBindFramebuffer is not available.\n");
+        VLTRACE(Trace::LEVEL_VL_WARN, "glBindFramebuffer is not available.\n");
         return GL_INVALID_OPERATION;
     }
 
@@ -278,7 +278,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
 
     /* Ensure that we enable only valid FBOs. */
     if (!this->IsValid()) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
         return GL_INVALID_OPERATION;
     }
 
@@ -286,7 +286,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
     try {
         this->saveState();
     } catch (OpenGLException e) {
-        TRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
             "enabling FBO (\"%s\").\n", e.GetMsgA());
         return e.GetErrorCode();
     }
@@ -392,7 +392,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     USES_GL_DEFERRED_VERIFY;
 
     //if (GL_FAILED(this->Disable())) {
-    //    TRACE(Trace::LEVEL_VL_WARN, "Disabling FBO before release failed. "
+    //    VLTRACE(Trace::LEVEL_VL_WARN, "Disabling FBO before release failed. "
     //        "This is not a critical error.\n");
     //}
 
@@ -402,7 +402,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
          * Extensions might not have been initialised, but dtor will call 
          * Release anyway. 
          */
-        TRACE(Trace::LEVEL_VL_WARN, "glDeleteRenderbuffers or "
+        VLTRACE(Trace::LEVEL_VL_WARN, "glDeleteRenderbuffers or "
             "glDeleteFramebuffers is not available.\n");
         return;
     }
@@ -611,12 +611,12 @@ bool vislib::graphics::gl::FramebufferObject::isComplete(void) const {
             /* Unreachable. */
 
         case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-            TRACE(Trace::LEVEL_ERROR, "The selected framebuffer format is "
+            VLTRACE(Trace::LEVEL_ERROR, "The selected framebuffer format is "
                 "unsupported.\n");
             /* falls through. */
 
         default:
-            TRACE(Trace::LEVEL_ERROR, "The framebuffer object is not complete "
+            VLTRACE(Trace::LEVEL_ERROR, "The framebuffer object is not complete "
                 "(%u).\n", status);
             return false;
             /* Unreachable. */
@@ -668,7 +668,7 @@ void vislib::graphics::gl::FramebufferObject::saveState(void) {
 
     GL_VERIFY_THROW(::glGetIntegerv(GL_VIEWPORT, this->oldVp));
 
-    TRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
+    VLTRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
         "\tGL_DRAW_BUFFER = %d\n"
         "\tGL_READ_BUFFER = %d\n"
         "\tGL_VIEWPORT = %d %d %d %d\n",

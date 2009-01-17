@@ -214,7 +214,7 @@ bool vislib::sys::Thread::Start(void *userData) {
         return true;
 
     } else {
-        TRACE(Trace::LEVEL_VL_ERROR, "CreateThread() failed with error %d.\n", 
+        VLTRACE(Trace::LEVEL_VL_ERROR, "CreateThread() failed with error %d.\n", 
             ::GetLastError());
         throw SystemException(__FILE__, __LINE__);
     }
@@ -226,7 +226,7 @@ bool vislib::sys::Thread::Start(void *userData) {
         return true;
 
     } else {
-        TRACE(Trace::LEVEL_VL_ERROR, "pthread_create() failed with error %d.\n", 
+        VLTRACE(Trace::LEVEL_VL_ERROR, "pthread_create() failed with error %d.\n", 
             ::GetLastError());
         throw SystemException(__FILE__, __LINE__);
     }
@@ -246,7 +246,7 @@ bool vislib::sys::Thread::Terminate(const bool forceTerminate,
 
 #ifdef _WIN32
         if (::TerminateThread(this->handle, exitCode) == FALSE) {
-            TRACE(Trace::LEVEL_VL_ERROR, "TerminateThread() failed with error "
+            VLTRACE(Trace::LEVEL_VL_ERROR, "TerminateThread() failed with error "
                 "%d.\n", ::GetLastError());
             throw SystemException(__FILE__, __LINE__);
         }
@@ -257,7 +257,7 @@ bool vislib::sys::Thread::Terminate(const bool forceTerminate,
         this->exitCode = exitCode;
 
         if (::pthread_cancel(this->id) != 0) {
-            TRACE(Trace::LEVEL_VL_ERROR, "pthread_cancel() failed with error "
+            VLTRACE(Trace::LEVEL_VL_ERROR, "pthread_cancel() failed with error "
                 "%d.\n", ::GetLastError());
             throw SystemException(__FILE__, __LINE__);
         }
@@ -314,7 +314,7 @@ void vislib::sys::Thread::CleanupFunc(void *param) {
      * to mark the thread as finished.
      */
     if (t->exitCode == STILL_ACTIVE) {
-        TRACE(Trace::LEVEL_VL_WARN, "CleanupFunc called with exit code "
+        VLTRACE(Trace::LEVEL_VL_WARN, "CleanupFunc called with exit code "
             "STILL_ACTIVE");
         t->exitCode = 0;
     }
@@ -354,7 +354,7 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
     pthread_cleanup_pop(1);
 #endif /* !_WIN32 */
 
-    TRACE(Trace::LEVEL_VL_INFO, "Thread [%u] has exited with code %d (0x%x).\n",
+    VLTRACE(Trace::LEVEL_VL_INFO, "Thread [%u] has exited with code %d (0x%x).\n",
         t->id, retval, retval);
 
 #ifdef _WIN32

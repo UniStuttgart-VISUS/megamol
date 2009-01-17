@@ -80,7 +80,7 @@ void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn,
     //    throw IllegalParamException("btn", __FILE__, __LINE__);
     //}
     if (btn >= this->btnCnt) {
-        TRACE(Trace::LEVEL_VL_WARN, "%d is an illegal value for \"btn\".\n");
+        VLTRACE(Trace::LEVEL_VL_WARN, "%d is an illegal value for \"btn\".\n");
         return;
     }
 

@@ -254,7 +254,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
             default: {
                 // unknown error
                 vislib::sys::SystemMessage msg(::GetLastError());
-                TRACE(Trace::LEVEL_VL_INFO, 
+                VLTRACE(Trace::LEVEL_VL_INFO, 
                     "NamedPipe Open WaitForSigleObject Error: \"%s\"", 
                     static_cast<const char*>(msg));
             } // NO BREAK;
@@ -262,7 +262,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
                 // timeout
                 if (::CancelIo(this->handle) == 0) {
                     vislib::sys::SystemMessage msg(::GetLastError());
-                    TRACE(Trace::LEVEL_VL_INFO, 
+                    VLTRACE(Trace::LEVEL_VL_INFO, 
                         "NamedPipe Open Timeout: CancelIo failed \"%s\"", 
                         static_cast<const char*>(msg));
                 }
@@ -287,7 +287,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     // Create the FIFO if it does not exist
     if (::mknod(pipeName.PeekBuffer(), S_IFIFO | 0666, 0) != 0) {
 
-//        TRACE(vislib::Trace::LEVEL_VL_INFO, "mknod failed\n");
+//        VLTRACE(vislib::Trace::LEVEL_VL_INFO, "mknod failed\n");
 
         DWORD lastError = ::GetLastError();
         if (lastError != EEXIST) {
@@ -297,7 +297,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     }
     ::umask(oldMask);
 
-//    TRACE(vislib::Trace::LEVEL_VL_INFO, "vislib::sys::NamedPipe::Open\n");
+//    VLTRACE(vislib::Trace::LEVEL_VL_INFO, "vislib::sys::NamedPipe::Open\n");
 
     if (timeout > 0) {
         tot.Start();
@@ -312,10 +312,10 @@ bool vislib::sys::NamedPipe::Open(vislib::StringA name,
     }
 
     if (this->handle < 0) {
-//        TRACE(vislib::Trace::LEVEL_VL_INFO, "open failed.\n");
+//        VLTRACE(vislib::Trace::LEVEL_VL_INFO, "open failed.\n");
         throw vislib::sys::SystemException(__FILE__, __LINE__);
     } else if (ext.IsTerminated()) {
-//        TRACE(vislib::Trace::LEVEL_VL_INFO, "open timed out.\n");
+//        VLTRACE(vislib::Trace::LEVEL_VL_INFO, "open timed out.\n");
         ::close(this->handle);
         this->handle = -1;
     }
@@ -413,7 +413,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
             default: {
                 // unknown error
                 vislib::sys::SystemMessage msg(::GetLastError());
-                TRACE(Trace::LEVEL_VL_INFO, 
+                VLTRACE(Trace::LEVEL_VL_INFO, 
                     "NamedPipe Open WaitForSigleObject Error: \"%s\"", 
                     static_cast<const char*>(msg));
             } // NO BREAK;
@@ -421,7 +421,7 @@ bool vislib::sys::NamedPipe::Open(vislib::StringW name,
                 // timeout
                 if (::CancelIo(this->handle) == 0) {
                     vislib::sys::SystemMessage msg(::GetLastError());
-                    TRACE(Trace::LEVEL_VL_INFO, 
+                    VLTRACE(Trace::LEVEL_VL_INFO, 
                         "NamedPipe Open Timeout: CancelIo failed \"%s\"", 
                         static_cast<const char*>(msg));
                 }
@@ -511,15 +511,15 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
 
 #else /* _WIN32 */
 
-        //TRACE(vislib::Trace::LEVEL_VL_INFO, "Read (%d)\n", size);
+        //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "Read (%d)\n", size);
 
         outRead = ::read(this->handle, buffer, size);
 
-        //TRACE(vislib::Trace::LEVEL_VL_INFO, "Read returned %d\n", outRead);
+        //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "Read returned %d\n", outRead);
 
         if (outRead <= 0) {
 
-            //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
+            //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
 
             this->cleanupLock.Lock();
             ::close(this->handle);
@@ -527,7 +527,7 @@ void vislib::sys::NamedPipe::Read(void *buffer, unsigned int size) {
             this->mode = PIPE_MODE_NONE;
             this->cleanupLock.Unlock();
 
-            //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");
+            //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");
 
             throw vislib::sys::SystemException(__FILE__, __LINE__);
         }
@@ -644,15 +644,15 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
 
 #else /* _WIN32 */
 
-        //TRACE(vislib::Trace::LEVEL_VL_INFO, "Write (%d)\n", size);
+        //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "Write (%d)\n", size);
 
         outWritten = ::write(this->handle, buffer, size);
 
-        //TRACE(vislib::Trace::LEVEL_VL_INFO, "Write returned %d\n", outWritten);
+        //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "Write returned %d\n", outWritten);
 
         if (outWritten <= 0) {
 
-            //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
+            //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror\n");
 
             this->cleanupLock.Lock();
             ::close(this->handle);
@@ -660,7 +660,7 @@ void vislib::sys::NamedPipe::Write(void *buffer, unsigned int size) {
             this->mode = PIPE_MODE_NONE;
             this->cleanupLock.Unlock();
 
-            //TRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");
+            //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "feof or ferror ... Done!\n");
 
             throw vislib::sys::SystemException(__FILE__, __LINE__);
 

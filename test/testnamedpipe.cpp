@@ -56,7 +56,7 @@ DWORD TestNamedPipeSecondThread(void *param) {
     // initialze Barrier
     m2.Lock();
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     try {
         pipe.Open(PIPE_NAME, vislib::sys::NamedPipe::PIPE_MODE_READ, 1000);
@@ -67,7 +67,7 @@ DWORD TestNamedPipeSecondThread(void *param) {
         AssertTrue("Open Pipe 2 for reading", false);
     }
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
@@ -83,31 +83,31 @@ DWORD TestNamedPipeSecondThread(void *param) {
         }
     } // */
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Read(buf, 256);
     AssertEqual("Communication #1 correct", strcmp(buf, COM_STR_01), 0);
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Read(buf, 256);
     AssertEqual("Communication #2 correct", strcmp(buf, COM_STR_02), 0);
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Read(buf, 16);
     pipe.Read(&buf[16], 240);
     AssertEqual("Communication #3 correct", strcmp(buf, COM_STR_03), 0);
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     pipe.Close();
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
@@ -162,7 +162,7 @@ DWORD TestNamedPipeSecondThread(void *param) {
 
 #define SyncHere BarrierT1
 void TestNamedPipe(void) {
-    TRACE.SetLevel(vislib::Trace::LEVEL_ALL);
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
 
     vislib::sys::Thread secondThread(TestNamedPipeSecondThread);
     vislib::sys::NamedPipe pipe;
@@ -190,31 +190,31 @@ void TestNamedPipe(void) {
         AssertTrue("Open Pipe 1 for writing", false);
     }
     // SyncHere();
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
     SyncHere();
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
     SyncHere();
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     strncpy(buf, COM_STR_01, 255);
     pipe.Write(buf, 256);
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     strncpy(buf, COM_STR_02, 255);
     pipe.Write(buf, 16);
     pipe.Write(&buf[16], 240);
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     strncpy(buf, COM_STR_03, 255);
     pipe.Write(buf, 256);
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     SyncHere();
 
-    //TRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
+    //VLTRACE(VISLIB_TRCELVL_INFO, "Here: {%d}\n", __LINE__);
 
     AssertException("Write to closed pipe", pipe.Write(buf, 256), vislib::sys::SystemException);
 
