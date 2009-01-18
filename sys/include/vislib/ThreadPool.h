@@ -119,9 +119,35 @@ namespace sys {
          *                             available processor.
          *
          * @throws IllegalStateException If the work item queue has been closed.
+         * @throws IllegalParamException If 'runnable' is NULL.
          */
         void QueueUserWorkItem(Runnable *runnable, void *userData = NULL, 
             const bool createDefaultThreads = true);
+
+        /**
+         * Queue a new work item for execution in a pool thread.
+         *
+         * This method can only be called until the Terminate() method for 
+         * shutting down the pool was called and closed the queue.
+         *
+         * The caller is resposible for that 'runnable' and 'userData' exists
+         * until they have been processed by a pool thread. See the class 
+         * documentation on how to ensure this.
+         *
+         * @param runnable             The Runnable::Function that does the work. 
+         *                             This must not be a NULL pointer.
+         * @param userData             This pointer is passed to the Runnable
+         *                             once it is executed.
+         * @param createDefaultThreads If set true, the pool creates threads if
+         *                             no threads already exist. The default 
+         *                             number of threads is one for each 
+         *                             available processor.
+         *
+         * @throws IllegalStateException If the work item queue has been closed.
+         * @throws IllegalParamException If 'runnable' is NULL.
+         */
+        void QueueUserWorkItem(Runnable::Function runnable, 
+            void *userData = NULL, const bool createDefaultThreads = true);
 
         /**
          * Removes, if registered, 'listener' from the list of objects informed
@@ -207,10 +233,12 @@ namespace sys {
         /** Used to store the work items and their input data. */
         typedef struct WorkItem_t {
             Runnable *runnable;
+            Runnable::Function runnableFunction;
             void *userData;
 
             inline bool operator ==(const struct WorkItem_t& rhs) const {
                 return ((this->runnable == rhs.runnable)
+                    && (this->runnableFunction == rhs.runnableFunction)
                     &&(this->userData == rhs.userData));
             }
         } WorkItem;
@@ -229,22 +257,41 @@ namespace sys {
          *
          * This method is thread-safe
          *
-         * @param runnable The work item that was aborted.
+         * @param workItem The work item that was aborted.
          * @param userData The user input associated with the work item.
          */
-        void fireUserWorkItemAborted(Runnable *runnable, void *userData);
+        void fireUserWorkItemAborted(WorkItem& workItem);
 
         /**
          * Fire the completed event. 
          *
          * This method is thread-safe
          *
-         * @param runnable The work item that was completer.
-         * @param userData The user input associated with the work item.
+         * @param workItem The work item that was completed.
          * @param exitCode The exit code of the work item.
          */
-        void fireUserWorkItemCompleted(Runnable *runnable, void *userData, 
+        void fireUserWorkItemCompleted(WorkItem& workItem, 
             const DWORD exitCode);
+
+        /**
+         * Queue a new work item for execution in a pool thread.
+         *
+         * This method can only be called until the Terminate() method for 
+         * shutting down the pool was called and closed the queue.
+         *
+         * @param workItem             The work item to be queued.
+         * @param createDefaultThreads If set true, the pool creates threads if
+         *                             no threads already exist. The default 
+         *                             number of threads is one for each 
+         *                             available processor.
+         * 
+         * @throws IllegalStateException If the work item queue has been closed.
+         * @throws IllegalParamException If both, the 'runnable' and the 
+         *                               'runnnableFunction' in the 'workItem' 
+         *                               are both NULL or not NULL.
+         */
+        void queueUserWorkItem(WorkItem& workItem, 
+            const bool createDefaultThreads);
 
         /**
          * Forbidden assignment.

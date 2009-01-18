@@ -28,7 +28,13 @@ public:
     void OnUserWorkItemAborted(ThreadPool& src, Runnable *runnable,
         void *userData) throw();
 
+    void OnUserWorkItemAborted(ThreadPool& src, Runnable::Function runnable,
+        void *userData) throw();
+
     void OnUserWorkItemCompleted(ThreadPool& src, Runnable *runnable, 
+        void *userData, const DWORD exitCode) throw();
+
+    void OnUserWorkItemCompleted(ThreadPool& src, Runnable::Function runnable,
         void *userData, const DWORD exitCode) throw();
 
     UINT cntAborted;
@@ -41,8 +47,19 @@ void Horcher::OnUserWorkItemAborted(ThreadPool& src, Runnable *runnable,
     this->cntAborted++;
 }
 
+void Horcher::OnUserWorkItemAborted(ThreadPool& src, 
+        Runnable::Function runnable, void *userData) throw() {
+    this->cntAborted++;
+}
+
 void Horcher::OnUserWorkItemCompleted(ThreadPool& src, Runnable *runnable,
         void *userData, const DWORD exitCode) throw() {
+    this->cntCompleted++;
+}
+
+void Horcher::OnUserWorkItemCompleted(ThreadPool& src, 
+        Runnable::Function runnable, void *userData, 
+        const DWORD exitCode) throw() {
     this->cntCompleted++;
 }
 

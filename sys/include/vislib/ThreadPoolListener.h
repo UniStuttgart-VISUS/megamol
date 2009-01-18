@@ -55,6 +55,21 @@ namespace sys {
             void *userData) throw() = 0;
 
         /**
+         * The thread pool calls this method once a work item 
+         * (Runnable::Function) is removed from its queue without having been 
+         * processed.
+         *
+         * Implementing methods should return as soon as possible.
+         *
+         * @param src      The thread pool that originated the event.
+         * @param runnable The Runnable::Function that has been aborted.
+         * @param userData The user data pointer that would have been passed 
+         *                 into the Runnable::Function.
+         */
+        virtual void OnUserWorkItemAborted(ThreadPool& src, 
+            Runnable::Function runnable, void *userData) throw() = 0;
+
+        /**
          * The thread pool calls this method once a work item (Runnable) has been 
          * completed.
          *
@@ -69,6 +84,24 @@ namespace sys {
          */
         virtual void OnUserWorkItemCompleted(ThreadPool& src, 
             Runnable *runnable, void *userData, 
+            const DWORD exitCode) throw() = 0;
+
+
+        /**
+         * The thread pool calls this method once a work item 
+         * (Runnable::Function) has been completed.
+         *
+         * This method runs in the thread context of the thread pool. The 
+         * implementation should return a soon as possible.
+         *
+         * @param src      The thread pool that originated the event.
+         * @param runnable The Runnable::Function that has been completed.
+         * @param userData The user data pointer that has been passed into the
+         *                 Runnable::Function.
+         * @param exitCode The exit code that the Runnable::Function returned.
+         */
+        virtual void OnUserWorkItemCompleted(ThreadPool& src, 
+            Runnable::Function runnable, void *userData, 
             const DWORD exitCode) throw() = 0;
 
     protected:

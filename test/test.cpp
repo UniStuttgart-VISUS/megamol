@@ -51,6 +51,7 @@
 #include "testpoolallocator.h"
 #include "testpoint.h"
 #include "teststacktrace.h"
+#include "testasyncsocket.h"
 
 
 /* type for test functions */
@@ -100,6 +101,7 @@ VislibTest tests[] = {
     {_T("NetInfo"), ::TestNetworkInformation, "Tests vislib::net::NetworkInformation"},
     {_T("Sockets"), ::TestSockets, "Tests the sockets"},
     {_T("TcpServer"), ::TestTcpServer, "Tests the TCP server"},
+    {_T("AsyncSockets"), ::TestAsyncSocket, "Tests the asynchronous socket extension"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},

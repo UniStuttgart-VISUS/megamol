@@ -51,7 +51,7 @@ SIZE_T vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
     while (it.HasNext() && this->semBlockWorker.TryLock()) {
         WorkItem& workItem = it.Next();
         retval++;
-        this->fireUserWorkItemAborted(workItem.runnable, workItem.userData);
+        this->fireUserWorkItemAborted(workItem);
     }
 
     for (SIZE_T i = 0; i < retval; i++) {
@@ -117,35 +117,26 @@ SIZE_T vislib::sys::ThreadPool::CountUserWorkItems(void) const {
  */
 void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable *runnable, 
         void *userData, const bool createDefaultThreads) {
-    ASSERT(runnable != NULL);
-
     WorkItem workItem;
     workItem.runnable = runnable;
+    workItem.runnableFunction = NULL;
     workItem.userData = userData;
 
-    /* Add work item to queue. */
-    this->lockQueue.Lock();
-    if (this->isQueueOpen) {
-        this->queue.Append(workItem);
-        this->evtAllCompleted.Reset();  // Signal unfinished work.
-        this->semBlockWorker.Unlock();  // Wake workers.
-        this->lockQueue.Unlock();
-#ifndef _WIN32
-        // Linux has the most crap scheduler I have ever seen ...
-        sched_yield();
-#endif /* _WIN32 */
-    } else {
-        this->lockQueue.Unlock();
-        throw IllegalStateException("The user work item queue has been closed, "
-            "because the thread pool is being terminated.", __FILE__, __LINE__);
-    }
+    this->queueUserWorkItem(workItem, createDefaultThreads);
+}
 
-    /* Create threads if requested. */
-    this->lockThreadCounters.Lock();
-    if (createDefaultThreads && (this->cntTotalThreads < 1)) {
-        this->SetThreadCount(SystemInformation::ProcessorCount());
-    }
-    this->lockThreadCounters.Unlock();
+
+/*
+ * vislib::sys::ThreadPool::QueueUserWorkItem
+ */
+void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable::Function runnable, 
+        void *userData, const bool createDefaultThreads) {
+    WorkItem workItem;
+    workItem.runnable = NULL;
+    workItem.runnableFunction = runnable;
+    workItem.userData = userData;
+
+    this->queueUserWorkItem(workItem, createDefaultThreads);
 }
 
 
@@ -285,12 +276,15 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
         /* Do the work. */
         VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n",
             Thread::CurrentID());
-        DWORD exitCode = workItem.runnable->Run(workItem.userData);
+        ASSERT((workItem.runnable != NULL) 
+            || (workItem.runnableFunction != NULL));
+        DWORD exitCode = (workItem.runnable != NULL)
+            ? workItem.runnable->Run(workItem.userData)
+            : workItem.runnableFunction(workItem.userData);
         VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] completed work "
             "item with exit code %u\n", Thread::CurrentID(), exitCode);
 
-        this->pool->fireUserWorkItemCompleted(workItem.runnable, 
-            workItem.userData, exitCode);
+        this->pool->fireUserWorkItemCompleted(workItem, exitCode);
 
         /* Mark the thread as inactive and signal event if necessary. */
         this->pool->lockQueue.Lock();
@@ -317,14 +311,22 @@ vislib::sys::ThreadPool::ThreadPool(const ThreadPool& rhs) {
 /*
  * vislib::sys::ThreadPool::fireUserWorkItemAborted
  */
-void vislib::sys::ThreadPool::fireUserWorkItemAborted(Runnable *runnable, 
-        void *userData) {
+void vislib::sys::ThreadPool::fireUserWorkItemAborted(WorkItem& workItem) {
     AutoLock lock(this->lockListeners);
 
     SingleLinkedList<ThreadPoolListener *>::Iterator it 
         = this->listeners.GetIterator();
-    while (it.HasNext()) {
-        it.Next()->OnUserWorkItemAborted(*this, runnable, userData);
+    if (workItem.runnable != NULL) {
+        while (it.HasNext()) {
+            it.Next()->OnUserWorkItemAborted(*this, workItem.runnable, 
+                workItem.userData);
+        }
+    } else {
+        ASSERT(workItem.runnableFunction != NULL);
+        while (it.HasNext()) {
+            it.Next()->OnUserWorkItemAborted(*this, workItem.runnableFunction,
+                workItem.userData);
+        }
     }
 }
 
@@ -332,15 +334,63 @@ void vislib::sys::ThreadPool::fireUserWorkItemAborted(Runnable *runnable,
 /*
  * vislib::sys::ThreadPool::fireUserWorkItemCompleted
  */
-void vislib::sys::ThreadPool::fireUserWorkItemCompleted(Runnable *runnable, 
-        void *userData, const DWORD exitCode) {
+void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem,
+                                                        const DWORD exitCode) {
     AutoLock lock(this->lockListeners);
 
     SingleLinkedList<ThreadPoolListener *>::Iterator it 
         = this->listeners.GetIterator();
-    while (it.HasNext()) {
-        it.Next()->OnUserWorkItemCompleted(*this, runnable, userData, exitCode);
+    if (workItem.runnable != NULL) {
+        while (it.HasNext()) {
+            it.Next()->OnUserWorkItemCompleted(*this, workItem.runnable, 
+                workItem.userData, exitCode);
+        }
+    } else {
+        ASSERT(workItem.runnableFunction != NULL);
+        while (it.HasNext()) {
+            it.Next()->OnUserWorkItemCompleted(*this, workItem.runnableFunction,
+                workItem.userData, exitCode);
+        }
     }
+}
+
+
+/*
+ * vislib::sys::ThreadPool::queueUserWorkItem
+ */
+void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
+        const bool createDefaultThreads) {
+    /* Sanity checks. */
+    if ((workItem.runnable == NULL) && (workItem.runnableFunction == NULL)) {
+        throw vislib::IllegalParamException("workItem", __FILE__, __LINE__);
+    }
+    if ((workItem.runnable != NULL) && (workItem.runnableFunction != NULL)) {
+        throw vislib::IllegalParamException("workItem", __FILE__, __LINE__);
+    }
+
+    /* Add work item to queue. */
+    this->lockQueue.Lock();
+    if (this->isQueueOpen) {
+        this->queue.Append(workItem);
+        this->evtAllCompleted.Reset();  // Signal unfinished work.
+        this->semBlockWorker.Unlock();  // Wake workers.
+        this->lockQueue.Unlock();
+#ifndef _WIN32
+        // Linux has the most crap scheduler I have ever seen ...
+        sched_yield();
+#endif /* _WIN32 */
+    } else {
+        this->lockQueue.Unlock();
+        throw IllegalStateException("The user work item queue has been closed, "
+            "because the thread pool is being terminated.", __FILE__, __LINE__);
+    }
+
+    /* Create threads if requested. */
+    this->lockThreadCounters.Lock();
+    if (createDefaultThreads && (this->cntTotalThreads < 1)) {
+        this->SetThreadCount(SystemInformation::ProcessorCount());
+    }
+    this->lockThreadCounters.Unlock();
 }
 
 
