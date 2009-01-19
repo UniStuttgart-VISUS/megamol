@@ -58,7 +58,7 @@ const UINT vislib::Trace::LEVEL_VL = 0x80000000;
 /*
  * vislib::Trace::LEVEL_VL_ERROR
  */
-const UINT vislib::Trace::LEVEL_VL_ERROR = vislib::Trace::LEVEL_VL;
+const UINT vislib::Trace::LEVEL_VL_ERROR = vislib::Trace::LEVEL_VL + 1;
 
 
 /*
