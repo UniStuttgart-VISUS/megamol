@@ -32,7 +32,7 @@ namespace vislib {
      * 'vislib::sys::ThreadSafeStackTrace::Initialise'. Otherwise the stack
      * returned may be wrong or corrupted.
      *
-     * You should use the 'VISLIB_STACKTRACE' macro to push functions onto
+     * You should use the 'VL_STACKTRACE' macro to push functions onto
      * the tracing stack.
      */
     class StackTrace {
@@ -267,11 +267,15 @@ namespace vislib {
 
 
 #if defined(DEBUG) || defined(_DEBUG)
-#define VISLIB_STACKTRACE(FN, FILE, LINE) vislib::StackTrace::Marker \
-    __localStackTraceMarker(#FN, FILE, LINE);
+#define VLSTACKTRACE(FN, FILE, LINE) vislib::StackTrace::Marker \
+    __localStackTraceMarker(FN, FILE, LINE);
 #else /* defined(DEBUG) || defined(_DEBUG) */
-#define VISLIB_STACKTRACE(FN, FILE, LINE)
+#define VLSTACKTRACE(FN, FILE, LINE)
 #endif /* defined(DEBUG) || defined(_DEBUG) */
+
+
+/* Deprecated */
+#define VISLIB_STACKTRACE(FN, FILE, LINE) VLSTACKTRACE(#FN, FILE, LINE)
 
 
 #if defined(_WIN32) && defined(_MANAGED)

@@ -96,7 +96,7 @@ void testStack2(const vislib::SingleLinkedList<vislib::StringA>& tehStack) {
  * function3
  */
 void function3(void) {
-    VISLIB_STACKTRACE(function3, "horst", 1);
+    VLSTACKTRACE("function3", "horst", 1);
     manualStack.Append("function3 [horst:1]");
 
     testStack();
@@ -108,7 +108,7 @@ void function3(void) {
  * functionEX
  */
 void functionEX(void) {
-    VISLIB_STACKTRACE(functionEX, "THEND", 42);
+    VLSTACKTRACE("functionEX", "THEND", 42);
     manualStack.Append("functionEX [THEND:42]");
 
     throw vislib::Exception("Here we go!", "HERE", 128);
@@ -119,7 +119,7 @@ void functionEX(void) {
  * function2
  */
 void function2(void) {
-    VISLIB_STACKTRACE(function2, "hugo", 10);
+    VLSTACKTRACE("function2", "hugo", 10);
     manualStack.Append("function2 [hugo:10]");
 
     testStack();
@@ -134,7 +134,7 @@ void function2(void) {
  * function1
  */
 void function1(void) {
-    VISLIB_STACKTRACE(function1, "", 99);
+    VLSTACKTRACE("function1", "", 99);
     manualStack.Append("function1 [:99]");
 
     testStack();
@@ -153,7 +153,7 @@ void function1(void) {
  */
 void TestStackTrace(void) {
     vislib::StackTrace::Initialise();
-    VISLIB_STACKTRACE(TestStackTrace, "", 0);
+    VLSTACKTRACE("TestStackTrace", "", 0);
     manualStack.Clear();
     manualStack.Append("TestStackTrace [:0]");
 
@@ -200,7 +200,7 @@ void randomSleep(void) {
  * tfunction
  */
 void tfunction(vislib::SingleLinkedList<vislib::StringA>& stack, int i) {
-    VISLIB_STACKTRACE(tfunction, "", i);
+    VLSTACKTRACE("tfunction", "", i);
     vislib::StringA str;
     str.Format("tfunction [:%d]", i);
     stack.Append(str);
@@ -225,7 +225,7 @@ void tfunction(vislib::SingleLinkedList<vislib::StringA>& stack, int i) {
  * thread1run
  */
 DWORD thread1run(void*) {
-    VISLIB_STACKTRACE(thread1run, "", 1);
+    VLSTACKTRACE("thread1run", "", 1);
     manualStack3.Append("thread1run [:1]");
 
     randomSleep();
@@ -244,7 +244,7 @@ DWORD thread1run(void*) {
  * thread2run
  */
 DWORD thread2run(void*) {
-    VISLIB_STACKTRACE(thread2run, "", 2);
+    VLSTACKTRACE("thread2run", "", 2);
     manualStack2.Append("thread2run [:2]");
 
     randomSleep();
@@ -266,7 +266,7 @@ DWORD thread2run(void*) {
  * thread3run
  */
 DWORD thread3run(void*) {
-    VISLIB_STACKTRACE(thread3run, "horst", 3);
+    VLSTACKTRACE("thread3run", "horst", 3);
     manualStack.Append("thread3run [horst:3]");
 
     randomSleep();
