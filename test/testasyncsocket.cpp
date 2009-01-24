@@ -14,10 +14,15 @@
 #include "vislib/AsyncSocket.h"
 #include "vislib/AsyncSocketContext.h"
 #include "vislib/RunnableThread.h"
-
+#include "vislib/Trace.h"
 
 using namespace vislib::net;
+using namespace vislib::sys;
 
+// Ensure that a whole line is output at once on cout.
+static CriticalSection COUT_IO_LOCK;
+#define LOCK_COUT ::COUT_IO_LOCK.Lock()
+#define UNLOCK_COUT ::COUT_IO_LOCK.Unlock()
 
 static const unsigned short TEST_PORT = 65432;
 
@@ -49,12 +54,26 @@ DWORD Sender::Run(void *userData) {
         AssertNoException("Connect to server", socket.Connect(endPoint));
 
         for (UINT_PTR i = 0; i < cnt; i++) {
+            LOCK_COUT;
+            std::cout << "BeginSend #" << i << std::endl;
+            UNLOCK_COUT;
             ctx.Reset();
             socket.BeginSend(&i, sizeof(i), &ctx);
+
+            LOCK_COUT;
+            std::cout << "Wait (send) #" << i << std::endl;
+            UNLOCK_COUT;
             ctx.Wait();
+
+            LOCK_COUT;
+            std::cout << "EndSend #" << i << std::endl;
+            UNLOCK_COUT;
             AssertEqual("Sent sufficient data", socket.EndSend(&ctx),
                 static_cast<SIZE_T>(sizeof(UINT_PTR)));
         }
+
+        AssertNoException("socket.Shutdown", socket.Shutdown());
+        AssertNoException("socket.Close", socket.Close());
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
@@ -95,13 +114,34 @@ DWORD Receiver::Run(void *userData) {
         AssertNoException("Listen on server socket", serverSocket.Listen());
         AsyncSocket socket(serverSocket.Accept());
 
+        LOCK_COUT;
+        std::cout << "Client (sender) " 
+            << socket.GetPeerEndPoint().ToStringA().PeekBuffer() 
+            << " connected." << std::endl;
+        UNLOCK_COUT;
+
         for (UINT_PTR i = 0; i < cnt; i++) {
+            LOCK_COUT;
+            std::cout << "BeginReceive #" << i << std::endl;
+            UNLOCK_COUT;
+
             ctx.Reset();
             socket.BeginReceive(&data, sizeof(data), &ctx);
+
+            LOCK_COUT;
+            std::cout << "Wait (send) #" << i << std::endl;
+            UNLOCK_COUT;
             ctx.Wait();
+
+            LOCK_COUT;
+            std::cout << "EndReceive #" << i << std::endl;
+            UNLOCK_COUT;
             AssertEqual("Received sufficient data", socket.EndReceive(&ctx),
                 static_cast<SIZE_T>(sizeof(UINT_PTR)));
         }
+
+        AssertNoException("socket.Shutdown", socket.Shutdown());
+        AssertNoException("socket.Close", socket.Close());
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
@@ -120,8 +160,8 @@ void TestAsyncSocket(void) {
     vislib::sys::RunnableThread<Receiver> receiver;
 
     UINT_PTR cnt = 10;
-    sender.Start(reinterpret_cast<void *>(cnt));
     receiver.Start(reinterpret_cast<void *>(cnt));
+    sender.Start(reinterpret_cast<void *>(cnt));
 
     sender.Join();
     receiver.Join();

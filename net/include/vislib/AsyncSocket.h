@@ -16,6 +16,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+//#define VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN
+
+
 #include "vislib/Socket.h"  // Must be first.
 #include "vislib/CriticalSection.h"
 #include "vislib/Runnable.h"
@@ -44,6 +47,12 @@ namespace net {
      * rather than using AIO, because the documentation on the behaviour of AIO
      * on socket handles is more than sketchy. We assume that it does not work
      * after reading a lot of posts in newsgroups and mailing lists.
+     *
+     * Implementation notes: On Windows, the implementation of AsyncSocket uses
+     * the inherently asynchronous I/O operations of the Windows socket API to 
+     * implement the asynchronous send and receive operations. On Linux, the 
+     * asynchronous sender and receiver threads are implemented using a VISlib
+     * thread pool.
      */
     class AsyncSocket : public Socket {
 
@@ -54,7 +63,7 @@ namespace net {
          * a new socket.
          */
         inline AsyncSocket(void) : Super() {
-            VISLIB_STACKTRACE(AsyncSocket, __FILE__, __LINE__);
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /**
@@ -63,7 +72,7 @@ namespace net {
          * @param handle The socket handle.
          */
         explicit inline AsyncSocket(SOCKET handle) : Super(handle) {
-            VISLIB_STACKTRACE(AsyncSocket, __FILE__, __LINE__);
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /**
@@ -72,7 +81,7 @@ namespace net {
          * @param socket The socket to be cloned
          */
         explicit inline AsyncSocket(Socket socket) : Super(socket) {
-            VISLIB_STACKTRACE(AsyncSocket, __FILE__, __LINE__);
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /**
@@ -81,7 +90,7 @@ namespace net {
          * @param rhs The object to be cloned.
          */
         inline AsyncSocket(const AsyncSocket& rhs) : Super(rhs) {
-            VISLIB_STACKTRACE(AsyncSocket, __FILE__, __LINE__);
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /** Dtor. */
@@ -155,17 +164,22 @@ namespace net {
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
          *                  at least this number of bytes.
+         * @param context   The AsyncSocketContext that is used to complete
+         *                  the operation. This context allows for 
+         *                  notification via a callback function or for 
+         *                  waiting synchronously. The caller remains owner
+         *                  of the memory designated by 'context' and must
+         *                  ensure that it exists until a call to 
+         *                  EndSend() was made.
          * @param timeout   A timeout in milliseconds. A value less than 1 
          *                  specifies an infinite timeout. If the operation 
          *                  timeouts, an exception will be thrown.
          * @param flags     The flags that specify the way in which the call is 
          *                  made.
          *
-         * @return The number of bytes acutally sent.
-         *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
-         *                               and 'forceSend' is true.
+         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
+         *                               NULL pointer.
          */
         void BeginSend(const void *data, const SIZE_T cntBytes,
             AsyncSocketContext *context, const INT timeout = TIMEOUT_INFINITE, 
@@ -182,17 +196,22 @@ namespace net {
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
          *                  at least this number of bytes.
+         * @param context   The AsyncSocketContext that is used to complete
+         *                  the operation. This context allows for 
+         *                  notification via a callback function or for 
+         *                  waiting synchronously. The caller remains owner
+         *                  of the memory designated by 'context' and must
+         *                  ensure that it exists until a call to 
+         *                  EndSend() was made.
          * @param timeout   A timeout in milliseconds. A value less than 1 
          *                  specifies an infinite timeout. If the operation 
          *                  timeouts, an exception will be thrown.
          * @param flags     The flags that specify the way in which the call is 
          *                  made.
          *
-         * @return The number of bytes acutally sent.
-         *
          * @throws SocketException       If the operation fails.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
-         *                               and 'forceSend' is true.
+         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
+         *                               NULL pointer.
          */
         void BeginSend(const IPEndPoint& toAddr, const void *data, 
             const SIZE_T cntBytes, AsyncSocketContext *context, 
@@ -215,14 +234,14 @@ namespace net {
         SIZE_T EndReceive(AsyncSocketContext *context);
 
         /**
-         * Completes an asynchronous receive operation. This method must be 
+         * Completes an asynchronous send operation. This method must be 
          * called to complete the operation once 'context' was signaled or 
          * within the callback function.
          *
-         * @param context The context object of an asynchronous receive 
+         * @param context The context object of an asynchronous send 
          *                operation.
          *
-         * @return The number of bytes actually received.
+         * @return The number of bytes actually sent.
          *
          * @throws SocketException       If the previously initiated operation 
          *                               failed.
@@ -230,12 +249,14 @@ namespace net {
          */
         SIZE_T EndSend(AsyncSocketContext *context);
 
-
-#ifndef _WIN32
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /**
          * Receives 'cntBytes' from the socket and saves them to the memory 
          * designated by 'outData'. 'outData' must be large enough to receive at
          * least 'cntBytes'. 
+         *
+         * Note: This overridden method is thread-safe with regard to the 
+         * 'lockRecv' critical section of the socket.
          *
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
@@ -263,6 +284,9 @@ namespace net {
          * 'outData' must be large enough to receive at least 'cntBytes'. 
          *
          * This method can only be used on datagram sockets.
+         *
+         * Note: This overridden method is thread-safe with regard to the 
+         * 'lockRecv' critical section of the socket.
          *
          * @param outFromAddr  The socket address the datagram was received 
          *                     from. This variable is only valid upon successful
@@ -298,6 +322,9 @@ namespace net {
          * IPv4 sockets. Use IPEndPoint instead of SocketAddress for IPv6 
          * support and better performance.
          *
+         * Note: This overridden method is thread-safe with regard to the 
+         * 'lockRecv' critical section of the socket.
+         *
          * @param outFromAddr  The socket address the datagram was received 
          *                     from. This variable is only valid upon successful
          *                     return from the method.
@@ -326,6 +353,9 @@ namespace net {
          * Send 'cntBytes' from the location designated by 'data' using this 
          * socket.
          *
+         * Note: This overridden method is thread-safe with regard to the 
+         * 'lockSend' critical section of the socket.
+         *
          * @param data      The data to be sent. The caller remains owner of the
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
@@ -352,6 +382,9 @@ namespace net {
          *
          * This method can only be used on datagram sockets.
          *
+         * Note: This overridden method is thread-safe with regard to the 
+         * 'lockSend' critical section of the socket.
+         *
          * @param toAddr    Socket address of the destination host.
          * @param data      The data to be sent. The caller remains owner of the
          *                  memory.
@@ -372,7 +405,7 @@ namespace net {
         virtual SIZE_T Send(const IPEndPoint& toAddr, const void *data, 
             const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
             const INT flags = 0, const bool forceSend = false);
-#endif /* !_WIN32 */
+#endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
         /**
          * Assignment operator.
@@ -382,7 +415,7 @@ namespace net {
          * @return *this.
          */
         AsyncSocket& operator =(const AsyncSocket& rhs) {
-            VISLIB_STACKTRACE(operator=, __FILE__, __LINE__);
+            VLSTACKTRACE("AsyncSocket::opertor =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -395,7 +428,7 @@ namespace net {
          * @return true, if *this and 'rhs' are equal, false otherwise.
          */
         inline bool operator ==(const AsyncSocket& rhs) const {
-            VISLIB_STACKTRACE(operator==, __FILE__, __LINE__);
+            VISLIB_STACKTRACE("AsyncSocket::operator ==", __FILE__, __LINE__);
             return Super::operator ==(rhs);
         }
 
@@ -407,7 +440,7 @@ namespace net {
          * @return true, if *this and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const AsyncSocket& rhs) const {
-            VISLIB_STACKTRACE(operator!=, __FILE__, __LINE__);
+            VLSTACKTRACE("AsyncSocket::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -417,13 +450,45 @@ namespace net {
         typedef Socket Super;
 
 #ifdef _WIN32
+        /**
+         * This is the completion function for WSA overlapped socket I/O. It is 
+         * used to transform the callback function call of WSA into a callback
+         * function call of VISlib.
+         *
+         * @param dwError       The 'dwError' parameter specifies the 
+         *                      completion status for the overlapped operation 
+         *                      as indicated by lpOverlapped.
+         * @param cbTransferred 'cbTransferred' specifies the number of bytes 
+         *                      sent.
+         * @param lpOverlapped  The WSAOVERLAPPED structure of the send/receive
+         *                      operation.
+         * @param dwFlags       Always zero according to MSDN.
+         */
         static void CALLBACK completedFunc(DWORD dwError, DWORD cbTransferred, 
             LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
 #endif /* _WIN32 */
 
-//#ifndef _WIN32
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
+        /**
+         * This function runs the receive operation specified in 
+         * 'asyncSocketContext'. It is run in the thread pool.
+         *
+         * @param asyncSocketContext An AsyncSocketContext containing all 
+         *                           parameters required to start the operation.
+         *
+         * @return 0 in case of success, an OS error code otherwise.
+         */
         static DWORD receiveFunc(void *asyncSocketContext);
 
+        /**
+         * This function runs the send operation specified in 
+         * 'asyncSocketContext'. It is run in the thread pool.
+         *
+         * @param asyncSocketContext An AsyncSocketContext containing all 
+         *                           parameters required to start the operation.
+         *
+         * @return 0 in case of success, an OS error code otherwise.
+         */
         static DWORD sendFunc(void *asyncSocketContext);
 
         /** This lock ensures exclusive receive access on Linux. */
@@ -434,8 +499,7 @@ namespace net {
 
         /** The thread pool that runs the asynchronous operations on Linux. */
         vislib::sys::ThreadPool threadPool;
-//#endif /* !_WIN32 */
-
+#endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
     };
     
 } /* end namespace net */

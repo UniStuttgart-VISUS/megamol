@@ -25,6 +25,8 @@
 #include "vislib/Event.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Socket.h"
+#include "vislib/StackTrace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 namespace vislib {
@@ -51,15 +53,19 @@ namespace net {
         AsyncSocketContext(AsyncCallback callback = NULL, 
             void *userContext = NULL);
 
-        /**
-         * Copy ctor.
-         *
-         * @param rhs The object to be cloned.
-         */
-        inline AsyncSocketContext(const AsyncSocketContext& rhs) : Super(rhs) {}
-
         /** Dtor. */
         virtual ~AsyncSocketContext(void);
+
+        /**
+         * Reset the state of the context. If a context object is reused for
+         * more than one asynchronous operation, Reset() must be called before
+         * every operation.
+         *
+         * Reset() must not be called between the begin and end of an 
+         * asynchronous operation. The results of the call are undefined in this
+         * case.
+         */
+        virtual void Reset(void);
 
         /**
          * Wait for the operation associated with this context to complete.
@@ -84,51 +90,177 @@ namespace net {
          * @return A pointer to the WSAOVERLAPPED structure.
          */
         operator WSAOVERLAPPED *(void) {
+            VLSTACKTRACE("AsyncSocketContext::operator WSAOVERLAPPED *", 
+                __FILE__, __LINE__);
             ASSERT(sizeof(WSAOVERLAPPED) == sizeof(OVERLAPPED));
             return (Super::operator OVERLAPPED *());
         }
 #endif /* _WIN32 */
 
+        /**
+         * Completes the asynchronous operation by setting the result parameters
+         * 'cntData' and 'errorCode', calling any registered callback function and
+         * signaling the event object.
+         *
+         * @param cntData   The amount of data acutally sent/received.
+         * @param errorCode 0 in case the operation completed successfully, an 
+         *                  appropriate system error code otherwise.
+         */
         virtual void notifyCompleted(const DWORD cntData, 
             const DWORD errorCode);
 
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
+        /**
+         * Pass the input parameters for an asynchronous datagram operation.
+         *
+         * @param socket    The socket to be used.
+         * @param dgramAddr The peer address. This must not be NULL.
+         * @param data      Pointer to the data buffer.
+         * @param cntData   Size of the data buffer.
+         * @param flags     Socket flags.
+         * @param timeout   Timeout for the operation.
+         */
         inline void setDgramParams(AsyncSocket *socket, 
                 const IPEndPoint *dgramAddr, const void *data, 
                 const SIZE_T cntData, const INT flags, const INT timeout) {
+            VLSTACKTRACE("AsyncSocketContext::setDgramParams", __FILE__, 
+                __LINE__);
+            ASSERT(dgramAddr != NULL);
             this->socket = socket;
-            this->dgramAddr = const_cast<IPEndPoint *>(dgramAddr);
+            this->dgramAddrOrg = const_cast<IPEndPoint *>(dgramAddr);
+            this->dgramAddrCpy = *this->dgramAddrOrg;
             this->data = const_cast<void *>(data);
             this->cntData = cntData;
             this->flags = flags;
             this->timeout = timeout;
         }
 
+        /**
+         * Pass the input parameters for an asynchronous stream operation.
+         *
+         * @param socket    The socket to be used.
+         * @param data      Pointer to the data buffer.
+         * @param cntData   Size of the data buffer.
+         * @param flags     Socket flags.
+         * @param timeout   Timeout for the operation.         */
         inline void setStreamParams(AsyncSocket *socket, const void *data, 
                 const SIZE_T cntData, const INT flags, const INT timeout) {
+            VLSTACKTRACE("AsyncSocketContext::setStreamParams", __FILE__, 
+                __LINE__);
             this->socket = socket;
-            this->dgramAddr = NULL;
+            this->dgramAddrOrg = NULL;
             this->data = const_cast<void *>(data);
             this->cntData = cntData;
             this->flags = flags;
             this->timeout = timeout;
         }
+
+#else /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
+        /**
+         * Pass the input parameters for an asynchronous operation.
+         *
+         * @param data      Pointer to the data buffer.
+         * @param cntData   Size of the data buffer.
+         */
+        inline void setWsaParams(const void *data, const SIZE_T cntData) {
+            VLSTACKTRACE("AsyncSocketContext::setWsaParams", __FILE__, 
+                __LINE__);
+            wsaBuf.buf = static_cast<char *>(const_cast<void *>(data));
+            wsaBuf.len = static_cast<u_long>(cntData);
+        }
+#endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
     private:
 
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        inline AsyncSocketContext(const AsyncSocketContext& rhs)
+                : Super(NULL, NULL) {
+            VLSTACKTRACE("AsyncSocketContext::AsyncSocketContext", __FILE__, 
+                __LINE__);
+            throw UnsupportedOperationException("AsyncSocketContext", __FILE__, 
+                __LINE__);
+        }
+
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        AsyncSocketContext& operator =(const AsyncSocketContext& rhs);
+
+        /** 
+         * The size of the data packet sent or received.
+         *
+         * On Linux, this variable is used to describe the size of the input 
+         * parameter as well as the return value of the operation.
+         *
+         * On Windows, it is only used to transport the return value.
+         */
+        DWORD cntData;
+
+        /**
+         * An error code that may have been raised by the asynchronous send or
+         * receive operation.
+         */
         DWORD errorCode;
 
-        SIZE_T cntData;
-               
+        /** The event that is signaled on completion. */
+        vislib::sys::Event evt;
+
+        
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
+        /** 
+         * Passes the data pointer from AsyncSocket::BeginSend() or 
+         * AsyncSocket::BeginReceive() to the worker thread.
+         */
         void *data; 
 
-        IPEndPoint *dgramAddr;
+        /**
+         * The address of the peer address in case of a datagram socket 
+         * operation. Otherwise, this parameter must be NULL (for stream
+         * sockets).
+         */
+        IPEndPoint *dgramAddrOrg;
 
-        INT flags;
-
-        INT timeout;
-
+        /** The socket that is used to send/receive data. */
         AsyncSocket *socket;
 
+        /**
+         * A deep copy of 'dgramAddrOrg' that is used only for send 
+         * operations.
+         */
+        IPEndPoint dgramAddrCpy;
+
+        /** 
+         * Passes the socket flags from AsyncSocket::BeginSend() or 
+         * AsyncSocket::BeginReceive() to the worker thread.
+         */
+        INT flags;
+
+        /** 
+         * Passes the timeout from AsyncSocket::BeginSend() or 
+         * AsyncSocket::BeginReceive() to the worker thread.
+         */
+        INT timeout;
+
+#else /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
+        /** 
+         * The input/ouput buffer that is used for the asynchronous operation.
+         * This variable is placed in the context structure as it must remain
+         * valid until the operation completes.
+         */
+        WSABUF wsaBuf;
+#endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
         /** Allow access to protected cast operation to the socket. */
         friend class AsyncSocket;
