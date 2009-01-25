@@ -14,6 +14,7 @@
 #include "vislib/SocketException.h"
 #include "vislib/Thread.h"
 #include "vislib/Trace.h"
+#include "vislib/unreferenced.h"
 
 
 /*
@@ -35,6 +36,7 @@ vislib::net::AsyncSocketSender::~AsyncSocketSender(void) {
         this->lockStoragePool.Lock();
         SAFE_DELETE(this->storagePool);
     } catch (Exception& e) {
+        VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         VLTRACE(Trace::LEVEL_VL_WARN, "Exception while destroying "
             "AsyncSocketSender: %s\n", e.GetMsgA());
     }
@@ -228,6 +230,7 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
         this->semBlockSender.Unlock();  // Ensure that the thread can run.
 
     } catch (vislib::Exception& e) {
+        VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         VLTRACE(Trace::LEVEL_VL_ERROR, "Terminating AsyncSocketSender "
             "failed. %s\n", e.GetMsgA());
         retval = false;

@@ -10,6 +10,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/Trace.h"
+#include "vislib/unreferenced.h"
 
 
 /*
@@ -170,6 +171,7 @@ void vislib::net::cluster::AbstractControllerNode::onPeerConnected(
     try {
         this->sendAllParameters(&peerId);
     } catch (Exception& e) {
+        VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         VLTRACE(Trace::LEVEL_VL_ERROR, "Sending camera parameters to newly "
             "connected node failed: %s\n", e.GetMsgA());
     } catch (...) {
