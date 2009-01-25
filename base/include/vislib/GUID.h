@@ -275,7 +275,11 @@ namespace vislib {
     private:
 
         /** The GUID structure wrapped by this object. */
+#ifdef _WIN32
+        ::GUID guid;
+#else /* _WIN32 */
         uuid_t guid;
+#endif /* _WIN32 */
 
     };
 

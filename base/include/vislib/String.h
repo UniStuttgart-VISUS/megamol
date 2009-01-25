@@ -1134,7 +1134,7 @@ namespace vislib {
      * vislib::String<T>::EMPTY
      */
     template<class T>
-    const String<T> String<T>::EMPTY(CharTraits<T>::EMPTY_STRING);
+    const String<T> String<T>::EMPTY; //(CharTraits<T>::EMPTY_STRING);
 
 
     /*

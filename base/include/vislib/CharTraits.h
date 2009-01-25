@@ -163,7 +163,7 @@ namespace vislib {
         }
 
         /** Empty character sequence constant. */
-        static const Char EMPTY_STRING[];
+        static const T EMPTY_STRING[];
 
     protected:
 
@@ -272,15 +272,15 @@ namespace vislib {
         static const iconv_t INVALID_ICONV_T;
 #endif /* !_WIN32 */
 
-    }; /* end class CharTraitsImpl */
+    }; /* end class CharTraitsBase */
 
 
     /*
      * vislib::CharTraitsBase<T>::EMPTY_STRING
      */
     template<class T> 
-    const typename CharTraitsBase<T>::Char CharTraitsBase<T>::EMPTY_STRING[]
-        = { static_cast<Char>(0) };
+    //const typename CharTraitsBase<T>::Char CharTraitsBase<T>::EMPTY_STRING[1]
+    const T CharTraitsBase<T>::EMPTY_STRING[] = { static_cast<T>(0) };
 
 
 #ifndef _WIN32
