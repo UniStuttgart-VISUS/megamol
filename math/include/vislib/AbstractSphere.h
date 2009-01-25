@@ -277,7 +277,7 @@ namespace math {
      */
     template<class T, class S> 
     const ShallowPoint<T, 3> AbstractSphere<T, S>::GetCenter(void) const {
-        ShallowPoint<T, 3> retval(this->xyzr);
+        ShallowPoint<T, 3> retval(const_cast<T *>(this->xyzr));
         return retval;
     }
 
