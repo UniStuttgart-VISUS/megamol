@@ -1,7 +1,7 @@
 /*
  * AsyncSocketContext.h
  *
- * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 by Visualisierungsinstitut der Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
@@ -38,6 +38,51 @@ namespace net {
 
     /**
      * This class is used for handling asynchronous socket operations.
+     *
+     * AsyncSocketContext can be used to wait synchronously for an asynchronous
+     * socket operation to complete like in the following example:
+     * <code>
+     * vislib::net::AsyncSocket socket;
+     * vislib::net::AsyncSocketContext context;
+     * BYTE data[16];
+     *
+     * // Setup the socket and connect.
+     *
+     * context.Reset();     // Optional if you do not reuse 'context'.
+     * socket.BeginReceive(&data, sizeof(data), &context);
+     *
+     * // Do some other stuff here. (Otherwise, asnychronous I/O would not make
+     * // any sense.)
+     *
+     * context.Wait();
+     * socket.EndReceive(&context);
+     * </code>
+     *
+     * Alternatively, the asynchronous callback function of the context
+     * can be used to complete the operation. In this case, the caller is
+     * required to ensure that the context exists until the asynchronous
+     * operation completes. As the socket is required in the callback, it
+     * must be passed with the AbstractAsyncContext, either directly as the
+     * 'userContext' or as a member of a structure or class that is the
+     * 'userContext'. The following example illustrates how the Socket
+     * is passed as the 'userContext' directly.
+     * <code>
+     * void OnReceiveCompleted(AbstractAsyncContext *context) {
+     *     vislib::net::AsyncSocket *socket 
+     *          = static_cast<vislib::net::AsyncSocket>(
+     *          context->GetUserContext());
+     *     socket->EndReceive(context);
+     * }
+     *
+     * // Somewhere else:
+     * vislib::net::AsyncSocket socket;
+     * BYTE data[16];
+     *
+     * // Setup the socket and connect.
+     *
+     * vislib::net::AsyncSocketContext context(OnReceiveCompleted, &socket);
+     * socket.BeginReceive(&data, sizeof(data), &context);
+     * </code>
      */
     class AsyncSocketContext : public vislib::sys::AbstractAsyncContext {
 
@@ -101,6 +146,10 @@ namespace net {
          * Completes the asynchronous operation by setting the result parameters
          * 'cntData' and 'errorCode', calling any registered callback function and
          * signaling the event object.
+         *
+         * Implementation note: The parameters 'cntData' and 'errorCode' are 
+         * ignored on Windows, as this information can be retrieved using 
+         * WSAGetOverlappedResult in AsyncSocket::endAsync().
          *
          * @param cntData   The amount of data acutally sent/received.
          * @param errorCode 0 in case the operation completed successfully, an 
@@ -198,27 +247,23 @@ namespace net {
          */
         AsyncSocketContext& operator =(const AsyncSocketContext& rhs);
 
+        /** The event that is signaled on completion. */
+        vislib::sys::Event evt;
+        
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /** 
          * The size of the data packet sent or received.
-         *
-         * On Linux, this variable is used to describe the size of the input 
+         * This variable is used to describe the size of the input 
          * parameter as well as the return value of the operation.
-         *
-         * On Windows, it is only used to transport the return value.
          */
-        DWORD cntData;
+        int cntData;
 
         /**
          * An error code that may have been raised by the asynchronous send or
          * receive operation.
          */
-        DWORD errorCode;
+        int errorCode;
 
-        /** The event that is signaled on completion. */
-        vislib::sys::Event evt;
-
-        
-#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /** 
          * Passes the data pointer from AsyncSocket::BeginSend() or 
          * AsyncSocket::BeginReceive() to the worker thread.

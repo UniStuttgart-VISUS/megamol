@@ -1,7 +1,7 @@
 /*
  * AsyncSocketContext.cpp
  *
- * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 by Visualisierungsinstitut der Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
@@ -17,9 +17,12 @@
  * vislib::net::AsyncSocketContext::AsyncSocketContext
  */
 vislib::net::AsyncSocketContext::AsyncSocketContext(AsyncCallback callback,
-        void *userContext) : Super(callback, userContext), cntData(0), 
-        errorCode(0), evt(true) {
+        void *userContext) : Super(callback, userContext), evt(true) {
     VLSTACKTRACE("AsyncSocketContext::AsyncSocketContext", __FILE__, __LINE__);
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
+    this->cntData = 0;
+    this->errorCode = 0;
+#endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 }
 
 
@@ -61,13 +64,18 @@ void vislib::net::AsyncSocketContext::notifyCompleted(const DWORD cntData,
         "asynchronous socket operation with return value %u for "
         "%u Bytes ...\n", errorCode, cntData);
 
-    // Remember the result of the operation.
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
+    /* Remember the result of the operation. */
     this->cntData = cntData;
     this->errorCode = errorCode;
+#endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
-    // TODO: CALLBACK
+    /* Call the callback if set. */
+    if (this->callback != NULL) {
+        this->callback(this);
+    }
 
-    // Signal the event.
+    /* Signal the event. */
     this->evt.Set();
 }
 

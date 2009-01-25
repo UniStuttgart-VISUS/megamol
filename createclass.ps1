@@ -81,7 +81,7 @@ $CPPContent = "/*
  *
  * Copyright (C) 2006 - "
  $CPPContent += $curYear
- $CPPContent += " by Universitaet Stuttgart (VIS). 
+ $CPPContent += " by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -115,7 +115,7 @@ $HContent = "/*
  *
  * Copyright (C) 2006 - "
  $HContent += $curYear
- $HContent += " by Universitaet Stuttgart (VIS). 
+ $HContent += " by Visualisierungsinstitut Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  */
 

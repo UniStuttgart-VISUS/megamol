@@ -1,7 +1,7 @@
 /*
  * AsyncSocket.h
  *
- * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 by Visualisierungsinstitut der Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
@@ -16,7 +16,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-//#define VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN
+// Note: #define VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN for testing the Linux
+// implementationg using the VISlib thread pool on Windows. This is not
+// recommended for production use as it does not make any sense with regard
+// to the system performance.
 
 
 #include "vislib/Socket.h"  // Must be first.
@@ -38,6 +41,10 @@ namespace net {
      * operations in an asynchronous manner.
      *
      * It is safe to call the synchronous methods on this socket, too.
+     *
+     * Note: For an example on how the AsyncSocketContext must be used to
+     * complete pending asynchronous socket I/O, see the documentation of 
+     * AsyncSocketContext.
      *
      * Rationale: The asynchronous operations are not included in the standard
      * socket class as these require additional resources that are not required
@@ -231,7 +238,10 @@ namespace net {
          *                               failed.
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        SIZE_T EndReceive(AsyncSocketContext *context);
+        inline SIZE_T EndReceive(AsyncSocketContext *context) {
+            VLSTACKTRACE("AsyncSocket::EndReceive", __FILE__, __LINE__);
+            return this->endAsync(context);
+        }
 
         /**
          * Completes an asynchronous send operation. This method must be 
@@ -247,7 +257,10 @@ namespace net {
          *                               failed.
          * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        SIZE_T EndSend(AsyncSocketContext *context);
+        inline SIZE_T EndSend(AsyncSocketContext *context) {
+            VLSTACKTRACE("AsyncSocket::EndSend", __FILE__, __LINE__);
+            return this->endAsync(context);
+        }
 
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /**
@@ -415,7 +428,7 @@ namespace net {
          * @return *this.
          */
         AsyncSocket& operator =(const AsyncSocket& rhs) {
-            VLSTACKTRACE("AsyncSocket::opertor =", __FILE__, __LINE__);
+            VLSTACKTRACE("AsyncSocket::operator =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -490,7 +503,24 @@ namespace net {
          * @return 0 in case of success, an OS error code otherwise.
          */
         static DWORD sendFunc(void *asyncSocketContext);
+#endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
+        /**
+         * Completes an asynchronous operation. This method implements the 
+         * common functionality of EndReceive() and EndSend()
+         *
+         * @param context The context object of an asynchronous receive 
+         *                operation.
+         *
+         * @return The number of bytes actually received or sent.
+         *
+         * @throws SocketException       If the previously initiated operation 
+         *                               failed.
+         * @throws IllegalParamException If 'context' is a NULL pointer.
+         */
+        SIZE_T endAsync(AsyncSocketContext *context);
+
+#if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /** This lock ensures exclusive receive access on Linux. */
         vislib::sys::CriticalSection lockRecv;
 

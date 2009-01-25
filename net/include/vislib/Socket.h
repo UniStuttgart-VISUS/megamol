@@ -50,37 +50,37 @@ namespace net {
 
         /** The supported protocols. */
         enum Protocol {
-            PROTOCOL_IP = IPPROTO_IP,               // IPv4.
-            PROTOCOL_HOPOPTS = IPPROTO_HOPOPTS,     // IPv6 hop-by-hop options.
-            PROTOCOL_ICMP = IPPROTO_ICMP,           // Control message protocol.
-            PROTOCOL_IGMP = IPPROTO_IGMP,           // Internet group mgmnt.
+            PROTOCOL_IP = IPPROTO_IP,               //!< IPv4.
+            PROTOCOL_HOPOPTS = IPPROTO_HOPOPTS,     //!< IPv6 hop-by-hop options.
+            PROTOCOL_ICMP = IPPROTO_ICMP,           //!< Control message protocol.
+            PROTOCOL_IGMP = IPPROTO_IGMP,           //!< Internet group mgmnt.
             //PROTOCOL_GGP = IPPROTO_GGP,             // Gateway^2 (deprecated).
 #ifdef _WIN32
             PROTOCOL_IPV4 = IPPROTO_IPV4,           // IPv4.
 #endif /* _WIN32 */
-            PROTOCOL_TCP = IPPROTO_TCP,             // TCP.
-            PROTOCOL_PUP = IPPROTO_PUP,             // PUP.
-            PROTOCOL_UDP = IPPROTO_UDP,             // User Datagram Protocol.
-            PROTOCOL_IDP = IPPROTO_IDP,             // XNS IDP.
-            PROTOCOL_IPV6 = IPPROTO_IPV6,           // IPv6.
-            PROTOCOL_ROUTING = IPPROTO_ROUTING,     // IPv6 routing header.
-            PROTOCOL_FRAGMENT = IPPROTO_FRAGMENT,   // IPv6 fragmentation hdr.
-            PROTOCOL_ESP = IPPROTO_ESP,             // IPsec ESP header.
-            PROTOCOL_AH = IPPROTO_AH,               // IPsec AH.
-            PROTOCOL_ICMPV6 = IPPROTO_ICMPV6,       // ICMPv6.
-            PROTOCOL_NONE = IPPROTO_NONE,           // IPv6 no next header.
-            PROTOCOL_DSTOPTS = IPPROTO_DSTOPTS,     // IPv6 destination options.
-            //PROTOCOL_ND = IPPROTO_ND,             // UNOFFICIAL net disk prot.
+            PROTOCOL_TCP = IPPROTO_TCP,             //!< TCP.
+            PROTOCOL_PUP = IPPROTO_PUP,             //!< PUP.
+            PROTOCOL_UDP = IPPROTO_UDP,             //!< User Datagram Protocol.
+            PROTOCOL_IDP = IPPROTO_IDP,             //!< XNS IDP.
+            PROTOCOL_IPV6 = IPPROTO_IPV6,           //!< IPv6.
+            PROTOCOL_ROUTING = IPPROTO_ROUTING,     //!< IPv6 routing header.
+            PROTOCOL_FRAGMENT = IPPROTO_FRAGMENT,   //!< IPv6 fragmentation hdr.
+            PROTOCOL_ESP = IPPROTO_ESP,             //!< IPsec ESP header.
+            PROTOCOL_AH = IPPROTO_AH,               //!< IPsec AH.
+            PROTOCOL_ICMPV6 = IPPROTO_ICMPV6,       //!< ICMPv6.
+            PROTOCOL_NONE = IPPROTO_NONE,           //!< IPv6 no next header.
+            PROTOCOL_DSTOPTS = IPPROTO_DSTOPTS,     //!< IPv6 destination options.
+            //PROTOCOL_ND = IPPROTO_ND,             //!< UNOFFICIAL net disk prot.
             //PROTOCOL_ICLFXBM = IPPROTO_ICLFXBM,
-            PROTOCOL_RAW = IPPROTO_RAW              // Raw IP packet.
+            PROTOCOL_RAW = IPPROTO_RAW              //!< Raw IP packet.
         };
 
 
         /** The supported protocol families. */
         enum ProtocolFamily {
-            FAMILY_UNSPEC = PF_UNSPEC,      // Unspecified.
+            FAMILY_UNSPEC = PF_UNSPEC,      //!< Unspecified.
             //FAMILY_UNIX = PF_UNIX,
-            FAMILY_INET = PF_INET,          // UDP, TCP etc. version 4.
+            FAMILY_INET = PF_INET,          //!< UDP, TCP etc. version 4.
             //FAMILY_IMPLINK = PF_IMPLINK,
             //FAMILY_PUP = PF_PUP,
             //FAMILY_CHAOS = PF_CHAOS,
@@ -102,7 +102,7 @@ namespace net {
             //FAMILY_UNKNOWN1 = PF_UNKNOWN1,
             //FAMILY_BAN = PF_BAN,
             //FAMILY_ATM = PF_ATM,
-            FAMILY_INET6 = PF_INET6     // Internet version 6.
+            FAMILY_INET6 = PF_INET6     //!< Internet version 6.
         };
 
 

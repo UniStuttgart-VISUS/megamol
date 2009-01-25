@@ -1,7 +1,7 @@
 /*
  * AsyncSocket.cpp
  *
- * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 by Visualisierungsinstitut der Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
@@ -185,46 +185,6 @@ void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr,
     context->setDgramParams(this, &toAddr, data, cntBytes, timeout, flags);
     this->threadPool.QueueUserWorkItem(AsyncSocket::receiveFunc, context);
 #endif /* (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
-}
-
-
-/*
- * vislib::net::AsyncSocket::EndReceive
- */
-SIZE_T vislib::net::AsyncSocket::EndReceive(AsyncSocketContext *context) {
-    VLSTACKTRACE("AsyncSocket::EndReceive", __FILE__, __LINE__);
-
-    /* Sanity checks. */
-    if (context == NULL) {
-        throw IllegalParamException("context", __FILE__, __LINE__);
-    }
-
-    /* Check for success of the operation. */
-    if (context->errorCode != 0) {
-        throw SocketException(context->errorCode, __FILE__, __LINE__);
-    }
-
-    return context->cntData;
-}
-
-
-/*
- * vislib::net::AsyncSocket::EndSend
- */
-SIZE_T vislib::net::AsyncSocket::EndSend(AsyncSocketContext *context) {
-    VLSTACKTRACE("AsyncSocket::EndSend", __FILE__, __LINE__);
-
-    /* Sanity checks. */
-    if (context == NULL) {
-        throw IllegalParamException("context", __FILE__, __LINE__);
-    }
-
-    /* Check for success of the operation. */
-    if (context->errorCode != 0) {
-        throw SocketException(context->errorCode, __FILE__, __LINE__);
-    }
-
-    return context->cntData;
 }
 
 
@@ -458,3 +418,33 @@ DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
     return retval;
 }
 #endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
+
+
+/*
+ * vislib::net::AsyncSocket::endAsync
+ */
+SIZE_T vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
+    VLSTACKTRACE("AsyncSocket::endAsync", __FILE__, __LINE__);
+    DWORD retval = 0;
+    DWORD flags = 0;
+
+    /* Sanity checks. */
+    if (context == NULL) {
+        throw IllegalParamException("context", __FILE__, __LINE__);
+    }
+
+    /* Check for success of the operation. */
+#if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
+    if (!::WSAGetOverlappedResult(this->handle, 
+            static_cast<WSAOVERLAPPED *>(*context), &retval, TRUE, &flags)) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+#else /* (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
+    if (context->errorCode != 0) {
+        throw SocketException(context->errorCode, __FILE__, __LINE__);
+    }
+    retval = static_cast<DWORD>(context->cntData);
+#endif /* (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
+
+    return static_cast<SIZE_T>(retval);
+}

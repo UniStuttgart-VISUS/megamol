@@ -166,10 +166,10 @@ namespace sys {
         }
 #endif /* _WIN32 */
 
-    private:
-
         /** The callback function to be called once the operation completed. */
         AsyncCallback callback;
+
+    private:
 
 #ifdef _WIN32
         /** The OVERLAPPED structure that is used by Win32 API functions. */
