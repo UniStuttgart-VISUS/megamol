@@ -102,7 +102,7 @@ namespace math {
          * @return The z-coordinate of the center point of the sphere.
          */
         inline T GetCenterZ(void) const {
-            return this->xyrz[IDX_Z];
+            return this->xyzr[IDX_Z];
         }
 
         /**
@@ -121,6 +121,19 @@ namespace math {
          */
         template<class Sp> 
         void SetCenter(const AbstractPoint<T, 3, Sp>& center);
+
+        /**
+         * Set the center point of the sphere.
+         *
+         * @param x The x-coordinate of the center point of the sphere.
+         * @param y The y-coordinate of the center point of the sphere.
+         * @param z The z-coordinate of the center point of the sphere.
+         */
+        inline void SetCenter(const T x, const T y, const T z) {
+            this->xyzr[IDX_X] = x;
+            this->xyzr[IDX_Y] = y;
+            this->xyzr[IDX_Z] = z;
+        }
 
         /**
          * Set the x-coordinate of the center point of the sphere.
