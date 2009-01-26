@@ -14,6 +14,7 @@
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
+#include "vislib/unreferenced.h"
 
 
 /*
@@ -427,6 +428,10 @@ SIZE_T vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
     VLSTACKTRACE("AsyncSocket::endAsync", __FILE__, __LINE__);
     DWORD retval = 0;
     DWORD flags = 0;
+
+#ifndef _WIN32
+    VL_UNREFERENCED_LOCAL_VARIABLE(flags);
+#endif /* _WIN32 */
 
     /* Sanity checks. */
     if (context == NULL) {

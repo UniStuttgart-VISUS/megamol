@@ -177,13 +177,14 @@ vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
     if ((err = ::getnameinfo(reinterpret_cast<struct sockaddr *>(&addr),
             sizeof(struct sockaddr_in6), buffer, sizeof(buffer), NULL, 0,
             NI_NUMERICHOST)) != 0) {
-#ifdef _WIN32
-        char *errStr = ::gai_strerrorA(err);            
-#else /* _WIN32 */
-        char *errStr = ::gai_strerror(err)
-#endif /* _WIN32 */
         VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
-            "IPAddress6::ToStringA(): %s\n", errStr);
+            "IPAddress6::ToStringA(): %s\n",
+#ifdef _WIN32
+            ::gai_strerrorA(err)
+#else /* _WIN32 */
+            ::gai_strerror(err)
+#endif /* _WIN32 */
+        );
         buffer[0] = 0;
     }
 

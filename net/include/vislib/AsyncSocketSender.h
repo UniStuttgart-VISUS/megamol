@@ -129,8 +129,19 @@ namespace net {
                 sys::Event *evt, const bool doNotCopy,
                 const INT timeout = Socket::TIMEOUT_INFINITE,
                 const INT flags = 0, const bool forceSend = true) {
-            this->Send(data, cntBytes, AsyncSocketSender::onSendCompleted,
+            this->Send(data, cntBytes, AsyncSocketSender::onSendCompletedEvt,
                 evt, doNotCopy, timeout, flags, forceSend);
+        }
+
+        /**
+         * TODO
+         */
+        inline void Send(const void *data, const SIZE_T cntBytes,
+                sys::Semaphore *semaphore, const bool doNotCopy,
+                const INT timeout = Socket::TIMEOUT_INFINITE,
+                const INT flags = 0, const bool forceSend = true) {
+            this->Send(data, cntBytes, AsyncSocketSender::onSendCompletedSem,
+                semaphore, doNotCopy, timeout, flags, forceSend);    
         }
 
         /**
@@ -229,7 +240,19 @@ namespace net {
          * @param cntBytesSent
          * @param userContext
          */
-        static void onSendCompleted(const DWORD result, const void *data,
+        static void onSendCompletedEvt(const DWORD result, const void *data,
+            const SIZE_T cntBytesSent, void *userContext);
+
+        /**
+         * Internal completed callback that is used to unlock a Semaphore 
+         * passed as 'userContext'.
+         *
+         * @param result
+         * @param data
+         * @param cntBytesSent
+         * @param userContext
+         */
+        static void onSendCompletedSem(const DWORD result, const void *data,
             const SIZE_T cntBytesSent, void *userContext);
 
         /**

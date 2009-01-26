@@ -159,7 +159,11 @@ DWORD vislib::sys::Thread::GetExitCode(void) const {
  */
 bool vislib::sys::Thread::IsRunning(void) const {
     try {
+#ifdef _WIN32
         return ((this->handle != NULL)
+#else /* _WIN32 */
+        return ((this->id != 0)
+#endif /* _WIN32 */
             && (this->GetExitCode() == STILL_ACTIVE));
     } catch (SystemException) {
         return false;

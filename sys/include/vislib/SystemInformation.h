@@ -13,6 +13,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#ifndef _WIN32
+#include <X11/Xlib.h>
+#endif /* !_WIN32 */
 
 #include "vislib/Array.h"
 #include "vislib/Rectangle.h"
@@ -273,6 +276,19 @@ namespace sys {
         }
 
     private:
+
+#ifndef _WIN32
+        /**
+         * Open the root window of the specified X11 screen and answer its 
+         * location and dimension.
+         *
+         * @param dpy    The display.
+         * @param screen The screen number.
+         *
+         * @return The window rectangle.
+         */
+        static MonitorRect getRootWndRect(Display *dpy, int screen);
+#endif /* !_WIN32 */
 
 #ifdef _WIN32
         /** 

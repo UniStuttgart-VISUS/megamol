@@ -232,8 +232,7 @@ namespace vislib {
 
 
 #if defined(DEBUG) || defined(_DEBUG)
-#define VLTRACE(level, fmt, ...) vislib::Trace::GetInstance()(level, fmt,\
-    __VA_ARGS__)
+#define VLTRACE vislib::Trace::GetInstance()
 #else /* defined(DEBUG) || defined(_DEBUG) */
 #define VLTRACE(level, fmt, ...)
 #endif /* defined(DEBUG) || defined(_DEBUG) */

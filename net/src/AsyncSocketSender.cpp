@@ -246,12 +246,23 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
 
 
 /*
- * vislib::net::AsyncSocketSender::onSendCompleted
+ * vislib::net::AsyncSocketSender::onSendCompletedEvt
  */
-void vislib::net::AsyncSocketSender::onSendCompleted(const DWORD result,
+void vislib::net::AsyncSocketSender::onSendCompletedEvt(const DWORD result,
         const void *data, const SIZE_T cntBytesSent, void *userContext) {
     if (userContext != NULL) {
         static_cast<sys::Event *>(userContext)->Set();
+    }
+}
+
+
+/*
+ * vislib::net::AsyncSocketSender::onSendCompletedSem
+ */
+void vislib::net::AsyncSocketSender::onSendCompletedSem(const DWORD result,
+        const void *data, const SIZE_T cntBytesSent, void *userContext) {
+    if (userContext != NULL) {
+        static_cast<sys::Semaphore *>(userContext)->Unlock();
     }
 }
 

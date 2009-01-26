@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <pwd.h>
-#include <X11/Xlib.h>
 #endif
 
 
@@ -192,14 +191,12 @@ DWORD vislib::sys::SystemInformation::MonitorRects(
             reinterpret_cast<LPARAM>(&outMonitorRects))) {
         throw SystemException(__FILE__, __LINE__);
     }
+
 #else /* _WIN32 */
-    throw MissingImplementationException("MonitorRects", __FILE__, __LINE__);
-    // TODO: This implementation is nonsense!! Must determine origin.
-
-    Display *dpy = NULL;
-    StringA errorDesc;
-    int cntScreens = 0;
-
+    int cntScreens = 0;         // # of attached screens.
+    Display *dpy = NULL;        // The display.
+    StringA errorDesc;          // For formatting an error message.
+    
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
         errorDesc.Format("Could not open display \"%s\".", 
             ::XDisplayName(NULL));
@@ -208,8 +205,7 @@ DWORD vislib::sys::SystemInformation::MonitorRects(
 
     cntScreens = ScreenCount(dpy);
     for (int i = 0; i < cntScreens; i++) {
-        outMonitorRects.Append(MonitorRect(0, 0, DisplayWidth(dpy, i), 
-            DisplayHeight(dpy, i)));
+        outMonitorRects.Append(SystemInformation::getRootWndRect(dpy, i));
     }
     
     ::XCloseDisplay(dpy);
@@ -312,9 +308,6 @@ vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
     }
 
 #else /* _WIN32 */
-    throw MissingImplementationException("PrimaryMonitorRect", __FILE__, __LINE__);
-    // TODO: This implementation is nonsense!! Must determine origin.
-    int dftScreen = 0;
     Display *dpy = NULL;
     StringA errorDesc;
 
@@ -324,9 +317,7 @@ vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
         throw Exception(errorDesc, __FILE__, __LINE__);
     }
 
-    dftScreen = DefaultScreen(dpy);
-    retval.Set(0, 0, DisplayWidth(dpy, dftScreen), 
-        DisplayHeight(dpy, dftScreen));
+    retval = SystemInformation::getRootWndRect(dpy, DefaultScreen(dpy));
     ::XCloseDisplay(dpy);
 #endif /* _WIN32 */
 
@@ -590,6 +581,24 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
     outName = tmpStr;
 #endif
 }
+
+
+#ifndef _WIN32
+/*
+ * vislib:sys::SystemInformation::getRootWndRect
+ */
+vislib::sys::SystemInformation::MonitorRect 
+vislib::sys::SystemInformation::getRootWndRect(Display *dpy, int screen) {
+    XWindowAttributes attribs;  // Attributes of screen root window.
+    Window wnd;                 // The per-screen root window.
+    
+    wnd = RootWindow(dpy, screen);
+    ::XGetWindowAttributes(dpy, wnd, &attribs);
+    // TODO: Error handling.
+
+    return MonitorRect(attribs.x, attribs.y, attribs.width, attribs.height);
+}
+#endif /* !_WIN32 */
 
 
 #ifdef _WIN32
