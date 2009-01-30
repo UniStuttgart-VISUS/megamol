@@ -281,6 +281,12 @@ void TestStringA(void) {
     s2.Format(&s1, 3);
     AssertTrue("Format with vislib format string", !::strcmp(s2.PeekBuffer(), "Hugo 3"));
 
+	s1 = "The quick brown fox jumps over the lazy dog.";
+	s2 = s1;
+	s2.Rot48();
+	AssertNotEqual("Obfuscated is different", s1, s2);
+	s2.Rot48();
+	AssertEqual("Deobfuscated is equal to original", s1, s2);
 }
 
 void TestStringW(void) {
@@ -517,6 +523,13 @@ void TestStringW(void) {
     s1 = L"Hugo %d";
     s2.Format(&s1, 3);
     AssertTrue("Format with vislib format string", !::wcscmp(s2.PeekBuffer(), L"Hugo 3"));
+
+	s1 = L"The quick brown fox jumps over the lazy dog.";
+	s2 = s1;
+	s2.Rot48();
+	AssertNotEqual("Obfuscated is different", s1, s2);
+	s2.Rot48();
+	AssertEqual("Deobfuscated is equal to original", s1, s2);
 }
 
 void TestUTF8String(void) {
