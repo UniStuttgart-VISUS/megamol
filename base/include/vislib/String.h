@@ -748,11 +748,11 @@ namespace vislib {
             return this->Replace(oldStr.data, newChar, limit);
         }
 
-		/**
-		 * Obfuscate the string by applying Rot48. This works only on
-		 * characters between 32 and 127.
-		 */
-		void Rot48(void);
+        /**
+         * Obfuscate the string by applying Rot48. This works only on
+         * characters between 32 and 127.
+         */
+        void Rot48(void);
 
         /**
          * Answer whether this string starts with the character 'c'.
@@ -1876,16 +1876,16 @@ namespace vislib {
     }
 
 
-	/*
-	 * String<T>::Rot48
-	 */
-	template<class T> void String<T>::Rot48(void) {
-		for (Char *c = this->data; *c != 0; c++) {
-			if ((*c > 31) && (*c < 128)) {
-				*c = static_cast<Char>(((*c - 32 + 48) % 96) + 32);
-			}
-		}
-	}
+    /*
+     * String<T>::Rot48
+     */
+    template<class T> void String<T>::Rot48(void) {
+        for (Char *c = this->data; *c != 0; c++) {
+            if ((*c > 31) && (*c < 128)) {
+                *c = static_cast<Char>(((*c - 32 + 48) % 96) + 32);
+            }
+        }
+    }
 
 
     /*
