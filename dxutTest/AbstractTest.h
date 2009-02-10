@@ -49,6 +49,18 @@ public:
         bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
         INT nMouseWheelDelta, INT xPos, INT yPos);
 
+    /**
+     * The TestManager will call this method once a test has been disabled
+     * (by the user) and after the final OnD3D9LostDevice() call was made.
+     */
+    virtual void OnTestDisable(void);
+    
+    /**
+     * The TestManager will call this method before a test is enabled (by the 
+     * user) and before the first call to OnD3D9ResetDevice().
+     */
+    virtual void OnTestEnable(void);
+
 protected:
 
     AbstractTest(const vislib::StringW& name);

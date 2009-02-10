@@ -13,6 +13,7 @@
 #include "vislib/SocketException.h"
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
+#include "vislib/unreferenced.h"
 
 #include "messagereceiver.h"
 
@@ -184,6 +185,7 @@ SIZE_T vislib::net::cluster::AbstractClientNode::forEachPeer(
         func(this, this->serverAddress, this->socket, context);
         retval = 1;
     } catch (Exception& e) {
+        VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
         VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
             "with an exception: %s\n", e.GetMsgA());
     } catch (...) {
@@ -206,6 +208,7 @@ bool vislib::net::cluster::AbstractClientNode::forPeer(
             func(this, this->serverAddress, this->socket, context);
             retval = true;
         } catch (Exception& e) {
+            VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
             VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed "
                 "with an exception: %s\n", e.GetMsgA());
         } catch (...) {

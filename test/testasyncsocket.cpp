@@ -77,7 +77,7 @@ DWORD Sender::Run(void *userData) {
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
-        return cnt;
+        return static_cast<DWORD>(cnt);
     } catch (...) {
         return 0;
     }
@@ -145,7 +145,7 @@ DWORD Receiver::Run(void *userData) {
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
-        return cnt;
+        return static_cast<DWORD>(cnt);
     } catch (...) {
         return 0;
     }

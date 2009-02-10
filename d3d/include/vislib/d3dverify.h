@@ -60,21 +60,21 @@
  *
  * @param call The call to test.
  */
-#ifdef V
-#define D3D_VERIFY(call) V(call)
-#else /* V */
+//#ifdef V
+//#define D3D_VERIFY(call) V(call)
+//#else /* V */
 #define D3D_VERIFY(call) VERIFY(D3D_SUCCEEDED(__d3dv_hr = (call)))
-#endif /* V */
+//#endif /* V */
 
 
 
-#ifdef V_RETURN
-#define D3D_VERIFY_RETURN(call) V_RETURN(call)
-#else /* V_RETURN */
+//#ifdef V_RETURN
+//#define D3D_VERIFY_RETURN(call) V_RETURN(call)
+//#else /* V_RETURN */
 #define D3D_VERIFY_RETURN(call) if (D3D_FAILED(__d3dv_hr = (call))) {          \
     return __d3dv_hr;                                                          \
 }
-#endif /* V_RETURN */
+//#endif /* V_RETURN */
 
 
 #define D3D_VERIFY_THROW(call) if (D3D_FAILED(__d3dv_hr = (call))) {           \

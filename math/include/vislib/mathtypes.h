@@ -34,9 +34,16 @@ namespace math {
 
     /** Enumeration for halfspaces. */
     enum HalfSpace { 
-        HALFSPACE_NEGATIVE = -1, // Halfspace opposite of normal.
-        HALFSPACE_IN_PLANE = 0,  // No halfspace, but plane itself.
-        HALFSPACE_POSITIVE = 1   // Halfspace in normal direction.
+        HALFSPACE_NEGATIVE = -1, //< Halfspace opposite of normal.
+        HALFSPACE_IN_PLANE = 0,  //< No halfspace, but plane itself.
+        HALFSPACE_POSITIVE = 1   //< Halfspace in normal direction.
+    };
+
+    /** Enumeration for coordinate system types. */
+    enum CoordSystemType {
+        COORD_SYS_LEFT_HANDED = 1,  //< Identify a left-handed system 
+                                    //  (Direct3D default).
+        COORD_SYS_RIGHT_HANDED      //< Identify a right-handed system (OpenGL).
     };
 
 

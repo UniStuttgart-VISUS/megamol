@@ -84,6 +84,20 @@ void AbstractTest::OnMouse(bool bLeftButtonDown, bool bRightButtonDown,
 
 
 /*
+ * AbstractTest::OnTestDisable
+ */
+void AbstractTest::OnTestDisable(void) {
+}
+
+
+/*
+ * AbstractTest::OnTestEnable
+ */
+void AbstractTest::OnTestEnable(void) {
+}
+
+
+/*
  * AbstractTest::AbstractTest
  */
 AbstractTest::AbstractTest(const vislib::StringW& name) 

@@ -146,7 +146,9 @@ void TestManager::RegisterTests(CDXUTComboBox *comboBox) {
 bool TestManager::SetActiveTest(const SIZE_T activeTest) {
     if (activeTest < this->tests.Count()) {
         this->tests[this->activeTest]->OnD3D9LostDevice();
+        this->tests[this->activeTest]->OnTestDisable();
         this->activeTest = activeTest;
+        this->tests[this->activeTest]->OnTestEnable();
         this->tests[this->activeTest]->OnD3D9ResetDevice(::DXUTGetD3D9Device(),
             &this->surfaceDesc);
 
