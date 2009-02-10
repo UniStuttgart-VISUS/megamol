@@ -11,6 +11,7 @@
 
 
 /* Default values */
+#define DEFAULT_COORD_SYS_TYPE  math::COORD_SYS_RIGHT_HANDED
 #define DEFAULT_EYE             LEFT_EYE
 #define DEFAULT_FAR_CLIP        10.0f
 #define DEFAULT_FOCAL_DIST      1.0f
@@ -32,7 +33,8 @@
  * vislib::graphics::CameraParamsStore::CameraParamsStore
  */
 vislib::graphics::CameraParamsStore::CameraParamsStore(void) 
-        : CameraParameters(), eye(DEFAULT_EYE), farClip(DEFAULT_FAR_CLIP), 
+        : CameraParameters(), coordSysType(DEFAULT_COORD_SYS_TYPE),
+        eye(DEFAULT_EYE), farClip(DEFAULT_FAR_CLIP),
         focalDistance(DEFAULT_FOCAL_DIST), front(DEFAULT_FRONT), 
         halfApertureAngle(DEFAULT_HALF_AP_ANGLE), 
         halfStereoDisparity(DEFAULT_HALF_DISPARITY), 
@@ -94,6 +96,15 @@ void vislib::graphics::CameraParamsStore::ApplyLimits(void) {
 
 
 /*
+ * vislib::graphics::CameraParamsStore::CoordSystemType
+ */
+vislib::math::CoordSystemType
+vislib::graphics::CameraParamsStore::CoordSystemType(void) const {
+    return this->coordSysType;
+}
+
+
+/*
  * vislib::graphics::CameraParamsStore::Eye
  */
 vislib::graphics::CameraParameters::StereoEye 
@@ -135,6 +146,9 @@ vislib::graphics::CameraParamsStore::EyeRightVector(void) const {
     math::Vector<SceneSpaceType, 3> eyeright 
         = this->EyeDirection().Cross(this->EyeUpVector());
     eyeright.Normalise();
+    if (this->CoordSystemType() == math::COORD_SYS_LEFT_HANDED) {
+        eyeright *= static_cast<SceneSpaceType>(-1);
+    }
     return eyeright;
 }
 
@@ -149,7 +163,9 @@ vislib::graphics::CameraParamsStore::EyePosition(void) const {
         return this->position;
     } else {
         return this->position + (this->right * (this->halfStereoDisparity
-            * ((this->eye == RIGHT_EYE) ? 1.0f : -1.0f) ));
+            * ((this->Eye() == RIGHT_EYE)
+            ? static_cast<SceneSpaceType>(1) 
+            : static_cast<SceneSpaceType>(-1)) ));
     }
 }
 
@@ -261,6 +277,7 @@ vislib::graphics::CameraParamsStore::Projection(void) const {
  * vislib::graphics::CameraParamsStore::Reset
  */
 void vislib::graphics::CameraParamsStore::Reset(void) {
+    this->coordSysType = DEFAULT_COORD_SYS_TYPE;
     this->eye = DEFAULT_EYE;
     this->farClip = DEFAULT_FAR_CLIP;
     this->focalDistance = DEFAULT_FOCAL_DIST;
@@ -339,6 +356,19 @@ void vislib::graphics::CameraParamsStore::SetClip(
     this->farClip = farClip;
 
     this->syncNumber++;
+}
+
+
+/*
+ * vislib::graphics::CameraParamsStore::SetCoordSystemType
+ */
+void vislib::graphics::CameraParamsStore::SetCoordSystemType(
+        vislib::math::CoordSystemType coordSysType) {
+    if (this->coordSysType != coordSysType) {
+        this->coordSysType = coordSysType;
+        this->right *= static_cast<SceneSpaceType>(-1);
+        this->syncNumber++;
+    }
 }
 
 
@@ -512,6 +542,9 @@ void vislib::graphics::CameraParamsStore::SetUp(const
     this->right.Normalise();
     this->up = this->right.Cross(this->front);
     this->up.Normalise();
+    if (this->CoordSystemType() == math::COORD_SYS_LEFT_HANDED) {
+        this->right *= static_cast<SceneSpaceType>(-1);
+    }
 
     this->syncNumber++;
 }
@@ -552,6 +585,9 @@ void vislib::graphics::CameraParamsStore::SetView(const
     this->right.Normalise();
     this->up = this->right.Cross(this->front);
     this->up.Normalise(); // should not be neccessary, but to be sure (inaccuracy)
+    if (this->CoordSystemType() == math::COORD_SYS_LEFT_HANDED) {
+        this->right *= static_cast<SceneSpaceType>(-1);
+    }
 
     this->syncNumber++;
 }
@@ -617,6 +653,7 @@ vislib::graphics::CameraParamsStore::VirtualViewSize(void) const {
 vislib::graphics::CameraParamsStore& 
 vislib::graphics::CameraParamsStore::operator=(
         const vislib::graphics::CameraParamsStore& rhs) {
+    this->coordSysType = rhs.coordSysType;
     this->eye = rhs.eye;
     this->farClip = rhs.farClip;
     this->focalDistance = rhs.focalDistance;
@@ -645,6 +682,7 @@ vislib::graphics::CameraParamsStore::operator=(
 vislib::graphics::CameraParamsStore& 
 vislib::graphics::CameraParamsStore::operator=(
         const vislib::graphics::CameraParameters& rhs) {
+    this->coordSysType = rhs.CoordSystemType();
     this->eye = rhs.Eye();
     this->farClip = rhs.FarClip();
     this->focalDistance = rhs.FocalDistance();
@@ -672,7 +710,8 @@ vislib::graphics::CameraParamsStore::operator=(
  */
 bool vislib::graphics::CameraParamsStore::operator==(
         const vislib::graphics::CameraParamsStore& rhs) const {
-    return ((this->eye == rhs.eye)
+    return ((this->coordSysType == rhs.coordSysType)
+        && (this->eye == rhs.eye)
         && (this->farClip == rhs.farClip)
         && (this->focalDistance == rhs.focalDistance)
         && (this->front == rhs.front)

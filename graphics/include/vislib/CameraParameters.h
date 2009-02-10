@@ -76,7 +76,7 @@ namespace graphics {
          */
         inline math::AngleDeg ApertureAngle(void) const {
             return math::AngleRad2Deg(this->HalfApertureAngle()
-                * static_cast<vislib::math::AngleRad>(2));            
+                * static_cast<vislib::math::AngleRad>(2));
         }
 
         /**
@@ -104,6 +104,13 @@ namespace graphics {
             SceneSpaceType border);
 
         /**
+         * Answer the coordinate system type of the camera.
+         *
+         * @return the coordinate system type of the camera.
+         */
+        virtual math::CoordSystemType CoordSystemType(void) const = 0;
+
+        /**
          * Copies all values from 'src' into this object.
          *
          * @param src The source object to copy from.
@@ -120,6 +127,7 @@ namespace graphics {
         inline void CopyFrom(const CameraParameters *src) {
             this->SetApertureAngle(src->ApertureAngle());
             this->SetClip(src->NearClip(), src->FarClip());
+            this->SetCoordSystemType(src->CoordSystemType());
             this->SetProjection(src->Projection());
             this->SetStereoParameters(src->StereoDisparity(), src->Eye(), src->FocalDistance());
             this->SetView(src->Position(), src->LookAt(), src->Up());
@@ -167,7 +175,8 @@ namespace graphics {
 
         /**
          * Calculates and returns the real eye looking direction taking stereo
-         * projection mode and stereo disparity into account.
+         * projection mode and stereo disparity into account. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The real eye looking direction.
          */
@@ -175,7 +184,8 @@ namespace graphics {
 
         /**
          * Calculates and returns the real eye position taking stereo 
-         * projection mode and stereo disparity into account.
+         * projection mode and stereo disparity into account. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The real eye position.
          */
@@ -269,7 +279,8 @@ namespace graphics {
         virtual void ResetTileRect(void) = 0;
 
         /** 
-         * Answer the normalised right vector of the camera. 
+         * Answer the normalised right vector of the camera. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The normalised right vector of the camera. 
          */
@@ -303,6 +314,13 @@ namespace graphics {
          * @param farClip the distance to the far clipping plane.
          */
         virtual void SetClip(SceneSpaceType nearClip, SceneSpaceType farClip) = 0;
+
+        /**
+         * Sets the coordinate system type the camera is used in.
+         *
+         * @param coordSysType The new coordinate system type to use.
+         */
+        virtual void SetCoordSystemType(math::CoordSystemType coordSysType) = 0;
 
         /**
          * Sets the eye for stereo projection.

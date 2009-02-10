@@ -46,6 +46,16 @@ void vislib::graphics::CameraParamsOverride::ApplyLimits(void) {
 
 
 /*
+ * vislib::graphics::CameraParamsOverride::CoordSystemType
+ */
+vislib::math::CoordSystemType
+vislib::graphics::CameraParamsOverride::CoordSystemType(void) const {
+    ASSERT(!this->base.IsNull());
+    return this->base->CoordSystemType();
+}
+
+
+/*
  * vislib::graphics::CameraParamsOverride::Eye
  */
 vislib::graphics::CameraParameters::StereoEye 
@@ -90,6 +100,9 @@ vislib::graphics::CameraParamsOverride::EyeRightVector(void) const {
     math::Vector<SceneSpaceType, 3> eyeright 
         = this->EyeDirection().Cross(this->EyeUpVector());
     eyeright.Normalise();
+    if (this->CoordSystemType() == math::COORD_SYS_LEFT_HANDED) {
+        eyeright *= static_cast<SceneSpaceType>(-1);
+    }
     return eyeright;
 }
 
@@ -106,7 +119,9 @@ vislib::graphics::CameraParamsOverride::EyePosition(void) const {
     } else {
         return this->Position() + (this->Right() 
             * (this->HalfStereoDisparity()
-            * ((this->Eye() == RIGHT_EYE) ? 1.0f : -1.0f) ));
+            * ((this->Eye() == RIGHT_EYE)
+            ? static_cast<SceneSpaceType>(1) 
+            : static_cast<SceneSpaceType>(-1)) ));
     }
 }
 
@@ -307,6 +322,16 @@ void vislib::graphics::CameraParamsOverride::SetClip(
         vislib::graphics::SceneSpaceType farClip) {
     ASSERT(!this->base.IsNull());
     this->base->SetClip(nearClip, farClip);
+}
+
+
+/*
+ * vislib::graphics::CameraParamsOverride::SetCoordSystemType
+ */
+void vislib::graphics::CameraParamsOverride::SetCoordSystemType(
+        vislib::math::CoordSystemType coordSysType) {
+    ASSERT(!this->base.IsNull());
+    this->base->SetCoordSystemType(coordSysType);
 }
 
 

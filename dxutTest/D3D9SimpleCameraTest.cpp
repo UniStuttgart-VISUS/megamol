@@ -24,6 +24,7 @@ D3D9SimpleCameraTest::D3D9SimpleCameraTest(void)
     using vislib::graphics::MouseInteractionAdapter;
 
     this->mia = new MouseInteractionAdapter(this->camera.Parameters());
+    this->camera.Parameters()->SetCoordSystemType(vislib::math::COORD_SYS_LEFT_HANDED);
     //this->mia->ConfigureRotation(MouseInteractionAdapter::ROTATION_FREE);
 }
 

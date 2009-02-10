@@ -62,6 +62,13 @@ namespace graphics {
         virtual void ApplyLimits(void);
 
         /**
+         * Answer the coordinate system type of the camera.
+         *
+         * @return the coordinate system type of the camera.
+         */
+        virtual math::CoordSystemType CoordSystemType(void) const;
+
+        /**
          * Answer the eye for stereo projections.
          *
          * @return The eye for stereo projections.
@@ -86,7 +93,8 @@ namespace graphics {
 
         /**
          * Calculates and returns the real eye looking direction taking stereo
-         * projection mode and stereo disparity into account.
+         * projection mode and stereo disparity into account. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The real eye looking direction.
          */
@@ -94,7 +102,8 @@ namespace graphics {
 
         /**
          * Calculates and returns the real eye position taking stereo 
-         * projection mode and stereo disparity into account.
+         * projection mode and stereo disparity into account. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The real eye position.
          */
@@ -188,7 +197,8 @@ namespace graphics {
         virtual void ResetTileRect(void);
 
         /** 
-         * Answer the normalised right vector of the camera. 
+         * Answer the normalised right vector of the camera. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The normalised right vector of the camera. 
          */
@@ -208,6 +218,13 @@ namespace graphics {
          * @param farClip the distance to the far clipping plane.
          */
         virtual void SetClip(SceneSpaceType nearClip, SceneSpaceType farClip);
+
+        /**
+         * Sets the coordinate system type the camera is used in.
+         *
+         * @param coordSysType The new coordinate system type to use.
+         */
+        virtual void SetCoordSystemType(math::CoordSystemType coordSysType);
 
         /**
          * Sets the eye for stereo projection.
@@ -388,6 +405,9 @@ namespace graphics {
 
     private:
 
+        /** The coordinate system type of the camera */
+        math::CoordSystemType coordSysType;
+
         /** eye for stereo projections */
         StereoEye eye;
 
@@ -442,7 +462,7 @@ namespace graphics {
          */
         math::Vector<SceneSpaceType, 3> up;
 
-        /** the size of the full virtual view */         
+        /** the size of the full virtual view */
         math::Dimension<ImageSpaceType, 2> virtualViewSize;
 
     };

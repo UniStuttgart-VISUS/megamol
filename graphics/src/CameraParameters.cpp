@@ -99,6 +99,8 @@ void vislib::graphics::CameraParameters::Deserialise(
     // TODO: Add name parameters
     serialiser.Deserialise(f0, "ApertureAngle");
     this->SetApertureAngle(f0);
+    serialiser.Deserialise(i, "CoordSystemType");
+    this->SetCoordSystemType(static_cast<math::CoordSystemType>(i));
     serialiser.Deserialise(f0, "NearClip");
     serialiser.Deserialise(f1, "FarClip");
     this->SetClip(f0, f1);
@@ -137,6 +139,7 @@ void vislib::graphics::CameraParameters::Deserialise(
 void vislib::graphics::CameraParameters::Serialise(
         vislib::Serialiser& serialiser) const {
     serialiser.Serialise((float)this->ApertureAngle(), "ApertureAngle");
+    serialiser.Serialise((INT32)this->CoordSystemType(), "CoordSystemType");
     serialiser.Serialise((float)this->NearClip(), "NearClip");
     serialiser.Serialise((float)this->FarClip(), "FarClip");
     serialiser.Serialise((INT32)this->Projection(), "Projection");

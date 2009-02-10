@@ -86,6 +86,16 @@ void vislib::graphics::ObservableCameraParams::BeginBatchInteraction(void) {
 
 
 /*
+ * vislib::graphics::ObservableCameraParams::CoordSystemType
+ */
+vislib::math::CoordSystemType
+vislib::graphics::ObservableCameraParams::CoordSystemType(void) const {
+    ASSERT(!this->observed.IsNull());
+    return this->observed->CoordSystemType();
+}
+
+
+/*
  * vislib::graphics::ObservableCameraParams::EndBatchInteraction
  */
 void vislib::graphics::ObservableCameraParams::EndBatchInteraction(void) {
@@ -321,6 +331,18 @@ void vislib::graphics::ObservableCameraParams::SetClip(
     this->resumeFire();
     this->fireChanged(DIRTY_NEARCLIP | DIRTY_FARCLIP);
 
+}
+
+
+/*
+ * vislib::graphics::ObservableCameraParams::SetCoordSystemType
+ */
+void vislib::graphics::ObservableCameraParams::SetCoordSystemType(
+        vislib::math::CoordSystemType coordSysType) {
+    this->suspendFire();
+    this->observed->SetCoordSystemType(coordSysType);
+    this->resumeFire();
+    this->fireChanged(DIRTY_COORDSYSTEMTYPE);
 }
 
 
@@ -568,6 +590,12 @@ const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_ALL
  */
 const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE
     = 0x00000001;
+
+/*
+ * vislib::graphics::ObservableCameraParams::DIRTY_COORDSYSTEMTYPE
+ */
+const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_COORDSYSTEMTYPE
+    = 0x00002000;
 
 
 /*

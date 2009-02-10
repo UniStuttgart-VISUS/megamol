@@ -95,6 +95,13 @@ namespace graphics {
         virtual void BeginBatchInteraction(void);
 
         /**
+         * Answer the coordinate system type of the camera.
+         *
+         * @return the coordinate system type of the camera.
+         */
+        virtual math::CoordSystemType CoordSystemType(void) const;
+
+        /**
          * Ends a batch interaction and fires all pending events.
          */
         virtual void EndBatchInteraction(void);
@@ -124,7 +131,8 @@ namespace graphics {
 
         /**
          * Calculates and returns the real eye looking direction taking stereo
-         * projection mode and stereo disparity into account.
+         * projection mode and stereo disparity into account. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The real eye looking direction.
          */
@@ -132,7 +140,8 @@ namespace graphics {
 
         /**
          * Calculates and returns the real eye position taking stereo 
-         * projection mode and stereo disparity into account.
+         * projection mode and stereo disparity into account. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The real eye position.
          */
@@ -240,7 +249,8 @@ namespace graphics {
         virtual void ResetTileRect(void);
 
         /** 
-         * Answer the normalised right vector of the camera. 
+         * Answer the normalised right vector of the camera. This vector
+         * depends on the coordinate system type of the camera.
          *
          * @return The normalised right vector of the camera. 
          */
@@ -260,6 +270,13 @@ namespace graphics {
          * @param farClip the distance to the far clipping plane.
          */
         virtual void SetClip(SceneSpaceType nearClip, SceneSpaceType farClip);
+
+        /**
+         * Sets the coordinate system type the camera is used in.
+         *
+         * @param coordSysType The new coordinate system type to use.
+         */
+        virtual void SetCoordSystemType(math::CoordSystemType coordSysType);
 
         /**
          * Sets the eye for stereo projection.
@@ -444,6 +461,9 @@ namespace graphics {
 
         /** The dirty flag for the aperture angle. */
         static const UINT32 DIRTY_APERTUREANGLE;
+
+        /** The dirty flag for the coordinate system type */
+        static const UINT32 DIRTY_COORDSYSTEMTYPE;
 
         /** The dirty flag for the stereo eye. */
         static const UINT32 DIRTY_EYE;
