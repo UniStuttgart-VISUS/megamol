@@ -15,6 +15,7 @@
  * vislib::graphics::d3d::D3DCamera::D3DCamera
  */
 vislib::graphics::d3d::D3DCamera::D3DCamera(void) : Camera() {
+    this->Parameters()->SetCoordSystemType(math::COORD_SYS_LEFT_HANDED);
 }
 
 
@@ -138,10 +139,8 @@ bool vislib::graphics::d3d::D3DCamera::operator ==(const D3DCamera& rhs) const {
  */
 bool vislib::graphics::d3d::D3DCamera::updateCache(void) const {
     if (this->needUpdate()) {
-        this->cacheAt = this->Parameters()->EyeDirection();
-        this->cacheEye.Set(this->Parameters()->EyePosition().X(),
-            this->Parameters()->EyePosition().Y(),
-            this->Parameters()->EyePosition().Z());
+        this->cacheEye = this->Parameters()->EyePosition();
+        this->cacheAt = this->cacheEye + this->Parameters()->EyeDirection();
         this->cacheUp = this->Parameters()->EyeUpVector();
         this->CalcViewFrustum(this->cacheFrustum);
 

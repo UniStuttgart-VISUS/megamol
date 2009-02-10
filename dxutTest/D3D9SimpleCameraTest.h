@@ -16,13 +16,12 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <d3dx9shape.h>
-
 #include "vislib/D3DCamera.h"
 #include "vislib/D3DVISLogo.h"
 #include "vislib/MouseInteractionAdapter.h"
 
 #include "AbstractTest.h"
+#include "D3D9TestBoxGeometry.h"
 
 
 class D3D9SimpleCameraTest : public AbstractTest {
@@ -54,7 +53,7 @@ public:
 
 private:
 
-    LPD3DXMESH box;
+    D3D9TestBoxGeometry boxes;
 
     vislib::graphics::d3d::D3DCamera camera;
 

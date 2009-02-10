@@ -19,12 +19,10 @@
  * D3D9SimpleCameraTest::D3D9SimpleCameraTest
  */
 D3D9SimpleCameraTest::D3D9SimpleCameraTest(void)
-        : AbstractTest(L"Simple D3DCamera Test"), box(NULL), logo(NULL), 
-        mia(NULL) {
+        : AbstractTest(L"Simple D3DCamera Test"), logo(NULL), mia(NULL) {
     using vislib::graphics::MouseInteractionAdapter;
 
     this->mia = new MouseInteractionAdapter(this->camera.Parameters());
-    this->camera.Parameters()->SetCoordSystemType(vislib::math::COORD_SYS_LEFT_HANDED);
     //this->mia->ConfigureRotation(MouseInteractionAdapter::ROTATION_FREE);
 }
 
@@ -45,19 +43,17 @@ HRESULT D3D9SimpleCameraTest::OnD3D9CreateDevice(
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc) {
     using namespace vislib::graphics::d3d;
     USES_D3D_VERIFY;
-    ASSERT(this->box == NULL);
     ASSERT(this->logo == NULL);
 
     AbstractTest::OnD3D9CreateDevice(pd3dDevice, pBackBufferSurfaceDesc);
 
-    D3D_VERIFY_RETURN(::D3DXCreateBox(pd3dDevice, 2.0f, 0.2f, 1.0f, &this->box, 
-        NULL));
     if ((this->logo = new D3DVISLogo(pd3dDevice)) == NULL) {
         return E_OUTOFMEMORY;
     }
 
     try {
         this->logo->Create();
+        this->boxes.Create(pd3dDevice);
     } catch (D3DException e) {
         return e.GetResult();
     }
@@ -70,7 +66,7 @@ HRESULT D3D9SimpleCameraTest::OnD3D9CreateDevice(
  * D3D9SimpleCameraTest::OnD3D9DestroyDevice
  */
 void D3D9SimpleCameraTest::OnD3D9DestroyDevice(void) {
-    SAFE_RELEASE(this->box);
+    this->boxes.Release();
     SAFE_DELETE(this->logo);
 }
 
@@ -92,9 +88,9 @@ void D3D9SimpleCameraTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice,
 
     D3D_VERIFY_THROW(this->camera.ApplyViewTransform(pd3dDevice));
 
-    //D3D_VERIFY_THROW(pd3dDevice->SetTransform(D3DTS_PROJECTION, 
-    //    static_cast<D3DXMATRIX *>(this->camera.CalcProjectionMatrix(
-    //    projMatrix))));
+    D3D_VERIFY_THROW(pd3dDevice->SetTransform(D3DTS_PROJECTION, 
+        static_cast<D3DXMATRIX *>(this->camera.CalcProjectionMatrix(
+        projMatrix))));
 
     D3D_VERIFY_THROW(pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE));
     D3D_VERIFY_THROW(pd3dDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE));
@@ -102,8 +98,9 @@ void D3D9SimpleCameraTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice,
     D3D_VERIFY_THROW(pd3dDevice->SetRenderState(D3DRS_LIGHTING, FALSE));
     D3D_VERIFY_THROW(pd3dDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE));
 
-    //this->logo->Draw();
-    this->box->DrawSubset(0);
+    this->logo->Draw();
+
+    this->boxes.Draw();
 }
 
 
@@ -176,7 +173,7 @@ void D3D9SimpleCameraTest::OnTestEnable(void) {
     this->camera.Parameters()->SetApertureAngle(D3DX_PI / 2.0f);
     this->camera.Parameters()->SetVirtualViewSize(1.0f, 1.0f);
     this->camera.Parameters()->SetView(
-        SceneSpacePoint3D(0.0f, 0.0f, -2.0f),
+        SceneSpacePoint3D(0.0f, 0.0f, -10.0f),
         SceneSpacePoint3D(0.0f, 0.0f, 0.0f),
         SceneSpaceVector3D(0.0f, 1.0f, 0.0f));
 }

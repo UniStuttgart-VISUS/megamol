@@ -18,6 +18,7 @@
 
 #include "vislib/Camera.h"
 #include "vislib/D3DMatrix.h"
+#include "vislib/D3DPoint3D.h"
 #include "vislib/D3DVector3D.h"
 
 
@@ -85,7 +86,15 @@ namespace d3d {
             const bool isLeftHanded = true) const;
 
         /**
-         * TODO documentation
+         * Answer the view matrix for the camera.
+         *
+         * @param outMatrix    This parameter receives the matrix.
+         * @param isLeftHanded If true, return the matrix for a left-handed 
+         *                     coordinate system (which is D3D default), 
+         *                     otherwise construct a matrix for a right-handed
+         *                     system.
+         *
+         * @return The matrix 'outMatrix' is returned for convenience.
          */
         D3DMatrix& CalcViewMatrix(D3DMatrix& outMatrix,
             const bool isLeftHanded = true) const;
@@ -132,13 +141,13 @@ namespace d3d {
         /** Cached view frustum. */
         mutable SceneSpaceFrustum cacheFrustum;
 
-        /** Cached look at point. */ 
-        mutable D3DVector3D cacheAt;
+        /** Cached look at point (for the current eye). */ 
+        mutable D3DPoint3D cacheAt;
 
-        /** Cached viewer position */
-        mutable D3DVector3D cacheEye;
+        /** Cached viewer position (for the current eye). */
+        mutable D3DPoint3D cacheEye;
 
-        /** Cached up vector */
+        /** Cached up vector (for the current eye). */
         mutable D3DVector3D cacheUp;
 
     };

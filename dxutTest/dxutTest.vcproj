@@ -353,6 +353,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\D3D9TestBoxGeometry.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\D3D9VisLogoTest.cpp"
 				>
 			</File>
@@ -379,7 +383,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\D3D9TestBoxGeometry.h"
+				>
+			</File>
+			<File
 				RelativePath=".\D3D9VisLogoTest.h"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
@@ -392,6 +404,14 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\dxutTest.rc"
+				>
+			</File>
+			<File
+				RelativePath="..\icon\vislib.ico"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="DXUT"
