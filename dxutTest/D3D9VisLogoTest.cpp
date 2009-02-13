@@ -90,9 +90,10 @@ void D3D9VisLogoTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice,
     D3DXVECTOR3 lookAtVec(0.0f, 0.0f, 0.0f);    // Look at vector.
     D3DXVECTOR3 upVec(0.0f, 1.0f, 0.0f);        // Camera up vector.
 
-    D3DXMatrixRotationY(&tmpMatrix, this->angle);
-    D3DXMatrixRotationZ(&modelMatrix, D3DX_PI);
-    modelMatrix *= tmpMatrix;
+    D3DXMatrixRotationY(&modelMatrix, this->angle);
+    //D3DXMatrixRotationZ(&modelMatrix, -D3DX_PI);
+    //D3DXMatrixIdentity(&modelMatrix);
+    //modelMatrix *= tmpMatrix;
     D3D_VERIFY_THROW(pd3dDevice->SetTransform(D3DTS_WORLD, &modelMatrix));
 
     D3DXMatrixLookAtLH(&viewMatrix, &eyeVec, &lookAtVec, &upVec);
