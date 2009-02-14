@@ -82,11 +82,10 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
+			Name="Debug|x64"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -102,12 +101,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -141,10 +144,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
+			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -160,16 +164,12 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -272,6 +272,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractBitmapCodec.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractCameraController.cpp"
 				>
 			</File>
@@ -291,7 +295,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -299,7 +303,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -325,6 +329,10 @@
 			</File>
 			<File
 				RelativePath=".\src\AbstractVISLogo.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\BitmapImage.cpp"
 				>
 			</File>
 			<File
@@ -400,6 +408,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PpmBitmapCodec.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ZoomToRectangle.cpp"
 				>
 			</File>
@@ -409,6 +421,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\vislib\AbstractBitmapCodec.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractCameraController.h"
 				>
@@ -431,6 +447,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractVISLogo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\BitmapImage.h"
 				>
 			</File>
 			<File
@@ -510,6 +530,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\PpmBitmapCodec.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\ZoomToRectangle.h"
 				>
 			</File>
@@ -532,7 +556,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -540,7 +564,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool

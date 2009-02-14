@@ -32,4 +32,6 @@ void TestPathManipulations(void);
 
 void TestFileNameSequence(void);
 
+void TestBitmapCodecSimple(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

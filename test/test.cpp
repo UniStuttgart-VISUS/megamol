@@ -85,6 +85,8 @@ VislibTest tests[] = {
     {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
     {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
+    // graphics
+    {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},

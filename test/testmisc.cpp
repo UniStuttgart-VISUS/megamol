@@ -21,6 +21,9 @@
 #include "vislib/Path.h"
 #include "vislib/Trace.h"
 #include "vislib/FileNameSequence.h"
+#include "vislib/BitmapImage.h"
+#include "vislib/PpmBitmapCodec.h"
+#include "vislib/RawStorage.h"
 
 // #define USE_UNICODE_COLUMNFORMATTER
 
@@ -578,4 +581,83 @@ void TestFileNameSequence(void) {
         printf("Autodetection failed (Sequence is invalid).\n");
     }
     //*/
+}
+
+
+/*
+ * TestBitmapCodecSimple
+ */
+void TestBitmapCodecSimple(void) {
+    using vislib::graphics::PpmBitmapCodec;
+    using vislib::graphics::BitmapImage;
+    using vislib::RawStorage;
+
+    const unsigned char bmpdata1[] = {
+          0,  0,  0,  85,  0,  0, 170,  0,  0, 255,  0,  0,
+          0, 85,  0,  85, 85,  0, 170, 85,  0, 255, 85,  0,
+          0,170,  0,  85,170,  0, 170,170,  0, 255,170,  0,
+          0,255,  0,  85,255,  0, 170,255,  0, 255,255,  0
+    };
+
+    const unsigned char bmpdata2[] = {
+          0,  0,  0,  85,  0,  0, 170,  0,  0, 255,  0,  0,
+          0,  0, 85,  85,  0, 85, 170,  0, 85, 255,  0, 85,
+          0,  0,170,  85,  0,170, 170,  0,170, 255,  0,170,
+          0,  0,255,  85,  0,255, 170,  0,255, 255,  0,255
+    };
+
+    PpmBitmapCodec codec;
+    BitmapImage img(4, 4, 3, BitmapImage::CHANNELTYPE_BYTE, NULL);
+    RawStorage mem;
+    img.SetChannelLabel(0, BitmapImage::CHANNEL_RED);
+    img.SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
+    img.SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
+    memcpy(img.PeekData(), bmpdata1, 4 * 4 *3);
+    codec.Image() = &img;
+
+    codec.SetSaveOption(true);
+    AssertTrue("Working with binary PPM", codec.GetSaveOption());
+    AssertTrue("Codec can store to memory", codec.CanSaveToMemory());
+    AssertTrue("Codec can load from memory", codec.CanLoadFromMemory());
+    AssertTrue("Bitmap data stored in image", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
+
+    AssertTrue("Image stored in memory", codec.Save(mem));
+    AssertTrue("Memory not empty", mem.GetSize() > 0);
+    AssertTrue("Image data not changed", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
+
+    memcpy(img.PeekData(), bmpdata2, 4 * 4 *3);
+    AssertTrue("Image data updated (1/2)", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) != 0);
+    AssertTrue("Image data updated (2/2)", memcmp(img.PeekData(), bmpdata2, 4 * 4 * 3) == 0);
+
+    AssertTrue("Image loaded from memory", codec.Load(mem));
+    AssertTrue("Memory not cleared", mem.GetSize() > 0);
+    AssertTrue("Image data restored (1/2)", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
+    AssertTrue("Image data restored (2/2)", memcmp(img.PeekData(), bmpdata2, 4 * 4 * 3) != 0);
+
+    codec.SetSaveOption(false);
+    AssertFalse("Working with ASCII PPM", codec.GetSaveOption());
+    AssertTrue("Codec can store to memory", codec.CanSaveToMemory());
+    AssertTrue("Codec can load from memory", codec.CanLoadFromMemory());
+    AssertTrue("Bitmap data stored in image", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
+
+    AssertTrue("Image stored in memory", codec.Save(mem));
+    AssertTrue("Memory not empty", mem.GetSize() > 0);
+    AssertTrue("Image data not changed", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
+
+    memcpy(img.PeekData(), bmpdata2, 4 * 4 *3);
+    AssertTrue("Image data updated (1/2)", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) != 0);
+    AssertTrue("Image data updated (2/2)", memcmp(img.PeekData(), bmpdata2, 4 * 4 * 3) == 0);
+
+    AssertTrue("Image loaded from memory", codec.Load(mem));
+    AssertTrue("Memory not cleared", mem.GetSize() > 0);
+    AssertTrue("Image data restored (1/2)", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
+    AssertTrue("Image data restored (2/2)", memcmp(img.PeekData(), bmpdata2, 4 * 4 * 3) != 0);
+
+    /* vislib::sys::File f;
+    if (f.Open("C:\\temp\\test.ppm", vislib::sys::File::WRITE_ONLY,
+            vislib::sys::File::SHARE_READ, vislib::sys::File::CREATE_OVERWRITE)) {
+        f.Write(mem, mem.GetSize());
+        f.Close();
+    } */
+
 }
