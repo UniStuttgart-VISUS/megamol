@@ -82,6 +82,9 @@ namespace graphics {
             switch (this->chanType) {
                 case CHANNELTYPE_WORD: base = 2; break;
                 case CHANNELTYPE_FLOAT: base = 4; break;
+#ifndef _WIN32
+                default: break;
+#endif /* !_WIN32 */
             }
             return base * this->numChans;
         }

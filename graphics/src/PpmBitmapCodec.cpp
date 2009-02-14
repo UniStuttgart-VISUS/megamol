@@ -7,6 +7,7 @@
  */
 
 #include "vislib/PpmBitmapCodec.h"
+#include <climits>
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/mathfunctions.h"
@@ -252,6 +253,9 @@ bool vislib::graphics::PpmBitmapCodec::Save(vislib::RawStorage& outmem) const {
                     cr = cg = cb = i;
                 }
                 break;
+#ifndef _WIN32
+            default: break;
+#endif /* !_WIN32 */
         }
     }
 
