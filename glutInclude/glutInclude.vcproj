@@ -24,28 +24,7 @@
 			IntermediateDirectory="Win32\$(ConfigurationName)"
 			ConfigurationType="10"
 			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-				CommandLine=""
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="Win32\$(ConfigurationName)"
-			IntermediateDirectory="Win32\$(ConfigurationName)"
-			ConfigurationType="10"
-			CharacterSet="2"
-			WholeProgramOptimization="1"
+			DeleteExtensionsOnClean="*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -67,6 +46,7 @@
 			IntermediateDirectory="Win64\$(ConfigurationName)"
 			ConfigurationType="10"
 			CharacterSet="2"
+			DeleteExtensionsOnClean="*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -84,11 +64,35 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="Win32\$(ConfigurationName)"
+			IntermediateDirectory="Win32\$(ConfigurationName)"
+			ConfigurationType="10"
+			CharacterSet="2"
+			DeleteExtensionsOnClean="*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				CommandLine=""
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|x64"
 			OutputDirectory="Win64\$(ConfigurationName)"
 			IntermediateDirectory="Win64\$(ConfigurationName)"
 			ConfigurationType="10"
 			CharacterSet="2"
+			DeleteExtensionsOnClean="*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -152,7 +156,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -160,7 +164,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -188,7 +192,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -196,7 +200,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -224,7 +228,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -232,7 +236,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -256,19 +260,9 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;"
+					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;"
-					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
+					Outputs=""
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -276,9 +270,19 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;"
+					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
+					Outputs=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
+					Outputs=""
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -286,9 +290,9 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;"
+					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
+					Outputs=""
 				/>
 			</FileConfiguration>
 		</File>
@@ -304,7 +308,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -312,7 +316,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
