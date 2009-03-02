@@ -557,7 +557,7 @@ namespace sys {
      * CmdLineProvider<T>::operator=
      */
     template<class T> CmdLineProvider<T>& CmdLineProvider<T>::operator=(const CmdLineProvider<T>& rhs) {
-        if (*rhs != this) {
+        if (&rhs != this) {
             this->clearArgumentList();
 
             this->storeCount = rhs.storeCount;
