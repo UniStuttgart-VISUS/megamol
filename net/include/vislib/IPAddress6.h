@@ -202,6 +202,11 @@ namespace net {
         /**
          * Answer whether the IP address is an IPv4-compatible IPv6 address.
          *
+         * An IPv6 address is IPv4 compatible if it is assigned to an IPv6/IPv4 
+         * node, which bears the high-order 96-bit prefix 0:0:0:0:0:0, and an
+         * IPv4 address in the low-order 32-bits. IPv4-compatible addresses are 
+         * used by the automatic tunneling mechanism.
+         *
          * @return true if the IPv6 address is an IPv4-compatible address,
          *         false otherwise.
          */
@@ -250,6 +255,18 @@ namespace net {
         inline StringW ToStringW(void) const {
             return StringW(this->ToStringA());
         }
+
+        /**
+         * If this IPv6 address is a mapped IPv4 address, i. e. if 
+         * this->IsV4Mapped() returns true, this method returns the mapped
+         * IPv4 address.
+         *
+         * @return The mapped IPv4 address.
+         *
+         * @throws IllegalStateException If this address is not a mapped IPv4
+         *                               address.
+         */
+        IPAddress UnmapV4Address(void) const;
 
         /**
          * Provides access to the single bytes of the IP address.
@@ -377,6 +394,20 @@ namespace net {
         inline operator struct in6_addr *(void) {
             return &this->address;
         }
+
+        /**
+         * Cast to an IPv4 address.
+         *
+         * This operation is only valid if the IPv6 address is either a mapped
+         * IPv4 address or if the IPv6 address is IPv4 compatible.
+         *
+         * @return The IPv4 address that is equivalent to this IPv6 address if 
+         *         such a conversion is possible.
+         *
+         * @throws IllegalStateException If the IPv6 address is neither an IPv4
+         *                               mapped address nor IPv4 compatible.
+         */
+        operator IPAddress(void) const;
 
     private:
 

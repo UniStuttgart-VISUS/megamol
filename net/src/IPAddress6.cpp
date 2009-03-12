@@ -10,6 +10,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/DNS.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
@@ -193,6 +194,20 @@ vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
 
 
 /*
+ * vislib::net::IPAddress6::UnmapV4Address
+ */
+vislib::net::IPAddress vislib::net::IPAddress6::UnmapV4Address(void) const {
+    if (this->IsV4Mapped()) {
+        return IPAddress(*reinterpret_cast<const in_addr *>(
+            this->address.s6_addr + 12));
+    } else {
+        throw IllegalStateException("The IPv6 address is not a mapped IPv4 "
+            "address.", __FILE__, __LINE__);
+    }
+}
+
+
+/*
  * vislib::net::IPAddress6::operator []
  */
 BYTE vislib::net::IPAddress6::operator [](const int i) const {
@@ -236,4 +251,17 @@ bool vislib::net::IPAddress6::operator ==(const struct in6_addr& rhs) const {
 #define IN6_ADDR_EQUAL IN6_ARE_ADDR_EQUAL
 #endif /* !_WIN32 */
     return (IN6_ADDR_EQUAL(&this->address, &rhs) != 0);
+}
+
+
+/*
+ * vislib::net::IPAddress6::IPAddress
+ */
+vislib::net::IPAddress6::operator vislib::net::IPAddress(void) const {
+    if (this->IsV4Compatible()) {
+        return IPAddress(*reinterpret_cast<const in_addr *>(
+            this->address.s6_addr + 12));
+    } else {
+        return this->UnmapV4Address();
+    }
 }
