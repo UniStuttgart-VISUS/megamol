@@ -64,6 +64,11 @@ CamRotatorTestApp::CamRotatorTestApp(void) : AbstractGlutApp(),
     this->rotator2.SetAltModifier(
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
 
+    this->mover.SetCameraParams(this->camera.Parameters());
+    this->mover.SetTestButton(2); // middle button
+    this->mover.SetModifierTestCount(0);
+    this->cursor.RegisterCursorEvent(&this->mover);
+
     this->SetupRotator2();
 }
 

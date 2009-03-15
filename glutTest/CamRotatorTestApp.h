@@ -14,6 +14,7 @@
 
 #include "AbstractGlutApp.h"
 #include "vislib/Camera.h"
+#include "vislib/CameraMove2D.h"
 #include "vislib/CameraOpenGL.h"
 #include "vislib/CameraRotate2D.h"
 #include "vislib/CameraRotate2DLookAt.h"
@@ -50,6 +51,7 @@ private:
     vislib::graphics::Cursor2D cursor;
     vislib::graphics::CameraRotate2D rotator1;
     vislib::graphics::CameraRotate2DLookAt rotator2;
+    vislib::graphics::CameraMove2D mover;
     CamParamObserver testObserver;
 
     void SetupRotator1(void);

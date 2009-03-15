@@ -56,7 +56,7 @@ namespace graphics {
             = SmartPtr<CameraParameters>());
 
         /** Dtor. */
-        ~CameraZoom2DMove(void);
+        virtual ~CameraZoom2DMove(void);
 
         /**
          * Answer the zooming behaviour.

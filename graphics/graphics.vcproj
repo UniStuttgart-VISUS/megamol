@@ -340,6 +340,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\CameraMove2D.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CameraParameterLimits.cpp"
 				>
 			</File>
@@ -455,6 +459,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Camera.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\CameraMove2D.h"
 				>
 			</File>
 			<File
