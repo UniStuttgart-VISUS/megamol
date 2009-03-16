@@ -183,7 +183,7 @@ namespace math {
 
         b = SIZE_T ((rand() / static_cast<double>(RAND_MAX)) * inData.Count());
         for (unsigned int j = 0; j <= MAX_PIVOT_ITERATIONS; j++) {
-            dist = 0;
+            dist = 0.0f;
             for (SIZE_T i = 0; i < inData.Count(); i++) {
                 tmpDist = calcDistanceSquared(dim, i, b);
                 if (tmpDist > dist) {
@@ -212,7 +212,8 @@ namespace math {
         for (currDim = 0; currDim < D; currDim++) {
             chooseDistant(currDim);
 
-            if (calcDistanceSquared(currDim, a[currDim], b[currDim]) == 0) {
+            //if (calcDistanceSquared(currDim, a[currDim], b[currDim]) == 0) {
+            if (vislib::math::IsEqual(calcDistanceSquared(currDim, a[currDim], b[currDim]), 0.0f)) {
                 for (SIZE_T i = 0; i < inData.Count(); i++) {
                     outData[i][currDim] = 0;
                 }
