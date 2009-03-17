@@ -396,6 +396,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Cursor2DRectLasso.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\FpsCounter.cpp"
 				>
 			</File>
@@ -515,6 +519,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Cursor2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\Cursor2DRectLasso.h"
 				>
 			</File>
 			<File
