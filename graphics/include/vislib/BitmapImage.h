@@ -117,6 +117,11 @@ namespace graphics {
             unsigned int channels, ChannelType type, const void *data);
 
         /**
+         * Flipps the image vertically
+         */
+        void FlipVertical(void);
+
+        /**
          * Answer the number of channels
          *
          * @return The number of channels
@@ -155,6 +160,45 @@ namespace graphics {
          */
         inline unsigned int Height(void) const {
             return this->height;
+        }
+
+        /**
+         * Labels three channels with the labels "CHANNEL_RED",
+         * "CHANNEL_GREEN", and "CHANNEL_BLUE".
+         *
+         * @param r The zero-based index of the channel to be labeled with
+         *          "CHANNEL_RED". Default is channel 0.
+         * @param g The zero-based index of the channel to be labeled with
+         *          "CHANNEL_GREEN". Default is channel 1.
+         * @param b The zero-based index of the channel to be labeled with
+         *          "CHANNEL_BLUE". Default is channel 2.
+         */
+        inline void LabelChannelsRGB(unsigned int r = 0, unsigned int g = 1,
+                unsigned int b = 2) {
+            this->SetChannelLabel(r, CHANNEL_RED);
+            this->SetChannelLabel(g, CHANNEL_GREEN);
+            this->SetChannelLabel(b, CHANNEL_BLUE);
+        }
+
+        /**
+         * Labels three channels with the labels "CHANNEL_RED",
+         * "CHANNEL_GREEN", "CHANNEL_BLUE", and "CHANNEL_ALPHA".
+         *
+         * @param r The zero-based index of the channel to be labeled with
+         *          "CHANNEL_RED". Default is channel 0.
+         * @param g The zero-based index of the channel to be labeled with
+         *          "CHANNEL_GREEN". Default is channel 1.
+         * @param b The zero-based index of the channel to be labeled with
+         *          "CHANNEL_BLUE". Default is channel 2.
+         * @param a The zero-based index of the channel to be labeled with
+         *          "CHANNEL_ALPHA". Default is channel 3.
+         */
+        inline void LabelChannelsRGBA(unsigned int r = 0, unsigned int g = 1,
+                unsigned int b = 2, unsigned int a = 3) {
+            this->SetChannelLabel(r, CHANNEL_RED);
+            this->SetChannelLabel(g, CHANNEL_GREEN);
+            this->SetChannelLabel(b, CHANNEL_BLUE);
+            this->SetChannelLabel(a, CHANNEL_ALPHA);
         }
 
         /**

@@ -93,3 +93,22 @@ void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
         ZeroMemory(this->data, len);
     }
 }
+
+
+/*
+ * vislib::graphics::BitmapImage::FlipVertical
+ */
+void vislib::graphics::BitmapImage::FlipVertical(void) {
+    unsigned int lineSize = this->width * this->BytesPerPixel();
+    unsigned int hh = this->height / 2;
+    unsigned int mh = this->height - 1;
+    unsigned char *tmpbuf = new unsigned char[lineSize];
+
+    for (unsigned int y = 0; y < hh; y++) {
+        memcpy(tmpbuf, this->data + (y * lineSize), lineSize);
+        memcpy(this->data + (y * lineSize), this->data + ((mh - y) * lineSize), lineSize);
+        memcpy(this->data + ((mh - y) * lineSize), tmpbuf, lineSize);
+    }
+
+    delete[] tmpbuf;
+}
