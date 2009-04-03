@@ -503,7 +503,13 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
  */
 vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
 #ifdef _WIN32
-    return Environment::GetVariable("TEMP", false);
+    char buffer[MAX_PATH + 1];
+    buffer[MAX_PATH] = buffer[0] = 0;
+    if (::GetTempPathA(MAX_PATH, buffer) > MAX_PATH) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+    return buffer;
+//    return Environment::GetVariable("TEMP", false);
 #else /* _WIN32 */
     return StringA("/tmp");
 #endif /* _WIN32 */
@@ -515,7 +521,13 @@ vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
  */
 vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
 #ifdef _WIN32
-    return Environment::GetVariable(L"TEMP", false);
+    wchar_t buffer[MAX_PATH + 1];
+    buffer[MAX_PATH] = buffer[0] = 0;
+    if (::GetTempPathW(MAX_PATH, buffer) > MAX_PATH) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+    return buffer;
+//    return Environment::GetVariable(L"TEMP", false);
 #else /* _WIN32 */
     return StringW(L"/tmp");
 #endif /* _WIN32 */
@@ -583,6 +595,7 @@ vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
 bool vislib::sys::Path::IsRelative(const StringA& path) {
 #ifdef _WIN32
     return (::PathIsRelativeA(path.PeekBuffer()) != FALSE)
+        || path.IsEmpty()
         || ((path.PeekBuffer()[0] == SEPARATOR_A) && (path.PeekBuffer()[1] != SEPARATOR_A));
 #else /* _WIN32 */
     return !path.StartsWith(SEPARATOR_A);
@@ -596,6 +609,7 @@ bool vislib::sys::Path::IsRelative(const StringA& path) {
 bool vislib::sys::Path::IsRelative(const StringW& path) {
 #ifdef _WIN32
     return (::PathIsRelativeW(path.PeekBuffer()) != FALSE)
+        || path.IsEmpty()
         || ((path.PeekBuffer()[0] == SEPARATOR_W) && (path.PeekBuffer()[1] != SEPARATOR_W));
 #else /* _WIN32 */
     return !path.StartsWith(SEPARATOR_W);
