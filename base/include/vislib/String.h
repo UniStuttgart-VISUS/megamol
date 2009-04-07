@@ -1194,8 +1194,12 @@ namespace vislib {
         }
             
         this->data = new Char[newLen + 1];
-        ::memcpy(this->data, data, newLen * T::CharSize());
-        this->data[newLen] = 0;
+        if (data != NULL) {
+            ::memcpy(this->data, data, newLen * T::CharSize());
+            this->data[newLen] = 0;
+        } else {
+            this->data[0] = 0;
+        }
     }
 
 
@@ -1218,7 +1222,12 @@ namespace vislib {
     template<class U> String<T>::String(const U *data) {
         Size newLen = CharTraits<U>::SafeStringLength(data) + 1;
         this->data = new Char[newLen];
-        CharTraits<U>::Convert(this->data, newLen, data);
+        if (newLen > 1) {
+            CharTraits<U>::Convert(this->data, newLen, data);
+        } else {
+            /* 'data' must be a NULL pointer. */
+            this->data[0] = 0;
+        }
     }
 
 
