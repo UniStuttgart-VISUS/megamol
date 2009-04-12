@@ -15,6 +15,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "vislib/types.h"
+
 
 namespace vislib {
 namespace graphics {
@@ -43,6 +45,24 @@ namespace graphics {
             CHANNELTYPE_FLOAT //< use 4 bytes per channel and pixel
         };
 
+        /** A BitmapImage template with Gray byte channels */
+        static const BitmapImage TemplateByteGray;
+
+        /** A BitmapImage template with RGB byte channels */
+        static const BitmapImage TemplateByteGrayAlpha;
+
+        /** A BitmapImage template with RGB byte channels */
+        static const BitmapImage TemplateByteRGB;
+
+        /** A BitmapImage template with RGBA byte channels */
+        static const BitmapImage TemplateByteRGBA;
+
+        /**
+         * Ctor. Creates an empty bitmap (channel count, width, and height
+         * zero).
+         */
+        BitmapImage(void);
+
         /**
          * Ctor. Generates a new bitmap.
          *
@@ -60,7 +80,25 @@ namespace graphics {
          *             (black/transparent) in all channels.
          */
         BitmapImage(unsigned int width, unsigned int height,
-            unsigned int channels, ChannelType type, const void *data);
+            unsigned int channels, ChannelType type, const void *data = NULL);
+
+        /**
+         * Ctor. Generates a new bitmap.
+         *
+         * If 'data' is not NULL, the memory it points to is interpreted
+         * according to the other parameters as array of scanlines where the
+         * data of the channels is stored interleaved.
+         *
+         * @param width The width in pixels
+         * @param height The height in pixels
+         * @param tmpl A BitmapImage object which will be used as template.
+         *             It's channel configuration will be used.
+         * @param data The data to initialize the image with. If this is NULL,
+         *             the image will be initialized with Zero
+         *             (black/transparent) in all channels.
+         */
+        BitmapImage(unsigned int width, unsigned int height,
+            const BitmapImage& tmpl, const void *data = NULL);
 
         /**
          * Copy ctor. Creates a deep copy of the source image.
@@ -68,6 +106,55 @@ namespace graphics {
          * @param src The source image to create the deep copy from.
          */
         explicit BitmapImage(const BitmapImage& src);
+
+        /**
+         * Ctor. Creates an empty bitmap (width and height are zero) with one
+         * channel of the specified type and label. This ctor can be used to
+         * create a BitmapImage object usable as template.
+         *
+         * @param type The type of the channels in this bitmap.
+         * @param label1 The label for the first channel.
+         */
+        BitmapImage(ChannelType type, ChannelLabel label1);
+
+        /**
+         * Ctor. Creates an empty bitmap (width and height are zero) with two
+         * channels of the specified type and label. This ctor can be used to
+         * create a BitmapImage object usable as template.
+         *
+         * @param type The type of the channels in this bitmap.
+         * @param label1 The label for the first channel.
+         * @param label2 The label for the second channel.
+         */
+        BitmapImage(ChannelType type, ChannelLabel label1,
+            ChannelLabel label2);
+
+        /**
+         * Ctor. Creates an empty bitmap (width and height are zero) with
+         * three channels of the specified type and label. This ctor can be
+         * used to create a BitmapImage object usable as template.
+         *
+         * @param type The type of the channels in this bitmap.
+         * @param label1 The label for the first channel.
+         * @param label2 The label for the second channel.
+         * @param label3 The label for the thrid channel.
+         */
+        BitmapImage(ChannelType type, ChannelLabel label1,
+            ChannelLabel label2, ChannelLabel label3);
+
+        /**
+         * Ctor. Creates an empty bitmap (width and height are zero) with four
+         * channels of the specified type and label. This ctor can be used to
+         * create a BitmapImage object usable as template.
+         *
+         * @param type The type of the channels in this bitmap.
+         * @param label1 The label for the first channel.
+         * @param label2 The label for the second channel.
+         * @param label3 The label for the thrid channel.
+         * @param label4 The label for the fourth channel.
+         */
+        BitmapImage(ChannelType type, ChannelLabel label1,
+            ChannelLabel label2, ChannelLabel label3, ChannelLabel label4);
 
         /** Dtor. */
         ~BitmapImage(void);
@@ -90,11 +177,31 @@ namespace graphics {
         }
 
         /**
-         *  Creates a deep copy of the source image.
+         * Creates a deep copy of the source image.
          *
          * @param src The source image to create the deep copy from.
          */
         void CopyFrom(const BitmapImage& src);
+
+        /**
+         * Converts this BitmapImage to match the channel type and channel
+         * labels of the template 'tmpl'.
+         *
+         * @param tmpl The template object defining the targeted channel type
+         *             and channel labels.
+         */
+        void Convert(const BitmapImage& tmpl);
+
+        /**
+         * Copies the image data from the source BitmapImage 'src' to this
+         * BitmapImage and converts the data to match the channel type and
+         * channel labels of the template 'tmpl'.
+         *
+         * @param src The source BitmapImage.
+         * @param tmpl The template object defining the targeted channel type
+         *             and channel labels.
+         */
+        void ConvertFrom(const BitmapImage& src, const BitmapImage& tmpl);
 
         /**
          * Generates a new bitmap. This overwrites all data previously stored
@@ -114,7 +221,26 @@ namespace graphics {
          *             (black/transparent) in all channels.
          */
         void CreateImage(unsigned int width, unsigned int height,
-            unsigned int channels, ChannelType type, const void *data);
+            unsigned int channels, ChannelType type, const void *data = NULL);
+
+        /**
+         * Generates a new bitmap. This overwrites all data previously stored
+         * in the bitmap.
+         *
+         * If 'data' is not NULL, the memory it points to is interpreted
+         * according to the other parameters as array of scanlines where the
+         * data of the channels is stored interleaved.
+         *
+         * @param width The width in pixels
+         * @param height The height in pixels
+         * @param tmpl A BitmapImage object which will be used as template.
+         *             It's channel configuration will be used.
+         * @param data The data to initialize the image with. If this is NULL,
+         *             the image will be initialized with Zero
+         *             (black/transparent) in all channels.
+         */
+        void CreateImage(unsigned int width, unsigned int height,
+            const BitmapImage& tmpl, const void *data = NULL);
 
         /**
          * Flipps the image vertically
