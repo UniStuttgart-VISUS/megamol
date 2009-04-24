@@ -141,6 +141,19 @@ bool vislib::net::IPAddress::operator ==(const IPAddress& rhs) const {
 
 
 /*
+ * vislib::net::IPAddress::operator &=
+ */
+vislib::net::IPAddress& vislib::net::IPAddress::operator &=(
+        const IPAddress& mask) {
+#ifdef _WIN32
+    this->address.S_un.S_addr &= mask.address.S_un.S_addr;
+#else /* _WIN32 */
+    this->address.s_addr &= mask.address.s_addr;
+#endif /* _WIN32 */
+    return *this;
+}
+
+/*
  * vislib::net::IPAddress::IPAddress
  */
 vislib::net::IPAddress::IPAddress(const unsigned long address) {

@@ -208,6 +208,28 @@ namespace net {
             return &this->address;
         }
 
+        /**
+         * Applies a subnet mask on this IP address.
+         *
+         * @param mask The subnet mask.
+         *
+         * @return *this.
+         */
+        IPAddress& operator &=(const IPAddress& mask);
+
+        /**
+         * Applies a subnet mask to this IP address and returns the result.
+         *
+         * @param mask The subnet mask.
+         *
+         * @return The IP address with the subnet mask applied.
+         */
+        inline IPAddress operator &(const IPAddress& mask) const {
+            IPAddress retval(*this);
+            retval &= mask;
+            return retval;
+        }
+
     private:
 
         /**

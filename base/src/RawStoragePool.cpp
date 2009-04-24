@@ -63,7 +63,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
             bestFit = &n;
             bestDist = n.storage->GetSize() - size;
 
-        } else if (n.storage->GetSize() == 0) {
+        } else if (n.storage->GetSize() == size) {
             bestFit = &n;
             break;  // Cannot find any better fit.
         }
