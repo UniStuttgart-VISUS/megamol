@@ -959,7 +959,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     ::strncpy_s(request.SenderBody.Name, MAX_NAME_LEN, ds->name.PeekBuffer(),
         MAX_NAME_LEN);
 #else /* (_MSC_VER >= 1400) */
-    ::strncpy(request.SenderBody.Name, ds->Name.PeekBuffer(), MAX_NAME_LEN);
+    ::strncpy(request.SenderBody.Name, ds->name.PeekBuffer(), MAX_NAME_LEN);
 #endif /* (_MSC_VER >= 1400) */
 
 
