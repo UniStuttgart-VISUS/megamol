@@ -21,6 +21,7 @@
 #include "GlutServer.h"
 #include "PlainClient.h"
 #include "PlainServer.h"
+#include "DiscoveryTestApp.h"
 
 
 void usage(const TCHAR *app, vislib::sys::TCmdLineParser& parser) {
@@ -67,8 +68,9 @@ int main(int argc, char **argv) {
         Option::FLAG_UNIQUE | Option::FLAG_REQUIRED,
         ValueDesc::ValueList(Option::STRING_VALUE, _T("name"), 
         _T("The name of the test mode to run. This can be one of ")
-        _T("\"plainserver\", \"plainclient\",")
-        _T("\"glutserver\" or \"glutclient\".")));
+        _T("\"plainserver\", \"plainclient\", ")
+        _T("\"glutserver\", \"glutclient\", ")
+        _T("\"discovery\".")));
     parser.AddOption(&optTest);
 
     int parseResult = parser.Parse(argc, argv);
@@ -94,6 +96,9 @@ int main(int argc, char **argv) {
             } else if (val.Equals(_T("plainclient"), false)) {
                 PlainClient::GetInstance().Initialise(cmdLine);
                 return PlainClient::GetInstance().Run();
+            } else if (val.Equals(_T("discovery"), false)) {
+                DiscoveryTestApp::GetInstance().Initialise(cmdLine);
+                return DiscoveryTestApp::GetInstance().Run();
             }
         } catch (vislib::Exception& e) {
             std::cerr << e.GetMsgA() << " @ " << e.GetFile() << ":" 

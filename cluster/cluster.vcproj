@@ -303,6 +303,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DiscoveryListener.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\DiscoveryService.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\messagereceiver.cpp"
 				>
 			</File>
@@ -334,6 +342,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\clustermessages.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\DiscoveryListener.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\DiscoveryService.h"
 				>
 			</File>
 			<File
