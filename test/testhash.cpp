@@ -81,6 +81,23 @@ void TestMD5(void) {
     std::cout << "Hash is " << hash.ToStringA() << std::endl;
     AssertEqualCaseInsensitive("MD5 string equal to reference", hash.ToStringA(), "57edf4a22be3c955ac49da2e2107b67a");
 
+
+    // strange code™
+    MD5HashProvider hash2;
+    hashSize = hash2.GetHashSize();
+    BYTE *hashVal = new BYTE[hashSize];
+    TEXT = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+    hash2.TransformFinalBlock(hashVal, hashSize, reinterpret_cast<const BYTE*>(TEXT), ::strlen(TEXT));
+    // hash2.GetHashValue(hashVal, hashSize); <= with this line the code works! Why?
+    vislib::StringA hashStr, tmp;
+    for (SIZE_T i =0; i < hashSize; i++) {
+        tmp.Format("%.2x", hashVal[i]);
+        hashStr += tmp;
+    }
+    delete[] hashVal;
+    AssertEqualCaseInsensitive("MD5 string equal to reference", hashStr, "57edf4a22be3c955ac49da2e2107b67a");
+
+
 }
 
 
