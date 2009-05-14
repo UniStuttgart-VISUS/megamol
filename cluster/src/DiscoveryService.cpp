@@ -791,7 +791,6 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx(
     } catch (...) {
     }
     try {
-        // TODO: Check this 
         this->recvThread.Terminate(true);
     } catch (...) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Error while forcefully terminating "
@@ -1154,7 +1153,7 @@ void vislib::net::cluster::DiscoveryService::fireUserMessage(
         this->listenersCritSect.Unlock();
     }
     
-    this->peerNodesCritSect.Lock();
+    this->peerNodesCritSect.Unlock();
 }
 
 
