@@ -76,9 +76,14 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::decrementResponseChances(
         void) {
     if (this->cntResponseChances > 0) {
         this->cntResponseChances--;
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Response chances for %s decremented "
+            "to %d.\n", this->responseAddress.ToStringA().PeekBuffer(),
+            this->cntResponseChances);
+        return true;
+
+    } else {
+        return false;
     }
-    
-    return (this->cntResponseChances != 0);
 }
 
 
@@ -597,8 +602,8 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
             Socket::PROTOCOL_UDP);
         this->socket.SetBroadcast(true);
         this->socket.SetReuseAddr(true);
-        this->socket.SetExclusiveAddrUse(
-            !config->GetDiscoveryService().IsShareSockets());
+//        this->socket.SetExclusiveAddrUse(
+//            !config->GetDiscoveryService().IsShareSockets());
         this->socket.Bind(config->GetBindAddress());
         //socket.SetLinger(false, 0);     // Force hard close.
     } catch (SocketException e) {
@@ -791,7 +796,9 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx(
     } catch (...) {
     }
     try {
-        this->recvThread.Terminate(true);
+        if (this->recvThread.IsRunning()) {   
+            this->recvThread.Terminate(true);
+        }
     } catch (...) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Error while forcefully terminating "
             "receiver thread.\n");
@@ -829,14 +836,19 @@ void
 vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
         Message& message, const IPEndPoint& to) {
     Socket *socket = NULL;
-
-    if (message.MsgType >= MSG_TYPE_USER) {
+    
+    // We use different sockets for discovery messages, which are broadcasted,
+    // and user messages, which might be unicasted. Both sockets are created
+    // lazily the first time they are used.
+    if (message.MsgType < MSG_TYPE_USER) {
         if (!this->socketSend.IsValid()) {
             // Create a bind address for the sender socket from the receiver 
             // address.
             IPEndPoint bindAddr(this->bindAddress, 0);
 
             try {
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Lazy creation of discovery "
+                    "service send socket.\n");
                 this->socketSend.Create(this->GetProtocolFamily(), 
                     Socket::TYPE_DGRAM, Socket::PROTOCOL_UDP);
                 this->socketSend.SetBroadcast(true);
@@ -850,11 +862,15 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
             }
         }
 
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Using broadcast socket for sending a "
+            "message to %s ...\n", to.ToStringA().PeekBuffer());
         socket = &this->socketSend;
 
     } else {
         if (!this->socketUserMsg.IsValid()) {
             try {
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Lazy creation of discovery "
+                    "service user message socket.\n");
                 this->socketUserMsg.Create(this->GetProtocolFamily(), 
                     Socket::TYPE_DGRAM, Socket::PROTOCOL_UDP);
             } catch (SocketException e) {
@@ -865,9 +881,11 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
             } 
         }
 
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Using user message socket for "
+            "sending a message to %s ...\n", to.ToStringA().PeekBuffer());
         socket = &this->socketUserMsg;
     }
-
+    
     socket->Send(to, &message, sizeof(Message));  
 }
 
@@ -974,7 +992,8 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         try {
             config.SendCustomisedMessage(request);
             VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
-                "MSG_TYPE_IAMHERE to %s.\n", 
+                "MSG_TYPE_IAMHERE (%s) to %s.\n", 
+                config.GetResponseAddress().ToStringA().PeekBuffer(),
                 config.GetBcastAddress().ToStringA().PeekBuffer());
         } catch (SocketException e) {
             VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
@@ -1021,7 +1040,8 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
             try {
                 config.SendCustomisedMessage(request);
                 VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
-                    "MSG_TYPE_IAMALIVE to %s.\n", 
+                    "MSG_TYPE_IAMALIVE (%s) to %s.\n", 
+                    config.GetResponseAddress().ToStringA().PeekBuffer(),
                     config.GetBcastAddress().ToStringA().PeekBuffer());
             } catch (SocketException e) {
                 VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
@@ -1203,6 +1223,9 @@ void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
 
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         if (this->peerNodes[i]->decrementResponseChances()) {
+            ASSERT(this->peerNodes[i]->isValid());
+            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Node %s lost, firing event ...\n",
+                this->peerNodes[i]->responseAddress.ToStringA().PeekBuffer());
             
             /* Fire event. */
             ConstIterator<ListenerList::Iterator> it 
