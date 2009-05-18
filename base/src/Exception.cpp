@@ -58,9 +58,9 @@ vislib::Exception::Exception(const Exception& rhs)
     this->setFile(rhs.file);
 
     if (rhs.isMsgUnicode) {
-        this->setMsg(static_cast<const wchar_t *>(rhs.msg));
+        this->setMsg(static_cast<const wchar_t *>(rhs.GetMsgW()));
     } else {
-        this->setMsg(static_cast<const char *>(rhs.msg));
+        this->setMsg(static_cast<const char *>(rhs.GetMsgA()));
     }
 
     if (rhs.stack != NULL) {
