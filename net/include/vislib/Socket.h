@@ -923,7 +923,9 @@ namespace net {
         }
 
         /**
-         * Allows the socket to be bound to an address that is already in use.
+         * Allows the socket to be bound to an address that is already in use 
+         * and in a TIME_WAIT state. This does not allow multiple servers to
+         * use the same address.
          *
          * @param enable The new activation state of the option.
          *

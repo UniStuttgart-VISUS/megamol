@@ -1222,7 +1222,7 @@ void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
     this->peerNodesCritSect.Lock();
 
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
-        if (this->peerNodes[i]->decrementResponseChances()) {
+        if (!this->peerNodes[i]->decrementResponseChances()) {
             ASSERT(this->peerNodes[i]->isValid());
             VLTRACE(Trace::LEVEL_VL_VERBOSE, "Node %s lost, firing event ...\n",
                 this->peerNodes[i]->responseAddress.ToStringA().PeekBuffer());

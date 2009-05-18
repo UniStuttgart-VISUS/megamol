@@ -64,10 +64,10 @@ void DiscoveryTestApp::OnNodeFound(const DiscoveryService& src,
         << std::endl
         << "Now, the following nodes are known to the service:" << std::endl;
     for (SIZE_T i = 0; i < src.CountPeers(); i++) {
-        std::cout << "\t" << src[hPeer].ToStringA().PeekBuffer() << std::endl;
+        std::cout << "\t" << src[i].ToStringA().PeekBuffer() << std::endl;
     }
 
-    const char *msg = "Hello, node!";
+    const char *msg = "Hello, nodes!";
     const_cast<DiscoveryService&>(src).SendUserMessage(
         DiscoveryService::MSG_TYPE_USER + 0, &msg, ::strlen(msg) + 1);
 
@@ -84,7 +84,7 @@ void DiscoveryTestApp::OnNodeLost(const DiscoveryService& src,
         << " lost peer node " << src[hPeer].ToStringA().PeekBuffer()
         << " for reason " << reason 
         << std::endl
-        << "Now, the following nodes are known to the service:" << std::endl;
+        << "from the following list of known nodes:" << std::endl;
     for (SIZE_T i = 0; i < src.CountPeers(); i++) {
         std::cout << "\t" << src[hPeer].ToStringA().PeekBuffer() << std::endl;
     }
@@ -130,7 +130,7 @@ DWORD DiscoveryTestApp::Run(void) {
         cfg = DiscoveryService::DiscoveryConfig(IPEndPoint(adapter, 40000), adapter);
 
         this->cds.AddListener(this);
-        this->cds.Start("CDS2Test", &cfg, 1, DiscoveryService::FLAG_SHARE_SOCKETS);
+        this->cds.Start("CDS2Test", &cfg, 1, 0/*DiscoveryService::FLAG_SHARE_SOCKETS*/);
 
         Socket::Cleanup();
     } catch (vislib::Exception& e) {
