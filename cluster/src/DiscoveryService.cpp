@@ -10,6 +10,7 @@
 #include "vislib/assert.h"
 #include "vislib/DiscoveryListener.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
@@ -474,8 +475,10 @@ UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
  */
 void vislib::net::cluster::DiscoveryService::Start(const char *name, 
         const DiscoveryConfig *configs, const SIZE_T cntConfigs,
+        const UINT cntExpectedNodes,
         const UINT32 flags,
         const UINT requestInterval,
+        const UINT requestIntervalIntensive,
         const UINT cntResponseChances) {
     // TODO: Check for restart
 
@@ -487,8 +490,13 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
         this->configs.Add(DiscoveryConfigEx(configs[i], this));
     }
 
+    this->cntExpectedNodes = cntExpectedNodes;
     this->flags = flags;
     this->requestInterval = requestInterval;
+    this->requestIntervalIntensive 
+        = (requestInterval > requestIntervalIntensive)
+        ? requestIntervalIntensive
+        : math::Max(requestInterval / 2, static_cast<UINT>(1));
     this->cntResponseChances = cntResponseChances;
 
     /* Start the threads. */
@@ -951,6 +959,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     DiscoveryService *ds    // The discovery service we work for.
         = static_cast<DiscoveryService *>(cds);
     SIZE_T cntConfigs = ds->configs.Count();    // # of configs. to serve.
+    SIZE_T cntPeers = 0;    // Cache for # of known peers.
 
     // Assert expected memory layout of messages.
     ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
@@ -1030,6 +1039,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
             return -1;
         }
 
+        cntPeers = ds->CountPeers();    // Remember that for all configs.
         for (SIZE_T i = 0; i < cntConfigs; i++) {
             DiscoveryConfigEx& config = ds->configs[i];
 
@@ -1052,7 +1062,8 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
 
         try {
             if (this->isRunning != 0) {
-                sys::Thread::Sleep(ds->requestInterval);
+                sys::Thread::Sleep((cntPeers < ds->cntExpectedNodes)
+                    ? ds->requestIntervalIntensive : ds->requestInterval);
             }
         } catch (sys::SystemException e) {
             VLTRACE(Trace::LEVEL_VL_WARN, "An error occurred in the "

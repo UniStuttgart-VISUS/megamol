@@ -130,7 +130,7 @@ DWORD DiscoveryTestApp::Run(void) {
         cfg = DiscoveryService::DiscoveryConfig(IPEndPoint(adapter, 40000), adapter);
 
         this->cds.AddListener(this);
-        this->cds.Start("CDS2Test", &cfg, 1, 0/*DiscoveryService::FLAG_SHARE_SOCKETS*/);
+        this->cds.Start("CDS2Test", &cfg, 1, 2, 0/*DiscoveryService::FLAG_SHARE_SOCKETS*/, DiscoveryService::DEFAULT_REQUEST_INTERVAL, 1);
 
         Socket::Cleanup();
     } catch (vislib::Exception& e) {

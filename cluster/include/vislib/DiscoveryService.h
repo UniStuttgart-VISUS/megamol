@@ -742,22 +742,32 @@ namespace cluster {
          * as these threads are running, the node is regarded to be a member of
          * the specified cluster.
          *
-         * @param name                This is the name of the cluster to 
-         *                            detect. It is used to ensure that nodes
-         *                            answering a discovery request want to 
-         *                            join the same cluster. The name must have 
-         *                            at most MAX_NAME_LEN characters. If it is
-         *                            longer, it will be truncated by the 
-         *                            DiscoveryService.
+         * @param name                     This is the name of the cluster to 
+         *                                 detect. It is used to ensure that 
+         *                                 nodes answering a discovery request 
+         *                                 want to join the same cluster. The 
+         *                                 name must have at most MAX_NAME_LEN 
+         *                                 characters. If it is longer, it will 
+         *                                 be truncated by the DiscoveryService.
          * @param configs
          * @param cntConfigs
-         * @param flags               A bitmask of flags configuring the detail
-         *                            behaviour of the discovery service.
-         * @param requestInterval     The interval between two discovery 
-         *                            requests in milliseconds.
-         * @param cntResponseChances  The number of requests that another node 
-         *                            may not answer before being removed from
-         *                            this nodes list of known peers.
+         * @param flags                    A bitmask of flags configuring the 
+         *                                 detail behaviour of the discovery 
+         *                                 service.
+         * @param cntExpectedNodes         The number of nodes expected. Until
+         *                                 this number of nodes is found, an
+         *                                 intensive (faster) search is 
+         *                                 performed. If this number is zero,
+         *                                 which is the default, no intensive
+         *                                 search is performed.
+         * @param requestInterval          The interval between two discovery 
+         *                                 requests in milliseconds.
+         * @param requestIntervalIntensive The request interval for intensive
+         *                                 search.
+         * @param cntResponseChances       The number of requests that another 
+         *                                 node may not answer before being 
+         *                                 removed from this nodes list of 
+         *                                 known peers.
          *
          * @throws SystemException If the creation of one or more threads 
          *                         failed.
@@ -766,8 +776,10 @@ namespace cluster {
          */
         virtual void Start(const char *name, 
             const DiscoveryConfig *configs, const SIZE_T cntConfigs,
+            const UINT cntExpectedNodes = 0,
             const UINT32 flags = 0,
             const UINT requestInterval = DEFAULT_REQUEST_INTERVAL,
+            const UINT requestIntervalIntensive = DEFAULT_REQUEST_INTERVAL / 2,
             const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
 
         /** 
@@ -1220,6 +1232,12 @@ namespace cluster {
         static const UINT32 MSG_TYPE_SAYONARA = 3;
 
         /** 
+         * The number of expected nodes. Until this number is reached, the
+         * discovery service performs an intensive search for peer nodes.
+         */
+        UINT cntExpectedNodes;
+
+        /** 
          * The number of chances a node gets to respond before it is implicitly 
          * disconnected from the cluster.
          */
@@ -1230,6 +1248,9 @@ namespace cluster {
 
         /** The time in milliseconds between two discovery requests. */
         UINT requestInterval;
+
+        /** The interval for intensive search in milliseconds. */
+        UINT requestIntervalIntensive;
 
         /** The per-adapter configurations. */
         ConfigList configs;
