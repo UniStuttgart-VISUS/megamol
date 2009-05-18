@@ -44,12 +44,6 @@ const UINT32 vislib::net::TcpServer::FLAGS_SHARE_ADDRESS = 0x0001;
 
 
 /*
- * vislib::net::TcpServer::FLAGS_USE_IPV6
- */
-const UINT32 vislib::net::TcpServer::FLAGS_USE_IPV6 = 0x0002;
-
-
-/*
  * vislib::net::TcpServer::TcpServer
  */
 vislib::net::TcpServer::TcpServer(const UINT32 flags) : flags(flags) {
@@ -132,9 +126,8 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
 
     /* Create socket and bind it to specified address. */
     try {
-        this->socket.Create(
-            this->IsUsingIPv6() ? Socket::FAMILY_INET6 : Socket::FAMILY_INET,
-            Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
+        this->socket.Create(serverAddr, Socket::TYPE_STREAM, 
+            Socket::PROTOCOL_TCP);
         if (this->IsSharingAddress()) {
             this->socket.SetExclusiveAddrUse(false);
         }

@@ -102,10 +102,11 @@ namespace net {
          */
         static const UINT32 FLAGS_SHARE_ADDRESS;
 
-        /** If this flag is set, the server socket will use IPv6. */
-        static const UINT32 FLAGS_USE_IPV6;
-
-        /** Ctor. */
+        /**
+         * Ctor.
+         *
+         * @param flags Special behaviour flags for the server
+         */
         TcpServer(const UINT32 flags = 0);
 
         /** Dtor. */
@@ -134,15 +135,6 @@ namespace net {
         }
 
         /**
-         * Answer whether the server socket is using IPv6.
-         *
-         * @return true if the server socket is using IPv6, false otherwise.
-         */
-        inline bool IsUsingIPv6(void) const {
-            return ((this->flags & FLAGS_USE_IPV6) != 0);
-        }
-
-        /**
          * Remove 'listener' from the list of objects informed about new 
          * connections. Possible multiple instances of 'listener' registered
          * will all be removed. The TcpServer will therefore not use the object
@@ -167,7 +159,9 @@ namespace net {
         /**
          * Start the server.
          *
-         * @param serverAddr The address to bind the server to.
+         * @param serverAddr The address to bind the server to. The address 
+         *                   family of the address determines whether the server
+         *                   is IPv4 or IPv6.
          *
          * @return 0 in case of success, an error code otherwise.
          */
