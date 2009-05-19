@@ -172,9 +172,8 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     this->fireServerStopped();
 
     /* Clean up socket library. */
+    this->Terminate();
     try {
-        this->socket.Shutdown();
-        this->socket.Close();
         Socket::Cleanup();
     } catch (SocketException e) {
         VLTRACE(VISLIB_TRCELVL_WARN, "Error during TcpServer shutdown: %s\n",
@@ -191,6 +190,7 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
  */
 bool vislib::net::TcpServer::Terminate(void) {
     try {
+        this->socket.Shutdown();
         this->socket.Close();
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when terminating "
