@@ -638,7 +638,10 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
         try {
 
             /* Wait for next message. */
-            this->socket.Receive(peerAddr, &msg, sizeof(Message));
+            if (this->socket.Receive(peerAddr, &msg, sizeof(Message))
+                    != sizeof(Message)) {
+                break;
+            }
 
             if (msg.MagicNumber != MAGIC_NUMBER) {
                 VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery service received "
@@ -756,14 +759,14 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
         this->socket.Shutdown();
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Error while shutting down cluster "
-            "discovery receiver socket: %s This is normally no problem.",
+            "discovery receiver socket: %s. This is normally no problem.\n",
             e.GetMsgA());
     }
     try {
         this->socket.Close();   // TODO: Should perhaps be protected by crit sect?
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Error while closing cluster "
-            "discovery receiver socket: %s This is normally no problem.",
+            "discovery receiver socket: %s. This is normally no problem.\n",
             e.GetMsgA());
     }
 
