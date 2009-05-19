@@ -751,7 +751,22 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
  */
 bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
     vislib::sys::Interlocked::Exchange(&this->isRunning, 0);
-    this->socket.Close();   // TODO: Should perhaps be protected by crit sect?
+
+    try {
+        this->socket.Shutdown();
+    } catch (SocketException e) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "Error while shutting down cluster "
+            "discovery receiver socket: %s This is normally no problem.",
+            e.GetMsgA());
+    }
+    try {
+        this->socket.Close();   // TODO: Should perhaps be protected by crit sect?
+    } catch (SocketException e) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "Error while closing cluster "
+            "discovery receiver socket: %s This is normally no problem.",
+            e.GetMsgA());
+    }
+
     return true;
 }
 
@@ -796,7 +811,15 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(
 vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx(
         void) {
     try {
+        this->socketSend.Shutdown();
+    } catch (...) {
+    }
+    try {
         this->socketSend.Close();
+    } catch (...) {
+    }
+    try {
+        this->socketUserMsg.Shutdown();
     } catch (...) {
     }
     try {
