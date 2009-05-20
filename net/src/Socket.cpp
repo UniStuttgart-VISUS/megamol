@@ -320,10 +320,10 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
     fd_set readSet;             // Set of socket to check for readability.
     struct timeval timeOut;     // Timeout for readability check.
 
-    /* Check parameter constraints. */
-    if ((timeout >= 1) && forceReceive) {
-        throw IllegalParamException("forceReceive", __FILE__, __LINE__);
-    }
+    ///* Check parameter constraints. */
+    //if ((timeout >= 1) && forceReceive) {
+    //    throw IllegalParamException("forceReceive", __FILE__, __LINE__);
+    //}
 
     /* Handle infinite timeout first by calling normal receive operation. */
     if (timeout < 1) {
@@ -331,7 +331,7 @@ SIZE_T vislib::net::Socket::Receive(void *outData, const SIZE_T cntBytes,
     }
 
     /* Initialise socket set and timeout structure. */
-    ASSERT(forceReceive == false);
+    //ASSERT(forceReceive == false);
     FD_ZERO(&readSet);
     FD_SET(this->handle, &readSet);
 
@@ -371,10 +371,10 @@ SIZE_T vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
     fd_set readSet;             // Set of socket to check for readability.
     struct timeval timeOut;     // Timeout for readability check.
 
-    /* Check parameter constraints. */
-    if ((timeout >= 1) && forceReceive) {
-        throw IllegalParamException("forceReceive", __FILE__, __LINE__);
-    }
+    ///* Check parameter constraints. */
+    //if ((timeout >= 1) && forceReceive) {
+    //    throw IllegalParamException("forceReceive", __FILE__, __LINE__);
+    //}
 
     /* Handle infinite timeout first by calling normal receive operation. */
     if (timeout < 1) {
@@ -383,7 +383,7 @@ SIZE_T vislib::net::Socket::Receive(IPEndPoint& outFromAddr, void *outData,
     }
 
     /* Initialise socket set and timeout structure. */
-    ASSERT(forceReceive == false);
+    //ASSERT(forceReceive == false);
     FD_ZERO(&readSet);
     FD_SET(this->handle, &readSet);
 

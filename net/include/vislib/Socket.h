@@ -556,7 +556,12 @@ namespace net {
         /**
          * Receives 'cntBytes' from the socket and saves them to the memory 
          * designated by 'outData'. 'outData' must be large enough to receive at
-         * least 'cntBytes'. 
+         * least 'cntBytes'.
+         *
+         * Note that the timeout is specified for each receive call. When
+         * setting the forceReceive flag multiple calls might be needed to get
+         * all requested data and thus the overall timeout will be a multiple
+         * of the specified timeout.
          *
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
@@ -572,8 +577,6 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
-         *                               and 'forceReceive' is true.
          */
         virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes, 
             const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
@@ -582,6 +585,11 @@ namespace net {
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
          * 'outData' must be large enough to receive at least 'cntBytes'. 
+         *
+         * Note that the timeout is specified for each receive call. When
+         * setting the forceReceive flag multiple calls might be needed to get
+         * all requested data and thus the overall timeout will be a multiple
+         * of the specified timeout.
          *
          * This method can only be used on datagram sockets.
          *
@@ -602,8 +610,6 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
-         *                               and 'forceReceive' is true.
          */
         virtual SIZE_T Receive(IPEndPoint& outFromAddr, void *outData, 
             const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
@@ -612,6 +618,11 @@ namespace net {
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
          * 'outData' must be large enough to receive at least 'cntBytes'. 
+         *
+         * Note that the timeout is specified for each receive call. When
+         * setting the forceReceive flag multiple calls might be needed to get
+         * all requested data and thus the overall timeout will be a multiple
+         * of the specified timeout.
          *
          * This method can only be used on datagram sockets.
          *
@@ -636,8 +647,6 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
-         *                               and 'forceReceive' is true.
          */
         virtual SIZE_T Receive(SocketAddress& outFromAddr, void *outData, 
             const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
