@@ -8,6 +8,7 @@
 #include "vislib/TcpServer.h"
 
 #include "vislib/IllegalParamException.h"
+#include "vislib/Interlocked.h"
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
 
@@ -35,6 +36,12 @@ vislib::net::TcpServer::Listener::Listener(void) {
 void vislib::net::TcpServer::Listener::OnServerStopped(void) throw() {
     // Nothing to do.
 }
+
+
+/*
+ * vislib::net::TcpServer::FLAGS_REUSE_ADDRESS
+ */
+const UINT32 vislib::net::TcpServer::FLAGS_REUSE_ADDRESS = 0x0002;
 
 
 /*
@@ -129,7 +136,11 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
         this->socket.Create(serverAddr, Socket::TYPE_STREAM, 
             Socket::PROTOCOL_TCP);
         if (this->IsSharingAddress()) {
+            // TODO: Problems with admin rights
             this->socket.SetExclusiveAddrUse(false);
+        }
+        if (this->IsReuseAddress()) {
+            this->socket.SetReuseAddr(true);
         }
         this->socket.Bind(serverAddr);
     } catch (SocketException e) {
@@ -182,6 +193,15 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     }
 
     return retval;
+}
+
+
+/*
+ * vislib::net::TcpServer::SetFlags
+ */
+void vislib::net::TcpServer::SetFlags(UINT32 flags) {
+    vislib::sys::Interlocked::Exchange(reinterpret_cast<INT32*>(&this->flags),
+        static_cast<INT32>(flags));
 }
 
 

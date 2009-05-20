@@ -95,6 +95,13 @@ namespace net {
             Listener(void);
         }; /* end class Listener */
 
+        /**
+         * If this flag is set, the socket can be bound to an address that is
+         * already in use and in a TIME_WAIT state. This does not allow
+         * multiple servers to use the same address.
+         */
+        static const UINT32 FLAGS_REUSE_ADDRESS;
+
         /** 
          * If this flag is set, the server address is not used exclusively, but
          * can be used by different sockets. Setting this flag is a possible 
@@ -123,6 +130,24 @@ namespace net {
          *                 to pass a NULL pointer.
          */
         void AddListener(Listener *listener);
+
+        /**
+         * Answer the behaviour flags.
+         *
+         * @return The behaviour flags.
+         */
+        inline UINT32 GetFlags(void) const {
+            return this->flags;
+        }
+
+        /**
+         * Answer whether the server socket reuses its address.
+         *
+         * @return true if the server address is reused, false otherwise.
+         */
+        inline bool IsReuseAddress(void) const {
+            return ((this->flags & FLAGS_REUSE_ADDRESS) != 0);
+        }
 
         /**
          * Answer whether the server socket does not use its address 
@@ -166,6 +191,14 @@ namespace net {
          * @return 0 in case of success, an error code otherwise.
          */
         virtual DWORD Run(const IPEndPoint& serverAddr);
+
+        /**
+         * Sets the behaviour flags. This method has no effect after the
+         * server was started.
+         *
+         * @param flags The new behaviour flags
+         */
+        void SetFlags(UINT32 flags);
 
         /**
          * Terminate the server.
