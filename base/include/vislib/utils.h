@@ -43,6 +43,23 @@ namespace vislib {
         right = tmp;
     }
 
+    /**
+     * A comparator using the operator '-'. You can use this comparator for
+     * sorting collections of basic types.
+     *
+     * @param lhs The left hand side operand
+     * @param rhs The right hand side operand
+     *
+     * @return (lhs - rhs)
+     *          = 0 if lhs == rhs
+     *          < 0 if lhs < rhs
+     *          > 0 if lhs > rhs
+     */
+    template<class T> int DiffComparator(const T& lhs, const T& rhs) {
+        T diff = (lhs - rhs);
+        return (diff < 0) ? -1 : ((diff > 0) ? 1 : 0);
+    }
+
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
