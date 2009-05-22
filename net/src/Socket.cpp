@@ -285,6 +285,35 @@ vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint(void) const {
 
 
 /*
+ * vislib::net::Socket::GracefulDisconnect
+ */
+void vislib::net::Socket::GracefulDisconnect(const bool isClose) {
+    BYTE buffer[4];             // Buffer for receiving remaining data.
+    SIZE_T cntReceived = 0;     // # of pending bytes received.
+    
+    try {
+        /* Signal to server that we will not send anything else. */
+        this->Shutdown(SEND);
+
+        /* Receive all pending data from server. */
+        while (this->Receive(&buffer, sizeof(buffer)) > 0);
+
+    } catch (...) {
+        /* Ensure that Close() is called in any case if requested. */
+        if (isClose) {
+            this->Close();
+        }
+        throw;
+    }
+
+    /* Close socket if requested. */
+    if (isClose) {
+        this->Close();
+    }
+}
+
+
+/*
  * vislib::net::Socket::IOControl
  */
 void vislib::net::Socket::IOControl(const DWORD ioControlCode, void *inBuffer,
@@ -300,6 +329,7 @@ void vislib::net::Socket::IOControl(const DWORD ioControlCode, void *inBuffer,
     // TODO
 #endif /* _WIN32 */
 }
+
 
 /*
  * vislib::net::Socket::Listen
@@ -642,7 +672,8 @@ SIZE_T vislib::net::Socket::receive(void *outData, const SIZE_T cntBytes,
         }
 
 #endif /* _WIN32 */
-    } while (forceReceive && (totalReceived < cntBytes));
+    } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
+    // Note: Test (lastReceived > 0) is for graceful disconnect detection.
 
 #ifdef _WIN32
     if (!::WSACloseEvent(overlapped.hEvent)) {
@@ -717,7 +748,8 @@ SIZE_T vislib::net::Socket::receiveFrom(IPEndPoint& outFromAddr,
         }
 #endif /* _WIN32 */
 
-    } while (forceReceive && (totalReceived < cntBytes));
+    } while (forceReceive && (totalReceived < cntBytes) && (lastReceived > 0));
+    // Note: Test (lastReceived > 0) is for graceful disconnect detection.
 
 #ifdef _WIN32
     if (!::WSACloseEvent(overlapped.hEvent)) {

@@ -76,15 +76,19 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             /* Receive a message header into 'recvBuf'. */
             recvBuf.AssertSize(sizeof(MessageHeader));
             msgHdr = recvBuf.As<MessageHeader>();
-            ctx->Socket->Receive(static_cast<void *>(recvBuf), 
-                sizeof(MessageHeader), Socket::TIMEOUT_INFINITE, 0, true);
+            if (ctx->Socket->Receive(static_cast<void *>(recvBuf), 
+                    sizeof(MessageHeader), Socket::TIMEOUT_INFINITE, 
+                    0, true) == 0) {
+                VLTRACE(Trace::LEVEL_VL_INFO, "vislib::net::cluster::"
+                    "ReceiveMessages exits because of graceful disconnect.\n");
+            }
 
             /* Sanity check. */
             ASSERT(recvBuf.GetSize() >= sizeof(MessageHeader));
             //ASSERT(msgHdr->MagicNumber == MAGIC_NUMBER);
             if (msgHdr->MagicNumber != MAGIC_NUMBER) {
-                VLTRACE(Trace::LEVEL_WARN, "Discarding data packet without valid "
-                    "magic number. Expected %u, but received %u.\n",
+                VLTRACE(Trace::LEVEL_WARN, "Discarding data packet without "
+                    "valid magic number. Expected %u, but received %u.\n",
                     MAGIC_NUMBER, msgHdr->MagicNumber);
                 break;
             }
@@ -93,8 +97,12 @@ DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             msgSize = sizeof(MessageHeader) + msgHdr->Header.BlockLength;
             recvBuf.AssertSize(msgSize, true);
             msgHdr = recvBuf.As<MessageHeader>();
-            ctx->Socket->Receive(recvBuf.As<BYTE>() + sizeof(MessageHeader),
-                msgHdr->Header.BlockLength, Socket::TIMEOUT_INFINITE, 0, true);
+            if (ctx->Socket->Receive(recvBuf.As<BYTE>() + sizeof(MessageHeader),
+                    msgHdr->Header.BlockLength, Socket::TIMEOUT_INFINITE, 0, 
+                    true) == 0) {
+                VLTRACE(Trace::LEVEL_VL_INFO, "vislib::net::cluster::"
+                    "ReceiveMessages exits because of graceful disconnect.\n");
+            }
 
             /* Call the handler method to process the message. */
             if (msgHdr->Header.BlockId == MSGID_MULTIPLE) {

@@ -515,6 +515,30 @@ namespace net {
         }
 
         /**
+         * Performs a graceful TCP client disconnect sequence. 
+         *
+         * This method must only be called on TCP sockets! It is intended
+         * for sockets that have the linger option not enabled.
+         * It performs a shutdown of the send channel and waits for any pending 
+         * data to receive. The caller should close the socket afterwards if
+         * 'isClose' is not set. Note that this method is blocking.
+         *
+         * See http://msdn.microsoft.com/en-us/library/ms738547(VS.85).aspx for
+         * more information.
+         *
+         * In case the operation fails and 'isClose' is set, it is guaranteed 
+         * that Close() is called in any case. However, the Close() call may
+         * fail itself.
+         *
+         * @param isClose If true, the socket will be closed once FD_CLOSE was
+         *                signaled. Otherwise, the method will return without
+         *                closing the socket after it was signaled.
+         *
+         * @throws SocketException In case the operation fails.
+         */
+        void GracefulDisconnect(const bool isClose);
+
+        /**
          * Send an I/O Control message to the socket (Windows only).
          *
          * @param ioControlCode    The I/O control code. See WSAIoctl function
@@ -626,7 +650,7 @@ namespace net {
          *
          * This method can only be used on datagram sockets.
          *
-         * This method is for backward compatibilty and is only supported on 
+         * This method is for backward compatibility and is only supported on 
          * IPv4 sockets. Use IPEndPoint instead of SocketAddress for IPv6 
          * support and better performance.
          *
