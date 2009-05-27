@@ -231,7 +231,8 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                 if (ioctl(testSocket, SIOCGIFNAME, &info) == 0) {
                     // Only use ethernet interfaces
                     ioctl(testSocket, SIOCGIFHWADDR, &info);
-                    if (info.ifr_hwaddr.sa_family == ARPHRD_ETHER) {
+                    if ((info.ifr_hwaddr.sa_family == ARPHRD_ETHER) 
+                            || (info.ifr_hwaddr.sa_family == ARPHRD_INFINIBAND)) {
                         countNetAdapters++;
                     }
                 }
@@ -246,7 +247,8 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                 if (ioctl(testSocket, SIOCGIFNAME, &info) == 0) {
                     // Only use ethernet interfaces
                     ioctl(testSocket, SIOCGIFHWADDR, &info);
-                    if (info.ifr_hwaddr.sa_family == ARPHRD_ETHER) {
+                    if ((info.ifr_hwaddr.sa_family == ARPHRD_ETHER) 
+                            || (info.ifr_hwaddr.sa_family == ARPHRD_INFINIBAND)) {
 
                         // name             SIOCGIFNAME
                         info.ifr_ifindex = i;
