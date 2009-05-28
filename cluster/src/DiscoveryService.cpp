@@ -529,7 +529,7 @@ bool vislib::net::cluster::DiscoveryService::Stop(const bool noWait) {
     }
     
     try {
-        this->senderThread.TryTerminate(false);
+        this->senderThread.Terminate(false);
     } catch (sys::SystemException e) {
         VLTRACE(Trace::LEVEL_VL_ERROR, "Stopping the discovery sender thread "
             "failed. The error code is %d (\"%s\").\n", 

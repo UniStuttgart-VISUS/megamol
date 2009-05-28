@@ -241,6 +241,19 @@ namespace net {
         virtual void Bind(const SocketAddress& address);
 
         /**
+         * This is a Linux-only method. It is not required nor supported on 
+         * Windows. On Windows, the method has no effect.
+         *
+         * Bind this socket to a particular device like "eth0", as specified 
+         * in 'name'.
+         *
+         * @param name The name of the device to bind to, e. g. "eth0".
+         *
+         * @throws SocketException If the operation fails.
+         */
+        virtual void BindToDevice(const StringA& name);
+
+        /**
          * Close the socket. If the socket is not open, i. e. not valid, this 
          * method succeeds, too.
          */

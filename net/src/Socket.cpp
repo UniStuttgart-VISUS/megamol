@@ -9,6 +9,7 @@
 
 #ifndef _WIN32
 #include <unistd.h>
+#include <net/if.h>
 
 #define SOCKET_ERROR (-1)
 #endif /* _WIN32 */
@@ -132,6 +133,24 @@ void vislib::net::Socket::Bind(const SocketAddress& address) {
             sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
+}
+
+
+/*
+ * vislib::net::Socket::BindToDevice
+ */
+void vislib::net::Socket::BindToDevice(const StringA& name) {
+#ifndef _WIN32
+    struct ifreq interface;
+
+    ::strncpy(interface.ifr_ifrn.ifrn_name, name.PeekBuffer(), 
+        name.GetLength() + 1);
+
+    if (::setsockopt(this->handle, SOL_SOCKET, SO_BINDTODEVICE, &interface,
+            sizeof(interface)) == -1) {
+        throw SocketException(__FILE__, __LINE__);
+    }
+#endif /* !_WIN32 */
 }
 
 
