@@ -144,7 +144,7 @@ void vislib::net::Socket::BindToDevice(const StringA& name) {
     struct ifreq interface;
 
     ::strncpy(interface.ifr_ifrn.ifrn_name, name.PeekBuffer(), 
-        name.GetLength() + 1);
+        name.Length() + 1);
 
     if (::setsockopt(this->handle, SOL_SOCKET, SO_BINDTODEVICE, &interface,
             sizeof(interface)) == -1) {
