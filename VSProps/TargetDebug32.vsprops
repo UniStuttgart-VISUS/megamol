@@ -8,6 +8,10 @@
 		Name="VCCLCompilerTool"
 		RuntimeLibrary="3"
 	/>
+	<Tool
+		Name="VCResourceCompilerTool"
+		PreprocessorDefinitions="_DEBUG;_WIN32"
+	/>
 	<UserMacro
 		Name="Bits"
 		Value="32"
@@ -27,11 +31,11 @@
 		Name="ArchName"
 		Value="x86"
 	/>
-    <UserMacro
+	<UserMacro
 		Name="RuntimeMT"
 		Value=""
 	/>
-    <UserMacro
+	<UserMacro
 		Name="RuntimeLib"
 		Value="MD"
 	/>

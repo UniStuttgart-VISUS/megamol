@@ -8,7 +8,11 @@
 		Name="VCCLCompilerTool"
 		RuntimeLibrary="3"
 	/>
-	<UserMacro
+    <Tool
+		Name="VCResourceCompilerTool"
+		PreprocessorDefinitions="_DEBUG;_WIN32;_WIN64"
+	/>
+    <UserMacro
 		Name="Bits"
 		Value="64"
 		PerformEnvironmentSet="true"
