@@ -1,6 +1,7 @@
 /*
  * IPHostEntry.h
  *
+ * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
@@ -20,7 +21,7 @@
 #include <netdb.h>
 #endif /* !_WIN32 */
 
-#include "vislib/IPEndPoint.h"
+#include "vislib/IPAgnosticAddress.h"       // Must be first include!
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/String.h"
@@ -57,7 +58,7 @@ namespace net {
          * @return An array of IP end points, which of the object remains 
          *         owner.
          */
-        inline const Array<IPEndPoint>& GetAddresses(void) const {
+        inline const Array<IPAgnosticAddress>& GetAddresses(void) const {
             return this->addresses;
         }
 
@@ -103,8 +104,8 @@ namespace net {
         void set(const ADDRINFOW *addrInfo);
 #endif /* _WIN32 */
 
-        /** The socket addresses of the endpoint (IPv4 or IPv6). */
-        Array<IPEndPoint> addresses;
+        /** The socket addresses of the host (IPv4 or IPv6). */
+        Array<IPAgnosticAddress> addresses;
 
         /** The The official name of the host. */
         String<T> canonicalName;
@@ -166,13 +167,15 @@ namespace net {
         while (ai != NULL) {
             switch (ai->ai_family) {
                 case AF_INET:
-                    this->addresses.Add(IPEndPoint(
-                        *reinterpret_cast<const sockaddr_in *>(ai->ai_addr)));
+                    this->addresses.Add(IPAgnosticAddress(
+                        reinterpret_cast<const sockaddr_in *>(
+                        ai->ai_addr)->sin_addr));
                     break;
 
                 case AF_INET6:
-                    this->addresses.Add(IPEndPoint(
-                        *reinterpret_cast<const sockaddr_in6 *>(ai->ai_addr)));
+                    this->addresses.Add(IPAgnosticAddress(
+                        reinterpret_cast<const sockaddr_in6 *>(
+                        ai->ai_addr)->sin6_addr));
                     break;
 
                 default:
@@ -202,13 +205,15 @@ namespace net {
         while (ai != NULL) {
             switch (ai->ai_family) {
                 case AF_INET:
-                    this->addresses.Add(IPEndPoint(
-                        *reinterpret_cast<const sockaddr_in *>(ai->ai_addr)));
+                    this->addresses.Add(IPAgnosticAddress(
+                        reinterpret_cast<const sockaddr_in *>(
+                        ai->ai_addr)->sin_addr));
                     break;
 
                 case AF_INET6:
-                    this->addresses.Add(IPEndPoint(
-                        *reinterpret_cast<const sockaddr_in6 *>(ai->ai_addr)));
+                    this->addresses.Add(IPAgnosticAddress(
+                        reinterpret_cast<const sockaddr_in6 *>(
+                        ai->ai_addr)->sin6_addr));
                     break;
 
                 default:

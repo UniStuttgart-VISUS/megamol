@@ -1,6 +1,7 @@
 /*
  * DNS.h
  *
+ * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
@@ -16,6 +17,7 @@
 
 #include "vislib/IPAddress.h"
 #include "vislib/IPAddress6.h"
+#include "vislib/IPAgnosticAddress.h"
 #include "vislib/IPHostEntry.h"
 #include "vislib/String.h"
 
@@ -96,6 +98,47 @@ namespace net {
          */
         static void GetHostAddress(IPAddress6& outAddress,
             const wchar_t *hostNameOrAddress);
+
+        /**
+         * Answer any of the IP addresses of the host identified by the given
+         * host name or human readable IP address.
+         *
+         * @param outAddress        Receives the IP address.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         * @param inCaseOfDoubt     The address family to be used if it is not
+         *                          clear from the 'hostNameOrAddress' 
+         *                          parameter. This parameter defaults to
+         *                          FAMILY_INET6.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostAddress(IPAgnosticAddress& outAddress,
+            const char *hostNameOrAddress, 
+            const IPAgnosticAddress::AddressFamily inCaseOfDoubt 
+            = IPAgnosticAddress::FAMILY_INET6);
+
+        /**
+         * Answer any of the IP addresses of the host identified by the given
+         * host name or human readable IP address.
+         *
+         * @param outAddress        Receives the IP address.
+         * @param hostNameOrAddress The host name or stringised IP address to 
+         *                          search.
+         * @param inCaseOfDoubt     The address family to be used if it is not
+         *                          clear from the 'hostNameOrAddress' 
+         *                          parameter. This parameter defaults to
+         *                          FAMILY_INET6.
+         *
+         * @throws SocketException In case the operation fails, e.g. the host 
+         *                         could not be found.
+         */
+        static void GetHostAddress(IPAgnosticAddress& outAddress,
+            const wchar_t *hostNameOrAddress,
+            const IPAgnosticAddress::AddressFamily inCaseOfDoubt 
+            = IPAgnosticAddress::FAMILY_INET6);
+
 
         //static void GetHostAddresses(vislib::Array<IPAddress>& outAddresses,
         //    const char *hostNameOrAddress);

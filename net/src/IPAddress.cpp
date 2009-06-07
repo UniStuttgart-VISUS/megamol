@@ -14,6 +14,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
 
 
@@ -87,6 +88,34 @@ vislib::net::IPAddress::~IPAddress(void) {
 
 
 /*
+ * vislib::net::IPAddress::GetPrefix
+ */
+vislib::net::IPAddress vislib::net::IPAddress::GetPrefix(
+        const ULONG prefixLength) const {
+    int cntBytes = sizeof(in_addr); 
+    int cntPrefix = prefixLength > static_cast<ULONG>(8 * cntBytes)
+        ? cntBytes : static_cast<int>(prefixLength);
+    div_t cntCopy = ::div(cntPrefix, 8);
+    BYTE mask[4];
+
+    for (int i = 0; i < cntCopy.quot; i++) {
+        mask[i] = 255;
+    }
+    for (int i = cntCopy.quot; i < cntBytes; i++) {
+        mask[i] = 0;
+    }
+
+    /* Copy fraction of incomplete byte if necessary. */
+    if (cntCopy.rem > 0) {
+        mask[cntCopy.quot] = 255 << (8 - cntCopy.rem);
+    }
+
+    IPAddress retval(mask[0], mask[1], mask[2], mask[3]);
+    return (retval & *this);
+}
+
+
+/*
  * vislib::net::IPAddress::Lookup
  */
 bool vislib::net::IPAddress::Lookup(const char *hostname) {
@@ -117,6 +146,19 @@ bool vislib::net::IPAddress::Lookup(const char *hostname) {
 vislib::StringA vislib::net::IPAddress::ToStringA(void) const {
     StringA retval(::inet_ntoa(this->address));
     return retval;
+}
+
+
+/*
+ * vislib::net::IPAddress::operator []
+ */
+BYTE vislib::net::IPAddress::operator [](const int i) const {
+    if ((i > 0) && (i < static_cast<int>(sizeof(this->address)))) {
+        return reinterpret_cast<const BYTE *>(&this->address)[i];
+    } else {
+        throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
+            __LINE__);
+    }
 }
 
 

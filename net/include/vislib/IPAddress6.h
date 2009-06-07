@@ -154,6 +154,16 @@ namespace net {
         ~IPAddress6(void);
 
         /**
+         * Get the prefix of length 'prefixLength' bits of the address. The rest
+         * of the returned address will be filled with zeroes.
+         *
+         * @param prefixLength The length of the prefix. If it is out of range, 
+         *                     the method will succeed and return the complete
+         *                     address.
+         */
+        IPAddress6 GetPrefix(const ULONG prefixLength) const;
+
+        /**
          * Determines whether the address is a link local address.
          *
          * @return true if the address is a link local address, false otherwise.
@@ -411,7 +421,7 @@ namespace net {
 
     private:
 
-        /** The acutal IPv6 address. */
+        /** The actual IPv6 address. */
         struct in6_addr address;
 
     };

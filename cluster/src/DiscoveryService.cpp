@@ -123,12 +123,12 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::isValid(void) const {
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
     // TODO: This is not good
-    NetworkInformation::Adapter adapter
-        = NetworkInformation::AdapterInformation(0);
+    NetworkInformation::Adapter adapter = NetworkInformation::GetAdapter(0);
     
-    this->responseAddress = IPEndPoint(adapter.Address());
-    this->bindAddress = IPEndPoint(adapter.Address(), DEFAULT_PORT);
-    this->bcastAddress = IPEndPoint(adapter.BroadcastAddress(), DEFAULT_PORT);
+    throw 1; // TODO NETINFO
+    //this->responseAddress = IPEndPoint(adapter.GetAddress4());
+    //this->bindAddress = IPEndPoint(adapter.GetAddress4(), DEFAULT_PORT);
+    //this->bcastAddress = IPEndPoint(adapter.BroadcastAddress(), DEFAULT_PORT);
 }
 
 /*
@@ -171,18 +171,19 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
     ASSERT(this->bcastAddress.GetPort() == 0);  // This is our guard!
 
     // TODO: This is not yet IPv6-compatible
-    UINT cntAdapters = NetworkInformation::AdapterCount();
-    for (UINT i = 0; i < cntAdapters; i++) {
-        const NetworkInformation::Adapter& a 
-            = NetworkInformation::AdapterInformation(i);
-        IPAddress aNet = a.Address() & a.SubnetMask();
-        IPAddress bNet = bindAddress & a.SubnetMask();
+    throw 1; // TODO NETINFO
+    //UINT cntAdapters = NetworkInformation::AdapterCount();
+    //for (UINT i = 0; i < cntAdapters; i++) {
+    //    const NetworkInformation::Adapter& a 
+    //        = NetworkInformation::AdapterInformation(i);
+    //    IPAddress aNet = a.Address() & a.SubnetMask();
+    //    IPAddress bNet = bindAddress & a.SubnetMask();
 
-        if (a.SubnetMask() != IPAddress::ANY && aNet == bNet) {
-            this->bcastAddress.SetIPAddress(a.BroadcastAddress());
-            this->bcastAddress.SetPort(bindPort);
-        }
-    }
+    //    if (a.SubnetMask() != IPAddress::ANY && aNet == bNet) {
+    //        this->bcastAddress.SetIPAddress(a.BroadcastAddress());
+    //        this->bcastAddress.SetPort(bindPort);
+    //    }
+    //}
 
     if (this->bcastAddress.GetPort() == 0) {
         this->~DiscoveryConfig();

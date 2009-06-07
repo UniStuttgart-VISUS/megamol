@@ -1151,7 +1151,7 @@ namespace vislib {
             return false;
         }
         for (SIZE_T i = 0; i < this->count; i++) {
-            if (this->elements[i] != rhs.elements[i]) {
+            if (!(this->elements[i] == rhs.elements[i])) {
                 this->Unlock();
                 return false;
             }

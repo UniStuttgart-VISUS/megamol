@@ -1,6 +1,7 @@
 /*
  * IPEndPoint.h
  *
+ * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
@@ -14,8 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/IPAddress6.h"
-#include "vislib/SocketAddress.h"
+#include "vislib/IPAgnosticAddress.h"
 
 
 namespace vislib {
@@ -49,9 +49,9 @@ namespace net {
          * valid for IPEndPoints.
          */
         enum AddressFamily {
-            FAMILY_UNSPECIFIED = SocketAddress::FAMILY_UNSPEC,
-            FAMILY_INET = SocketAddress::FAMILY_INET,
-            FAMILY_INET6 = SocketAddress::FAMILY_INET6
+            FAMILY_UNSPECIFIED = IPAgnosticAddress::FAMILY_UNSPECIFIED,
+            FAMILY_INET = IPAgnosticAddress::FAMILY_INET,
+            FAMILY_INET6 = IPAgnosticAddress::FAMILY_INET6
         };
 
         /**
@@ -102,6 +102,15 @@ namespace net {
          * @param port      The port number of the end point.
          */
         IPEndPoint(const IPAddress6& ipAddress, const unsigned short port);
+
+        /**
+         * Creates a new end point using the specified address and port.
+         *
+         * @param ipAddress The IP address of the end point.
+         * @param port      The port number of the end point. 
+         */
+        IPEndPoint(const IPAgnosticAddress& ipAddress, 
+            const unsigned short port);
 
         /**
          * Create a new unspecified end point (ANY) for the given address 
@@ -173,6 +182,15 @@ namespace net {
         }
 
         /**
+         * Answer the IP address of the IP end point.
+         *
+         * @return The IP address of the end point.
+         *
+         * @throws IllegalStateException If the address familiy is illegal.
+         */
+        IPAgnosticAddress GetIPAddress(void) const;
+
+        /**
          * Answer the IPv4 address of the IP end point. This might fail if the
          * end point is an IPv6 end point and the address cannot be converted.
          *
@@ -187,6 +205,8 @@ namespace net {
          * IPv4 end point, the address will be mapped.
          *
          * @return The IP address of the end point.
+         *
+         * @throws IllegalStateException If the address familiy is illegal.
          */
         IPAddress6 GetIPAddress6(void) const;
 
@@ -212,6 +232,13 @@ namespace net {
          * @param ipAddress The new IP address.
          */
         void SetIPAddress(const IPAddress6& ipAddress);
+
+        /**
+         * Set a new IP address. This will also change the address family.
+         *
+         * @param ipAddress The new IP address.
+         */
+        void SetIPAddress(const IPAgnosticAddress& ipAddress);
 
         /**
          * Set a new port number.

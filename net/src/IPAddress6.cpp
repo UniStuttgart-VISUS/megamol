@@ -8,6 +8,8 @@
 
 #include "vislib/IPAddress6.h"
 
+#include <cstdlib>
+
 #include "vislib/assert.h"
 #include "vislib/DNS.h"
 #include "vislib/IllegalStateException.h"
@@ -138,6 +140,33 @@ vislib::net::IPAddress6::IPAddress6(const IPAddress6& rhs) {
  * vislib::net::IPAddress6::~IPAddress6
  */
 vislib::net::IPAddress6::~IPAddress6(void) {
+}
+
+
+/*
+ * vislib::net::IPAddress6::GetPrefix
+ */ 
+vislib::net::IPAddress6 
+vislib::net::IPAddress6::GetPrefix(const ULONG prefixLength) const {
+    IPAddress6 retval;
+    int cntBytes = sizeof(retval.address.s6_addr); 
+    int cntPrefix = prefixLength > static_cast<ULONG>(8 * cntBytes)
+        ? cntBytes : static_cast<int>(prefixLength);
+    div_t cntCopy = ::div(cntPrefix, 8);
+
+    /* Zero out everything. */
+    ::ZeroMemory(retval.address.s6_addr, cntBytes);
+
+    /* Copy complete bytes. */
+    ::memcpy(retval.address.s6_addr, this->address.s6_addr, cntCopy.quot);
+
+    /* Copy fraction of incomplete byte if necessary. */
+    if (cntCopy.rem > 0) {
+        retval.address.s6_addr[cntCopy.quot] 
+            = this->address.s6_addr[cntCopy.quot] << (8 - cntCopy.rem);
+    }
+
+    return retval;
 }
 
 

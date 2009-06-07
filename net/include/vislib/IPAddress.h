@@ -107,6 +107,16 @@ namespace net {
         ~IPAddress(void);
 
         /**
+         * Get the prefix of length 'prefixLength' bits of the address. The rest
+         * of the returned address will be filled with zeroes.
+         *
+         * @param prefixLength The length of the prefix. If it is out of range, 
+         *                     the method will succeed and return the complete
+         *                     address.
+         */
+        IPAddress GetPrefix(const ULONG prefixLength) const;
+
+        /**
          * Lookup and set the IP address of the specified host. If the host is
          * not found, nothing is changed and the return value is false.
          *
@@ -136,6 +146,18 @@ namespace net {
         inline StringW ToStringW(void) const {
             return StringW(this->ToStringA());
         }
+
+        /**
+         * Provides access to the single bytes of the IP address.
+         *
+         * @param i The index of the byte to access, which must be within 
+         *          [0, 4].
+         *
+         * @return The 'i'th byte of the address.
+         *
+         * @throws OutOfRangeException If 'i' is not a legal byte number.
+         */
+        BYTE operator [](const int i) const;
 
         /**
          * Assignment operator.

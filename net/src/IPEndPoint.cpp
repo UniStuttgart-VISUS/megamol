@@ -1,6 +1,7 @@
 /*
  * IPEndPoint.cpp
  *
+ * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
@@ -86,6 +87,17 @@ vislib::net::IPEndPoint::IPEndPoint(const IPAddress6& ipAddress,
     this->SetIPAddress(ipAddress);
     this->SetPort(port);            // IP address must have been set before!
     // TODO flow stuff etc!
+}
+
+
+/*
+ * vislib::net::IPEndPoint::IPEndPoint
+ */
+vislib::net::IPEndPoint::IPEndPoint(const IPAgnosticAddress& ipAddress, 
+                                    const unsigned short port) {
+    ::ZeroMemory(&this->address, sizeof(this->address));
+    this->SetIPAddress(ipAddress);
+    this->SetPort(port);            // IP address must have been set before!
 }
 
 
@@ -181,6 +193,25 @@ vislib::net::IPEndPoint::~IPEndPoint(void) {
 
 
 /*
+ * vislib::net::IPAgnosticAddress
+ */
+vislib::net::IPAgnosticAddress vislib::net::IPEndPoint::GetIPAddress(
+        void) const {
+    switch (this->address.ss_family) {
+        case AF_INET:
+            return IPAgnosticAddress(this->asV4().sin_addr);
+
+        case AF_INET6:
+            return IPAgnosticAddress(this->asV6().sin6_addr);
+
+        default:
+            throw IllegalStateException("The address family of the IPEndPoint "
+                "is not in the expected range.", __FILE__, __LINE__);
+    }
+}
+
+
+/*
  * vislib::net::IPEndPoint::GetIPAddress4
  */
 vislib::net::IPAddress vislib::net::IPEndPoint::GetIPAddress4(void) const {
@@ -262,6 +293,25 @@ void vislib::net::IPEndPoint::SetIPAddress(const IPAddress6& ipAddress) {
     ::memcpy(&(this->asV6().sin6_addr),
         static_cast<const struct in6_addr *>(ipAddress),
         sizeof(struct in6_addr));
+}
+
+
+/*
+ * vislib::net::IPEndPoint::SetIPAddress
+ */
+void vislib::net::IPEndPoint::SetIPAddress(const IPAgnosticAddress& ipAddress) {
+    switch (ipAddress.GetAddressFamily()) {
+        case IPAgnosticAddress::FAMILY_INET:
+            this->SetIPAddress(static_cast<IPAddress>(ipAddress));
+            break;
+
+        case IPAgnosticAddress::FAMILY_INET6:
+            this->SetIPAddress(static_cast<IPAddress6>(ipAddress));
+            break;
+
+        default:
+            throw IllegalParamException("ipAddress", __FILE__, __LINE__);
+    }
 }
 
 
