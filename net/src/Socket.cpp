@@ -308,7 +308,6 @@ vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint(void) const {
  */
 void vislib::net::Socket::GracefulDisconnect(const bool isClose) {
     BYTE buffer[4];             // Buffer for receiving remaining data.
-    SIZE_T cntReceived = 0;     // # of pending bytes received.
     
     try {
         /* Signal to server that we will not send anything else. */

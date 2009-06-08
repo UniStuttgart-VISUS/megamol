@@ -302,11 +302,13 @@ void vislib::net::IPEndPoint::SetIPAddress(const IPAddress6& ipAddress) {
 void vislib::net::IPEndPoint::SetIPAddress(const IPAgnosticAddress& ipAddress) {
     switch (ipAddress.GetAddressFamily()) {
         case IPAgnosticAddress::FAMILY_INET:
-            this->SetIPAddress(static_cast<IPAddress>(ipAddress));
+            this->SetIPAddress(static_cast<const IPAddress&>(ipAddress));
             break;
 
         case IPAgnosticAddress::FAMILY_INET6:
-            this->SetIPAddress(static_cast<IPAddress6>(ipAddress));
+            // SetIPAddress produces deep copy. Cast to object does not work
+            // on gcc, because this program is utter sh**.
+            this->SetIPAddress(static_cast<const IPAddress6&>(ipAddress));
             break;
 
         default:
