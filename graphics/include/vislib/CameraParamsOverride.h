@@ -127,7 +127,7 @@ namespace graphics {
          *
          * @return The focal distance for stereo images 
          */
-        virtual SceneSpaceType FocalDistance(void) const;
+        virtual SceneSpaceType FocalDistance(bool autofocus = true) const;
 
         /** 
          * Answer the normalised front vector of the camera. 
@@ -272,7 +272,8 @@ namespace graphics {
         virtual void SetFarClip(SceneSpaceType farClip);
 
         /**
-         * Sets the focal distance.
+         * Sets the focal distance. A value of zero will activate auto-focus
+         * to the look at point.
          *
          * @param focalDistance The focal distance.
          */

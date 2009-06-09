@@ -140,9 +140,9 @@ vislib::graphics::CameraParamsOverride::FarClip(void) const {
  * vislib::graphics::CameraParamsOverride::FocalDistance
  */
 vislib::graphics::SceneSpaceType 
-vislib::graphics::CameraParamsOverride::FocalDistance(void) const {
+vislib::graphics::CameraParamsOverride::FocalDistance(bool autofocus) const {
     ASSERT(!this->base.IsNull());
-    return this->base->FocalDistance();
+    return this->base->FocalDistance(autofocus);
 }
 
 

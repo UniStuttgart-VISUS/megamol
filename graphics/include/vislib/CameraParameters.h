@@ -201,9 +201,13 @@ namespace graphics {
         /** 
          * Answer the focal distance for stereo images 
          *
+         * @param autofocus If 'true' and the focus distance is in auto-focus
+         *                  mode (0.0f) it returns the distance to the look-at
+         *                  point instead of 0.0f.
+         *
          * @return The focal distance for stereo images 
          */
-        virtual SceneSpaceType FocalDistance(void) const = 0;
+        virtual SceneSpaceType FocalDistance(bool autofocus = true) const = 0;
 
         /** 
          * Answer the normalised front vector of the camera. 
@@ -337,7 +341,8 @@ namespace graphics {
         virtual void SetFarClip(SceneSpaceType farClip) = 0;
 
         /**
-         * Sets the focal distance.
+         * Sets the focal distance. A value of zero will activate auto-focus
+         * to the look at point.
          *
          * @param focalDistance The focal distance.
          */

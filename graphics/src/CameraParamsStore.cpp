@@ -14,7 +14,7 @@
 #define DEFAULT_COORD_SYS_TYPE  math::COORD_SYS_RIGHT_HANDED
 #define DEFAULT_EYE             LEFT_EYE
 #define DEFAULT_FAR_CLIP        10.0f
-#define DEFAULT_FOCAL_DIST      1.0f
+#define DEFAULT_FOCAL_DIST      0.0f
 #define DEFAULT_FRONT           math::Vector<float, 3>(0.0f, 0.0f, -1.0f)
 #define DEFAULT_HALF_AP_ANGLE   0.5236f
 #define DEFAULT_HALF_DISPARITY  0.125f
@@ -183,7 +183,12 @@ vislib::graphics::SceneSpaceType vislib::graphics::CameraParamsStore::FarClip(
  * vislib::graphics::CameraParamsStore::FocalDistance
  */
 vislib::graphics::SceneSpaceType 
-vislib::graphics::CameraParamsStore::FocalDistance(void) const {
+vislib::graphics::CameraParamsStore::FocalDistance(bool autofocus) const {
+     /* no epsilon test is needed, since this is an explicity set symbol */
+    if (autofocus && (this->focalDistance == 0.0f)) {
+        // autofocus
+        return this->LookAt().Distance(this->Position());
+    }
     return this->focalDistance;
 }
 
@@ -410,10 +415,14 @@ void vislib::graphics::CameraParamsStore::SetFocalDistance(
         vislib::graphics::SceneSpaceType focalDistance) {
     ASSERT(!this->limits.IsNull());
 
-    if (this->limits->MinFocalDist() > focalDistance) {
-        focalDistance = this->limits->MinFocalDist();
+    if (vislib::math::IsEqual(focalDistance, 0.0f)) {
+        this->focalDistance = 0.0f; // special indication
+    } else {
+        if (this->limits->MinFocalDist() > focalDistance) {
+            focalDistance = this->limits->MinFocalDist();
+        }
+        this->focalDistance = focalDistance;
     }
-    this->focalDistance = focalDistance;
     this->syncNumber++;
 }
 
@@ -508,10 +517,14 @@ void vislib::graphics::CameraParamsStore::SetStereoParameters(
 
     this->halfStereoDisparity = stereoDisparity * 0.5f; 
     this->eye = eye;
-    if (this->limits->MinFocalDist() > focalDistance) {
-        focalDistance = this->limits->MinFocalDist();
+    if (vislib::math::IsEqual(focalDistance, 0.0f)) {
+        this->focalDistance = 0.0f; // special indication
+    } else {
+        if (this->limits->MinFocalDist() > focalDistance) {
+            focalDistance = this->limits->MinFocalDist();
+        }
+        this->focalDistance = focalDistance;
     }
-    this->focalDistance = focalDistance;
     this->syncNumber++;
 }
 
@@ -685,7 +698,7 @@ vislib::graphics::CameraParamsStore::operator=(
     this->coordSysType = rhs.CoordSystemType();
     this->eye = rhs.Eye();
     this->farClip = rhs.FarClip();
-    this->focalDistance = rhs.FocalDistance();
+    this->focalDistance = rhs.FocalDistance(false);
     this->front = rhs.Front();
     this->halfApertureAngle = rhs.HalfApertureAngle();
     this->halfStereoDisparity = rhs.HalfStereoDisparity();
