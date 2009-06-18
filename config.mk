@@ -79,7 +79,11 @@ CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic -fPIC
 ifneq (,$(findstring gcc,$(shell $(CPP) --version)))
 ifneq (,$(findstring 4.3,$(shell $(CPP) --version)))
 	# Add -fpermissive to gcc 4.3.* flags because they fail at name resolution
-	CompilerFlags := $(CompilerFlags) -fpermissive -Wno-variadic-macros
+	CompilerFlags := $(CompilerFlags) -fpermissive
+endif
+ifneq (,$(findstring 4.,$(shell $(CPP) --version)))
+	# Add -Wno-variadic-macros to gcc 4.* flags 
+	CompilerFlags := $(CompilerFlags) -Wno-variadic-macros
 endif
 endif
 ifneq ($VISLIB_ICC, 0)
