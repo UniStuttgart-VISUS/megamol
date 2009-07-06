@@ -78,6 +78,22 @@ void vislib::graphics::FpsCounter::FrameEnd(void) {
 
 
 /*
+ * vislib::graphics::FpsCounter::LastFrameTime
+ */
+double vislib::graphics::FpsCounter::LastFrameTime(void) const {
+    unsigned int idx = this->timeValuesPos;
+    if (idx > 0) {
+        idx--;
+    } else if (this->wholeBufferValid) {
+        idx = this->timeValuesCount - 1;
+    } else {
+        return 0.0;
+    }
+    return this->timeValues[idx].before + this->timeValues[idx].frame;
+}
+
+
+/*
  * vislib::graphics::FpsCounter::Reset
  */
 void vislib::graphics::FpsCounter::Reset(void) {

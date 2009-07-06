@@ -73,6 +73,14 @@ namespace graphics {
 		 */
 		void FrameEnd(void);
 
+        /**
+         * Answer the time in milliseconds the last frame needed to be
+         * rendered.
+         *
+         * @return The time required to renderer the last frame.
+         */
+        double LastFrameTime(void) const;
+
         /** 
          * Answer the maximum time in milliseconds to be used when calculating
          * the averaged fps.
