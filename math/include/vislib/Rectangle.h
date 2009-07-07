@@ -28,6 +28,9 @@ namespace math {
 
     public:
 
+        /** An empty rectangle in the origin. */
+        static const Rectangle EMPTY;
+
         /**
          * Create an empty rectangle in the origin.
          */ 
@@ -142,6 +145,11 @@ namespace math {
         typedef AbstractRectangle<T, T[4]> Super;
     };
 
+
+    /*
+     * vislib::math::Rectangle<T>::Rectangle<T>::EMPTY
+     */
+    template<class T> const Rectangle<T> Rectangle<T>::EMPTY(0, 0, 0, 0);
 
     /*
      * vislib::math::Rectangle<T>::~Rectangle
