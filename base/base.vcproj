@@ -705,6 +705,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\deprecated.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\Exception.h"
 				>
 			</File>

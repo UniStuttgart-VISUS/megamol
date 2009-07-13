@@ -16,6 +16,7 @@
 
 
 #include "vislib/CharTraits.h"
+#include "vislib/deprecated.h"
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
 
@@ -201,8 +202,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-//#pragma deprecated(Compare)
-        inline bool Compare(const Char *rhs) const {
+        VLDEPRECATED inline bool Compare(const Char *rhs) const {
         // TODO: The semantics of this method is unintuitive and should be 
         // changed to be similar to strcmp.
         // TODO: Merge Compare and CompareInsensitive to one method and
@@ -217,8 +217,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-//#pragma deprecated(Compare)
-        inline bool Compare(const String& rhs) const {
+        VLDEPRECATED inline bool Compare(const String& rhs) const {
         // TODO: The semantics of this method is unintuitive and should be 
         // changed to be similar to strcmp.
         // TODO: Merge Compare and CompareInsensitive to one method and

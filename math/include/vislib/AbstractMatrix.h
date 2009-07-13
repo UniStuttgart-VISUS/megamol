@@ -190,6 +190,13 @@ namespace math {
         template<class Tp, class Sp>
         AbstractMatrix& operator =(const AbstractQuaternion<Tp, Sp>& rhs);
 
+        /**
+         * Answer the quaternion representing the rotation of this matrix.
+         *
+         * @return A quaternion representing the rotation.
+         */
+        //operator Quaternion<T>(void) const;
+
     protected:
 
         /** A typedef for the super class. */
@@ -300,7 +307,21 @@ namespace math {
 
         return *this;
     }
+
     
+    /*
+     * vislib::math::AbstractMatrix<T, 4, L, S>::operator Quaternion<T>
+     */
+    //template<class T, MatrixLayout L, class S>
+    //AbstractMatrix<T, 4, L, S>::operator Quaternion<T>(void) const {
+    //    double r = Sqrt(1.0 + this->components[Super::indexOf(0, 0)]
+    //        + this->components[Super::indexOf(1, 1)]
+    //        + this->components[Super::indexOf(2, 2]);
+
+
+
+    //}
+
 } /* end namespace math */
 } /* end namespace vislib */
 
