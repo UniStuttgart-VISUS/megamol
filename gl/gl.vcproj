@@ -84,13 +84,12 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
+			Name="Debug|x64"
 			OutputDirectory="$(SolutionDir)\lib"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -107,12 +106,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\glutInclude&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -146,12 +149,13 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
+			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\lib"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease32.vsprops"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -168,16 +172,12 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\glutInclude&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -310,7 +310,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -318,7 +318,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -460,28 +460,16 @@
 			>
 		</Filter>
 		<File
-			RelativePath=".\genext.ps1"
+			RelativePath=".\include\glh\extgen.pl"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h ..."
-					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
-					Outputs="$(ProjectDir)\include\glh\glh_genext.h"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h ..."
-					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
-					Outputs="$(ProjectDir)\include\glh\glh_genext.h"
+					CommandLine="perl &quot;$(InputPath)&quot; &quot;$(ProjectDir)\include\glh\glh_genext.h&quot; &quot;$(ProjectDir)\include\GL\glext.h&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="&quot;$(ProjectDir)\include\GL\glext.h&quot;"
+					Outputs="&quot;$(ProjectDir)\include\glh\glh_genext.h&quot;"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -489,10 +477,19 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h ..."
-					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
-					Outputs="$(ProjectDir)\include\glh\glh_genext.h"
+					CommandLine="perl &quot;$(InputPath)&quot; &quot;$(ProjectDir)\include\glh\glh_genext.h&quot; &quot;$(ProjectDir)\include\GL\glext.h&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="&quot;$(ProjectDir)\include\GL\glext.h&quot;"
+					Outputs="&quot;$(ProjectDir)\include\glh\glh_genext.h&quot;"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="perl &quot;$(InputPath)&quot; &quot;$(ProjectDir)\include\glh\glh_genext.h&quot; &quot;$(ProjectDir)\include\GL\glext.h&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="&quot;$(ProjectDir)\include\GL\glext.h&quot;"
+					Outputs="&quot;$(ProjectDir)\include\glh\glh_genext.h&quot;"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -500,10 +497,9 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Generating glh\glh_genext.h ..."
-					CommandLine="powershell -nologo -noprofile -noninteractive -command &quot;&amp; &apos;$(InputPath)&apos; &apos;$(InputDir)&apos; &apos;$(Bits)&apos; &apos;$(ConfigurationName)&apos; &apos;$(VCInstallDir)&apos;&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(ProjectDir)\include\glh\genextfile.ps1;$(ProjectDir)\include\glh\glh.sln;$(ProjectDir)\include\glh\glh.vcproj;$(ProjectDir)\include\glh\glh_extensions.h;$(ProjectDir)\include\glh\genext.cpp;$(ProjectDir)\include\GL\glext.h"
-					Outputs="$(ProjectDir)\include\glh\glh_genext.h"
+					CommandLine="perl &quot;$(InputPath)&quot; &quot;$(ProjectDir)\include\glh\glh_genext.h&quot; &quot;$(ProjectDir)\include\GL\glext.h&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="&quot;$(ProjectDir)\include\GL\glext.h&quot;"
+					Outputs="&quot;$(ProjectDir)\include\glh\glh_genext.h&quot;"
 				/>
 			</FileConfiguration>
 		</File>
@@ -519,7 +515,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -527,7 +523,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool

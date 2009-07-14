@@ -35,4 +35,5 @@ $(CPP_DEPS_RELEASE): ./include/glh/glh_genext.h
 
 # build target for glh
 ./include/glh/glh_genext.h:
-	$(Q)$(MAKE) -C ./include/glh glh_genext.h
+	perl ./include/glh/extgen.pl ./include/glh/glh_genext.h ./include/GL/glext.h
+#	$(Q)$(MAKE) -C ./include/glh glh_genext.h
