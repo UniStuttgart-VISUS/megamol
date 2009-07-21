@@ -480,15 +480,15 @@ SIZE_T vislib::net::Socket::Receive(SocketAddress& outFromAddr, void *outData,
  * vislib::net::Socket::Send
  */
 SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes, 
-        const INT flags, const INT timeout, const bool forceSend) {
+        const INT timeout, const INT flags, const bool forceSend) {
     int n = 0;                  // Highest descriptor in 'writeSet' + 1.
     fd_set writeSet;            // Set of socket to check for writability.
     struct timeval timeOut;     // Timeout for writability check.
 
-    /* Check parameter constraints. */
-    if ((timeout >= 1) && forceSend) {
-        throw IllegalParamException("forceSend", __FILE__, __LINE__);
-    }
+    ///* Check parameter constraints. */
+    //if ((timeout >= 1) && forceSend) {
+    //    throw IllegalParamException("forceSend", __FILE__, __LINE__);
+    //}
 
     /* Handle infinite timeout first by calling normal send operation. */
     if (timeout < 1) {
@@ -496,7 +496,7 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
     }
 
     /* Initialise socket set and timeout structure. */
-    ASSERT(forceSend == false);
+    //ASSERT(forceSend == false);
     FD_ZERO(&writeSet);
     FD_SET(this->handle, &writeSet);
 
@@ -507,7 +507,7 @@ SIZE_T vislib::net::Socket::Send(const void *data, const SIZE_T cntBytes,
 #ifndef _WIN32
     n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
 #endif /* !_WIN32 */
-    if (::select(n, &writeSet, NULL, NULL, &timeOut) == -1) {
+    if (::select(n, NULL, &writeSet, NULL, &timeOut) == -1) {
         throw SocketException(__FILE__, __LINE__);
     }
 
@@ -536,10 +536,10 @@ SIZE_T vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
     fd_set writeSet;            // Set of socket to check for writability.
     struct timeval timeOut;     // Timeout for writability check.
 
-    /* Check parameter constraints. */
-    if ((timeout >= 1) && forceSend) {
-        throw IllegalParamException("forceSend", __FILE__, __LINE__);
-    }
+    ///* Check parameter constraints. */
+    //if ((timeout >= 1) && forceSend) {
+    //    throw IllegalParamException("forceSend", __FILE__, __LINE__);
+    //}
 
     /* Handle infinite timeout first by calling normal send operation. */
     if (timeout < 1) {
@@ -547,7 +547,7 @@ SIZE_T vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
     }
 
     /* Initialise socket set and timeout structure. */
-    ASSERT(forceSend == false);
+    //ASSERT(forceSend == false);
     FD_ZERO(&writeSet);
     FD_SET(this->handle, &writeSet);
 
@@ -558,7 +558,7 @@ SIZE_T vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
 #ifndef _WIN32
     n = this->handle + 1;   // Windows does not need 'n' and will ignore it.
 #endif /* !_WIN32 */
-    if (::select(n, &writeSet, NULL, NULL, &timeOut) == -1) {
+    if (::select(n, NULL, &writeSet, NULL, &timeOut) == -1) {
         throw SocketException(__FILE__, __LINE__);
     }
 

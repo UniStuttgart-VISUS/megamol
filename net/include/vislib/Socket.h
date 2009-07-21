@@ -710,6 +710,11 @@ namespace net {
          * Send 'cntBytes' from the location designated by 'data' using this 
          * socket.
          *
+         * Note that the timeout is specified for each receive call. When
+         * setting the forceReceive flag multiple calls might be needed to get
+         * all requested data and thus the overall timeout will be a multiple
+         * of the specified timeout.
+         *
          * @param data      The data to be sent. The caller remains owner of the
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
@@ -733,6 +738,11 @@ namespace net {
         /**
          * Send a datagram of 'cntBytes' bytes from the location designated by 
          * 'data' using this socket to the socket 'toAddr'.
+         *
+         * Note that the timeout is specified for each receive call. When
+         * setting the forceReceive flag multiple calls might be needed to get
+         * all requested data and thus the overall timeout will be a multiple
+         * of the specified timeout.
          *
          * This method can only be used on datagram sockets.
          *
@@ -760,6 +770,11 @@ namespace net {
         /**
          * Send a datagram of 'cntBytes' bytes from the location designated by 
          * 'data' using this socket to the socket 'toAddr'.
+         *
+         * Note that the timeout is specified for each receive call. When
+         * setting the forceReceive flag multiple calls might be needed to get
+         * all requested data and thus the overall timeout will be a multiple
+         * of the specified timeout.
          *
          * This method can only be used on datagram sockets.
          *
