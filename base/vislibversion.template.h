@@ -53,14 +53,26 @@
 #define VISLIB_NET_REVISION         $VISLIB_NET_REVISION$
 #define VISLIB_SYS_REVISION         $VISLIB_SYS_REVISION$
 
+#if $VISLIB_HAS_MODIFICATIONS$
+#define VISLIB_DITRY_BUILD 1
+#endif
+
 
 /**
  * Build version number of the vislib
  */
 #if defined(DEBUG) || defined(_DEBUG)
+#if defined(VISLIB_DITRY_BUILD)
+#define VISLIB_VERSION_BUILD 3
+#else
 #define VISLIB_VERSION_BUILD 1
+#endif
 #else /* defined(DEBUG) || defined(_DEBUG) */
+#if defined(VISLIB_DITRY_BUILD)
+#define VISLIB_VERSION_BUILD 2
+#else
 #define VISLIB_VERSION_BUILD 0
+#endif
 #endif /* defined(DEBUG) || defined(_DEBUG) */
 
 

@@ -31,4 +31,13 @@ $hash{'$VISLIB_MATH_REVISION$'} = $vislib_math->rev;
 $hash{'$VISLIB_NET_REVISION$'} = $vislib_net->rev;
 $hash{'$VISLIB_SYS_REVISION$'} = $vislib_sys->rev;
 
+my $anyDirty = $vislib->dirty || $vislib_base->dirty || $vislib_cluster->dirty || $vislib_clusterd3d->dirty
+    || $vislib_clustergl->dirty || $vislib_d3d->dirty || $vislib_gl->dirty || $vislib_graphics->dirty
+    || $vislib_math->dirty || $vislib_net->dirty || $vislib_sys->dirty;
+if (!$anyDirty) {
+    $anyDirty = 0;
+}
+
+$hash{'$VISLIB_HAS_MODIFICATIONS$'} = $anyDirty;
+
 processFile($outFile, $inFile, \%hash);
