@@ -7,7 +7,7 @@ ProjectDirs = base sys math graphics glutInclude gl net cluster test glutTest cl
 
 ################################################################################
 
-all:
+all: VersionInfo
 	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done
 
 sweep:
@@ -35,5 +35,11 @@ rebuild: clean all
 #	
 #graphics: base math
 #	$(MAKE) -C $@
-	
-.PHONY: all clean sweep rebuild
+
+VersionInfo:
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"base/include/vislib/vislibversion.h: "
+	@tput sgr0
+	$(Q)cd base && $(Q)perl makevislibversion.pl .. vislibversion.template.h include/vislib/vislibversion.h
+
+.PHONY: all clean sweep rebuild VersionInfo

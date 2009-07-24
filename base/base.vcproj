@@ -27,6 +27,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Collecting version information"
+				CommandLine="perl &quot;$(ProjectDir)\makevislibversion.pl&quot; &quot;$(SolutionDir)\.&quot; &quot;$(ProjectDir)\vislibversion.template.h&quot; &quot;$(ProjectDir)\include\vislib\vislibversion.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -88,6 +90,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Collecting version information"
+				CommandLine="perl &quot;$(ProjectDir)\makevislibversion.pl&quot; &quot;$(SolutionDir)\.&quot; &quot;$(ProjectDir)\vislibversion.template.h&quot; &quot;$(ProjectDir)\include\vislib\vislibversion.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -151,6 +155,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Collecting version information"
+				CommandLine="perl &quot;$(ProjectDir)\makevislibversion.pl&quot; &quot;$(SolutionDir)\.&quot; &quot;$(ProjectDir)\vislibversion.template.h&quot; &quot;$(ProjectDir)\include\vislib\vislibversion.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -210,6 +216,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Collecting version information"
+				CommandLine="perl &quot;$(ProjectDir)\makevislibversion.pl&quot; &quot;$(SolutionDir)\.&quot; &quot;$(ProjectDir)\vislibversion.template.h&quot; &quot;$(ProjectDir)\include\vislib\vislibversion.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -924,6 +932,10 @@
 			>
 		</Filter>
 		<File
+			RelativePath=".\makevislibversion.pl"
+			>
+		</File>
+		<File
 			RelativePath=".\project.mk"
 			>
 			<FileConfiguration
@@ -958,6 +970,10 @@
 					Name="VCCustomBuildTool"
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\vislibversion.template.h"
+			>
 		</File>
 	</Files>
 	<Globals>
