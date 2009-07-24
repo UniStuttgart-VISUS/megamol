@@ -28,7 +28,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Checking Existance of glutInclude.win.h"
+				CommandLine="IF NOT EXIST &quot;$(ProjectDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(ProjectDir)\glutInclude.system.h&quot; &quot;$(ProjectDir)\glutInclude.win.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -50,7 +51,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Checking Existance of glutInclude.win.h"
+				CommandLine="IF NOT EXIST &quot;$(ProjectDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(ProjectDir)\glutInclude.system.h&quot; &quot;$(ProjectDir)\glutInclude.win.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -74,7 +76,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Checking Existance of glutInclude.win.h"
+				CommandLine="IF NOT EXIST &quot;$(ProjectDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(ProjectDir)\glutInclude.system.h&quot; &quot;$(ProjectDir)\glutInclude.win.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -97,7 +100,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Checking Existance of glutInclude.win.h"
+				CommandLine="IF NOT EXIST &quot;$(ProjectDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(ProjectDir)\glutInclude.system.h&quot; &quot;$(ProjectDir)\glutInclude.win.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -257,42 +261,46 @@
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
+				ExcludedFromBuild="true"
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
+					CommandLine=""
+					AdditionalDependencies=""
+					Outputs=""
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Debug|x64"
+				ExcludedFromBuild="true"
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
+					CommandLine=""
+					AdditionalDependencies=""
+					Outputs=""
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|Win32"
+				ExcludedFromBuild="true"
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
+					CommandLine=""
+					AdditionalDependencies=""
+					Outputs=""
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|x64"
+				ExcludedFromBuild="true"
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="IF NOT EXIST &quot;$(InputDir)\glutInclude.win.h&quot; copy /V /Y /B &quot;$(InputDir)\glutInclude.system.h&quot; &quot;$(InputDir)\glutInclude.win.h&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)\glutInclude.system.h"
-					Outputs="$(InputDir)\glutInclude.win.h"
+					CommandLine=""
+					AdditionalDependencies=""
+					Outputs=""
 				/>
 			</FileConfiguration>
 		</File>
