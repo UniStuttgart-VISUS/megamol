@@ -40,6 +40,6 @@ VersionInfo:
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"base/include/vislib/vislibversion.h: "
 	@tput sgr0
-	$(Q)cd base && $(Q)perl makevislibversion.pl .. vislibversion.template.h include/vislib/vislibversion.h
+	@cd base && @perl makevislibversion.pl .. vislibversion.template.h include/vislib/vislibversion.h
 
 .PHONY: all clean sweep rebuild VersionInfo
