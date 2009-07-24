@@ -30,25 +30,25 @@ template<class T> bool AssertEqual(const char *desc,
 template<class T> bool AssertEqual(const char *desc, 
                                    const char *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringA(lhs).Compare(vislib::StringA(rhs)));
+    return ::AssertTrue(desc, vislib::StringA(lhs).Equals(vislib::StringA(rhs)));
 }
 
 template<class T> bool AssertEqual(const char *desc, 
                                    const wchar_t *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringW(lhs).Compare(vislib::StringW(rhs)));
+    return ::AssertTrue(desc, vislib::StringW(lhs).Equals(vislib::StringW(rhs)));
 }
 
 template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
                                    const char *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringA(lhs).CompareInsensitive(vislib::StringA(rhs)));
+    return ::AssertTrue(desc, vislib::StringA(lhs).Equals(vislib::StringA(rhs), false));
 }
 
 template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
                                    const wchar_t *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, vislib::StringW(lhs).CompareInsensitive(vislib::StringW(rhs)));
+    return ::AssertTrue(desc, vislib::StringW(lhs).Equals(vislib::StringW(rhs), false));
 }
 
 template<class T> bool AssertNotEqual(const char *desc,
