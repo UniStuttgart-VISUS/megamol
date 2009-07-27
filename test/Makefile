@@ -16,10 +16,6 @@ VISlibDir := ../lib
 VISlibs := graphics math net sys base
 
 
-# Name of the ouput file:
-OutName := vislibtest
-
-
 # C++ compiler flags:
 CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 
@@ -56,13 +52,13 @@ CPP_OBJS = $(addprefix $(IntDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 CPP_DEPS = $(patsubst %.o, %.d, $(CPP_OBJS))
 
 
-all: $(OutDir)/$(OutName)
+all: $(OutDir)/$(TargetName)
 
-$(OutDir)/$(OutName): $(IntDir)/$(OutName)
+$(OutDir)/$(TargetName): $(IntDir)/$(TargetName)
 	@mkdir -p $(OutDir)
-	@cp $(IntDir)/$(OutName) $(OutDir)/
+	@cp $^ $(OutDir)/
 	
-$(IntDir)/$(OutName): $(CPP_OBJS) $(addsuffix .a, $(addprefix $(VISlibDir)/lib, $(VISlibs)))
+$(IntDir)/$(TargetName): $(CPP_OBJS) $(addsuffix .a, $(addprefix $(VISlibDir)/lib, $(VISlibs)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'" $@: "
 	@tput sgr0
 	$(Q)$(LINK) -o $@ $^ $(LDFLAGS)
@@ -91,11 +87,11 @@ $(IntDir)/%.o:
 #	ctags *.c *.cpp *.h
 
 clean: sweep
-	rm -f $(OutDir)/$(OutName)
+	rm -f $(OutDir)/$(TargetName)
 
 sweep:
 	rm -f $(IntDir)/*
 
 rebuild: clean all
 
-.PHONY: clean sweep rebuild tags
+.PHONY: clean sweep rebuild tags $(OutDir)/$(TargetName)

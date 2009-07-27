@@ -41,7 +41,7 @@ void vislib::graphics::gl::GlutMouseInteractionAdapter::OnKeyDown(
  */
 void vislib::graphics::gl::GlutMouseInteractionAdapter::OnMouseButton(
         const int button, const int state, const int x, const int y) {
-    MouseInteractionAdapter::Button btn;
+    MouseInteractionAdapter::Button btn = MouseInteractionAdapter::BUTTON_LEFT;
 
     switch (button) {
         case GLUT_LEFT_BUTTON: 

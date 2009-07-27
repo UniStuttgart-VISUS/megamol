@@ -2,7 +2,7 @@
  * String.h
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
- * Copyright (C) 2005 - 2006 by Christoph Mueller. All rights reserved.
+ * Copyright (C) 2005 - 2009 by Christoph Mueller. All rights reserved.
  */
 
 #ifndef VISLIB_STRING_H_INCLUDED
@@ -248,6 +248,58 @@ namespace vislib {
         inline bool CompareInsensitive(const String& rhs) const {
             return this->Equals(rhs, false);
         }
+
+        /**
+         * Answer whether the string contains 'c'. The search begins with the 
+         * 'beginningAt'th character.
+         *
+         * @param c		      The character to be searched.
+         * @param beginningAt The index of the first character to be tested.
+         *
+         * @return true if 'c' is found at 'beginningAt' or after that.
+         */
+        inline bool Contains(const Char c, const Size beginningAt = 0) const {
+            return (this->Find(c, beginningAt) != INVALID_POS);
+        }
+
+        /**
+         * Answer whether the string contains 'str'. The search begins with the 
+         * 'beginningAt'th character.
+         *
+         * @param str         The string to be searched.
+         * @param beginningAt The index of the first character to be tested.
+         *
+         * @return true if 'str' is found at 'beginningAt' or after that.
+         */
+        inline bool Contains(const Char *str, 
+                const Size beginningAt = 0) const {
+            return (this->Find(str, beginningAt) != INVALID_POS);
+        }
+
+        /**
+         * Answer whether the string contains 'str'. The search begins with the 
+         * 'beginningAt'th character.
+         *
+         * @param str         The string to be searched.
+         * @param beginningAt The index of the first character to be tested.
+         *
+         * @return true if 'str' is found at 'beginningAt' or after that.
+         */
+        inline bool Contains(const String& str, 
+                const Size beginningAt = 0) const {
+            return (this->Find(str.data, beginningAt) != INVALID_POS);
+        }
+
+        /**
+         * Count the occurences of 'c' at or after 'beginningAt'.
+         *
+         * @param c		      The character to be counted.
+         * @param beginningAt The index of the first character to be tested.
+         *
+         * @return The number of occurrences of 'c' in the substring starting
+         *         at 'beginningAt'.
+         */
+        SIZE_T Count(const Char c, const Size beginningAt = 0) const;
 
         /**
          * Answer whether this string ends with the character 'c'.
@@ -537,6 +589,54 @@ namespace vislib {
          */
         inline bool IsEmpty(void) const {
             return (this->data[0] == static_cast<Char>(0));
+        }
+
+        /**
+         * Compute the Levenshtein 
+         * (http://www.keldysh.ru/departments/dpt_10/lev.html) distance between
+         * this string and 'rhs'. Note that this string is considered the 
+         * expected text and 'rhs' the actually found one.
+         *
+         * This operation has a memory consumption of 
+         * (this->Length() + 1) * (ths.Length() + 1) * sizeof(Size).
+         *
+         * @rhs              The string to be compared.
+         * @param costAdd    The cost for an insertion (default 1).
+         * @param costDelete The cost for a deletion (default 1).
+         * @param costChange The cost for a substitution (default 1).
+         *
+         * @return The Levenshtein distance using the given weights.
+         *
+         * @throws std::bad_alloc if the temporary buffer for computing the 
+         *                        result cannot be allocated.
+         */
+        Size LevenshteinDistance(const Char *rhs, const Size costAdd = 1,
+            const Size costDelete = 1, const Size costChange = 1) const;
+
+        /**
+         * Compute the Levenshtein 
+         * (http://www.keldysh.ru/departments/dpt_10/lev.html) distance between
+         * this string and 'rhs'. Note that this string is considered the 
+         * expected text and 'rhs' the actually found one.
+         *
+         * This operation has a memory consumption of 
+         * (this->Length() + 1) * (ths.Length() + 1) * sizeof(Size).
+         *
+         * @rhs              The string to be compared.
+         * @param costAdd    The cost for an insertion (default 1).
+         * @param costDelete The cost for a deletion (default 1).
+         * @param costChange The cost for a substitution (default 1).
+         *
+         * @return The Levenshtein distance using the given weights.
+         *
+         * @throws std::bad_alloc if the temporary buffer for computing the 
+         *                        result cannot be allocated.
+         */
+        inline Size LevenshteinDistance(const String& rhs, 
+                const Size costAdd = 1, const Size costDelete = 1, 
+                const Size costChange = 1) const {
+            return this->LevenshteinDistance(rhs.data, costAdd, 
+                costDelete, costChange);
         }
 
 #ifdef _WIN32
@@ -1143,21 +1243,21 @@ namespace vislib {
 
 
     /*
-     * String<T>::INVALID_POS
+     * vislib::String<T>::INVALID_POS
      */
     template<class T> 
     const typename String<T>::Size String<T>::INVALID_POS = -1;
 
 
     /*
-     * String<T>::NO_LIMIT
+     * vislib::String<T>::NO_LIMIT
      */
     template<class T> 
     const typename String<T>::Size String<T>::NO_LIMIT = -1;
 
 
     /*
-     * String<T>::String
+     * vislib::String<T>::String
      */
     template<class T> String<T>::String(void) : data(NULL) {
         this->data = new Char[1];
@@ -1166,7 +1266,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::String
+     * vislib::String<T>::String
      */
     template<class T> String<T>::String(const Char *data) : data(NULL) {
         Size newLen = T::SafeStringLength(data) + 1;
@@ -1182,7 +1282,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::String
+     * vislib::String<T>::String
      */
     template<class T> String<T>::String(const Char *data, const Size& cnt) 
             : data(NULL) {
@@ -1203,7 +1303,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::String
+     * vislib::String<T>::String
      */
     template<class T> 
     template<class U> String<T>::String(const String<U>& data) {
@@ -1215,7 +1315,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::String
+     * vislib::String<T>::String
      */
     template<class T> 
     template<class U> String<T>::String(const U *data) {
@@ -1231,7 +1331,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::String
+     * vislib::String<T>::String
      */
     template<class T> String<T>::String(const Char c, const Size cnt) 
             : data(NULL) {
@@ -1246,7 +1346,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::String
+     * vislib::String<T>::String
      */
     template<class T> String<T>::String(const String& rhs) : data(NULL) {
         Size newLen = rhs.Length() + 1;
@@ -1256,7 +1356,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::~String
+     * vislib::String<T>::~String
      */
     template<class T> String<T>::~String(void) {
         ARY_SAFE_DELETE(this->data);
@@ -1264,10 +1364,10 @@ namespace vislib {
 
 
     /*
-     * String<T>::AllocateBuffer
+     * vislib::String<T>::AllocateBuffer
      */
     template<class T>
-    typename String<T>::Char * String<T>::AllocateBuffer(const Size newLen) {
+    typename String<T>::Char *String<T>::AllocateBuffer(const Size newLen) {
         ARY_SAFE_DELETE(this->data);
         this->data = new Char[newLen + 1];
         this->data[newLen] = 0;
@@ -1276,7 +1376,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Append
+     * vislib::String<T>::Append
      */
     template<class T> void String<T>::Append(const Char *rhs, const Size cnt) {
         Size len = this->Length();
@@ -1292,7 +1392,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Clear
+     * vislib::String<T>::Clear
      */
     template<class T> void String<T>::Clear(void) {
         delete[] this->data;
@@ -1302,7 +1402,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Compare
+     * vislib::String<T>::Compare
      */
     template<class T>
     typename String<T>::Size String<T>::Compare(const Char *rhs, 
@@ -1337,8 +1437,26 @@ namespace vislib {
         return retval;
     }
 
+
     /*
-     * String<T>::EndsWith
+     * vislib::String<T>::Count
+     */
+    template<class T> 
+    SIZE_T String<T>::Count(const Char c, const Size beginningAt) const {
+        SIZE_T retval = 0;
+        Size offset = beginningAt;
+
+        while ((offset = this->Find(c, offset)) != INVALID_POS) {
+            retval++;
+            offset++;
+        }
+
+        return retval;
+    }
+
+
+    /*
+     * vislib::String<T>::EndsWith
      */
     template<class T> bool String<T>::EndsWith(const Char c) const {
         Size len = this->Length();
@@ -1347,7 +1465,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::EndsWith
+     * vislib::String<T>::EndsWith
      */
     template<class T> bool String<T>::EndsWith(const Char *str) const {
         Size len1 = this->Length();
@@ -1404,7 +1522,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::EscapeCharacters
+     * vislib::String<T>::EscapeCharacters
      */
     template<class T> bool String<T>::EscapeCharacters(const Char ec, 
             const Char *normChars, const Char *escpdChars) {
@@ -1462,7 +1580,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Find
+     * vislib::String<T>::Find
      */
     template<class T> typename String<T>::Size String<T>::Find(const Char c,
             const Size beginningAt) const {
@@ -1480,7 +1598,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Find
+     * vislib::String<T>::Find
      */
     template<class T> 
     typename String<T>::Size String<T>::Find(const Char *str, 
@@ -1516,7 +1634,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::FindLast
+     * vislib::String<T>::FindLast
      */
     template<class T> typename String<T>::Size String<T>::FindLast(
             const Char c, const Size beginningAt) const {
@@ -1539,7 +1657,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::FindLast
+     * vislib::String<T>::FindLast
      */
     template<class T> 
     typename String<T>::Size String<T>::FindLast(const Char *str, 
@@ -1576,7 +1694,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Format
+     * vislib::String<T>::Format
      */
     template<class T> void String<T>::Format(const Char *fmt, ...) {
         va_list argptr;
@@ -1599,7 +1717,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Format
+     * vislib::String<T>::Format
      */
     template<class T> void String<T>::Format(const String *fmt, ...) {
         // Implementation note: Using a reference as input to va_start is 
@@ -1653,7 +1771,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::HashCode
+     * vislib::String<T>::HashCode
      */
     template<class T> UINT32 String<T>::HashCode(void) const {
         // DJB2 hash function
@@ -1716,9 +1834,59 @@ namespace vislib {
     }
 
 
+    /*
+     * vislib::String<T>::LevenshteinDistance
+     */
+    template<class T>
+    typename String<T>::Size String<T>::LevenshteinDistance(const Char *rhs,
+            const Size costAdd, const Size costDelete, 
+            const Size costChange) const {
+        // mueller: Adapted from wbcore. I am not completely sure whether this 
+        // works ...
+#define VL_LVS_ARY_IDX(i, j) ((i) * (len2 + 1) + (j))
+#define VL_LVS_MIN3(a, b, c) (((a) < (b))\
+    ? (((c) < (a)) ? (c) : (a))\
+    : (((c) < (b)) ? (c) : (b)))
+
+        ASSERT(rhs != NULL);
+
+        Size len1 = this->Length();
+        Size len2 = T::SafeStringLength(rhs);
+        Size retval = static_cast<Size>(0);
+        Size *dist = new Size[(len1 + 1) * (len2 + 1)];
+
+        dist[0] = static_cast<Size>(0);
+        
+        for (Size i = 1; i <= len2; i++) {
+            dist[i] = i * costAdd;
+        }
+   
+        for (Size i = 1; i <= len1; i++) {
+            dist[VL_LVS_ARY_IDX(i, 0)] = i * costDelete;
+        }
+
+        for (Size i = 1; i <= len1; i++) {
+            for (Size j = 1; j <= len2; j++) {
+                dist[VL_LVS_ARY_IDX(i, j)] = VL_LVS_MIN3(
+                    dist[VL_LVS_ARY_IDX(i - 1, j - 1)] 
+                    + ((this->data[i - 1] == rhs[j - 1]) ? 0 : costChange),
+                    dist[VL_LVS_ARY_IDX(i, j - 1)] + costAdd,
+	                dist[VL_LVS_ARY_IDX(i - 1, j)] + costDelete);
+            }
+        }
+
+        retval = dist[VL_LVS_ARY_IDX(len1, len2)];
+        ARY_SAFE_DELETE(dist);
+        return retval;
+
+#undef VL_LVS_MIN3
+#undef VL_LVS_ARY_IDX
+    }
+
+
 #ifdef _WIN32
     /*
-     * String<T>::Load
+     * vislib::String<T>::Load
      */
     template<class T>
     bool String<T>::Load(const HINSTANCE hInst, const UINT id) {
@@ -1747,7 +1915,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Prepend
+     * vislib::String<T>::Prepend
      */
     template<class T> void String<T>::Prepend(const Char rhs) {
         Size len = this->Length();
@@ -1762,7 +1930,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Prepend
+     * vislib::String<T>::Prepend
      */
     template<class T> void String<T>::Prepend(const Char *rhs) {
         if (rhs != NULL) {
@@ -1780,7 +1948,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Remove
+     * vislib::String<T>::Remove
      */
     template<class T> void String<T>::Remove(const Size begin, const Size cnt) {
         Size len = this->Length();
@@ -1809,7 +1977,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Replace
+     * vislib::String<T>::Replace
      */
     template<class T> typename String<T>::Size String<T>::Replace(
             const Char oldChar, const Char newChar, const Size limit) {
@@ -1828,7 +1996,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Replace
+     * vislib::String<T>::Replace
      */
     template<class T> typename String<T>::Size String<T>::Replace(
             const Char *oldStr, const Char *newStr, const Size limit) {
@@ -1885,7 +2053,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Rot48
+     * vislib::String<T>::Rot48
      */
     template<class T> void String<T>::Rot48(void) {
         for (Char *c = this->data; *c != 0; c++) {
@@ -1897,7 +2065,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::StartsWith
+     * vislib::String<T>::StartsWith
      */
     template<class T> bool String<T>::StartsWith(const Char c) const {
         return (this->data[0] == c);
@@ -1905,7 +2073,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::StartsWith
+     * vislib::String<T>::StartsWith
      */
     template<class T> bool String<T>::StartsWith(const Char *str) const {
         if (str != NULL) {
@@ -1926,7 +2094,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::StartsWithInsensitive
+     * vislib::String<T>::StartsWithInsensitive
      */
     template<class T> bool String<T>::StartsWithInsensitive(const Char c) const {
         return (T::ToLower(this->data[0]) == T::ToLower(c));
@@ -1934,7 +2102,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::StartsWithInsensitive
+     * vislib::String<T>::StartsWithInsensitive
      */
     template<class T> bool String<T>::StartsWithInsensitive(const Char *str) const {
         if (str != NULL) {
@@ -1955,7 +2123,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Substring
+     * vislib::String<T>::Substring
      */
     template<class T> String<T> String<T>::Substring(const Size begin) const {
         Size len = this->Length();
@@ -1969,7 +2137,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Substring
+     * vislib::String<T>::Substring
      */
     template<class T> String<T> String<T>::Substring(const Size begin, 
             const Size length) const {
@@ -2057,7 +2225,7 @@ namespace vislib {
 
     
     /*
-     * String<T>::TrimSpacesBegin
+     * vislib::String<T>::TrimSpacesBegin
      */
     template<class T> void String<T>::TrimSpacesBegin(void) {
         if ((this->data != NULL) && T::IsSpace(this->data[0])) {
@@ -2090,7 +2258,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::TrimSpacesEnd
+     * vislib::String<T>::TrimSpacesEnd
      */
     template<class T> void String<T>::TrimSpacesEnd(void) {
         unsigned int len = this->Length();
@@ -2114,7 +2282,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::Truncate
+     * vislib::String<T>::Truncate
      */
     template<class T> void String<T>::Truncate(const Size size) {
         Size len = this->Length();
@@ -2131,7 +2299,7 @@ namespace vislib {
     }
 
     /*
-     * String<T>::UnescapeCharacters
+     * vislib::String<T>::UnescapeCharacters
      */
     template<class T> bool String<T>::UnescapeCharacters(const Char ec, 
             const Char *normChars, const Char *escpdChars) {
@@ -2197,7 +2365,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator =
+     * vislib::String<T>::operator =
      */
     template<class T> String<T>& String<T>::operator =(const String& rhs) {
         if (this != &rhs) {
@@ -2214,7 +2382,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator =
+     * vislib::String<T>::operator =
      */
     template<class T> String<T>& String<T>::operator =(const Char *rhs) {
         if (this->data != rhs) {
@@ -2237,7 +2405,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator =
+     * vislib::String<T>::operator =
      */
     template<class T> template<class U> 
     String<T>& String<T>::operator =(const String<U>& rhs) {
@@ -2256,7 +2424,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator =
+     * vislib::String<T>::operator =
      */
     template<class T> template<class U> 
     String<T>& String<T>::operator =(const U *rhs) {
@@ -2274,7 +2442,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator +
+     * vislib::String<T>::operator +
      */
     template<class T> String<T> String<T>::operator +(const Char rhs) const {
         Size len = this->Length();
@@ -2292,7 +2460,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator +
+     * vislib::String<T>::operator +
      */
     template<class T> String<T> String<T>::operator +(const Char *rhs) const {
         if (rhs != NULL) {
@@ -2315,7 +2483,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator +=
+     * vislib::String<T>::operator +=
      */
     template<class T> void String<T>::operator +=(const Char rhs) {
         Size len = this->Length();
@@ -2331,7 +2499,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator +=
+     * vislib::String<T>::operator +=
      */
     template<class T> void String<T>::operator +=(const Char *rhs) {
         if (rhs != NULL) {
@@ -2349,7 +2517,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator []
+     * vislib::String<T>::operator []
      */
     template<class T> 
     typename String<T>::Char String<T>::operator [](const Size i) const {
@@ -2363,7 +2531,7 @@ namespace vislib {
 
 
     /*
-     * String<T>::operator []
+     * vislib::String<T>::operator []
      */
     template<class T> 
     typename String<T>::Char& String<T>::operator [](const Size i) {

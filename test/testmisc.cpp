@@ -5,7 +5,6 @@
  */
 
 #include "testmisc.h"
-#include "vislib/NetworkInformation.h"
 #include "testhelper.h"
 
 #include "vislib/Array.h"
@@ -433,31 +432,6 @@ void TestColumnFormatter(void) {
 
 }
 
-const char *TestNIHelper1(vislib::net::NetworkInformation::Adapter::ValidityType v) {
-    switch (v) {
-        case vislib::net::NetworkInformation::Adapter::NOT_VALID : return "NOT_VALID"; break;
-        case vislib::net::NetworkInformation::Adapter::VALID : return "VALID"; break;
-        case vislib::net::NetworkInformation::Adapter::VALID_GENERATED : return "VALID_GEN"; break;
-        default: return "UNKNOWN"; break;
-    }
-}
-
-void TestNetworkInformation(void) {
-    unsigned int cnt = vislib::net::NetworkInformation::AdapterCount();
-    printf("%u Adapters found: \n", cnt);
-
-    for (unsigned int i = 0; i < cnt; i++) {
-        const vislib::net::NetworkInformation::Adapter &ad = vislib::net::NetworkInformation::AdapterInformation(i);
-        printf("\tAdapter %u\n", i);
-        printf("\tName[%s]: %s\n", TestNIHelper1(ad.NameValidity()), ad.Name().PeekBuffer());
-        printf("\tMAC[%s]: %s\n", TestNIHelper1(ad.MACAddressValidity()), ad.MACAddress().PeekBuffer());
-        printf("\tAddr[%s]: %s\n", TestNIHelper1(ad.AddressValidity()), ad.Address().ToStringA().PeekBuffer());
-        printf("\tMask[%s]: %s\n", TestNIHelper1(ad.SubnetMaskValidity()), ad.SubnetMask().ToStringA().PeekBuffer());
-        printf("\tBroadcast[%s]: %s\n", TestNIHelper1(ad.BroadcastAddressValidity()), ad.BroadcastAddress().ToStringA().PeekBuffer());
-
-    }
-
-}
 
 void TestTrace(void) {
     vislib::Trace::GetInstance().EnableFileOutput("trace.txt");

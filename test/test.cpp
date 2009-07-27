@@ -52,6 +52,7 @@
 #include "testpoint.h"
 #include "teststacktrace.h"
 #include "testasyncsocket.h"
+#include "testnetinfo.h"
 
 
 /* type for test functions */

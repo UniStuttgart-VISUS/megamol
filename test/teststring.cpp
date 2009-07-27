@@ -287,6 +287,14 @@ void TestStringA(void) {
 	AssertNotEqual("Obfuscated is different", s1, s2);
 	s2.Rot48();
 	AssertEqual("Deobfuscated is equal to original", s1, s2);
+
+    s1 = "Tier";
+    s2 = "Tor";
+    AssertEqual("Levenshtein distance.", s1.LevenshteinDistance(s2), StringA::Size(2));
+
+    s1 = "kitten";
+    s2 = "sitting";
+    AssertEqual("Levenshtein distance.", s1.LevenshteinDistance(s2), StringA::Size(3));
 }
 
 void TestStringW(void) {
@@ -530,6 +538,14 @@ void TestStringW(void) {
 	AssertNotEqual("Obfuscated is different", s1, s2);
 	s2.Rot48();
 	AssertEqual("Deobfuscated is equal to original", s1, s2);
+
+    s1 = L"Tier";
+    s2 = L"Tor";
+    AssertEqual("Levenshtein distance.", s1.LevenshteinDistance(s2), StringW::Size(2));
+
+    s1 = L"kitten";
+    s2 = L"sitting";
+    AssertEqual("Levenshtein distance.", s1.LevenshteinDistance(s2), StringW::Size(3));
 }
 
 void TestUTF8String(void) {
@@ -631,5 +647,4 @@ void TestStringTokeniser(void) {
     if (!AssertTrue("Tokeniser HasNext", t2.HasNext())) return;
     AssertEqual("Token correct", t2.Next(), "Test with no match a all");
     if (!AssertFalse("Tokeniser HasNext NOT", t2.HasNext())) return;
-
 }

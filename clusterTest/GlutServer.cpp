@@ -7,6 +7,7 @@
 
 #include "GlutServer.h"
 
+#if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
 using namespace vislib::net::cluster;
 
 
@@ -68,3 +69,5 @@ void GlutServer::onInitialise(void) {
     GlutServerNode<GlutServer>::onInitialise();
     ::glEnable(GL_DEPTH_TEST);
 }
+
+#endif /*defined(VISLIB_CLUSTER_WITH_OPENGL) && ... */

@@ -14,7 +14,6 @@
 #include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/memutils.h"
-#include "vislib/StackTrace.h"
 
 
 /*
@@ -185,10 +184,10 @@ vislib::net::IPAgnosticAddress::AddressFamily
 vislib::net::IPAgnosticAddress::GetAddressFamily(void) const {
     VLSTACKTRACE("IPAgnosticAddress::GetAddressFamily", __FILE__, __LINE__);
 
-    if (this->v4 != NULL) {
+    if (this->IsV4()) {
         return FAMILY_INET;
 
-    } else if (this->v6 != NULL) {
+    } else if (this->IsV6()) {
         return FAMILY_INET6;
 
     } else {
@@ -204,10 +203,10 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::GetPrefix(
         const ULONG prefixLength) const {
     VLSTACKTRACE("IPAgnosticAddress::GetPrefix", __FILE__, __LINE__);
 
-    if (this->v4 != NULL) {
+    if (this->IsV4()) {
         return IPAgnosticAddress(this->v4->GetPrefix(prefixLength));
 
-    } else if (this->v6 != NULL) {
+    } else if (this->IsV6()) {
         return IPAgnosticAddress(this->v6->GetPrefix(prefixLength));
 
     } else {
@@ -222,10 +221,10 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::GetPrefix(
 vislib::StringA vislib::net::IPAgnosticAddress::ToStringA(void) const {
     VLSTACKTRACE("IPAgnosticAddress::ToStringA", __FILE__, __LINE__);
 
-    if (this->v4 != NULL) {
+    if (this->IsV4()) {
         return this->v4->ToStringA();
 
-    } else if (this->v6 != NULL) {
+    } else if (this->IsV6()) {
         return this->v6->ToStringA();
 
     } else {
@@ -240,10 +239,10 @@ vislib::StringA vislib::net::IPAgnosticAddress::ToStringA(void) const {
 vislib::StringW vislib::net::IPAgnosticAddress::ToStringW(void) const {
     VLSTACKTRACE("IPAgnosticAddress::ToStringW", __FILE__, __LINE__);
 
-    if (this->v4 != NULL) {
+    if (this->IsV4()) {
         return this->v4->ToStringW();
 
-    } else if (this->v6 != NULL) {
+    } else if (this->IsV6()) {
         return this->v6->ToStringW();
 
     } else {
@@ -258,10 +257,10 @@ vislib::StringW vislib::net::IPAgnosticAddress::ToStringW(void) const {
 BYTE vislib::net::IPAgnosticAddress::operator [](const int i) const {
     VLSTACKTRACE("IPAgnosticAddress::operator []", __FILE__, __LINE__);
 
-    if (this->v4 != NULL) {
+    if (this->IsV4()) {
         return this->v4->operator [](i);
 
-    } else if (this->v6 != NULL) {
+    } else if (this->IsV6()) {
         return this->v6->operator [](i);
 
     } else {
@@ -282,11 +281,11 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
         SAFE_DELETE(this->v4);
         SAFE_DELETE(this->v6);
 
-        if (rhs.v4 != NULL) {
+        if (rhs.IsV4()) {
             ASSERT(rhs.v6 == NULL);
             this->v4 = new IPAddress(*(rhs.v4));
 
-        } else if (rhs.v6 != NULL) {
+        } else if (rhs.IsV6()) {
             ASSERT(rhs.v4 == NULL);
             this->v6 = new IPAddress6(*(rhs.v6));
         }
@@ -337,7 +336,7 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
         const struct in_addr& rhs) {
     VLSTACKTRACE("IPAgnosticAddress::operator =", __FILE__, __LINE__);
 
-    // TODO: This might be unsafe is s.o. copies internal data of v4
+    // TODO: This might be unsafe if s.o. copies internal data of v4
     SAFE_DELETE(this->v4);
     SAFE_DELETE(this->v6);
     this->v4 = new IPAddress(rhs);
@@ -353,7 +352,7 @@ vislib::net::IPAgnosticAddress& vislib::net::IPAgnosticAddress::operator =(
         const struct in6_addr& rhs) {
     VLSTACKTRACE("IPAgnosticAddress::operator =", __FILE__, __LINE__);
 
-    // TODO: This might be unsafe is s.o. copies internal data of v6
+    // TODO: This might be unsafe if s.o. copies internal data of v6
     SAFE_DELETE(this->v4);
     SAFE_DELETE(this->v6);
     this->v6 = new IPAddress6(rhs);
@@ -369,17 +368,17 @@ bool vislib::net::IPAgnosticAddress::operator ==(
         const IPAgnosticAddress& rhs) const {
     VLSTACKTRACE("IPAgnosticAddress::operator ==", __FILE__, __LINE__);
 
-    if ((this->v4 != NULL) && (rhs.v4 != NULL)) {
+    if (this->IsV4() && rhs.IsV4()) {
         return this->v4->operator ==(*(rhs.v4));
 
-    } else if ((this->v6 != NULL) && (rhs.v6 != NULL)) {
+    } else if (this->IsV6() && rhs.IsV6()) {
         return this->v6->operator ==(*(rhs.v6));
 
-    } else if ((this->v4 != NULL) && (rhs.v6 != NULL)) {
+    } else if (this->IsV4() && rhs.IsV6()) {
         // TODO: Diese Implementierung ist ranzig!
         return rhs.v6->operator ==(IPAddress6(*(this->v4)));
 
-    } else if ((this->v6 != NULL) && (rhs.v4 != NULL)) {
+    } else if (this->IsV6() && rhs.IsV4()) {
         // TODO: Diese Implementierung ist ranzig!
         return this->v6->operator ==(IPAddress6(*(rhs.v4)));
 
@@ -398,7 +397,7 @@ bool vislib::net::IPAgnosticAddress::operator ==(
  */
 bool vislib::net::IPAgnosticAddress::operator ==(const IPAddress& rhs) const {
     VLSTACKTRACE("IPAgnosticAddress::operator ==", __FILE__, __LINE__);
-    return (this->v4 != NULL) ? this->v4->operator ==(rhs) : false;
+    return (this->IsV4()) ? this->v4->operator ==(rhs) : false;
 }
 
 
@@ -407,7 +406,7 @@ bool vislib::net::IPAgnosticAddress::operator ==(const IPAddress& rhs) const {
  */
 bool vislib::net::IPAgnosticAddress::operator ==(const IPAddress6& rhs) const {
     VLSTACKTRACE("IPAgnosticAddress::operator ==", __FILE__, __LINE__);
-    return (this->v6 != NULL) ? this->v6->operator ==(rhs) : false;
+    return (this->IsV6()) ? this->v6->operator ==(rhs) : false;
 }
 
 
@@ -417,7 +416,7 @@ bool vislib::net::IPAgnosticAddress::operator ==(const IPAddress6& rhs) const {
 bool vislib::net::IPAgnosticAddress::operator ==(
         const struct in_addr& rhs) const {
     VLSTACKTRACE("IPAgnosticAddress::operator ==", __FILE__, __LINE__);
-    return (this->v4 != NULL) ? this->v4->operator ==(rhs) : false;
+    return (this->IsV4()) ? this->v4->operator ==(rhs) : false;
 }
 
 
@@ -427,7 +426,7 @@ bool vislib::net::IPAgnosticAddress::operator ==(
 bool vislib::net::IPAgnosticAddress::operator ==(
         const struct in6_addr& rhs) const {
     VLSTACKTRACE("IPAgnosticAddress::operator ==", __FILE__, __LINE__);
-    return (this->v6 != NULL) ? this->v6->operator ==(rhs) : false;
+    return (this->IsV6()) ? this->v6->operator ==(rhs) : false;
 }
 
 
@@ -437,14 +436,47 @@ bool vislib::net::IPAgnosticAddress::operator ==(
 vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress(void) const {
     VLSTACKTRACE("IPAgnosticAddress::operator IPAddress", __FILE__, __LINE__);
 
-    if (this->v4 != NULL) {
+    if (this->IsV4()) {
         return *(this->v4);
 
-    } else if (this->v6 != NULL) {
+    } else if (this->IsV6()) {
         return static_cast<IPAddress>(*(this->v6));
 
     } else {
-        return IPAgnosticAddress::NONE4;
+        throw IllegalStateException("The IPAgnosticAddress cannot be converted "
+            "to an IPv4 address.", __FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress *
+ */
+vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress *(
+        void) const {
+    VLSTACKTRACE("IPAgnosticAddress::operator const IPAddress *", __FILE__, 
+        __LINE__);
+
+    if (this->IsV4()) {
+        return this->v4;
+    } else {
+        throw IllegalStateException("The IPAgnosticAddress does not represent "
+            "an IPv4 address.", __FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress *
+ */
+vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress *(void) {
+    VLSTACKTRACE("IPAgnosticAddress::operator IPAddress *", __FILE__, __LINE__);
+
+    if (this->IsV4()) {
+        return this->v4;
+    } else {
+        throw IllegalStateException("The IPAgnosticAddress does not represent "
+            "an IPv4 address.", __FILE__, __LINE__);
     }
 }
 
@@ -455,13 +487,45 @@ vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress(void) const {
 vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6(void) const {
     VLSTACKTRACE("IPAgnosticAddress::operator IPAddress6", __FILE__, __LINE__);
 
-    if (this->v4 != NULL) {
+    if (this->IsV4()) {
         return IPAddress6(*(this->v4));
 
-    } else if (this->v6 != NULL) {
+    } else if (this->IsV6()) {
         return *(this->v6);
 
     } else {
         return IPAgnosticAddress::NONE6;
+    }
+}
+
+
+/*
+ * vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress6 *
+ */
+vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress6 *(
+        void) const {
+    VLSTACKTRACE("IPAgnosticAddress::operator const IPAddress6 *", __FILE__, 
+        __LINE__);
+
+    if (this->IsV6()) {
+        return this->v6;
+    } else {
+        throw IllegalStateException("The IPAgnosticAddress does not represent "
+            "an IPv6 address.", __FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6 *
+ */
+vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6 *(void) {
+    VLSTACKTRACE("IPAgnosticAddress::operator IPAddress6 *", __FILE__, __LINE__);
+
+    if (this->IsV6()) {
+        return this->v6;
+    } else {
+        throw IllegalStateException("The IPAgnosticAddress does not represent "
+            "an IPv6 address.", __FILE__, __LINE__);
     }
 }

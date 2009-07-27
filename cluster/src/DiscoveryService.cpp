@@ -123,7 +123,7 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::isValid(void) const {
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
     // TODO: This is not good
-//    NetworkInformation::Adapter adapter = NetworkInformation::GetAdapter(0);
+    NetworkInformation::Adapter adapter = NetworkInformation::GetAdapter(0);
     
     throw 1; // TODO NETINFO
     //this->responseAddress = IPEndPoint(adapter.GetAddress4());

@@ -45,7 +45,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\glutInclude&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG"
+				PreprocessorDefinitions="WIN32;_DEBUG;VISLIB_CLUSTER_WITH_OPENGL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"

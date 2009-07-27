@@ -15,6 +15,8 @@
 #include "vislib/OpenGLVISLogo.h"
 
 
+#if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
+
 class GlutServer : public vislib::net::cluster::GlutServerNode<GlutServer> {
 
 public:
@@ -39,4 +41,5 @@ protected:
 
 };
 
+#endif /*defined(VISLIB_CLUSTER_WITH_OPENGL) && ... */
 #endif /* VISLIBTEST_GLUTSERVER_H_INCLUDED */

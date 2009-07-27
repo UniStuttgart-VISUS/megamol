@@ -7,6 +7,7 @@
 
 #include "GlutClient.h"
 
+#if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
 using namespace vislib::net::cluster;
 
 
@@ -54,3 +55,5 @@ void GlutClient::onInitialise(void) {
     GlutClientNode<GlutClient>::onInitialise();
     ::glEnable(GL_DEPTH_TEST);
 }
+
+#endif /*defined(VISLIB_CLUSTER_WITH_OPENGL) && ... */

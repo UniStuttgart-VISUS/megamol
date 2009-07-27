@@ -18,6 +18,7 @@
 #include "vislib/IPAddress.h"
 #include "vislib/IPAddress6.h"
 #include "vislib/SocketAddress.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -224,6 +225,26 @@ namespace net {
          */
         IPAgnosticAddress GetPrefix(const ULONG prefixLength) const;
 
+        /**
+         * Answer whether the address family version is 4.
+         *
+         * @return true if the address is v4, false otherwise.
+         */
+        inline bool IsV4(void) const {
+            VLSTACKTRACE("IPAgnosticAddress::IsV4", __FILE__, __LINE__);
+            return (this->v4 != NULL);
+        }
+
+        /**
+         * Answer whether the address family version is 6.
+         *
+         * @return true if the address is v6, false otherwise.
+         */
+        inline bool IsV6(void) const {
+            VLSTACKTRACE("IPAgnosticAddress::IsV6", __FILE__, __LINE__);
+            return (this->v6 != NULL);
+        }
+
         /** 
          * Answer a string representation of the IP address. 
          *
@@ -349,6 +370,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAgnosticAddress& rhs) const {
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -360,6 +382,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAddress& rhs) const {
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -371,6 +394,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAddress6& rhs) const {
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -382,6 +406,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const struct in_addr& rhs) const {
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -393,6 +418,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const struct in6_addr& rhs) const {
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -411,7 +437,35 @@ namespace net {
         operator IPAddress(void) const;
 
         /**
-         * Cast to an IPv6 address.
+         * Cast to a pointer to an IPv4 address.
+         *
+         * This operation is only valid if the IPAgnosticAddress represents an
+         * IPv4 address.
+         *
+         * @return The IPv4 address that is equivalent to this address.
+         *
+         * @throws IllegalStateException If the address is not IPv4.
+         */
+        operator const IPAddress *(void) const;
+
+        /**
+         * Cast to a pointer to an IPv4 address. This cast exposes the internal
+         * address structure, i.e. results in aliasing. The callee remains owner
+         * of the memory, which is valid as long as the object is unchanged.
+         *
+         * This operation is only valid if the IPAgnosticAddress represents an
+         * IPv4 address.
+         *
+         * @return The IPv4 address that is equivalent to this address.
+         *
+         * @throws IllegalStateException If the address is not IPv4.
+         */
+        operator IPAddress *(void);
+
+        /**
+         * Cast to an IPv6 address. This cast exposes the internal
+         * address structure, i.e. results in aliasing. The callee remains owner
+         * of the memory, which is valid as long as the object is unchanged.
          *
          * This operation is only valid if the IPAgnosticAddress represents an
          * IPv6 address or an IPv4 address.
@@ -422,6 +476,34 @@ namespace net {
          *                               be casted to an IPv6 address.
          */
         operator IPAddress6(void) const;
+
+        /**
+         * Cast to a pointer to an IPv6 address. This cast exposes the internal
+         * address structure, i.e. results in aliasing. The callee remains owner
+         * of the memory, which is valid as long as the object is unchanged.
+         *
+         * This operation is only valid if the IPAgnosticAddress represents an
+         * IPv6 address.
+         *
+         * @return The IPv6 address that is equivalent to this address.
+         *
+         * @throws IllegalStateException If the address is not IPv6.
+         */
+        operator const IPAddress6 *(void) const;
+
+        /**
+         * Cast to a pointer to an IPv6 address. This cast exposes the internal
+         * address structure, i.e. results in aliasing. The callee remains owner
+         * of the memory, which is valid as long as the object is unchanged.
+         *
+         * This operation is only valid if the IPAgnosticAddress represents an
+         * IPv6 address.
+         *
+         * @return The IPv6 address that is equivalent to this address.
+         *
+         * @throws IllegalStateException If the address is not IPv6.
+         */
+        operator IPAddress6 *(void);
 
     private:
 

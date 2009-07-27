@@ -65,7 +65,7 @@ namespace vislib {
      * No memory is allocated, if the capacity is forced to zero.
      *
      * Implementation note: The construction/destruction policy of the array is 
-     * that all elements within the current capacity must have beeb constructed.
+     * that all elements within the current capacity must have been constructed.
      * In order to prevent memory leaks in the derived PtrArray class, elements
      * that are erased are immediately dtored and the free element(s) is/are
      * reconstructed using the default ctor after that.
@@ -954,6 +954,7 @@ namespace vislib {
     template<class T, class L, class C>
     void Array<T, L, C>::Resize(const SIZE_T capacity) {
         void *newPtr = NULL;
+        SIZE_T oldCapacity = this->capacity;
 
         this->Lock();
 
@@ -979,16 +980,19 @@ namespace vislib {
             /* Array is empty now, make 'this->elements' a NULL pointer. */
             SAFE_FREE(this->elements);
 
-        } else {
+        } else if (oldCapacity != this->capacity) {
             /* Reallocate elements. */
             if ((newPtr = ::realloc(this->elements, this->capacity * sizeof(T)))
                     != NULL) {
                 this->elements = static_cast<T *>(newPtr);
 
-                for (SIZE_T i = this->count; i < this->capacity; i++) {
+                for (SIZE_T i = oldCapacity; i < this->capacity; i++) {
                     C::Ctor(this->elements + i);
                 }
             } else {
+                for (SIZE_T i = 0; i < oldCapacity; i++) {
+                    C::Dtor(this->elements + i);
+                }
                 SAFE_FREE(this->elements);
                 this->Unlock();
                 throw std::bad_alloc();

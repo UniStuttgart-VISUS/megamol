@@ -18,8 +18,6 @@ void TestConsoleColours(void);
 
 void TestColumnFormatter(void);
 
-void TestNetworkInformation(void);
-
 void TestTrace(void);
 
 void TestExceptions(void);

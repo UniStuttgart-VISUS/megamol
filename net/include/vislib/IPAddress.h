@@ -97,6 +97,18 @@ namespace net {
         inline IPAddress(const struct in_addr& address) : address(address) { };
 
         /**
+         * Create an IPAddress from its representation as a single integer.
+         *
+         * @param address         The address as integer. The byte order of this
+         *                        integer must be according to the value of the
+         *                        'isHostByteOrder' flag.
+         * @param isHostByteOrder Determines whether 'address' is host byte 
+         *                        order or network byte order (false, default).
+         */
+        explicit IPAddress(const unsigned long address, 
+                const bool isHostByteOrder = false);
+
+        /**
          * Copy ctor.
          *
          * @param rhs The object to be cloned.
@@ -253,13 +265,6 @@ namespace net {
         }
 
     private:
-
-        /**
-         * Create an IPAddress from its representation as a single integer.
-         *
-         * @param address The address as integer.
-         */
-        explicit IPAddress(const unsigned long address);
 
         /** The IP address wrapped by this object. */
         struct in_addr address;
