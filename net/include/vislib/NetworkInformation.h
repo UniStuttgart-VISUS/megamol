@@ -931,11 +931,14 @@ namespace net {
          * might become invalid after the method returned in case that another
          * thread updates the adapter cache.
          *
-         * @return
+         * @return The number of known adapters.
          * 
-         * @throws SystemException
-         * @throws SocketException
-         * @throws std::bad_alloc 
+         * @throws SystemException If the adapters could not be retrieved due to
+         *                         an error in a system call.
+         * @throws SocketException If the adapters could not be retrieved due to
+         *                         an error in a socket operation.
+         * @throws std::bad_alloc  If the memory required to retrieve the 
+         *                         adapters could not be allocated.
          */
         static SIZE_T CountAdapters(void);
 
@@ -945,9 +948,12 @@ namespace net {
          * @param reread If set true, the cache is immediately re-read after 
          *               clearing.
          *
-         * @throws SystemException
-         * @throws SocketException
-         * @throws std::bad_alloc 
+         * @throws SystemException If the adapters could not be retrieved due to
+         *                         an error in a system call.
+         * @throws SocketException If the adapters could not be retrieved due to
+         *                         an error in a socket operation.
+         * @throws std::bad_alloc  If the memory required to retrieve the 
+         *                         adapters could not be allocated.
          */
         static void DiscardCache(const bool reread = false);
 
@@ -960,9 +966,12 @@ namespace net {
          * @param userContext
          *
          * @throws IllegalParamException If 'cb' is a NULL pointer.
-         * @throws SystemException
-         * @throws SocketException
-         * @throws std::bad_alloc
+         * @throws SystemException       If the adapters could not be retrieved 
+         *                               due to an error in a system call.
+         * @throws SocketException       If the adapters could not be retrieved 
+         *                               due to an error in a socket operation.
+         * @throws std::bad_alloc        If the memory required to retrieve the 
+         *                               adapters could not be allocated.
          */
         static void EnumerateAdapters(EnumerateAdaptersCallback cb,
             void *userContext = NULL);
@@ -1100,6 +1109,24 @@ namespace net {
         static SIZE_T GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
             const IPAgnosticAddress& address);
 
+        /**
+         * Answer all adapters that have the same prefix of length
+         * 'prefixLength' as the given IP address 'address'.
+         *
+         * This method is thread-safe.
+         *
+         * @param outAdapters Receives the adapters.
+         * @param address     The IP address that the adapter must have.
+         *
+         * @return The number of adapters found.
+         *
+         * @throws SystemException     If an error occurred while retrieving 
+         *                             information from the OS.
+         * @throws SocketException     If the socket subsystem could not be 
+         *                             used.
+         * @throws std::bad_alloc      If there was insufficient memory for 
+         *                             retrieving the data.
+         */
         static SIZE_T GetAdaptersForUnicastPrefix(AdapterList& outAdapters,
             const IPAgnosticAddress& address, const ULONG prefixLength);
 
@@ -1135,12 +1162,38 @@ namespace net {
         static const Adapter& GetAdapterUnsafe(const SIZE_T idx);
 
         /**
-         * Performs a wild guess which adapter could be designated by the given
-         * string representation 'str'.
+         * Performs a wild guess on which adapter could be designated by the 
+         * given string representation 'str'.
          *
-         * @param outAdapter
-         * @param str
-         * @param invertWildness
+         * The string representation that can be parsed assumes the following
+         * basic format:
+         *
+         * <IP/host name/device name>/<netmask/prefix length>:<port>
+         *
+         * The port number is ignored for guessing the adapter and is only 
+         * recognised for convenience.
+         *
+         * The IP address, host name and device name are mutually exclusive. The
+         * best interpretation will be used. IP addresses can be either IPv4 or
+         * IPv6. IPv6 addresses can be enclosed in brackets ("[", "]").
+         *
+         * The netmask (including the preceding "/") is optional.
+         *
+         * An IP address can include an optional zone ID ("%<zone>"), which is
+         * not used for guessing.
+         *
+         * If you specify an IP address, host or device name that exactly 
+         * matches an adapter and you also specify a prefix length which is
+         * not applicable for any IP address of the designated adapter, the
+         * wildness of the guess is increased.
+         *
+         * The wildness of the guess is increased for adapters that are 
+         * currently down.
+         *
+         * @param outAdapter     Receives the guessed adapter.
+         * @param str            The string that should identify an adapter.
+         * @param invertWildness Return (1.0 - wildness) instead of the 
+         *                       wildness. Note that this is not chefm‰ﬂig!
          * 
          * @return The wildness, which is a value within [0, 1] indicating "how
          *         wild" the guess was. If the value is 0, the result can be
@@ -1148,10 +1201,57 @@ namespace net {
          *         result is mostly random. If 'inverWildness' is set true, the
          *         return value is inverted, i.e. 1.0 in best case and 0.0 in
          *         worst case.
+         *
+         * @throws NoSuchElementException If there is no known adapter 
+         *                                available.
          */
         static float GuessAdapter(Adapter& outAdapter, const char *str,
                 const bool invertWildness = false);
 
+        /**
+         * Performs a wild guess on which adapter could be designated by the 
+         * given string representation 'str'.
+         *
+         * The string representation that can be parsed assumes the following
+         * basic format:
+         *
+         * <IP/host name/device name>/<netmask/prefix length>:<port>
+         *
+         * The port number is ignored for guessing the adapter and is only 
+         * recognised for convenience.
+         *
+         * The IP address, host name and device name are mutually exclusive. The
+         * best interpretation will be used. IP addresses can be either IPv4 or
+         * IPv6. IPv6 addresses can be enclosed in brackets ("[", "]").
+         *
+         * The netmask (including the preceding "/") is optional.
+         *
+         * An IP address can include an optional zone ID ("%<zone>"), which is
+         * not used for guessing.
+         *
+         * If you specify an IP address, host or device name that exactly 
+         * matches an adapter and you also specify a prefix length which is
+         * not applicable for any IP address of the designated adapter, the
+         * wildness of the guess is increased.
+         *
+         * The wildness of the guess is increased for adapters that are 
+         * currently down.
+         *
+         * @param outAdapter     Receives the guessed adapter.
+         * @param str            The string that should identify an adapter.
+         * @param invertWildness Return (1.0 - wildness) instead of the 
+         *                       wildness. Note that this is not chefm‰ﬂig!
+         * 
+         * @return The wildness, which is a value within [0, 1] indicating "how
+         *         wild" the guess was. If the value is 0, the result can be
+         *         considered correct and unambiguous. If it is near 1, the 
+         *         result is mostly random. If 'inverWildness' is set true, the
+         *         return value is inverted, i.e. 1.0 in best case and 0.0 in
+         *         worst case.
+         *
+         * @throws NoSuchElementException If there is no known adapter 
+         *                                available.
+         */
         static float GuessAdapter(Adapter& outAdapter, const wchar_t *str,
             const bool invertWildness = false);
 

@@ -1661,8 +1661,12 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
     SIZE_T cntEqualWildness = 0;    // # of adapters with equal wildness.
     Adapter *candidate = NULL;      // The currently best guess.
 
-    /* Ensure that we know the adapters. */
+    /* Ensure that we know the adapters and that we have at least one. */
     NetworkInformation::initAdapters();
+    if (NetworkInformation::adapters.IsEmpty()) {
+        throw NoSuchElementException("There are no network adapters available "
+            "for guessing the right one.", __FILE__, __LINE__);
+    }
     
     /* Initially, all adapters are candidates with wildness 1. */
     wildness.AssertCapacity(NetworkInformation::adapters.Count());
