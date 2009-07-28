@@ -14,8 +14,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/vislibversion.h"
-
 
 #ifdef _WIN32
 #include <windows.h>
