@@ -463,9 +463,9 @@ namespace sys {
         String<T> rlhs = (Path::IsAbsolute(lhs)) ? Path::Canonicalise(lhs) : Path::Resolve(lhs);
         String<T> rrhs = (Path::IsAbsolute(rhs)) ? Path::Canonicalise(rhs) : Path::Resolve(rhs);
 #ifdef _WIN32
-        return rlhs.CompareInsensitive(rrhs);
+        return rlhs.Equals(rrhs, false);
 #else /* _WIN32 */
-        return rlhs.Compare(rrhs);
+        return rlhs.Equals(rrhs, true);
 #endif /* _WIN32 */
     }
     

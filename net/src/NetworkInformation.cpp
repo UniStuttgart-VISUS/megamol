@@ -1651,8 +1651,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
             const IPAgnosticAddress& address, const StringW& device, 
             const ULONG prefixLen, const UINT32 validMask) {
     VLSTACKTRACE("NetworkInformation::wildGuessAdapter", __FILE__, __LINE__);
-    static const float LEVENSHTEIN_WILDNESS_WEIGHT = 0.05f;
-    static const float WRONG_PREFIX_PENALTY = 0.2f;
+    //static const float LEVENSHTEIN_WILDNESS_WEIGHT = 0.05f;
     Array<float> wildness(0);       // The pre-adapter wildness.
     float retval = 1.0f;            // The final wildness of the guess.
     float dist = 0.0f;              // Levenshtein between input and adapter.
@@ -1753,7 +1752,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
                 if (matchedIndex >= 0) {
                     if ((a.GetUnicastAddresses()[matchedIndex])
                             .GetPrefixLength() != prefixLen) {
-                        wildness[i] += WRONG_PREFIX_PENALTY;
+                        wildness[i] += NetworkInformation::PENALTY_WRONG_PREFIX;
                     }
                 } else if ((matchedIndex = NetworkInformation::findSamePrefix(
                         a.GetUnicastAddresses(), address, prefixLen)) >= 0) {
@@ -1776,10 +1775,10 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
             // TODO: Das könnte man auch anders implementieren, so dass ein 
             // Adapter, der mehrere Addressen im richtigen Subnetz hat besser
             // bewertet wird.
-            wildness[i] += WRONG_PREFIX_PENALTY;
+            wildness[i] += NetworkInformation::PENALTY_WRONG_PREFIX;
             for (SIZE_T a = 0; a < al.Count(); a++) {
                 if (al[a].GetPrefixLength() == prefixLen) {
-                    wildness[i] -= WRONG_PREFIX_PENALTY;
+                    wildness[i] -= NetworkInformation::PENALTY_WRONG_PREFIX;
                     VLTRACE(Trace::LEVEL_VL_VERBOSE, "Prefix length %u is "
                         "OK.\n", prefixLen);
                     break;
@@ -1787,6 +1786,16 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
             }
 
         } /* end if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) */
+
+        /* Check for connection state. */
+        try {
+            if ((a.GetStatus() == Adapter::STATUS_DOWN)
+                    || (a.GetStatus() == Adapter::STATUS_LOWER_LAYER_DOWN)) {
+                wildness[i] += NetworkInformation::PENALTY_ADAPTER_DOWN;
+            }
+        } catch (NoConfidenceException) {
+            wildness[i] += NetworkInformation::PENALTY_ADAPTER_DOWN / 2.0f;
+        }
     } /* end for (SIZE_T i = 0; i < NetworkInformation::adapters.Count() ... */
 
     /* 
@@ -1987,6 +1996,18 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
 
     return retval;
 }
+
+
+/*
+ * vislib::net::NetworkInformation::PENALTY_ADAPTER_DOWN
+ */
+const float vislib::net::NetworkInformation::PENALTY_ADAPTER_DOWN = 0.2f;
+
+
+/*
+ * vislib::net::NetworkInformation::PENALTY_WRONG_PREFIX
+ */
+const float vislib::net::NetworkInformation::PENALTY_WRONG_PREFIX = 0.15f;
 
 
 /* 

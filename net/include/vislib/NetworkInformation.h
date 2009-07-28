@@ -1562,6 +1562,17 @@ namespace net {
             const wchar_t *str);
 
         /**
+         * Wildness penalty for an adapter that matches, but is currently down.
+         */
+        static const float PENALTY_ADAPTER_DOWN;
+
+        /**
+         * Wildness penalty for a wrong prefix while the rest of the adapter
+         * specification matches.
+         */
+        static const float PENALTY_WRONG_PREFIX;
+
+        /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outAddress'.
          */

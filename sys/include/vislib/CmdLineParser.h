@@ -2041,7 +2041,7 @@ namespace sys {
         while(it.HasNext()) {
             Option *o = it.Next();
             if (!o->longName.IsEmpty()
-                    && o->longName.CompareInsensitive(longname)) return o;
+                    && o->longName.Equals(longname, false)) return o;
         }
 
         return NULL;
@@ -2060,7 +2060,7 @@ namespace sys {
         while(it.HasNext()) {
             Option *o = it.Next();
             if (!o->longName.IsEmpty()
-                    && o->longName.CompareInsensitive(longname)) return o;
+                    && o->longName.Equals(longname, false)) return o;
         }
 
         return NULL;
@@ -2101,7 +2101,7 @@ namespace sys {
                     while (opti.HasNext()) {
                         Option *opt = opti.Next();
                         ASSERT(opt != NULL);
-                        if (opt->longName.CompareInsensitive(&argv[i][2])) {
+                        if (opt->longName.Equals(&argv[i][2], false)) {
                             o = opt; 
                             break;
                         }
@@ -2294,7 +2294,7 @@ namespace sys {
                     while (opti.HasNext()) {
                         Option *opt = opti.Next();
                         ASSERT(opt != NULL);
-                        if (opt->longName.CompareInsensitive(&argv[i][2])) {
+                        if (opt->longName.Equals(&argv[i][2], false)) {
                             this->arglist[this->arglistSize].option = opt;
                             this->arglist[this->arglistSize].type = Argument::TYPE_OPTION_LONGNAME;
                             if (opt->firstArg == NULL) {

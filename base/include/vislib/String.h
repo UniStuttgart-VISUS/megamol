@@ -233,7 +233,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        inline bool CompareInsensitive(const Char *rhs) const {
+        VLDEPRECATED inline bool CompareInsensitive(const Char *rhs) const {
             return this->Equals(rhs, false);
         }
 
@@ -245,7 +245,7 @@ namespace vislib {
          *
          * @return true if both strings are equal, false otherwise.
          */
-        inline bool CompareInsensitive(const String& rhs) const {
+        VLDEPRECATED inline bool CompareInsensitive(const String& rhs) const {
             return this->Equals(rhs, false);
         }
 
