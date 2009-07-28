@@ -264,7 +264,7 @@ void TestNetworkInformation(void) {
         << " from \"" << guessInput << "\"" << std::endl;
 
 
-    /* Guess local end points. */
+    * Guess local end points. */
     guessInput = "127.0.0.1/24";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
     std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
@@ -296,6 +296,24 @@ void TestNetworkInformation(void) {
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "localhost/128";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "/64";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "/255.255.255.0";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
     std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 

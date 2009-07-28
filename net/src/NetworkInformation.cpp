@@ -762,7 +762,7 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
                         i++) {
                     const UnicastAddressList& al 
                         = NetworkInformation::adapters[i].GetUnicastAddresses();
-                    if ((j < bestAddressIdx) 
+                    if ((j <= bestAddressIdx) 
                             && (bestAddressIdx < j + al.Count())) {
                         outEndPoint.SetIPAddress(
                             al[bestAddressIdx - j].GetAddress());
@@ -803,7 +803,11 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
 
                 retval = NetworkInformation::consolidateWildness(wildness, 
                     bestAddressIdx);
-                outEndPoint.SetIPAddress(al[bestAddressIdx].GetAddress());
+                if (retval < 1.0f) {
+                    // Set only, if meaingful. Otherwise, it is better to
+                    // leave it ANY4/ANY6.
+                    outEndPoint.SetIPAddress(al[bestAddressIdx].GetAddress());
+                }
                 outEndPoint.SetPort(port);
             } /* end if (retval < 1.0f) */
         } /* end if (NetworkInformation::adapters.IsEmpty()) */
