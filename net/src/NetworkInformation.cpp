@@ -736,7 +736,6 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
                 "not have a network adapter ...\n", W2A(str));
             outEndPoint.SetIPAddress(((validMask & WILD_GUESS_HAS_NETMASK) != 0)
                 ? IPAgnosticAddress::ANY4 : IPAgnosticAddress::ANY6);
-            outEndPoint.SetPort(port);
             retval = 1.0f;
 
         } else {
@@ -756,34 +755,31 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
                 &ctx);
             retval = NetworkInformation::consolidateWildness(wildness, 
                 bestAddressIdx);
-            if (retval < 1.0f) {
-                /* The guess is reasonably good, get the address. */
-
-                for (SIZE_T i = 0, j = 0; 
-                        i < NetworkInformation::adapters.Count();
-                        i++) {
-                    const UnicastAddressList& al 
-                        = NetworkInformation::adapters[i].GetUnicastAddresses();
-                    if ((j <= bestAddressIdx) 
-                            && (bestAddressIdx < j + al.Count())) {
-                        outEndPoint.SetIPAddress(
-                            al[bestAddressIdx - j].GetAddress());
-                        outEndPoint.SetPort(port);
-                        break;
-                    }
-                    j += al.Count();
-                } /* end for for (SIZE_T i = 0, j = 0; ... */
+            for (SIZE_T i = 0, j = 0; i < NetworkInformation::adapters.Count(); 
+                    i++) {
+                const UnicastAddressList& al 
+                    = NetworkInformation::adapters[i].GetUnicastAddresses();
+                if ((j <= bestAddressIdx) 
+                        && (bestAddressIdx < j + al.Count())) {
+                    outEndPoint.SetIPAddress(
+                        al[bestAddressIdx - j].GetAddress());
+                    break;
+                }
+                j += al.Count();
+            } /* end for for (SIZE_T i = 0, j = 0; ... */
                 
-            } else {
+            if ((retval == 1.0f) 
+                    || ((validMask & WILD_GUESS_HAS_ADDRESS) == 0)) {
                 /* 
-                 * The guess is complete nonsense, try to find something better
-                 * by guessing the adapter via the default method.
+                 * The guess might be complete nonsense, try to find something 
+                 * better by guessing the adapter via the default method.
                  *
                  * At this point we know, that we cannot find a exact address 
                  * match and no exact prefix match. Therefore, the search is
                  * limited to prefix length and address family, if some is
                  * given.
                  */
+                float oldGuessWildness = retval;    // preserve this.
                 retval = NetworkInformation::wildGuessAdapter(candidate, 
                     address, device, prefixLen, validMask);
                 const UnicastAddressList& al = candidate.GetUnicastAddresses();
@@ -805,15 +801,15 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
 
                 retval = NetworkInformation::consolidateWildness(wildness, 
                     bestAddressIdx);
-                if (retval < 1.0f) {
-                    // Set only, if meaingful. Otherwise, it is better to
-                    // leave it ANY4/ANY6.
+                if (retval < oldGuessWildness) {
+                    // Set only, if meaningful. Otherwise, it is better to
+                    // leave previous guess.
                     outEndPoint.SetIPAddress(al[bestAddressIdx].GetAddress());
                 }
-                outEndPoint.SetPort(port);
             } /* end if (retval < 1.0f) */
         } /* end if (NetworkInformation::adapters.IsEmpty()) */
 
+        outEndPoint.SetPort(port);
     } catch (...) {
         NetworkInformation::lockAdapters.Unlock();
         throw;
@@ -823,6 +819,63 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
     ASSERT(retval >= 0.0f);
     ASSERT(retval <= 1.0f);
     return (invertWildness ? (1.0f - retval) : retval);
+}
+
+
+/*
+ * NetworkInformation::GuessRemoteEndPoint
+ */
+float vislib::net::NetworkInformation::GuessRemoteEndPoint(
+        IPEndPoint& outEndPoint, const char *str, const bool invertWildness) {
+    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+    return NetworkInformation::GuessRemoteEndPoint(outEndPoint, A2W(str),
+        invertWildness);
+}
+    
+
+/*
+ * NetworkInformation::GuessRemoteEndPoint
+ */
+float vislib::net::NetworkInformation::GuessRemoteEndPoint(
+        IPEndPoint& outEndPoint, const wchar_t *str, const bool invertWildness) {
+    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+
+    float retval = 1.0f;            // The wildness of the guess.
+    IPHostEntryW hostEntry;         // DNS host entry.
+    UINT32 validMask = 0;           // Valid fields from the input.
+    IPAgnosticAddress address;      // The adapter address from the input.
+    StringW device;                 // The device name from the input.
+    ULONG prefixLen;                // The prefix length from the input.
+    USHORT port;                    // The port from the input.
+
+#if (defined(DEBUG) || defined(_DEBUG))
+    if (invertWildness) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
+            "of GuessRemoteEndPoint(). Please be advised that this is not "
+            "recommended and severely degrades the Chefmäßigkeit of your "
+            "application. It is recommended not to invert the wildness.\n");
+    }
+#endif /* (defined(DEBUG) || defined(_DEBUG)) */
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessRemoteEndPoint() trying to guess "
+        " what endpoint \"%s\" might be ...\n", W2A(str));
+
+    /* Parse the input. */
+    validMask = NetworkInformation::wildGuessSplitInput(address, device, 
+        prefixLen, port, str);
+
+    /* Set ephemeral port if no port was specified. */
+    if ((validMask & WILD_GUESS_HAS_PORT) == 0) {
+        port = 0;
+    }
+
+    /* Do the wild guess. */
+    try {
+        DNS::GetHostEntry(hostEntry, address);
+        // TODO: implementation.
+    } catch (...) {
+    }
+
+    return 1.0f;
 }
 
 

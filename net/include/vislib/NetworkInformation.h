@@ -1282,6 +1282,14 @@ namespace net {
         static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
             const wchar_t *str, const bool invertWildness = false);
 
+        // TODO: documentation
+        static float GuessRemoteEndPoint(IPEndPoint& outEndPoint, 
+            const char *str, const bool invertWildness = false);
+    
+        // TODO: documentation
+        static float GuessRemoteEndPoint(IPEndPoint& outEndPoint, 
+            const wchar_t *str, const bool invertWildness = false);
+
         /**
          * Convert a network mask to a prefix length.
          *
