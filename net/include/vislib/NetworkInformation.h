@@ -19,6 +19,7 @@
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Exception.h"
+#include "vislib/IPHostEntry.h"
 #include "vislib/StackTrace.h"
 #include "vislib/String.h"
 
@@ -1258,11 +1259,11 @@ namespace net {
 
         // TODO: documentation
         static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
-            const char *str, const bool invertWildness);
+            const char *str, const bool invertWildness = false);
     
         // TODO: documentation
         static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
-            const wchar_t *str, const bool invertWildness);
+            const wchar_t *str, const bool invertWildness = false);
 
         /**
          * Convert a network mask to a prefix length.
@@ -1426,18 +1427,34 @@ namespace net {
     private:
 
         /**
+         * This is the context structure for enumerating adapters using the 
+         * callback function processAdapterForLocalEndpointGuess.
+         */
+        typedef struct GuessLocalEndPointCtx_t {
+            IPAgnosticAddress *Address; //< Pointer to input address.
+            ULONG *PrefixLen;           //< Pointer to input prefix length.
+            Array<float> *Wildness;     //< Output array of address wildness.
+            bool IsIPv4Preferred;       //< Prefer IPv4 in case of doubt.
+        } GuessLocalEndPointCtx;
+
+        // TODO: documentation
+        static float consolidateWildness(Array<float>& inOutWildness, 
+            SIZE_T& outIdxFirstBest);
+
+        /**
          * Answer whether the UnicastAddressList 'list' contains the IPAddress,
          * IPAddress6 or IPAgnosticAddress 'addr'. 
          *
          * @param list   The list to be searched for 'addr'.
          * @param addr   The address to be searched.
+         * @param startIdx  First index to check in 'list'.
          *
          * @return The index of the first occurrence of 'addr' in 'list',
          *         or -1 if not found.
          */
         template<class A> 
         static int findAddress(const UnicastAddressList& list, 
-            const A& addr);
+            const A& addr, const int startIdx = 0);
 
         /**
          * Answer whether the UnicastAddressList 'list' contains an address that
@@ -1448,13 +1465,14 @@ namespace net {
          * @param list      The list to be searched for the prefix.
          * @param addr      The address defining the prefix.
          * @param prefixLen The prefix length.
+         * @param startIdx  First index to check in 'list'.
          *
          * @return The index of the first address with the given prefix in 
          *         'list', or -1 if not found.
          */
         template<class A> 
         static int findSamePrefix(const UnicastAddressList& list, 
-            const A& addr, const ULONG prefixLen);
+            const A& addr, const ULONG prefixLen, const int startIdx = 0);
 
         /**
          * Guess a broadcast address for the given adapter address 'address' 
@@ -1574,6 +1592,10 @@ namespace net {
         static void prefixToNetmask(BYTE *outNetmask, const SIZE_T len,
             const ULONG prefix);
 
+        // TODO: documentation
+        static bool processAdapterForLocalEndpointGuess(const Adapter& adapter, 
+            void *context);
+
         /**
          * Answer whether the adapter 'adapter' has given type.
          *
@@ -1660,7 +1682,7 @@ namespace net {
          * The splitting rules are as described for GuessAdapter().
          *
          * @param outAddress   Receives the address if specified in 'str'.
-         * @param outDevice    Receives the device name if specified in 'str'.
+         * @param outDevice    Receives the device name if specified in 'str'. 
          * @param outPrefixLen Receives the prefix length if specified in 'str'.
          * @param outPort      Receives the port if any specified in 'str'.
          * @param str          The string to be checked.
@@ -1675,6 +1697,11 @@ namespace net {
          * Wildness penalty for an adapter that matches, but is currently down.
          */
         static const float PENALTY_ADAPTER_DOWN;
+
+        /**
+         * Wildness penalty for a wring address family.
+         */
+        static const float PENALTY_WRONG_ADDRESSFAMILY;
 
         /**
          * Wildness penalty for a wrong prefix while the rest of the adapter
@@ -1814,11 +1841,12 @@ namespace net {
      * vislib::net::NetworkInformation::findAddress
      */
     template<class A> int NetworkInformation::findAddress(
-            const UnicastAddressList& list, const A& addr) {
+            const UnicastAddressList& list, const A& addr, const int startIdx) {
         VLSTACKTRACE("NetworkInformation::findAddress", __FILE__, 
             __LINE__);
+        ASSERT(startIdx >= 0);
 
-        for (SIZE_T i = 0; i < list.Count(); i++) {
+        for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count(); i++) {
             if (list[i] == addr) {
                 return static_cast<int>(i);
             }
@@ -1827,20 +1855,24 @@ namespace net {
 
         return -1;
     }
-    
+
 
     /*
      * NetworkInformation::findSamePrefix
      */
     template<class A> int NetworkInformation::findSamePrefix(
             const UnicastAddressList& list, 
-            const A& addr, const ULONG prefixLen) {
+            const A& addr, const ULONG prefixLen, 
+            const int startIdx) {
         VLSTACKTRACE("NetworkInformation::findAddress", __FILE__, 
             __LINE__);
+        ASSERT(startIdx >= 0);
+
         try {
             A prefix = addr.GetPrefix(prefixLen);
 
-            for (SIZE_T i = 0; i < list.Count(); i++) {
+            for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count();
+                    i++) {
                 try {
                     if (list[i].GetAddress().GetPrefix(prefixLen) == prefix) {
                         return static_cast<int>(i);

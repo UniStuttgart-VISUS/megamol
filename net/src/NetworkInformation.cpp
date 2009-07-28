@@ -27,6 +27,7 @@
 #endif /* _WIN32 */
 
 #include "vislib/assert.h"
+#include "vislib/DNS.h"
 #include "vislib/memutils.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/OutOfRangeException.h"
@@ -623,6 +624,7 @@ vislib::net::NetworkInformation::GetAdapterUnsafe(const SIZE_T idx) {
  */
 float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter, 
         const char *str, const bool invertWildness) {
+    VLSTACKTRACE("NetworkInformation::GuessAdapter", __FILE__, __LINE__);
     return NetworkInformation::GuessAdapter(outAdapter, A2W(str), 
         invertWildness);
 }
@@ -691,8 +693,12 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, 
         const bool invertWildness) {
     VLSTACKTRACE("NetworkInformation::GuessLocalEndPoint", __FILE__, __LINE__);
+
+    Adapter candidate;              // The adapter candidate.
+    GuessLocalEndPointCtx ctx;      // The enumeration context.
+    Array<float> wildness(0);       // The wildness of multiple candidates.
     float retval = 1.0f;            // The wildness of the guess.
-    AdapterList candidates;         // The list of adapter candidates.
+    SIZE_T bestAddressIdx = 0;      // Index of best address after consolidate.
     UINT32 validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
@@ -714,17 +720,94 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
     validMask = NetworkInformation::wildGuessSplitInput(address, device, 
         prefixLen, port, str);
 
+    /* Set ephemeral port if no port was specified. */
+    if ((validMask & WILD_GUESS_HAS_PORT) == 0) {
+        port = 0;
+    }
+
     /* Do the wild guess. */
     try {
         NetworkInformation::lockAdapters.Lock();
+        NetworkInformation::initAdapters();
 
-        /* Try to find the address directly as a first guess. */
-        NetworkInformation::GetAdaptersForUnicastAddress(candidates, address);
+        /* Return any endpoint (with wildness 1) if no adapter is available. */
+        if (NetworkInformation::adapters.IsEmpty()) {
+            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Suggest any endpoint as we do "
+                "not have a network adapter ...\n", W2A(str));
+            outEndPoint.SetIPAddress(((validMask & WILD_GUESS_HAS_NETMASK) != 0)
+                ? IPAgnosticAddress::ANY4 : IPAgnosticAddress::ANY6);
+            outEndPoint.SetPort(port);
+            retval = 1.0f;
 
+        } else {
+            /* Try a real guess, first directly from the user input. */
+            ctx.Address = ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) 
+                ? &address : NULL;
+            ctx.PrefixLen = (((validMask & WILD_GUESS_HAS_NETMASK) != 0) 
+                || ((validMask & WILD_GUESS_HAS_PREFIX_LEN) != 0)) 
+                ? &prefixLen : NULL;
+            ctx.Wildness = &wildness;
+            ctx.IsIPv4Preferred = ((validMask & WILD_GUESS_HAS_NETMASK) != 0);
 
+            NetworkInformation::EnumerateAdapters(
+                NetworkInformation::processAdapterForLocalEndpointGuess,
+                &ctx);
+            retval = NetworkInformation::consolidateWildness(wildness, 
+                bestAddressIdx);
+            if (retval < 1.0f) {
+                /* The guess is reasonably good, get the address. */
 
-        //retval = NetworkInformation::wildGuessAdapter(outAdapter, address, 
-        //    device, prefixLen, validMask);
+                for (SIZE_T i = 0, j = 0; 
+                        i < NetworkInformation::adapters.Count();
+                        i++) {
+                    const UnicastAddressList& al 
+                        = NetworkInformation::adapters[i].GetUnicastAddresses();
+                    if ((j < bestAddressIdx) 
+                            && (bestAddressIdx < j + al.Count())) {
+                        outEndPoint.SetIPAddress(
+                            al[bestAddressIdx - j].GetAddress());
+                        outEndPoint.SetPort(port);
+                        break;
+                    }
+                    j += al.Count();
+                } /* end for for (SIZE_T i = 0, j = 0; ... */
+                
+            } else {
+                /* 
+                 * The guess is complete nonsense, try to find something better
+                 * by guessing the adapter via the default method.
+                 *
+                 * At this point we know, that we cannot find a exact address 
+                 * match and no exact prefix match. Therefore, the search is
+                 * limited to prefix length and address family, if some is
+                 * given.
+                 */
+                retval = NetworkInformation::wildGuessAdapter(candidate, 
+                    address, device, prefixLen, validMask);
+                const UnicastAddressList& al = candidate.GetUnicastAddresses();
+                
+                wildness.Clear();
+                for (SIZE_T i = 0; i < al.Count(); i++) {
+                    wildness.Add(retval);
+                    float &w = wildness.Last();
+
+                    if ((ctx.PrefixLen != NULL)
+                            && (al[i].GetPrefixLength() != *ctx.PrefixLen)) {
+                        w += NetworkInformation::PENALTY_WRONG_PREFIX;
+                    }
+                    if (ctx.IsIPv4Preferred && (al[i].GetAddressFamily() 
+                            != IPAgnosticAddress::FAMILY_INET)) {
+                        w += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
+                    }
+                }
+
+                retval = NetworkInformation::consolidateWildness(wildness, 
+                    bestAddressIdx);
+                outEndPoint.SetIPAddress(al[bestAddressIdx].GetAddress());
+                outEndPoint.SetPort(port);
+            } /* end if (retval < 1.0f) */
+        } /* end if (NetworkInformation::adapters.IsEmpty()) */
+
     } catch (...) {
         NetworkInformation::lockAdapters.Unlock();
         throw;
@@ -909,6 +992,68 @@ const char *vislib::net::NetworkInformation::Stringise(
 }
 
 #undef IMPLEMENT_STRINGISE_CASE
+
+
+/*
+ * vislib::net::NetworkInformation::consolidateWildness
+ */
+float vislib::net::NetworkInformation::consolidateWildness(
+        Array<float>& inOutWildness, SIZE_T& outIdxFirstBest) {
+    VLSTACKTRACE("NetworkInformation::consolidateWildness", __FILE__, __LINE__);
+    SIZE_T cntEqualWildness = 1;    // # of equal wildness values.
+    float retval = 1.0f;            // The minimal wildness found.
+
+    outIdxFirstBest = 0;
+
+    /* Consolidate to [0, 1] and find the minimum. */
+    ASSERT(!inOutWildness.IsEmpty());
+    for (SIZE_T i = 0; i < inOutWildness.Count(); i++) {
+        if (inOutWildness[i] < 0.0f) {
+            inOutWildness[i] = 0.0f;
+        } else if (inOutWildness[i] > 1.0f) {
+            inOutWildness[i] = 1.0f;
+        }
+
+        if (inOutWildness[i] < retval) {
+            retval = inOutWildness[i];
+            outIdxFirstBest = i;
+            cntEqualWildness = 1;
+
+        } else if (inOutWildness[i] == retval) {
+            cntEqualWildness++;
+        }
+    }
+    /* We have the candidate now. */
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Have %u candidates with equal "
+        "wildness %f. The first is at index %u.\n", cntEqualWildness, retval,
+        outIdxFirstBest);
+
+    /* 
+     * If there are multiple equally good candidates, use equal weight to 
+     * reflect the wildness of guessing the first one as right candidate.
+     *
+     * The change is not applied to 'inOutWildness' in order to allow multiple,
+     * incremental calls to the method.
+     */
+    if (cntEqualWildness > 1) {
+        if ((retval > 0.0f) && (retval < 1.0f)) {
+            retval *= cntEqualWildness;
+        } else if (retval == 0.0f) {
+            retval = 1.0f / static_cast<float>(cntEqualWildness);
+        }
+    }
+
+    /* Ensure 'retval' within [0, 1]. There might be rounding errors ... */
+    if (retval < 0.0f) {
+        retval = 0.0f;
+    } else if (retval > 1.0f) {
+        retval = 1.0f;
+    }
+
+    ASSERT(retval >= 0.0f);
+    ASSERT(retval <= 1.0f);
+    return retval;
+}
 
 
 /*
@@ -1641,6 +1786,83 @@ void vislib::net::NetworkInformation::prefixToNetmask(BYTE *outNetmask,
 
 
 /*
+ * vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess
+ */
+bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
+        const Adapter& adapter, void *context) {
+    VLSTACKTRACE("NetworkInformation::processAdapterForLocalEndpointGuess", 
+        __FILE__, __LINE__);
+    GuessLocalEndPointCtx *ctx = static_cast<GuessLocalEndPointCtx *>(context);
+    UnicastAddressList al = adapter.GetUnicastAddresses();
+    float wildness = 1.0f;
+
+    ASSERT(ctx->Wildness != NULL);
+
+    for (SIZE_T i = 0; i < al.Count(); i++) {
+        wildness = 1.0f;
+
+        if (ctx->Address != NULL) {
+            IPAgnosticAddress a = al[i].GetAddress();
+            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Checking input \"%s\" against "
+                "\"%s\" ...\n", ctx->Address->ToStringA().PeekBuffer(),  
+                a.ToStringA().PeekBuffer());
+
+            if (a == *ctx->Address) {
+                /* Identified by exact address. */
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact address match "
+                    "\"%s\".\n", a.ToStringA().PeekBuffer());
+                wildness = 0.0f;
+
+                if (ctx->PrefixLen != NULL) {
+                    /* Check for expected prefix length. */
+                    if (al[i].GetPrefixLength() != *ctx->PrefixLen) {
+                        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Prefix length %u was "
+                            "found, but %u was expected.\n", 
+                            al[i].GetPrefixLength(), *ctx->PrefixLen);
+                        wildness += NetworkInformation::PENALTY_WRONG_PREFIX;
+                    }
+                }
+
+                if ((a.GetAddressFamily() != IPAgnosticAddress::FAMILY_INET)
+                        && ctx->IsIPv4Preferred) {
+                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" is not "
+                        "IPv4 as preferred.\n", a.ToStringA().PeekBuffer());
+                    wildness += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
+                }
+
+            } else if (ctx->PrefixLen != NULL) {
+                try {
+                    a = a.GetPrefix(*ctx->PrefixLen);
+                
+                    if (a == ctx->Address->GetPrefix(*ctx->PrefixLen)) {
+                        /* Identified by subnet. */
+                        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact prefix "
+                            "match \"%s\".\n", a.ToStringA().PeekBuffer());
+                        wildness = 0.0f;
+                    }
+                } catch (...) {
+                    // Illegal prefix length, just ignore it and leave wildness.
+                }
+            }
+
+        } else if (ctx->PrefixLen != NULL) {
+            // Choose only based on prefix length. This is really wild ...
+            if (al[i].GetPrefixLength() == *ctx->PrefixLen) {
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found prefix length match "
+                    "\"%s/%u\".\n", al[i].GetAddress().ToStringA().PeekBuffer(),
+                    *ctx->PrefixLen);
+                wildness = 0.8f;
+            }
+        }
+
+        ctx->Wildness->Add(wildness);
+    }
+        
+    return true;
+}
+
+
+/*
  * vislib::net::NetworkInformation::selectAdapterByType
  */
 bool vislib::net::NetworkInformation::selectAdapterByType(
@@ -1721,8 +1943,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
     float len1 = 0.0f;              // Temporary length variable.
     float len2 = 0.0f;              // Temporary length variable.
     int matchedIndex = -1;          // Index of the last successful match.
-    SIZE_T cntEqualWildness = 0;    // # of adapters with equal wildness.
-    Adapter *candidate = NULL;      // The currently best guess.
+    SIZE_T candidateIdx = 0;        // Index of the guess candidate.
 
     /* Ensure that we know the adapters and that we have at least one. */
     NetworkInformation::initAdapters();
@@ -1865,49 +2086,8 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
         }
     } /* end for (SIZE_T i = 0; i < NetworkInformation::adapters.Count() ... */
 
-    /* 
-     * Consolidate the wildness to [0, 1] and find the adapter(s) with minimal 
-     * wildness. 
-     */
-    retval = 1.0f;
-    cntEqualWildness = 1;
-    candidate = &(NetworkInformation::adapters[0]);
-    for (SIZE_T i = 0; i < wildness.Count(); i++) {
-        if (wildness[i] < 0.0f) {
-            wildness[i] = 0.0f;
-        } else if (wildness[i] > 1.0f) {
-            wildness[i] = 1.0f;
-        }
-
-        if (wildness[i] < retval) {
-            retval = wildness[i];
-            candidate = &(NetworkInformation::adapters[i]);
-            cntEqualWildness = 1;
-        } else if (wildness[i] == retval) {
-            cntEqualWildness++;
-        }
-    }
-    /* We have the candidate now. */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Have %u adapter candidate(s) with equal "
-        "wildness %f.\n", cntEqualWildness, retval);
-    outAdapter = *candidate;
-
-    /* 
-     * If there are multiple equally good candidates, use equal weight to 
-     * reflect the wildness of guessing the first one as right candidate.
-     */
-    if (cntEqualWildness > 1) {
-        if ((retval > 0.0f) && (retval < 1.0f)) {
-            retval *= cntEqualWildness;
-        } else if (retval == 0.0f) {
-            retval = 1.0f / static_cast<float>(cntEqualWildness);
-        }
-    }
-    if (retval < 0.0f) {
-        retval = 0.0f;
-    } else if (retval > 1.0f) {
-        retval = 1.0f;
-    }
+    retval = NetworkInformation::consolidateWildness(wildness, candidateIdx);
+    outAdapter = NetworkInformation::adapters[candidateIdx];
 
     ASSERT(retval >= 0.0f);
     ASSERT(retval <= 1.0f);
@@ -1926,6 +2106,8 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
     StringW::Size pos = 0;      // Split positions.
     StringW input(str);     
     StringW prefix;
+    IPAgnosticAddress::AddressFamily preferredFamily 
+        = IPAgnosticAddress::FAMILY_INET6;
 
     VLTRACE(Trace::LEVEL_VL_VERBOSE, "Splitting wild guess input \"%s\" ...\n",
         W2A(str));
@@ -2006,6 +2188,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
                     mask.ToStringA().PeekBuffer());
 
                 outPrefixLen = NetworkInformation::NetmaskToPrefix(mask);
+                preferredFamily = IPAgnosticAddress::FAMILY_INET;
                 retval |= WILD_GUESS_HAS_NETMASK;
                 VLTRACE(Trace::LEVEL_VL_VERBOSE, "Converted netmask to prefix "
                     "length: %u\n", outPrefixLen);
@@ -2021,6 +2204,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
                 try {
                     outPrefixLen = static_cast<ULONG>(CharTraitsW::ParseInt(
                         prefix.PeekBuffer()));
+                    preferredFamily = IPAgnosticAddress::FAMILY_INET6;
                     retval |= WILD_GUESS_HAS_PREFIX_LEN;
                     VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found prefix length: "
                         "%d.\n", outPrefixLen);
@@ -2047,7 +2231,10 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
 #endif /* !_WIN32 */
     input.TrimSpaces();
     try {
-        outAddress = IPAgnosticAddress::Create(input.PeekBuffer());
+        outAddress = IPAgnosticAddress::Create(input.PeekBuffer(), 
+            preferredFamily);
+
+        //outDevice = input;
         retval |= WILD_GUESS_HAS_ADDRESS;
         VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsed address: %s\n",
             outAddress.ToStringA().PeekBuffer());
@@ -2069,6 +2256,13 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
  * vislib::net::NetworkInformation::PENALTY_ADAPTER_DOWN
  */
 const float vislib::net::NetworkInformation::PENALTY_ADAPTER_DOWN = 0.2f;
+
+
+/*
+ * vislib::net::NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY 
+ */
+const float vislib::net::NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY 
+    = 0.02f;
 
 
 /*

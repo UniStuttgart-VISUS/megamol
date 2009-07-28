@@ -196,6 +196,90 @@ namespace net {
         static void GetHostEntry(IPHostEntryW& outEntry,
             const wchar_t *hostNameOrAddress);
 
+        /**
+         * Answer the IPHostEntry for the specified IP address.
+         *
+         * @param outEntry Receives the host entry.
+         * @param addrress The reference IP address to search.
+         *
+         * @throws SocketException       In case the operation fails, e.g. the
+         *                               host could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
+         */
+        static void GetHostEntry(IPHostEntryA& outEntry, 
+            const IPAgnosticAddress& address);
+
+        /**
+         * Answer the IPHostEntry for the specified IP address.
+         *
+         * @param outEntry Receives the host entry.
+         * @param addrress The reference IP address to search.
+         *
+         * @throws SocketException       In case the operation fails, e.g. the
+         *                               host could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
+         */
+        static void GetHostEntry(IPHostEntryW& outEntry, 
+            const IPAgnosticAddress& address);
+
+        /**
+         * Answer the IPHostEntry for the specified IP address.
+         *
+         * @param outEntry Receives the host entry.
+         * @param addrress The reference IP address to search.
+         *
+         * @throws SocketException       In case the operation fails, e.g. the
+         *                               host could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
+         */
+        static void GetHostEntry(IPHostEntryA& outEntry, 
+            const IPAddress& address);
+
+        /**
+         * Answer the IPHostEntry for the specified IP address.
+         *
+         * @param outEntry Receives the host entry.
+         * @param addrress The reference IP address to search.
+         *
+         * @throws SocketException       In case the operation fails, e.g. the
+         *                               host could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
+         */
+        static void GetHostEntry(IPHostEntryW& outEntry, 
+            const IPAddress& address);
+
+        /**
+         * Answer the IPHostEntry for the specified IP address.
+         *
+         * @param outEntry Receives the host entry.
+         * @param addrress The reference IP address to search.
+         *
+         * @throws SocketException       In case the operation fails, e.g. the
+         *                               host could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
+         */
+        static void GetHostEntry(IPHostEntryA& outEntry, 
+            const IPAddress6& address);
+
+        /**
+         * Answer the IPHostEntry for the specified IP address.
+         *
+         * @param outEntry Receives the host entry.
+         * @param addrress The reference IP address to search.
+         *
+         * @throws SocketException       In case the operation fails, e.g. the
+         *                               host could not be found.
+         * @throws IllegalParamException If the specified host does not use 
+         *                               IPv4 or IPv6.
+         */
+        static void GetHostEntry(IPHostEntryW& outEntry, 
+            const IPAddress6& address);
+
         /** Dtor. */
         ~DNS(void);
 

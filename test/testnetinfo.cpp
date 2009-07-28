@@ -127,6 +127,12 @@ void PrintAdapterList(const vislib::net::NetworkInformation::AdapterList& a) {
 void TestNetworkInformation(void) {
     using namespace vislib::net;
 
+    NetworkInformation::Adapter guessedAdapter;
+    IPEndPoint guessedEndPoint;
+    const char *guessInput = NULL;
+    float wildness = 0.0;
+
+
     Socket::Startup();
 
     SIZE_T cntAdapters = NetworkInformation::CountAdapters();
@@ -159,10 +165,6 @@ void TestNetworkInformation(void) {
 
 
     /* Test wild guess. */
-    NetworkInformation::Adapter guessedAdapter;
-    const char *guessInput = NULL;
-    float wildness = 0.0;
-
     guessInput = "LAN";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
     std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
@@ -259,6 +261,44 @@ void TestNetworkInformation(void) {
     std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
         << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+
+    /* Guess local end points. */
+    guessInput = "127.0.0.1/24";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "salsa/24";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "salsa/255.255.255.0";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "klassik/255.255.255.0";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "klassik";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "localhost/128";
+    wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     Socket::Cleanup();

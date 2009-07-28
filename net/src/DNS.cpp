@@ -288,6 +288,66 @@ void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,
 
 
 /*
+ * vislib::net::DNS::GetHostEntry
+ */
+void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
+        const IPAgnosticAddress& address) {
+    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
+}
+
+
+/*
+ * vislib::net::DNS::GetHostEntry
+ */
+void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
+        const IPAgnosticAddress& address) {
+    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
+}
+
+
+/*
+ * vislib::net::DNS::GetHostEntry
+ */
+void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
+        const IPAddress& address) {
+    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
+}
+
+
+/*
+ * vislib::net::DNS::GetHostEntry
+ */
+void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
+        const IPAddress& address) {
+    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
+}
+
+
+/*
+ * vislib::net::DNS::GetHostEntry
+ */
+void vislib::net::DNS::GetHostEntry(IPHostEntryA& outEntry, 
+        const IPAddress6& address) {
+    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    DNS::GetHostEntry(outEntry, address.ToStringA().PeekBuffer());
+}
+
+
+/*
+ * vislib::net::DNS::GetHostEntry
+ */
+void vislib::net::DNS::GetHostEntry(IPHostEntryW& outEntry,  
+        const IPAddress6& address) {
+    VLSTACKTRACE("DNS::GetHostEntry", __FILE__, __LINE__);
+    DNS::GetHostEntry(outEntry, address.ToStringW().PeekBuffer());
+}
+
+
+/*
  * vislib::net::DNS::getAddrInfo
  */
 struct addrinfo *vislib::net::DNS::getAddrInfo(const char *hostNameOrAddress,
