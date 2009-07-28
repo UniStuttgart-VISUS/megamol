@@ -135,6 +135,8 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
         if (addrFam != AF_INET) {
             addrFam = AF_INET;
             entries = DNS::getAddrInfo(hostNameOrAddress, addrFam);
+        } else {
+            throw;
         }
     }
 
@@ -184,6 +186,8 @@ void vislib::net::DNS::GetHostAddress(IPAgnosticAddress& outAddress,
         if (addrFam != AF_INET) {
             addrFam = AF_INET;
             entries = DNS::getAddrInfo(hostNameOrAddress, addrFam);
+        } else {
+            throw;
         }
     }
 
