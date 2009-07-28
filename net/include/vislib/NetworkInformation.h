@@ -1464,6 +1464,11 @@ namespace net {
         } GuessLocalEndPointCtx;
 
         // TODO: documentation
+        static float assessAddressAsEndPoint(
+            const UnicastAddressInformation& addrInfo, 
+            const GuessLocalEndPointCtx& ctx);
+
+        // TODO: documentation
         static float consolidateWildness(Array<float>& inOutWildness, 
             SIZE_T& outIdxFirstBest);
 
@@ -1740,6 +1745,9 @@ namespace net {
          * successfully.
          */
         static const float PENALTY_EMPTY_ADDRESS;
+
+        /** Wildness penalty for missing port. */
+        static const float PENALTY_NO_PORT;
 
         /**
          * Wildness penalty for a wring address family.

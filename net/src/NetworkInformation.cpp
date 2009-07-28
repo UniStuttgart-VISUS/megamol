@@ -786,17 +786,8 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
                 
                 wildness.Clear();
                 for (SIZE_T i = 0; i < al.Count(); i++) {
-                    wildness.Add(retval);
-                    float &w = wildness.Last();
-
-                    if ((ctx.PrefixLen != NULL)
-                            && (al[i].GetPrefixLength() != *ctx.PrefixLen)) {
-                        w += NetworkInformation::PENALTY_WRONG_PREFIX;
-                    }
-                    if (ctx.IsIPv4Preferred && (al[i].GetAddressFamily() 
-                            != IPAgnosticAddress::FAMILY_INET)) {
-                        w += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
-                    }
+                    wildness.Add(NetworkInformation::assessAddressAsEndPoint(
+                        al[i], ctx) * retval);
                 }
 
                 retval = NetworkInformation::consolidateWildness(wildness, 
@@ -840,8 +831,10 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, const bool invertWildness) {
     VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
 
+    Array<float> wildness(0);       // The wildness of multiple candidates.
     float retval = 1.0f;            // The wildness of the guess.
     IPHostEntryW hostEntry;         // DNS host entry.
+    SIZE_T bestAddressIdx = 0;      // Index of best address after consolidate.
     UINT32 validMask = 0;           // Valid fields from the input.
     IPAgnosticAddress address;      // The adapter address from the input.
     StringW device;                 // The device name from the input.
@@ -871,11 +864,71 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
     /* Do the wild guess. */
     try {
         DNS::GetHostEntry(hostEntry, address);
-        // TODO: implementation.
+        const Array<IPAgnosticAddress>& al = hostEntry.GetAddresses();
+
+        if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) {
+            for (SIZE_T i = 0; i < al.Count(); i++) {
+                retval = 1.0f;
+
+                if (al[i] == address) {
+                    retval = 0.0f;
+                }
+
+                if ((validMask & (WILD_GUESS_HAS_NETMASK 
+                        | WILD_GUESS_HAS_PREFIX_LEN)) != 0) {
+                    try {
+                        if (al[i].GetPrefix(prefixLen) 
+                                != address.GetPrefix(prefixLen)) {
+                            retval 
+                                += NetworkInformation::PENALTY_WRONG_PREFIX;
+                        }
+                    } catch (...) {
+                        retval += NetworkInformation::PENALTY_WRONG_PREFIX;
+                    }
+                }
+
+                if (al[i].GetAddressFamily() == address.GetAddressFamily()) {
+                    retval += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
+                }
+
+                if ((validMask & WILD_GUESS_FROM_EMPTY_ADDRESS) != 0) {
+                    retval += NetworkInformation::PENALTY_EMPTY_ADDRESS;
+                }
+
+                wildness.Add(retval);
+            }
+
+        } else {
+            /*
+             * If we do not have a remote address to lookup, deliberately 
+             * generate an exception to enter the catch block.
+             */
+            throw 1;
+        } /* if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) */
+
+        retval = NetworkInformation::consolidateWildness(wildness, 
+            bestAddressIdx);
+        outEndPoint.SetIPAddress(al[bestAddressIdx]);
+        outEndPoint.SetPort(port);
+
     } catch (...) {
+        /*  
+         * Lookup failed, assume remote endpoint on local machine and
+         * add a penalty for the
+         */
+        retval = NetworkInformation::GuessLocalEndPoint(outEndPoint, str, 
+            invertWildness) * 2.0f;
+        if (retval < 0.5f) {
+            retval = 0.5f;
+        } else if (retval > 1.0f) {
+            retval = 1.0f;
+        }
+
     }
 
-    return 1.0f;
+    ASSERT(retval >= 0.0f);
+    ASSERT(retval <= 1.0f);
+    return (invertWildness ? (1.0f - retval) : retval);
 }
 
 
@@ -1051,6 +1104,85 @@ const char *vislib::net::NetworkInformation::Stringise(
 }
 
 #undef IMPLEMENT_STRINGISE_CASE
+
+
+/*
+ * vislib::net::NetworkInformation::assessAddressAsEndPoint
+ */
+float vislib::net::NetworkInformation::assessAddressAsEndPoint(
+        const UnicastAddressInformation& addrInfo, 
+        const GuessLocalEndPointCtx& ctx) {
+    VLSTACKTRACE("NetworkInformation::assessAddressAsEndPoint", __FILE__, 
+        __LINE__);
+    float retval = 1.0f;        // Initialise wildness result.
+
+    if (ctx.Address != NULL) {
+        IPAgnosticAddress a = addrInfo.GetAddress();
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Checking input \"%s\" against \"%s\" "
+            "...\n", ctx.Address->ToStringA().PeekBuffer(),  
+            a.ToStringA().PeekBuffer());
+
+        if (a == *ctx.Address) {
+            /* Identified by exact address. */
+            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact address match "
+                "\"%s\".\n", a.ToStringA().PeekBuffer());
+            retval = 0.0f;
+
+            if (ctx.PrefixLen != NULL) {
+                /* Check for expected prefix length. */
+                if (addrInfo.GetPrefixLength() != *ctx.PrefixLen) {
+                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Prefix length %u was "
+                        "found, but %u was expected.\n", 
+                        addrInfo.GetPrefixLength(), *ctx.PrefixLen);
+                    retval += NetworkInformation::PENALTY_WRONG_PREFIX;
+                }
+            }
+
+            if ((a.GetAddressFamily() != IPAgnosticAddress::FAMILY_INET)
+                    && ctx.IsIPv4Preferred) {
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" is not "
+                    "IPv4 as preferred.\n", a.ToStringA().PeekBuffer());
+                retval += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
+            }
+
+            if (ctx.IsEmptyAddress) {
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" was "
+                    "obtained from empty input.\n", a.ToStringA().PeekBuffer());
+                retval += NetworkInformation::PENALTY_EMPTY_ADDRESS;
+            }
+
+        } else if (ctx.PrefixLen != NULL) {
+            try {
+                a = a.GetPrefix(*ctx.PrefixLen);
+                
+                if (a == ctx.Address->GetPrefix(*ctx.PrefixLen)) {
+                    /* Identified by subnet. */
+                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact prefix "
+                        "match \"%s\".\n", a.ToStringA().PeekBuffer());
+                    retval = 0.0f;
+                }
+            } catch (...) {
+                // Illegal prefix length, just ignore it and leave wildness.
+            }
+        } /* end if (a == *ctx.Address) */
+
+    } else if (ctx.PrefixLen != NULL) {
+        /* Choose only based on prefix length. This is really wild ... */
+        if (addrInfo.GetPrefixLength() == *ctx.PrefixLen) {
+            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found prefix length match "
+                "\"%s/%u\".\n", 
+                addrInfo.GetAddress().ToStringA().PeekBuffer(),
+                *ctx.PrefixLen);
+            retval = 0.8f;
+        }
+    } /* end if (ctx.Address != NULL) */
+
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Input \"%s\" was assessed as endpoint "
+        "with wildness %f.\n", addrInfo.GetAddress().ToStringA().PeekBuffer(),  
+        retval);
+
+    return retval;
+}
 
 
 /*
@@ -1853,75 +1985,13 @@ bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
         __FILE__, __LINE__);
     GuessLocalEndPointCtx *ctx = static_cast<GuessLocalEndPointCtx *>(context);
     UnicastAddressList al = adapter.GetUnicastAddresses();
-    float wildness = 1.0f;
 
+    ASSERT(ctx != NULL);
     ASSERT(ctx->Wildness != NULL);
 
     for (SIZE_T i = 0; i < al.Count(); i++) {
-        wildness = 1.0f;
-
-        if (ctx->Address != NULL) {
-            IPAgnosticAddress a = al[i].GetAddress();
-            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Checking input \"%s\" against "
-                "\"%s\" ...\n", ctx->Address->ToStringA().PeekBuffer(),  
-                a.ToStringA().PeekBuffer());
-
-            if (a == *ctx->Address) {
-                /* Identified by exact address. */
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact address match "
-                    "\"%s\".\n", a.ToStringA().PeekBuffer());
-                wildness = 0.0f;
-
-                if (ctx->PrefixLen != NULL) {
-                    /* Check for expected prefix length. */
-                    if (al[i].GetPrefixLength() != *ctx->PrefixLen) {
-                        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Prefix length %u was "
-                            "found, but %u was expected.\n", 
-                            al[i].GetPrefixLength(), *ctx->PrefixLen);
-                        wildness += NetworkInformation::PENALTY_WRONG_PREFIX;
-                    }
-                }
-
-                if ((a.GetAddressFamily() != IPAgnosticAddress::FAMILY_INET)
-                        && ctx->IsIPv4Preferred) {
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" is not "
-                        "IPv4 as preferred.\n", a.ToStringA().PeekBuffer());
-                    wildness += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
-                }
-
-                if (ctx->IsEmptyAddress) {
-                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" was "
-                        "obtained from empty input.\n", 
-                        a.ToStringA().PeekBuffer());
-                    wildness += NetworkInformation::PENALTY_EMPTY_ADDRESS;
-                }
-
-            } else if (ctx->PrefixLen != NULL) {
-                try {
-                    a = a.GetPrefix(*ctx->PrefixLen);
-                
-                    if (a == ctx->Address->GetPrefix(*ctx->PrefixLen)) {
-                        /* Identified by subnet. */
-                        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found exact prefix "
-                            "match \"%s\".\n", a.ToStringA().PeekBuffer());
-                        wildness = 0.0f;
-                    }
-                } catch (...) {
-                    // Illegal prefix length, just ignore it and leave wildness.
-                }
-            }
-
-        } else if (ctx->PrefixLen != NULL) {
-            // Choose only based on prefix length. This is really wild ...
-            if (al[i].GetPrefixLength() == *ctx->PrefixLen) {
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Found prefix length match "
-                    "\"%s/%u\".\n", al[i].GetAddress().ToStringA().PeekBuffer(),
-                    *ctx->PrefixLen);
-                wildness = 0.8f;
-            }
-        }
-
-        ctx->Wildness->Add(wildness);
+        ctx->Wildness->Add(NetworkInformation::assessAddressAsEndPoint(al[i], 
+            *ctx));
     }
         
     return true;
@@ -2343,6 +2413,12 @@ const float vislib::net::NetworkInformation::PENALTY_EMPTY_ADDRESS = 0.75f;
  */
 const float vislib::net::NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY 
     = 0.02f;
+
+
+/*
+ * vislib::net::NetworkInformation::PENALTY_NO_PORT
+ */
+const float vislib::net::NetworkInformation::PENALTY_NO_PORT = 0.01f;
 
 
 /*

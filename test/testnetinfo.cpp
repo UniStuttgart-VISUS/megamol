@@ -319,6 +319,38 @@ void TestNetworkInformation(void) {
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
+
+    /* Guess remote endpoints. */
+    guessInput = "salsa.informatik.uni-stuttgart.de";
+    wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "salsa.informatik.uni-stuttgart.de/255.255.255.0";
+    wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "salsa.informatik.uni-stuttgart.de/255.255.0.0";
+    wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "salsa.informatik.uni-stuttgart.de/48";
+    wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
+    guessInput = "/48";
+    wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
+        << "\" with wildness " << wildness 
+        << " from \"" << guessInput << "\"" << std::endl;
+
     Socket::Cleanup();
 
     //NetworkInformation::DiscardCache();
