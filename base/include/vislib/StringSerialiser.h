@@ -464,7 +464,7 @@ namespace vislib {
          *
          * @return The string holding the serialised data.
          */
-        inline String<T> String(void) const {
+        inline String<T> GetString(void) const {
             vislib::String<T> tmp;
             this->GetString(tmp);
             return tmp;

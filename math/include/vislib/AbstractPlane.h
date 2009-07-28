@@ -181,7 +181,7 @@ namespace math {
          *
          * @return A point in the plane.
          */
-        Point<T, 3> Point(void) const;
+        math::Point<T, 3> Point(void) const;
 
         /**
          * Answer three points in the plane.
@@ -450,7 +450,7 @@ namespace math {
      * AbstractPlane<T, S>::Point
      */
     template<class T, class S>
-    Point<T, 3> AbstractPlane<T, S>::Point(void) const {
+    math::Point<T, 3> AbstractPlane<T, S>::Point(void) const {
         T a, b, c, d;
         this->normalise(a, b, c, d);
         return vislib::math::Point<T, 3>(-d * a, -d * b, -d * c);
