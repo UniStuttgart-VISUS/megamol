@@ -540,15 +540,15 @@ namespace net {
              * The members are derived from RFC 2863, see
              * http://www.ietf.org/rfc/rfc2863.txt
              */
-            typedef enum Status_t {
-                STATUS_UNKNOWN = 0, //< Operational status is unknown.
-                STATUS_UP,          //< Interface is up.
-                STATUS_DOWN,        //< Interface is down.
-                STATUS_TESTING,     //< Interface is in testing mode.
-                STATUS_DORMANT,     //< Interface is waiting for events.
-                STATUS_NOT_PRESENT, //< Refinement of STATUS_DOWN.
-                STATUS_LOWER_LAYER_DOWN //< Refinement of STATUS_DOWN.
-            } Status;
+            typedef enum OperStatus_t {
+                OPERSTATUS_UNKNOWN = 0, //< Operational status is unknown.
+                OPERSTATUS_UP,          //< Interface is up.
+                OPERSTATUS_DOWN,        //< Interface is down.
+                OPERSTATUS_TESTING,     //< Interface is in testing mode.
+                OPERSTATUS_DORMANT,     //< Interface is waiting for events.
+                OPERSTATUS_NOT_PRESENT, //< Refinement of STATUS_DOWN.
+                OPERSTATUS_LOWER_LAYER_DOWN //< Refinement of STATUS_DOWN.
+            } OperStatus;
 
             /**
              * The encapsulation method used by a tunnel if the adapter address 
@@ -782,7 +782,8 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline Status GetStatus(Confidence *outConfidence = NULL) const {
+            inline OperStatus GetStatus(
+                    Confidence *outConfidence = NULL) const {
                 this->status.GetConfidence(outConfidence, "Status");
                 return this->status;
             }
@@ -886,7 +887,7 @@ namespace net {
             Array<BYTE> physicalAddress;
 
             /** The status of the adapter. */
-            AssessedMember<Status> status;
+            AssessedMember<OperStatus> status;
 
             /** The type of adapter. */
             AssessedMember<Type> type;
@@ -1255,6 +1256,14 @@ namespace net {
         static float GuessAdapter(Adapter& outAdapter, const wchar_t *str,
             const bool invertWildness = false);
 
+        // TODO: documentation
+        static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
+            const char *str, const bool invertWildness);
+    
+        // TODO: documentation
+        static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
+            const wchar_t *str, const bool invertWildness);
+
         /**
          * Convert a network mask to a prefix length.
          *
@@ -1343,7 +1352,7 @@ namespace net {
          * @throws IllegalParamException If the enumeration value cannot be
          *                               stringised.
          */
-        static const char *Stringise(const Adapter::Status as);
+        static const char *Stringise(const Adapter::OperStatus as);
 
         /**
          * Answer a human-readable string for the given adapter type
@@ -1498,7 +1507,7 @@ namespace net {
 #ifdef _WIN32
         /**
          * Maps a system defined operation state constant to the VISlib
-         * Adapter::Status enumeration.
+         * Adapter::OperStatus enumeration.
          *
          * @param prefixOrigin The constant to be mapped.
          *
@@ -1506,7 +1515,8 @@ namespace net {
          *
          * @throws IllegalParamException If no valid mapping could be found.
          */
-        static Adapter::Status mapOperationStatus(const IF_OPER_STATUS status);
+        static Adapter::OperStatus mapOperationStatus(
+            const IF_OPER_STATUS status);
 #endif /* _WIN32 */
 
 #ifdef _WIN32

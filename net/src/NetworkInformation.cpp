@@ -645,9 +645,9 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
 #if (defined(DEBUG) || defined(_DEBUG))
     if (invertWildness) {
         VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
-            "of GuessAdapter(). Please be advised that this is not recommended "
-            "and severely degrades the Chefmäßigkeit of your application. It "
-            "is recommended not to invert the wildness.\n");
+            "of GuessAdapter(). Please be advised that this is not "
+            "recommended and severely degrades the Chefmäßigkeit of your "
+            "application. It is recommended not to invert the wildness.\n");
     }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
     VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessAdapter() trying to guess what "
@@ -662,6 +662,69 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
         NetworkInformation::lockAdapters.Lock();
         retval = NetworkInformation::wildGuessAdapter(outAdapter, address, 
             device, prefixLen, validMask);
+    } catch (...) {
+        NetworkInformation::lockAdapters.Unlock();
+        throw;
+    }
+    NetworkInformation::lockAdapters.Unlock();
+
+    ASSERT(retval >= 0.0f);
+    ASSERT(retval <= 1.0f);
+    return (invertWildness ? (1.0f - retval) : retval);
+}
+
+
+/*
+ * vislib::net::NetworkInformation::GuessLocalEndPoint
+ */
+float vislib::net::NetworkInformation::GuessLocalEndPoint(
+        IPEndPoint& outEndPoint, const char *str, const bool invertWildness) {
+    return NetworkInformation::GuessLocalEndPoint(outEndPoint, A2W(str),
+        invertWildness);
+}
+
+
+/*
+ * vislib::net::NetworkInformation::GuessLocalEndPoint
+ */
+float vislib::net::NetworkInformation::GuessLocalEndPoint(
+        IPEndPoint& outEndPoint, const wchar_t *str, 
+        const bool invertWildness) {
+    VLSTACKTRACE("NetworkInformation::GuessLocalEndPoint", __FILE__, __LINE__);
+    float retval = 1.0f;            // The wildness of the guess.
+    AdapterList candidates;         // The list of adapter candidates.
+    UINT32 validMask = 0;           // Valid fields from the input.
+    IPAgnosticAddress address;      // The adapter address from the input.
+    StringW device;                 // The device name from the input.
+    ULONG prefixLen;                // The prefix length from the input.
+    USHORT port;                    // The port from the input.
+
+#if (defined(DEBUG) || defined(_DEBUG))
+    if (invertWildness) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
+            "of GuessLocalEndPoint(). Please be advised that this is not "
+            "recommended and severely degrades the Chefmäßigkeit of your "
+            "application. It is recommended not to invert the wildness.\n");
+    }
+#endif /* (defined(DEBUG) || defined(_DEBUG)) */
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessLocalEndPoint() trying to guess "
+        " what endpoint \"%s\" might be ...\n", W2A(str));
+
+    /* Parse the input. */
+    validMask = NetworkInformation::wildGuessSplitInput(address, device, 
+        prefixLen, port, str);
+
+    /* Do the wild guess. */
+    try {
+        NetworkInformation::lockAdapters.Lock();
+
+        /* Try to find the address directly as a first guess. */
+        NetworkInformation::GetAdaptersForUnicastAddress(candidates, address);
+
+
+
+        //retval = NetworkInformation::wildGuessAdapter(outAdapter, address, 
+        //    device, prefixLen, validMask);
     } catch (...) {
         NetworkInformation::lockAdapters.Unlock();
         throw;
@@ -726,18 +789,18 @@ const char *vislib::net::NetworkInformation::Stringise(
  * vislib::net::NetworkInformation::Stringise
  */
 const char *vislib::net::NetworkInformation::Stringise(
-        const Adapter::Status as) {
+        const Adapter::OperStatus as) {
     VLSTACKTRACE("NetworkInformation::Stringise", __FILE__, 
         __LINE__);
 
     switch (as) {
-        IMPLEMENT_STRINGISE_CASE(Adapter, STATUS_UNKNOWN);
-        IMPLEMENT_STRINGISE_CASE(Adapter, STATUS_UP);
-        IMPLEMENT_STRINGISE_CASE(Adapter, STATUS_DOWN);
-        IMPLEMENT_STRINGISE_CASE(Adapter, STATUS_TESTING);
-        IMPLEMENT_STRINGISE_CASE(Adapter, STATUS_DORMANT);
-        IMPLEMENT_STRINGISE_CASE(Adapter, STATUS_NOT_PRESENT);
-        IMPLEMENT_STRINGISE_CASE(Adapter, STATUS_LOWER_LAYER_DOWN);
+        IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_UNKNOWN);
+        IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_UP);
+        IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_DOWN);
+        IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_TESTING);
+        IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_DORMANT);
+        IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_NOT_PRESENT);
+        IMPLEMENT_STRINGISE_CASE(Adapter, OPERSTATUS_LOWER_LAYER_DOWN);
 
         default:
             throw IllegalParamException("as", __FILE__, __LINE__);
@@ -1046,7 +1109,7 @@ void vislib::net::NetworkInformation::initAdapters(void) {
             adapter.status.Set(NetworkInformation::mapOperationStatus(
                 cur->OperStatus), VALID);
         } catch (IllegalParamException) {
-            adapter.status.Set(Adapter::STATUS_UNKNOWN, GUESSED);
+            adapter.status.Set(Adapter::OPERSTATUS_UNKNOWN, GUESSED);
         }
 
         //pDnServer = pCurrAddresses->FirstDnsServerAddress;
@@ -1131,10 +1194,10 @@ void vislib::net::NetworkInformation::initAdapters(void) {
 
             /* Retrieve adapter status. */
             if ((cur->ifa_flags & IFF_UP) != 0) {
-                adapter->status.Set(Adapter::STATUS_UP, VALID);
+                adapter->status.Set(Adapter::OPERSTATUS_UP, VALID);
             } else {
                 /* Linux does not tell us whether an adapter is down. */
-                adapter->status.Set(Adapter::STATUS_UNKNOWN, GUESSED);
+                adapter->status.Set(Adapter::OPERSTATUS_UNKNOWN, GUESSED);
             }
         }
 
@@ -1413,32 +1476,32 @@ vislib::net::NetworkInformation::mapAdapterType(
 /*
  * vislib::net::NetworkInformation::mapOperationStatus
  */
-vislib::net::NetworkInformation::Adapter::Status
+vislib::net::NetworkInformation::Adapter::OperStatus
 vislib::net::NetworkInformation::mapOperationStatus(
         const IF_OPER_STATUS status) {
     VLSTACKTRACE("NetworkInformation::mapOperationStatus", __FILE__, __LINE__);
 
     switch (status) {
         case IfOperStatusUp:
-            return Adapter::STATUS_UP;
+            return Adapter::OPERSTATUS_UP;
 
         case IfOperStatusDown:
-            return Adapter::STATUS_DOWN;
+            return Adapter::OPERSTATUS_DOWN;
 
         case IfOperStatusTesting:
-            return Adapter::STATUS_TESTING;
+            return Adapter::OPERSTATUS_TESTING;
 
         case IfOperStatusDormant:
-            return Adapter::STATUS_DOWN;
+            return Adapter::OPERSTATUS_DOWN;
 
         case IfOperStatusNotPresent:
-            return Adapter::STATUS_NOT_PRESENT;
+            return Adapter::OPERSTATUS_NOT_PRESENT;
 
         case IfOperStatusLowerLayerDown:
-            return Adapter::STATUS_LOWER_LAYER_DOWN;
+            return Adapter::OPERSTATUS_LOWER_LAYER_DOWN;
 
         case IfOperStatusUnknown:
-            return Adapter::STATUS_UNKNOWN;
+            return Adapter::OPERSTATUS_UNKNOWN;
 
         default:
             throw IllegalParamException("status", __FILE__, __LINE__);
@@ -1793,8 +1856,8 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
 
         /* Check for connection state. */
         try {
-            if ((a.GetStatus() == Adapter::STATUS_DOWN)
-                    || (a.GetStatus() == Adapter::STATUS_LOWER_LAYER_DOWN)) {
+            if ((a.GetStatus() == Adapter::OPERSTATUS_DOWN) || (a.GetStatus() 
+                    == Adapter::OPERSTATUS_LOWER_LAYER_DOWN)) {
                 wildness[i] += NetworkInformation::PENALTY_ADAPTER_DOWN;
             }
         } catch (NoConfidenceException) {
