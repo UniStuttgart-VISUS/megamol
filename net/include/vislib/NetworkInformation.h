@@ -1048,6 +1048,23 @@ namespace net {
         static SIZE_T GetAdaptersForPredicate(AdapterList& outAdapters,
             SelectAdapterCallback cb, void *userContext = NULL);
 
+        /**
+         * Answer all adapters of the given type
+         *
+         * This method is thread-safe.
+         *
+         * @param outAdapter Receives the adapter, if true is returned.
+         * @param type       The type of adapters to be retrieved.
+         * 
+         * @return The number of adapters found.
+         *
+         * @throws SystemException     If an error occurred while retrieving 
+         *                             information from the OS.
+         * @throws SocketException     If the socket subsystem could not be 
+         *                             used.
+         * @throws std::bad_alloc      If there was insufficient memory for 
+         *                             retrieving the data.
+         */
         static SIZE_T GetAdaptersForType(AdapterList& outAdapters,
             const Adapter::Type type);
 
@@ -1435,6 +1452,7 @@ namespace net {
             ULONG *PrefixLen;           //< Pointer to input prefix length.
             Array<float> *Wildness;     //< Output array of address wildness.
             bool IsIPv4Preferred;       //< Prefer IPv4 in case of doubt.
+            bool IsEmptyAddress;        //< Add empty input penalty.
         } GuessLocalEndPointCtx;
 
         // TODO: documentation
@@ -1592,7 +1610,18 @@ namespace net {
         static void prefixToNetmask(BYTE *outNetmask, const SIZE_T len,
             const ULONG prefix);
 
-        // TODO: documentation
+        /**
+         * Process an enumerated adapter for guessing a local endpoint.
+         *
+         * The method adds the wildness for the adatper to the 'Wildness' array
+         * in the context structure.
+         *
+         * @param adapter The currently processed adapter.
+         * @param context A pointer to a GuessLocalEndPointCtx that must live
+         *                until the method returns.
+         *
+         * @return true
+         */
         static bool processAdapterForLocalEndpointGuess(const Adapter& adapter, 
             void *context);
 
@@ -1699,6 +1728,12 @@ namespace net {
         static const float PENALTY_ADAPTER_DOWN;
 
         /**
+         * Wildness penalty for an empty address, which might be parsed 
+         * successfully.
+         */
+        static const float PENALTY_EMPTY_ADDRESS;
+
+        /**
          * Wildness penalty for a wring address family.
          */
         static const float PENALTY_WRONG_ADDRESSFAMILY;
@@ -1708,6 +1743,12 @@ namespace net {
          * specification matches.
          */
         static const float PENALTY_WRONG_PREFIX;
+
+        /**
+         * Flag indicating that the address returned by wildGuessSplitInput()
+         * was parsed from an empty string.
+         */
+        static const UINT32 WILD_GUESS_FROM_EMPTY_ADDRESS;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 

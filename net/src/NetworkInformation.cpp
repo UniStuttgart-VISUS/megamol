@@ -748,6 +748,8 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
                 ? &prefixLen : NULL;
             ctx.Wildness = &wildness;
             ctx.IsIPv4Preferred = ((validMask & WILD_GUESS_HAS_NETMASK) != 0);
+            ctx.IsEmptyAddress = ((validMask & WILD_GUESS_FROM_EMPTY_ADDRESS) 
+                != 0);
 
             NetworkInformation::EnumerateAdapters(
                 NetworkInformation::processAdapterForLocalEndpointGuess,
@@ -1834,6 +1836,13 @@ bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
                     wildness += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
                 }
 
+                if (ctx->IsEmptyAddress) {
+                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" was "
+                        "obtained from empty input.\n", 
+                        a.ToStringA().PeekBuffer());
+                    wildness += NetworkInformation::PENALTY_EMPTY_ADDRESS;
+                }
+
             } else if (ctx->PrefixLen != NULL) {
                 try {
                     a = a.GetPrefix(*ctx->PrefixLen);
@@ -2052,6 +2061,11 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
                 }
             } /* end if (((validMask & WILD_GUESS_HAS_PREFIX_LEN) == 0) ... */
 
+            if ((validMask & WILD_GUESS_FROM_EMPTY_ADDRESS) != 0) {
+                /* Add penalty for guessing from empty string. */
+                wildness[i] += NetworkInformation::PENALTY_EMPTY_ADDRESS;
+            }
+
         } else if (((validMask & WILD_GUESS_HAS_PREFIX_LEN) != 0)
                 || ((validMask & WILD_GUESS_HAS_NETMASK) != 0)) {
             /* 
@@ -2240,6 +2254,9 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
 
         //outDevice = input;
         retval |= WILD_GUESS_HAS_ADDRESS;
+        if (input.IsEmpty()) {
+            retval |= WILD_GUESS_FROM_EMPTY_ADDRESS;
+        }
         VLTRACE(Trace::LEVEL_VL_VERBOSE, "Parsed address: %s\n",
             outAddress.ToStringA().PeekBuffer());
 
@@ -2263,6 +2280,12 @@ const float vislib::net::NetworkInformation::PENALTY_ADAPTER_DOWN = 0.2f;
 
 
 /*
+ * vislib::net::NetworkInformation::PENALTY_EMPTY_ADDRESS 
+ */
+const float vislib::net::NetworkInformation::PENALTY_EMPTY_ADDRESS = 0.75f;
+
+
+/*
  * vislib::net::NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY 
  */
 const float vislib::net::NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY 
@@ -2273,6 +2296,13 @@ const float vislib::net::NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY
  * vislib::net::NetworkInformation::PENALTY_WRONG_PREFIX
  */
 const float vislib::net::NetworkInformation::PENALTY_WRONG_PREFIX = 0.15f;
+
+
+/*
+ * vislib::net::NetworkInformation::WILD_GUESS_FROM_EMPTY_ADDRESS 
+ */
+const UINT32 vislib::net::NetworkInformation::WILD_GUESS_FROM_EMPTY_ADDRESS
+    = 0x20;
 
 
 /* 
