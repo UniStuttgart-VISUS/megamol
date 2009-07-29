@@ -613,8 +613,8 @@ vislib::net::NetworkInformation::GetAdapterUnsafe(const SIZE_T idx) {
 
     } else {
         NetworkInformation::lockAdapters.Unlock();
-        throw OutOfRangeException(idx, 0, static_cast<int>(cntAdapters), 
-            __FILE__, __LINE__);
+        throw OutOfRangeException(static_cast<int>(idx), 0,
+            static_cast<int>(cntAdapters), __FILE__, __LINE__);
     }
 }
 
@@ -887,7 +887,7 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
                     }
                 }
 
-                if (al[i].GetAddressFamily() == address.GetAddressFamily()) {
+                if (al[i].GetAddressFamily() != address.GetAddressFamily()) {
                     retval += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
                 }
 
@@ -1955,7 +1955,7 @@ void vislib::net::NetworkInformation::prefixToNetmask(BYTE *outNetmask,
     VLSTACKTRACE("NetworkInformation::prefixToNetmask", __FILE__, __LINE__);
     BYTE *mask = outNetmask;
     LONG remBits = prefix;
-    LONG maxPrefix = 8 * len;
+    LONG maxPrefix = 8L * static_cast<LONG>(len);
     
     if ((remBits < 0) || (remBits > maxPrefix)) {
         throw vislib::OutOfRangeException(remBits, 0, maxPrefix, __FILE__, 
