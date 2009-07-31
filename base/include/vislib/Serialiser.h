@@ -857,6 +857,22 @@ namespace vislib {
         virtual void Serialise(const StringW& value,
             const wchar_t *name) = 0;
 
+        /**
+         * TODO: Document
+         */
+        template<class T> inline Serialiser& operator<<(const T& d) {
+            this->Serialise(d);
+            return *this;
+        }
+
+        /**
+         * TODO: Document
+         */
+        template<class T> inline Serialiser& operator>>(T& d) {
+            this->Deserialise(d);
+            return *this;
+        }
+
     protected:
 
         /** 
