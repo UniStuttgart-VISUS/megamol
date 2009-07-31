@@ -479,6 +479,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\RawStorageWriter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ReferenceCounted.cpp"
 				>
 			</File>
@@ -814,6 +818,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\RawStorageSerialiser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RawStorageWriter.h"
 				>
 			</File>
 			<File
