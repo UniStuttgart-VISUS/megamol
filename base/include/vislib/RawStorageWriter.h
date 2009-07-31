@@ -142,7 +142,7 @@ namespace vislib {
         inline void Write(float d) { this->Write(&d, 4); }
         inline void Write(double d) { this->Write(&d, 8); }
         inline void Write(const vislib::StringA& d) {
-            this->Write(static_cast<UINT64>(d.Length()));
+            this->Write(static_cast<unsigned int>(d.Length()));
             this->Write(d.PeekBuffer(), d.Length() * sizeof(char));
         }
         // You really do not want to use unicode, since linux has f**ked it up
@@ -151,9 +151,9 @@ namespace vislib {
         //    this->Write(d.PeekBuffer(), d.Length() * sizeof(wchar_t));
         //}
         inline void Write(const char *d) {
-            UINT64 l = static_cast<UINT64>(vislib::CharTraitsA::SafeStringLength(d));
-            this->Write(l);
-            this->Write(d, static_cast<SIZE_T>(l));
+            SIZE_T l = vislib::CharTraitsA::SafeStringLength(d);
+            this->Write(static_cast<unsigned int>(l));
+            this->Write(d, l);
         }
         // You really do not want to use unicode, since linux has f**ked it up
         //inline Write(const wchar_t *d) {
@@ -161,9 +161,9 @@ namespace vislib {
         //    this->Write(d, l * sizeof(wchar_t));
         //}
         inline void Write(const vislib::RawStorage& d) {
-            UINT64 l = static_cast<UINT64>(d.GetSize());
-            this->Write(l);
-            this->Write(d, static_cast<SIZE_T>(l));
+            SIZE_T l = d.GetSize());
+            this->Write(static_cast<UINT64>(l));
+            this->Write(d, l);
         }
         template<class T> inline RawStorageWriter& operator<<(const T& d) {
             this->Write(d);
