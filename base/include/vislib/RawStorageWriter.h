@@ -161,7 +161,7 @@ namespace vislib {
         //    this->Write(d, l * sizeof(wchar_t));
         //}
         inline void Write(const vislib::RawStorage& d) {
-            SIZE_T l = d.GetSize());
+            SIZE_T l = d.GetSize();
             this->Write(static_cast<UINT64>(l));
             this->Write(d, l);
         }
