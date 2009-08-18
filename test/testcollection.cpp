@@ -128,6 +128,28 @@ void TestArray(void) {
 
 
     vislib::sys::SynchronisedArray<int> syncedIntArray;
+
+    intAry.Clear();
+    intAry.Add(1);
+    intAry.Add(2);
+    intAry.Add(3);
+    intAry.Add(4);
+    intAry.Erase(0, 1);
+    AssertEqual("Array has 3 elements", intAry.Count(), SIZE_T(3));
+    AssertEqual("Array[0] == 2", intAry[0], 2);
+    AssertEqual("Array[1] == 3", intAry[1], 3);
+    AssertEqual("Array[2] == 4", intAry[2], 4);
+
+    intAry.Clear();
+    intAry.Add(1);
+    intAry.Add(2);
+    intAry.Add(3);
+    intAry.Add(4);
+    intAry.Erase(1, 1);
+    AssertEqual("Array has 3 elements", intAry.Count(), SIZE_T(3));
+    AssertEqual("Array[0] == 1", intAry[0], 1);
+    AssertEqual("Array[1] == 3", intAry[1], 3);
+    AssertEqual("Array[2] == 4", intAry[2], 4);
 }
 
 

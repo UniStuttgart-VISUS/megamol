@@ -711,6 +711,7 @@ namespace vislib {
     void Array<T, L, C>::Erase(const SIZE_T beginIdx, const SIZE_T cnt) {
         SIZE_T cntRemoved = cnt;
         SIZE_T range = cnt;
+        SIZE_T cntMove = range;
 
         this->Lock();
 
@@ -718,7 +719,7 @@ namespace vislib {
 
             /* Sanity check. */
             if (beginIdx + range >= this->count) {
-                cntRemoved = range = this->count - beginIdx;
+                cntRemoved = range = cntMove = this->count - beginIdx;
             }
             ASSERT(beginIdx + range <= this->count);
 
@@ -730,10 +731,10 @@ namespace vislib {
             /* Fill empty range. */
             for (SIZE_T i = beginIdx + range; i < this->count; i += range) {
                 if (i + range >= this->count) {
-                    range = this->count - i;
+                    cntMove = this->count - i;
                 }
-                ::memcpy(this->elements + (i - range - 1), this->elements + i, 
-                    range * sizeof(T));
+                ::memcpy(this->elements + (i - range), this->elements + i, 
+                    cntMove * sizeof(T));
             }
             this->count -= cntRemoved;
 
