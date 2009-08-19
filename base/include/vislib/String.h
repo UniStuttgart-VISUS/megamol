@@ -192,7 +192,7 @@ namespace vislib {
          */
         inline Size Compare(const String& rhs, 
                 const bool isCaseSensitive) const {
-            return this->Compare(rhs.data);
+            return this->Compare(rhs.data, isCaseSensitive);
         }
 
         /**
