@@ -170,7 +170,17 @@ void vislib::graphics::CameraParameters::Serialise(
 vislib::graphics::CameraParameters& 
 vislib::graphics::CameraParameters::operator=(
         const vislib::graphics::CameraParameters& rhs) {
-    // Intentionally empty
+    if (this != &rhs) {
+        this->SetCoordSystemType(rhs.CoordSystemType());
+        this->SetClip(rhs.NearClip(), rhs.FarClip());
+        this->SetApertureAngle(rhs.ApertureAngle());
+        this->SetProjection(rhs.Projection());
+        this->SetStereoParameters(rhs.StereoDisparity(), rhs.Eye(), rhs.FocalDistance());
+        this->SetView(rhs.Position(), rhs.LookAt(), rhs.Up());
+        this->SetTileRect(rhs.TileRect());
+        this->SetVirtualViewSize(rhs.VirtualViewSize());
+        this->SetLimits(rhs.Limits());
+    }
     return *this;
 }
 
