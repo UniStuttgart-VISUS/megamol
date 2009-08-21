@@ -15,6 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/types.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -203,6 +204,13 @@ namespace sys {
         inline WORD NoModKeys(void) const {
             return this->key & ~KEY_MOD;
         }
+
+        /**
+         * Generates a human-readable ASCII String representing the key code.
+         *
+         * @return A human-readable ASCII String
+         */
+        vislib::StringA ToStringA(void) const;
 
         /**
          * Assignment operator.
