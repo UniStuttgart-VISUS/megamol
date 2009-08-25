@@ -88,8 +88,8 @@ void vislib::RawStorage::EnforceSize(const SIZE_T size,
             this->data = ::realloc(this->data, this->size);
 
         } else {
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, 
-                "RawStorage::AssertSize allocates %u bytes.\n", this->size);
+            //VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, 
+            //    "RawStorage::AssertSize allocates %u bytes.\n", this->size);
             SAFE_FREE(this->data);
             this->data = ::malloc(this->size);
         }

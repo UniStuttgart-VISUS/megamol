@@ -33,10 +33,10 @@ namespace math {
          * Ctor. 
          */
         inline Plane(void) {
-            this->parameters[IDX_A] = static_cast<T>(0);
-            this->parameters[IDX_B] = static_cast<T>(0);
-            this->parameters[IDX_C] = static_cast<T>(0);
-            this->parameters[IDX_D] = static_cast<T>(0);
+            this->parameters[Super::IDX_A] = static_cast<T>(0);
+            this->parameters[Super::IDX_B] = static_cast<T>(0);
+            this->parameters[Super::IDX_C] = static_cast<T>(0);
+            this->parameters[Super::IDX_D] = static_cast<T>(0);
         }
 
         /** 
@@ -125,10 +125,10 @@ namespace math {
     template <class T> 
     template<class Tp, class Sp>
     Plane<T>::Plane(const AbstractPlane<Tp, Sp>& rhs) {
-        this->parameters[IDX_A] = static_cast<T>(rhs.A());
-        this->parameters[IDX_B] = static_cast<T>(rhs.B());
-        this->parameters[IDX_C] = static_cast<T>(rhs.C());
-        this->parameters[IDX_D] = static_cast<T>(rhs.D());
+        this->parameters[Super::IDX_A] = static_cast<T>(rhs.A());
+        this->parameters[Super::IDX_B] = static_cast<T>(rhs.B());
+        this->parameters[Super::IDX_C] = static_cast<T>(rhs.C());
+        this->parameters[Super::IDX_D] = static_cast<T>(rhs.D());
     }
 
 
