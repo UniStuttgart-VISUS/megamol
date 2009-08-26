@@ -211,7 +211,7 @@ namespace vislib {
             Map<K, V>* owner;
 
             /** The next index */
-            unsigned int idx;
+            SIZE_T idx;
 
             /** The returned value */
             ElementPair retval;
@@ -356,7 +356,7 @@ namespace vislib {
             this->keys.Append(key);
             this->values.Append(value);
         } else {
-            this->values[static_cast<unsigned int>(idx)] = value;
+            this->values[static_cast<SIZE_T>(idx)] = value;
         }
     }
 
@@ -392,8 +392,8 @@ namespace vislib {
     template<class K, class V> 
     SingleLinkedList<K> Map<K, V>::FindKeys(const V &value) const {
         SingleLinkedList<K> retval;
-        unsigned int len = static_cast<unsigned int>(this->values.Count());
-        for (unsigned int i = 0; i < len; i++) {
+        SIZE_T len = static_cast<SIZE_T>(this->values.Count());
+        for (SIZE_T i = 0; i < len; i++) {
             if (this->values[i] == value) {
                 retval.Append(this->keys[i]);
             }
@@ -411,7 +411,7 @@ namespace vislib {
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
-            return &this->values[static_cast<unsigned int>(idx)];
+            return &this->values[static_cast<SIZE_T>(idx)];
         }
     }
 
@@ -424,7 +424,7 @@ namespace vislib {
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
-            return &this->values[static_cast<unsigned int>(idx)];
+            return &this->values[static_cast<SIZE_T>(idx)];
         }
     }
 
