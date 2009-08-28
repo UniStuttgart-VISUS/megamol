@@ -1,98 +1,37 @@
 #
-# checkdumpbin.ps1  12.09.2006 (mueller)
+# sign-script.ps1
 #
-# Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+# Copyright (C) 2008 by Universität Stuttgart (VISUS). Alle Rechte vorbehalten.
 #
 
-# Use Set-ExecutionPolicy unrestricted for easy execution on Powershell
+if ($Args.Length -eq 2) {
+    $file = $Args[0]
+    $user = $Args[1]
 
+    if (Test-Path $file) {
+        $search = "CN\s*=\s*{0}" -f $user
+        $matches = @(gci -r cert:\CurrentUser\My -codesigning | where { $_.Subject -imatch $search })
 
-# Path to the batch script that sets the Visual Studio paths and variables
-$VSEnvScript = "D:\Program Files (x86)\Microsoft Visual Studio 8\Common7\Tools\vsvars32.bat"
+        if ($matches.Length -eq 1) {
+            Set-AuthenticodeSignature $file $matches[0]
+        } else {
+            Write-Output ("Your query `"{0}`" should match exactly one certificate, but actually matches {1}:" -f $user, $matches.Length)
+            $matches | foreach { Write-Output ("`"{0}`"" -f $_.Subject) }
+        }
 
+    } else {
+        Write-Output "The specified file `"$file`" does not exist." 
+    }
 
-if ($Args.Length -eq 1) {
-	$LibPath = $Args[0]
 } else {
-	echo "usage: checkdumpbin.ps1 <libpath>"
-	exit
+    Write-Output ("Usage: {0} <Script> <Certificate CN>" -f ($MyInvocation.MyCommand).Name)
 }
-
-# Define the platforms and the include and exclude list that is evaluated for 
-# the output of dumpbin.
-$Platforms = @{ 
-	"32" = @{ "Include" = "machine\s+\(x86\)"; "Exclude" = "machine\s+\(x64\)" };
-	"64" = @{ "Include" = "machine\s+\(x64\)"; "Exclude" = "machine\s+\(x86\)" };
-}
-
-# Define the debug and release version and the two lists for them.
-$Debugs = @{ 
-	"" = @{ "Include" = @(); "Exclude" = "\.debug" };
-	"d" = @{ "Include" = "\.debug"; "Exclude" = @() };
-}
-
-# Add the Visual Studio Variables from $VSEnvScript to the path environment of
-# the Powershell
-$VSPath = (gc $VSEnvScript | select-string "set\s+path") -replace "(.+\s+path\s*=\s*)", "" -replace "%path%", ""
-if ("$env:path" -inotmatch ($VSPath -replace "\\", "\\" -replace "\(", "\(" -replace "\)", "\)")) {
-	# $VSPath must be at begin for dumpbin to work
-	$env:path = $VSPath + $env:path
-}
-
-foreach ($p in $Platforms.Keys) {
-	foreach ($d in $Debugs.Keys) {
-	
-		# List the the libraries that match
-		$Libs = gci $LibPath\* -i *$p$c$d.lib
-		foreach ($l in $Libs)  {
-			echo "Checking $l ..."
-			$failed = $FALSE
-			$out = dumpbin /all $l.FullName
-
-			# Check platform
-			foreach ($i in $Platforms[$p]["Include"]) {
-				if ("$out" -inotmatch "$i") { 
-					echo "Include '$i' for $p FAILED"
-					$failed = $TRUE
-				}
-			}
-			
-			foreach ($e in $Platforms[$p]["Exclude"]) {
-				if ("$out" -imatch "$e") { 
-					echo "Exclude '$e' for $p FAILED"
-					$failed = $TRUE
-				}
-			}
-			
-			# Check debug symbols
-			foreach ($i in $Debugs[$d]["Include"]) {
-				if ("$out" -inotmatch "$i") { 
-					echo "Include '$i' for $d FAILED"
-					$failed = $TRUE
-				}
-			}
-			
-			foreach ($e in $Debugs[$d]["Exclude"]) {
-				if ("$out" -imatch "$e") { 
-					echo "Exclude '$e' for $d FAILED"
-					$failed = $TRUE
-				}
-			}	
-			
-			if ($failed) {
-				$filename = $l.Name -replace "(\.lib)$", ".txt"
-				echo "Writing output of dumpbin to $filename  ..."
-				ni . -name $filename -force -type "file" -value ($out | out-string) >> $null
-			}
-		} # end foreach ($l in $Libs)
-	} # end foreach ($d in $Debugs.Keys)
-} # end foreach ($p in $Platforms.Keys)
 
 # SIG # Begin signature block
 # MIINsAYJKoZIhvcNAQcCoIINoTCCDZ0CAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU0iAnXVu8dvufq+syXCrHOCou
-# 6eegggn7MIIJ9zCCB9+gAwIBAgIKYXFZ9AAAAAAACTANBgkqhkiG9w0BAQsFADBw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUmuHa3sXAQAzfmcTP5UuZ9L7k
+# fk2gggn7MIIJ9zCCB9+gAwIBAgIKYXFZ9AAAAAAACTANBgkqhkiG9w0BAQsFADBw
 # MRIwEAYKCZImiZPyLGQBGRYCZGUxHTAbBgoJkiaJk/IsZAEZFg11bmktc3R1dHRn
 # YXJ0MRUwEwYKCZImiZPyLGQBGRYFdmlzdXMxJDAiBgNVBAMTG1ZJU1VTIENlcnRp
 # ZmljYXRlIEF1dGhvcml0eTAeFw0wOTA4MjgxMTI1NTVaFw0xMTA4MjgxMTM1NTVa
@@ -150,17 +89,17 @@ foreach ($p in $Platforms.Keys) {
 # ZAEZFgV2aXN1czEkMCIGA1UEAxMbVklTVVMgQ2VydGlmaWNhdGUgQXV0aG9yaXR5
 # AgphcVn0AAAAAAAJMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEMMQowCKACgACh
 # AoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQBgjcCAQsxDjAM
-# BgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBT9VNHCoA1sj/DiAdKg5TjcS/bV
-# SzANBgkqhkiG9w0BAQEFAASCAgBCfeKQHm4MAn91ecQ4UoAPw+kt35TLKo6lx9Hx
-# QDiqmS3yqy6R82YjpVQhLARoAycrfJwGiTfIkJ5ZHRk+5Ai6Vd88fk0q65r4yz/V
-# 94HkDvlhuygHizQEq+8bUQMEMlgPmsps8P5vRtdeW6XHoFKjfQWEYowb7XCrTjA9
-# 8ystagEFTmoU42SXTSKAeaD9sdyEsy15AdZM3u5Gi1gvXomrE/xM6rrVKq9D6R+f
-# HsAc9Nrc+mbRejCAjg6f2+4nE7EFpxEWMTPQyYG1fuJWmrzILQkmyUM7i4um1bw0
-# UyiH1mhOeVJAJPWgOfHzwv7TtG5oNl95WNJI9NdCArWR65jneN4DH0sdXmvEuRHx
-# ulv3QKWMFWtfPC+l6SfZzA5RR0VA9KyAeFY1zvEur3OuUQcE5aLwt17FyK4pl46u
-# HBMHyzrEtCNRGs1IL6qJ22FfTEUC8973i5lP0vidOlarFNN0zrZAlCxO7Hfv8wAB
-# NF/8YqNK1o3icaWPsVxrzNaxTLB3Y1t0N2V/+jYIZ6IALB1KERA/qaNfdDHOf+JI
-# FqXiJTAr1L9VO2rTumVwW5eeUuWaWWY9j+HwouRMWrceT7HTteYEwhOOLBEiuZE8
-# TxnwHNkG93IERpSkAF454SiyZM3PHT18TvPvcVNMkNv6+5R14kZbaUK0g4ZkgSIH
-# rDr/AA==
+# BgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBQmpsS/lEMMwzEIcrFFutOAuqi8
+# TDANBgkqhkiG9w0BAQEFAASCAgA0ZkkKwwjg7ZcjdPfwCrX4feQwzF5xViuzkoRm
+# asMt/U8LsklTid9n1epRKQqIvrcyMohzgDcFA6EAs7FghlNO5HYCg9VrQnOlwg35
+# t+fEpp9ZnIeGbBRulayx6RmesnSgfkDgYOdnbhRYcNvCMjWK36E7dDCwEBIgH8oH
+# cjR2HfTXGedAMcCIW8i/eWAnK+zURohWXHHFoy+L8y2pZ+WhuA6oKoq8JJatPvpv
+# QaP5heHuzvsrs8fuB5RdD0sndrQp+p0D/wJ2ol3Zjcmq5bI7YA7Vfv9M0hDhCtia
+# k78Dpi6TEW0AWYdzyfSyGyZ1ZDqSwSomlx0a8Zy36jPaKguzvXb/muiSx2nmGp4N
+# Vyn3RxFPoPgTeyiv5NB0vm3Dlv5I69HMuaTkRKrXNcxwVsEBs3iJ720bd7Fyx4GW
+# qxiuxx8hchekXOq8qfRbJ5ENGrDlAKdG5gS/uNPhsmOARIU25kzuvdy6YD9GanwD
+# 80Rh8gsnNcFq15PNr8490IB/ANwsX0ctrtlc6WVvLLd5DAIMhxq4//UUU/fhZ8Ur
+# u8aYt1CaX9WVAF4LOITYZewwrgVWE2N4KPlajrayt3AYnJIIlJpCg4L927JSF/jU
+# rBh0J31yuP9xeRJCSKGMEI534pgUznRJVde2bi4Gf1wuRobP6YpbiOTFdwpAW1z7
+# SVvMuQ==
 # SIG # End signature block

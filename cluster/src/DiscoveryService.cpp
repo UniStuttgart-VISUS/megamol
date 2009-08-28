@@ -168,24 +168,22 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const USHORT bindPort)
         : bindAddress(bindAddress, bindPort),
         responseAddress(responseAddress) {
-    ASSERT(this->bcastAddress.GetPort() == 0);  // This is our guard!
+    NetworkInformation::AdapterList candidates;
+    NetworkInformation::Confidence confidence;
 
-    // TODO: This is not yet IPv6-compatible
-    throw 1; // TODO NETINFO
-    //UINT cntAdapters = NetworkInformation::AdapterCount();
-    //for (UINT i = 0; i < cntAdapters; i++) {
-    //    const NetworkInformation::Adapter& a 
-    //        = NetworkInformation::AdapterInformation(i);
-    //    IPAddress aNet = a.Address() & a.SubnetMask();
-    //    IPAddress bNet = bindAddress & a.SubnetMask();
+    NetworkInformation::GetAdaptersForUnicastAddress(candidates, bindAddress);
 
-    //    if (a.SubnetMask() != IPAddress::ANY && aNet == bNet) {
-    //        this->bcastAddress.SetIPAddress(a.BroadcastAddress());
-    //        this->bcastAddress.SetPort(bindPort);
-    //    }
-    //}
+    for (SIZE_T i = 0; i < candidates.Count(); i++) {
+        this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
+            &confidence));
+        if (confidence != NetworkInformation::INVALID) {
+            break;
+        }
+    }
 
-    if (this->bcastAddress.GetPort() == 0) {
+    if (confidence != NetworkInformation::INVALID) {
+        this->bcastAddress.SetPort(bindPort);
+    } else {
         this->~DiscoveryConfig();
         throw IllegalParamException("bindAddress", __FILE__, __LINE__);
     }
@@ -201,7 +199,25 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 //            const USHORT bindPort)
 //        : bindAddress(bindAddress, bindPort),
 //        responseAddress(bcastAddress) {
-//    // TODO
+//    NetworkInformation::AdapterList candidates;
+//    NetworkInformation::Confidence confidence;
+//
+//    NetworkInformation::GetAdaptersForUnicastAddress(candidates, bindAddress);
+//
+//    for (SIZE_T i = 0; i < candidates.Count(); i++) {
+//        this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
+//            &confidence));
+//        if (confidence != NetworkInformation::INVALID) {
+//            break;
+//        }
+//    }
+//
+//    if (confidence != NetworkInformation::INVALID) {
+//        this->bcastAddress.SetPort(bindPort);
+//    } else {
+//        this->~DiscoveryConfig();
+//        throw IllegalParamException("bindAddress", __FILE__, __LINE__);
+//    }
 //}
 
 

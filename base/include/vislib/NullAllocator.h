@@ -33,6 +33,14 @@ namespace vislib {
      */
     template<class T> class NullAllocator {
 
+    public:
+
+        /** The type of the object handled by the allocator.*/
+        typedef T TargetType;
+
+        /** The pointer type that is handled by the allocator. */
+        typedef T *TargetPtrType;
+
         /**
          * Allways returns 'NULL'.
          *
@@ -40,7 +48,7 @@ namespace vislib {
          *
          * @return 'NULL'
          */
-        static inline T *Allocate(const SIZE_T cnt = 0) {
+        static inline TargetPtrType Allocate(const SIZE_T cnt = 0) {
             return NULL;
         }
 
@@ -49,7 +57,7 @@ namespace vislib {
          *
          * @param inOutPtr The pointer will be set NULL.
          */
-        static inline void Deallocate(T *& inOutPtr) {
+        static inline void Deallocate(TargetPtrType& inOutPtr) {
             inOutPtr = NULL;
         }
 
