@@ -23,7 +23,7 @@
  * vislib::graphics::gl::FramebufferObject::RequiredExtensions
  */
 const char *vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
-    return "GL_EXT_framebuffer_object ";
+    return "GL_EXT_framebuffer_object GL_ARB_draw_buffers ";
 }
 
 
@@ -322,6 +322,66 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
     GL_VERIFY_RETURN(::glViewport(0, 0, this->width, this->height));
 
     return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::FramebufferObject::EnableMultipleV
+ */
+GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(UINT cntColourAttachments, UINT* colourAttachments) {
+    if (cntColourAttachments <= 1) {
+        return this->Enable(*colourAttachments);
+    }
+
+    USES_GL_VERIFY;
+
+    /* Ensure that we enable only valid FBOs. */
+    if (!this->IsValid()) {
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
+        return GL_INVALID_OPERATION;
+    }
+
+    /* Preserve the state. */
+    try {
+        this->saveState();
+    } catch (OpenGLException e) {
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
+            "enabling FBO (\"%s\").\n", e.GetMsgA());
+        return e.GetErrorCode();
+    }
+
+    /* Bind the FBO and disable interpolation on target textures. */
+    GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->idFb));
+    GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+        GL_NEAREST));
+    GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
+        GL_NEAREST));
+
+    GL_VERIFY_RETURN(::glDrawBuffersARB(cntColourAttachments, colourAttachments));
+    // There is no ::glReadBuffersARB
+    GL_VERIFY_RETURN(::glReadBuffer(GL_NONE));
+
+    /* Set viewport. */
+    GL_VERIFY_RETURN(::glViewport(0, 0, this->width, this->height));
+
+    return GL_NO_ERROR;
+}
+
+
+/*
+ * vislib::graphics::gl::FramebufferObject::EnableMultiple
+ */
+GLenum vislib::graphics::gl::FramebufferObject::EnableMultiple(UINT cntColourAttachments, ...) {
+   va_list argptr;
+   va_start(argptr, cntColourAttachments);
+   UINT *atts = new UINT[cntColourAttachments];
+   for (UINT i = 0; i < cntColourAttachments; i++) {
+       atts[i] = va_arg(argptr, int);
+   }
+   va_end(argptr);
+   GLenum rv = this->EnableMultipleV(cntColourAttachments, atts);
+   delete[] atts;
+   return rv;
 }
 
 

@@ -301,6 +301,22 @@ namespace gl {
         GLenum Enable(const UINT colourAttachment = 0);
 
         /**
+         * TODO: Document
+         * For multiple render targets.
+         * Does not set and unsets read buffer!
+         * OpenGL morons defined GL_COLOR_ATTACHMENT0_EXT to use
+         */
+        GLenum EnableMultipleV(UINT cntColourAttachments, UINT* colourAttachments);
+
+        /**
+         * TODO: Document
+         * For multiple render targets
+         * Does not set and unsets read buffer!
+         * OpenGL morons defined GL_COLOR_ATTACHMENT0_EXT to use
+         */
+        GLenum EnableMultiple(UINT cntColourAttachments, ...);
+
+        /**
          * Answer the number of colour attachments attached to this framebuffer
          * object.
          *
