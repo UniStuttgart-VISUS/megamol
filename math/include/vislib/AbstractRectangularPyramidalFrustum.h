@@ -43,6 +43,12 @@ namespace math {
         /**
          * TODO: Documentation
          */
+        template<class Tp, class Sp>
+        bool Contains(const AbstractPoint<Tp, 3, Sp>& point);
+
+        /**
+         * TODO: Documentation
+         */
         inline Point<T, 3> GetApex(void) const {
             VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetApex", 
                 __FILE__, __LINE__);
@@ -264,6 +270,9 @@ namespace math {
          */
         Plane<T> *fillPlaneCache(const bool forceUpdate = false) const;
 
+        void getBasePoints(vislib::Array<Point<T, 3> >& outPoints, 
+            const T& dz) const;
+
         /**
          * TODO Documentation
          */
@@ -301,6 +310,20 @@ namespace math {
 
 
     /*
+     * vislib::math::AbstractRectangularPyramidalFrustum<T, S>::Contains
+     */
+    template<class T, class S> 
+    template<class Tp, class Sp>
+    bool AbstractRectangularPyramidalFrustum<T, S>::Contains(
+            const AbstractPoint<Tp, 3, Sp>& point) {
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Contains",
+            __FILE__, __LINE__);
+        // TODO
+        throw MissingImplementationException("Contains", __FILE__, __LINE__);
+    }
+
+
+    /*
      * AbstractRectangularPyramidalFrustum<T, S>::GetBottomBasePoints
      */
     template<class T, class S> 
@@ -308,16 +331,7 @@ namespace math {
             vislib::Array<Point<T, 3> >& outPoints) const {
         VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBottomBasePoints",
             __FILE__, __LINE__);
-        ASSERT(this->GetBaseNormal().IsNormalised());
-
-        Point<T, 3> center = this->GetApex() + this->GetBaseNormal() 
-            * this->values[IDX_FAR];
-        //Vector<T, 3> offset
-
-        outPoints.Clear();
-
-        // TODO
-        throw MissingImplementationException("GetBottomBasePoints", __FILE__, __LINE__);
+        this->getBasePoints(outPoints, this->values[IDX_FAR]);
     }
 
 
@@ -329,8 +343,7 @@ namespace math {
             vislib::Array<Point<T, 3> >& outPoints) const {
         VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetTopBasePoints",
             __FILE__, __LINE__);
-        // TODO
-        throw MissingImplementationException("GetTopBasePoints", __FILE__, __LINE__);
+        this->getBasePoints(outPoints, this->values[IDX_NEAR]);
     }
 
 
@@ -576,6 +589,10 @@ namespace math {
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
         Vector<T, 3> right = normal.Cross(up);          // Compute right.
         right.Normalise();
+        Point<T, 3> planePoint;                         // Point on plane.
+        Vector<T, 3> planeNormal;                       // Normal of plane.
+
+        /* Assert some preconditions. */
         ASSERT(normal.IsNormalised());
         ASSERT(up.IsNormalised());
         ASSERT(right.IsNormalised());
@@ -584,40 +601,64 @@ namespace math {
         Point<T, 3> nearIntersect = apex + this->values[IDX_NEAR] * normal;
         Point<T, 3> farIntersect = apex + this->values[IDX_FAR] * normal;
         
+        /* Near and far plane (top and bottom base of the frustum) are easy. */
         this->cachePlanes[IDX_NEAR].Set(nearIntersect, -normal);
         this->cachePlanes[IDX_FAR].Set(farIntersect, normal);
 
-        //this->cachePlanes[IDX_BOTTOM].Set(
+        // Use bottom/left point on near plane for bottom and left plane.
+        planePoint = nearIntersect + (this->values[IDX_LEFT] * right) 
+            + (this->values[IDX_BOTTOM] * up);
 
-	//Vec3 aux,normal;
+        planeNormal = up.Cross(planePoint - apex);
+        this->cachePlanes[IDX_BOTTOM].Set(planePoint, planeNormal);
 
-	//aux = (nc - Y*nh) - p;
-	//aux.normalize();
-	//normal = X * aux;
-	//pl[BOTTOM].setNormalAndPoint(normal,nc-Y*nh);
+        planeNormal = right.Cross(planePoint - apex);
+        this->cachePlanes[IDX_LEFT].Set(planePoint, planeNormal);
 
+        // Use top/right point on near plane for top and right plane.
+        planePoint = nearIntersect + (this->values[IDX_RIGHT] * right) 
+            + (this->values[IDX_TOP] * up);
+        
+        planeNormal = up.Cross(planePoint - apex);
+        this->cachePlanes[IDX_TOP].Set(planePoint, planeNormal);
 
-
-	//aux = (nc + Y*nh) - p;
-	//aux.normalize();
-	//normal = aux * X;
-	//pl[TOP].setNormalAndPoint(normal,nc+Y*nh);
-
-
-	//
-	//aux = (nc - X*nw) - p;
-	//aux.normalize();
-	//normal = aux * Y;
-	//pl[LEFT].setNormalAndPoint(normal,nc-X*nw);
-
-	//aux = (nc + X*nw) - p;
-	//aux.normalize();
-	//normal = Y * aux;
-	//pl[RIGHT].setNormalAndPoint(normal,nc+X*nw);
-
-
+        planeNormal = right.Cross(planePoint - apex);
+        this->cachePlanes[IDX_RIGHT].Set(planePoint, planeNormal);
 
         return this->cachePlanes;
+    }
+
+
+    /*
+     * vislib::math::AbstractRectangularPyramidalFrustum<T, S>::getBasePoints
+     */
+    template<class T, class S>
+    void AbstractRectangularPyramidalFrustum<T, S>::getBasePoints(
+            vislib::Array<Point<T, 3> >& outPoints, const T& dz) const {
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::getBasePoints",
+            __FILE__, __LINE__);
+        Point<T, 3> apex = this->GetApex();             // Cache apex.
+        Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
+        Vector<T, 3> up = this->GetBaseUp();            // Cache up.
+        Vector<T, 3> right = normal.Cross(up);          // Compute right.
+        right.Normalise();
+
+        ASSERT(normal.IsNormalised());
+        ASSERT(up.IsNormalised());
+        ASSERT(right.IsNormalised());
+
+        Point<T, 3> center = apex + normal * dz;
+
+        outPoints.Clear();
+        outPoints.SetCount(4);
+        outPoints[IDX_LEFT_BOTTOM_POINT] = center 
+            + (this->values[IDX_LEFT] * right) + (this->values[IDX_BOTTOM] * up);
+        outPoints[IDX_RIGHT_BOTTOM_POINT] = center 
+            + (this->values[IDX_RIGHT] * right) + (this->values[IDX_BOTTOM] * up);
+        outPoints[IDX_RIGHT_TOP_POINT] = center 
+            + (this->values[IDX_RIGHT] * right) + (this->values[IDX_TOP] * up);
+        outPoints[IDX_LEFT_TOP_POINT] = center 
+            + (this->values[IDX_LEFT] * right) + (this->values[IDX_TOP] * up);
     }
 
 
