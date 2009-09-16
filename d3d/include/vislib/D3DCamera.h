@@ -139,7 +139,7 @@ namespace d3d {
         bool updateCache(void) const;
     
         /** Cached view frustum. */
-        mutable SceneSpaceFrustum cacheFrustum;
+        mutable SceneSpaceViewFrustum cacheFrustum;
 
         /** Cached look at point (for the current eye). */ 
         mutable D3DPoint3D cacheAt;

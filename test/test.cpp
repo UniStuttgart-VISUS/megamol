@@ -53,6 +53,7 @@
 #include "teststacktrace.h"
 #include "testasyncsocket.h"
 #include "testnetinfo.h"
+#include "testfrustum.h"
 
 
 /* type for test functions */
@@ -97,6 +98,7 @@ VislibTest tests[] = {
     {_T("Rectangle"), ::TestRectangle, "Tests vislib::math::Rectangle"},
     {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
     {_T("Point"), ::TestPoint, "Tests vislib::math::Point"},
+    {_T("Frustum"), ::TestFrustum, "Tests vislib::math::WorldSpaceFrustum"},
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},

@@ -1,13 +1,15 @@
 /*
- * Frustum.h
+ * ViewFrustum.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 by Universität Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_FRUSTUM_H_INCLUDED
-#define VISLIB_FRUSTUM_H_INCLUDED
+#ifndef VISLIB_VIEWFRUSTUM_H_INCLUDED
+#define VISLIB_VIEWFRUSTUM_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -16,7 +18,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractFrustum.h"
+#include "vislib/AbstractViewFrustum.h"
 
 
 namespace vislib {
@@ -26,20 +28,21 @@ namespace math {
     /**
      * Objects of this class represent a rectangular view frustum.
      */
-    template<class T> class Frustum : public AbstractFrustum<T, T[6]> {
+    template<class T> 
+    class ViewFrustum : public AbstractViewFrustum<T, T[6]> {
 
     public:
 
         /** 
          * Create a degenerate frustum that has collapsed to a point.
          */
-        inline Frustum(void) {
-            this->bounds[Super::IDX_BOTTOM] = static_cast<T>(0);
-            this->bounds[Super::IDX_TOP] = static_cast<T>(0);
-            this->bounds[Super::IDX_LEFT] = static_cast<T>(0);
-            this->bounds[Super::IDX_RIGHT] = static_cast<T>(0);
-            this->bounds[Super::IDX_NEAR] = static_cast<T>(0);
-            this->bounds[Super::IDX_FAR] = static_cast<T>(0);
+        inline ViewFrustum(void) {
+            this->offsets[Super::IDX_BOTTOM] = static_cast<T>(0);
+            this->offsets[Super::IDX_TOP] = static_cast<T>(0);
+            this->offsets[Super::IDX_LEFT] = static_cast<T>(0);
+            this->offsets[Super::IDX_RIGHT] = static_cast<T>(0);
+            this->offsets[Super::IDX_NEAR] = static_cast<T>(0);
+            this->offsets[Super::IDX_FAR] = static_cast<T>(0);
         }
 
         /** 
@@ -56,7 +59,7 @@ namespace math {
          * @param zNear   The offset of the near plane from the origin.
          * @param zFar    The offset of the far plane from the origin.
          */
-        inline Frustum(const T left, const T right, const T bottom, 
+        inline ViewFrustum(const T left, const T right, const T bottom, 
                 const T top, const T zNear, const T zFar) {
             this->Set(left, right, bottom, top, zNear, zFar); 
         }
@@ -75,8 +78,8 @@ namespace math {
          * @param zFar        The distance from the viewer to the far clipping
          *                    plane. 
          */
-        inline Frustum(const T fovy, const double aspectRatio, const T zNear, 
-                const T zFar) {
+        inline ViewFrustum(const T fovy, const double aspectRatio, 
+                const T zNear, const T zFar) {
             this->Set(fovy, aspectRatio, zNear, zFar);
         }
 
@@ -86,8 +89,8 @@ namespace math {
          *
          * @param rhs The object to be cloned.
          */
-        inline Frustum(const Frustum& rhs) {
-            ::memcpy(this->bounds, rhs.bounds, 6 * sizeof(T));
+        inline ViewFrustum(const ViewFrustum& rhs) {
+            ::memcpy(this->offsets, rhs.offsets, 6 * sizeof(T));
         }
 
         /**
@@ -97,11 +100,10 @@ namespace math {
          * @param rhs The object to be cloned.
          */        
         template<class Tp, class Sp>
-        Frustum(const AbstractFrustum<Tp, Sp>& rhs);
+        ViewFrustum(const AbstractViewFrustum<Tp, Sp>& rhs);
 
         /** Dtor. */
-        ~Frustum(void);
-
+        virtual ~ViewFrustum(void);
 
         /**
          * Assignment.
@@ -110,7 +112,7 @@ namespace math {
          *
          * @return *this.
          */
-        inline Frustum& operator =(const Frustum& rhs) {
+        inline ViewFrustum& operator =(const ViewFrustum& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -124,7 +126,8 @@ namespace math {
          * @return *this.
          */
         template<class Tp, class Sp>
-        inline Frustum& operator =(const AbstractFrustum<Tp, Sp>& rhs) {
+        inline ViewFrustum& operator =(
+                const AbstractViewFrustum<Tp, Sp>& rhs) {
             Super::operator =(rhs);
             return *this;
         }
@@ -132,30 +135,32 @@ namespace math {
     protected:
 
         /** The super class of this one. */
-        typedef AbstractFrustum<T, T[6]> Super;
+        typedef AbstractViewFrustum<T, T[6]> Super;
 
     };
 
 
     /*
-     * vislib::math::Frustum<T>::Frustum
+     * vislib::math::ViewFrustum<T>::ViewFrustum
      */
-    template <class T> 
+    template<class T> 
     template<class Tp, class Sp>
-    Frustum<T>::Frustum(const AbstractFrustum<Tp, Sp>& rhs) {
-        this->bounds[Super::IDX_BOTTOM] = static_cast<T>(rhs.Bottom());
-        this->bounds[Super::IDX_TOP] = static_cast<T>(rhs.Top());
-        this->bounds[Super::IDX_LEFT] = static_cast<T>(rhs.Left());
-        this->bounds[Super::IDX_RIGHT] = static_cast<T>(rhs.Right());
-        this->bounds[Super::IDX_NEAR] = static_cast<T>(rhs.Near());
-        this->bounds[Super::IDX_FAR] = static_cast<T>(rhs.Far());
+    ViewFrustum<T>::ViewFrustum(const AbstractViewFrustum<Tp, Sp>& rhs) {
+        this->offsets[Super::IDX_BOTTOM] 
+            = static_cast<T>(rhs.GetBottomDistance());
+        this->offsets[Super::IDX_TOP] = static_cast<T>(rhs.GetTopDistance());
+        this->offsets[Super::IDX_LEFT] = static_cast<T>(rhs.GetLeftDistance());
+        this->offsets[Super::IDX_RIGHT] 
+            = static_cast<T>(rhs.GetRightDistance());
+        this->offsets[Super::IDX_NEAR] = static_cast<T>(rhs.GetNearDistance());
+        this->offsets[Super::IDX_FAR] = static_cast<T>(rhs.GetFarDistance());
     }
 
 
     /*
-     * Frustum<T>::~Frustum
+     * ViewFrustum<T>::~ViewFrustum
      */
-    template<class T> Frustum<T>::~Frustum(void) {
+    template<class T> ViewFrustum<T>::~ViewFrustum(void) {
     }
     
 } /* end namespace math */
@@ -164,5 +169,5 @@ namespace math {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_FRUSTUM_H_INCLUDED */
+#endif /* VISLIB_VIEWFRUSTUM_H_INCLUDED */
 

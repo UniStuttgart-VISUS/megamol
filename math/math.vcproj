@@ -382,26 +382,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\AbstractFrustum.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\src\AbstractMatrix.cpp"
 				>
 				<FileConfiguration
@@ -582,6 +562,42 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\AbstractPyramidalFrustum.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\AbstractQuaternion.cpp"
 				>
 				<FileConfiguration
@@ -619,6 +635,42 @@
 			</File>
 			<File
 				RelativePath=".\src\AbstractRectangle.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\AbstractRectangularPyramidalFrustum.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -703,6 +755,42 @@
 			</File>
 			<File
 				RelativePath=".\src\AbstractVectorImpl.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\AbstractViewFrustum.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -887,42 +975,6 @@
 			</File>
 			<File
 				RelativePath=".\src\ForceDirected.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\Frustum.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -1179,6 +1231,42 @@
 			</File>
 			<File
 				RelativePath=".\src\Rectangle.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\RectangularPyramidalFrustum.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -1545,6 +1633,78 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\src\ViewFrustum.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\WorldSpaceFrustum.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1561,10 +1721,6 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractDimensionImpl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\AbstractFrustum.h"
 				>
 			</File>
 			<File
@@ -1588,11 +1744,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AbstractPyramidalFrustum.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractQuaternion.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractRectangle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractRectangularPyramidalFrustum.h"
 				>
 			</File>
 			<File
@@ -1605,6 +1769,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractVectorImpl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractViewFrustum.h"
 				>
 			</File>
 			<File
@@ -1629,10 +1797,6 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\ForceDirected.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\vislib\Frustum.h"
 				>
 			</File>
 			<File
@@ -1665,6 +1829,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Rectangle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\RectangularPyramidalFrustum.h"
 				>
 			</File>
 			<File
@@ -1709,6 +1877,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Vector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ViewFrustum.h"
 				>
 			</File>
 		</Filter>

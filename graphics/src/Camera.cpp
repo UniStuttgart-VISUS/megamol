@@ -51,8 +51,23 @@ vislib::graphics::Camera::~Camera(void) {
 /*
  * vislib::graphics::Camera::CalcViewFrustum
  */
-vislib::graphics::SceneSpaceFrustum& vislib::graphics::Camera::CalcViewFrustum(
-        SceneSpaceFrustum& outFrustum) const {
+vislib::graphics::SceneSpaceFrustum& 
+vislib::graphics::Camera::CalcViewFrustum(SceneSpaceFrustum& outFrustum) {
+    SceneSpaceViewFrustum tmp;
+    outFrustum.Set(this->CalcViewFrustum(tmp), 
+        this->Parameters()->EyePosition(),
+        this->Parameters()->EyeDirection(),
+        this->Parameters()->EyeUpVector());
+    return outFrustum;
+}
+
+
+/*
+ * vislib::graphics::Camera::CalcViewFrustum
+ */
+vislib::graphics::SceneSpaceViewFrustum& 
+vislib::graphics::Camera::CalcViewFrustum(
+        SceneSpaceViewFrustum& outFrustum) const {
     SceneSpaceType h;   // Height of the frustum.
     SceneSpaceType w;   // Width of the frustum.
     SceneSpaceType l;   // Left clipping plane.

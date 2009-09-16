@@ -97,6 +97,83 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;$(NOINHERIT)"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRTDBG_MAP_ALLOC"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib vislibgraphics$(BitsD).lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(SolutionDir)\lib"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -151,83 +228,6 @@
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
-			ConfigurationType="1"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetDebug64.vsprops"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\net\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;$(NOINHERIT)"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRTDBG_MAP_ALLOC"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibmath$(BitsD).lib vislibnet$(BitsD).lib vislibgraphics$(BitsD).lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)\lib"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -389,6 +389,10 @@
 			</File>
 			<File
 				RelativePath=".\testfloat16.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\testfrustum.cpp"
 				>
 			</File>
 			<File
@@ -566,6 +570,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testfrustum.h"
+				>
+			</File>
+			<File
 				RelativePath=".\testhash.h"
 				>
 			</File>
@@ -708,7 +716,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="Debug|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -716,7 +724,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|x64"
+				Name="Release|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool

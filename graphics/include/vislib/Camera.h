@@ -87,8 +87,21 @@ namespace graphics {
         /** Dtor. */
         virtual ~Camera(void);
 
+
         /**
-         * Compute the view frustum of the camera.
+         * Compute the view frustum of the camera in world coordinates.
+         *
+         * @param outFrustum A frustum object to receive the view frustum.
+         *
+         * @return 'outFrustum'. The out parameter is returned for convenience.
+         *
+         * @throws IllegalStateException If the projection type of the camera 
+         *                               is not supported. 
+         */
+        SceneSpaceFrustum& CalcViewFrustum(SceneSpaceFrustum& outFrustum);
+
+        /**
+         * Compute the view frustum of the camera in camera coordinates.
          *
          * @param outFrustum A frustum object to receive the view frustum.
          *
@@ -97,7 +110,8 @@ namespace graphics {
          * @throws IllegalStateException If the projection type of the camera 
          *                               is not supported.
          */
-        SceneSpaceFrustum& CalcViewFrustum(SceneSpaceFrustum& outFrustum) const;
+        SceneSpaceViewFrustum& CalcViewFrustum(
+            SceneSpaceViewFrustum& outFrustum) const;
 
         /**
          * Answers the parameters object.

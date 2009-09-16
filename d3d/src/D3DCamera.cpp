@@ -67,22 +67,22 @@ vislib::graphics::d3d::D3DCamera::CalcProjectionMatrix(
     if (isLeftHanded) {
         ::D3DXMatrixPerspectiveOffCenterLH(
             static_cast<D3DXMATRIX *>(outMatrix),
-            this->cacheFrustum.Left(),
-            this->cacheFrustum.Right(),
-            this->cacheFrustum.Bottom(),
-            this->cacheFrustum.Top(),
-            this->cacheFrustum.Near(),
-            this->cacheFrustum.Far());
+            this->cacheFrustum.GetLeftDistance(),
+            this->cacheFrustum.GetRightDistance(),
+            this->cacheFrustum.GetBottomDistance(),
+            this->cacheFrustum.GetTopDistance(),
+            this->cacheFrustum.GetNearDistance(),
+            this->cacheFrustum.GetFarDistance());
 
     } else {
         ::D3DXMatrixPerspectiveOffCenterRH(
             static_cast<D3DXMATRIX *>(outMatrix),
-            this->cacheFrustum.Left(),
-            this->cacheFrustum.Right(),
-            this->cacheFrustum.Bottom(),
-            this->cacheFrustum.Top(),
-            this->cacheFrustum.Near(),
-            this->cacheFrustum.Far());
+            this->cacheFrustum.GetLeftDistance(),
+            this->cacheFrustum.GetRightDistance(),
+            this->cacheFrustum.GetBottomDistance(),
+            this->cacheFrustum.GetTopDistance(),
+            this->cacheFrustum.GetNearDistance(),
+            this->cacheFrustum.GetFarDistance());
     }
     return outMatrix;
 }

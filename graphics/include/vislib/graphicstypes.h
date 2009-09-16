@@ -16,10 +16,11 @@
 
 #include "vislib/Cuboid.h"
 #include "vislib/Dimension.h"
-#include "vislib/Frustum.h"
 #include "vislib/Point.h"
 #include "vislib/Rectangle.h"
+#include "vislib/RectangularPyramidalFrustum.h"
 #include "vislib/Vector.h"
+#include "vislib/ViewFrustum.h"
 #include "vislib/ShallowDimension.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/ShallowRectangle.h"
@@ -55,8 +56,8 @@ namespace graphics {
     /** A 3D scene space cuboid. */
     typedef math::Cuboid<SceneSpaceType> SceneSpaceCuboid;
 
-    /** A scene space view frustum. */
-    typedef math::Frustum<SceneSpaceType> SceneSpaceFrustum;
+    /** A scene space frustum. */
+    typedef math::RectangularPyramidalFrustum<SceneSpaceType> SceneSpaceFrustum;
 
     /** A 2D scene space point. */
     typedef math::Point<SceneSpaceType, 2> SceneSpacePoint2D;
@@ -81,6 +82,9 @@ namespace graphics {
 
     /** A shallow 3D scene space vector. */
     typedef math::ShallowVector<SceneSpaceType, 3> ShallowSceneSpaceVector3D;
+
+    /** A scene space view frustum. */
+    typedef math::ViewFrustum<SceneSpaceType> SceneSpaceViewFrustum;
 
 } /* end namespace graphics */
 } /* end namespace vislib */
