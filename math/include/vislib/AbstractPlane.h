@@ -174,7 +174,7 @@ namespace math {
         /**
          * Normalise the plane parameters.
          */
-        void Normalise(void) const;
+        void Normalise(void);
 
         /**
          * Answer a point in the plane.
@@ -439,7 +439,7 @@ namespace math {
      * AbstractPlane<T, S>::Normalise
      */
     template<class T, class S>
-    void AbstractPlane<T, S>::Normalise(void) const {
+    void AbstractPlane<T, S>::Normalise(void) {
         T a, b, c, d;
         this->normalise(a, b, c, d);
         this->Set(a, b, c, d);

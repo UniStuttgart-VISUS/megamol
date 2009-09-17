@@ -162,6 +162,17 @@ namespace math {
         void SetNull(void);
 
         /**
+         * Make this vector having a length of 'newLength'.
+         *
+         * Note that a null vector cannot be scaled and will remain unchanged.
+         *
+         * @param newLength The new length of the vector.
+         *
+         * @return The old length of the vector.
+         */
+        T ScaleToLength(const T newLength);
+
+        /**
          * Answer the square of the length of the vector.
          *
          * @return The square of the length of the vector.
@@ -570,6 +581,7 @@ namespace math {
         return length;
     }
 
+
     /*
      * vislib::math::AbstractVectorImpl<T, D, S, C>::SetNull
      */
@@ -579,6 +591,26 @@ namespace math {
         for (unsigned int d = 0; d < D; d++) {
             this->components[d] = static_cast<T>(0);
         }
+    }
+
+
+    /*
+     * vislib::math::AbstractVectorImpl<T, D, S, C>::ScaleToLength
+     */
+    template<class T, unsigned int D, class S, 
+        template<class T, unsigned int D, class S> class C>
+    T AbstractVectorImpl<T, D, S, C>::ScaleToLength(const T newLength) {
+        T retval = this->Length();
+
+        if (retval != static_cast<T>(0)) {
+            T scaleFactor = newLength / retval;
+
+            for (unsigned int d = 0; d < D; d++) {
+                this->components[d] *= scaleFactor;
+            }
+        }
+
+        return retval;
     }
 
 

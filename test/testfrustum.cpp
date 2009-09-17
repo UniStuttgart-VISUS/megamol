@@ -28,7 +28,17 @@ void TestWorldSpaceFrustum(void) {
     plane2 = vonJedemDreck.GetTopBase();
     AssertTrue("Bottom base normal", plane1.Normal() == vonJedemDreck.GetBaseNormal());
     AssertTrue("Top base normal", plane2.Normal() == -1.0f * vonJedemDreck.GetBaseNormal());
-    
+
+    vonJedemDreck.Set(
+        Point<float, 3>(0, 0, 0),   // apex
+        Vector<float, 3>(0, 0, 1),  // base normal = view
+        Vector<float, 3>(0, 1, 0),  // base up
+        10.0f, 5.0f, 1.0f, 10.0f);
+    AssertFalse("Apex is not within frustum", vonJedemDreck.Contains(Point<float, 3>(0, 0, 0)));
+    AssertTrue("Point on top base", vonJedemDreck.Contains(Point<float, 3>(0, 0, 1), true));
+    AssertFalse("onIsIn", vonJedemDreck.Contains(Point<float, 3>(0, 0, 1), false));
+    AssertTrue("Point between bases", vonJedemDreck.Contains(Point<float, 3>(0, 0, 6), true));
+    AssertTrue("onIsIn", vonJedemDreck.Contains(Point<float, 3>(0, 0, 6), false));
 
     //Plane<float> plane1;
     //Plane<float> plane2;

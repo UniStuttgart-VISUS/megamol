@@ -53,11 +53,17 @@ vislib::graphics::Camera::~Camera(void) {
  */
 vislib::graphics::SceneSpaceFrustum& 
 vislib::graphics::Camera::CalcViewFrustum(SceneSpaceFrustum& outFrustum) {
+    if (this->Parameters()->Projection() 
+            == CameraParameters::MONO_ORTHOGRAPHIC) {
+        throw vislib::IllegalStateException("Computing frustums for "
+            "MONO_ORTHOGRAPHIC is currently unsupported.", __FILE__, __LINE__);
+    }
+
     SceneSpaceViewFrustum tmp;
-    outFrustum.Set(this->CalcViewFrustum(tmp), 
-        this->Parameters()->EyePosition(),
+    outFrustum.Set(this->Parameters()->EyePosition(),
         this->Parameters()->EyeDirection(),
-        this->Parameters()->EyeUpVector());
+        this->Parameters()->EyeUpVector(),
+        this->CalcViewFrustum(tmp));
     return outFrustum;
 }
 
