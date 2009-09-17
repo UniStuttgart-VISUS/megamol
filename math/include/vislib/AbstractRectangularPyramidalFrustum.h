@@ -17,6 +17,7 @@
 
 #include "vislib/AbstractPyramidalFrustum.h"
 #include "vislib/AbstractViewFrustum.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
 #include "vislib/Plane.h"
 #include "vislib/Point.h"
@@ -392,13 +393,13 @@ namespace math {
         Point<T, 3> center = apex + normal;
 
         outPoints.SetCount(4);
-        outPoints[IDX_LEFT_BOTTOM_POINT] = center
+        outPoints[Super::IDX_LEFT_BOTTOM_POINT] = center
             + scale * (normal + left + down);
-        outPoints[IDX_RIGHT_BOTTOM_POINT] = center
+        outPoints[Super::IDX_RIGHT_BOTTOM_POINT] = center
             + scale * (normal + right + up);
-        outPoints[IDX_RIGHT_TOP_POINT] = center 
+        outPoints[Super::IDX_RIGHT_TOP_POINT] = center 
             + scale * (normal + right + up);
-        outPoints[IDX_LEFT_TOP_POINT] = center 
+        outPoints[Super::IDX_LEFT_TOP_POINT] = center 
             + scale * (normal + left + up);
     }
 
@@ -426,10 +427,10 @@ namespace math {
         Point<T, 3> center = apex + normal * this->values[IDX_NEAR];
 
         outPoints.SetCount(4);
-        outPoints[IDX_LEFT_BOTTOM_POINT] = center + left + down;
-        outPoints[IDX_RIGHT_BOTTOM_POINT] = center + right + up;
-        outPoints[IDX_RIGHT_TOP_POINT] = center + right + up;
-        outPoints[IDX_LEFT_TOP_POINT] = center + left + up;
+        outPoints[Super::IDX_LEFT_BOTTOM_POINT] = center + left + down;
+        outPoints[Super::IDX_RIGHT_BOTTOM_POINT] = center + right + up;
+        outPoints[Super::IDX_RIGHT_TOP_POINT] = center + right + up;
+        outPoints[Super::IDX_LEFT_TOP_POINT] = center + left + up;
     }
 
 
@@ -736,7 +737,7 @@ namespace math {
         ASSERT(normal.IsNormalised());
         if (inOutUp.IsParallel(normal)) {
             // Cannot fix non-perpendicular up vector if vectors are parallel.
-            throw IllegalParamException("inOutUp", __FILE__, __LINE__);
+            throw vislib::IllegalParamException("inOutUp", __FILE__, __LINE__);
         }
         
         Vector<T, 3> right = normal.Cross(inOutUp);

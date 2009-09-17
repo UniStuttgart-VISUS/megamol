@@ -348,19 +348,19 @@ namespace math {
             __LINE__);
         outPoints.Clear();
         outPoints.SetCount(4);
-        outPoints[IDX_LEFT_BOTTOM_POINT].Set(
+        outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(
             this->offsets[IDX_LEFT], 
             this->offsets[IDX_BOTTOM], 
             this->offsets[IDX_FAR]);
-        outPoints[IDX_RIGHT_BOTTOM_POINT].Set(
+        outPoints[Super::IDX_RIGHT_BOTTOM_POINT].Set(
             this->offsets[IDX_RIGHT], 
             this->offsets[IDX_BOTTOM], 
             this->offsets[IDX_FAR]);
-        outPoints[IDX_RIGHT_TOP_POINT].Set(
+        outPoints[Super::IDX_RIGHT_TOP_POINT].Set(
             this->offsets[IDX_RIGHT],
             this->offsets[IDX_TOP], 
             this->offsets[IDX_FAR]);
-        outPoints[IDX_LEFT_TOP_POINT].Set(
+        outPoints[Super::IDX_LEFT_TOP_POINT].Set(
             this->offsets[IDX_LEFT], 
             this->offsets[IDX_TOP], 
             this->offsets[IDX_FAR]);
@@ -377,19 +377,19 @@ namespace math {
             __LINE__);
         outPoints.Clear();
         outPoints.SetCount(4);
-        outPoints[IDX_LEFT_BOTTOM_POINT].Set(
+        outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(
             this->offsets[IDX_LEFT], 
             this->offsets[IDX_BOTTOM], 
             this->offsets[IDX_NEAR]);
-        outPoints[IDX_RIGHT_BOTTOM_POINT].Set(
+        outPoints[Super::IDX_RIGHT_BOTTOM_POINT].Set(
             this->offsets[IDX_RIGHT], 
             this->offsets[IDX_BOTTOM], 
             this->offsets[IDX_NEAR]);
-        outPoints[IDX_RIGHT_TOP_POINT].Set(
+        outPoints[Super::IDX_RIGHT_TOP_POINT].Set(
             this->offsets[IDX_RIGHT],
             this->offsets[IDX_TOP], 
             this->offsets[IDX_NEAR]);
-        outPoints[IDX_LEFT_TOP_POINT].Set(
+        outPoints[Super::IDX_LEFT_TOP_POINT].Set(
             this->offsets[IDX_LEFT], 
             this->offsets[IDX_TOP], 
             this->offsets[IDX_NEAR]);

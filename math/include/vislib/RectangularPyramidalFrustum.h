@@ -16,6 +16,7 @@
 
 
 #include "vislib/AbstractRectangularPyramidalFrustum.h"
+#include "vislib/IllegalParamException.h"
 
 
 namespace vislib {
@@ -34,22 +35,23 @@ namespace math {
         inline RectangularPyramidalFrustum(void) : Super() {
             VLSTACKTRACE("RectangularPyramidalFrustum"
                 "::RectangularPyramidalFrustum", __FILE__, __LINE__);
-            this->values[IDX_BOTTOM] = static_cast<T>(0);
-            this->values[IDX_TOP] = static_cast<T>(0);
-            this->values[IDX_LEFT] = static_cast<T>(0);
-            this->values[IDX_RIGHT] = static_cast<T>(0);
-            this->values[IDX_NEAR] = static_cast<T>(0);
-            this->values[IDX_FAR] = static_cast<T>(0);
-            this->values[IDX_APEX_X] = static_cast<T>(0);
-            this->values[IDX_APEX_Y] = static_cast<T>(0);
-            this->values[IDX_APEX_Z] = static_cast<T>(0);
-            this->values[IDX_NORMAL_X] = static_cast<T>(0);
-            this->values[IDX_NORMAL_Y] = static_cast<T>(0);
-            this->values[IDX_NORMAL_Z] = static_cast<T>(1);
-            this->values[IDX_UP_X] = static_cast<T>(0);
-            this->values[IDX_UP_Y] = static_cast<T>(1);
-            this->values[IDX_UP_Z] = static_cast<T>(0);
-            this->safeUpVector(ShallowVector<T, 3>(this->values + IDX_UP_X));
+            this->values[Super::IDX_BOTTOM] = static_cast<T>(0);
+            this->values[Super::IDX_TOP] = static_cast<T>(0);
+            this->values[Super::IDX_LEFT] = static_cast<T>(0);
+            this->values[Super::IDX_RIGHT] = static_cast<T>(0);
+            this->values[Super::IDX_NEAR] = static_cast<T>(0);
+            this->values[Super::IDX_FAR] = static_cast<T>(0);
+            this->values[Super::IDX_APEX_X] = static_cast<T>(0);
+            this->values[Super::IDX_APEX_Y] = static_cast<T>(0);
+            this->values[Super::IDX_APEX_Z] = static_cast<T>(0);
+            this->values[Super::IDX_NORMAL_X] = static_cast<T>(0);
+            this->values[Super::IDX_NORMAL_Y] = static_cast<T>(0);
+            this->values[Super::IDX_NORMAL_Z] = static_cast<T>(1);
+            this->values[Super::IDX_UP_X] = static_cast<T>(0);
+            this->values[Super::IDX_UP_Y] = static_cast<T>(1);
+            this->values[Super::IDX_UP_Z] = static_cast<T>(0);
+            this->safeUpVector(ShallowVector<T, 3>(this->values 
+                + Super::IDX_UP_X));
         }
 
         template<class Sp1, class Sp2, class Sp3, class Sp4>
