@@ -744,6 +744,8 @@ namespace math {
         right.Normalise();
         inOutUp = right.Cross(normal);
         inOutUp.Normalise();
+
+        return inOutUp;
     }
     
 } /* end namespace math */
