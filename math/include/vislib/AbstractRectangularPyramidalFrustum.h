@@ -446,7 +446,8 @@ namespace math {
         this->values[IDX_NORMAL_Y] = y;
         this->values[IDX_NORMAL_Z] = z;
         ShallowVector<T, 3>(this->values + IDX_NORMAL_X).Normalise();
-        this->safeUpVector(ShallowVector<T, 3>(this->values + IDX_UP_X));
+        ShallowVector<T, 3> tmp(this->values + IDX_UP_X);
+        this->safeUpVector(tmp);
         this->invalidateCaches();
     }
 
@@ -462,7 +463,8 @@ namespace math {
         this->values[IDX_UP_X] = x;
         this->values[IDX_UP_Y] = y;
         this->values[IDX_UP_Z] = z;
-        this->safeUpVector(ShallowVector<T, 3>(this->values + IDX_UP_X));
+        ShallowVector<T, 3> tmp(this->values + IDX_UP_X);
+        this->safeUpVector(tmp);
         this->invalidateCaches();
     }
 

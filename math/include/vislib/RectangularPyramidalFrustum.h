@@ -50,8 +50,8 @@ namespace math {
             this->values[Super::IDX_UP_X] = static_cast<T>(0);
             this->values[Super::IDX_UP_Y] = static_cast<T>(1);
             this->values[Super::IDX_UP_Z] = static_cast<T>(0);
-            this->safeUpVector(ShallowVector<T, 3>(this->values 
-                + Super::IDX_UP_X));
+            ShallowVector<T, 3> tmp(this->values + Super::IDX_UP_X);
+            this->safeUpVector(tmp);
         }
 
         template<class Sp1, class Sp2, class Sp3, class Sp4>
