@@ -10,7 +10,7 @@
 #include <climits>
 #include "vislib/assert.h"
 #include "vislib/BitmapImage.h"
-#include "vislib/mathFunctions.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/Trace.h"
 
 
@@ -46,6 +46,12 @@ typedef struct tagBITMAPCOREHEADER {
   WORD  bcPlanes;
   WORD  bcBitCount;
 } BITMAPCOREHEADER;
+typedef long FXPT2DOT30;
+typedef struct tagCIEXYZ {
+  FXPT2DOT30 ciexyzX;
+  FXPT2DOT30 ciexyzY;
+  FXPT2DOT30 ciexyzZ;
+} CIEXYZ;
 typedef struct tagCIEXYZTRIPLE {
   CIEXYZ ciexyzRed;
   CIEXYZ ciexyzGreen;
@@ -101,10 +107,10 @@ typedef struct {
 } BITMAPV5HEADER;
 #define BI_RGB        0L
 typedef struct tagRGBQUAD {
-        BYTE    rgbBlue;
-        BYTE    rgbGreen;
-        BYTE    rgbRed;
-        BYTE    rgbReserved;
+  BYTE    rgbBlue;
+  BYTE    rgbGreen;
+  BYTE    rgbRed;
+  BYTE    rgbReserved;
 } RGBQUAD;
 
 #endif /* _WIN32 */
@@ -372,6 +378,11 @@ bool vislib::graphics::BmpBitmapCodec::Save(vislib::RawStorage& outmem) const {
                 if (gidx == UINT_MAX) gidx = i;
                 if (bidx == UINT_MAX) bidx = i;
                 break;
+#ifndef _WIN32
+            default:
+                // nothing to do here
+                break;
+#endif /* !_WIN32 */
         }
     }
     if ((ridx == UINT_MAX) && (gidx == UINT_MAX) && (bidx == UINT_MAX)) {
