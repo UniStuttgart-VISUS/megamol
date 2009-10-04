@@ -22,6 +22,7 @@
 #include "vislib/FileNameSequence.h"
 #include "vislib/BitmapImage.h"
 #include "vislib/PpmBitmapCodec.h"
+#include "vislib/BmpBitmapCodec.h"
 #include "vislib/RawStorage.h"
 
 // #define USE_UNICODE_COLUMNFORMATTER
@@ -565,6 +566,7 @@ void TestBitmapCodecSimple(void) {
     using vislib::graphics::PpmBitmapCodec;
     using vislib::graphics::BitmapImage;
     using vislib::RawStorage;
+    using vislib::graphics::BmpBitmapCodec;
 
     const unsigned char bmpdata1[] = {
           0,  0,  0,  85,  0,  0, 170,  0,  0, 255,  0,  0,
@@ -633,5 +635,56 @@ void TestBitmapCodecSimple(void) {
         f.Write(mem, mem.GetSize());
         f.Close();
     } */
+
+    //BitmapImage bmp;
+    //BmpBitmapCodec bmpCodec;
+    //PpmBitmapCodec ppmCodec;
+    //bmpCodec.Image() = &bmp;
+    //ppmCodec.Image() = &bmp;
+
+    //AssertTrue("Test Image loaded", bmpCodec.Load("C:\\tmp\\test_1.bmp"));
+    //AssertTrue("Image present", bmpCodec.Image() != NULL);
+    //AssertEqual("Image width correct", bmpCodec.Image()->Width(), 600U);
+    //AssertEqual("Image height correct", bmpCodec.Image()->Height(), 902U);
+    //AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_1.ppm"));
+
+    //AssertTrue("Test Image loaded", bmpCodec.Load("C:\\tmp\\test_4.bmp"));
+    //AssertTrue("Image present", bmpCodec.Image() != NULL);
+    //AssertEqual("Image width correct", bmpCodec.Image()->Width(), 500U);
+    //AssertEqual("Image height correct", bmpCodec.Image()->Height(), 500U);
+    //AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_4.ppm"));
+
+    //AssertTrue("Test Image loaded", bmpCodec.Load("C:\\tmp\\test_8.bmp"));
+    //AssertTrue("Image present", bmpCodec.Image() != NULL);
+    //AssertEqual("Image width correct", bmpCodec.Image()->Width(), 1000U);
+    //AssertEqual("Image height correct", bmpCodec.Image()->Height(), 667U);
+    //AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_8.ppm"));
+
+    //AssertTrue("Test Image loaded", bmpCodec.Load("C:\\tmp\\test_16.bmp"));
+    //AssertTrue("Image present", bmpCodec.Image() != NULL);
+    //AssertEqual("Image width correct", bmpCodec.Image()->Width(), 546U);
+    //AssertEqual("Image height correct", bmpCodec.Image()->Height(), 640U);
+    //AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_16.ppm"));
+    //AssertTrue("Test Image saved again", bmpCodec.Save("C:\\tmp\\test_16_test.bmp"));
+
+    //AssertTrue("Test Image loaded", bmpCodec.Load("C:\\tmp\\test_24.bmp"));
+    //AssertTrue("Image present", bmpCodec.Image() != NULL);
+    //AssertEqual("Image width correct", bmpCodec.Image()->Width(), 692U);
+    //AssertEqual("Image height correct", bmpCodec.Image()->Height(), 900U);
+    //AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_24.ppm"));
+    //AssertTrue("Test Image saved again", bmpCodec.Save("C:\\tmp\\test_24_test.bmp"));
+
+    //AssertTrue("Test Image loaded", bmpCodec.Load("C:\\tmp\\test_32.bmp"));
+    //AssertTrue("Image present", bmpCodec.Image() != NULL);
+    //AssertEqual("Image width correct", bmpCodec.Image()->Width(), 800U);
+    //AssertEqual("Image height correct", bmpCodec.Image()->Height(), 800U);
+    //AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_32.ppm"));
+
+    //// RLE is not really supported
+    ////AssertTrue("Test Image loaded", bmpCodec.Load("C:\\tmp\\test_4_rle.bmp"));
+    ////AssertTrue("Image present", bmpCodec.Image() != NULL);
+    ////AssertEqual("Image width correct", bmpCodec.Image()->Width(), 868U);
+    ////AssertEqual("Image height correct", bmpCodec.Image()->Height(), 1100U);
+    ////AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_4_rle.ppm"));
 
 }

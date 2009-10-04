@@ -336,6 +336,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\BmpBitmapCodec.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Camera.cpp"
 				>
 			</File>
@@ -459,6 +463,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\BitmapImage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\BmpBitmapCodec.h"
 				>
 			</File>
 			<File
