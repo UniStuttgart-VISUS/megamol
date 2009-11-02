@@ -54,6 +54,7 @@
 #include "testasyncsocket.h"
 #include "testnetinfo.h"
 #include "testfrustum.h"
+#include "testbezier.h"
 
 
 /* type for test functions */
@@ -99,6 +100,7 @@ VislibTest tests[] = {
     {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
     {_T("Point"), ::TestPoint, "Tests vislib::math::Point"},
     {_T("Frustum"), ::TestFrustum, "Tests vislib::math::WorldSpaceFrustum"},
+    {_T("Bezier"), ::TestBezier, "Tests vislib::math::BezierCurve"},
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},

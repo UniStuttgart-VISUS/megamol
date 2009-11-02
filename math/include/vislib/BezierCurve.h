@@ -1,7 +1,8 @@
 /*
  * BezierCurve.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -14,9 +15,10 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
-#include "vislib/Point.h"
+#include "vislib/forceinline.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/Point.h"
+#include "vislib/Vector.h"
 
 
 namespace vislib {
@@ -24,7 +26,8 @@ namespace math {
 
 
     /**
-     * TODO: comment class
+     * Stores and evaluates a bézier curve of degree E. The curve is defined
+     * by E + 1 points (type T and dimension D) forming the control polygon.
      *
      * Template parameters:
      *  T type (float, Double)
@@ -35,21 +38,91 @@ namespace math {
     class BezierCurve {
     public:
 
-        /** Ctor. */
+        /**
+         * Ctor.
+         * Creates an empty curve with all control points placed in the
+         * origin.
+         */
         BezierCurve(void);
 
         /** Dtor. */
         ~BezierCurve(void);
 
-        /**
-         * TODO: Document
+        /*
+         * Evaluates the position on the bézier curve for the
+         * interpolation parameter t based on the algorithm of de Casteljau.
+         *
+         * @param t The interpolation parameter (0..1); Results for values
+         *          outside this range are undefined.
+         *
+         * @return The position on the bézier curve
          */
-        void SetControlPoint(unsigned int idx, const Point<T, D>& p);
+        Point<T, D> CalcPoint(float t) const;
 
         /**
-         * TODO: Document
+         * Calculates the tangent vector along the curve at the point defined
+         * by the interpolation value t.
+         *
+         * @param t The interpolation parameter (0..1); Results for values
+         *          outside this range are undefined.
+         *
+         * @return The tangent vector along the bézier curve
          */
-        Point<T, D> Evaluate(float t);
+        Vector<T, D> CalcTangent(float t) const;
+
+        /**
+         * Accesses the idx-th control point
+         *
+         * @param idx The index of the control point to be set (0..E)
+         *
+         * @return A reference to the idx-th control point
+         */
+        Point<T, D>& ControlPoint(unsigned int idx);
+
+        /**
+         * Accesses the idx-th control point read-only
+         *
+         * @param idx The index of the control point to be set (0..E)
+         *
+         * @return A const reference to the idx-th control point
+         */
+        const Point<T, D>& ControlPoint(unsigned int idx) const;
+
+        /**
+         * Evaluates the position on the bézier curve for the
+         * interpolation parameter t based on the algorithm of de Casteljau.
+         *
+         * @param t The interpolation parameter (0..1); Results for values
+         *          outside this range are undefined.
+         *
+         * @return The position on the bézier curve
+         */
+        VISLIB_FORCEINLINE Point<T, D> Evaluate(float t) const {
+            return this->CalcPoint(t);
+        }
+
+        /**
+         * Sets the idx-th control point
+         *
+         * @param idx The index of the control point to be set (0..E)
+         * @param p The new value for the control point
+         */
+        VISLIB_FORCEINLINE void SetControlPoint(unsigned int idx, const Point<T, D>& p) {
+            this->ControlPoint(idx) = p;
+        }
+
+        /**
+         * Evaluates the position on the bézier curve for the
+         * interpolation parameter t based on the algorithm of de Casteljau.
+         *
+         * @param t The interpolation parameter (0..1); Results for values
+         *          outside this range are undefined.
+         *
+         * @return The position on the bézier curve
+         */
+        VISLIB_FORCEINLINE Point<T, D> operator()(float t) const {
+            return this->CalcPoint(t);
+        }
 
     private:
 
@@ -64,6 +137,7 @@ namespace math {
      */
     template<class T, unsigned int D, unsigned int E>
     BezierCurve<T, D, E>::BezierCurve(void) {
+        // intentionally empty
     }
 
 
@@ -72,50 +146,81 @@ namespace math {
      */
     template<class T, unsigned int D, unsigned int E>
     BezierCurve<T, D, E>::~BezierCurve(void) {
+        // intentionally empty
     }
 
 
     /*
-     * BezierCurve<T, D, E>::SetControlPoint
+     * BezierCurve<T, D, E>::CalcPoint
      */
     template<class T, unsigned int D, unsigned int E>
-    void BezierCurve<T, D, E>::SetControlPoint(unsigned int idx, const Point<T, D>& p) {
-        if (idx > E) {
-            throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
-        }
-        this->cp[idx] = p;
-    }
-
-
-    /*
-     * BezierCurve<T, D, E>::Evaluate
-     */
-    template<class T, unsigned int D, unsigned int E>
-    Point<T, D> BezierCurve<T, D, E>::Evaluate(float t) {
+    Point<T, D> BezierCurve<T, D, E>::CalcPoint(float t) const {
+        // algorithm of de casteljau
         Point<T, D> bp[E];
         unsigned int cnt = E;
-
+        // first iteration on the control points
         for (unsigned int i = 0; i < cnt; i++) {
             bp[i] = this->cp[i].Interpolate(this->cp[i + 1], t);
         }
+        // subsequent iterations on temp array
         while (cnt > 1) {
             cnt--;
             for (unsigned int i = 0; i < cnt; i++) {
                 bp[i] = bp[i].Interpolate(bp[i + 1], t);
             }
         }
-
+        // final result
         return bp[0];
     }
 
 
-    ///*
-    // * BezierCurve<T, D, 0>::Evaluate
-    // */
-    //template<class T, unsigned int D, 0>
-    //Point<T, D> BezierCurve<T, D, 0>::Evaluate(float t) {
-    //    return this->cp[0];
-    //}
+    /*
+     * BezierCurve<T, D, E>::CalcTangent
+     */
+    template<class T, unsigned int D, unsigned int E>
+    Vector<T, D> BezierCurve<T, D, E>::CalcTangent(float t) const {
+        // algorithm of de casteljau
+        Point<T, D> bp[E];
+        unsigned int cnt = E;
+        // first iteration on the control points
+        for (unsigned int i = 0; i < cnt; i++) {
+            bp[i] = this->cp[i].Interpolate(this->cp[i + 1], t);
+        }
+        // subsequent iterations on temp array, 
+        while (cnt > 2) {
+            cnt--;
+            for (unsigned int i = 0; i < cnt; i++) {
+                bp[i] = bp[i].Interpolate(bp[i + 1], t);
+            }
+        }
+
+        return bp[1] - bp[0];
+    }
+
+
+    /*
+     * BezierCurve<T, D, E>::ControlPoint
+     */
+    template<class T, unsigned int D, unsigned int E>
+    Point<T, D>& BezierCurve<T, D, E>::ControlPoint(unsigned int idx) {
+        if (idx > E) {
+            throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
+        }
+        return this->cp[idx];
+    }
+
+
+    /*
+     * BezierCurve<T, D, E>::ControlPoint
+     */
+    template<class T, unsigned int D, unsigned int E>
+    const Point<T, D>& BezierCurve<T, D, E>::ControlPoint(
+            unsigned int idx) const {
+        if (idx > E) {
+            throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
+        }
+        return this->cp[idx];
+    }
 
 
 } /* end namespace math */
