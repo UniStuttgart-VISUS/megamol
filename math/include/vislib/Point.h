@@ -359,6 +359,116 @@ namespace math {
     template<class T> const unsigned int Point<T, 3>::D = 3;
 
 
+    /**
+     * Partial template specialisation for four-dimensional point. This class
+     * provides a constructor with separate components.
+     */
+    template<class T> 
+    class Point<T, 4> : public AbstractPoint<T, 4, T[4]> {
+
+    public:
+
+        /** Behaves like primary class template. */
+        Point(void);
+
+        /** Behaves like primary class template. */
+        explicit inline Point(const T *coordinates) : Super() {
+            ASSERT(coordinates != NULL);
+            ::memcpy(this->coordinates, coordinates, D * sizeof(T));
+        }
+
+        /**
+         * Create a new point.
+         *
+         * @param x The x-coordinate. 
+         * @param y The y-coordinate.
+         * @param z The z-coordinate.
+         * @param w The w-coordinate.
+         */
+        inline Point(const T& x, const T& y, const T& z, const T& w)
+                : Super() {
+            this->coordinates[0] = x;
+            this->coordinates[1] = y;
+            this->coordinates[2] = z;
+            this->coordinates[3] = w;
+        }
+
+        /** Behaves like primary class template. */
+        inline Point(const Point& rhs) : Super() {
+            ::memcpy(this->coordinates, rhs.coordinates, D * sizeof(T));
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
+
+        /** Behaves like primary class template. */
+        ~Point(void);
+
+        /** Behaves like primary class template. */
+        inline Point& operator =(const Point& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Point& operator =(const AbstractPoint<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    private:
+
+        /** The dimensionality of the point. */
+        static const unsigned int D;
+
+        /** Super class typedef. */
+        typedef AbstractPoint<T, 4, T[4]> Super;
+
+        
+    };
+
+
+    /*
+     * vislib::math::Point<T, 4>::Point
+     */
+    template<class T> Point<T, 4>::Point(void) : Super() {
+        for (unsigned int d = 0; d < D; d++) {
+            this->coordinates[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Point<T, 4>::Point
+     */
+    template<class T>
+    template<class Tp, unsigned int Dp, class Sp>
+    Point<T, 4>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
+        for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
+            this->coordinates[d] = static_cast<T>(rhs[d]);
+        }
+        for (unsigned int d = Dp; d < D; d++) {
+            this->coordinates[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Point<T, 4>::~Point
+     */
+    template<class T> Point<T, 4>::~Point(void) {
+        // intentionally empty
+    }
+
+
+    /*
+     * vislib::math::Point<T, 4>::D
+     */
+    template<class T> const unsigned int Point<T, 4>::D = 4;
+
+
 
 } /* end namespace math */
 } /* end namespace vislib */

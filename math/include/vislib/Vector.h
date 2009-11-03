@@ -351,6 +351,115 @@ namespace math {
      */
     template<class T> const unsigned int Vector<T, 3>::D = 3;
 
+
+    /**
+     * Partial template specialisation for four-dimensional vectors. This
+     * class provides an additional constructor with single components.
+     */
+    template<class T> 
+    class Vector<T, 4> : public AbstractVector<T, 4, T[4]> {
+
+    public:
+
+        /** Behaves like primary class template. */
+        Vector(void);
+
+        /** Behaves like primary class template. */
+        explicit inline Vector(const T *components) : Super() {
+            ASSERT(components != NULL);
+            ::memcpy(this->components, components, D * sizeof(T));
+        }
+
+        /**
+         * Create a new vector.
+         *
+         * @param x The x-component.
+         * @param y The y-component.
+         * @param z The z-component.
+         * @param w The w-component.
+         */
+        inline Vector(const T& x, const T& y, const T& z, const T& w)
+                : Super() {
+            this->components[0] = x;
+            this->components[1] = y;
+            this->components[2] = z;
+            this->components[3] = w;
+        }
+
+        /** Behaves like primary class template. */
+        inline Vector(const Vector& rhs) : Super() {
+            ::memcpy(this->components, rhs.components, D * sizeof(T));
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
+
+        /** Behaves like primary class template. */
+        ~Vector(void);
+
+        /** Behaves like primary class template. */
+        inline Vector& operator =(const Vector& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+        /** Behaves like primary class template. */
+        template<class Tp, unsigned int Dp, class Sp>
+        inline Vector& operator =(const AbstractVector<Tp, Dp, Sp>& rhs) {
+            Super::operator =(rhs);
+            return *this;
+        }
+
+    private:
+
+        /** The dimension of the vector. */
+        static const unsigned int D;
+
+        /** A typedef for the super class. */
+        typedef AbstractVector<T, 4, T[4]> Super;
+    };
+
+
+    /*
+     * vislib::math::Vector<T, 4>::Vector
+     */
+    template<class T> Vector<T, 4>::Vector(void) : Super() {
+        for (unsigned int d = 0; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Vector<T, 4>::Vector
+     */
+    template<class T>
+    template<class Tp, unsigned int Dp, class Sp>
+    Vector<T, 4>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) : Super() {
+        for (unsigned int d = 0; (d < D) && (d < Dp); d++) {
+            this->components[d] = static_cast<T>(rhs[d]);
+        }
+        for (unsigned int d = Dp; d < D; d++) {
+            this->components[d] = static_cast<T>(0);
+        }
+    }
+
+
+    /*
+     * vislib::math::Vector<T, 4>::~Vector
+     */
+    template<class T> Vector<T, 4>::~Vector(void) {
+        // intentionally empty
+    }
+
+
+    /*
+     * Vector<T, 4>::D
+     */
+    template<class T> const unsigned int Vector<T, 4>::D = 4;
+
+
 } /* end namespace math */
 } /* end namespace vislib */
 
