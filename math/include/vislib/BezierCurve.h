@@ -27,14 +27,15 @@ namespace math {
 
     /**
      * Stores and evaluates a bézier curve of degree E. The curve is defined
-     * by E + 1 points (type T and dimension D) forming the control polygon.
+     * by E + 1 control points (type T) forming the control polygon.
      *
      * Template parameters:
-     *  T type (float, Double)
-     *  D Dimension
+     *  T type (e. g. Point<float, 3>); Must support the method
+     *    'Interpolate(rhs, float t)' with 0 <= t <= 1 for linear
+     *    interpolation
      *  E Degree
      */
-    template <class T, unsigned int D, unsigned int E>
+    template <class T, unsigned int E>
     class BezierCurve {
     public:
 
@@ -52,23 +53,28 @@ namespace math {
          * Evaluates the position on the bézier curve for the
          * interpolation parameter t based on the algorithm of de Casteljau.
          *
+         * @param outPt The variable to be set to the calculated point.
          * @param t The interpolation parameter (0..1); Results for values
          *          outside this range are undefined.
          *
-         * @return The position on the bézier curve
+         * @return The same reference as 'outPt'
          */
-        Point<T, D> CalcPoint(float t) const;
+        T& CalcPoint(T& outPt, float t) const;
 
         /**
-         * Calculates the tangent vector along the curve at the point defined
-         * by the interpolation value t.
+         * Calculates the tangent along the curve for the interpolation
+         * value t.
          *
+         * @param outVec The variable to be set. The type must be compatible
+         *               with the result type of the 'operator -' of the
+         *               template type T.
          * @param t The interpolation parameter (0..1); Results for values
          *          outside this range are undefined.
          *
-         * @return The tangent vector along the bézier curve
+         * @return The same reference as 'outVec'
          */
-        Vector<T, D> CalcTangent(float t) const;
+        template<class Tp>
+        Tp& CalcTangent(Tp& outVec, float t) const;
 
         /**
          * Accesses the idx-th control point
@@ -77,7 +83,7 @@ namespace math {
          *
          * @return A reference to the idx-th control point
          */
-        Point<T, D>& ControlPoint(unsigned int idx);
+        T& ControlPoint(unsigned int idx);
 
         /**
          * Accesses the idx-th control point read-only
@@ -86,7 +92,7 @@ namespace math {
          *
          * @return A const reference to the idx-th control point
          */
-        const Point<T, D>& ControlPoint(unsigned int idx) const;
+        const T& ControlPoint(unsigned int idx) const;
 
         /**
          * Evaluates the position on the bézier curve for the
@@ -97,8 +103,9 @@ namespace math {
          *
          * @return The position on the bézier curve
          */
-        VISLIB_FORCEINLINE Point<T, D> Evaluate(float t) const {
-            return this->CalcPoint(t);
+        VISLIB_FORCEINLINE T Evaluate(float t) const {
+            T rv;
+            return this->CalcPoint(rv, t);
         }
 
         /**
@@ -107,7 +114,7 @@ namespace math {
          * @param idx The index of the control point to be set (0..E)
          * @param p The new value for the control point
          */
-        VISLIB_FORCEINLINE void SetControlPoint(unsigned int idx, const Point<T, D>& p) {
+        VISLIB_FORCEINLINE void SetControlPoint(unsigned int idx, T& p) {
             this->ControlPoint(idx) = p;
         }
 
@@ -120,8 +127,9 @@ namespace math {
          *
          * @return The position on the bézier curve
          */
-        VISLIB_FORCEINLINE Point<T, D> operator()(float t) const {
-            return this->CalcPoint(t);
+        VISLIB_FORCEINLINE T operator()(float t) const {
+            T rv;
+            return this->CalcPoint(rv, t);
         }
 
         /**
@@ -131,41 +139,41 @@ namespace math {
          *
          * @return 'true' if 'this' and 'rhs' are equal, 'false' if not.
          */
-        bool operator==(const BezierCurve<T, D, E>& rhs) const;
+        bool operator==(const BezierCurve<T, E>& rhs) const;
 
     private:
 
         /** control points */
-        Point<T, D> cp[E + 1];
+        T cp[E + 1];
 
     };
 
 
     /*
-     * BezierCurve<T, D, E>::BezierCurve
+     * BezierCurve<T, E>::BezierCurve
      */
-    template<class T, unsigned int D, unsigned int E>
-    BezierCurve<T, D, E>::BezierCurve(void) {
+    template<class T, unsigned int E>
+    BezierCurve<T, E>::BezierCurve(void) {
         // intentionally empty
     }
 
 
     /*
-     * BezierCurve<T, D, E>::~BezierCurve
+     * BezierCurve<T, E>::~BezierCurve
      */
-    template<class T, unsigned int D, unsigned int E>
-    BezierCurve<T, D, E>::~BezierCurve(void) {
+    template<class T, unsigned int E>
+    BezierCurve<T, E>::~BezierCurve(void) {
         // intentionally empty
     }
 
 
     /*
-     * BezierCurve<T, D, E>::CalcPoint
+     * BezierCurve<T, E>::CalcPoint
      */
-    template<class T, unsigned int D, unsigned int E>
-    Point<T, D> BezierCurve<T, D, E>::CalcPoint(float t) const {
+    template<class T, unsigned int E>
+    T& BezierCurve<T, E>::CalcPoint(T& outPt, float t) const {
         // algorithm of de casteljau
-        Point<T, D> bp[E];
+        T bp[E];
         unsigned int cnt = E;
         // first iteration on the control points
         for (unsigned int i = 0; i < cnt; i++) {
@@ -179,17 +187,19 @@ namespace math {
             }
         }
         // final result
-        return bp[0];
+        outPt = bp[0];
+        return outPt;
     }
 
 
     /*
-     * BezierCurve<T, D, E>::CalcTangent
+     * BezierCurve<T, E>::CalcTangent
      */
-    template<class T, unsigned int D, unsigned int E>
-    Vector<T, D> BezierCurve<T, D, E>::CalcTangent(float t) const {
+    template<class T, unsigned int E>
+    template<class Tp>
+    Tp& BezierCurve<T, E>::CalcTangent(Tp& outVec, float t) const {
         // algorithm of de casteljau
-        Point<T, D> bp[E];
+        T bp[E];
         unsigned int cnt = E;
         // first iteration on the control points
         for (unsigned int i = 0; i < cnt; i++) {
@@ -202,16 +212,17 @@ namespace math {
                 bp[i] = bp[i].Interpolate(bp[i + 1], t);
             }
         }
-
-        return bp[1] - bp[0];
+        // final result
+        outVec = bp[1] - bp[0];
+        return outVec;
     }
 
 
     /*
-     * BezierCurve<T, D, E>::ControlPoint
+     * BezierCurve<T, E>::ControlPoint
      */
-    template<class T, unsigned int D, unsigned int E>
-    Point<T, D>& BezierCurve<T, D, E>::ControlPoint(unsigned int idx) {
+    template<class T, unsigned int E>
+    T& BezierCurve<T, E>::ControlPoint(unsigned int idx) {
         if (idx > E) {
             throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
         }
@@ -220,11 +231,10 @@ namespace math {
 
 
     /*
-     * BezierCurve<T, D, E>::ControlPoint
+     * BezierCurve<T, E>::ControlPoint
      */
-    template<class T, unsigned int D, unsigned int E>
-    const Point<T, D>& BezierCurve<T, D, E>::ControlPoint(
-            unsigned int idx) const {
+    template<class T, unsigned int E>
+    const T& BezierCurve<T, E>::ControlPoint(unsigned int idx) const {
         if (idx > E) {
             throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
         }
@@ -233,10 +243,10 @@ namespace math {
 
 
     /*
-     * BezierCurve<T, D, E>::ControlPoint
+     * BezierCurve<T, E>::operator==
      */
-    template<class T, unsigned int D, unsigned int E>
-    bool BezierCurve<T, D, E>::operator==(const BezierCurve<T, D, E>& rhs) const {
+    template<class T, unsigned int E>
+    bool BezierCurve<T, E>::operator==(const BezierCurve<T, E>& rhs) const {
         for (SIZE_T i = 0; i <= E; i++) {
             if (this->cp[i] != rhs.cp[i]) {
                 return false;

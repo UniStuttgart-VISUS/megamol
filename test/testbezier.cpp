@@ -14,27 +14,29 @@
 
 
 void TestBezier(void) {
-    using vislib::math::BezierCurve;
     using vislib::math::Point;
     using vislib::math::Vector;
+    typedef vislib::math::BezierCurve<Point<float, 3>, 3> BezierCurve;
 
-    BezierCurve<float, 3, 3> curve;
+    BezierCurve curve;
     curve.ControlPoint(0).Set(0.0f, -1.0f, 0.0f);
     curve.ControlPoint(1).Set(0.0f, 1.0f, 0.0f);
     curve.ControlPoint(2).Set(2.0f, -1.0f, 0.0f);
     curve.ControlPoint(3).Set(2.0f, 1.0f, 0.0f);
 
-    Point<float, 3> p1 = curve.CalcPoint(0.0f);
-    Point<float, 3> p2 = curve.CalcPoint(0.5f);
-    Point<float, 3> p3 = curve.CalcPoint(1.0f);
+    Point<float, 3> p1;
+    curve.CalcPoint(p1, 0.0f);
+    Point<float, 3> p2;
+    curve.CalcPoint(p2, 0.5f);
+    Point<float, 3> p3;
+    curve.CalcPoint(p3, 1.0f);
 
-    Vector<float, 3> t1 = curve.CalcTangent(0.0f);
-    Vector<float, 3> t2 = curve.CalcTangent(0.5f);
-    Vector<float, 3> t3 = curve.CalcTangent(1.0f);
-
-    t1.Normalise();
-    t2.Normalise();
-    t3.Normalise();
+    Vector<float, 3> t1;
+    curve.CalcTangent(t1, 0.0f).Normalise();
+    Vector<float, 3> t2;
+    curve.CalcTangent(t2, 0.5f).Normalise();
+    Vector<float, 3> t3;
+    curve.CalcTangent(t3, 1.0f).Normalise();
 
     AssertEqual("Point at t=0 correct",   p1, Point<float, 3>(0.0f, -1.0f, 0.0f));
     AssertEqual("Point at t=0.5 correct", p2, Point<float, 3>(1.0f, 0.0f, 0.0f));
