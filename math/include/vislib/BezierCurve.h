@@ -124,6 +124,15 @@ namespace math {
             return this->CalcPoint(t);
         }
 
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return 'true' if 'this' and 'rhs' are equal, 'false' if not.
+         */
+        bool operator==(const BezierCurve<T, D, E>& rhs) const;
+
     private:
 
         /** control points */
@@ -220,6 +229,20 @@ namespace math {
             throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
         }
         return this->cp[idx];
+    }
+
+
+    /*
+     * BezierCurve<T, D, E>::ControlPoint
+     */
+    template<class T, unsigned int D, unsigned int E>
+    bool BezierCurve<T, D, E>::operator==(const BezierCurve<T, D, E>& rhs) const {
+        for (SIZE_T i = 0; i <= E; i++) {
+            if (this->cp[i] != rhs.cp[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
