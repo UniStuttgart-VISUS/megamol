@@ -304,6 +304,19 @@ namespace math {
         }
 
         /**
+         * Answer the length of the longest edge (width, height, or depth)
+         *
+         * @return The length of the longest edge of the cuboid
+         */
+        inline T LongestEdge(void) const {
+            T w = this->Width();
+            T h = this->Height();
+            T d = this->Depth();
+            return ((w > h) && (w > d)) ? w :
+                ((h > d) ? h : d);
+        }
+
+        /**
          * Move the cuboid.
          *
          * @param dx The offset in x-direction.
@@ -575,6 +588,24 @@ namespace math {
          */
         inline bool operator !=(const AbstractCuboid& rhs) const {
             return !(*this == rhs);
+        }
+
+        /**
+         * Scales the whole cuboid (all coordinates of both points) by the
+         * factor rhs.
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return *this
+         */
+        inline AbstractCuboid& operator *=(const T& rhs) {
+            this->bounds[IDX_LEFT] *= rhs;
+            this->bounds[IDX_BOTTOM] *= rhs;
+            this->bounds[IDX_BACK] *= rhs;
+            this->bounds[IDX_RIGHT] *= rhs;
+            this->bounds[IDX_TOP] *= rhs;
+            this->bounds[IDX_FRONT] *= rhs;
+            return *this;
         }
 
         //vislib::math::Point<T, 3> operator[](const int i) const;
