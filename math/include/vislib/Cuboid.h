@@ -35,7 +35,7 @@ namespace math {
          */
         inline Cuboid(void) : Super() {
             this->bounds[0] = this->bounds[1] = this->bounds[2] 
-                = this->bounds[3] = this->bounds[3] = this->bounds[5]
+                = this->bounds[3] = this->bounds[4] = this->bounds[5]
                 = static_cast<T>(0);
         }
 
