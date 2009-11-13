@@ -98,11 +98,14 @@ namespace sys {
                 case '*':
                     pp++;
                     if (pp == pl) {
-                        return true; // pattern always matches rest of the filename
+                         // pattern always matches rest of the filename
+                        return true;
                     }
                     // this is super slow and lazy, but works
-                    for (SIZE_T skipSize = 0; skipSize < (fnl - fnp); skipSize++) {
-                        if (FilenameGlobMatch(filename + fnp + skipSize, pattern + pp)) {
+                    for (SIZE_T skipSize = 0; skipSize < (fnl - fnp);
+                            skipSize++) {
+                        if (FilenameGlobMatch(filename + fnp + skipSize,
+                                pattern + pp)) {
                             return true;
                         }
                     }
@@ -111,7 +114,9 @@ namespace sys {
                     SIZE_T pps = pp;
                     while ((pp < pl) && (pattern[pp] != ']')) pp++;
                     if (pp == pl) return false;
-                    vislib::String<vislib::CharTraits<T> > matchGroup(pattern + pps + 1, pp - (1 + pps));
+                    vislib::String<vislib::CharTraits<T> > matchGroup(
+                        pattern + pps + 1, static_cast<vislib::String<
+                            vislib::CharTraits<T> >::Size>(pp - (1 + pps)));
                     if (!matchGroup.Contains(filename[fnp])) return false;
                     fnp++;
                     pp++;
