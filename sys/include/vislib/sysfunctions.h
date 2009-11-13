@@ -59,6 +59,77 @@ namespace sys {
     const unsigned int defMaxLineSize = 1024;
 
     /**
+     * Answer whether the file name 'filename' matches with the glob pattern
+     * 'pattern'. Be aware that this function does not try to match directory
+     * names, but only file names (handled as simple strings without any
+     * additional information).
+     *
+     * Pattern syntax:
+     *  ?       matches any one character
+     *  *       matches any number (even zero) characters
+     *  [...]   matches one character from the given list of characters. Note
+     *          that this character list does not support ranges!
+     *  \?      matches the ? character
+     *  \*      matches the * character
+     *  \[      matches the [ character
+     *  \]      matches the ] character
+     *  \\      matches the \ character
+     *
+     * @param filename The file name string to test. This name should not
+     *                 contain any directory information.
+     * @param pattern The glob pattern to test. This pattern should not
+     *                contain any directory information.
+     *
+     * @return 'true' if the pattern matches the file name, 'false' otherwise.
+     */
+    template <class T>
+    bool FilenameGlobMatch(const T* filename, const T* pattern) {
+        SIZE_T fnl = vislib::CharTraits<T>::SafeStringLength(filename);
+        SIZE_T fnp = 0;
+        SIZE_T pl = vislib::CharTraits<T>::SafeStringLength(pattern);
+        SIZE_T pp = 0;
+
+        while ((fnp < fnl) && (pp < pl)) {
+            switch (pattern[pp]) {
+                case '?':
+                    pp++;
+                    fnp++;
+                    break;
+                case '*':
+                    pp++;
+                    if (pp == pl) {
+                        return true; // pattern always matches rest of the filename
+                    }
+                    // this is super slow and lazy, but works
+                    for (SIZE_T skipSize = 0; skipSize < (fnl - fnp); skipSize++) {
+                        if (FilenameGlobMatch(filename + fnp + skipSize, pattern + pp)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                case '[': {
+                    SIZE_T pps = pp;
+                    while ((pp < pl) && (pattern[pp] != ']')) pp++;
+                    if (pp == pl) return false;
+                    vislib::String<vislib::CharTraits<T> > matchGroup(pattern + pps + 1, pp - (1 + pps));
+                    if (!matchGroup.Contains(filename[fnp])) return false;
+                    fnp++;
+                    pp++;
+                } break;
+                case '\\': pp++; // fall through
+                default:
+                    if (filename[fnp] != pattern[pp]) return false;
+                    fnp++;
+                    pp++;
+                    break;
+            }
+        }
+
+        // pattern matches only if pattern and filename are consumed at same speed.
+        return (fnp == fnl) && (pp == pl);
+    }
+
+    /**
      * Reads ansi characters from the file until the end of file, a line break 
      * is reached, or size characters are read. The returned string does not
      * contain the line break if one had been read.
