@@ -115,7 +115,7 @@ namespace sys {
                     while ((pp < pl) && (pattern[pp] != ']')) pp++;
                     if (pp == pl) return false;
                     vislib::String<vislib::CharTraits<T> > matchGroup(
-                        pattern + pps + 1, static_cast<vislib::String<
+                        pattern + pps + 1, static_cast<typename vislib::String<
                             vislib::CharTraits<T> >::Size>(pp - (1 + pps)));
                     if (!matchGroup.Contains(filename[fnp])) return false;
                     fnp++;
