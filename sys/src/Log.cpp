@@ -15,6 +15,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/Thread.h"
+#include "vislib/Trace.h"
 #include <climits>
 #include <cstdio>
 #include <ctime>
@@ -24,6 +25,9 @@
 #include <share.h>
 #include <sys/stat.h>
 #endif /* _WIN32 */
+
+
+#define TRACE_LVL Trace::LEVEL_INFO
 
 
 /*****************************************************************************/
@@ -219,6 +223,8 @@ vislib::sys::Log::Log(UINT level, unsigned int msgbufsize)
         : level(level), filename(), logfile(NULL), msgbufsize(0), 
         omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
         echoLevel(LEVEL_ERROR), echoOut(NULL) {
+    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
+        reinterpret_cast<unsigned long>(this), __LINE__);
     this->SetOfflineMessageBufferSize(msgbufsize);
 }
 
@@ -229,6 +235,8 @@ vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix)
         : level(level), filename(), logfile(NULL), msgbufsize(0), 
         omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
         echoLevel(LEVEL_ERROR), echoOut(NULL) {
+    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
+        reinterpret_cast<unsigned long>(this), __LINE__);
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -240,6 +248,8 @@ vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix)
         : level(level), filename(), logfile(NULL), msgbufsize(0), 
         omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
         echoLevel(LEVEL_ERROR), echoOut(NULL) {
+    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
+        reinterpret_cast<unsigned long>(this), __LINE__);
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -251,6 +261,8 @@ vislib::sys::Log::Log(const Log& source)
         : level(LEVEL_ERROR), filename(), logfile(NULL), msgbufsize(0), 
         omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
         echoLevel(LEVEL_ERROR), echoOut(NULL) {
+    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
+        reinterpret_cast<unsigned long>(this), __LINE__);
     *this = source;
 }
 
@@ -259,6 +271,8 @@ vislib::sys::Log::Log(const Log& source)
  * vislib::sys::Log::~Log
  */
 vislib::sys::Log::~Log(void) {
+    VLTRACE(TRACE_LVL, "Log[%lu]::~Log()\n",
+        reinterpret_cast<unsigned long>(this));
     if (this->logfile) {
         fclose(this->logfile);
         this->logfile = NULL;
