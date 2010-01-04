@@ -17,11 +17,19 @@
 #include "vislib/UnsupportedOperationException.h"
 
 
+
+/*
+ * vislib::net::TcpCommChannel::FLAG_NODELAY
+ */
+const UINT64 vislib::net::TcpCommChannel::FLAG_NODELAY = 0x00000001;
+
+
 /*
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(void) : AbstractBidiCommChannel(),
-        AbstractClientEndpoint() , AbstractServerEndpoint() {
+vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) 
+        : AbstractBidiCommChannel(),AbstractClientEndpoint() , 
+        AbstractServerEndpoint(), flags(flags) {
      VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
 }
 
@@ -91,7 +99,9 @@ void vislib::net::TcpCommChannel::Bind(const IPEndPoint address) {
     if (this->socket.IsValid()) {
         this->socket.Close();
     }
+
     this->socket.Create(address, Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
+    this->socket.SetNoDelay(this->IsSetNoDelay());
 
     this->socket.Bind(address);
 }
@@ -160,7 +170,9 @@ void vislib::net::TcpCommChannel::Connect(const IPEndPoint& address) {
     if (this->socket.IsValid()) {
         this->socket.Close();
     }
+
     this->socket.Create(address, Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
+    this->socket.SetNoDelay(this->IsSetNoDelay());
 
     this->socket.Connect(address);
 }
@@ -202,7 +214,10 @@ vislib::SmartRef<vislib::net::AbstractCommChannel>
 vislib::net::TcpCommChannel::WaitForClient(const int backlog) {
     VLSTACKTRACE("TcpCommChannel::WaitForClient", __FILE__, __LINE__);
     this->socket.Listen(backlog);
+
     Socket socket = this->socket.Accept();
+    socket.SetNoDelay(this->IsSetNoDelay());
+
     return SmartRef<AbstractCommChannel>(new TcpCommChannel(socket), false);
 }
 

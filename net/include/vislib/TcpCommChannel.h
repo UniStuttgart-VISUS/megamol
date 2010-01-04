@@ -36,8 +36,20 @@ namespace net {
 
     public:
 
-        /** Ctor. */
-        TcpCommChannel(void);
+         /**
+          * This behaviour flag disables the Nagle algorithm for send 
+          * coalescing. Setting the flag has an effect on the communication
+          * channel itself as well as on the child channels created in server
+          * mode.
+          */
+        static const UINT64 FLAG_NODELAY;
+
+        /**
+         * Ctor.
+         *
+         * @param flags The flags for the channel.
+         */
+        TcpCommChannel(const UINT64 flags = 0);
 
         /**
          * Create a communication channel from an existing socket.
@@ -133,6 +145,15 @@ namespace net {
         }
 
         /**
+         * Answer whether the Nagle algorihm is disabled on the socket.
+         *
+         * @return true if the Nagle algorithm is disabled, false otherwise.
+         */
+        inline bool IsSetNoDelay(void) const {
+            return ((this->flags & FLAG_NODELAY) != 0);
+        }
+
+        /**
          * Receives 'cntBytes' over the communication channel and saves them to 
          * the memory designated by 'outData'. 'outData' must be large enough to 
          * receive at least 'cntBytes'.
@@ -215,6 +236,9 @@ namespace net {
          * @throws UnsupportedOperationException Unconditionally.
          */
         TcpCommChannel(const TcpCommChannel& rhs);
+
+        /** Behaviour flags for the channel. */
+        UINT64 flags;
 
         /** The socket that performs the actual work. */
         Socket socket;
