@@ -79,66 +79,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|x64"
-			ConfigurationType="4"
-			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease64.vsprops"
-			CharacterSet="0"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
 			Name="Debug|Win32"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -171,6 +111,66 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			ConfigurationType="4"
+			InheritedPropertySheets="..\vislib.vsprops;..\VSProps\TargetRelease64.vsprops"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\sys\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -272,6 +272,30 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\AbstractBidiCommChannel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractClientEndpoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractCommChannel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractInboundCommChannel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractOutboundCommChannel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AbstractServerEndpoint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AsyncSocket.cpp"
 				>
 			</File>
@@ -323,7 +347,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -331,7 +355,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -364,6 +388,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\TcpCommChannel.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\TcpServer.cpp"
 				>
 			</File>
@@ -373,6 +401,30 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\vislib\AbstractBidiCommChannel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractClientEndpoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractCommChannel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractInboundCommChannel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractOutboundCommChannel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\AbstractServerEndpoint.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\vislib\AsyncSocket.h"
 				>
@@ -434,6 +486,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\TcpCommChannel.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\TcpServer.h"
 				>
 			</File>
@@ -456,7 +512,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|x64"
+				Name="Debug|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -464,7 +520,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|Win32"
+				Name="Release|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -492,7 +548,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|x64"
+				Name="Debug|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -500,7 +556,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Debug|Win32"
+				Name="Release|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool

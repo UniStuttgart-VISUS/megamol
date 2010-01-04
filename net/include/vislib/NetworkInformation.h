@@ -99,7 +99,7 @@ namespace net {
              * @return *this.
              */
             virtual NoConfidenceException& operator =(
-		        const NoConfidenceException& rhs);
+                const NoConfidenceException& rhs);
 
         }; /* end class NoConfidenceException */
 

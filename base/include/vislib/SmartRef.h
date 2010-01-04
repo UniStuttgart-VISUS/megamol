@@ -63,12 +63,35 @@ namespace vislib {
         }
 
         /** 
-         * Dtor. 
+         * Dtor.
          *
          * If the object referenced is not NULL, the reference count will be
          * decremented.
          */
         ~SmartRef(void);
+
+        /**
+         * Dynamic cast the object designated by the reference to 'Tp' and
+         * return a smart reference on the new pointer.
+         *
+         * @param addRef Determines whether the new instance will increment the
+         *               reference count (default) or not.
+         *
+         * @return A smart reference pointer with type 'Tp'.
+         */
+        template<class Tp> SmartRef<Tp> DynamicCast(const bool addRef = true);
+
+        /**
+         * Dynamic cast the object designated by the reference to 'Tp' and
+         * return a smart reference on the new pointer.
+         *
+         * @param addRef Determines whether the new instance will increment the
+         *               reference count (default) or not.
+         *
+         * @return A smart reference pointer with type 'Tp'.
+         */
+        template<class Tp>
+        const SmartRef<Tp> DynamicCast(const bool addRef = true) const;
 
         /**
          * Answer, whether the smart reference is a NULL pointer.
@@ -182,7 +205,7 @@ namespace vislib {
 
 
     /*
-     * SmartRef<T>::SmartRef
+     * vislib::SmartRef<T>::SmartRef
      */
     template<class T> 
     SmartRef<T>::SmartRef(T *obj, const bool addRef) : obj(obj) {
@@ -193,12 +216,36 @@ namespace vislib {
 
 
     /*
-     * SmartRef<T>::~SmartRef
+     * vislib::SmartRef<T>::~SmartRef
      */
     template<class T> SmartRef<T>::~SmartRef(void) {
         if (this->obj != NULL) {
             this->obj->Release();
         }
+    }
+
+
+    /*
+     * vislib::SmartRef<T>::DynamicCast
+     */
+    template<class T>
+    template<class Tp> 
+    SmartRef<Tp> SmartRef<T>::DynamicCast(const bool addRef) {
+        return (this->IsNull()) 
+            ? SmartRef<Tp>(NULL, addRef)
+            : SmartRef<Tp>(dynamic_cast<Tp *>(this->obj), addRef);
+    }
+
+
+    /*
+     * vislib::SmartRef<T>::DynamicCast
+     */
+    template<class T>
+    template<class Tp> 
+    SmartRef<Tp> const SmartRef<T>::DynamicCast(const bool addRef) const {
+        return (this->IsNull()) 
+            ? const SmartRef<Tp>(NULL, addRef)
+            : const SmartRef<Tp>(dynamic_cast<Tp *>(this->obj), addRef);
     }
 
 
