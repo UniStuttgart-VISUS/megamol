@@ -244,8 +244,13 @@ namespace vislib {
     template<class Tp> 
     SmartRef<Tp> const SmartRef<T>::DynamicCast(const bool addRef) const {
         return (this->IsNull()) 
+#ifdef _WIN32
             ? const SmartRef<Tp>(NULL, addRef)
             : const SmartRef<Tp>(dynamic_cast<Tp *>(this->obj), addRef);
+#else /* _WIN32 */
+            ? SmartRef<Tp>(NULL, addRef)
+            : SmartRef<Tp>(dynamic_cast<Tp *>(this->obj), addRef);
+#endif /* _WIN32 */
     }
 
 
