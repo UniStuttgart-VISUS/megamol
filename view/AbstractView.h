@@ -15,7 +15,6 @@
 #include "CalleeSlot.h"
 #include "param/AbstractParam.h"
 #include "vislib/Array.h"
-#include "vislib/deprecated.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
@@ -91,7 +90,7 @@ namespace view {
          * Resets the view. This normally sets the camera parameters to
          * default values.
          */
-        VLDEPRECATED virtual void ResetView(void) = 0;
+        virtual void ResetView(void) = 0;
 
         /**
          * Resizes the AbstractView3D.
