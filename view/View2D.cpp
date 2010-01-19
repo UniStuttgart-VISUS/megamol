@@ -1,0 +1,294 @@
+/*
+ * View2D.cpp
+ *
+ * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ */
+
+#include "stdafx.h"
+#include "View2D.h"
+#include "view/CallRender2D.h"
+#include <GL/gl.h>
+#include "param/BoolParam.h"
+#include "param/ButtonParam.h"
+#include "param/StringParam.h"
+#include "utility/ColourParser.h"
+#include "vislib/Trace.h"
+
+using namespace megamol::core;
+
+
+/*
+ * view::View2D::View2D
+ */
+view::View2D::View2D(void) : view::AbstractView(),
+        backCol("backCol", "The views background colour"),
+        firstImg(false), height(1.0f), mouseMode(0), mouseX(0.0f), mouseY(0.0f),
+        rendererSlot("rendering", "Connects the view to a Renderer"),
+        resetViewSlot("resetView", "Triggers the reset of the view"),
+        showBBoxSlot("showBBox", "Shows/hides the bounding box"),
+        viewX(0.0f), viewY(0.0f), viewZoom(1.0f), width(1.0f) {
+
+    this->MakeSlotAvailable(view::AbstractView::getRenderViewSlot());
+
+    this->bkgndCol[0] = 0.0f;
+    this->bkgndCol[1] = 0.0f;
+    this->bkgndCol[2] = 0.125f;
+
+    this->backCol << new param::StringParam(utility::ColourParser::ToString(
+        this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]));
+    this->MakeSlotAvailable(&this->backCol);
+
+    this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
+    this->MakeSlotAvailable(&this->rendererSlot);
+
+    this->resetViewSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_HOME);
+    this->resetViewSlot.SetUpdateCallback(&View2D::onResetView);
+    this->MakeSlotAvailable(&this->resetViewSlot);
+
+    this->showBBoxSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->showBBoxSlot);
+
+    this->ResetView();
+}
+
+
+/*
+ * view::View2D::~View2D
+ */
+view::View2D::~View2D(void) {
+    this->Release();
+}
+
+
+/*
+ * view::View2D::Render
+ */
+void view::View2D::Render(void) {
+    if (this->doHookCode()) {
+        this->doBeforeRenderHook();
+    }
+
+    CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
+
+    //this->fpsCounter.FrameBegin();
+
+    // clear viewport
+    ::glViewport(0, 0, static_cast<GLsizei>(this->width), static_cast<GLsizei>(this->height));
+
+    //if (this->setViewport) {
+    //    ::glViewport(0, 0,
+    //        static_cast<GLsizei>(this->camParams->TileRect().Width()),
+    //        static_cast<GLsizei>(this->camParams->TileRect().Height()));
+    //}
+
+    if (this->backCol.IsDirty()) {
+        this->backCol.ResetDirty();
+        utility::ColourParser::FromString(this->backCol.Param<param::StringParam>()->Value(),
+            this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
+    }
+    ::glClearColor(this->bkgndCol[0], this->bkgndCol[1],
+        this->bkgndCol[2], 0.0f);
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
+
+    if (cr2d == NULL) {
+        return;
+    }
+    if (this->firstImg) {
+        this->firstImg = false;
+        this->ResetView();
+    }
+
+    vislib::math::Rectangle<float> bbox(-1.0f, -1.0f, 1.0f, 1.0f);
+    if ((*cr2d)(1)) {
+        bbox = cr2d->GetBoundingBox();
+    }
+
+    ::glMatrixMode(GL_PROJECTION);
+    ::glLoadIdentity();
+	float asp = this->height / this->width;
+    ::glScalef(asp, 1.0f, 1.0f);
+
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glLoadIdentity();
+
+    ::glScalef(this->viewZoom, this->viewZoom, 1.0f);
+    ::glTranslatef(this->viewX, this->viewY, 0.0f);
+
+    cr2d->SetBackgroundColour(
+        static_cast<unsigned char>(this->bkgndCol[0] * 255.0f),
+        static_cast<unsigned char>(this->bkgndCol[1] * 255.0f),
+        static_cast<unsigned char>(this->bkgndCol[2] * 255.0f));
+
+	asp = 1.0f / asp;
+	vislib::math::Rectangle<float> vr(
+		(-asp / this->viewZoom - this->viewX),
+		(-1.0f / this->viewZoom - this->viewY),
+		(asp / this->viewZoom - this->viewX),
+		(1.0f / this->viewZoom - this->viewY));
+    cr2d->SetBoundingBox(vr);
+
+    cr2d->SetViewportSize(static_cast<unsigned int>(this->width),
+        static_cast<unsigned int>(this->height));
+
+    if (this->showBBoxSlot.Param<param::BoolParam>()->Value()) {
+        ::glEnable(GL_BLEND);
+        ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        ::glEnable(GL_LINE_SMOOTH);
+        ::glLineWidth(1.2f);
+        ::glDisable(GL_LIGHTING);
+
+        ::glColor3ub(255, 255, 255);
+        ::glBegin(GL_LINE_LOOP);
+        ::glVertex2f(bbox.Left(), bbox.Top());
+        ::glVertex2f(bbox.Left(), bbox.Bottom());
+        ::glVertex2f(bbox.Right(), bbox.Bottom());
+        ::glVertex2f(bbox.Right(), bbox.Top());
+        ::glEnd();
+
+        ::glDisable(GL_LINE_SMOOTH);
+        ::glDisable(GL_BLEND);
+        ::glLineWidth(1.0f);
+    }
+
+    (*cr2d)(0); // render
+
+    //this->fpsCounter.FrameEnd();
+
+}
+
+
+/*
+ * view::View2D::ResetView
+ */
+void view::View2D::ResetView(void) {
+    // using namespace vislib::graphics;
+    VLTRACE(VISLIB_TRCELVL_INFO, "View2D::ResetView\n");
+
+    CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
+    if ((cr2d != NULL) && ((*cr2d)(1))) {
+        this->viewX = -0.5f * (cr2d->GetBoundingBox().Left() + cr2d->GetBoundingBox().Right());
+        this->viewY = -0.5f * (cr2d->GetBoundingBox().Bottom() + cr2d->GetBoundingBox().Top());
+        this->viewZoom = 2.0f / cr2d->GetBoundingBox().Height();
+
+    } else {
+        this->viewX = 0.0f;
+        this->viewY = 0.0f;
+        this->viewZoom = 1.0f;
+    }
+}
+
+
+/*
+ * view::View2D::Resize
+ */
+void view::View2D::Resize(unsigned int width, unsigned int height) {
+    this->width = static_cast<float>(width);
+    this->height = static_cast<float>(height);
+    // intentionally empty ATM
+}
+
+
+/*
+ * view::View2D::SetCursor2DButtonState
+ */
+void view::View2D::SetCursor2DButtonState(unsigned int btn, bool down) {
+    if (down) {
+        if (btn == 0) {
+            this->mouseMode = 1; // pan
+        } else if (btn == 2) {
+            this->mouseMode = 2; // zoom
+        }
+    } else {
+        this->mouseMode = 0;
+    }
+}
+
+
+/*
+ * view::View2D::SetCursor2DPosition
+ */
+void view::View2D::SetCursor2DPosition(float x, float y) {
+    if (this->mouseMode == 1) { // pan
+        float movSpeed = 2.0f / (this->viewZoom * this->height);
+        this->viewX -= (this->mouseX - x) * movSpeed;
+        this->viewY += (this->mouseY - y) * movSpeed;
+
+    } else if (this->mouseMode == 2) { // zoom
+        const double spd = 2.0;
+        const double logSpd = log(spd);
+        float base = 1.0f;
+
+        CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
+        if ((cr2d != NULL) && ((*cr2d)(1))) {
+            base = cr2d->GetBoundingBox().Height();
+        }
+
+        float newZoom = static_cast<float>(
+            pow(spd,
+            log(static_cast<double>(this->viewZoom / base)) / logSpd
+            + static_cast<double>(((this->mouseY - y) * 1.0f / this->height)))) * base;
+
+        this->viewZoom = newZoom;
+
+    }
+    this->mouseX = x;
+    this->mouseY = y;
+}
+
+
+/*
+ * view::View2D::SetInputModifier
+ */
+void view::View2D::SetInputModifier(mmcInputModifier mod, bool down) {
+    // intentionally empty ATM
+}
+
+
+/*
+ * view::View2D::OnRenderView
+ */
+bool view::View2D::OnRenderView(Call& call) {
+ 
+    // currently not supported
+
+    return false;
+}
+
+
+/*
+ * view::View2D::UpdateFreeze
+ */
+void view::View2D::UpdateFreeze(bool freeze) {
+
+    // currently not supported
+
+}
+
+
+/*
+ * view::View2D::create
+ */
+bool view::View2D::create(void) {
+ 
+    this->firstImg = true;
+
+    return true;
+}
+
+
+/*
+ * view::View2D::release
+ */
+void view::View2D::release(void) {
+    // intentionally empty
+}
+
+
+/*
+ * view::View2D::onResetView
+ */
+bool view::View2D::onResetView(param::ParamSlot& p) {
+    this->ResetView();
+    return true;
+}

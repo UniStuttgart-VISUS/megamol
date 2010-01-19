@@ -1,0 +1,282 @@
+/*
+ * AbstractView.h
+ *
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
+ */
+
+#ifndef MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
+#define MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include "api/MegaMolCore.h"
+#include "CalleeSlot.h"
+#include "param/AbstractParam.h"
+#include "vislib/Array.h"
+#include "vislib/deprecated.h"
+#include "vislib/SingleLinkedList.h"
+#include "vislib/SmartPtr.h"
+#include "vislib/String.h"
+
+
+namespace megamol {
+namespace core {
+
+    /** forward declaration */
+    class Module;
+
+namespace view {
+
+
+    /**
+     * Abstract base class of rendering views
+     */
+    class AbstractView {
+    public:
+
+        /**
+         * Interfaces class for hooking into view processes
+         */
+        class Hooks {
+        public:
+
+            /**
+             * Empty ctor.
+             */
+            Hooks(void) {
+                // intentionally empty
+            }
+
+            /**
+             * Empty but virtual dtor.
+             */
+            virtual ~Hooks(void) {
+                // intentionally empty
+            }
+
+            /**
+             * Hook method to be called before the view is rendered.
+             *
+             * @param view The calling view
+             */
+            virtual void BeforeRender(AbstractView *view) {
+                // intentionally empty
+            }
+
+        };
+
+        /** Ctor. */
+        AbstractView(void);
+
+        /** Dtor. */
+        virtual ~AbstractView(void);
+
+        /**
+         * Answers whether the given parameter is relevant for this view.
+         *
+         * @param param The parameter to test.
+         *
+         * @return 'true' if 'param' is relevant, 'false' otherwise.
+         */
+        virtual bool IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const;
+
+        /**
+         * Renders this AbstractView3D in the currently active OpenGL context.
+         */
+        virtual void Render(void) = 0;
+
+        /**
+         * Resets the view. This normally sets the camera parameters to
+         * default values.
+         */
+        VLDEPRECATED virtual void ResetView(void) = 0;
+
+        /**
+         * Resizes the AbstractView3D.
+         *
+         * @param width The new width.
+         * @param height The new height.
+         */
+        virtual void Resize(unsigned int width, unsigned int height) = 0;
+
+        /**
+         * Sets the button state of a button of the 2d cursor. See
+         * 'vislib::graphics::Cursor2D' for additional information.
+         *
+         * @param button The button.
+         * @param down Flag whether the button is pressed, or not.
+         */
+        virtual void SetCursor2DButtonState(unsigned int btn, bool down) = 0;
+
+        /**
+         * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
+         * for additional information.
+         *
+         * @param x The x coordinate
+         * @param y The y coordinate
+         */
+        virtual void SetCursor2DPosition(float x, float y) = 0;
+
+        /**
+         * Sets the state of an input modifier.
+         *
+         * @param mod The input modifier to be set.
+         * @param down The new state of the input modifier.
+         */
+        virtual void SetInputModifier(mmcInputModifier mod, bool down) = 0;
+
+        /**
+         * Answers the desired window position configuration of this view.
+         *
+         * @param x To receive the coordinate of the upper left corner
+         * @param y To recieve the coordinate of the upper left corner
+         * @param w To receive the width
+         * @param h To receive the height
+         * @param nd To receive the flag deactivating window decorations
+         *
+         * @return 'true' if this view has a desired window position
+         *         configuration, 'false' if not. In the latter case the value
+         *         the parameters are pointing to are not altered.
+         */
+        virtual bool DesiredWindowPosition(int *x, int *y, int *w, int *h, bool *nd);
+
+        /**
+         * Registers a hook
+         *
+         * @param hook The hook to register
+         */
+        void RegisterHook(view::AbstractView::Hooks *hook) {
+            if (!this->hooks.Contains(hook)) {
+                this->hooks.Add(hook);
+            }
+        }
+
+        /**
+         * Unregisters a hook
+         *
+         * @param hook The hook to unregister
+         */
+        void UnregisterHook(view::AbstractView::Hooks *hook) {
+            this->hooks.RemoveAll(hook);
+        }
+
+        /**
+         * Callback requesting a rendering of this view
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        virtual bool OnRenderView(Call& call);
+
+        /**
+         * Callback requesting a rendering of this view
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        virtual bool OnFreezeView(Call& call) {
+            this->UpdateFreeze(true);
+            return true;
+        }
+
+        /**
+         * Callback requesting a rendering of this view
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        virtual bool OnUnfreezeView(Call& call) {
+            this->UpdateFreeze(false);
+            return true;
+        }
+
+        /**
+         * Freezes, updates, or unfreezes the view onto the scene (not the
+         * rendering, but camera settings, timing, etc).
+         *
+         * @param freeze true means freeze or update freezed settings,
+         *               false means unfreeze
+         */
+        virtual void UpdateFreeze(bool freeze) = 0;
+
+    protected:
+
+        /** Typedef alias */
+        typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
+
+        /**
+         * Tries to load the desired window position configuration form the
+         * configuration value with the given name.
+         *
+         * @param str The value to be parsed
+         * @param x To receive the coordinate of the upper left corner
+         * @param y To recieve the coordinate of the upper left corner
+         * @param w To receive the width
+         * @param h To receive the height
+         * @param nd To receive the flag deactivating window decorations
+         *
+         * @return 'true' if this view has a desired window position
+         *         configuration, 'false' if not. In the latter case the value
+         *         the parameters are pointing to are not altered.
+         */
+        bool desiredWindowPosition(const vislib::StringW& str,
+            int *x, int *y, int *w, int *h, bool *nd);
+
+        /**
+         * Answer the render view slot. Use this method in the first ctor of a
+         * class derived from this class and from 'Module' to make this slot
+         * available.
+         */
+        inline AbstractSlot* getRenderViewSlot(void) {
+            return &this->renderViewSlot;
+        }
+
+        /**
+         * Answer if hook code should be executed.
+         *
+         * @return 'true' if hook code should be run
+         */
+        inline bool doHookCode(void) const {
+            return !this->hooks.IsEmpty();
+        }
+
+        /**
+         * Gets an iterator to the list or registered hooks.
+         *
+         * @return An iterator to the list of registered hooks.
+         */
+        inline HooksIterator getHookIterator(void) {
+            return this->hooks.GetIterator();
+        }
+
+        /**
+         * The code triggering the pre render hook
+         */
+        inline void doBeforeRenderHook(void) {
+            HooksIterator i = this->getHookIterator();
+            while (i.HasNext()) {
+                i.Next()->BeforeRender(this);
+            }
+        }
+
+    private:
+
+        /** Slot for incoming rendering requests */
+        CalleeSlot renderViewSlot;
+
+        /** List of registered hooks */
+        vislib::SingleLinkedList<Hooks *> hooks;
+
+    };
+
+
+} /* end namespace view */
+} /* end namespace core */
+} /* end namespace megamol */
+
+#endif /* MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED */

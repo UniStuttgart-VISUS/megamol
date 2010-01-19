@@ -1,0 +1,226 @@
+/*
+ * CallRender2D.h
+ *
+ * Copyright (C) 2009 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
+ */
+
+#ifndef MEGAMOLCORE_CALLRENDER2D_H_INCLUDED
+#define MEGAMOLCORE_CALLRENDER2D_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include "api/MegaMolCore.std.h"
+#include "Call.h"
+#include "CallAutoDescription.h"
+#include "vislib/Rectangle.h"
+#include "vislib/types.h"
+
+
+namespace megamol {
+namespace core {
+namespace view {
+
+
+    /**
+     * Call for rendering 2d images
+     *
+     * Function "Render" tells the callee to render itself into the currently
+     * active opengl context (TODO: Later on it could also be a FBO).
+     * The bounding box member will be set to the world space rectangle
+     * containing the visible part.
+     *
+     * Function "GetExtents" asks the callee to fill the extents member of the
+     * call (bounding boxes).
+     * The renderer should not draw anything outside the bounding box
+     */
+    class MEGAMOLCORE_API CallRender2D : public Call {
+    public:
+
+        /**
+         * Answer the name of the objects of this description.
+         *
+         * @return The name of the objects of this description.
+         */
+        static const char *ClassName(void) {
+            return "CallRender2D";
+        }
+
+        /**
+         * Gets a human readable description of the module.
+         *
+         * @return A human readable description of the module.
+         */
+        static const char *Description(void) {
+            return "Call for rendering a frame";
+        }
+
+        /**
+         * Answer the number of functions used for this call.
+         *
+         * @return The number of functions used for this call.
+         */
+        static unsigned int FunctionCount(void) {
+            return 2;
+        }
+
+        /**
+         * Answer the name of the function used for this call.
+         *
+         * @param idx The index of the function to return it's name.
+         *
+         * @return The name of the requested function.
+         */
+        static const char * FunctionName(unsigned int idx) {
+            switch (idx) {
+                case 0: return "Render";
+                case 1: return "GetExtents";
+                default: return NULL;
+            }
+        }
+
+        /** Ctor. */
+        CallRender2D(void);
+
+        /** Dtor. */
+        virtual ~CallRender2D(void);
+
+        /**
+         * Gets the bounding box. As an answer to an 'GetExtents' call this
+		 * member holds the bounding rectangle of all visible elements created
+		 * by the renderer in world space. When called for 'Render' this
+		 * member holds the rectangle in world space which is visible on the
+		 * viewport.
+         *
+         * @return The bounding box
+         */
+        inline const vislib::math::Rectangle<float>& GetBoundingBox(void) const {
+            return this->bbox;
+        }
+
+        /**
+         * Answer the background colour
+         *
+         * @return The background colour as three bytes [0..255] RGB
+         */
+        inline const unsigned char * GetBackgroundColour(void) const {
+            return this->bkgndCol;
+        }
+
+        /**
+         * Answer the viewport height in pixel
+         *
+         * @return The viewport height in pixel
+         */
+        inline unsigned int GetHeight(void) const {
+            return this->height;
+        }
+
+        /**
+         * Answer the viewport width in pixel
+         *
+         * @return The viewport width in pixel
+         */
+        inline unsigned int GetWidth(void) const {
+            return this->width;
+        }
+
+        /**
+         * Sets the bounding box member
+         *
+         * @param minX The minimum value along the x axis
+         * @param minY The minimum value along the y axis
+         * @param maxX The maximum value along the x axis
+         * @param maxY The maximum value along the y axis
+         */
+        inline void SetBoundingBox(float minX, float minY, float maxX, float maxY) {
+            this->bbox.Set(minX, minY, maxX, maxY);
+        }
+
+        /**
+         * Sets the bounding box member
+         *
+         * @param box The bounding box rectangle
+         */
+        inline void SetBoundingBox(const vislib::math::Rectangle<float>& box) {
+            this->bbox = box;
+        }
+
+        /**
+         * Sets the background colour
+         *
+         * @param col Pointer to an array of three bytes holding the RGB background
+         *            colour.
+         */
+        inline void SetBackgroundColour(const unsigned char *col) {
+            this->bkgndCol[0] = col[0];
+            this->bkgndCol[1] = col[1];
+            this->bkgndCol[2] = col[2];
+        }
+
+        /**
+         * Sets the background colour
+         *
+         * @param r The red colour component for the background colour [0..255]
+         * @param g The green colour component for the background colour [0..255]
+         * @param b The blue colour component for the background colour [0..255]
+         */
+        inline void SetBackgroundColour(unsigned char r, unsigned char g, unsigned char b) {
+            this->bkgndCol[0] = r;
+            this->bkgndCol[1] = g;
+            this->bkgndCol[2] = b;
+        }
+
+        /**
+         * Sets the viewport size
+         *
+         * @param w The width of the viewport in pixel
+         * @param h The height of the viewport in pixel
+         */
+        inline void SetViewportSize(unsigned int w, unsigned int h) {
+            this->height = h;
+            this->width = w;
+        }
+
+        /**
+         * Assignment operator
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this
+         */
+        CallRender2D& operator=(const CallRender2D& rhs);
+
+    private:
+
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+        /** The bounding box */
+        vislib::math::Rectangle<float> bbox;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+
+        /** The background colour in RGB (bytes) */
+        unsigned char bkgndCol[3];
+
+        /** The viewport height in pixel */
+        unsigned int height;
+
+        /** The viewport width in pixel */
+        unsigned int width;
+
+    };
+
+
+    /** Description class typedef */
+    typedef CallAutoDescription<CallRender2D> CallRender2DDescription;
+
+
+} /* end namespace view */
+} /* end namespace core */
+} /* end namespace megamol */
+
+#endif /* MEGAMOLCORE_CALLRENDER2D_H_INCLUDED */

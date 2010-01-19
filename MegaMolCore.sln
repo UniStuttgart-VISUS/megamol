@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config.scripts", "config.scripts", "{EF9E1AAC-2AAE-4095-A6C3-E2F6E135927D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{EF9E1AAC-2AAE-4095-A6C3-E2F6E135927D}"
 	ProjectSection(SolutionItems) = preProject
 		config.bat = config.bat
 		config.sh = config.sh
@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config.scripts", "config.sc
 		configure.win.pl = configure.win.pl
 		ExtLibs.mk.input = ExtLibs.mk.input
 		ExtLibs.vsprops.input = ExtLibs.vsprops.input
+		Makefile = Makefile
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shaders", "Shaders", "{9BBCE494-B33B-4896-B7CC-FBA33C2CF8D4}"
@@ -102,7 +103,52 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sphereEx", "sphereEx", "{09
 		Shaders\sphereEx\params_upload.glvs = Shaders\sphereEx\params_upload.glvs
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core.vcproj", "{F34CA35F-7F60-431D-A40D-4679B6A82259}"
+	ProjectSection(ProjectDependencies) = postProject
+		{704C9777-C43E-49DF-A782-8AEB641B5C12} = {704C9777-C43E-49DF-A782-8AEB641B5C12}
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F} = {FA666CA6-C58F-4AC2-A382-77A236E70B5F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CoreAPI", "CoreAPI.vcproj", "{FA666CA6-C58F-4AC2-A382-77A236E70B5F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{704C9777-C43E-49DF-A782-8AEB641B5C12} = {704C9777-C43E-49DF-A782-8AEB641B5C12}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VersionInfo", "VersionInfo.vcproj", "{704C9777-C43E-49DF-A782-8AEB641B5C12}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Debug|Win32.Build.0 = Debug|Win32
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Debug|x64.ActiveCfg = Debug|x64
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Debug|x64.Build.0 = Debug|x64
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Release|Win32.ActiveCfg = Release|Win32
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Release|Win32.Build.0 = Release|Win32
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Release|x64.ActiveCfg = Release|x64
+		{F34CA35F-7F60-431D-A40D-4679B6A82259}.Release|x64.Build.0 = Release|x64
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Debug|Win32.Build.0 = Debug|Win32
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Debug|x64.ActiveCfg = Debug|x64
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Debug|x64.Build.0 = Debug|x64
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Release|Win32.ActiveCfg = Release|Win32
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Release|Win32.Build.0 = Release|Win32
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Release|x64.ActiveCfg = Release|x64
+		{FA666CA6-C58F-4AC2-A382-77A236E70B5F}.Release|x64.Build.0 = Release|x64
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|Win32.ActiveCfg = Debug|Win32
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|Win32.Build.0 = Debug|Win32
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|x64.ActiveCfg = Debug|x64
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|x64.Build.0 = Debug|x64
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|Win32.ActiveCfg = Release|Win32
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|Win32.Build.0 = Release|Win32
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|x64.ActiveCfg = Release|x64
+		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
