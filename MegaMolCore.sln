@@ -1,8 +1,113 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config.scripts", "config.scripts", "{EF9E1AAC-2AAE-4095-A6C3-E2F6E135927D}"
+	ProjectSection(SolutionItems) = preProject
+		config.bat = config.bat
+		config.sh = config.sh
+		configure.lin.pl = configure.lin.pl
+		configure.win.pl = configure.win.pl
+		ExtLibs.mk.input = ExtLibs.mk.input
+		ExtLibs.vsprops.input = ExtLibs.vsprops.input
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shaders", "Shaders", "{9BBCE494-B33B-4896-B7CC-FBA33C2CF8D4}"
+	ProjectSection(SolutionItems) = preProject
+		Shaders\arrow.glfp = Shaders\arrow.glfp
+		Shaders\arrow.glvp = Shaders\arrow.glvp
+		Shaders\common.btf = Shaders\common.btf
+		Shaders\commondefines.glsl = Shaders\commondefines.glsl
+		Shaders\cylinder.glfp = Shaders\cylinder.glfp
+		Shaders\cylinder.glvp = Shaders\cylinder.glvp
+		Shaders\lightdirectional.glsl = Shaders\lightdirectional.glsl
+		Shaders\mipdepth.btf = Shaders\mipdepth.btf
+		Shaders\oraclesphere.btf = Shaders\oraclesphere.btf
+		Shaders\perpixellight.glfp = Shaders\perpixellight.glfp
+		Shaders\perpixellight.glvp = Shaders\perpixellight.glvp
+		Shaders\protein.btf = Shaders\protein.btf
+		Shaders\simplesphere.btf = Shaders\simplesphere.btf
+		Shaders\sphere.glfs = Shaders\sphere.glfs
+		Shaders\sphere.glvs = Shaders\sphere.glvs
+		Shaders\sphere.slfp = Shaders\sphere.slfp
+		Shaders\sphere.slvp = Shaders\sphere.slvp
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protein", "protein", "{B032A44D-A872-4251-9756-CB5230953705}"
+	ProjectSection(SolutionItems) = preProject
+		Shaders\protein\arrow.glgs = Shaders\protein\arrow.glgs
+		Shaders\protein\arrow_simple.glgs = Shaders\protein\arrow_simple.glgs
+		Shaders\protein\cartoon.glfs = Shaders\protein\cartoon.glfs
+		Shaders\protein\cartoon.glgs = Shaders\protein\cartoon.glgs
+		Shaders\protein\cartoon.glvs = Shaders\protein\cartoon.glvs
+		Shaders\protein\cartoon_simple.glfs = Shaders\protein\cartoon_simple.glfs
+		Shaders\protein\cartoon_simple.glgs = Shaders\protein\cartoon_simple.glgs
+		Shaders\protein\cartoon_simple.glvs = Shaders\protein\cartoon_simple.glvs
+		Shaders\protein\commondefines.glsl = Shaders\protein\commondefines.glsl
+		Shaders\protein\cylinder.glfs = Shaders\protein\cylinder.glfs
+		Shaders\protein\cylinder.glvs = Shaders\protein\cylinder.glvs
+		Shaders\protein\elliptic_helix.glgs = Shaders\protein\elliptic_helix.glgs
+		Shaders\protein\helix.glgs = Shaders\protein\helix.glgs
+		Shaders\protein\helix_simple.glgs = Shaders\protein\helix_simple.glgs
+		Shaders\protein\hfilter.glfs = Shaders\protein\hfilter.glfs
+		Shaders\protein\hfilter.glvs = Shaders\protein\hfilter.glvs
+		Shaders\protein\Kopie von cartoon.glgs = Shaders\protein\Kopie von cartoon.glgs
+		Shaders\protein\lightdirectional.glsl = Shaders\protein\lightdirectional.glsl
+		Shaders\protein\perpixellight.glfs = Shaders\protein\perpixellight.glfs
+		Shaders\protein\perpixellight.glvs = Shaders\protein\perpixellight.glvs
+		Shaders\protein\rootsolver.glsl = Shaders\protein\rootsolver.glsl
+		Shaders\protein\silhouette.glfs = Shaders\protein\silhouette.glfs
+		Shaders\protein\silhouette.glvs = Shaders\protein\silhouette.glvs
+		Shaders\protein\sphere.glfs = Shaders\protein\sphere.glfs
+		Shaders\protein\sphere.glvs = Shaders\protein\sphere.glvs
+		Shaders\protein\sphereSES.glfs = Shaders\protein\sphereSES.glfs
+		Shaders\protein\sphereSES.glvs = Shaders\protein\sphereSES.glvs
+		Shaders\protein\sphericaltriageom.glfs = Shaders\protein\sphericaltriageom.glfs
+		Shaders\protein\sphericaltriageom.glgs = Shaders\protein\sphericaltriageom.glgs
+		Shaders\protein\sphericaltriageom.glvs = Shaders\protein\sphericaltriageom.glvs
+		Shaders\protein\sphericaltriageom_pt.glfs = Shaders\protein\sphericaltriageom_pt.glfs
+		Shaders\protein\sphericaltriageom_pt.glgs = Shaders\protein\sphericaltriageom_pt.glgs
+		Shaders\protein\sphericaltriageom_vt.glgs = Shaders\protein\sphericaltriageom_vt.glgs
+		Shaders\protein\sphericaltriangle.glfs = Shaders\protein\sphericaltriangle.glfs
+		Shaders\protein\sphericaltriangle.glvs = Shaders\protein\sphericaltriangle.glvs
+		Shaders\protein\sphericaltriangle2.glfs = Shaders\protein\sphericaltriangle2.glfs
+		Shaders\protein\sphericaltriangle2.glvs = Shaders\protein\sphericaltriangle2.glvs
+		Shaders\protein\spline_arrow.glgs = Shaders\protein\spline_arrow.glgs
+		Shaders\protein\spline_cartoon.glfs = Shaders\protein\spline_cartoon.glfs
+		Shaders\protein\spline_cartoon.glvs = Shaders\protein\spline_cartoon.glvs
+		Shaders\protein\spline_helix.glgs = Shaders\protein\spline_helix.glgs
+		Shaders\protein\spline_helix_bevel.glgs = Shaders\protein\spline_helix_bevel.glgs
+		Shaders\protein\spline_tube.glgs = Shaders\protein\spline_tube.glgs
+		Shaders\protein\torus.glfs = Shaders\protein\torus.glfs
+		Shaders\protein\torus.glvs = Shaders\protein\torus.glvs
+		Shaders\protein\tube.glgs = Shaders\protein\tube.glgs
+		Shaders\protein\tube_old.glfs = Shaders\protein\tube_old.glfs
+		Shaders\protein\tube_old.glvs = Shaders\protein\tube_old.glvs
+		Shaders\protein\tube_simple.glgs = Shaders\protein\tube_simple.glgs
+		Shaders\protein\vfilter.glfs = Shaders\protein\vfilter.glfs
+		Shaders\protein\vfilter.glvs = Shaders\protein\vfilter.glvs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sphereEx", "sphereEx", "{09DCFF38-A4D1-452F-8FF4-A53642859FA1}"
+	ProjectSection(SolutionItems) = preProject
+		Shaders\sphereEx\body.glvs = Shaders\sphereEx\body.glvs
+		Shaders\sphereEx\box_analytic_aa.glvs = Shaders\sphereEx\box_analytic_aa.glvs
+		Shaders\sphereEx\box_lumberjack_aa.glvs = Shaders\sphereEx\box_lumberjack_aa.glvs
+		Shaders\sphereEx\box_point.glvs = Shaders\sphereEx\box_point.glvs
+		Shaders\sphereEx\box_quad.glgs = Shaders\sphereEx\box_quad.glgs
+		Shaders\sphereEx\box_quad.glvs = Shaders\sphereEx\box_quad.glvs
+		Shaders\sphereEx\footer.glgs = Shaders\sphereEx\footer.glgs
+		Shaders\sphereEx\footer.glvs = Shaders\sphereEx\footer.glvs
+		Shaders\sphereEx\header.glgs = Shaders\sphereEx\header.glgs
+		Shaders\sphereEx\header.glvs = Shaders\sphereEx\header.glvs
+		Shaders\sphereEx\params_upload.glvs = Shaders\sphereEx\params_upload.glvs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B032A44D-A872-4251-9756-CB5230953705} = {9BBCE494-B33B-4896-B7CC-FBA33C2CF8D4}
+		{09DCFF38-A4D1-452F-8FF4-A53642859FA1} = {9BBCE494-B33B-4896-B7CC-FBA33C2CF8D4}
 	EndGlobalSection
 EndGlobal
