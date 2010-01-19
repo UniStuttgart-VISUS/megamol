@@ -2,30 +2,28 @@
 # Makefile
 # Core (MegaMol)
 #
-# Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
+# Copyright (C) 2008-2010 by VISUS (Universitaet Stuttgart).
 # Alle Rechte vorbehalten.
 #
 
-include ../common.mk
-include ../ExtLibs.mk
-include ../ExtLibs_core.mk
+include common.mk
+include ExtLibs.mk
 
 # Target name
 TargetName := MegaMolCore
 OutDir := lib
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
-InputDirs := . api utility utility/xml param modnet view special job protein misc vismol2 moldyn
+InputDirs := . api job misc moldyn param special utility utility/xml view vismol2
 IncludeDir := $(IncludeDir) $(vislibpath)/base/include $(vislibpath)/math/include \
 	$(vislibpath)/sys/include $(vislibpath)/graphics/include $(vislibpath)/gl/include \
 	$(vislibpath)/net/include $(vislibpath)/cluster/include \
-	$(expatpath)/include 
+	$(expatpath)/include $(visglutpath)/include
 
 
 # Additional compiler flags
 CompilerFlags := $(CompilerFlags) -fPIC
-ExcludeFromBuild += ./DllEntry.c protein/RMSRenderer.cpp vismol2/Mol20DataCall.cpp \
-	vismol2/Mol20DataSource.cpp vismol2/Mol20Renderer.cpp vismol2/Mol2Data.cpp
+ExcludeFromBuild += vismol2/Mol20DataCall.cpp vismol2/Mol20DataSource.cpp vismol2/Mol20Renderer.cpp vismol2/Mol2Data.cpp
 
 
 # Libraries
@@ -49,35 +47,56 @@ CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
 
 
-all: $(TargetName)d $(TargetName)
+all: VersionInfo $(TargetName)d $(TargetName)
 
 
 # Rules for shared objects in $(OutDir):
 $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 	@mkdir -p $(OutDir)
-	@mkdir -p $(SolOutputDir)
+	@mkdir -p $(outbin)
+	@mkdir -p $(outshaders)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS)d.so
-	cp $< $(SolOutputDir)/lib$(TargetName)$(BITS)d.so
+	cp $< $(outbin)/lib$(TargetName)$(BITS)d.so
+	cd Shaders && find . -wholename '*.svn' -prune -o -exec cp --parents \{\} $(outshaders) \;
 
 $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 	@mkdir -p $(OutDir)
-	@mkdir -p $(SolOutputDir)
+	@mkdir -p $(outbin)
+	@mkdir -p $(outshaders)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS).so
-	cp $< $(SolOutputDir)/lib$(TargetName)$(BITS).so
+	cp $< $(outbin)/lib$(TargetName)$(BITS).so
+	cd Shaders && find . -wholename '*.svn' -prune -o -exec cp --parents \{\} $(outshaders) \;
 
 
 # Rules for special intermediate files
-generatedFiles: api/MegaMolCore.inl
-
-
 api/MegaMolCore.inl: api/MegaMolCore.h api/geninl.pl
 	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"api/MegaMolCore.inl: "
 	@tput sgr0
 	$(Q)perl api/geninl.pl api/MegaMolCore.h api/MegaMolCore.inl
 
+productversion.gen.h: productversion.template.h
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"VersionInfo: productversion.gen.h"
+	@tput sgr0
+	$(Q)perl VersionInfo.pl .
+
+api/MegaMolCore.std.h: api/MegaMolCore.std.template.h
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"VersionInfo: api/MegaMolCore.std.h"
+	@tput sgr0
+	$(Q)perl VersionInfo.pl .
+
+
+# Phony target to force rebuild of the version info files
+VersionInfo:
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"VersionInfo: productversion.gen.h api/MegaMolCore.std.h"
+	@tput sgr0
+	$(Q)perl VersionInfo.pl .
+
 
 # Rules for intermediate shared objects:
-$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile generatedFiles $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
@@ -87,7 +106,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile generatedFiles $(add
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
 #	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
-$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile generatedFiles $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
@@ -99,14 +118,14 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile generatedFiles $(ad
 
 
 # Rules for dependencies:
-$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile api/MegaMolCore.inl
+$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) -I$(<D) $(DebugCompilerFlags) $< >> $@
 
-$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile api/MegaMolCore.inl
+$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h api/MegaMolCore.inl
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
@@ -121,7 +140,7 @@ endif
 endif
 
 
-# Rules for object files: 
+# Rules for object files:
 $(IntDir)/$(DebugDir)/%.o:
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"CPP "'\E[0;32;40m'"$@: "
@@ -135,10 +154,10 @@ $(IntDir)/$(ReleaseDir)/%.o:
 	$(Q)$(CPP) -c $(CPPFLAGS) -I$(<D) $(ReleaseCompilerFlags) -o $@ $<
 
 
-# Cleanup rules:	
+# Cleanup rules:
 clean: sweep
 	rm -f $(OutDir)/lib$(TargetName)$(BITS).so $(OutDir)/lib$(TargetName)$(BITS)d.so \
-	$(SolOutputDir)/lib$(TargetName)$(BITS).so $(SolOutputDir)/lib$(TargetName)$(BITS)d.so
+	$(outbin)/lib$(TargetName)$(BITS).so $(outbin)/lib$(TargetName)$(BITS)d.so
 
 
 sweep:
@@ -149,4 +168,4 @@ sweep:
 rebuild: clean all
 
 
-.PHONY: clean sweep rebuild tags
+.PHONY: clean sweep rebuild tags VersionInfo

@@ -21,5 +21,5 @@ $hash{'$CORE_URI$'} = $core->uri;
 $hash{'$COREAPI_REV$'} = $coreapi->rev;
 $hash{'$COREAPI_DIRTY$'} = $coreapi->dirty;
 
-processFile("productversion.gen.h", "productversion.template.h", \%hash);
-processFile("api/MegaMolCore.std.h", "api/MegaMolCore.std.template.h", \%hash);
+processFile("./productversion.gen.h", "./productversion.template.h", \%hash);
+processFile("./api/MegaMolCore.std.h", "./api/MegaMolCore.std.template.h", \%hash);

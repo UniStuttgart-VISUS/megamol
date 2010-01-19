@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{EF9E1AAC-2AAE-4095-A6C3-E2F6E135927D}"
 	ProjectSection(SolutionItems) = preProject
+		common.mk = common.mk
 		config.bat = config.bat
 		config.sh = config.sh
 		configure.lin.pl = configure.lin.pl
