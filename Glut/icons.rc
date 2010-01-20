@@ -1,0 +1,55 @@
+//
+// icons.rc
+// (MegaMol Console)
+// Copyright (C) 2006 - 2009 by VISUS (Universitaet Stuttgart)
+// Copyright (C) 2009 by SGrottel (http://www.sgrottel.de)
+// Alle Rechte vorbehalten.
+//
+
+#include "versioninfo.h"
+#include "WinVer.h"
+
+// icons
+100 ICON "../Icons/MegaMol_App.ico"
+
+// version info
+1 VERSIONINFO
+ FILEVERSION    MEGAMOL_GLUT_VERSION
+ PRODUCTVERSION MEGAMOL_PRODUCT_VERSION
+ FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+ FILEFLAGS      VS_FF_DEBUG
+#else
+ FILEFLAGS      0x0L
+#endif
+#ifdef MEGAMOL_GLUT_ISDIRTY
+              | VS_FF_PRERELEASE | VS_FF_PRIVATEBUILD
+#endif
+ FILEOS         VOS__WINDOWS32
+ FILETYPE       VFT_DLL
+ FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004b0"
+        BEGIN
+            VALUE "Comments",         MEGAMOL_GLUT_COMMENTS
+            VALUE "CompanyName",      MEGAMOL_PRODUCT_COMPANY
+            VALUE "FileDescription",  "MegaMol Viewer Library based on VISglut"
+            VALUE "FileVersion",      MEGAMOL_GLUT_VERSION_STR
+            VALUE "InternalName",     MEGAMOL_GLUT_NAME
+            VALUE "LegalCopyright",   MEGAMOL_GLUT_COPYRIGHT
+            VALUE "OriginalFilename", MEGAMOL_GLUT_FILENAME
+#ifdef MEGAMOL_GLUT_ISDIRTY
+            VALUE "PrivateBuild",     MEGAMOL_DIRTYWARNING
+#endif
+            VALUE "ProductName",      MEGAMOL_PRODUCT_NAME
+            VALUE "ProductVersion",   MEGAMOL_PRODUCT_VERSION_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1200
+    END
+END
+

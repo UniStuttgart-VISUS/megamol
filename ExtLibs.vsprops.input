@@ -19,4 +19,9 @@
   Value="%visglutPath%"
   PerformEnvironmentSet="true"
   />
+  <UserMacro
+  Name="MegaMolCorePath"
+  Value="%mmcorePath%"
+  PerformEnvironmentSet="true"
+  />
 </VisualStudioPropertySheet>

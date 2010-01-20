@@ -10,3 +10,4 @@
 outbin := %outbin%
 vislibpath := %vislib%
 visglutpath := %visglutPath%
+mmcorepath := %mmcorePath%
