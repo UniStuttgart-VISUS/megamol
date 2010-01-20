@@ -18,7 +18,7 @@ InputDirs := . api job misc moldyn param special utility utility/xml view vismol
 IncludeDir := $(IncludeDir) $(vislibpath)/base/include $(vislibpath)/math/include \
 	$(vislibpath)/sys/include $(vislibpath)/graphics/include $(vislibpath)/gl/include \
 	$(vislibpath)/net/include $(vislibpath)/cluster/include \
-	$(expatpath)/include $(visglutpath)/include
+	$(expatpath)/include
 
 
 # Additional compiler flags

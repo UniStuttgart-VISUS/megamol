@@ -49,7 +49,7 @@ BEGIN
             VALUE "InternalName",     MEGAMOL_CORE_NAME
             VALUE "LegalCopyright",   MEGAMOL_CORE_COPYRIGHT
             VALUE "OriginalFilename", MEGAMOL_CORE_FILENAME
-#ifdef MEGAMOL_GLUT_ISDIRTY
+#ifdef MEGAMOL_CORE_ISDIRTY
             VALUE "PrivateBuild",     MEGAMOL_DIRTYWARNING
 #endif
             VALUE "ProductName",      MEGAMOL_PRODUCT_NAME

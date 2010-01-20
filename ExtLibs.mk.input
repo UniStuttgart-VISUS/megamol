@@ -11,4 +11,3 @@ outbin := %outbin%
 outshaders := %outshader%
 vislibpath := %vislib%
 expatpath := %expatPath%
-visglutpath := %visglutPath%

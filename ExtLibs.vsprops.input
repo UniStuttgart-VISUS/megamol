@@ -20,11 +20,6 @@
   PerformEnvironmentSet="true"
   />
   <UserMacro
-  Name="VisGlutPath"
-  Value="%visglutPath%"
-  PerformEnvironmentSet="true"
-  />
-  <UserMacro
   Name="ExpatPath"
   Value="%expatPath%"
   PerformEnvironmentSet="true"
