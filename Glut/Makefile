@@ -15,7 +15,7 @@ OutDir := lib
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
 InputDir := .
-IncludeDir := . ../Viewer/include
+IncludeDir := . .. ../Viewer/include $(mmcorepath)/api
 IncludeDir := $(IncludeDir) $(vislibpath)/base/include $(vislibpath)/math/include \
 	$(vislibpath)/sys/include $(vislibpath)/graphics/include $(vislibpath)/gl/include \
 	$(visglutpath)/include
@@ -53,15 +53,15 @@ all: $(TargetName)d $(TargetName)
 # Rules for shared objects in $(OutDir):
 $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 	@mkdir -p $(OutDir)
-	@mkdir -p $(SolOutputDir)
+	@mkdir -p $(outbin)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS)d.so
-	cp $< $(SolOutputDir)/lib$(TargetName)$(BITS)d.so
+	cp $< $(outbin)/lib$(TargetName)$(BITS)d.so
 
 $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 	@mkdir -p $(OutDir)
-	@mkdir -p $(SolOutputDir)
+	@mkdir -p $(outbin)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS).so
-	cp $< $(SolOutputDir)/lib$(TargetName)$(BITS).so
+	cp $< $(outbin)/lib$(TargetName)$(BITS).so
 
 
 # Rules for intermediate shared objects:

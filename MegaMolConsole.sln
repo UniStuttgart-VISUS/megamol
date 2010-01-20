@@ -3,12 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{152F4A60-A2BA-43ED-BD53-6E3E992EE4F7}"
 	ProjectSection(SolutionItems) = preProject
+		common.mk = common.mk
 		config.bat = config.bat
 		config.sh = config.sh
 		configure.lin.pl = configure.lin.pl
 		configure.win.pl = configure.win.pl
 		ExtLibs.mk.input = ExtLibs.mk.input
 		ExtLibs.vsprops.input = ExtLibs.vsprops.input
+		Makefile = Makefile
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Viewer", "Viewer\Viewer.vcproj", "{980D6E2F-2755-4199-B34D-35CE18C18B58}"

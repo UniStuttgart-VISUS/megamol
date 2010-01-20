@@ -11,8 +11,8 @@ include ../ExtLibs.mk
 
 # Target name
 TargetName := MegaMolCon
-IncludeDir := $(IncludeDir) ../Core/api ../Viewer/include $(vislibpath)/base/include $(vislibpath)/sys/include $(vislibpath)/math/include\
-	$(visglutpath)/include
+IncludeDir := $(IncludeDir) ../Viewer/include $(vislibpath)/base/include $(vislibpath)/sys/include $(vislibpath)/math/include\
+	$(visglutpath)/include $(mmcorepath)/api
 
 # Additional compiler flags
 CompilerFlags := $(CompilerFlags)
@@ -30,7 +30,7 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.d, 
 	$(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS))))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
-LDFLAGS := $(LinkerFlags) -L../Core/lib -L$(vislibpath)/lib
+LDFLAGS := $(LinkerFlags) -L$(mmcorepath)/lib -L$(vislibpath)/lib
 
 
 all: $(TargetName)Debug $(TargetName)Release
@@ -38,12 +38,12 @@ all: $(TargetName)Debug $(TargetName)Release
 
 # Rules for binary in $(OutDir):
 $(TargetName)Debug: $(IntDir)/$(DebugDir)/$(TargetName)
-	@mkdir -p $(SolOutputDir)
-	cp $< $(SolOutputDir)/$(TargetName)$(BITS)d
+	@mkdir -p $(outbin)
+	cp $< $(outbin)/$(TargetName)$(BITS)d
 
 $(TargetName)Release: $(IntDir)/$(ReleaseDir)/$(TargetName)
-	@mkdir -p $(SolOutputDir)
-	cp $< $(SolOutputDir)/$(TargetName)$(BITS)
+	@mkdir -p $(outbin)
+	cp $< $(outbin)/$(TargetName)$(BITS)
 
 
 # Rules for intermediate binary:	
