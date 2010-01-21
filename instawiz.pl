@@ -3,11 +3,14 @@ use strict;
 use warnings 'all';
 
 # dependencies
-use Digest::MD5 qw(md5_hex);
+my $HAVE_MD5 = 1;
+eval "use Digest::MD5 qw(md5_hex)";
+$HAVE_MD5 = 0  if ($@);
 
 # constants
 my $ERR_ALREADY_INSTA = "plugin already instantiated, go away.";
 my $SRCGUID = "B5FFC5D2-5CF9-4D34-A1C1-C61D7FAC0AB8";
+my $ZEROGUID = "00000000-0000-0000-0000-000000000000";
 
 # variables
 my $ok = 0;
@@ -41,9 +44,9 @@ sub checkGUID($) {
 }
 
 sub IsInputNo($) {
-	my $input = shift;
-	return ($input eq "0" or $input =~ /^\s*false\s*$/i or $input =~ /^\s*off\s*$/i or $input =~ /^\s*no\s*$/i
-			or $input =~ /^\s*f\s*$/i or $input =~ /^\s*n\s*$/i);
+    my $input = shift;
+    return ($input eq "0" or $input =~ /^\s*false\s*$/i or $input =~ /^\s*off\s*$/i or $input =~ /^\s*no\s*$/i
+            or $input =~ /^\s*f\s*$/i or $input =~ /^\s*n\s*$/i);
 }
 
 sub slurpFile($) {
@@ -90,19 +93,22 @@ chomp($temp = <STDIN>);
 if ($temp ne "") {
     $filename = $temp;
 }
-$guid = genGUID($filename);
+if ($HAVE_MD5) {
+    $guid = genGUID($filename);
+} else {
+    $guid = $ZEROGUID;
+}
 print "Input a well-formed GUID for your project [$guid]: ";
 chomp($temp = <STDIN>);
 if ($temp ne "") {
-    if (checkGUID($temp)) {
-        $guid = $temp;
-    } else {
-        autoEuthanize("GUID is ill-formed, you nub.");
-    }
+    $guid = $temp;
+}
+if (not checkGUID($guid)) {
+    autoEuthanize("GUID is ill-formed, you nub.");
 }
 
 # paranoia confirmation
-print "generating plugin $filename with GUID $guid. OK? [y/ ]: ";
+print "generating plugin $filename with GUID $guid. OK? [ /n]: ";
 chomp($temp = <STDIN>);
 if (IsInputNo($temp)) {
     autoEuthanize("aborting.");
