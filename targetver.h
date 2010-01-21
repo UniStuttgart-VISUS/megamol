@@ -1,3 +1,15 @@
+/*
+ * targetver.h
+ *
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
+
+/*
+ * This file is used under Windows only!
+ */
+#ifdef _WIN32
+
 #pragma once
 
 // The following macros define the minimum required platform.  The minimum required platform
@@ -22,3 +34,5 @@
 #ifndef _WIN32_IE                       // Specifies that the minimum required platform is Internet Explorer 7.0.
 #define _WIN32_IE 0x0700        // Change this to the appropriate value to target other versions of IE.
 #endif
+
+#endif /* _WIN32 */
