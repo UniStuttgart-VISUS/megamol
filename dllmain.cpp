@@ -1,3 +1,16 @@
+/*
+ * MegaMolPlugin.cpp
+ *
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
+
+/*
+ * This file is used under Windows only!
+ */
+#ifdef _WIN32
+
+
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 
@@ -17,3 +30,4 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	return TRUE;
 }
 
+#endif /* _WIN32 */
