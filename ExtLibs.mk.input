@@ -1,0 +1,15 @@
+#
+# ExtLib.mk.input
+# MegaMol
+#
+# Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
+# Alle Rechte vorbehalten.
+#
+
+# Path to ouput directories
+outbin := %outbin%
+outshaders := %outshader%
+# Path to MegaMol Core
+mmcorepath := %mmcorePath%
+# Paths to external libraries
+vislibpath := %vislib%
