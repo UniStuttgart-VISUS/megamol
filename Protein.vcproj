@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="MegaMolPlugin"
-	ProjectGUID="{B5FFC5D2-5CF9-4D34-A1C1-C61D7FAC0AB8}"
-	RootNamespace="MegaMolPlugin"
+	Name="Protein"
+	ProjectGUID="{B68B06CD-66AF-475E-BF71-36EA0DED696B}"
+	RootNamespace="Protein"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -46,7 +46,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLPLUGIN_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -67,7 +67,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
-				OutputFile="$(OutDir)\Template$(BitsD).win$(Bits).mmplg"
+				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
 				GenerateDebugInformation="true"
@@ -126,7 +126,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLPLUGIN_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -146,7 +146,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
-				OutputFile="$(OutDir)\Template$(BitsD).win$(Bits).mmplg"
+				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
 				GenerateDebugInformation="true"
@@ -206,7 +206,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLPLUGIN_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -227,7 +227,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
-				OutputFile="$(OutDir)\Template$(BitsD).win$(Bits).mmplg"
+				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
 				GenerateDebugInformation="true"
@@ -287,7 +287,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLPLUGIN_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -307,7 +307,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
-				OutputFile="$(OutDir)\Template$(BitsD).win$(Bits).mmplg"
+				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
 				GenerateDebugInformation="true"
@@ -389,7 +389,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\MegaMolPlugin.cpp"
+				RelativePath=".\Protein.cpp"
 				>
 			</File>
 			<File
@@ -435,7 +435,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\MegaMolPlugin.h"
+				RelativePath=".\Protein.h"
 				>
 			</File>
 			<File
