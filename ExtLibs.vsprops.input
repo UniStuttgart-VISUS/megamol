@@ -4,6 +4,16 @@
   Version="8.00"
   Name="ExtLibs"
   >
+  <Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="%withNETCDF%!$(NETCDFPath)\include!!"
+		PreprocessorDefinitions="%withNETCDF%!WITH_NETCDF!!"
+	/>
+  <Tool
+		Name="VCLinkerTool"
+		AdditionalLibraryDirectories="%withNETCDF%!$(NETCDFPath)\lib$(BitsD)!!"
+		AdditionalDependencies="%withNETCDF%!netcdf$(Bits).lib!!"
+	/>
   <UserMacro
   Name="OutputBin"
   Value="%outbin%"
@@ -24,4 +34,9 @@
   Value="%vislib%"
   PerformEnvironmentSet="true"
   />
+  <UserMacro
+		Name="NETCDFPath"
+		Value="%netcdfPath%"
+		PerformEnvironmentSet="true"
+	/>
 </VisualStudioPropertySheet>
