@@ -6,10 +6,33 @@
  */
 
 #include "stdafx.h"
+/* create symbols for the opengl extensions in this object file */
+#define GLH_EXT_SINGLE_FILE 1
+#if (_MSC_VER > 1000)
+#pragma warning(disable: 4996)
+#endif /* (_MSC_VER > 1000) */
+#include "glh/glh_extensions.h"
+#if (_MSC_VER > 1000)
+#pragma warning(default: 4996)
+#endif /* (_MSC_VER > 1000) */
+
 #include "Protein.h"
 #include "api/MegaMolCore.std.h"
+
+#include "ProteinRendererCartoon.h"
+#include "ProteinRenderer.h"
+#include "ProteinRendererSES.h"
+
+#include "ProteinData.h"
+#include "NetCDFData.h"
+
+#include "CallProteinData.h"
+#include "CallFrame.h"
+
+#include "CallAutoDescription.h"
 #include "ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
+
 #include "vislib/Log.h"
 #include "vislib/ThreadSafeStackTrace.h"
 
@@ -26,7 +49,7 @@ PROTEIN_API int mmplgPluginAPIVersion(void) {
  * mmplgPluginName
  */
 PROTEIN_API const char * mmplgPluginName(void) {
-    return "Protein"; // TODO: Change this name
+    return "Protein";
 }
 
 
@@ -34,7 +57,7 @@ PROTEIN_API const char * mmplgPluginName(void) {
  * mmplgPluginDescription
  */
 PROTEIN_API const char * mmplgPluginDescription(void) {
-    return "Template for MegaMol Plugins (TODO: CHANGE this description)";
+    return "Plugin for protein rendering (SFB716 D4)";
 }
 
 
@@ -55,7 +78,11 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    return 0; // TODO: Implement
+#if (defined(WITH_NETCDF) && (WITH_NETCDF))
+    return 5;
+#else
+    return 4;
+#endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
 }
 
 
@@ -63,7 +90,17 @@ PROTEIN_API int mmplgModuleCount(void) {
  * mmplgModuleDescription
  */
 PROTEIN_API void* mmplgModuleDescription(int idx) {
-    return NULL; // TODO: Implement
+    switch (idx) {
+        case 0: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinData>();
+        case 1: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRenderer>();
+        case 2: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRendererCartoon>();
+        case 3: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRendererSES>();
+#if (defined(WITH_NETCDF) && (WITH_NETCDF))
+        case 4: return new megamol::core::ModuleAutoDescription<megamol::core::protein::NetCDFData>();
+#endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
+        default: return NULL;
+    }
+    return NULL;
 }
 
 
@@ -71,7 +108,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 0; // TODO: Implement
+    return 2;
 }
 
 
@@ -79,7 +116,12 @@ PROTEIN_API int mmplgCallCount(void) {
  * mmplgCallDescription
  */
 PROTEIN_API void* mmplgCallDescription(int idx) {
-    return NULL; // TODO: Implement
+    switch (idx) {
+        case 0: return new megamol::core::CallAutoDescription<megamol::core::protein::CallProteinData>();
+        case 1: return new megamol::core::CallAutoDescription<megamol::core::protein::CallFrame>();
+        default: return NULL;
+    }
+    return NULL;
 }
 
 
