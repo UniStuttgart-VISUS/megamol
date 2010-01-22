@@ -1,12 +1,12 @@
 /*
- * MegaMolPlugin.cpp
+ * TriSoup.cpp
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "MegaMolPlugin.h"
+#include "TriSoup.h"
 #include "api/MegaMolCore.std.h"
 #include "ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
@@ -17,7 +17,7 @@
 /*
  * mmplgPluginAPIVersion
  */
-MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void) {
+TRISOUP_API int mmplgPluginAPIVersion(void) {
     return 100;
 }
 
@@ -25,15 +25,15 @@ MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgPluginName
  */
-MEGAMOLPLUGIN_API const char * mmplgPluginName(void) {
-    return "PluginTemplate"; // TODO: Change this name
+TRISOUP_API const char * mmplgPluginName(void) {
+    return "TriSoup"; // TODO: Change this name
 }
 
 
 /*
  * mmplgPluginDescription
  */
-MEGAMOLPLUGIN_API const char * mmplgPluginDescription(void) {
+TRISOUP_API const char * mmplgPluginDescription(void) {
     return "Template for MegaMol Plugins (TODO: CHANGE this description)";
 }
 
@@ -41,7 +41,7 @@ MEGAMOLPLUGIN_API const char * mmplgPluginDescription(void) {
 /*
  * mmplgCoreCompatibilityValue
  */
-MEGAMOLPLUGIN_API const void * mmplgCoreCompatibilityValue(void) {
+TRISOUP_API const void * mmplgCoreCompatibilityValue(void) {
     static const mmplgCompatibilityValues compRev = {
         sizeof(mmplgCompatibilityValues),
         MEGAMOL_CORE_COMP_REV,
@@ -54,7 +54,7 @@ MEGAMOLPLUGIN_API const void * mmplgCoreCompatibilityValue(void) {
 /*
  * mmplgModuleCount
  */
-MEGAMOLPLUGIN_API int mmplgModuleCount(void) {
+TRISOUP_API int mmplgModuleCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -62,7 +62,7 @@ MEGAMOLPLUGIN_API int mmplgModuleCount(void) {
 /*
  * mmplgModuleDescription
  */
-MEGAMOLPLUGIN_API void* mmplgModuleDescription(int idx) {
+TRISOUP_API void* mmplgModuleDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -70,7 +70,7 @@ MEGAMOLPLUGIN_API void* mmplgModuleDescription(int idx) {
 /*
  * mmplgCallCount
  */
-MEGAMOLPLUGIN_API int mmplgCallCount(void) {
+TRISOUP_API int mmplgCallCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -78,7 +78,7 @@ MEGAMOLPLUGIN_API int mmplgCallCount(void) {
 /*
  * mmplgCallDescription
  */
-MEGAMOLPLUGIN_API void* mmplgCallDescription(int idx) {
+TRISOUP_API void* mmplgCallDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -86,7 +86,7 @@ MEGAMOLPLUGIN_API void* mmplgCallDescription(int idx) {
 /*
  * mmplgConnectStatics
  */
-MEGAMOLPLUGIN_API bool mmplgConnectStatics(int which, void* value) {
+TRISOUP_API bool mmplgConnectStatics(int which, void* value) {
     static vislib::sys::Log::EchoTargetRedirect etr(NULL);
     switch (which) {
 
