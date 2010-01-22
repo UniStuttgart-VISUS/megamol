@@ -16,7 +16,7 @@ TargetName := TriSoup
 InputRootDir := $(InputDir)
 InputDirs := .
 IncludeDir := $(IncludeDir) $(vislibpath)/base/include $(vislibpath)/math/include \
-	$(vislibpath)/sys/include $(mmcorepath)
+	$(vislibpath)/sys/include $(vislibpath)/graphics/include $(mmcorepath)
 
 
 # Additional compiler flags
@@ -25,7 +25,7 @@ ExcludeFromBuild += ./dllmain.cpp
 
 
 # Libraries
-LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid
+LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL
 
 
 # Additional linker flags
@@ -66,14 +66,14 @@ $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: Makefile $(addpref
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) \
-	-lvislibsys$(BITS)d -lvislibmath$(BITS)d -lvislibbase$(BITS)d \
+	-lvislibgraphics$(BITS)d -lvislibsys$(BITS)d -lvislibmath$(BITS)d -lvislibbase$(BITS)d \
 	-o $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg
 
 $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) \
-	-lvislibsys$(BITS) -lvislibmath$(BITS) -lvislibbase$(BITS) \
+	-lvislibgraphics$(BITS) -lvislibsys$(BITS) -lvislibmath$(BITS) -lvislibbase$(BITS) \
 	-o $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 
 

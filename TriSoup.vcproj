@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -66,93 +66,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;if not exist $(OutputShaders) mkdir $(OutputShaders)&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;xcopy $(ProjectDir)\Shaders\*.* $(OutputShaders) /Y /F /V /G /K /E&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
-			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets=".\vislibVSProps\TargetRelease32.vsprops;.\ExtLibs.vsprops"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
-				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
-				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -205,7 +124,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -226,13 +145,94 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;if not exist $(OutputShaders) mkdir $(OutputShaders)&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;xcopy $(ProjectDir)\Shaders\*.* $(OutputShaders) /Y /F /V /G /K /E&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
+			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets=".\vislibVSProps\TargetRelease32.vsprops;.\ExtLibs.vsprops"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
+				RuntimeLibrary="2"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
+				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -286,7 +286,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -306,7 +306,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -361,7 +361,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -370,7 +370,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -387,10 +387,6 @@
 						CompileAsManaged="0"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\TriSoup.cpp"
-				>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
@@ -404,7 +400,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -412,7 +408,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -428,6 +424,14 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\TriSoup.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TriSoupRenderer.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -435,15 +439,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\TriSoup.h"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TriSoup.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TriSoupRenderer.h"
 				>
 			</File>
 		</Filter>

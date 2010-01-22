@@ -12,6 +12,7 @@
 #include "vislib/vislibversion.h"
 #include "vislib/Log.h"
 #include "vislib/ThreadSafeStackTrace.h"
+#include "TriSoupRenderer.h"
 
 
 /*
@@ -26,7 +27,7 @@ TRISOUP_API int mmplgPluginAPIVersion(void) {
  * mmplgPluginName
  */
 TRISOUP_API const char * mmplgPluginName(void) {
-    return "TriSoup"; // TODO: Change this name
+    return "TriSoup";
 }
 
 
@@ -34,7 +35,7 @@ TRISOUP_API const char * mmplgPluginName(void) {
  * mmplgPluginDescription
  */
 TRISOUP_API const char * mmplgPluginDescription(void) {
-    return "Template for MegaMol Plugins (TODO: CHANGE this description)";
+    return "Plugin for rendering TriSoup mesh data";
 }
 
 
@@ -55,7 +56,7 @@ TRISOUP_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 TRISOUP_API int mmplgModuleCount(void) {
-    return 0; // TODO: Implement
+    return 1;
 }
 
 
@@ -63,7 +64,11 @@ TRISOUP_API int mmplgModuleCount(void) {
  * mmplgModuleDescription
  */
 TRISOUP_API void* mmplgModuleDescription(int idx) {
-    return NULL; // TODO: Implement
+    if (idx == 0) {
+        return new megamol::core::ModuleAutoDescription<
+            megamol::core::misc::TriSoupRenderer>();
+    }
+    return NULL;
 }
 
 
@@ -71,7 +76,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 TRISOUP_API int mmplgCallCount(void) {
-    return 0; // TODO: Implement
+    return 0;
 }
 
 
@@ -79,7 +84,7 @@ TRISOUP_API int mmplgCallCount(void) {
  * mmplgCallDescription
  */
 TRISOUP_API void* mmplgCallDescription(int idx) {
-    return NULL; // TODO: Implement
+    return NULL;
 }
 
 
