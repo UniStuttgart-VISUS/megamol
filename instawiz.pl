@@ -6,6 +6,9 @@ use warnings 'all';
 my $HAVE_MD5 = 1;
 eval "use Digest::MD5 qw(md5_hex)";
 $HAVE_MD5 = 0  if ($@);
+my $HAVE_CWD = 1;
+eval "use Cwd";
+$HAVE_CWD = 0 if ($@);
 
 # constants
 my $ERR_ALREADY_INSTA = "plugin already instantiated, go away.";
@@ -86,7 +89,9 @@ close SOLUTION;
 autoEuthanize($ERR_ALREADY_INSTA) unless $ok == 1;
 
 # ask for parameters
-$filename = $ENV{'PWD'};
+if ($HAVE_CWD) {
+    $filename = getcwd();
+}
 $filename =~ s/.*[\/\\]//;
 print "Input the plugin filename [$filename]: ";
 chomp($temp = <STDIN>);
