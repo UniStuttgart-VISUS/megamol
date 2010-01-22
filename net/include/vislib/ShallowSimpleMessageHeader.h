@@ -25,8 +25,7 @@ namespace net {
     /**
      * TODO: comment class
      */
-    class ShallowSimpleMessageHeader 
-			: public AbstractSimpleMessageHeader<SimpleMessageHeaderData *> {
+    class ShallowSimpleMessageHeader : public AbstractSimpleMessageHeader {
 
     public:
 
@@ -34,6 +33,13 @@ namespace net {
 
         /** Dtor. */
         virtual ~ShallowSimpleMessageHeader(void);
+
+		/**
+		 * Provides direct access to the underlying SimpleMessageHeaderData.
+		 *
+		 * @return A pointer to the message header data.
+		 */
+		virtual const SimpleMessageHeaderData *PeekData(void) const;
 
 		/**
 		 * Assignment operator.
@@ -80,7 +86,13 @@ namespace net {
 	private:
 
 		/** Superclass typedef. */
-		typedef AbstractSimpleMessageHeader<SimpleMessageHeaderData *> Super;
+		typedef AbstractSimpleMessageHeader Super;
+
+		/** 
+		 * Pointer to the actual data. The object is not the owner of the memory
+		 * designated by this pointer.
+		 */
+		SimpleMessageHeaderData *data;
 
     };
     

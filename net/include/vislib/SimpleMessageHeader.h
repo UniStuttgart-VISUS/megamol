@@ -26,8 +26,7 @@ namespace net {
      * This class represents a message header consisting of 
 	 * SimpleMessageHeaderData.
      */
-	class SimpleMessageHeader 
-			: public AbstractSimpleMessageHeader<SimpleMessageHeaderData[1]> {
+	class SimpleMessageHeader : public AbstractSimpleMessageHeader {
 
     public:
 
@@ -58,6 +57,13 @@ namespace net {
 
         /** Dtor. */
         virtual ~SimpleMessageHeader(void);
+
+		/**
+		 * Provides direct access to the underlying SimpleMessageHeaderData.
+		 *
+		 * @return A pointer to the message header data.
+		 */
+		virtual const SimpleMessageHeaderData *PeekData(void) const;
 
 		/**
 		 * Assignment operator.
@@ -103,7 +109,10 @@ namespace net {
 	private:
 
 		/** Superclass typedef. */
-		typedef AbstractSimpleMessageHeader<SimpleMessageHeaderData[1]> Super;
+		typedef AbstractSimpleMessageHeader Super;
+
+		/** The actual header data. */
+		SimpleMessageHeaderData data;
 
     };
 

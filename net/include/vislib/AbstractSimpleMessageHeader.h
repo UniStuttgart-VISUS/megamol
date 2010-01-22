@@ -15,8 +15,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/assert.h"
-#include "vislib/IllegalParamException.h"
 #include "vislib/SimpleMessageHeaderData.h"
 #include "vislib/StackTrace.h"
 
@@ -26,12 +24,14 @@ namespace net {
 
 
     /**
-     * TODO: comment class
-	 *
-	 * The template parameter S must be either SimpleMessageHeaderData[1] or
-	 * SimpleMessageHeaderData *
+     * This class provides the interface for a message header in the simple 
+	 * network protocol implementation of VISlib. There are two subclasses of
+	 * this abstract class: SimpleMessageHeader is an implementation which
+	 * provides storage for the header data. ShallowSimpleMessageHeader does
+	 * not provide any storage, but takes a pointer to memory containing the
+	 * header data.
      */
-    template<class S> class AbstractSimpleMessageHeader {
+    class AbstractSimpleMessageHeader {
 
     public:
 
@@ -46,7 +46,7 @@ namespace net {
 		inline UINT32 GetBodySize(void) const {
 			VLSTACKTRACE("SimpleMessageHeader::GetBodySize", __FILE__, 
 				__LINE__);
-			return this->data->BodySize;
+			return this->PeekData()->BodySize;
 		}
 
 		/**
@@ -58,8 +58,6 @@ namespace net {
 		inline UINT32 GetHeaderSize(void) const {
 			VLSTACKTRACE("SimpleMessageHeader::GetHeaderSize", __FILE__, 
 				__LINE__);
-			// Note: As S is a pointer, we cannot do anything else here than
-			// hard-coding the header data type.
 			return sizeof(SimpleMessageHeaderData);
 		}
 
@@ -71,7 +69,7 @@ namespace net {
 		inline UINT32 GetMessageID(void) const {
 			VLSTACKTRACE("SimpleMessageHeader::GetMessageID", __FILE__, 
 				__LINE__);
-			return this->data->MessageID;
+			return this->PeekData()->MessageID;
 		}
 
 		/**
@@ -81,7 +79,7 @@ namespace net {
 		 */
 		inline bool HasBody(void) const {
 			VLSTACKTRACE("SimpleMessageHeader::HasBody", __FILE__, __LINE__);
-			return (this->data->BodySize > 0);
+			return (this->PeekData()->BodySize > 0);
 		}
 
 		/**
@@ -89,20 +87,14 @@ namespace net {
 		 *
 		 * @return A pointer to the message header data.
 		 */
-		inline SimpleMessageHeaderData *PeekData(void) {
-			VLSTACKTRACE("SimpleMessageHeader::PeekData", __FILE__, __LINE__);
-			return this->data;
-		}
+		virtual SimpleMessageHeaderData *PeekData(void);
 
 		/**
 		 * Provides direct access to the underlying SimpleMessageHeaderData.
 		 *
 		 * @return A pointer to the message header data.
 		 */
-		inline const SimpleMessageHeaderData *PeekData(void) const {
-			VLSTACKTRACE("SimpleMessageHeader::PeekData", __FILE__, __LINE__);
-			return this->data;
-		}
+		virtual const SimpleMessageHeaderData *PeekData(void) const = 0;
 
 		/**
 		 * Set the body size.
@@ -112,7 +104,7 @@ namespace net {
 		inline void SetBodySize(const UINT32 bodySize) {
 			VLSTACKTRACE("SimpleMessageHeader::SetBodySize", __FILE__, 
 				__LINE__);
-			this->data->BodySize = bodySize;
+			this->PeekData()->BodySize = bodySize;
 		}
 
 		/**
@@ -142,7 +134,8 @@ namespace net {
 		 *
 		 * @return *this
 		 */
-		AbstractSimpleMessageHeader& operator =(const SimpleMessageHeaderData& rhs);
+		AbstractSimpleMessageHeader& operator =(
+			const SimpleMessageHeaderData& rhs);
 
 		/**
 		 * Assignment operator.
@@ -151,7 +144,8 @@ namespace net {
 		 *
 		 * @return *this
 		 */
-		AbstractSimpleMessageHeader& operator =(const SimpleMessageHeaderData *rhs);
+		AbstractSimpleMessageHeader& operator =(
+			const SimpleMessageHeaderData *rhs);
 
 		/**
 		 * Test for equality.
@@ -182,118 +176,7 @@ namespace net {
         /** Ctor. */
         AbstractSimpleMessageHeader(void);
 
-		/** 
-		 * The message header data. This can be either a pointer to an external
-		 * piece of memory or an array of SimpleMessageHeaderData with exactly
-		 * one element.
-		 */
-		S data;
-
     };
-
-
-	/*
-	 * vislib::net::AbstractSimpleMessageHeader<S>::~AbstractSimpleMessageHeader
-	 */
-	template<class S>
-	AbstractSimpleMessageHeader<S>::~AbstractSimpleMessageHeader(void) {
-		VLSTACKTRACE("AbstractSimpleMessageHeader::"
-			"~AbstractSimpleMessageHeader", __FILE__, __LINE__);
-	}
-
-
-	/*
-	 * vislib::net::AbstractSimpleMessageHeader<S>::SetMessageID
-	 */
-	template<class S>
-	void vislib::net::AbstractSimpleMessageHeader<S>::SetMessageID(
-			const UINT32 messageID, bool isSystemID) {
-		VLSTACKTRACE("AbstractSimpleMessageHeader::SetMessageID", __FILE__, 
-			__LINE__);
-		if (isSystemID && (messageID < VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
-			throw IllegalParamException("messageID", __FILE__, __LINE__);
-		} else if (!isSystemID && (messageID >= VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
-			throw IllegalParamException("messageID", __FILE__, __LINE__);
-		}
-
-		this->data->MessageID = messageID;
-	}
-
-
-	/*
-	 * vislib::net::AbstractSimpleMessageHeader<S>::operator =
-	 */
-	template<class S>
-	AbstractSimpleMessageHeader<S>& AbstractSimpleMessageHeader<S>::operator =(
-			const AbstractSimpleMessageHeader& rhs) {
-		VLSTACKTRACE("AbstractSimpleMessageHeader::operator =", __FILE__, 
-			__LINE__);
-
-		if (this != &rhs) {
-			::memcpy(this->data, rhs.data, this->GetHeaderSize());
-		}
-
-		return *this;
-	}
-
-
-	/*
-	 * vislib::net::AbstractSimpleMessageHeader<S>::operator =
-	 */
-	template<class S>
-	AbstractSimpleMessageHeader<S>& AbstractSimpleMessageHeader<S>::operator =(
-			const SimpleMessageHeaderData& rhs) {
-		VLSTACKTRACE("AbstractSimpleMessageHeader::operator =", __FILE__, 
-			__LINE__);
-
-		if (this->data != &rhs) {
-			::memcpy(this->data, &rhs, this->GetHeaderSize());
-		}
-
-		return *this;
-	}
-
-
-	/*
-	 * vislib::net::AbstractSimpleMessageHeader<S>::operator =
-	 */
-	template<class S>
-	AbstractSimpleMessageHeader<S>& AbstractSimpleMessageHeader<S>::operator =(
-			const SimpleMessageHeaderData *rhs) {
-		VLSTACKTRACE("AbstractSimpleMessageHeader::operator =", __FILE__, 
-			__LINE__);
-		ASSERT(rhs != NULL);
-
-		if (this->data != rhs) {
-			::memcpy(this->data, rhs, this->GetHeaderSize());
-		}
-
-		return *this;
-	}
-
-
-	/*
-	 * vislib::net::AbstractSimpleMessageHeader<S>::operator ==
-	 */
-	template<class S>
-	bool AbstractSimpleMessageHeader<S>::operator ==(
-			const AbstractSimpleMessageHeader& rhs) const {
-		VLSTACKTRACE("AbstractSimpleMessageHeader::operator ==", __FILE__,
-			__LINE__);
-		return (::memcmp(this->data, rhs.data, this->GetHeaderSize()) 
-			== 0);
-		
-	}
-
-
-	/*
-	 * vislib::net::AbstractSimpleMessageHeader<S>::AbstractSimpleMessageHeader
-	 */
-	template<class S>
-	AbstractSimpleMessageHeader<S>::AbstractSimpleMessageHeader(void) {
-		VLSTACKTRACE("AbstractSimpleMessageHeader::AbstractSimpleMessageHeader",
-			__FILE__, __LINE__);
-	}
     
 } /* end namespace net */
 } /* end namespace vislib */
@@ -302,4 +185,3 @@ namespace net {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTSIMPLEMESSAGEHEADER_H_INCLUDED */
-
