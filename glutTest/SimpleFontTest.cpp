@@ -16,15 +16,86 @@
 #include "vislib/sysfunctions.h"
 #include "vislib/SimpleFont.h"
 
+//#include "vislib/OutlineFont.h"
+//#include "C:/dev/misc/Font2GL/data/times.inc"
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <cstdlib>
+#include <cfloat>
 
+
+/****************************************************************************/
+
+/*
+ * SimpleFontTest::BoxTest<T>::Draw
+ */
+template<class T> void SimpleFontTest::BoxTest<T>::Draw(void) const {
+    glTranslatef(0.0f, 0.0f, this->z);
+    glColor3ubv(this->col);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(this->x, this->y);
+    glVertex2f(this->x + this->w, this->y);
+    glVertex2f(this->x + this->w, this->y + this->h);
+    glVertex2f(this->x, this->y + this->h);
+    glEnd();
+    this->font->DrawString(this->x, this->y, this->w, this->h, this->size, this->flipY, this->txt, this->align);
+    glTranslatef(0.0f, 0.0f, -this->z);
+}
+
+
+/*
+ * SimpleFontTest::LineTest<T>::Draw
+ */
+template<class T> void SimpleFontTest::LineTest<T>::Draw(void) const {
+    using vislib::graphics::AbstractFont;
+    float w, h;
+    h = this->font->LineHeight(this->size) * this->font->BlockLines(FLT_MAX, this->txt);
+    if (this->flipY) {
+        h = -h;
+    }
+    w = this->font->LineWidth(this->size, this->txt);
+    float xo = 0.0f, yo = 0.0f;
+    glColor3ubv(this->col);
+    if ((this->align == AbstractFont::ALIGN_CENTER_BOTTOM)
+            || (this->align == AbstractFont::ALIGN_CENTER_MIDDLE)
+            || (this->align == AbstractFont::ALIGN_CENTER_TOP)) {
+        xo -= w * 0.5f;
+    } else if ((this->align == AbstractFont::ALIGN_RIGHT_BOTTOM)
+            || (this->align == AbstractFont::ALIGN_RIGHT_MIDDLE)
+            || (this->align == AbstractFont::ALIGN_RIGHT_TOP)) {
+        xo -= w;
+    }
+    if ((this->align == AbstractFont::ALIGN_CENTER_MIDDLE)
+            || (this->align == AbstractFont::ALIGN_LEFT_MIDDLE)
+            || (this->align == AbstractFont::ALIGN_RIGHT_MIDDLE)) {
+        yo -= h * 0.5f;
+    } else if ((this->align == AbstractFont::ALIGN_CENTER_BOTTOM)
+            || (this->align == AbstractFont::ALIGN_LEFT_BOTTOM)
+            || (this->align == AbstractFont::ALIGN_RIGHT_BOTTOM)) {
+        yo -= h;
+    }
+    xo += this->x;
+    yo += this->y;
+    glTranslatef(xo, yo, this->z);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(0.0f, 0.0f);
+    glVertex2f(w, 0.0f);
+    glVertex2f(w, h);
+    glVertex2f(0.0f, h);
+    glEnd();
+    glTranslatef(-xo, -yo, 0.0f);
+    this->font->DrawString(this->x, this->y, this->size, this->flipY, this->txt, this->align);
+    glTranslatef(0.0f, 0.0f, -this->z);
+}
+
+
+/****************************************************************************/
 
 /*
  * SimpleFontTest::SimpleFontTest
  */
-SimpleFontTest::SimpleFontTest(void) : AbstractGlutApp(), font(NULL) {
+SimpleFontTest::SimpleFontTest(void) : AbstractGlutApp(), tests(), font1(NULL) {
 
     this->camera.Parameters()->SetClip(0.1f, 7.0f);
     this->camera.Parameters()->SetFocalDistance(2.5f);
@@ -66,19 +137,66 @@ SimpleFontTest::~SimpleFontTest(void) {
  * SimpleFontTest::GLInit
  */
 int SimpleFontTest::GLInit(void) {
+    using vislib::graphics::AbstractFont;
+
     this->camera.Parameters()->SetView(
         vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
         vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
         vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
 
-    if (this->font == NULL) {
-            this->font = new vislib::graphics::gl::SimpleFont();
+    if (this->font1 == NULL) {
+        this->font1 = new vislib::graphics::gl::SimpleFont();
+        //this->font1 = new vislib::graphics::gl::OutlineFont(
+        //    vislib::graphics::gl::FontInfo_Times_New_Roman,
+        //    vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE);
     }
-    if (!this->font->Initialise()) return -2;
+    if (!this->font1->Initialise()) return -2;
+
+    vislib::StringA lorem("Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+    float z = 1.0f, s = 0.1f;
+    unsigned int r = 64, g = 128, b = 255;
+    this->tests.Add(new LineTest<char>(-1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, "TopLeft"));
+    this->tests.Add(new LineTest<char>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "TopCenter"));
+    this->tests.Add(new LineTest<char>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "TopRight"));
+    this->tests.Add(new LineTest<char>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "MiddleLeft"));
+    this->tests.Add(new LineTest<char>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, "MiddleCenter"));
+    this->tests.Add(new LineTest<char>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "MiddleRight"));
+    this->tests.Add(new LineTest<char>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "BottomLeft"));
+    this->tests.Add(new LineTest<char>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "BottomCenter"));
+    this->tests.Add(new LineTest<char>( 1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, "BottomRight"));
+    z -= 0.2f; r = 128; g = 192; b = 255; s = 0.2f;
+    this->tests.Add(new LineTest<char>(-1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, "Top\nLeft"));
+    this->tests.Add(new LineTest<char>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "Top\nCenter"));
+    this->tests.Add(new LineTest<char>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "Top\nRight"));
+    this->tests.Add(new LineTest<char>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "Middle\nLeft"));
+    this->tests.Add(new LineTest<char>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, "Middle\nCenter"));
+    this->tests.Add(new LineTest<char>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "Middle\nRight"));
+    this->tests.Add(new LineTest<char>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "Bottom\nLeft"));
+    this->tests.Add(new LineTest<char>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "Bottom\nCenter"));
+    this->tests.Add(new LineTest<char>( 1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, "Bottom\nRight"));
+    z -= 0.2f; r = 0; g = 255; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_TOP, vislib::StringA("TopLeft-Text: ") + lorem));
+    z -= 0.2f; r = 64; g = 255; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, vislib::StringA("TopCenter-Text: ") + lorem));
+    z -= 0.2f; r = 128; g = 255; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, vislib::StringA("TopRight-Text: ") + lorem));
+    z -= 0.2f; r = 192; g = 255; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, vislib::StringA("MiddleLeft-Text: ") + lorem));
+    z -= 0.2f; r = 255; g = 255; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, vislib::StringA("MiddleCenter-Text: ") + lorem));
+    z -= 0.2f; r = 255; g = 192; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, vislib::StringA("MiddleRight-Text: ") + lorem));
+    z -= 0.2f; r = 255; g = 128; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, vislib::StringA("BottomLeft-Text: ") + lorem));
+    z -= 0.2f; r = 255; g = 64; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, vislib::StringA("BottomCenter-Text: ") + lorem));
+    z -= 0.2f; r = 255; g = 0; b = 0; s = 0.15f;
+    this->tests.Add(new BoxTest<char>(-1.0f, -1.0f, 2.0f, 2.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_BOTTOM, vislib::StringA("BottomRight-Text: ") + lorem));
+
+    this->tests.Sort(AbstractTest::Compare);
 
     ::glEnable(GL_TEXTURE_2D);
     ::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-//    ::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
     return 0;
 }
@@ -88,10 +206,10 @@ int SimpleFontTest::GLInit(void) {
  * SimpleFontTest::GLDeinit
  */
 void SimpleFontTest::GLDeinit(void) {
-    if (this->font != NULL) {
-        this->font->Deinitialise();
-        delete this->font;
-        this->font = NULL;
+    if (this->font1 != NULL) {
+        this->font1->Deinitialise();
+        delete this->font1;
+        this->font1 = NULL;
     }
 }
 
@@ -178,9 +296,25 @@ void SimpleFontTest::Render(void) {
     glLoadIdentity();
     this->camera.glMultViewMatrix();
 
-    glScalef(0.7f, 0.7f, 0.7f);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_LINE_SMOOTH);
+
+    // find camera position in rotated user space for correct painters algorithm
+    double proj[16];
+    double view[16];
+    GLint win[4];
+    ::glGetDoublev(GL_PROJECTION_MATRIX, proj);
+    ::glGetDoublev(GL_MODELVIEW_MATRIX, view);
+    ::glGetIntegerv(GL_VIEWPORT, win);
+    vislib::math::Point<float, 3> camP(this->camera.Parameters()->EyePosition());
+    double wx, wy, wz;
+    ::gluProject(camP.X(), camP.Y(), camP.Z(), view, proj, win, &wx, &wy, &wz);
+
+    glScalef(0.6f, 0.6f, 0.6f);
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-    glRotatef(float(vislib::sys::GetTicksOfDay() % 3600) * 0.1f, 0.0f, 1.0f, 0.0f);
+    glRotatef(float(vislib::sys::GetTicksOfDay() % 36000) * 0.01f, 0.0f, 1.0f, 0.0f);
 
     glColor3ub(128, 128, 128);
     glBegin(GL_LINES);
@@ -210,75 +344,26 @@ void SimpleFontTest::Render(void) {
         glVertex3i( 1,  1,  1);
         glVertex3i(-1,  1, -1);
         glVertex3i( 1,  1, -1);
-
-        glVertex3i(0, -1, 0);
-        glVertex3i(0,  1, 0);
     glEnd();
+
+    ::glGetDoublev(GL_MODELVIEW_MATRIX, view);
+    double x, y, z;
+    ::gluUnProject(wx, wy, wz, view, proj, win, &x, &y, &z);
+
+    float camZ = static_cast<float>(z);
 
     glScalef(1.0f, -1.0f, 1.0f);
-    glBegin(GL_LINE_LOOP);
-        glColor3ub(255, 0, 0);
-        glVertex2i(-1, -1);
-        glColor3ub(64, 255, 64);
-        glVertex2i( 1, -1);
-        glVertex2i( 1,  1);
-        glVertex2i(-1,  1);
-    glEnd();
-
-    if (this->font != NULL) {
-        const char *text1 = "This is a demo text.";
-        const char *text2 = 
-            //"This is a much longer\ndemo text,\nto be used for testing the\n\nsoft wrapping\nof lines when drawing a string into an rectangluar area, and it also\ncontains a hard new line!";
-            "Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-
-        float w, h;
-        h = this->font->LineHeight();
-        w = this->font->LineWidth(text1);
-
-        this->font->SetSize(0.2f);
-
-        glColor4ub(64, 128, 255, 192);
-
-        glBegin(GL_LINE_LOOP);
-            glVertex2f(0.0f, 0.0f);
-            glVertex2f(w, 0.0f);
-            glVertex2f(w, -h);
-            glVertex2f(0.0f, -h);
-        glEnd();
-
-        this->font->DrawString(0.0f, 0.0f, true, text1
-            //, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE
-            //, vislib::graphics::AbstractFont::ALIGN_RIGHT_BOTTOM
-            );
-
-        glColor3ub(0, 255, 0);
-        this->font->DrawString(-1.0f, -1.0f, 2.0f, 2.0f, 0.15f, true, text2
-            , vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE
-            //, vislib::graphics::AbstractFont::ALIGN_RIGHT_BOTTOM
-            );
-
-        //unsigned int lc = this->font->BlockLines(2.0f, text2);
-        //ASSERT(lc == 9);
-
-        //glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        ////glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-        ////glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        //glBindTexture(GL_TEXTURE_2D, this->font->BlockLines(0.0f, "a"));
-
-        //glBegin(GL_QUADS);
-        //    glTexCoord2f(0.0f, 0.0f);
-        //    glVertex2f(-0.9f, -0.9f);
-        //    glTexCoord2f(1.0f, 0.0f);
-        //    glVertex2f( 0.9f, -0.9f);
-        //    glTexCoord2f(1.0f, 1.0f);
-        //    glVertex2f( 0.9f,  0.9f);
-        //    glTexCoord2f(0.0f, 1.0f);
-        //    glVertex2f(-0.9f,  0.9f);
-        //glEnd();
-
-        //glBindTexture(GL_TEXTURE_2D, 0);
-        //glDisable(GL_BLEND);
+    SIZE_T l = this->tests.Count();
+    for (SIZE_T i = 0; i < l; i++) {
+        if (this->tests[i]->Z() >= camZ) {
+            this->tests[i]->Draw();
+        }
+    }
+    for (SIZE_T i = l; i > 0;) {
+        i--;
+        if (this->tests[i]->Z() < camZ) {
+            this->tests[i]->Draw();
+        }
     }
 
     glFlush();
