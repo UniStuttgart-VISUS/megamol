@@ -371,6 +371,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\OutlineFont.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ShaderSource.cpp"
 				>
 			</File>
@@ -442,6 +446,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\OpenGLVISLogo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\OutlineFont.h"
 				>
 			</File>
 			<File
