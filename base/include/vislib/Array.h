@@ -90,13 +90,15 @@ namespace vislib {
         Array(const SIZE_T capacity = DEFAULT_CAPACITY);
 
         /**
-         * Create a new array with the specified initial capacity and
-         * use 'element' as default value for all elements.
+         * Create a new array with the specified initial capacity, set the
+         * number of elemenst to that value and use 'element' as default value
+         * for all these elements.
          *
-         * @param capacity The initial capacity of the array.
-         * @param element  The default value to set.
+         * @param count   The initial capacity of the array and number of
+         *                elemnets.
+         * @param element The default value to set.
          */
-        Array(const SIZE_T capacity, const T& element);
+        Array(const SIZE_T count, const T& element);
 
         /**
          * Clone 'rhs'.
@@ -578,11 +580,11 @@ namespace vislib {
      * vislib::Array<T, L, C>::Array
      */
     template<class T, class L, class C>
-    Array<T, L, C>::Array(const SIZE_T capacity, const T& element)
-            : OrderedCollection<T, L>(), capacity(0), count(capacity),
+    Array<T, L, C>::Array(const SIZE_T count, const T& element)
+            : OrderedCollection<T, L>(), capacity(0), count(count),
             elements(NULL) {
         this->Lock();
-        this->AssertCapacity(capacity);
+        this->AssertCapacity(count);
         for (SIZE_T i = 0; i < this->count; i++) {
             this->elements[i] = element;
         }
