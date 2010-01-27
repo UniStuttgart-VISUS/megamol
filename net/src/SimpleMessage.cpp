@@ -14,11 +14,11 @@
  * vislib::net::SimpleMessage::SimpleMessage
  */
 vislib::net::SimpleMessage::SimpleMessage(const SIZE_T bodySize) : Super() {
-	VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
-	// This will force the superclass to (i) allocate memory for the message
-	// header and the body itself and (ii) to update the message header pointer.
-	Super::assertStorage(bodySize);
-	this->GetHeader().SetBodySize(bodySize);
+    VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
+    // This will force the superclass to (i) allocate memory for the message
+    // header and the body itself and (ii) to update the message header pointer.
+    Super::assertStorage(bodySize);
+    this->GetHeader().SetBodySize(bodySize);
 }
 
 
@@ -26,15 +26,15 @@ vislib::net::SimpleMessage::SimpleMessage(const SIZE_T bodySize) : Super() {
  * vislib::net::SimpleMessage::SimpleMessage
  */
 vislib::net::SimpleMessage::SimpleMessage(
-	const AbstractSimpleMessageHeader& header, const void *body) : Super() {
-	VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
+    const AbstractSimpleMessageHeader& header, const void *body) : Super() {
+    VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
 
-	Super::assertStorage(header.GetBodySize());
-	this->SetHeader(header);
+    Super::assertStorage(header.GetBodySize());
+    this->SetHeader(header);
 
-	if (body != NULL) {
-		this->SetBody(body);
-	}
+    if (body != NULL) {
+        this->SetBody(body);
+    }
 }
 
 
@@ -42,8 +42,8 @@ vislib::net::SimpleMessage::SimpleMessage(
  * vislib::net::SimpleMessage::SimpleMessage
  */
 vislib::net::SimpleMessage::SimpleMessage(const SimpleMessage& rhs) : Super() {
-	VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
-	*this = rhs;
+    VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
+    *this = rhs;
 }
 
 
@@ -51,9 +51,9 @@ vislib::net::SimpleMessage::SimpleMessage(const SimpleMessage& rhs) : Super() {
  * vislib::net::SimpleMessage::SimpleMessage
  */
 vislib::net::SimpleMessage::SimpleMessage(const AbstractSimpleMessage& rhs) 
-		: Super() {
-	VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
-	*this = rhs;
+        : Super() {
+    VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
+    *this = rhs;
 }
 
 
@@ -69,9 +69,9 @@ vislib::net::SimpleMessage::~SimpleMessage(void) {
  * vislib::net::SimpleMessage::assertStorage
  */
 bool vislib::net::SimpleMessage::assertStorage(void *& outStorage, 
-		const SIZE_T size) {
-	VLSTACKTRACE("SimpleMessage::assertStorage", __FILE__, __LINE__);
-	bool retval = this->storage.AssertSize(size, false);
-	outStorage = static_cast<void *>(this->storage);
-	return retval;
+        const SIZE_T size) {
+    VLSTACKTRACE("SimpleMessage::assertStorage", __FILE__, __LINE__);
+    bool retval = this->storage.AssertSize(size, false);
+    outStorage = static_cast<void *>(this->storage);
+    return retval;
 }

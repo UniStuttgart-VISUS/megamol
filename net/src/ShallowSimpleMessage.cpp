@@ -12,18 +12,18 @@
  * vislib::net::ShallowSimpleMessage::ShallowSimpleMessage
  */
 vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
-		void *storage, const SIZE_T cntStorage) 
-		: Super(), cntStorage(cntStorage), storage(storage) {
+        void *storage, const SIZE_T cntStorage) 
+        : Super(), cntStorage(cntStorage), storage(storage) {
     VLSTACKTRACE("ShallowSimpleMessage::ShallowSimpleMessage", 
-		__FILE__, __LINE__);
-	ASSERT(storage != NULL);
-	ASSERT((cntStorage == 0) 
-		|| (cntStorage >= sizeof(SimpleMessageHeaderData)));
+        __FILE__, __LINE__);
+    ASSERT(storage != NULL);
+    ASSERT((cntStorage == 0) 
+        || (cntStorage >= sizeof(SimpleMessageHeaderData)));
 
-	// Note: Cannot do that in initialiser!
-	if (this->cntStorage == 0) {
-		this->cntStorage = this->GetMessageSize();
-	}
+    // Note: Cannot do that in initialiser!
+    if (this->cntStorage == 0) {
+        this->cntStorage = this->GetMessageSize();
+    }
 }
 
 
@@ -32,7 +32,7 @@ vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
  */
 vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
     VLSTACKTRACE("ShallowSimpleMessage::~ShallowSimpleMessage",
-		__FILE__, __LINE__);
+        __FILE__, __LINE__);
 }
 
 
@@ -40,13 +40,13 @@ vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
  * vislib::net::ShallowSimpleMessage::SetStorage
  */
 void vislib::net::ShallowSimpleMessage::SetStorage(void *storage, 
-		const SIZE_T cntStorage) {
+        const SIZE_T cntStorage) {
     VLSTACKTRACE("ShallowSimpleMessage::SetStorage", __FILE__, __LINE__);
-	ASSERT(storage != NULL);
-	ASSERT((cntStorage == 0) 
-		|| (cntStorage >= sizeof(SimpleMessageHeaderData)));
-	
-	// Note: Order of assignments is important!
-	this->storage = storage;
-	this->cntStorage = (cntStorage > 0) ? cntStorage : this->GetMessageSize();
+    ASSERT(storage != NULL);
+    ASSERT((cntStorage == 0) 
+        || (cntStorage >= sizeof(SimpleMessageHeaderData)));
+    
+    // Note: Order of assignments is important!
+    this->storage = storage;
+    this->cntStorage = (cntStorage > 0) ? cntStorage : this->GetMessageSize();
 }
