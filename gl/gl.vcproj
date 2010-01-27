@@ -460,6 +460,10 @@
 				RelativePath=".\include\vislib\SimpleFont.h"
 				>
 			</File>
+			<File
+				RelativePath=".\include\vislib\Verdana.inc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

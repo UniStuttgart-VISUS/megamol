@@ -45,13 +45,13 @@ private:
     protected:
         float x, y, z;
         unsigned char col[3];
-        vislib::graphics::AbstractFont *font;
+        vislib::graphics::AbstractFont *& font;
         float size;
         bool flipY;
         vislib::graphics::AbstractFont::Alignment align;
         AbstractTest(float x, float y, float z, unsigned char colr, unsigned char colg, unsigned char colb,
-                vislib::graphics::AbstractFont *font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align)
-                : x(x), y(y), z(z), font(font), size(size), flipY(flipY), align(align) {
+                vislib::graphics::AbstractFont *& font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align)
+                : x(x), y(y), z(z), font(font), size(size), flipY(flipY), align(align), active(true) {
             this->col[0] = colr;
             this->col[1] = colg;
             this->col[2] = colb;
@@ -75,6 +75,7 @@ private:
             return this->z;
         }
         virtual void Draw(void) const = 0;
+        bool active;
     };
 
     template<class T> class BoxTest : public AbstractTest {
@@ -83,7 +84,7 @@ private:
         vislib::String<vislib::CharTraits<T> > txt;
     public:
         BoxTest(float x, float y, float w, float h, float z, unsigned char colr, unsigned char colg, unsigned char colb,
-                vislib::graphics::AbstractFont *font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align,
+                vislib::graphics::AbstractFont *& font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align,
                 const vislib::String<vislib::CharTraits<T> >& txt)
                 : AbstractTest(x, y, z, colr, colg, colb, font, size, flipY, align), w(w), h(h), txt(txt) {
         }
@@ -97,7 +98,7 @@ private:
         vislib::String<vislib::CharTraits<T> > txt;
     public:
         LineTest(float x, float y, float z, unsigned char colr, unsigned char colg, unsigned char colb,
-                vislib::graphics::AbstractFont *font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align,
+                vislib::graphics::AbstractFont *& font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align,
                 const vislib::String<vislib::CharTraits<T> >& txt)
                 : AbstractTest(x, y, z, colr, colg, colb, font, size, flipY, align), txt(txt) {
         }
@@ -114,6 +115,7 @@ private:
     vislib::PtrArray<AbstractTest> tests;
 
     vislib::graphics::AbstractFont *font1;
+    bool rot;
 
 };
 

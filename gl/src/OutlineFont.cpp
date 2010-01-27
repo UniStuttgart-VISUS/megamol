@@ -7,7 +7,7 @@
 
 #include "vislib/OutlineFont.h"
 #include <cfloat>
-#include <GL/GL.h>
+#include <GL/gl.h>
 #include "vislib/CharTraits.h"
 #include "vislib/memutils.h"
 #include "vislib/UTF8Encoder.h"

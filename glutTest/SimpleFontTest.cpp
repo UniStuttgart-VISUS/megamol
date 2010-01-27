@@ -16,8 +16,8 @@
 #include "vislib/sysfunctions.h"
 #include "vislib/SimpleFont.h"
 
-//#include "vislib/OutlineFont.h"
-//#include "C:/dev/misc/Font2GL/data/times.inc"
+#include "vislib/OutlineFont.h"
+#include "vislib/Verdana.inc"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -31,6 +31,7 @@
  * SimpleFontTest::BoxTest<T>::Draw
  */
 template<class T> void SimpleFontTest::BoxTest<T>::Draw(void) const {
+    if (!this->active || (this->font == NULL)) return;
     glTranslatef(0.0f, 0.0f, this->z);
     glColor3ubv(this->col);
     glBegin(GL_LINE_LOOP);
@@ -50,6 +51,7 @@ template<class T> void SimpleFontTest::BoxTest<T>::Draw(void) const {
 template<class T> void SimpleFontTest::LineTest<T>::Draw(void) const {
     using vislib::graphics::AbstractFont;
     float w, h;
+    if (!this->active || (this->font == NULL)) return;
     h = this->font->LineHeight(this->size) * this->font->BlockLines(FLT_MAX, this->txt);
     if (this->flipY) {
         h = -h;
@@ -95,7 +97,7 @@ template<class T> void SimpleFontTest::LineTest<T>::Draw(void) const {
 /*
  * SimpleFontTest::SimpleFontTest
  */
-SimpleFontTest::SimpleFontTest(void) : AbstractGlutApp(), tests(), font1(NULL) {
+SimpleFontTest::SimpleFontTest(void) : AbstractGlutApp(), tests(), font1(NULL), rot(true) {
 
     this->camera.Parameters()->SetClip(0.1f, 7.0f);
     this->camera.Parameters()->SetFocalDistance(2.5f);
@@ -145,10 +147,9 @@ int SimpleFontTest::GLInit(void) {
         vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
 
     if (this->font1 == NULL) {
-        this->font1 = new vislib::graphics::gl::SimpleFont();
-        //this->font1 = new vislib::graphics::gl::OutlineFont(
-        //    vislib::graphics::gl::FontInfo_Times_New_Roman,
-        //    vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE);
+        this->font1 = new vislib::graphics::gl::OutlineFont(
+            vislib::graphics::gl::FontInfo_Verdana,
+            vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE);
     }
     if (!this->font1->Initialise()) return -2;
 
@@ -231,6 +232,63 @@ void SimpleFontTest::OnResize(unsigned int w, unsigned int h) {
 bool SimpleFontTest::OnKeyPress(unsigned char key, int x, int y) {
     this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
         static_cast<vislib::graphics::ImageSpaceType>(y), true);
+
+    switch (key) {
+        case 'f': {
+            vislib::graphics::AbstractFont *f = NULL;
+            if (dynamic_cast<vislib::graphics::gl::SimpleFont*>(this->font1) != NULL) {
+                f = new vislib::graphics::gl::OutlineFont(
+                    vislib::graphics::gl::FontInfo_Verdana,
+                    vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE);
+            } else {
+                f = new vislib::graphics::gl::SimpleFont();
+            }
+            if (f != NULL) {
+                if (f->Initialise()) {
+                    delete this->font1;
+                    this->font1 = f;
+                    printf("Font replaced\n");
+                } else {
+                    printf("Failed to initialize new font\n");
+                }
+            } else {
+                printf("Failed to create new font\n");
+            }
+            return true;
+        }
+        case '0':
+            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+                this->tests[i]->active = true;
+            }
+            return true;
+        case '1':
+            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+                this->tests[i]->active = (i == 0);
+            }
+            return true;
+        case '+':
+            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+                if (this->tests[i]->active) {
+                    this->tests[i]->active = false;
+                    this->tests[(i + 1) % this->tests.Count()]->active = true;
+                    break;
+                }
+            }
+            return true;
+        case '-':
+            for (SIZE_T i = 0; i < this->tests.Count(); i++) {
+                if (this->tests[i]->active) {
+                    this->tests[i]->active = false;
+                    this->tests[(i == 0) ? (this->tests.Count() - 1) : (i - 1)]->active = true;
+                    break;
+                }
+            }
+            return true;
+        case 'r':
+            rot = !rot;
+            return true;
+    }
+
     return false; // retval;
 }
 
@@ -300,6 +358,7 @@ void SimpleFontTest::Render(void) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_LINE_SMOOTH);
+    glLineWidth(1.1f);
 
     // find camera position in rotated user space for correct painters algorithm
     double proj[16];
@@ -314,7 +373,9 @@ void SimpleFontTest::Render(void) {
 
     glScalef(0.6f, 0.6f, 0.6f);
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-    glRotatef(float(vislib::sys::GetTicksOfDay() % 36000) * 0.01f, 0.0f, 1.0f, 0.0f);
+    if (rot) {
+        glRotatef(float(vislib::sys::GetTicksOfDay() % 36000) * 0.01f, 0.0f, 1.0f, 0.0f);
+    }
 
     glColor3ub(128, 128, 128);
     glBegin(GL_LINES);
