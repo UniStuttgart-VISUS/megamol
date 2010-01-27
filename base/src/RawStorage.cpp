@@ -64,7 +64,7 @@ void *vislib::RawStorage::Append(const void *data, const SIZE_T cntData) {
  * vislib::RawStorage::AssertSize
  */
 bool vislib::RawStorage::AssertSize(const SIZE_T size, const bool keepContent) {
-    if (this->size < size) {
+	if (!this->TestSize(size)) {
         this->EnforceSize(size, keepContent);
         return true;
 

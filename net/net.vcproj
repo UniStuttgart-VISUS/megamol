@@ -296,6 +296,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AbstractSimpleMessage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\AbstractSimpleMessageHeader.cpp"
 				>
 			</File>
@@ -380,6 +384,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ShallowSimpleMessage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ShallowSimpleMessageHeader.cpp"
 				>
 			</File>
@@ -446,6 +454,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\AbstractSimpleMessage.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\AbstractSimpleMessageHeader.h"
 				>
 			</File>
@@ -495,6 +507,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\NetworkInformation.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ShallowSimpleMessage.h"
 				>
 			</File>
 			<File

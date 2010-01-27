@@ -94,7 +94,7 @@ namespace vislib {
         }
 
         /**
-         * Answer the raw memory block at and offset of 'offset' bytes as 
+         * Answer the raw memory block at an offset of 'offset' bytes as 
          * pointer to T. The object remains owner of the memory designated 
          * by the pointer returned.
          *
@@ -108,7 +108,7 @@ namespace vislib {
         }
 
         /**
-         * Answer the raw memory block at and offset of 'offset' bytes as 
+         * Answer the raw memory block at an offset of 'offset' bytes as 
          * pointer to T. The object remains owner of the memory designated 
          * by the pointer returned.
          *
@@ -195,6 +195,18 @@ namespace vislib {
         inline bool IsEmpty(void) const {
             return (this->size == 0);
         }
+
+        /**
+         * Answer whether the object has at least 'size' bytes.
+         *
+         * @param size The minimum size to be tested.
+         *
+         * @return true, if the memory the memory block is 'size' bytes or larger,
+		 *         false otherwise.
+         */
+		inline bool TestSize(const SIZE_T size) {
+			return (this->size >= size);
+		}
 
         /**
          * Sets the whole allocated memory to zero.

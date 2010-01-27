@@ -41,6 +41,13 @@ namespace net {
 		SimpleMessageHeader(const SimpleMessageHeader& rhs);
 
 		/**
+		 * Clone 'rhs'.
+		 *
+		 * @param rhs The object to be cloned. 
+		 */
+		SimpleMessageHeader(const AbstractSimpleMessageHeader& rhs);
+
+		/**
 		 * Assign the given header data to this message header.
 		 *
 		 * @param data The message header data.
@@ -73,6 +80,20 @@ namespace net {
 		 * @return *this
 		 */
 		inline SimpleMessageHeader& operator =(const SimpleMessageHeader& rhs) {
+			VLSTACKTRACE("SimpleMessageHeader::operator =", __FILE__, __LINE__);
+			Super::operator =(rhs);
+			return *this;
+		}
+
+		/**
+		 * Assignment operator.
+		 *
+		 * @param The right hand side operand.
+		 *
+		 * @return *this
+		 */
+		inline SimpleMessageHeader& operator =(
+				const AbstractSimpleMessageHeader& rhs) {
 			VLSTACKTRACE("SimpleMessageHeader::operator =", __FILE__, __LINE__);
 			Super::operator =(rhs);
 			return *this;
@@ -124,4 +145,3 @@ namespace net {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_SIMPLEMESSAGEHEADER_H_INCLUDED */
-

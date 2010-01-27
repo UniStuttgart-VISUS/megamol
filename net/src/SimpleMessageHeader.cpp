@@ -34,6 +34,17 @@ vislib::net::SimpleMessageHeader::SimpleMessageHeader(
  * vislib::net::SimpleMessageHeader::SimpleMessageHeader
  */
 vislib::net::SimpleMessageHeader::SimpleMessageHeader(
+		const AbstractSimpleMessageHeader& rhs) : Super() {
+	VLSTACKTRACE("SimpleMessageHeader::SimpleMessageHeader", __FILE__, 
+		__LINE__);
+	*this = rhs;
+}
+
+
+/*
+ * vislib::net::SimpleMessageHeader::SimpleMessageHeader
+ */
+vislib::net::SimpleMessageHeader::SimpleMessageHeader(
 		const SimpleMessageHeaderData& data) : Super() {
 	VLSTACKTRACE("SimpleMessageHeader::SimpleMessageHeader", __FILE__, 
 		__LINE__);
