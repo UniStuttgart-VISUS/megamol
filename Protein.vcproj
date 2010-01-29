@@ -449,6 +449,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SolPathDataCall.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SolPathDataSource.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SolPathRenderer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -552,6 +564,18 @@
 			</File>
 			<File
 				RelativePath=".\RMS.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SolPathDataCall.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SolPathDataSource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SolPathRenderer.h"
 				>
 			</File>
 			<File
