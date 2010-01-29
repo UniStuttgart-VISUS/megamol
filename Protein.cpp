@@ -36,6 +36,10 @@
 #include "vislib/Log.h"
 #include "vislib/ThreadSafeStackTrace.h"
 
+#include "SolPathDataCall.h"
+#include "SolPathDataSource.h"
+#include "SolPathRenderer.h"
+
 
 /*
  * mmplgPluginAPIVersion
@@ -79,9 +83,9 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  */
 PROTEIN_API int mmplgModuleCount(void) {
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-    return 5;
+    return 7;
 #else
-    return 4;
+    return 6;
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
 }
 
@@ -95,8 +99,10 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 1: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRenderer>();
         case 2: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRendererCartoon>();
         case 3: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRendererSES>();
+        case 4: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathDataSource>();
+        case 5: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathRenderer>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 4: return new megamol::core::ModuleAutoDescription<megamol::core::protein::NetCDFData>();
+        case 6: return new megamol::core::ModuleAutoDescription<megamol::core::protein::NetCDFData>();
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
         default: return NULL;
     }
@@ -108,7 +114,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 2;
+    return 3;
 }
 
 
@@ -119,6 +125,7 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
     switch (idx) {
         case 0: return new megamol::core::CallAutoDescription<megamol::core::protein::CallProteinData>();
         case 1: return new megamol::core::CallAutoDescription<megamol::core::protein::CallFrame>();
+        case 2: return new megamol::core::CallAutoDescription<megamol::protein::SolPathDataCall>();
         default: return NULL;
     }
     return NULL;
