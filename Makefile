@@ -15,8 +15,8 @@ TargetName := TriSoup
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
 InputDirs := .
-IncludeDir := $(IncludeDir) $(vislibpath)/base/include $(vislibpath)/math/include \
-	$(vislibpath)/sys/include $(vislibpath)/graphics/include $(mmcorepath)
+IncludeDir := $(IncludeDir) $(mmcorepath)
+VISlibs := graphics sys math base
 
 
 # Additional compiler flags
@@ -39,6 +39,10 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.d, $(CPP_SRC
 	$(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.d, $(CPP_SRCS)))
 CPP_D_OBJS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 CPP_R_OBJS := $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+
+IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
+DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
+ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
@@ -65,15 +69,13 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg: "
 	@tput sgr0
-	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) \
-	-lvislibgraphics$(BITS)d -lvislibsys$(BITS)d -lvislibmath$(BITS)d -lvislibbase$(BITS)d \
+	$(Q)$(LINK) $(LDFLAGS) $(DebugLinkerFlags) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) \
 	-o $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg
 
 $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg: "
 	@tput sgr0
-	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) \
-	-lvislibgraphics$(BITS) -lvislibsys$(BITS) -lvislibmath$(BITS) -lvislibbase$(BITS) \
+	$(Q)$(LINK) $(LDFLAGS) $(ReleaseLinkerFlags) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) \
 	-o $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 
 
