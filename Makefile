@@ -15,10 +15,8 @@ OutDir := lib
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
 InputDirs := . api job misc moldyn param special utility utility/xml view vismol2
-IncludeDir := $(IncludeDir) $(vislibpath)/base/include $(vislibpath)/math/include \
-	$(vislibpath)/sys/include $(vislibpath)/graphics/include $(vislibpath)/gl/include \
-	$(vislibpath)/net/include $(vislibpath)/cluster/include \
-	$(expatpath)/include
+IncludeDir := $(IncludeDir) $(expatpath)/include
+VISlibs := cluster net gl graphics sys math base
 
 
 # Additional compiler flags
@@ -42,6 +40,10 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.d, $(CPP_SRC
 	$(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.d, $(CPP_SRCS)))
 CPP_D_OBJS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 CPP_R_OBJS := $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+
+IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
+DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
+ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
@@ -100,7 +102,6 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(DebugLinkerFlags) \
-	-lvislibgl$(BITS)d -lvislibgraphics$(BITS)d -lvislibcluster$(BITS)d -lvislibnet$(BITS)d -lvislibsys$(BITS)d -lvislibmath$(BITS)d -lvislibbase$(BITS)d \
 	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
@@ -110,7 +111,6 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(ReleaseLinkerFlags) \
-	-lvislibgl$(BITS) -lvislibgraphics$(BITS) -lvislibcluster$(BITS) -lvislibnet$(BITS) -lvislibsys$(BITS) -lvislibmath$(BITS) -lvislibbase$(BITS) \
 	-o $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
