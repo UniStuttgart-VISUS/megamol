@@ -28,7 +28,7 @@ namespace net {
      * header and the message body. It is normally recommended using this
      * message class.
      */
-    class SimpleMessage : AbstractSimpleMessage {
+    class SimpleMessage : public AbstractSimpleMessage {
 
     public:
 
@@ -72,6 +72,12 @@ namespace net {
 
         /** Dtor. */
         virtual ~SimpleMessage(void);
+
+        /**
+         * Trim the storage of the message to hold the actual size of the
+         * header and the current content.
+         */
+        void Trim(void);
 
         /**
          * Assignment operator.

@@ -38,7 +38,7 @@ namespace net {
      *
      * The class will never release the user-defined memory.
      */
-    class ShallowSimpleMessage : AbstractSimpleMessage {
+    class ShallowSimpleMessage : public AbstractSimpleMessage {
 
     public:
 

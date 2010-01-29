@@ -33,7 +33,7 @@ namespace vislib {
      * TODO: Remove default use of 'NullLockable' as soon as all collections
      *       have been fixed.
      */
-    template<class T, class L = NullLockable> class Collection: public L {
+    template<class T, class L = NullLockable> class Collection : public L {
 
     public:
 
@@ -123,11 +123,33 @@ namespace vislib {
         virtual bool IsEmpty(void) const = 0;
 
         /**
+         * Acquires the lock of the collection.
+         *
+         * Implementation note: This method is required to emulate a mutable 
+         * lock. We do not use a mutable member to avoid additional memory
+         * used in non-synchronised collections.
+         */
+        VISLIB_FORCEINLINE void Lock(void) const {
+            const_cast<L *>(static_cast<const L *>(this))->Lock();
+        }
+
+        /**
          * Remove all elements that are equal to 'element' from the collection.
          *
          * @param element The element to be removed.
          */
         virtual void RemoveAll(const T& element) = 0;
+
+        /**
+         * Releases the lock of the collection
+         *
+         * Implementation note: This method is required to emulate a mutable 
+         * lock. We do not use a mutable member to avoid additional memory
+         * used in non-synchronised collections.
+         */
+        VISLIB_FORCEINLINE void Unlock(void) const {
+            const_cast<L *>(static_cast<const L *>(this))->Unlock();
+        }
 
     protected:
 

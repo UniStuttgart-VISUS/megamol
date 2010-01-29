@@ -11,6 +11,7 @@
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/PeerDisconnectedException.h"
 #include "vislib/SocketException.h"
 #include "vislib/StackTrace.h"
 #include "vislib/Trace.h"
@@ -184,7 +185,17 @@ void vislib::net::TcpCommChannel::Connect(const IPEndPoint& address) {
 SIZE_T vislib::net::TcpCommChannel::Receive(void *outData, 
         const SIZE_T cntBytes, const INT timeout, const bool forceReceive) {
     VLSTACKTRACE("TcpCommChannel::Receive", __FILE__, __LINE__);
-    return this->socket.Receive(outData, cntBytes, timeout, 0, forceReceive);
+    SIZE_T retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
+        forceReceive);
+
+    if (retval == 0) {
+        throw PeerDisconnectedException(
+            PeerDisconnectedException::FormatMessageForLocalEndpoint(
+            this->socket.GetLocalEndPoint().ToStringW().PeekBuffer()), 
+            __FILE__, __LINE__);
+    }
+
+    return retval;
 }
 
 

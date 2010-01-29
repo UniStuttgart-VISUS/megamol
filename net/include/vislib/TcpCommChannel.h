@@ -170,6 +170,8 @@ namespace net {
          *
          * @return The number of bytes acutally received.
          *
+         * @throws PeerDisconnectedException In case the peer node did 
+         *                                   disconnect gracefully.
          * @throws SocketException In case the operation fails.
          */
         virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,

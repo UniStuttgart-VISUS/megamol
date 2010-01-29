@@ -42,7 +42,7 @@ namespace vislib {
          * This implementation does nothing and therefore object using this
          * lockable are not threadsafe.
          */
-        VISLIB_FORCEINLINE void Lock(void) const {
+        VISLIB_FORCEINLINE void Lock(void) {
             // intentionally empty
         }
 
@@ -53,7 +53,7 @@ namespace vislib {
          * This implementation does nothing and therefore object using this
          * lockable are not threadsafe.
          */
-        VISLIB_FORCEINLINE void Unlock(void) const {
+        VISLIB_FORCEINLINE void Unlock(void) {
             // intentionally empty
         }
 

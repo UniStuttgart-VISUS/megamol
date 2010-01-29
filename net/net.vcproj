@@ -384,6 +384,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PeerDisconnectedException.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ShallowSimpleMessage.cpp"
 				>
 			</File>
@@ -393,6 +397,14 @@
 			</File>
 			<File
 				RelativePath=".\src\SimpleMessage.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SimpleMessageDispatcher.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SimpleMessageDispatchListener.cpp"
 				>
 			</File>
 			<File
@@ -510,6 +522,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\PeerDisconnectedException.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\ShallowSimpleMessage.h"
 				>
 			</File>
@@ -519,6 +535,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\SimpleMessage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SimpleMessageDispatcher.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\SimpleMessageDispatchListener.h"
 				>
 			</File>
 			<File

@@ -7,6 +7,8 @@
 
 #include "vislib/SimpleMessage.h"
 
+#include <climits>
+
 #include "vislib/OutOfRangeException.h"
 
 
@@ -17,8 +19,9 @@ vislib::net::SimpleMessage::SimpleMessage(const SIZE_T bodySize) : Super() {
     VLSTACKTRACE("SimpleMessage::SimpleMessage", __FILE__, __LINE__);
     // This will force the superclass to (i) allocate memory for the message
     // header and the body itself and (ii) to update the message header pointer.
+    ASSERT(bodySize < UINT_MAX);
     Super::assertStorage(bodySize);
-    this->GetHeader().SetBodySize(bodySize);
+    this->GetHeader().SetBodySize(static_cast<UINT32>(bodySize));
 }
 
 
@@ -62,6 +65,15 @@ vislib::net::SimpleMessage::SimpleMessage(const AbstractSimpleMessage& rhs)
  */
 vislib::net::SimpleMessage::~SimpleMessage(void) {
     VLSTACKTRACE("SimpleMessage::~SimpleMessage", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::SimpleMessage::Trim
+ */
+void vislib::net::SimpleMessage::Trim(void) {
+    VLSTACKTRACE("SimpleMessage::Trim", __FILE__, __LINE__);
+    this->storage.EnforceSize(this->GetMessageSize(), true);
 }
 
 

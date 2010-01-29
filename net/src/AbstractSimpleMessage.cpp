@@ -133,6 +133,17 @@ vislib::net::AbstractSimpleMessage::operator const void *(void) const {
 
 
 /*
+ * vislib::net::AbstractSimpleMessage::operator void *
+ */
+vislib::net::AbstractSimpleMessage::operator void *(void) {
+    VLSTACKTRACE("AbstractSimpleMessage::operator void *",
+        __FILE__, __LINE__);
+    return const_cast<void *>(static_cast<const void *>(
+        this->header.PeekData()));
+}
+
+
+/*
  * vislib::net::AbstractSimpleMessage::assertStorage
  */
 void *vislib::net::AbstractSimpleMessage::assertStorage(

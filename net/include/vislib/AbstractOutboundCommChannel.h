@@ -32,27 +32,27 @@ namespace net {
     public:
 
         /**
-         * Receives 'cntBytes' over the communication channel and saves them to 
-         * the memory designated by 'outData'. 'outData' must be large enough to 
-         * receive at least 'cntBytes'.
+         * Send 'cntBytes' from the location designated by 'data' over the
+         * communication channel.
          *
-         * @param outData      The buffer to receive the data. The caller must
-         *                     allocate this memory and remains owner.
-         * @param cntBytes     The number of bytes to receive.
-         * @param timeout      A timeout in milliseconds. A value less than 1 
-         *                     specifies an infinite timeout. If the operation 
-         *                     timeouts, an exception will be thrown.
-         * @param forceReceive If the data block cannot be received as a single 
-         *                     packet, repeat the operation until all of 
-         *                     'cntBytes' is received or a step fails.
+         * @param data      The data to be sent. The caller remains owner of the
+         *                  memory.
+         * @param cntBytes  The number of bytes to be sent. 'data' must contain
+         *                  at least this number of bytes.
+         * @param timeout   A timeout in milliseconds. A value less than 1 
+         *                  specifies an infinite timeout. If the operation 
+         *                  timeouts, an exception will be thrown.
+         * @param forceSend If the data block cannot be sent as a single packet,
+         *                  repeat the operation until all of 'cntBytes' is sent
+         *                  or a step fails.
          *
-         * @return The number of bytes acutally received.
+         * @return The number of bytes acutally sent.
          *
          * @throws Exception Or any derived exception depending on the 
          *                   underlying layer in case of an error.
          */
-        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            const INT timeout, const bool forceReceive) = 0;
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
+            const INT timeout, const bool forceSend) = 0;
 
     protected:
 

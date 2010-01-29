@@ -32,7 +32,7 @@ DWORD Worker::Run(void *userData) {
 
     Socket::Startup();
 
-    bool isServer = reinterpret_cast<bool>(userData);
+    bool isServer = (userData != 0);
     int data;
     vislib::SmartRef<TcpCommChannel> comm(new TcpCommChannel(), false);
     vislib::SmartRef<TcpCommChannel> client;

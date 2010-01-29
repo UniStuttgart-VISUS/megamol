@@ -41,6 +41,18 @@ namespace vislib {
             virtual ~AbstractSimpleMessage(void);
 
             /**
+             * Ensure that the message body is big enough to hold the number of
+             * bytes specified in the message header.
+             *
+            * @throws Exception or derived in case of an error. 
+             */
+            void AssertBodySize(void) {
+                VLSTACKTRACE("AbstractSimpleMessage::AssertBodySize", 
+                    __FILE__, __LINE__);
+                this->assertStorage(this->GetHeader().GetBodySize());
+            }
+
+            /**
             * Get a pointer to the message body. The object remains owner of
             * the memory designated by the pointer returned.
             *
@@ -228,14 +240,24 @@ namespace vislib {
             }
 
             /**
-            * Get the message data starting at the header. This is what you want to
-            * send over the network.
-            *
-            * The ownership of the memory returned does not change.
-            *
-            * @return Pointer to the memory of the message (including header).
-            */
+             * Get the message data starting at the header. This is what you want to
+             * send over the network.
+             *
+             * The ownership of the memory returned does not change.
+             *
+             * @return Pointer to the memory of the message (including header).
+             */
             operator const void *(void) const;
+
+            /**
+             * Get the message data starting at the header. This is what you want to
+             * send over the network.
+             *
+             * The ownership of the memory returned does not change.
+             *
+             * @return Pointer to the memory of the message (including header).
+             */
+            operator void *(void);
 
         protected:
 
