@@ -56,6 +56,7 @@
 #include "testfrustum.h"
 #include "testbezier.h"
 #include "testcomm.h"
+#include "testmsgdisp.h"
 
 
 /* type for test functions */
@@ -111,6 +112,7 @@ VislibTest tests[] = {
     {_T("TcpServer"), ::TestTcpServer, "Tests the TCP server"},
     {_T("AsyncSockets"), ::TestAsyncSocket, "Tests the asynchronous socket extension"},
     {_T("Comm"), ::TestComm, "Tests the communication abstraction layer"},
+    {_T("MsgDisp"), ::TestMsgDisp, "Tests the message dispatching facility on TCP/IP"},
     // sys
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},
