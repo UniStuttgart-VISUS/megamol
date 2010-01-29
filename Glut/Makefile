@@ -16,9 +16,8 @@ OutDir := lib
 InputRootDir := $(InputDir)
 InputDir := .
 IncludeDir := . .. ../Viewer/include $(mmcorepath)/api
-IncludeDir := $(IncludeDir) $(vislibpath)/base/include $(vislibpath)/math/include \
-	$(vislibpath)/sys/include $(vislibpath)/graphics/include $(vislibpath)/gl/include \
-	$(visglutpath)/include
+IncludeDir := $(IncludeDir) $(visglutpath)/include
+VISlibs := gl graphics sys math base
 
 
 # Additional compiler flags
@@ -42,6 +41,10 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.d, $(CPP_SRC
 	$(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.d, $(CPP_SRCS)))
 CPP_D_OBJS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 CPP_R_OBJS := $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+
+IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
+DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
+ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(visglutpath)/lib
@@ -69,7 +72,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile $(addprefix $(IntDir
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) \
-	-lvislibgl$(BITS) -lvislibgraphics$(BITS)d -lvislibsys$(BITS)d -lvislibmath$(BITS)d -lvislibbase$(BITS)d -lvisglut$(BITS)d \
+	$(DebugLinkerFlags) -lvisglut$(BITS)d \
 	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
@@ -79,7 +82,7 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile $(addprefix $(IntDi
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) \
-	-lvislibgl$(BITS) -lvislibgraphics$(BITS) -lvislibsys$(BITS) -lvislibmath$(BITS) -lvislibbase$(BITS) -lvisglut$(BITS) \
+	$(ReleaseLinkerFlags) -lvisglut$(BITS) \
 	-o $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \

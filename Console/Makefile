@@ -11,8 +11,9 @@ include ../ExtLibs.mk
 
 # Target name
 TargetName := MegaMolCon
-IncludeDir := $(IncludeDir) ../Viewer/include $(vislibpath)/base/include $(vislibpath)/sys/include $(vislibpath)/math/include\
-	$(visglutpath)/include $(mmcorepath)/api
+IncludeDir := $(IncludeDir) ../Viewer/include $(visglutpath)/include $(mmcorepath)/api
+VISlibs := sys math base
+
 
 # Additional compiler flags
 CompilerFlags := $(CompilerFlags)
@@ -28,6 +29,10 @@ LIBS := $(LIBS) m pthread pam pam_misc dl ncurses
 CPP_SRCS := $(filter-out $(ExcludeFromBuild), $(wildcard $(InputDir)/*.cpp))
 CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS)))) \
 	$(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS))))
+
+IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
+DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
+ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
 LDFLAGS := $(LinkerFlags) -L$(mmcorepath)/lib -L$(vislibpath)/lib
@@ -51,14 +56,14 @@ $(IntDir)/$(DebugDir)/$(TargetName): $(addprefix $(IntDir)/$(DebugDir)/, $(notdi
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
-	-lMegaMolCore$(BITS)d -lvislibmath$(BITS)d -lvislibsys$(BITS)d -lvislibbase$(BITS)d \
+	$(DebugLinkerFlags) -lMegaMolCore$(BITS)d \
 	$(addprefix -l,$(LIBS)) -o $(IntDir)/$(DebugDir)/$(TargetName)
 
 $(IntDir)/$(ReleaseDir)/$(TargetName): $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
-	-lMegaMolCore$(BITS) -lvislibmath$(BITS) -lvislibsys$(BITS) -lvislibbase$(BITS) \
+	$(ReleaseLinkerFlags) -lMegaMolCore$(BITS) \
 	$(addprefix -l,$(LIBS)) -o $(IntDir)/$(ReleaseDir)/$(TargetName)
 
 
