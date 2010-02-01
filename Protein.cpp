@@ -6,15 +6,6 @@
  */
 
 #include "stdafx.h"
-/* create symbols for the opengl extensions in this object file */
-#define GLH_EXT_SINGLE_FILE 1
-#if (_MSC_VER > 1000)
-#pragma warning(disable: 4996)
-#endif /* (_MSC_VER > 1000) */
-#include "glh/glh_extensions.h"
-#if (_MSC_VER > 1000)
-#pragma warning(default: 4996)
-#endif /* (_MSC_VER > 1000) */
 
 #include "Protein.h"
 #include "api/MegaMolCore.std.h"
