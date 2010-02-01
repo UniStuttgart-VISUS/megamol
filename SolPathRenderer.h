@@ -105,10 +105,11 @@ namespace protein {
 
     private:
 
-        /**
-         * The slot to get the data
-         */
+        /** The slot to get the data */
         core::CallerSlot getdataslot;
+
+        /** The shader for shading the path lines */
+        vislib::graphics::gl::GLSLShader pathlineShader;
 
     };
 

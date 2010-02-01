@@ -7,8 +7,11 @@
 #include "stdafx.h"
 #include "SolPathRenderer.h"
 #include "CallAutoDescription.h"
+#include "CoreInstance.h"
 #include "SolPathDataCall.h"
+#include "utility/ShaderSourceFactory.h"
 #include "view/CallRender3D.h"
+#include "vislib/ShaderSource.h"
 #include <GL/gl.h>
 
 using namespace megamol;
@@ -19,7 +22,7 @@ using namespace megamol::protein;
  * SolPathRenderer::SolPathRenderer
  */
 SolPathRenderer::SolPathRenderer(void) : core::view::Renderer3DModule(),
-        getdataslot("getdata", "Fetches data") {
+        getdataslot("getdata", "Fetches data"), pathlineShader() {
 
     this->getdataslot.SetCompatibleCall<core::CallAutoDescription<SolPathDataCall> >();
     this->MakeSlotAvailable(&this->getdataslot);
@@ -38,6 +41,39 @@ SolPathRenderer::~SolPathRenderer(void) {
  * SolPathRenderer::create
  */
 bool SolPathRenderer::create(void) {
+    using vislib::sys::Log;
+    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "Unable to initialise opengl extensions for glsl");
+        return false;
+    }
+
+    try {
+        vislib::graphics::gl::ShaderSource vertSrc;
+        vislib::graphics::gl::ShaderSource fragSrc;
+
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("solpath::pathline::vert", vertSrc)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline vertex shader source");
+            return false;
+        }
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("solpath::pathline::frag", fragSrc)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline fragment shader source");
+            return false;
+        }
+
+        if (!this->pathlineShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
+            return false;
+        }
+
+    } catch(vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader: %s", e.GetMsgA());
+        return false;
+    } catch(...) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
+        return false;
+    }
+
     return true;
 }
 
@@ -79,6 +115,7 @@ bool SolPathRenderer::GetExtents(core::Call& call) {
  * SolPathRenderer::release
  */
 void SolPathRenderer::release(void) {
+    this->pathlineShader.Release();
 }
 
 
@@ -101,6 +138,8 @@ bool SolPathRenderer::Render(core::Call& call) {
     ::glPointSize(2.0f);
     ::glEnable(GL_POINT_SMOOTH);
 
+    this->pathlineShader.Enable();
+
     ::glColor3ub(192, 192, 192);
     const SolPathDataCall::Pathline *path = spdc->Pathlines();
     for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
@@ -110,6 +149,8 @@ bool SolPathRenderer::Render(core::Call& call) {
         }
         ::glEnd();
     }
+
+    this->pathlineShader.Disable();
 
     ::glPointSize(2.0f);
     ::glEnable(GL_POINT_SMOOTH);

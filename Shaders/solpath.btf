@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="solpath">
+
+  <namespace name="pathline">
+    <shader name="vert">
+      <snippet type="string">
+        <![CDATA[
+void main() {
+    //gl_Position = gl_ModelViewProjectionMatrix * vec4(gl_Vertex.xyz, 0.0f);
+    gl_Position = ftransform();
+}
+]]>
+      </snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="string">
+        <![CDATA[
+void main() {
+    gl_FragColor = vec4(0.25, 0.5, 1.0, 1.0);
+}
+]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+</btf>

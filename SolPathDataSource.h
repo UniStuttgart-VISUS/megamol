@@ -107,6 +107,19 @@ namespace protein {
         } fileBlockInfo;
 
         /**
+         * Answer whether any parameter slot is dirty.
+         *
+         * @return 'true' if any parameter slot is dirty.
+         */
+        inline bool anyParamslotDirty(void) const {
+            return this->filenameslot.IsDirty()
+                || this->smoothSlot.IsDirty()
+                || this->smoothValueSlot.IsDirty()
+                || this->speedOfSmoothedSlot.IsDirty()
+                || this->clusterOfSmoothedSlot.IsDirty();
+        }
+
+        /**
          * Sends the data to the caller
          */
         bool getData(megamol::core::Call &call);
@@ -131,6 +144,18 @@ namespace protein {
 
         /** The path of the solpath file to load */
         megamol::core::param::ParamSlot filenameslot;
+
+        /** Flag whether or not to smooth the data */
+        megamol::core::param::ParamSlot smoothSlot;
+
+        /** Value for the smooth filter */
+        megamol::core::param::ParamSlot smoothValueSlot;
+
+        /** Flag whether or not to use the smoothed data for the speed calculation */
+        megamol::core::param::ParamSlot speedOfSmoothedSlot;
+
+        /** Flag to cluster the smoothed or unsmoothed data */
+        megamol::core::param::ParamSlot clusterOfSmoothedSlot;
 
         /** The bbox */
         vislib::math::Cuboid<float> bbox;

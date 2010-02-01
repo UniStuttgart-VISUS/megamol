@@ -5,14 +5,21 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
+#define _USE_MATH_DEFINES 1
 #include "SolPathDataSource.h"
+#include "param/BoolParam.h"
+#include "param/FloatParam.h"
 #include "param/StringParam.h"
 #include "vislib/Log.h"
 #include "vislib/MemmappedFile.h"
+#include "vislib/ShallowPoint.h"
+#include "vislib/ShallowVector.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
-#include <climits>
+#include "vislib/Vector.h"
 #include <cfloat>
+#include <climits>
+#include <cmath>
 
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -23,7 +30,11 @@ using namespace megamol::protein;
  */
 SolPathDataSource::SolPathDataSource(void) : core::Module(),
         getdataslot("getdata", "Publishes the data for other modules"),
-        filenameslot("filename", "The path of the solpath file to load") {
+        filenameslot("filename", "The path of the solpath file to load"),
+        smoothSlot("smooth", "Flag whether or not to smooth the data"),
+        smoothValueSlot("smoothValue", "Value for the smooth filter"),
+        speedOfSmoothedSlot("speedOfSmoothed", "Flag whether or not to use the smoothed data for the speed calculation"),
+        clusterOfSmoothedSlot("clusterOfSmoothed", "Flag to cluster the smoothed or unsmoothed data") {
 
     this->getdataslot.SetCallback(SolPathDataCall::ClassName(), "GetData", &SolPathDataSource::getData);
     this->getdataslot.SetCallback(SolPathDataCall::ClassName(), "GetExtent", &SolPathDataSource::getExtent);
@@ -31,6 +42,18 @@ SolPathDataSource::SolPathDataSource(void) : core::Module(),
 
     this->filenameslot << new param::StringParam("");
     this->MakeSlotAvailable(&this->filenameslot);
+
+    this->smoothSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->smoothSlot);
+
+    this->smoothValueSlot << new param::FloatParam(5.0f, 0.0f, 100.0f);
+    this->MakeSlotAvailable(&this->smoothValueSlot);
+
+    this->speedOfSmoothedSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->speedOfSmoothedSlot);
+
+    this->clusterOfSmoothedSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->clusterOfSmoothedSlot);
 
 }
 
@@ -48,7 +71,7 @@ SolPathDataSource::~SolPathDataSource(void) {
  * SolPathDataSource::create
  */
 bool SolPathDataSource::create(void) {
-    if (this->filenameslot.IsDirty()) {
+    if (this->anyParamslotDirty()) {
         this->loadData();
     }
     return true;
@@ -70,7 +93,7 @@ bool SolPathDataSource::getData(megamol::core::Call &call) {
     SolPathDataCall *spdc = dynamic_cast<SolPathDataCall *>(&call);
     if (spdc == NULL) return false;
 
-    if (this->filenameslot.IsDirty()) {
+    if (this->anyParamslotDirty()) {
         this->loadData();
     }
 
@@ -88,7 +111,7 @@ bool SolPathDataSource::getExtent(megamol::core::Call &call) {
     SolPathDataCall *spdc = dynamic_cast<SolPathDataCall *>(&call);
     if (spdc == NULL) return false;
 
-    if (this->filenameslot.IsDirty()) {
+    if (this->anyParamslotDirty()) {
         this->loadData();
     }
 
@@ -122,7 +145,12 @@ void SolPathDataSource::loadData(void) {
     using vislib::sys::File;
     using vislib::sys::Log;
     vislib::sys::MemmappedFile file;
+
     this->filenameslot.ResetDirty();
+    this->smoothSlot.ResetDirty();
+    this->smoothValueSlot.ResetDirty();
+    this->speedOfSmoothedSlot.ResetDirty();
+    this->clusterOfSmoothedSlot.ResetDirty();
 
     this->clear();
 
@@ -277,7 +305,10 @@ void SolPathDataSource::loadData(void) {
         for (SIZE_T v = 0; v < this->pathlines[p].length; v++) {
             SolPathDataCall::Vertex &v1 = this->vertices[off + v];
 
-            v1.speed = 0.0f; // TODO: Speed calculus
+            if (v > 0) {
+                v1.speed = vislib::math::ShallowPoint<float, 3>(&v1.x)
+                    .Distance(vislib::math::ShallowPoint<float, 3>(&this->vertices[off + v - 1].x));
+            }
 
             if (v1.time > this->maxTime) this->maxTime = v1.time;
             if (v1.time < this->minTime) this->minTime = v1.time;
@@ -290,10 +321,83 @@ void SolPathDataSource::loadData(void) {
             if (this->bbox.Back() > v1.z) this->bbox.SetBack(v1.z);
             if (this->bbox.Front() < v1.z) this->bbox.SetFront(v1.z);
         }
+        if (this->pathlines[p].length > 2) {
+            this->vertices[off].speed = this->vertices[off + 1].speed;
+        }
 
         off += this->pathlines[p].length;
     }
 
     this->bbox.EnforcePositiveSize();
 
+    if (!this->smoothSlot.Param<param::BoolParam>()->Value()
+            || !this->clusterOfSmoothedSlot.Param<param::BoolParam>()->Value()) {
+
+        // TODO: calculate clusters here
+
+    }
+
+    if (this->smoothSlot.Param<param::BoolParam>()->Value()) {
+
+        // smooth
+        float smoothValue = this->smoothValueSlot.Param<param::FloatParam>()->Value();
+        vislib::Array<float> filter(1 + static_cast<unsigned int>(::ceil(smoothValue)), 0.0f);
+        filter[0] = 1.0f;
+        if (smoothValue > 0.00001f) {
+            for (SIZE_T i = 1; i < filter.Count(); i++) {
+                filter[i] = ::cos(static_cast<float>(M_PI) * static_cast<float>(i) / (1.0f + smoothValue));
+                filter[i] *= filter[i];
+            }
+        }
+
+        off = 0;
+        for (SIZE_T p = 0; p < this->pathlines.Count(); p++) {
+            for (SIZE_T v = 0; v < this->pathlines[p].length; v++) {
+                float fac = 1.0f;
+                vislib::math::ShallowVector<float, 3> pos(&this->vertices[off + v].x);
+                for (SIZE_T f = 1; f < filter.Count(); f++) {
+                    if (f <= v) {
+                        pos += vislib::math::ShallowVector<float, 3>(&this->vertices[off + v - f].x) * filter[f];
+                        fac += filter[f];
+                    }
+                    if (f + v < this->pathlines[p].length) {
+                        pos += vislib::math::ShallowVector<float, 3>(&this->vertices[off + v + f].x) * filter[f];
+                        fac += filter[f];
+                    }
+                }
+                pos /= fac;
+            }
+            off += this->pathlines[p].length;
+        }
+
+        // Note: smoothing does change the positions, but will never leave the
+        // original bounding box. Since everything is just an approximation we
+        // keep the old bounding box.
+
+        if (this->speedOfSmoothedSlot.Param<param::BoolParam>()->Value()) {
+            // recalculate speed
+            off = 0;
+            this->maxSpeed = -FLT_MAX;
+            this->minSpeed = FLT_MAX;
+            for (SIZE_T p = 0; p < this->pathlines.Count(); p++) {
+                for (SIZE_T v = 1; v < this->pathlines[p].length; v++) {
+                    SolPathDataCall::Vertex &v1 = this->vertices[off + v];
+                    v1.speed = vislib::math::ShallowPoint<float, 3>(&v1.x)
+                        .Distance(vislib::math::ShallowPoint<float, 3>(&this->vertices[off + v - 1].x));
+                    if (v1.speed > this->maxSpeed) this->maxSpeed = v1.speed;
+                    if (v1.speed < this->minSpeed) this->minSpeed = v1.speed;
+                }
+                if (this->pathlines[p].length > 2) {
+                    this->vertices[off].speed = this->vertices[off + 1].speed;
+                }
+                off += this->pathlines[p].length;
+            }
+        }
+
+        if (this->clusterOfSmoothedSlot.Param<param::BoolParam>()->Value()) {
+
+            // TODO: calculate clusters here
+
+        }
+    }
 }
