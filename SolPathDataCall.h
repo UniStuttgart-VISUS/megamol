@@ -11,6 +11,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractGetData3DCall.h"
+#include "vislib/mathfunctions.h"
+
 
 namespace megamol {
 namespace protein {
@@ -21,7 +23,13 @@ namespace protein {
     class SolPathDataCall : public megamol::core::AbstractGetData3DCall {
     public:
 
-        /** data struct defining the layout of a vertex */
+        /**
+         * data struct defining the layout of a vertex
+         *
+         * Linear, interleaved memory layout for fast upload:
+         *  x, y, z, speed      (vec4)
+         *  time, clusterID     (ivec2)
+         */
         typedef struct _vertex_t {
 
             /** The position of the vertex */
@@ -36,6 +44,39 @@ namespace protein {
             /** The cluster id of the vertex */
             unsigned int clusterID;
 
+            /**
+             * Assignment operator
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return A reference to this
+             */
+            inline struct _vertex_t& operator=(const struct _vertex_t& rhs) {
+                this->x = rhs.x;
+                this->y = rhs.y;
+                this->z = rhs.z;
+                this->speed = rhs.speed;
+                this->time = rhs.time;
+                this->clusterID = rhs.clusterID;
+                return *this;
+            }
+
+            /**
+             * Test for equality
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return 'true' if 'this' and 'rhs' are equal, 'false' otherwise
+             */
+            inline bool operator==(const struct _vertex_t& rhs) {
+                return vislib::math::IsEqual(this->x, rhs.x)
+                    && vislib::math::IsEqual(this->y, rhs.y)
+                    && vislib::math::IsEqual(this->z, rhs.z)
+                    && vislib::math::IsEqual(this->speed, rhs.speed)
+                    && (this->time == rhs.time)
+                    && (this->clusterID == rhs.clusterID);
+            }
+
         } Vertex;
 
         /** data structure defining the layout of a pathline */
@@ -48,7 +89,34 @@ namespace protein {
             unsigned int length;
 
             /** The data of the pathline */
-            Vertex *data;
+            const Vertex *data;
+
+            /**
+             * Assignment operator
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return A reference to this
+             */
+            inline struct _pathline_t& operator=(const struct _pathline_t& rhs) {
+                this->id = rhs.id;
+                this->length = rhs.length;
+                this->data = rhs.data; // NOT a deep copy
+                return *this;
+            }
+
+            /**
+             * Test for equality
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return 'true' if 'this' and 'rhs' are equal, 'false' otherwise
+             */
+            inline bool operator==(const struct _pathline_t& rhs) {
+                return (this->id == rhs.id)
+                    && (this->length == rhs.length)
+                    && (this->data == rhs.data);
+            }
 
         } Pathline;
 
@@ -101,8 +169,44 @@ namespace protein {
          *
          * @return The number of pathlines
          */
-        unsigned int Count(void) const {
+        inline unsigned int Count(void) const {
             return this->count;
+        }
+
+        /**
+         * Answer the maximum speed present
+         *
+         * @return The maximum speed present
+         */
+        inline float MaxSpeed(void) const {
+            return this->maxSpeed;
+        }
+
+        /**
+         * Answer the maximum frame number used
+         *
+         * @return The maximum frame number used
+         */
+        inline unsigned int MaxTime(void) const {
+            return this->maxTime;
+        }
+
+        /**
+         * Answer the minimum speed present
+         *
+         * @return The minimum speed present
+         */
+        inline float MinSpeed(void) const {
+            return this->minSpeed;
+        }
+
+        /**
+         * Answer the minimum frame number used
+         *
+         * @return The minimum frame number used
+         */
+        inline unsigned int MinTime(void) const {
+            return this->minTime;
         }
 
         /**
@@ -110,7 +214,7 @@ namespace protein {
          *
          * @return A pointer to the array of pathlines
          */
-        const Pathline *Pathlines(void) const {
+        inline const Pathline *Pathlines(void) const {
             return this->lines;
         }
 
@@ -122,10 +226,19 @@ namespace protein {
          *
          * @param cnt The number of pathlines
          * @param lines The array of pathlines
+         * @param minTime The minimum frame number used
+         * @param maxTime The maximum frame number used
+         * @param minSpeed The minimum speed present
+         * @param maxSpeed The maximum speed present
          */
-        void Set(unsigned int cnt, Pathline *lines) {
+        inline void Set(unsigned int cnt, const Pathline *lines, unsigned int minTime,
+                unsigned int maxTime, float minSpeed, float maxSpeed) {
             this->count = cnt;
             this->lines = lines;
+            this->minTime = minTime;
+            this->maxTime = maxTime;
+            this->minSpeed = minSpeed;
+            this->maxSpeed = maxSpeed;
         }
 
     private:
@@ -134,7 +247,19 @@ namespace protein {
         unsigned int count;
 
         /** The pathlines */
-        Pathline *lines;
+        const Pathline *lines;
+
+        /** The minimum frame number */
+        unsigned int minTime;
+
+        /** The maximum frame number */
+        unsigned int maxTime;
+
+        /** The minimum speed */
+        float minSpeed;
+
+        /** The maximum speed */
+        float maxSpeed;
 
     };
 
