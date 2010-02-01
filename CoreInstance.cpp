@@ -1383,11 +1383,30 @@ void megamol::core::CoreInstance::applyConfigParams(
  */
 void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     vislib::sys::DynamicLinkLibrary *plugin = new vislib::sys::DynamicLinkLibrary();
+    unsigned int loadFailedLevel = vislib::sys::Log::LEVEL_ERROR;
+    if (this->config.IsConfigValueSet("PluginLoadFailMsg")) {
+        try {
+            const vislib::StringW &v = this->config.ConfigValue("PluginLoadFailMsg");
+            if (v.CompareInsensitive(L"error") || v.CompareInsensitive(L"err") || v.CompareInsensitive(L"e")) {
+                loadFailedLevel = vislib::sys::Log::LEVEL_ERROR;
+            } else 
+            if (v.CompareInsensitive(L"warning") || v.CompareInsensitive(L"warn") || v.CompareInsensitive(L"w")) {
+                loadFailedLevel = vislib::sys::Log::LEVEL_WARN;
+            } else 
+            if (v.CompareInsensitive(L"information") || v.CompareInsensitive(L"info") || v.CompareInsensitive(L"i")
+                    || v.CompareInsensitive(L"message") || v.CompareInsensitive(L"msg") || v.CompareInsensitive(L"m")) {
+                loadFailedLevel = vislib::sys::Log::LEVEL_INFO;
+            } else {
+                loadFailedLevel = vislib::CharTraitsW::ParseInt(v.PeekBuffer());
+            }
+        } catch(...) {
+        }
+    }
 
     // load module
     if (!plugin->Load(filename)) {
         delete plugin;
-        this->log.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        this->log.WriteMsg(loadFailedLevel,
             "Unable to load Plugin \"%s\": Cannot load plugin\n",
             vislib::StringA(filename).PeekBuffer());
         return;
@@ -1398,7 +1417,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     if ((mmplgPluginAPIVersion == NULL)) {
         plugin->Free();
         delete plugin;
-        this->log.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        this->log.WriteMsg(loadFailedLevel,
             "Unable to load Plugin \"%s\": API entry not found\n",
             vislib::StringA(filename).PeekBuffer());
         return;
@@ -1407,7 +1426,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     if (plgApiVer != 100) {
         plugin->Free();
         delete plugin;
-        this->log.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        this->log.WriteMsg(loadFailedLevel,
             "Unable to load Plugin \"%s\": incompatible API version\n",
             vislib::StringA(filename).PeekBuffer());
         return;
@@ -1418,7 +1437,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     if ((mmplgCoreCompatibilityValue == NULL)) {
         plugin->Free();
         delete plugin;
-        this->log.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        this->log.WriteMsg(loadFailedLevel,
             "Unable to load Plugin \"%s\": API function \"mmplgCoreCompatibilityValue\" not found\n",
             vislib::StringA(filename).PeekBuffer());
         return;
@@ -1429,7 +1448,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
             || ((compVal->vislibRev != 0) && (compVal->vislibRev != VISLIB_VERSION_REVISION))) {
         plugin->Free();
         delete plugin;
-        this->log.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        this->log.WriteMsg(loadFailedLevel,
             "Unable to load Plugin \"%s\": core version mismatch\n",
             vislib::StringA(filename).PeekBuffer());
         return;
@@ -1441,7 +1460,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
         bool rv;
         rv = mmplgConnectStatics(1, static_cast<void*>(&vislib::sys::Log::DefaultLog));
         VLTRACE(VISLIB_TRCELVL_INFO, "Plug-in connect log: %s\n", rv ? "true" : "false");
-		vislib::SmartPtr<vislib::StackTrace> stackManager(vislib::StackTrace::Manager());
+        vislib::SmartPtr<vislib::StackTrace> stackManager(vislib::StackTrace::Manager());
         rv = mmplgConnectStatics(2, static_cast<void*>(&stackManager));
         VLTRACE(VISLIB_TRCELVL_INFO, "Plug-in connect stacktrace: %s\n", rv ? "true" : "false");
     }
@@ -1452,7 +1471,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     if ((mmplgPluginName == NULL)/* || (mmplgPluginDescription == NULL)*/) {
         plugin->Free();
         delete plugin;
-        this->log.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        this->log.WriteMsg(loadFailedLevel,
             "Unable to load Plugin \"%s\": API name/description functions not found\n",
             vislib::StringA(filename).PeekBuffer());
         return;
@@ -1461,7 +1480,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     if (plgName.IsEmpty()) {
         plugin->Free();
         delete plugin;
-        this->log.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        this->log.WriteMsg(loadFailedLevel,
             "Unable to load Plugin \"%s\": Plugin does not export a name\n",
             vislib::StringA(filename).PeekBuffer());
         return;
