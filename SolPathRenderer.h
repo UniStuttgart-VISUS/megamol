@@ -14,6 +14,7 @@
 #include "param/ParamSlot.h"
 #include "vislib/GLSLShader.h"
 #include "Call.h"
+#include "CallerSlot.h"
 
 
 namespace megamol {
@@ -103,6 +104,11 @@ namespace protein {
         virtual bool Render(core::Call& call);
 
     private:
+
+        /**
+         * The slot to get the data
+         */
+        core::CallerSlot getdataslot;
 
     };
 

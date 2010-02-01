@@ -13,6 +13,10 @@
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
+#include "SolPathDataCall.h"
+#include "vislib/Array.h"
+#include "vislib/Cuboid.h"
+#include "vislib/File.h"
 
 
 namespace megamol {
@@ -72,6 +76,82 @@ namespace protein {
         virtual void release(void);
 
     private:
+
+        /**
+         * structure of file blocks
+         */
+        typedef struct fileBlockInfo_t {
+
+            /** id of the block */
+            unsigned int id;
+
+            /** starting offset of the block */
+            vislib::sys::File::FileOffset start;
+
+            /** size of the block */
+            vislib::sys::File::FileSize size;
+
+            /**
+             * Test for equality.
+             *
+             * @param rhs The right hand side operand.
+             *
+             * @return 'true' if equal, 'false' otherwise.
+             */
+            inline bool operator ==(const struct fileBlockInfo_t& rhs) const {
+                return (this->id == rhs.id)
+                    && (this->start == rhs.start)
+                    && (this->size == rhs.size);
+            }
+
+        } fileBlockInfo;
+
+        /**
+         * Sends the data to the caller
+         */
+        bool getData(megamol::core::Call &call);
+
+        /**
+         * Sends data size information to the caller
+         */
+        bool getExtent(megamol::core::Call &call);
+
+        /**
+         * Clears all data
+         */
+        void clear(void);
+
+        /**
+         * Loads the data file
+         */
+        void loadData(void);
+
+        /** The slot publishing the data */
+        megamol::core::CalleeSlot getdataslot;
+
+        /** The path of the solpath file to load */
+        megamol::core::param::ParamSlot filenameslot;
+
+        /** The bbox */
+        vislib::math::Cuboid<float> bbox;
+
+        /** The minimum frame number */
+        unsigned int minTime;
+
+        /** The maximum frame number */
+        unsigned int maxTime;
+
+        /** The minimum speed */
+        float minSpeed;
+
+        /** The maximum speed */
+        float maxSpeed;
+
+        /** The vertex data */
+        vislib::Array<SolPathDataCall::Vertex> vertices;
+
+        /** The pathline data */
+        vislib::Array<SolPathDataCall::Pathline> pathlines;
 
     };
 
