@@ -1387,14 +1387,14 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     if (this->config.IsConfigValueSet("PluginLoadFailMsg")) {
         try {
             const vislib::StringW &v = this->config.ConfigValue("PluginLoadFailMsg");
-            if (v.CompareInsensitive(L"error") || v.CompareInsensitive(L"err") || v.CompareInsensitive(L"e")) {
+            if (v.Equals(L"error", false) || v.Equals(L"err", false) || v.Equals(L"e", false)) {
                 loadFailedLevel = vislib::sys::Log::LEVEL_ERROR;
             } else 
-            if (v.CompareInsensitive(L"warning") || v.CompareInsensitive(L"warn") || v.CompareInsensitive(L"w")) {
+            if (v.Equals(L"warning", false) || v.Equals(L"warn", false) || v.Equals(L"w", false)) {
                 loadFailedLevel = vislib::sys::Log::LEVEL_WARN;
             } else 
-            if (v.CompareInsensitive(L"information") || v.CompareInsensitive(L"info") || v.CompareInsensitive(L"i")
-                    || v.CompareInsensitive(L"message") || v.CompareInsensitive(L"msg") || v.CompareInsensitive(L"m")) {
+            if (v.Equals(L"information", false) || v.Equals(L"info", false) || v.Equals(L"i", false)
+                    || v.Equals(L"message", false) || v.Equals(L"msg", false) || v.Equals(L"m", false)) {
                 loadFailedLevel = vislib::sys::Log::LEVEL_INFO;
             } else {
                 loadFailedLevel = vislib::CharTraitsW::ParseInt(v.PeekBuffer());
