@@ -277,8 +277,8 @@ bool megamol::core::utility::Configuration::logFilenameLocked = false;
  * megamol::core::utility::Configuration::Configuration(void)
  */
 megamol::core::utility::Configuration::Configuration(void) 
-        : cfgFileName(), criticalParserError(false), baseDir(), appDir(),
-        shaderDir(), configSets(), configValues(), instanceRequests(),
+        : cfgFileName(), criticalParserError(false), appDir(),
+        shaderDirs(), configSets(), configValues(), instanceRequests(),
         pluginLoadInfos() {
     this->setDefaultValues();
 }
@@ -505,21 +505,8 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
         // realize configuration values
         this->cfgFileName = filename;
 
-        if (vislib::sys::Path::IsRelative(this->baseDir)) {
-            this->baseDir = vislib::sys::Path::Resolve(this->baseDir);
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO + 50,
-                "Directory \"base\" resolved to \"%s\"", W2A(this->baseDir));
-        } else {
-            this->baseDir = vislib::sys::Path::Canonicalise(this->baseDir);
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO + 150,
-                "Directory \"base\" is \"%s\"", W2A(this->baseDir));
-        }
-
         if (vislib::sys::Path::IsRelative(this->appDir)) {
-            this->appDir = vislib::sys::Path::Resolve(
-                this->appDir, this->baseDir);
+            this->appDir = vislib::sys::Path::Resolve(this->appDir);
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_INFO + 50,
                 "Directory \"application\" resolved to \"%s\"", 
@@ -529,20 +516,6 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_INFO + 150,
                 "Directory \"application\" is \"%s\"", W2A(this->appDir));
-        }
-
-        if (vislib::sys::Path::IsRelative(this->shaderDir)) {
-            this->shaderDir = vislib::sys::Path::Resolve(
-                this->shaderDir, this->baseDir);
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO + 50,
-                "Directory \"shader\" resolved to \"%s\"", 
-                W2A(this->shaderDir));
-        } else {
-            this->shaderDir = vislib::sys::Path::Canonicalise(this->shaderDir);
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO + 150,
-                "Directory \"shader\" is \"%s\"", W2A(this->shaderDir));
         }
 
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, 
@@ -614,10 +587,9 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
  */
 void megamol::core::utility::Configuration::setDefaultValues(void) {
     cfgFileName.Clear();
-    this->baseDir = vislib::sys::Path::Resolve(
+    this->appDir = vislib::sys::Path::Resolve(
         vislib::sys::Path::GetCurrentDirectoryW());
-    this->appDir = this->baseDir;
-    this->shaderDir = this->baseDir;
+    this->shaderDirs.Add(this->appDir);
     this->configValues.Clear();
 
     // set default value for new configuration values here
@@ -634,9 +606,6 @@ const void * megamol::core::utility::Configuration::GetValue(
         case MMC_CFGID_APPLICATION_DIR:
             if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
             return this->appDir.PeekBuffer();
-        case MMC_CFGID_SHADER_DIR:
-            if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-            return this->shaderDir.PeekBuffer();
         case MMC_CFGID_CONFIG_FILE:
             if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
             return this->cfgFileName.PeekBuffer();
@@ -667,9 +636,6 @@ const void * megamol::core::utility::Configuration::GetValue(
         case MMC_CFGID_APPLICATION_DIR:
             if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
             return this->appDir.PeekBuffer();
-        case MMC_CFGID_SHADER_DIR:
-            if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-            return this->shaderDir.PeekBuffer();
         case MMC_CFGID_CONFIG_FILE:
             if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
             return this->cfgFileName.PeekBuffer();
@@ -851,7 +817,7 @@ void megamol::core::utility::Configuration::ListPluginsToLoad(
     vislib::SingleLinkedList<PluginLoadInfo>::Iterator i = this->pluginLoadInfos.GetIterator();
     while (i.HasNext()) {
         PluginLoadInfo &pli = i.Next();
-        vislib::TString dir = vislib::sys::Path::Resolve(pli.directory, vislib::TString(this->baseDir));
+        vislib::TString dir = vislib::sys::Path::Resolve(pli.directory, vislib::TString(this->appDir));
         vislib::sys::TDirectoryIterator diri(dir);
         while (diri.HasNext()) {
             vislib::sys::TDirectoryEntry& e = diri.Next();
@@ -869,4 +835,20 @@ void megamol::core::utility::Configuration::ListPluginsToLoad(
         }
     }
 
+}
+
+
+/*
+ * megamol::core::utility::Configuration::AddShaderDirectory
+ */
+void megamol::core::utility::Configuration::AddShaderDirectory(const char *dir) {
+    this->shaderDirs.Add(vislib::StringW(dir));
+}
+
+
+/*
+ * megamol::core::utility::Configuration::AddShaderDirectory
+ */
+void megamol::core::utility::Configuration::AddShaderDirectory(const wchar_t *dir) {
+    this->shaderDirs.Add(vislib::StringW(dir));
 }

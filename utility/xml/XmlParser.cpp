@@ -85,6 +85,14 @@ void XmlParser::Comment(unsigned int level, const MMXML_CHAR *text,
 
 
 /*
+ * XmlParser::Completed
+ */
+void XmlParser::Completed(void) {
+    // intentionally empty
+}
+
+
+/*
  * XmlParser::CheckBaseTag
  */
 bool XmlParser::CheckBaseTag(const XmlReader& reader) {

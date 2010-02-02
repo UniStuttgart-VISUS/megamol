@@ -135,6 +135,11 @@ namespace xml {
             const MMXML_CHAR * name, XmlReader::ParserState state,
             XmlReader::ParserState& outPostEndTagState);
 
+        /**
+         * Is called when the parsing of the xml file is completed
+         */
+        virtual void Completed(void);
+
     private:
 
         /**
@@ -154,6 +159,12 @@ namespace xml {
 
         /** The active instance */
         Configuration::InstanceRequest activeInstanceRequest;
+
+        /** The legacy base directory */
+        vislib::StringW legacyBaseDir;
+
+        /** The legacy shader directory */
+        vislib::StringW legacyShaderDir;
 
     };
 

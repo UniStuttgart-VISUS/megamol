@@ -50,27 +50,20 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name) {
         return true;
     }
 
-    vislib::StringW path;
-    mmcValueType type;
-    const void *data = this->config.GetValue(MMC_CFGID_SHADER_DIR,
-        (const wchar_t*)NULL, &type);
-    if (type == MMC_TYPE_CSTR) {
-        path = vislib::StringA(static_cast<const char *>(data));
-    } else if (type == MMC_TYPE_WSTR) {
-        path = vislib::StringW(static_cast<const wchar_t *>(data));
-    } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load btf \"%s\": shader directory unavailable\n",
-            name.PeekBuffer());
-        return false;
+    vislib::StringW filename;
+    const vislib::Array<vislib::StringW>& searchPaths = this->config.ShaderDirectories();
+    for (SIZE_T i = 0; i < searchPaths.Count(); i++) {
+        filename = vislib::sys::Path::Concatenate(searchPaths[i], vislib::StringW(name));
+        filename.Append(L".btf");
+        if (vislib::sys::File::Exists(filename)) {
+            break;
+        } else {
+            filename.Clear();
+        }
     }
-    vislib::StringW filename = vislib::sys::Path::Concatenate(path,
-        vislib::StringW(name));
-    filename.Append(L".btf");
-
-    if (!vislib::sys::File::Exists(filename)) {
+    if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load btf \"%s\": file not found\n",
+            "Unable to load btf \"%s\": not found\n",
             name.PeekBuffer());
         return false;
     }

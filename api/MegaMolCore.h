@@ -41,7 +41,6 @@ extern "C" {
 typedef enum _mmcConfigID {
     MMC_CFGID_INVALID, // an invalid object!
     MMC_CFGID_APPLICATION_DIR,
-    MMC_CFGID_SHADER_DIR,
     MMC_CFGID_CONFIG_FILE,
     MMC_CFGID_VARIABLE // a configured variable set-tag
 } mmcConfigID;

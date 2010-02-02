@@ -68,7 +68,8 @@ ConfigurationParser::RedirectedConfigurationException::operator=(
  */
 ConfigurationParser::ConfigurationParser(
         megamol::core::utility::Configuration& config) 
-        : ConditionalParser(), config(config), activeInstanceRequest() {
+        : ConditionalParser(), config(config), activeInstanceRequest(),
+        legacyBaseDir(), legacyShaderDir() {
     this->SetConfigSetProvider(&this->config);
 }
 
@@ -111,9 +112,13 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
                 } else if (ver < vislib::VersionNumber(1, 1)) {
                     versionValid = true; // 1.0.x.x
                     this->setConditionalParserVersion(0);
+                    this->legacyBaseDir = vislib::sys::Path::GetCurrentDirectoryW();
+                    this->legacyShaderDir.Clear();
                 } else if (ver < vislib::VersionNumber(1, 2)) {
                     versionValid = true; // 1.1.x.x
                     this->setConditionalParserVersion(1);
+                    this->legacyBaseDir = vislib::sys::Path::GetCurrentDirectoryW();
+                    this->legacyShaderDir.Clear();
                 } else {
                     versionValid = false; // >= 1.2 does not exist yet!
                 }
@@ -249,7 +254,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
             //}
             switch (dirname) {
                 case 2:
-                    this->config.baseDir = pathW;
+                    this->legacyBaseDir = pathW;
                     pathA = "base"; 
                     break;
                 case 3:
@@ -257,7 +262,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
                     pathA = "application";
                     break;
                 case 4:
-                    this->config.shaderDir = pathW;
+                    this->legacyShaderDir = pathW;
                     pathA = "shader";
                     break;
                 default:
@@ -478,6 +483,36 @@ bool ConfigurationParser::EndTag(unsigned int num, unsigned int level,
     }
 
     return false; // unhandled.
+}
+
+
+/*
+ * ConfigurationParser::Completed
+ */
+void ConfigurationParser::Completed(void) {
+    if (!this->legacyBaseDir.IsEmpty()) {
+        // legacy config file was parsed!
+
+        // make app path absolute
+        if (vislib::sys::Path::IsRelative(this->config.appDir)) {
+            this->config.appDir = vislib::sys::Path::Resolve(this->config.appDir, this->legacyBaseDir);
+        }
+
+        // make plugin paths absolute
+        vislib::SingleLinkedList<Configuration::PluginLoadInfo>::Iterator iter
+            = this->config.pluginLoadInfos.GetIterator();
+        while (iter.HasNext()) {
+            Configuration::PluginLoadInfo& info = iter.Next();
+            if (vislib::sys::Path::IsRelative(info.directory)) {
+                info.directory = vislib::sys::Path::Resolve(info.directory, this->legacyBaseDir);
+            }
+        }
+
+        // add shader paths
+        this->config.shaderDirs.Clear();
+        this->config.AddShaderDirectory(
+            vislib::sys::Path::Resolve(this->legacyShaderDir, this->legacyBaseDir));
+    }
 }
 
 

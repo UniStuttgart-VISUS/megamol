@@ -106,6 +106,11 @@ namespace xml {
              XmlReader::ParserState state);
 
         /**
+         * Is called when the parsing of the xml file is completed
+         */
+        virtual void Completed(void);
+
+        /**
          * Checks whether the base tag of the file specified by the reader is
          * compatible with this parser.
          *

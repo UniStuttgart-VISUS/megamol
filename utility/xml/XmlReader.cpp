@@ -350,6 +350,10 @@ bool XmlReader::parseXml(void) {
             }
         }
 
+        if (this->externalParser != NULL) {
+            this->externalParser->Completed();
+        }
+
     } catch (...) {
         XML_ParserFree(parser);
         this->internalParser = NULL;

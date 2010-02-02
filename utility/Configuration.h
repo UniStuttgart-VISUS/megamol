@@ -358,6 +358,29 @@ namespace xml {
         void ListPluginsToLoad(
             vislib::SingleLinkedList<vislib::TString> &plugins);
 
+        /**
+         * Adds 'dir' as search path for shader files
+         *
+         * @param dir The shader path to be added
+         */
+        void AddShaderDirectory(const char *dir);
+
+        /**
+         * Adds 'dir' as search path for shader files
+         *
+         * @param dir The shader path to be added
+         */
+        void AddShaderDirectory(const wchar_t *dir);
+
+        /**
+         * Answer the array of shader search directories
+         *
+         * @return The array of shader search directories
+         */
+        inline const vislib::Array<vislib::StringW>& ShaderDirectories(void) const {
+            return this->shaderDirs;
+        }
+
     private:
 
         /** ctor */
@@ -625,14 +648,11 @@ namespace xml {
         /** flag whether or not to allow setting a new log file name from the configuration file */
         static bool logFilenameLocked;
 
-        /** the root directory */
-        vislib::StringW baseDir;
-
         /** the application directory */
         vislib::StringW appDir;
 
-        /** the shader sourcecode directory */
-        vislib::StringW shaderDir;
+        /** the shader sourcecode directories */
+        vislib::Array<vislib::StringW> shaderDirs;
 
         /**
          * temporary pointer to the log object of the instance. This pointer 
