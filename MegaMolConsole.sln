@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution
 		configure.lin.pl = configure.lin.pl
 		configure.win.pl = configure.win.pl
 		ExtLibs.mk.input = ExtLibs.mk.input
-		ExtLibs.vsprops.input = ExtLibs.vsprops.input
+		ExtLibTw.vsprops.input = ExtLibTw.vsprops.input
 		Makefile = Makefile
 	EndProjectSection
 EndProject

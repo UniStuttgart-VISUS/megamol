@@ -24,7 +24,7 @@
 			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\vislibVSProps\TargetDebug32.vsprops;..\ExtLibs.vsprops;..\common.vsprops"
+			InheritedPropertySheets="..\vislibVSProps\TargetDebug32.vsprops;..\ExtLibs.vsprops;..\common.vsprops;..\ExtLibTw.vsprops"
 			CharacterSet="0"
 			>
 			<Tool
@@ -45,12 +45,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)/graphics/include&quot;;&quot;$(VISlibPath)/gl/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -66,11 +67,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib opengl32.lib"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
-				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib"
+				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
@@ -105,7 +106,7 @@
 			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\vislibVSProps\TargetDebug64.vsprops;..\ExtLibs.vsprops;..\common.vsprops"
+			InheritedPropertySheets="..\vislibVSProps\TargetDebug64.vsprops;..\ExtLibs.vsprops;..\common.vsprops;..\ExtLibTw.vsprops"
 			CharacterSet="0"
 			>
 			<Tool
@@ -127,12 +128,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)/graphics/include&quot;;&quot;$(VISlibPath)/gl/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -148,11 +150,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib opengl32.lib"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
-				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib"
+				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
@@ -187,7 +189,7 @@
 			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\vislibVSProps\TargetRelease32.vsprops;..\ExtLibs.vsprops;..\common.vsprops"
+			InheritedPropertySheets="..\vislibVSProps\TargetRelease32.vsprops;..\ExtLibs.vsprops;..\common.vsprops;..\ExtLibTw.vsprops"
 			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
@@ -208,10 +210,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)/graphics/include&quot;;&quot;$(VISlibPath)/gl/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -227,11 +230,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib opengl32.lib"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
-				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib"
+				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -268,7 +271,7 @@
 			OutputDirectory="Win$(Bits)\$(ConfigurationName)"
 			IntermediateDirectory="Win$(Bits)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\vislibVSProps\TargetRelease64.vsprops;..\ExtLibs.vsprops;..\common.vsprops"
+			InheritedPropertySheets="..\vislibVSProps\TargetRelease64.vsprops;..\ExtLibs.vsprops;..\common.vsprops;..\ExtLibTw.vsprops"
 			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
@@ -290,10 +293,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)\api&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)/graphics/include&quot;;&quot;$(VISlibPath)/gl/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -309,11 +313,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib opengl32.lib"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
-				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib"
+				IgnoreDefaultLibraryNames="MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -368,6 +372,10 @@
 			</File>
 			<File
 				RelativePath=".\CoreHandle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GUILayer.cpp"
 				>
 			</File>
 			<File
@@ -446,6 +454,10 @@
 			</File>
 			<File
 				RelativePath=".\CoreHandle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GUILayer.h"
 				>
 			</File>
 			<File

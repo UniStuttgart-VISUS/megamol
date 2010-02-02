@@ -11,3 +11,12 @@ outbin := %outbin%
 vislibpath := %vislib%
 visglutpath := %visglutPath%
 mmcorepath := %mmcorePath%
+
+ifeq (%withTweakbar%$1$0$, 1)
+	tweakbarpath := %tweakbarpath%
+	IncludeDir += $(tweakbarpath)/include
+	CompilerFlags += -DWITH_TWEAKBAR
+	LinkerFlags += -ltweakbarpath$(BITS)
+	DebugLinkerFlags += -L$(tweakbarpath)/lib$(BITS)d 
+	ReleaseLinkerFlags += -L$(tweakbarpath)/lib$(BITS)
+endif

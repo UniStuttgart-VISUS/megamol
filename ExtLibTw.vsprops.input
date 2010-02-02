@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+  ProjectType="Visual C++"
+  Version="8.00"
+  Name="ExtLibTw"
+  >
+    <Tool
+          Name="VCCLCompilerTool"
+          AdditionalIncludeDirectories="%withTweakbar%!$(TweakbarPath)\include!!"
+          PreprocessorDefinitions="%withTweakbar%!WITH_TWEAKBAR!!"
+	/>
+    <Tool
+          Name="VCLinkerTool"
+          AdditionalLibraryDirectories="%withTweakbar%!$(TweakbarPath)\lib!!"
+          AdditionalDependencies="%withTweakbar%!AntTweakBar$(BitsD).lib!!"
+	/>
+    <UserMacro
+          Name="TweakbarPath"
+          Value="%tweakbarpath%"
+          PerformEnvironmentSet="true"
+	/>
+</VisualStudioPropertySheet>

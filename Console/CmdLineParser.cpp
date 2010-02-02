@@ -59,7 +59,9 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("id"), _T("The view instance id specifying the window to place"))
         ->Add(ParserOption::STRING_VALUE, _T("placement"), _T("Specifies the window placement (Syntax: \"{ F | [X<num>Y<num>][W<num>H<num>] }\")"))),
     paramFileInit(0, _T("paramfileinit"), _T("if present the parameter file is written as soon as all instances have been created. (Has no effect if no parameter file is specified.)")),
-    paramFileInitOnly(0, _T("paramfileinitonly"), _T("if present the parameter file is written as soon as all instances have been created and terminates the application afterwards. (Has no effect if no parameter file is specified.)")) {
+    paramFileInitOnly(0, _T("paramfileinitonly"), _T("if present the parameter file is written as soon as all instances have been created and terminates the application afterwards. (Has no effect if no parameter file is specified.)")),
+    setVSync(0, _T("vsync"), _T("(De-)Activates the vsync for all windows."), ParserOption::FLAG_UNIQUE,
+        ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("Switch"), _T("'True' forces vsync enable, 'False' forces vsync disable"))) {
 
     this->parser.AddOption(&this->help);
     this->parser.AddOption(&this->fullHelp);
@@ -79,6 +81,7 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     this->parser.AddOption(&this->logEchoLevel);
 
     this->parser.AddOption(&this->forceViewer);
+    this->parser.AddOption(&this->setVSync);
 
     this->parser.AddOption(&this->projectFile);
     this->parser.AddOption(&this->instJobView);

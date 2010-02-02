@@ -18,7 +18,9 @@
 #include "vislib/KeyCode.h"
 #include "vislib/Map.h"
 #include "vislib/SmartPtr.h"
-
+#ifdef WITH_TWEAKBAR
+#include "GUILayer.h"
+#endif /* WITH_TWEAKBAR */
 
 #ifdef _WIN32
 #define MMAPI_CALLBACK __stdcall
@@ -239,6 +241,11 @@ namespace console {
 
         /** Handle to the viewer window */
         CoreHandle hWnd;
+
+#ifdef WITH_TWEAKBAR
+        /** The gui object */
+        GUILayer::GUIClient gui;
+#endif /* WITH_TWEAKBAR */
 
         /** Flag whether this window is closed, or not. */
         bool isClosed;

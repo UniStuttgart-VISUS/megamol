@@ -220,8 +220,12 @@ void MMAPI_CALLBACK megamol::console::Window::CloseRequestCallback(void* data) {
 /*
  * megamol::console::Window::Window
  */
-megamol::console::Window::Window(void) : hView(), hWnd(), isClosed(false),
-        modAlt(false), modCtrl(false), modShift(false), hotkeys() {
+megamol::console::Window::Window(void) : hView(), hWnd(),
+#ifdef WITH_TWEAKBAR
+        gui(),
+#endif /* WITH_TWEAKBAR */
+        isClosed(false), modAlt(false), modCtrl(false), modShift(false),
+        hotkeys() {
     this->mouseBtns[0] = false;
     this->mouseBtns[1] = false;
     this->mouseBtns[2] = false;

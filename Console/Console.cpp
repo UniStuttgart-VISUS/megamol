@@ -27,6 +27,7 @@
 #include "vislib/CriticalSection.h"
 #include "vislib/Console.h"
 #include "vislib/functioncast.h"
+#include "vislib/glfunctions.h"
 #include "vislib/Log.h"
 #include "vislib/Map.h"
 #include "vislib/memutils.h"
@@ -566,6 +567,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     vislib::TMultiSz winPoss;
     bool initParameterFile = false;
     bool initOnlyParameterFile = false;
+    bool setVSync = false;
+    bool vSyncOff = false;
     int retval = 0;
 
 #ifndef _WIN32
@@ -576,6 +579,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     parameterFile = parser->ParameterFile();
     initParameterFile = parser->InitParameterFile();
     initOnlyParameterFile = parser->InitOnlyParameterFile();
+    setVSync = parser->SetVSync();
+    vSyncOff = parser->SetVSyncOff();
 
     // run the application!
 #ifdef _WIN32
@@ -701,7 +706,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 
         // Initialise views
         while (::mmcHasPendingViewInstantiationRequests(hCore)) {
-            vislib::SmartPtr<megamol::console::Window> win 
+            vislib::SmartPtr<megamol::console::Window> win
                 = new megamol::console::Window();
 
             if (!::mmvCreateWindow(hView, win->HWnd())) {
@@ -721,6 +726,10 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                     "Unable to instantiate requested view.");
                 retval = -27;
                 continue;
+            }
+
+            if (setVSync) {
+                vislib::graphics::gl::EnableVSync(!vSyncOff);
             }
 
             ::mmvInstallContextMenu(win->HWnd());

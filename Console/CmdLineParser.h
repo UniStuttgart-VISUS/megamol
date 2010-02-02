@@ -285,6 +285,30 @@ namespace utility {
          */
         vislib::TMultiSz WindowPositions(void) const;
 
+        /**
+         * Answer if the set vsync option is present
+         *
+         * @return 'True' if the set vsync option is present
+         */
+        inline bool SetVSync(void) const {
+            ParserArgument *arg = this->setVSync.GetFirstOccurrence();
+            return (arg != NULL);
+        }
+
+        /**
+         * Answers if the vsync should be turned off
+         *
+         * @return 'True' if the vsync should be turned off
+         */
+        inline bool SetVSyncOff(void) const {
+            ParserArgument *arg = this->setVSync.GetFirstOccurrence();
+            try {
+                return ((arg != NULL) && !arg->GetValueBool());
+            } catch(...) {
+            }
+            return false;
+        }
+
     private:
 
         /** the default value of the flag of the cmd line echo */
@@ -376,6 +400,9 @@ namespace utility {
          * have been created and terminates the application afterwards.
          */
         ParserOption paramFileInitOnly;
+
+        /** Parser option to control VSync */
+        ParserOption setVSync;
 
     };
 
