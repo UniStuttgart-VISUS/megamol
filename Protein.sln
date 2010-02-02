@@ -1,18 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{26B1A6E1-F518-4B0E-B5A3-C4A04BDACC00}"
-	ProjectSection(SolutionItems) = preProject
-		common.mk = common.mk
-		config.bat = config.bat
-		config.sh = config.sh
-		configure.lin.pl = configure.lin.pl
-		configure.win.pl = configure.win.pl
-		ExtLibs.mk.input = ExtLibs.mk.input
-		ExtLibs.vsprops.input = ExtLibs.vsprops.input
-		Makefile = Makefile
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Protein", "Protein.vcproj", "{B68B06CD-66AF-475E-BF71-36EA0DED696B}"
 EndProject
 Global

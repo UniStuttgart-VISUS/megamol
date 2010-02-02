@@ -97,7 +97,7 @@ bool SolPathDataSource::getData(megamol::core::Call &call) {
         this->loadData();
     }
 
-    spdc->Set(this->pathlines.Count(), this->pathlines.PeekElements(),
+    spdc->Set(static_cast<unsigned int>(this->pathlines.Count()), this->pathlines.PeekElements(),
         this->minTime, this->maxTime, this->minSpeed, this->maxSpeed);
 
     return true;
