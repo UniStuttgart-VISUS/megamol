@@ -54,15 +54,11 @@ all: $(TargetName)d $(TargetName)
 # Rules for plugins in $(SolOutputDir):
 $(TargetName)d: $(IntDir)/$(DebugDir)/$(TargetName)$(BITS)d.lin$(BITS).mmplg
 	@mkdir -p $(outbin)
-	@mkdir -p $(outshaders)
 	cp $< $(outbin)/$(TargetName)$(BITS)d.lin$(BITS).mmplg
-	cd Shaders && find . -wholename '*.svn' -prune -o -exec cp --parents \{\} $(outshaders) \;
 
 $(TargetName): $(IntDir)/$(ReleaseDir)/$(TargetName)$(BITS).lin$(BITS).mmplg
 	@mkdir -p $(outbin)
-	@mkdir -p $(outshaders)
 	cp $< $(outbin)/$(TargetName)$(BITS).lin$(BITS).mmplg
-	cd Shaders && find . -wholename '*.svn' -prune -o -exec cp --parents \{\} $(outshaders) \;
 
 
 # Rules for intermediate plugins:
