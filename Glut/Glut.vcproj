@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(ProjectDir)\lib mkdir $(ProjectDir)\lib&#x0D;&#x0A;if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).dll $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).lib $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(ProjectDir)\lib&quot; mkdir &quot;$(ProjectDir)\lib&quot;&#x0D;&#x0A;if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).dll&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).lib&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -179,7 +179,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(ProjectDir)\lib mkdir $(ProjectDir)\lib&#x0D;&#x0A;if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).dll $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).lib $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(ProjectDir)\lib&quot; mkdir &quot;$(ProjectDir)\lib&quot;&#x0D;&#x0A;if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).dll&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).lib&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -260,7 +260,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(ProjectDir)\lib mkdir $(ProjectDir)\lib&#x0D;&#x0A;if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).dll $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).lib $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(ProjectDir)\lib&quot; mkdir &quot;$(ProjectDir)\lib&quot;&#x0D;&#x0A;if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).dll&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).lib&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -342,7 +342,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(ProjectDir)\lib mkdir $(ProjectDir)\lib&#x0D;&#x0A;if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).dll $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetDir)\$(TargetName).lib $(ProjectDir)\lib\ /Y /F /V /G /K&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(ProjectDir)\lib&quot; mkdir &quot;$(ProjectDir)\lib&quot;&#x0D;&#x0A;if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).dll&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetDir)\$(TargetName).lib&quot; &quot;$(ProjectDir)\lib&quot; /Y /F /V /G /K&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

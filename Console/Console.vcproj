@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -179,7 +179,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -260,7 +260,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -342,7 +342,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not exist $(OutputBin) mkdir $(OutputBin)&#x0D;&#x0A;xcopy $(TargetPath) $(OutputBin) /Y /F /V /G /K&#x0D;&#x0A;if exist $(ProjectDir)\PostBuild.bat cmd /Q /C $(ProjectDir)\PostBuild.bat&#x0D;&#x0A;"
+				CommandLine="if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
