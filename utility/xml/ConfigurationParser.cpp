@@ -69,7 +69,7 @@ ConfigurationParser::RedirectedConfigurationException::operator=(
 ConfigurationParser::ConfigurationParser(
         megamol::core::utility::Configuration& config) 
         : ConditionalParser(), config(config), activeInstanceRequest(),
-        legacyBaseDir(), legacyShaderDir() {
+        xmlVersion(), legacyBaseDir(), legacyShaderDir() {
     this->SetConfigSetProvider(&this->config);
 }
 
@@ -105,19 +105,24 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
             }
 
         } else if (attr.Key().Equals(MMXML_STRING("version"), false)) {
-            vislib::VersionNumber ver;
-            if (ver.Parse(attr.Value()) >= 1) {
-                if (ver < vislib::VersionNumber(1, 0)) {
+            if (this->xmlVersion.Parse(attr.Value()) >= 1) {
+                if (this->xmlVersion < vislib::VersionNumber(1, 0)) {
                     versionValid = false; // pre 1.0 does not exist!
-                } else if (ver < vislib::VersionNumber(1, 1)) {
+                } else if (this->xmlVersion < vislib::VersionNumber(1, 1)) {
                     versionValid = true; // 1.0.x.x
                     this->setConditionalParserVersion(0);
                     this->legacyBaseDir = vislib::sys::Path::GetCurrentDirectoryW();
                     this->legacyShaderDir.Clear();
-                } else if (ver < vislib::VersionNumber(1, 2)) {
+                } else if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
                     versionValid = true; // 1.1.x.x
                     this->setConditionalParserVersion(1);
                     this->legacyBaseDir = vislib::sys::Path::GetCurrentDirectoryW();
+                    this->legacyShaderDir.Clear();
+                } else if (this->xmlVersion < vislib::VersionNumber(1, 3)) {
+                    versionValid = true; // 1.2.x.x
+                    this->setConditionalParserVersion(1);
+                    this->config.shaderDirs.Clear();
+                    this->legacyBaseDir.Clear();
                     this->legacyShaderDir.Clear();
                 } else {
                     versionValid = false; // >= 1.2 does not exist yet!
@@ -139,6 +144,11 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
         vislib::sys::Log::DefaultLog.WriteMsg(1, 
             "base tag attribute \"version\" not present or invalid.");
         return false;
+    }
+    if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+            "config file version %s marked deprecated. Upgrade to config file version 1.2",
+            this->xmlVersion.ToStringA().PeekBuffer());
     }
 
     return typeValid && versionValid;
@@ -216,66 +226,103 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
         return true;
     }
 
-    if (MMXML_STRING("directory").Equals(name, false)) {
+    if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
+        if (MMXML_STRING("directory").Equals(name, false)) {
 
-        unsigned int dirname = 0;
-        const MMXML_CHAR *path = NULL;
-        const char *pathA = NULL;
-        for (int i = 0; attrib[i]; i += 2) {
-            if (MMXML_STRING("name").Equals(attrib[i])) {
-                if (MMXML_STRING("base").Equals(attrib[i + 1], false)) {
-                    dirname = 2; 
-                } else if (MMXML_STRING("application").Equals(attrib[i + 1],
-                        false)) {
-                    dirname = 3; 
-                } else if (MMXML_STRING("shader").Equals(attrib[i + 1],
-                        false)) {
-                    dirname = 4; 
+            unsigned int dirname = 0;
+            const MMXML_CHAR *path = NULL;
+            const char *pathA = NULL;
+            for (int i = 0; attrib[i]; i += 2) {
+                if (MMXML_STRING("name").Equals(attrib[i])) {
+                    if (MMXML_STRING("base").Equals(attrib[i + 1], false)) {
+                        dirname = 2; 
+                    } else if (MMXML_STRING("application").Equals(attrib[i + 1],
+                            false)) {
+                        dirname = 3; 
+                    } else if (MMXML_STRING("shader").Equals(attrib[i + 1],
+                            false)) {
+                        dirname = 4; 
+                    } else {
+                        dirname = 1;
+                    }
+                } else if (MMXML_STRING("path").Equals(attrib[i])) {
+                    path = attrib[i + 1];
                 } else {
-                    dirname = 1;
+                    this->WarnUnexpectedAttribut(name, attrib[i]);
                 }
-            } else if (MMXML_STRING("path").Equals(attrib[i])) {
-                path = attrib[i + 1];
-            } else {
-                this->WarnUnexpectedAttribut(name, attrib[i]);
             }
+
+            if (dirname == 0) {
+                this->Error("Tag \"directory\" without \"name\" ignored.");
+            } else if (dirname == 1) {
+                this->Error("Tag \"directory\" with unknown \"name\" ignored.");
+            } else if (path == NULL) {
+                this->Error("Tag \"directory\" without \"path\" ignored.");
+            } else {
+                vislib::StringW pathW(path);
+                //if (!vislib::UTF8Encoder::Decode(pathW, path)) {
+                //    pathW = A2W(path);
+                //}
+                switch (dirname) {
+                    case 2:
+                        this->legacyBaseDir = pathW;
+                        pathA = "base"; 
+                        break;
+                    case 3:
+                        this->config.appDir = pathW;
+                        pathA = "application";
+                        break;
+                    case 4:
+                        this->legacyShaderDir = pathW;
+                        pathA = "shader";
+                        break;
+                    default:
+                        this->FatalError(
+                            "Internal Error while parsing directory tag.");
+                        break;
+                }
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_INFO + 50, 
+                    "Directory \"%s\" set to \"%s\"", pathA, W2A(pathW));
+            }
+            return true;
         }
 
-        if (dirname == 0) {
-            this->Error("Tag \"directory\" without \"name\" ignored.");
-        } else if (dirname == 1) {
-            this->Error("Tag \"directory\" with unknown \"name\" ignored.");
-        } else if (path == NULL) {
-            this->Error("Tag \"directory\" without \"path\" ignored.");
-        } else {
-            vislib::StringW pathW(path);
-            //if (!vislib::UTF8Encoder::Decode(pathW, path)) {
-            //    pathW = A2W(path);
-            //}
-            switch (dirname) {
-                case 2:
-                    this->legacyBaseDir = pathW;
-                    pathA = "base"; 
-                    break;
-                case 3:
-                    this->config.appDir = pathW;
-                    pathA = "application";
-                    break;
-                case 4:
-                    this->legacyShaderDir = pathW;
-                    pathA = "shader";
-                    break;
-                default:
-                    this->FatalError(
-                        "Internal Error while parsing directory tag.");
-                    break;
+    } else if (this->xmlVersion < vislib::VersionNumber(1, 3)) {
+        if (MMXML_STRING("appdir").Equals(name, false)) {
+            const MMXML_CHAR *path = NULL;
+            for (int i = 0; attrib[i]; i += 2) {
+                if (MMXML_STRING("path").Equals(attrib[i])) {
+                    path = attrib[i + 1];
+                } else {
+                    this->WarnUnexpectedAttribut(name, attrib[i]);
+                }
             }
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO + 50, 
-                "Directory \"%s\" set to \"%s\"", pathA, W2A(pathW));
+            if (path != NULL) {
+                this->config.appDir = vislib::StringW(path);
+            } else {
+                this->Warning("\"appdir\" tag without \"path\" attribute ignored.\n");
+            }
+            return true;
         }
-        return true;
+        if (MMXML_STRING("shaderdir").Equals(name, false)) {
+            const MMXML_CHAR *path = NULL;
+            for (int i = 0; attrib[i]; i += 2) {
+                if (MMXML_STRING("path").Equals(attrib[i])) {
+                    path = attrib[i + 1];
+                } else {
+                    this->WarnUnexpectedAttribut(name, attrib[i]);
+                }
+            }
+            if (path != NULL) {
+                this->config.AddShaderDirectory(path);
+            } else {
+                this->Warning("\"shaderdir\" tag without \"path\" attribute ignored.\n");
+            }
+            return true;
+        }
     }
+
 
     if (MMXML_STRING("plugin").Equals(name, false)) {
         const MMXML_CHAR *path = NULL;
@@ -309,10 +356,10 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
 
         if ((path != NULL) && (name != NULL)) {
             config.AddPluginLoadInfo(vislib::TString(path), vislib::TString(name), inc);
-            return true;
         } else {
             this->Warning("\"plugin\" tag without \"name\" and \"path\" attribute ignored.\n");
         }
+        return true;
     }
 
     if (MMXML_STRING("log").Equals(name, false)) {
@@ -464,13 +511,23 @@ bool ConfigurationParser::EndTag(unsigned int num, unsigned int level,
     }
 
     if (MMXML_STRING("redirect").Equals(name, false)
-            || MMXML_STRING("directory").Equals(name, false)
             || MMXML_STRING("plugin").Equals(name, false)
             || MMXML_STRING("log").Equals(name, false)
             || MMXML_STRING("set").Equals(name, false)
             || MMXML_STRING("param").Equals(name)) {
         return true;
     }
+    if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
+        if (MMXML_STRING("directory").Equals(name, false)) {
+            return true;
+        }
+    } else if (this->xmlVersion < vislib::VersionNumber(1, 3)) {
+        if (MMXML_STRING("appdir").Equals(name, false)
+                || MMXML_STRING("shaderdir").Equals(name, false)) {
+            return true;
+        }
+    }
+
     if (MMXML_STRING("instance").Equals(name)) {
         if ((!this->activeInstanceRequest.Identifier().IsEmpty())
                 && (!this->activeInstanceRequest.Description().IsEmpty())) {
@@ -490,7 +547,8 @@ bool ConfigurationParser::EndTag(unsigned int num, unsigned int level,
  * ConfigurationParser::Completed
  */
 void ConfigurationParser::Completed(void) {
-    if (!this->legacyBaseDir.IsEmpty()) {
+
+    if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
         // legacy config file was parsed!
 
         // make app path absolute
@@ -512,7 +570,38 @@ void ConfigurationParser::Completed(void) {
         this->config.shaderDirs.Clear();
         this->config.AddShaderDirectory(
             vislib::sys::Path::Resolve(this->legacyShaderDir, this->legacyBaseDir));
+
+    } else if (this->xmlVersion < vislib::VersionNumber(1, 3)) {
+
+        // make plugin paths absolute
+        vislib::SingleLinkedList<Configuration::PluginLoadInfo>::Iterator iter
+            = this->config.pluginLoadInfos.GetIterator();
+        while (iter.HasNext()) {
+            Configuration::PluginLoadInfo& info = iter.Next();
+            if (vislib::sys::Path::IsRelative(info.directory)) {
+                info.directory = vislib::sys::Path::Resolve(info.directory, this->config.appDir);
+            }
+        }
+
+        // make shader paths absolute
+        if (this->config.shaderDirs.Count() == 0) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "No shader directories configured");
+
+        } else for (SIZE_T i = 0; i < this->config.shaderDirs.Count(); i++) {
+            if (vislib::sys::Path::IsRelative(this->config.shaderDirs[i])) {
+                this->config.shaderDirs[i]
+                    = vislib::sys::Path::Resolve(this->config.shaderDirs[i], this->config.appDir);
+                if (!vislib::sys::File::IsDirectory(this->config.shaderDirs[i])) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                        "Configured shader directory \"%s\" does not exist",
+                        vislib::StringA(this->config.shaderDirs[i]).PeekBuffer());
+                }
+            }
+        }
+
     }
+
 }
 
 

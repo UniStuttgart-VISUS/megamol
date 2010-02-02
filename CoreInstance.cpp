@@ -115,6 +115,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->log.SetLogFileName(static_cast<const char*>(NULL), false);
     this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
     this->log.SetEchoLevel(vislib::sys::Log::LEVEL_NONE);
+    this->log.SetOfflineMessageBufferSize(25);
     this->log.SetEchoOutTarget(&this->logEchoTarget);
 
     // register builtin descriptions

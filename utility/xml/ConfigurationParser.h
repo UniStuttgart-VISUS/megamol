@@ -11,12 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-
 #include "utility/Configuration.h"
 #include "utility/xml/ConditionalParser.h"
 #include "utility/xml/XmlReader.h"
 #include "vislib/Exception.h"
 #include "vislib/types.h"
+#include "vislib/VersionNumber.h"
 
 
 namespace megamol {
@@ -159,6 +159,9 @@ namespace xml {
 
         /** The active instance */
         Configuration::InstanceRequest activeInstanceRequest;
+
+        /** The version number of the xml file */
+        vislib::VersionNumber xmlVersion;
 
         /** The legacy base directory */
         vislib::StringW legacyBaseDir;

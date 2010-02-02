@@ -154,7 +154,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="glu32.lib opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibnet$(BitsD).lib vislibcluster$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib expatw$(BitsD).lib libpng$(BitsD).lib zlib$(BitsD).lib"
 				OutputFile="$(OutDir)\MegaMolCore$(BitsD).dll"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(VISlibPath)\lib&quot;;&quot;$(ZlibPath)\lib&quot;;&quot;$(PngPath)\lib&quot;;&quot;$(ExpatPath)\lib&quot;"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
