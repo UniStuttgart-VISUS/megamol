@@ -10,11 +10,6 @@
   PerformEnvironmentSet="true"
   />
   <UserMacro
-  Name="OutputShaders"
-  Value="%outshader%"
-  PerformEnvironmentSet="true"
-  />
-  <UserMacro
   Name="MegaMolCorePath"
   Value="%mmcorePath%"
   PerformEnvironmentSet="true"
