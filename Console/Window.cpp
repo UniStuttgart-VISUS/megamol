@@ -107,6 +107,9 @@ void megamol::console::Window::RenderCallback(void *wnd, void *params) {
     } else {
         win->MarkToClose();
     }
+#ifdef WITH_TWEAKBAR
+    win->gui.Layer().Draw();
+#endif /* WITH_TWEAKBAR */
 }
 
 
@@ -119,6 +122,9 @@ void megamol::console::Window::ResizeCallback(void *wnd,
     ASSERT((win != NULL) && (params != NULL));
     ASSERT(::mmcIsHandleValid(win->hView));
     ASSERT(::mmvIsHandleValid(win->hWnd));
+#ifdef WITH_TWEAKBAR
+    win->gui.SetWindowSize(params[0], params[1]);
+#endif /* WITH_TWEAKBAR */
     ::mmcResizeView(win->hView, params[0], params[1]);
 }
 
@@ -160,6 +166,9 @@ void megamol::console::Window::MouseButtonCallback(void *wnd,
     ASSERT(::mmcIsHandleValid(win->hView));
     ASSERT(::mmvIsHandleValid(win->hWnd));
     win->setModifierStates(params->modAlt, params->modCtrl, params->modShift);
+#ifdef WITH_TWEAKBAR
+    if (!win->gui.Layer().MouseButton(params->button, params->buttonDown) || !params->buttonDown) {
+#endif /* WITH_TWEAKBAR */
     switch (params->button) {
         case 0: case 1: case 2:
             if (win->mouseBtns[params->button] != params->buttonDown) {
@@ -171,6 +180,9 @@ void megamol::console::Window::MouseButtonCallback(void *wnd,
         default:
             break;
     }
+#ifdef WITH_TWEAKBAR
+    }
+#endif /* WITH_TWEAKBAR */
     ::mmcSet2DMousePosition(win->hView,
         static_cast<float>(params->mouseX),
         static_cast<float>(params->mouseY));
@@ -187,6 +199,9 @@ void megamol::console::Window::MouseMoveCallback(void *wnd,
     ASSERT(::mmcIsHandleValid(win->hView));
     ASSERT(::mmvIsHandleValid(win->hWnd));
     win->setModifierStates(params->modAlt, params->modCtrl, params->modShift);
+#ifdef WITH_TWEAKBAR
+    win->gui.Layer().MouseMove(params->mouseX, params->mouseY);
+#endif /* WITH_TWEAKBAR */
     ::mmcSet2DMousePosition(win->hView,
         static_cast<float>(params->mouseX),
         static_cast<float>(params->mouseY));
