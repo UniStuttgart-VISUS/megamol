@@ -9,6 +9,7 @@
 #include "Window.h"
 #include "visglut.h"
 #include "vislib/KeyCode.h"
+#include "vislib/Log.h"
 #include <GL/gl.h>
 
 
@@ -285,21 +286,31 @@ megamol::viewer::Window* megamol::viewer::Window::thisWindow(void) {
  * megamol::viewer::Window::glutDisplayCallback
  */
 void megamol::viewer::Window::glutDisplayCallback(void) {
-    Window *t = thisWindow();
-    if (t == NULL) return;
-    bool contRedraw = true;
+    try {
 
-    t->renderCallback.Call(*thisWindow(), &contRedraw);
+        Window *t = thisWindow();
+        if (t == NULL) return;
+        bool contRedraw = true;
 
-    if (t->presentationMode > 0) {
-        t->presentationMode = 2;
-        t->owner.PresentationModeSwap();
+        t->renderCallback.Call(*thisWindow(), &contRedraw);
 
-    } else {
-        ::glutSwapBuffers();
-        if (contRedraw) {
-            ::glutPostRedisplay();
+        if (t->presentationMode > 0) {
+            t->presentationMode = 2;
+            t->owner.PresentationModeSwap();
+
+        } else {
+            ::glutSwapBuffers();
+            if (contRedraw) {
+                ::glutPostRedisplay();
+            }
         }
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
 }
 
@@ -308,16 +319,26 @@ void megamol::viewer::Window::glutDisplayCallback(void) {
  * megamol::viewer::Window::glutReshapeCallback
  */
 void megamol::viewer::Window::glutReshapeCallback(int w, int h) {
-    if (thisWindow() == NULL) return;
-    if (w <= 0) w = 1;
-    if (h <= 0) h = 1;
-    if (!thisWindow()->isFullscreen) {
-        thisWindow()->width = w;
-        thisWindow()->height = h;
+    try {
+
+        if (thisWindow() == NULL) return;
+        if (w <= 0) w = 1;
+        if (h <= 0) h = 1;
+        if (!thisWindow()->isFullscreen) {
+            thisWindow()->width = w;
+            thisWindow()->height = h;
+        }
+        ::glViewport(0, 0, w, h);
+        unsigned int size[2] = { w, h };
+        thisWindow()->resizeCallback.Call(*thisWindow(), size);
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
-    ::glViewport(0, 0, w, h);
-    unsigned int size[2] = { w, h };
-    thisWindow()->resizeCallback.Call(*thisWindow(), size);
 }
 
 
@@ -326,34 +347,44 @@ void megamol::viewer::Window::glutReshapeCallback(int w, int h) {
  */
 void megamol::viewer::Window::glutKeyboardCallback(unsigned char key,
         int x, int y) {
-    if (thisWindow() == NULL) return;
-    mmvKeyParamsStruct params;
+    try {
 
-    vislib::sys::KeyCode keycode;
-    switch (key) {
-        case 8: keycode = vislib::sys::KeyCode::KEY_BACKSPACE; break;
-        case 9: keycode = vislib::sys::KeyCode::KEY_TAB; break;
-        case 13: keycode = vislib::sys::KeyCode::KEY_ENTER; break;
-        case 27: keycode = vislib::sys::KeyCode::KEY_ESC; break;
-        case 127: keycode = vislib::sys::KeyCode::KEY_DELETE; break;
-        default: keycode = key; break;
+        if (thisWindow() == NULL) return;
+        mmvKeyParamsStruct params;
+
+        vislib::sys::KeyCode keycode;
+        switch (key) {
+            case 8: keycode = vislib::sys::KeyCode::KEY_BACKSPACE; break;
+            case 9: keycode = vislib::sys::KeyCode::KEY_TAB; break;
+            case 13: keycode = vislib::sys::KeyCode::KEY_ENTER; break;
+            case 27: keycode = vislib::sys::KeyCode::KEY_ESC; break;
+            case 127: keycode = vislib::sys::KeyCode::KEY_DELETE; break;
+            default: keycode = key; break;
+        }
+
+        params.mouseX = x;
+        params.mouseY = y;
+        
+        thisWindow()->modifiers = ::glutGetModifiers();
+        params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
+        params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
+        params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
+
+        if (params.modShift) keycode = vislib::sys::KeyCode::KEY_MOD_SHIFT | keycode;
+        if (params.modCtrl) keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | keycode;
+        if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
+
+        params.keycode = keycode;
+
+        thisWindow()->keyCallback.Call(*thisWindow(), &params);
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
-
-    params.mouseX = x;
-    params.mouseY = y;
-    
-    thisWindow()->modifiers = ::glutGetModifiers();
-    params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
-    params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
-    params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
-
-    if (params.modShift) keycode = vislib::sys::KeyCode::KEY_MOD_SHIFT | keycode;
-    if (params.modCtrl) keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | keycode;
-    if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
-
-    params.keycode = keycode;
-
-    thisWindow()->keyCallback.Call(*thisWindow(), &params);
 }
 
 
@@ -361,95 +392,105 @@ void megamol::viewer::Window::glutKeyboardCallback(unsigned char key,
  * megamol::viewer::Window::glutSpecialCallback
  */
 void megamol::viewer::Window::glutSpecialCallback(int key, int x, int y) {
-    if (thisWindow() == NULL) return;
-    mmvKeyParams params;
+    try {
 
-    vislib::sys::KeyCode keycode;
+        if (thisWindow() == NULL) return;
+        mmvKeyParams params;
 
-    params.mouseX = x;
-    params.mouseY = y;
+        vislib::sys::KeyCode keycode;
 
-    thisWindow()->modifiers = ::glutGetModifiers();
-    params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
-    params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
-    params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
+        params.mouseX = x;
+        params.mouseY = y;
 
-    switch (key) {
-        case GLUT_KEY_F1:
-            keycode = vislib::sys::KeyCode::KEY_F1;
-            break;
-        case GLUT_KEY_F2:
-            keycode = vislib::sys::KeyCode::KEY_F2;
-            break;
-        case GLUT_KEY_F3:
-            keycode = vislib::sys::KeyCode::KEY_F3;
-            break;
-        case GLUT_KEY_F4:
-            keycode = vislib::sys::KeyCode::KEY_F4;
-            break;
-        case GLUT_KEY_F5:
-            keycode = vislib::sys::KeyCode::KEY_F5;
-            break;
-        case GLUT_KEY_F6:
-            keycode = vislib::sys::KeyCode::KEY_F6;
-            break;
-        case GLUT_KEY_F7:
-            keycode = vislib::sys::KeyCode::KEY_F7;
-            break;
-        case GLUT_KEY_F8:
-            keycode = vislib::sys::KeyCode::KEY_F8;
-            break;
-        case GLUT_KEY_F9:
-            keycode = vislib::sys::KeyCode::KEY_F9;
-            break;
-        case GLUT_KEY_F10:
-            keycode = vislib::sys::KeyCode::KEY_F10;
-            break;
-        case GLUT_KEY_F11:
-            keycode = vislib::sys::KeyCode::KEY_F11;
-            break;
-        case GLUT_KEY_F12:
-            keycode = vislib::sys::KeyCode::KEY_F12;
-            break;
-        case GLUT_KEY_LEFT:
-            keycode = vislib::sys::KeyCode::KEY_LEFT;
-            break;
-        case GLUT_KEY_UP:
-            keycode = vislib::sys::KeyCode::KEY_UP;
-            break;
-        case GLUT_KEY_RIGHT:
-            keycode = vislib::sys::KeyCode::KEY_RIGHT;
-            break;
-        case GLUT_KEY_DOWN:
-            keycode = vislib::sys::KeyCode::KEY_DOWN;
-            break;
-        case GLUT_KEY_PAGE_UP:
-            keycode = vislib::sys::KeyCode::KEY_PAGE_UP;
-            break;
-        case GLUT_KEY_PAGE_DOWN:
-            keycode = vislib::sys::KeyCode::KEY_PAGE_DOWN;
-            break;
-        case GLUT_KEY_HOME:
-            keycode = vislib::sys::KeyCode::KEY_HOME;
-            break;
-        case GLUT_KEY_END:
-            keycode = vislib::sys::KeyCode::KEY_END;
-            break;
-        case GLUT_KEY_INSERT:
-            keycode = vislib::sys::KeyCode::KEY_INSERT;
-            break;
-        default:
-            fprintf(stderr, "Glut special key %d not handled.\n", key);
-            break;
+        thisWindow()->modifiers = ::glutGetModifiers();
+        params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
+        params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
+        params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
+
+        switch (key) {
+            case GLUT_KEY_F1:
+                keycode = vislib::sys::KeyCode::KEY_F1;
+                break;
+            case GLUT_KEY_F2:
+                keycode = vislib::sys::KeyCode::KEY_F2;
+                break;
+            case GLUT_KEY_F3:
+                keycode = vislib::sys::KeyCode::KEY_F3;
+                break;
+            case GLUT_KEY_F4:
+                keycode = vislib::sys::KeyCode::KEY_F4;
+                break;
+            case GLUT_KEY_F5:
+                keycode = vislib::sys::KeyCode::KEY_F5;
+                break;
+            case GLUT_KEY_F6:
+                keycode = vislib::sys::KeyCode::KEY_F6;
+                break;
+            case GLUT_KEY_F7:
+                keycode = vislib::sys::KeyCode::KEY_F7;
+                break;
+            case GLUT_KEY_F8:
+                keycode = vislib::sys::KeyCode::KEY_F8;
+                break;
+            case GLUT_KEY_F9:
+                keycode = vislib::sys::KeyCode::KEY_F9;
+                break;
+            case GLUT_KEY_F10:
+                keycode = vislib::sys::KeyCode::KEY_F10;
+                break;
+            case GLUT_KEY_F11:
+                keycode = vislib::sys::KeyCode::KEY_F11;
+                break;
+            case GLUT_KEY_F12:
+                keycode = vislib::sys::KeyCode::KEY_F12;
+                break;
+            case GLUT_KEY_LEFT:
+                keycode = vislib::sys::KeyCode::KEY_LEFT;
+                break;
+            case GLUT_KEY_UP:
+                keycode = vislib::sys::KeyCode::KEY_UP;
+                break;
+            case GLUT_KEY_RIGHT:
+                keycode = vislib::sys::KeyCode::KEY_RIGHT;
+                break;
+            case GLUT_KEY_DOWN:
+                keycode = vislib::sys::KeyCode::KEY_DOWN;
+                break;
+            case GLUT_KEY_PAGE_UP:
+                keycode = vislib::sys::KeyCode::KEY_PAGE_UP;
+                break;
+            case GLUT_KEY_PAGE_DOWN:
+                keycode = vislib::sys::KeyCode::KEY_PAGE_DOWN;
+                break;
+            case GLUT_KEY_HOME:
+                keycode = vislib::sys::KeyCode::KEY_HOME;
+                break;
+            case GLUT_KEY_END:
+                keycode = vislib::sys::KeyCode::KEY_END;
+                break;
+            case GLUT_KEY_INSERT:
+                keycode = vislib::sys::KeyCode::KEY_INSERT;
+                break;
+            default:
+                fprintf(stderr, "Glut special key %d not handled.\n", key);
+                break;
+        }
+
+        if (params.modShift) keycode = vislib::sys::KeyCode::KEY_MOD_SHIFT | keycode;
+        if (params.modCtrl) keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | keycode;
+        if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
+
+        params.keycode = keycode;
+
+        thisWindow()->keyCallback.Call(*thisWindow(), &params);
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
-
-    if (params.modShift) keycode = vislib::sys::KeyCode::KEY_MOD_SHIFT | keycode;
-    if (params.modCtrl) keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | keycode;
-    if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
-
-    params.keycode = keycode;
-
-    thisWindow()->keyCallback.Call(*thisWindow(), &params);
 }
 
 
@@ -458,22 +499,32 @@ void megamol::viewer::Window::glutSpecialCallback(int key, int x, int y) {
  */
 void megamol::viewer::Window::glutMouseCallback(int button, int state,
         int x, int y) {
-    if (thisWindow() == NULL) return;
-    mmvMouseButtonParams params;
-    switch (button) {
-        case GLUT_LEFT_BUTTON: params.button = 0; break;
-        case GLUT_RIGHT_BUTTON: params.button = 1; break;
-        case GLUT_MIDDLE_BUTTON: params.button = 2; break;
-        default: return;
+    try {
+
+        if (thisWindow() == NULL) return;
+        mmvMouseButtonParams params;
+        switch (button) {
+            case GLUT_LEFT_BUTTON: params.button = 0; break;
+            case GLUT_RIGHT_BUTTON: params.button = 1; break;
+            case GLUT_MIDDLE_BUTTON: params.button = 2; break;
+            default: return;
+        }
+        params.buttonDown = state == GLUT_DOWN;
+        params.mouseX = x;
+        params.mouseY = y;
+        thisWindow()->modifiers = ::glutGetModifiers();
+        params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
+        params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
+        params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
+        thisWindow()->mouseButtonCallback.Call(*thisWindow(), &params);
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
-    params.buttonDown = state == GLUT_DOWN;
-    params.mouseX = x;
-    params.mouseY = y;
-    thisWindow()->modifiers = ::glutGetModifiers();
-    params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
-    params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
-    params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
-    thisWindow()->mouseButtonCallback.Call(*thisWindow(), &params);
 }
 
 
@@ -481,14 +532,24 @@ void megamol::viewer::Window::glutMouseCallback(int button, int state,
  * megamol::viewer::Window::glutMotionCallback
  */
 void megamol::viewer::Window::glutMotionCallback(int x, int y) {
-    if (thisWindow() == NULL) return;
-    mmvMouseMoveParams params;
-    params.mouseX = x;
-    params.mouseY = y;
-    params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
-    params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
-    params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
-    thisWindow()->mouseMoveCallback.Call(*thisWindow(), &params);
+    try {
+
+        if (thisWindow() == NULL) return;
+        mmvMouseMoveParams params;
+        params.mouseX = x;
+        params.mouseY = y;
+        params.modShift = (thisWindow()->modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT;
+        params.modCtrl = (thisWindow()->modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL;
+        params.modAlt = (thisWindow()->modifiers & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT;
+        thisWindow()->mouseMoveCallback.Call(*thisWindow(), &params);
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
+    }
 }
 
 
@@ -496,13 +557,23 @@ void megamol::viewer::Window::glutMotionCallback(int x, int y) {
  * megamol::viewer::Window::glutCloseCallback
  */
 void megamol::viewer::Window::glutCloseCallback(void) {
-    if (thisWindow() == NULL) return;
-    // remove window from the list of active windows,
-    // but keep the handles valid!
-    if (thisWindow()->glutID != 0) {
-        thisWindow()->closeCallback.Call(*thisWindow(), NULL);
-        thisWindow()->owner.UnownWindow(thisWindow());
-        thisWindow()->glutID = 0;
+    try {
+
+        if (thisWindow() == NULL) return;
+        // remove window from the list of active windows,
+        // but keep the handles valid!
+        if (thisWindow()->glutID != 0) {
+            thisWindow()->closeCallback.Call(*thisWindow(), NULL);
+            thisWindow()->owner.UnownWindow(thisWindow());
+            thisWindow()->glutID = 0;
+        }
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
 }
 
@@ -511,17 +582,27 @@ void megamol::viewer::Window::glutCloseCallback(void) {
  * megamol::viewer::Window::glutMainMenuCallback
  */
 void megamol::viewer::Window::glutMainMenuCallback(int item) {
-    switch (item) {
-        case 0: break; // none or separator
-        case 1: // close
-            ::glutDestroyWindow(thisWindow()->glutID);
-            break;
-        case 2: { // exit
-            Viewer &viewer = thisWindow()->owner;
-            viewer.CloseAllWindows();
-            viewer.RequestAppTermination();
-        } break;
-        default: break; // unknown
+    try {
+
+        switch (item) {
+            case 0: break; // none or separator
+            case 1: // close
+                ::glutDestroyWindow(thisWindow()->glutID);
+                break;
+            case 2: { // exit
+                Viewer &viewer = thisWindow()->owner;
+                viewer.CloseAllWindows();
+                viewer.RequestAppTermination();
+            } break;
+            default: break; // unknown
+        }
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
 }
 
@@ -530,17 +611,27 @@ void megamol::viewer::Window::glutMainMenuCallback(int item) {
  * megamol::viewer::Window::glutSizeMenuCallback
  */
 void megamol::viewer::Window::glutSizeMenuCallback(int item) {
-    switch (item) {
-        case 0: break; // none or separator
-        case 1: thisWindow()->toogleFullscreen(); break;
-        case 2: thisWindow()->ResizeWindow(256, 256); break;
-        case 3: thisWindow()->ResizeWindow(512, 512); break;
-        case 4: thisWindow()->ResizeWindow(640, 480); break;
-        case 5: thisWindow()->ResizeWindow(768, 768); break;
-        case 6: thisWindow()->ResizeWindow(800, 600); break;
-        case 7: thisWindow()->ResizeWindow(1024, 768); break;
-        case 8: thisWindow()->ResizeWindow(1024, 1024); break;
-        default: break; // unknown
+    try {
+
+        switch (item) {
+            case 0: break; // none or separator
+            case 1: thisWindow()->toogleFullscreen(); break;
+            case 2: thisWindow()->ResizeWindow(256, 256); break;
+            case 3: thisWindow()->ResizeWindow(512, 512); break;
+            case 4: thisWindow()->ResizeWindow(640, 480); break;
+            case 5: thisWindow()->ResizeWindow(768, 768); break;
+            case 6: thisWindow()->ResizeWindow(800, 600); break;
+            case 7: thisWindow()->ResizeWindow(1024, 768); break;
+            case 8: thisWindow()->ResizeWindow(1024, 1024); break;
+            default: break; // unknown
+        }
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
     }
 }
 
@@ -549,7 +640,17 @@ void megamol::viewer::Window::glutSizeMenuCallback(int item) {
  * megamol::viewer::Window::glutCommandMenuCallback
  */
 void megamol::viewer::Window::glutCommandMenuCallback(int item) {
-    thisWindow()->commandCallback.Call(*thisWindow(), &item);
+    try {
+
+        thisWindow()->commandCallback.Call(*thisWindow(), &item);
+
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: %s [%s, %d]", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unhandled exception: native exception");
+    }
 }
 
 
