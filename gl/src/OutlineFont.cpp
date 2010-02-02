@@ -19,7 +19,7 @@ using namespace vislib::graphics::gl;
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi) : AbstractFont(),
-        data(ofi), renderType(OutlineFont::RENDERTYPE_FILL), glyphMesh(NULL) {
+        data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
 }
 
 
@@ -28,7 +28,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi) : AbstractFont(),
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
         OutlineFont::RenderType render) : AbstractFont(), data(ofi),
-        renderType(render), glyphMesh(NULL) {
+        renderType(render) {
 }
 
 
@@ -36,8 +36,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL),
-        glyphMesh(NULL) {
+        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
     this->SetSize(size);
 }
 
@@ -46,8 +45,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size)
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, bool flipY)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL),
-        glyphMesh(NULL) {
+        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
     this->SetFlipY(flipY);
 }
 
@@ -57,7 +55,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, bool flipY)
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
         OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(ofi), renderType(render), glyphMesh(NULL) {
+        data(ofi), renderType(render) {
     this->SetFlipY(flipY);
 }
 
@@ -66,8 +64,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size, bool flipY)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL),
-        glyphMesh(NULL) {
+        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -78,7 +75,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size, bool flipY)
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
         OutlineFont::RenderType render) : AbstractFont(), data(ofi),
-        renderType(render), glyphMesh(NULL) {
+        renderType(render) {
     this->SetSize(size);
 }
 
@@ -88,7 +85,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
         OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(ofi), renderType(render), glyphMesh(NULL) {
+        data(ofi), renderType(render) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -98,7 +95,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFont& src) : AbstractFont(),
-        data(src.data), renderType(src.renderType), glyphMesh(NULL) {
+        data(src.data), renderType(src.renderType) {
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
 }
@@ -109,7 +106,7 @@ OutlineFont::OutlineFont(const OutlineFont& src) : AbstractFont(),
  */
 OutlineFont::OutlineFont(const OutlineFont& src,
         OutlineFont::RenderType render) : AbstractFont(), data(src.data),
-        renderType(render), glyphMesh(NULL) {
+        renderType(render) {
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
 }
@@ -119,7 +116,7 @@ OutlineFont::OutlineFont(const OutlineFont& src,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFont& src, float size) : AbstractFont(),
-        data(src.data), renderType(src.renderType), glyphMesh(NULL) {
+        data(src.data), renderType(src.renderType) {
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
 }
@@ -129,7 +126,7 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size) : AbstractFont(),
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFont& src, bool flipY) : AbstractFont(),
-        data(src.data), renderType(src.renderType), glyphMesh(NULL) {
+        data(src.data), renderType(src.renderType) {
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
 }
@@ -140,7 +137,7 @@ OutlineFont::OutlineFont(const OutlineFont& src, bool flipY) : AbstractFont(),
  */
 OutlineFont::OutlineFont(const OutlineFont& src,
         OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(src.data), renderType(render), glyphMesh(NULL) {
+        data(src.data), renderType(render) {
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
 }
@@ -150,8 +147,7 @@ OutlineFont::OutlineFont(const OutlineFont& src,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFont& src, float size, bool flipY)
-        : AbstractFont(), data(src.data), renderType(src.renderType),
-        glyphMesh(NULL) {
+        : AbstractFont(), data(src.data), renderType(src.renderType) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -162,7 +158,7 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size, bool flipY)
  */
 OutlineFont::OutlineFont(const OutlineFont& src, float size,
         OutlineFont::RenderType render) : AbstractFont(), data(src.data),
-        renderType(render), glyphMesh(NULL) {
+        renderType(render) {
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
 }
@@ -173,7 +169,7 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size,
  */
 OutlineFont::OutlineFont(const OutlineFont& src, float size,
         OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(src.data), renderType(render), glyphMesh(NULL) {
+        data(src.data), renderType(render) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -184,7 +180,6 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size,
  */
 OutlineFont::~OutlineFont(void) {
     this->Deinitialise();
-    ARY_SAFE_DELETE(this->glyphMesh);
 }
 
 
@@ -426,10 +421,7 @@ float OutlineFont::LineWidth(float size, const wchar_t *txt) const {
  * OutlineFont::initialise
  */
 bool OutlineFont::initialise(void) {
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->buildUpFillingMeshes();
-    }
+    // intentionally empty
     return true;
 }
 
@@ -438,15 +430,7 @@ bool OutlineFont::initialise(void) {
  * OutlineFont::deinitialise
  */
 void OutlineFont::deinitialise(void) {
-    ARY_SAFE_DELETE(this->glyphMesh);
-}
-
-
-/*
- * buildUpFillingMeshes
- */
-void OutlineFont::buildUpFillingMeshes(void) {
-    // TODO: Implement
+    // intentionally empty
 }
 
 
@@ -602,6 +586,9 @@ void OutlineFont::drawFilled(int *run, float x, float y, float size,
 
     }
 
+    ::glEnableClientState(GL_VERTEX_ARRAY);
+    ::glDisable(GL_CULL_FACE);
+
     while (*run != 0) {
         const OutlineGlyphInfo &glyph = this->data.glyph[
             (*run < 0) ? (-1 - *run) : (*run - 1)];
@@ -622,22 +609,19 @@ void OutlineFont::drawFilled(int *run, float x, float y, float size,
             gy += sy;
         }
 
-        // TODO: Implement
-
-        //const float *pt = glyph.points;
-        //for (unsigned int l = 0; l < glyph.loopCount; l++) {
-        //    ::glBegin(GL_LINE_LOOP);
-        //    for (unsigned int p = glyph.loopLength[l]; p > 0; p--) {
-        //        ::glVertex2f(gx + pt[0] * size, gy + pt[1] * sy);
-        //        pt += 2;
-        //    }
-        //    ::glEnd();
-        //}
+        ::glPushMatrix();
+        ::glTranslatef(gx, gy, 0.0f);
+        ::glScalef(size, sy, 1.0f);
+        ::glVertexPointer(2, GL_FLOAT, 0, glyph.points);
+        ::glDrawElements(GL_TRIANGLES, glyph.triCount, GL_UNSIGNED_INT, glyph.tris);
+        ::glPopMatrix();
 
         gx += glyph.width * size;
 
         run++;
     }
+
+    ::glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 
@@ -660,6 +644,8 @@ void OutlineFont::drawOutline(int *run, float x, float y, float size,
 
     }
 
+    ::glEnableClientState(GL_VERTEX_ARRAY);
+
     while (*run != 0) {
         const OutlineGlyphInfo &glyph = this->data.glyph[
             (*run < 0) ? (-1 - *run) : (*run - 1)];
@@ -680,20 +666,23 @@ void OutlineFont::drawOutline(int *run, float x, float y, float size,
             gy += sy;
         }
 
-        const float *pt = glyph.points;
+        ::glPushMatrix();
+        ::glTranslatef(gx, gy, 0.0f);
+        ::glScalef(size, sy, 1.0f);
+        ::glVertexPointer(2, GL_FLOAT, 0, glyph.points);
+        unsigned int off = 0;
         for (unsigned int l = 0; l < glyph.loopCount; l++) {
-            ::glBegin(GL_LINE_LOOP);
-            for (unsigned int p = glyph.loopLength[l]; p > 0; p--) {
-                ::glVertex2f(gx + pt[0] * size, gy + pt[1] * sy);
-                pt += 2;
-            }
-            ::glEnd();
+            ::glDrawArrays(GL_LINE_LOOP, off, glyph.loopLength[l]);
+            off += glyph.loopLength[l];
         }
+        ::glPopMatrix();
 
         gx += glyph.width * size;
 
         run++;
     }
+
+    ::glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 

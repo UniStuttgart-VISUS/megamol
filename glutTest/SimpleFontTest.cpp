@@ -149,7 +149,7 @@ int SimpleFontTest::GLInit(void) {
     if (this->font1 == NULL) {
         this->font1 = new vislib::graphics::gl::OutlineFont(
             vislib::graphics::gl::FontInfo_Verdana,
-            vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE);
+            vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
     }
     if (!this->font1->Initialise()) return -2;
 

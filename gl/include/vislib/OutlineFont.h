@@ -31,6 +31,9 @@ namespace gl {
         const unsigned int loopCount; /* The number of outline loops */
         const unsigned int *loopLength; /* The length of each outline loop */
         const float *points; /* The points for each outline loop */
+        const unsigned int triCount; /* The number of vertices of the
+                                        triangles used to fill the glyph */
+        const unsigned int *tris; /* Index buffer of the triangles used */
     } OutlineGlyphInfo;
 
 #endif /* VISLIB_OUTLINEGLYPHINFO_STRUCT */
@@ -339,10 +342,6 @@ namespace gl {
          */
         inline void SetRenderType(RenderType t) {
             this->renderType = t;
-            if (((t == RENDERTYPE_FILL) || (t == RENDERTYPE_FILL_AND_OUTLINE))
-                    && (this->glyphMesh == NULL)) {
-                this->buildUpFillingMeshes();
-            }
         }
 
     protected:
@@ -364,11 +363,6 @@ namespace gl {
         virtual void deinitialise(void);
 
     private:
-
-        /**
-         * Generates the data of the filling triangle meshes for all glyphs
-         */
-        void buildUpFillingMeshes(void);
 
         /**
          * Generates the glyph runs for the text 'txt'
@@ -455,9 +449,6 @@ namespace gl {
 
         /** The render type used */
         RenderType renderType;
-
-        /** The glyph meshes used for filled rendering */
-        void *glyphMesh;
 
     };
 

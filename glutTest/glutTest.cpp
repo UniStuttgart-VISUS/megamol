@@ -155,8 +155,8 @@ int main(int argc, char* argv[]) {
     glutCreateWindow("VISlib Glut Test");                       // TODO: should be configured by AbstractGlutApp
 
     printf("VSync is %s\n", vislib::graphics::gl::IsVSyncEnabled() ? "Enabled" : "Disabled");
-    vislib::graphics::gl::DisableVSync();
-    printf("VSync is %s\n", vislib::graphics::gl::IsVSyncEnabled() ? "Enabled" : "Disabled");
+    //vislib::graphics::gl::DisableVSync();
+    //printf("VSync is %s\n", vislib::graphics::gl::IsVSyncEnabled() ? "Enabled" : "Disabled");
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
