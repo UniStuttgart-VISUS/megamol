@@ -56,18 +56,14 @@ all: VersionInfo $(TargetName)d $(TargetName)
 $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 	@mkdir -p $(OutDir)
 	@mkdir -p $(outbin)
-	@mkdir -p $(outshaders)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS)d.so
 	cp $< $(outbin)/lib$(TargetName)$(BITS)d.so
-	cd Shaders && find . -wholename '*.svn' -prune -o -exec cp --parents \{\} $(outshaders) \;
 
 $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 	@mkdir -p $(OutDir)
 	@mkdir -p $(outbin)
-	@mkdir -p $(outshaders)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS).so
 	cp $< $(outbin)/lib$(TargetName)$(BITS).so
-	cd Shaders && find . -wholename '*.svn' -prune -o -exec cp --parents \{\} $(outshaders) \;
 
 
 # Rules for special intermediate files

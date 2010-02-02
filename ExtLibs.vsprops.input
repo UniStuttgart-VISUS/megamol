@@ -10,11 +10,6 @@
   PerformEnvironmentSet="true"
   />
   <UserMacro
-  Name="OutputShaders"
-  Value="%outshader%"
-  PerformEnvironmentSet="true"
-  />
-  <UserMacro
   Name="VISlibPath"
   Value="%vislib%"
   PerformEnvironmentSet="true"

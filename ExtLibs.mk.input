@@ -8,6 +8,5 @@
 
 # Paths to external libraries
 outbin := %outbin%
-outshaders := %outshader%
 vislibpath := %vislib%
 expatpath := %expatPath%

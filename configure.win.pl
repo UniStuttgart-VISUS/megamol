@@ -19,13 +19,7 @@ $a = PathParameter->new();
     $a->placeholder("%outbin%");
     $a->autoDetect(0);
     push @pps, $a;
-$a = PathParameter->new();
-    $a->id("outshader");
-    $a->description("Path to the global \"shaders\" output directory");
-    $a->placeholder("%outshader%");
-    $a->autoDetect(0);
-    push @pps, $a;
-    
+
 $a = PathParameter->new();
     $a->id("vislib");
     $a->description("Path to the vislib directory");
