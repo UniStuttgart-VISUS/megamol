@@ -141,7 +141,9 @@ void megamol::console::Window::KeyCallback(void *wnd, mmvKeyParams *params) {
     ::mmcSet2DMousePosition(win->hView,
         static_cast<float>(params->mouseX),
         static_cast<float>(params->mouseY));
-
+#ifdef WITH_TWEAKBAR
+    if (!win->gui.Layer().KeyPressed(params->keycode, params->modShift, params->modAlt, params->modCtrl)) {
+#endif /* WITH_TWEAKBAR */
     vislib::sys::KeyCode key(params->keycode);
     if (win->hotkeys.Contains(key)) {
         vislib::SmartPtr<HotKeyAction> action = win->hotkeys[key];
@@ -152,6 +154,9 @@ void megamol::console::Window::KeyCallback(void *wnd, mmvKeyParams *params) {
     }
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 1000,
         "Unused key %i\n", int(key));
+#ifdef WITH_TWEAKBAR
+    }
+#endif /* WITH_TWEAKBAR */
 
 }
 

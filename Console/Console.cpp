@@ -489,6 +489,14 @@ void menuCommandCallback(void *wnd, int *params) {
             if (parameterFile.IsEmpty()) break;
             readParameterFile();
             break;
+#ifdef WITH_TWEAKBAR
+        case 2:
+            static_cast<megamol::console::Window *>(wnd)->ActivateGUI();
+            break;
+        case 3:
+            static_cast<megamol::console::Window *>(wnd)->DeactivateGUI();
+            break;
+#endif /* WITH_TWEAKBAR */
         default:
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_ERROR,
@@ -733,6 +741,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             }
 
             ::mmvInstallContextMenu(win->HWnd());
+
+#ifdef WITH_TWEAKBAR
+            ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 2);
+            ::mmvInstallContextMenuCommandA(win->HWnd(), "Deactivate GUI", 3);
+#endif /* WITH_TWEAKBAR */
 
             if (!parameterFile.IsEmpty()) {
                 ::mmvInstallContextMenuCommandA(win->HWnd(),

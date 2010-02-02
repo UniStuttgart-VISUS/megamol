@@ -11,8 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "MegaMolViewer.h"
-
 
 namespace megamol {
 namespace console {
@@ -43,6 +41,16 @@ namespace console {
             GUILayer& Layer(void);
 
             /**
+             * Activates this client
+             */
+            void Activate(void);
+
+            /**
+             * Deactivates this client
+             */
+            void Deactivate(void);
+
+            /**
              * Tells the gui client the window size
              *
              * @param w The width of the window
@@ -58,17 +66,17 @@ namespace console {
             /** The reference counter */
             static SIZE_T cntr;
 
-            /** The last width told to the gui */
-            static int lastWidth;
-
-            /** The last height told to the gui */
-            static int lastHeight;
+            /** The currently active client */
+            static GUIClient* activeClient;
 
             /** The width of the window */
             int width;
 
             /** The height of the window */
             int height;
+
+            /** The parameter bar of this client */
+            void *myBar;
 
         };
 
@@ -98,6 +106,18 @@ namespace console {
          */
         bool MouseButton(int btn, bool down);
 
+        /**
+         * Informs the GUI that a key has been pressed
+         *
+         * @param keycode The vislib key code
+         * @param shift The shift modifier flag
+         * @param alt The alt modifier flag
+         * @param ctrl The control modifier flag
+         *
+         * @return True if the event was consumed by the gui
+         */
+        bool KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctrl);
+
     private:
 
         /** Ctor */
@@ -105,6 +125,9 @@ namespace console {
 
         /** Dtor */
         ~GUILayer(void);
+
+        /** The active flag */
+        bool active;
 
     };
 

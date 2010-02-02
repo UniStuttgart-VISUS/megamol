@@ -175,6 +175,22 @@ namespace console {
         void RegisterHotKeyAction(const vislib::sys::KeyCode& key,
             HotKeyAction *action, const vislib::StringA& target);
 
+#ifdef WITH_TWEAKBAR
+        /**
+         * Activates the GUI client
+         */
+        inline void ActivateGUI(void) {
+            this->gui.Activate();
+        }
+
+        /**
+         * Deactivates the GUI client
+         */
+        inline void DeactivateGUI(void) {
+            this->gui.Deactivate();
+        }
+#endif /* WITH_TWEAKBAR */
+
     private:
 
         /**
