@@ -115,6 +115,7 @@ namespace protein {
             return this->filenameslot.IsDirty()
                 || this->smoothSlot.IsDirty()
                 || this->smoothValueSlot.IsDirty()
+                || this->smoothExpSlot.IsDirty()
                 || this->speedOfSmoothedSlot.IsDirty()
                 || this->clusterOfSmoothedSlot.IsDirty();
         }
@@ -151,6 +152,9 @@ namespace protein {
         /** Value for the smooth filter */
         megamol::core::param::ParamSlot smoothValueSlot;
 
+        /** The smoothing function exponent */
+        megamol::core::param::ParamSlot smoothExpSlot;
+
         /** Flag whether or not to use the smoothed data for the speed calculation */
         megamol::core::param::ParamSlot speedOfSmoothedSlot;
 
@@ -161,10 +165,10 @@ namespace protein {
         vislib::math::Cuboid<float> bbox;
 
         /** The minimum frame number */
-        unsigned int minTime;
+        float minTime;
 
         /** The maximum frame number */
-        unsigned int maxTime;
+        float maxTime;
 
         /** The minimum speed */
         float minSpeed;

@@ -33,6 +33,7 @@ SolPathDataSource::SolPathDataSource(void) : core::Module(),
         filenameslot("filename", "The path of the solpath file to load"),
         smoothSlot("smooth", "Flag whether or not to smooth the data"),
         smoothValueSlot("smoothValue", "Value for the smooth filter"),
+        smoothExpSlot("smoothExp", "The smoothing filter function exponent"),
         speedOfSmoothedSlot("speedOfSmoothed", "Flag whether or not to use the smoothed data for the speed calculation"),
         clusterOfSmoothedSlot("clusterOfSmoothed", "Flag to cluster the smoothed or unsmoothed data") {
 
@@ -46,8 +47,11 @@ SolPathDataSource::SolPathDataSource(void) : core::Module(),
     this->smoothSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->smoothSlot);
 
-    this->smoothValueSlot << new param::FloatParam(5.0f, 0.0f, 100.0f);
+    this->smoothValueSlot << new param::FloatParam(10.0f, 0.0f, 100.0f);
     this->MakeSlotAvailable(&this->smoothValueSlot);
+
+    this->smoothExpSlot << new param::FloatParam(2.0f, 1.0f);
+    this->MakeSlotAvailable(&this->smoothExpSlot);
 
     this->speedOfSmoothedSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->speedOfSmoothedSlot);
@@ -129,8 +133,8 @@ bool SolPathDataSource::getExtent(megamol::core::Call &call) {
  */
 void SolPathDataSource::clear(void) {
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    this->minTime = 0;
-    this->maxTime = 0;
+    this->minTime = 0.0f;
+    this->maxTime = 0.0f;
     this->minSpeed = 0.0f;
     this->maxSpeed = 0.0f;
     this->vertices.Clear();
@@ -149,6 +153,7 @@ void SolPathDataSource::loadData(void) {
     this->filenameslot.ResetDirty();
     this->smoothSlot.ResetDirty();
     this->smoothValueSlot.ResetDirty();
+    this->smoothExpSlot.ResetDirty();
     this->speedOfSmoothedSlot.ResetDirty();
     this->clusterOfSmoothedSlot.ResetDirty();
 
@@ -237,7 +242,7 @@ void SolPathDataSource::loadData(void) {
         SolPathDataCall::Pathline path;
         vertex.speed = 0.0f; // will be set later
         vertex.clusterID = 0;
-        vertex.time = UINT_MAX - 2;
+        vertex.time = -2.0f;
         path.length = 0;
         path.data = NULL; // will be set later
 
@@ -251,7 +256,7 @@ void SolPathDataSource::loadData(void) {
             file.Read(&tmp, 4);
             file.Read(&vertex.x, 12);
 
-            if (tmp != vertex.time + 1) {
+            if (tmp != static_cast<unsigned int>(vertex.time) + 1) {
                 // start a new path
                 if (path.length > 0) {
                     this->pathlines.Add(path);
@@ -261,7 +266,7 @@ void SolPathDataSource::loadData(void) {
                 // continue path
                 path.length++;
             }
-            vertex.time = tmp;
+            vertex.time = static_cast<float>(tmp);
 
             this->vertices.Add(vertex);
         }
@@ -294,8 +299,8 @@ void SolPathDataSource::loadData(void) {
     }
 
     off = 0;
-    this->maxTime = 0;
-    this->minTime = UINT_MAX;
+    this->maxTime = 0.0f;
+    this->minTime = FLT_MAX;
     this->maxSpeed = -FLT_MAX;
     this->minSpeed = FLT_MAX;
     this->bbox.Set(FLT_MAX, FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -344,8 +349,9 @@ void SolPathDataSource::loadData(void) {
         vislib::Array<float> filter(1 + static_cast<unsigned int>(::ceil(smoothValue)), 0.0f);
         filter[0] = 1.0f;
         if (smoothValue > 0.00001f) {
+            float exp = this->smoothExpSlot.Param<param::FloatParam>()->Value();
             for (SIZE_T i = 1; i < filter.Count(); i++) {
-                filter[i] = ::cos(static_cast<float>(M_PI) * static_cast<float>(i) / (1.0f + smoothValue));
+                filter[i] = ::pow(::cos(static_cast<float>(M_PI) * static_cast<float>(i) / (1.0f + smoothValue)), exp);
                 filter[i] *= filter[i];
             }
         }
