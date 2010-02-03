@@ -11,6 +11,7 @@
 #include "SolPathDataCall.h"
 #include "utility/ShaderSourceFactory.h"
 #include "view/CallRender3D.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/ShaderSource.h"
 #include <GL/gl.h>
 
@@ -139,33 +140,37 @@ bool SolPathRenderer::Render(core::Call& call) {
     ::glEnable(GL_POINT_SMOOTH);
 
     this->pathlineShader.Enable();
+    GLint attrloc = ::glGetAttribLocationARB(this->pathlineShader.ProgramHandle(), "params");
+    ::glEnableClientState(GL_VERTEX_ARRAY);
+    ::glEnableVertexAttribArrayARB(attrloc);
+    this->pathlineShader.SetParameter("timeSpan", spdc->MinTime(),
+        1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()));
 
-    ::glColor3ub(192, 192, 192);
     const SolPathDataCall::Pathline *path = spdc->Pathlines();
     for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
-        ::glBegin(GL_LINE_STRIP);
-        for (unsigned int v = 0; v < path->length; v++) {
-            ::glVertex3fv(&path->data[v].x);
-        }
-        ::glEnd();
+        ::glVertexPointer(3, GL_FLOAT, sizeof(SolPathDataCall::Vertex), path->data);
+        ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(SolPathDataCall::Vertex), &path->data->time);
+        ::glDrawArrays(GL_LINE_STRIP, 0, path->length);
     }
-
     this->pathlineShader.Disable();
 
-    ::glPointSize(2.0f);
-    ::glEnable(GL_POINT_SMOOTH);
-    ::glEnable(GL_BLEND);
-    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    ::glColor3ub(255, 0, 0);
-    path = spdc->Pathlines();
-    for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
-        ::glBegin(GL_POINTS);
-        for (unsigned int v = 0; v < path->length; v++) {
-            ::glVertex3fv(&path->data[v].x);
-        }
-        ::glEnd();
-    }
-    ::glDisable(GL_POINT_SMOOTH);
+    //::glPointSize(2.0f);
+    //::glEnable(GL_POINT_SMOOTH);
+    //::glEnable(GL_BLEND);
+    //::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //::glColor3ub(255, 0, 0);
+    //path = spdc->Pathlines();
+    //for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
+    //    ::glBegin(GL_POINTS);
+    //    for (unsigned int v = 0; v < path->length; v++) {
+    //        ::glVertex3fv(&path->data[v].x);
+    //    }
+    //    ::glEnd();
+    //}
+    //::glDisable(GL_POINT_SMOOTH);
+
+    ::glDisableVertexAttribArrayARB(attrloc);
+    ::glDisableClientState(GL_VERTEX_ARRAY);
 
     return false;
 }

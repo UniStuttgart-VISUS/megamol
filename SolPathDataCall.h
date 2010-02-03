@@ -39,10 +39,10 @@ namespace protein {
             float speed;
 
             /** The frame number of the vertex */
-            unsigned int time;
+            float time;
 
             /** The cluster id of the vertex */
-            unsigned int clusterID;
+            float clusterID;
 
             /**
              * Assignment operator
@@ -187,7 +187,7 @@ namespace protein {
          *
          * @return The maximum frame number used
          */
-        inline unsigned int MaxTime(void) const {
+        inline float MaxTime(void) const {
             return this->maxTime;
         }
 
@@ -205,7 +205,7 @@ namespace protein {
          *
          * @return The minimum frame number used
          */
-        inline unsigned int MinTime(void) const {
+        inline float MinTime(void) const {
             return this->minTime;
         }
 
@@ -231,8 +231,8 @@ namespace protein {
          * @param minSpeed The minimum speed present
          * @param maxSpeed The maximum speed present
          */
-        inline void Set(unsigned int cnt, const Pathline *lines, unsigned int minTime,
-                unsigned int maxTime, float minSpeed, float maxSpeed) {
+        inline void Set(unsigned int cnt, const Pathline *lines, float minTime,
+                float maxTime, float minSpeed, float maxSpeed) {
             this->count = cnt;
             this->lines = lines;
             this->minTime = minTime;
@@ -250,10 +250,10 @@ namespace protein {
         const Pathline *lines;
 
         /** The minimum frame number */
-        unsigned int minTime;
+        float minTime;
 
         /** The maximum frame number */
-        unsigned int maxTime;
+        float maxTime;
 
         /** The minimum speed */
         float minSpeed;
