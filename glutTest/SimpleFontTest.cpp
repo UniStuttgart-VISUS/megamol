@@ -160,7 +160,7 @@ int SimpleFontTest::GLInit(void) {
     this->tests.Add(new LineTest<char>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "TopCenter"));
     this->tests.Add(new LineTest<char>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "TopRight"));
     this->tests.Add(new LineTest<char>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "MiddleLeft"));
-    this->tests.Add(new LineTest<char>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, "MiddleCenter"));
+    this->tests.Add(new LineTest<wchar_t>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, L"MiddleCänter™"));
     this->tests.Add(new LineTest<char>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "MiddleRight"));
     this->tests.Add(new LineTest<char>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "BottomLeft"));
     this->tests.Add(new LineTest<char>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "BottomCenter"));
@@ -239,7 +239,7 @@ bool SimpleFontTest::OnKeyPress(unsigned char key, int x, int y) {
             if (dynamic_cast<vislib::graphics::gl::SimpleFont*>(this->font1) != NULL) {
                 f = new vislib::graphics::gl::OutlineFont(
                     vislib::graphics::gl::FontInfo_Verdana,
-                    vislib::graphics::gl::OutlineFont::RENDERTYPE_OUTLINE);
+                    vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
             } else {
                 f = new vislib::graphics::gl::SimpleFont();
             }

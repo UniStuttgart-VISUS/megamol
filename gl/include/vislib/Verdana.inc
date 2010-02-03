@@ -14,52 +14,57 @@ namespace gl {
 
 #ifndef VISLIB_OUTLINEGLYPHINFO_STRUCT
 #define VISLIB_OUTLINEGLYPHINFO_STRUCT
-typedef struct _outlineglyphinfo_t {
-    const char *utf8char;
-    const float width;
-    const unsigned int loopCount;
-    const unsigned int *loopLength;
-    const float *points;
-    const unsigned int triCount;
-    const unsigned int *tris;
-} OutlineGlyphInfo;
+
+    typedef struct _outlineglyphinfo_t {
+        const float width; /* The glyph width */
+        const unsigned short loopCount; /* The number of outline loops */
+        const unsigned short *loopLength; /* The length of each outline loop */
+        const float *points; /* The points for each outline loop */
+        const unsigned short triCount; /* The number of vertices of the
+                                        triangles used to fill the glyph */
+        const unsigned short *tris; /* Index buffer of the triangles used */
+    } OutlineGlyphInfo;
+
 #endif /* VISLIB_OUTLINEGLYPHINFO_STRUCT */
 
 #ifndef VISLIB_OUTLINEFONTINFO_STRUCT
 #define VISLIB_OUTLINEFONTINFO_STRUCT
-typedef struct _outlinefontinfo_t {
-    const char *name;
-    const float baseline;
-    const float charHeight;
-    const float charTop;
-    const float charBottom;
-    const unsigned int glyphCount;
-    const OutlineGlyphInfo *glyph;
-} OutlineFontInfo;
+
+    /**
+     * Utility structure storing the data of font glyph outlines
+     */
+    typedef struct _outlinefontinfo_t {
+        const char *name; /* The name of the font */
+        const float baseline; /* The distance of the base line from top */
+        const float charHeight; /* The main height of a character */
+        const float charTop; /* The top line above the main height */
+        const float charBottom; /* The bottom line below the base line */
+        const unsigned short glyphCount; /* The number of glyphs */
+        const OutlineGlyphInfo *glyph; /* The glyph data, sorted acending
+                                          according to 'utf8char' */
+        const short *glyphIndex; /* The glyph search index */
+    } OutlineFontInfo;
+
 #endif /* VISLIB_OUTLINEFONTINFO_STRUCT */
+
 
 namespace font2gl {
 namespace Verdana {
 
 const char *_font_name = "Verdana";
-const char *_glyph0000_name = "\x01";
-const char *_glyph0001_name = "\x20";
-const char *_glyph0002_name = "!";
-const unsigned int _glyph0002_looplengths[] = {4, 4};
+const unsigned short _glyph0002_looplengths[] = {4, 4};
 const float _glyph0002_points[] = {
     0.2069104f, 0.229007632f, 0.196464449f, 0.662515044f, 0.128163919f, 0.662515044f, 0.116914421f, 0.229007632f,
     0.202892721f, 0.8272399f, 0.1209321f, 0.8272399f, 0.1209321f, 0.742466867f, 0.202892721f, 0.742466867f };
-const unsigned int _glyph0002_tris[] = {
+const unsigned short _glyph0002_tris[] = {
       0,   1,   3,   2,   1,   3,   6,   5,   4,   7,   6,   4 };
-const char *_glyph0003_name = "\"";
-const unsigned int _glyph0003_looplengths[] = {4, 4};
+const unsigned short _glyph0003_looplengths[] = {4, 4};
 const float _glyph0003_points[] = {
     0.31016472f, 0.20208919f, 0.2928887f, 0.434712738f, 0.239855364f, 0.434712738f, 0.222579345f, 0.20208919f,
     0.15508236f, 0.20208919f, 0.137806341f, 0.434712738f, 0.0847730041f, 0.434712738f, 0.0674969852f, 0.20208919f };
-const unsigned int _glyph0003_tris[] = {
+const unsigned short _glyph0003_tris[] = {
       1,   0,   3,   2,   1,   3,   5,   4,   7,   6,   5,   7 };
-const char *_glyph0004_name = "#";
-const unsigned int _glyph0004_looplengths[] = {28, 4};
+const unsigned short _glyph0004_looplengths[] = {28, 4};
 const float _glyph0004_points[] = {
     0.5950181f, 0.4527923f, 0.4612294f, 0.4527923f, 0.4242668f, 0.603857f, 0.548011243f, 0.603857f,
     0.548011243f, 0.6580956f, 0.4102049f, 0.6580956f, 0.368421048f, 0.8272399f, 0.316593021f, 0.8272399f,
@@ -69,15 +74,14 @@ const float _glyph0004_points[] = {
     0.3053435f, 0.229007632f, 0.357171565f, 0.229007632f, 0.314985931f, 0.39855364f, 0.423463225f, 0.39855364f,
     0.46564886f, 0.229007632f, 0.5174769f, 0.229007632f, 0.475291282f, 0.39855364f, 0.5950181f, 0.39855364f,
     0.410606682f, 0.451988757f, 0.3005223f, 0.451988757f, 0.262756139f, 0.6046605f, 0.3728405f, 0.6046605f };
-const unsigned int _glyph0004_tris[] = {
+const unsigned short _glyph0004_tris[] = {
       3,   2,   4,   5,   4,   2,   5,   6,   7,   7,   5,   8,  10,   9,  11,  11,
       9,  12,  12,  13,  14,   9,  12,  15,  14,  12,  15,   8,   5,  15,  15,   9,
       8,  17,  16,  18,  19,  18,  16,  19,   1,   0,  20,  19,  22,  19,   0,  22,
      21,  20,  22,   0,  22,  23,  23,   0,  26,  24,  23,  26,  25,  24,  26,  26,
       0,  27,   1,   2,  28,  19,   1,  28,  19,  16,  29,  28,  19,  29,  16,  15,
      30,  15,   5,  30,  29,  16,  30,   5,  30,  31,   2,  28,  31,  31,   5,   2 };
-const char *_glyph0005_name = "$";
-const unsigned int _glyph0005_looplengths[] = {45, 9, 9};
+const unsigned short _glyph0005_looplengths[] = {45, 9, 9};
 const float _glyph0005_points[] = {
     0.466950566f, 0.6747127f, 0.4546083f, 0.7323102f, 0.41758135f, 0.778593838f, 0.362040967f, 0.8115066f,
     0.291072726f, 0.8269345f, 0.291072726f, 0.972985148f, 0.242732f, 0.972985148f, 0.242732f, 0.8289916f,
@@ -95,7 +99,7 @@ const float _glyph0005_points[] = {
     0.163535565f, 0.4967778f, 0.194391325f, 0.514262736f, 0.3908397f, 0.684998f, 0.384668529f, 0.653113663f,
     0.3671836f, 0.630486131f, 0.336327851f, 0.615058243f, 0.291072726f, 0.602715969f, 0.291072726f, 0.769337058f,
     0.333242267f, 0.7611089f, 0.36512655f, 0.74465245f, 0.384668529f, 0.719967842f };
-const unsigned int _glyph0005_tris[] = {
+const unsigned short _glyph0005_tris[] = {
       5,   4,   6,   6,   4,   7,   9,  10,  11,   9,  11,  12,   8,   9,  13,  12,
       9,  13,   7,   8,  14,  13,   8,  14,   7,  14,  15,   4,   7,  16,  15,   7,
      16,  16,   4,  17,  21,  20,  24,  21,  24,  23,  23,  22,  21,  19,  18,  24,
@@ -109,8 +113,7 @@ const unsigned int _glyph0005_tris[] = {
      39,  45,  45,  53,  58,  57,  45,  58,   3,   4,  59,   4,  17,  59,  17,  59,
      58,  58,  53,  17,   3,  59,  60,   2,   3,  61,  60,   3,  61,  61,   2,  62,
      62,   2,  54 };
-const char *_glyph0006_name = "%";
-const unsigned int _glyph0006_looplengths[] = {16, 4, 16, 16, 16};
+const unsigned short _glyph0006_looplengths[] = {16, 4, 16, 16, 16};
 const float _glyph0006_points[] = {
     0.35586983f, 0.3949538f, 0.346613079f, 0.47415027f, 0.31781438f, 0.5296906f, 0.271530747f, 0.5626034f,
     0.207762152f, 0.572888732f, 0.143993571f, 0.5626034f, 0.097709924f, 0.5296906f, 0.06993973f, 0.47415027f,
@@ -129,7 +132,7 @@ const float _glyph0006_points[] = {
     0.6788268f, 0.537918866f, 0.643857f, 0.5451186f, 0.620200932f, 0.565689f, 0.60683006f, 0.603744447f,
     0.602715969f, 0.662370443f, 0.60683006f, 0.7209964f, 0.620200932f, 0.759051859f, 0.643857f, 0.778593838f,
     0.6788268f, 0.7857935f, 0.713796735f, 0.778593838f, 0.736424267f, 0.759051859f, 0.7508236f, 0.7209964f };
-const unsigned int _glyph0006_tris[] = {
+const unsigned short _glyph0006_tris[] = {
       2,   1,   3,   6,   7,   8,   5,   9,   8,   8,   6,   5,  12,  11,  13,   0,
      13,  14,   0,  14,  15,  16,  19,  18,  18,  17,  16,  22,  23,  25,  24,  23,
      25,  25,  22,  26,  27,  28,  30,  29,  28,  30,  30,  27,  31,  21,  20,  33,
@@ -143,8 +146,7 @@ const unsigned int _glyph0006_tris[] = {
      58,  59,  59,  27,  60,  27,  60,  61,  27,  26,  62,  61,  27,  62,  62,  26,
      63,  22,  26,  64,  26,  63,  64,  21,  22,  65,  64,  22,  65,  21,  65,  66,
      66,  21,  67,  67,  21,  52 };
-const char *_glyph0007_name = "&";
-const unsigned int _glyph0007_looplengths[] = {16, 13, 45};
+const unsigned short _glyph0007_looplengths[] = {16, 13, 45};
 const float _glyph0007_points[] = {
     0.3188429f, 0.3496987f, 0.312671751f, 0.3147288f, 0.296215355f, 0.289015651f, 0.2705022f, 0.2725593f,
     0.237589389f, 0.267416626f, 0.204676583f, 0.2735878f, 0.177934915f, 0.292101234f, 0.160449967f, 0.319871426f,
@@ -165,7 +167,7 @@ const float _glyph0007_points[] = {
     0.376440346f, 0.420666963f, 0.361012459f, 0.440208942f, 0.3394134f, 0.458722383f, 0.312671751f, 0.476207316f,
     0.277701885f, 0.489578158f, 0.4268381f, 0.63562876f, 0.4360948f, 0.599630356f, 0.4391804f, 0.55951786f,
     0.4391804f, 0.5091201f, 0.4391804f, 0.462836474f };
-const unsigned int _glyph0007_tris[] = {
+const unsigned short _glyph0007_tris[] = {
      11,  16,  17,  11,  17,  18,  11,  18,  19,  11,  20,  19,  11,  16,  34,  12,
      11,  34,  34,  33,  12,  16,  28,  36,  34,  16,  36,  35,  34,  36,  26,  27,
      37,  27,  37,  36,  36,  28,  27,  25,  38,  37,  37,  26,  25,  38,  39,  40,
@@ -181,14 +183,12 @@ const unsigned int _glyph0007_tris[] = {
      13,  12,  68,  67,  13,  68,  12,  33,  69,  68,  12,  69,  32,  33,  70,  69,
      33,  70,  70,  32,  71,  31,  32,  72,  71,  32,  72,  30,  31,  73,  72,  31,
      73,  73,  30,  29 };
-const char *_glyph0008_name = "'";
-const unsigned int _glyph0008_looplengths[] = {4};
+const unsigned short _glyph0008_looplengths[] = {4};
 const float _glyph0008_points[] = {
     0.15508236f, 0.20208919f, 0.137806341f, 0.434712738f, 0.08316593f, 0.434712738f, 0.06588992f, 0.20208919f };
-const unsigned int _glyph0008_tris[] = {
+const unsigned short _glyph0008_tris[] = {
       1,   0,   3,   2,   1,   3 };
-const char *_glyph0009_name = "(";
-const unsigned int _glyph0009_looplengths[] = {22};
+const unsigned short _glyph0009_looplengths[] = {22};
 const float _glyph0009_points[] = {
     0.3147288f, 0.9935556f, 0.223190039f, 0.9935556f, 0.160449967f, 0.908188045f, 0.112109281f, 0.8156207f,
     0.08331057f, 0.712768137f, 0.07302531f, 0.59757334f, 0.08331057f, 0.483406961f, 0.112109281f, 0.380554438f,
@@ -196,13 +196,12 @@ const float _glyph0009_points[] = {
     0.253017277f, 0.274616331f, 0.198505417f, 0.364098042f, 0.159421444f, 0.472093225f, 0.148107678f, 0.5338048f,
     0.143993571f, 0.59757334f, 0.148107678f, 0.664427459f, 0.158392921f, 0.724081933f, 0.198505417f, 0.832077146f,
     0.253017277f, 0.921558857f, 0.3147288f, 0.9894415f };
-const unsigned int _glyph0009_tris[] = {
+const unsigned short _glyph0009_tris[] = {
       3,   4,   5,   2,   3,   6,   5,   3,   6,   6,   2,   1,   9,   8,  10,   8,
      10,  11,   8,  11,  12,   8,  12,  13,   8,   7,  14,  13,   8,  14,   7,   6,
      15,  14,   7,  15,  15,   6,  16,  16,   6,  17,   6,   1,  18,  17,   6,  18,
      18,   1,  19,   1,   0,  20,  19,   1,  20,  20,   0,  21 };
-const char *_glyph0010_name = ")";
-const unsigned int _glyph0010_looplengths[] = {22};
+const unsigned short _glyph0010_looplengths[] = {22};
 const float _glyph0010_points[] = {
     0.301357985f, 0.59757334f, 0.291072726f, 0.712768137f, 0.262274f, 0.8156207f, 0.214961827f, 0.908188045f,
     0.151193246f, 0.9935556f, 0.059654478f, 0.9935556f, 0.059654478f, 0.9894415f, 0.121366f, 0.921558857f,
@@ -210,58 +209,51 @@ const float _glyph0010_points[] = {
     0.226275623f, 0.5338048f, 0.21599035f, 0.472093225f, 0.176906392f, 0.364098042f, 0.121366f, 0.274616331f,
     0.059654478f, 0.206733629f, 0.059654478f, 0.202619523f, 0.151193246f, 0.202619523f, 0.214961827f, 0.287987143f,
     0.262274f, 0.380554438f, 0.291072726f, 0.483406961f };
-const unsigned int _glyph0010_tris[] = {
+const unsigned short _glyph0010_tris[] = {
       4,   3,   5,   3,   5,   6,   3,   6,   7,   3,   7,   8,   3,   2,   9,   8,
       3,   9,   1,   2,  10,   9,   2,  10,   1,  10,  11,   0,   1,  12,  11,   1,
      12,   0,  12,  13,  13,   0,  14,  16,  15,  18,  17,  16,  18,  14,  15,  19,
      18,  15,  19,   0,  14,  20,  19,  14,  20,   0,  20,  21 };
-const char *_glyph0011_name = "*";
-const unsigned int _glyph0011_looplengths[] = {18};
+const unsigned short _glyph0011_looplengths[] = {18};
 const float _glyph0011_points[] = {
     0.456809968f, 0.470871836f, 0.431096822f, 0.515066266f, 0.2856569f, 0.429489762f, 0.2880675f, 0.5741262f,
     0.236239448f, 0.5741262f, 0.238248289f, 0.429489762f, 0.09321012f, 0.515468061f, 0.06709522f, 0.4712736f,
     0.22016874f, 0.3881077f, 0.06709522f, 0.304941744f, 0.09321012f, 0.260747284f, 0.238650054f, 0.346323818f,
     0.236239448f, 0.20208919f, 0.2880675f, 0.20208919f, 0.285255134f, 0.346323818f, 0.431096822f, 0.261149049f,
     0.456809968f, 0.3053435f, 0.3041382f, 0.3877059f };
-const unsigned int _glyph0011_tris[] = {
+const unsigned short _glyph0011_tris[] = {
       2,   3,   4,   4,   2,   5,   2,   5,   8,   5,   8,   7,   7,   6,   5,   8,
       9,  10,   1,  11,  10,   2,   1,  10,  10,   8,   2,  12,  11,  14,  13,  12,
      14,   0,   1,  17,   1,  11,  17,  17,  16,  15,  17,  15,  14,  14,  11,  17 };
-const char *_glyph0012_name = "+";
-const unsigned int _glyph0012_looplengths[] = {12};
+const unsigned short _glyph0012_looplengths[] = {12};
 const float _glyph0012_points[] = {
     0.5889916f, 0.5974287f, 0.370028138f, 0.5974287f, 0.370028138f, 0.8163921f, 0.303334683f, 0.8163921f,
     0.303334683f, 0.5974287f, 0.08437123f, 0.5974287f, 0.08437123f, 0.533145845f, 0.303334683f, 0.533145845f,
     0.303334683f, 0.3141824f, 0.370028138f, 0.3141824f, 0.370028138f, 0.533145845f, 0.5889916f, 0.533145845f };
-const unsigned int _glyph0012_tris[] = {
+const unsigned short _glyph0012_tris[] = {
       2,   1,   4,   3,   2,   4,   5,   4,   6,   4,   1,   7,   6,   4,   7,   7,
       1,   0,   8,   7,  10,   7,   0,  10,   9,   8,  10,  10,   0,  11 };
-const char *_glyph0013_name = ",";
-const unsigned int _glyph0013_looplengths[] = {4};
+const unsigned short _glyph0013_looplengths[] = {4};
 const float _glyph0013_points[] = {
     0.231016472f, 0.712736f, 0.117717959f, 0.9758939f, 0.059059862f, 0.9758939f, 0.128967464f, 0.712736f };
-const unsigned int _glyph0013_tris[] = {
+const unsigned short _glyph0013_tris[] = {
       1,   0,   3,   2,   1,   3 };
-const char *_glyph0014_name = "-";
-const unsigned int _glyph0014_looplengths[] = {4};
+const unsigned short _glyph0014_looplengths[] = {4};
 const float _glyph0014_points[] = {
     0.312173575f, 0.6018481f, 0.06147047f, 0.6018481f, 0.06147047f, 0.529128134f, 0.312173575f, 0.529128134f };
-const unsigned int _glyph0014_tris[] = {
+const unsigned short _glyph0014_tris[] = {
       1,   0,   2,   2,   0,   3 };
-const char *_glyph0015_name = ".";
-const unsigned int _glyph0015_looplengths[] = {4};
+const unsigned short _glyph0015_looplengths[] = {4};
 const float _glyph0015_points[] = {
     0.197669744f, 0.8272399f, 0.10164725f, 0.8272399f, 0.10164725f, 0.712736f, 0.197669744f, 0.712736f };
-const unsigned int _glyph0015_tris[] = {
+const unsigned short _glyph0015_tris[] = {
       2,   1,   0,   3,   2,   0 };
-const char *_glyph0016_name = "/";
-const unsigned int _glyph0016_looplengths[] = {4};
+const unsigned short _glyph0016_looplengths[] = {4};
 const float _glyph0016_points[] = {
     0.3455203f, 0.20208919f, 0.05745279f, 0.949377239f, -0.0120530333f, 0.949377239f, 0.274809152f, 0.20208919f };
-const unsigned int _glyph0016_tris[] = {
+const unsigned short _glyph0016_tris[] = {
       1,   0,   3,   2,   1,   3 };
-const char *_glyph0017_name = "0";
-const unsigned int _glyph0017_looplengths[] = {32, 30};
+const unsigned short _glyph0017_looplengths[] = {32, 30};
 const float _glyph0017_points[] = {
     0.469007641f, 0.5286621f, 0.4659221f, 0.603744447f, 0.456665337f, 0.6685416f, 0.44123745f, 0.7220249f,
     0.4186099f, 0.765222967f, 0.389811158f, 0.7981358f, 0.3548413f, 0.8217919f, 0.3116432f, 0.8351627f,
@@ -279,7 +271,7 @@ const float _glyph0017_points[] = {
     0.141936526f, 0.6346002f, 0.148107678f, 0.673684239f, 0.160449967f, 0.7096826f, 0.176906392f, 0.7374528f,
     0.1974769f, 0.7569948f, 0.226275623f, 0.769337058f, 0.262274f, 0.7734512f, 0.2972439f, 0.769337058f,
     0.325014085f, 0.758023262f, 0.347641647f, 0.7384813f };
-const unsigned int _glyph0017_tris[] = {
+const unsigned short _glyph0017_tris[] = {
       6,   7,   8,   4,   5,   9,   5,   9,   8,   8,   6,   5,   9,   4,  10,  13,
      14,  16,  15,  14,  16,  11,  12,  17,  12,  17,  16,  16,  13,  12,  10,  18,
      17,  17,  11,  10,  22,  23,  24,  21,  25,  24,  24,  22,  21,   0,  25,  26,
@@ -292,19 +284,17 @@ const unsigned int _glyph0017_tris[] = {
      18,  50,  51,  10,  18,  52,  18,  51,  52,  10,  52,  53,  53,  10,  54,  10,
      54,  55,  10,  55,  56,  10,  56,  57,   4,  10,  58,  57,  10,  58,   4,  58,
      59,   4,  59,  60,  32,   4,  61,   4,  60,  61 };
-const char *_glyph0018_name = "1";
-const unsigned int _glyph0018_looplengths[] = {15};
+const unsigned short _glyph0018_looplengths[] = {15};
 const float _glyph0018_points[] = {
     0.4360948f, 0.827963054f, 0.112109281f, 0.827963054f, 0.112109281f, 0.7662515f, 0.236560866f, 0.7662515f,
     0.236560866f, 0.3661551f, 0.112109281f, 0.3661551f, 0.112109281f, 0.3106147f, 0.166621134f, 0.3065006f,
     0.192334265f, 0.3023865f, 0.2098192f, 0.29415828f, 0.239646435f, 0.269473672f, 0.251988769f, 0.227304146f,
     0.3137003f, 0.227304146f, 0.3137003f, 0.7662515f, 0.4360948f, 0.7662515f };
-const unsigned int _glyph0018_tris[] = {
+const unsigned short _glyph0018_tris[] = {
       0,   1,   2,   0,   2,   3,   5,   4,   6,   6,   4,   7,   7,   4,   8,  10,
      11,  12,   4,   3,  13,   3,   0,  13,   4,  13,  12,   4,  12,  10,   4,  10,
       9,   9,   8,   4,  13,   0,  14 };
-const char *_glyph0019_name = "2";
-const unsigned int _glyph0019_looplengths[] = {35};
+const unsigned short _glyph0019_looplengths[] = {35};
 const float _glyph0019_points[] = {
     0.470036179f, 0.827963054f, 0.0647971f, 0.827963054f, 0.0647971f, 0.743624f, 0.150164723f, 0.671627164f,
     0.228332669f, 0.599630356f, 0.29415828f, 0.5327762f, 0.316785842f, 0.503977537f, 0.3342708f, 0.4803214f,
@@ -315,7 +305,7 @@ const float _glyph0019_points[] = {
     0.4155243f, 0.2859301f, 0.4319807f, 0.3137003f, 0.442266f, 0.345584571f, 0.445351541f, 0.381582975f,
     0.4360948f, 0.445351541f, 0.410381675f, 0.501920462f, 0.3743833f, 0.55026114f, 0.322957f, 0.603744447f,
     0.233475283f, 0.6860265f, 0.148107678f, 0.759051859f, 0.470036179f, 0.759051859f };
-const unsigned int _glyph0019_tris[] = {
+const unsigned short _glyph0019_tris[] = {
       0,   1,   2,  16,  15,  18,  17,  16,  18,  14,  13,  19,  14,  19,  18,  18,
      15,  14,  12,  20,  19,  19,  13,  12,  12,  20,  21,  12,  21,  22,  11,  12,
      23,  22,  12,  23,   9,  10,  24,  10,  24,  23,  23,  11,  10,  25,  24,   9,
@@ -323,8 +313,7 @@ const unsigned int _glyph0019_tris[] = {
      28,  29,   7,  29,  30,   5,   4,  31,   5,  31,  30,   6,   5,  30,  30,   7,
       6,   3,   4,  32,  31,   4,  32,   0,   2,  33,   2,   3,  33,  32,   3,  33,
      34,  33,   0 };
-const char *_glyph0020_name = "3";
-const unsigned int _glyph0020_looplengths[] = {59};
+const unsigned short _glyph0020_looplengths[] = {59};
 const float _glyph0020_points[] = {
     0.41758135f, 0.5399759f, 0.449465632f, 0.583174f, 0.458722383f, 0.6130012f, 0.461807936f, 0.651056647f,
     0.457693845f, 0.6901406f, 0.446380079f, 0.726139f, 0.428895146f, 0.758023262f, 0.405239046f, 0.784765f,
@@ -341,7 +330,7 @@ const float _glyph0020_points[] = {
     0.3908397f, 0.250960231f, 0.416552842f, 0.271530747f, 0.434037745f, 0.2972439f, 0.445351541f, 0.32707113f,
     0.449465632f, 0.361012459f, 0.440208942f, 0.408324629f, 0.4144958f, 0.448437124f, 0.376440346f, 0.478264362f,
     0.331185222f, 0.494720757f, 0.331185222f, 0.5008919f, 0.3754118f, 0.514262736f };
-const unsigned int _glyph0020_tris[] = {
+const unsigned short _glyph0020_tris[] = {
       1,   2,   3,   0,   1,   4,   3,   1,   4,   4,   0,   5,   8,   9,  11,  10,
       9,  11,   7,  12,  11,  11,   8,   7,  13,  14,  15,  13,  15,  16,  12,  17,
      16,  16,  13,  12,   7,  12,  18,  12,  17,  18,   7,  18,  19,  19,   7,  20,
@@ -353,19 +342,17 @@ const unsigned int _glyph0020_tris[] = {
      35,  33,  50,  49,  49,  34,  33,  51,  52,  53,  33,  50,  54,  50,  54,  53,
      53,  51,  50,  32,  33,  55,  54,  33,  55,  31,  56,  55,  55,  32,  31,  24,
      31,  57,  31,  56,  57,   0,  58,  57,  57,  24,   0 };
-const char *_glyph0021_name = "4";
-const unsigned int _glyph0021_looplengths[] = {11, 3};
+const unsigned short _glyph0021_looplengths[] = {11, 3};
 const float _glyph0021_points[] = {
     0.483326644f, 0.6588991f, 0.394535959f, 0.6588991f, 0.394535959f, 0.8272399f, 0.317396551f, 0.8272399f,
     0.317396551f, 0.6588991f, 0.0309361182f, 0.6588991f, 0.0309361182f, 0.566492558f, 0.320610672f, 0.229007632f,
     0.394535959f, 0.229007632f, 0.394535959f, 0.5946163f, 0.483326644f, 0.5946163f, 0.317396551f, 0.5946163f,
     0.317396551f, 0.324628353f, 0.0855765343f, 0.5946163f };
-const unsigned int _glyph0021_tris[] = {
+const unsigned short _glyph0021_tris[] = {
       2,   1,   4,   3,   2,   4,   8,   7,   9,   9,   0,  10,   0,   9,  11,   7,
       6,  12,   9,   7,  12,  11,   9,  12,   5,   4,  13,   6,   5,  13,  12,   6,
      13,   4,  13,  11,   1,   4,  11,  11,   0,   1 };
-const char *_glyph0022_name = "5";
-const unsigned int _glyph0022_looplengths[] = {39};
+const unsigned short _glyph0022_looplengths[] = {39};
 const float _glyph0022_points[] = {
     0.46489352f, 0.6376858f, 0.460779428f, 0.6788268f, 0.4504942f, 0.7179108f, 0.4319807f, 0.7528807f,
     0.408324629f, 0.7816794f, 0.3394134f, 0.8248775f, 0.296215355f, 0.836191237f, 0.246846139f, 0.8403053f,
@@ -377,7 +364,7 @@ const float _glyph0022_points[] = {
     0.461807936f, 0.299300939f, 0.178963438f, 0.299300939f, 0.178963438f, 0.458722383f, 0.2139333f, 0.456665337f,
     0.2458176f, 0.45563677f, 0.331185222f, 0.463865042f, 0.3661551f, 0.475178778f, 0.398039371f, 0.4926637f,
     0.4268381f, 0.5183768f, 0.4474086f, 0.55026114f, 0.460779428f, 0.5893451f };
-const unsigned int _glyph0022_tris[] = {
+const unsigned short _glyph0022_tris[] = {
       4,   5,   7,   6,   5,   7,   7,   4,   8,   9,  10,  11,   9,  11,  12,   8,
      13,  12,  12,   9,   8,   8,  13,  14,   4,   8,  15,   8,  14,  15,  15,   4,
      16,   4,  16,  17,   4,   3,  18,  17,   4,  18,   2,   3,  19,  18,   3,  19,
@@ -385,8 +372,7 @@ const unsigned int _glyph0022_tris[] = {
      27,  28,  26,  28,  29,  26,  24,  30,  24,  23,  30,  29,  26,  30,  22,  23,
      31,  30,  23,  31,  22,  31,  32,   0,  33,  32,  21,   0,  32,  32,  22,  21,
       0,  33,  34,   0,  34,  35,   0,  35,  36,   0,  36,  37,   0,  37,  38 };
-const char *_glyph0023_name = "6";
-const unsigned int _glyph0023_looplengths[] = {45, 19};
+const unsigned short _glyph0023_looplengths[] = {45, 19};
 const float _glyph0023_points[] = {
     0.47929287f, 0.6335717f, 0.475178778f, 0.6767698f, 0.463865042f, 0.715853751f, 0.445351541f, 0.751852155f,
     0.4186099f, 0.7827079f, 0.3867256f, 0.807392538f, 0.351755738f, 0.825906f, 0.3137003f, 0.836191237f,
@@ -404,7 +390,7 @@ const float _glyph0023_points[] = {
     0.137822419f, 0.54409f, 0.1367939f, 0.561574936f, 0.1367939f, 0.582145452f, 0.139879465f, 0.6387144f,
     0.150164723f, 0.6829409f, 0.165592611f, 0.7148252f, 0.186163113f, 0.740538359f, 0.2252471f, 0.7662515f,
     0.2725593f, 0.774479747f, 0.325014085f, 0.7662515f, 0.364098042f, 0.7395098f, 0.38878265f, 0.6963118f };
-const unsigned int _glyph0023_tris[] = {
+const unsigned short _glyph0023_tris[] = {
       6,   7,   8,   4,   5,   9,   5,   9,   8,   8,   6,   5,   9,   4,  10,  14,
      15,  16,  12,  13,  17,  13,  17,  16,  16,  14,  13,  10,  11,  18,  11,  18,
      17,  17,  12,  11,  21,  22,  24,  23,  22,  24,  24,  21,  25,  25,  26,  27,
@@ -417,15 +403,13 @@ const unsigned int _glyph0023_tris[] = {
      19,  18,  54,  53,  19,  54,  54,  18,  55,  18,  10,  56,  55,  18,  56,  56,
      10,  57,  57,  10,  58,  58,  10,  59,   4,  10,  60,  10,  59,  60,  60,   4,
      61,   4,  61,  62,   3,  63,  62,  62,   4,   3,   2,  45,  63,  63,   3,   2 };
-const char *_glyph0024_name = "7";
-const unsigned int _glyph0024_looplengths[] = {7};
+const unsigned short _glyph0024_looplengths[] = {7};
 const float _glyph0024_points[] = {
     0.4712736f, 0.318601847f, 0.200482115f, 0.8272399f, 0.114503816f, 0.8272399f, 0.402571321f, 0.299317f,
     0.0618722364f, 0.299317f, 0.0618722364f, 0.229007632f, 0.4712736f, 0.229007632f };
-const unsigned int _glyph0024_tris[] = {
+const unsigned short _glyph0024_tris[] = {
       1,   0,   3,   2,   1,   3,   3,   4,   5,   6,   5,   3,   3,   0,   6 };
-const char *_glyph0025_name = "8";
-const unsigned int _glyph0025_looplengths[] = {46, 19, 19};
+const unsigned short _glyph0025_looplengths[] = {46, 19, 19};
 const float _glyph0025_points[] = {
     0.47415027f, 0.6613419f, 0.470036179f, 0.698368847f, 0.4597509f, 0.7323102f, 0.44123745f, 0.763165951f,
     0.4144958f, 0.7899076f, 0.381582975f, 0.812535167f, 0.345584571f, 0.827963054f, 0.305472076f, 0.838248253f,
@@ -448,7 +432,7 @@ const float _glyph0025_points[] = {
     0.210847721f, 0.52660507f, 0.177934915f, 0.55026114f, 0.152221784f, 0.5800884f, 0.135765374f, 0.6160868f,
     0.130622745f, 0.6561993f, 0.139879465f, 0.70659703f, 0.167649657f, 0.745681f, 0.210847721f, 0.7724227f,
     0.263302535f, 0.7816794f, 0.315757334f, 0.774479747f, 0.356898367f, 0.751852155f, 0.383640021f, 0.715853751f };
-const unsigned int _glyph0025_tris[] = {
+const unsigned short _glyph0025_tris[] = {
       5,   6,   8,   7,   6,   8,   4,   5,   9,   8,   5,   9,   9,   4,  10,  13,
      14,  17,  14,  17,  16,  16,  15,  14,  11,  12,  18,  12,  18,  17,  17,  13,
      12,  18,  11,  10,  24,  23,  25,  22,  21,  26,  22,  26,  25,  25,  23,  22,
@@ -466,8 +450,7 @@ const unsigned int _glyph0025_tris[] = {
      76,  18,  10,  77,  76,  18,  77,  77,  10,  78,  10,  78,  79,   4,  10,  80,
      10,  79,  80,  80,   4,  81,  81,   4,  82,   3,   4,  83,  82,   4,  83,  83,
       3,  65 };
-const char *_glyph0026_name = "9";
-const unsigned int _glyph0026_looplengths[] = {45, 20};
+const unsigned short _glyph0026_looplengths[] = {45, 20};
 const float _glyph0026_points[] = {
     0.469007641f, 0.4926637f, 0.46489352f, 0.5677461f, 0.451522678f, 0.6346002f, 0.428895146f, 0.6942547f,
     0.397010833f, 0.743624f, 0.35586983f, 0.784765f, 0.305472076f, 0.814592242f, 0.2458176f, 0.8331057f,
@@ -486,7 +469,7 @@ const float _glyph0026_points[] = {
     0.1295942f, 0.45563677f, 0.137822419f, 0.483406961f, 0.152221784f, 0.506034553f, 0.174849346f, 0.525576532f,
     0.214961827f, 0.542032957f, 0.263302535f, 0.546147048f, 0.3260426f, 0.537918866f, 0.3867256f, 0.5132342f,
     0.3877541f, 0.4967778f };
-const unsigned int _glyph0026_tris[] = {
+const unsigned short _glyph0026_tris[] = {
       5,   6,   8,   7,   6,   8,   4,   5,   9,   8,   5,   9,   9,   4,  10,  10,
      11,  12,  10,  12,  13,  10,  13,  14,   4,  10,  15,  10,  14,  15,  15,   4,
      16,  16,   4,  17,   4,  17,  18,   4,   3,  19,  18,   4,  19,   2,   3,  20,
@@ -500,43 +483,37 @@ const unsigned int _glyph0026_tris[] = {
      23,  59,  22,  23,  60,  59,  23,  60,  22,  60,  61,  20,  21,  62,  21,  62,
      61,  61,  22,  21,   1,   2,  63,  63,  62,  20,  20,   2,  63,   1,  45,  64,
      63,   1,  64 };
-const char *_glyph0027_name = ":";
-const unsigned int _glyph0027_looplengths[] = {4, 4};
+const unsigned short _glyph0027_looplengths[] = {4, 4};
 const float _glyph0027_points[] = {
     0.235034153f, 0.492969066f, 0.139011651f, 0.492969066f, 0.139011651f, 0.378465235f, 0.235034153f, 0.378465235f,
     0.235034153f, 0.8272399f, 0.139011651f, 0.8272399f, 0.139011651f, 0.712736f, 0.235034153f, 0.712736f };
-const unsigned int _glyph0027_tris[] = {
+const unsigned short _glyph0027_tris[] = {
       1,   0,   2,   0,   2,   3,   4,   6,   5,   7,   6,   4 };
-const char *_glyph0028_name = ";";
-const unsigned int _glyph0028_looplengths[] = {4, 4};
+const unsigned short _glyph0028_looplengths[] = {4, 4};
 const float _glyph0028_points[] = {
     0.235034153f, 0.492969066f, 0.139011651f, 0.492969066f, 0.139011651f, 0.378465235f, 0.235034153f, 0.378465235f,
     0.2643632f, 0.712736f, 0.151064679f, 0.9758939f, 0.0924065858f, 0.9758939f, 0.162314177f, 0.712736f };
-const unsigned int _glyph0028_tris[] = {
+const unsigned short _glyph0028_tris[] = {
       1,   0,   2,   0,   2,   3,   5,   4,   7,   6,   5,   7 };
-const char *_glyph0029_name = "<";
-const unsigned int _glyph0029_looplengths[] = {7};
+const unsigned short _glyph0029_looplengths[] = {7};
 const float _glyph0029_points[] = {
     0.565689f, 0.796303749f, 0.102049015f, 0.590196848f, 0.102049015f, 0.5403777f, 0.565689f, 0.3342708f,
     0.565689f, 0.406589f, 0.20008035f, 0.5652873f, 0.565689f, 0.723985553f };
-const unsigned int _glyph0029_tris[] = {
+const unsigned short _glyph0029_tris[] = {
       1,   0,   2,   2,   4,   3,   2,   4,   5,   0,   2,   5,   5,   6,   0 };
-const char *_glyph0030_name = "=";
-const unsigned int _glyph0030_looplengths[] = {4, 4};
+const unsigned short _glyph0030_looplengths[] = {4, 4};
 const float _glyph0030_points[] = {
     0.5749297f, 0.5130575f, 0.09843311f, 0.5130575f, 0.09843311f, 0.4487746f, 0.5749297f, 0.4487746f,
     0.5749297f, 0.681799948f, 0.09843311f, 0.681799948f, 0.09843311f, 0.617517054f, 0.5749297f, 0.617517054f };
-const unsigned int _glyph0030_tris[] = {
+const unsigned short _glyph0030_tris[] = {
       1,   0,   2,   2,   0,   3,   4,   6,   5,   6,   4,   7 };
-const char *_glyph0031_name = ">";
-const unsigned int _glyph0031_looplengths[] = {7};
+const unsigned short _glyph0031_looplengths[] = {7};
 const float _glyph0031_points[] = {
     0.5713138f, 0.590196848f, 0.107673764f, 0.796303749f, 0.107673764f, 0.723985553f, 0.473282456f, 0.5652873f,
     0.107673764f, 0.406589f, 0.107673764f, 0.3342708f, 0.5713138f, 0.5403777f };
-const unsigned int _glyph0031_tris[] = {
+const unsigned short _glyph0031_tris[] = {
       1,   0,   2,   2,   0,   3,   4,   3,   5,   0,   6,   5,   5,   3,   0 };
-const char *_glyph0032_name = "?";
-const unsigned int _glyph0032_looplengths[] = {32, 4};
+const unsigned short _glyph0032_looplengths[] = {32, 4};
 const float _glyph0032_points[] = {
     0.404210538f, 0.370269179f, 0.401124954f, 0.407296121f, 0.389811158f, 0.440208942f, 0.352784246f, 0.494720757f,
     0.301357985f, 0.537918866f, 0.239646435f, 0.5770028f, 0.239646435f, 0.667513f, 0.167649657f, 0.667513f,
@@ -547,15 +524,14 @@ const float _glyph0032_points[] = {
     0.0966814f, 0.235532343f, 0.135765374f, 0.226275623f, 0.2180474f, 0.217018872f, 0.295186818f, 0.227304146f,
     0.353812784f, 0.2591884f, 0.376440346f, 0.281816f, 0.3918682f, 0.307529122f, 0.401124954f, 0.337356359f,
     0.2458176f, 0.827963054f, 0.163535565f, 0.827963054f, 0.163535565f, 0.7425954f, 0.2458176f, 0.7425954f };
-const unsigned int _glyph0032_tris[] = {
+const unsigned short _glyph0032_tris[] = {
       6,   5,   7,   5,   7,   8,   5,   4,   9,   8,   5,   9,   3,   4,  10,   9,
       4,  10,   2,   3,  11,  10,   3,  11,   2,  11,  12,   1,   2,  13,  12,   2,
      13,   0,   1,  14,  13,   1,  14,  14,   0,  15,  20,  19,  23,  20,  23,  22,
      22,  21,  20,  19,  18,  24,  23,  19,  24,  16,  25,  24,  17,  16,  24,  24,
      18,  17,  16,  25,  26,  16,  26,  27,   0,  15,  28,  15,  28,  27,  27,  16,
      15,   0,  28,  29,   0,  29,  30,   0,  30,  31,  32,  35,  34,  34,  33,  32 };
-const char *_glyph0033_name = "@";
-const unsigned int _glyph0033_looplengths[] = {83, 13};
+const unsigned short _glyph0033_looplengths[] = {83, 13};
 const float _glyph0033_points[] = {
     0.751852155f, 0.561574936f, 0.747738063f, 0.6160868f, 0.7353957f, 0.669570148f, 0.715853751f, 0.719967842f,
     0.689112067f, 0.7641944f, 0.5122057f, 0.7641944f, 0.501920462f, 0.7179108f, 0.444323033f, 0.754937768f,
@@ -581,7 +557,7 @@ const float _glyph0033_points[] = {
     0.5008919f, 0.45563677f, 0.45563677f, 0.4391804f, 0.41243875f, 0.434037745f, 0.3661551f, 0.4432945f,
     0.331185222f, 0.470036179f, 0.308557659f, 0.514262736f, 0.301357985f, 0.572888732f, 0.307529122f, 0.630486131f,
     0.325014085f, 0.671627164f, 0.3548413f, 0.6973403f, 0.398039371f, 0.7055685f, 0.451522678f, 0.693226159f };
-const unsigned int _glyph0033_tris[] = {
+const unsigned short _glyph0033_tris[] = {
       5,   4,   6,  10,  11,  15,  11,  15,  14,  12,  11,  14,  14,  13,  12,  15,
      10,   9,  24,  23,  25,   6,   4,  26,  26,  25,  23,  18,  17,  23,  19,  18,
      23,  20,  19,  23,  21,  20,  23,  23,  22,  21,   4,  26,  27,   3,   4,  28,
@@ -600,18 +576,16 @@ const unsigned int _glyph0033_tris[] = {
      86,  17,  87,  17,  87,  88,  17,  16,  89,  88,  17,  89,  89,  16,  90,  16,
      15,  91,  90,  16,  91,   9,   8,  92,  15,   9,  92,  91,  15,  92,   8,  92,
      93,   7,   8,  94,  93,   8,  94,   6,   7,  95,  94,   7,  95,  95,   6,  83 };
-const char *_glyph0034_name = "A";
-const unsigned int _glyph0034_looplengths[] = {8, 3};
+const unsigned short _glyph0034_looplengths[] = {8, 3};
 const float _glyph0034_points[] = {
     0.552028954f, 0.8272399f, 0.46725592f, 0.8272399f, 0.408597827f, 0.660506248f, 0.149859384f, 0.660506248f,
     0.09120128f, 0.8272399f, 0.0104459627f, 0.8272399f, 0.2282041f, 0.229007632f, 0.3342708f, 0.229007632f,
     0.38409f, 0.5922057f, 0.2792286f, 0.298513472f, 0.173965454f, 0.5922057f };
-const unsigned int _glyph0034_tris[] = {
+const unsigned short _glyph0034_tris[] = {
       2,   1,   0,   3,   4,   5,   6,   5,   3,   7,   2,   0,   7,   2,   8,   6,
       7,   9,   7,   8,   9,   3,   2,  10,   6,   3,  10,   8,   2,  10,   9,   6,
      10 };
-const char *_glyph0035_name = "B";
-const unsigned int _glyph0035_looplengths[] = {27, 13, 16};
+const unsigned short _glyph0035_looplengths[] = {27, 13, 16};
 const float _glyph0035_points[] = {
     0.5317477f, 0.643857f, 0.5276336f, 0.6860265f, 0.515291333f, 0.7220249f, 0.495749325f, 0.7539092f,
     0.470036179f, 0.778593838f, 0.435066283f, 0.8012214f, 0.395982325f, 0.816649258f, 0.3496987f, 0.8248775f,
@@ -627,7 +601,7 @@ const float _glyph0035_points[] = {
     0.3990679f, 0.553346753f, 0.351755738f, 0.5399759f, 0.3219285f, 0.537918866f, 0.284901559f, 0.536890268f,
     0.160449967f, 0.536890268f, 0.160449967f, 0.760080338f, 0.265359581f, 0.760080338f, 0.312671751f, 0.759051859f,
     0.3507272f, 0.754937768f, 0.406267583f, 0.7343672f, 0.4391804f, 0.698368847f, 0.446380079f, 0.675741255f };
-const unsigned int _glyph0035_tris[] = {
+const unsigned short _glyph0035_tris[] = {
       5,   6,   8,   7,   6,   8,   4,   9,   8,   8,   5,   4,   3,   2,   9,   9,
       4,   3,  16,  17,  18,  14,  15,  19,  15,  19,  18,  18,  16,  15,  13,  14,
      20,  19,  14,  20,  23,   0,  24,  24,   0,  25,  25,   0,  26,  21,  20,  27,
@@ -639,8 +613,7 @@ const unsigned int _glyph0035_tris[] = {
      36,  34,  35,  46,  45,  35,  46,  34,  46,  47,  34,   9,  48,  47,  34,  48,
      48,   9,  49,  49,   9,  50,  50,   9,  51,   9,   2,  52,  51,   9,  52,   2,
       1,  53,  52,   2,  53,  53,   1,  54,   1,  40,  55,  54,   1,  55 };
-const char *_glyph0036_name = "C";
-const unsigned int _glyph0036_looplengths[] = {52};
+const unsigned short _glyph0036_looplengths[] = {52};
 const float _glyph0036_points[] = {
     0.5430615f, 0.784765f, 0.50294894f, 0.8022499f, 0.45563677f, 0.8197348f, 0.403182f, 0.8331057f,
     0.3394134f, 0.838248253f, 0.277701885f, 0.834134161f, 0.221133f, 0.82076335f, 0.171763763f, 0.7971073f,
@@ -655,7 +628,7 @@ const float _glyph0036_points[] = {
     0.146050617f, 0.6376858f, 0.166621134f, 0.6788268f, 0.190277219f, 0.711739659f, 0.221133f, 0.7374528f,
     0.25610286f, 0.755966246f, 0.29415828f, 0.7662515f, 0.3352993f, 0.7703656f, 0.3908397f, 0.765222967f,
     0.4432945f, 0.7497951f, 0.4916352f, 0.725110531f, 0.536890268f, 0.691169143f, 0.5430615f, 0.691169143f };
-const unsigned int _glyph0036_tris[] = {
+const unsigned short _glyph0036_tris[] = {
       2,   3,   4,   1,   5,   4,   4,   2,   1,  10,  11,  12,   9,  10,  13,  12,
      10,  13,   7,  14,  13,   8,   7,  13,  13,   9,   8,  18,  19,  20,  16,  17,
      21,  17,  21,  20,  20,  18,  17,  21,  16,  22,  23,  25,  24,  23,  25,  26,
@@ -666,8 +639,7 @@ const unsigned int _glyph0036_tris[] = {
       5,  42,  41,   6,  42,  42,   5,  43,  43,   5,  44,   1,   5,  45,   5,  44,
      45,  45,   1,  46,   1,  46,  47,   1,  47,  48,   0,  49,  48,  48,   1,   0,
      49,   0,  50,  50,   0,  51 };
-const char *_glyph0037_name = "D";
-const unsigned int _glyph0037_looplengths[] = {19, 18};
+const unsigned short _glyph0037_looplengths[] = {19, 18};
 const float _glyph0037_points[] = {
     0.586259544f, 0.5296906f, 0.5770028f, 0.60683006f, 0.55026114f, 0.6767698f, 0.5091201f, 0.736424267f,
     0.45563677f, 0.7796223f, 0.41243875f, 0.8022499f, 0.36512655f, 0.816649258f, 0.3065006f, 0.8248775f,
@@ -679,7 +651,7 @@ const float _glyph0037_points[] = {
     0.160449967f, 0.759051859f, 0.235532343f, 0.759051859f, 0.289015651f, 0.7569948f, 0.3352993f, 0.7508236f,
     0.376440346f, 0.7395098f, 0.413467258f, 0.719967842f, 0.452551246f, 0.687055051f, 0.4803214f, 0.6448855f,
     0.49780637f, 0.5924307f };
-const unsigned int _glyph0037_tris[] = {
+const unsigned short _glyph0037_tris[] = {
       5,   6,   7,   3,   8,   4,   5,   8,   4,   7,   5,   8,   8,   3,   9,   0,
      13,  14,   0,  14,  15,   0,  15,  16,   0,  16,  17,   0,  17,  18,   1,   0,
      19,  19,   0,  20,  13,   0,  21,  20,   0,  21,  12,  13,  22,  13,  21,  22,
@@ -687,26 +659,23 @@ const unsigned int _glyph0037_tris[] = {
      10,  26,  26,  10,  27,  10,   9,  28,  27,  10,  28,  28,   9,  29,   9,   3,
      30,  29,   9,  30,  30,  31,   3,  31,   3,  32,   3,  32,  33,   3,  33,  34,
       2,   3,  35,  34,   3,  35,   2,   1,  36,  35,   2,  36,  36,   1,  19 };
-const char *_glyph0038_name = "E";
-const unsigned int _glyph0038_looplengths[] = {12};
+const unsigned short _glyph0038_looplengths[] = {12};
 const float _glyph0038_points[] = {
     0.474487752f, 0.8272399f, 0.08035356f, 0.8272399f, 0.08035356f, 0.229007632f, 0.474487752f, 0.229007632f,
     0.474487752f, 0.299718767f, 0.159903571f, 0.299718767f, 0.159903571f, 0.46364f, 0.474487752f, 0.46364f,
     0.474487752f, 0.53435117f, 0.159903571f, 0.53435117f, 0.159903571f, 0.756528735f, 0.474487752f, 0.756528735f };
-const unsigned int _glyph0038_tris[] = {
+const unsigned short _glyph0038_tris[] = {
       2,   3,   4,   2,   4,   5,   2,   1,   6,   5,   2,   6,   7,   6,   8,   6,
       1,   9,   8,   6,   9,   1,   0,  10,   9,   1,  10,  10,   0,  11 };
-const char *_glyph0039_name = "F";
-const unsigned int _glyph0039_looplengths[] = {10};
+const unsigned short _glyph0039_looplengths[] = {10};
 const float _glyph0039_points[] = {
     0.4624347f, 0.299718767f, 0.159903571f, 0.299718767f, 0.159903571f, 0.468461215f, 0.419847339f, 0.468461215f,
     0.419847339f, 0.539172351f, 0.159903571f, 0.539172351f, 0.159903571f, 0.8272399f, 0.08035356f, 0.8272399f,
     0.08035356f, 0.229007632f, 0.4624347f, 0.229007632f };
-const unsigned int _glyph0039_tris[] = {
+const unsigned short _glyph0039_tris[] = {
       3,   2,   4,   4,   2,   5,   5,   6,   7,   2,   1,   8,   2,   8,   7,   7,
       5,   2,   0,   9,   8,   8,   1,   0 };
-const char *_glyph0040_name = "G";
-const unsigned int _glyph0040_looplengths[] = {52};
+const unsigned short _glyph0040_looplengths[] = {52};
 const float _glyph0040_points[] = {
     0.5800884f, 0.7837364f, 0.473121732f, 0.8228204f, 0.4155243f, 0.8351627f, 0.359983921f, 0.8392768f,
     0.293129772f, 0.834134161f, 0.23244676f, 0.8197348f, 0.177934915f, 0.796078742f, 0.13267979f, 0.7621374f,
@@ -721,7 +690,7 @@ const float _glyph0040_points[] = {
     0.163535565f, 0.6705986f, 0.190277219f, 0.70659703f, 0.224218562f, 0.7343672f, 0.263302535f, 0.7539092f,
     0.307529122f, 0.7662515f, 0.356898367f, 0.7703656f, 0.434037745f, 0.763165951f, 0.5008919f, 0.743624f,
     0.5008919f, 0.5965448f, 0.340441942f, 0.5965448f, 0.340441942f, 0.52660507f, 0.5800884f, 0.52660507f };
-const unsigned int _glyph0040_tris[] = {
+const unsigned short _glyph0040_tris[] = {
       1,   2,   3,   3,   1,   4,   9,  10,  11,   8,   9,  12,  11,   9,  12,   6,
      13,  12,   7,   6,  12,  12,   8,   7,  17,  18,  19,  15,  20,  19,  16,  15,
      19,  19,  17,  16,  21,  22,  23,  21,  23,  24,  21,  24,  25,  21,  25,  26,
@@ -732,26 +701,23 @@ const unsigned int _glyph0040_tris[] = {
       4,  42,  41,   5,  42,  42,   4,  43,   1,   4,  44,  43,   4,  44,   1,  44,
      45,   0,   1,  46,  45,   1,  46,   0,  46,  47,  47,   0,  48,  49,  48,  50,
      51,  50,  48,  48,   0,  51 };
-const char *_glyph0041_name = "H";
-const unsigned int _glyph0041_looplengths[] = {12};
+const unsigned short _glyph0041_looplengths[] = {12};
 const float _glyph0041_points[] = {
     0.537967f, 0.8272399f, 0.458417028f, 0.8272399f, 0.458417028f, 0.53435117f, 0.159903571f, 0.53435117f,
     0.159903571f, 0.8272399f, 0.08035356f, 0.8272399f, 0.08035356f, 0.229007632f, 0.159903571f, 0.229007632f,
     0.159903571f, 0.46364f, 0.458417028f, 0.46364f, 0.458417028f, 0.229007632f, 0.537967f, 0.229007632f };
-const unsigned int _glyph0041_tris[] = {
+const unsigned short _glyph0041_tris[] = {
       2,   1,   0,   3,   4,   5,   5,   3,   6,   3,   2,   8,   6,   3,   8,   7,
       6,   8,   8,   2,   9,   9,  10,  11,   2,   0,  11,  11,   9,   2 };
-const char *_glyph0042_name = "I";
-const unsigned int _glyph0042_looplengths[] = {12};
+const unsigned short _glyph0042_looplengths[] = {12};
 const float _glyph0042_points[] = {
     0.291281641f, 0.8272399f, 0.0550421849f, 0.8272399f, 0.0550421849f, 0.766171157f, 0.1333869f, 0.766171157f,
     0.1333869f, 0.290076345f, 0.0550421849f, 0.290076345f, 0.0550421849f, 0.229007632f, 0.291281641f, 0.229007632f,
     0.291281641f, 0.290076345f, 0.212936923f, 0.290076345f, 0.212936923f, 0.766171157f, 0.291281641f, 0.766171157f };
-const unsigned int _glyph0042_tris[] = {
+const unsigned short _glyph0042_tris[] = {
       0,   1,   2,   0,   2,   3,   4,   5,   6,   6,   4,   7,   7,   9,   4,   7,
       9,   8,   4,   3,  10,   3,   0,  10,   9,   4,  10,  10,   0,  11 };
-const char *_glyph0043_name = "J";
-const unsigned int _glyph0043_looplengths[] = {21};
+const unsigned short _glyph0043_looplengths[] = {21};
 const float _glyph0043_points[] = {
     0.300329447f, 0.6726557f, 0.287987143f, 0.7425954f, 0.251988769f, 0.794021666f, 0.195419848f, 0.825906f,
     0.12342307f, 0.836191237f, 0.1007955f, 0.8351627f, 0.0719967857f, 0.8331057f, 0.01851346f, 0.8248775f,
@@ -759,49 +725,44 @@ const float _glyph0043_points[] = {
     0.1450221f, 0.7662515f, 0.171763763f, 0.759051859f, 0.203648061f, 0.7353957f, 0.2180474f, 0.6963118f,
     0.221133f, 0.641799867f, 0.221133f, 0.293129772f, 0.0935958251f, 0.293129772f, 0.0935958251f, 0.229361191f,
     0.300329447f, 0.229361191f };
-const unsigned int _glyph0043_tris[] = {
+const unsigned short _glyph0043_tris[] = {
       2,   3,   4,   4,   2,   5,   6,   7,   8,   6,   8,   9,   5,   6,  10,   9,
       6,  10,   2,   5,  11,  10,   5,  11,   2,  11,  12,   2,  12,  13,   2,  13,
      14,   2,   1,  15,  14,   2,  15,  15,   1,  16,   0,  17,  16,  16,   1,   0,
      18,  17,  19,   0,  17,  20,  19,  17,  20 };
-const char *_glyph0044_name = "K";
-const unsigned int _glyph0044_looplengths[] = {12};
+const unsigned short _glyph0044_looplengths[] = {12};
 const float _glyph0044_points[] = {
     0.5612696f, 0.8272399f, 0.458015263f, 0.8272399f, 0.22137405f, 0.560867846f, 0.161912411f, 0.62434715f,
     0.161912411f, 0.8272399f, 0.08236239f, 0.8272399f, 0.08236239f, 0.229007632f, 0.161912411f, 0.229007632f,
     0.161912411f, 0.5411812f, 0.452390522f, 0.229007632f, 0.5488148f, 0.229007632f, 0.281639218f, 0.5102451f };
-const unsigned int _glyph0044_tris[] = {
+const unsigned short _glyph0044_tris[] = {
       4,   3,   5,   6,   5,   3,   6,   3,   8,   3,   2,   8,   7,   6,   8,   9,
       8,   2,   9,   2,  11,   2,   1,  11,  10,   9,  11,  11,   1,   0 };
-const char *_glyph0045_name = "L";
-const unsigned int _glyph0045_looplengths[] = {6};
+const unsigned short _glyph0045_looplengths[] = {6};
 const float _glyph0045_points[] = {
     0.4588188f, 0.8272399f, 0.08035356f, 0.8272399f, 0.08035356f, 0.229007632f, 0.159903571f, 0.229007632f,
     0.159903571f, 0.756528735f, 0.4588188f, 0.756528735f };
-const unsigned int _glyph0045_tris[] = {
+const unsigned short _glyph0045_tris[] = {
       2,   1,   4,   1,   0,   4,   3,   2,   4,   5,   4,   0 };
-const char *_glyph0046_name = "M";
-const unsigned int _glyph0046_looplengths[] = {13};
+const unsigned short _glyph0046_looplengths[] = {13};
 const float _glyph0046_points[] = {
     0.6130976f, 0.8272399f, 0.5335476f, 0.8272399f, 0.5335476f, 0.3117718f, 0.367215753f, 0.662515044f,
     0.319807142f, 0.662515044f, 0.1546806f, 0.3117718f, 0.1546806f, 0.8272399f, 0.08035356f, 0.8272399f,
     0.08035356f, 0.229007632f, 0.188830853f, 0.229007632f, 0.348332673f, 0.5620731f, 0.5026115f, 0.229007632f,
     0.6130976f, 0.229007632f };
-const unsigned int _glyph0046_tris[] = {
+const unsigned short _glyph0046_tris[] = {
       2,   1,   0,   4,   3,   5,   6,   5,   7,   7,   5,   8,   3,   2,  10,   5,
       3,  10,   5,  10,   9,   9,   8,   5,  10,   2,  11,   2,  11,  12,  12,   2,
       0 };
-const char *_glyph0047_name = "N";
-const unsigned int _glyph0047_looplengths[] = {10};
+const unsigned short _glyph0047_looplengths[] = {10};
 const float _glyph0047_points[] = {
     0.536761761f, 0.8272399f, 0.438328654f, 0.8272399f, 0.1546806f, 0.292085171f, 0.1546806f, 0.8272399f,
     0.08035356f, 0.8272399f, 0.08035356f, 0.229007632f, 0.203696266f, 0.229007632f, 0.4624347f, 0.717557251f,
     0.4624347f, 0.229007632f, 0.536761761f, 0.229007632f };
-const unsigned int _glyph0047_tris[] = {
+const unsigned short _glyph0047_tris[] = {
       2,   1,   0,   3,   2,   5,   4,   3,   5,   5,   2,   6,   2,   0,   7,   6,
       2,   7,   7,   0,   9,   9,   8,   7 };
-const char *_glyph0048_name = "O";
-const unsigned int _glyph0048_looplengths[] = {32, 32};
+const unsigned short _glyph0048_looplengths[] = {32, 32};
 const float _glyph0048_points[] = {
     0.52660507f, 0.2982724f, 0.55951786f, 0.343527526f, 0.583174f, 0.397010833f, 0.59757334f, 0.458722383f,
     0.602715969f, 0.5286621f, 0.59757334f, 0.5986019f, 0.582145452f, 0.6613419f, 0.5584893f, 0.7148252f,
@@ -819,7 +780,7 @@ const float _glyph0048_points[] = {
     0.182049021f, 0.708654046f, 0.210847721f, 0.736424267f, 0.244789079f, 0.755966246f, 0.2828445f, 0.767280042f,
     0.325014085f, 0.771394134f, 0.3671836f, 0.767280042f, 0.405239046f, 0.755966246f, 0.4381519f, 0.736424267f,
     0.466950566f, 0.708654046f, 0.489578158f, 0.673684239f, 0.506034553f, 0.6325432f, 0.5163198f, 0.584202468f };
-const unsigned int _glyph0048_tris[] = {
+const unsigned short _glyph0048_tris[] = {
       2,   3,   4,   0,   1,   5,   1,   5,   4,   4,   2,   1,   5,   0,   6,  10,
      11,  12,   9,  10,  13,  12,  10,  13,   8,  14,  13,  13,   9,   8,  18,  19,
      20,  16,  17,  21,  17,  21,  20,  20,  18,  17,  15,  22,  21,  21,  16,  15,
@@ -832,8 +793,7 @@ const unsigned int _glyph0048_tris[] = {
      51,  14,  52,  52,  14,  53,  14,  53,  54,  14,  54,  55,   8,  14,  56,  14,
      55,  56,   8,  56,  57,  57,   8,  58,  58,   8,  59,   8,  59,  60,   7,   8,
      61,  60,   8,  61,   7,   6,  62,  61,   7,  62,  32,   6,  63,  62,   6,  63 };
-const char *_glyph0049_name = "P";
-const unsigned int _glyph0049_looplengths[] = {19, 12};
+const unsigned short _glyph0049_looplengths[] = {19, 12};
 const float _glyph0049_points[] = {
     0.472093225f, 0.410381675f, 0.469007641f, 0.449465632f, 0.458722383f, 0.484435529f, 0.4196384f, 0.5430615f,
     0.385697067f, 0.5698031f, 0.346613079f, 0.5893451f, 0.2982724f, 0.6006589f, 0.239646435f, 0.604773f,
@@ -843,15 +803,14 @@ const float _glyph0049_points[] = {
     0.3784974f, 0.3589554f, 0.345584571f, 0.320899934f, 0.301357985f, 0.30341503f, 0.239646435f, 0.2982724f,
     0.160449967f, 0.2982724f, 0.160449967f, 0.536890268f, 0.227304146f, 0.536890268f, 0.271530747f, 0.534833252f,
     0.305472076f, 0.5286621f, 0.3548413f, 0.5008919f, 0.381582975f, 0.4597509f };
-const unsigned int _glyph0049_tris[] = {
+const unsigned short _glyph0049_tris[] = {
       9,   8,  10,  11,  10,   8,   5,   4,   8,   6,   5,   8,   8,   7,   6,   0,
      12,  13,   0,  13,  14,   0,  14,  15,   0,  15,  16,   0,  16,  17,   0,  17,
      18,   2,   1,  19,   0,  20,  19,  19,   1,   0,   0,  12,  21,  20,   0,  21,
      12,  11,  22,  21,  12,  22,  22,  11,  23,  23,  11,  24,  11,   8,  25,   8,
       4,  25,  24,  11,  25,   4,  25,  26,   4,  26,  27,   4,  27,  28,   3,   4,
      29,  28,   4,  29,   3,   2,  30,  29,   3,  30,  30,   2,  19 };
-const char *_glyph0050_name = "Q";
-const unsigned int _glyph0050_looplengths[] = {45, 32};
+const unsigned short _glyph0050_looplengths[] = {45, 32};
 const float _glyph0050_points[] = {
     0.6140297f, 0.9740137f, 0.566717565f, 0.9832704f, 0.5183768f, 0.9853274f, 0.45563677f, 0.9760707f,
     0.406267583f, 0.947272f, 0.3743833f, 0.9009884f, 0.359983921f, 0.8372198f, 0.34147045f, 0.8392768f,
@@ -873,7 +832,7 @@ const float _glyph0050_points[] = {
     0.2828445f, 0.767280042f, 0.325014085f, 0.771394134f, 0.3671836f, 0.767280042f, 0.405239046f, 0.755966246f,
     0.4381519f, 0.736424267f, 0.466950566f, 0.708654046f, 0.489578158f, 0.673684239f, 0.506034553f, 0.6325432f,
     0.5163198f, 0.584202468f };
-const unsigned int _glyph0050_tris[] = {
+const unsigned short _glyph0050_tris[] = {
       0,   1,   2,   2,   0,   3,   3,   4,   6,   5,   4,   6,  14,  15,  16,  12,
      13,  17,  13,  17,  16,  16,  14,  13,  11,  18,  17,  17,  12,  11,  22,  23,
      24,  21,  22,  25,  24,  22,  25,  20,  26,  25,  25,  21,  20,  30,  31,  32,
@@ -889,8 +848,7 @@ const unsigned int _glyph0050_tris[] = {
      68,   8,   7,  36,   3,  70,   3,  70,  69,  69,   6,   3,  35,  36,  71,  70,
      36,  71,  35,  71,  72,  34,  35,  73,  72,  35,  73,  34,  73,  74,  74,  34,
      75,  34,  75,  76,  76,  34,  45 };
-const char *_glyph0051_name = "R";
-const unsigned int _glyph0051_looplengths[] = {19, 12};
+const unsigned short _glyph0051_looplengths[] = {19, 12};
 const float _glyph0051_points[] = {
     0.5759743f, 0.827963054f, 0.472093225f, 0.827963054f, 0.2725593f, 0.590373635f, 0.160449967f, 0.590373635f,
     0.160449967f, 0.827963054f, 0.08125352f, 0.827963054f, 0.08125352f, 0.229361191f, 0.247874662f, 0.229361191f,
@@ -900,15 +858,14 @@ const float _glyph0051_points[] = {
     0.380554438f, 0.351755738f, 0.369240642f, 0.3342708f, 0.3507272f, 0.3188429f, 0.309586167f, 0.3023865f,
     0.2540458f, 0.2982724f, 0.160449967f, 0.2982724f, 0.160449967f, 0.5235195f, 0.240674958f, 0.5235195f,
     0.3065006f, 0.517348349f, 0.3548413f, 0.4926637f, 0.381582975f, 0.453579724f };
-const unsigned int _glyph0051_tris[] = {
+const unsigned short _glyph0051_tris[] = {
       4,   3,   5,   6,   5,   3,  11,  12,  14,  13,  12,  14,   9,  10,  15,  10,
      15,  14,  14,  11,  10,  15,   9,  16,   1,   0,  18,   9,  16,  20,  16,  19,
      20,   8,   9,  21,  20,   9,  21,   8,  21,  22,   8,   7,  23,  22,   8,  23,
       6,   7,  24,  23,   7,  24,   6,  24,  25,   6,   3,  26,   3,   2,  26,  25,
       6,  26,   2,  26,  27,  18,   1,  28,   1,  28,  27,  27,   2,   1,  17,  18,
      29,  28,  18,  29,  16,  17,  30,  29,  17,  30,  30,  16,  19 };
-const char *_glyph0052_name = "S";
-const unsigned int _glyph0052_looplengths[] = {60};
+const unsigned short _glyph0052_looplengths[] = {60};
 const float _glyph0052_points[] = {
     0.515291333f, 0.6572278f, 0.5111772f, 0.6921977f, 0.498834878f, 0.726139f, 0.47929287f, 0.758023262f,
     0.453579724f, 0.7837364f, 0.3784974f, 0.823848963f, 0.33221373f, 0.8351627f, 0.275644839f, 0.838248253f,
@@ -925,7 +882,7 @@ const float _glyph0052_points[] = {
     0.150164723f, 0.344556034f, 0.140908f, 0.382611483f, 0.146050617f, 0.4155243f, 0.160449967f, 0.44123745f,
     0.18719165f, 0.4597509f, 0.228332669f, 0.473121732f, 0.2591884f, 0.47929287f, 0.301357985f, 0.487521082f,
     0.381582975f, 0.503977537f, 0.440208942f, 0.525576532f, 0.481349915f, 0.557460845f, 0.507063031f, 0.599630356f };
-const unsigned int _glyph0052_tris[] = {
+const unsigned short _glyph0052_tris[] = {
       4,   5,   7,   6,   5,   7,   7,   4,   8,   9,  10,  11,   9,  11,  12,   9,
      12,  13,   8,   9,  14,  13,   9,  14,  14,   8,  15,   4,   8,  16,   8,  15,
      16,  16,   4,  17,   4,  17,  18,   4,   3,  19,  18,   4,  19,   2,   3,  20,
@@ -937,16 +894,14 @@ const unsigned int _glyph0052_tris[] = {
      50,  26,  50,  51,  26,  25,  52,  51,  26,  52,  52,  25,  53,  24,  25,  54,
      53,  25,  54,   1,   0,  55,   1,  55,  54,  22,   1,  54,  23,  22,  54,  54,
      24,  23,  55,   0,  56,  56,   0,  57,  57,  58,   0,  58,   0,  59 };
-const char *_glyph0053_name = "T";
-const unsigned int _glyph0053_looplengths[] = {8};
+const unsigned short _glyph0053_looplengths[] = {8};
 const float _glyph0053_points[] = {
     0.507030964f, 0.299718767f, 0.293290466f, 0.299718767f, 0.293290466f, 0.8272399f, 0.213740453f, 0.8272399f,
     0.213740453f, 0.299718767f, 0.0f, 0.299718767f, 0.0f, 0.229007632f, 0.507030964f, 0.229007632f };
-const unsigned int _glyph0053_tris[] = {
+const unsigned short _glyph0053_tris[] = {
       2,   1,   4,   3,   2,   4,   5,   4,   6,   0,   7,   6,   1,   0,   6,   6,
       4,   1 };
-const char *_glyph0054_name = "U";
-const unsigned int _glyph0054_looplengths[] = {36};
+const unsigned short _glyph0054_looplengths[] = {36};
 const float _glyph0054_points[] = {
     0.530719161f, 0.5872881f, 0.5276336f, 0.6479711f, 0.517348349f, 0.7014544f, 0.49780637f, 0.745681f,
     0.470036179f, 0.7816794f, 0.437123328f, 0.8084211f, 0.398039371f, 0.825906f, 0.352784246f, 0.836191237f,
@@ -957,7 +912,7 @@ const float _glyph0054_points[] = {
     0.228332669f, 0.759051859f, 0.262274f, 0.7683085f, 0.301357985f, 0.771394134f, 0.34147045f, 0.7683085f,
     0.3743833f, 0.759051859f, 0.4021535f, 0.7425954f, 0.422724f, 0.7189393f, 0.445351541f, 0.666484535f,
     0.4504942f, 0.6335717f, 0.451522678f, 0.5934592f, 0.451522678f, 0.229361191f, 0.530719161f, 0.229361191f };
-const unsigned int _glyph0054_tris[] = {
+const unsigned short _glyph0054_tris[] = {
       5,   6,   8,   7,   6,   8,   4,   5,   9,   8,   5,   9,   9,   4,  10,  14,
      15,  16,  11,  10,  16,  12,  11,  16,  13,  12,  16,  16,  14,  13,  17,  16,
      19,  18,  17,  19,  19,  16,  20,  16,  10,  21,  20,  16,  21,  21,  10,  22,
@@ -965,94 +920,82 @@ const unsigned int _glyph0054_tris[] = {
       4,  27,  27,   4,  28,  28,   4,  29,   3,   4,  30,  29,   4,  30,   2,  31,
      30,  30,   3,   2,   2,  31,  32,   1,   2,  33,  32,   2,  33,   0,  34,  33,
      33,   1,   0,   0,  34,  35 };
-const char *_glyph0055_name = "V";
-const unsigned int _glyph0055_looplengths[] = {7};
+const unsigned short _glyph0055_looplengths[] = {7};
 const float _glyph0055_points[] = {
     0.552028954f, 0.229007632f, 0.3342708f, 0.8272399f, 0.2282041f, 0.8272399f, 0.0104459627f, 0.229007632f,
     0.09562073f, 0.229007632f, 0.283246279f, 0.7553234f, 0.470871836f, 0.229007632f };
-const unsigned int _glyph0055_tris[] = {
+const unsigned short _glyph0055_tris[] = {
       2,   1,   5,   3,   2,   5,   4,   3,   5,   1,   6,   0,   5,   1,   6 };
-const char *_glyph0056_name = "W";
-const unsigned int _glyph0056_looplengths[] = {13};
+const unsigned short _glyph0056_looplengths[] = {13};
 const float _glyph0056_points[] = {
     0.7766171f, 0.229007632f, 0.62113297f, 0.8272399f, 0.5315388f, 0.8272399f, 0.405785441f, 0.3306549f,
     0.2828445f, 0.8272399f, 0.195259139f, 0.8272399f, 0.0369626358f, 0.229007632f, 0.1185215f, 0.229007632f,
     0.24427481f, 0.726396143f, 0.368019283f, 0.229007632f, 0.4487746f, 0.229007632f, 0.5737244f, 0.7312174f,
     0.698674142f, 0.229007632f };
-const unsigned int _glyph0056_tris[] = {
+const unsigned short _glyph0056_tris[] = {
       5,   4,   6,   4,   3,   8,   6,   4,   8,   7,   6,   8,   8,   3,   9,   3,
      10,   9,   2,   1,  11,   3,   2,  11,  10,   3,  11,   1,  12,   0,  11,   1,
      12 };
-const char *_glyph0057_name = "X";
-const unsigned int _glyph0057_looplengths[] = {12};
+const unsigned short _glyph0057_looplengths[] = {12};
 const float _glyph0057_points[] = {
     0.536761761f, 0.229007632f, 0.330253124f, 0.524708748f, 0.536359966f, 0.8272399f, 0.44435516f, 0.8272399f,
     0.281237453f, 0.5809562f, 0.114102051f, 0.8272399f, 0.027320208f, 0.8272399f, 0.235837683f, 0.5283246f,
     0.03214142f, 0.229007632f, 0.123744473f, 0.229007632f, 0.284853369f, 0.472077131f, 0.449578136f, 0.229007632f };
-const unsigned int _glyph0057_tris[] = {
+const unsigned short _glyph0057_tris[] = {
       2,   3,   4,   5,   4,   7,   6,   5,   7,   1,   8,   7,   2,   1,   7,   7,
       4,   2,   9,   8,  10,   8,   1,  10,   1,  11,   0,  10,   1,  11 };
-const char *_glyph0058_name = "Y";
-const unsigned int _glyph0058_looplengths[] = {9};
+const unsigned short _glyph0058_looplengths[] = {9};
 const float _glyph0058_points[] = {
     0.5038168f, 0.229007632f, 0.293290466f, 0.5648855f, 0.293290466f, 0.8272399f, 0.213740453f, 0.8272399f,
     0.213740453f, 0.5733226f, 0.00241060671f, 0.229007632f, 0.09039775f, 0.229007632f, 0.253917247f, 0.496584982f,
     0.419043779f, 0.229007632f };
-const unsigned int _glyph0058_tris[] = {
+const unsigned short _glyph0058_tris[] = {
       2,   1,   4,   3,   2,   4,   4,   1,   5,   1,   6,   5,   1,   6,   7,   0,
       1,   7,   7,   8,   0 };
-const char *_glyph0059_name = "Z";
-const unsigned int _glyph0059_looplengths[] = {10};
+const unsigned short _glyph0059_looplengths[] = {10};
 const float _glyph0059_points[] = {
     0.5174769f, 0.8272399f, 0.05062274f, 0.8272399f, 0.05062274f, 0.753314555f, 0.417436719f, 0.299718767f,
     0.06428284f, 0.299718767f, 0.06428284f, 0.229007632f, 0.508638f, 0.229007632f, 0.508638f, 0.300924063f,
     0.138208121f, 0.756528735f, 0.5174769f, 0.756528735f };
-const unsigned int _glyph0059_tris[] = {
+const unsigned short _glyph0059_tris[] = {
       0,   1,   2,   3,   4,   5,   5,   3,   6,   3,   6,   7,   3,   2,   8,   2,
       0,   8,   7,   3,   8,   8,   0,   9 };
-const char *_glyph0060_name = "[";
-const unsigned int _glyph0060_looplengths[] = {8};
+const unsigned short _glyph0060_looplengths[] = {8};
 const float _glyph0060_points[] = {
     0.304941744f, 0.9847328f, 0.0960225f, 0.9847328f, 0.0960225f, 0.20208919f, 0.304941744f, 0.20208919f,
     0.304941744f, 0.259542f, 0.165930092f, 0.259542f, 0.165930092f, 0.92728f, 0.304941744f, 0.92728f };
-const unsigned int _glyph0060_tris[] = {
+const unsigned short _glyph0060_tris[] = {
       2,   3,   4,   2,   4,   5,   2,   1,   6,   1,   0,   6,   5,   2,   6,   6,
       0,   7 };
-const char *_glyph0061_name = "\\";
-const unsigned int _glyph0061_looplengths[] = {4};
+const unsigned short _glyph0061_looplengths[] = {4};
 const float _glyph0061_points[] = {
     0.385697067f, 0.949377239f, 0.316191256f, 0.949377239f, 0.0281237438f, 0.20208919f, 0.09883487f, 0.20208919f };
-const unsigned int _glyph0061_tris[] = {
+const unsigned short _glyph0061_tris[] = {
       2,   1,   0,   3,   2,   0 };
-const char *_glyph0062_name = "]";
-const unsigned int _glyph0062_looplengths[] = {8};
+const unsigned short _glyph0062_looplengths[] = {8};
 const float _glyph0062_points[] = {
     0.277621537f, 0.9847328f, 0.06870229f, 0.9847328f, 0.06870229f, 0.92728f, 0.207713947f, 0.92728f,
     0.207713947f, 0.259542f, 0.06870229f, 0.259542f, 0.06870229f, 0.20208919f, 0.277621537f, 0.20208919f };
-const unsigned int _glyph0062_tris[] = {
+const unsigned short _glyph0062_tris[] = {
       0,   1,   2,   0,   2,   3,   4,   3,   0,   4,   5,   6,   6,   4,   7,   7,
       4,   0 };
-const char *_glyph0063_name = "^";
-const unsigned int _glyph0063_looplengths[] = {7};
+const unsigned short _glyph0063_looplengths[] = {7};
 const float _glyph0063_points[] = {
     0.598634f, 0.5524307f, 0.519084f, 0.5524307f, 0.336279631f, 0.3005223f, 0.153877065f, 0.5532342f,
     0.07472881f, 0.5532342f, 0.311370015f, 0.229007632f, 0.361992776f, 0.229007632f };
-const unsigned int _glyph0063_tris[] = {
+const unsigned short _glyph0063_tris[] = {
       1,   0,   2,   2,   5,   4,   4,   3,   2,   2,   5,   6,   6,   2,   0 };
-const char *_glyph0064_name = "_";
-const unsigned int _glyph0064_looplengths[] = {4};
+const unsigned short _glyph0064_looplengths[] = {4};
 const float _glyph0064_points[] = {
     0.524708748f, 0.9477702f, -0.00160707114f, 0.9477702f, -0.00160707114f, 0.899558067f, 0.524708748f, 0.899558067f };
-const unsigned int _glyph0064_tris[] = {
+const unsigned short _glyph0064_tris[] = {
       1,   0,   2,   2,   0,   3 };
-const char *_glyph0065_name = "`";
-const unsigned int _glyph0065_looplengths[] = {4};
+const unsigned short _glyph0065_looplengths[] = {4};
 const float _glyph0065_points[] = {
     0.306147039f, 0.3041382f, 0.24628365f, 0.3041382f, 0.136601046f, 0.153877065f, 0.234230608f, 0.153877065f };
-const unsigned int _glyph0065_tris[] = {
+const unsigned short _glyph0065_tris[] = {
       1,   0,   2,   2,   0,   3 };
-const char *_glyph0066_name = "a";
-const unsigned int _glyph0066_looplengths[] = {37, 15};
+const unsigned short _glyph0066_looplengths[] = {37, 15};
 const float _glyph0066_points[] = {
     0.4237525f, 0.827963054f, 0.348670155f, 0.827963054f, 0.348670155f, 0.7796223f, 0.320899934f, 0.7991643f,
     0.287987143f, 0.818706334f, 0.244789079f, 0.834134161f, 0.18719165f, 0.8403053f, 0.131651267f, 0.83002007f,
@@ -1067,7 +1010,7 @@ const float _glyph0066_points[] = {
     0.2252471f, 0.602715969f, 0.1933628f, 0.6099156f, 0.163535565f, 0.6212294f, 0.139879465f, 0.6387144f,
     0.125480115f, 0.662370443f, 0.120337479f, 0.6921977f, 0.126508638f, 0.726139f, 0.143993571f, 0.7508236f,
     0.173820823f, 0.765222967f, 0.214961827f, 0.7703656f, 0.253017277f, 0.7662515f, 0.2869586f, 0.754937768f };
-const unsigned int _glyph0066_tris[] = {
+const unsigned short _glyph0066_tris[] = {
       1,   0,   2,   3,   4,   6,   5,   4,   6,   6,   3,   7,   8,   9,  11,  10,
       9,  11,   7,   8,  12,  11,   8,  12,  12,   7,  13,  24,  23,  26,  25,  24,
      26,  22,  23,  27,  26,  23,  27,  20,  28,  27,  21,  20,  27,  27,  22,  21,
@@ -1078,8 +1021,7 @@ const unsigned int _glyph0066_tris[] = {
      14,  42,  42,  13,  43,  13,  43,  44,   7,  13,  45,  13,  44,  45,   7,  45,
      46,  46,   7,  47,   3,   7,  48,   7,  47,  48,   3,  48,  49,  49,   3,  50,
      50,   3,  51,  37,  51,   3,  37,   3,   2,   2,   0,  37 };
-const char *_glyph0067_name = "b";
-const unsigned int _glyph0067_looplengths[] = {26, 14};
+const unsigned short _glyph0067_looplengths[] = {26, 14};
 const float _glyph0067_points[] = {
     0.470036179f, 0.599630356f, 0.4659221f, 0.654142261f, 0.453579724f, 0.7014544f, 0.435066283f, 0.7425954f,
     0.4114102f, 0.776536763f, 0.381582975f, 0.804307f, 0.348670155f, 0.823848963f, 0.312671751f, 0.836191237f,
@@ -1091,7 +1033,7 @@ const float _glyph0067_points[] = {
     0.36512655f, 0.4803214f, 0.330156684f, 0.448437124f, 0.27975893f, 0.4381519f, 0.246846139f, 0.442266f,
     0.212904781f, 0.452551246f, 0.150164723f, 0.489578158f, 0.150164723f, 0.7467095f, 0.2057051f, 0.7662515f,
     0.2581599f, 0.7724227f, 0.3137003f, 0.7621374f, 0.35586983f, 0.731281638f, 0.382611483f, 0.677798331f };
-const unsigned int _glyph0067_tris[] = {
+const unsigned short _glyph0067_tris[] = {
       6,   7,   8,   4,   9,   8,   5,   4,   8,   8,   6,   5,  11,  10,  12,   4,
       3,  10,  10,   9,   4,  13,  12,  15,  14,  13,  15,   0,  18,  19,   0,  19,
      20,   0,  20,  21,   0,  21,  22,   0,  22,  23,   0,  23,  24,   0,  24,  25,
@@ -1100,8 +1042,7 @@ const unsigned int _glyph0067_tris[] = {
      33,  32,  15,  33,  33,  12,  34,  34,  12,  35,  10,   3,  36,  10,  36,  35,
      35,  12,  10,   3,   2,  37,  36,   3,  37,  37,   2,  38,   1,   0,  39,   1,
      39,  38,  38,   2,   1,  39,   0,  26 };
-const char *_glyph0068_name = "c";
-const unsigned int _glyph0068_looplengths[] = {39};
+const unsigned short _glyph0068_looplengths[] = {39};
 const float _glyph0068_points[] = {
     0.406267583f, 0.7991643f, 0.3352993f, 0.827963054f, 0.263302535f, 0.838248253f, 0.21599035f, 0.834134161f,
     0.173820823f, 0.823848963f, 0.103881076f, 0.780650854f, 0.07816794f, 0.747738063f, 0.0586259551f, 0.707625568f,
@@ -1113,7 +1054,7 @@ const float _glyph0068_points[] = {
     0.130622745f, 0.530719161f, 0.121366f, 0.603744447f, 0.130622745f, 0.675741255f, 0.1573644f, 0.7292246f,
     0.201591f, 0.7621374f, 0.2591884f, 0.7724227f, 0.3065006f, 0.7662515f, 0.348670155f, 0.7508236f,
     0.37952593f, 0.7323102f, 0.4021535f, 0.7168823f, 0.406267583f, 0.7168823f };
-const unsigned int _glyph0068_tris[] = {
+const unsigned short _glyph0068_tris[] = {
       7,   8,   9,   5,   6,  10,   6,  10,   9,   9,   7,   6,   4,   5,  11,  10,
       5,  11,  14,  15,  17,  16,  15,  17,  13,  18,  17,  17,  14,  13,  18,  20,
      19,  18,  20,  21,  18,  21,  22,  22,  18,  23,  18,  23,  24,  13,  18,  25,
@@ -1121,8 +1062,7 @@ const unsigned int _glyph0068_tris[] = {
      11,  29,  28,  12,  29,  11,   4,  30,  29,  11,  30,   4,   3,  31,  30,   4,
      31,   2,   3,  32,  31,   3,  32,   1,   2,  33,  32,   2,  33,   1,   0,  34,
      33,   1,  34,  34,   0,  35,  35,   0,  36,  36,   0,  37,  37,   0,  38 };
-const char *_glyph0069_name = "d";
-const unsigned int _glyph0069_looplengths[] = {25, 14};
+const unsigned short _glyph0069_looplengths[] = {25, 14};
 const float _glyph0069_points[] = {
     0.4391804f, 0.827963054f, 0.3630695f, 0.827963054f, 0.3630695f, 0.780650854f, 0.330156684f, 0.806364f,
     0.295186818f, 0.8248775f, 0.2581599f, 0.836191237f, 0.219075948f, 0.8403053f, 0.181020483f, 0.836191237f,
@@ -1134,7 +1074,7 @@ const float _glyph0069_points[] = {
     0.25610286f, 0.4360948f, 0.199533954f, 0.4474086f, 0.1573644f, 0.4803214f, 0.130622745f, 0.5338048f,
     0.121366f, 0.604773f, 0.128565684f, 0.675741255f, 0.1491362f, 0.727167547f, 0.18513459f, 0.758023262f,
     0.236560866f, 0.7683085f, 0.269473672f, 0.7641944f, 0.301357985f, 0.7539092f };
-const unsigned int _glyph0069_tris[] = {
+const unsigned short _glyph0069_tris[] = {
       0,   1,   2,   4,   5,   6,   3,   7,   6,   6,   4,   3,  10,  11,  13,  12,
      11,  13,   9,  10,  14,  13,  10,  14,   8,  15,  14,  14,   9,   8,  23,  22,
      24,   0,  24,  22,  18,  17,  22,  19,  18,  22,  20,  19,  22,  22,  21,  20,
@@ -1143,8 +1083,7 @@ const unsigned int _glyph0069_tris[] = {
      32,  31,  16,  32,   7,   8,  33,   8,  15,  33,  32,  15,  33,   7,  33,  34,
       3,   7,  35,  34,   7,  35,   3,  35,  36,   3,  36,  37,  37,   3,  38,   2,
      25,  38,  38,   3,   2 };
-const char *_glyph0070_name = "e";
-const unsigned int _glyph0070_looplengths[] = {38, 9};
+const unsigned short _glyph0070_looplengths[] = {38, 9};
 const float _glyph0070_points[] = {
     0.4504942f, 0.610944152f, 0.119308956f, 0.610944152f, 0.12342307f, 0.650028169f, 0.13267979f, 0.6829409f,
     0.14707914f, 0.711739659f, 0.166621134f, 0.7333387f, 0.21599035f, 0.763165951f, 0.27975893f, 0.7724227f,
@@ -1158,7 +1097,7 @@ const float _glyph0070_points[] = {
     0.4381519f, 0.483406961f, 0.4504942f, 0.5698031f, 0.376440346f, 0.553346753f, 0.369240642f, 0.5008919f,
     0.346613079f, 0.461807936f, 0.309586167f, 0.437123328f, 0.257131368f, 0.428895146f, 0.202619523f, 0.4381519f,
     0.160449967f, 0.46489352f, 0.13267979f, 0.505006f, 0.119308956f, 0.553346753f };
-const unsigned int _glyph0070_tris[] = {
+const unsigned short _glyph0070_tris[] = {
       9,  10,  13,  10,  13,  12,  12,  11,  10,   6,  14,  13,   7,   6,  13,   8,
       7,  13,  13,   9,   8,   6,  14,  15,   6,  15,  16,   6,  16,  17,   5,   6,
      18,  17,   6,  18,   4,   5,  19,  18,   5,  19,   2,   3,  20,   3,  20,  19,
@@ -1168,8 +1107,7 @@ const unsigned int _glyph0070_tris[] = {
      32,   0,  39,   0,  38,  39,  32,  39,  40,  28,  32,  41,  40,  32,  41,  28,
      41,  42,  28,  42,  43,  27,  26,  44,  27,  44,  43,  43,  28,  27,  44,  26,
      45,  26,   1,  46,  45,  26,  46,   0,  38,  46,  46,   1,   0 };
-const char *_glyph0071_name = "f";
-const unsigned int _glyph0071_looplengths[] = {25};
+const unsigned short _glyph0071_looplengths[] = {25};
 const float _glyph0071_points[] = {
     0.316785842f, 0.275644839f, 0.312671751f, 0.275644839f, 0.27975893f, 0.268445134f, 0.244789079f, 0.264331043f,
     0.202619523f, 0.269473672f, 0.173820823f, 0.2859301f, 0.1573644f, 0.315757334f, 0.152221784f, 0.364098042f,
@@ -1178,14 +1116,13 @@ const float _glyph0071_points[] = {
     0.02777019f, 0.3784974f, 0.07919646f, 0.3784974f, 0.07919646f, 0.364098042f, 0.08948172f, 0.293129772f,
     0.118280433f, 0.24170348f, 0.166621134f, 0.2098192f, 0.233475283f, 0.198505417f, 0.278730422f, 0.200562477f,
     0.316785842f, 0.206733629f };
-const unsigned int _glyph0071_tris[] = {
+const unsigned short _glyph0071_tris[] = {
       9,   8,  10,  10,   8,  11,  12,  11,  14,  13,  12,  14,  14,  15,  16,  14,
      11,  17,  16,  14,  17,  17,  11,  18,   7,   8,  19,   8,  19,  18,  18,  11,
       8,   4,   5,  20,   5,  20,  19,   6,   5,  19,  19,   7,   6,  21,  20,   4,
      21,   4,   3,  21,   3,   2,   0,  21,   2,   2,   1,   0,   0,  21,  22,   0,
      22,  23,   0,  23,  24 };
-const char *_glyph0072_name = "g";
-const unsigned int _glyph0072_looplengths[] = {43, 13};
+const unsigned short _glyph0072_looplengths[] = {43, 13};
 const float _glyph0072_points[] = {
     0.4391804f, 0.776536763f, 0.4360948f, 0.83002007f, 0.425809562f, 0.875275254f, 0.409353167f, 0.9133307f,
     0.3867256f, 0.944186449f, 0.357926875f, 0.9678425f, 0.320899934f, 0.9842989f, 0.277701885f, 0.9945842f,
@@ -1201,7 +1138,7 @@ const float _glyph0072_points[] = {
     0.3630695f, 0.4597509f, 0.307529122f, 0.440208942f, 0.25610286f, 0.434037745f, 0.199533954f, 0.444323033f,
     0.1573644f, 0.476207316f, 0.130622745f, 0.5276336f, 0.121366f, 0.59757334f, 0.128565684f, 0.664427459f,
     0.148107678f, 0.711739659f, 0.183077544f, 0.7415669f, 0.236560866f, 0.7508236f, 0.3023865f, 0.7384813f };
-const unsigned int _glyph0072_tris[] = {
+const unsigned short _glyph0072_tris[] = {
       5,   6,   8,   7,   6,   8,   4,   9,   8,   8,   5,   4,   9,  10,  11,   9,
      11,  12,   9,  12,  13,  13,   9,  14,   4,   9,  15,   9,  14,  15,  15,   4,
      16,   4,  16,  17,   4,   3,  18,  17,   4,  18,   2,   3,  19,  18,   3,  19,
@@ -1213,8 +1150,7 @@ const unsigned int _glyph0072_tris[] = {
      32,  32,  25,  51,  50,  32,  51,  25,  24,  52,  51,  25,  52,  52,  24,  53,
      22,  23,  54,  23,  54,  53,  53,  24,  23,  20,  21,  55,  21,  55,  54,  54,
      22,  21,  43,  55,  20,  20,   1,  43 };
-const char *_glyph0073_name = "h";
-const unsigned int _glyph0073_looplengths[] = {23};
+const unsigned short _glyph0073_looplengths[] = {23};
 const float _glyph0073_points[] = {
     0.4504942f, 0.827963054f, 0.3743833f, 0.827963054f, 0.3743833f, 0.5718602f, 0.3712977f, 0.514262736f,
     0.3661551f, 0.490606666f, 0.357926875f, 0.472093225f, 0.329128176f, 0.446380079f, 0.27975893f, 0.4381519f,
@@ -1222,20 +1158,18 @@ const float _glyph0073_points[] = {
     0.07508236f, 0.827963054f, 0.07508236f, 0.202619523f, 0.150164723f, 0.202619523f, 0.150164723f, 0.428895146f,
     0.223190039f, 0.382611483f, 0.262274f, 0.370269179f, 0.301357985f, 0.3661551f, 0.36512655f, 0.377468884f,
     0.4114102f, 0.410381675f, 0.440208942f, 0.463865042f, 0.4504942f, 0.536890268f };
-const unsigned int _glyph0073_tris[] = {
+const unsigned short _glyph0073_tris[] = {
       2,   1,   0,  10,  11,  12,  13,  12,  10,  13,  10,  15,  10,   9,  15,  14,
      13,  15,   8,   9,  16,  15,   9,  16,   6,   7,  17,   7,  17,  16,  16,   8,
       7,   5,  18,  17,  17,   6,   5,   5,  18,  19,   2,   3,  20,   3,  20,  19,
       4,   3,  19,  19,   5,   4,  20,   2,  21,   2,   0,  22,  22,  21,   2 };
-const char *_glyph0074_name = "i";
-const unsigned int _glyph0074_looplengths[] = {4, 4};
+const unsigned short _glyph0074_looplengths[] = {4, 4};
 const float _glyph0074_points[] = {
     0.155484125f, 0.303334683f, 0.07030936f, 0.303334683f, 0.07030936f, 0.224989951f, 0.155484125f, 0.224989951f,
     0.150662914f, 0.8272399f, 0.0751305744f, 0.8272399f, 0.0751305744f, 0.378465235f, 0.150662914f, 0.378465235f };
-const unsigned int _glyph0074_tris[] = {
+const unsigned short _glyph0074_tris[] = {
       0,   1,   2,   2,   0,   3,   5,   4,   6,   7,   6,   4 };
-const char *_glyph0075_name = "j";
-const unsigned int _glyph0075_looplengths[] = {4, 19};
+const unsigned short _glyph0075_looplengths[] = {4, 19};
 const float _glyph0075_points[] = {
     0.214961827f, 0.30341503f, 0.1295942f, 0.30341503f, 0.1295942f, 0.2252471f, 0.214961827f, 0.2252471f,
     0.2098192f, 0.838248253f, 0.199533954f, 0.907159448f, 0.1697067f, 0.9575573f, 0.122394539f, 0.987384558f,
@@ -1243,28 +1177,25 @@ const float _glyph0075_points[] = {
     -0.020570511f, 0.9143592f, 0.0102852555f, 0.9246444f, 0.047312174f, 0.92978704f, 0.0935958251f, 0.9225874f,
     0.120337479f, 0.8979027f, 0.131651267f, 0.8588188f, 0.134736836f, 0.804307f, 0.134736836f, 0.442266f,
     0.041141022f, 0.442266f, 0.041141022f, 0.3784974f, 0.2098192f, 0.3784974f };
-const unsigned int _glyph0075_tris[] = {
+const unsigned short _glyph0075_tris[] = {
       1,   0,   2,   0,   2,   3,   6,   7,   8,   5,   9,   8,   8,   6,   5,   9,
      10,  11,   9,  11,  12,   9,  12,  13,   5,   9,  14,  13,   9,  14,   5,  14,
      15,   5,  15,  16,   5,  16,  17,   5,  17,  18,   4,  19,  18,  18,   5,   4,
      19,  20,  21,  22,  21,  19,  22,  19,   4 };
-const char *_glyph0076_name = "k";
-const unsigned int _glyph0076_looplengths[] = {12};
+const unsigned short _glyph0076_looplengths[] = {12};
 const float _glyph0076_points[] = {
     0.481719553f, 0.8272399f, 0.382081151f, 0.8272399f, 0.20208919f, 0.6307754f, 0.153073519f, 0.6773805f,
     0.153073519f, 0.8272399f, 0.07754118f, 0.8272399f, 0.07754118f, 0.20208919f, 0.153073519f, 0.20208919f,
     0.153073519f, 0.603053451f, 0.371233433f, 0.378465235f, 0.4664524f, 0.378465235f, 0.257934928f, 0.5857774f };
-const unsigned int _glyph0076_tris[] = {
+const unsigned short _glyph0076_tris[] = {
       4,   3,   5,   6,   5,   3,   6,   3,   8,   3,   2,   8,   7,   6,   8,   9,
       8,   2,   9,   2,  11,   2,   1,  11,  10,   9,  11,  11,   1,   0 };
-const char *_glyph0077_name = "l";
-const unsigned int _glyph0077_looplengths[] = {4};
+const unsigned short _glyph0077_looplengths[] = {4};
 const float _glyph0077_points[] = {
     0.150662914f, 0.8272399f, 0.0751305744f, 0.8272399f, 0.0751305744f, 0.20208919f, 0.150662914f, 0.20208919f };
-const unsigned int _glyph0077_tris[] = {
+const unsigned short _glyph0077_tris[] = {
       2,   1,   0,   3,   2,   0 };
-const char *_glyph0078_name = "m";
-const unsigned int _glyph0078_looplengths[] = {44};
+const unsigned short _glyph0078_looplengths[] = {44};
 const float _glyph0078_points[] = {
     0.7292246f, 0.827963054f, 0.654142261f, 0.827963054f, 0.654142261f, 0.5718602f, 0.651056647f, 0.5163198f,
     0.6407714f, 0.473121732f, 0.6140297f, 0.4474086f, 0.5934592f, 0.440208942f, 0.5646605f, 0.4381519f,
@@ -1277,7 +1208,7 @@ const float _glyph0078_points[] = {
     0.3383849f, 0.3712977f, 0.373354763f, 0.385697067f, 0.401124954f, 0.409353167f, 0.420666963f, 0.4391804f,
     0.46489352f, 0.406267583f, 0.505006f, 0.383640021f, 0.54409f, 0.370269179f, 0.585231f, 0.3661551f,
     0.6489996f, 0.377468884f, 0.6942547f, 0.4114102f, 0.7209964f, 0.46489352f, 0.7292246f, 0.536890268f };
-const unsigned int _glyph0078_tris[] = {
+const unsigned short _glyph0078_tris[] = {
       1,   0,   2,  13,  12,  15,  14,  13,  15,  15,  12,  16,  10,  11,  17,  11,
      17,  16,  16,  12,  11,  10,  17,  18,  23,  26,  25,  25,  24,  23,  23,  22,
      28,  26,  23,  28,  27,  26,  28,  29,  28,  22,  29,  22,  21,  29,  21,  20,
@@ -1286,8 +1217,7 @@ const unsigned int _glyph0078_tris[] = {
       9,  36,   9,   8,  36,   8,   7,   7,   6,  36,  36,   6,  37,   6,  37,  39,
      38,  37,  39,   6,  39,  40,   4,   5,  41,   5,  41,  40,  40,   6,   5,   0,
       2,  42,   2,  42,  41,   3,   2,  41,  41,   4,   3,   0,  42,  43 };
-const char *_glyph0079_name = "n";
-const unsigned int _glyph0079_looplengths[] = {23};
+const unsigned short _glyph0079_looplengths[] = {23};
 const float _glyph0079_points[] = {
     0.4504942f, 0.827963054f, 0.3743833f, 0.827963054f, 0.3743833f, 0.5718602f, 0.3712977f, 0.514262736f,
     0.3661551f, 0.490606666f, 0.357926875f, 0.472093225f, 0.329128176f, 0.446380079f, 0.27975893f, 0.4381519f,
@@ -1295,13 +1225,12 @@ const float _glyph0079_points[] = {
     0.07508236f, 0.827963054f, 0.07508236f, 0.3784974f, 0.150164723f, 0.3784974f, 0.150164723f, 0.428895146f,
     0.223190039f, 0.382611483f, 0.262274f, 0.370269179f, 0.301357985f, 0.3661551f, 0.36512655f, 0.377468884f,
     0.4114102f, 0.410381675f, 0.440208942f, 0.463865042f, 0.4504942f, 0.536890268f };
-const unsigned int _glyph0079_tris[] = {
+const unsigned short _glyph0079_tris[] = {
       2,   1,   0,  10,  13,  12,  12,  11,  10,  10,   9,  15,  13,  10,  15,  14,
      13,  15,  16,  15,   9,  16,   9,   8,  16,   8,   7,   7,   6,  16,   6,  16,
      18,  17,  16,  18,   6,  18,  19,   5,   6,  20,  19,   6,  20,   2,  21,  20,
       3,   2,  20,   4,   3,  20,  20,   5,   4,   2,   0,  22,  22,  21,   2 };
-const char *_glyph0080_name = "o";
-const unsigned int _glyph0080_looplengths[] = {32, 16};
+const unsigned short _glyph0080_looplengths[] = {32, 16};
 const float _glyph0080_points[] = {
     0.457693845f, 0.603744447f, 0.453579724f, 0.655170739f, 0.4432945f, 0.7014544f, 0.425809562f, 0.7415669f,
     0.401124954f, 0.776536763f, 0.370269179f, 0.804307f, 0.3352993f, 0.823848963f, 0.295186818f, 0.836191237f,
@@ -1315,7 +1244,7 @@ const float _glyph0080_points[] = {
     0.249931708f, 0.4319807f, 0.196448371f, 0.442266f, 0.155307353f, 0.47415027f, 0.1295942f, 0.5276336f,
     0.121366f, 0.603744447f, 0.1295942f, 0.677798331f, 0.155307353f, 0.731281638f, 0.196448371f, 0.7641944f,
     0.249931708f, 0.7755082f, 0.304443568f, 0.765222967f, 0.344556034f, 0.7323102f, 0.3712977f, 0.6788268f };
-const unsigned int _glyph0080_tris[] = {
+const unsigned short _glyph0080_tris[] = {
       6,   7,   8,   4,   5,   9,   5,   9,   8,   8,   6,   5,   9,   4,  10,  13,
      16,  14,  15,  16,  14,  12,  13,  17,  16,  13,  17,  10,  11,  18,  11,  18,
      17,  17,  12,  11,  18,  10,  19,  22,  23,  24,  21,  25,  24,  24,  22,  21,
@@ -1325,8 +1254,7 @@ const unsigned int _glyph0080_tris[] = {
      19,  39,  38,  38,  20,  19,  19,  39,  40,  10,  19,  41,  19,  40,  41,  41,
      10,  42,  10,  42,  43,   4,  10,  44,  10,  43,  44,  44,   4,  45,  45,   4,
      46,   2,   3,  47,   3,  47,  46,  46,   4,   3,   1,  32,  47,  47,   2,   1 };
-const char *_glyph0081_name = "p";
-const unsigned int _glyph0081_looplengths[] = {23, 14};
+const unsigned short _glyph0081_looplengths[] = {23, 14};
 const float _glyph0081_points[] = {
     0.470036179f, 0.59757334f, 0.4659221f, 0.650028169f, 0.453579724f, 0.6973403f, 0.435066283f, 0.7395098f,
     0.410381675f, 0.774479747f, 0.347641647f, 0.82076335f, 0.3106147f, 0.832077146f, 0.271530747f, 0.836191237f,
@@ -1338,7 +1266,7 @@ const float _glyph0081_points[] = {
     0.246846139f, 0.442266f, 0.2139333f, 0.452551246f, 0.150164723f, 0.489578158f, 0.150164723f, 0.743624f,
     0.2057051f, 0.763165951f, 0.2581599f, 0.7683085f, 0.3147288f, 0.758023262f, 0.356898367f, 0.726139f,
     0.382611483f, 0.6726557f };
-const unsigned int _glyph0081_tris[] = {
+const unsigned short _glyph0081_tris[] = {
      10,   9,  11,  12,  11,   9,   6,   5,   9,   7,   6,   9,   9,   8,   7,  13,
      12,  14,  15,  16,  17,  17,  15,  18,   0,  18,  19,   0,  19,  20,   0,  20,
      21,   0,  21,  22,   2,   1,  23,   0,  24,  23,  23,   1,   0,  18,   0,  25,
@@ -1346,8 +1274,7 @@ const unsigned int _glyph0081_tris[] = {
      14,  28,  28,  14,  29,  30,  29,  14,  14,  12,  30,  12,   9,  31,   9,   5,
      31,  30,  12,  31,   5,  31,  32,   5,  32,  33,   5,   4,  34,  33,   5,  34,
      34,   4,  35,   3,   4,  36,  35,   4,  36,   2,  23,  36,  36,   3,   2 };
-const char *_glyph0082_name = "q";
-const unsigned int _glyph0082_looplengths[] = {25, 14};
+const unsigned short _glyph0082_looplengths[] = {25, 14};
 const float _glyph0082_points[] = {
     0.4391804f, 0.9935556f, 0.3630695f, 0.9935556f, 0.3630695f, 0.7775653f, 0.329128176f, 0.803278446f,
     0.29415828f, 0.8217919f, 0.2581599f, 0.8331057f, 0.219075948f, 0.836191237f, 0.181020483f, 0.832077146f,
@@ -1359,7 +1286,7 @@ const float _glyph0082_points[] = {
     0.25610286f, 0.434037745f, 0.198505417f, 0.445351541f, 0.156335875f, 0.47929287f, 0.130622745f, 0.5317477f,
     0.121366f, 0.6006589f, 0.128565684f, 0.6705986f, 0.1491362f, 0.7220249f, 0.18513459f, 0.7539092f,
     0.235532343f, 0.7641944f, 0.268445134f, 0.7611089f, 0.301357985f, 0.7508236f };
-const unsigned int _glyph0082_tris[] = {
+const unsigned short _glyph0082_tris[] = {
       2,   1,   0,  10,  11,  12,   9,  10,  13,  12,  10,  13,   7,   8,  14,   8,
      14,  13,  13,   9,   8,  18,  19,  20,  16,  21,  20,  17,  16,  20,  20,  18,
      17,  23,  22,  24,  24,   2,   0,  24,  25,   2,  21,  26,  22,  24,  26,  25,
@@ -1368,21 +1295,19 @@ const unsigned int _glyph0082_tris[] = {
      33,  32,  14,  33,   7,   6,  34,  33,   7,  34,   5,   6,  35,  34,   6,  35,
       4,   5,  36,  35,   5,  36,   4,   3,  37,  36,   4,  37,   2,   3,  38,  37,
       3,  38,  38,   2,  25 };
-const char *_glyph0083_name = "r";
-const unsigned int _glyph0083_looplengths[] = {19};
+const unsigned short _glyph0083_looplengths[] = {19};
 const float _glyph0083_points[] = {
     0.3548413f, 0.461807936f, 0.3507272f, 0.461807936f, 0.31781438f, 0.45563677f, 0.280787468f, 0.453579724f,
     0.2458176f, 0.457693845f, 0.212904781f, 0.469007641f, 0.150164723f, 0.5091201f, 0.150164723f, 0.827963054f,
     0.07508236f, 0.827963054f, 0.07508236f, 0.3784974f, 0.150164723f, 0.3784974f, 0.150164723f, 0.445351541f,
     0.192334265f, 0.4144958f, 0.229361191f, 0.39392525f, 0.264331043f, 0.382611483f, 0.299300939f, 0.3784974f,
     0.316785842f, 0.37952593f, 0.328099638f, 0.37952593f, 0.3548413f, 0.383640021f };
-const unsigned int _glyph0083_tris[] = {
+const unsigned short _glyph0083_tris[] = {
       6,   7,   8,   8,   6,   9,   6,   5,  11,   9,   6,  11,  10,   9,  11,   4,
       5,  12,  11,   5,  12,   0,  13,  12,   1,   0,  12,   2,   1,  12,   3,   2,
      12,  12,   4,   3,   0,  13,  14,   0,  14,  15,   0,  15,  16,   0,  16,  17,
       0,  17,  18 };
-const char *_glyph0084_name = "s";
-const unsigned int _glyph0084_looplengths[] = {56};
+const unsigned short _glyph0084_looplengths[] = {56};
 const float _glyph0084_points[] = {
     0.3949538f, 0.698368847f, 0.3918682f, 0.7281961f, 0.382611483f, 0.754937768f, 0.3671836f, 0.778593838f,
     0.344556034f, 0.7991643f, 0.284901559f, 0.8289916f, 0.2057051f, 0.838248253f, 0.114166334f, 0.8269345f,
@@ -1398,7 +1323,7 @@ const float _glyph0084_points[] = {
     0.152221784f, 0.4474086f, 0.130622745f, 0.467979133f, 0.12342307f, 0.494720757f, 0.127537161f, 0.5194054f,
     0.140908f, 0.536890268f, 0.163535565f, 0.55026114f, 0.195419848f, 0.55951786f, 0.242732f, 0.5698031f,
     0.2859301f, 0.5780313f, 0.33221373f, 0.5944878f, 0.3671836f, 0.619172335f, 0.3877541f, 0.654142261f };
-const unsigned int _glyph0084_tris[] = {
+const unsigned short _glyph0084_tris[] = {
       4,   5,   6,   6,   4,   7,   8,   9,  10,   8,  10,  11,   7,  12,  11,  11,
       8,   7,   4,   7,  13,   7,  12,  13,  13,  14,   4,  14,   4,  15,  15,   4,
      16,   4,   3,  17,  16,   4,  17,   2,   3,  18,  17,   3,  18,   2,  18,  19,
@@ -1410,8 +1335,7 @@ const unsigned int _glyph0084_tris[] = {
      48,  21,  49,  48,  48,  22,  21,   1,  20,  50,  20,  50,  49,  49,  21,  20,
       0,  51,  50,  50,   1,   0,  51,   0,  52,  52,   0,  53,  53,   0,  54,  54,
       0,  55 };
-const char *_glyph0085_name = "t";
-const unsigned int _glyph0085_looplengths[] = {28};
+const unsigned short _glyph0085_looplengths[] = {28};
 const float _glyph0085_points[] = {
     0.307529122f, 0.823848963f, 0.2612455f, 0.8331057f, 0.217018872f, 0.836191237f, 0.156335875f, 0.8269345f,
     0.112109281f, 0.7991643f, 0.08536761f, 0.7508236f, 0.07611089f, 0.6808839f, 0.07611089f, 0.442266f,
@@ -1420,14 +1344,13 @@ const float _glyph0085_points[] = {
     0.152221784f, 0.442266f, 0.152221784f, 0.646942556f, 0.152221784f, 0.6788268f, 0.1532503f, 0.702482939f,
     0.164564088f, 0.7395098f, 0.1892487f, 0.763165951f, 0.208790675f, 0.7683085f, 0.236560866f, 0.7703656f,
     0.274616331f, 0.765222967f, 0.292101234f, 0.760080338f, 0.30341503f, 0.755966246f, 0.307529122f, 0.755966246f };
-const unsigned int _glyph0085_tris[] = {
+const unsigned short _glyph0085_tris[] = {
       1,   0,   2,   4,   5,   6,   3,   2,   6,   6,   4,   3,   8,   7,   9,  10,
       9,   7,  11,  12,  13,  14,  13,  15,  11,  10,  16,  16,  15,  13,  13,  11,
      16,   7,  17,  16,  16,  10,   7,   7,   6,  18,  17,   7,  18,  18,   6,  19,
       6,   2,  20,  19,   6,  20,  20,   2,  21,   0,   2,  22,  21,   2,  22,   0,
      22,  23,  23,   0,  24,  24,   0,  25,  25,   0,  27,  27,  26,  25 };
-const char *_glyph0086_name = "u";
-const unsigned int _glyph0086_looplengths[] = {24};
+const unsigned short _glyph0086_looplengths[] = {24};
 const float _glyph0086_points[] = {
     0.446380079f, 0.827963054f, 0.3712977f, 0.827963054f, 0.3712977f, 0.7775653f, 0.3342708f, 0.804307f,
     0.2982724f, 0.823848963f, 0.2612455f, 0.836191237f, 0.221133f, 0.8403053f, 0.158392921f, 0.83002007f,
@@ -1435,58 +1358,52 @@ const float _glyph0086_points[] = {
     0.14707914f, 0.3784974f, 0.14707914f, 0.6346002f, 0.150164723f, 0.693226159f, 0.163535565f, 0.7343672f,
     0.192334265f, 0.760080338f, 0.212904781f, 0.7662515f, 0.242732f, 0.7683085f, 0.2735878f, 0.7641944f,
     0.3065006f, 0.7528807f, 0.3712977f, 0.713796735f, 0.3712977f, 0.3784974f, 0.446380079f, 0.3784974f };
-const unsigned int _glyph0086_tris[] = {
+const unsigned short _glyph0086_tris[] = {
       1,   0,   2,   3,   4,   6,   5,   4,   6,   6,   3,   7,  11,  10,   9,  11,
       9,   8,  11,   8,   7,  12,  11,  13,  11,   7,  14,  13,  11,  14,  14,   7,
      15,   7,   3,  16,  15,   7,  16,  16,   3,  17,  17,   3,  18,  18,   3,  19,
      19,   3,  20,  21,  20,   3,  21,   3,   2,   2,   0,  21,  21,  22,  23,  23,
      21,   0 };
-const char *_glyph0087_name = "v";
-const unsigned int _glyph0087_looplengths[] = {7};
+const unsigned short _glyph0087_looplengths[] = {7};
 const float _glyph0087_points[] = {
     0.4624347f, 0.378465235f, 0.2808357f, 0.8272399f, 0.204901561f, 0.8272399f, 0.0245078336f, 0.378465235f,
     0.106468461f, 0.378465235f, 0.2454801f, 0.73563683f, 0.383286446f, 0.378465235f };
-const unsigned int _glyph0087_tris[] = {
+const unsigned short _glyph0087_tris[] = {
       2,   1,   3,   1,   4,   3,   1,   4,   5,   0,   1,   5,   5,   6,   0 };
-const char *_glyph0088_name = "w";
-const unsigned int _glyph0088_looplengths[] = {13};
+const unsigned short _glyph0088_looplengths[] = {13};
 const float _glyph0088_points[] = {
     0.638810754f, 0.378465235f, 0.521896362f, 0.8272399f, 0.451988757f, 0.8272399f, 0.3366814f, 0.4813178f,
     0.22217758f, 0.8272399f, 0.152671754f, 0.8272399f, 0.03455203f, 0.378465235f, 0.113298513f, 0.378465235f,
     0.1956609f, 0.725994349f, 0.307754129f, 0.378465235f, 0.370028138f, 0.378465235f, 0.4849337f, 0.725994349f,
     0.562876642f, 0.378465235f };
-const unsigned int _glyph0088_tris[] = {
+const unsigned short _glyph0088_tris[] = {
       2,   1,   3,   5,   4,   6,   4,   3,   8,   6,   4,   8,   7,   6,   8,   8,
       3,   9,   3,  10,   9,   1,   0,  11,   3,   1,  11,  10,   3,  11,  11,  12,
       0 };
-const char *_glyph0089_name = "x";
-const unsigned int _glyph0089_looplengths[] = {12};
+const unsigned short _glyph0089_looplengths[] = {12};
 const float _glyph0089_points[] = {
     0.462836474f, 0.8272399f, 0.367617518f, 0.8272399f, 0.240257129f, 0.6548815f, 0.11209321f, 0.8272399f,
     0.0241060667f, 0.8272399f, 0.19927682f, 0.6034552f, 0.0257131383f, 0.378465235f, 0.1209321f, 0.378465235f,
     0.247488946f, 0.548011243f, 0.374447584f, 0.378465235f, 0.462836474f, 0.378465235f, 0.286460429f, 0.599437535f };
-const unsigned int _glyph0089_tris[] = {
+const unsigned short _glyph0089_tris[] = {
       0,   1,   2,   0,   2,   5,   2,   5,   4,   4,   3,   2,   6,   5,   0,   6,
       7,   8,   6,   8,  11,   8,  11,  10,  10,   9,   8,  11,   6,   0 };
-const char *_glyph0090_name = "y";
-const unsigned int _glyph0090_looplengths[] = {8};
+const unsigned short _glyph0090_looplengths[] = {8};
 const float _glyph0090_points[] = {
     0.4624347f, 0.378465235f, 0.200482115f, 0.992768168f, 0.1197268f, 0.992768168f, 0.2032945f, 0.8055444f,
     0.0245078336f, 0.378465235f, 0.106468461f, 0.378465235f, 0.24427481f, 0.71112895f, 0.383286446f, 0.378465235f };
-const unsigned int _glyph0090_tris[] = {
+const unsigned short _glyph0090_tris[] = {
       1,   0,   3,   2,   1,   3,   3,   5,   4,   3,   5,   6,   0,   3,   6,   6,
       7,   0 };
-const char *_glyph0091_name = "z";
-const unsigned int _glyph0091_looplengths[] = {10};
+const unsigned short _glyph0091_looplengths[] = {10};
 const float _glyph0091_points[] = {
     0.399758935f, 0.8272399f, 0.0373644046f, 0.8272399f, 0.0373644046f, 0.771394134f, 0.298915237f, 0.441542774f,
     0.0429891534f, 0.441542774f, 0.0429891534f, 0.378465235f, 0.3929289f, 0.378465235f, 0.3929289f, 0.432302117f,
     0.130172759f, 0.7633588f, 0.399758935f, 0.7633588f };
-const unsigned int _glyph0091_tris[] = {
+const unsigned short _glyph0091_tris[] = {
       0,   1,   2,   3,   4,   5,   5,   3,   6,   3,   6,   7,   3,   2,   8,   2,
       0,   8,   7,   3,   8,   8,   0,   9 };
-const char *_glyph0092_name = "{";
-const unsigned int _glyph0092_looplengths[] = {46};
+const unsigned short _glyph0092_looplengths[] = {46};
 const float _glyph0092_points[] = {
     0.4474086f, 0.9853274f, 0.3877541f, 0.9853274f, 0.3219285f, 0.975042164f, 0.2705022f, 0.9452149f,
     0.237589389f, 0.896874249f, 0.226275623f, 0.83002007f, 0.226275623f, 0.7703656f, 0.2180474f, 0.7096826f,
@@ -1500,7 +1417,7 @@ const float _glyph0092_points[] = {
     0.230389714f, 0.624315f, 0.2663881f, 0.65928483f, 0.2900442f, 0.7014544f, 0.2982724f, 0.7528807f,
     0.2982724f, 0.8228204f, 0.304443568f, 0.871161163f, 0.322957f, 0.9040739f, 0.3548413f, 0.9236159f,
     0.4021535f, 0.92978704f, 0.4474086f, 0.92978704f };
-const unsigned int _glyph0092_tris[] = {
+const unsigned short _glyph0092_tris[] = {
       3,   4,   5,   2,   3,   6,   5,   3,   6,   2,   6,   7,  10,  11,  12,   9,
      10,  13,  12,  10,  13,   9,   8,  14,  13,   9,  14,  19,  20,  22,  21,  20,
      22,  22,  19,  18,  24,  23,  25,  23,  22,  26,  25,  23,  26,  18,  17,  27,
@@ -1510,14 +1427,12 @@ const unsigned int _glyph0092_tris[] = {
      40,  39,  36,  40,  36,  35,  35,  14,  40,   7,   2,  41,   7,  41,  40,  40,
       8,   7,   2,   1,  42,  41,   2,  42,  42,   1,  43,   0,   1,  44,  43,   1,
      44,  45,  44,   0 };
-const char *_glyph0093_name = "|";
-const unsigned int _glyph0093_looplengths[] = {4};
+const unsigned short _glyph0093_looplengths[] = {4};
 const float _glyph0093_points[] = {
     0.221775815f, 0.9847328f, 0.151868224f, 0.9847328f, 0.151868224f, 0.20208919f, 0.221775815f, 0.20208919f };
-const unsigned int _glyph0093_tris[] = {
+const unsigned short _glyph0093_tris[] = {
       2,   1,   0,   3,   2,   0 };
-const char *_glyph0094_name = "}";
-const unsigned int _glyph0094_looplengths[] = {46};
+const unsigned short _glyph0094_looplengths[] = {46};
 const float _glyph0094_points[] = {
     0.453579724f, 0.6253435f, 0.433009237f, 0.6253435f, 0.373354763f, 0.6346002f, 0.331185222f, 0.6633989f,
     0.305472076f, 0.7096826f, 0.2972439f, 0.7703656f, 0.2972439f, 0.83002007f, 0.2859301f, 0.896874249f,
@@ -1531,7 +1446,7 @@ const float _glyph0094_points[] = {
     0.201591f, 0.212904781f, 0.253017277f, 0.242732f, 0.2859301f, 0.291072726f, 0.2972439f, 0.357926875f,
     0.2972439f, 0.41758135f, 0.305472076f, 0.478264362f, 0.331185222f, 0.524548f, 0.373354763f, 0.553346753f,
     0.433009237f, 0.5626034f, 0.453579724f, 0.5626034f };
-const unsigned int _glyph0094_tris[] = {
+const unsigned short _glyph0094_tris[] = {
       7,   8,  10,   9,   8,  10,  10,   7,   6,  12,  11,  13,  11,  10,  14,  13,
      11,  14,   6,   5,  15,  10,   6,  15,  14,  10,  15,   5,  15,  16,   4,   5,
      17,  16,   5,  17,  17,   4,  18,   4,  18,  19,   4,  19,  20,   4,   3,  21,
@@ -1541,8 +1456,7 @@ const unsigned int _glyph0094_tris[] = {
      29,  38,  37,  37,  30,  29,  38,  28,  39,  28,  39,  40,  28,  27,  41,  40,
      28,  41,   1,   0,  42,  27,   1,  42,  41,  27,  42,   0,  42,  43,  43,   0,
      44,   0,  44,  45 };
-const char *_glyph0095_name = "~";
-const unsigned int _glyph0095_looplengths[] = {37};
+const unsigned short _glyph0095_looplengths[] = {37};
 const float _glyph0095_points[] = {
     0.5986019f, 0.45563677f, 0.5893451f, 0.5338048f, 0.563632f, 0.602715969f, 0.5430615f, 0.630486131f,
     0.5183768f, 0.651056647f, 0.48854962f, 0.664427459f, 0.452551246f, 0.6685416f, 0.416552842f, 0.664427459f,
@@ -1554,7 +1468,7 @@ const float _glyph0095_points[] = {
     0.352784246f, 0.5286621f, 0.382611483f, 0.5626034f, 0.405239046f, 0.586259544f, 0.4268381f, 0.6006589f,
     0.4504942f, 0.604773f, 0.485464f, 0.5944878f, 0.5111772f, 0.563632f, 0.525576532f, 0.5163198f,
     0.5317477f, 0.45563677f };
-const unsigned int _glyph0095_tris[] = {
+const unsigned short _glyph0095_tris[] = {
       4,   5,   7,   6,   5,   7,   7,   4,   8,   4,   8,   9,   4,   9,  10,   4,
      10,  11,   4,  11,  12,  16,  15,  18,  17,  16,  18,  18,  15,  19,  15,  19,
      20,  14,  15,  21,  20,  15,  21,   4,  12,  22,  22,  21,  14,  22,  14,  13,
@@ -1562,8 +1476,7 @@ const unsigned int _glyph0095_tris[] = {
      23,  28,  28,  22,  29,  29,  22,  30,  22,   4,  31,  30,  22,  31,   4,   3,
      32,  31,   4,  32,   3,   2,  33,  32,   3,  33,   1,   2,  34,  33,   2,  34,
       0,   1,  35,  34,   1,  35,  35,   0,  36 };
-const char *_glyph0096_name = "\xC2\xA9";
-const unsigned int _glyph0096_looplengths[] = {32, 32, 35};
+const unsigned short _glyph0096_looplengths[] = {32, 32, 35};
 const float _glyph0096_points[] = {
     0.759051859f, 0.5646605f, 0.7528807f, 0.6335717f, 0.7333387f, 0.698368847f, 0.7014544f, 0.7569948f,
     0.6572278f, 0.8104781f, 0.603744447f, 0.854704738f, 0.5451186f, 0.886589f, 0.481349915f, 0.906131f,
@@ -1590,7 +1503,7 @@ const float _glyph0096_points[] = {
     0.370269179f, 0.4360948f, 0.33221373f, 0.461807936f, 0.308557659f, 0.503977537f, 0.300329447f, 0.5626034f,
     0.308557659f, 0.619172335f, 0.331185222f, 0.6613419f, 0.369240642f, 0.6880836f, 0.420666963f, 0.6963118f,
     0.486492574f, 0.684998f, 0.546147048f, 0.6520852f, 0.553346753f, 0.6520852f };
-const unsigned int _glyph0096_tris[] = {
+const unsigned short _glyph0096_tris[] = {
       6,   7,   8,   5,   6,   9,   8,   6,   9,   9,   5,   4,  14,  15,  16,  13,
      14,  17,  16,  14,  17,  17,  13,  12,  22,  23,  24,  21,  22,  25,  24,  22,
      25,  25,  21,  26,   0,  27,  28,   0,  28,  29,   0,  29,  30,   0,  30,  31,
@@ -1610,18 +1523,16 @@ const unsigned int _glyph0096_tris[] = {
      74,  91,  67,  73,  92,  91,  73,  92,  66,  67,  93,  67,  92,  93,  93,  66,
      94,  65,  66,  95,  94,  66,  95,  64,  65,  96,  95,  65,  96,  97,  96,  64,
      98,  97,  64 };
-const char *_glyph0097_name = "\xC2\xAB";
-const unsigned int _glyph0097_looplengths[] = {7, 7};
+const unsigned short _glyph0097_looplengths[] = {7, 7};
 const float _glyph0097_points[] = {
     0.460425884f, 0.7505022f, 0.248292491f, 0.5821615f, 0.248292491f, 0.548011243f, 0.460425884f, 0.380072325f,
     0.460425884f, 0.455604672f, 0.3169948f, 0.5652873f, 0.460425884f, 0.674969852f, 0.287665725f, 0.762153447f,
     0.06669345f, 0.5829651f, 0.06669345f, 0.5472077f, 0.287665725f, 0.368421048f, 0.287665725f, 0.447167546f,
     0.138609886f, 0.5652873f, 0.287665725f, 0.683407f };
-const unsigned int _glyph0097_tris[] = {
+const unsigned short _glyph0097_tris[] = {
       1,   0,   2,   2,   4,   3,   2,   4,   5,   0,   2,   5,   5,   6,   0,   8,
       9,  12,   9,  12,  11,  11,  10,   9,   7,  13,  12,  12,   8,   7 };
-const char *_glyph0098_name = "\xC2\xAE";
-const unsigned int _glyph0098_looplengths[] = {32, 32, 17, 11};
+const unsigned short _glyph0098_looplengths[] = {32, 32, 17, 11};
 const float _glyph0098_points[] = {
     0.759051859f, 0.5646605f, 0.7528807f, 0.6335717f, 0.7333387f, 0.698368847f, 0.7014544f, 0.7569948f,
     0.6572278f, 0.8104781f, 0.603744447f, 0.854704738f, 0.5451186f, 0.886589f, 0.481349915f, 0.906131f,
@@ -1646,7 +1557,7 @@ const float _glyph0098_points[] = {
     0.481349915f, 0.5811169f, 0.494720757f, 0.47929287f, 0.48854962f, 0.453579724f, 0.470036179f, 0.435066283f,
     0.4432945f, 0.425809562f, 0.408324629f, 0.4237525f, 0.347641647f, 0.4237525f, 0.347641647f, 0.548204064f,
     0.3990679f, 0.548204064f, 0.442266f, 0.54409f, 0.472093225f, 0.530719161f, 0.489578158f, 0.5091201f };
-const unsigned int _glyph0098_tris[] = {
+const unsigned short _glyph0098_tris[] = {
       6,   7,   8,   5,   6,   9,   8,   6,   9,   9,   5,   4,  14,  15,  16,  13,
      14,  17,  16,  14,  17,  17,  13,  12,  22,  23,  24,  21,  22,  25,  24,  22,
      25,  25,  21,  26,   0,  27,  28,   0,  28,  29,   0,  29,  30,   0,  30,  31,
@@ -1665,8 +1576,7 @@ const unsigned int _glyph0098_tris[] = {
      85,  70,  86,  70,  67,  87,  67,  66,  87,  86,  70,  87,  80,  66,  88,  87,
      66,  88,  80,  88,  89,  79,  80,  90,  89,  80,  90,  79,  78,  91,  90,  79,
      91,  91,  78,  81 };
-const char *_glyph0099_name = "\xC2\xB0";
-const unsigned int _glyph0099_looplengths[] = {16, 16};
+const unsigned short _glyph0099_looplengths[] = {16, 16};
 const float _glyph0099_points[] = {
     0.384668529f, 0.37952593f, 0.373354763f, 0.442266f, 0.3383849f, 0.493692279f, 0.2859301f, 0.5286621f,
     0.223190039f, 0.5399759f, 0.160449967f, 0.5286621f, 0.1090237f, 0.493692279f, 0.07405384f, 0.442266f,
@@ -1676,26 +1586,24 @@ const float _glyph0099_points[] = {
     0.223190039f, 0.2828445f, 0.186163113f, 0.2900442f, 0.155307353f, 0.3106147f, 0.135765374f, 0.34147045f,
     0.128565684f, 0.37952593f, 0.135765374f, 0.41758135f, 0.156335875f, 0.448437124f, 0.18719165f, 0.469007641f,
     0.223190039f, 0.476207316f, 0.2612455f, 0.469007641f, 0.291072726f, 0.448437124f, 0.3116432f, 0.416552842f };
-const unsigned int _glyph0099_tris[] = {
+const unsigned short _glyph0099_tris[] = {
       6,   7,   8,   5,   6,   9,   8,   6,   9,   0,  12,  13,   0,  13,  14,   0,
      14,  15,   1,   0,  16,  16,   0,  17,  12,   0,  18,  17,   0,  18,  11,  12,
      19,  12,  18,  19,  11,  10,  20,  19,  11,  20,  20,  10,  21,  21,  10,  22,
      10,   9,  23,  22,  10,  23,  23,   9,  24,   9,   5,  25,  24,   9,  25,   5,
       4,  26,  25,   5,  26,   4,   3,  27,  26,   4,  27,  27,   3,  28,   2,   3,
      29,  28,   3,  29,   2,  29,  30,   2,   1,  31,  30,   2,  31,  31,   1,  16 };
-const char *_glyph0100_name = "\xC2\xB1";
-const unsigned int _glyph0100_looplengths[] = {16};
+const unsigned short _glyph0100_looplengths[] = {16};
 const float _glyph0100_points[] = {
     0.5869827f, 0.7553234f, 0.08638007f, 0.7553234f, 0.08638007f, 0.6918441f, 0.303334683f, 0.6918441f,
     0.303334683f, 0.5222981f, 0.08638007f, 0.5222981f, 0.08638007f, 0.4588188f, 0.303334683f, 0.4588188f,
     0.303334683f, 0.239855364f, 0.370028138f, 0.239855364f, 0.370028138f, 0.4588188f, 0.5869827f, 0.4588188f,
     0.5869827f, 0.5222981f, 0.370028138f, 0.5222981f, 0.370028138f, 0.6918441f, 0.5869827f, 0.6918441f };
-const unsigned int _glyph0100_tris[] = {
+const unsigned short _glyph0100_tris[] = {
       0,   1,   2,   0,   2,   3,   5,   4,   6,   7,   6,   4,   7,   8,   9,   9,
       7,  10,  10,  11,  12,   7,  10,  13,  12,  10,  13,   0,   3,  14,   3,   4,
      14,   4,  14,  13,  13,   7,   4,  15,  14,   0 };
-const char *_glyph0101_name = "\xC2\xB2";
-const unsigned int _glyph0101_looplengths[] = {32};
+const unsigned short _glyph0101_looplengths[] = {32};
 const float _glyph0101_points[] = {
     0.38878265f, 0.6006589f, 0.08331057f, 0.6006589f, 0.08331057f, 0.537918866f, 0.1573644f, 0.490606666f,
     0.188220173f, 0.470036179f, 0.211876243f, 0.452551246f, 0.255074322f, 0.416552842f, 0.278730422f, 0.389811158f,
@@ -1705,15 +1613,14 @@ const float _glyph0101_points[] = {
     0.219075948f, 0.217018872f, 0.2828445f, 0.2252471f, 0.329128176f, 0.248903185f, 0.356898367f, 0.2859301f,
     0.3661551f, 0.331185222f, 0.361012459f, 0.368212134f, 0.346613079f, 0.401124954f, 0.320899934f, 0.433009237f,
     0.281816f, 0.466950566f, 0.228332669f, 0.505006f, 0.170735225f, 0.542032957f, 0.38878265f, 0.542032957f };
-const unsigned int _glyph0101_tris[] = {
+const unsigned short _glyph0101_tris[] = {
       0,   1,   2,  15,  14,  18,  15,  18,  17,  17,  16,  15,  19,  18,  14,  19,
      14,  13,  19,  13,  12,  12,  11,  19,  11,  19,  20,  11,  20,  21,  11,  21,
      22,  23,  22,  11,  23,  11,  10,  23,  10,   9,  23,   9,   8,   8,   7,  23,
       7,  24,  23,   7,  24,  25,   7,  25,  26,   7,  26,  27,   6,   5,  28,   6,
      28,  27,  27,   7,   6,   3,   4,  29,   4,  29,  28,  28,   5,   4,   0,   2,
      30,   2,   3,  30,  29,   3,  30,  31,  30,   0 };
-const char *_glyph0102_name = "\xC2\xB3";
-const unsigned int _glyph0102_looplengths[] = {52};
+const unsigned short _glyph0102_looplengths[] = {52};
 const float _glyph0102_points[] = {
     0.384668529f, 0.499863416f, 0.381582975f, 0.5276336f, 0.3712977f, 0.5523182f, 0.3352993f, 0.58831656f,
     0.2828445f, 0.608887136f, 0.217018872f, 0.6160868f, 0.146050617f, 0.6099156f, 0.08331057f, 0.5924307f,
@@ -1728,7 +1635,7 @@ const float _glyph0102_points[] = {
     0.289015651f, 0.224218562f, 0.3352993f, 0.244789079f, 0.364098042f, 0.275644839f, 0.373354763f, 0.3147288f,
     0.368212134f, 0.347641647f, 0.351755738f, 0.373354763f, 0.3260426f, 0.392896742f, 0.29415828f, 0.406267583f,
     0.29415828f, 0.409353167f, 0.329128176f, 0.420666963f, 0.357926875f, 0.4381519f, 0.377468884f, 0.46489352f };
-const unsigned int _glyph0102_tris[] = {
+const unsigned short _glyph0102_tris[] = {
       4,   5,   3,   6,   7,   8,   6,   8,   9,   6,   9,  10,   5,   6,  11,  10,
       6,  11,   5,  11,  12,   5,   3,  13,  12,   5,  13,  13,   3,  14,  14,   3,
      15,   3,   2,  16,  15,   3,  16,  16,   2,  17,   1,   2,  18,  17,   2,  18,
@@ -1739,49 +1646,44 @@ const unsigned int _glyph0102_tris[] = {
      30,  29,  27,  42,  44,  43,  42,  44,  27,  44,  45,  27,  45,  46,  26,  25,
      47,  26,  47,  46,  46,  27,  26,  25,   0,  48,  47,  25,  48,  48,   0,  49,
      49,   0,  50,  50,   0,  51 };
-const char *_glyph0103_name = "\xC2\xB6";
-const unsigned int _glyph0103_looplengths[] = {20};
+const unsigned short _glyph0103_looplengths[] = {20};
 const float _glyph0103_points[] = {
     0.445351541f, 0.9740137f, 0.385697067f, 0.9740137f, 0.385697067f, 0.281816f, 0.299300939f, 0.281816f,
     0.299300939f, 0.9740137f, 0.239646435f, 0.9740137f, 0.239646435f, 0.5893451f, 0.164564088f, 0.5759743f,
     0.105938122f, 0.537918866f, 0.08331057f, 0.5111772f, 0.06788269f, 0.4803214f, 0.0586259551f, 0.445351541f,
     0.05554038f, 0.406267583f, 0.0586259551f, 0.3671836f, 0.06891121f, 0.33221373f, 0.08536761f, 0.301357985f,
     0.107995175f, 0.275644839f, 0.171763763f, 0.240674958f, 0.257131368f, 0.229361191f, 0.445351541f, 0.229361191f };
-const unsigned int _glyph0103_tris[] = {
+const unsigned short _glyph0103_tris[] = {
       2,   1,   0,   4,   3,   6,   5,   4,   6,   9,  10,  12,  11,  10,  12,   8,
       9,  13,  12,   9,  13,   8,   7,  14,  13,   8,  14,   6,   3,  15,   6,  15,
      14,  14,   7,   6,  15,   3,  16,  16,   3,  17,   2,  18,  17,  17,   3,   2,
      18,   2,  19,  19,   2,   0 };
-const char *_glyph0104_name = "\xC2\xB7";
-const unsigned int _glyph0104_looplengths[] = {4};
+const unsigned short _glyph0104_looplengths[] = {4};
 const float _glyph0104_points[] = {
     0.197669744f, 0.6219365f, 0.10164725f, 0.6219365f, 0.10164725f, 0.5082362f, 0.197669744f, 0.5082362f };
-const unsigned int _glyph0104_tris[] = {
+const unsigned short _glyph0104_tris[] = {
       2,   1,   0,   3,   2,   0 };
-const char *_glyph0105_name = "\xC2\xBB";
-const unsigned int _glyph0105_looplengths[] = {7, 7};
+const unsigned short _glyph0105_looplengths[] = {7, 7};
 const float _glyph0105_points[] = {
     0.46364f, 0.5829651f, 0.242667735f, 0.762153447f, 0.242667735f, 0.683407f, 0.391723573f, 0.5652873f,
     0.242667735f, 0.447167546f, 0.242667735f, 0.368421048f, 0.46364f, 0.5472077f, 0.282040983f, 0.5821615f,
     0.06990759f, 0.7505022f, 0.06990759f, 0.674969852f, 0.213338688f, 0.5652873f, 0.06990759f, 0.455604672f,
     0.06990759f, 0.380072325f, 0.282040983f, 0.548011243f };
-const unsigned int _glyph0105_tris[] = {
+const unsigned short _glyph0105_tris[] = {
       1,   0,   2,   2,   0,   3,   3,   0,   4,   0,   4,   6,   5,   4,   6,   8,
       7,   9,   9,   7,  10,  10,   7,  12,  11,  10,  12,  12,   7,  13 };
-const char *_glyph0106_name = "\xC3\x84";
-const unsigned int _glyph0106_looplengths[] = {8, 3, 4, 4};
+const unsigned short _glyph0106_looplengths[] = {8, 3, 4, 4};
 const float _glyph0106_points[] = {
     0.552028954f, 0.8272399f, 0.46725592f, 0.8272399f, 0.408597827f, 0.660506248f, 0.149859384f, 0.660506248f,
     0.09120128f, 0.8272399f, 0.0104459627f, 0.8272399f, 0.2282041f, 0.229007632f, 0.3342708f, 0.229007632f,
     0.38409f, 0.5922057f, 0.2792286f, 0.298513472f, 0.173965454f, 0.5922057f, 0.403776616f, 0.153475285f,
     0.323824823f, 0.153475285f, 0.323824823f, 0.0751305744f, 0.403776616f, 0.0751305744f, 0.237846524f, 0.153475285f,
     0.157894731f, 0.153475285f, 0.157894731f, 0.0751305744f, 0.237846524f, 0.0751305744f };
-const unsigned int _glyph0106_tris[] = {
+const unsigned short _glyph0106_tris[] = {
       0,   1,   2,   3,   4,   5,   6,   5,   3,   2,   0,   7,   2,   7,   8,   7,
       6,   9,   8,   7,   9,   6,   3,  10,   3,   2,  10,   8,   2,  10,   9,   6,
      10,  12,  13,  14,  14,  12,  11,  17,  16,  15,  18,  17,  15 };
-const char *_glyph0107_name = "\xC3\x96";
-const unsigned int _glyph0107_looplengths[] = {32, 32, 4, 4};
+const unsigned short _glyph0107_looplengths[] = {32, 32, 4, 4};
 const float _glyph0107_points[] = {
     0.525576532f, 0.2982724f, 0.5584893f, 0.343527526f, 0.582145452f, 0.397010833f, 0.5965448f, 0.458722383f,
     0.6006589f, 0.5286621f, 0.595516264f, 0.5986019f, 0.5811169f, 0.6613419f, 0.557460845f, 0.7148252f,
@@ -1801,7 +1703,7 @@ const float _glyph0107_points[] = {
     0.4659221f, 0.708654046f, 0.48854962f, 0.673684239f, 0.505006f, 0.6325432f, 0.515291333f, 0.584202468f,
     0.445351541f, 0.15427883f, 0.3661551f, 0.15427883f, 0.3661551f, 0.07611089f, 0.445351541f, 0.07611089f,
     0.27975893f, 0.15427883f, 0.199533954f, 0.15427883f, 0.199533954f, 0.07611089f, 0.27975893f, 0.07611089f };
-const unsigned int _glyph0107_tris[] = {
+const unsigned short _glyph0107_tris[] = {
       2,   3,   4,   0,   1,   5,   1,   5,   4,   4,   2,   1,   5,   0,   6,  10,
      11,  12,   9,  10,  13,  12,  10,  13,   8,  14,  13,  13,   9,   8,  18,  19,
      20,  17,  18,  21,  20,  18,  21,  15,  16,  22,  16,  22,  21,  21,  17,  16,
@@ -1815,17 +1717,15 @@ const unsigned int _glyph0107_tris[] = {
      55,  56,   8,  56,  57,  57,   8,  58,  58,   8,  59,   8,  59,  60,   8,   7,
      61,  60,   8,  61,   6,   7,  62,  61,   7,  62,  62,   6,  63,  63,   6,  32,
      65,  64,  66,  64,  66,  67,  70,  69,  68,  71,  70,  68 };
-const char *_glyph0108_name = "\xC3\x97";
-const unsigned int _glyph0108_looplengths[] = {12};
+const unsigned short _glyph0108_looplengths[] = {12};
 const float _glyph0108_points[] = {
     0.5564484f, 0.740458f, 0.511852145f, 0.785054266f, 0.3366814f, 0.6082764f, 0.161510646f, 0.785054266f,
     0.116914421f, 0.740458f, 0.293692231f, 0.5652873f, 0.116914421f, 0.3901165f, 0.161510646f, 0.3455203f,
     0.3366814f, 0.5222981f, 0.511852145f, 0.3455203f, 0.5564484f, 0.3901165f, 0.37967056f, 0.5652873f };
-const unsigned int _glyph0108_tris[] = {
+const unsigned short _glyph0108_tris[] = {
       3,   2,   4,   2,   4,   5,   0,   6,   5,   0,   5,   2,   2,   1,   0,   7,
       6,   8,   6,   0,  11,   8,   6,  11,   8,  11,  10,  10,   9,   8 };
-const char *_glyph0109_name = "\xC3\x9C";
-const unsigned int _glyph0109_looplengths[] = {36, 4, 4};
+const unsigned short _glyph0109_looplengths[] = {36, 4, 4};
 const float _glyph0109_points[] = {
     0.530719161f, 0.5872881f, 0.5276336f, 0.6479711f, 0.517348349f, 0.7014544f, 0.49780637f, 0.745681f,
     0.470036179f, 0.7816794f, 0.437123328f, 0.8084211f, 0.398039371f, 0.825906f, 0.352784246f, 0.836191237f,
@@ -1838,7 +1738,7 @@ const float _glyph0109_points[] = {
     0.4504942f, 0.6335717f, 0.451522678f, 0.5934592f, 0.451522678f, 0.229361191f, 0.530719161f, 0.229361191f,
     0.424781054f, 0.15427883f, 0.344556034f, 0.15427883f, 0.344556034f, 0.07611089f, 0.424781054f, 0.07611089f,
     0.2591884f, 0.15427883f, 0.178963438f, 0.15427883f, 0.178963438f, 0.07611089f, 0.2591884f, 0.07611089f };
-const unsigned int _glyph0109_tris[] = {
+const unsigned short _glyph0109_tris[] = {
       5,   6,   8,   7,   6,   8,   4,   5,   9,   8,   5,   9,   9,   4,  10,  14,
      15,  16,  11,  17,  16,  12,  11,  16,  13,  12,  16,  16,  14,  13,  18,  17,
      19,  11,  17,  20,  17,  19,  20,  10,  11,  21,  20,  11,  21,  21,  10,  22,
@@ -1847,8 +1747,7 @@ const unsigned int _glyph0109_tris[] = {
       3,   2,   3,  32,  31,   3,  32,   1,   2,  33,  32,   2,  33,   0,  34,  33,
      33,   1,   0,   0,  34,  35,  37,  36,  38,  36,  38,  39,  42,  41,  40,  43,
      42,  40 };
-const char *_glyph0110_name = "\xC3\x9F";
-const unsigned int _glyph0110_looplengths[] = {57};
+const unsigned short _glyph0110_looplengths[] = {57};
 const float _glyph0110_points[] = {
     0.469007641f, 0.6346002f, 0.4659221f, 0.675741255f, 0.45563677f, 0.713796735f, 0.4381519f, 0.747738063f,
     0.4144958f, 0.778593838f, 0.384668529f, 0.804307f, 0.3507272f, 0.8228204f, 0.3137003f, 0.8331057f,
@@ -1865,7 +1764,7 @@ const float _glyph0110_points[] = {
     0.428895146f, 0.329128176f, 0.421695441f, 0.3712977f, 0.400096446f, 0.410381675f, 0.368212134f, 0.440208942f,
     0.3260426f, 0.458722383f, 0.3260426f, 0.461807936f, 0.385697067f, 0.484435529f, 0.429923654f, 0.52146244f,
     0.458722383f, 0.5718602f };
-const unsigned int _glyph0110_tris[] = {
+const unsigned short _glyph0110_tris[] = {
       6,   7,   8,   4,   5,   9,   5,   9,   8,   8,   6,   5,   9,   4,  10,  10,
      11,  13,  12,  11,  13,   4,  10,  14,  10,  13,  14,  14,   4,  15,   4,  15,
      16,   4,   3,  17,  16,   4,  17,   2,   3,  18,  17,   3,  18,   1,   2,  19,
@@ -1877,8 +1776,7 @@ const unsigned int _glyph0110_tris[] = {
      28,  47,  26,  48,  26,  48,  49,  26,  49,  50,  25,  26,  51,  50,  26,  51,
      25,  24,  52,  51,  25,  52,  24,   0,  53,  52,  24,  53,  53,   0,  54,  54,
       0,  55,  55,   0,  56 };
-const char *_glyph0111_name = "\xC3\xA4";
-const unsigned int _glyph0111_looplengths[] = {37, 15, 4, 4};
+const unsigned short _glyph0111_looplengths[] = {37, 15, 4, 4};
 const float _glyph0111_points[] = {
     0.4237525f, 0.827963054f, 0.348670155f, 0.827963054f, 0.348670155f, 0.7796223f, 0.320899934f, 0.7991643f,
     0.287987143f, 0.818706334f, 0.244789079f, 0.834134161f, 0.18719165f, 0.8403053f, 0.131651267f, 0.83002007f,
@@ -1895,7 +1793,7 @@ const float _glyph0111_points[] = {
     0.173820823f, 0.765222967f, 0.214961827f, 0.7703656f, 0.253017277f, 0.7662515f, 0.2869586f, 0.754937768f,
     0.372326225f, 0.30341503f, 0.292101234f, 0.30341503f, 0.292101234f, 0.2252471f, 0.372326225f, 0.2252471f,
     0.206733629f, 0.30341503f, 0.126508638f, 0.30341503f, 0.126508638f, 0.2252471f, 0.206733629f, 0.2252471f };
-const unsigned int _glyph0111_tris[] = {
+const unsigned short _glyph0111_tris[] = {
       0,   1,   2,   3,   4,   6,   5,   4,   6,   6,   3,   7,   8,   9,  11,  10,
       9,  11,   7,   8,  12,  11,   8,  12,  12,   7,  13,  24,  23,  26,  25,  24,
      26,  26,  23,  27,  23,  22,  28,  27,  23,  28,  20,  29,  28,  21,  20,  28,
@@ -1907,8 +1805,7 @@ const unsigned int _glyph0111_tris[] = {
      46,  46,   7,  47,   3,   7,  48,   7,  47,  48,   3,  48,  49,  49,   3,  50,
      50,   3,  51,  37,  51,   3,  37,   3,   2,   2,   0,  37,  53,  54,  55,  55,
      53,  52,  58,  57,  56,  59,  58,  56 };
-const char *_glyph0112_name = "\xC3\xB6";
-const unsigned int _glyph0112_looplengths[] = {32, 16, 4, 4};
+const unsigned short _glyph0112_looplengths[] = {32, 16, 4, 4};
 const float _glyph0112_points[] = {
     0.457693845f, 0.603744447f, 0.453579724f, 0.655170739f, 0.4432945f, 0.7014544f, 0.425809562f, 0.7415669f,
     0.401124954f, 0.776536763f, 0.370269179f, 0.804307f, 0.3352993f, 0.823848963f, 0.295186818f, 0.836191237f,
@@ -1924,7 +1821,7 @@ const float _glyph0112_points[] = {
     0.249931708f, 0.7755082f, 0.304443568f, 0.765222967f, 0.344556034f, 0.7323102f, 0.3712977f, 0.6788268f,
     0.373354763f, 0.30341503f, 0.293129772f, 0.30341503f, 0.293129772f, 0.2252471f, 0.373354763f, 0.2252471f,
     0.207762152f, 0.30341503f, 0.127537161f, 0.30341503f, 0.127537161f, 0.2252471f, 0.207762152f, 0.2252471f };
-const unsigned int _glyph0112_tris[] = {
+const unsigned short _glyph0112_tris[] = {
       6,   7,   8,   4,   5,   9,   5,   9,   8,   8,   6,   5,   9,   4,  10,  14,
      15,  16,  13,  14,  17,  16,  14,  17,  11,  12,  18,  12,  18,  17,  17,  13,
      12,  10,  19,  18,  18,  11,  10,   0,  25,  26,   0,  26,  27,   0,  27,  28,
@@ -1935,8 +1832,7 @@ const unsigned int _glyph0112_tris[] = {
      40,  41,  41,  10,  42,  10,  42,  43,   4,  10,  44,  10,  43,  44,  44,   4,
      45,  45,   4,  46,   3,   4,  47,  46,   4,  47,   2,  32,  47,  47,   3,   2,
      49,  50,  51,  51,  49,  48,  54,  53,  52,  55,  54,  52 };
-const char *_glyph0113_name = "\xC3\xBC";
-const unsigned int _glyph0113_looplengths[] = {24, 4, 4};
+const unsigned short _glyph0113_looplengths[] = {24, 4, 4};
 const float _glyph0113_points[] = {
     0.446380079f, 0.827963054f, 0.3712977f, 0.827963054f, 0.3712977f, 0.7775653f, 0.3342708f, 0.804307f,
     0.2982724f, 0.823848963f, 0.2612455f, 0.836191237f, 0.221133f, 0.8403053f, 0.158392921f, 0.83002007f,
@@ -1946,88 +1842,76 @@ const float _glyph0113_points[] = {
     0.3065006f, 0.7528807f, 0.3712977f, 0.713796735f, 0.3712977f, 0.3784974f, 0.446380079f, 0.3784974f,
     0.384668529f, 0.30341503f, 0.304443568f, 0.30341503f, 0.304443568f, 0.2252471f, 0.384668529f, 0.2252471f,
     0.2180474f, 0.30341503f, 0.137822419f, 0.30341503f, 0.137822419f, 0.2252471f, 0.2180474f, 0.2252471f };
-const unsigned int _glyph0113_tris[] = {
+const unsigned short _glyph0113_tris[] = {
       0,   1,   2,   3,   4,   6,   5,   4,   6,   6,   3,   7,   7,  11,  10,   8,
       7,  10,  10,   9,   8,  12,  11,  13,   7,  11,  14,  11,  13,  14,  14,   7,
      15,   3,   7,  16,   7,  15,  16,   3,  16,  17,   3,  17,  18,  18,   3,  19,
      19,   3,  20,  21,  20,   3,  21,   3,   2,   2,   0,  21,  21,   0,  23,  23,
      22,  21,  25,  24,  26,  24,  26,  27,  30,  29,  28,  31,  30,  28 };
-const char *_glyph0114_name = "\xE2\x80\x93";
-const unsigned int _glyph0114_looplengths[] = {4};
+const unsigned short _glyph0114_looplengths[] = {4};
 const float _glyph0114_points[] = {
     0.461631179f, 0.5974287f, 0.06147047f, 0.5974287f, 0.06147047f, 0.533145845f, 0.461631179f, 0.533145845f };
-const unsigned int _glyph0114_tris[] = {
+const unsigned short _glyph0114_tris[] = {
       1,   0,   2,   2,   0,   3 };
-const char *_glyph0115_name = "\xE2\x80\x94";
-const unsigned int _glyph0115_looplengths[] = {4};
+const unsigned short _glyph0115_looplengths[] = {4};
 const float _glyph0115_points[] = {
     0.7613499f, 0.5974287f, 0.06147047f, 0.5974287f, 0.06147047f, 0.533145845f, 0.7613499f, 0.533145845f };
-const unsigned int _glyph0115_tris[] = {
+const unsigned short _glyph0115_tris[] = {
       1,   0,   2,   2,   0,   3 };
-const char *_glyph0116_name = "\xE2\x80\x98";
-const unsigned int _glyph0116_looplengths[] = {4};
+const unsigned short _glyph0116_looplengths[] = {4};
 const float _glyph0116_points[] = {
     0.156689435f, 0.426677376f, 0.101245478f, 0.426677376f, -0.007633588f, 0.20208919f, 0.09039775f, 0.20208919f };
-const unsigned int _glyph0116_tris[] = {
+const unsigned short _glyph0116_tris[] = {
       2,   1,   0,   3,   2,   0 };
-const char *_glyph0117_name = "\xE2\x80\x99";
-const unsigned int _glyph0117_looplengths[] = {4};
+const unsigned short _glyph0117_looplengths[] = {4};
 const float _glyph0117_points[] = {
     0.228605866f, 0.20208919f, 0.1197268f, 0.426677376f, 0.06428284f, 0.426677376f, 0.130574524f, 0.20208919f };
-const unsigned int _glyph0117_tris[] = {
+const unsigned short _glyph0117_tris[] = {
       1,   0,   3,   2,   1,   3 };
-const char *_glyph0118_name = "\xE2\x80\x9A";
-const unsigned int _glyph0118_looplengths[] = {4};
+const unsigned short _glyph0118_looplengths[] = {4};
 const float _glyph0118_points[] = {
     0.160305336f, 0.7135396f, 0.0514262766f, 0.938127756f, -0.00401767762f, 0.938127756f, 0.0622740053f, 0.7135396f };
-const unsigned int _glyph0118_tris[] = {
+const unsigned short _glyph0118_tris[] = {
       1,   0,   3,   2,   1,   3 };
-const char *_glyph0119_name = "\xE2\x80\x9C";
-const unsigned int _glyph0119_looplengths[] = {4, 4};
+const unsigned short _glyph0119_looplengths[] = {4, 4};
 const float _glyph0119_points[] = {
     0.317396551f, 0.426677376f, 0.263559669f, 0.426677376f, 0.1546806f, 0.20208919f, 0.251104861f, 0.20208919f,
     0.15508236f, 0.426677376f, 0.101245478f, 0.426677376f, -0.007633588f, 0.20208919f, 0.08879068f, 0.20208919f };
-const unsigned int _glyph0119_tris[] = {
+const unsigned short _glyph0119_tris[] = {
       1,   0,   2,   0,   2,   3,   5,   4,   6,   7,   6,   4 };
-const char *_glyph0120_name = "\xE2\x80\x9D";
-const unsigned int _glyph0120_looplengths[] = {4, 4};
+const unsigned short _glyph0120_looplengths[] = {4, 4};
 const float _glyph0120_points[] = {
     0.3852953f, 0.20208919f, 0.276416242f, 0.426677376f, 0.222579345f, 0.426677376f, 0.28887102f, 0.20208919f,
     0.22298111f, 0.20208919f, 0.114102051f, 0.426677376f, 0.06026517f, 0.426677376f, 0.126556844f, 0.20208919f };
-const unsigned int _glyph0120_tris[] = {
+const unsigned short _glyph0120_tris[] = {
       1,   0,   3,   2,   1,   3,   5,   4,   7,   6,   5,   7 };
-const char *_glyph0121_name = "\xE2\x80\x9E";
-const unsigned int _glyph0121_looplengths[] = {4, 4};
+const unsigned short _glyph0121_looplengths[] = {4, 4};
 const float _glyph0121_points[] = {
     0.321012467f, 0.7135396f, 0.2121334f, 0.938127756f, 0.158296511f, 0.938127756f, 0.224588186f, 0.7135396f,
     0.158698276f, 0.7135396f, 0.049819205f, 0.938127756f, -0.00401767762f, 0.938127756f, 0.0622740053f, 0.7135396f };
-const unsigned int _glyph0121_tris[] = {
+const unsigned short _glyph0121_tris[] = {
       1,   0,   3,   2,   1,   3,   5,   4,   7,   6,   5,   7 };
-const char *_glyph0122_name = "\xE2\x80\xA6";
-const unsigned int _glyph0122_looplengths[] = {4, 4, 4};
+const unsigned short _glyph0122_looplengths[] = {4, 4, 4};
 const float _glyph0122_points[] = {
     0.6018481f, 0.8272399f, 0.5198875f, 0.8272399f, 0.5198875f, 0.7376456f, 0.6018481f, 0.7376456f,
     0.3776617f, 0.8272399f, 0.2957011f, 0.8272399f, 0.2957011f, 0.7376456f, 0.3776617f, 0.7376456f,
     0.153475285f, 0.8272399f, 0.0715146661f, 0.8272399f, 0.0715146661f, 0.7376456f, 0.153475285f, 0.7376456f };
-const unsigned int _glyph0122_tris[] = {
+const unsigned short _glyph0122_tris[] = {
       1,   0,   2,   0,   2,   3,   6,   5,   4,   7,   6,   4,   9,   8,  10,  11,
      10,   8 };
-const char *_glyph0123_name = "\xE2\x80\xB9";
-const unsigned int _glyph0123_looplengths[] = {7};
+const unsigned short _glyph0123_looplengths[] = {7};
 const float _glyph0123_points[] = {
     0.2957011f, 0.7581358f, 0.07472881f, 0.5829651f, 0.07472881f, 0.5472077f, 0.2957011f, 0.372438729f,
     0.2957011f, 0.452390522f, 0.146645233f, 0.5652873f, 0.2957011f, 0.678184032f };
-const unsigned int _glyph0123_tris[] = {
+const unsigned short _glyph0123_tris[] = {
       0,   1,   2,   2,   4,   3,   2,   4,   5,   0,   2,   5,   5,   6,   0 };
-const char *_glyph0124_name = "\xE2\x80\xBA";
-const unsigned int _glyph0124_looplengths[] = {7};
+const unsigned short _glyph0124_looplengths[] = {7};
 const float _glyph0124_points[] = {
     0.298915237f, 0.5829651f, 0.07794295f, 0.7581358f, 0.07794295f, 0.678184032f, 0.226998791f, 0.5652873f,
     0.07794295f, 0.452390522f, 0.07794295f, 0.372438729f, 0.298915237f, 0.5472077f };
-const unsigned int _glyph0124_tris[] = {
+const unsigned short _glyph0124_tris[] = {
       1,   0,   2,   2,   0,   3,   3,   0,   5,   4,   3,   5,   5,   0,   6 };
-const char *_glyph0125_name = "\xE2\x82\xAC";
-const unsigned int _glyph0125_looplengths[] = {60};
+const unsigned short _glyph0125_looplengths[] = {60};
 const float _glyph0125_points[] = {
     0.4926637f, 0.803278446f, 0.41243875f, 0.8310486f, 0.372326225f, 0.836191237f, 0.325014085f, 0.838248253f,
     0.276673377f, 0.834134161f, 0.23244676f, 0.823848963f, 0.190277219f, 0.804307f, 0.150164723f, 0.7775653f,
@@ -2044,7 +1928,7 @@ const float _glyph0125_points[] = {
     0.130622745f, 0.565689f, 0.283873051f, 0.565689f, 0.2663881f, 0.6130012f, 0.138850942f, 0.6130012f,
     0.167649657f, 0.6788268f, 0.211876243f, 0.7281961f, 0.2663881f, 0.760080338f, 0.325014085f, 0.7703656f,
     0.381582975f, 0.767280042f, 0.4237525f, 0.7569948f, 0.487521082f, 0.719967842f, 0.4926637f, 0.719967842f };
-const unsigned int _glyph0125_tris[] = {
+const unsigned short _glyph0125_tris[] = {
       2,   1,   3,  11,  12,  13,   9,  10,  14,  14,  13,  11,  11,  10,  14,   9,
      14,  15,   8,   9,  16,  15,   9,  16,   8,  16,  17,   7,   8,  18,  17,   8,
      18,  19,  18,  20,   6,   7,  21,  21,  20,  18,  18,   7,  21,  21,   6,   5,
@@ -2056,8 +1940,7 @@ const unsigned int _glyph0125_tris[] = {
      50,  51,  50,  48,  48,  21,  51,  21,   5,  52,  51,  21,  52,   4,  53,  52,
      52,   5,   4,   4,  53,  54,   1,   3,  55,   3,  55,  54,  54,   4,   3,  55,
       1,  56,   0,   1,  57,  56,   1,  57,  57,   0,  58,  58,   0,  59 };
-const char *_glyph0126_name = "\xE2\x84\xA2";
-const unsigned int _glyph0126_looplengths[] = {15, 8};
+const unsigned short _glyph0126_looplengths[] = {15, 8};
 const float _glyph0126_points[] = {
     0.713941336f, 0.511852145f, 0.664122164f, 0.511852145f, 0.664122164f, 0.263961434f, 0.6560868f, 0.263961434f,
     0.560867846f, 0.4451587f, 0.529128134f, 0.4451587f, 0.433105677f, 0.261149049f, 0.42306146f, 0.261149049f,
@@ -2065,139 +1948,191 @@ const float _glyph0126_points[] = {
     0.5460024f, 0.382482916f, 0.62274003f, 0.229007632f, 0.713941336f, 0.229007632f, 0.303334683f, 0.276014477f,
     0.211329848f, 0.276014477f, 0.211329848f, 0.511852145f, 0.160305336f, 0.511852145f, 0.160305336f, 0.276014477f,
     0.06830052f, 0.276014477f, 0.06830052f, 0.229007632f, 0.303334683f, 0.229007632f };
-const unsigned int _glyph0126_tris[] = {
+const unsigned short _glyph0126_tris[] = {
       1,   0,   2,   5,   4,   6,   8,   7,   9,  10,   9,   7,  10,   7,   6,   3,
       4,  12,   4,   6,  12,   6,  12,  11,  11,  10,   6,  13,  12,   3,   3,   2,
      13,   0,   2,  14,  13,   2,  14,  17,  16,  19,  18,  17,  19,  19,  20,  21,
      15,  22,  21,  16,  15,  21,  21,  19,  16 };
 const OutlineGlyphInfo _glyphs[] = {
-    { _glyph0000_name, 0.904898047f, 0, NULL, NULL, 0, NULL },
-    { _glyph0001_name, 0.288988054f, 0, NULL, NULL, 0, NULL },
-    { _glyph0002_name, 0.3235401f, 2, _glyph0002_looplengths, _glyph0002_points, 12, _glyph0002_tris },
-    { _glyph0003_name, 0.377376974f, 2, _glyph0003_looplengths, _glyph0003_points, 12, _glyph0003_tris },
-    { _glyph0004_name, 0.67307806f, 2, _glyph0004_looplengths, _glyph0004_points, 96, _glyph0004_tris },
-    { _glyph0005_name, 0.523813248f, 3, _glyph0005_looplengths, _glyph0005_points, 195, _glyph0005_tris },
-    { _glyph0006_name, 0.8858543f, 5, _glyph0006_looplengths, _glyph0006_points, 198, _glyph0006_tris },
-    { _glyph0007_name, 0.597867131f, 3, _glyph0007_looplengths, _glyph0007_points, 228, _glyph0007_tris },
-    { _glyph0008_name, 0.220687523f, 1, _glyph0008_looplengths, _glyph0008_points, 6, _glyph0008_tris },
-    { _glyph0009_name, 0.373648554f, 1, _glyph0009_looplengths, _glyph0009_points, 60, _glyph0009_tris },
-    { _glyph0010_name, 0.373648554f, 1, _glyph0010_looplengths, _glyph0010_points, 60, _glyph0010_tris },
-    { _glyph0011_name, 0.5228169f, 1, _glyph0011_looplengths, _glyph0011_points, 48, _glyph0011_tris },
-    { _glyph0012_name, 0.67307806f, 1, _glyph0012_looplengths, _glyph0012_points, 30, _glyph0012_tris },
-    { _glyph0013_name, 0.299032241f, 1, _glyph0013_looplengths, _glyph0013_points, 6, _glyph0013_tris },
-    { _glyph0014_name, 0.3733593f, 1, _glyph0014_looplengths, _glyph0014_points, 6, _glyph0014_tris },
-    { _glyph0015_name, 0.299032241f, 1, _glyph0015_looplengths, _glyph0015_points, 6, _glyph0015_tris },
-    { _glyph0016_name, 0.3733593f, 1, _glyph0016_looplengths, _glyph0016_points, 6, _glyph0016_tris },
-    { _glyph0017_name, 0.523813248f, 2, _glyph0017_looplengths, _glyph0017_points, 186, _glyph0017_tris },
-    { _glyph0018_name, 0.523813248f, 1, _glyph0018_looplengths, _glyph0018_points, 39, _glyph0018_tris },
-    { _glyph0019_name, 0.523813248f, 1, _glyph0019_looplengths, _glyph0019_points, 99, _glyph0019_tris },
-    { _glyph0020_name, 0.523813248f, 1, _glyph0020_looplengths, _glyph0020_points, 171, _glyph0020_tris },
-    { _glyph0021_name, 0.5228169f, 2, _glyph0021_looplengths, _glyph0021_points, 42, _glyph0021_tris },
-    { _glyph0022_name, 0.523813248f, 1, _glyph0022_looplengths, _glyph0022_points, 111, _glyph0022_tris },
-    { _glyph0023_name, 0.523813248f, 2, _glyph0023_looplengths, _glyph0023_points, 192, _glyph0023_tris },
-    { _glyph0024_name, 0.5228169f, 1, _glyph0024_looplengths, _glyph0024_points, 15, _glyph0024_tris },
-    { _glyph0025_name, 0.523813248f, 3, _glyph0025_looplengths, _glyph0025_points, 258, _glyph0025_tris },
-    { _glyph0026_name, 0.523813248f, 2, _glyph0026_looplengths, _glyph0026_points, 195, _glyph0026_tris },
-    { _glyph0027_name, 0.3733593f, 2, _glyph0027_looplengths, _glyph0027_points, 12, _glyph0027_tris },
-    { _glyph0028_name, 0.3733593f, 2, _glyph0028_looplengths, _glyph0028_points, 12, _glyph0028_tris },
-    { _glyph0029_name, 0.67307806f, 1, _glyph0029_looplengths, _glyph0029_points, 15, _glyph0029_tris },
-    { _glyph0030_name, 0.67307806f, 2, _glyph0030_looplengths, _glyph0030_points, 12, _glyph0030_tris },
-    { _glyph0031_name, 0.67307806f, 1, _glyph0031_looplengths, _glyph0031_points, 15, _glyph0031_tris },
-    { _glyph0032_name, 0.448730916f, 2, _glyph0032_looplengths, _glyph0032_points, 96, _glyph0032_tris },
-    { _glyph0033_name, 0.823114157f, 2, _glyph0033_looplengths, _glyph0033_points, 288, _glyph0033_tris },
-    { _glyph0034_name, 0.5621901f, 2, _glyph0034_looplengths, _glyph0034_points, 33, _glyph0034_tris },
-    { _glyph0035_name, 0.563925743f, 3, _glyph0035_looplengths, _glyph0035_points, 174, _glyph0035_tris },
-    { _glyph0036_name, 0.575239539f, 1, _glyph0036_looplengths, _glyph0036_points, 150, _glyph0036_tris },
-    { _glyph0037_name, 0.633865535f, 2, _glyph0037_looplengths, _glyph0037_points, 111, _glyph0037_tris },
-    { _glyph0038_name, 0.5200045f, 1, _glyph0038_looplengths, _glyph0038_points, 30, _glyph0038_tris },
-    { _glyph0039_name, 0.47259593f, 1, _glyph0039_looplengths, _glyph0039_points, 24, _glyph0039_tris },
-    { _glyph0040_name, 0.6379796f, 1, _glyph0040_looplengths, _glyph0040_points, 150, _glyph0040_tris },
-    { _glyph0041_name, 0.618035853f, 1, _glyph0041_looplengths, _glyph0041_points, 30, _glyph0041_tris },
-    { _glyph0042_name, 0.3460391f, 1, _glyph0042_looplengths, _glyph0042_points, 30, _glyph0042_tris },
-    { _glyph0043_name, 0.3746771f, 1, _glyph0043_looplengths, _glyph0043_points, 57, _glyph0043_tris },
-    { _glyph0044_name, 0.569823742f, 1, _glyph0044_looplengths, _glyph0044_points, 30, _glyph0044_tris },
-    { _glyph0045_name, 0.457730532f, 1, _glyph0045_looplengths, _glyph0045_points, 12, _glyph0045_tris },
-    { _glyph0046_name, 0.693166435f, 1, _glyph0046_looplengths, _glyph0046_points, 33, _glyph0046_tris },
-    { _glyph0047_name, 0.615223467f, 1, _glyph0047_looplengths, _glyph0047_points, 24, _glyph0047_tris },
-    { _glyph0048_name, 0.6482649f, 2, _glyph0048_looplengths, _glyph0048_points, 192, _glyph0048_tris },
-    { _glyph0049_name, 0.4960431f, 2, _glyph0049_looplengths, _glyph0049_points, 93, _glyph0049_tris },
-    { _glyph0050_name, 0.6482649f, 2, _glyph0050_looplengths, _glyph0050_points, 231, _glyph0050_tris },
-    { _glyph0051_name, 0.572154f, 2, _glyph0051_looplengths, _glyph0051_points, 93, _glyph0051_tris },
-    { _glyph0052_name, 0.562897265f, 1, _glyph0052_looplengths, _glyph0052_points, 174, _glyph0052_tris },
-    { _glyph0053_name, 0.5067462f, 1, _glyph0053_looplengths, _glyph0053_points, 18, _glyph0053_tris },
-    { _glyph0054_name, 0.6019812f, 1, _glyph0054_looplengths, _glyph0054_points, 102, _glyph0054_tris },
-    { _glyph0055_name, 0.5621901f, 1, _glyph0055_looplengths, _glyph0055_points, 15, _glyph0055_tris },
-    { _glyph0056_name, 0.813295f, 1, _glyph0056_looplengths, _glyph0056_points, 33, _glyph0056_tris },
-    { _glyph0057_name, 0.563395441f, 1, _glyph0057_looplengths, _glyph0057_points, 30, _glyph0057_tris },
-    { _glyph0058_name, 0.505942643f, 1, _glyph0058_looplengths, _glyph0058_points, 21, _glyph0058_tris },
-    { _glyph0059_name, 0.563395441f, 1, _glyph0059_looplengths, _glyph0059_points, 24, _glyph0059_tris },
-    { _glyph0060_name, 0.3733593f, 1, _glyph0060_looplengths, _glyph0060_points, 18, _glyph0060_tris },
-    { _glyph0061_name, 0.3733593f, 1, _glyph0061_looplengths, _glyph0061_points, 6, _glyph0061_tris },
-    { _glyph0062_name, 0.3733593f, 1, _glyph0062_looplengths, _glyph0062_points, 18, _glyph0062_tris },
-    { _glyph0063_name, 0.67307806f, 1, _glyph0063_looplengths, _glyph0063_points, 15, _glyph0063_tris },
-    { _glyph0064_name, 0.5228169f, 1, _glyph0064_looplengths, _glyph0064_points, 6, _glyph0064_tris },
-    { _glyph0065_name, 0.5228169f, 1, _glyph0065_looplengths, _glyph0065_points, 6, _glyph0065_tris },
-    { _glyph0066_name, 0.49398604f, 2, _glyph0066_looplengths, _glyph0066_points, 156, _glyph0066_tris },
-    { _glyph0067_name, 0.512499452f, 2, _glyph0067_looplengths, _glyph0067_points, 120, _glyph0067_tris },
-    { _glyph0068_name, 0.4291889f, 1, _glyph0068_looplengths, _glyph0068_points, 111, _glyph0068_tris },
-    { _glyph0069_name, 0.512499452f, 2, _glyph0069_looplengths, _glyph0069_points, 117, _glyph0069_tris },
-    { _glyph0070_name, 0.489871949f, 2, _glyph0070_looplengths, _glyph0070_points, 141, _glyph0070_tris },
-    { _glyph0071_name, 0.289309472f, 1, _glyph0071_looplengths, _glyph0071_points, 69, _glyph0071_tris },
-    { _glyph0072_name, 0.512499452f, 2, _glyph0072_looplengths, _glyph0072_points, 168, _glyph0072_tris },
-    { _glyph0073_name, 0.520727754f, 1, _glyph0073_looplengths, _glyph0073_points, 63, _glyph0073_tris },
-    { _glyph0074_name, 0.225508749f, 2, _glyph0074_looplengths, _glyph0074_points, 12, _glyph0074_tris },
-    { _glyph0075_name, 0.2831383f, 2, _glyph0075_looplengths, _glyph0075_points, 57, _glyph0075_tris },
-    { _glyph0076_name, 0.4866578f, 1, _glyph0076_looplengths, _glyph0076_points, 30, _glyph0076_tris },
-    { _glyph0077_name, 0.225508749f, 1, _glyph0077_looplengths, _glyph0077_points, 6, _glyph0077_tris },
-    { _glyph0078_name, 0.8004866f, 1, _glyph0078_looplengths, _glyph0078_points, 126, _glyph0078_tris },
-    { _glyph0079_name, 0.520727754f, 1, _glyph0079_looplengths, _glyph0079_points, 63, _glyph0079_tris },
-    { _glyph0080_name, 0.4991287f, 2, _glyph0080_looplengths, _glyph0080_points, 144, _glyph0080_tris },
-    { _glyph0081_name, 0.512499452f, 2, _glyph0081_looplengths, _glyph0081_points, 111, _glyph0081_tris },
-    { _glyph0082_name, 0.512499452f, 2, _glyph0082_looplengths, _glyph0082_points, 117, _glyph0082_tris },
-    { _glyph0083_name, 0.351021f, 1, _glyph0083_looplengths, _glyph0083_points, 51, _glyph0083_tris },
-    { _glyph0084_name, 0.4291889f, 1, _glyph0084_looplengths, _glyph0084_points, 162, _glyph0084_tris },
-    { _glyph0085_name, 0.324279338f, 1, _glyph0085_looplengths, _glyph0085_points, 78, _glyph0085_tris },
-    { _glyph0086_name, 0.520727754f, 1, _glyph0086_looplengths, _glyph0086_points, 66, _glyph0086_tris },
-    { _glyph0087_name, 0.4866578f, 1, _glyph0087_looplengths, _glyph0087_points, 15, _glyph0087_tris },
-    { _glyph0088_name, 0.67307806f, 1, _glyph0088_looplengths, _glyph0088_points, 33, _glyph0088_tris },
-    { _glyph0089_name, 0.4866578f, 1, _glyph0089_looplengths, _glyph0089_points, 30, _glyph0089_tris },
-    { _glyph0090_name, 0.4866578f, 1, _glyph0090_looplengths, _glyph0090_points, 18, _glyph0090_tris },
-    { _glyph0091_name, 0.4320174f, 1, _glyph0091_looplengths, _glyph0091_points, 24, _glyph0091_tris },
-    { _glyph0092_name, 0.52278477f, 1, _glyph0092_looplengths, _glyph0092_points, 132, _glyph0092_tris },
-    { _glyph0093_name, 0.3733593f, 1, _glyph0093_looplengths, _glyph0093_points, 6, _glyph0093_tris },
-    { _glyph0094_name, 0.52278477f, 1, _glyph0094_looplengths, _glyph0094_points, 132, _glyph0094_tris },
-    { _glyph0095_name, 0.673978031f, 1, _glyph0095_looplengths, _glyph0095_points, 105, _glyph0095_tris },
-    { _glyph0096_name, 0.823114157f, 3, _glyph0096_looplengths, _glyph0096_points, 291, _glyph0096_tris },
-    { _glyph0097_name, 0.5300487f, 2, _glyph0097_looplengths, _glyph0097_points, 30, _glyph0097_tris },
-    { _glyph0098_name, 0.823114157f, 4, _glyph0098_looplengths, _glyph0098_points, 276, _glyph0098_tris },
-    { _glyph0099_name, 0.44667387f, 2, _glyph0099_looplengths, _glyph0099_points, 96, _glyph0099_tris },
-    { _glyph0100_name, 0.67307806f, 1, _glyph0100_looplengths, _glyph0100_points, 42, _glyph0100_tris },
-    { _glyph0101_name, 0.44667387f, 1, _glyph0101_looplengths, _glyph0101_points, 90, _glyph0101_tris },
-    { _glyph0102_name, 0.44667387f, 1, _glyph0102_looplengths, _glyph0102_points, 150, _glyph0102_tris },
-    { _glyph0103_name, 0.523813248f, 1, _glyph0103_looplengths, _glyph0103_points, 54, _glyph0103_tris },
-    { _glyph0104_name, 0.299032241f, 1, _glyph0104_looplengths, _glyph0104_points, 6, _glyph0104_tris },
-    { _glyph0105_name, 0.5300487f, 2, _glyph0105_looplengths, _glyph0105_points, 30, _glyph0105_tris },
-    { _glyph0106_name, 0.5621901f, 4, _glyph0106_looplengths, _glyph0106_points, 45, _glyph0106_tris },
-    { _glyph0107_name, 0.6482649f, 4, _glyph0107_looplengths, _glyph0107_points, 204, _glyph0107_tris },
-    { _glyph0108_name, 0.67307806f, 1, _glyph0108_looplengths, _glyph0108_points, 30, _glyph0108_tris },
-    { _glyph0109_name, 0.6019812f, 3, _glyph0109_looplengths, _glyph0109_points, 114, _glyph0109_tris },
-    { _glyph0110_name, 0.510442436f, 1, _glyph0110_looplengths, _glyph0110_points, 165, _glyph0110_tris },
-    { _glyph0111_name, 0.49398604f, 4, _glyph0111_looplengths, _glyph0111_points, 168, _glyph0111_tris },
-    { _glyph0112_name, 0.4991287f, 4, _glyph0112_looplengths, _glyph0112_points, 156, _glyph0112_tris },
-    { _glyph0113_name, 0.520727754f, 3, _glyph0113_looplengths, _glyph0113_points, 78, _glyph0113_tris },
-    { _glyph0114_name, 0.5228169f, 1, _glyph0114_looplengths, _glyph0114_points, 6, _glyph0114_tris },
-    { _glyph0115_name, 0.822535634f, 1, _glyph0115_looplengths, _glyph0115_points, 6, _glyph0115_tris },
-    { _glyph0116_name, 0.220687523f, 1, _glyph0116_looplengths, _glyph0116_points, 6, _glyph0116_tris },
-    { _glyph0117_name, 0.220687523f, 1, _glyph0117_looplengths, _glyph0117_points, 6, _glyph0117_tris },
-    { _glyph0118_name, 0.220687523f, 1, _glyph0118_looplengths, _glyph0118_points, 6, _glyph0118_tris },
-    { _glyph0119_name, 0.377376974f, 2, _glyph0119_looplengths, _glyph0119_points, 12, _glyph0119_tris },
-    { _glyph0120_name, 0.377376974f, 2, _glyph0120_looplengths, _glyph0120_points, 12, _glyph0120_tris },
-    { _glyph0121_name, 0.377376974f, 2, _glyph0121_looplengths, _glyph0121_points, 12, _glyph0121_tris },
-    { _glyph0122_name, 0.67307806f, 3, _glyph0122_looplengths, _glyph0122_points, 18, _glyph0122_tris },
-    { _glyph0123_name, 0.3733593f, 1, _glyph0123_looplengths, _glyph0123_points, 15, _glyph0123_tris },
-    { _glyph0124_name, 0.3733593f, 1, _glyph0124_looplengths, _glyph0124_points, 15, _glyph0124_tris },
-    { _glyph0125_name, 0.523813248f, 1, _glyph0125_looplengths, _glyph0125_points, 174, _glyph0125_tris },
-    { _glyph0126_name, 0.8032508f, 2, _glyph0126_looplengths, _glyph0126_points, 57, _glyph0126_tris } };
+    { 0.904898047f, 0, NULL, NULL, 0, NULL },
+    { 0.288988054f, 0, NULL, NULL, 0, NULL },
+    { 0.3235401f, 2, _glyph0002_looplengths, _glyph0002_points, 12, _glyph0002_tris },
+    { 0.377376974f, 2, _glyph0003_looplengths, _glyph0003_points, 12, _glyph0003_tris },
+    { 0.67307806f, 2, _glyph0004_looplengths, _glyph0004_points, 96, _glyph0004_tris },
+    { 0.523813248f, 3, _glyph0005_looplengths, _glyph0005_points, 195, _glyph0005_tris },
+    { 0.8858543f, 5, _glyph0006_looplengths, _glyph0006_points, 198, _glyph0006_tris },
+    { 0.597867131f, 3, _glyph0007_looplengths, _glyph0007_points, 228, _glyph0007_tris },
+    { 0.220687523f, 1, _glyph0008_looplengths, _glyph0008_points, 6, _glyph0008_tris },
+    { 0.373648554f, 1, _glyph0009_looplengths, _glyph0009_points, 60, _glyph0009_tris },
+    { 0.373648554f, 1, _glyph0010_looplengths, _glyph0010_points, 60, _glyph0010_tris },
+    { 0.5228169f, 1, _glyph0011_looplengths, _glyph0011_points, 48, _glyph0011_tris },
+    { 0.67307806f, 1, _glyph0012_looplengths, _glyph0012_points, 30, _glyph0012_tris },
+    { 0.299032241f, 1, _glyph0013_looplengths, _glyph0013_points, 6, _glyph0013_tris },
+    { 0.3733593f, 1, _glyph0014_looplengths, _glyph0014_points, 6, _glyph0014_tris },
+    { 0.299032241f, 1, _glyph0015_looplengths, _glyph0015_points, 6, _glyph0015_tris },
+    { 0.3733593f, 1, _glyph0016_looplengths, _glyph0016_points, 6, _glyph0016_tris },
+    { 0.523813248f, 2, _glyph0017_looplengths, _glyph0017_points, 186, _glyph0017_tris },
+    { 0.523813248f, 1, _glyph0018_looplengths, _glyph0018_points, 39, _glyph0018_tris },
+    { 0.523813248f, 1, _glyph0019_looplengths, _glyph0019_points, 99, _glyph0019_tris },
+    { 0.523813248f, 1, _glyph0020_looplengths, _glyph0020_points, 171, _glyph0020_tris },
+    { 0.5228169f, 2, _glyph0021_looplengths, _glyph0021_points, 42, _glyph0021_tris },
+    { 0.523813248f, 1, _glyph0022_looplengths, _glyph0022_points, 111, _glyph0022_tris },
+    { 0.523813248f, 2, _glyph0023_looplengths, _glyph0023_points, 192, _glyph0023_tris },
+    { 0.5228169f, 1, _glyph0024_looplengths, _glyph0024_points, 15, _glyph0024_tris },
+    { 0.523813248f, 3, _glyph0025_looplengths, _glyph0025_points, 258, _glyph0025_tris },
+    { 0.523813248f, 2, _glyph0026_looplengths, _glyph0026_points, 195, _glyph0026_tris },
+    { 0.3733593f, 2, _glyph0027_looplengths, _glyph0027_points, 12, _glyph0027_tris },
+    { 0.3733593f, 2, _glyph0028_looplengths, _glyph0028_points, 12, _glyph0028_tris },
+    { 0.67307806f, 1, _glyph0029_looplengths, _glyph0029_points, 15, _glyph0029_tris },
+    { 0.67307806f, 2, _glyph0030_looplengths, _glyph0030_points, 12, _glyph0030_tris },
+    { 0.67307806f, 1, _glyph0031_looplengths, _glyph0031_points, 15, _glyph0031_tris },
+    { 0.448730916f, 2, _glyph0032_looplengths, _glyph0032_points, 96, _glyph0032_tris },
+    { 0.823114157f, 2, _glyph0033_looplengths, _glyph0033_points, 288, _glyph0033_tris },
+    { 0.5621901f, 2, _glyph0034_looplengths, _glyph0034_points, 33, _glyph0034_tris },
+    { 0.563925743f, 3, _glyph0035_looplengths, _glyph0035_points, 174, _glyph0035_tris },
+    { 0.575239539f, 1, _glyph0036_looplengths, _glyph0036_points, 150, _glyph0036_tris },
+    { 0.633865535f, 2, _glyph0037_looplengths, _glyph0037_points, 111, _glyph0037_tris },
+    { 0.5200045f, 1, _glyph0038_looplengths, _glyph0038_points, 30, _glyph0038_tris },
+    { 0.47259593f, 1, _glyph0039_looplengths, _glyph0039_points, 24, _glyph0039_tris },
+    { 0.6379796f, 1, _glyph0040_looplengths, _glyph0040_points, 150, _glyph0040_tris },
+    { 0.618035853f, 1, _glyph0041_looplengths, _glyph0041_points, 30, _glyph0041_tris },
+    { 0.3460391f, 1, _glyph0042_looplengths, _glyph0042_points, 30, _glyph0042_tris },
+    { 0.3746771f, 1, _glyph0043_looplengths, _glyph0043_points, 57, _glyph0043_tris },
+    { 0.569823742f, 1, _glyph0044_looplengths, _glyph0044_points, 30, _glyph0044_tris },
+    { 0.457730532f, 1, _glyph0045_looplengths, _glyph0045_points, 12, _glyph0045_tris },
+    { 0.693166435f, 1, _glyph0046_looplengths, _glyph0046_points, 33, _glyph0046_tris },
+    { 0.615223467f, 1, _glyph0047_looplengths, _glyph0047_points, 24, _glyph0047_tris },
+    { 0.6482649f, 2, _glyph0048_looplengths, _glyph0048_points, 192, _glyph0048_tris },
+    { 0.4960431f, 2, _glyph0049_looplengths, _glyph0049_points, 93, _glyph0049_tris },
+    { 0.6482649f, 2, _glyph0050_looplengths, _glyph0050_points, 231, _glyph0050_tris },
+    { 0.572154f, 2, _glyph0051_looplengths, _glyph0051_points, 93, _glyph0051_tris },
+    { 0.562897265f, 1, _glyph0052_looplengths, _glyph0052_points, 174, _glyph0052_tris },
+    { 0.5067462f, 1, _glyph0053_looplengths, _glyph0053_points, 18, _glyph0053_tris },
+    { 0.6019812f, 1, _glyph0054_looplengths, _glyph0054_points, 102, _glyph0054_tris },
+    { 0.5621901f, 1, _glyph0055_looplengths, _glyph0055_points, 15, _glyph0055_tris },
+    { 0.813295f, 1, _glyph0056_looplengths, _glyph0056_points, 33, _glyph0056_tris },
+    { 0.563395441f, 1, _glyph0057_looplengths, _glyph0057_points, 30, _glyph0057_tris },
+    { 0.505942643f, 1, _glyph0058_looplengths, _glyph0058_points, 21, _glyph0058_tris },
+    { 0.563395441f, 1, _glyph0059_looplengths, _glyph0059_points, 24, _glyph0059_tris },
+    { 0.3733593f, 1, _glyph0060_looplengths, _glyph0060_points, 18, _glyph0060_tris },
+    { 0.3733593f, 1, _glyph0061_looplengths, _glyph0061_points, 6, _glyph0061_tris },
+    { 0.3733593f, 1, _glyph0062_looplengths, _glyph0062_points, 18, _glyph0062_tris },
+    { 0.67307806f, 1, _glyph0063_looplengths, _glyph0063_points, 15, _glyph0063_tris },
+    { 0.5228169f, 1, _glyph0064_looplengths, _glyph0064_points, 6, _glyph0064_tris },
+    { 0.5228169f, 1, _glyph0065_looplengths, _glyph0065_points, 6, _glyph0065_tris },
+    { 0.49398604f, 2, _glyph0066_looplengths, _glyph0066_points, 156, _glyph0066_tris },
+    { 0.512499452f, 2, _glyph0067_looplengths, _glyph0067_points, 120, _glyph0067_tris },
+    { 0.4291889f, 1, _glyph0068_looplengths, _glyph0068_points, 111, _glyph0068_tris },
+    { 0.512499452f, 2, _glyph0069_looplengths, _glyph0069_points, 117, _glyph0069_tris },
+    { 0.489871949f, 2, _glyph0070_looplengths, _glyph0070_points, 141, _glyph0070_tris },
+    { 0.289309472f, 1, _glyph0071_looplengths, _glyph0071_points, 69, _glyph0071_tris },
+    { 0.512499452f, 2, _glyph0072_looplengths, _glyph0072_points, 168, _glyph0072_tris },
+    { 0.520727754f, 1, _glyph0073_looplengths, _glyph0073_points, 63, _glyph0073_tris },
+    { 0.225508749f, 2, _glyph0074_looplengths, _glyph0074_points, 12, _glyph0074_tris },
+    { 0.2831383f, 2, _glyph0075_looplengths, _glyph0075_points, 57, _glyph0075_tris },
+    { 0.4866578f, 1, _glyph0076_looplengths, _glyph0076_points, 30, _glyph0076_tris },
+    { 0.225508749f, 1, _glyph0077_looplengths, _glyph0077_points, 6, _glyph0077_tris },
+    { 0.8004866f, 1, _glyph0078_looplengths, _glyph0078_points, 126, _glyph0078_tris },
+    { 0.520727754f, 1, _glyph0079_looplengths, _glyph0079_points, 63, _glyph0079_tris },
+    { 0.4991287f, 2, _glyph0080_looplengths, _glyph0080_points, 144, _glyph0080_tris },
+    { 0.512499452f, 2, _glyph0081_looplengths, _glyph0081_points, 111, _glyph0081_tris },
+    { 0.512499452f, 2, _glyph0082_looplengths, _glyph0082_points, 117, _glyph0082_tris },
+    { 0.351021f, 1, _glyph0083_looplengths, _glyph0083_points, 51, _glyph0083_tris },
+    { 0.4291889f, 1, _glyph0084_looplengths, _glyph0084_points, 162, _glyph0084_tris },
+    { 0.324279338f, 1, _glyph0085_looplengths, _glyph0085_points, 78, _glyph0085_tris },
+    { 0.520727754f, 1, _glyph0086_looplengths, _glyph0086_points, 66, _glyph0086_tris },
+    { 0.4866578f, 1, _glyph0087_looplengths, _glyph0087_points, 15, _glyph0087_tris },
+    { 0.67307806f, 1, _glyph0088_looplengths, _glyph0088_points, 33, _glyph0088_tris },
+    { 0.4866578f, 1, _glyph0089_looplengths, _glyph0089_points, 30, _glyph0089_tris },
+    { 0.4866578f, 1, _glyph0090_looplengths, _glyph0090_points, 18, _glyph0090_tris },
+    { 0.4320174f, 1, _glyph0091_looplengths, _glyph0091_points, 24, _glyph0091_tris },
+    { 0.52278477f, 1, _glyph0092_looplengths, _glyph0092_points, 132, _glyph0092_tris },
+    { 0.3733593f, 1, _glyph0093_looplengths, _glyph0093_points, 6, _glyph0093_tris },
+    { 0.52278477f, 1, _glyph0094_looplengths, _glyph0094_points, 132, _glyph0094_tris },
+    { 0.673978031f, 1, _glyph0095_looplengths, _glyph0095_points, 105, _glyph0095_tris },
+    { 0.823114157f, 3, _glyph0096_looplengths, _glyph0096_points, 291, _glyph0096_tris },
+    { 0.5300487f, 2, _glyph0097_looplengths, _glyph0097_points, 30, _glyph0097_tris },
+    { 0.823114157f, 4, _glyph0098_looplengths, _glyph0098_points, 276, _glyph0098_tris },
+    { 0.44667387f, 2, _glyph0099_looplengths, _glyph0099_points, 96, _glyph0099_tris },
+    { 0.67307806f, 1, _glyph0100_looplengths, _glyph0100_points, 42, _glyph0100_tris },
+    { 0.44667387f, 1, _glyph0101_looplengths, _glyph0101_points, 90, _glyph0101_tris },
+    { 0.44667387f, 1, _glyph0102_looplengths, _glyph0102_points, 150, _glyph0102_tris },
+    { 0.523813248f, 1, _glyph0103_looplengths, _glyph0103_points, 54, _glyph0103_tris },
+    { 0.299032241f, 1, _glyph0104_looplengths, _glyph0104_points, 6, _glyph0104_tris },
+    { 0.5300487f, 2, _glyph0105_looplengths, _glyph0105_points, 30, _glyph0105_tris },
+    { 0.5621901f, 4, _glyph0106_looplengths, _glyph0106_points, 45, _glyph0106_tris },
+    { 0.6482649f, 4, _glyph0107_looplengths, _glyph0107_points, 204, _glyph0107_tris },
+    { 0.67307806f, 1, _glyph0108_looplengths, _glyph0108_points, 30, _glyph0108_tris },
+    { 0.6019812f, 3, _glyph0109_looplengths, _glyph0109_points, 114, _glyph0109_tris },
+    { 0.510442436f, 1, _glyph0110_looplengths, _glyph0110_points, 165, _glyph0110_tris },
+    { 0.49398604f, 4, _glyph0111_looplengths, _glyph0111_points, 168, _glyph0111_tris },
+    { 0.4991287f, 4, _glyph0112_looplengths, _glyph0112_points, 156, _glyph0112_tris },
+    { 0.520727754f, 3, _glyph0113_looplengths, _glyph0113_points, 78, _glyph0113_tris },
+    { 0.5228169f, 1, _glyph0114_looplengths, _glyph0114_points, 6, _glyph0114_tris },
+    { 0.822535634f, 1, _glyph0115_looplengths, _glyph0115_points, 6, _glyph0115_tris },
+    { 0.220687523f, 1, _glyph0116_looplengths, _glyph0116_points, 6, _glyph0116_tris },
+    { 0.220687523f, 1, _glyph0117_looplengths, _glyph0117_points, 6, _glyph0117_tris },
+    { 0.220687523f, 1, _glyph0118_looplengths, _glyph0118_points, 6, _glyph0118_tris },
+    { 0.377376974f, 2, _glyph0119_looplengths, _glyph0119_points, 12, _glyph0119_tris },
+    { 0.377376974f, 2, _glyph0120_looplengths, _glyph0120_points, 12, _glyph0120_tris },
+    { 0.377376974f, 2, _glyph0121_looplengths, _glyph0121_points, 12, _glyph0121_tris },
+    { 0.67307806f, 3, _glyph0122_looplengths, _glyph0122_points, 18, _glyph0122_tris },
+    { 0.3733593f, 1, _glyph0123_looplengths, _glyph0123_points, 15, _glyph0123_tris },
+    { 0.3733593f, 1, _glyph0124_looplengths, _glyph0124_points, 15, _glyph0124_tris },
+    { 0.523813248f, 1, _glyph0125_looplengths, _glyph0125_points, 174, _glyph0125_tris },
+    { 0.8032508f, 2, _glyph0126_looplengths, _glyph0126_points, 57, _glyph0126_tris } };
+const signed short _glyphIndex[] = {
+       2,    1,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12,   13,   14,   15,   16,
+       0,    0,   -2,  -18,  -34,  -50,  -66,  -82,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,   -1,  -17,  -33,  -49,  -65,  -81,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,   -3,  -19,  -35,  -51,  -67,  -83,    0,    0,    0,    0,   17,    0,   33,    0,
+       0,    0,   -4,  -20,  -36,  -52,  -68,  -84,    0,    0,    0,    0,   27,    0,    0,    0,
+       0,    0,   -5,  -21,  -37,  -53,  -69,  -85,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,   -6,  -22,  -38,  -54,  -70,  -86,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,   -7,  -23,  -39,  -55,  -71,  -87,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,   -8,  -24,  -40,  -56,  -72,  -88,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,   -9,  -25,  -41,  -57,  -73,  -89,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,  -10,  -26,  -42,  -58,  -74,  -90,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,  -11,  -27,  -43,  -59,  -75,  -91,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,  -12,  -28,  -44,  -60,  -76,  -92,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,  -13,  -29,  -45,  -61,  -77,  -93,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,  -14,  -30,  -46,  -62,  -78,  -94,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,  -15,  -31,  -47,  -63,  -79,  -95,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,  -16,  -32,  -48,  -64,  -80,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+      21,   22,   23,   24,    0,    0,   25,   26,    0,   18,    0,   19,    0,    0,   20,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,  -96,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,  -97, -105,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,  -98,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,  -99,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -100,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -101,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -102,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -103,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -104,    0,    0,    0,    0,
+       0,    0,    0,    0,   28,    0,   29,   30,    0,    0,    0,    0,   31,    0,    0,   32,
+       0,    0,    0,    0,    0,    0,    0,    0, -106,    0, -111,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -107,    0, -112,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -108,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -109,    0, -113,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -110,    0,    0,    0,    0,    0,    0,
+      34,    0,   45,    0,   48,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,   35,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,   36,   37,    0,   44,    0,   38,   39,   40,    0,   41,   42,   43,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -114,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -115,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -116,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -117,    0, -123,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -118,    0, -124,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -119,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -120,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0, -121,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -122,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,   46,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,   47,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -125,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,   49,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,   50,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+       0,    0,    0,    0,    0,    0,    0,    0,    0,    0, -126,    0,    0,    0,    0,    0 };
 
 } /* end namespace Verdana */
 } /* end namespace font2gl */
@@ -2212,7 +2147,8 @@ const OutlineFontInfo FontInfo_Verdana = {
     0.15387702f,
     0.170429885f,
     127,
-    font2gl::Verdana::_glyphs };
+    font2gl::Verdana::_glyphs,
+    font2gl::Verdana::_glyphIndex };
 
 } /* end namespace gl */
 } /* end namespace graphics */

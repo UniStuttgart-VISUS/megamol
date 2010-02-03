@@ -484,43 +484,39 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
         CharTraitsA::SafeStringLength(txtutf8));
     SIZE_T pos = 0;
     int *glyphrun = new int[txtlen + 1];
-    int keylen = 1;
     bool knowLastWhite = false;
     bool blackspace = true;
     SIZE_T lastWhiteGlyph;
     SIZE_T lastWhiteSpace;
     float lineLength = 0.0f;
     bool nextAsNewLine = false;
-    unsigned int idx;
+    signed short idx;
     ::memset(glyphrun, 0, sizeof(int) * (txtlen + 1));
     // > 0 1+index of the glyph to use
     // < 0 -(1+index) of the glyph and new line
     // = 0 end
 
     // build glyph run
-    for (SIZE_T i = 0; i < txtlen; i += keylen) {
-        // special handle new lines
-        if (txtutf8[i] == '\n') {
+    idx = 0;
+    for (SIZE_T i = 0; i < txtlen; i++) {
+        if (txtutf8[i] == '\n') { // special handle new lines
             nextAsNewLine = true;
             continue;
         }
 
         // select glyph
-        idx = 0xFFFFFFFF;
-        keylen = 1;
-        while ((txtutf8[i - 1 + keylen] & 0x80) != 0) keylen++;
-        // TODO: Tree search!!!!
-        for (unsigned int j = 0; j < this->data.glyphCount; j++) {
-            if (strncmp(txtutf8 + i, this->data.glyph[j].utf8char, keylen) == 0) {
-                idx = j;
-                break;
-            }
+        idx = this->data.glyphIndex[idx * 16 + ((unsigned char)txtutf8[i] % 0x10)];
+        if (idx == 0) continue; // glyph not found
+        if (idx > 0) {
+            // second part of byte
+            idx = this->data.glyphIndex[idx * 16 + ((unsigned char)txtutf8[i] / 0x10)];
+            if (idx == 0) continue; // glyph not found
+            if (idx > 0) continue; // glyph key not complete
         }
+        idx = -idx; // glyph found
 
-        if (idx == 0xFFFFFFFF) { // glyph not found
-            continue;
-        }
-        if (this->data.glyph[idx].utf8char[0] == ' ') {
+        // add glyph to run
+        if (txtutf8[i] == ' ') { // the only special white-space
             glyphrun[pos++] = 1 + idx;
             lineLength += this->data.glyph[idx].width;
             // no test for soft break here!
@@ -561,6 +557,8 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
             }
 
         }
+
+        idx = 0; // start with new glyph search
     }
 
     return glyphrun;
@@ -613,7 +611,7 @@ void OutlineFont::drawFilled(int *run, float x, float y, float size,
         ::glTranslatef(gx, gy, 0.0f);
         ::glScalef(size, sy, 1.0f);
         ::glVertexPointer(2, GL_FLOAT, 0, glyph.points);
-        ::glDrawElements(GL_TRIANGLES, glyph.triCount, GL_UNSIGNED_INT, glyph.tris);
+        ::glDrawElements(GL_TRIANGLES, glyph.triCount, GL_UNSIGNED_SHORT, glyph.tris);
         ::glPopMatrix();
 
         gx += glyph.width * size;

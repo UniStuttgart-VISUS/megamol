@@ -26,14 +26,13 @@ namespace gl {
 #define VISLIB_OUTLINEGLYPHINFO_STRUCT
 
     typedef struct _outlineglyphinfo_t {
-        const char *utf8char; /* The glyph char code in utf8 */
         const float width; /* The glyph width */
-        const unsigned int loopCount; /* The number of outline loops */
-        const unsigned int *loopLength; /* The length of each outline loop */
+        const unsigned short loopCount; /* The number of outline loops */
+        const unsigned short *loopLength; /* The length of each outline loop */
         const float *points; /* The points for each outline loop */
-        const unsigned int triCount; /* The number of vertices of the
+        const unsigned short triCount; /* The number of vertices of the
                                         triangles used to fill the glyph */
-        const unsigned int *tris; /* Index buffer of the triangles used */
+        const unsigned short *tris; /* Index buffer of the triangles used */
     } OutlineGlyphInfo;
 
 #endif /* VISLIB_OUTLINEGLYPHINFO_STRUCT */
@@ -50,9 +49,10 @@ namespace gl {
         const float charHeight; /* The main height of a character */
         const float charTop; /* The top line above the main height */
         const float charBottom; /* The bottom line below the base line */
-        const unsigned int glyphCount; /* The number of glyphs */
+        const unsigned short glyphCount; /* The number of glyphs */
         const OutlineGlyphInfo *glyph; /* The glyph data, sorted acending
                                           according to 'utf8char' */
+        const short *glyphIndex; /* The glyph search index */
     } OutlineFontInfo;
 
 #endif /* VISLIB_OUTLINEFONTINFO_STRUCT */
