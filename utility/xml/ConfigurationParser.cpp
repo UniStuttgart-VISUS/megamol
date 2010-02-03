@@ -316,6 +316,10 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
             }
             if (path != NULL) {
                 this->config.AddShaderDirectory(path);
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_INFO + 50, 
+                    "Path \"%s\" added as shader search path.", vislib::StringA(path).PeekBuffer());
+
             } else {
                 this->Warning("\"shaderdir\" tag without \"path\" attribute ignored.\n");
             }

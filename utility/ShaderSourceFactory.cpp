@@ -56,6 +56,8 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name) {
         filename = vislib::sys::Path::Concatenate(searchPaths[i], vislib::StringW(name));
         filename.Append(L".btf");
         if (vislib::sys::File::Exists(filename)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 50,
+                "Loading %s ...\n", vislib::StringA(filename).PeekBuffer());
             break;
         } else {
             filename.Clear();
