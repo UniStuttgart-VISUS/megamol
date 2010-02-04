@@ -111,6 +111,9 @@ namespace protein {
         /** The shader for shading the path lines */
         vislib::graphics::gl::GLSLShader pathlineShader;
 
+        /** The shader for shading the dots */
+        vislib::graphics::gl::GLSLShader dotsShader;
+
     };
 
 } /* end namespace protein */

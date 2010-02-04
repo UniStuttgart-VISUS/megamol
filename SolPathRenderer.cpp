@@ -75,6 +75,32 @@ bool SolPathRenderer::create(void) {
         return false;
     }
 
+    try {
+        vislib::graphics::gl::ShaderSource vertSrc;
+        vislib::graphics::gl::ShaderSource fragSrc;
+
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("solpath::dots::vert", vertSrc)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots vertex shader source");
+            return false;
+        }
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("solpath::dots::frag", fragSrc)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots fragment shader source");
+            return false;
+        }
+
+        if (!this->dotsShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
+            return false;
+        }
+
+    } catch(vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader: %s", e.GetMsgA());
+        return false;
+    } catch(...) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
+        return false;
+    }
+
     return true;
 }
 
@@ -117,6 +143,7 @@ bool SolPathRenderer::GetExtents(core::Call& call) {
  */
 void SolPathRenderer::release(void) {
     this->pathlineShader.Release();
+    this->dotsShader.Release();
 }
 
 
@@ -143,17 +170,29 @@ bool SolPathRenderer::Render(core::Call& call) {
     GLint attrloc = ::glGetAttribLocationARB(this->pathlineShader.ProgramHandle(), "params");
     ::glEnableClientState(GL_VERTEX_ARRAY);
     ::glEnableVertexAttribArrayARB(attrloc);
-    this->pathlineShader.SetParameter("timeSpan", spdc->MinTime(),
-        1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()));
+    this->pathlineShader.SetParameter("paramSpan",
+        spdc->MinTime(),
+        1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()),
+        spdc->MinSpeed(),
+        1.0f / vislib::math::Max(1.0f, spdc->MaxSpeed() - spdc->MinSpeed()));
 
     const SolPathDataCall::Pathline *path = spdc->Pathlines();
     for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
-        ::glVertexPointer(3, GL_FLOAT, sizeof(SolPathDataCall::Vertex), path->data);
+        ::glVertexPointer(4, GL_FLOAT, sizeof(SolPathDataCall::Vertex), path->data);
         ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(SolPathDataCall::Vertex), &path->data->time);
         ::glDrawArrays(GL_LINE_STRIP, 0, path->length);
     }
     this->pathlineShader.Disable();
 
+    //this->dotsShader.Enable();
+    //::glDisableVertexAttribArrayARB(attrloc);
+    //attrloc = ::glGetAttribLocationARB(this->dotsShader.ProgramHandle(), "params");
+    //::glEnableVertexAttribArrayARB(attrloc);
+    //this->dotsShader.SetParameter("paramSpan",
+    //    spdc->MinTime(),
+    //    1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()),
+    //    spdc->MinSpeed(),
+    //    1.0f / vislib::math::Max(1.0f, spdc->MaxSpeed() - spdc->MinSpeed()));
     //::glPointSize(2.0f);
     //::glEnable(GL_POINT_SMOOTH);
     //::glEnable(GL_BLEND);
@@ -161,13 +200,12 @@ bool SolPathRenderer::Render(core::Call& call) {
     //::glColor3ub(255, 0, 0);
     //path = spdc->Pathlines();
     //for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
-    //    ::glBegin(GL_POINTS);
-    //    for (unsigned int v = 0; v < path->length; v++) {
-    //        ::glVertex3fv(&path->data[v].x);
-    //    }
-    //    ::glEnd();
+    //    ::glVertexPointer(4, GL_FLOAT, sizeof(SolPathDataCall::Vertex), path->data);
+    //    ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(SolPathDataCall::Vertex), &path->data->time);
+    //    ::glDrawArrays(GL_POINTS, 0, path->length);
     //}
     //::glDisable(GL_POINT_SMOOTH);
+    //this->dotsShader.Disable();
 
     ::glDisableVertexAttribArrayARB(attrloc);
     ::glDisableClientState(GL_VERTEX_ARRAY);
