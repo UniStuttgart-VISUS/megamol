@@ -50,7 +50,7 @@ SolPathDataSource::SolPathDataSource(void) : core::Module(),
     this->smoothValueSlot << new param::FloatParam(10.0f, 0.0f, 100.0f);
     this->MakeSlotAvailable(&this->smoothValueSlot);
 
-    this->smoothExpSlot << new param::FloatParam(2.0f, 1.0f);
+    this->smoothExpSlot << new param::FloatParam(3.0f, 2.0f);
     this->MakeSlotAvailable(&this->smoothExpSlot);
 
     this->speedOfSmoothedSlot << new param::BoolParam(true);
@@ -317,8 +317,10 @@ void SolPathDataSource::loadData(void) {
 
             if (v1.time > this->maxTime) this->maxTime = v1.time;
             if (v1.time < this->minTime) this->minTime = v1.time;
-            if (v1.speed > this->maxSpeed) this->maxSpeed = v1.speed;
-            if (v1.speed < this->minSpeed) this->minSpeed = v1.speed;
+            if (v1.speed > 0.01f) {
+                if (v1.speed > this->maxSpeed) this->maxSpeed = v1.speed;
+                if (v1.speed < this->minSpeed) this->minSpeed = v1.speed;
+            }
             if (this->bbox.Left() > v1.x) this->bbox.SetLeft(v1.x);
             if (this->bbox.Right() < v1.x) this->bbox.SetRight(v1.x);
             if (this->bbox.Bottom() > v1.y) this->bbox.SetBottom(v1.y);
@@ -390,8 +392,10 @@ void SolPathDataSource::loadData(void) {
                     SolPathDataCall::Vertex &v1 = this->vertices[off + v];
                     v1.speed = vislib::math::ShallowPoint<float, 3>(&v1.x)
                         .Distance(vislib::math::ShallowPoint<float, 3>(&this->vertices[off + v - 1].x));
-                    if (v1.speed > this->maxSpeed) this->maxSpeed = v1.speed;
-                    if (v1.speed < this->minSpeed) this->minSpeed = v1.speed;
+                    if (v1.speed > 0.01f) {
+                        if (v1.speed > this->maxSpeed) this->maxSpeed = v1.speed;
+                        if (v1.speed < this->minSpeed) this->minSpeed = v1.speed;
+                    }
                 }
                 if (this->pathlines[p].length > 2) {
                     this->vertices[off].speed = this->vertices[off + 1].speed;
