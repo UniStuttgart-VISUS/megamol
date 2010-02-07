@@ -15,10 +15,24 @@
 #define TW_NO_LIB_PRAGMA
 #include "AntTweakBar.h"
 #include "CoreHandle.h"
+#include "vislib/Array.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 
+
+/**
+ * Test for equality of TwEnumVal structs
+ *
+ * @param lhs The left hand side operand
+ * @param rhs The right hand side operand
+ *
+ * @return The comparison result
+ */
+inline bool operator==(const TwEnumVal &lhs, const TwEnumVal &rhs) {
+    return (strcmp(lhs.Label, rhs.Label) == 0)
+        && (lhs.Value == rhs.Value);
+}
 
 namespace megamol {
 namespace console {
@@ -265,7 +279,7 @@ namespace console {
                  */
                 PlaceboParameter(vislib::SmartPtr<megamol::console::CoreHandle> hParam,
                         const char *name, unsigned char *desc, unsigned int len)
-                        : Parameter(NULL, hParam, name) {
+                        : Parameter(NULL, hParam, name), len(len) {
                     this->desc = new unsigned char[len];
                     ::memcpy(this->desc, desc, len);
                 }
@@ -303,6 +317,38 @@ namespace console {
 
                 /** The length of the description in bytes */
                 unsigned int len;
+
+            };
+
+            /**
+             * Button parameter clas
+             */
+            class ButtonParameter : public Parameter {
+            public:
+
+                /**
+                 * The button click callback
+                 *
+                 * @param clientData The client data
+                 */
+                static void TW_CALL Click(void *clientData);
+
+                /**
+                 * Ctor
+                 *
+                 * @param bar The bar handle
+                 * @param hParam The parameter core handle
+                 * @param name The name of the parameter as zero-terminated ANSI string
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 */
+                ButtonParameter(TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+                    const char *name, unsigned char *desc, unsigned int len);
+
+                /**
+                 * Dtor
+                 */
+                virtual ~ButtonParameter(void);
 
             };
 
@@ -390,6 +436,208 @@ namespace console {
                  * Dtor.
                  */
                 virtual ~StringParameter(void);
+
+            protected:
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Set(const void *value);
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Get(void *value);
+
+            };
+
+            /**
+             * Boolean parameter
+             */
+            class BoolParameter : public ValueParameter {
+            public:
+
+                /**
+                 * Ctor
+                 *
+                 * @param bar The bar handle
+                 * @param hParam The parameter core handle
+                 * @param name The name of the parameter as zero-terminated ANSI string
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 */
+                BoolParameter(TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+                        const char *name, unsigned char *desc, unsigned int len);
+
+                /**
+                 * Dtor.
+                 */
+                virtual ~BoolParameter(void);
+
+            protected:
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Set(const void *value);
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Get(void *value);
+
+            };
+
+            /**
+             * Enumeration parameter
+             */
+            class EnumParameter : public ValueParameter {
+            public:
+
+                /**
+                 * Ctor
+                 *
+                 * @param bar The bar handle
+                 * @param hParam The parameter core handle
+                 * @param name The name of the parameter as zero-terminated ANSI string
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 */
+                EnumParameter(TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+                        const char *name, unsigned char *desc, unsigned int len);
+
+                /**
+                 * Dtor.
+                 */
+                virtual ~EnumParameter(void);
+
+            protected:
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Set(const void *value);
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Get(void *value);
+
+            private:
+
+                /**
+                 * Creates the enum type
+                 *
+                 * @param hParam The parameter core handle
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 *
+                 * @return The new enum type
+                 */
+                static TwType makeMyEnumType(vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+                    unsigned char *desc, unsigned int len);
+
+                /**
+                 * Parses the enum type values from the type description
+                 *
+                 * @param outValues The array to receive the result
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 */
+                static void parseEnumDesc(vislib::Array<TwEnumVal>& outValues,
+                    unsigned char *desc, unsigned int len);
+
+                /** The enum string labels */
+                static vislib::Array<vislib::StringA> enumStrings;
+
+                /** The possible values */
+                vislib::Array<TwEnumVal> values;
+
+            };
+
+            /**
+             * Float parameter
+             */
+            class FloatParameter : public ValueParameter {
+            public:
+
+                /**
+                 * Ctor
+                 *
+                 * @param bar The bar handle
+                 * @param hParam The parameter core handle
+                 * @param name The name of the parameter as zero-terminated ANSI string
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 */
+                FloatParameter(TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+                        const char *name, unsigned char *desc, unsigned int len);
+
+                /**
+                 * Dtor.
+                 */
+                virtual ~FloatParameter(void);
+
+            protected:
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Set(const void *value);
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Get(void *value);
+
+            };
+
+            /**
+             * Integer parameter
+             */
+            class IntParameter : public ValueParameter {
+            public:
+
+                /**
+                 * Ctor
+                 *
+                 * @param bar The bar handle
+                 * @param hParam The parameter core handle
+                 * @param name The name of the parameter as zero-terminated ANSI string
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 */
+                IntParameter(TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+                        const char *name, unsigned char *desc, unsigned int len);
+
+                /**
+                 * Dtor.
+                 */
+                virtual ~IntParameter(void);
 
             protected:
 

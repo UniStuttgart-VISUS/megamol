@@ -36,7 +36,23 @@ GUILayer::GUIClient::Parameter *GUILayer::GUIClient::Factory(
         return new PlaceboParameter(hParam, name, desc, len);
     }
 
-    // TODO: Implement
+    if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMBUTN", 6) == 0)) {
+        return new ButtonParameter(bar, hParam, name, desc, len);
+    }
+    if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMBOOL", 6) == 0)) {
+        return new BoolParameter(bar, hParam, name, desc, len);
+    }
+    if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMENUM", 6) == 0)) {
+        return new EnumParameter(bar, hParam, name, desc, len);
+    }
+    if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMFLOT", 6) == 0)) {
+        return new FloatParameter(bar, hParam, name, desc, len);
+    }
+    if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMINTR", 6) == 0)) {
+        return new IntParameter(bar, hParam, name, desc, len);
+    }
+
+    // Implement selection of further parameter types here!
 
     return new StringParameter(bar, hParam, name, desc, len);
 }
@@ -99,8 +115,7 @@ GUILayer& GUILayer::GUIClient::Layer(void) {
  * GUILayer::GUIClient::Activate
  */
 void GUILayer::GUIClient::Activate(void) {
-    if (activeClient == this) return;
-    if (activeClient != NULL) {
+    if ((activeClient != this) && (activeClient != NULL)) {
         activeClient->Deactivate();
     }
     activeClient = this;
@@ -279,6 +294,96 @@ vislib::StringA GUILayer::GUIClient::Parameter::paramGroup(const char *name) {
 
 /****************************************************************************/
 
+/*
+ * GUILayer::GUIClient::ButtonParameter::Click
+ */
+void TW_CALL GUILayer::GUIClient::ButtonParameter::Click(void *clientData) {
+    ButtonParameter *btn = static_cast<ButtonParameter *>(clientData);
+    ::mmcSetParameterValueA(btn->Handle(), "clicked");
+}
+
+
+/*
+ * GUILayer::GUIClient::ButtonParameter::ButtonParameter
+ */
+GUILayer::GUIClient::ButtonParameter::ButtonParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len)
+        : Parameter(bar, hParam, name) {
+    vislib::StringA defStr;
+    defStr.Format("label='%s' group='%s' ", paramName(name), paramGroup(name));
+    vislib::StringA keyStr;
+    vislib::sys::KeyCode key;
+    if (len == 7) {
+        key = *reinterpret_cast<char*>(desc + 6);
+    } else if (len == 8) {
+        key = *reinterpret_cast<WORD*>(desc + 6);
+    }
+    if (key.NoModKeys() != 0) {
+        if (key.IsSpecial()) {
+            switch (key.NoModKeys()) {
+                case vislib::sys::KeyCode::KEY_ENTER: keyStr = "RET"; break;
+                case vislib::sys::KeyCode::KEY_ESC: keyStr = "ESC"; break;
+                case vislib::sys::KeyCode::KEY_TAB: keyStr = "TAB"; break;
+                case vislib::sys::KeyCode::KEY_LEFT: keyStr = "LEFT"; break;
+                case vislib::sys::KeyCode::KEY_UP: keyStr = "UP"; break;
+                case vislib::sys::KeyCode::KEY_RIGHT: keyStr = "RIGHT"; break;
+                case vislib::sys::KeyCode::KEY_DOWN: keyStr = "DOWN"; break;
+                case vislib::sys::KeyCode::KEY_PAGE_UP: keyStr = "PGUP"; break;
+                case vislib::sys::KeyCode::KEY_PAGE_DOWN: keyStr = "PGDOWN"; break;
+                case vislib::sys::KeyCode::KEY_HOME: keyStr = "HOME"; break;
+                case vislib::sys::KeyCode::KEY_END: keyStr = "END"; break;
+                case vislib::sys::KeyCode::KEY_INSERT: keyStr = "INS"; break;
+                case vislib::sys::KeyCode::KEY_DELETE: keyStr = "DEL"; break;
+                case vislib::sys::KeyCode::KEY_BACKSPACE: keyStr = "BS"; break;
+                case vislib::sys::KeyCode::KEY_F1: keyStr = "F1"; break;
+                case vislib::sys::KeyCode::KEY_F2: keyStr = "F2"; break;
+                case vislib::sys::KeyCode::KEY_F3: keyStr = "F3"; break;
+                case vislib::sys::KeyCode::KEY_F4: keyStr = "F4"; break;
+                case vislib::sys::KeyCode::KEY_F5: keyStr = "F5"; break;
+                case vislib::sys::KeyCode::KEY_F6: keyStr = "F6"; break;
+                case vislib::sys::KeyCode::KEY_F7: keyStr = "F7"; break;
+                case vislib::sys::KeyCode::KEY_F8: keyStr = "F8"; break;
+                case vislib::sys::KeyCode::KEY_F9: keyStr = "F9"; break;
+                case vislib::sys::KeyCode::KEY_F10: keyStr = "F10"; break;
+                case vislib::sys::KeyCode::KEY_F11: keyStr = "F11"; break;
+                case vislib::sys::KeyCode::KEY_F12: keyStr = "F12"; break;
+            }
+        } else if (key.NoModKeys() == ' ') {
+            keyStr = "SPACE";
+        } else {
+            keyStr.Format("%c", static_cast<char>(key.NoModKeys()));
+        }
+        if (!keyStr.IsEmpty()) {
+            if (key.IsAltMod()) {
+                keyStr.Prepend("ALT+");
+            }
+            if (key.IsCtrlMod()) {
+                keyStr.Prepend("CTRL+");
+            }
+            if (key.IsShiftMod()) {
+                keyStr.Prepend("SHIFT+");
+            }
+        }
+    }
+    if (!keyStr.IsEmpty()) {
+        defStr.Append(" key='");
+        defStr.Append(keyStr);
+        defStr.Append("'");
+    }
+    TW_VERIFY(::TwAddButton(bar, this->objName(), Click, this, defStr), __LINE__);
+}
+
+
+/*
+ * GUILayer::GUIClient::ButtonParameter::~ButtonParameter
+ */
+GUILayer::GUIClient::ButtonParameter::~ButtonParameter(void) {
+    TW_VERIFY(::TwRemoveVar(this->Bar(), this->objName()), __LINE__);
+}
+
+
+/****************************************************************************/
 
 /*
  * GUILayer::GUIClient::ValueParameter::ValueParameter
@@ -350,12 +455,253 @@ void GUILayer::GUIClient::StringParameter::Set(const void *value) {
 
 
 /*
- * GUILayer::GUIClient::ValueParameter::Get
+ * GUILayer::GUIClient::StringParameter::Get
  */
 void GUILayer::GUIClient::StringParameter::Get(void *value) {
     const char *dat = ::mmcGetParameterValueA(this->Handle());
     char **destPtr = (char **)value;
     ::TwCopyCDStringToLibrary(destPtr, dat);
+}
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::BoolParameter::BoolParameter
+ */
+GUILayer::GUIClient::BoolParameter::BoolParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) 
+        : ValueParameter(bar, hParam, TW_TYPE_BOOLCPP, name, desc, len, "") {
+}
+
+
+/*
+ * GUILayer::GUIClient::BoolParameter::~BoolParameter
+ */
+GUILayer::GUIClient::BoolParameter::~BoolParameter() {
+}
+
+
+/*
+ * GUILayer::GUIClient::BoolParameter::Set
+ */
+void GUILayer::GUIClient::BoolParameter::Set(const void *value) {
+    ::mmcSetParameterValueA(this->Handle(), (*static_cast<const bool*>(value)) ? "true" : "false");
+}
+
+
+/*
+ * GUILayer::GUIClient::BoolParameter::Get
+ */
+void GUILayer::GUIClient::BoolParameter::Get(void *value) {
+    try {
+        *static_cast<bool*>(value)
+            = vislib::CharTraitsA::ParseBool(
+                ::mmcGetParameterValueA(this->Handle()));
+    } catch(...) {
+    }
+}
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::EnumParameter::enumStrings
+ */
+vislib::Array<vislib::StringA> GUILayer::GUIClient::EnumParameter::enumStrings;
+
+
+/*
+ * GUILayer::GUIClient::EnumParameter::EnumParameter
+ */
+GUILayer::GUIClient::EnumParameter::EnumParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) 
+        : ValueParameter(bar, hParam, makeMyEnumType(hParam, desc, len), name,
+        desc, len, ""), values() {
+    parseEnumDesc(this->values, desc, len);
+}
+
+
+/*
+ * GUILayer::GUIClient::EnumParameter::~EnumParameter
+ */
+GUILayer::GUIClient::EnumParameter::~EnumParameter() {
+}
+
+
+/*
+ * GUILayer::GUIClient::EnumParameter::Set
+ */
+void GUILayer::GUIClient::EnumParameter::Set(const void *value) {
+    vislib::StringA str;
+    str.Format("%d", *static_cast<const int*>(value));
+    ::mmcSetParameterValueA(this->Handle(), str);
+}
+
+
+/*
+ * GUILayer::GUIClient::EnumParameter::Get
+ */
+void GUILayer::GUIClient::EnumParameter::Get(void *value) {
+    try {
+        const char *v = ::mmcGetParameterValueA(this->Handle());
+        for (SIZE_T i = 0; i < this->values.Count(); i++) {
+            if (strcmp(v, this->values[i].Label) == 0) {
+                *static_cast<int*>(value) = this->values[i].Value;
+                return;
+            }
+        }
+        *static_cast<int*>(value)
+            = vislib::CharTraitsA::ParseInt(v);
+    } catch(...) {
+    }
+}
+
+
+/*
+ * GUILayer::GUIClient::EnumParameter::makeMyEnumType
+ */
+TwType GUILayer::GUIClient::EnumParameter::makeMyEnumType(
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        unsigned char *desc, unsigned int len) {
+    vislib::StringA n;
+    UINT64 id = reinterpret_cast<UINT64>(hParam.operator->());
+    unsigned char idc[8];
+    ::memcpy(idc, &id, 8);
+    n.Format("%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
+        idc[0], idc[1], idc[2], idc[3],
+        idc[4], idc[5], idc[6], idc[7]);
+
+    vislib::Array<TwEnumVal> values;
+    parseEnumDesc(values, desc, len);
+
+    return ::TwDefineEnum(n, values.PeekElements(),
+        static_cast<unsigned int>(values.Count()));
+}
+
+
+/*
+ * GUILayer::GUIClient::EnumParameter::parseEnumDesc
+ */
+void GUILayer::GUIClient::EnumParameter::parseEnumDesc(
+        vislib::Array<TwEnumVal>& outValues,
+        unsigned char *desc, unsigned int len) {
+    desc += 6;
+    SIZE_T cnt = *reinterpret_cast<unsigned int*>(desc);
+    desc += 4;
+    outValues.SetCount(cnt);
+    for (SIZE_T i = 0; i < cnt; i++) {
+        outValues[i].Value = static_cast<int>(
+            *reinterpret_cast<unsigned int*>(desc));
+        desc += 4;
+        vislib::StringA l(reinterpret_cast<char*>(desc));
+        desc += l.Length() + 1;
+        INT_PTR p = enumStrings.IndexOf(l);
+        if (p == vislib::Array<vislib::StringA>::INVALID_POS) {
+            p = enumStrings.Count();
+            enumStrings.Add(l);
+        }
+        outValues[i].Label = enumStrings[
+            static_cast<SIZE_T>(p)].PeekBuffer();
+    }
+}
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::FloatParameter::FloatParameter
+ */
+GUILayer::GUIClient::FloatParameter::FloatParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) 
+        : ValueParameter(bar, hParam, TW_TYPE_FLOAT, name, desc, len, "step='0.01'") {
+    if (len == 14) {
+        float minVal = *reinterpret_cast<float*>(desc + 6);
+        float maxVal = *reinterpret_cast<float*>(desc + 10);
+        TW_VERIFY(::TwSetParam(bar, this->objName(), "min", TW_PARAM_FLOAT, 1, &minVal), __LINE__);
+        TW_VERIFY(::TwSetParam(bar, this->objName(), "max", TW_PARAM_FLOAT, 1, &maxVal), __LINE__);
+    }
+}
+
+
+/*
+ * GUILayer::GUIClient::FloatParameter::~FloatParameter
+ */
+GUILayer::GUIClient::FloatParameter::~FloatParameter() {
+}
+
+
+/*
+ * GUILayer::GUIClient::FloatParameter::Set
+ */
+void GUILayer::GUIClient::FloatParameter::Set(const void *value) {
+    vislib::StringA str;
+    str.Format("%f", *static_cast<const float*>(value));
+    ::mmcSetParameterValueA(this->Handle(), str);
+}
+
+
+/*
+ * GUILayer::GUIClient::FloatParameter::Get
+ */
+void GUILayer::GUIClient::FloatParameter::Get(void *value) {
+    try {
+        *static_cast<float*>(value)
+            = static_cast<float>(vislib::CharTraitsA::ParseDouble(
+                ::mmcGetParameterValueA(this->Handle())));
+    } catch(...) {
+    }
+}
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::IntParameter::IntParameter
+ */
+GUILayer::GUIClient::IntParameter::IntParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) 
+        : ValueParameter(bar, hParam, TW_TYPE_INT32, name, desc, len, "") {
+    if (len == 6 + 2 * sizeof(int)) {
+        int minVal = *reinterpret_cast<int*>(desc + 6);
+        int maxVal = *reinterpret_cast<int*>(desc + 6 + sizeof(int));
+        TW_VERIFY(::TwSetParam(bar, this->objName(), "min", TW_PARAM_INT32, 1, &minVal), __LINE__);
+        TW_VERIFY(::TwSetParam(bar, this->objName(), "max", TW_PARAM_INT32, 1, &maxVal), __LINE__);
+    }
+}
+
+
+/*
+ * GUILayer::GUIClient::IntParameter::~IntParameter
+ */
+GUILayer::GUIClient::IntParameter::~IntParameter() {
+}
+
+
+/*
+ * GUILayer::GUIClient::IntParameter::Set
+ */
+void GUILayer::GUIClient::IntParameter::Set(const void *value) {
+    vislib::StringA str;
+    str.Format("%d", *static_cast<const int*>(value));
+    ::mmcSetParameterValueA(this->Handle(), str);
+}
+
+
+/*
+ * GUILayer::GUIClient::IntParameter::Get
+ */
+void GUILayer::GUIClient::IntParameter::Get(void *value) {
+    try {
+        *static_cast<int*>(value)
+            = vislib::CharTraitsA::ParseInt(
+                ::mmcGetParameterValueA(this->Handle()));
+    } catch(...) {
+    }
 }
 
 /****************************************************************************/

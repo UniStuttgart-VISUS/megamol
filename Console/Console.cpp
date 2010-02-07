@@ -804,9 +804,6 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             if (hideGUI) {
                 win->DeactivateGUI();
             }
-            if (showGUI) {
-                win->ActivateGUI();
-            }
 #endif /* WITH_TWEAKBAR */
 
             if (!parameterFile.IsEmpty()) {
@@ -891,6 +888,9 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             win->RegisterHotKeys(hCore);
 #ifdef WITH_TWEAKBAR
             win->InitGUI(hCore);
+            if (showGUI) {
+                win->ActivateGUI();
+            }
 #endif /* WITH_TWEAKBAR */
         }
 
