@@ -108,7 +108,7 @@ void megamol::console::Window::RenderCallback(void *wnd, void *params) {
         win->MarkToClose();
     }
 #ifdef WITH_TWEAKBAR
-    win->gui.Layer().Draw();
+    win->gui.Draw();
 #endif /* WITH_TWEAKBAR */
 }
 
@@ -142,7 +142,7 @@ void megamol::console::Window::KeyCallback(void *wnd, mmvKeyParams *params) {
         static_cast<float>(params->mouseX),
         static_cast<float>(params->mouseY));
 #ifdef WITH_TWEAKBAR
-    if (!win->gui.Layer().KeyPressed(params->keycode, params->modShift, params->modAlt, params->modCtrl)) {
+    if (!win->gui.KeyPressed(params->keycode, params->modShift, params->modAlt, params->modCtrl)) {
 #endif /* WITH_TWEAKBAR */
     vislib::sys::KeyCode key(params->keycode);
     if (win->hotkeys.Contains(key)) {
@@ -172,7 +172,7 @@ void megamol::console::Window::MouseButtonCallback(void *wnd,
     ASSERT(::mmvIsHandleValid(win->hWnd));
     win->setModifierStates(params->modAlt, params->modCtrl, params->modShift);
 #ifdef WITH_TWEAKBAR
-    if (!win->gui.Layer().MouseButton(params->button, params->buttonDown) || !params->buttonDown) {
+    if (!win->gui.MouseButton(params->button, params->buttonDown) || !params->buttonDown) {
 #endif /* WITH_TWEAKBAR */
     switch (params->button) {
         case 0: case 1: case 2:
@@ -205,7 +205,7 @@ void megamol::console::Window::MouseMoveCallback(void *wnd,
     ASSERT(::mmvIsHandleValid(win->hWnd));
     win->setModifierStates(params->modAlt, params->modCtrl, params->modShift);
 #ifdef WITH_TWEAKBAR
-    win->gui.Layer().MouseMove(params->mouseX, params->mouseY);
+    win->gui.MouseMove(params->mouseX, params->mouseY);
 #endif /* WITH_TWEAKBAR */
     ::mmcSet2DMousePosition(win->hView,
         static_cast<float>(params->mouseX),
@@ -295,6 +295,40 @@ void megamol::console::Window::RegisterHotKeyAction(
         delete action;
     }
 }
+
+
+#ifdef WITH_TWEAKBAR
+/*
+ * megamol::console::Window::InitGUI
+ */
+void megamol::console::Window::InitGUI(CoreHandle& hCore) {
+    ParamEnumContext peContext;
+    peContext.wnd = this;
+    peContext.hCore = &hCore;
+    ::mmcEnumParametersA(hCore, &Window::initGUI, &peContext);
+}
+
+
+/*
+ * megamol::console::Window::initGUI
+ */
+void MEGAMOLCORE_CALLBACK megamol::console::Window::initGUI(const char *paramName, void *contextPtr) {
+    ParamEnumContext *context = reinterpret_cast<ParamEnumContext *>(contextPtr);
+    vislib::SmartPtr<megamol::console::CoreHandle> hParam = new megamol::console::CoreHandle();
+    vislib::RawStorage desc;
+
+    if (context == NULL) { return; }
+    if (!::mmcGetParameterA(*context->hCore, paramName, *hParam)) { return; }
+    if (!::mmcIsParameterRelevant(context->wnd->HView(), *hParam)) { return; }
+
+    unsigned int len = 0;
+    ::mmcGetParameterTypeDescription(*hParam, NULL, &len);
+    desc.AssertSize(len);
+    ::mmcGetParameterTypeDescription(*hParam, desc.As<unsigned char>(), &len);
+
+    context->wnd->gui.AddParameter(hParam, paramName, desc.As<unsigned char>(), len);
+}
+#endif /* WITH_TWEAKBAR */
 
 
 /*

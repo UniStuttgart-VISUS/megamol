@@ -189,6 +189,13 @@ namespace console {
         inline void DeactivateGUI(void) {
             this->gui.Deactivate();
         }
+
+        /**
+         * Initialises the GUI client
+         *
+         * @param hCore The core handle
+         */
+        void InitGUI(CoreHandle& hCore);
 #endif /* WITH_TWEAKBAR */
 
     private:
@@ -229,6 +236,16 @@ namespace console {
 
         /** global flag if any window has been closed */
         static bool hasClosed;
+
+#ifdef WITH_TWEAKBAR
+        /**
+         * Initialises the GUI client
+         *
+         * @param paramName The name of the parameter
+         * @param contextPtr Pointer to the context structure
+         */
+        static void MEGAMOLCORE_CALLBACK initGUI(const char *paramName, void *contextPtr);
+#endif /* WITH_TWEAKBAR */
 
         /**
          * Enumeration method for the core parameters

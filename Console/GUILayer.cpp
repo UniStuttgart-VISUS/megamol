@@ -5,12 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "GUILayer.h"
 #ifdef WITH_TWEAKBAR
-#define TW_STATIC
-#define TW_NO_LIB_PRAGMA
-#include "AntTweakBar.h"
+#include "GUILayer.h"
+#include "MegaMolCore.h"
 #include "vislib/assert.h"
+#include "vislib/Log.h"
 #include "vislib/memutils.h"
 #include "vislib/Trace.h"
 #include "vislib/KeyCode.h"
@@ -28,12 +27,26 @@ using namespace megamol::console;
 
 
 /*
+ * GUILayer::GUIClient::Factory
+ */
+GUILayer::GUIClient::Parameter *GUILayer::GUIClient::Factory(
+        TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) {
+    if (bar == NULL) {
+        return new PlaceboParameter(hParam, name, desc, len);
+    }
+
+    // TODO: Implement
+
+    return new StringParameter(bar, hParam, name, desc, len);
+}
+
+
+/*
  * GUILayer::GUIClient::GUIClient
  */
-GUILayer::GUIClient::GUIClient(void) : width(256), height(256), myBar(NULL) {
-    if (cntr == 0) {
-        this->Activate();
-    }
+GUILayer::GUIClient::GUIClient(void) : width(256), height(256), _myBar(NULL),
+        params() {
     cntr++;
 }
 
@@ -44,10 +57,18 @@ GUILayer::GUIClient::GUIClient(void) : width(256), height(256), myBar(NULL) {
 GUILayer::GUIClient::~GUIClient(void) {
     ASSERT(cntr > 0);
     cntr--;
-    if (myBar != NULL) {
-        TW_VERIFY(::TwDeleteBar(static_cast<TwBar*>(this->myBar)), __LINE__);
-        this->myBar = NULL;
+
+    vislib::SingleLinkedList<Parameter *>::Iterator iter = this->params.GetIterator();
+    while (iter.HasNext()) {
+        delete iter.Next();
     }
+    this->params.Clear();
+
+    if (this->_myBar != NULL) {
+        TW_VERIFY(::TwDeleteBar(this->_myBar), __LINE__);
+        this->_myBar = NULL;
+    }
+
     if (cntr == 0) {
         SAFE_DELETE(layer);
     }
@@ -83,20 +104,27 @@ void GUILayer::GUIClient::Activate(void) {
         activeClient->Deactivate();
     }
     activeClient = this;
+    if ((layer == NULL) && !this->params.IsEmpty()) {
+        this->Layer(); // initialise layer
+        vislib::SingleLinkedList<Parameter*>::Iterator iter = this->params.GetIterator();
+        while (iter.HasNext()) {
+            Parameter *& param = iter.Next();
+            PlaceboParameter *pp = dynamic_cast<PlaceboParameter*>(param);
+            if (pp != NULL) {
+                // lazy instantiation
+                param = Factory(this->myBar(), pp->CoreHandle(), pp->Name(),
+                    pp->Description(), pp->DescriptionLength());
+                delete pp;
+            }
+        }
+    }
     if (layer != NULL) {
         vislib::StringA name;
         TW_VERIFY(::TwWindowSize(this->width, this->height), __LINE__);
-        if (this->myBar == NULL) {
-            name.Format("%d", reinterpret_cast<int>(this));
-            this->myBar = static_cast<void*>(::TwNewBar(name));
-            if (this->myBar != NULL) {
-                name.Format("%d label='Parameters' position='10 10' text=dark alpha=192 color='128 192 255'", reinterpret_cast<int>(this));
-                TW_VERIFY(::TwDefine(name), __LINE__);
-            }
-        }
-        if (this->myBar != NULL) {
-            name.Format("%d visible=true", reinterpret_cast<int>(this));
-            TW_VERIFY(::TwDefine(name), __LINE__);
+        if (this->_myBar != NULL) {
+            vislib::StringA def = this->name();
+            def.Append(" visible=true");
+            TW_VERIFY(::TwDefine(def), __LINE__);
         }
     }
 }
@@ -108,10 +136,10 @@ void GUILayer::GUIClient::Activate(void) {
 void GUILayer::GUIClient::Deactivate(void) {
     if (activeClient == this) {
         activeClient = NULL;
-        if (this->myBar != NULL) {
-            vislib::StringA name;
-            name.Format("%d visible=false", reinterpret_cast<int>(this));
-            TW_VERIFY(::TwDefine(name), __LINE__);
+        if (this->_myBar != NULL) {
+            vislib::StringA def = this->name();
+            def.Append(" visible=false");
+            TW_VERIFY(::TwDefine(def), __LINE__);
         }
     }
 }
@@ -132,6 +160,75 @@ void GUILayer::GUIClient::SetWindowSize(unsigned int w, unsigned int h) {
 
 
 /*
+ * GUILayer::GUIClient::AddParameter
+ */
+void GUILayer::GUIClient::AddParameter(
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) {
+
+    Parameter *param = Factory(this->_myBar, hParam, name, desc, len);
+    if (param != NULL) {
+        this->params.Add(param);
+    }
+}
+
+
+/*
+ * GUILayer::GUIClient::Draw
+ */
+void GUILayer::GUIClient::Draw(void) {
+    if (layer != NULL) {
+        this->Layer().Draw();
+    }
+}
+
+
+/*
+ * GUILayer::GUIClient::MouseMove
+ */
+bool GUILayer::GUIClient::MouseMove(int x, int y) {
+    if (layer == NULL) return false;
+    return this->Layer().MouseMove(x, y);
+}
+
+
+/*
+ * GUILayer::GUIClient::MouseButton
+ */
+bool GUILayer::GUIClient::MouseButton(int btn, bool down) {
+    if (layer == NULL) return false;
+    return this->Layer().MouseButton(btn, down);
+}
+
+
+/*
+ * GUILayer::GUIClient::KeyPressed
+ */
+bool GUILayer::GUIClient::KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctrl) {
+    if (layer == NULL) return false;
+    return this->Layer().KeyPressed(keycode, shift, alt, ctrl);
+}
+
+
+/*
+ * GUILayer::GUIClient::myBar
+ */
+TwBar *GUILayer::GUIClient::myBar(void) {
+    if (this->_myBar == NULL) {
+        GUILayer &l = this->Layer();
+        vislib::StringA def = this->name();
+        this->_myBar = ::TwNewBar(def);
+        ASSERT(this->_myBar != NULL);
+        def.Append(" label='Parameters' position='10 10' text=dark alpha=192 color='128 192 255'");
+        def.Append(" visible=");
+        def.Append((activeClient == this) ? "true" : "false");
+        TW_VERIFY(::TwDefine(def), __LINE__);
+    }
+    return this->_myBar;
+}
+
+
+/*
  * GUILayer::GUIClient::layer
  */
 GUILayer* GUILayer::GUIClient::layer = NULL;
@@ -147,6 +244,119 @@ SIZE_T GUILayer::GUIClient::cntr = 0;
  * GUILayer::GUIClient::activeClient
  */
 GUILayer::GUIClient* GUILayer::GUIClient::activeClient = NULL;
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::Parameter::paramName
+ */
+vislib::StringA GUILayer::GUIClient::Parameter::paramName(const char *name) {
+    vislib::StringA str(name);
+    vislib::StringA::Size pos = str.FindLast("::");
+    if (pos != vislib::StringA::INVALID_POS) {
+        return str.Substring(pos + 2);
+    }
+    return str;
+}
+
+
+/*
+ * GUILayer::GUIClient::Parameter::paramGroup
+ */
+vislib::StringA GUILayer::GUIClient::Parameter::paramGroup(const char *name) {
+    vislib::StringA str(name);
+    if (str.StartsWith("::")) {
+        str = str.Substring(2);
+    }
+    vislib::StringA::Size pos = str.FindLast("::");
+    if (pos != vislib::StringA::INVALID_POS) {
+        str.Truncate(pos);
+    }
+    return str;
+}
+
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::ValueParameter::ValueParameter
+ */
+GUILayer::GUIClient::ValueParameter::ValueParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam, TwType type,
+        const char *name, unsigned char *desc, unsigned int len
+        , const char *def) : Parameter(bar, hParam, name) {
+    vislib::StringA defStr;
+    defStr.Format("label='%s' group='%s' ", paramName(name), paramGroup(name));
+    defStr.Append(def);
+    TW_VERIFY(::TwAddVarCB(bar, this->objName(), type, &ValueParameter::Set,
+        &ValueParameter::Get, this, defStr), __LINE__);
+}
+
+
+/*
+ * GUILayer::GUIClient::ValueParameter::~ValueParameter
+ */
+GUILayer::GUIClient::ValueParameter::~ValueParameter() {
+    TW_VERIFY(::TwRemoveVar(this->Bar(), this->objName()), __LINE__);
+}
+
+
+/*
+ * GUILayer::GUIClient::ValueParameter::Set
+ */
+void TW_CALL GUILayer::GUIClient::ValueParameter::Set(const void *value, void *clientData) {
+    ValueParameter *p = static_cast<ValueParameter *>(clientData);
+    p->Set(value);
+}
+
+
+/*
+ * GUILayer::GUIClient::ValueParameter::Get
+ */
+void TW_CALL GUILayer::GUIClient::ValueParameter::Get(void *value, void *clientData) {
+    ValueParameter *p = static_cast<ValueParameter *>(clientData);
+    p->Get(value);
+}
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::StringParameter::StringParameter
+ */
+GUILayer::GUIClient::StringParameter::StringParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) 
+        : ValueParameter(bar, hParam, TW_TYPE_CDSTRING, name, desc, len, "") {
+}
+
+
+/*
+ * GUILayer::GUIClient::StringParameter::~StringParameter
+ */
+GUILayer::GUIClient::StringParameter::~StringParameter() {
+}
+
+
+/*
+ * GUILayer::GUIClient::StringParameter::Set
+ */
+void GUILayer::GUIClient::StringParameter::Set(const void *value) {
+    ::mmcSetParameterValueA(this->Handle(),
+        *reinterpret_cast<const char * const *>(value));
+}
+
+
+/*
+ * GUILayer::GUIClient::ValueParameter::Get
+ */
+void GUILayer::GUIClient::StringParameter::Get(void *value) {
+    const char *dat = ::mmcGetParameterValueA(this->Handle());
+    char **destPtr = (char **)value;
+    ::TwCopyCDStringToLibrary(destPtr, dat);
+}
 
 /****************************************************************************/
 
@@ -243,6 +453,8 @@ bool GUILayer::KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctr
 GUILayer::GUILayer(void) : active(false) {
     TW_VERIFY(::TwInit(TW_OPENGL, NULL), __LINE__);
     TW_VERIFY(::TwDeleteAllBars(), __LINE__);
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        "GUI Layer initialized");
 }
 
 
@@ -251,6 +463,8 @@ GUILayer::GUILayer(void) : active(false) {
  */
 GUILayer::~GUILayer(void) {
     TW_VERIFY(::TwTerminate(), __LINE__);
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        "GUI Layer shutdown");
 }
 
 #endif /* WITH_TWEAKBAR */

@@ -578,6 +578,10 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     bool setVSync = false;
     bool vSyncOff = false;
     int retval = 0;
+#ifdef WITH_TWEAKBAR
+    bool showGUI = false;
+    bool hideGUI = false;
+#endif /* WITH_TWEAKBAR */
 
 #ifndef _WIN32
     oldSignl =
@@ -589,6 +593,10 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     initOnlyParameterFile = parser->InitOnlyParameterFile();
     setVSync = parser->SetVSync();
     vSyncOff = parser->SetVSyncOff();
+#ifdef WITH_TWEAKBAR
+    showGUI = parser->ShowGUI();
+    hideGUI = parser->HideGUI();
+#endif /* WITH_TWEAKBAR */
 
     // run the application!
 #ifdef _WIN32
@@ -686,6 +694,54 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         return -23;
     }
 
+#ifdef WITH_TWEAKBAR
+    if (!showGUI && !hideGUI) {
+        // not set by command line parameter
+        // ask for gui configuration
+        mmcValueType type;
+        const void *cfgv = ::mmcGetConfigurationValueA(hCore,
+            MMC_CFGID_VARIABLE, "consolegui", &type);
+        switch (type) {
+            case MMC_TYPE_BOOL:
+                if (*static_cast<const bool*>(cfgv)) {
+                    showGUI = true;
+                } else {
+                    hideGUI = true;
+                }
+                break;
+            case MMC_TYPE_CSTR:
+                try {
+                    bool b = vislib::CharTraitsA::ParseBool(
+                        static_cast<const char *>(cfgv));
+                    if (b) {
+                        showGUI = true;
+                    } else {
+                        hideGUI = true;
+                    }
+                } catch(...) {
+                }
+                break;
+            case MMC_TYPE_WSTR:
+                try {
+                    bool b = vislib::CharTraitsW::ParseBool(
+                        static_cast<const wchar_t *>(cfgv));
+                    if (b) {
+                        showGUI = true;
+                    } else {
+                        hideGUI = true;
+                    }
+                } catch(...) {
+                }
+                break;
+        }
+    }
+
+    if (showGUI && hideGUI) {
+        showGUI = false;
+        hideGUI = false;
+    }
+#endif /* WITH_TWEAKBAR */
+
     // Load Projects
     vislib::SingleLinkedList<vislib::TString>::Iterator
         prjIter = projects.GetIterator();
@@ -745,6 +801,12 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 #ifdef WITH_TWEAKBAR
             ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 2);
             ::mmvInstallContextMenuCommandA(win->HWnd(), "Deactivate GUI", 3);
+            if (hideGUI) {
+                win->DeactivateGUI();
+            }
+            if (showGUI) {
+                win->ActivateGUI();
+            }
 #endif /* WITH_TWEAKBAR */
 
             if (!parameterFile.IsEmpty()) {
@@ -827,6 +889,9 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             }
 
             win->RegisterHotKeys(hCore);
+#ifdef WITH_TWEAKBAR
+            win->InitGUI(hCore);
+#endif /* WITH_TWEAKBAR */
         }
 
         if (megamol::console::WindowManager::Instance()->Count() == 0) {

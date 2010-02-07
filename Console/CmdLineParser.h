@@ -309,6 +309,36 @@ namespace utility {
             return false;
         }
 
+#ifdef WITH_TWEAKBAR
+        /**
+         * Answer if the gui should be shown
+         *
+         * @return 'True' if the gui should be shown
+         */
+        inline bool ShowGUI(void) const {
+            ParserArgument *arg = this->showGUI.GetFirstOccurrence();
+            try {
+                return ((arg != NULL) && arg->GetValueBool());
+            } catch(...) {
+            }
+            return false;
+        }
+
+        /**
+         * Answer if the gui should be hidden
+         *
+         * @return 'True' if the gui should be hidden
+         */
+        inline bool HideGUI(void) const {
+            ParserArgument *arg = this->showGUI.GetFirstOccurrence();
+            try {
+                return ((arg != NULL) && !arg->GetValueBool());
+            } catch(...) {
+            }
+            return false;
+        }
+#endif /* WITH_TWEAKBAR */
+
     private:
 
         /** the default value of the flag of the cmd line echo */
@@ -403,6 +433,11 @@ namespace utility {
 
         /** Parser option to control VSync */
         ParserOption setVSync;
+
+#ifdef WITH_TWEAKBAR
+        /** Parser option to de-/activate the gui layer */
+        ParserOption showGUI;
+#endif /* WITH_TWEAKBAR */
 
     };
 
