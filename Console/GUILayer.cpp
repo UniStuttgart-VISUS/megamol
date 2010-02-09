@@ -755,7 +755,8 @@ bool GUILayer::KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctr
     int mod = TW_KMOD_NONE;
 
     if ((keycode & vislib::sys::KeyCode::KEY_SPECIAL) != 0) {
-        switch (keycode) {
+        unsigned short cleankey = keycode & ~vislib::sys::KeyCode::KEY_MOD;
+        switch (cleankey) {
             case vislib::sys::KeyCode::KEY_ENTER: key = TW_KEY_RETURN; break;
             case vislib::sys::KeyCode::KEY_ESC: key = TW_KEY_ESCAPE; break;
             case vislib::sys::KeyCode::KEY_TAB: key = TW_KEY_TAB; break;
@@ -785,8 +786,8 @@ bool GUILayer::KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctr
         }
     }
 
-    if (shift) mod |= TW_KMOD_SHIFT;
     if (alt) mod |= TW_KMOD_ALT;
+    if (shift) mod |= TW_KMOD_SHIFT;
     if (ctrl) mod |= TW_KMOD_CTRL;
 
     return (::TwKeyPressed(key, mod) == 1);

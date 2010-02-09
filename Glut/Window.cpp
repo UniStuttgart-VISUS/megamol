@@ -374,6 +374,12 @@ void megamol::viewer::Window::glutKeyboardCallback(unsigned char key,
         if (params.modCtrl) keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | keycode;
         if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
 
+        if (params.modCtrl && (key < ' ')) {
+            keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | ('a' - 1 + key);
+            if (params.modShift) keycode = vislib::sys::KeyCode::KEY_MOD_SHIFT | keycode;
+            if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
+        }
+
         params.keycode = keycode;
 
         thisWindow()->keyCallback.Call(*thisWindow(), &params);
@@ -480,6 +486,12 @@ void megamol::viewer::Window::glutSpecialCallback(int key, int x, int y) {
         if (params.modCtrl) keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | keycode;
         if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
 
+        if (params.modCtrl && (key < ' ')) {
+            keycode = vislib::sys::KeyCode::KEY_MOD_CTRL | ('a' - 1 + key);
+            if (params.modShift) keycode = vislib::sys::KeyCode::KEY_MOD_SHIFT | keycode;
+            if (params.modAlt) keycode = vislib::sys::KeyCode::KEY_MOD_ALT | keycode;
+        }
+
         params.keycode = keycode;
 
         thisWindow()->keyCallback.Call(*thisWindow(), &params);
@@ -507,6 +519,8 @@ void megamol::viewer::Window::glutMouseCallback(int button, int state,
             case GLUT_LEFT_BUTTON: params.button = 0; break;
             case GLUT_RIGHT_BUTTON: params.button = 1; break;
             case GLUT_MIDDLE_BUTTON: params.button = 2; break;
+            // case 3: TODO: mouse wheel up
+            // case 4: TODO: mouse wheel down
             default: return;
         }
         params.buttonDown = state == GLUT_DOWN;
