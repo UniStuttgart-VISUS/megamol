@@ -15,7 +15,7 @@ OutDir := lib
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
 InputDirs := . api job misc moldyn param special utility utility/xml view vismol2
-IncludeDir := $(IncludeDir) $(expatpath)/include
+IncludeDir := $(IncludeDir)
 VISlibs := cluster net gl graphics sys math base
 
 
@@ -25,7 +25,7 @@ ExcludeFromBuild += vismol2/Mol20DataCall.cpp vismol2/Mol20DataSource.cpp vismol
 
 
 # Libraries
-LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU expat$(BITS) png z
+LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU png z
 
 
 # Additional linker flags

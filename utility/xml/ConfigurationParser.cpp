@@ -566,7 +566,7 @@ void ConfigurationParser::Completed(void) {
         while (iter.HasNext()) {
             Configuration::PluginLoadInfo& info = iter.Next();
             if (vislib::sys::Path::IsRelative(info.directory)) {
-                info.directory = vislib::sys::Path::Resolve(info.directory, this->legacyBaseDir);
+                info.directory = vislib::sys::Path::Resolve(info.directory, W2T(this->legacyBaseDir));
             }
         }
 
@@ -583,7 +583,7 @@ void ConfigurationParser::Completed(void) {
         while (iter.HasNext()) {
             Configuration::PluginLoadInfo& info = iter.Next();
             if (vislib::sys::Path::IsRelative(info.directory)) {
-                info.directory = vislib::sys::Path::Resolve(info.directory, this->config.appDir);
+                info.directory = vislib::sys::Path::Resolve(info.directory, W2T(this->config.appDir));
             }
         }
 

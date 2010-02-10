@@ -28,6 +28,12 @@ $a = PathParameter->new();
     $a->relativeLocation("./");
     $a->autoDetect(1);
     push @pps, $a;
+$b = FlagParameter->new();
+    $b->id("withUserExpat");
+    $b->description("Use a local user compiled expat 2 library (MegaMol-Lib-Naming required)");
+    $b->placeholder("%withUserExpat%");
+    $b->value(1);
+    push @fps, $b;
 $a = PathParameter->new();
     $a->id("expat");
     $a->description("Path to the expat directory");
@@ -35,9 +41,11 @@ $a = PathParameter->new();
     $a->markerFile("expat.h\$");
     $a->relativeLocation("../");
     $a->autoDetect(1);
+    $a->dependencyFlagID("withUserExpat");
+    $a->dependencyDisabledValue("");
     push @pps, $a;
-# libpng is part of Linux OS
-# zlib is part of Linux OS
+# libpng is always part of Linux OS
+# zlib is always part of Linux OS
 
 $c = ConfigFilePair->new();
     $c->inFile("ExtLibs.mk.input");
