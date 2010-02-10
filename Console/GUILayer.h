@@ -55,7 +55,7 @@ namespace console {
         public:
 
             /**
-             * The factory method
+             * The parameter factory method
              *
              * @param bar The bar handle
              * @param hParam The parameter core handle
@@ -65,7 +65,7 @@ namespace console {
              *
              * @return The parameter object representing the parameter
              */
-            static Parameter *Factory(TwBar *bar,
+            static Parameter *ParameterFactory(TwBar *bar,
                 vislib::SmartPtr<megamol::console::CoreHandle> hParam,
                     const char *name, unsigned char *desc, unsigned int len);
 
@@ -145,6 +145,16 @@ namespace console {
              * @return True if the event was consumed by the gui
              */
             bool KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctrl);
+
+            /**
+             * Begins initialisation of the gui
+             */
+            void BeginInitialisation(void);
+
+            /**
+             * End initialisation of the gui
+             */
+            void EndInitialisation(void);
 
         private:
 

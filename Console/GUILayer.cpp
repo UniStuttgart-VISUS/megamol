@@ -27,13 +27,17 @@ using namespace megamol::console;
 
 
 /*
- * GUILayer::GUIClient::Factory
+ * GUILayer::GUIClient::ParameterFactory
  */
-GUILayer::GUIClient::Parameter *GUILayer::GUIClient::Factory(
+GUILayer::GUIClient::Parameter *GUILayer::GUIClient::ParameterFactory(
         TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
         const char *name, unsigned char *desc, unsigned int len) {
     if (bar == NULL) {
         return new PlaceboParameter(hParam, name, desc, len);
+    }
+
+    if ((desc == NULL) || (len == 0)) {
+        return NULL;
     }
 
     if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMBUTN", 6) == 0)) {
@@ -127,8 +131,8 @@ void GUILayer::GUIClient::Activate(void) {
             PlaceboParameter *pp = dynamic_cast<PlaceboParameter*>(param);
             if (pp != NULL) {
                 // lazy instantiation
-                param = Factory(this->myBar(), pp->CoreHandle(), pp->Name(),
-                    pp->Description(), pp->DescriptionLength());
+                param = ParameterFactory(this->myBar(), pp->CoreHandle(),
+                    pp->Name(), pp->Description(), pp->DescriptionLength());
                 delete pp;
             }
         }
@@ -181,7 +185,7 @@ void GUILayer::GUIClient::AddParameter(
         vislib::SmartPtr<megamol::console::CoreHandle> hParam,
         const char *name, unsigned char *desc, unsigned int len) {
 
-    Parameter *param = Factory(this->_myBar, hParam, name, desc, len);
+    Parameter *param = ParameterFactory(this->_myBar, hParam, name, desc, len);
     if (param != NULL) {
         this->params.Add(param);
     }
@@ -222,6 +226,27 @@ bool GUILayer::GUIClient::MouseButton(int btn, bool down) {
 bool GUILayer::GUIClient::KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctrl) {
     if (layer == NULL) return false;
     return this->Layer().KeyPressed(keycode, shift, alt, ctrl);
+}
+
+
+/*
+ * GUILayer::GUIClient::BeginInitialisation
+ */
+void GUILayer::GUIClient::BeginInitialisation(void) {
+    // intentionally empty.
+    // defined just for consistency reasons
+}
+
+
+/*
+ * GUILayer::GUIClient::EndInitialisation
+ */
+void GUILayer::GUIClient::EndInitialisation(void) {
+    if (this->params.IsEmpty()) {
+        // add an empty parameter to ensure that
+        // the bar will be initialized even if it's empty
+        this->AddParameter(NULL, "none", NULL, 0);
+    }
 }
 
 

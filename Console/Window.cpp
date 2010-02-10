@@ -305,7 +305,9 @@ void megamol::console::Window::InitGUI(CoreHandle& hCore) {
     ParamEnumContext peContext;
     peContext.wnd = this;
     peContext.hCore = &hCore;
+    this->gui.BeginInitialisation();
     ::mmcEnumParametersA(hCore, &Window::initGUI, &peContext);
+    this->gui.EndInitialisation();
 }
 
 
