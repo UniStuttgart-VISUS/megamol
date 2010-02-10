@@ -733,6 +733,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                 } catch(...) {
                 }
                 break;
+#ifndef _WIN32
+            default:
+                // intentionally empty
+                break;
+#endif /* !_WIN32 */
         }
     }
 

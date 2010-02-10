@@ -12,7 +12,7 @@ include ../ExtLibs.mk
 # Target name
 TargetName := MegaMolCon
 IncludeDir := $(IncludeDir) ../Viewer/include $(visglutpath)/include $(mmcorepath)/api
-VISlibs := sys math base
+VISlibs := sys math base graphics gl
 
 
 # Additional compiler flags
@@ -22,7 +22,7 @@ CompilerFlags := $(CompilerFlags)
 LinkerFlags := $(LinkerFlags)
 
 # Libraries
-LIBS := $(LIBS) m pthread pam pam_misc dl ncurses
+LIBS := $(LIBS) m pthread pam pam_misc dl ncurses GL
 
 
 # Collect Files

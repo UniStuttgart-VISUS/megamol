@@ -255,7 +255,7 @@ void GUILayer::GUIClient::EndInitialisation(void) {
  */
 TwBar *GUILayer::GUIClient::myBar(void) {
     if (this->_myBar == NULL) {
-        GUILayer &l = this->Layer();
+        this->Layer(); // force layer initialisation
         vislib::StringA def = this->name();
         this->_myBar = ::TwNewBar(def);
         ASSERT(this->_myBar != NULL);
@@ -336,7 +336,9 @@ GUILayer::GUIClient::ButtonParameter::ButtonParameter(TwBar *bar,
         const char *name, unsigned char *desc, unsigned int len)
         : Parameter(bar, hParam, name) {
     vislib::StringA defStr;
-    defStr.Format("label='%s' group='%s' ", paramName(name), paramGroup(name));
+    defStr.Format("label='%s' group='%s' ",
+        paramName(name).PeekBuffer(),
+        paramGroup(name).PeekBuffer());
     vislib::StringA keyStr;
     vislib::sys::KeyCode key;
     if (len == 7) {
@@ -418,7 +420,9 @@ GUILayer::GUIClient::ValueParameter::ValueParameter(TwBar *bar,
         const char *name, unsigned char *desc, unsigned int len
         , const char *def) : Parameter(bar, hParam, name) {
     vislib::StringA defStr;
-    defStr.Format("label='%s' group='%s' ", paramName(name), paramGroup(name));
+    defStr.Format("label='%s' group='%s' ",
+        paramName(name).PeekBuffer(),
+        paramGroup(name).PeekBuffer());
     defStr.Append(def);
     TW_VERIFY(::TwAddVarCB(bar, this->objName(), type, &ValueParameter::Set,
         &ValueParameter::Get, this, defStr), __LINE__);
@@ -824,7 +828,9 @@ bool GUILayer::KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctr
  */
 GUILayer::GUILayer(void) : active(false) {
     TW_VERIFY(::TwInit(TW_OPENGL, NULL), __LINE__);
-    TW_VERIFY(::TwDeleteAllBars(), __LINE__);
+    if (::TwGetBarCount() > 0) {
+        TW_VERIFY(::TwDeleteAllBars(), __LINE__);
+    }
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
         "GUI Layer initialized");
 }
@@ -834,6 +840,9 @@ GUILayer::GUILayer(void) : active(false) {
  * GUILayer::~GUILayer
  */
 GUILayer::~GUILayer(void) {
+#ifndef _WIN32
+    ::TwNewBar("DerLetzteArsch");
+#endif /* !_WIN32 */
     TW_VERIFY(::TwTerminate(), __LINE__);
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
         "GUI Layer shutdown");

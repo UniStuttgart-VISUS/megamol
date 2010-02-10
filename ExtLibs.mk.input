@@ -16,7 +16,7 @@ ifeq (%withTweakbar%$1$0$, 1)
 	tweakbarpath := %tweakbarpath%
 	IncludeDir += $(tweakbarpath)/include
 	CompilerFlags += -DWITH_TWEAKBAR
-	LinkerFlags += -ltweakbarpath$(BITS)
-	DebugLinkerFlags += -L$(tweakbarpath)/lib$(BITS)d 
-	ReleaseLinkerFlags += -L$(tweakbarpath)/lib$(BITS)
+	LinkerFlags += -L$(tweakbarpath)/lib
+	DebugLinkerFlags += -lAntTweakBar$(BITS)
+	ReleaseLinkerFlags += -lAntTweakBar$(BITS)
 endif
