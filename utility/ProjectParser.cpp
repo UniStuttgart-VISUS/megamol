@@ -232,7 +232,35 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
         return true;
     }
 
-    // TODO: Implement param tag
+    if (MMXML_STRING("param").Equals(name)) {
+        if (this->vd == NULL) {
+            this->Error("\"param\" tag outside a \"view\" tag ignored");
+            return true;
+        }
+        const MMXML_CHAR *name = NULL;
+        const MMXML_CHAR *value = NULL;
+        for (int i = 0; attrib[i]; i += 2) {
+            if (MMXML_STRING("name").Equals(attrib[i])) {
+                name = attrib[i + 1];
+            } else
+            if (MMXML_STRING("value").Equals(attrib[i])) {
+                value = attrib[i + 1];
+            } else {
+                this->WarnUnexpectedAttribut(name, attrib[i]);
+            }
+        }
+        if (name == NULL) {
+            this->Error("\"param\" tag without a name ignored");
+            return true;
+        }
+        if (value == NULL) {
+            this->Error("\"param\" tag without a value ignored");
+            return true;
+        }
+        this->vd->AddParamValue(vislib::StringA(name), vislib::TString(value));
+        return true;
+    }
+
     // TODO: Implement instance tag
     // TODO: Implement job tag
     //       etc.
@@ -260,8 +288,8 @@ bool utility::ProjectParser::EndTag(unsigned int num, unsigned int level,
     }
     if (MMXML_STRING("module").Equals(name)
             || MMXML_STRING("call").Equals(name)
-            /*|| MMXML_STRING("param").Equals(name)
-            || MMXML_STRING("instance").Equals(name)*/) {
+            || MMXML_STRING("param").Equals(name)
+            /*|| MMXML_STRING("instance").Equals(name)*/) {
         return true;
     }
 
