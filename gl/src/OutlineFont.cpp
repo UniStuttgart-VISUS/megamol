@@ -277,6 +277,10 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
         case ALIGN_RIGHT_TOP:
             x += w;
             break;
+#ifndef _WIN32
+        default:
+            break;
+#endif /* !_WIN32 */
     }
 
     if ((this->renderType == RENDERTYPE_FILL)
@@ -368,6 +372,10 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
         case ALIGN_RIGHT_TOP:
             x += w;
             break;
+#ifndef _WIN32
+        default:
+            break;
+#endif /* !_WIN32 */
     }
 
     if ((this->renderType == RENDERTYPE_FILL)
@@ -486,8 +494,8 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
     int *glyphrun = new int[txtlen + 1];
     bool knowLastWhite = false;
     bool blackspace = true;
-    SIZE_T lastWhiteGlyph;
-    SIZE_T lastWhiteSpace;
+    SIZE_T lastWhiteGlyph = 0;
+    SIZE_T lastWhiteSpace = 0;
     float lineLength = 0.0f;
     bool nextAsNewLine = false;
     signed short idx;
