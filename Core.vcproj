@@ -1035,10 +1035,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\view\CallRender.h"
-					>
-				</File>
-				<File
 					RelativePath=".\view\CallRender2D.h"
 					>
 				</File>
@@ -1072,10 +1068,6 @@
 				</File>
 				<File
 					RelativePath=".\view\Renderer3DModule.h"
-					>
-				</File>
-				<File
-					RelativePath=".\view\RendererModule.h"
 					>
 				</File>
 				<File
@@ -1115,10 +1107,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\view\CallRender.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\view\CallRender2D.cpp"
 					>
 				</File>
@@ -1152,10 +1140,6 @@
 				</File>
 				<File
 					RelativePath=".\view\Renderer3DModule.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\view\RendererModule.cpp"
 					>
 				</File>
 				<File

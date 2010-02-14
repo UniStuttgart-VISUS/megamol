@@ -18,7 +18,6 @@
 #include "param/ButtonParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
-#include "CallRender.h"
 #include "CallRender3D.h"
 #include "utility/ColourParser.h"
 #include "vislib/CameraParamsStore.h"
@@ -73,7 +72,6 @@ view::View3D::View3D(void) : view::AbstractView(), cam(), camParams(),
     this->bkgndCol[1] = 0.0f;
     this->bkgndCol[2] = 0.125f;
 
-    this->rendererSlot.SetCompatibleCall<CallRenderDescription>();
     this->rendererSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
@@ -142,7 +140,6 @@ void view::View3D::Render(void) {
         this->doBeforeRenderHook();
     }
 
-    CallRender *cr = this->rendererSlot.CallAs<CallRender>();
     CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
 
     this->fpsCounter.FrameBegin();
@@ -164,7 +161,7 @@ void view::View3D::Render(void) {
         this->bkgndCol[2], 0.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if ((cr == NULL) && (cr3d == NULL)) {
+    if (cr3d == NULL) {
         return; // empty enought
     }
 
@@ -199,8 +196,6 @@ void view::View3D::Render(void) {
         cr3d->SetTime(this->frozenValues ? this->frozenValues->time : this->timeFrame);
         cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
         cr3d->SetLastFrameTime(this->fpsCounter.LastFrameTime());
-    } else {
-        cr->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
     }
     this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
@@ -242,8 +237,6 @@ void view::View3D::Render(void) {
     // call for render
     if (cr3d != NULL) {
         (*cr3d)(0);
-    } else {
-        (*cr)();
     }
 
     // render bounding box front

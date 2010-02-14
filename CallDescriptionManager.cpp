@@ -18,12 +18,10 @@
 #include "view/CallClipPlane.h"
 #include "view/CallCursorInput.h"
 #include "view/CallGetTransferFunction.h"
-#include "view/CallRender.h"
 #include "view/CallRender2D.h"
 #include "view/CallRender3D.h"
 #include "view/CallRenderView.h"
 //#include "volume/CallVolumeData.h"
-//#include "volume/CallRender2D.h"
 //
 //#include "featuretracking/CallGetData.h"
 //#include "featuretracking/CallLinkingBrushing.h"
@@ -54,14 +52,12 @@ CallDescriptionManager::Instance() {
         instance->registerAutoDescription<view::CallClipPlane>();
         instance->registerAutoDescription<view::CallCursorInput>();
         instance->registerAutoDescription<view::CallGetTransferFunction>();
-        instance->registerAutoDescription<view::CallRender>();
         instance->registerAutoDescription<view::CallRender2D>();
         instance->registerAutoDescription<view::CallRender3D>();
         instance->registerAutoDescription<view::CallRenderView>();
 //        instance->registerAutoDescription<vismol2::Mol20DataCall>();
 
 //		instance->registerAutoDescription<volume::CallVolumeData>();
-//		instance->registerAutoDescription<volume::CallRender2D>();
 
 //		instance->registerAutoDescription<featuretracking::CallGetData>();
 //		instance->registerAutoDescription<featuretracking::CallLinkingBrushing>();

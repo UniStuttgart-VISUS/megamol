@@ -7,6 +7,8 @@
 
 #include "stdafx.h"
 #include "VisLogoRenderer.h"
+#include "BoundingBoxes.h"
+#include "view/CallRender3D.h"
 #include "param/FloatParam.h"
 #include <GL/gl.h>
 
@@ -16,7 +18,7 @@ using namespace megamol::core;
 /*
  * special::VisLogoRenderer::VisLogoRenderer
  */
-special::VisLogoRenderer::VisLogoRenderer(void) : RendererModule(),
+special::VisLogoRenderer::VisLogoRenderer(void) : Renderer3DModule(),
         visLogo(), scale("scale", "Scales the vis logo") {
     this->scale << new param::FloatParam(1.0f, 0.0f);
     this->MakeSlotAvailable(&this->scale);
@@ -45,6 +47,37 @@ bool special::VisLogoRenderer::create(void) {
  */
 void special::VisLogoRenderer::release(void) {
     this->visLogo.Release();
+}
+
+
+/*
+ * special::VisLogoRenderer::GetCapabilities
+ */
+bool special::VisLogoRenderer::GetCapabilities(Call& call) {
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if (cr3d == NULL) return false;
+
+    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER
+        | view::CallRender3D::CAP_LIGHTING);
+
+    return true;
+}
+
+
+/*
+ * special::VisLogoRenderer::GetExtents
+ */
+bool special::VisLogoRenderer::GetExtents(Call& call) {
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if (cr3d == NULL) return false;
+
+    float scale = *this->scale.Param<param::FloatParam>();
+    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
+    bbox.SetObjectSpaceBBox(-scale, -scale, -scale, scale, scale, scale);
+    bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
+    bbox.MakeScaledWorld(1.0f);
+
+    return true;
 }
 
 

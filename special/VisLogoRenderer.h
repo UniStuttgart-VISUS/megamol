@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/RendererModule.h"
+#include "view/Renderer3DModule.h"
 #include "Call.h"
 #include "param/ParamSlot.h"
 #include "vislib/OpenGLVISLogo.h"
@@ -25,7 +25,7 @@ namespace special {
     /**
      * Renderer for rendering the vis logo into the unit cube.
      */
-    class VisLogoRenderer : public view::RendererModule {
+    class VisLogoRenderer : public view::Renderer3DModule {
     public:
 
         /**
@@ -74,6 +74,27 @@ namespace special {
          * Implementation of 'Release'.
          */
         virtual void release(void);
+
+        /**
+         * The get capabilities callback. The module should set the members
+         * of 'call' to tell the caller its capabilities.
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetCapabilities(Call& call);
+
+        /**
+         * The get extents callback. The module should set the members of
+         * 'call' to tell the caller the extents of its data (bounding boxes
+         * and times).
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetExtents(Call& call);
 
         /**
          * The render callback.
