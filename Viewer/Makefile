@@ -28,7 +28,7 @@ $(InputDir)/include/MegaMolViewerDynamic.h: VersionInfo genDynIncl.pl $(InputDir
 	@tput sgr0
 	$(Q)perl genDynIncl.pl $(InputDir)/include/MegaMolViewerStatic.h
 
-VersionInfo: version.template.h versionInfo.pl Makefile
+VersionInfo: version.template.h VersionInfo.pl Makefile
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"include/MegaMolViewer.version.gen.h: "
 	@tput sgr0

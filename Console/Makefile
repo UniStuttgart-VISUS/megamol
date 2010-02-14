@@ -42,24 +42,24 @@ all: VersionInfo $(TargetName)Debug $(TargetName)Release
 
 
 # Rules for binary in $(OutDir):
-$(TargetName)Debug: $(IntDir)/$(DebugDir)/$(TargetName) VersionInfo
+$(TargetName)Debug: $(IntDir)/$(DebugDir)/$(TargetName)
 	@mkdir -p $(outbin)
 	cp $< $(outbin)/$(TargetName)$(BITS)d
 
-$(TargetName)Release: $(IntDir)/$(ReleaseDir)/$(TargetName) VersionInfo
+$(TargetName)Release: $(IntDir)/$(ReleaseDir)/$(TargetName)
 	@mkdir -p $(outbin)
 	cp $< $(outbin)/$(TargetName)$(BITS)
 
 
 # Rules for intermediate binary:
-$(IntDir)/$(DebugDir)/$(TargetName): Makefile VersionInfo $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+$(IntDir)/$(DebugDir)/$(TargetName): Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
 	$(DebugLinkerFlags) -lMegaMolCore$(BITS)d \
 	$(addprefix -l,$(LIBS)) -o $(IntDir)/$(DebugDir)/$(TargetName)
 
-$(IntDir)/$(ReleaseDir)/$(TargetName): Makefile VersionInfo $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+$(IntDir)/$(ReleaseDir)/$(TargetName): Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
@@ -68,20 +68,18 @@ $(IntDir)/$(ReleaseDir)/$(TargetName): Makefile VersionInfo $(addprefix $(IntDir
 
 
 # Rules for dependencies:
-$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile VersionInfo
+$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
-	@echo -n VersionInfo >> $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
-$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile VersionInfo
+$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
-	@echo -n VersionInfo >> $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
 
 
@@ -107,7 +105,13 @@ $(IntDir)/$(ReleaseDir)/%.o:
 
 
 # Rules for generated files:
-VersionInfo: version.template.h versionInfo.pl Makefile
+VersionInfo: version.template.h VersionInfo.pl Makefile
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"version.gen.h: "
+	@tput sgr0
+	$(Q)perl VersionInfo.pl .
+
+version.gen.h: version.template.h VersionInfo.pl Makefile
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"version.gen.h: "
 	@tput sgr0
