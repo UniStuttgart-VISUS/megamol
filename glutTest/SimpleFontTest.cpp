@@ -160,7 +160,11 @@ int SimpleFontTest::GLInit(void) {
     this->tests.Add(new LineTest<char>( 0.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_TOP, "TopCenter"));
     this->tests.Add(new LineTest<char>( 1.0f,  1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_TOP, "TopRight"));
     this->tests.Add(new LineTest<char>(-1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_MIDDLE, "MiddleLeft"));
+#ifdef _WIN32
     this->tests.Add(new LineTest<wchar_t>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, L"MiddleCänter™"));
+#else /* _WIN32 */
+    this->tests.Add(new LineTest<wchar_t>( 0.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_MIDDLE, L"MiddleCenter"));
+#endif /* _WIN32 */
     this->tests.Add(new LineTest<char>( 1.0f,  0.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_RIGHT_MIDDLE, "MiddleRight"));
     this->tests.Add(new LineTest<char>(-1.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_LEFT_BOTTOM, "BottomLeft"));
     this->tests.Add(new LineTest<char>( 0.0f, -1.0f, z, r, g, b, this->font1, s, true, AbstractFont::ALIGN_CENTER_BOTTOM, "BottomCenter"));
