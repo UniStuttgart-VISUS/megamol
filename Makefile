@@ -29,7 +29,7 @@ LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU png z
 
 
 # Additional linker flags
-LinkerFlags := $(LinkerFlags) -shared
+LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic
 #	-lc -Wl,-e,mmCoreMain
 
 
