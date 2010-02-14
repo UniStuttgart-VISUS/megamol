@@ -16,8 +16,8 @@
 #include "param/ParamSlot.h"
 #include "BSpline.h"
 #include "CallerSlot.h"
-#include "view/RendererModule.h"
-#include "view/CallRender.h"
+#include "view/Renderer3DModule.h"
+#include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"
 #include "vislib/GLSLGeometryShader.h"
 #include "vislib/SimpleFont.h"
@@ -40,7 +40,7 @@ namespace protein {
 	 * - add RenderMode CARTOON_GPU
      */
 
-	class ProteinRendererCartoon : public view::RendererModule
+	class ProteinRendererCartoon : public view::Renderer3DModule
 	{
 	public:
         /**
@@ -152,6 +152,27 @@ namespace protein {
 	   /**********************************************************************
 		* 'render'-functions
 	    **********************************************************************/
+
+        /**
+         * The get capabilities callback. The module should set the members
+         * of 'call' to tell the caller its capabilities.
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetCapabilities(Call& call);
+
+        /**
+         * The get extents callback. The module should set the members of
+         * 'call' to tell the caller the extents of its data (bounding boxes
+         * and times).
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetExtents(Call& call);
 
         /**
          * The Open GL Render callback.

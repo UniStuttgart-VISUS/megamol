@@ -35,7 +35,7 @@ using namespace megamol::core;
 /*
  * protein::ProteinRenderer::ProteinRenderer (CTOR)
  */
-protein::ProteinRenderer::ProteinRenderer(void) : RendererModule (), 
+protein::ProteinRenderer::ProteinRenderer(void) : Renderer3DModule (), 
 	m_protDataCallerSlot ("getData", "Connects the protein rendering with protein data storage"),
     m_callFrameCalleeSlot("callFrame", "Connects the protein rendering with frame call from RMS renderer"),
     m_renderingModeParam("renderingMode", "Rendering Mode"), 
@@ -219,6 +219,59 @@ bool protein::ProteinRenderer::create(void)
 }
 
 
+/*
+ * protein::ProteinRenderer::GetCapabilities
+ */
+bool protein::ProteinRenderer::GetCapabilities(Call& call) {
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if (cr3d == NULL) return false;
+
+    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER | view::CallRender3D::CAP_LIGHTING);
+
+    return true;
+}
+
+
+/*
+ * protein::ProteinRenderer::GetExtents
+ */
+bool protein::ProteinRenderer::GetExtents(Call& call) {
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if (cr3d == NULL) return false;
+
+    protein::CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+    if (protein == NULL) return false;
+    // decide to use already loaded frame request from CallFrame or 'normal' rendering
+    if (this->m_callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
+        if (!this->m_renderRMSData) return false;
+    } else {
+        if (!(*protein)()) return false;
+    }
+
+    float scale, xoff, yoff, zoff;
+    vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
+    xoff = -bbc.X();
+    yoff = -bbc.Y();
+    zoff = -bbc.Z();
+    scale = 2.0f / vislib::math::Max(vislib::math::Max(protein->BoundingBox().Width(),
+        protein->BoundingBox().Height()), protein->BoundingBox().Depth());
+
+    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
+    bbox.SetObjectSpaceBBox(protein->BoundingBox());
+    bbox.SetWorldSpaceBBox(
+        (protein->BoundingBox().Left() + xoff) * scale,
+        (protein->BoundingBox().Bottom() + yoff) * scale,
+        (protein->BoundingBox().Back() + zoff) * scale,
+        (protein->BoundingBox().Right() + xoff) * scale,
+        (protein->BoundingBox().Top() + yoff) * scale,
+        (protein->BoundingBox().Front() + zoff) * scale);
+    bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
+    bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
+
+    return true;
+}
+
+
 /**********************************************************************
  * 'render'-functions
  **********************************************************************/
@@ -247,7 +300,7 @@ bool protein::ProteinRenderer::Render(Call& call)
     }
 
 	// get camera information
-	this->m_cameraInfo = dynamic_cast<view::CallRender*>(&call)->GetCameraParameters();
+	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>(&call)->GetCameraParameters();
 
     // parameter refresh
     if (this->m_renderingModeParam.IsDirty()) 

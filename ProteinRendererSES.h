@@ -14,8 +14,8 @@
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "CallFrame.h"
-#include "view/RendererModule.h"
-#include "view/CallRender.h"
+#include "view/Renderer3DModule.h"
+#include "view/CallRender3D.h"
 #include "vislib/SimpleFont.h"
 #include "ReducedSurface.h"
 #include "ReducedSurfaceSimplified.h"
@@ -36,7 +36,7 @@ namespace protein {
 	 * Molecular Surface Renderer class.
 	 * Computes and renders the solvent excluded (Connolly) surface.
 	 */
-	class ProteinRendererSES : public view::RendererModule
+	class ProteinRendererSES : public view::Renderer3DModule
 	{
 	public:
 				
@@ -305,7 +305,29 @@ namespace protein {
 		void CreateSingularityTexture( unsigned int idxRS);
 				
     private:
-		/**
+
+        /**
+         * The get capabilities callback. The module should set the members
+         * of 'call' to tell the caller its capabilities.
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetCapabilities(Call& call);
+
+        /**
+         * The get extents callback. The module should set the members of
+         * 'call' to tell the caller the extents of its data (bounding boxes
+         * and times).
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetExtents(Call& call);
+
+        /**
 		 * Open GL Render call.
 		 *
 		 * @param call The calling call.
