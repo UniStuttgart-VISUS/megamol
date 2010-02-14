@@ -50,17 +50,17 @@ CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(visglutpath)/lib
 
 
-all: $(TargetName)d $(TargetName)
+all: VersionInfo $(TargetName)d $(TargetName)
 
 
 # Rules for shared objects in $(OutDir):
-$(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
+$(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so VersionInfo
 	@mkdir -p $(OutDir)
 	@mkdir -p $(outbin)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS)d.so
 	cp $< $(outbin)/lib$(TargetName)$(BITS)d.so
 
-$(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
+$(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so VersionInfo
 	@mkdir -p $(OutDir)
 	@mkdir -p $(outbin)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS).so
@@ -68,7 +68,7 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 
 
 # Rules for intermediate shared objects:
-$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile VersionInfo $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) \
@@ -78,7 +78,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile $(addprefix $(IntDir
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
 #	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
-$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile VersionInfo $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) \
@@ -90,18 +90,20 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile $(addprefix $(IntDi
 
 
 # Rules for dependencies:
-$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
+$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile VersionInfo
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
+	@echo -n VersionInfo >> $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
-$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile
+$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile VersionInfo
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
+	@echo -n VersionInfo >> $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(ReleaseCompilerFlags) $< >> $@
 
 
@@ -126,6 +128,14 @@ $(IntDir)/$(ReleaseDir)/%.o:
 	$(Q)$(CPP) -c $(CPPFLAGS) $(ReleaseCompilerFlags) -o $@ $<
 
 
+# Rules for generated files:
+VersionInfo: version.template.h versionInfo.pl Makefile
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"version.gen.h: "
+	@tput sgr0
+	$(Q)perl VersionInfo.pl .
+
+
 # Cleanup rules:	
 clean: sweep
 	rm -f $(OutDir)/lib$(TargetName)$(BITS).so $(OutDir)/lib$(TargetName)$(BITS)d.so \
@@ -140,4 +150,4 @@ sweep:
 rebuild: clean all
 
 
-.PHONY: clean sweep rebuild tags
+.PHONY: clean sweep rebuild tags VersionInfo

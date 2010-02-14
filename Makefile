@@ -15,7 +15,7 @@ ProjectDirs = Viewer Glut Console
 
 ################################################################################
 
-all: VersionInfo
+all:
 	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done
 
 sweep:
@@ -25,11 +25,5 @@ clean:
 	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done
 	
 rebuild: clean all
-
-VersionInfo:
-	@mkdir -p $(dir $@)
-	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"consoleversion.gen.h: "
-	@tput sgr0
-	$(Q)perl VersionInfo.pl .
 
 .PHONY: all clean sweep rebuild VersionInfo

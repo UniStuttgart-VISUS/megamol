@@ -14,23 +14,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Viewer", "Viewer\Viewer.vcproj", "{980D6E2F-2755-4199-B34D-35CE18C18B58}"
-	ProjectSection(ProjectDependencies) = postProject
-		{704C9777-C43E-49DF-A782-8AEB641B5C12} = {704C9777-C43E-49DF-A782-8AEB641B5C12}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Console", "Console\Console.vcproj", "{C1A41F40-1789-4920-A01B-976FDB163F46}"
 	ProjectSection(ProjectDependencies) = postProject
 		{980D6E2F-2755-4199-B34D-35CE18C18B58} = {980D6E2F-2755-4199-B34D-35CE18C18B58}
-		{704C9777-C43E-49DF-A782-8AEB641B5C12} = {704C9777-C43E-49DF-A782-8AEB641B5C12}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Glut", "Glut\Glut.vcproj", "{4BCE4F61-ADFD-4B1C-AFAF-AFF91C033311}"
 	ProjectSection(ProjectDependencies) = postProject
 		{980D6E2F-2755-4199-B34D-35CE18C18B58} = {980D6E2F-2755-4199-B34D-35CE18C18B58}
-		{704C9777-C43E-49DF-A782-8AEB641B5C12} = {704C9777-C43E-49DF-A782-8AEB641B5C12}
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VersionInfo", "VersionInfo.vcproj", "{704C9777-C43E-49DF-A782-8AEB641B5C12}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,14 +57,6 @@ Global
 		{4BCE4F61-ADFD-4B1C-AFAF-AFF91C033311}.Release|Win32.Build.0 = Release|Win32
 		{4BCE4F61-ADFD-4B1C-AFAF-AFF91C033311}.Release|x64.ActiveCfg = Release|x64
 		{4BCE4F61-ADFD-4B1C-AFAF-AFF91C033311}.Release|x64.Build.0 = Release|x64
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|Win32.ActiveCfg = Debug|Win32
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|Win32.Build.0 = Debug|Win32
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|x64.ActiveCfg = Debug|x64
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Debug|x64.Build.0 = Debug|x64
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|Win32.ActiveCfg = Release|Win32
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|Win32.Build.0 = Release|Win32
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|x64.ActiveCfg = Release|x64
-		{704C9777-C43E-49DF-A782-8AEB641B5C12}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

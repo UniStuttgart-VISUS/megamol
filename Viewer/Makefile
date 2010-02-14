@@ -18,15 +18,21 @@ InputDir := .
 IncludeDir := .
 
 
-all: $(InputDir)/include/MegaMolViewerDynamic.h
+all: VersionInfo $(InputDir)/include/MegaMolViewerDynamic.h
 
 
 # Rules for generated files:
-$(InputDir)/include/MegaMolViewerDynamic.h: $(InputDir)/genDynIncl.pl $(InputDir)/include/MegaMolViewerStatic.h Makefile
+$(InputDir)/include/MegaMolViewerDynamic.h: VersionInfo genDynIncl.pl $(InputDir)/include/MegaMolViewerStatic.h Makefile
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"$@: "
 	@tput sgr0
-	$(Q)perl $(InputDir)/genDynIncl.pl $(InputDir)/include/MegaMolViewerStatic.h
+	$(Q)perl genDynIncl.pl $(InputDir)/include/MegaMolViewerStatic.h
+
+VersionInfo: version.template.h versionInfo.pl Makefile
+	@mkdir -p $(dir $@)
+	@echo -e '\E[1;32;40m'"GEN "'\E[0;32;40m'"include/MegaMolViewer.version.gen.h: "
+	@tput sgr0
+	$(Q)perl VersionInfo.pl .
 
 
 # Cleanup rules:
@@ -37,4 +43,4 @@ clean:
 rebuild: clean all
 
 
-.PHONY: clean rebuild tags
+.PHONY: clean rebuild tags VersionInfo

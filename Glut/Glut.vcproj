@@ -29,7 +29,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Generating version.gen.h ..."
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -60,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -110,7 +111,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Generating version.gen.h ..."
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -142,7 +144,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -193,7 +195,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Generating version.gen.h ..."
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -221,7 +224,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -274,7 +277,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				Description="Generating version.gen.h ..."
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -303,7 +307,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -429,6 +433,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\version.gen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\version.template.h"
+				>
+			</File>
+			<File
 				RelativePath=".\versioninfo.h"
 				>
 			</File>
@@ -485,6 +497,42 @@
 		</Filter>
 		<File
 			RelativePath=".\Makefile"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\VersionInfo.pl"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"

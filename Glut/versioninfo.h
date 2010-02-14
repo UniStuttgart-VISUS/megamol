@@ -13,18 +13,21 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "consoleversion.gen.h"
-#include "../productversion.h"
-#include "visglutversion.h"
+#include "MegaMolViewer.version.gen.h"  // megamol console viewer version
+#include "version.gen.h"                // megamol console glut version
+#include "../productversion.h"          // megamol core version
+#include "visglutversion.h"             // visglut version
 
-
+// from megamol core version
 #define MEGAMOL_GLUT_MAJOR_VER MEGAMOL_PRODUCT_MAJOR_VER
 #define MEGAMOL_GLUT_MINOR_VER MEGAMOL_PRODUCT_MINOR_VER
-#define MEGAMOL_GLUT_MAJOR_REV MEGAMOL_VIEWER_API_LCREV
-#define MEGAMOL_GLUT_MINOR_REV MEGAMOL_GLUT_LCREV
+// from megamol console viewer version
+#define MEGAMOL_GLUT_MAJOR_REV MEGAMOL_CONSOLE_VIEWER_LCREV
+// from megamol console glut version
+#define MEGAMOL_GLUT_MINOR_REV MEGAMOL_CONSOLE_GLUT_LCREV
 
 
-#if (MEGAMOL_GLUT_DIRTY == 1) || (MEGAMOL_VIEWER_API_DIRTY == 1)
+#if (MEGAMOL_CONSOLE_GLUT_DIRTY == 1) || (MEGAMOL_CONSOLE_VIEWER_DIRTY == 1)
 #define MEGAMOL_GLUT_ISDIRTY 1
 #define MEGAMOL_GLUT_DIRTYTEXT MEGAMOL_DIRTYWARNING
 #else
@@ -43,7 +46,7 @@
 #define MEGAMOL_GLUT_VERSION MEGAMOL_GLUT_MAJOR_VER, MEGAMOL_GLUT_MINOR_VER, MEGAMOL_GLUT_MAJOR_REV, MEGAMOL_GLUT_MINOR_REV
 #define MEGAMOL_GLUT_VERSION_STR MEGAMOL_STRINGIZE(MEGAMOL_GLUT_VERSION)
 
-#define MEGAMOL_GLUT_COPYRIGHT "Copyright (c) 2006 - " MEGAMOL_STRINGIZE(MEGAMOL_GLUT_LCYEAR) " by " MEGAMOL_PRODUCT_COMPANY "\n" \
+#define MEGAMOL_GLUT_COPYRIGHT "Copyright (c) 2006 - " MEGAMOL_STRINGIZE(MEGAMOL_CONSOLE_GLUT_LCYEAR) " by " MEGAMOL_PRODUCT_COMPANY "\n" \
     "Alle Rechte vorbehalten.\n" \
     "All rights reserved.\n" MEGAMOL_GLUT_DIRTYTEXT
 
