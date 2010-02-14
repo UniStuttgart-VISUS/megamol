@@ -52,14 +52,14 @@ $(TargetName)Release: $(IntDir)/$(ReleaseDir)/$(TargetName)
 
 
 # Rules for intermediate binary:
-$(IntDir)/$(DebugDir)/$(TargetName): Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+$(IntDir)/$(DebugDir)/$(TargetName): Makefile version.gen.h $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
 	$(DebugLinkerFlags) -lMegaMolCore$(BITS)d \
 	$(addprefix -l,$(LIBS)) -o $(IntDir)/$(DebugDir)/$(TargetName)
 
-$(IntDir)/$(ReleaseDir)/$(TargetName): Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
+$(IntDir)/$(ReleaseDir)/$(TargetName): Makefile version.gen.h $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/$(TargetName): "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))) \
@@ -68,14 +68,14 @@ $(IntDir)/$(ReleaseDir)/$(TargetName): Makefile $(addprefix $(IntDir)/$(ReleaseD
 
 
 # Rules for dependencies:
-$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
+$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
-$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile
+$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0

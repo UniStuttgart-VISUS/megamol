@@ -68,7 +68,7 @@ $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 
 
 # Rules for intermediate shared objects:
-$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile version.gen.h $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) \
@@ -78,7 +78,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile $(addprefix $(IntDir
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
 #	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
-$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile version.gen.h $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e '\E[1;32;40m'"LNK "'\E[0;32;40m'"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@tput sgr0
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) \
@@ -90,14 +90,14 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile $(addprefix $(IntDi
 
 
 # Rules for dependencies:
-$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile
+$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) $(DebugCompilerFlags) $< >> $@
 
-$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile
+$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile version.gen.h
 	@mkdir -p $(dir $@)
 	@echo -e '\E[1;32;40m'"DEP "'\E[0;32;40m'"$@: "
 	@tput sgr0
