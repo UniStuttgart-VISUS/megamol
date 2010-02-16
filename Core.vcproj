@@ -1447,6 +1447,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\moldyn\SIFFDataSource.h"
+					>
+				</File>
+				<File
 					RelativePath=".\moldyn\SimpleSphereRenderer.h"
 					>
 				</File>
@@ -1488,6 +1492,10 @@
 				</File>
 				<File
 					RelativePath=".\moldyn\ParticleGridDataCall.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\SIFFDataSource.cpp"
 					>
 				</File>
 				<File

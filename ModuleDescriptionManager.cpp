@@ -20,6 +20,7 @@
 #include "moldyn/IMDAtomDataSource.h"
 #include "moldyn/MipDepthSphereRenderer.h"
 #include "moldyn/OracleSphereRenderer.h"
+#include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleSphereRenderer.h"
 #include "moldyn/VIMDataSource.h"
 #include "special/AnaglyphStereoDisplay.h"
@@ -76,12 +77,13 @@ ModuleDescriptionManager::Instance() {
 
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
-		instance->registerAutoDescription<misc::DemoRenderer2D>();
+        instance->registerAutoDescription<misc::DemoRenderer2D>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();
         instance->registerAutoDescription<moldyn::DataGridder>();
         instance->registerAutoDescription<moldyn::GrimRenderer>();
         instance->registerAutoDescription<moldyn::IMDAtomDataSource>();
         instance->registerAutoDescription<moldyn::MipDepthSphereRenderer>();
+        instance->registerAutoDescription<moldyn::SIFFDataSource>();
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
