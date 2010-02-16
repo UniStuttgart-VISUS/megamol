@@ -135,6 +135,7 @@ bool misc::DemoRenderer2D::MouseEvent(float x, float y, view::MouseFlags flags) 
         if (this->drag) {
             this->tox = mx;
             this->toy = my;
+            return true;
         }
     } else {
         this->drag = false;

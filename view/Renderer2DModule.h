@@ -64,6 +64,9 @@ namespace view {
          * @param x The x coordinate of the mouse in world space
          * @param y The y coordinate of the mouse in world space
          * @param flags The mouse flags
+         *
+         * @return 'true' if the mouse event was consumed by the renderer and
+         *         must be ignored by the view or subsequent renderer modules.
          */
         virtual bool MouseEvent(float x, float y, MouseFlags flags);
 
