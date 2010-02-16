@@ -18,6 +18,7 @@ $a = PathParameter->new();
     $a->description("Path to the global \"bin\" output directory");
     $a->placeholder("%outbin%");
     $a->autoDetect(0);
+    $a->value("../bin");
     push @pps, $a;
 
 $a = PathParameter->new();
