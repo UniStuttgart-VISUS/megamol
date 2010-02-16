@@ -15,6 +15,7 @@
 #include "Module.h"
 #include "CalleeSlot.h"
 #include "CallRender2D.h"
+#include "view/MouseFlags.h"
 
 
 namespace megamol {
@@ -56,6 +57,16 @@ namespace view {
          */
         virtual bool Render(CallRender2D& call) = 0;
 
+        /**
+         * The mouse event callback called when the mouse moved or a mouse
+         * button changes it's state.
+         *
+         * @param x The x coordinate of the mouse in world space
+         * @param y The y coordinate of the mouse in world space
+         * @param flags The mouse flags
+         */
+        virtual bool MouseEvent(float x, float y, MouseFlags flags);
+
     private:
 
         /**
@@ -77,6 +88,16 @@ namespace view {
          * @return The return value of the function.
          */
         bool onRenderCallback(Call& call);
+
+        /**
+         * The mouse event callback.
+         *
+         * @param call The calling call.
+         *
+         * @return 'true' if the event got consumed by the renderer and should
+         *         not be passed to the GUI or view.
+         */
+        bool onMouseEventCallback(Call& call);
 
         /** The render callee slot */
         CalleeSlot renderSlot;

@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "view/AbstractView.h"
+#include "view/MouseFlags.h"
 #include "Module.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
@@ -170,6 +171,9 @@ namespace view {
 
         /** The mouse y coordinate */
         float mouseY;
+
+        /** The mouse flags */
+        MouseFlags mouseFlags;
 
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;

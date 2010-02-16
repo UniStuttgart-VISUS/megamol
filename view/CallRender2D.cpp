@@ -14,7 +14,8 @@ using namespace megamol::core;
 /*
  * view::CallRender2D::CallRender2D
  */
-view::CallRender2D::CallRender2D(void) : Call(), bbox(), height(1), width(1) {
+view::CallRender2D::CallRender2D(void) : Call(), bbox(), height(1), width(1),
+        mouseX(0.0f), mouseY(0.0f), mouseFlags(0) {
     // intentionally empty
 }
 
@@ -37,6 +38,9 @@ view::CallRender2D& view::CallRender2D::operator=(
     this->bkgndCol[0] = rhs.bkgndCol[0];
     this->height = rhs.height;
     this->width = rhs.width;
+    this->mouseX = rhs.mouseX;
+    this->mouseY = rhs.mouseY;
+    this->mouseFlags = rhs.mouseFlags;
 
     return *this;
 }

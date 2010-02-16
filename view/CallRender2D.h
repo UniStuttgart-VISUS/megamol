@@ -16,6 +16,7 @@
 #include "CallAutoDescription.h"
 #include "vislib/Rectangle.h"
 #include "vislib/types.h"
+#include "view/MouseFlags.h"
 
 
 namespace megamol {
@@ -62,7 +63,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 2;
+            return 3;
         }
 
         /**
@@ -76,6 +77,7 @@ namespace view {
             switch (idx) {
                 case 0: return "Render";
                 case 1: return "GetExtents";
+                case 2: return "MouseEvent";
                 default: return NULL;
             }
         }
@@ -88,10 +90,10 @@ namespace view {
 
         /**
          * Gets the bounding box. As an answer to an 'GetExtents' call this
-		 * member holds the bounding rectangle of all visible elements created
-		 * by the renderer in world space. When called for 'Render' this
-		 * member holds the rectangle in world space which is visible on the
-		 * viewport.
+         * member holds the bounding rectangle of all visible elements created
+         * by the renderer in world space. When called for 'Render' this
+         * member holds the rectangle in world space which is visible on the
+         * viewport.
          *
          * @return The bounding box
          */
@@ -115,6 +117,33 @@ namespace view {
          */
         inline unsigned int GetHeight(void) const {
             return this->height;
+        }
+
+        /**
+         * Answer the mouse flags
+         *
+         * @return The mouse flags
+         */
+        inline MouseFlags GetMouseFlags(void) const {
+            return this->mouseFlags;
+        }
+
+        /**
+         * Answer the mouse x coordinate in world space
+         *
+         * @return The mouse x coordinate in world space
+         */
+        inline float GetMouseX(void) const {
+            return this->mouseX;
+        }
+
+        /**
+         * Answer the mouse y coordinate in world space
+         *
+         * @return The mouse y coordinate in world space
+         */
+        inline float GetMouseY(void) const {
+            return this->mouseY;
         }
 
         /**
@@ -173,6 +202,19 @@ namespace view {
         }
 
         /**
+         * Sets the mouse informations.
+         *
+         * @param x The mouse x coordinate in world space
+         * @param y The mouse y coordinate in world space
+         * @param flags The mouse flags
+         */
+        inline void SetMouseInfo(float x, float y, MouseFlags flags) {
+            this->mouseX = x;
+            this->mouseY = y;
+            this->mouseFlags = flags;
+        }
+
+        /**
          * Sets the viewport size
          *
          * @param w The width of the viewport in pixel
@@ -211,6 +253,12 @@ namespace view {
 
         /** The viewport width in pixel */
         unsigned int width;
+
+        /** The mouse coordinates for the mouse event */
+        float mouseX, mouseY;
+
+        /** The mouse flags for the mouse event */
+        MouseFlags mouseFlags;
 
     };
 

@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "View2D.h"
 #include "view/CallRender2D.h"
+#include "view/MouseFlags.h"
 #include <GL/gl.h>
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
@@ -23,7 +24,8 @@ using namespace megamol::core;
  */
 view::View2D::View2D(void) : view::AbstractView(),
         backCol("backCol", "The views background colour"),
-        firstImg(false), height(1.0f), mouseMode(0), mouseX(0.0f), mouseY(0.0f),
+        firstImg(false), height(1.0f),
+        mouseMode(0), mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"),
@@ -106,7 +108,7 @@ void view::View2D::Render(void) {
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
-	float asp = this->height / this->width;
+    float asp = this->height / this->width;
     ::glScalef(asp, 1.0f, 1.0f);
 
     ::glMatrixMode(GL_MODELVIEW);
@@ -120,12 +122,12 @@ void view::View2D::Render(void) {
         static_cast<unsigned char>(this->bkgndCol[1] * 255.0f),
         static_cast<unsigned char>(this->bkgndCol[2] * 255.0f));
 
-	asp = 1.0f / asp;
-	vislib::math::Rectangle<float> vr(
-		(-asp / this->viewZoom - this->viewX),
-		(-1.0f / this->viewZoom - this->viewY),
-		(asp / this->viewZoom - this->viewX),
-		(1.0f / this->viewZoom - this->viewY));
+    asp = 1.0f / asp;
+    vislib::math::Rectangle<float> vr(
+        (-asp / this->viewZoom - this->viewX),
+        (-1.0f / this->viewZoom - this->viewY),
+        (asp / this->viewZoom - this->viewX),
+        (1.0f / this->viewZoom - this->viewY));
     cr2d->SetBoundingBox(vr);
 
     cr2d->SetViewportSize(static_cast<unsigned int>(this->width),
@@ -193,14 +195,53 @@ void view::View2D::Resize(unsigned int width, unsigned int height) {
  * view::View2D::SetCursor2DButtonState
  */
 void view::View2D::SetCursor2DButtonState(unsigned int btn, bool down) {
+    switch (btn) {
+        case 0 : // left
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
+            break;
+        case 1 : // right
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                view::MOUSEFLAG_BUTTON_RIGHT_DOWN, down);
+            break;
+        case 2 : // middle
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
+            break;
+    }
+
+    if (this->mouseMode == 0) {
+        CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
+        if (cr2d) {
+            float mx, my;
+            mx = ((this->mouseX * 2.0f / this->width) - 1.0f) * this->width / this->height;
+            my = 1.0f - (this->mouseY * 2.0f / this->height);
+            mx /= this->viewZoom;
+            my /= this->viewZoom;
+            mx -= this->viewX;
+            my -= this->viewY;
+            cr2d->SetMouseInfo(mx, my, this->mouseFlags);
+            if ((*cr2d)(2)) {
+                view::MouseFlagsResetAllChanged(this->mouseFlags);
+                // mouse event consumed
+                return;
+            }
+            view::MouseFlagsResetAllChanged(this->mouseFlags);
+        }
+    }
+
     if (down) {
+
         if (btn == 0) {
             this->mouseMode = 1; // pan
         } else if (btn == 2) {
             this->mouseMode = 2; // zoom
         }
+
     } else {
+
         this->mouseMode = 0;
+
     }
 }
 
@@ -209,6 +250,28 @@ void view::View2D::SetCursor2DButtonState(unsigned int btn, bool down) {
  * view::View2D::SetCursor2DPosition
  */
 void view::View2D::SetCursor2DPosition(float x, float y) {
+    if (this->mouseMode == 0) {
+        CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
+        if (cr2d) {
+            float mx, my;
+            mx = ((x * 2.0f / this->width) - 1.0f) * this->width / this->height;
+            my = 1.0f - (y * 2.0f / this->height);
+            mx /= this->viewZoom;
+            my /= this->viewZoom;
+            mx -= this->viewX;
+            my -= this->viewY;
+            cr2d->SetMouseInfo(mx, my, this->mouseFlags);
+            if ((*cr2d)(2)) {
+                this->mouseX = x;
+                this->mouseY = y;
+                view::MouseFlagsResetAllChanged(this->mouseFlags);
+                // mouse event consumed
+                return;
+            }
+            view::MouseFlagsResetAllChanged(this->mouseFlags);
+        }
+    }
+
     if (this->mouseMode == 1) { // pan
         float movSpeed = 2.0f / (this->viewZoom * this->height);
         this->viewX -= (this->mouseX - x) * movSpeed;
@@ -241,7 +304,20 @@ void view::View2D::SetCursor2DPosition(float x, float y) {
  * view::View2D::SetInputModifier
  */
 void view::View2D::SetInputModifier(mmcInputModifier mod, bool down) {
-    // intentionally empty ATM
+    switch (mod) {
+        case MMC_INMOD_SHIFT:
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                view::MOUSEFLAG_MODKEY_SHIFT_DOWN, down);
+            break;
+        case MMC_INMOD_CTRL:
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                view::MOUSEFLAG_MODKEY_CTRL_DOWN, down);
+            break;
+        case MMC_INMOD_ALT:
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                view::MOUSEFLAG_MODKEY_ALT_DOWN, down);
+            break;
+    }
 }
 
 

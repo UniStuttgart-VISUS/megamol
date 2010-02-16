@@ -11,8 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/Renderer2DModule.h"
 #include "ModuleAutoDescription.h"
+#include "view/Renderer2DModule.h"
+#include "view/MouseFlags.h"
 
 
 namespace megamol {
@@ -21,39 +22,101 @@ namespace misc {
 
     /**
      * A simple 2d renderer which just creates a circle
-     *
-     * TODO: Document!
      */
     class DemoRenderer2D : public view::Renderer2DModule {
     public:
 
+        /**
+         * The class name for the factory
+         *
+         * @return The class name
+         */
         static const char *ClassName(void) {
             return "DemoRenderer2D";
         }
 
+        /**
+         * A human-readable description string for the module
+         *
+         * @return The description string
+         */
         static const char *Description(void) {
             return "Demo 2D-Renderer";
         }
 
+        /**
+         * Test if the module can be instanziated
+         *
+         * @return 'true'
+         */
         static bool IsAvailable(void) {
             return true;
         }
 
+        /**
+         * ctor
+         */
         DemoRenderer2D();
 
+        /**
+         * dtor
+         */
         virtual ~DemoRenderer2D();
 
     protected:
 
+        /**
+         * Initializes the module directly after instanziation
+         *
+         * @return 'true' on success
+         */
         virtual bool create(void);
 
+        /**
+         * Sets the extents (animation and bounding box) into the call object
+         *
+         * @param call The incoming call
+         *
+         * @return 'true' on success
+         */
         virtual bool GetExtents(view::CallRender2D& call);
 
+        /**
+         * Renders the scene
+         *
+         * @param call The incoming call
+         *
+         * @return 'true' on success
+         */
         virtual bool Render(view::CallRender2D& call);
 
+        /**
+         * Releases all resources of the module
+         */
         virtual void release(void);
 
+        /**
+         * Callback for mouse events (move, press, and release)
+         *
+         * @param x The x coordinate of the mouse in world space
+         * @param y The y coordinate of the mouse in world space
+         * @param flags The mouse flags
+         */
+        virtual bool MouseEvent(float x, float y, view::MouseFlags flags);
+
     private:
+
+        /** The mouse coordinate */
+        float mx, my;
+
+        /** The coordinates to draw the test line from */
+        float fromx, fromy;
+
+        /** The coordinates to draw the test line to */
+        float tox, toy;
+
+        /** Flag if the test line is being spanned */
+        bool drag;
 
     };
 
