@@ -99,10 +99,8 @@ typedef struct mmvMouseMoveParamsStruct {
 #define MMV_WINHINT_HIDECURSOR      0x00000002
 #define MMV_WINHINT_STAYONTOP       0x00000004
 #define MMV_WINHINT_PRESENTATION    0x00000008
-#define MMV_WINHINT_VSYNCOFF        0x00000010
-#define MMV_WINHINT_VSYNCON         0x00000020
-#define MMV_WINHINT_GUIOFF          0x00000040
-#define MMV_WINHINT_GUION           0x00000080
+#define MMV_WINHINT_VSYNC           0x00000010
+#define MMV_WINHINT_PARAMGUI        0x00000020
 
 /**
  * the callback function syntax

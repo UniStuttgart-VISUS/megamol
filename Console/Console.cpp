@@ -826,9 +826,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             }
 
             if (setVSync) {
-                ::mmvSetWindowHints(win->HWnd(),
-                    MMV_WINHINT_VSYNCOFF | MMV_WINHINT_VSYNCON,
-                    vSyncOff ? MMV_WINHINT_VSYNCOFF : MMV_WINHINT_VSYNCON);
+                ::mmvSetWindowHints(win->HWnd(), MMV_WINHINT_VSYNC,
+                    vSyncOff ? MMV_WINHINT_NONE : MMV_WINHINT_VSYNC);
             }
 
             if (::mmvSupportContextMenu(win->HWnd())) {
@@ -843,13 +842,13 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                         win->DeactivateGUI();
 #endif /* WITH_TWEAKBAR */
                     }
-                } else {
+                } /* else {
                     if (hideGUI || showGUI) {
                         vislib::sys::Log::DefaultLog.WriteMsg(
                             vislib::sys::Log::LEVEL_WARN,
                             "Parameter GUI is not supported by the viewer");
                     }
-                }
+                } */
 
                 if (!parameterFile.IsEmpty()) {
                     ::mmvInstallContextMenuCommandA(win->HWnd(),
