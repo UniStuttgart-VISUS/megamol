@@ -27,7 +27,6 @@
 #include "vislib/CriticalSection.h"
 #include "vislib/Console.h"
 #include "vislib/functioncast.h"
-#include "vislib/glfunctions.h"
 #include "vislib/Log.h"
 #include "vislib/Map.h"
 #include "vislib/memutils.h"
@@ -578,10 +577,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     bool setVSync = false;
     bool vSyncOff = false;
     int retval = 0;
-#ifdef WITH_TWEAKBAR
     bool showGUI = false;
     bool hideGUI = false;
-#endif /* WITH_TWEAKBAR */
 
 #ifndef _WIN32
     oldSignl =
@@ -593,10 +590,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     initOnlyParameterFile = parser->InitOnlyParameterFile();
     setVSync = parser->SetVSync();
     vSyncOff = parser->SetVSyncOff();
-#ifdef WITH_TWEAKBAR
     showGUI = parser->ShowGUI();
     hideGUI = parser->HideGUI();
-#endif /* WITH_TWEAKBAR */
 
     // run the application!
 #ifdef _WIN32
@@ -694,10 +689,44 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         return -23;
     }
 
-#ifdef WITH_TWEAKBAR
+    if (!setVSync) {
+        // not set by command line parameter
+        // ask core for vsync configuration
+        mmcValueType type;
+        const void *cfgv = ::mmcGetConfigurationValueA(hCore,
+            MMC_CFGID_VARIABLE, "vsync", &type);
+        switch (type) {
+            case MMC_TYPE_BOOL:
+                setVSync = true;
+                vSyncOff = !(*static_cast<const bool*>(cfgv));
+                break;
+            case MMC_TYPE_CSTR:
+                try {
+                    vSyncOff = !vislib::CharTraitsA::ParseBool(
+                        static_cast<const char *>(cfgv));
+                    setVSync = true;
+                } catch(...) {
+                }
+                break;
+            case MMC_TYPE_WSTR:
+                try {
+                    vSyncOff = !vislib::CharTraitsW::ParseBool(
+                        static_cast<const wchar_t *>(cfgv));
+                    setVSync = true;
+                } catch(...) {
+                }
+                break;
+#ifndef _WIN32
+            default:
+                // intentionally empty
+                break;
+#endif /* !_WIN32 */
+        }
+    }
+
     if (!showGUI && !hideGUI) {
         // not set by command line parameter
-        // ask for gui configuration
+        // ask core for gui configuration
         mmcValueType type;
         const void *cfgv = ::mmcGetConfigurationValueA(hCore,
             MMC_CFGID_VARIABLE, "consolegui", &type);
@@ -745,7 +774,6 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         showGUI = false;
         hideGUI = false;
     }
-#endif /* WITH_TWEAKBAR */
 
     // Load Projects
     vislib::SingleLinkedList<vislib::TString>::Iterator
@@ -798,24 +826,39 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             }
 
             if (setVSync) {
-                vislib::graphics::gl::EnableVSync(!vSyncOff);
+                ::mmvSetWindowHints(win->HWnd(),
+                    MMV_WINHINT_VSYNCOFF | MMV_WINHINT_VSYNCON,
+                    vSyncOff ? MMV_WINHINT_VSYNCOFF : MMV_WINHINT_VSYNCON);
             }
 
-            ::mmvInstallContextMenu(win->HWnd());
+            if (::mmvSupportContextMenu(win->HWnd())) {
+                ::mmvInstallContextMenu(win->HWnd());
 
+                /* TODO: Move GUI */
+                /*if (::mmvSupportParameterGUI(win->HWnd()))*/ {
+                    ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 2);
+                    ::mmvInstallContextMenuCommandA(win->HWnd(), "Deactivate GUI", 3);
+                    if (hideGUI) {
 #ifdef WITH_TWEAKBAR
-            ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 2);
-            ::mmvInstallContextMenuCommandA(win->HWnd(), "Deactivate GUI", 3);
-            if (hideGUI) {
-                win->DeactivateGUI();
-            }
+                        win->DeactivateGUI();
 #endif /* WITH_TWEAKBAR */
+                    }
+                } else {
+                    if (hideGUI || showGUI) {
+                        vislib::sys::Log::DefaultLog.WriteMsg(
+                            vislib::sys::Log::LEVEL_WARN,
+                            "Parameter GUI is not supported by the viewer");
+                    }
+                }
 
+                if (!parameterFile.IsEmpty()) {
+                    ::mmvInstallContextMenuCommandA(win->HWnd(),
+                        "Write Parameter File", 0);
+                    ::mmvInstallContextMenuCommandA(win->HWnd(),
+                        "Read Parameter File", 1);
+                }
+            }
             if (!parameterFile.IsEmpty()) {
-                ::mmvInstallContextMenuCommandA(win->HWnd(),
-                    "Write Parameter File", 0);
-                ::mmvInstallContextMenuCommandA(win->HWnd(),
-                    "Read Parameter File", 1);
                 win->RegisterHotKeyAction(vislib::sys::KeyCode(vislib::sys::KeyCode::KEY_MOD_ALT | 'p'),
                     new megamol::console::HotKeyCallback(::readParameterFile), "ReadParameterFile");
                 win->RegisterHotKeyAction(vislib::sys::KeyCode(

@@ -30,7 +30,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version.gen.h ..."
-				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib"
 				OutputFile="$(OutDir)\MegaMolGlut$(BitsD).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(VisGlutPath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -112,7 +112,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version.gen.h ..."
-				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -130,7 +130,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -151,7 +151,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib"
 				OutputFile="$(OutDir)\MegaMolGlut$(BitsD).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(VisGlutPath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -196,7 +196,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version.gen.h ..."
-				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -212,7 +212,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -231,7 +231,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib"
 				OutputFile="$(OutDir)\MegaMolGlut$(BitsD).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(VisGlutPath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -278,7 +278,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version.gen.h ..."
-				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
+				CommandLine="cd &quot;$(InputDir)\.&quot;&#x0D;&#x0A;perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -295,7 +295,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -314,7 +314,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib"
+				AdditionalDependencies="visglut$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib"
 				OutputFile="$(OutDir)\MegaMolGlut$(BitsD).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(VisGlutPath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"

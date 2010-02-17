@@ -61,12 +61,9 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     paramFileInit(0, _T("paramfileinit"), _T("if present the parameter file is written as soon as all instances have been created. (Has no effect if no parameter file is specified.)")),
     paramFileInitOnly(0, _T("paramfileinitonly"), _T("if present the parameter file is written as soon as all instances have been created and terminates the application afterwards. (Has no effect if no parameter file is specified.)")),
     setVSync(0, _T("vsync"), _T("(De-)Activates the vsync for all windows."), ParserOption::FLAG_UNIQUE,
-        ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("Switch"), _T("'True' forces vsync enable, 'False' forces vsync disable")))
-#ifdef WITH_TWEAKBAR
-        ,
+        ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("Switch"), _T("'True' forces vsync enable, 'False' forces vsync disable"))),
     showGUI(0, _T("gui"), _T("Option to de-/activate the gui layer"), ParserOption::FLAG_UNIQUE,
         ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("gui"), _T("'True' activates the gui, 'False' deactivates the gui")))
-#endif /* WITH_TWEAKBAR */
 {
 
     this->parser.AddOption(&this->help);
@@ -88,9 +85,7 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
 
     this->parser.AddOption(&this->forceViewer);
     this->parser.AddOption(&this->setVSync);
-#ifdef WITH_TWEAKBAR
     this->parser.AddOption(&this->showGUI);
-#endif /* WITH_TWEAKBAR */
 
     this->parser.AddOption(&this->projectFile);
     this->parser.AddOption(&this->instJobView);

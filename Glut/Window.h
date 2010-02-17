@@ -225,6 +225,27 @@ namespace viewer {
          */
         void PresentationModeRefresh(void);
 
+        /**
+         * De-/activates the vertical sync on the rendering
+         *
+         * @param active Flag to activate (true) or deactivate (false) vsync
+         */
+        void SetVSync(bool active);
+
+        /**
+         * Shows or hides the parameter gui
+         *
+         * @param show Flag to show (true) or hide (false) the parameter gui
+         */
+        void ShowParameterGUI(bool show = true);
+
+        /**
+         * Hides the parameter gui
+         */
+        inline void HideParameterGUI(void) {
+            this->ShowParameterGUI(false);
+        }
+
     private:
 
         /**

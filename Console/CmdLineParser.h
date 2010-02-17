@@ -309,7 +309,6 @@ namespace utility {
             return false;
         }
 
-#ifdef WITH_TWEAKBAR
         /**
          * Answer if the gui should be shown
          *
@@ -337,7 +336,6 @@ namespace utility {
             }
             return false;
         }
-#endif /* WITH_TWEAKBAR */
 
     private:
 
@@ -434,10 +432,8 @@ namespace utility {
         /** Parser option to control VSync */
         ParserOption setVSync;
 
-#ifdef WITH_TWEAKBAR
         /** Parser option to de-/activate the gui layer */
         ParserOption showGUI;
-#endif /* WITH_TWEAKBAR */
 
     };
 

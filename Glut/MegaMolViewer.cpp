@@ -615,4 +615,19 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowHints)(void *hWnd,
     if ((mask & MMV_WINHINT_HIDECURSOR) != 0) win->SetCursorVisibility((hints & MMV_WINHINT_HIDECURSOR) == 0);
     if ((mask & MMV_WINHINT_STAYONTOP) != 0) win->StayOnTop((hints & MMV_WINHINT_STAYONTOP) != 0);
     if ((mask & MMV_WINHINT_PRESENTATION) != 0) win->SetPresentationMode((hints & MMV_WINHINT_PRESENTATION) != 0);
+
+    bool vsyncOn = (((mask & hints) & MMV_WINHINT_VSYNCON) == MMV_WINHINT_VSYNCON);
+    bool vsyncOff = (((mask & hints) & MMV_WINHINT_VSYNCOFF) == MMV_WINHINT_VSYNCOFF);
+    bool guiOn = (((mask & hints) & MMV_WINHINT_GUION) == MMV_WINHINT_GUION);
+    bool guiOff = (((mask & hints) & MMV_WINHINT_GUIOFF) == MMV_WINHINT_GUIOFF);
+
+    if (!vsyncOn || !vsyncOff) {
+        if (vsyncOn) win->SetVSync(true);
+        if (vsyncOff) win->SetVSync(false);
+    }
+    if (!guiOn || !guiOff) {
+        if (guiOn) win->ShowParameterGUI();
+        if (guiOff) win->HideParameterGUI();
+    }
+
 }

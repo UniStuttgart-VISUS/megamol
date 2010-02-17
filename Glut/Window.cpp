@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "Window.h"
 #include "visglut.h"
+#include "vislib/glfunctions.h"
 #include "vislib/KeyCode.h"
 #include "vislib/Log.h"
 #include <GL/gl.h>
@@ -747,4 +748,22 @@ void megamol::viewer::Window::PresentationModeRefresh(void) {
     ::glutSetWindow(this->glutID);
     ::glutPostRedisplay();
     this->presentationMode = 1;
+}
+
+
+/*
+ * megamol::viewer::Window::SetVSync
+ */
+void megamol::viewer::Window::SetVSync(bool active) {
+    vislib::graphics::gl::EnableVSync(active);
+}
+
+
+/*
+ * megamol::viewer::Window::ShowParameterGUI
+ */
+void megamol::viewer::Window::ShowParameterGUI(bool show) {
+
+    // TODO: Implement
+
 }
