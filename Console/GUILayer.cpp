@@ -123,7 +123,7 @@ void GUILayer::GUIClient::Activate(void) {
         activeClient->Deactivate();
     }
     activeClient = this;
-    if ((layer == NULL) && !this->params.IsEmpty()) {
+    if (((layer == NULL) || (this->_myBar == NULL)) && !this->params.IsEmpty()) {
         this->Layer(); // initialise layer
         vislib::SingleLinkedList<Parameter*>::Iterator iter = this->params.GetIterator();
         while (iter.HasNext()) {
