@@ -332,6 +332,18 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvUnregisterWindowCallback)(
 
 
 /*
+ * mmvSupportContextMenu
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSupportContextMenu)(void *hWnd){
+    VLSTACKTRACE("mmvSupportContextMenu", __FILE__, __LINE__);
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    return (win != NULL);
+}
+
+
+/*
  * mmvInstallContextMenu
  */
 MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvInstallContextMenu)(void *hWnd) {
@@ -370,6 +382,146 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvInstallContextMenuCommandW)(
 
     mmvInstallContextMenuCommandA(hWnd, vislib::StringA(caption).PeekBuffer(),
         value);
+}
+
+
+/*
+ * mmvSupportParameterGUI
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSupportParameterGUI)(void *hWnd) {
+    VLSTACKTRACE("mmvSupportParameterGUI", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return false;
+
+    // TODO: Implement
+
+    return false;
+}
+
+
+/*
+ * mmvInstallParameterGUI
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvInstallParameterGUI)(void *hWnd) {
+    VLSTACKTRACE("mmvInstallParameterGUI", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return false;
+
+    // TODO: Implement
+
+    return false;
+}
+
+
+/*
+ * mmvInstallParameter
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvInstallParameter)(void *hWnd,
+        void *paramID, const unsigned char *desc, unsigned int len) {
+    VLSTACKTRACE("mmvInstallParameter", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return false;
+
+    // TODO: Implement
+
+    return false;
+}
+
+
+/*
+ * mmvRemoveParameter
+ */
+MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvRemoveParameter)(void *hWnd,
+        void *paramID) {
+    VLSTACKTRACE("mmvRemoveParameter", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return;
+
+    // TODO: Implement
+
+}
+
+
+/*
+ * mmvSetParameterValueA
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSetParameterValueA)(void *hWnd,
+        void *paramID, const char *value) {
+    VLSTACKTRACE("mmvSetParameterValueA", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return false;
+
+    // TODO: Implement
+
+    return false;
+}
+
+
+/*
+ * mmvSetParameterValueW
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSetParameterValueW)(void *hWnd,
+        void *paramID, const wchar_t *value) {
+    VLSTACKTRACE("mmvSetParameterValueW", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return false;
+
+    // TODO: Implement
+
+    return false;
+}
+
+
+/*
+ * mmvRegisterParameterCallback
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvRegisterParameterCallback)(
+        void *hWnd, void *paramID, mmvCallback function) {
+    VLSTACKTRACE("mmvRegisterParameterCallback", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return false;
+
+    // TODO: Implement
+
+    return false;
+}
+
+
+/*
+ * mmvUnregisterParameterCallback
+ */
+MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvUnregisterParameterCallback)(
+        void *hWnd, void *paramID) {
+    VLSTACKTRACE("mmvUnregisterParameterCallback", __FILE__, __LINE__);
+
+    megamol::viewer::Window *win 
+        = megamol::viewer::ApiHandle::InterpretHandle<
+        megamol::viewer::Window>(hWnd);
+    if (win == NULL) return;
+
+    // TODO: Implement
+
 }
 
 

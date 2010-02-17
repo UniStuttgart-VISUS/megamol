@@ -99,6 +99,10 @@ typedef struct mmvMouseMoveParamsStruct {
 #define MMV_WINHINT_HIDECURSOR      0x00000002
 #define MMV_WINHINT_STAYONTOP       0x00000004
 #define MMV_WINHINT_PRESENTATION    0x00000008
+#define MMV_WINHINT_VSYNCOFF        0x00000010
+#define MMV_WINHINT_VSYNCON         0x00000020
+#define MMV_WINHINT_GUIOFF          0x00000040
+#define MMV_WINHINT_GUION           0x00000080
 
 /**
  * the callback function syntax
@@ -307,6 +311,15 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvUnregisterWindowCallback)(
     void *hWnd, mmvWindowCallbacks slot, mmvCallback function);
 
 /**
+ * Answer if this window supports a context menu
+ *
+ * @param hWnd The window handle
+ *
+ * @return 'true' if a context menu is supported, 'false' otherwise
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSupportContextMenu)(void *hWnd);
+
+/**
  * Installs a context menu on the given window.
  *
  * @param hWnd The window handle.
@@ -343,6 +356,104 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvInstallContextMenuCommandA)(
 MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvInstallContextMenuCommandW)(
     void *hWnd, const wchar_t *caption, int value);
 
+/**
+ * Answer if this window supports a parameter gui
+ *
+ * @param hWnd The window handle
+ *
+ * @return 'true' if a parameter gui is supported, 'false' otherwise
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSupportParameterGUI)(void *hWnd);
+
+/**
+ * Installs a parameter gui on the given window.
+ *
+ * @param hWnd The window handle
+ *
+ * @return 'true' on success, 'false' on failure.
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvInstallParameterGUI)(void *hWnd);
+
+/**
+ * Installs a parameter into the parameter gui of the given window.
+ * 'mmvInstallParameterGUI' must have been called successfully before.
+ *
+ * @param hWnd The window handle
+ * @param paramID A void pointer with a unique value identifying the
+ *                parameter. The pointers value will only be used for
+ *                identification and will never be dereferenced.
+ * @param desc A MegaMol parameter description
+ * @param len The length of the MegaMol parameter description in bytes
+ *
+ * @return 'true' on success, 'false' on failure.
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvInstallParameter)(void *hWnd,
+    void *paramID, const unsigned char *desc, unsigned int len);
+
+/**
+ * Removes a parameter from the parameter gui of the given window. Fails
+ * silently on any error.
+ *
+ * @param hWnd The window handle
+ * @param paramID The parameter id void pointer
+ */
+MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvRemoveParameter)(void *hWnd,
+    void *paramID);
+
+/**
+ * Sets the value of a parameter in the parameter gui. The parameter must have
+ * been successfully installed before.
+ *
+ * @param hWnd The window handle
+ * @param paramID The parameter id void pointer
+ * @param value A zero-terminated string representation of the parameter
+ *
+ * @return 'true' on success, 'false' on failure.
+ */
+#if defined(UNICODE) || defined(_UNICODE)
+#define mmvSetParameterValue mmvSetParameterValueW
+#else /* defined(UNICODE) || defined(_UNICODE) */
+#define mmvSetParameterValue mmvSetParameterValueA
+#endif /* defined(UNICODE) || defined(_UNICODE) */
+
+/*
+ * ANSI implementation of mmvSetParameterValue
+ * @see mmvSetParameterValue
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSetParameterValueA)(void *hWnd,
+    void *paramID, const char *value);
+
+/*
+ * Unicode implementation of mmvSetParameterValue
+ * @see mmvSetParameterValue
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvSetParameterValueW)(void *hWnd,
+    void *paramID, const wchar_t *value);
+
+/**
+ * Registers a callback function for the given parameter of the parameter gui
+ * of the specified window. The callback will be called with 'paramID' in
+ * 'userData' and an ANSI string representation of the new parameter value
+ * in 'param' whenever the value of the parameter is changed in the gui.
+ *
+ * @param hWnd The window to register the callback on.
+ * @param paramID The parameter id void pointer
+ * @param function The callback function to be registered.
+ *
+ * @return 'true' on success, 'false' on failure.
+ */
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvRegisterParameterCallback)(
+    void *hWnd, void *paramID, mmvCallback function);
+
+/**
+ * Unregisters a callback function from the given parameter of the parameter
+ * gui of the specified window.
+ *
+ * @param hWnd The window handle
+ * @param paramID The parameter id void pointer
+ */
+MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvUnregisterParameterCallback)(
+    void *hWnd, void *paramID);
 
 /**
  * Sets the size of the given window.
@@ -353,7 +464,6 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvInstallContextMenuCommandW)(
  */
 MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowSize)(void *hWnd,
     unsigned int width, unsigned int height);
-
 
 /**
  * Sets the title of a view window.
@@ -381,7 +491,6 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowTitleA)(
 MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowTitleW)(
     void *hWnd, const wchar_t *title);
 
-
 /**
  * Sets the position of the given window.
  *
@@ -392,14 +501,12 @@ MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowTitleW)(
 MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowPosition)(void *hWnd,
     int x, int y);
 
-
 /**
  * Switches the given window to full screen mode.
  *
  * @param hWnd The window handle.
  */
 MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvSetWindowFullscreen)(void *hWnd);
-
 
 /**
  * Sets window hints.
