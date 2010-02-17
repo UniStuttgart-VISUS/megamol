@@ -14,9 +14,8 @@
 #include "misc/BezierDataCall.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "moldyn/ParticleGridDataCall.h"
-#include "special/CallRegisterAtController.h"
+//#include "special/CallRegisterAtController.h"
 #include "view/CallClipPlane.h"
-#include "view/CallCursorInput.h"
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender2D.h"
 #include "view/CallRender3D.h"
@@ -48,9 +47,8 @@ CallDescriptionManager::Instance() {
         instance->registerAutoDescription<misc::BezierDataCall>();
         instance->registerAutoDescription<moldyn::MultiParticleDataCall>();
         instance->registerAutoDescription<moldyn::ParticleGridDataCall>();
-        instance->registerAutoDescription<special::CallRegisterAtController>();
+        //instance->registerAutoDescription<special::CallRegisterAtController>();
         instance->registerAutoDescription<view::CallClipPlane>();
-        instance->registerAutoDescription<view::CallCursorInput>();
         instance->registerAutoDescription<view::CallGetTransferFunction>();
         instance->registerAutoDescription<view::CallRender2D>();
         instance->registerAutoDescription<view::CallRender3D>();

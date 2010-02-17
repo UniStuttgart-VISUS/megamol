@@ -1,7 +1,7 @@
 /*
  * View3D.h
  *
- * Copyright (C) 2008 - 2009 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
@@ -12,8 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "BoundingBoxes.h"
-#include "view/AbstractView.h"
-#include "Module.h"
+#include "view/AbstractView3D.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
@@ -39,7 +38,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class View3D: public AbstractView, public Module {
+    class View3D: public AbstractView3D {
     public:
 
         /**
@@ -142,6 +141,17 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze);
 
+    protected:
+
+        /**
+         * Unpacks the mouse coordinates, which are relative to the virtual
+         * viewport size.
+         *
+         * @param x The x coordinate of the mouse position
+         * @param y The y coordinate of the mouse position
+         */
+        virtual void unpackMouseCoordinates(float &x, float &y);
+
     private:
 
         /**
@@ -156,6 +166,7 @@ namespace view {
             FrozenValues(void) {
                 this->camParams = new vislib::graphics::CameraParamsStore();
                 this->time = 0.0f;
+                this->freezeCounter = 1;
             }
 
             /** The camera parameters frozen (does not work at all!) */
@@ -163,6 +174,9 @@ namespace view {
 
             /** The frame time frozen */
             float time;
+
+            /** The freezeCounter */
+            unsigned int freezeCounter;
 
         };
 
@@ -192,42 +206,6 @@ namespace view {
          * Renders the front side of the bounding box
          */
         inline void renderBBoxFrontside(void);
-
-        /**
-         * cursor input callback
-         *
-         * @param call The calling call
-         *
-         * @return The return value
-         */
-        bool onSetCursor2DButtonState(Call& call);
-
-        /**
-         * cursor input callback
-         *
-         * @param call The calling call
-         *
-         * @return The return value
-         */
-        bool onSetCursor2DPosition(Call& call);
-
-        /**
-         * cursor input callback
-         *
-         * @param call The calling call
-         *
-         * @return The return value
-         */
-        bool onSetInputModifier(Call& call);
-
-        /**
-         * cursor input callback
-         *
-         * @param call The calling call
-         *
-         * @return The return value
-         */
-        bool onResetView(Call& call);
 
         /**
          * Renders the soft cursor
@@ -296,9 +274,6 @@ namespace view {
 
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;
-
-        /** Slot for incoming cursor input */
-        CalleeSlot cursorInputSlot;
 
         /** The light direction vector (NOT LIGHT POSITION) */
         vislib::graphics::SceneSpaceVector3D lightDir;

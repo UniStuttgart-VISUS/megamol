@@ -212,11 +212,8 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    float viewportStuff[4] = {
-        cr->GetCameraParameters()->TileRect().Left(),
-        cr->GetCameraParameters()->TileRect().Bottom(),
-        cr->GetCameraParameters()->TileRect().Width(),
-        cr->GetCameraParameters()->TileRect().Height()};
+    float viewportStuff[4];
+    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
     glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;

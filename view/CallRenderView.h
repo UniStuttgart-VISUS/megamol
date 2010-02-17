@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.h"
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/CameraParameters.h"
-#include "vislib/deprecated.h"
 #include "vislib/graphicstypes.h"
 
 
@@ -46,13 +46,34 @@ namespace view {
             return "Call for registering a module at the cluster display";
         }
 
+        /** Function index of 'render' */
+        static const unsigned int CALL_RENDER;
+
+        /** Function index of 'freeze' */
+        static const unsigned int CALL_FREEZE;
+
+        /** Function index of 'unfreeze' */
+        static const unsigned int CALL_UNFREEZE;
+
+        /** Function index of 'SetCursor2DButtonState' */
+        static const unsigned int CALL_SETCURSOR2DBUTTONSTATE;
+
+        /** Function index of 'SetCursor2DPosition' */
+        static const unsigned int CALL_SETCURSOR2DPOSITION;
+
+        /** Function index of 'SetInputModifier' */
+        static const unsigned int CALL_SETINPUTMODIFIER;
+
+        /** Function index of 'ResetView' */
+        static const unsigned int CALL_RESETVIEW;
+
         /**
          * Answer the number of functions used for this call.
          *
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 3;
+            return 7;
         }
 
         /**
@@ -62,14 +83,7 @@ namespace view {
          *
          * @return The name of the requested function.
          */
-        static const char * FunctionName(unsigned int idx) {
-            switch (idx) {
-                case 0: return "render";
-                case 1: return "freeze";
-                case 2: return "unfreeze";
-                default: return NULL;
-            }
-        }
+        static const char * FunctionName(unsigned int idx);
 
         /**
          * Ctor.
@@ -134,6 +148,15 @@ namespace view {
         }
 
         /**
+         * Gets the input modifier
+         *
+         * @return The input modifier
+         */
+        inline mmcInputModifier InputModifier(void) const {
+            return this->mod;
+        }
+
+        /**
          * Answers the flag indicating that the background information has been set
          *
          * @return 'true' if the background information has been set
@@ -167,6 +190,42 @@ namespace view {
          */
         inline bool IsViewportSet(void) const {
             return this->flagVP;
+        }
+
+        /**
+         * Gets the button.
+         *
+         * @return The button
+         */
+        inline unsigned int MouseButton(void) const {
+            return this->btn;
+        }
+
+        /**
+         * Gets the 'down' flag.
+         *
+         * @return The 'down' flag
+         */
+        inline bool MouseButtonDown(void) const{
+            return this->down;
+        }
+
+        /**
+         * Gets the x coordinate.
+         *
+         * @return The x coordinate
+         */
+        inline float MouseX(void) const {
+            return this->x;
+        }
+
+        /**
+         * Gets the y coordinate.
+         *
+         * @return The y coordinate
+         */
+        inline float MouseY(void) const {
+            return this->y;
         }
 
         /**
@@ -222,6 +281,17 @@ namespace view {
         }
 
         /**
+         * Sets the input modifier info
+         *
+         * @param mod The input modifier
+         * qparam down The down flag
+         */
+        inline void SetInputModifier(mmcInputModifier mod, bool down) {
+            this->mod = mod;
+            this->down = down;
+        }
+
+        /**
          * Sets the projection information
          *
          * @param p The type of projection
@@ -232,6 +302,28 @@ namespace view {
             this->flagProj = true;
             this->projType = p;
             this->eye = e;
+        }
+
+        /**
+         * Sets the mouse button info
+         *
+         * @param btn The mouse button
+         * @param down The down flag
+         */
+        inline void SetMouseButton(unsigned int btn, bool down) {
+            this->btn = btn;
+            this->down = down;
+        }
+
+        /**
+         * Sets the mouse position
+         *
+         * @param x The x coordinate of the mouse position
+         * @param y The y coordinate of the mouse position
+         */
+        inline void SetMousePosition(float x, float y) {
+            this->x = x;
+            this->y = y;
         }
 
         /**
@@ -399,6 +491,24 @@ namespace view {
 
         /** The width of the virtual viewport */
         float width;
+
+        /** The button */
+        unsigned int btn;
+
+        /**
+         * Flag whether the button is pressed, or not, or the new input
+         * modifier state
+         */
+        bool down;
+
+        /** The x coordinate */
+        float x;
+
+        /** The y coordinate */
+        float y;
+
+        /** The input modifier to be set */
+        mmcInputModifier mod;
 
     };
 

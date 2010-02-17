@@ -14,7 +14,7 @@ TargetName := MegaMolCore
 OutDir := lib
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
-InputDirs := . api job misc moldyn param special utility utility/xml view vismol2
+InputDirs := . api job misc moldyn param utility utility/xml view vismol2
 IncludeDir := $(IncludeDir)
 VISlibs := cluster net gl graphics sys math base
 

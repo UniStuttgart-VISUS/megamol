@@ -1,20 +1,19 @@
 /*
- * View2D.h
+ * OverrideView.h
  *
- * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VIEW2D_H_INCLUDED
-#define MEGAMOLCORE_VIEW2D_H_INCLUDED
+#ifndef MEGAMOLCORE_OVERRIDEVIEW_H_INCLUDED
+#define MEGAMOLCORE_OVERRIDEVIEW_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/AbstractView.h"
-#include "view/MouseFlags.h"
-#include "CallerSlot.h"
 #include "param/ParamSlot.h"
+#include "view/AbstractOverrideView.h"
+#include "vislib/CameraParameters.h"
 
 
 namespace megamol {
@@ -23,9 +22,9 @@ namespace view {
 
 
     /**
-     * Base class of rendering graph calls
+     * Abstract base class of override rendering views
      */
-    class View2D: public AbstractView {
+    class OverrideView : public AbstractOverrideView {
     public:
 
         /**
@@ -34,7 +33,7 @@ namespace view {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "View2D";
+            return "OverrideView";
         }
 
         /**
@@ -43,7 +42,7 @@ namespace view {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "2D View Module";
+            return "Override View Module";
         }
 
         /**
@@ -56,10 +55,10 @@ namespace view {
         }
 
         /** Ctor. */
-        View2D(void);
+        OverrideView(void);
 
         /** Dtor. */
-        virtual ~View2D(void);
+        virtual ~OverrideView(void);
 
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
@@ -107,15 +106,6 @@ namespace view {
         virtual void SetInputModifier(mmcInputModifier mod, bool down);
 
         /**
-         * Callback requesting a rendering of this view
-         *
-         * @param call The calling call
-         *
-         * @return The return value
-         */
-        virtual bool OnRenderView(Call& call);
-
-        /**
          * Freezes, updates, or unfreezes the view onto the scene (not the
          * rendering, but camera settings, timing, etc).
          *
@@ -124,7 +114,7 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze);
 
-    private:
+    protected:
 
         /**
          * Implementation of 'Create'.
@@ -139,61 +129,57 @@ namespace view {
         virtual void release(void);
 
         /**
-         * Resets the view
+         * Packs the mouse coordinates, which are relative to the virtual
+         * viewport size.
          *
-         * @param p Must be resetViewSlot
-         *
-         * @return true
+         * @param x The x coordinate of the mouse position
+         * @param y The y coordinate of the mouse position
          */
-        bool onResetView(param::ParamSlot& p);
+        virtual void packMouseCoordinates(float &x, float &y);
 
-        /** The background colour */
-        param::ParamSlot backCol;
+    private:
 
-        /** The background colour for the view */
-        float bkgndCol[3];
+        /** The stereo projection eye */
+        vislib::graphics::CameraParameters::StereoEye eye;
 
-        /**
-         * Flag if this is the first time an image gets created. Used for 
-         * initial camera reset
-         */
-        bool firstImg;
+        /** The stereo projection eye */
+        param::ParamSlot eyeSlot;
 
-        /** The viewport height */
-        float height;
+        /** The stereo projection type */
+        vislib::graphics::CameraParameters::ProjectionType projType;
 
-        /** The mouse drag mode */
-        unsigned int mouseMode;
+        /** The stereo projection type */
+        param::ParamSlot projTypeSlot;
 
-        /** The mouse x coordinate */
-        float mouseX;
+        /** The height of the rendering tile */
+        float tileH;
 
-        /** The mouse y coordinate */
-        float mouseY;
+        /** The rendering tile */
+        param::ParamSlot tileSlot;
 
-        /** The mouse flags */
-        MouseFlags mouseFlags;
+        /** The width of the rendering tile */
+        float tileW;
 
-        /** Slot to call the renderer to render */
-        CallerSlot rendererSlot;
+        /** The x coordinate of the rendering tile */
+        float tileX;
 
-        /** Triggers the reset of the view */
-        param::ParamSlot resetViewSlot;
+        /** The y coordinate of the rendering tile */
+        float tileY;
 
-        /** Shows/hides the bounding box */
-        param::ParamSlot showBBoxSlot;
+        /** The height of the virtual viewport */
+        float virtHeight;
 
-        /** The view focus x coordinate */
-        float viewX;
+        /** The virtual viewport size */
+        param::ParamSlot virtSizeSlot;
 
-        /** The view focus y coordinate */
-        float viewY;
+        /** The width of the virtual viewport */
+        float virtWidth;
 
-        /** The view zoom factor */
-        float viewZoom;
+        /** The width of the actual viewport in pixels */
+        unsigned int viewportWidth;
 
-        /** the viewport width */
-        float width;
+        /** The height of the actual viewport in pixels */
+        unsigned int viewportHeight;
 
     };
 
@@ -202,4 +188,4 @@ namespace view {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_VIEW2D_H_INCLUDED */
+#endif /* MEGAMOLCORE_ABSTRACTOVERRIDEVIEW_H_INCLUDED */

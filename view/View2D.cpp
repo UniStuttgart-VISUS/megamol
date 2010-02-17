@@ -1,7 +1,7 @@
 /*
  * View2D.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
@@ -30,8 +30,6 @@ view::View2D::View2D(void) : view::AbstractView(),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"),
         viewX(0.0f), viewY(0.0f), viewZoom(1.0f), width(1.0f) {
-
-    this->MakeSlotAvailable(view::AbstractView::getRenderViewSlot());
 
     this->bkgndCol[0] = 0.0f;
     this->bkgndCol[1] = 0.0f;

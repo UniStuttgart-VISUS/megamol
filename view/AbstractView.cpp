@@ -10,7 +10,6 @@
 #include <climits>
 #include "AbstractNamedObject.h"
 #include "CoreInstance.h"
-#include "Module.h"
 #include "param/AbstractParam.h"
 #include "param/ParamSlot.h"
 #include "view/CallRenderView.h"
@@ -25,17 +24,32 @@ using vislib::sys::Log;
 /*
  * view::AbstractView::AbstractView
  */
-view::AbstractView::AbstractView(void) : 
-        renderViewSlot("renderView", "Connects modules requesting renderings"),
+view::AbstractView::AbstractView(void) : Module(),
+        renderSlot("render", "Connects modules requesting renderings"),
         hooks() {
 
-    this->renderViewSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(0), &AbstractView::OnRenderView);
-    this->renderViewSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(1), &AbstractView::OnFreezeView);
-    this->renderViewSlot.SetCallback(view::CallRenderView::ClassName(), 
-        view::CallRenderView::FunctionName(2), &AbstractView::OnUnfreezeView);
-
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_RENDER),
+        &AbstractView::OnRenderView);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE),
+        &AbstractView::OnFreezeView);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE),
+        &AbstractView::OnUnfreezeView);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE),
+        &AbstractView::onSetCursor2DButtonState);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_SETCURSOR2DPOSITION),
+        &AbstractView::onSetCursor2DPosition);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_SETINPUTMODIFIER),
+        &AbstractView::onSetInputModifier);
+    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), 
+        view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW),
+        &AbstractView::onResetView);
+    this->MakeSlotAvailable(&this->renderSlot);
 }
 
 
@@ -44,7 +58,6 @@ view::AbstractView::AbstractView(void) :
  */
 view::AbstractView::~AbstractView(void) {
     this->hooks.Clear(); // DO NOT DELETE OBJECTS
-    // intentionally empty
 }
 
 
@@ -218,5 +231,61 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
 
     }
 
+    return true;
+}
+
+
+/*
+ * view::AbstractView::unpackMouseCoordinates
+ */
+void view::AbstractView::unpackMouseCoordinates(float &x, float &y) {
+    // intentionally empty
+    // do something smart in the derived classes
+}
+
+
+/*
+ * view::AbstractView::onSetCursor2DButtonState
+ */
+bool view::AbstractView::onSetCursor2DButtonState(Call& call) {
+    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
+    if (crv == NULL) return false;
+    this->SetCursor2DButtonState(crv->MouseButton(), crv->MouseButtonDown());
+    return true;
+}
+
+
+/*
+ * view::AbstractView::onSetCursor2DPosition
+ */
+bool view::AbstractView::onSetCursor2DPosition(Call& call) {
+    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
+    if (crv == NULL) return false;
+
+    float x = crv->MouseX();
+    float y = crv->MouseY();
+    this->unpackMouseCoordinates(x, y);
+    this->SetCursor2DPosition(x, y);
+
+    return true;
+}
+
+
+/*
+ * view::AbstractView::onSetInputModifier
+ */
+bool view::AbstractView::onSetInputModifier(Call& call) {
+    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
+    if (crv == NULL) return false;
+    this->SetInputModifier(crv->InputModifier(), crv->MouseButtonDown());
+    return true;
+}
+
+
+/*
+ * view::AbstractView::onResetView
+ */
+bool view::AbstractView::onResetView(Call& call) {
+    this->ResetView();
     return true;
 }

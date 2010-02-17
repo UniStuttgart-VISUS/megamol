@@ -1,20 +1,20 @@
 /*
- * ClusterCameraParamOverride.cpp
+ * CameraParamOverride.cpp
  *
  * Copyright (C) 2008 - 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "ClusterCameraParamOverride.h"
+#include "CameraParamOverride.h"
 
 using namespace megamol::core;
 
 
 /*
- * view::ClusterCameraParamOverride::ClusterCameraParamOverride
+ * view::CameraParamOverride::CameraParamOverride
  */
-view::ClusterCameraParamOverride::ClusterCameraParamOverride(void)
+view::CameraParamOverride::CameraParamOverride(void)
         : vislib::graphics::CameraParamsOverride(),
         projOverridden(false), tileOverridden(false),
         eye(vislib::graphics::CameraParameters::RIGHT_EYE),
@@ -25,9 +25,9 @@ view::ClusterCameraParamOverride::ClusterCameraParamOverride(void)
 
 
 /*
- * view::ClusterCameraParamOverride::ClusterCameraParamOverride
+ * view::CameraParamOverride::CameraParamOverride
  */
-view::ClusterCameraParamOverride::ClusterCameraParamOverride(
+view::CameraParamOverride::CameraParamOverride(
         const vislib::SmartPtr<vislib::graphics::CameraParameters>& params)
         : vislib::graphics::CameraParamsOverride(params),
         projOverridden(false), tileOverridden(false), eye(params->Eye()),
@@ -38,17 +38,17 @@ view::ClusterCameraParamOverride::ClusterCameraParamOverride(
 
 
 /*
- * view::ClusterCameraParamOverride::~ClusterCameraParamOverride
+ * view::CameraParamOverride::~CameraParamOverride
  */
-view::ClusterCameraParamOverride::~ClusterCameraParamOverride(void) {
+view::CameraParamOverride::~CameraParamOverride(void) {
     // intentionally empty
 }
 
 
 /*
- * view::ClusterCameraParamOverride::SetOverrides
+ * view::CameraParamOverride::SetOverrides
  */
-void view::ClusterCameraParamOverride::SetOverrides(
+void view::CameraParamOverride::SetOverrides(
         const view::CallRenderView& call) {
     this->projOverridden = call.IsProjectionSet();
     this->eye = call.GetEye();
@@ -63,10 +63,10 @@ void view::ClusterCameraParamOverride::SetOverrides(
 
 
 /*
- * view::ClusterCameraParamOverride::operator=
+ * view::CameraParamOverride::operator=
  */
-view::ClusterCameraParamOverride& view::ClusterCameraParamOverride::operator=(
-        const view::ClusterCameraParamOverride& rhs) {
+view::CameraParamOverride& view::CameraParamOverride::operator=(
+        const view::CameraParamOverride& rhs) {
     CameraParamsOverride::operator=(rhs);
 
     this->projOverridden = rhs.projOverridden;
@@ -83,10 +83,10 @@ view::ClusterCameraParamOverride& view::ClusterCameraParamOverride::operator=(
 
 
 /*
- * view::ClusterCameraParamOverride::operator==
+ * view::CameraParamOverride::operator==
  */
-bool view::ClusterCameraParamOverride::operator==(
-        const view::ClusterCameraParamOverride& rhs) const {
+bool view::CameraParamOverride::operator==(
+        const view::CameraParamOverride& rhs) const {
     return (CameraParamsOverride::operator==(rhs)
         && (this->projOverridden == rhs.projOverridden)
         && (this->eye == rhs.eye)
@@ -98,18 +98,18 @@ bool view::ClusterCameraParamOverride::operator==(
 
 
 /*
- * view::ClusterCameraParamOverride::preBaseSet
+ * view::CameraParamOverride::preBaseSet
  */
-void view::ClusterCameraParamOverride::preBaseSet(
+void view::CameraParamOverride::preBaseSet(
         const vislib::SmartPtr<vislib::graphics::CameraParameters>& params) {
     // intentionally empty
 }
 
 
 /*
- * view::ClusterCameraParamOverride::resetOverride
+ * view::CameraParamOverride::resetOverride
  */
-void view::ClusterCameraParamOverride::resetOverride(void) {
+void view::CameraParamOverride::resetOverride(void) {
     ASSERT(!this->paramsBase().IsNull());
 
     this->projOverridden = false;

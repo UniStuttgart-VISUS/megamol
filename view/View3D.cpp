@@ -1,7 +1,7 @@
 /*
  * View3D.cpp
  *
- * Copyright (C) 2008 - 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,9 +11,8 @@
 #include <windows.h>
 #endif /* _WIN32 */
 #include <GL/gl.h>
-#include "view/CallCursorInput.h"
 #include "view/CallRenderView.h"
-#include "view/ClusterCameraParamOverride.h"
+#include "view/CameraParamOverride.h"
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
 #include "param/FloatParam.h"
@@ -37,11 +36,10 @@ using namespace megamol::core;
 /*
  * view::View3D::View3D
  */
-view::View3D::View3D(void) : view::AbstractView(), cam(), camParams(),
+view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         camOverrides(), setViewport(true), cursor2d(), modkeys(), rotator1(),
         rotator2(), zoomer1(), zoomer2(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
-        cursorInputSlot("cursorInput", "Slot for incoming cursor input"),
         lightDir(0.5f, -1.0f, -1.0f), isCamLight(true), bboxs(),
         animPlay("animPlay", "Bool parameter to play/stop the animation"),
         animSpeed("animSpeed", "Float parameter of animation speed in time frames per second"),
@@ -54,10 +52,9 @@ view::View3D::View3D(void) : view::AbstractView(), cam(), camParams(),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         timeFrame(0.0f), animTimer(true), fpsCounter(10), fpsOutputTimer(0),
         firstImg(false), frozenValues(NULL) {
-    this->MakeSlotAvailable(view::AbstractView::getRenderViewSlot());
 
     this->camParams = this->cam.Parameters();
-    this->camOverrides = new ClusterCameraParamOverride(this->camParams);
+    this->camOverrides = new CameraParamOverride(this->camParams);
 
     vislib::graphics::ImageSpaceType defWidth(
         static_cast<vislib::graphics::ImageSpaceType>(100));
@@ -74,16 +71,6 @@ view::View3D::View3D(void) : view::AbstractView(), cam(), camParams(),
 
     this->rendererSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
-
-    this->cursorInputSlot.SetCallback(view::CallCursorInput::ClassName(), 
-        view::CallCursorInput::FunctionName(0), &View3D::onSetCursor2DButtonState);
-    this->cursorInputSlot.SetCallback(view::CallCursorInput::ClassName(), 
-        view::CallCursorInput::FunctionName(1), &View3D::onSetCursor2DPosition);
-    this->cursorInputSlot.SetCallback(view::CallCursorInput::ClassName(), 
-        view::CallCursorInput::FunctionName(2), &View3D::onSetInputModifier);
-    this->cursorInputSlot.SetCallback(view::CallCursorInput::ClassName(), 
-        view::CallCursorInput::FunctionName(3), &View3D::onResetView);
-    this->MakeSlotAvailable(&this->cursorInputSlot);
 
     // empty bounding box will trigger initialisation
     this->bboxs.Clear();
@@ -343,8 +330,14 @@ bool view::View3D::OnRenderView(Call& call) {
     this->setViewport = false;
     if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
         this->cam.SetParameters(this->camOverrides);
-        this->camOverrides.DynamicCast<ClusterCameraParamOverride>()
+        this->camOverrides.DynamicCast<CameraParamOverride>()
             ->SetOverrides(*crv);
+        if (!crv->IsTileSet() && crv->IsViewportSet()) {
+            this->camOverrides->SetVirtualViewSize(
+                static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportWidth()),
+                static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportHeight()));
+            this->camOverrides->ResetTileRect();
+        }
     }
     if (crv->IsBackgroundSet()) {
         redirtyColour = this->backCol.IsDirty();
@@ -384,18 +377,30 @@ void view::View3D::UpdateFreeze(bool freeze) {
     if (freeze) {
         if (this->frozenValues == NULL) {
             this->frozenValues = new FrozenValues();
-            this->camOverrides.DynamicCast<ClusterCameraParamOverride>()
+            this->camOverrides.DynamicCast<CameraParamOverride>()
                 ->SetParametersBase(this->frozenValues->camParams);
             this->cam.SetParameters(this->frozenValues->camParams);
         }
         *(this->frozenValues->camParams) = *this->camParams;
         this->frozenValues->time = this->timeFrame;
     } else {
-        this->camOverrides.DynamicCast<ClusterCameraParamOverride>()
+        this->camOverrides.DynamicCast<CameraParamOverride>()
             ->SetParametersBase(this->camParams);
         this->cam.SetParameters(this->camParams);
         SAFE_DELETE(this->frozenValues);
     }
+}
+
+
+/*
+ * view::View3D::unpackMouseCoordinates
+ */
+void view::View3D::unpackMouseCoordinates(float &x, float &y) {
+    // fixing around the otherwise correct flag 'flipY'
+    // in this mode the mouse-events rotation, pan, etc. are wrong,
+    // but at least the soft-cursor is shown correctly
+    y = this->camParams->VirtualViewSize().Height() -
+        static_cast<vislib::graphics::ImageSpaceType>(1) - y;
 }
 
 
@@ -563,53 +568,6 @@ void view::View3D::renderBBoxFrontside(void) {
 
 
 /*
- * view::View3D::onSetCursor2DButtonState
- */
-bool view::View3D::onSetCursor2DButtonState(Call& call) {
-    view::CallCursorInput *cci = dynamic_cast<view::CallCursorInput *>(&call);
-    if (cci == NULL) return false;
-    this->SetCursor2DButtonState(cci->Btn(), cci->Down());
-    return true;
-}
-
-
-/*
- * view::View3D::onSetCursor2DPosition
- */
-bool view::View3D::onSetCursor2DPosition(Call& call) {
-    view::CallCursorInput *cci = dynamic_cast<view::CallCursorInput *>(&call);
-    if (cci == NULL) return false;
-
-    float w = this->camParams->VirtualViewSize().Width();
-    float h = this->camParams->VirtualViewSize().Height();
-    float s = vislib::math::Min(w, h);
-    this->SetCursor2DPosition(0.5f * w + cci->X() * s, 0.5f * h + cci->Y() * s);
-
-    return true;
-}
-
-
-/*
- * view::View3D::onSetInputModifier
- */
-bool view::View3D::onSetInputModifier(Call& call) {
-    view::CallCursorInput *cci = dynamic_cast<view::CallCursorInput *>(&call);
-    if (cci == NULL) return false;
-    this->SetInputModifier(cci->Mod(), cci->Down());
-    return true;
-}
-
-
-/*
- * view::View3D::onResetView
- */
-bool view::View3D::onResetView(Call& call) {
-    this->ResetView();
-    return true;
-}
-
-
-/*
  * view::View3D::renderSoftCursor
  */
 void view::View3D::renderSoftCursor(void) {
@@ -618,32 +576,15 @@ void view::View3D::renderSoftCursor(void) {
     ::glMatrixMode(GL_MODELVIEW);
     ::glLoadIdentity();
 
-    // transform to tile coordinates!
-    ::glTranslatef(-1.0, -1.0f, -1.0f);
-    ::glScalef(2.0f, 2.0f, 1.0f);
-    ::glScalef(1.0f / this->cam.Parameters()->TileRect().Width(),
-        1.0f / this->cam.Parameters()->TileRect().Height(), 1.0f);
-    ::glTranslatef(-this->cam.Parameters()->TileRect().Left(),
-        -this->cam.Parameters()->TileRect().Bottom(), 0.0f);
+    vislib::SmartPtr<vislib::graphics::CameraParameters> params = this->cam.Parameters();
 
-    float w = this->camParams->VirtualViewSize().Width();
-    float h = this->camParams->VirtualViewSize().Height();
-    float s = vislib::math::Min(w, h);
-    float x = this->cursor2d.X();
-    float y = this->cursor2d.Y();
+    const float cursorScale = 1.0f;
 
-    x = (x - 0.5f * w) / s;
-    y = (y - 0.5f * h) / s;
-
-    w = this->cam.Parameters()->VirtualViewSize().Width();
-    h = this->cam.Parameters()->VirtualViewSize().Height();
-    s = vislib::math::Min(w, h);
-
-    x = x * s + 0.5f * w;
-    y = y * s + 0.5f * h;
-
-    ::glTranslatef(x, y, 0.0f);
-    ::glScalef(1.5f, -1.5f, 1.0f);
+    ::glTranslatef(-1.0f, 1.0f, 0.0f);
+    ::glScalef(2.0f / params->TileRect().Width(), -2.0f / params->TileRect().Height(), 1.0f);
+    ::glTranslatef(-params->TileRect().Left(), -params->TileRect().Bottom(), 0.0f);
+    ::glTranslatef(this->cursor2d.X(), this->cursor2d.Y(), 0.0f);
+    ::glScalef(cursorScale, cursorScale, 1.0f);
 
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

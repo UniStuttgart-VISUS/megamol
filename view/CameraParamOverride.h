@@ -1,12 +1,12 @@
 /*
- * ClusterCameraParamOverride.h
+ * CameraParamOverride.h
  *
  * Copyright (C) 2008 - 2009 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CLUSTERCAMERAPARAMOVERRIDE_H_INCLUDED
-#define MEGAMOLCORE_CLUSTERCAMERAPARAMOVERRIDE_H_INCLUDED
+#ifndef MEGAMOLCORE_CameraParamOverride_H_INCLUDED
+#define MEGAMOLCORE_CameraParamOverride_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -25,13 +25,13 @@ namespace view {
     /**
      * Camera parameter override class overriding the eye.
      */
-    class ClusterCameraParamOverride :
+    class CameraParamOverride :
         public vislib::graphics::CameraParamsOverride {
 
     public:
 
         /** Ctor. */
-        ClusterCameraParamOverride(void);
+        CameraParamOverride(void);
 
         /** 
          * Ctor. 
@@ -41,12 +41,12 @@ namespace view {
          *
          * @param params The base 'CameraParameters' object to use.
          */
-        ClusterCameraParamOverride(
+        CameraParamOverride(
             const vislib::SmartPtr<vislib::graphics::CameraParameters>&
                 params);
 
         /** Dtor. */
-        ~ClusterCameraParamOverride(void);
+        ~CameraParamOverride(void);
 
         /**
          * Sets the overrides variables based on the call to render the
@@ -106,8 +106,8 @@ namespace view {
          *
          * @return Reference to this object.
          */
-        ClusterCameraParamOverride& operator=(
-            const ClusterCameraParamOverride& rhs);
+        CameraParamOverride& operator=(
+            const CameraParamOverride& rhs);
 
         /**
          * Test for equality
@@ -118,7 +118,7 @@ namespace view {
          *         'false' if at least one member apart from syncNumber is not
          *         equal.
          */
-        bool operator==(const ClusterCameraParamOverride& rhs) const;
+        bool operator==(const CameraParamOverride& rhs) const;
 
     private:
 
@@ -160,4 +160,4 @@ namespace view {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CLUSTERCAMERAPARAMOVERRIDE_H_INCLUDED */
+#endif /* MEGAMOLCORE_CameraParamOverride_H_INCLUDED */

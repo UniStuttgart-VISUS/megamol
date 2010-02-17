@@ -13,6 +13,7 @@
 
 #include "api/MegaMolCore.h"
 #include "CalleeSlot.h"
+#include "Module.h"
 #include "param/AbstractParam.h"
 #include "vislib/Array.h"
 #include "vislib/SingleLinkedList.h"
@@ -22,17 +23,13 @@
 
 namespace megamol {
 namespace core {
-
-    /** forward declaration */
-    class Module;
-
 namespace view {
 
 
     /**
      * Abstract base class of rendering views
      */
-    class AbstractView {
+    class AbstractView : public Module {
     public:
 
         /**
@@ -203,6 +200,14 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze) = 0;
 
+        /**
+         * Sets the button state of a button of the 2d cursor. See
+         * 'vislib::graphics::Cursor2D' for additional information.
+         *
+         * @param button The button.
+         * @param down Flag whether the button is pressed, or not.
+         */
+
     protected:
 
         /** Typedef alias */
@@ -225,15 +230,6 @@ namespace view {
          */
         bool desiredWindowPosition(const vislib::StringW& str,
             int *x, int *y, int *w, int *h, bool *nd);
-
-        /**
-         * Answer the render view slot. Use this method in the first ctor of a
-         * class derived from this class and from 'Module' to make this slot
-         * available.
-         */
-        inline AbstractSlot* getRenderViewSlot(void) {
-            return &this->renderViewSlot;
-        }
 
         /**
          * Answer if hook code should be executed.
@@ -263,10 +259,55 @@ namespace view {
             }
         }
 
+        /**
+         * Unpacks the mouse coordinates, which are relative to the virtual
+         * viewport size.
+         *
+         * @param x The x coordinate of the mouse position
+         * @param y The y coordinate of the mouse position
+         */
+        virtual void unpackMouseCoordinates(float &x, float &y);
+
     private:
 
+        /**
+         * cursor input callback
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        bool onSetCursor2DButtonState(Call& call);
+
+        /**
+         * cursor input callback
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        bool onSetCursor2DPosition(Call& call);
+
+        /**
+         * cursor input callback
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        bool onSetInputModifier(Call& call);
+
+        /**
+         * cursor input callback
+         *
+         * @param call The calling call
+         *
+         * @return The return value
+         */
+        bool onResetView(Call& call);
+
         /** Slot for incoming rendering requests */
-        CalleeSlot renderViewSlot;
+        CalleeSlot renderSlot;
 
         /** List of registered hooks */
         vislib::SingleLinkedList<Hooks *> hooks;

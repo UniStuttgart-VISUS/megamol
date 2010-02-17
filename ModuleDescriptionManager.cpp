@@ -23,15 +23,15 @@
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleSphereRenderer.h"
 #include "moldyn/VIMDataSource.h"
-#include "special/AnaglyphStereoDisplay.h"
-#include "special/ClusterController.h"
-#include "special/ClusterDisplay.h"
-#include "special/ColStereoDisplay.h"
-#include "special/RenderMaster.h"
-#include "special/TimeView.h"
-#include "special/TitleSceneView.h"
-#include "special/ScreenShooter.h"
-#include "special/VisLogoRenderer.h"
+//#include "special/AnaglyphStereoDisplay.h"
+//#include "special/ClusterController.h"
+//#include "special/ClusterDisplay.h"
+//#include "special/ColStereoDisplay.h"
+//#include "special/RenderMaster.h"
+//#include "special/TimeView.h"
+//#include "special/TitleSceneView.h"
+//#include "special/ScreenShooter.h"
+//#include "special/VisLogoRenderer.h"
 //#include "volume/VolumeRenderer.h"
 //#include "volume/VolumeData.h"
 //#include "volume/Scatterplot2D.h"
@@ -39,6 +39,7 @@
 //#include "volume/View2D.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
+#include "view/OverrideView.h"
 #include "view/SwitchRenderer3D.h"
 #include "view/View2D.h"
 #include "view/View3D.h"
@@ -87,22 +88,23 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
-        instance->registerAutoDescription<special::AnaglyphStereoDisplay>();
-        instance->registerAutoDescription<special::ClusterController>();
-        instance->registerAutoDescription<special::ClusterDisplay>();
-        instance->registerAutoDescription<special::ColStereoDisplay>();
-        instance->registerAutoDescription<special::RenderMaster>();
-        instance->registerAutoDescription<special::ScreenShooter>();
-        instance->registerAutoDescription<special::TimeView>();
-        instance->registerAutoDescription<special::TitleSceneView>();
+        //instance->registerAutoDescription<special::AnaglyphStereoDisplay>();
+        //instance->registerAutoDescription<special::ClusterController>();
+        //instance->registerAutoDescription<special::ClusterDisplay>();
+        //instance->registerAutoDescription<special::ColStereoDisplay>();
+        //instance->registerAutoDescription<special::RenderMaster>();
+        //instance->registerAutoDescription<special::ScreenShooter>();
+        //instance->registerAutoDescription<special::TimeView>();
+        //instance->registerAutoDescription<special::TitleSceneView>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();
+        instance->registerAutoDescription<view::OverrideView>();
         instance->registerAutoDescription<view::SwitchRenderer3D>();
         instance->registerAutoDescription<view::View2D>();
         instance->registerAutoDescription<view::View3D>();
 
         instance->registerAutoDescription<job::JobThread>();
-        instance->registerAutoDescription<special::VisLogoRenderer>();
+        //instance->registerAutoDescription<special::VisLogoRenderer>();
 //        instance->registerAutoDescription<volume::VolumeRenderer>();
 //        instance->registerAutoDescription<volume::VolumeData>();
 //        instance->registerAutoDescription<volume::Scatterplot2D>();

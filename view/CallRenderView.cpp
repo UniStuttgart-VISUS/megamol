@@ -12,6 +12,64 @@ using namespace megamol::core;
 
 
 /*
+ * view::CallRenderView::CALL_RENDER
+ */
+const unsigned int view::CallRenderView::CALL_RENDER = 0;
+
+
+/*
+ * view::CallRenderView::CALL_FREEZE
+ */
+const unsigned int view::CallRenderView::CALL_FREEZE = 1;
+
+
+/*
+ * view::CallRenderView::CALL_UNFREEZE
+ */
+const unsigned int view::CallRenderView::CALL_UNFREEZE = 2;
+
+
+/*
+ * view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE
+ */
+const unsigned int view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE = 3;
+
+
+/*
+ * view::CallRenderView::CALL_SETCURSOR2DPOSITION
+ */
+const unsigned int view::CallRenderView::CALL_SETCURSOR2DPOSITION = 4;
+
+
+/*
+ * view::CallRenderView::CALL_SETINPUTMODIFIER
+ */
+const unsigned int view::CallRenderView::CALL_SETINPUTMODIFIER = 5;
+
+
+/*
+ * view::CallRenderView::CALL_RESETVIEW
+ */
+const unsigned int view::CallRenderView::CALL_RESETVIEW = 6;
+
+
+/*
+ * view::CallRenderView::FunctionName
+ */
+const char * view::CallRenderView::FunctionName(unsigned int idx) {
+    switch (idx) {
+        case 0: return "render";
+        case 1: return "freeze";
+        case 2: return "unfreeze";
+        case 3: return "SetCursor2DButtonState";
+        case 4: return "SetCursor2DPosition";
+        case 5: return "SetInputModifier";
+        case 6: return "ResetView";
+        default: return NULL;
+    }
+}
+
+/*
  * view::CallRenderView::CallRenderView
  */
 view::CallRenderView::CallRenderView(void) : Call(), bkgndB(0), bkgndG(0),
@@ -20,7 +78,8 @@ view::CallRenderView::CallRenderView(void) : Call(), bkgndB(0), bkgndG(0),
         height(1.0f),
         projType(vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
         tileH(1.0f), tileW(1.0f), tileX(0.0f), tileY(0.0f), vpHeight(1),
-        vpWidth(1), width(1.0f) {
+        vpWidth(1), width(1.0f), btn(0), down(false),
+        x(0.0f), y(0.0f), mod(MMC_INMOD_SHIFT) {
     // intentionally empty
 }
 
@@ -62,5 +121,10 @@ view::CallRenderView& view::CallRenderView::operator=(const view::CallRenderView
     this->vpHeight = rhs.vpHeight;
     this->vpWidth = rhs.vpWidth;
     this->width = rhs.width;
+    this->btn = rhs.btn;
+    this->down = rhs.down;
+    this->x = rhs.x;
+    this->y = rhs.y;
+    this->mod = rhs.mod;
     return *this;
 }
