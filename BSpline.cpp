@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "BSpline.h"
 
-using namespace megamol::core;
+using namespace megamol;
 
 /*
  * protein::BSpline::BSpline

@@ -22,7 +22,6 @@
 #include <vector>
 
 namespace megamol {
-namespace core {
 namespace protein {
 
 	/*
@@ -34,7 +33,7 @@ namespace protein {
 	 *    o rainbow / "chain"-bow(?)
      */
 
-	class ProteinRenderer : public view::Renderer3DModule
+	class ProteinRenderer : public megamol::core::view::Renderer3DModule
 	{
 	public:
         /**
@@ -90,7 +89,8 @@ namespace protein {
 			STRUCTURE = 2,
 			VALUE     = 3,
 			CHAIN_ID  = 4,
-			RAINBOW   = 5
+			RAINBOW   = 5,
+			CHARGE    = 6
 		};
 
 	   /**********************************************************************
@@ -153,7 +153,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetCapabilities(Call& call);
+        virtual bool GetCapabilities( megamol::core::Call& call);
 
         /**
          * The get extents callback. The module should set the members of
@@ -164,7 +164,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(Call& call);
+        virtual bool GetExtents( megamol::core::Call& call);
 
         /**
          * The Open GL Render callback.
@@ -172,7 +172,7 @@ namespace protein {
          * @param call The calling call.
          * @return The return value of the function.
          */
-		virtual bool Render(Call& call);
+		virtual bool Render( megamol::core::Call& call);
 
         /**
          * Draw label for current loaded RMS frame.
@@ -187,13 +187,12 @@ namespace protein {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        bool ProcessFrameRequest(Call& call);
+        bool ProcessFrameRequest( megamol::core::Call& call);
 
 		/**
 		 * Render protein data in LINES mode.
 		 *
 		 * @param prot The data interface.
-		 * @param info The renderer information.
 		 */
 		void RenderLines( const CallProteinData *prot);
 
@@ -201,7 +200,6 @@ namespace protein {
 		 * Render protein data in STICK_RAYCASTING mode.
 		 *
 		 * @param prot The data interface.
-		 * @param info The renderer information.
 		 */
 		void RenderStickRaycasting( const CallProteinData *prot);
 
@@ -209,7 +207,6 @@ namespace protein {
 		 * Render protein data in BALL_AND_STICK mode using GPU raycasting.
 		 *
 		 * @param prot The data interface.
-		 * @param info The renderer information.
 		 */
 		void RenderBallAndStick( const CallProteinData *prot);
 
@@ -217,14 +214,12 @@ namespace protein {
 		 * Render protein data in SPACEFILLING mode using GPU raycasting.
 		 *
 		 * @param prot The data interface.
-		 * @param info The renderer information.
 		 */
 		void RenderSpacefilling( const CallProteinData *prot);
 
 		 /* Render protein data in SAS mode (Solvent Accessible Surface) using GPU raycasting.
 		 *
 		 * @param prot The data interface.
-		 * @param info The renderer information.
 		 */
 		void RenderSolventAccessibleSurface( const CallProteinData *prot);
 
@@ -232,7 +227,6 @@ namespace protein {
 		 * Render disulfide bonds using GL_LINES.
 		 *
 		 * @param prot The data interface.
-		 * @param info The renderer information.
 		 */
 		void RenderDisulfideBondsLine( const CallProteinData *prot);
 
@@ -247,6 +241,13 @@ namespace protein {
 		 void FillAminoAcidColorTable(void);
 		 
 		 /**
+		 * Creates a rainbow color table with 'num' entries.
+		 *
+		 * @param num The number of color entries.
+		 */
+		void MakeRainbowColorTable( unsigned int num);
+		
+		/**
 		  * Make color table for all atoms acoording to the current coloring mode.
 		  * The color table is only computed if it is empty or if the recomputation 
 		  * is forced by parameter.
@@ -261,9 +262,9 @@ namespace protein {
 		 **********************************************************************/
 
         // caller slot
-		CallerSlot m_protDataCallerSlot;
+		megamol::core::CallerSlot m_protDataCallerSlot;
         // callee slot
-        CalleeSlot m_callFrameCalleeSlot;
+        megamol::core::CalleeSlot m_callFrameCalleeSlot;
 
         // 'true' if there is rms data to be rendered
         bool m_renderRMSData;
@@ -274,12 +275,12 @@ namespace protein {
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> m_cameraInfo;
 
-        param::ParamSlot m_renderingModeParam;
-        param::ParamSlot m_coloringModeParam;
-        param::ParamSlot m_drawBackboneParam;
-        param::ParamSlot m_drawDisulfideBondsParam;
-		param::ParamSlot m_stickRadiusParam;
-		param::ParamSlot m_probeRadiusParam;
+        megamol::core::param::ParamSlot m_renderingModeParam;
+        megamol::core::param::ParamSlot m_coloringModeParam;
+        megamol::core::param::ParamSlot m_drawBackboneParam;
+        megamol::core::param::ParamSlot m_drawDisulfideBondsParam;
+		megamol::core::param::ParamSlot m_stickRadiusParam;
+		megamol::core::param::ParamSlot m_probeRadiusParam;
 
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader m_sphereShader;
@@ -341,14 +342,20 @@ namespace protein {
 
 		// color table for amino acids
 		vislib::Array<vislib::math::Vector<unsigned char, 3> > m_aminoAcidColorTable;
+		// color palette vector: stores the color for chains
+		std::vector<vislib::math::Vector<float,3> > rainbowColors;
 		// color table for protein atoms
 		vislib::Array<unsigned char> m_protAtomColorTable;
 
+		// the Id of the current frame (for dynamic data)
+		unsigned int m_currentFrameId;
+
+        // the number of protein atoms
+        unsigned int atomCount;
 	};
 
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif // MEGAMOLCORE_PROTEINRENDERER_H_INCLUDED

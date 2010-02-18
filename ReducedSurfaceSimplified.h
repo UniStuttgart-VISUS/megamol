@@ -18,7 +18,6 @@
 #include <list>
 
 namespace megamol {
-namespace core {
 namespace protein {
 
 	/**
@@ -40,7 +39,7 @@ namespace protein {
 			 * @param inter Pointer to the protein data interface.
 			 * @param chId ID of the chain.
 			 */
-			SimplifiedChain( const megamol::core::protein::CallProteinData *inter,
+			SimplifiedChain( const CallProteinData *inter,
 								  unsigned int chId);
 			/** dtor */
 			virtual ~SimplifiedChain();
@@ -66,7 +65,7 @@ namespace protein {
 			void Init();
 		private:
 			/** the protein data interface (unchangeable ) */
-			const megamol::core::protein::CallProteinData *protein;
+			const CallProteinData *protein;
 			/** the chain ID (unchangeable) */
 			const unsigned int chainId;
 			/** null vector in R^3 */
@@ -276,7 +275,7 @@ namespace protein {
 		 * @param prot Pointer to the CallProteinData.
 		 * @param probeRad The radius of the probe.
 		 */
-		ReducedSurfaceSimplified( const megamol::core::protein::CallProteinData *prot,
+		ReducedSurfaceSimplified( const CallProteinData *prot,
 							 float probeRad = 1.4f);
 		
 		/** dtor */
@@ -448,7 +447,7 @@ namespace protein {
 				
 	private:
 		// The pointer to the protein data interface
-		const megamol::core::protein::CallProteinData *protein;
+		const CallProteinData *protein;
 		
 		std::vector<SimplifiedChain*> simpleChain;
 		
@@ -493,7 +492,6 @@ namespace protein {
 	};
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED */

@@ -24,19 +24,15 @@
 #include <map>
 #include "Stride.h"
 
-namespace megamol
-{
-namespace core
-{
-namespace protein
-{
+namespace megamol {
+namespace protein {
 
     /**
      * Data source for PDB files containing atomic movement.
      * Reads two PDB files with potentially different atomic positions.
      */
 
-    class ProteinMovementData : public Module
+    class ProteinMovementData : public megamol::core::Module
     {
     public:
 
@@ -99,7 +95,7 @@ namespace protein
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        bool ProtDataCallback ( Call& call );
+        bool ProtDataCallback ( megamol::core::Call& call );
 
         /**********************************************************************
          * 'protein'-functions
@@ -179,13 +175,13 @@ namespace protein
         //**********************************************************************
 
         /** Callee slot */
-        CalleeSlot protDataCalleeSlot;
+        megamol::core::CalleeSlot protDataCalleeSlot;
 
         /** The filename parameter for the main file */
-        param::ParamSlot  mainFilename;
+        megamol::core::param::ParamSlot  mainFilename;
 
         /** The filename parameter for the differences */
-        param::ParamSlot  diffFilename;
+        megamol::core::param::ParamSlot  diffFilename;
 
         ////////////////////////////////////////////////////////////
         // variables for storing all data needed by the interface //
@@ -229,14 +225,13 @@ namespace protein
         vislib::Array<CallProteinMovementData::AtomType> tmp_atomTypes;
         
         /** Stride secondary structure */
-        megamol::core::protein::Stride *stride;
+        Stride *stride;
         /** Stride sec struct computed */
         bool secondaryStructureComputed;
     };
 
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif //MEGAMOLCORE_PROTEINMOVEMENTDATA_H_INCLUDED

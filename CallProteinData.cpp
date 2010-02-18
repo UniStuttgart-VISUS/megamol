@@ -12,7 +12,7 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 
-using namespace megamol::core;
+using namespace megamol;
 
 
 /****************************************************************************/

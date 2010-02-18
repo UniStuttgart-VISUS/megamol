@@ -71,7 +71,11 @@ void main(void) {
     
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
+    
     
 
     // send color to fragment shader
@@ -316,7 +320,10 @@ void main(void) {
     
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     
 
     // send color to fragment shader
@@ -629,7 +636,10 @@ void main(void) {
     
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
 
@@ -1407,7 +1417,10 @@ void main(void) {
     
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
 
@@ -5304,7 +5317,10 @@ void main(void) {
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
 
     // send color to fragment shader
     gl_FrontColor = gl_Color;
@@ -5600,7 +5616,10 @@ void main(void) {
     camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
     // Sphere-Touch-Plane-Approach
@@ -5955,7 +5974,10 @@ void main(void) {
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -7075,7 +7097,10 @@ void main(void) {
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
 
     // send color to fragment shader
     gl_FrontColor = gl_Color;
@@ -7410,7 +7435,10 @@ void main(void) {
     camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
     // Sphere-Touch-Plane-Approach
@@ -7848,7 +7876,10 @@ void main(void) {
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    // USE THIS LINE TO GET POSITIONAL LIGHTING
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
+    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
+    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size

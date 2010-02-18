@@ -50,7 +50,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 namespace megamol {
-namespace core {
 namespace protein {
 
 #ifndef RMS_ROTATE_JACOBI3
@@ -128,7 +127,6 @@ float CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *mass, int
 
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* RMSD_H_INCLUDED */

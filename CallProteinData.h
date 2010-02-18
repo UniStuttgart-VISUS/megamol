@@ -28,7 +28,6 @@
 #endif /* _WIN32 */
 
 namespace megamol {
-namespace core {
 namespace protein {
 
     /**
@@ -54,7 +53,7 @@ namespace protein {
      * this structure might change over time!
      */
 
-    class CallProteinData : public Call {
+	class CallProteinData : public megamol::core::Call {
     public:
 
         /**
@@ -2058,11 +2057,10 @@ namespace protein {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallProteinData> CallProteinDataDescription;
+	typedef megamol::core::CallAutoDescription<CallProteinData> CallProteinDataDescription;
 
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_CALLPROTEINDATA_H_INCLUDED */

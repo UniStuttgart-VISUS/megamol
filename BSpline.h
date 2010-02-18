@@ -17,7 +17,6 @@
 #include <vector>
 
 namespace megamol {
-namespace core {
 namespace protein {
 
 	class BSpline
@@ -55,7 +54,6 @@ namespace protein {
 	};
 
 } /* end namespace Utility */
-} /* end namespace Core */
 } /* end namespace MegaMol */
 
 #endif /* MEGAMOL_BSPLINE_H_INCLUDED */

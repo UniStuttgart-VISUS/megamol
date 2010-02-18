@@ -48,7 +48,7 @@
 #include <cmath>
 #include "vislib/Log.h"
 
-using namespace megamol::core;
+using namespace megamol;
 
 /*
  *  protein::Normalize

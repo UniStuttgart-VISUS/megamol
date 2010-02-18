@@ -12,7 +12,9 @@
 #include "vislib/IllegalStateException.h"
 #include <cmath>
 
+using namespace megamol;
 using namespace megamol::core;
+
 
 /*
  * protein::AnimDataTimer::AnimDataTimer

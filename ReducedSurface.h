@@ -18,7 +18,6 @@
 #include <list>
 
 namespace megamol {
-namespace core {
 namespace protein {
 
 	/**
@@ -213,7 +212,7 @@ namespace protein {
 		 * @param prot Pointer to the CallProteinData.
 		 * @param probeRad The radius of the probe.
 		 */
-		ReducedSurface( const megamol::core::protein::CallProteinData *prot,
+		ReducedSurface( const CallProteinData *prot,
 							 float probeRad = 1.4f);
 		
 		/**
@@ -226,7 +225,7 @@ namespace protein {
 		 * @param probeRad The radius of the probe.
 		 */
 		ReducedSurface( unsigned int chainId,
-							 const megamol::core::protein::CallProteinData *prot, 
+							 const CallProteinData *prot, 
 							 float probeRad = 1.4f);
 		
 		/** dtor */
@@ -395,7 +394,7 @@ namespace protein {
 				
 	private:
 		// The pointer to the protein data interface
-		const megamol::core::protein::CallProteinData *protein;
+		const CallProteinData *protein;
 		
 		// Boolean flag for global (true) or single chain (false) computation
 		const bool globalRS;
@@ -441,7 +440,6 @@ namespace protein {
 	};
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_REDUCEDSURFACE_H_INCLUDED */

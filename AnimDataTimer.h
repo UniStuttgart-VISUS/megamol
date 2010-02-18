@@ -16,7 +16,6 @@
 #include "vislib/PerformanceCounter.h"
 
 namespace megamol {
-namespace core {
 namespace protein {
 
     /**
@@ -38,7 +37,7 @@ namespace protein {
          * @return The parameter for the flag whether or not the animation is 
          *         running.
          */
-        inline param::ParamSlot& AnimationActiveParameter(void) {
+        inline megamol::core::param::ParamSlot& AnimationActiveParameter(void) {
             return this->m_animationParam;
         }
 
@@ -49,7 +48,7 @@ namespace protein {
          * @return The parameter for the speed factor of the animation in 
          *         frames per second.
          */
-        inline param::ParamSlot& AnimationSpeedParameter(void) {
+        inline megamol::core::param::ParamSlot& AnimationSpeedParameter(void) {
             return this->m_animSpeedParam;
         }
 
@@ -70,7 +69,7 @@ namespace protein {
          * @param source The 'AnimDataSource' object which will be animated
          *               using this timer.
          */
-        void SetSource(view::AnimDataModule *source) {
+        void SetSource( megamol::core::view::AnimDataModule *source) {
             this->m_source = source;
         }
 
@@ -90,7 +89,7 @@ namespace protein {
     private:
 
         /** The data source which will be animated with this timer. */
-        view::AnimDataModule * m_source;
+        megamol::core::view::AnimDataModule * m_source;
 
         /** flag whether or not the animation is running */
         mutable bool m_runAnim;
@@ -104,14 +103,13 @@ namespace protein {
         mutable float m_animTime;
 
         /** parameter for the flag whether or not the animation is running */
-		mutable param::ParamSlot m_animationParam;
+		mutable megamol::core::param::ParamSlot m_animationParam;
 
         /** the speed factor of the animation in frames per second */
-        param::ParamSlot m_animSpeedParam;
+        megamol::core::param::ParamSlot m_animSpeedParam;
     };
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* megamol_ANIMDATATIMER_H_INCLUDED */

@@ -15,13 +15,13 @@
 #include <iostream>
 #include <ctime>
 
-using namespace megamol::core;
-using namespace megamol::core::protein;
+using namespace megamol;
+using namespace megamol::protein;
 
 /*
  * ReducedSurfaceSimplified::ReducedSurfaceSimplified
  */
-ReducedSurfaceSimplified::ReducedSurfaceSimplified( const megamol::core::protein::CallProteinData *prot,
+ReducedSurfaceSimplified::ReducedSurfaceSimplified( const CallProteinData *prot,
 										  float probeRad) :
 		protein( prot), zeroVec3( 0, 0, 0)
 {
@@ -2019,7 +2019,7 @@ bool ReducedSurfaceSimplified::RSFace::operator==(const RSFace& rhs) const
  * ctor SimplifiedChain
  */
 ReducedSurfaceSimplified::SimplifiedChain::SimplifiedChain(
-		const megamol::core::protein::CallProteinData *inter, unsigned int chId) : 
+		const CallProteinData *inter, unsigned int chId) : 
 		 protein( inter), chainId( chId), nullvec3( 0.0f, 0.0f, 0.0f)
 {
 	// set the chain lenght to zero
