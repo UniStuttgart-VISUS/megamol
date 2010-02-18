@@ -13,6 +13,7 @@
 #include "ProteinRendererCartoon.h"
 #include "ProteinRenderer.h"
 #include "ProteinRendererSES.h"
+#include "ProteinRendererBDP.h"
 #include "ProteinVolumeRenderer.h"
 
 #include "ProteinData.h"
@@ -75,9 +76,9 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  */
 PROTEIN_API int mmplgModuleCount(void) {
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-    return 7;
+    return 9;
 #else
-    return 6;
+    return 8;
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
 }
 
@@ -93,9 +94,13 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 3: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSES>();
         case 4: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathDataSource>();
         case 5: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathRenderer>();
-		case 6: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinVolumeRenderer>();
+        case 6: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererBDP>();
+		case 7: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinVolumeRenderer>();
+
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 7: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+
+        case 8: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
         default: return NULL;
     }

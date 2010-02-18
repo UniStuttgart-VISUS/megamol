@@ -429,6 +429,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinRendererBDP.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ProteinRendererCartoon.cpp"
 				>
 			</File>
@@ -548,6 +552,10 @@
 			</File>
 			<File
 				RelativePath=".\ProteinRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProteinRendererBDP.h"
 				>
 			</File>
 			<File
