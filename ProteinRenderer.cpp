@@ -288,26 +288,22 @@ bool protein::ProteinRenderer::GetExtents(Call& call) {
 bool protein::ProteinRenderer::Render(Call& call)
 {
 	// get pointer to CallProteinData
-	protein::CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+	CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
 
-    if (protein == NULL) 
+    if( protein == NULL) 
         return false;
 
-	if ( this->m_currentFrameId != protein->GetCurrentFrameId() )
-	{
+	if( this->m_currentFrameId != protein->GetCurrentFrameId() ) {
 		this->m_currentFrameId = protein->GetCurrentFrameId();
 		this->RecomputeAll();
 	}
 
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if(this->m_callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED)
-    {
-        if(!this->m_renderRMSData)
+    if( this->m_callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
+        if( !this->m_renderRMSData )
             return false;
-    }
-    else
-    {
-        if(!(*protein)()) 
+    } else {
+        if( !(*protein)() ) 
             return false;
     }
 
@@ -321,8 +317,7 @@ bool protein::ProteinRenderer::Render(Call& call)
 	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>(&call)->GetCameraParameters();
 
     // parameter refresh
-    if (this->m_renderingModeParam.IsDirty()) 
-	{
+    if( this->m_renderingModeParam.IsDirty() ) {
         this->SetRenderMode(static_cast<RenderMode>(int(this->m_renderingModeParam.Param<param::EnumParam>()->Value())));
 		this->m_renderingModeParam.ResetDirty();
     }
@@ -478,33 +473,31 @@ void protein::ProteinRenderer::DrawLabel(unsigned int frameID)
     using namespace vislib::graphics;
     char frameChar[10];
 
-    glPushAttrib(GL_ENABLE_BIT);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
+    glPushAttrib( GL_ENABLE_BIT);
+    glDisable( GL_CULL_FACE);
+    glDisable( GL_LIGHTING);
 
-    glMatrixMode(GL_MODELVIEW);
+    glMatrixMode( GL_MODELVIEW);
     glPushMatrix();
 
-        glTranslatef(-1.0f, 1.0f, 1.0f);
+    glTranslatef(-1.0f, 1.0f, 1.0f);
 
-        glColor3f(1.0, 1.0, 1.0);
-        if (this->m_frameLabel == NULL) 
-        {
-            this->m_frameLabel = new vislib::graphics::gl::SimpleFont();
-            if(!this->m_frameLabel->Initialise())
-            {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "ProteinRenderer: Problems to initalise the Font");
-            }
+    glColor3f( 1.0, 1.0, 1.0);
+    if( this->m_frameLabel == NULL) {
+        this->m_frameLabel = new vislib::graphics::gl::SimpleFont();
+        if( !this->m_frameLabel->Initialise()) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "ProteinRenderer: Problems to initalise the Font");
         }
+    }
 #ifdef _WIN32
-        _itoa_s(frameID, frameChar, 10, 10);
+    _itoa_s(frameID, frameChar, 10, 10);
 #else  /* _WIN32 */
-        vislib::StringA tmp; /* worst idea ever, but linux does not deserve anything better! */
-        tmp.Format("%i", frameID);
-        memcpy(frameChar, tmp.PeekBuffer(), 10);
+    vislib::StringA tmp; /* worst idea ever, but linux does not deserve anything better! */
+    tmp.Format("%i", frameID);
+    memcpy(frameChar, tmp.PeekBuffer(), 10);
 #endif /* _WIN32 */
 
-        this->m_frameLabel->DrawString(0.0f, 0.0f, 0.1f, true, (vislib::StringA("Frame: ") + frameChar).PeekBuffer() , AbstractFont::ALIGN_LEFT_TOP);
+    this->m_frameLabel->DrawString(0.0f, 0.0f, 0.1f, true, (vislib::StringA("Frame: ") + frameChar).PeekBuffer() , AbstractFont::ALIGN_LEFT_TOP);
 
     glPopMatrix();
 

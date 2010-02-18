@@ -13,6 +13,7 @@
 #include "ProteinRendererCartoon.h"
 #include "ProteinRenderer.h"
 #include "ProteinRendererSES.h"
+#include "ProteinVolumeRenderer.h"
 
 #include "ProteinData.h"
 #include "NetCDFData.h"
@@ -92,8 +93,9 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 3: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSES>();
         case 4: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathDataSource>();
         case 5: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathRenderer>();
+		case 6: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinVolumeRenderer>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 6: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+        case 7: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
         default: return NULL;
     }
