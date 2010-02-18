@@ -437,6 +437,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinVolumeRenderer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ReducedSurface.cpp"
 				>
 			</File>
@@ -555,6 +559,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinVolumeRenderer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ReducedSurface.h"
 				>
 			</File>
@@ -607,6 +615,10 @@
 			</File>
 			<File
 				RelativePath=".\Shaders\solpath.btf"
+				>
+			</File>
+			<File
+				RelativePath=".\Shaders\volume.btf"
 				>
 			</File>
 		</Filter>
