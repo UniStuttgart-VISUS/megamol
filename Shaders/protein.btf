@@ -8077,6 +8077,7 @@ void main(void) {
         dist1 = dot( pos1, planeNormal) - d;
         dist2 = dot( inVec2.xyz + objPos.xyz, planeNormal) - d;
         if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
+    }
 
         // discard the point if it is eaten away by one of the neighbouring probes
         // ==> check first, if one of the probes is nearly dual to the object position
@@ -8087,37 +8088,37 @@ void main(void) {
                 ( dot1( pos1 - dualProbe) < inVec3.w ) ) { discard; }
         */
 
-        // Singularity handling:
-        int i;
-        vec3 probePos;
-        int numProbes = min( int(texCoord1.x), 16);
-        if( numProbes > 0 )
+    // Singularity handling:
+    int i;
+    vec3 probePos;
+    int numProbes = min( int(texCoord1.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
         {
-            for( i = 0; i < numProbes; i++ )
-            {
-                probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-            }
-        }
-        numProbes = min( int(texCoord2.x), 16);
-        if( numProbes > 0 )
-        {
-            for( i = 0; i < numProbes; i++ )
-            {
-                probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-            }
-        }
-        numProbes = min( int(texCoord3.x), 16);
-        if( numProbes > 0 )
-        {
-            for( i = 0; i < numProbes; i++ )
-            {
-                probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-            }
+            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
+    numProbes = min( int(texCoord2.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+        }
+    }
+    numProbes = min( int(texCoord3.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+        }
+    }
+
 
     // "calc" normal at intersection point
     vec3 normal = -sphereintersection / rad;
