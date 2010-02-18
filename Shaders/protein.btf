@@ -7267,13 +7267,13 @@ void main(void) {
         if(discardExt && discardInt) { discard; }
     }
 
-    // clip ...
+    // clip fragment out of surfVectors max range
     surfPos = sphereintersection1 - surfVector.xyz;
     if(dot(surfPos, surfPos) > surfVector.w) { discardExt = true; }
     surfPos = sphereintersection2 - surfVector.xyz;
     if(dot(surfPos, surfPos) > surfVector.w) { discardInt = true; }
 
-    // ...
+    // choose right color and intersection or discard fragment
     if(!discardExt) { 
         color = vec3( 0.0, 0.98, 0.23);
     }
@@ -7716,12 +7716,11 @@ void main(void) {
     }
     if( acos( dot( normPlane, cuttingPlane)) > ( abs( maxAngle)/2.0 + epsilon) ) { discardExt = true; }
 
-    // select nearest fragment
-    if(discardExt && discardInt) {
+    if(discardExt && discardInt) { // no fragment
         discard;
-    } else if(!discardExt && discardInt) { 
+    } else if(!discardExt && discardInt) { // only exterior fragment
         intersection = intersection2;
-    } else if(!discardExt && !discardInt) {
+    } else if(!discardExt && !discardInt) { // if both fragments are valid: select nearest fragment
         float d1 = dot((a - intersection), (a - intersection));
         float d2 = dot((a - intersection2), (a - intersection2));
         if(d2 < d1) {
@@ -7730,7 +7729,7 @@ void main(void) {
         } else {
             discardExt = true;
         }
-    }
+    } // else: interior fragment (default)
 
     // compute inward-facing normal
     vec3 normal;
@@ -8078,45 +8077,45 @@ void main(void) {
         dist1 = dot( pos1, planeNormal) - d;
         dist2 = dot( inVec2.xyz + objPos.xyz, planeNormal) - d;
         if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
-    }
 
-    // discard the point if it is eaten away by one of the neighbouring probes
-    // ==> check first, if one of the probes is nearly dual to the object position
-    /*
-    if( ( dot1( inProbe1.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe1.xyz) < squarRad ) ) || 
-        ( dot1( inProbe2.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe2.xyz) < squarRad ) ) || 
-            ( dot1( inProbe3.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe3.xyz) < squarRad ) ) ||
-            ( dot1( pos1 - dualProbe) < inVec3.w ) ) { discard; }
-    */
+        // discard the point if it is eaten away by one of the neighbouring probes
+        // ==> check first, if one of the probes is nearly dual to the object position
+        /*
+        if( ( dot1( inProbe1.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe1.xyz) < squarRad ) ) || 
+            ( dot1( inProbe2.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe2.xyz) < squarRad ) ) || 
+                ( dot1( inProbe3.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe3.xyz) < squarRad ) ) ||
+                ( dot1( pos1 - dualProbe) < inVec3.w ) ) { discard; }
+        */
 
-    // Singularity handling:
-    int i;
-    vec3 probePos;
-    int numProbes = min( int(texCoord1.x), 16);
-    if( numProbes > 0 )
-    {
-        for( i = 0; i < numProbes; i++ )
+        // Singularity handling:
+        int i;
+        vec3 probePos;
+        int numProbes = min( int(texCoord1.x), 16);
+        if( numProbes > 0 )
         {
-            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            for( i = 0; i < numProbes; i++ )
+            {
+                probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            }
         }
-    }
-    numProbes = min( int(texCoord2.x), 16);
-    if( numProbes > 0 )
-    {
-        for( i = 0; i < numProbes; i++ )
+        numProbes = min( int(texCoord2.x), 16);
+        if( numProbes > 0 )
         {
-            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            for( i = 0; i < numProbes; i++ )
+            {
+                probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            }
         }
-    }
-    numProbes = min( int(texCoord3.x), 16);
-    if( numProbes > 0 )
-    {
-        for( i = 0; i < numProbes; i++ )
+        numProbes = min( int(texCoord3.x), 16);
+        if( numProbes > 0 )
         {
-            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            for( i = 0; i < numProbes; i++ )
+            {
+                probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            }
         }
     }
 
