@@ -19,6 +19,7 @@
 #include "vislib/Runnable.h"
 #include "vislib/SimpleMessage.h"
 #include "vislib/SingleLinkedList.h"
+#include "vislib/SmartRef.h"
 #include "vislib/StackTrace.h"
 
 
@@ -132,7 +133,7 @@ namespace net {
         bool fireMessageReceived(const AbstractSimpleMessage& msg);
 
         /** The communication channel that is used to receive messages. */
-        AbstractInboundCommChannel *channel;
+        SmartRef<AbstractInboundCommChannel> channel;
 
         /** The list of listeners. */
         ListenerList listeners;

@@ -14,8 +14,8 @@
 vislib::net::SimpleMessageHeader::SimpleMessageHeader(void) {
 	VLSTACKTRACE("SimpleMessageHeader::SimpleMessageHeader", __FILE__, 
 		__LINE__);
-	Super::PeekData()->MessageID = 0;
-	Super::PeekData()->BodySize = 0;
+	this->PeekData()->MessageID = 0;
+	this->PeekData()->BodySize = 0;
 }
 
 
@@ -69,6 +69,16 @@ vislib::net::SimpleMessageHeader::SimpleMessageHeader(
 vislib::net::SimpleMessageHeader::~SimpleMessageHeader(void) {
 	VLSTACKTRACE("SimpleMessageHeader::~SimpleMessageHeader", __FILE__, 
 		__LINE__);
+}
+
+
+/*
+ * vislib::net::SimpleMessageHeader::PeekData
+ */
+vislib::net::SimpleMessageHeaderData *
+vislib::net::SimpleMessageHeader::PeekData(void) {
+	VLSTACKTRACE("SimpleMessageHeader::PeekData", __FILE__, __LINE__);
+	return &(this->data);
 }
 
 

@@ -70,6 +70,13 @@ namespace net {
 		 *
 		 * @return A pointer to the message header data.
 		 */
+		virtual SimpleMessageHeaderData *PeekData(void);
+
+		/**
+		 * Provides direct access to the underlying SimpleMessageHeaderData.
+		 *
+		 * @return A pointer to the message header data.
+		 */
 		virtual const SimpleMessageHeaderData *PeekData(void) const;
 
 		/**

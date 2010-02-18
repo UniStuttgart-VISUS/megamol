@@ -29,6 +29,11 @@ namespace net {
      * This class implements a communication channel based on TCP/IP sockets.
      * The TCP/IP version supports AbstractClientEndpoint and
      * AbstractServerEndpoint as well as AbstractBidiCommChannel.
+     *
+     * Q: Why does TcpCommChannel not support vislib::net::SocketAddress?
+     * A: TcpCommChannel is designed to support IPv6 from the beginning. 
+     *    SocketAddress is only for backward compatibility and should not be used
+     *    for new programs.
      */
     class TcpCommChannel : public virtual AbstractBidiCommChannel,
             public virtual AbstractClientEndpoint, 
@@ -57,6 +62,15 @@ namespace net {
          * @param socket The socket to be used.
          */
         explicit TcpCommChannel(Socket& socket);
+
+        /**
+         * Permit incoming connection attempt on the communication channel.
+         *
+         * @return The client connection.
+         *
+         * @throws SocketException In case the operation fails.
+         */
+        virtual SmartRef<AbstractCommChannel> Accept(void);
 
         /**
          * Increment the reference count.
@@ -154,6 +168,16 @@ namespace net {
         }
 
         /**
+         * Place the communication channel in a state in which it is listening 
+         * for an incoming connection.
+         *
+         * @param backlog Maximum length of the queue of pending connections.
+         *
+         * @throws SocketException In case the operation fails.
+         */
+        virtual void Listen(const int backlog = SOMAXCONN);
+
+        /**
          * Receives 'cntBytes' over the communication channel and saves them to 
          * the memory designated by 'outData'. 'outData' must be large enough to 
          * receive at least 'cntBytes'.
@@ -208,20 +232,6 @@ namespace net {
         virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
             const INT timeout = TIMEOUT_INFINITE, 
             const bool forceSend = true);
-
-        /**
-         * Waits for a client to connect.
-         *
-         * This method blocks until a remote node connected.
-         *
-         * @param backlog Maximum length of the queue of pending connections.
-         *
-         * @return A communication channel for the new connection.
-         *
-         * @throws SocketException In case the operation fails.
-         */
-        virtual SmartRef<AbstractCommChannel> WaitForClient(
-            const int backlog = SOMAXCONN);
 
     protected:
 

@@ -87,7 +87,7 @@ namespace net {
 		 *
 		 * @return A pointer to the message header data.
 		 */
-		virtual SimpleMessageHeaderData *PeekData(void);
+		virtual SimpleMessageHeaderData *PeekData(void) = 0;
 
 		/**
 		 * Provides direct access to the underlying SimpleMessageHeaderData.

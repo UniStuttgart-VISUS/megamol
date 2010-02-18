@@ -797,7 +797,24 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
                     // leave previous guess.
                     outEndPoint.SetIPAddress(al[bestAddressIdx].GetAddress());
                 }
-            } /* end if (retval < 1.0f) */
+            } /* end if (retval == 1.0f) */
+
+            if ((retval == 1.0f) 
+                    || ((validMask & WILD_GUESS_HAS_ADDRESS) == 0)) {
+                /*
+                 * If we still did not find an adapter address, there might be
+                 * another option for local end points: The address could be a
+                 * valid ANY4 or ANY6 address.
+                 */
+                if (address == IPAgnosticAddress::ANY4) {
+                    outEndPoint.SetIPAddress(IPAgnosticAddress::ANY4);
+                    retval = 0.0f;
+                } else if (address == IPAgnosticAddress::ANY6) {
+                    outEndPoint.SetIPAddress(IPAgnosticAddress::ANY6);
+                    retval = 0.0f;
+                }
+            } /* end if (retval == 1.0f) */
+        
         } /* end if (NetworkInformation::adapters.IsEmpty()) */
 
         outEndPoint.SetPort(port);
@@ -1152,6 +1169,10 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
             }
 
         } else if (ctx.PrefixLen != NULL) {
+            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Have no exact address match for "
+                "\"%s\", can check for same prefix length of %u.\n", 
+                a.ToStringA().PeekBuffer(), *ctx.PrefixLen);
+
             try {
                 a = a.GetPrefix(*ctx.PrefixLen);
                 
@@ -2368,7 +2389,7 @@ UINT32 vislib::net::NetworkInformation::wildGuessSplitInput(
   
     /* The rest is either the adapter address or device name. */
 #ifndef _WIN32
-    input.Trim(L"[]");
+    input.Trim(L"[]");  // mueller: I forgot why we do that on Linux ...
 #endif /* !_WIN32 */
     input.TrimSpaces();
     try {

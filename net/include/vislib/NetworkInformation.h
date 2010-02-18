@@ -1468,7 +1468,28 @@ namespace net {
             const UnicastAddressInformation& addrInfo, 
             const GuessLocalEndPointCtx& ctx);
 
-        // TODO: documentation
+        /**
+         * Enforces that the wildness in 'inOutWildness' is within [0, 1] and 
+         * find the wildness that is the lowest wildness in this array. The
+         * method returns the index of this wildness to 'outIdxFirstBest' and
+         * the actual numeric value as return value.
+         *
+         * As a side-effect of the method, all values in 'inOutWildness' will
+         * be forced to [0, 1].
+         *
+         * TODO: Should we normalise the wildness range rather than clamping
+         * it? Should we preserver 0 and 1 in this case?
+         *
+         * @param inOutWildness   A list of wildness values.
+         * @param outIdxFirstBest The index of the minimum value in 
+         *                        'inOutWildness'. If the minimum occurs 
+         *                        multiple times, the first occurrence is 
+         *                        returned.
+         *
+         * @return The minimum wildness found. If the minimum occurs mutliple
+         *         times, it will be weighted except for 0 and 1. This weighting
+         *         change is not reflected in 'inOutWildness'.
+         */
         static float consolidateWildness(Array<float>& inOutWildness, 
             SIZE_T& outIdxFirstBest);
 
@@ -1750,7 +1771,7 @@ namespace net {
         static const float PENALTY_NO_PORT;
 
         /**
-         * Wildness penalty for a wring address family.
+         * Wildness penalty for a wrong address family.
          */
         static const float PENALTY_WRONG_ADDRESSFAMILY;
 

@@ -45,6 +45,19 @@ vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket)
 }
 
 
+/*
+ * vislib::net::TcpCommChannel::Accept
+ */
+vislib::SmartRef<vislib::net::AbstractCommChannel> 
+vislib::net::TcpCommChannel::Accept(void) {
+    VLSTACKTRACE("TcpCommChannel::Accept", __FILE__, __LINE__);
+    Socket socket = this->socket.Accept();
+    socket.SetNoDelay(this->IsSetNoDelay());
+
+    return SmartRef<AbstractCommChannel>(new TcpCommChannel(socket), false);
+}
+
+
 ///*
 // * vislib::net::TcpCommChannel::AddRef
 // */
@@ -81,9 +94,11 @@ void vislib::net::TcpCommChannel::Bind(const wchar_t *address) {
 
     if (NetworkInformation::GuessLocalEndPoint(endPoint, address) > 0.0f) {
         // If there is no address match, bind to ANY.
-        endPoint.SetIPAddress(
-            (endPoint.GetAddressFamily() == IPEndPoint::FAMILY_INET)
-            ? IPAddress::ANY : IPAddress6::ANY);
+        if (endPoint.GetAddressFamily() == IPEndPoint::FAMILY_INET) {
+            endPoint.SetIPAddress(IPAddress::ANY);
+        } else {
+            endPoint.SetIPAddress(IPAddress6::ANY);
+        }
     }
 
     this->Bind(endPoint);
@@ -180,6 +195,15 @@ void vislib::net::TcpCommChannel::Connect(const IPEndPoint& address) {
 
 
 /*
+ * vislib::net::TcpCommChannel::Listen
+ */
+void vislib::net::TcpCommChannel::Listen(const int backlog) {
+    VLSTACKTRACE("TcpCommChannel::Listen", __FILE__, __LINE__);
+    this->socket.Listen(backlog);
+}
+
+
+/*
  * vislib::net::TcpCommChannel::Receive
  */
 SIZE_T vislib::net::TcpCommChannel::Receive(void *outData, 
@@ -215,21 +239,6 @@ SIZE_T vislib::net::TcpCommChannel::Send(const void *data,
         const SIZE_T cntBytes, const INT timeout, const bool forceSend) {
     VLSTACKTRACE("TcpCommChannel::Send", __FILE__, __LINE__);
     return this->socket.Send(data, cntBytes, timeout, 0, forceSend);
-}
-
-
-/*
- * vislib::net::TcpCommChannel::WaitForClient
- */
-vislib::SmartRef<vislib::net::AbstractCommChannel>
-vislib::net::TcpCommChannel::WaitForClient(const int backlog) {
-    VLSTACKTRACE("TcpCommChannel::WaitForClient", __FILE__, __LINE__);
-    this->socket.Listen(backlog);
-
-    Socket socket = this->socket.Accept();
-    socket.SetNoDelay(this->IsSetNoDelay());
-
-    return SmartRef<AbstractCommChannel>(new TcpCommChannel(socket), false);
 }
 
 

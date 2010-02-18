@@ -41,6 +41,15 @@ namespace net {
     public:
 
         /**
+         * Permit incoming connection attempt on the communication channel.
+         *
+         * @return The client connection.
+         *
+         * @throws Exception Or derived in case the operation fails.
+         */
+        virtual SmartRef<AbstractCommChannel> Accept(void) = 0;
+
+        /**
          * Binds the server to a specified address.
          *
          * Note: The default implementation redirects the method to the UNICODE
@@ -65,6 +74,16 @@ namespace net {
         virtual void Bind(const wchar_t *address) = 0;
 
         /**
+         * Place the communication channel in a state in which it is listening 
+         * for an incoming connection.
+         *
+         * @param backlog Maximum length of the queue of pending connections.
+         *
+         * @throws Exception Or derived in case the operation fails.
+         */
+        virtual void Listen(const int backlog) = 0;
+
+        /**
          * Waits for a client to connect.
          *
          * This method blocks until a remote node connected.
@@ -73,10 +92,10 @@ namespace net {
          *
          * @return A communication channel for the new connection.
          *
-         * @throws Exception Or derived in case the operation fails.
+         * @throws SocketException In case the operation fails.
          */
-        virtual SmartRef<AbstractCommChannel> WaitForClient(
-            const int backlog) = 0;
+        //virtual SmartRef<AbstractCommChannel> WaitForClient(
+        //    const int backlog = SOMAXCONN);
 
     protected:
 

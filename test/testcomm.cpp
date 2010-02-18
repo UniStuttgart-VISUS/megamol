@@ -10,10 +10,10 @@
 #include "testcomm.h"
 
 #include "testhelper.h"
+#include "vislib/Event.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
 #include "vislib/RunnableThread.h"
-#include "vislib/Event.h"
 #include "vislib/StringConverter.h"
 
 
@@ -41,9 +41,10 @@ DWORD Worker::Run(void *userData) {
         if (isServer) {
             std::cout << "Server binding to " << W2A(this->Address.PeekBuffer()) << " ..." << std::endl;
             comm->Bind(this->Address);
+            comm->Listen();
             std::cout << "Server (" << &(*comm) << ") ready and waiting now ..." << std::endl;
-            ::evtServerBound.Set(); // This is actually not safe, but enough for a test.
-            client = comm->WaitForClient().DynamicCast<TcpCommChannel>();
+            ::evtServerBound.Set(); // This is actually not totally safe, but enough for a test.
+            client = comm->Accept().DynamicCast<TcpCommChannel>();
             std::cout << "Client acceppted " << client->GetSocket().GetPeerEndPoint().ToStringA().PeekBuffer() << "." << std::endl;
             comm->Close();
 

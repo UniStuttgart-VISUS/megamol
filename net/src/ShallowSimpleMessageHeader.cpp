@@ -30,7 +30,17 @@ vislib::net::ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader(void) {
 
 
 /*
- * vislib::net::AbstractSimpleMessageHeader::PeekData
+ * vislib::net::ShallowSimpleMessageHeader::PeekData
+ */
+vislib::net::SimpleMessageHeaderData *
+vislib::net::ShallowSimpleMessageHeader::PeekData(void) {
+	VLSTACKTRACE("ShallowSimpleMessageHeader::PeekData", __FILE__, __LINE__);
+	return this->data;
+}
+
+
+/*
+ * vislib::net::ShallowSimpleMessageHeader::PeekData
  */
 const vislib::net::SimpleMessageHeaderData *
 vislib::net::ShallowSimpleMessageHeader::PeekData(void) const {

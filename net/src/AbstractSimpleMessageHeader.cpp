@@ -20,15 +20,6 @@ vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader(void) {
 
 
 /*
- * vislib::net::AbstractSimpleMessageHeader::PeekData
- */
-vislib::net::SimpleMessageHeaderData *
-vislib::net::AbstractSimpleMessageHeader::PeekData(void) {
-	VLSTACKTRACE("AbstractSimpleMessageHeader::PeekData", __FILE__, __LINE__);
-	return const_cast<AbstractSimpleMessageHeader *>(this)->PeekData();
-}
-
-/*
  * vislib::net::AbstractSimpleMessageHeader::SetMessageID
  */
 void vislib::net::AbstractSimpleMessageHeader::SetMessageID(

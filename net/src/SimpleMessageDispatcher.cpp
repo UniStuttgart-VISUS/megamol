@@ -5,6 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
+#include "vislib/Socket.h"
 #include "vislib/SimpleMessageDispatcher.h"
 
 #include "vislib/AbstractInboundCommChannel.h"
@@ -28,10 +29,6 @@ vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void)
 vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher(void) {
     VLSTACKTRACE("SimpleMessageDispatcher::~SimpleMessageDispatcher", 
         __FILE__, __LINE__);
-    if (this->channel != NULL) {
-        this->channel->Release();
-        this->channel = NULL;
-    }
 }
 
 
@@ -71,7 +68,8 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
 
     bool exitRequested = false;
     this->channel = static_cast<AbstractInboundCommChannel *>(channel);
-    this->channel->AddRef();
+
+    Socket::Startup();
 
     VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher is entering the "
         "message loop ...\n");
@@ -108,6 +106,8 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
         this->fireCommunicationError(e);
     }
 
+    Socket::Cleanup();
+
     VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher has left the "
         "message loop ...\n");
     this->fireDispatcherExited();
@@ -121,7 +121,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
 bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
     VLSTACKTRACE("SimpleMessageDispatcher::Terminate", __FILE__, __LINE__);
 
-    if (this->channel != NULL) {
+    if (!this->channel.IsNull()) {
         try {
             this->channel->Close();
         } catch (Exception e) {
