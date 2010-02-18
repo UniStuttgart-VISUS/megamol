@@ -7,9 +7,9 @@
 #endif /* _WIN32 */
 
 
-using namespace megamol::core::protein;
+using namespace megamol::protein;
 
-Stride::Stride( megamol::core::protein::CallProteinData *pdi) :
+Stride::Stride( megamol::protein::CallProteinData *pdi) :
 		Successful( false )
 {
 	// set protein chain count to zero
@@ -33,7 +33,7 @@ Stride::Stride( megamol::core::protein::CallProteinData *pdi) :
 	ComputeSecondaryStructure();
 }
 
-Stride::Stride( megamol::core::protein::CallProteinMovementData *pdi) :
+Stride::Stride( megamol::protein::CallProteinMovementData *pdi) :
         Successful( false )
 {
 	// set protein chain count to zero
@@ -72,7 +72,7 @@ Stride::~Stride(void)
 	free ( StrideCmd );
 }
 
-void Stride::GetChains( megamol::core::protein::CallProteinData *pdi)
+void Stride::GetChains( megamol::protein::CallProteinData *pdi)
 {
 	int ChainCnt;
 	int cntCha, cntRes, cntAtm;
@@ -194,7 +194,7 @@ void Stride::GetChains( megamol::core::protein::CallProteinData *pdi)
 	
 } 
 
-void Stride::GetChains( megamol::core::protein::CallProteinMovementData *pdi)
+void Stride::GetChains( megamol::protein::CallProteinMovementData *pdi)
 {
 	int ChainCnt;
 	int cntCha, cntRes, cntAtm;
@@ -347,7 +347,7 @@ bool Stride::ComputeSecondaryStructure()
 	return true;
 }
 
-bool Stride::WriteToInterface( megamol::core::protein::CallProteinData *pdi)
+bool Stride::WriteToInterface( megamol::protein::CallProteinData *pdi)
 {			
 	if( pdi )
 	{
@@ -440,7 +440,7 @@ bool Stride::WriteToInterface( megamol::core::protein::CallProteinData *pdi)
 	return true;
 }
 
-bool Stride::WriteToInterface( megamol::core::protein::CallProteinMovementData *pdi)
+bool Stride::WriteToInterface( megamol::protein::CallProteinMovementData *pdi)
 {			
 	if( pdi )
 	{

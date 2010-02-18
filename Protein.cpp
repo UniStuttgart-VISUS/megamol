@@ -86,14 +86,14 @@ PROTEIN_API int mmplgModuleCount(void) {
  */
 PROTEIN_API void* mmplgModuleDescription(int idx) {
     switch (idx) {
-        case 0: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinData>();
-        case 1: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRenderer>();
-        case 2: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRendererCartoon>();
-        case 3: return new megamol::core::ModuleAutoDescription<megamol::core::protein::ProteinRendererSES>();
+        case 0: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinData>();
+        case 1: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRenderer>();
+        case 2: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCartoon>();
+        case 3: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSES>();
         case 4: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathDataSource>();
         case 5: return new megamol::core::ModuleAutoDescription<megamol::protein::SolPathRenderer>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 6: return new megamol::core::ModuleAutoDescription<megamol::core::protein::NetCDFData>();
+        case 6: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
         default: return NULL;
     }
@@ -114,8 +114,8 @@ PROTEIN_API int mmplgCallCount(void) {
  */
 PROTEIN_API void* mmplgCallDescription(int idx) {
     switch (idx) {
-        case 0: return new megamol::core::CallAutoDescription<megamol::core::protein::CallProteinData>();
-        case 1: return new megamol::core::CallAutoDescription<megamol::core::protein::CallFrame>();
+        case 0: return new megamol::core::CallAutoDescription<megamol::protein::CallProteinData>();
+        case 1: return new megamol::core::CallAutoDescription<megamol::protein::CallFrame>();
         case 2: return new megamol::core::CallAutoDescription<megamol::protein::SolPathDataCall>();
         default: return NULL;
     }

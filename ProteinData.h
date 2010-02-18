@@ -25,7 +25,6 @@
 #include "Stride.h"
 
 namespace megamol {
-namespace core {
 namespace protein {
 
     /**
@@ -37,7 +36,7 @@ namespace protein {
 	 *   --> insert amino acids of type 'unknown' with zero atoms as placeholders
 	 */
 
-	class ProteinData : public Module
+	class ProteinData : public megamol::core::Module
 	{
 	public:
 		
@@ -100,7 +99,7 @@ namespace protein {
 		 *
 		 * @return 'true' on success, 'false' otherwise.
 		 */
-		bool ProtDataCallback (Call& call);
+		bool ProtDataCallback( megamol::core::Call& call);
 
 		/**********************************************************************
 		 * 'protein'-functions
@@ -218,10 +217,10 @@ namespace protein {
 		 **********************************************************************/
 
 		/** Callee slot */
-		CalleeSlot m_protDataCalleeSlot;
+		megamol::core::CalleeSlot m_protDataCalleeSlot;
 
         /** The filename parameter */
-        param::ParamSlot  m_filename;
+        megamol::core::param::ParamSlot  m_filename;
 
 		////////////////////////////////////////////////////////////
 		// variables for storing all data needed by the interface //
@@ -271,14 +270,13 @@ namespace protein {
 		vislib::Array<unsigned int> tmp_cysteineSulfurAtoms;
 		
 		/** Stride secondary structure */
-		megamol::core::protein::Stride *m_stride;
+		Stride *m_stride;
 		/** Stride sec struct computed */
 		bool m_secondaryStructureComputed;
 	};
 
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif //MEGAMOLCORE_PROTEINDATA_H_INCLUDED

@@ -19,6 +19,7 @@
 #include <string>
 #include <iostream>
 
+using namespace megamol;
 using namespace megamol::core;
 
 

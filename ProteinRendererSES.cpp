@@ -30,8 +30,9 @@
 #include <fstream>
 #include <math.h>
 
+using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core::protein;
+using namespace megamol::protein;
 
 /*
  * ProteinRendererSES::ProteinRendererSES
@@ -1152,7 +1153,7 @@ void ProteinRendererSES::CreateFBO()
  * Render the molecular surface using GPU raycasting
  */
 void ProteinRendererSES::RenderSESGpuRaycasting(
-	const megamol::core::protein::CallProteinData *protein)
+	const CallProteinData *protein)
 {
 	// TODO: attribute locations nicht jedes mal neu abfragen!
 
@@ -1327,7 +1328,7 @@ void ProteinRendererSES::RenderSESGpuRaycasting(
  * Render the molecular surface using GPU raycasting
  */
 void ProteinRendererSES::RenderSESGpuRaycastingSimple(
-	const megamol::core::protein::CallProteinData *protein)
+	const CallProteinData *protein)
 {
 	// TODO: attribute locations nicht jedes mal neu abfragen!
 
@@ -1500,7 +1501,7 @@ void ProteinRendererSES::RenderSESGpuRaycastingSimple(
  * Render debug stuff
  */
 void ProteinRendererSES::RenderDebugStuff(
-	const megamol::core::protein::CallProteinData *protein)
+	const CallProteinData *protein)
 {
 	// --> USAGE: UNCOMMENT THE NEEDED PARTS
 	
@@ -3093,7 +3094,7 @@ void ProteinRendererSES::CreateSingularityTexture( unsigned int idxRS)
  * Render all atoms
  */
 void ProteinRendererSES::RenderAtomsGPU( 
-	const megamol::core::protein::CallProteinData *protein, const float scale)
+	const CallProteinData *protein, const float scale)
 {
 	unsigned int cnt, cntRS, max1, max2;
 
@@ -3353,7 +3354,7 @@ void ProteinRendererSES::MakeColorTable( const CallProteinData *prot, bool force
 	unsigned int i;
 	unsigned int currentChain, currentAminoAcid, currentAtom, currentSecStruct;
 	unsigned int cntCha, cntRes, cntAto;
-	megamol::core::protein::CallProteinData::Chain chain;
+	CallProteinData::Chain chain;
 	vislib::math::Vector<float, 3> color;
 	// if recomputation is forced: clear current color table
 	if( forceRecompute )

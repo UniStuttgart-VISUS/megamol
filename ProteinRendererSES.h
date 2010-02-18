@@ -29,14 +29,13 @@
 #include "vislib/FpsCounter.h"
 
 namespace megamol {
-namespace core {
 namespace protein {
 
 	/**
 	 * Molecular Surface Renderer class.
 	 * Computes and renders the solvent excluded (Connolly) surface.
 	 */
-	class ProteinRendererSES : public view::Renderer3DModule
+	class ProteinRendererSES : public megamol::core::view::Renderer3DModule
 	{
 	public:
 				
@@ -164,7 +163,7 @@ namespace protein {
 		 * @param protein The protein data interface.
 		 * @param scale The scale factor for the atom radius.
 		 */
-		void RenderAtomsGPU( const megamol::core::protein::CallProteinData *protein, 
+		void RenderAtomsGPU( const CallProteinData *protein, 
 			const float scale = 1.0f);
 
 		/**
@@ -226,7 +225,7 @@ namespace protein {
 		 * @param protein Pointer to the protein data interface.
 		 */
 		void RenderSESGpuRaycasting(
-			const megamol::core::protein::CallProteinData *protein);
+			const CallProteinData *protein);
 
 		/**
 		 * Render the molecular surface using GPU raycasting.
@@ -234,14 +233,14 @@ namespace protein {
 		 * @param protein Pointer to the protein data interface.
 		 */
 		void RenderSESGpuRaycastingSimple(
-			const megamol::core::protein::CallProteinData *protein);
+			const CallProteinData *protein);
 		
 		/**
 		 * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
 		 *
 		 * @param protein Pointer to the protein data interface.
 		 */
-		void RenderDebugStuff( const megamol::core::protein::CallProteinData *protein);
+		void RenderDebugStuff( const CallProteinData *protein);
 
 		/**
 		 * Postprocessing: use screen space ambient occlusion
@@ -284,7 +283,7 @@ namespace protein {
 		 * @param prot The protein data interface.
 		 * @param forceRecompute If 'true', the color Table is recomputed, otherwise only if necessary.
 		 */
-		void MakeColorTable( const megamol::core::protein::CallProteinData *prot, bool forceRecompute = true);
+		void MakeColorTable( const CallProteinData *prot, bool forceRecompute = true);
 
 		/**
 		 * Create the singularity textureS which stores for every RS-edge (of all
@@ -314,7 +313,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetCapabilities(Call& call);
+        virtual bool GetCapabilities( megamol::core::Call& call);
 
         /**
          * The get extents callback. The module should set the members of
@@ -325,7 +324,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(Call& call);
+        virtual bool GetExtents( megamol::core::Call& call);
 
         /**
 		 * Open GL Render call.
@@ -333,7 +332,7 @@ namespace protein {
 		 * @param call The calling call.
 		 * @return The return value of the function.
 		 */
-		virtual bool Render( Call& call);
+		virtual bool Render( megamol::core::Call& call);
 
 		/**
 		 * Deinitialises this renderer. This is only called if there was a 
@@ -346,7 +345,7 @@ namespace protein {
 		 **********************************************************************/
 		
 		// caller slot
-		CallerSlot m_protDataCallerSlot;
+		megamol::core::CallerSlot m_protDataCallerSlot;
 		
 		// 'true' if there is rms data to be rendered
 		bool m_renderRMSData;
@@ -357,28 +356,28 @@ namespace protein {
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> m_cameraInfo;
 		
-		param::ParamSlot m_postprocessingParam;
-		param::ParamSlot m_rendermodeParam;
-		param::ParamSlot m_coloringmodeParam;
-		param::ParamSlot m_silhouettecolorParam;
-		param::ParamSlot m_sigmaParam;
-		param::ParamSlot m_lambdaParam;
-		param::ParamSlot m_minvaluecolorParam;
-		param::ParamSlot m_maxvaluecolorParam;
-		param::ParamSlot m_meanvaluecolorParam;
-		param::ParamSlot m_fogstartParam;
-        param::ParamSlot debugParam;
-        param::ParamSlot drawSESParam;
-        param::ParamSlot drawSASParam;
+		megamol::core::param::ParamSlot m_postprocessingParam;
+		megamol::core::param::ParamSlot m_rendermodeParam;
+		megamol::core::param::ParamSlot m_coloringmodeParam;
+		megamol::core::param::ParamSlot m_silhouettecolorParam;
+		megamol::core::param::ParamSlot m_sigmaParam;
+		megamol::core::param::ParamSlot m_lambdaParam;
+		megamol::core::param::ParamSlot m_minvaluecolorParam;
+		megamol::core::param::ParamSlot m_maxvaluecolorParam;
+		megamol::core::param::ParamSlot m_meanvaluecolorParam;
+		megamol::core::param::ParamSlot m_fogstartParam;
+        megamol::core::param::ParamSlot debugParam;
+        megamol::core::param::ParamSlot drawSESParam;
+        megamol::core::param::ParamSlot drawSASParam;
 
         bool drawRS;
         bool drawSES;
         bool drawSAS;
 
 		/** the reduced surface(s) */
-		std::vector<megamol::core::protein::ReducedSurface*> reducedSurface;
+		std::vector<ReducedSurface*> reducedSurface;
 		/** the simplified reduced surface(s) */
-		std::vector<megamol::core::protein::ReducedSurfaceSimplified*> simpleRS;
+		std::vector<ReducedSurfaceSimplified*> simpleRS;
 		
 		// shader for the cylinders (raycasting view)
 		vislib::graphics::gl::GLSLShader cylinderShader;
@@ -504,7 +503,6 @@ namespace protein {
 	};
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_MOLSURFACERENDERER_H_INCLUDED */

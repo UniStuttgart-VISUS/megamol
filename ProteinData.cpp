@@ -19,8 +19,8 @@
 #include <string>
 #include <iostream>
 
+using namespace megamol;
 using namespace megamol::core;
-
 
 
 /*
@@ -1149,6 +1149,30 @@ bool protein::ProteinData::MakeConnections( unsigned int chainIdIdx, unsigned in
 	std::map<std::string, unsigned int> atomNamesMap;
 	unsigned int counter;
 	vislib::StringA name;
+
+    // TEMP!!!! 
+
+    unsigned int cnt1, cnt2, idx1, idx2;
+    //vislib::math::Vector<float, 3> v1, v2;
+    // loop over all atoms in this amino acid and fill the map with the names of the atoms
+    for ( cnt1 = 0; cnt1 < this->tmp_atomEntries[chainIdIdx][resSeqIdx].size() - 1; ++cnt1 ){
+        for ( cnt2 = cnt1 + 1; cnt2 < this->tmp_atomEntries[chainIdIdx][resSeqIdx].size(); ++cnt2 ){
+            idx1 = m_aminoAcidChains[chainIdIdx][resSeqIdx].FirstAtomIndex() + cnt1;
+            idx2 = m_aminoAcidChains[chainIdIdx][resSeqIdx].FirstAtomIndex() + cnt2;
+            vislib::math::Vector<float, 3> v1( &this->m_protAtomPos[idx1 * 3]);
+            vislib::math::Vector<float, 3> v2( &this->m_protAtomPos[idx2 * 3]);
+            if( ( v1 - v2).Length() <
+                0.6f * ( this->m_atomTypes[this->m_protAtomData[idx1].TypeIndex()].Radius() +
+                this->m_atomTypes[this->m_protAtomData[idx2].TypeIndex()].Radius() ) ) {
+                m_aminoAcidChains[chainIdIdx][resSeqIdx].AccessConnectivity().Add (
+                    protein::CallProteinMovementData::IndexPair ( cnt1, cnt2 ) );
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    return true;
+    ///////////////////////////////////////////////////////////////////////////
 
 	// loop over all atoms in this amino acid and fill the map with the names of the atoms
 	for( counter = 0; counter < this->tmp_atomEntries[chainIdIdx][resSeqIdx].size(); counter++ )

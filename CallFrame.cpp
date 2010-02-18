@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "CallFrame.h"
 
-using namespace megamol::core;
+using namespace megamol;
 
 
 /**

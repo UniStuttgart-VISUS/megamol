@@ -23,7 +23,6 @@
 #include "CallProteinMovementData.h"
 
 namespace megamol {
-namespace core {
 namespace protein {	
 
 #define Pi                        3.1415927
@@ -279,16 +278,16 @@ public:
 		BUFFER Type;
 	} PATTERN;
 
-	Stride( megamol::core::protein::CallProteinData *pdi);
-    Stride( megamol::core::protein::CallProteinMovementData *pdi);
+	Stride( megamol::protein::CallProteinData *pdi);
+    Stride( megamol::protein::CallProteinMovementData *pdi);
 	virtual ~Stride(void);
 
-	bool WriteToInterface( megamol::core::protein::CallProteinData *pdi);
-    bool WriteToInterface( megamol::core::protein::CallProteinMovementData *pdi);
+	bool WriteToInterface( megamol::protein::CallProteinData *pdi);
+    bool WriteToInterface( megamol::protein::CallProteinMovementData *pdi);
 	
 protected:
-	void GetChains( megamol::core::protein::CallProteinData *pdi);
-    void GetChains( megamol::core::protein::CallProteinMovementData *pdi);
+	void GetChains( megamol::protein::CallProteinData *pdi);
+    void GetChains( megamol::protein::CallProteinMovementData *pdi);
 	bool ComputeSecondaryStructure();
 	
 	void DefaultCmd( COMMAND *Cmd );
@@ -390,7 +389,6 @@ private:
 };
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_STRIDE_H_INCLUDED */

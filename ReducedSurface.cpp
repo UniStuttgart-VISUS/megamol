@@ -16,13 +16,13 @@
 #include <iostream>
 #include <ctime>
 
-using namespace megamol::core;
-using namespace megamol::core::protein;
+using namespace megamol;
+using namespace megamol::protein;
 
 /*
  * ReducedSurface::ReducedSurface
  */
-ReducedSurface::ReducedSurface( const megamol::core::protein::CallProteinData *prot,
+ReducedSurface::ReducedSurface( const CallProteinData *prot,
 										  float probeRad) :
 		protein( prot), globalRS( true), zeroVec3( 0, 0, 0)
 {
@@ -44,7 +44,7 @@ ReducedSurface::ReducedSurface( const megamol::core::protein::CallProteinData *p
 }
 
 ReducedSurface::ReducedSurface( unsigned int chainId, 
-										  const megamol::core::protein::CallProteinData *prot,
+										  const CallProteinData *prot,
 										  float probeRad) :
 		protein( prot), globalRS( false), zeroVec3( 0, 0, 0)
 {

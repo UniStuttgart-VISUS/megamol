@@ -30,7 +30,9 @@
 #include <math.h>
 #include <time.h>
 
+using namespace megamol;
 using namespace megamol::core;
+
 
 /*
  * protein::ProteinRenderer::ProteinRenderer (CTOR)
@@ -43,7 +45,8 @@ protein::ProteinRenderer::ProteinRenderer(void) : Renderer3DModule (),
     m_drawBackboneParam("drawBackbone", "Draw Backbone only"),
     m_drawDisulfideBondsParam("drawDisulfideBonds", "Draw Disulfide Bonds"),
 	m_stickRadiusParam("stickRadius", "Stick Radius for spheres and sticks with STICK_ render modes"),
-	m_probeRadiusParam("probeRadius", "Probe Radius for SAS rendering")
+		m_probeRadiusParam ( "probeRadius", "Probe Radius for SAS rendering" ),
+		m_currentFrameId ( 0 ), atomCount( 0 )
 {
     this->m_protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
     this->MakeSlotAvailable(&this->m_protDataCallerSlot);
@@ -65,9 +68,10 @@ protein::ProteinRenderer::ProteinRenderer(void) : Renderer3DModule (),
 	cm->SetTypePair(ELEMENT, "Element");
 	cm->SetTypePair(AMINOACID, "AminoAcid");
 	cm->SetTypePair(STRUCTURE, "SecondaryStructure");
-	//cm->SetTypePair(VALUE, "Value");
+	cm->SetTypePair(VALUE, "Value");
 	cm->SetTypePair(CHAIN_ID, "ChainID");
-	//cm->SetTypePair(RAINBOW, "Rainbow");
+	cm->SetTypePair(RAINBOW, "Rainbow");
+	cm->SetTypePair ( CHARGE, "Charge" );
 
     this->m_coloringModeParam << cm;
 
@@ -127,6 +131,8 @@ protein::ProteinRenderer::ProteinRenderer(void) : Renderer3DModule (),
 
 	// fill amino acid color table
 	this->FillAminoAcidColorTable();
+	// fill rainbow color table
+	this->MakeRainbowColorTable( 100);
 
 	// draw no dots for atoms when using LINES mode
 	this->m_drawDotsWithLine = false;
@@ -287,6 +293,12 @@ bool protein::ProteinRenderer::Render(Call& call)
     if (protein == NULL) 
         return false;
 
+	if ( this->m_currentFrameId != protein->GetCurrentFrameId() )
+	{
+		this->m_currentFrameId = protein->GetCurrentFrameId();
+		this->RecomputeAll();
+	}
+
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
     if(this->m_callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED)
     {
@@ -297,6 +309,12 @@ bool protein::ProteinRenderer::Render(Call& call)
     {
         if(!(*protein)()) 
             return false;
+    }
+
+    // check last atom count with current atom count
+    if( this->atomCount != protein->ProteinAtomCount() ) {
+        this->atomCount = protein->ProteinAtomCount();
+        this->RecomputeAll();
     }
 
 	// get camera information
@@ -740,6 +758,10 @@ void protein::ProteinRenderer::RenderStickRaycasting(
 					// compute the absolute position 'position' of the cylinder (center point)
 					position = firstAtomPos + (dir/2.0f);
 					
+					// don't draw bonds that are too long
+					if ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) > 3.5f )
+						continue;
+					
 					this->m_inParaCylStickRaycasting.Add( m_radiusStick);
 					this->m_inParaCylStickRaycasting.Add( abs( (firstAtomPos-secondAtomPos).Length()));
 
@@ -858,6 +880,8 @@ void protein::ProteinRenderer::RenderBallAndStick(
 		// clear color array for sphere colors
 		this->m_colorSphereStickRay.Clear();
 
+        this->m_vertSphereStickRay.AssertCapacity( 4 * prot->ProteinAtomCount() );
+		this->m_colorSphereStickRay.AssertCapacity( 3 * prot->ProteinAtomCount() );
 		// store the points (will be rendered as spheres by the shader)
 		for( i1 = 0; i1 < prot->ProteinAtomCount(); i1++)
 		{
@@ -979,6 +1003,10 @@ void protein::ProteinRenderer::RenderBallAndStick(
 					// compute the absolute position 'position' of the cylinder (center point)
 					position = firstAtomPos + (dir/2.0f);
 					
+					// don't draw bonds that are too long
+					if ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) > 3.5f )
+						continue;
+
 					this->m_inParaCylStickRaycasting.Add( m_radiusStick/3.0f);
 					this->m_inParaCylStickRaycasting.Add( abs( (firstAtomPos-secondAtomPos).Length()));
 
@@ -1286,10 +1314,16 @@ void protein::ProteinRenderer::MakeColorTable( const CallProteinData *prot, bool
 {
 	unsigned int i;
 	unsigned int currentChain, currentAminoAcid, currentAtom, currentSecStruct;
+	unsigned int cntCha, cntRes, cntAto;
 	protein::CallProteinData::Chain chain;
+	vislib::math::Vector<float, 3> color;
 	// if recomputation is forced: clear current color table
 	if( forceRecompute )
+	{
 		this->m_protAtomColorTable.Clear();
+	}
+	// reserve memory for all atoms
+	this->m_protAtomColorTable.AssertCapacity( prot->ProteinAtomCount() );
 	// only compute color table if necessary
 	if( this->m_protAtomColorTable.IsEmpty() )
 	{
@@ -1301,7 +1335,7 @@ void protein::ProteinRenderer::MakeColorTable( const CallProteinData *prot, bool
 				this->m_protAtomColorTable.Add( prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[1]);
 				this->m_protAtomColorTable.Add( prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[2]);
 			}
-		}
+		} // ... END coloring mode ELEMENT
 		else if( this->m_currentColoringMode == AMINOACID )
 		{
 			// loop over all chains
@@ -1327,7 +1361,7 @@ void protein::ProteinRenderer::MakeColorTable( const CallProteinData *prot, bool
 					}
 				}
 			}
-		}
+		} // ... END coloring mode AMINOACID
 		else if( this->m_currentColoringMode == STRUCTURE )
 		{
 			// loop over all chains
@@ -1373,10 +1407,66 @@ void protein::ProteinRenderer::MakeColorTable( const CallProteinData *prot, bool
 					}
 				}
 			}
+			// add missing atom colors
+			if ( prot->ProteinAtomCount() > ( this->m_protAtomColorTable.Count() / 3 ) )
+			{
+				currentAtom = this->m_protAtomColorTable.Count() / 3;
+				for ( ; currentAtom < prot->ProteinAtomCount(); ++currentAtom )
+				{
+					this->m_protAtomColorTable.Add ( 200 );
+					this->m_protAtomColorTable.Add ( 200 );
+					this->m_protAtomColorTable.Add ( 200 );
 		}
+			}
+		} // ... END coloring mode STRUCTURE
 		else if( this->m_currentColoringMode == VALUE )
 		{
+			vislib::math::Vector<int, 3> colMax( 255,   0,   0);
+			vislib::math::Vector<int, 3> colMid( 255, 255, 255);
+			vislib::math::Vector<int, 3> colMin(   0,   0, 255);
+			vislib::math::Vector<int, 3> col;
+			
+			float min( prot->MinimumTemperatureFactor() );
+			float max( prot->MaximumTemperatureFactor() );
+			float mid( ( max - min)/2.0f + min );
+			float val;
+			
+			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
+			{
+				if( min == max )
+				{
+					this->m_protAtomColorTable.Add( colMid.GetX() );
+					this->m_protAtomColorTable.Add( colMid.GetY() );
+					this->m_protAtomColorTable.Add( colMid.GetZ() );
+					continue;
+				}
+				
+				val = prot->ProteinAtomData()[i].TempFactor();
+				// below middle value --> blend between min and mid color
+				if( val < mid )
+				{
+					col = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
+					this->m_protAtomColorTable.Add( col.GetX() );
+					this->m_protAtomColorTable.Add( col.GetY() );
+					this->m_protAtomColorTable.Add( col.GetZ() );
+				}
+				// above middle value --> blend between max and mid color
+				else if( val > mid )
+				{
+					col = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
+					this->m_protAtomColorTable.Add( col.GetX() );
+					this->m_protAtomColorTable.Add( col.GetY() );
+					this->m_protAtomColorTable.Add( col.GetZ() );
 		}
+				// middle value --> assign mid color
+				else
+				{
+					this->m_protAtomColorTable.Add( colMid.GetX() );
+					this->m_protAtomColorTable.Add( colMid.GetY() );
+					this->m_protAtomColorTable.Add( colMid.GetZ() );
+				}
+			}
+		} // ... END coloring mode VALUE
 		else if( this->m_currentColoringMode == CHAIN_ID )
 		{
 			// loop over all chains
@@ -1401,10 +1491,74 @@ void protein::ProteinRenderer::MakeColorTable( const CallProteinData *prot, bool
 					}
 				}
 			}
-		}
+		} // ... END coloring mode CHAIN_ID
 		else if( this->m_currentColoringMode == RAINBOW )
 		{
+			for( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
+			{
+				for( cntRes = 0; cntRes < prot->ProteinChain( cntCha).AminoAcidCount(); ++cntRes )
+				{
+					i = int( ( float( cntRes) / float( prot->ProteinChain( cntCha).AminoAcidCount() ) ) * float( rainbowColors.size() ) );
+					color = this->rainbowColors[i];
+					for( cntAto = 0;
+					     cntAto < prot->ProteinChain( cntCha).AminoAcid()[cntRes].AtomCount();
+					     ++cntAto )
+					{
+						this->m_protAtomColorTable.Add( int(color.GetX() * 255.0f) );
+						this->m_protAtomColorTable.Add( int(color.GetY() * 255.0f) );
+						this->m_protAtomColorTable.Add( int(color.GetZ() * 255.0f) );
+					}
+				}
+			}
+		} // ... END coloring mode RAINBOW
+		else if ( this->m_currentColoringMode == CHARGE )
+		{
+			vislib::math::Vector<int, 3> colMax( 255,   0,   0);
+			vislib::math::Vector<int, 3> colMid( 255, 255, 255);
+			vislib::math::Vector<int, 3> colMin(   0,   0, 255);
+			vislib::math::Vector<int, 3> col;
+			
+			float min( prot->MinimumCharge() );
+			float max( prot->MaximumCharge() );
+			float mid( ( max - min)/2.0f + min );
+			float charge;
+			
+			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
+			{
+				if( min == max )
+				{
+					this->m_protAtomColorTable.Add( colMid.GetX() );
+					this->m_protAtomColorTable.Add( colMid.GetY() );
+					this->m_protAtomColorTable.Add( colMid.GetZ() );
+					continue;
+				}
+				
+				charge = prot->ProteinAtomData()[i].Charge();
+				// below middle value --> blend between min and mid color
+				if( charge < mid )
+				{
+					col = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( charge - min );
+					this->m_protAtomColorTable.Add( col.GetX() );
+					this->m_protAtomColorTable.Add( col.GetY() );
+					this->m_protAtomColorTable.Add( col.GetZ() );
+				}
+				// above middle value --> blend between max and mid color
+				else if( charge > mid )
+				{
+					col = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( charge - mid );
+					this->m_protAtomColorTable.Add( col.GetX() );
+					this->m_protAtomColorTable.Add( col.GetY() );
+					this->m_protAtomColorTable.Add( col.GetZ() );
+				}
+				// middle value --> assign mid color
+				else
+				{
+					this->m_protAtomColorTable.Add( colMid.GetX() );
+					this->m_protAtomColorTable.Add( colMid.GetY() );
+					this->m_protAtomColorTable.Add( colMid.GetZ() );
 		}
+	}
+		} // ... END coloring mode CHARGE
 	}
 }
 
@@ -1463,3 +1617,38 @@ void protein::ProteinRenderer::FillAminoAcidColorTable()
 	this->m_aminoAcidColorTable[24].Set( 255, 192, 128);
 }
 
+/*
+ * protein::ProteinRenderer::makeRainbowColorTable
+ * Creates a rainbow color table with 'num' entries.
+ */
+void protein::ProteinRenderer::MakeRainbowColorTable( unsigned int num)
+{
+	unsigned int n = (num/4);
+	// the color table should have a minimum size of 16
+	if( n < 4 )
+		n = 4;
+	this->rainbowColors.clear();
+	float f = 1.0f/float(n);
+	vislib::math::Vector<float,3> color;
+	color.Set( 1.0f, 0.0f, 0.0f);
+	for( unsigned int i = 0; i < n; i++)
+	{
+		color.SetY( vislib::math::Min( color.GetY() + f, 1.0f));
+		rainbowColors.push_back( color);
+	}
+	for( unsigned int i = 0; i < n; i++)
+	{
+		color.SetX( vislib::math::Max( color.GetX() - f, 0.0f));
+		rainbowColors.push_back( color);
+	}
+	for( unsigned int i = 0; i < n; i++)
+	{
+		color.SetZ( vislib::math::Min( color.GetZ() + f, 1.0f));
+		rainbowColors.push_back( color);
+	}
+	for( unsigned int i = 0; i < n; i++)
+	{
+		color.SetY( vislib::math::Max( color.GetY() - f, 0.0f));
+		rainbowColors.push_back( color);
+	}
+}

@@ -602,6 +602,10 @@
 			Filter="btf"
 			>
 			<File
+				RelativePath=".\Shaders\protein.btf"
+				>
+			</File>
+			<File
 				RelativePath=".\Shaders\solpath.btf"
 				>
 			</File>

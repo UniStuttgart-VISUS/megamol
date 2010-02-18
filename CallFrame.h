@@ -15,7 +15,6 @@
 #include "CallAutoDescription.h"
 
 namespace megamol {
-namespace core {
 namespace protein {
 
 
@@ -30,7 +29,7 @@ namespace protein {
      *
      */
 
-    class CallFrame : public Call 
+	class CallFrame : public megamol::core::Call 
     {
     public:
 
@@ -109,11 +108,10 @@ namespace protein {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallFrame> CallFrameDescription;
+    typedef megamol::core::CallAutoDescription<CallFrame> CallFrameDescription;
 
 
 } /* end namespace protein */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_CALLFRAME_H_INCLUDED */
