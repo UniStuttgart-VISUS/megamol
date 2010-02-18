@@ -1163,7 +1163,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             //////////////////////////////////
             // ray cast the tori on the GPU //
             //////////////////////////////////
-            /*
+            
             // enable torus shader
             this->torusShader.Enable();
             // set shader variables
@@ -1207,7 +1207,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glDisableClientState(GL_VERTEX_ARRAY);
             // enable torus shader
             this->torusShader.Disable();
-            */
+            
             
             /////////////////////////////////////////////////
             // ray cast the spherical triangles on the GPU //
@@ -1320,7 +1320,8 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glBindTexture( GL_TEXTURE_2D, 0);
 
         // DEBUG
-        // drawing suurfVectors as yellow lines
+        // drawing surfVectors as yellow lines
+        /*
         glDisable( GL_LIGHTING);
         glLineWidth( 1.0f);
         glEnable( GL_LINE_WIDTH);
@@ -1340,6 +1341,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glPopAttrib();
         glDisable( GL_LINE_WIDTH);
         glEnable( GL_LIGHTING);
+        */
         // end DEBUG
         
     }
@@ -2247,16 +2249,19 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                 edgeVector += tempVec;
             }
 
-            // if max angle of visible surface part is less than PI use surfVector else edgeVector
+            // if max angle of visible surface part is more than PI use edgeVector else surfVector
             if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
+                surfVector = edgeVector*(-1.0f);
+            } else {
                 // look if there are several unconnected surface parts
+                /*
                 unsigned int edgeCounter = 1;
                 const ReducedSurface::RSEdge * firstEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
                 const ReducedSurface::RSVertex * currentVertex = this->reducedSurface[cntRS]->GetRSVertex(i);
                 ReducedSurface::RSEdge * lastEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
                 ReducedSurface::RSFace * lastFace = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
                 ReducedSurface::RSEdge * currentEdge;
-                for(j = 1; j < edgeCount; ++j) {
+                for(j = 1; j < edgeCount+1; ++j) {
                     currentEdge = lastFace->GetEdge1();
                     if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
                         if(currentEdge == firstEdge) {
@@ -2303,11 +2308,11 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                         }
                     }
                 }
-                // if there is only one surface part choose edgeVector
-                // else there are several surface parts for which the default surfVector is better
-                if(edgeCount == edgeCounter) {
-                    surfVector = edgeVector*(-1.0f);
+                if(edgeCounter == edgeCount) {
+                    surfVector.Normalise();
+                    surfVector *= atomRadius;
                 }
+                */
             }
             surfVector.Normalise();
             surfVector *= atomRadius;
@@ -2625,16 +2630,19 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
             edgeVector += tempVec;
         }
 
-        // if max angle of visible surface part is less than PI use surfVector else edgeVector
+        // if max angle of visible surface part is more than PI use edgeVector else surfVector
         if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
+            surfVector = edgeVector*(-1.0f);
+        } else {
             // look if there are several unconnected surface parts
+            /*
             unsigned int edgeCounter = 1;
             const ReducedSurface::RSEdge * firstEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
             const ReducedSurface::RSVertex * currentVertex = this->reducedSurface[idxRS]->GetRSVertex(i);
             ReducedSurface::RSEdge * lastEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
             ReducedSurface::RSFace * lastFace = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
             ReducedSurface::RSEdge * currentEdge;
-            for(j = 1; j < edgeCount; ++j) {
+            for(j = 1; j < edgeCount+1; ++j) {
                 currentEdge = lastFace->GetEdge1();
                 if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
                     if(currentEdge == firstEdge) {
@@ -2681,11 +2689,11 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
                     }
                 }
             }
-            // if there is only one surface part choose edgeVector
-            // else there are several surface parts for which the default surfVector is better
-            if(edgeCount == edgeCounter) {
-                surfVector = edgeVector*(-1.0f);
+            if(edgeCounter == edgeCount) {
+                surfVector.Normalise();
+                surfVector *= atomRadius;
             }
+            */
         }
         surfVector.Normalise();
         surfVector *= atomRadius;
