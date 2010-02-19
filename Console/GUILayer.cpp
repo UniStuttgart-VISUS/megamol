@@ -6,6 +6,7 @@
  */
 #include "stdafx.h"
 #ifdef WITH_TWEAKBAR
+#include <GL/gl.h>
 #include "GUILayer.h"
 #include "MegaMolCore.h"
 #include "vislib/assert.h"
@@ -741,6 +742,7 @@ void GUILayer::GUIClient::IntParameter::Get(void *value) {
  */
 void GUILayer::Draw(void) {
     if (!this->active) return;
+    ::glGetError();
     TW_VERIFY(::TwDraw(), __LINE__);
 }
 
