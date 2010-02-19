@@ -274,8 +274,8 @@ void main(void) {
                 vec3 dirWorld = dir * scaleVolInv.xyz;
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
-                //src = vec4(0.45, 0.55, 0.8, 0.2 + 1.5*(1.0-tmp)); // higher opacity for surfaces orthogonal to view dir
-                src = vec4(0.45, 0.55, 0.8, 0.6);
+                src = vec4(0.45, 0.55, 0.8, 0.4 + 1.5*(1.0-tmp)); // higher opacity for surfaces orthogonal to view dir
+                //src = vec4(0.45, 0.55, 0.8, 0.6);
                 src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 //src.rgb = -gradient*0.5 + 0.5;
 
