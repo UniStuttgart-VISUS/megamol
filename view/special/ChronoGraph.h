@@ -1,29 +1,30 @@
 /*
- * DemoRenderer2D.h
+ * ChronoGraph.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2010 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_DEMORENDERER2D_H_INCLUDED
-#define MEGAMOLCORE_DEMORENDERER2D_H_INCLUDED
+#ifndef MEGAMOLCORE_CHRONOGRAPH_H_INCLUDED
+#define MEGAMOLCORE_CHRONOGRAPH_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "ModuleAutoDescription.h"
 #include "view/Renderer2DModule.h"
-#include "view/MouseFlags.h"
 
 
 namespace megamol {
 namespace core {
-namespace misc {
+namespace view {
+namespace special {
+
 
     /**
      * A simple 2d renderer which just creates a circle
      */
-    class DemoRenderer2D : public view::Renderer2DModule {
+    class ChronoGraph : public view::Renderer2DModule {
     public:
 
         /**
@@ -32,7 +33,7 @@ namespace misc {
          * @return The class name
          */
         static const char *ClassName(void) {
-            return "DemoRenderer2D";
+            return "ChronoGraph";
         }
 
         /**
@@ -41,7 +42,7 @@ namespace misc {
          * @return The description string
          */
         static const char *Description(void) {
-            return "Demo 2D-Renderer";
+            return "ChronoGraph renderer displaying the core instance time";
         }
 
         /**
@@ -56,12 +57,12 @@ namespace misc {
         /**
          * ctor
          */
-        DemoRenderer2D();
+        ChronoGraph();
 
         /**
          * dtor
          */
-        virtual ~DemoRenderer2D();
+        virtual ~ChronoGraph();
 
     protected:
 
@@ -95,35 +96,36 @@ namespace misc {
          */
         virtual void release(void);
 
-        /**
-         * Callback for mouse events (move, press, and release)
-         *
-         * @param x The x coordinate of the mouse in world space
-         * @param y The y coordinate of the mouse in world space
-         * @param flags The mouse flags
-         */
-        virtual bool MouseEvent(float x, float y, view::MouseFlags flags);
-
     private:
 
-        /** The mouse coordinate */
-        float mx, my;
+        /**
+         * Renders the info grid into the given rectangle
+         *
+         * @param time The time code to show
+         * @param x The x coordinate
+         * @param y The y coordinate
+         * @param w The width
+         * @param h The height
+         */
+        void renderInfoGrid(float time, float x, float y, float w, float h);
 
-        /** The coordinates to draw the test line from */
-        float fromx, fromy;
-
-        /** The coordinates to draw the test line to */
-        float tox, toy;
-
-        /** Flag if the test line is being spanned */
-        bool drag;
+        /**
+         * Renders the info circle into the given rectangle
+         *
+         * @param time The time code to show
+         * @param x The x coordinate
+         * @param y The y coordinate
+         * @param w The width
+         * @param h The height
+         */
+        void renderInfoCircle(float time, float x, float y, float w, float h);
 
     };
 
 
-
-} /* end namespace misc */
+} /* end namespace special */
+} /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_DEMORENDERER2D_H_INCLUDED */
+#endif /* MEGAMOLCORE_CHRONOGRAPH_H_INCLUDED */

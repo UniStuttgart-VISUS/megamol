@@ -125,19 +125,13 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd = new ViewDescription("emptyview");
     vd->AddModule(ModuleDescriptionManager::Instance()
         ->Find("TitleSceneView"), "titleview");
-    vd->SetViewModuleID("titleview");
+    vd->SetViewModuleID("titleview"); // TODO: Replace (is deprecated)
     this->builtinViewDescs.Register(vd);
 
     vd = new ViewDescription("titleview");
     vd->AddModule(ModuleDescriptionManager::Instance()
         ->Find("TitleSceneView"), "titleview");
-    vd->SetViewModuleID("titleview");
-    this->builtinViewDescs.Register(vd);
-
-    vd = new ViewDescription("clusterdisplay");
-    vd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("ClusterDisplay"), "display");
-    vd->SetViewModuleID("display");
+    vd->SetViewModuleID("titleview"); // TODO: Replace (is deprecated)
     this->builtinViewDescs.Register(vd);
 
     // job descriptions
@@ -145,19 +139,19 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
 
     jd = new JobDescription("clustercontroller");
     jd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("ClusterController"), "::cctrl");
+        ->Find("ClusterController"), "::cctrl"); // TODO: Replace (is deprecated)
     jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
     jd = new JobDescription("rendermaster");
     jd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("RenderMaster"), "master");
+        ->Find("RenderMaster"), "master"); // TODO: Replace (is deprecated)
     jd->SetJobModuleID("master");
     this->builtinJobDescs.Register(jd);
 
     jd = new JobDescription("imagemaker");
     jd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("ScreenShooter"), "imgmaker");
+        ->Find("ScreenShooter"), "imgmaker"); // TODO: Replace (is deprecated)
     jd->SetJobModuleID("imgmaker");
     this->builtinJobDescs.Register(jd);
 

@@ -915,10 +915,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\special\TimeView.h"
-					>
-				</File>
-				<File
 					RelativePath=".\special\TitleSceneView.h"
 					>
 				</File>
@@ -1507,42 +1503,6 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\special\TimeView.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
 					RelativePath=".\special\TitleSceneView.cpp"
 					>
 					<FileConfiguration
@@ -1787,6 +1747,34 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="special"
+				>
+				<Filter
+					Name="Header Files"
+					>
+					<File
+						RelativePath=".\view\special\ChronoGraph.h"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\DemoRenderer2D.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Source Files"
+					>
+					<File
+						RelativePath=".\view\special\ChronoGraph.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\DemoRenderer2D.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="job"
@@ -1842,10 +1830,6 @@
 					RelativePath=".\misc\BezierMeshRenderer.h"
 					>
 				</File>
-				<File
-					RelativePath=".\misc\DemoRenderer2D.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -1860,10 +1844,6 @@
 				</File>
 				<File
 					RelativePath=".\misc\BezierMeshRenderer.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\misc\DemoRenderer2D.cpp"
 					>
 				</File>
 			</Filter>
