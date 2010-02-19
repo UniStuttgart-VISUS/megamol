@@ -328,7 +328,11 @@ namespace protein {
 		megamol::core::param::ParamSlot drawDisulfideBondsParam;
 		megamol::core::param::ParamSlot stickRadiusParam;
 		megamol::core::param::ParamSlot probeRadiusParam;
-		
+		// parameters for the volume rendering
+		megamol::core::param::ParamSlot volIsoValueParam;
+		megamol::core::param::ParamSlot volFilterRadiusParam;
+		megamol::core::param::ParamSlot volDensityScaleParam;
+
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereShader;
 		// shader for the cylinders (raycasting view)

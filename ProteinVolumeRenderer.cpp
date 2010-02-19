@@ -48,6 +48,9 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 		drawDisulfideBondsParam ( "drawDisulfideBonds", "Draw Disulfide Bonds" ),
 		stickRadiusParam ( "stickRadius", "Stick Radius for spheres and sticks with STICK_ render modes" ),
 		probeRadiusParam ( "probeRadius", "Probe Radius for SAS rendering" ),
+		volIsoValueParam( "volIsoValue", "Isovalue for isosurface rendering"),
+		volFilterRadiusParam( "volFilterRadius", "Filter Radius for volume generation"),
+		volDensityScaleParam( "volDensityScale", "Density scale factor for volume generation"),
         currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
         volFilterRadius( 1.75f), volDensityScale( 1.0f),
         width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
@@ -109,7 +112,7 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 	this->drawDisulfideBonds = false;
 	this->drawDisulfideBondsParam.SetParameter ( new param::BoolParam ( this->drawDisulfideBonds ) );
 
-	// --- set the radius for the stick rednering mode ---
+	// --- set the radius for the stick rendering mode ---
 	this->radiusStick = 0.3f;
 	this->stickRadiusParam.SetParameter ( new param::FloatParam ( this->radiusStick, 0.0f ) );
 
@@ -117,12 +120,22 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 	this->probeRadius = 1.4f;
 	this->probeRadiusParam.SetParameter ( new param::FloatParam ( this->probeRadius, 0.0f ) );
 
-	this->MakeSlotAvailable ( &this->coloringModeParam );
-	this->MakeSlotAvailable ( &this->renderingModeParam );
+	// --- set up parameter for isovalue ---
+	this->volIsoValueParam.SetParameter( new param::FloatParam( this->isoValue, 0.0f ) );
+	// --- set up parameter for volume filter radius ---
+	this->volFilterRadiusParam.SetParameter( new param::FloatParam( this->volFilterRadius, 0.0f ) );
+	// --- set up parameter for volume density scale ---
+	this->volDensityScaleParam.SetParameter( new param::FloatParam( this->volDensityScale, 0.0f ) );
+
+	this->MakeSlotAvailable( &this->coloringModeParam );
+	this->MakeSlotAvailable( &this->renderingModeParam );
 	//this->MakeSlotAvailable(&this->drawBackboneParam);
-	this->MakeSlotAvailable ( &this->drawDisulfideBondsParam );
-	this->MakeSlotAvailable ( &this->stickRadiusParam );
-	this->MakeSlotAvailable ( &this->probeRadiusParam );
+	this->MakeSlotAvailable( &this->drawDisulfideBondsParam );
+	this->MakeSlotAvailable( &this->stickRadiusParam );
+	this->MakeSlotAvailable( &this->probeRadiusParam );
+	this->MakeSlotAvailable( &this->volIsoValueParam );
+	this->MakeSlotAvailable( &this->volFilterRadiusParam );
+	this->MakeSlotAvailable( &this->volDensityScaleParam );
 
 	// set empty display list to zero
 	this->proteinDisplayListLines = 0;
@@ -467,6 +480,19 @@ bool protein::ProteinVolumeRenderer::Render( Call& call )
 	if ( this->probeRadiusParam.IsDirty() ) {
 		this->SetRadiusProbe ( this->probeRadiusParam.Param<param::FloatParam>()->Value() );
 		this->probeRadiusParam.ResetDirty();
+	}
+	// volume parameters
+	if ( this->volIsoValueParam.IsDirty() ) {
+		this->isoValue = this->volIsoValueParam.Param<param::FloatParam>()->Value();
+		this->volIsoValueParam.ResetDirty();
+	}
+	if ( this->volFilterRadiusParam.IsDirty() ) {
+		this->volFilterRadius = this->volFilterRadiusParam.Param<param::FloatParam>()->Value();
+		this->volFilterRadiusParam.ResetDirty();
+	}
+	if ( this->volDensityScaleParam.IsDirty() ) {
+		this->volDensityScale = this->volDensityScaleParam.Param<param::FloatParam>()->Value();
+		this->volDensityScaleParam.ResetDirty();
 	}
 
 	// make the atom color table if necessary
