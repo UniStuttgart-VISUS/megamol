@@ -425,6 +425,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinMovementRenderer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ProteinRenderer.cpp"
 				>
 			</File>
@@ -548,6 +552,10 @@
 			</File>
 			<File
 				RelativePath=".\ProteinMovementData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProteinMovementRenderer.h"
 				>
 			</File>
 			<File
