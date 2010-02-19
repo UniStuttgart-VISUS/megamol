@@ -10,6 +10,7 @@
 
 #include "vislib/AbstractInboundCommChannel.h"
 #include "vislib/SimpleMessageDispatchListener.h"
+#include "vislib/SocketException.h"
 #include "vislib/Trace.h"
 
 
@@ -66,10 +67,17 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
     VLSTACKTRACE("SimpleMessageDispatcher::Run", __FILE__, __LINE__);
     ASSERT(channel != NULL);
 
-    bool exitRequested = false;
     this->channel = static_cast<AbstractInboundCommChannel *>(channel);
-
-    Socket::Startup();
+    bool exitRequested = false;
+    
+    try {
+        Socket::Startup();
+    } catch (SocketException e) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Socket::Startup failed in "
+            "SimpleMessageDispatcher::Run: %s\n", e.GetMsgA());
+        this->fireCommunicationError(e);
+        return e.GetErrorCode();
+    }
 
     VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher is entering the "
         "message loop ...\n");
@@ -89,15 +97,17 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
                 this->msg.GetHeader().GetBodySize());
             this->msg.AssertBodySize();
 
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for "
-                "message body ...\n");
-            this->channel->Receive(this->msg.GetBody(), 
-                this->msg.GetHeader().GetBodySize(),
-                AbstractCommChannel::TIMEOUT_INFINITE, 
-                true);
+            if (this->msg.GetHeader().GetBodySize() > 0) {
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for "
+                    "message body ...\n");
+                this->channel->Receive(this->msg.GetBody(), 
+                    this->msg.GetHeader().GetBodySize(),
+                    AbstractCommChannel::TIMEOUT_INFINITE, 
+                    true);
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Message body "
+                    "received.\n");
+            }
 
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Message body "
-                "received.\n");
             this->fireMessageReceived(this->msg);
         }
     } catch (Exception e) {
@@ -106,11 +116,19 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
         this->fireCommunicationError(e);
     }
 
-    Socket::Cleanup();
+    this->channel.Release();
+
+    try {
+        Socket::Cleanup();
+    } catch (SocketException e) {
+        VLTRACE(VISLIB_TRCELVL_WARN, "Socket::Cleanup failed in "
+            "SimpleMessageDispatcher::Run: %s\n", e.GetMsgA());
+    }
 
     VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher has left the "
         "message loop ...\n");
     this->fireDispatcherExited();
+
     return 0;
 }
 

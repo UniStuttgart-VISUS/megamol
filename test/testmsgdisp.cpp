@@ -15,7 +15,9 @@
 #include "vislib/SimpleMessageDispatchListener.h"
 
 
-vislib::sys::Semaphore semWaitRecv;
+static const long CNT_MSGS = 1;
+
+vislib::sys::Semaphore semWaitRecv(0l, CNT_MSGS);
 
 class Listener : public vislib::net::SimpleMessageDispatchListener {
     virtual bool OnMessageReceived(const vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw();
@@ -51,16 +53,22 @@ void TestMsgDisp(void) {
 
     /* Start the dispatcher thread. */
     vislib::net::AbstractInboundCommChannel *cc = recvChannel.operator ->();
-    dispatcher.Start(cc);
+    dispatcher.Start(recvChannel.operator ->());
 
     msg.GetHeader().SetBodySize(0);
     msg.GetHeader().SetMessageID(27);
     sendChannel->Send(static_cast<void *>(msg), msg.GetMessageSize());
 
     std::cout << "Waiting for all test messages being received ..." << std::endl;
-    ::semWaitRecv.Lock();
+    for (long i = 0; i < CNT_MSGS; i++) {
+        ::semWaitRecv.Lock();
+    }
 
     dispatcher.Terminate(false);
 
+    /* Cleanup network stuff. */
+    recvChannel.Release();
+    sendChannel.Release();
+    serverChannel.Release();
     vislib::net::Socket::Cleanup();
 }

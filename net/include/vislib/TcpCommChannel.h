@@ -35,9 +35,9 @@ namespace net {
      *    SocketAddress is only for backward compatibility and should not be used
      *    for new programs.
      */
-    class TcpCommChannel : public virtual AbstractBidiCommChannel,
-            public virtual AbstractClientEndpoint, 
-            public virtual AbstractServerEndpoint {
+    class TcpCommChannel : public AbstractBidiCommChannel,
+            public AbstractClientEndpoint, 
+            public AbstractServerEndpoint {
 
     public:
 

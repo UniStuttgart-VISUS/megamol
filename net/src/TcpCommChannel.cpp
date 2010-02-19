@@ -128,12 +128,12 @@ void vislib::net::TcpCommChannel::Bind(const IPEndPoint address) {
  */
 void vislib::net::TcpCommChannel::Close(void) {
     // TODO: Find out how shutdown can be safely used.
-    try {
-        this->socket.Shutdown();
-    } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when shutting down "
-            "socket in TcpCommChannel::Close: %s\n", e.GetMsgA());
-    }
+    //try {
+    //    this->socket.Shutdown();
+    //} catch (SocketException e) {
+    //    VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when shutting down "
+    //        "socket in TcpCommChannel::Close: %s\n", e.GetMsgA());
+    //}
     try {
         this->socket.Close();
     } catch (SocketException e) {

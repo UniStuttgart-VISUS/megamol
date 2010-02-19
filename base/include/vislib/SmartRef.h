@@ -103,6 +103,13 @@ namespace vislib {
         }
 
         /**
+         * Release the reference that this SmartRef has on the object. The 
+         * reference will be set NULL. It is safe to call the method if the 
+         * reference is already NULL.
+         */
+        void Release(void);
+
+        /**
          * Assignment operator.
          *
          * This operation creates a strong reference, i. e. decrements the 
@@ -251,6 +258,17 @@ namespace vislib {
             ? SmartRef<Tp>(NULL, addRef)
             : SmartRef<Tp>(dynamic_cast<Tp *>(this->obj), addRef);
 #endif /* _WIN32 */
+    }
+
+
+    /*
+     * vislib::SmartRef<T>::Release
+     */
+    template<class T> void SmartRef<T>::Release(void) {
+        if (this->obj != NULL) {
+            this->obj->Release();
+            this->obj = NULL;
+        }
     }
 
 

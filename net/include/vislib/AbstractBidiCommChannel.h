@@ -33,8 +33,8 @@ namespace net {
      * resolution of possible ambiguities due to multiple inheritance into one 
      * class.
      */
-    class AbstractBidiCommChannel : public virtual AbstractInboundCommChannel,
-            public virtual AbstractOutboundCommChannel {
+    class AbstractBidiCommChannel : public AbstractInboundCommChannel,
+            public AbstractOutboundCommChannel {
 
     public:
 
