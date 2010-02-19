@@ -17,6 +17,7 @@
 #include "param/ButtonParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
+#include "param/Vector3fParam.h"
 #include "CallRender3D.h"
 #include "utility/ColourParser.h"
 #include "vislib/CameraParamsStore.h"
@@ -51,7 +52,13 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         timeFrame(0.0f), animTimer(true), fpsCounter(10), fpsOutputTimer(0),
-        firstImg(false), frozenValues(NULL) {
+        firstImg(false), frozenValues(NULL),
+        isCamLightSlot("light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system"),
+        lightDirSlot("light::direction", "Direction vector of the light"),
+        lightColDifSlot("light::diffuseCol", "Diffuse light colour"),
+        lightColAmbSlot("light::ambientCol", "Ambient light colour"),
+        stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection"),
+        stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection") {
 
     this->camParams = this->cam.Parameters();
     this->camOverrides = new CameraParamOverride(this->camParams);
@@ -106,7 +113,35 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->resetViewSlot.SetUpdateCallback(&View3D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
+    this->isCamLightSlot << new param::BoolParam(this->isCamLight);
+    this->MakeSlotAvailable(&this->isCamLightSlot);
+
+    this->lightDirSlot << new param::Vector3fParam(this->lightDir);
+    this->MakeSlotAvailable(&this->lightDirSlot);
+
+    this->lightColDif[0] = this->lightColDif[1] = this->lightColDif[2] = 1.0f;
+    this->lightColDif[3] = 1.0f;
+
+    this->lightColAmb[0] = this->lightColAmb[1] = this->lightColAmb[2] = 0.2f;
+    this->lightColAmb[3] = 1.0f;
+
+    this->lightColDifSlot << new param::StringParam(
+        utility::ColourParser::ToString(
+        this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]));
+    this->MakeSlotAvailable(&this->lightColDifSlot);
+
+    this->lightColAmbSlot << new param::StringParam(
+        utility::ColourParser::ToString(
+        this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]));
+    this->MakeSlotAvailable(&this->lightColAmbSlot);
+
     this->ResetView();
+
+    this->stereoEyeDistSlot << new param::FloatParam(this->camParams->StereoDisparity(), 0.0f);
+    this->MakeSlotAvailable(&this->stereoEyeDistSlot);
+
+    this->stereoFocusDistSlot << new param::FloatParam(this->camParams->FocalDistance(false), 0.0f);
+    this->MakeSlotAvailable(&this->stereoFocusDistSlot);
 }
 
 
@@ -187,6 +222,26 @@ void view::View3D::Render(void) {
     this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
     // set light parameters
+    if (this->isCamLightSlot.IsDirty()) {
+        this->isCamLightSlot.ResetDirty();
+        this->isCamLight = this->isCamLightSlot.Param<param::BoolParam>()->Value();
+    }
+    if (this->lightDirSlot.IsDirty()) {
+        this->lightDirSlot.ResetDirty();
+        this->lightDir = this->lightDirSlot.Param<param::Vector3fParam>()->Value();
+    }
+    if (this->lightColAmbSlot.IsDirty()) {
+        this->lightColAmbSlot.ResetDirty();
+        utility::ColourParser::FromString(
+            this->lightColAmbSlot.Param<param::StringParam>()->Value(),
+            this->lightColAmb[0], lightColAmb[1], lightColAmb[2]);
+    }
+    if (this->lightColDifSlot.IsDirty()) {
+        this->lightColDifSlot.ResetDirty();
+        utility::ColourParser::FromString(
+            this->lightColDifSlot.Param<param::StringParam>()->Value(),
+            this->lightColDif[0], lightColDif[1], lightColDif[2]);
+    }
     ::glEnable(GL_LIGHTING);    // TODO: check renderer capabilities
     ::glEnable(GL_LIGHT0);
     const float lp[4] = {
@@ -194,12 +249,12 @@ void view::View3D::Render(void) {
         -this->lightDir.Y(),
         -this->lightDir.Z(),
         0.0f};
-    const float la[4] = {0.1f, 0.1f, 0.1f, 1.0f}; // Could be configurable
-    glLightfv(GL_LIGHT0, GL_AMBIENT, la);
-    const float ld[4] = {0.9f, 0.9f, 0.9f, 1.0f}; // Could be configurable
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, ld);
-
-    //printf("Cam%u\n", this->cam.Parameters()->SyncNumber());
+    ::glLightfv(GL_LIGHT0, GL_AMBIENT, this->lightColAmb);
+    ::glLightfv(GL_LIGHT0, GL_DIFFUSE, this->lightColDif);
+    const float zeros[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    const float ones[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    ::glLightfv(GL_LIGHT0, GL_SPECULAR, ones);
+    ::glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zeros);
 
     // setup matrices
     ::glMatrixMode(GL_PROJECTION);
@@ -209,11 +264,11 @@ void view::View3D::Render(void) {
     ::glMatrixMode(GL_MODELVIEW);
     ::glLoadIdentity();
 
-    if (isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
+    if (this->isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
 
     this->cam.glMultViewMatrix();
 
-    if (!isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
+    if (!this->isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
 
     // render bounding box backside
     if (this->showBBox.Param<param::BoolParam>()->Value()) {

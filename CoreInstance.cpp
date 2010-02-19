@@ -837,12 +837,22 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
     vislib::StringA modName = path.Last();
     path.RemoveLast();
 
-    ModuleNamespace *mn = this->namespaceRoot.FindNamespace(path, false);
-    if (mn == NULL) {
-        if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot find parameter \"%s\": namespace not found",
-            name.PeekBuffer());
-        return NULL;
+    ModuleNamespace *mn = NULL;
+    // parameter slots may have namespace operators in their names!
+    while (mn == NULL) {
+        mn = this->namespaceRoot.FindNamespace(path, false, true);
+        if (mn == NULL) {
+            if (path.Count() > 0) {
+                slotName = modName + "::" + slotName;
+                modName = path.Last();
+                path.RemoveLast();
+            } else {
+                if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "Cannot find parameter \"%s\": namespace not found",
+                    name.PeekBuffer());
+                return NULL;
+            }
+        }
     }
 
     Module *mod = dynamic_cast<Module *>(mn->FindChild(modName));

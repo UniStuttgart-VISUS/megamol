@@ -56,7 +56,7 @@ vislib::StringA RootModuleNamespace::FullNamespace(const vislib::StringA& base,
  * RootModuleNamespace::FindNamespace
  */
 ModuleNamespace * RootModuleNamespace::FindNamespace(
-        const vislib::Array<vislib::StringA>& path, bool createMissing) {
+        const vislib::Array<vislib::StringA>& path, bool createMissing, bool quiet) {
 
     ModuleNamespace *cns = this;
 
@@ -78,8 +78,11 @@ ModuleNamespace * RootModuleNamespace::FindNamespace(
                 cns = nns;
 
             } else {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "name conflicts with a namespace object\n");
+                if (!quiet) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(
+                        vislib::sys::Log::LEVEL_ERROR,
+                        "name conflicts with a namespace object\n");
+                }
                 return NULL;
 
             }

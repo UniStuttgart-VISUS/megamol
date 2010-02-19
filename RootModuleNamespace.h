@@ -53,10 +53,12 @@ namespace core {
          *
          * @param path A array with the separated namespace names.
          * @param createMissing If true, all missing namespace object will be created.
+         * @param quiet Flag to deactivate error logging
          *
          * @return The requested namespace or 'NULL' in case of an error.
          */
-        ModuleNamespace * FindNamespace(const vislib::Array<vislib::StringA>& path, bool createMissing);
+        ModuleNamespace * FindNamespace(const vislib::Array<vislib::StringA>& path,
+            bool createMissing, bool quiet = false);
 
         /**
          * Locks the module namespace
