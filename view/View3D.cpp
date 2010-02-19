@@ -188,6 +188,18 @@ void view::View3D::Render(void) {
     }
 
     // camera settings
+    if (this->stereoEyeDistSlot.IsDirty()) {
+        param::FloatParam *fp = this->stereoEyeDistSlot.Param<param::FloatParam>();
+        this->camParams->SetStereoDisparity(fp->Value());
+        fp->SetValue(this->camParams->StereoDisparity());
+        this->stereoEyeDistSlot.ResetDirty();
+    }
+    if (this->stereoFocusDistSlot.IsDirty()) {
+        param::FloatParam *fp = this->stereoFocusDistSlot.Param<param::FloatParam>();
+        this->camParams->SetFocalDistance(fp->Value());
+        fp->SetValue(this->camParams->FocalDistance(false));
+        this->stereoFocusDistSlot.ResetDirty();
+    }
     if (cr3d != NULL) {
         (*cr3d)(1); // GetExtents
         if (!(cr3d->AccessBoundingBoxes() == this->bboxs)) {
