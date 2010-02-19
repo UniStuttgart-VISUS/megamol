@@ -201,7 +201,8 @@ void view::OverrideView::release(void) {
 void view::OverrideView::packMouseCoordinates(float &x, float &y) {
     x /= this->viewportWidth;
     y /= this->viewportHeight;
-    //y = 1.0f - y;
     x = this->tileX + this->tileW * x;
     y = this->tileY + this->tileH * y;
+    x /= this->virtWidth;
+    y /= this->virtHeight;
 }

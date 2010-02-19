@@ -463,11 +463,9 @@ void view::View3D::UpdateFreeze(bool freeze) {
  * view::View3D::unpackMouseCoordinates
  */
 void view::View3D::unpackMouseCoordinates(float &x, float &y) {
-    // fixing around the otherwise correct flag 'flipY'
-    // in this mode the mouse-events rotation, pan, etc. are wrong,
-    // but at least the soft-cursor is shown correctly
-    y = this->camParams->VirtualViewSize().Height() -
-        static_cast<vislib::graphics::ImageSpaceType>(1) - y;
+    x *= this->camParams->VirtualViewSize().Width();
+    y *= this->camParams->VirtualViewSize().Height();
+    y -= 1.0f;
 }
 
 
@@ -647,11 +645,16 @@ void view::View3D::renderSoftCursor(void) {
 
     const float cursorScale = 1.0f;
 
-    ::glTranslatef(-1.0f, 1.0f, 0.0f);
-    ::glScalef(2.0f / params->TileRect().Width(), -2.0f / params->TileRect().Height(), 1.0f);
+    ::glTranslatef(-1.0f, -1.0f, 0.0f);
+    ::glScalef(2.0f / params->TileRect().Width(), 2.0f / params->TileRect().Height(), 1.0f);
     ::glTranslatef(-params->TileRect().Left(), -params->TileRect().Bottom(), 0.0f);
+    ::glScalef(params->VirtualViewSize().Width() / this->camParams->VirtualViewSize().Width(),
+        params->VirtualViewSize().Height() / this->camParams->VirtualViewSize().Height(),
+        1.0f);
     ::glTranslatef(this->cursor2d.X(), this->cursor2d.Y(), 0.0f);
-    ::glScalef(cursorScale, cursorScale, 1.0f);
+    ::glScalef(cursorScale * this->camParams->VirtualViewSize().Width() / params->VirtualViewSize().Width(),
+        - cursorScale * this->camParams->VirtualViewSize().Height() / params->VirtualViewSize().Height(),
+        1.0f);
 
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
