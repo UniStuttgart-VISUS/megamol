@@ -8028,7 +8028,7 @@ void main(void) {
     
     if (radicand < 0.0) { discard; }
     
-    lambda = d1 - sqrt(radicand);                           // lambda for interior face
+    lambda = d1 + sqrt(radicand);                           // lambda for interior face
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
 
     // compute the actual position of the intersection with the sphere
@@ -8054,9 +8054,40 @@ void main(void) {
     dist2 = dot( inVec2.xyz + objPos.xyz, planeNormal) - d;
     if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discardInt = true; }
 
+    // Singularity handling:
+    int i;
+    vec3 probePos;
+    int numProbes = min( int(texCoord1.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
+        }
+    }
+    numProbes = min( int(texCoord2.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
+        }
+    }
+    numProbes = min( int(texCoord3.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
+        }
+    }
+
     // if interior face is discard test for external face
-    if(discardInt) { 
-        lambda = d1 + sqrt(radicand); 
+    if(discardInt) {
+        lambda = d1 - sqrt(radicand); 
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         pos1 = sphereintersection + objPos.xyz;
         // cut with plane 1
@@ -8077,52 +8108,49 @@ void main(void) {
         dist1 = dot( pos1, planeNormal) - d;
         dist2 = dot( inVec2.xyz + objPos.xyz, planeNormal) - d;
         if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
-    }
 
-        // discard the point if it is eaten away by one of the neighbouring probes
-        // ==> check first, if one of the probes is nearly dual to the object position
-        /*
-        if( ( dot1( inProbe1.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe1.xyz) < squarRad ) ) || 
-            ( dot1( inProbe2.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe2.xyz) < squarRad ) ) || 
-                ( dot1( inProbe3.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe3.xyz) < squarRad ) ) ||
-                ( dot1( pos1 - dualProbe) < inVec3.w ) ) { discard; }
-        */
-
-    // Singularity handling:
-    int i;
-    vec3 probePos;
-    int numProbes = min( int(texCoord1.x), 16);
-    if( numProbes > 0 )
-    {
-        for( i = 0; i < numProbes; i++ )
+        // Singularity handling:
+        numProbes = min( int(texCoord1.x), 16);
+        if( numProbes > 0 )
         {
-            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            for( i = 0; i < numProbes; i++ )
+            {
+                probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            }
         }
-    }
-    numProbes = min( int(texCoord2.x), 16);
-    if( numProbes > 0 )
-    {
-        for( i = 0; i < numProbes; i++ )
+        numProbes = min( int(texCoord2.x), 16);
+        if( numProbes > 0 )
         {
-            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            for( i = 0; i < numProbes; i++ )
+            {
+                probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            }
         }
-    }
-    numProbes = min( int(texCoord3.x), 16);
-    if( numProbes > 0 )
-    {
-        for( i = 0; i < numProbes; i++ )
+        numProbes = min( int(texCoord3.x), 16);
+        if( numProbes > 0 )
         {
-            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            for( i = 0; i < numProbes; i++ )
+            {
+                probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
+            }
         }
     }
 
+    // discard the point if it is eaten away by one of the neighbouring probes
+    // ==> check first, if one of the probes is nearly dual to the object position
+    /*
+    if( ( dot1( inProbe1.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe1.xyz) < squarRad ) ) || 
+        ( dot1( inProbe2.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe2.xyz) < squarRad ) ) || 
+            ( dot1( inProbe3.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe3.xyz) < squarRad ) ) ||
+            ( dot1( pos1 - dualProbe) < inVec3.w ) ) { discard; }
+    */
 
     // "calc" normal at intersection point
     vec3 normal = -sphereintersection / rad;
-    if(!discardInt) {
+    if(discardInt) {
         vec3 normal = sphereintersection / rad;
     }
 #ifdef SMALL_SPRITE_LIGHTING
@@ -8159,7 +8187,7 @@ void main(void) {
     // uniform color
     //color = vec3( 0.0, 0.75, 1.0);
     color = vec3( 0.0, 0.6, 0.6 ); // for VIS
-    if(!discardInt) {
+    if(discardInt) {
         color = vec3( 0.6, 0.0, 0.0 );
     }
     //color = vec3( texCoord2.xy, 0.0);

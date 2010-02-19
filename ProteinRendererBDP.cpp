@@ -2186,7 +2186,13 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
         vislib::math::Vector<float, 3> vertexPos, surfVector, tempVec, edgeVector;
         vislib::Array<vislib::math::Vector<float, 3> > vecList;
         float maxDist, dist, atomRadius;
-        unsigned int j, edgeCount;
+        unsigned int j, k, edgeCount;
+        unsigned int edgeCounter;
+        const ReducedSurface::RSEdge * firstEdge;
+        const ReducedSurface::RSVertex * currentVertex;
+        ReducedSurface::RSEdge * lastEdge;
+        ReducedSurface::RSFace * lastFace;
+        ReducedSurface::RSEdge * currentEdge;
 
         // loop over all RS-vertices (i.e. all protein atoms)
         for( i = 0; i < this->reducedSurface[cntRS]->GetRSVertexCount(); ++i ) {
@@ -2226,11 +2232,11 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             vecList.AssertCapacity(edgeCount);
             vecList.Clear();
 
-            surfVector.Set(0.0f, 0.0f, 0.0f);
-            edgeVector.Set(0.0f, 0.0f, 0.0f);
             // calculate intersections of the sphere with triangle patches.
             // the sum of these (normalised) intersections is the surfVector.
             // the sum of all (normalised) edges is the edgeVector.
+            surfVector.Set(0.0f, 0.0f, 0.0f);
+            edgeVector.Set(0.0f, 0.0f, 0.0f);
             for(j = 0; j < edgeCount; ++j ) {
                 tempVec = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(j)->GetFace1()->GetProbeCenter() - vertexPos;
                 tempVec.Normalise();
@@ -2249,80 +2255,88 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                 edgeVector += tempVec;
             }
 
-            // if max angle of visible surface part is more than PI use edgeVector else surfVector
-            if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
-                surfVector = edgeVector*(-1.0f);
-            } else {
-                // look if there are several unconnected surface parts
-                /*
-                unsigned int edgeCounter = 1;
-                const ReducedSurface::RSEdge * firstEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
-                const ReducedSurface::RSVertex * currentVertex = this->reducedSurface[cntRS]->GetRSVertex(i);
-                ReducedSurface::RSEdge * lastEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
-                ReducedSurface::RSFace * lastFace = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
-                ReducedSurface::RSEdge * currentEdge;
-                for(j = 1; j < edgeCount+1; ++j) {
-                    currentEdge = lastFace->GetEdge1();
-                    if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                        if(currentEdge == firstEdge) {
-                            break;
+            // look if there are several unconnected surface parts
+            edgeCounter = 1;
+            firstEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
+            currentVertex = this->reducedSurface[cntRS]->GetRSVertex(i);
+            lastEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
+            lastFace = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
+            for(j = 1; j < edgeCount+1; ++j) {
+                currentEdge = lastFace->GetEdge1();
+                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
+                    if(currentEdge == firstEdge) {
+                        break;
+                    } else {
+                        lastEdge = currentEdge;
+                        if(currentEdge->GetFace1() != lastFace) {
+                            lastFace = currentEdge->GetFace1();
                         } else {
-                            lastEdge = currentEdge;
-                            if(currentEdge->GetFace1() != lastFace) {
-                                lastFace = currentEdge->GetFace1();
-                            } else {
-                                lastFace = currentEdge->GetFace2();
-                            }
-                            edgeCounter++;
-                            continue;
+                            lastFace = currentEdge->GetFace2();
                         }
-                    }
-                    currentEdge = lastFace->GetEdge2();
-                    if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                        if(currentEdge == firstEdge) {
-                            break;
-                        } else {
-                            lastEdge = currentEdge;
-                            if(currentEdge->GetFace1() != lastFace) {
-                                lastFace = currentEdge->GetFace1();
-                            } else {
-                                lastFace = currentEdge->GetFace2();
-                            }
-                            edgeCounter++;
-                            continue;
-                        }
-                    }
-                    currentEdge = lastFace->GetEdge3();
-                    if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                        if(currentEdge == firstEdge) {
-                            break;
-                        } else {
-                            lastEdge = currentEdge;
-                            if(currentEdge->GetFace1() != lastFace) {
-                                lastFace = currentEdge->GetFace1();
-                            } else {
-                                lastFace = currentEdge->GetFace2();
-                            }
-                            edgeCounter++;
-                            continue;
-                        }
+                        edgeCounter++;
+                        continue;
                     }
                 }
-                if(edgeCounter == edgeCount) {
-                    surfVector.Normalise();
-                    surfVector *= atomRadius;
+                currentEdge = lastFace->GetEdge2();
+                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
+                    if(currentEdge == firstEdge) {
+                        break;
+                    } else {
+                        lastEdge = currentEdge;
+                        if(currentEdge->GetFace1() != lastFace) {
+                            lastFace = currentEdge->GetFace1();
+                        } else {
+                            lastFace = currentEdge->GetFace2();
+                        }
+                        edgeCounter++;
+                        continue;
+                    }
                 }
-                */
-            }
-            surfVector.Normalise();
-            surfVector *= atomRadius;
+                currentEdge = lastFace->GetEdge3();
+                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
+                    if(currentEdge == firstEdge) {
+                        break;
+                    } else {
+                        lastEdge = currentEdge;
+                        if(currentEdge->GetFace1() != lastFace) {
+                            lastFace = currentEdge->GetFace1();
+                        } else {
+                            lastFace = currentEdge->GetFace2();
+                        }
+                        edgeCounter++;
+                        continue;
+                    }
+                }
+            }                
+            
+            // look if surface parts are distributed over more than one hemisphere
+            maxDist = 0.0f;
+	        for(j = 0; j < edgeCount-1; ++j) {
+                for(k = j+1; k < edgeCount; ++k) {
+		            dist = vecList[j].Dot(vecList[k]);
+		            if(dist < 0.0f) { maxDist = 1.0f; } // angle > pi/2
+                }
+	        }
 
-            // calculate max distance to surfVector
-			maxDist = 0.0f;
-			for(j = 0; j < edgeCount; ++j) {
-				tempVec = (vecList[j]*atomRadius) - surfVector;
-				dist = tempVec.Dot(tempVec);
-				if(dist > maxDist) { maxDist = dist; }
+            // choose surfvector depending on surface parts and visible part
+            if((edgeCounter != edgeCount) && (maxDist == 1.0f)) {
+                surfVector.Set(0.0f, 0.0f, 0.0f);
+                maxDist = atomRadius*atomRadius * 2.5f;
+            } else {
+                // if max angle of visible surface part is more than PI use edgeVector else surfVector
+                if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
+                    surfVector = edgeVector * (-1.0f);
+                }
+                surfVector.Normalise();
+                surfVector *= atomRadius;
+
+                // calculate max distance to surfVector
+		        maxDist = 0.0f;
+		        for(j = 0; j < edgeCount; ++j) {
+			        tempVec = (vecList[j]*atomRadius) - surfVector;
+			        dist = tempVec.Dot(tempVec);
+			        if(dist > maxDist) { maxDist = dist; }
+		        }
             }
 
             this->sphereSurfVector[cntRS].Append(surfVector.GetX());
@@ -2562,11 +2576,16 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
     this->sphereSurfVector[idxRS].Clear();
 
     // variables for surface vector calculation
-    vislib::math::Vector<float, 3> edgeVector, vertexPos, surfVector, tempVec;
+    vislib::math::Vector<float, 3> vertexPos, surfVector, tempVec, edgeVector;
     vislib::Array<vislib::math::Vector<float, 3> > vecList;
     float maxDist, dist, atomRadius;
-    unsigned int j, edgeCount;
-
+    unsigned int j, k, edgeCount;
+    unsigned int edgeCounter;
+    const ReducedSurface::RSEdge * firstEdge;
+    const ReducedSurface::RSVertex * currentVertex;
+    ReducedSurface::RSEdge * lastEdge;
+    ReducedSurface::RSFace * lastFace;
+    ReducedSurface::RSEdge * currentEdge;
 
     // loop over all RS-vertices (i.e. all protein atoms)
     for( i = 0; i < this->reducedSurface[idxRS]->GetRSVertexCount(); ++i )
@@ -2607,11 +2626,11 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         vecList.AssertCapacity(edgeCount);
         vecList.Clear();
 
-        surfVector.Set(0.0f, 0.0f, 0.0f);
-        edgeVector.Set(0.0f, 0.0f, 0.0f);
         // calculate intersections of the sphere with triangle patches.
         // the sum of these (normalised) intersections is the surfVector.
         // the sum of all (normalised) edges is the edgeVector.
+        surfVector.Set(0.0f, 0.0f, 0.0f);
+        edgeVector.Set(0.0f, 0.0f, 0.0f);
         for(j = 0; j < edgeCount; ++j ) {
             tempVec = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(j)->GetFace1()->GetProbeCenter() - vertexPos;
             tempVec.Normalise();
@@ -2630,81 +2649,89 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
             edgeVector += tempVec;
         }
 
-        // if max angle of visible surface part is more than PI use edgeVector else surfVector
-        if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
-            surfVector = edgeVector*(-1.0f);
-        } else {
-            // look if there are several unconnected surface parts
-            /*
-            unsigned int edgeCounter = 1;
-            const ReducedSurface::RSEdge * firstEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
-            const ReducedSurface::RSVertex * currentVertex = this->reducedSurface[idxRS]->GetRSVertex(i);
-            ReducedSurface::RSEdge * lastEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
-            ReducedSurface::RSFace * lastFace = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
-            ReducedSurface::RSEdge * currentEdge;
-            for(j = 1; j < edgeCount+1; ++j) {
-                currentEdge = lastFace->GetEdge1();
-                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                    if(currentEdge == firstEdge) {
-                        break;
+        // look if there are several unconnected surface parts
+        edgeCounter = 1;
+        firstEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
+        currentVertex = this->reducedSurface[idxRS]->GetRSVertex(i);
+        lastEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
+        lastFace = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
+        for(j = 1; j < edgeCount+1; ++j) {
+            currentEdge = lastFace->GetEdge1();
+            if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
+                if(currentEdge == firstEdge) {
+                    break;
+                } else {
+                    lastEdge = currentEdge;
+                    if(currentEdge->GetFace1() != lastFace) {
+                        lastFace = currentEdge->GetFace1();
                     } else {
-                        lastEdge = currentEdge;
-                        if(currentEdge->GetFace1() != lastFace) {
-                            lastFace = currentEdge->GetFace1();
-                        } else {
-                            lastFace = currentEdge->GetFace2();
-                        }
-                        edgeCounter++;
-                        continue;
+                        lastFace = currentEdge->GetFace2();
                     }
-                }
-                currentEdge = lastFace->GetEdge2();
-                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                    if(currentEdge == firstEdge) {
-                        break;
-                    } else {
-                        lastEdge = currentEdge;
-                        if(currentEdge->GetFace1() != lastFace) {
-                            lastFace = currentEdge->GetFace1();
-                        } else {
-                            lastFace = currentEdge->GetFace2();
-                        }
-                        edgeCounter++;
-                        continue;
-                    }
-                }
-                currentEdge = lastFace->GetEdge3();
-                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                    if(currentEdge == firstEdge) {
-                        break;
-                    } else {
-                        lastEdge = currentEdge;
-                        if(currentEdge->GetFace1() != lastFace) {
-                            lastFace = currentEdge->GetFace1();
-                        } else {
-                            lastFace = currentEdge->GetFace2();
-                        }
-                        edgeCounter++;
-                        continue;
-                    }
+                    edgeCounter++;
+                    continue;
                 }
             }
-            if(edgeCounter == edgeCount) {
-                surfVector.Normalise();
-                surfVector *= atomRadius;
+            currentEdge = lastFace->GetEdge2();
+            if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
+                if(currentEdge == firstEdge) {
+                    break;
+                } else {
+                    lastEdge = currentEdge;
+                    if(currentEdge->GetFace1() != lastFace) {
+                        lastFace = currentEdge->GetFace1();
+                    } else {
+                        lastFace = currentEdge->GetFace2();
+                    }
+                    edgeCounter++;
+                    continue;
+                }
             }
-            */
+            currentEdge = lastFace->GetEdge3();
+            if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
+                if(currentEdge == firstEdge) {
+                    break;
+                } else {
+                    lastEdge = currentEdge;
+                    if(currentEdge->GetFace1() != lastFace) {
+                        lastFace = currentEdge->GetFace1();
+                    } else {
+                        lastFace = currentEdge->GetFace2();
+                    }
+                    edgeCounter++;
+                    continue;
+                }
+            }
+        }                
+        
+        // look if surface parts are distributed over more than one hemisphere
+        maxDist = 0.0f;
+        for(j = 0; j < edgeCount-1; ++j) {
+            for(k = j+1; k < edgeCount; ++k) {
+	            dist = vecList[j].Dot(vecList[k]);
+	            if(dist < 0.0f) { maxDist = 1.0f; } // angle > pi/2
+            }
         }
-        surfVector.Normalise();
-        surfVector *= atomRadius;
 
-        // calculate max distance to surfVector
-		maxDist = 0.0f;
-		for(j = 0; j < edgeCount; ++j) {
-			tempVec = (vecList[j]*atomRadius) - surfVector;
-			dist = tempVec.Dot(tempVec);
-			if(dist > maxDist) { maxDist = dist; }
-		}
+        // choose surfvector depending on surface parts and visible part
+        if((edgeCounter != edgeCount) && (maxDist == 1.0f)) {
+            surfVector.Set(0.0f, 0.0f, 0.0f);
+            maxDist = atomRadius*atomRadius * 2.5f;
+        } else {
+            // if max angle of visible surface part is more than PI use edgeVector else surfVector
+            if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
+                surfVector = edgeVector * (-1.0f);
+            }
+            surfVector.Normalise();
+            surfVector *= atomRadius;
+
+            // calculate max distance to surfVector
+	        maxDist = 0.0f;
+	        for(j = 0; j < edgeCount; ++j) {
+		        tempVec = (vecList[j]*atomRadius) - surfVector;
+		        dist = tempVec.Dot(tempVec);
+		        if(dist > maxDist) { maxDist = dist; }
+	        }
+            }
     
         this->sphereSurfVector[idxRS].Append(surfVector.GetX());
         this->sphereSurfVector[idxRS].Append(surfVector.GetY());
