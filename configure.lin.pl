@@ -5,7 +5,10 @@
 # Copyright (C) 2008-2010 by VISUS (Universitaet Stuttgart).
 # Alle Rechte vorbehalten.
 #
-push @INC, "configperl";
+use Cwd qw{abs_path};
+my $incpath = abs_path($0);
+$incpath =~ s/\/[^\/]+$//;
+push @INC, "$incpath/configperl";
 require "configperl.inc";
 
 my @pps = ();
@@ -67,5 +70,5 @@ $c = ConfigFilePair->new();
     $c->outFile("ExtLibs.mk");
     push @cfps, $c;
 
-Configure("MegaMol(TM) Console Configuration for Linux", ".megamol.console.lin.cache", \@pps, \@fps, \@cfps, \@sps);
+VISUS::configperl::Configure("MegaMol(TM) Console Configuration for Linux", ".megamol.console.lin.cache", \@pps, \@fps, \@cfps, \@sps);
 
