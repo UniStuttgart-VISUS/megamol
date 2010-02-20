@@ -144,6 +144,7 @@ uniform float alphaCorrection;
 
 uniform vec2 screenResInv;
 uniform float isoValue;
+uniform float isoOpacity = 0.4;
 
 // textures
 uniform sampler3D volumeSampler;
@@ -274,7 +275,7 @@ void main(void) {
                 vec3 dirWorld = dir * scaleVolInv.xyz;
 
                 float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
-                src = vec4(0.45, 0.55, 0.8, 0.4 + 1.5*(1.0-tmp)); // higher opacity for surfaces orthogonal to view dir
+                src = vec4(0.45, 0.55, 0.8, min( 1.0, isoOpacity + 1.5*(1.0-tmp))); // higher opacity for surfaces orthogonal to view dir
                 //src = vec4(0.45, 0.55, 0.8, 0.6);
                 src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
                 //src.rgb = -gradient*0.5 + 0.5;

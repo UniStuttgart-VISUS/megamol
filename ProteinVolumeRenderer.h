@@ -332,6 +332,7 @@ namespace protein {
 		megamol::core::param::ParamSlot volIsoValueParam;
 		megamol::core::param::ParamSlot volFilterRadiusParam;
 		megamol::core::param::ParamSlot volDensityScaleParam;
+		megamol::core::param::ParamSlot volIsoOpacityParam;
 
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereShader;
@@ -439,6 +440,8 @@ namespace protein {
         bool renderIsometric;
         // the iso value
         float isoValue;
+		// the opacity of the isosurface
+		float volIsoOpacity;
 	};
 
 
