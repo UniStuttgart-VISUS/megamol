@@ -51,12 +51,12 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 		volIsoValueParam( "volIsoValue", "Isovalue for isosurface rendering"),
 		volFilterRadiusParam( "volFilterRadius", "Filter Radius for volume generation"),
 		volDensityScaleParam( "volDensityScale", "Density scale factor for volume generation"),
+		volIsoOpacityParam( "volIsoOpacity", "Opacity of isosurface"),
         currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
         volFilterRadius( 1.75f), volDensityScale( 1.0f),
         width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
         volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
-        renderIsometric( true), isoValue( 0.6f)
-
+		renderIsometric( true), isoValue( 0.6f), volIsoOpacity( 0.4f)
 {
 	this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
 	this->MakeSlotAvailable ( &this->protDataCallerSlot );
@@ -126,6 +126,8 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 	this->volFilterRadiusParam.SetParameter( new param::FloatParam( this->volFilterRadius, 0.0f ) );
 	// --- set up parameter for volume density scale ---
 	this->volDensityScaleParam.SetParameter( new param::FloatParam( this->volDensityScale, 0.0f ) );
+	// --- set up parameter for isosurface opacity ---
+	this->volIsoOpacityParam.SetParameter( new param::FloatParam( this->volIsoOpacity, 0.0f, 1.0f ) );
 
 	this->MakeSlotAvailable( &this->coloringModeParam );
 	this->MakeSlotAvailable( &this->renderingModeParam );
@@ -136,6 +138,7 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 	this->MakeSlotAvailable( &this->volIsoValueParam );
 	this->MakeSlotAvailable( &this->volFilterRadiusParam );
 	this->MakeSlotAvailable( &this->volDensityScaleParam );
+	this->MakeSlotAvailable( &this->volIsoOpacityParam );
 
 	// set empty display list to zero
 	this->proteinDisplayListLines = 0;
@@ -493,6 +496,10 @@ bool protein::ProteinVolumeRenderer::Render( Call& call )
 	if ( this->volDensityScaleParam.IsDirty() ) {
 		this->volDensityScale = this->volDensityScaleParam.Param<param::FloatParam>()->Value();
 		this->volDensityScaleParam.ResetDirty();
+	}
+	if ( this->volIsoOpacityParam.IsDirty() ) {
+		this->volIsoOpacity = this->volIsoOpacityParam.Param<param::FloatParam>()->Value();
+		this->volIsoOpacityParam.ResetDirty();
 	}
 
 	// make the atom color table if necessary
@@ -2180,6 +2187,7 @@ void protein::ProteinVolumeRenderer::RenderVolume( const CallProteinData *protei
     glUniform1i( this->volumeShader.ParameterLocation( "rayLengthSampler"), 3);
 
     glUniform1f( this->volumeShader.ParameterLocation( "isoValue"), this->isoValue);
+	glUniform1f( this->volumeShader.ParameterLocation( "isoOpacity"), this->volIsoOpacity);
 
     // transfer function
     glActiveTexture( GL_TEXTURE1);
