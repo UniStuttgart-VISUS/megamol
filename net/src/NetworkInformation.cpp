@@ -606,7 +606,7 @@ vislib::net::NetworkInformation::GetAdapterUnsafe(const SIZE_T idx) {
     }
 
     cntAdapters = NetworkInformation::adapters.Count();
-    if ((idx > 0) && (idx < cntAdapters)) {
+    if ((idx >= 0) && (idx < cntAdapters)) {
         Adapter& retval = NetworkInformation::adapters[idx];
         NetworkInformation::lockAdapters.Unlock();
         return retval;

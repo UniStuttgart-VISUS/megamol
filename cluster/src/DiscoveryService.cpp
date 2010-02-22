@@ -169,7 +169,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         : bindAddress(bindAddress, bindPort),
         responseAddress(responseAddress) {
     NetworkInformation::AdapterList candidates;
-    NetworkInformation::Confidence confidence;
+    NetworkInformation::Confidence confidence = NetworkInformation::INVALID;
 
     NetworkInformation::GetAdaptersForUnicastAddress(candidates, bindAddress);
 
