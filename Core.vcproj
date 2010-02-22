@@ -863,10 +863,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\special\ClusterController.h"
-					>
-				</File>
-				<File
 					RelativePath=".\special\ClusterControllerClient.h"
 					>
 				</File>
@@ -1000,42 +996,6 @@
 				</File>
 				<File
 					RelativePath=".\special\CallRegisterAtController.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\special\ClusterController.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -3003,6 +2963,42 @@
 							Name="VCCustomBuildTool"
 						/>
 					</FileConfiguration>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="cluster"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\cluster\CallRegisterAtController.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\ClusterController.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\ClusterControllerClient.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\cluster\CallRegisterAtController.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\ClusterController.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\ClusterControllerClient.cpp"
+					>
 				</File>
 			</Filter>
 		</Filter>

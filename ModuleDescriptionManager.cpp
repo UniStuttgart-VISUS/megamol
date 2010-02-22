@@ -11,6 +11,7 @@
 #include "ModuleDescription.h"
 #include "vislib/assert.h"
 
+#include "cluster/ClusterController.h"
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
 #include "moldyn/AddParticleColours.h"
@@ -23,7 +24,6 @@
 #include "moldyn/SimpleSphereRenderer.h"
 #include "moldyn/VIMDataSource.h"
 //#include "special/AnaglyphStereoDisplay.h"
-//#include "special/ClusterController.h"
 //#include "special/ClusterDisplay.h"
 //#include "special/ColStereoDisplay.h"
 //#include "special/RenderMaster.h"
@@ -58,6 +58,7 @@ ModuleDescriptionManager::Instance() {
         // Register all rendering graph module descriptions here
         //////////////////////////////////////////////////////////////////////
 
+        instance->registerAutoDescription<cluster::ClusterController>();
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();
@@ -70,7 +71,6 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
         //instance->registerAutoDescription<special::AnaglyphStereoDisplay>();
-        //instance->registerAutoDescription<special::ClusterController>();
         //instance->registerAutoDescription<special::ClusterDisplay>();
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         //instance->registerAutoDescription<special::RenderMaster>();

@@ -1,7 +1,7 @@
 /*
  * CallRegisterAtController.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -17,7 +17,7 @@
 
 namespace megamol {
 namespace core {
-namespace special {
+namespace cluster {
 
     /** forward declaration */
     class ClusterControllerClient;
@@ -121,7 +121,7 @@ namespace special {
         CallRegisterAtControllerDescription;
 
 
-} /* end namespace special */
+} /* end namespace cluster */
 } /* end namespace core */
 } /* end namespace megamol */
 

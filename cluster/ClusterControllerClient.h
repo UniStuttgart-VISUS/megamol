@@ -1,7 +1,7 @@
 /*
  * ClusterControllerClient.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,12 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "special/ClusterController.h"
+#include "cluster/ClusterController.h"
 
 
 namespace megamol {
 namespace core {
-namespace special {
+namespace cluster {
 
     /**
      * Interface class for clients of cluster controllers
@@ -104,7 +104,7 @@ namespace special {
     };
 
 
-} /* end namespace special */
+} /* end namespace cluster */
 } /* end namespace core */
 } /* end namespace megamol */
 

@@ -1,7 +1,7 @@
 /*
  * ClusterController.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -18,14 +18,13 @@
 #include "vislib/CriticalSection.h"
 #include "vislib/DiscoveryListener.h"
 #include "vislib/DiscoveryService.h"
-#include "vislib/forceinline.h"
-#include "vislib/IPAddress.h"
-#include "vislib/IPAddress6.h"
+//#include "vislib/IPAddress.h"
+//#include "vislib/IPAddress6.h"
 
 
 namespace megamol {
 namespace core {
-namespace special {
+namespace cluster {
 
     /** forward declaration */
     class ClusterControllerClient;
@@ -164,28 +163,23 @@ namespace special {
     private:
 
         /**
+         * Answer the default address
+         *
+         * @return The default address
+         */
+        vislib::TString defaultAddress(void);
+
+        /**
+         * Answer the default port
+         *
+         * @return The default port
+         */
+        UINT16 defaultPort(void);
+
+        /**
          * Stops the discovery service.
          */
         void stopDiscoveryService(void);
-
-        ///**
-        // * Gets the network configuration parameters for the cluster discovery
-        // * service
-        // *
-        // * @param addr4    May receive the IPv4 adapter address
-        // * @param bcast4   May receive the IPv4 broadcast address
-        // * @param ip4Valid Indicates if 'addr4' and 'bcast4' are valid
-        // * @param addr6    May receive the IPv6 adapter address
-        // * @param bcast6   May receive the IPv6 broadcast address
-        // * @param ip6Valid Indicates if 'addr6' and 'bcast6' are valid
-        // * @param port     The udp socket port to be used.
-        // *
-        // * @return (ip4Valid || ip6Valid) for convenience
-        // */
-        //bool getServiceNetConfig(vislib::net::IPAddress& addr4,
-        //    vislib::net::IPAddress& bcast4, bool& ip4Valid,
-        //    vislib::net::IPAddress6& addr6, vislib::net::IPAddress6& bcast6,
-        //    bool& ip6Valid, unsigned short& port);
 
         /**
          * A module want's to register at the controller.
@@ -206,24 +200,13 @@ namespace special {
         bool unregisterModule(Call& call);
 
         /** The name of the rendering cluster */
-        param::ParamSlot clusterName;
+        param::ParamSlot cdsNameSlot;
 
-        /**
-         * The address of the adapter to be used by the cluster discovery
-         * service
-         */
-        param::ParamSlot cdsAdapterAddress;
-
-        /**
-         * The broadcast address to be used by the cluster discovery service.
-         */
-        param::ParamSlot cdsBCastAddress;
-
-        /** The port to be used by the cluster discovery service. */
-        param::ParamSlot cdsPort;
+        /** The ip end point address including port to be used by the cluster discovery service. */
+        param::ParamSlot cdsAddressSlot;
 
         /** Flag to start or stop the cluster discovery service */
-        param::ParamSlot cdsRun;
+        param::ParamSlot cdsRunSlot;
 
         /** The discovery service object */
         vislib::net::cluster::DiscoveryService discoveryService;
