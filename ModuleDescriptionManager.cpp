@@ -12,6 +12,7 @@
 #include "vislib/assert.h"
 
 #include "cluster/ClusterController.h"
+#include "cluster/PowerwallView.h"
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
 #include "moldyn/AddParticleColours.h"
@@ -59,6 +60,7 @@ ModuleDescriptionManager::Instance() {
         //////////////////////////////////////////////////////////////////////
 
         instance->registerAutoDescription<cluster::ClusterController>();
+        instance->registerAutoDescription<cluster::PowerwallView>();
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();

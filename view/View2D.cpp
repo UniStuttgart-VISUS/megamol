@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "View2D.h"
+#include "view/CallRenderView.h"
 #include "view/CallRender2D.h"
 #include "view/MouseFlags.h"
 #include <GL/gl.h>
@@ -22,22 +23,13 @@ using namespace megamol::core;
 /*
  * view::View2D::View2D
  */
-view::View2D::View2D(void) : view::AbstractView(),
-        backCol("backCol", "The views background colour"),
+view::View2D::View2D(void) : view::AbstractRenderingView(),
         firstImg(false), height(1.0f),
         mouseMode(0), mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"),
         viewX(0.0f), viewY(0.0f), viewZoom(1.0f), width(1.0f) {
-
-    this->bkgndCol[0] = 0.0f;
-    this->bkgndCol[1] = 0.0f;
-    this->bkgndCol[2] = 0.125f;
-
-    this->backCol << new param::StringParam(utility::ColourParser::ToString(
-        this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]));
-    this->MakeSlotAvailable(&this->backCol);
 
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
@@ -74,7 +66,22 @@ void view::View2D::Render(void) {
     //this->fpsCounter.FrameBegin();
 
     // clear viewport
-    ::glViewport(0, 0, static_cast<GLsizei>(this->width), static_cast<GLsizei>(this->height));
+    float w = this->width;
+    float h = this->height;
+    if (this->overrideViewport != NULL) {
+        if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0)
+                && (this->overrideViewport[2] > 0) && (this->overrideViewport[3] > 0)) {
+            ::glViewport(
+                this->overrideViewport[0], this->overrideViewport[1],
+                this->overrideViewport[2], this->overrideViewport[3]);
+            w = static_cast<float>(this->overrideViewport[2]);
+            h = static_cast<float>(this->overrideViewport[3]);
+        }
+    } else {
+        ::glViewport(0, 0,
+            static_cast<GLsizei>(this->width),
+            static_cast<GLsizei>(this->height));
+    }
 
     //if (this->setViewport) {
     //    ::glViewport(0, 0,
@@ -82,13 +89,9 @@ void view::View2D::Render(void) {
     //        static_cast<GLsizei>(this->camParams->TileRect().Height()));
     //}
 
-    if (this->backCol.IsDirty()) {
-        this->backCol.ResetDirty();
-        utility::ColourParser::FromString(this->backCol.Param<param::StringParam>()->Value(),
-            this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
-    }
-    ::glClearColor(this->bkgndCol[0], this->bkgndCol[1],
-        this->bkgndCol[2], 0.0f);
+    const float *bkgndCol = (this->overrideBkgndCol != NULL)
+        ? this->overrideBkgndCol : this->bkgndColour();
+    ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
     if (cr2d == NULL) {
@@ -106,7 +109,7 @@ void view::View2D::Render(void) {
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
-    float asp = this->height / this->width;
+    float asp = h / w;
     ::glScalef(asp, 1.0f, 1.0f);
 
     ::glMatrixMode(GL_MODELVIEW);
@@ -116,9 +119,9 @@ void view::View2D::Render(void) {
     ::glTranslatef(this->viewX, this->viewY, 0.0f);
 
     cr2d->SetBackgroundColour(
-        static_cast<unsigned char>(this->bkgndCol[0] * 255.0f),
-        static_cast<unsigned char>(this->bkgndCol[1] * 255.0f),
-        static_cast<unsigned char>(this->bkgndCol[2] * 255.0f));
+        static_cast<unsigned char>(bkgndCol[0] * 255.0f),
+        static_cast<unsigned char>(bkgndCol[1] * 255.0f),
+        static_cast<unsigned char>(bkgndCol[2] * 255.0f));
 
     asp = 1.0f / asp;
     vislib::math::Rectangle<float> vr(
@@ -128,8 +131,8 @@ void view::View2D::Render(void) {
         (1.0f / this->viewZoom - this->viewY));
     cr2d->SetBoundingBox(vr);
 
-    cr2d->SetViewportSize(static_cast<unsigned int>(this->width),
-        static_cast<unsigned int>(this->height));
+    cr2d->SetViewportSize(static_cast<unsigned int>(w),
+        static_cast<unsigned int>(h));
 
     if (this->showBBoxSlot.Param<param::BoolParam>()->Value()) {
         ::glEnable(GL_BLEND);
@@ -323,10 +326,43 @@ void view::View2D::SetInputModifier(mmcInputModifier mod, bool down) {
  * view::View2D::OnRenderView
  */
 bool view::View2D::OnRenderView(Call& call) {
- 
-    // currently not supported
+    float overBC[3];
+    int overVP[4] = {0, 0, 0, 0};
+    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
+    if (crv == NULL) return false;
 
-    return false;
+    this->overrideViewport = overVP;
+    //if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
+    //    this->cam.SetParameters(this->camOverrides);
+    //    this->camOverrides.DynamicCast<CameraParamOverride>()
+    //        ->SetOverrides(*crv);
+        if (crv->IsViewportSet()) {
+            overVP[2] = crv->ViewportWidth();
+            overVP[3] = crv->ViewportHeight();
+            //if (!crv->IsTileSet()) {
+            //    this->camOverrides->SetVirtualViewSize(
+            //        static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportWidth()),
+            //        static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportHeight()));
+            //    this->camOverrides->ResetTileRect();
+            //}
+        }
+    //}
+    if (crv->IsBackgroundSet()) {
+        overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
+        overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
+        overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
+        this->overrideBkgndCol = overBC; // hurk
+    }
+
+    this->Render();
+
+    //if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
+    //    this->cam.SetParameters(this->frozenValues ? this->frozenValues->camParams : this->camParams);
+    //}
+    this->overrideBkgndCol = NULL;
+    this->overrideViewport = NULL;
+
+    return true;
 }
 
 
@@ -337,6 +373,14 @@ void view::View2D::UpdateFreeze(bool freeze) {
 
     // currently not supported
 
+}
+
+
+/*
+ * view::View2D::unpackMouseCoordinates
+ */
+void view::View2D::unpackMouseCoordinates(float &x, float &y) {
+    x = y = 0.0f; // TODO: Fix mouse interaction
 }
 
 

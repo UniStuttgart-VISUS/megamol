@@ -38,15 +38,13 @@ using namespace megamol::core;
  * view::View3D::View3D
  */
 view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
-        camOverrides(), setViewport(true), cursor2d(), modkeys(), rotator1(),
+        camOverrides(), cursor2d(), modkeys(), rotator1(),
         rotator2(), zoomer1(), zoomer2(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         lightDir(0.5f, -1.0f, -1.0f), isCamLight(true), bboxs(),
         animPlay("animPlay", "Bool parameter to play/stop the animation"),
         animSpeed("animSpeed", "Float parameter of animation speed in time frames per second"),
         showBBox("showBBox", "Bool parameter to show/hide the bounding box"),
-        softCursor("softCursor", "Bool flag to activate software cursor rendering"),
-        backCol("backCol", "The views background colour"),
         cameraSettingsSlot("camsettings", "The stored camera settings"),
         storeCameraSettingsSlot("storecam", "Triggers the storage of the camera settings"),
         restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings"),
@@ -72,10 +70,6 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f,
         defWidth, defHeight));
 
-    this->bkgndCol[0] = 0.0f;
-    this->bkgndCol[1] = 0.0f;
-    this->bkgndCol[2] = 0.125f;
-
     this->rendererSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
@@ -89,12 +83,6 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->MakeSlotAvailable(&this->animSpeed);
     this->showBBox << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBox);
-    this->softCursor << new param::BoolParam(false, false);
-    this->MakeSlotAvailable(&this->softCursor);
-
-    this->backCol << new param::StringParam(utility::ColourParser::ToString(
-        this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]));
-    this->MakeSlotAvailable(&this->backCol);
 
     this->cameraSettingsSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->cameraSettingsSlot);
@@ -167,20 +155,24 @@ void view::View3D::Render(void) {
     this->fpsCounter.FrameBegin();
 
     // clear viewport
-    if (this->setViewport) {
+    if (this->overrideViewport != NULL) {
+        if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0)
+                && (this->overrideViewport[2] > 0) && (this->overrideViewport[3] > 0)) {
+            ::glViewport(
+                this->overrideViewport[0], this->overrideViewport[1],
+                this->overrideViewport[2], this->overrideViewport[3]);
+        }
+    } else {
+        // this is correct in non-override mode,
+        //  because then the tile will be whole viewport
         ::glViewport(0, 0,
             static_cast<GLsizei>(this->camParams->TileRect().Width()),
             static_cast<GLsizei>(this->camParams->TileRect().Height()));
     }
 
-    if (this->backCol.IsDirty()) {
-        this->backCol.ResetDirty();
-        utility::ColourParser::FromString(this->backCol.Param<param::StringParam>()->Value(),
-            this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
-    }
-
-    ::glClearColor(this->bkgndCol[0], this->bkgndCol[1],
-        this->bkgndCol[2], 0.0f);
+    const float *bkgndCol = (this->overrideBkgndCol != NULL)
+        ? this->overrideBkgndCol : this->bkgndColour();
+    ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (cr3d == NULL) {
@@ -299,7 +291,7 @@ void view::View3D::Render(void) {
         this->renderBBoxFrontside();
     }
 
-    if (this->softCursor.Param<param::BoolParam>()->Value()) {
+    if (this->showSoftCursor()) {
         this->renderSoftCursor();
     }
 
@@ -389,32 +381,32 @@ void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
  * view::View3D::OnRenderView
  */
 bool view::View3D::OnRenderView(Call& call) {
-    bool redirtyColour = false;
-    float oldBR = 0, oldBG = 0, oldBB = 0;
+    float overBC[3];
+    int overVP[4] = {0, 0, 0, 0};
     view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
     if (crv == NULL) return false;
 
-    this->setViewport = false;
+    this->overrideViewport = overVP;
     if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
         this->cam.SetParameters(this->camOverrides);
         this->camOverrides.DynamicCast<CameraParamOverride>()
             ->SetOverrides(*crv);
-        if (!crv->IsTileSet() && crv->IsViewportSet()) {
-            this->camOverrides->SetVirtualViewSize(
-                static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportWidth()),
-                static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportHeight()));
-            this->camOverrides->ResetTileRect();
+        if (crv->IsViewportSet()) {
+            overVP[2] = crv->ViewportWidth();
+            overVP[3] = crv->ViewportHeight();
+            if (!crv->IsTileSet()) {
+                this->camOverrides->SetVirtualViewSize(
+                    static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportWidth()),
+                    static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportHeight()));
+                this->camOverrides->ResetTileRect();
+            }
         }
     }
     if (crv->IsBackgroundSet()) {
-        redirtyColour = this->backCol.IsDirty();
-        this->backCol.ResetDirty();
-        oldBR = this->bkgndCol[0];
-        this->bkgndCol[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
-        oldBG = this->bkgndCol[1];
-        this->bkgndCol[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
-        oldBB = this->bkgndCol[2];
-        this->bkgndCol[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
+        overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
+        overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
+        overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
+        this->overrideBkgndCol = overBC; // hurk
     }
 
     this->Render();
@@ -422,15 +414,8 @@ bool view::View3D::OnRenderView(Call& call) {
     if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
         this->cam.SetParameters(this->frozenValues ? this->frozenValues->camParams : this->camParams);
     }
-    if (crv->IsBackgroundSet()) {
-        if (redirtyColour) {
-            this->backCol.ForceSetDirty();
-        }
-        this->bkgndCol[0] = oldBR;
-        this->bkgndCol[1] = oldBG;
-        this->bkgndCol[2] = oldBB;
-    }
-    this->setViewport = true;
+    this->overrideBkgndCol = NULL;
+    this->overrideViewport = NULL;
 
     return true;
 }

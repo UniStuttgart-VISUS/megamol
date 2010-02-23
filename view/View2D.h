@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/AbstractView.h"
-#include "view/MouseFlags.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
+#include "view/AbstractRenderingView.h"
+#include "view/MouseFlags.h"
 
 
 namespace megamol {
@@ -25,7 +25,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class View2D: public AbstractView {
+    class View2D: public AbstractRenderingView {
     public:
 
         /**
@@ -124,6 +124,17 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze);
 
+    protected:
+
+        /**
+         * Unpacks the mouse coordinates, which are relative to the virtual
+         * viewport size.
+         *
+         * @param x The x coordinate of the mouse position
+         * @param y The y coordinate of the mouse position
+         */
+        virtual void unpackMouseCoordinates(float &x, float &y);
+
     private:
 
         /**
@@ -146,12 +157,6 @@ namespace view {
          * @return true
          */
         bool onResetView(param::ParamSlot& p);
-
-        /** The background colour */
-        param::ParamSlot backCol;
-
-        /** The background colour for the view */
-        float bkgndCol[3];
 
         /**
          * Flag if this is the first time an image gets created. Used for 

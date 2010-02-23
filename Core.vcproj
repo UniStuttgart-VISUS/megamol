@@ -1547,6 +1547,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\view\AbstractRenderingView.h"
+					>
+				</File>
+				<File
 					RelativePath=".\view\AbstractTileView.h"
 					>
 				</File>
@@ -1632,6 +1636,10 @@
 				>
 				<File
 					RelativePath=".\view\AbstractOverrideView.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\view\AbstractRenderingView.cpp"
 					>
 				</File>
 				<File
@@ -2996,6 +3004,10 @@
 					RelativePath=".\cluster\ClusterControllerClient.h"
 					>
 				</File>
+				<File
+					RelativePath=".\cluster\PowerwallView.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -3014,6 +3026,10 @@
 				</File>
 				<File
 					RelativePath=".\cluster\ClusterControllerClient.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\PowerwallView.cpp"
 					>
 				</File>
 			</Filter>

@@ -14,7 +14,7 @@ using namespace megamol::core;
 /*
  * view::AbstractView3D::AbstractView3D
  */
-view::AbstractView3D::AbstractView3D(void) : AbstractView() {
+view::AbstractView3D::AbstractView3D(void) : AbstractRenderingView() {
 }
 
 

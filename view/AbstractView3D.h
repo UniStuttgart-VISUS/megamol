@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/AbstractView.h"
+#include "view/AbstractRenderingView.h"
 
 
 namespace megamol {
@@ -22,7 +22,7 @@ namespace view {
     /**
      * Abstract base class of 3d rendering views
      */
-    class AbstractView3D : public AbstractView {
+    class AbstractView3D : public AbstractRenderingView {
     public:
 
         /** Ctor. */

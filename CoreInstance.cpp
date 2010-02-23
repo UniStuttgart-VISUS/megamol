@@ -118,49 +118,84 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->log.SetOfflineMessageBufferSize(25);
     this->log.SetEchoOutTarget(&this->logEchoTarget);
 
+    //////////////////////////////////////////////////////////////////////
     // register builtin descriptions
+    //////////////////////////////////////////////////////////////////////
     // view descriptions
+    //////////////////////////////////////////////////////////////////////
     ViewDescription *vd;
 
+    // empty view; name for compatibility reasons
     vd = new ViewDescription("emptyview");
-    vd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("TitleSceneView"), "titleview");
-    vd->SetViewModuleID("titleview"); // TODO: Replace (is deprecated)
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
+    // 'View3D' will show the title logo as long as no renderer is connected
+    vd->SetViewModuleID("view");
+
+    // empty View3D
+    vd = new ViewDescription("emptyview3d");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
+    // 'View3D' will show the title logo as long as no renderer is connected
+    vd->SetViewModuleID("view");
+
+    // empty View2D
+    vd = new ViewDescription("emptyview2d");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View2D"), "view");
+    // 'View2D' will show the title logo as long as no renderer is connected
+    vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
+    // empty view (show the title); name for compatibility reasons
     vd = new ViewDescription("titleview");
-    vd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("TitleSceneView"), "titleview");
-    vd->SetViewModuleID("titleview"); // TODO: Replace (is deprecated)
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
+    // 'View3D' will show the title logo as long as no renderer is connected
+    vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
+    // view for powerwall
+    vd = new ViewDescription("powerwallview");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("PowerwallView"), "pwview");
+    //vd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl"); // TODO: Dependant instance!
+    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "pwview::register", "::cctrl::register");
+
+    // DEBUG! TODO: Remove
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View2D"), "view");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("ChronoGraph"), "watch");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRender2D"), "view::rendering", "watch::rendering");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRenderView"), "pwview::renderView", "view::render");
+
+    vd->SetViewModuleID("pwview");
+    this->builtinViewDescs.Register(vd);
+
+    //////////////////////////////////////////////////////////////////////
     // job descriptions
+    //////////////////////////////////////////////////////////////////////
     JobDescription *jd;
 
+    // job for the cluster controller modules
     jd = new JobDescription("clustercontroller");
-    jd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("ClusterController"), "::cctrl"); // TODO: Replace (is deprecated)
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl");
     jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
+     // TODO: Replace (is deprecated)
     jd = new JobDescription("rendermaster");
-    jd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("RenderMaster"), "master"); // TODO: Replace (is deprecated)
+    jd->AddModule(ModuleDescriptionManager::Instance() ->Find("RenderMaster"), "master");
     jd->SetJobModuleID("master");
     this->builtinJobDescs.Register(jd);
 
+     // TODO: Replace (is deprecated)
     jd = new JobDescription("imagemaker");
-    jd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("ScreenShooter"), "imgmaker"); // TODO: Replace (is deprecated)
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ScreenShooter"), "imgmaker");
     jd->SetJobModuleID("imgmaker");
     this->builtinJobDescs.Register(jd);
 
     // TODO: Debug
     jd = new JobDescription("DEBUGjob");
-    jd->AddModule(ModuleDescriptionManager::Instance()
-        ->Find("JobThread"), "ctrl");
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("JobThread"), "ctrl");
     jd->SetJobModuleID("ctrl");
     this->builtinJobDescs.Register(jd);
+
+    //////////////////////////////////////////////////////////////////////
 
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
 }

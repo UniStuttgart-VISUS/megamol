@@ -248,12 +248,6 @@ namespace view {
         /** The camera parameter overrides */
         vislib::SmartPtr<vislib::graphics::CameraParameters> camOverrides;
 
-        /** Flag controlling if the render method should set the viewport */
-        bool setViewport;
-
-        /** The background colour for the view */
-        float bkgndCol[3];
-
         /** the 2d cursor of this view */
         vislib::graphics::Cursor2D cursor2d;
 
@@ -292,12 +286,6 @@ namespace view {
 
         /** Bool flag showing the bounding box */
         param::ParamSlot showBBox;
-
-        /** Bool flag to activate software cursor rendering */
-        param::ParamSlot softCursor;
-
-        /** The background colour */
-        param::ParamSlot backCol;
 
         /** The stored camera settings */
         param::ParamSlot cameraSettingsSlot;

@@ -66,6 +66,11 @@ namespace cluster {
 
     protected:
 
+        /**
+         * Renders a fallback view holding information about the cluster
+         */
+        void renderFallbackView(void);
+
     private:
 
     };

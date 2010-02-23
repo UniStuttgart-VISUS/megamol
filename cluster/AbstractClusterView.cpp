@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "cluster/AbstractClusterView.h"
+#include <GL/gl.h>
 
 using namespace megamol::core;
 
@@ -16,6 +17,9 @@ using namespace megamol::core;
  */
 cluster::AbstractClusterView::AbstractClusterView(void) : view::AbstractTileView(),
         ClusterControllerClient() {
+
+    // slot initialized in 'ClusterControllerClient::ctor'
+    this->MakeSlotAvailable(&this->registerSlot);
 
     // TODO: Implement
 
@@ -61,4 +65,16 @@ void cluster::AbstractClusterView::SetCursor2DPosition(float x, float y) {
  */
 void cluster::AbstractClusterView::SetInputModifier(mmcInputModifier mod, bool down) {
     // intentionally empty to disallow local user input
+}
+
+
+/*
+ * cluster::AbstractClusterView::renderFallbackView
+ */
+void cluster::AbstractClusterView::renderFallbackView(void) {
+    ::glViewport(0, 0, this->getViewportWidth(), this->getViewportHeight());
+
+    ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    ::glClear(GL_COLOR_BUFFER_BIT);
+
 }
