@@ -537,6 +537,7 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
     this->name = name;
     this->name.Truncate(MAX_NAME_LEN);
 
+    this->configs.SetCount(0);
     this->configs.AssertCapacity(cntConfigs);
     for (SIZE_T i = 0; i < cntConfigs; i++) {
         this->configs.Add(DiscoveryConfigEx(configs[i], this));
