@@ -259,7 +259,7 @@ vislib::net::IPEndPoint vislib::net::cluster::DiscoveryService::DiscoveryConfig\
             break;
 
         case IPEndPoint::FAMILY_INET6:
-            anyEndPoint.SetIPAddress(IPAddress::ANY6);
+            anyEndPoint.SetIPAddress(IPAddress6::ANY);
             break;
 
         default:
@@ -268,7 +268,7 @@ vislib::net::IPEndPoint vislib::net::cluster::DiscoveryService::DiscoveryConfig\
             break;
     }
 
-    return anyEndPoint:    
+    return anyEndPoint;    
 }
 #endif /* !_WIN32 */
 
