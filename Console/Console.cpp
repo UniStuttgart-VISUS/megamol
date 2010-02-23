@@ -789,6 +789,25 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         ::mmcRequestInstance(hCore, insts[i * 2], insts[i * 2 + 1]);
     }
 
+    if (::mmcHasPendingJobInstantiationRequests(hCore)) {
+        vislib::SmartPtr<megamol::console::CoreHandle> jobHandle;
+
+        while (::mmcHasPendingJobInstantiationRequests(hCore)) {
+            jobHandle = new megamol::console::CoreHandle();
+
+            if (!::mmcInstantiatePendingJob(hCore,
+                    jobHandle->operator void*())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to instantiate requested job.");
+                retval = -28;
+                continue;
+            }
+
+            megamol::console::JobManager::Instance()->Add(jobHandle);
+        }
+    }
+
     if (::mmcHasPendingViewInstantiationRequests(hCore)) {
         if (!forceViewerLib()) {
             return -24;
@@ -946,25 +965,6 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                 vislib::sys::Log::LEVEL_ERROR,
                 "Unable to instantiate any of the requested views.\n");
             return -26;
-        }
-    }
-
-    if (::mmcHasPendingJobInstantiationRequests(hCore)) {
-        vislib::SmartPtr<megamol::console::CoreHandle> jobHandle;
-
-        while (::mmcHasPendingJobInstantiationRequests(hCore)) {
-            jobHandle = new megamol::console::CoreHandle();
-
-            if (!::mmcInstantiatePendingJob(hCore,
-                    jobHandle->operator void*())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to instantiate requested job.");
-                retval = -28;
-                continue;
-            }
-
-            megamol::console::JobManager::Instance()->Add(jobHandle);
         }
     }
 
