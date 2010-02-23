@@ -7,6 +7,8 @@
 
 #include "stdafx.h"
 #include "cluster/ClusterControllerClient.h"
+#include "cluster/CallRegisterAtController.h"
+#include "vislib/Log.h"
 
 using namespace megamol::core;
 
@@ -15,8 +17,11 @@ using namespace megamol::core;
  * cluster::ClusterControllerClient::ClusterControllerClient
  */
 cluster::ClusterControllerClient::ClusterControllerClient(void)
-        : ctrlr(NULL) {
-    // intentionally empty
+        : registerSlot("register", "The slot to register the client at the controller"),
+        ctrlr(NULL) {
+
+    this->registerSlot.SetCompatibleCall<CallRegisterAtControllerDescription>();
+    // must be published in derived class to avoid diamond-inheritance
 }
 
 
@@ -77,9 +82,13 @@ void cluster::ClusterControllerClient::OnUserMsg(
  */
 void cluster::ClusterControllerClient::SendUserMsg(
         const UINT32 msgType, const BYTE *msgBody, const SIZE_T msgSize) {
-
-    // TODO: Implement
-
+    if (this->ctrlr == NULL) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Cannot 'SendUserMsg[%d]': ClusterControllerClient is not connected to the controller\n",
+            __LINE__);
+        return;
+    }
+    this->ctrlr->SendUserMsg(msgType, msgBody, msgSize);
 }
 
 
@@ -89,7 +98,11 @@ void cluster::ClusterControllerClient::SendUserMsg(
 void cluster::ClusterControllerClient::SendUserMsg(
         const cluster::ClusterController::PeerHandle& hPeer,
         const UINT32 msgType, const BYTE *msgBody, const SIZE_T msgSize) {
-
-    // TODO: Implement
-
+    if (this->ctrlr == NULL) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Cannot 'SendUserMsg[%d]': ClusterControllerClient is not connected to the controller\n",
+            __LINE__);
+        return;
+    }
+    this->ctrlr->SendUserMsg(hPeer, msgType, msgBody, msgSize);
 }

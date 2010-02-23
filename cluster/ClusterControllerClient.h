@@ -11,7 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "CallerSlot.h"
 #include "cluster/ClusterController.h"
+#include "Module.h"
 
 
 namespace megamol {
@@ -95,6 +97,11 @@ namespace cluster {
         void SendUserMsg(const ClusterController::PeerHandle& hPeer,
             const UINT32 msgType, const BYTE *msgBody,
             const SIZE_T msgSize);
+
+    protected:
+
+        /** The caller to register the client at the controller */
+        CallerSlot registerSlot;
 
     private:
 

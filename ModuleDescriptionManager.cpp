@@ -32,10 +32,10 @@
 //#include "special/VisLogoRenderer.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
-#include "view/OverrideView.h"
 #include "view/special/ChronoGraph.h"
 #include "view/special/DemoRenderer2D.h"
 #include "view/SwitchRenderer3D.h"
+#include "view/TileView.h"
 #include "view/View2D.h"
 #include "view/View3D.h"
 #include "job/JobThread.h"
@@ -79,10 +79,10 @@ ModuleDescriptionManager::Instance() {
         //instance->registerAutoDescription<special::VisLogoRenderer>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();
-        instance->registerAutoDescription<view::OverrideView>();
         instance->registerAutoDescription<view::special::ChronoGraph>();
         instance->registerAutoDescription<view::special::DemoRenderer2D>();
         instance->registerAutoDescription<view::SwitchRenderer3D>();
+        instance->registerAutoDescription<view::TileView>();
         instance->registerAutoDescription<view::View2D>();
         instance->registerAutoDescription<view::View3D>();
         //instance->registerAutoDescription<vismol2::Mol20Renderer>();

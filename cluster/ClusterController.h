@@ -80,6 +80,27 @@ namespace cluster {
          */
         virtual ~ClusterController();
 
+        /**
+         * Sends a message to all nodes in the cluster.
+         *
+         * @param msgType The type value for the message
+         * @param msgBody The data of the message
+         * @param msgSize The size of the data of the message in bytes
+         */
+        void SendUserMsg(const UINT32 msgType, const BYTE *msgBody,
+            const SIZE_T msgSize);
+
+        /**
+         * Sends a message to one nodes in the cluster.
+         *
+         * @param hPeer The peer to the node to send the message to
+         * @param msgType The type value for the message
+         * @param msgBody The data of the message
+         * @param msgSize The size of the data of the message in bytes
+         */
+        void SendUserMsg(const PeerHandle& hPeer, const UINT32 msgType,
+            const BYTE *msgBody, const SIZE_T msgSize);
+
     protected:
 
         /**

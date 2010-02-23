@@ -15,6 +15,7 @@
 #include "view/AbstractView.h"
 #include "view/CallRenderView.h"
 #include "vislib/CameraParameters.h"
+#include "vislib/forceinline.h"
 
 
 namespace megamol {
@@ -33,6 +34,55 @@ namespace view {
 
         /** Dtor. */
         virtual ~AbstractOverrideView(void);
+
+        /**
+         * Resets the view. This normally sets the camera parameters to
+         * default values.
+         */
+        virtual void ResetView(void);
+
+        /**
+         * Resizes the AbstractView3D.
+         *
+         * @param width The new width.
+         * @param height The new height.
+         */
+        virtual void Resize(unsigned int width, unsigned int height);
+
+        /**
+         * Sets the button state of a button of the 2d cursor. See
+         * 'vislib::graphics::Cursor2D' for additional information.
+         *
+         * @param button The button.
+         * @param down Flag whether the button is pressed, or not.
+         */
+        virtual void SetCursor2DButtonState(unsigned int btn, bool down);
+
+        /**
+         * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
+         * for additional information.
+         *
+         * @param x The x coordinate
+         * @param y The y coordinate
+         */
+        virtual void SetCursor2DPosition(float x, float y);
+
+        /**
+         * Sets the state of an input modifier.
+         *
+         * @param mod The input modifier to be set.
+         * @param down The new state of the input modifier.
+         */
+        virtual void SetInputModifier(mmcInputModifier mod, bool down);
+
+        /**
+         * Freezes, updates, or unfreezes the view onto the scene (not the
+         * rendering, but camera settings, timing, etc).
+         *
+         * @param freeze true means freeze or update freezed settings,
+         *               false means unfreeze
+         */
+        virtual void UpdateFreeze(bool freeze);
 
     protected:
 
@@ -54,10 +104,34 @@ namespace view {
          */
         virtual void packMouseCoordinates(float &x, float &y);
 
+        /**
+         * Answer the width of the actual viewport in pixels
+         *
+         * @return The width of the actual viewport in pixels
+         */
+        VISLIB_FORCEINLINE unsigned int getViewportWidth(void) const {
+            return this->viewportWidth;
+        }
+
+        /**
+         * Answer the height of the actual viewport in pixels
+         *
+         * @return The height of the actual viewport in pixels
+         */
+        VISLIB_FORCEINLINE unsigned int getViewportHeight(void) const {
+            return this->viewportHeight;
+        }
+
     private:
 
         /** Slot for outgoing rendering requests to other views */
         CallerSlot renderViewSlot;
+
+        /** The width of the actual viewport in pixels */
+        unsigned int viewportWidth;
+
+        /** The height of the actual viewport in pixels */
+        unsigned int viewportHeight;
 
     };
 

@@ -1547,6 +1547,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\view\AbstractTileView.h"
+					>
+				</File>
+				<File
 					RelativePath=".\view\AbstractView.h"
 					>
 				</File>
@@ -1599,10 +1603,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\view\OverrideView.h"
-					>
-				</File>
-				<File
 					RelativePath=".\view\Renderer2DModule.h"
 					>
 				</File>
@@ -1612,6 +1612,10 @@
 				</File>
 				<File
 					RelativePath=".\view\SwitchRenderer3D.h"
+					>
+				</File>
+				<File
+					RelativePath=".\view\TileView.h"
 					>
 				</File>
 				<File
@@ -1628,6 +1632,10 @@
 				>
 				<File
 					RelativePath=".\view\AbstractOverrideView.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\view\AbstractTileView.cpp"
 					>
 				</File>
 				<File
@@ -1683,10 +1691,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\view\OverrideView.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\view\Renderer2DModule.cpp"
 					>
 				</File>
@@ -1696,6 +1700,10 @@
 				</File>
 				<File
 					RelativePath=".\view\SwitchRenderer3D.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\view\TileView.cpp"
 					>
 				</File>
 				<File
@@ -2973,6 +2981,10 @@
 				Name="Header Files"
 				>
 				<File
+					RelativePath=".\cluster\AbstractClusterView.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cluster\CallRegisterAtController.h"
 					>
 				</File>
@@ -2988,6 +3000,10 @@
 			<Filter
 				Name="Source Files"
 				>
+				<File
+					RelativePath=".\cluster\AbstractClusterView.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\cluster\CallRegisterAtController.cpp"
 					>

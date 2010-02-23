@@ -9,9 +9,10 @@
 #include "cluster/ClusterController.h"
 #include "cluster/CallRegisterAtController.h"
 #include "cluster/ClusterControllerClient.h"
-//#include "CoreInstance.h"
+#include "CoreInstance.h"
 #include "param/BoolParam.h"
 #include "param/StringParam.h"
+#include "utility/Configuration.h"
 #include "vislib/assert.h"
 #include "vislib/AutoLock.h"
 #include "vislib/DiscoveryService.h"
@@ -86,50 +87,89 @@ cluster::ClusterController::~ClusterController() {
 
 
 /*
+ * cluster::ClusterController::SendUserMsg
+ */
+void cluster::ClusterController::SendUserMsg(const UINT32 msgType,
+        const BYTE *msgBody, const SIZE_T msgSize) {
+    using vislib::sys::Log;
+    try {
+        UINT rv = this->discoveryService.SendUserMessage(
+            msgType, msgBody, msgSize);
+        if (rv != 0) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Failed to send user message %u: failed after %u communication trails\n",
+                msgType, rv);
+        }
+    } catch (vislib::Exception ex) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "Failed to send user message %u: %s\n",
+            msgType, ex.GetMsgA());
+    } catch (...) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "Failed to send user message %u: unknown exception\n",
+            msgType);
+    }
+}
+
+
+/*
+ * cluster::ClusterController::SendUserMsg
+ */
+void cluster::ClusterController::SendUserMsg(
+        const cluster::ClusterController::PeerHandle& hPeer,
+        const UINT32 msgType, const BYTE *msgBody, const SIZE_T msgSize) {
+    using vislib::sys::Log;
+    try {
+        UINT rv = this->discoveryService.SendUserMessage(
+            hPeer, msgType, msgBody, msgSize);
+        if (rv != 0) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Failed to send user message %u: failed after %u communication trails\n",
+                msgType, rv);
+        }
+    } catch (vislib::Exception ex) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "Failed to send user message %u: %s\n",
+            msgType, ex.GetMsgA());
+    } catch (...) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "Failed to send user message %u: unknown exception\n",
+            msgType);
+    }
+}
+
+
+/*
  * cluster::ClusterController::create
  */
 bool cluster::ClusterController::create(void) {
 
-    //const utility::Configuration& cfg
-    //    = this->GetCoreInstance()->Configuration();
+    const utility::Configuration& cfg
+        = this->GetCoreInstance()->Configuration();
 
-    //if (cfg.IsConfigValueSet("ClusterName")) {
-    //    this->clusterName.Param<param::StringParam>()->SetValue(
-    //        cfg.ConfigValue("ClusterName").PeekBuffer());
-    //}
-    //if (cfg.IsConfigValueSet("CDSAdapterAddress")) {
-    //    this->cdsAdapterAddress.Param<param::StringParam>()->SetValue(
-    //        cfg.ConfigValue("CDSAdapterAddress").PeekBuffer());
-    //}
-    //if (cfg.IsConfigValueSet("CDSBroadcastAddress")) {
-    //    this->cdsBCastAddress.Param<param::StringParam>()->SetValue(
-    //        cfg.ConfigValue("CDSBroadcastAddress").PeekBuffer());
-    //}
-    //if (cfg.IsConfigValueSet("CDSPort")) {
-    //    try {
-    //        this->cdsPort.Param<param::IntParam>()->SetValue(
-    //            vislib::CharTraitsW::ParseInt(
-    //            cfg.ConfigValue("CDSPort")));
-    //    } catch(...) {
-    //        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-    //            "Unable to parse configuration value \"CDSPort\" as number. "
-    //            "Configuration value ignored.");
-    //    }
-    //}
-    //if (cfg.IsConfigValueSet("CDSRun")) {
-    //    try {
-    //        this->cdsRun.Param<param::BoolParam>()->SetValue(
-    //            vislib::CharTraitsW::ParseBool(
-    //            cfg.ConfigValue("CDSRun")));
-    //    } catch(...) {
-    //        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-    //            "Unable to parse configuration value \"CDSRun\" as boolean. "
-    //            "Configuration value ignored.");
-    //    }
-    //}
+    if (cfg.IsConfigValueSet("cdsname")) {
+        this->cdsNameSlot.Param<param::StringParam>()->SetValue(
+            cfg.ConfigValue("cdsname").PeekBuffer());
+    }
+    if (cfg.IsConfigValueSet("cdsaddress")) {
+        this->cdsAddressSlot.Param<param::StringParam>()->SetValue(
+            cfg.ConfigValue("cdsaddress").PeekBuffer());
+    }
+    if (cfg.IsConfigValueSet("cdsrun")) {
+        try {
+            this->cdsRunSlot.Param<param::BoolParam>()->SetValue(
+                vislib::CharTraitsW::ParseBool(
+                cfg.ConfigValue("cdsrun")));
+        } catch(...) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+                "Unable to parse configuration value \"cdsrun\" as boolean. "
+                "Configuration value ignored.");
+        }
+    }
 
-    //// to trigger initialization on first parameter realization
-    //this->clusterName.ForceSetDirty();
+    if (this->cdsRunSlot.Param<param::BoolParam>()->Value()) {
+        this->cdsRunSlot.ForceSetDirty();
+    }
 
     return true;
 }
@@ -224,7 +264,10 @@ DWORD cluster::ClusterController::Run(void *userData) {
                                 endPoint.GetPort());
                         }
 
-                        this->discoveryService.Start(name, cfg.operator->(), 1);
+                        this->discoveryService.Start(name, cfg.operator->(), 1, 0, 0,
+                            DiscoveryService::DEFAULT_REQUEST_INTERVAL,
+                            DiscoveryService::DEFAULT_REQUEST_INTERVAL / 2,
+                            2); // using 2 to ensure that slow systems have enough time
 
                         if (this->discoveryService.IsRunning()) {
                             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
@@ -280,9 +323,14 @@ void cluster::ClusterController::OnNodeFound(const DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer) throw() {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster Node found: %s\n",
         src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
-
-    // TODO: Implement
-
+    vislib::sys::AutoLock lock(this->clientsLock);
+    vislib::SingleLinkedList<ClusterControllerClient *>::Iterator iter
+        = this->clients.GetIterator();
+    while (iter.HasNext()) {
+        ClusterControllerClient *c = iter.Next();
+        if (c == NULL) continue;
+        c->OnNodeFound(hPeer);
+    }
 }
 
 
@@ -294,9 +342,14 @@ void cluster::ClusterController::OnNodeLost(const DiscoveryService& src,
         const DiscoveryListener::NodeLostReason reason) throw() {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster Node lost: %s\n",
         src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
-
-    // TODO: Implement
-
+    vislib::sys::AutoLock lock(this->clientsLock);
+    vislib::SingleLinkedList<ClusterControllerClient *>::Iterator iter
+        = this->clients.GetIterator();
+    while (iter.HasNext()) {
+        ClusterControllerClient *c = iter.Next();
+        if (c == NULL) continue;
+        c->OnNodeLost(hPeer);
+    }
 }
 
 
@@ -308,9 +361,14 @@ void cluster::ClusterController::OnUserMessage(const DiscoveryService& src,
         const UINT32 msgType, const BYTE *msgBody) throw() {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
         src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
-
-    // TODO: Implement
-
+    vislib::sys::AutoLock lock(this->clientsLock);
+    vislib::SingleLinkedList<ClusterControllerClient *>::Iterator iter
+        = this->clients.GetIterator();
+    while (iter.HasNext()) {
+        ClusterControllerClient *c = iter.Next();
+        if (c == NULL) continue;
+        c->OnUserMsg(hPeer, msgType, msgBody);
+    }
 }
 
 
@@ -378,6 +436,7 @@ bool cluster::ClusterController::registerModule(Call& call) {
     vislib::sys::AutoLock lock(this->clientsLock);
     if (this->clients.Find(c->Client()) == NULL) {
         this->clients.Add(c->Client());
+        c->Client()->ctrlr = this;
         if (this->discoveryService.IsRunning()) {
             // inform client that cluster is now available
             c->Client()->OnClusterAvailable();
@@ -392,8 +451,9 @@ bool cluster::ClusterController::registerModule(Call& call) {
  */
 bool cluster::ClusterController::unregisterModule(Call& call) {
     CallRegisterAtController *c = dynamic_cast<CallRegisterAtController *>(&call);
-    if ((c == NULL) || (c->Client() == NULL)) return false;
+    if ((c == NULL) || (c->Client() == NULL) || (c->Client()->ctrlr != this)) return false;
     vislib::sys::AutoLock lock(this->clientsLock);
+    c->Client()->ctrlr = NULL;
     this->clients.RemoveAll(c->Client());
     return true;
 }
