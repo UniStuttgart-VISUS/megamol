@@ -106,8 +106,10 @@ namespace net {
          * This method is thread-safe.
          *
          * @param exception The exception that was caught.
+         *
+         * @return Accumulated (ANDed) return values of all listeners.
          */
-        void fireCommunicationError(const vislib::Exception& exception);
+        bool fireCommunicationError(const vislib::Exception& exception);
 
         /**
          * Inform all registered listener about that the listener is exiting.
@@ -129,6 +131,8 @@ namespace net {
          * This method is thread-safe.
          *
          * @param msg The message that was received.
+         *
+         * @return Accumulated (ANDed) return values of all listeners.
          */
         bool fireMessageReceived(const AbstractSimpleMessage& msg);
 

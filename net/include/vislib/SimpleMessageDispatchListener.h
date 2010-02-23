@@ -50,12 +50,23 @@ namespace net {
          * This method should return very quickly and should not perform
          * excessive work as it is executed in the discovery thread.
          *
+         * The return value of the method can be used to stop the message
+         * dispatcher. The default implementation returns true for continuing
+         * after an error.
+         *
+         * Note that the dispatcher will stop if any of the registered listeners
+         * returns false.
+         *
          * @param src       The SimpleMessageDispatcher which caught the 
          *                  communication error.
          * @param exception The exception that was caught (this exception
          *                  represents the error that occurred).
+         *
+         * @return true in order to make the SimpleMessageDispatcher continue
+         *         receiving messages, false will cause the dispatcher to
+         *         exit.
          */
-        virtual void OnCommunicationError(const SimpleMessageDispatcher& src,
+        virtual bool OnCommunicationError(const SimpleMessageDispatcher& src,
             const vislib::Exception& exception) throw();
 
         /**
@@ -93,6 +104,9 @@ namespace net {
          *
          * The return value of the method can be used to stop the message
          * dispatcher, e. g. if an exit message was received. 
+         *
+         * Note that the dispatcher will stop if any of the registered listeners
+         * returns false.
          *
          * @param src The SimpleMessageDispatcher that received the message.
          * @param msg The message that was received.

@@ -37,11 +37,12 @@ vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(
 /* 
  * vislib::net::SimpleMessageDispatchListener::OnCommunicationError
  */
-void vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
+bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
         const SimpleMessageDispatcher& src, 
         const vislib::Exception& exception) throw() {
     VLSTACKTRACE("SimpleMessageDispatchListener::OnCommunicationError", 
         __FILE__, __LINE__);
+    return true;
 }
 
 

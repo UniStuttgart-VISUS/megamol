@@ -68,7 +68,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
     ASSERT(channel != NULL);
 
     this->channel = static_cast<AbstractInboundCommChannel *>(channel);
-    bool exitRequested = false;
+    bool doReceive = true;
     
     try {
         Socket::Startup();
@@ -84,7 +84,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
     this->fireDispatcherStarted();
 
     try {
-        while (!exitRequested) {
+        while (doReceive) {
             VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for "
                 "message header ...\n");
             this->channel->Receive(static_cast<void *>(this->msg), 
@@ -108,12 +108,14 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
                     "received.\n");
             }
 
-            this->fireMessageReceived(this->msg);
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Dispatching message "
+                "to registered listeners ...\n");
+            doReceive = this->fireMessageReceived(this->msg);
         }
     } catch (Exception e) {
         VLTRACE(VISLIB_TRCELVL_ERROR, "The SimpleMessageDispatcher encountered "
             " an error: %s\n", e.GetMsgA());
-        this->fireCommunicationError(e);
+        doReceive = this->fireCommunicationError(e);
     }
 
     this->channel.Release();
@@ -155,18 +157,23 @@ bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
 /*
  * vislib::net::SimpleMessageDispatcher::fireCommunicationError
  */
-void vislib::net::SimpleMessageDispatcher::fireCommunicationError(
+bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(
         const vislib::Exception& exception) {
     VLSTACKTRACE("SimpleMessageDispatcher::fireCommunicationError", 
         __FILE__, __LINE__);
+    bool retval = true;
 
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
     while (it.HasNext()) {
-        it.Next()->OnCommunicationError(*this, exception);
+        retval = it.Next()->OnCommunicationError(*this, exception) && retval;
     }
     this->listeners.Unlock();
 
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "SimpleMessageDispatcher "
+        "received exit request from registered error listener: %d\n", 
+        retval);
+    return retval;
 }
 
 
@@ -217,5 +224,9 @@ bool vislib::net::SimpleMessageDispatcher::fireMessageReceived(
         retval = it.Next()->OnMessageReceived(*this, msg) && retval;
     }
     this->listeners.Unlock();
+
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "SimpleMessageDispatcher "
+        "received exit request from registered message listener: %d\n", 
+        retval);
     return retval;
 }
