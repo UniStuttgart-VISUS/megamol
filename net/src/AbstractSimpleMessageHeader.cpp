@@ -23,7 +23,7 @@ vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader(void) {
  * vislib::net::AbstractSimpleMessageHeader::SetMessageID
  */
 void vislib::net::AbstractSimpleMessageHeader::SetMessageID(
-		const UINT32 messageID, bool isSystemID) {
+		const SimpleMessageID messageID, bool isSystemID) {
 	VLSTACKTRACE("AbstractSimpleMessageHeader::SetMessageID", 
 		__FILE__, __LINE__);
 

@@ -96,7 +96,7 @@ vislib::net::AbstractSimpleMessage::operator =(
     VLSTACKTRACE("AbstractSimpleMessage::operator =", __FILE__, __LINE__);
 
     if ((this != &rhs) && (static_cast<const void *>(*this) 
-        != static_cast<const void *>(rhs))) {
+            != static_cast<const void *>(rhs))) {
         void *data = this->assertStorage(rhs.GetHeader().GetBodySize());
         ::memcpy(data, static_cast<const void *>(rhs), this->GetMessageSize());
     }
@@ -149,6 +149,7 @@ vislib::net::AbstractSimpleMessage::operator void *(void) {
 void *vislib::net::AbstractSimpleMessage::assertStorage(
         const SIZE_T bodySize) {
     VLSTACKTRACE("AbstractSimpleMessage::assertStorage", __FILE__, __LINE__);
+    ASSERT(bodySize <= UINT_MAX);
     
     SimpleMessageHeader oldHeader;
     void *retval = NULL;

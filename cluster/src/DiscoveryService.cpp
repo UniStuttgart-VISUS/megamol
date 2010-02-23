@@ -15,6 +15,8 @@
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
 
+#include "vislib/MissingImplementationException.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Begin class PeerNode
@@ -83,6 +85,8 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::decrementResponseChances(
         return true;
 
     } else {
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "No response chance for %s left.\n",
+            this->responseAddress.ToStringA().PeekBuffer());
         return false;
     }
 }
@@ -125,11 +129,13 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
     // TODO: This is not good
     NetworkInformation::Adapter adapter = NetworkInformation::GetAdapter(0);
     
-    throw 1; // TODO NETINFO
+    throw MissingImplementationException("DiscoveryConfig::DiscoveryConfig", __FILE__, __LINE__);
+    // TODO: use netinfo to find meaningful default configuration.
     //this->responseAddress = IPEndPoint(adapter.GetAddress4());
     //this->bindAddress = IPEndPoint(adapter.GetAddress4(), DEFAULT_PORT);
     //this->bcastAddress = IPEndPoint(adapter.BroadcastAddress(), DEFAULT_PORT);
 }
+
 
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig
@@ -176,6 +182,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
     for (SIZE_T i = 0; i < candidates.Count(); i++) {
         this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
             &confidence));
+        // We allow valid and guessed broadcast addresses.
         if (confidence != NetworkInformation::INVALID) {
             break;
         }
@@ -236,6 +243,34 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::~DiscoveryConfig(
         void) {
 }
+
+
+#ifndef _WIN32
+/*
+ * ...::cluster::DiscoveryService::DiscoveryConfig::GetBindAddressForReceiver
+ */
+vislib::net::IPEndPoint vislib::net::cluster::DiscoveryService::DiscoveryConfig\
+::GetBindAddressForReceiver(void) const {
+    IPEndPoint anyEndPoint = this->bindAddress;
+
+    switch (anyEndPoint.GetAddressFamily()) {
+        case IPEndPoint::FAMILY_INET:
+            anyEndPoint.SetIPAddress(IPAddress::ANY);
+            break;
+
+        case IPEndPoint::FAMILY_INET6:
+            anyEndPoint.SetIPAddress(IPAddress::ANY6);
+            break;
+
+        default:
+            throw vislib::IllegalStateException("Cannot convert an unspecified "
+                "address family for binding.", __FILE__, __LINE__);
+            break;
+    }
+
+    return anyEndPoint:    
+}
+#endif /* !_WIN32 */
 
 
 /*
@@ -620,7 +655,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
      */
     VLTRACE(Trace::LEVEL_VL_VERBOSE, "The discovery receiver thread is "
         "preparing its socket on %s ...\n", 
-        config->GetBindAddress().ToStringA().PeekBuffer());
+        config->GetBindAddressForReceiver().ToStringA().PeekBuffer());
     try {
         Socket::Startup();
         this->socket.Create(config->GetProtocolFamily(), Socket::TYPE_DGRAM, 
@@ -629,7 +664,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
         this->socket.SetReuseAddr(true);
 //        this->socket.SetExclusiveAddrUse(
 //            !config->GetDiscoveryService().IsShareSockets());
-        this->socket.Bind(config->GetBindAddress());
+        this->socket.Bind(config->GetBindAddressForReceiver());
         //socket.SetLinger(false, 0);     // Force hard close.
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery receiver thread could not "

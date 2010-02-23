@@ -22,6 +22,13 @@ namespace vislib {
 namespace net {
 
 
+    /** ID type for simple messages. */
+    typedef UINT32 SimpleMessageID;
+
+    /** Size type for simple messages. */
+    typedef UINT32 SimpleMessageSize;
+
+
     /**
      * This is the message header that goes over the wire. It is not recommended
 	 * using this structure directly, but rather than via the object-oriented 
@@ -30,8 +37,8 @@ namespace net {
 	 * languages.
      */
     typedef struct SimpleMessageHeaderData_t {
-		UINT32 MessageID;	///< User-defined message ID.
-		UINT32 BodySize;	///< Size of the body to follow in bytes.
+		SimpleMessageID MessageID;  ///< User-defined message ID.
+		SimpleMessageSize BodySize; ///< Size of the body to follow in bytes.
     } SimpleMessageHeaderData;
 
 
@@ -39,7 +46,7 @@ namespace net {
 	 * First VISlib-reserved message ID. User programmes shall not use message
 	 * IDs equal or larger than this number.
 	 */
-	extern const UINT32 VLSNP1_FIRST_RESERVED_MESSAGE_ID;
+	extern const SimpleMessageID VLSNP1_FIRST_RESERVED_MESSAGE_ID;
     
 } /* end namespace net */
 } /* end namespace vislib */

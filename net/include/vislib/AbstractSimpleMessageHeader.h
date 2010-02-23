@@ -43,7 +43,7 @@ namespace net {
 		 *
 		 * @return The body size.
 		 */
-		inline UINT32 GetBodySize(void) const {
+		inline SimpleMessageSize GetBodySize(void) const {
 			VLSTACKTRACE("SimpleMessageHeader::GetBodySize", __FILE__, 
 				__LINE__);
 			return this->PeekData()->BodySize;
@@ -55,7 +55,7 @@ namespace net {
 		 *
 		 * @return The size of the header data in bytes.
 		 */
-		inline UINT32 GetHeaderSize(void) const {
+		inline SimpleMessageSize GetHeaderSize(void) const {
 			VLSTACKTRACE("SimpleMessageHeader::GetHeaderSize", __FILE__, 
 				__LINE__);
 			return sizeof(SimpleMessageHeaderData);
@@ -66,7 +66,7 @@ namespace net {
 		 *
 		 * @return The message ID.
 		 */
-		inline UINT32 GetMessageID(void) const {
+		inline SimpleMessageID GetMessageID(void) const {
 			VLSTACKTRACE("SimpleMessageHeader::GetMessageID", __FILE__, 
 				__LINE__);
 			return this->PeekData()->MessageID;
@@ -101,7 +101,7 @@ namespace net {
 		 *
 		 * @param bodySize The body size.
 		 */
-		inline void SetBodySize(const UINT32 bodySize) {
+		inline void SetBodySize(const SimpleMessageSize bodySize) {
 			VLSTACKTRACE("SimpleMessageHeader::SetBodySize", __FILE__, 
 				__LINE__);
 			this->PeekData()->BodySize = bodySize;
@@ -115,7 +115,8 @@ namespace net {
 		 *
 		 * @throw IllegalParamException If the message ID is a system ID.
 		 */
-		void SetMessageID(const UINT32 messageID, bool isSystemID = false);
+		void SetMessageID(const SimpleMessageID messageID, 
+            bool isSystemID = false);
 
 		/**
 		 * Assignment operator.

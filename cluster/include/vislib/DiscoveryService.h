@@ -275,8 +275,10 @@ namespace cluster {
                 const USHORT bindPort = DEFAULT_PORT);
 
             /**
-             * Create a new configuration with all parameters manually 
-             * configured.
+             * Create a new configuration with all automatically detected 
+             * broadcast address. The broadcast address of the subnet of 
+             * 'bindAddress' is used. Therefore, a valid adapter must be 
+             * specified and IPAddress::ANY is not acceptable.
              *
              * @param responseAddress
              * @param bindAddress
@@ -320,13 +322,30 @@ namespace cluster {
             }
 
             /**
-             * Answer the end point that the local receiver will be bound to.
+             * Answer the end point that the local receiver was requested to 
+             * bind to.
              *
              * @return The local socket end point.
              */
             inline const IPEndPoint& GetBindAddress(void) const {
                 return this->bindAddress;
             }
+
+            /**
+             * Answer the end point that the local receiver will be bound to. 
+             * Note that this might be different than the address the revceiver 
+             * was requested to bind to as we must handle the wrong behaviour of
+             * Linux.
+             *
+             * @return The local socket end point.
+             */
+#ifdef _WIN32
+            inline const IPEndPoint& GetBindAddressForReceiver(void) const {
+                return this->bindAddress;
+            }
+#else /* _WIN32 */
+            IPEndPoint GetBindAddressForReceiver(void) const;
+#endif /* _WIN32 */
 
             /**
              * Get the address family of the protocol that the discovery thread 
