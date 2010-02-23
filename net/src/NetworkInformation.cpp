@@ -757,8 +757,10 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
                 bestAddressIdx);
             for (SIZE_T i = 0, j = 0; i < NetworkInformation::adapters.Count(); 
                     i++) {
+                Confidence dummy; // TODO: consider to use in wildness 'calculation'
                 const UnicastAddressList& al 
-                    = NetworkInformation::adapters[i].GetUnicastAddresses();
+                    = NetworkInformation::adapters[i].GetUnicastAddresses(&dummy);
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Confidence for unicast address is %d", dummy);
                 if ((j <= bestAddressIdx) 
                         && (bestAddressIdx < j + al.Count())) {
                     outEndPoint.SetIPAddress(
@@ -2005,7 +2007,8 @@ bool vislib::net::NetworkInformation::processAdapterForLocalEndpointGuess(
     VLSTACKTRACE("NetworkInformation::processAdapterForLocalEndpointGuess", 
         __FILE__, __LINE__);
     GuessLocalEndPointCtx *ctx = static_cast<GuessLocalEndPointCtx *>(context);
-    UnicastAddressList al = adapter.GetUnicastAddresses();
+    NetworkInformation::Confidence dummy; // TODO: should be accounted in wildness!
+    UnicastAddressList al = adapter.GetUnicastAddresses(&dummy);
 
     ASSERT(ctx != NULL);
     ASSERT(ctx->Wildness != NULL);
