@@ -7,6 +7,7 @@
 
 #include "vislib/AbstractSimpleMessage.h"
 
+#include <climits>
 
 
 /*
