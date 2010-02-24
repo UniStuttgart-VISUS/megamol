@@ -67,6 +67,16 @@ namespace core {
         }
 
         /**
+         * Finds a module in the module graph
+         *
+         * @param name The name to search for
+         * @param forceRooted Start search at the root of the module graph
+         *
+         * @return The found object or NULL if no module matches
+         */
+        AbstractNamedObject *FindNamedObject(const char *name, bool forceRooted = false);
+
+        /**
          * Answer an iterator of the children.
          *
          * @return An iterator of the children.

@@ -56,7 +56,7 @@ namespace core {
         bool ConnectCall(megamol::core::Call *call) {
             this->Parent()->LockModuleGraph(true);
             if (call == NULL) {
-                this->SetStatusDisconnected();
+                this->SetStatusDisconnected(); // TODO: This is wrong! Reference counting!
                 this->Parent()->UnlockModuleGraph();
                 return true;
             }

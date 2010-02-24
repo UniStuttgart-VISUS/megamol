@@ -177,10 +177,12 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
-     // TODO: Replace (is deprecated)
-    jd = new JobDescription("rendermaster");
-    jd->AddModule(ModuleDescriptionManager::Instance() ->Find("RenderMaster"), "master");
-    jd->SetJobModuleID("master");
+    // job for the cluster controller head-node modules
+    jd = new JobDescription("clusterheadcontroller");
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl");
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterViewMaster"), "::cmaster");
+    jd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "::cmaster::register", "::cctrl::register");
+    jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
      // TODO: Replace (is deprecated)

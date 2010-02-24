@@ -200,14 +200,6 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze) = 0;
 
-        /**
-         * Sets the button state of a button of the 2d cursor. See
-         * 'vislib::graphics::Cursor2D' for additional information.
-         *
-         * @param button The button.
-         * @param down Flag whether the button is pressed, or not.
-         */
-
     protected:
 
         /** Typedef alias */

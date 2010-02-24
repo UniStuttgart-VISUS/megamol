@@ -6,8 +6,10 @@
  */
 #include "stdafx.h"
 #include "AbstractNamedObjectContainer.h"
+#include <cstring>
 #include "vislib/assert.h"
 #include "vislib/Log.h"
+#include "vislib/String.h"
 
 using namespace megamol::core;
 
@@ -97,6 +99,46 @@ AbstractNamedObject *AbstractNamedObjectContainer::findChild(
         }
     }
     return NULL;
+}
+
+
+/*
+ * AbstractNamedObjectContainer::FindNamedObject
+ */
+AbstractNamedObject *AbstractNamedObjectContainer::FindNamedObject(const char *name, bool forceRooted) {
+    AbstractNamedObject *f = NULL;
+    AbstractNamedObjectContainer *c = this;
+    const char *next = NULL;
+    vislib::StringA n;
+
+    if (::strncmp(name, "::", 2) == 0) {
+        forceRooted = true;
+        name += 2;
+    }
+    if (forceRooted) {
+        c = dynamic_cast<AbstractNamedObjectContainer*>(this->RootModule());
+        if (c == NULL) {
+            return NULL;
+        }
+    }
+
+    while (*name != 0) {
+        next = ::strstr(name, "::");
+        if (next != NULL) {
+            n = vislib::StringA(name, next - name);
+            name = next + 2;
+        } else {
+            n = name;
+            name += n.Length();
+        }
+        if (c == NULL) {
+            return NULL;
+        }
+        f = c->findChild(n);
+        c = dynamic_cast<AbstractNamedObjectContainer*>(f);
+    }
+
+    return f;
 }
 
 
