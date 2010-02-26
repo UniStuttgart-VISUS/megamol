@@ -12,6 +12,7 @@
 #include "view/CallRender3D.h"
 #include "param/EnumParam.h"
 #include "param/StringParam.h"
+#include "param/FilePathParam.h"
 #include "vislib/KeyCode.h"
 #include "vislib/Log.h"
 #include "vislib/mathfunctions.h"
@@ -33,7 +34,7 @@ misc::TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
         surStyle("style", "The rendering style for the surface"),
         testButton("test", "A test button for button testing"), bbox() {
 
-    this->filename.SetParameter(new param::StringParam(""));
+    this->filename.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filename);
 
     this->showVertices.SetParameter(new param::BoolParam(true));
@@ -239,7 +240,7 @@ void misc::TriSoupRenderer::tryLoadFile(void) {
     ARY_SAFE_DELETE(this->clusters);
 
     const vislib::TString& fn
-        = this->filename.Param<param::StringParam>()->Value();
+        = this->filename.Param<param::FilePathParam>()->Value();
     if (fn.IsEmpty()) {
         // no file to load
         return;
