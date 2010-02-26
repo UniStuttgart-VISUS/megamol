@@ -13,10 +13,34 @@ using namespace megamol::core::param;
 
 
 /*
+ * FilePathParam::FLAG_NONE
+ */
+const UINT32 FilePathParam::FLAG_NONE = 0x00000000;
+
+
+/*
+ * FilePathParam::FLAG_NOPATHCHANGE
+ */
+const UINT32 FilePathParam::FLAG_NOPATHCHANGE = 0x00000001;
+
+
+/*
+ * FilePathParam::FLAG_NOEXISTANCECHECK
+ */
+const UINT32 FilePathParam::FLAG_NOEXISTANCECHECK = 0x00000002;
+
+
+/*
+ * FilePathParam::FLAG_TOBECREATED
+ */
+const UINT32 FilePathParam::FLAG_TOBECREATED = 0x00000003;
+
+
+/*
  * FilePathParam::FilePathParam
  */
-FilePathParam::FilePathParam(const vislib::TString& initVal)
-        : AbstractParam(), val(initVal) {
+FilePathParam::FilePathParam(const vislib::TString& initVal, UINT32 flags)
+        : AbstractParam(), flags(flags), val(initVal) {
     // intentionally empty
 }
 
@@ -24,8 +48,8 @@ FilePathParam::FilePathParam(const vislib::TString& initVal)
 /*
  * FilePathParam::FilePathParam
  */
-FilePathParam::FilePathParam(const char *initVal)
-        : AbstractParam(), val(initVal) {
+FilePathParam::FilePathParam(const char *initVal, UINT32 flags)
+        : AbstractParam(), flags(flags), val(initVal) {
     // intentionally empty
 }
 
@@ -33,8 +57,8 @@ FilePathParam::FilePathParam(const char *initVal)
 /*
  * FilePathParam::FilePathParam
  */
-FilePathParam::FilePathParam(const wchar_t *initVal)
-        : AbstractParam(), val(initVal) {
+FilePathParam::FilePathParam(const wchar_t *initVal, UINT32 flags)
+        : AbstractParam(), flags(flags), val(initVal) {
     // intentionally empty
 }
 

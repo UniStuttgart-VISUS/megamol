@@ -212,7 +212,8 @@ special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->tileHeightSlot << new param::IntParam(1024, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
-    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png"); // TODO: Need to handle Write-To-files special
+    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png",
+        param::FilePathParam::FLAG_TOBECREATED);
     this->MakeSlotAvailable(&this->imageFilenameSlot);
 
     param::EnumParam *bkgnd = new param::EnumParam(0);

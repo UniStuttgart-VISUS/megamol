@@ -15,6 +15,7 @@
 #include "AbstractParam.h"
 #include "vislib/String.h"
 #include "vislib/tchar.h"
+#include "vislib/types.h"
 
 
 namespace megamol {
@@ -29,25 +30,48 @@ namespace param {
     public:
 
         /**
-         * Ctor.
-         *
-         * @param initVal The initial value
+         * No flags set
          */
-        FilePathParam(const vislib::TString& initVal);
+        static const UINT32 FLAG_NONE;
+
+        /**
+         * Flag that the file path must not be changed by the framework
+         */
+        static const UINT32 FLAG_NOPATHCHANGE;
+
+        /**
+         * Flag that the framework should not search for the file
+         */
+        static const UINT32 FLAG_NOEXISTANCECHECK;
+
+        /**
+         * Flags FLAG_NOPATHCHANGE and FLAG_NOEXISTANCECHECK combined
+         */
+        static const UINT32 FLAG_TOBECREATED;
 
         /**
          * Ctor.
          *
          * @param initVal The initial value
+         * @param flags The flags for the parameter
          */
-        FilePathParam(const char *initVal);
+        FilePathParam(const vislib::TString& initVal, UINT32 flags = FLAG_NONE);
 
         /**
          * Ctor.
          *
          * @param initVal The initial value
+         * @param flags The flags for the parameter
          */
-        FilePathParam(const wchar_t *initVal);
+        FilePathParam(const char *initVal, UINT32 flags = FLAG_NONE);
+
+        /**
+         * Ctor.
+         *
+         * @param initVal The initial value
+         * @param flags The flags for the parameter
+         */
+        FilePathParam(const wchar_t *initVal, UINT32 flags = FLAG_NONE);
 
         /**
          * Dtor.
@@ -129,6 +153,9 @@ namespace param {
         }
 
     private:
+
+        /** The flags of the parameter */
+        UINT32 flags;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
