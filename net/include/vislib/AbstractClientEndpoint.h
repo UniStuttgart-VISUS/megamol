@@ -1,5 +1,5 @@
 /*
- * AbstractClientEndpoint.h
+ * AbstractClientEndPoint.h
  *
  * Copyright (C) 2010 by Christoph Müller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
@@ -33,7 +33,7 @@ namespace net {
      * the same for different network families. It is, however, encouraged that
      * subclasses provide additional methods using their native address format.
      */
-    class AbstractClientEndpoint : public virtual ReferenceCounted {
+    class AbstractClientEndPoint : public virtual ReferenceCounted {
 
     public:
 
@@ -61,10 +61,10 @@ namespace net {
     protected:
 
         /** Ctor. */
-        AbstractClientEndpoint(void);
+        AbstractClientEndPoint(void);
 
         /** Dtor. */
-        virtual ~AbstractClientEndpoint(void);
+        virtual ~AbstractClientEndPoint(void);
 
     };
     

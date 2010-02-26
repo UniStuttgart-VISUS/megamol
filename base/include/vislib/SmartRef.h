@@ -86,7 +86,9 @@ namespace vislib {
          * return a smart reference on the new pointer.
          *
          * @param addRef Determines whether the new instance will increment the
-         *               reference count (default) or not.
+         *               reference count (default) or not. It is usually no good
+         *               idea setting this to false - you do it on your own
+         *               "because I know"-risk.
          *
          * @return A smart reference pointer with type 'Tp'.
          */

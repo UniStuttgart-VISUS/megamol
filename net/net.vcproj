@@ -276,7 +276,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\AbstractClientEndpoint.cpp"
+				RelativePath=".\src\AbstractClientEndPoint.cpp"
 				>
 			</File>
 			<File
@@ -292,7 +292,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\AbstractServerEndpoint.cpp"
+				RelativePath=".\src\AbstractServerEndPoint.cpp"
 				>
 			</File>
 			<File
@@ -321,6 +321,14 @@
 			</File>
 			<File
 				RelativePath=".\src\ClusterDiscoveryService.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CommServer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CommServerListener.cpp"
 				>
 			</File>
 			<File
@@ -446,7 +454,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractClientEndpoint.h"
+				RelativePath=".\include\vislib\AbstractClientEndPoint.h"
 				>
 			</File>
 			<File
@@ -462,7 +470,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\vislib\AbstractServerEndpoint.h"
+				RelativePath=".\include\vislib\AbstractServerEndPoint.h"
 				>
 			</File>
 			<File
@@ -491,6 +499,14 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\ClusterDiscoveryService.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\CommServer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\CommServerListener.h"
 				>
 			</File>
 			<File

@@ -1,0 +1,388 @@
+/*
+ * CommServer.cpp
+ *
+ * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
+ * Alle Rechte vorbehalten.
+ */
+
+#include "vislib/Socket.h"  // Must be first.
+#include "vislib/CommServer.h"
+
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/SocketException.h"
+#include "vislib/StringConverter.h"
+#include "vislib/SystemException.h"
+#include "vislib/TcpCommChannel.h"
+#include "vislib/Trace.h"
+
+
+/*
+ * vislib::net::CommServer::Configuration::Configuration
+ */
+vislib::net::CommServer::Configuration::Configuration(
+        AbstractServerEndPoint *serverEndPoint, const wchar_t *bindAddress)
+        : bindAddress(bindAddress), serverEndPoint(serverEndPoint) {
+    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::Configuration::Configuration
+ */
+vislib::net::CommServer::Configuration::Configuration(
+        SmartRef<AbstractServerEndPoint>& serverEndPoint, 
+        const wchar_t *bindAddress)
+        : bindAddress(bindAddress), serverEndPoint(serverEndPoint) {
+    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::Configuration::Configuration
+ */
+vislib::net::CommServer::Configuration::Configuration(
+        AbstractServerEndPoint *serverEndPoint, const char *bindAddress) 
+        : bindAddress(A2W(bindAddress)), serverEndPoint(serverEndPoint) {
+    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::Configuration::Configuration
+ */
+vislib::net::CommServer::Configuration::Configuration(
+        SmartRef<AbstractServerEndPoint>& serverEndPoint, 
+        const char *bindAddress)
+        : bindAddress(A2W(bindAddress)), serverEndPoint(serverEndPoint) {
+    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::Configuration::Configuration
+ */
+vislib::net::CommServer::Configuration::Configuration(
+        const Configuration& rhs) 
+        : bindAddress(rhs.bindAddress), serverEndPoint(rhs.serverEndPoint) {
+    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::Configuration::~Configuration
+ */
+vislib::net::CommServer::Configuration::~Configuration(void) {
+    VLSTACKTRACE("Configuration::~Configuration", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::CommServer
+ */
+vislib::net::CommServer::CommServer(void) {
+    VLSTACKTRACE("CommServer::CommServer", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::~CommServer
+ */
+vislib::net::CommServer::~CommServer(void) {
+    VLSTACKTRACE("CommServer::~CommServer", __FILE__, __LINE__);
+}
+
+
+/*
+ * vislib::net::CommServer::AddListener
+ */
+void vislib::net::CommServer::AddListener(CommServerListener *listener) {
+    VLSTACKTRACE("CommServer::AddListener", __FILE__, __LINE__);
+    ASSERT(listener != NULL);
+
+    this->listeners.Lock();
+    if ((listener != NULL) && !this->listeners.Contains(listener)) {
+        this->listeners.Append(listener);
+    }
+    this->listeners.Unlock();
+}
+
+
+///*
+// * vislib::net::CommServer::ConfigureAsTcpServer
+// */
+//void vislib::net::CommServer::ConfigureAsTcpServer(const char *bindAddress,
+//        const UINT64 tcpChannelFlags) {
+//    VLSTACKTRACE("CommServer::ConfigureAsTcpServer", __FILE__, __LINE__);
+//    this->createNewTcpServerEndPoint();
+//
+//    try {
+//        this->serverEndPoint->Bind(bindAddress);
+//    } catch (...) {
+//        this->serverEndPoint.Release();
+//        throw;
+//    }
+//}
+//
+//
+///*
+// * vislib::net::CommServer::ConfigureAsTcpServer
+// */
+//void vislib::net::CommServer::ConfigureAsTcpServer(const wchar_t *bindAddress, 
+//        const UINT64 tcpChannelFlags) {
+//    VLSTACKTRACE("CommServer::ConfigureAsTcpServer", __FILE__, __LINE__);
+//    this->createNewTcpServerEndPoint();
+//
+//    try {
+//        this->serverEndPoint->Bind(bindAddress);
+//    } catch (...) {
+//        this->serverEndPoint.Release();
+//        throw;
+//    }
+//}
+
+
+/*
+ * vislib::net::CommServer::RemoveListener
+ */
+void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
+    VLSTACKTRACE("CommServer::AddListener", __FILE__, __LINE__);
+    ASSERT(listener != NULL);
+    this->listeners.RemoveAll(listener);
+}
+
+
+/*
+ * vislib::net::CommServer::Run
+ */
+DWORD vislib::net::CommServer::Run(void *configuration) {
+    VLSTACKTRACE("CommServer::Run", __FILE__, __LINE__);
+    SmartRef<Configuration> config(static_cast<Configuration *>(configuration));
+
+    DWORD retval = 0;
+    bool doServe = true;
+
+    /* Sanity checks. */
+    if (!this->serverEndPoint.IsNull()) {
+        throw IllegalStateException("CommServer cannot run in parallel.", 
+            __FILE__, __LINE__);
+    }
+    if (config->GetServerEndPoint().IsNull()) {
+        throw IllegalParamException("CommServer requires a non-NULL end point "
+            "in its configuration.", __FILE__, __LINE__);
+    }
+
+    this->serverEndPoint = config->GetServerEndPoint();
+
+    /* Prepare the socket subsystem. */
+    try {
+        Socket::Startup();
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Socket::Startup succeeded in "
+            "CommServer::Run\n.");
+    } catch (SocketException e) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Socket::Startup in CommServer::Run "
+            "failed: %s\n", e.GetMsgA());
+        retval = e.GetErrorCode();
+        this->fireServerError(e);
+        return retval;
+    }
+
+    /* Bind the end point. */
+    try {
+        this->serverEndPoint->Bind(config->GetBindAddress().PeekBuffer());
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer bound to %ls.\n",
+            config->GetBindAddress().PeekBuffer());
+    } catch (sys::SystemException se) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Binding server end point to specified "
+            "address failed: %s\n", se.GetMsgA());
+        retval = se.GetErrorCode();
+        this->fireServerError(se);
+    } catch (Exception e) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Binding server end point to specified "
+            "address failed: %s\n", e.GetMsgA());
+        retval = -1;
+        this->fireServerError(e);
+    }
+
+    /* Put the connection in listening state. */
+    try {
+        this->serverEndPoint->Listen(SOMAXCONN);
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer is now in listen "
+            "state.\n");
+    } catch (sys::SystemException se) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Putting server end point in listen "
+            "state failed: %s\n", se.GetMsgA());
+        retval = se.GetErrorCode();
+        this->fireServerError(se);
+    } catch (Exception e) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Putting server end point in listen "
+            "state failed: %s\n", e.GetMsgA());
+        retval = -1;
+        this->fireServerError(e);
+    }
+
+    /* Enter server loop if no error so far. */
+    if (retval == 0) {
+        try {
+            while (doServe) {
+                SmartRef<AbstractCommChannel> channel 
+                    = this->serverEndPoint->Accept();
+                VLTRACE(Trace::LEVEL_VL_INFO, "CommServer accepted new "
+                    "connection.\n");
+
+                if (!this->fireNewConnection(channel)) {
+                    VLTRACE(Trace::LEVEL_VL_INFO, "CommServer is closing "
+                        "connection, because none of the registered listeners "
+                        "is interested in the client.\n");
+                    try {
+                        channel->Close();
+                        channel.Release();
+                    } catch (Exception e) {
+                        VLTRACE(Trace::LEVEL_VL_WARN, "Closing unused peer "
+                            "connection caused an error: %s\n", e.GetMsgA());
+                    }
+                }
+            }
+        } catch (sys::SystemException se) {
+            VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in CommServer: "
+                "%s\n", se.GetMsgA());
+            retval = se.GetErrorCode();
+            doServe = this->fireServerError(se);
+        } catch (Exception e) {
+            VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in CommServer: "
+                "%s\n", e.GetMsgA());
+            retval = -1;
+            doServe = this->fireServerError(e);
+        }
+    }
+
+    /* Clean up connection and socket library. */
+    this->Terminate();
+    this->serverEndPoint.Release();
+
+    try {
+        Socket::Cleanup();
+    } catch (SocketException e) {
+        VLTRACE(VISLIB_TRCELVL_WARN, "Socket::Cleanup in CommServer::Run "
+            "failed: %s\n", e.GetMsgA());
+        retval = e.GetErrorCode();
+        this->fireServerError(e);
+    }
+
+    /* Inform listener that server exits. */
+    this->fireServerExited();
+
+    return retval;
+}
+
+
+/*
+ * vislib::net::CommServer::Terminate
+ */
+bool vislib::net::CommServer::Terminate(void) {
+    VLSTACKTRACE("CommServer::Terminate", __FILE__, __LINE__);
+    try {
+        this->serverEndPoint.DynamicCast<AbstractCommChannel>()->Close();
+    } catch (Exception e) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "Exception when shutting down "
+            "CommServer: %s. This is usually no problem.", e.GetMsgA());
+    }
+    return true;
+}
+
+
+/*
+ * vislib::net::CommServer::createNewTcpServerEndPoint
+ */
+void vislib::net::CommServer::createNewTcpServerEndPoint(void) {
+    VLSTACKTRACE("CommServer::createNewTcpServerEndPoint", __FILE__, __LINE__);
+    if (this->serverEndPoint.IsNull()) {
+        this->serverEndPoint = SmartRef<AbstractServerEndPoint>(
+            new TcpCommChannel(), false);
+
+        //if (this->IsSharingAddress()) {
+        //    // TODO: Problems with admin rights
+        //    this->socket.SetExclusiveAddrUse(false);
+        //}
+        //if (this->IsReuseAddress()) {
+        //    this->socket.SetReuseAddr(true);
+        //}
+    } else {
+        throw IllegalStateException("The server cannot be configured while it "
+            "is running.", __FILE__, __LINE__);
+    }
+}
+
+
+/*
+ * vislib::net::CommServer::fireNewConnection
+ */
+bool vislib::net::CommServer::fireNewConnection(
+        SmartRef<AbstractCommChannel>& channel) {
+    VLSTACKTRACE("CommServer::fireNewConnection", __FILE__, __LINE__);
+    bool retval = false;
+
+    this->listeners.Lock();
+    ListenerList::Iterator it = this->listeners.GetIterator();
+    while (it.HasNext()) {
+        if (it.Next()->OnNewConnection(*this, channel)) {
+            retval = true;
+            break;
+        }
+    }
+    this->listeners.Unlock();
+
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "CommServer informed "
+        "listeners about new connection. Was accepted: %d\n", retval);
+    return retval;
+}
+
+
+/*
+ * vislib::net::CommServer::fireServerError
+ */
+bool vislib::net::CommServer::fireServerError(
+        const vislib::Exception& exception) {
+    VLSTACKTRACE("CommServer::fireServerError", __FILE__, __LINE__);
+    bool retval = true;
+
+    this->listeners.Lock();
+    ListenerList::Iterator it = this->listeners.GetIterator();
+    while (it.HasNext()) {
+        retval = it.Next()->OnServerError(*this, exception) && retval;
+    }
+    this->listeners.Unlock();
+
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "CommServer "
+        "received exit request from registered error listener: %d\n", 
+        retval);
+    return retval;
+}
+
+
+/*
+ * vislib::net::CommServer::fireServerExited
+ */
+void vislib::net::CommServer::fireServerExited(void) {
+    VLSTACKTRACE("CommServer::fireServerExited", __FILE__, __LINE__);
+    this->listeners.Lock();
+    ListenerList::Iterator it = this->listeners.GetIterator();
+    while (it.HasNext()) {
+        it.Next()->OnServerExited(*this);
+    }
+    this->listeners.Unlock();
+}
+
+
+/*
+ * vislib::net::CommServer::fireServerStarted
+ */
+void vislib::net::CommServer::fireServerStarted(void) {
+    VLSTACKTRACE("CommServer::fireServerStarted", __FILE__, __LINE__);
+    this->listeners.Lock();
+    ListenerList::Iterator it = this->listeners.GetIterator();
+    while (it.HasNext()) {
+        it.Next()->OnServerStarted(*this);
+    }
+    this->listeners.Unlock();
+}

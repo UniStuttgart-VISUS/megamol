@@ -29,8 +29,8 @@ const UINT64 vislib::net::TcpCommChannel::FLAG_NODELAY = 0x00000001;
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
 vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) 
-        : AbstractBidiCommChannel(),AbstractClientEndpoint() , 
-        AbstractServerEndpoint(), flags(flags) {
+        : AbstractBidiCommChannel(),AbstractClientEndPoint() , 
+        AbstractServerEndPoint(), flags(flags) {
      VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
 }
 
@@ -39,8 +39,8 @@ vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags)
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
 vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket) 
-        : AbstractBidiCommChannel(), AbstractClientEndpoint() , 
-        AbstractServerEndpoint(), socket(socket) {
+        : AbstractBidiCommChannel(), AbstractClientEndPoint() , 
+        AbstractServerEndPoint(), socket(socket) {
     VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
 }
 

@@ -17,8 +17,8 @@
 
 #include "vislib/Socket.h"          // Must be first.
 #include "vislib/AbstractBidiCommChannel.h"
-#include "vislib/AbstractClientEndpoint.h"
-#include "vislib/AbstractServerEndpoint.h"
+#include "vislib/AbstractClientEndPoint.h"
+#include "vislib/AbstractServerEndPoint.h"
 
 
 namespace vislib {
@@ -27,8 +27,8 @@ namespace net {
 
     /**
      * This class implements a communication channel based on TCP/IP sockets.
-     * The TCP/IP version supports AbstractClientEndpoint and
-     * AbstractServerEndpoint as well as AbstractBidiCommChannel.
+     * The TCP/IP version supports AbstractClientEndPoint and
+     * AbstractServerEndPoint as well as AbstractBidiCommChannel.
      *
      * Q: Why does TcpCommChannel not support vislib::net::SocketAddress?
      * A: TcpCommChannel is designed to support IPv6 from the beginning. 
@@ -36,8 +36,8 @@ namespace net {
      *    for new programs.
      */
     class TcpCommChannel : public AbstractBidiCommChannel,
-            public AbstractClientEndpoint, 
-            public AbstractServerEndpoint {
+            public AbstractClientEndPoint, 
+            public AbstractServerEndPoint {
 
     public:
 

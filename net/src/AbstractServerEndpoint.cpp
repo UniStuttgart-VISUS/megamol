@@ -1,39 +1,39 @@
 /*
- * AbstractServerEndpoint.cpp
+ * AbstractServerEndPoint.cpp
  *
  * Copyright (C) 2010 by Christoph Müller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractServerEndpoint.h"
+#include "vislib/AbstractServerEndPoint.h"
 
 #include "vislib/StackTrace.h"
 #include "vislib/StringConverter.h"
 
 
 /*
- * vislib::net::AbstractServerEndpoint::Bind
+ * vislib::net::AbstractServerEndPoint::Bind
  */
-void vislib::net::AbstractServerEndpoint::Bind(const char *address) {
-     VLSTACKTRACE("AbstractServerEndpoint::Bind", __FILE__, __LINE__);
+void vislib::net::AbstractServerEndPoint::Bind(const char *address) {
+     VLSTACKTRACE("AbstractServerEndPoint::Bind", __FILE__, __LINE__);
      this->Bind(A2W(address));
 }
 
 
 /*
- * vislib::net::AbstractServerEndpoint::AbstractServerEndpoint
+ * vislib::net::AbstractServerEndPoint::AbstractServerEndPoint
  */
-vislib::net::AbstractServerEndpoint::AbstractServerEndpoint(void) {
-     VLSTACKTRACE("AbstractServerEndpoint::AbstractServerEndpoint", __FILE__,
+vislib::net::AbstractServerEndPoint::AbstractServerEndPoint(void) {
+     VLSTACKTRACE("AbstractServerEndPoint::AbstractServerEndPoint", __FILE__,
         __LINE__);
 }
 
 
 /*
- * vislib::net::AbstractServerEndpoint::~AbstractServerEndpoint
+ * vislib::net::AbstractServerEndPoint::~AbstractServerEndPoint
  */
-vislib::net::AbstractServerEndpoint::~AbstractServerEndpoint(void) {
-     VLSTACKTRACE("AbstractServerEndpoint::~AbstractServerEndpoint", __FILE__,
+vislib::net::AbstractServerEndPoint::~AbstractServerEndPoint(void) {
+     VLSTACKTRACE("AbstractServerEndPoint::~AbstractServerEndPoint", __FILE__,
         __LINE__);
 }
