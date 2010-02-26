@@ -47,15 +47,6 @@ namespace param {
         virtual void Definition(vislib::RawStorage& outDef) const = 0;
 
         /**
-         * Gets whether the parameter is visible in the gui.
-         *
-         * @return 'true' if the parameter is visible in the gui.
-         */
-        inline bool IsVisible(void) const {
-            return this->visible;
-        }
-
-        /**
          * Tries to parse the given string as value for this parameter and
          * sets the new value if successful. This also triggers the update
          * mechanism of the slot this parameter is assigned to.
@@ -77,10 +68,8 @@ namespace param {
 
         /**
          * Ctor.
-         *
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        AbstractParam(bool visible = true);
+        AbstractParam(void);
 
         /**
          * Answers whether this parameter object is assigned to a public slot.
@@ -100,9 +89,6 @@ namespace param {
 
         /** The holding slot */
         class AbstractParamSlot *slot;
-
-        /** flag whether or not this parameter is visible from the gui */
-        bool visible;
 
     };
 

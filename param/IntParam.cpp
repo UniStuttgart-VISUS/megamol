@@ -15,8 +15,8 @@ using namespace megamol::core::param;
 /*
  * IntParam::IntParam
  */
-IntParam::IntParam(int initVal, bool visible)
-        : AbstractParam(visible), val(initVal), minVal(INT_MIN),
+IntParam::IntParam(int initVal)
+        : AbstractParam(), val(initVal), minVal(INT_MIN),
         maxVal(INT_MAX) {
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
@@ -27,8 +27,8 @@ IntParam::IntParam(int initVal, bool visible)
 /*
  * IntParam::IntParam
  */
-IntParam::IntParam(int initVal, int minVal, bool visible)
-        : AbstractParam(visible), val(initVal), minVal(minVal),
+IntParam::IntParam(int initVal, int minVal)
+        : AbstractParam(), val(initVal), minVal(minVal),
         maxVal(INT_MAX) {
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
@@ -39,8 +39,8 @@ IntParam::IntParam(int initVal, int minVal, bool visible)
 /*
  * IntParam::IntParam
  */
-IntParam::IntParam(int initVal, int minVal, int maxVal, bool visible)
-        : AbstractParam(visible), val(initVal), minVal(minVal),
+IntParam::IntParam(int initVal, int minVal, int maxVal)
+        : AbstractParam(), val(initVal), minVal(minVal),
         maxVal(maxVal) {
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);

@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "VIMDataSource.h"
+#include "param/FilePathParam.h"
 #include "param/StringParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
@@ -327,7 +328,7 @@ moldyn::VIMDataSource::VIMDataSource(void) : view::AnimDataModule(),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), typeCnt(0), types(NULL), frameIdx(NULL), boxScaling(1.0f) {
 
-    this->filename.SetParameter(new param::StringParam(""));
+    this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&VIMDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
 
@@ -523,13 +524,13 @@ bool moldyn::VIMDataSource::filenameChanged(param::ParamSlot& slot) {
     } else {
         this->file->Close();
     }
-    ASSERT(this->filename.Param<param::StringParam>() != NULL);
+    ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<param::StringParam>()->Value(),
+    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to open VIM-File \"%s\".", vislib::StringA(
-            this->filename.Param<param::StringParam>()->Value()).PeekBuffer());
+            this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
         this->setFrameCount(1);
@@ -539,10 +540,10 @@ bool moldyn::VIMDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     this->buildFrameTable();
-    if (!this->readHeader(this->filename.Param<param::StringParam>()->Value())) {
+    if (!this->readHeader(this->filename.Param<param::FilePathParam>()->Value())) {
         this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to read VIM-Header from file \"%s\". Wrong format?", vislib::StringA(
-            this->filename.Param<param::StringParam>()->Value()).PeekBuffer());
+            this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
         this->file->Close();
         SAFE_DELETE(this->file);

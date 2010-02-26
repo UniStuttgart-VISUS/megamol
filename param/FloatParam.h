@@ -30,18 +30,16 @@ namespace param {
          * Ctor.
          *
          * @param initVal The initial value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        FloatParam(float initVal, bool visible = true);
+        FloatParam(float initVal);
 
         /**
          * Ctor.
          *
          * @param initVal The initial value
          * @param minVal The minimum value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        FloatParam(float initVal, float minVal, bool visible = true);
+        FloatParam(float initVal, float minVal);
 
         /**
          * Ctor.
@@ -49,10 +47,8 @@ namespace param {
          * @param initVal The initial value
          * @param minVal The minimum value
          * @param maxVal The maximum value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        FloatParam(float initVal, float minVal, float maxVal,
-            bool visible = true);
+        FloatParam(float initVal, float minVal, float maxVal);
 
         /**
          * Dtor.

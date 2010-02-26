@@ -2123,6 +2123,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\param\FilePathParam.h"
+					>
+				</File>
+				<File
 					RelativePath=".\param\FloatParam.h"
 					>
 				</File>
@@ -2180,6 +2184,10 @@
 				</File>
 				<File
 					RelativePath=".\param\EnumParam.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\param\FilePathParam.cpp"
 					>
 				</File>
 				<File

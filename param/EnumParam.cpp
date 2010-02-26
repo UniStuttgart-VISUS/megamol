@@ -17,8 +17,8 @@ using namespace megamol::core::param;
 /*
  * EnumParam::EnumParam
  */
-EnumParam::EnumParam(int initVal, bool visible)
-        : AbstractParam(visible), val(initVal), typepairs() {
+EnumParam::EnumParam(int initVal)
+        : AbstractParam(), val(initVal), typepairs() {
     // intentionally empty
 }
 

@@ -30,7 +30,7 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
         this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]));
     this->MakeSlotAvailable(&this->bkgndColSlot);
 
-    this->softCursorSlot << new param::BoolParam(this->softCursor, false);
+    this->softCursorSlot << new param::BoolParam(this->softCursor);
     this->MakeSlotAvailable(&this->softCursorSlot);
 
 }

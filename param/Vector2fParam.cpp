@@ -18,8 +18,8 @@ using namespace megamol::core;
  * param::Vector2fParam::Vector2fParam
  */
 param::Vector2fParam::Vector2fParam(
-        const vislib::math::Vector<float, 2> &initVal, bool visible)
-        : AbstractParam(visible), val(initVal),
+        const vislib::math::Vector<float, 2> &initVal)
+        : AbstractParam(), val(initVal),
         minVal(-FLT_MAX, -FLT_MAX),
         maxVal(FLT_MAX, FLT_MAX) {
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
@@ -33,8 +33,8 @@ param::Vector2fParam::Vector2fParam(
  */
 param::Vector2fParam::Vector2fParam(
         const vislib::math::Vector<float, 2> &initVal,
-        const vislib::math::Vector<float, 2> &minVal, bool visible)
-        : AbstractParam(visible), val(initVal), minVal(minVal),
+        const vislib::math::Vector<float, 2> &minVal)
+        : AbstractParam(), val(initVal), minVal(minVal),
         maxVal(FLT_MAX, FLT_MAX) {
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
@@ -48,8 +48,8 @@ param::Vector2fParam::Vector2fParam(
 param::Vector2fParam::Vector2fParam(
         const vislib::math::Vector<float, 2> &initVal,
         const vislib::math::Vector<float, 2> &minVal,
-        const vislib::math::Vector<float, 2> &maxVal, bool visible)
-        : AbstractParam(visible), val(initVal), minVal(minVal),
+        const vislib::math::Vector<float, 2> &maxVal)
+        : AbstractParam(), val(initVal), minVal(minVal),
         maxVal(maxVal) {
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));

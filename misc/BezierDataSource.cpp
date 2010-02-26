@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "BezierDataSource.h"
 #include "BezierDataCall.h"
-#include "param/StringParam.h"
+#include "param/FilePathParam.h"
 #include "vislib/BezierCurve.h"
 #include "vislib/Point.h"
 /*
@@ -40,7 +40,7 @@ misc::BezierDataSource::BezierDataSource(void) : Module(),
         minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f), maxY(1.0f),
         maxZ(1.0f), curves(), datahash(0) {
 
-    this->filenameSlot << new param::StringParam("");
+    this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->getDataSlot.SetCallback("BezierDataCall", "GetData",

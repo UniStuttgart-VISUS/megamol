@@ -30,9 +30,8 @@ namespace param {
          * Ctor.
          *
          * @param initVal The initial state value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        BoolParam(bool initVal, bool visible = true);
+        BoolParam(bool initVal);
 
         /**
          * Dtor.

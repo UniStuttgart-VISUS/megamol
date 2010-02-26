@@ -12,6 +12,7 @@
 #include "param/BoolParam.h"
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
+#include "param/FilePathParam.h"
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
 #include "vislib/forceinline.h"
@@ -752,7 +753,7 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         headerMaxZ(1.0f), minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f),
         maxY(1.0f), maxZ(1.0f), minC(0.0f), maxC(1.0f), datahash(0) {
 
-    this->filenameSlot << new param::StringParam("");
+    this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData",
@@ -937,13 +938,13 @@ void moldyn::IMDAtomDataSource::assertData(void) {
     this->clear();
 
     vislib::sys::MemmappedFile file;
-    vislib::TString filename = this->filenameSlot.Param<param::StringParam>()->Value();
+    vislib::TString filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
     this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename, vislib::sys::File::READ_ONLY,
             vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to open imd file %s\n", vislib::StringA(
-            this->filenameSlot.Param<param::StringParam>()->Value()).PeekBuffer());
+            this->filenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
         return;
     }
 

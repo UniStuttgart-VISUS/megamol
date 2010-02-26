@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "SIFFDataSource.h"
+#include "param/FilePathParam.h"
 #include "param/StringParam.h"
 #include "MultiParticleDataCall.h"
 #include "vislib/Log.h"
@@ -27,7 +28,7 @@ moldyn::SIFFDataSource::SIFFDataSource(void) : Module(),
         getDataSlot("getdata", "Slot to request data from this data source."),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data(), datahash(0) {
 
-    this->filenameSlot.SetParameter(new param::StringParam(""));
+    this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->filenameSlot.SetUpdateCallback(&SIFFDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filenameSlot);
 
@@ -52,7 +53,7 @@ moldyn::SIFFDataSource::~SIFFDataSource(void) {
  * moldyn::SIFFDataSource::create
  */
 bool moldyn::SIFFDataSource::create(void) {
-    if (!this->filenameSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+    if (!this->filenameSlot.Param<param::FilePathParam>()->Value().IsEmpty()) {
         this->filenameChanged(this->filenameSlot);
     }
     return true;
@@ -85,11 +86,11 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
     vislib::sys::MemmappedFile file;
 
-    if (!file.Open(this->filenameSlot.Param<param::StringParam>()->Value(),
+    if (!file.Open(this->filenameSlot.Param<param::FilePathParam>()->Value(),
             File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to open file \"%s\"", vislib::StringA(
-            this->filenameSlot.Param<param::StringParam>()->Value()).PeekBuffer());
+            this->filenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
         return true; // reset dirty flag!
     }
 

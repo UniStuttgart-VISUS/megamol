@@ -30,18 +30,16 @@ namespace param {
          * Ctor.
          *
          * @param initVal The initial value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        IntParam(int initVal, bool visible = true);
+        IntParam(int initVal);
 
         /**
          * Ctor.
          *
          * @param initVal The initial value
          * @param minVal The minimum value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        IntParam(int initVal, int minVal, bool visible = true);
+        IntParam(int initVal, int minVal);
 
         /**
          * Ctor.
@@ -49,9 +47,8 @@ namespace param {
          * @param initVal The initial value
          * @param minVal The minimum value
          * @param maxVal The maximum value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        IntParam(int initVal, int minVal, int maxVal, bool visible = true);
+        IntParam(int initVal, int minVal, int maxVal);
 
         /**
          * Dtor.

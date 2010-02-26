@@ -34,7 +34,7 @@ namespace param {
          * @param initVal The initial value
          * @param visible If 'true' the parameter is visible in the gui.
          */
-        StringParam(const vislib::TString& initVal, bool visible = true);
+        StringParam(const vislib::TString& initVal);
 
         /**
          * Ctor.

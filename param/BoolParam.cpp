@@ -14,8 +14,8 @@ using namespace megamol::core::param;
 /*
  * BoolParam::BoolParam
  */
-BoolParam::BoolParam(bool initVal, bool visible)
-        : AbstractParam(visible), val(initVal) {
+BoolParam::BoolParam(bool initVal)
+        : AbstractParam(), val(initVal) {
     // intentionally empty
 }
 

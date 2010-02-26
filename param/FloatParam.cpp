@@ -15,8 +15,8 @@ using namespace megamol::core::param;
 /*
  * FloatParam::FloatParam
  */
-FloatParam::FloatParam(float initVal, bool visible)
-        : AbstractParam(visible), val(initVal), minVal(-FLT_MAX),
+FloatParam::FloatParam(float initVal)
+        : AbstractParam(), val(initVal), minVal(-FLT_MAX),
         maxVal(FLT_MAX) {
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
@@ -27,8 +27,8 @@ FloatParam::FloatParam(float initVal, bool visible)
 /*
  * FloatParam::FloatParam
  */
-FloatParam::FloatParam(float initVal, float minVal, bool visible)
-        : AbstractParam(visible), val(initVal), minVal(minVal),
+FloatParam::FloatParam(float initVal, float minVal)
+        : AbstractParam(), val(initVal), minVal(minVal),
         maxVal(FLT_MAX) {
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
@@ -39,9 +39,8 @@ FloatParam::FloatParam(float initVal, float minVal, bool visible)
 /*
  * FloatParam::FloatParam
  */
-FloatParam::FloatParam(float initVal, float minVal, float maxVal,
-        bool visible) : AbstractParam(visible), val(initVal),
-        minVal(minVal), maxVal(maxVal) {
+FloatParam::FloatParam(float initVal, float minVal, float maxVal)
+        : AbstractParam(), val(initVal), minVal(minVal), maxVal(maxVal) {
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);

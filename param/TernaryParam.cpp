@@ -14,8 +14,8 @@ using namespace megamol::core::param;
 /*
  * TernaryParam::TernaryParam
  */
-TernaryParam::TernaryParam(const vislib::math::Ternary& initVal, bool visible)
-        : AbstractParam(visible), val(initVal) {
+TernaryParam::TernaryParam(const vislib::math::Ternary& initVal)
+        : AbstractParam(), val(initVal) {
     // intentionally empty
 }
 

@@ -1,69 +1,69 @@
 /*
- * StringParam.cpp
+ * FilePathParam.cpp
  *
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "StringParam.h"
+#include "FilePathParam.h"
 #include "vislib/StringConverter.h"
 
 using namespace megamol::core::param;
 
 
 /*
- * StringParam::StringParam
+ * FilePathParam::FilePathParam
  */
-StringParam::StringParam(const vislib::TString& initVal)
+FilePathParam::FilePathParam(const vislib::TString& initVal)
         : AbstractParam(), val(initVal) {
     // intentionally empty
 }
 
 
 /*
- * StringParam::StringParam
+ * FilePathParam::FilePathParam
  */
-StringParam::StringParam(const char *initVal)
+FilePathParam::FilePathParam(const char *initVal)
         : AbstractParam(), val(initVal) {
     // intentionally empty
 }
 
 
 /*
- * StringParam::StringParam
+ * FilePathParam::FilePathParam
  */
-StringParam::StringParam(const wchar_t *initVal)
+FilePathParam::FilePathParam(const wchar_t *initVal)
         : AbstractParam(), val(initVal) {
     // intentionally empty
 }
 
 
 /*
- * StringParam::~StringParam
+ * FilePathParam::~FilePathParam
  */
-StringParam::~StringParam(void) {
+FilePathParam::~FilePathParam(void) {
     // intentionally empty
 }
 
 
 /*
- * StringParam::Definition
+ * FilePathParam::Definition
  */
-void StringParam::Definition(vislib::RawStorage& outDef) const {
+void FilePathParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
 #if defined(UNICODE) || defined(_UNICODE)
-    memcpy(outDef.AsAt<char>(0), "MMSTRW", 6);
+    memcpy(outDef.AsAt<char>(0), "MMFILW", 6);
 #else  /* defined(UNICODE) || defined(_UNICODE) */
-    memcpy(outDef.AsAt<char>(0), "MMSTRA", 6);
+    memcpy(outDef.AsAt<char>(0), "MMFILA", 6);
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 }
 
 
 /*
- * StringParam::ParseValue
+ * FilePathParam::ParseValue
  */
-bool StringParam::ParseValue(const vislib::TString& v) {
+bool FilePathParam::ParseValue(const vislib::TString& v) {
     try {
         this->SetValue(v);
         return true;
@@ -74,9 +74,9 @@ bool StringParam::ParseValue(const vislib::TString& v) {
 
 
 /*
- * StringParam::SetValue
+ * FilePathParam::SetValue
  */
-void StringParam::SetValue(const vislib::TString& v, bool setDirty) {
+void FilePathParam::SetValue(const vislib::TString& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
         if (setDirty) this->setDirty();
@@ -85,9 +85,9 @@ void StringParam::SetValue(const vislib::TString& v, bool setDirty) {
 
 
 /*
- * StringParam::SetValue
+ * FilePathParam::SetValue
  */
-void StringParam::SetValue(const char *v, bool setDirty) {
+void FilePathParam::SetValue(const char *v, bool setDirty) {
     if (!this->val.Equals(A2T(v))) {
         this->val = v;
         if (setDirty) this->setDirty();
@@ -96,9 +96,9 @@ void StringParam::SetValue(const char *v, bool setDirty) {
 
 
 /*
- * StringParam::SetValue
+ * FilePathParam::SetValue
  */
-void StringParam::SetValue(const wchar_t *v, bool setDirty) {
+void FilePathParam::SetValue(const wchar_t *v, bool setDirty) {
     if (!this->val.Equals(W2T(v))) {
         this->val = v;
         if (setDirty) this->setDirty();
@@ -107,8 +107,8 @@ void StringParam::SetValue(const wchar_t *v, bool setDirty) {
 
 
 /*
- * StringParam::ValueString
+ * FilePathParam::ValueString
  */
-vislib::TString StringParam::ValueString(void) const {
+vislib::TString FilePathParam::ValueString(void) const {
     return this->val;
 }

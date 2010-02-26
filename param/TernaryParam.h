@@ -31,9 +31,8 @@ namespace param {
          * Ctor.
          *
          * @param initVal The initial state value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        TernaryParam(const vislib::math::Ternary& initVal, bool visible = true);
+        TernaryParam(const vislib::math::Ternary& initVal);
 
         /**
          * Dtor.

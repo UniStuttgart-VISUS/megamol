@@ -31,21 +31,17 @@ namespace param {
          * Ctor.
          *
          * @param initVal The initial value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        Vector4fParam(const vislib::math::Vector<float, 4> &initVal,
-            bool visible = true);
+        Vector4fParam(const vislib::math::Vector<float, 4> &initVal);
 
         /**
          * Ctor.
          *
          * @param initVal The initial value
          * @param minVal The minimum value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
         Vector4fParam(const vislib::math::Vector<float, 4> &initVal,
-            const vislib::math::Vector<float, 4> &minVal,
-            bool visible = true);
+            const vislib::math::Vector<float, 4> &minVal);
 
         /**
          * Ctor.
@@ -53,12 +49,10 @@ namespace param {
          * @param initVal The initial value
          * @param minVal The minimum value
          * @param maxVal The maximum value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
         Vector4fParam(const vislib::math::Vector<float, 4> &initVal,
             const vislib::math::Vector<float, 4> &minVal,
-            const vislib::math::Vector<float, 4> &maxVal,
-            bool visible = true);
+            const vislib::math::Vector<float, 4> &maxVal);
 
         /**
          * Dtor.

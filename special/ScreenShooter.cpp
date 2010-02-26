@@ -15,6 +15,7 @@
 #include "param/EnumParam.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
+#include "param/FilePathParam.h"
 #include "png.h"
 #include "view/CallRenderView.h"
 #include "vislib/assert.h"
@@ -211,7 +212,7 @@ special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->tileHeightSlot << new param::IntParam(1024, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
-    this->imageFilenameSlot << new param::StringParam("Unnamed.png");
+    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png"); // TODO: Need to handle Write-To-files special
     this->MakeSlotAvailable(&this->imageFilenameSlot);
 
     param::EnumParam *bkgnd = new param::EnumParam(0);
@@ -298,7 +299,7 @@ void special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     data.imgHeight = static_cast<UINT>(vislib::math::Max(0, this->imgHeightSlot.Param<param::IntParam>()->Value()));
     data.tileWidth = static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<param::IntParam>()->Value()));
     data.tileHeight = static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<param::IntParam>()->Value()));
-    vislib::TString filename = this->imageFilenameSlot.Param<param::StringParam>()->Value();
+    vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
     int bkgndMode = this->backgroundSlot.Param<param::EnumParam>()->Value();
     bool closeAfter = this->closeAfterShotSlot.Param<param::BoolParam>()->Value();
     data.bpp = (bkgndMode == 1) ? 4 : 3;

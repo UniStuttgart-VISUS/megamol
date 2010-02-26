@@ -33,9 +33,8 @@ namespace param {
          * Ctor.
          *
          * @param initVal The initial value
-         * @param visible If 'true' the parameter is visible in the gui.
          */
-        EnumParam(int initVal, bool visible = true);
+        EnumParam(int initVal);
 
         /**
          * Dtor.
