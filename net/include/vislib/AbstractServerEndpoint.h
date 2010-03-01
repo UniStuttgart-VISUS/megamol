@@ -19,6 +19,7 @@
 #include "vislib/AbstractCommChannel.h"
 #include "vislib/ReferenceCounted.h"
 #include "vislib/SmartRef.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -72,6 +73,28 @@ namespace net {
          * @throws Exception Or derived in case the operation fails.
          */
         virtual void Bind(const wchar_t *address) = 0;
+
+        /**
+         * Binds the server to a specified address.
+         *
+         * @param address The address to bind to.
+         *
+         * @throws Exception Or derived in case the operation fails.
+         */
+        inline void Bind(const StringA& address) {
+            this->Bind(address.PeekBuffer());
+        }
+
+        /**
+         * Binds the server to a specified address.
+         *
+         * @param address The address to bind to.
+         *
+         * @throws Exception Or derived in case the operation fails.
+         */
+        inline void Bind(const StringW& address) {
+            this->Bind(address.PeekBuffer());
+        }
 
         /**
          * Place the communication channel in a state in which it is listening 

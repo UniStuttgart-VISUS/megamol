@@ -28,53 +28,11 @@ namespace net {
 
 
     /**
-     * TODO: comment class
+     * This class implements a server for VISlib communication channels.
      */
     class CommServer : public vislib::sys::Runnable {
 
     public:
-
-        class Configuration : public ReferenceCounted {
-
-        public:
-            
-            Configuration(AbstractServerEndPoint *serverEndPoint,
-                const wchar_t *bindAddress);
-
-            Configuration(SmartRef<AbstractServerEndPoint>& serverEndPoint,
-                const wchar_t *bindAddress);
-
-            Configuration(AbstractServerEndPoint *serverEndPoint,
-                const char *bindAddress);
-
-            Configuration(SmartRef<AbstractServerEndPoint>& serverEndPoint,
-                const char *bindAddress);
-
-            Configuration(const Configuration& rhs);
-            
-            const vislib::StringW& GetBindAddress(void) const {
-                VLSTACKTRACE("Configuration::GetBindAddress", __FILE__, 
-                    __LINE__);
-                return this->bindAddress;
-            }
-
-            const SmartRef<AbstractServerEndPoint>& GetServerEndPoint(
-                    void) const {
-                VLSTACKTRACE("Configuration::GetServerEndPoint", __FILE__,
-                    __LINE__);
-                return this->serverEndPoint;
-            }
-
-        protected:
-
-            virtual ~Configuration(void);
-
-            vislib::StringW bindAddress;
-
-            SmartRef<AbstractServerEndPoint> serverEndPoint;
-
-        }; /* end class Configuration */
-
 
         /** Ctor. */
         CommServer(void);
@@ -96,6 +54,18 @@ namespace net {
          */
         void AddListener(CommServerListener *listener);
 
+        void Configure(AbstractServerEndPoint *serverEndPoint, 
+            const wchar_t *bindAddress);
+
+        void Configure(SmartRef<AbstractServerEndPoint>& serverEndPoint,
+            const wchar_t *bindAddress);
+
+        void Configure(AbstractServerEndPoint *serverEndPoint,
+            const char *bindAddress);
+
+        void Configure(SmartRef<AbstractServerEndPoint>& serverEndPoint,
+            const char *bindAddress);
+
         /**
          * Removes, if registered, 'listener' from the list of objects informed
          * about events events.
@@ -112,15 +82,12 @@ namespace net {
         /**
          * Perform the work of a thread.
          *
-         * @param configuration A pointer to a configuration instance on the
-         *                      heap (allocated using new). You can release
-         *                      your reference whenever you want, the server 
-         *                      will call AddRef as first action.
+         * @param reserved Unused pointer. Should be NULL.
          *
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        virtual DWORD Run(void *configuration);
+        virtual DWORD Run(void *reserved);
 
         /**
          * Abort the work of the server by forcefully closing the underlying
@@ -177,6 +144,9 @@ namespace net {
 
         /** The list of listeners. */
         ListenerList listeners;
+
+        /** The address to bind the server to. */
+        vislib::StringW bindAddress;
 
         /** The end point the server is using for waiting for clients. */
         SmartRef<AbstractServerEndPoint> serverEndPoint;

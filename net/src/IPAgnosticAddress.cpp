@@ -41,6 +41,26 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::Create(
 
 
 /*
+ * vislib::net::IPAgnosticAddress::CreateAny
+ */
+vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::CreateAny(
+        const AddressFamily addressFamily) {
+    VLSTACKTRACE("IPAgnosticAddress::CreateAny", __FILE__, __LINE__);
+
+    switch (addressFamily) {
+        case FAMILY_INET:
+            return IPAgnosticAddress(IPAgnosticAddress::ANY4);
+
+        case FAMILY_INET6:
+            return IPAgnosticAddress(IPAgnosticAddress::ANY6);
+
+        default:
+            throw IllegalParamException("addressFamily", __FILE__, __LINE__);
+    }
+}
+
+
+/*
  * vislib::net::IPAgnosticAddress::ANY4
  */
 const vislib::net::IPAddress& vislib::net::IPAgnosticAddress::ANY4

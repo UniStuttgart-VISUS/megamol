@@ -18,66 +18,6 @@
 
 
 /*
- * vislib::net::CommServer::Configuration::Configuration
- */
-vislib::net::CommServer::Configuration::Configuration(
-        AbstractServerEndPoint *serverEndPoint, const wchar_t *bindAddress)
-        : bindAddress(bindAddress), serverEndPoint(serverEndPoint) {
-    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::CommServer::Configuration::Configuration
- */
-vislib::net::CommServer::Configuration::Configuration(
-        SmartRef<AbstractServerEndPoint>& serverEndPoint, 
-        const wchar_t *bindAddress)
-        : bindAddress(bindAddress), serverEndPoint(serverEndPoint) {
-    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::CommServer::Configuration::Configuration
- */
-vislib::net::CommServer::Configuration::Configuration(
-        AbstractServerEndPoint *serverEndPoint, const char *bindAddress) 
-        : bindAddress(A2W(bindAddress)), serverEndPoint(serverEndPoint) {
-    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::CommServer::Configuration::Configuration
- */
-vislib::net::CommServer::Configuration::Configuration(
-        SmartRef<AbstractServerEndPoint>& serverEndPoint, 
-        const char *bindAddress)
-        : bindAddress(A2W(bindAddress)), serverEndPoint(serverEndPoint) {
-    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::CommServer::Configuration::Configuration
- */
-vislib::net::CommServer::Configuration::Configuration(
-        const Configuration& rhs) 
-        : bindAddress(rhs.bindAddress), serverEndPoint(rhs.serverEndPoint) {
-    VLSTACKTRACE("Configuration::Configuration", __FILE__, __LINE__);
-}
-
-
-/*
- * vislib::net::CommServer::Configuration::~Configuration
- */
-vislib::net::CommServer::Configuration::~Configuration(void) {
-    VLSTACKTRACE("Configuration::~Configuration", __FILE__, __LINE__);
-}
-
-
-/*
  * vislib::net::CommServer::CommServer
  */
 vislib::net::CommServer::CommServer(void) {
@@ -108,38 +48,52 @@ void vislib::net::CommServer::AddListener(CommServerListener *listener) {
 }
 
 
-///*
-// * vislib::net::CommServer::ConfigureAsTcpServer
-// */
-//void vislib::net::CommServer::ConfigureAsTcpServer(const char *bindAddress,
-//        const UINT64 tcpChannelFlags) {
-//    VLSTACKTRACE("CommServer::ConfigureAsTcpServer", __FILE__, __LINE__);
-//    this->createNewTcpServerEndPoint();
-//
-//    try {
-//        this->serverEndPoint->Bind(bindAddress);
-//    } catch (...) {
-//        this->serverEndPoint.Release();
-//        throw;
-//    }
-//}
-//
-//
-///*
-// * vislib::net::CommServer::ConfigureAsTcpServer
-// */
-//void vislib::net::CommServer::ConfigureAsTcpServer(const wchar_t *bindAddress, 
-//        const UINT64 tcpChannelFlags) {
-//    VLSTACKTRACE("CommServer::ConfigureAsTcpServer", __FILE__, __LINE__);
-//    this->createNewTcpServerEndPoint();
-//
-//    try {
-//        this->serverEndPoint->Bind(bindAddress);
-//    } catch (...) {
-//        this->serverEndPoint.Release();
-//        throw;
-//    }
-//}
+/*
+ * vislib::net::CommServer::Configure
+ */
+void vislib::net::CommServer::Configure(
+        AbstractServerEndPoint *serverEndPoint, 
+        const wchar_t *bindAddress) {
+    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
+    this->bindAddress = bindAddress;
+    this->serverEndPoint = serverEndPoint;
+}
+
+
+/*
+ * vislib::net::CommServer::Configure
+ */
+void vislib::net::CommServer::Configure(
+        SmartRef<AbstractServerEndPoint>& serverEndPoint,
+        const wchar_t *bindAddress) {
+    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
+    this->bindAddress = bindAddress;
+    this->serverEndPoint = serverEndPoint;
+}
+
+
+/*
+ * vislib::net::CommServer::Configure
+ */
+void vislib::net::CommServer::Configure(
+        AbstractServerEndPoint *serverEndPoint,
+        const char *bindAddress) {
+    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
+    this->bindAddress = A2W(bindAddress);
+    this->serverEndPoint = serverEndPoint;
+}
+
+
+/*
+ * vislib::net::CommServer::Configure
+ */
+void vislib::net::CommServer::Configure(
+        SmartRef<AbstractServerEndPoint>& serverEndPoint,
+        const char *bindAddress) {
+    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
+    this->bindAddress = A2W(bindAddress);
+    this->serverEndPoint = serverEndPoint;
+}
 
 
 /*
@@ -155,24 +109,20 @@ void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
 /*
  * vislib::net::CommServer::Run
  */
-DWORD vislib::net::CommServer::Run(void *configuration) {
+DWORD vislib::net::CommServer::Run(void *reserved) {
     VLSTACKTRACE("CommServer::Run", __FILE__, __LINE__);
-    SmartRef<Configuration> config(static_cast<Configuration *>(configuration));
-
     DWORD retval = 0;
     bool doServe = true;
 
     /* Sanity checks. */
-    if (!this->serverEndPoint.IsNull()) {
-        throw IllegalStateException("CommServer cannot run in parallel.", 
-            __FILE__, __LINE__);
+    if (this->serverEndPoint.IsNull()) {
+        throw IllegalStateException("CommServer must be configured before "
+            "being started.", __FILE__, __LINE__);
     }
-    if (config->GetServerEndPoint().IsNull()) {
-        throw IllegalParamException("CommServer requires a non-NULL end point "
-            "in its configuration.", __FILE__, __LINE__);
+    if (this->bindAddress.IsEmpty()) {
+        throw IllegalStateException("CommServer must be configured before "
+            "being started.", __FILE__, __LINE__);
     }
-
-    this->serverEndPoint = config->GetServerEndPoint();
 
     /* Prepare the socket subsystem. */
     try {
@@ -189,9 +139,9 @@ DWORD vislib::net::CommServer::Run(void *configuration) {
 
     /* Bind the end point. */
     try {
-        this->serverEndPoint->Bind(config->GetBindAddress().PeekBuffer());
+        this->serverEndPoint->Bind(this->bindAddress);
         VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer bound to %ls.\n",
-            config->GetBindAddress().PeekBuffer());
+            this->bindAddress.PeekBuffer());
     } catch (sys::SystemException se) {
         VLTRACE(VISLIB_TRCELVL_ERROR, "Binding server end point to specified "
             "address failed: %s\n", se.GetMsgA());

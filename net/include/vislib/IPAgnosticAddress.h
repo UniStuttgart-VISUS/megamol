@@ -99,6 +99,19 @@ namespace net {
             const AddressFamily inCaseOfDoubt = FAMILY_INET6);
 
         /**
+         * Convenience method for creating an "any address" for the given
+         * address family.
+         *
+         * @param addressFamily The address family to get the "any address" for.
+         *                      This must be FAMILY_INET or FAMILY_INET6.
+         *
+         * @return ANY4 or ANY6 depending on 'addressFamily'.
+         *
+         * @throws IllegalParamException If 'addressFamily' is not supported.
+         */
+        static IPAgnosticAddress CreateAny(const AddressFamily addressFamily);
+
+        /**
          * Provides an IP address that indicates that a server must listen for 
          * client activity on all network interfaces.
          */
