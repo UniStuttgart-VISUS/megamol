@@ -20,6 +20,7 @@ uniform vec3 scaleVol;
 uniform vec3 scaleVolInv;
 uniform float sliceDepth;
 uniform vec3 translate;
+uniform float volSize = 128.0;
 
 varying float scale;
 varying vec3 splatCenter;
@@ -39,7 +40,7 @@ void main(void) {
         gl_Position = vec4( devCoord, 0.0, 1.0);
     }
     
-    gl_PointSize = 2.0 * filterRadius * max( scaleVol.x, scaleVol.y) * 128.0 * scale;
+    gl_PointSize = 2.0 * filterRadius * max( scaleVol.x, scaleVol.y) * volSize * scale;
 }
 -->
             </snippet>
