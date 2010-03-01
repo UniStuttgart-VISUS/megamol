@@ -13,8 +13,8 @@
 
 #include "api/MegaMolCore.std.h"
 #include "BoundingBoxes.h"
-#include "Call.h"
 #include "CallAutoDescription.h"
+#include "view/AbstractCallRender.h"
 #include "vislib/assert.h"
 #include "vislib/CameraParameters.h"
 #include "vislib/SmartPtr.h"
@@ -38,7 +38,7 @@ namespace view {
      * Function "GetCapabilities" asks the callee to set the capabilities
      * flags of the call.
      */
-    class MEGAMOLCORE_API CallRender3D : public Call {
+    class MEGAMOLCORE_API CallRender3D : public AbstractCallRender {
     public:
 
         /**

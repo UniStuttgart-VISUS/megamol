@@ -12,10 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "api/MegaMolCore.std.h"
-#include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/Rectangle.h"
 #include "vislib/types.h"
+#include "view/AbstractCallRender.h"
 #include "view/MouseFlags.h"
 
 
@@ -36,7 +36,7 @@ namespace view {
      * call (bounding boxes).
      * The renderer should not draw anything outside the bounding box
      */
-    class MEGAMOLCORE_API CallRender2D : public Call {
+    class MEGAMOLCORE_API CallRender2D : public AbstractCallRender {
     public:
 
         /**

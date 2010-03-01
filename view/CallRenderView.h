@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "api/MegaMolCore.h"
-#include "Call.h"
 #include "CallAutoDescription.h"
+#include "view/AbstractCallRender.h"
 #include "vislib/CameraParameters.h"
 #include "vislib/graphicstypes.h"
 
@@ -25,7 +25,7 @@ namespace view {
     /**
      * Call for registering a module at the cluster display
      */
-    class CallRenderView : public Call {
+    class CallRenderView : public AbstractCallRender {
     public:
 
         /**

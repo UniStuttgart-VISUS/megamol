@@ -1543,6 +1543,10 @@
 				Name="Header Files"
 				>
 				<File
+					RelativePath=".\view\AbstractCallRender.h"
+					>
+				</File>
+				<File
 					RelativePath=".\view\AbstractOverrideView.h"
 					>
 				</File>
@@ -1634,6 +1638,10 @@
 			<Filter
 				Name="Source Files"
 				>
+				<File
+					RelativePath=".\view\AbstractCallRender.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\view\AbstractOverrideView.cpp"
 					>

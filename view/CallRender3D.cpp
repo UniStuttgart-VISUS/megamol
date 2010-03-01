@@ -32,8 +32,8 @@ const UINT64 view::CallRender3D::CAP_ANIMATION = 0x4;
 /*
  * view::CallRender3D::CallRender3D
  */
-view::CallRender3D::CallRender3D(void) : Call(), camParams(), bboxs(),
-        cntTimeFrames(0), capabilities(0), lastFrameTime(0.0) {
+view::CallRender3D::CallRender3D(void) : AbstractCallRender(), camParams(),
+        bboxs(), cntTimeFrames(0), capabilities(0), lastFrameTime(0.0) {
     // intentionally empty
 }
 
@@ -51,6 +51,7 @@ view::CallRender3D::~CallRender3D(void) {
  */
 view::CallRender3D& view::CallRender3D::operator=(
         const view::CallRender3D& rhs) {
+    view::AbstractCallRender::operator=(rhs);
 
     this->camParams = rhs.camParams;
     this->bboxs = rhs.bboxs;
