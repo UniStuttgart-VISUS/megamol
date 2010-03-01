@@ -172,6 +172,8 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
     }
 
     /* Enter server loop if no error so far. */
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer is entering the server "
+        "loop ...\n");
     if (retval == 0) {
         try {
             while (doServe) {
@@ -205,6 +207,8 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
             doServe = this->fireServerError(e);
         }
     }
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer has left the server "
+        "loop.\n");
 
     /* Clean up connection and socket library. */
     this->Terminate();
