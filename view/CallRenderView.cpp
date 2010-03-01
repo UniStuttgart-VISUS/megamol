@@ -75,11 +75,10 @@ const char * view::CallRenderView::FunctionName(unsigned int idx) {
 view::CallRenderView::CallRenderView(void) : AbstractCallRender(), bkgndB(0),
         bkgndG(0), bkgndR(0),
         eye(vislib::graphics::CameraParameters::RIGHT_EYE), flagBkgnd(false),
-        flagProj(false), flagTile(false), flagVP(false), height(1.0f),
+        flagProj(false), flagTile(false), height(1.0f),
         projType(vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
-        tileH(1.0f), tileW(1.0f), tileX(0.0f), tileY(0.0f), vpHeight(1),
-        vpWidth(1), width(1.0f), btn(0), down(false),
-        x(0.0f), y(0.0f), mod(MMC_INMOD_SHIFT) {
+        tileH(1.0f), tileW(1.0f), tileX(0.0f), tileY(0.0f), width(1.0f),
+        btn(0), down(false), x(0.0f), y(0.0f), mod(MMC_INMOD_SHIFT) {
     // intentionally empty
 }
 
@@ -113,15 +112,12 @@ view::CallRenderView& view::CallRenderView::operator=(const view::CallRenderView
     this->flagBkgnd = rhs.flagBkgnd;
     this->flagProj = rhs.flagProj;
     this->flagTile = rhs.flagTile;
-    this->flagVP = rhs.flagVP;
     this->height = rhs.height;
     this->projType = rhs.projType;
     this->tileH = rhs.tileH;
     this->tileW = rhs.tileW;
     this->tileX = rhs.tileX;
     this->tileY = rhs.tileY;
-    this->vpHeight = rhs.vpHeight;
-    this->vpWidth = rhs.vpWidth;
     this->width = rhs.width;
     this->btn = rhs.btn;
     this->down = rhs.down;

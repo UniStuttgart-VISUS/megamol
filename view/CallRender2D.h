@@ -116,7 +116,7 @@ namespace view {
          * @return The viewport height in pixel
          */
         inline unsigned int GetHeight(void) const {
-            return this->height;
+            return this->GetViewport().Height();
         }
 
         /**
@@ -152,7 +152,7 @@ namespace view {
          * @return The viewport width in pixel
          */
         inline unsigned int GetWidth(void) const {
-            return this->width;
+            return this->GetViewport().Width();
         }
 
         /**
@@ -215,17 +215,6 @@ namespace view {
         }
 
         /**
-         * Sets the viewport size
-         *
-         * @param w The width of the viewport in pixel
-         * @param h The height of the viewport in pixel
-         */
-        inline void SetViewportSize(unsigned int w, unsigned int h) {
-            this->height = h;
-            this->width = w;
-        }
-
-        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
@@ -247,12 +236,6 @@ namespace view {
 
         /** The background colour in RGB (bytes) */
         unsigned char bkgndCol[3];
-
-        /** The viewport height in pixel */
-        unsigned int height;
-
-        /** The viewport width in pixel */
-        unsigned int width;
 
         /** The mouse coordinates for the mouse event */
         float mouseX, mouseY;

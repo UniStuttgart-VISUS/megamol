@@ -66,13 +66,14 @@ void view::View2D::Render(void) {
     //this->fpsCounter.FrameBegin();
 
     // clear viewport
+    int vpx = 0, vpy = 0;
     float w = this->width;
     float h = this->height;
     if (this->overrideViewport != NULL) {
         if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0)
                 && (this->overrideViewport[2] > 0) && (this->overrideViewport[3] > 0)) {
             ::glViewport(
-                this->overrideViewport[0], this->overrideViewport[1],
+                vpx = this->overrideViewport[0], vpy = this->overrideViewport[1],
                 this->overrideViewport[2], this->overrideViewport[3]);
             w = static_cast<float>(this->overrideViewport[2]);
             h = static_cast<float>(this->overrideViewport[3]);
@@ -131,8 +132,8 @@ void view::View2D::Render(void) {
         (1.0f / this->viewZoom - this->viewY));
     cr2d->SetBoundingBox(vr);
 
-    cr2d->SetViewportSize(static_cast<unsigned int>(w),
-        static_cast<unsigned int>(h));
+    cr2d->SetOutputBuffer(GL_BACK,
+        vpx, vpy, static_cast<int>(w), static_cast<int>(h));
 
     if (this->showBBoxSlot.Param<param::BoolParam>()->Value()) {
         ::glEnable(GL_BLEND);

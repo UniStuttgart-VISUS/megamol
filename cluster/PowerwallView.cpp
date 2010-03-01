@@ -49,7 +49,7 @@ void cluster::PowerwallView::Render(void) {
             crv->SetTile(this->getVirtWidth(), this->getVirtHeight(),
                 this->getTileX(), this->getTileY(), this->getTileW(), this->getTileH());
         }
-        crv->SetViewportSize(this->getViewportWidth(), this->getViewportHeight());
+        crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
 
         if ((*crv)(view::CallRenderView::CALL_RENDER)) {
             // successfully rendered client view

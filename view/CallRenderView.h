@@ -189,7 +189,7 @@ namespace view {
          * @return 'true' if the viewport information has been set
          */
         inline bool IsViewportSet(void) const {
-            return this->flagVP;
+            return true;
         }
 
         /**
@@ -235,7 +235,6 @@ namespace view {
             this->flagBkgnd = false;
             this->flagProj = false;
             this->flagTile = false;
-            this->flagVP = false;
         }
 
         /**
@@ -257,13 +256,6 @@ namespace view {
          */
         inline void ResetTile(void) {
             this->flagTile = false;
-        }
-
-        /**
-         * Resets the flag indicating that the viewport had been set.
-         */
-        inline void ResetViewport(void) {
-            this->flagVP = false;
         }
 
         /**
@@ -347,18 +339,6 @@ namespace view {
         }
 
         /**
-         * Sets the size of the viewport in pixel.
-         *
-         * @param w The width of the viewport in pixel
-         * @param h The height of the viewport in pixel
-         */
-        inline void SetViewportSize(unsigned int w, unsigned int h) {
-            this->flagVP = true;
-            this->vpHeight = h;
-            this->vpWidth = w;
-        }
-
-        /**
          * Answer the height of the rendering tile
          *
          * @return The height of the rendering tile
@@ -400,7 +380,7 @@ namespace view {
          * @return The height of the viewport in pixel
          */
         inline unsigned int ViewportHeight(void) const {
-            return this->vpHeight;
+            return this->GetViewport().Height();
         }
 
         /**
@@ -409,7 +389,7 @@ namespace view {
          * @return The width of the viewport in pixel
          */
         inline unsigned int ViewportWidth(void) const {
-            return this->vpWidth;
+            return this->GetViewport().Width();
         }
 
         /**
@@ -462,9 +442,6 @@ namespace view {
         /** Flag indicating that the tile information has been set */
         bool flagTile : 1;
 
-        /** Flag indicating that the viewport information has been set */
-        bool flagVP : 1;
-
         /** The height of the virtual viewport */
         float height;
 
@@ -482,12 +459,6 @@ namespace view {
 
         /** The y coordinate of the rendering tile */
         float tileY;
-
-        /** The viewport height in pixel */
-        unsigned int vpHeight;
-
-        /** The viewport width in pixel */
-        unsigned int vpWidth;
 
         /** The width of the virtual viewport */
         float width;

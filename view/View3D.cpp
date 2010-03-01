@@ -179,6 +179,8 @@ void view::View3D::Render(void) {
         return; // empty enought
     }
 
+    cr3d->SetOutputBuffer(GL_BACK); // TODO: Handle incoming buffers!
+
     // camera settings
     if (this->stereoEyeDistSlot.IsDirty()) {
         param::FloatParam *fp = this->stereoEyeDistSlot.Param<param::FloatParam>();
