@@ -1945,18 +1945,6 @@ void protein::ProteinVolumeRenderer::MakeRainbowColorTable( unsigned int num)
  * Create a volume containing all protein atoms
  */
 void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData *protein) {
-    /*
-    float *tmpdata = new float[this->volumeSize*this->volumeSize*this->volumeSize];
-    for( unsigned int z = 0; z < this->volumeSize; ++z ) {
-        for( unsigned int y = 0; y < this->volumeSize; ++y ) {
-            for( unsigned int x = 0; x < this->volumeSize; ++x ) {
-                //tmpdata[x+y*this->volumeSize+z*this->volumeSize*this->volumeSize] = float(x) / float( this->volumeSize);
-                //tmpdata[x+y*this->volumeSize+z*this->volumeSize*this->volumeSize] = float(y) / float( this->volumeSize);
-                tmpdata[x+y*this->volumeSize+z*this->volumeSize*this->volumeSize] = float(z) / float( this->volumeSize);
-            }
-        }
-    }
-    */
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
         // from CellVis: cellVis.cpp, initGL
@@ -1965,7 +1953,6 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
         glTexImage3D( GL_TEXTURE_3D, 0, GL_LUMINANCE32F_ARB,
                       this->volumeSize, this->volumeSize, this->volumeSize, 0,
                       GL_LUMINANCE, GL_FLOAT, 0);
-                      //GL_LUMINANCE, GL_FLOAT, tmpdata);
         GLint param = GL_LINEAR;
         glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
         glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
@@ -1982,19 +1969,6 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
         glGenFramebuffersEXT( 1, &this->volFBO);
         CHECK_FOR_OGL_ERROR();
     }
-    /*
-    delete[] tmpdata;
-    // scale[i] = 1/extent[i] --- extent = size of the bbox
-    this->volScale[0] = 1.0f / protein->BoundingBox().Width();
-    this->volScale[1] = 1.0f / protein->BoundingBox().Height();
-    this->volScale[2] = 1.0f / protein->BoundingBox().Depth();
-    // scaleInv = 1 / scale = extend
-    this->volScaleInv[0] = 1.0f / this->volScale[0];
-    this->volScaleInv[1] = 1.0f / this->volScale[1];
-    this->volScaleInv[2] = 1.0f / this->volScale[2];
-    return;
-    // END DEBUG
-    */
 
     // counter variable
     unsigned int z;
@@ -2057,54 +2031,23 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
     glUniform3f( this->updateVolumeShader.ParameterLocation( "invVolRes"), 
         1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
     glUniform3fv( this->updateVolumeShader.ParameterLocation( "translate"), 1, orig.PeekComponents() );
+	glUniform1f( this->updateVolumeShader.ParameterLocation( "volSize"), float( this->volumeSize));
     CHECK_FOR_OGL_ERROR();
 
-    for( z = 0; z < this->volumeSize; ++z ) {
-        // attach texture slice to FBO
-        glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
-        glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
-        // draw all atoms as points, using w for radius
-        glBegin( GL_POINTS);
-        for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
-            glVertex4f( ( protein->ProteinAtomPositions()[cnt*3+0] + this->translation.GetX()) * this->scale,
-                ( protein->ProteinAtomPositions()[cnt*3+1] + this->translation.GetY()) * this->scale, 
-                ( protein->ProteinAtomPositions()[cnt*3+2] + this->translation.GetZ()) * this->scale, 
-                protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius() * this->scale );
-        }
-        glEnd(); // GL_POINTS
-    }
-
-    /*
-    vislib::math::Vector<float, 3> tmpVec;
-    for( z = 0; z < this->volumeSize; ++z ) {
-        // attach texture slice to FBO
-        glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->volumeTex, 0, z);
-        glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
-        // draw all atoms as points, using w for radius
-        glBegin( GL_POINTS);
-        
-        tmpVec = protein->BoundingBox().GetLeftBottomFront();
-        tmpVec = ( tmpVec + this->translation) * this->scale;
-        glVertex4f( tmpVec.GetX(), tmpVec.GetY(), tmpVec.GetZ(), 1.5f * this->scale);
-        
-        tmpVec = protein->BoundingBox().GetLeftTopBack();
-        tmpVec = ( tmpVec + this->translation) * this->scale;
-        glVertex4f( tmpVec.GetX(), tmpVec.GetY(), tmpVec.GetZ(), 1.5f * this->scale);
-        
-        tmpVec = protein->BoundingBox().GetRightBottomBack();
-        tmpVec = ( tmpVec + this->translation) * this->scale;
-        glVertex4f( tmpVec.GetX(), tmpVec.GetY(), tmpVec.GetZ(), 1.5f * this->scale);
-        
-        tmpVec = protein->BoundingBox().GetRightTopFront();
-        tmpVec = ( tmpVec + this->translation) * this->scale;
-        glVertex4f( tmpVec.GetX(), tmpVec.GetY(), tmpVec.GetZ(), 1.5f * this->scale);
-
-        tmpVec = protein->BoundingBox().CalcCenter();
-        tmpVec = ( tmpVec + this->translation) * this->scale;
-        glVertex4f( tmpVec.GetX(), tmpVec.GetY(), tmpVec.GetZ(), 1.5f * this->scale);
-        glEnd(); // GL_POINTS
-    }
-    */
+	for( z = 0; z < this->volumeSize; ++z ) {
+		// attach texture slice to FBO
+		glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
+		glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
+		// draw all atoms as points, using w for radius
+		glBegin( GL_POINTS);
+		for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
+			glVertex4f( ( protein->ProteinAtomPositions()[cnt*3+0] + this->translation.GetX()) * this->scale,
+				( protein->ProteinAtomPositions()[cnt*3+1] + this->translation.GetY()) * this->scale, 
+				( protein->ProteinAtomPositions()[cnt*3+2] + this->translation.GetZ()) * this->scale, 
+				protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius() * this->scale );
+		}
+		glEnd(); // GL_POINTS
+	}
 
     this->updateVolumeShader.Disable();
 
@@ -2122,23 +2065,6 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
     glEnable( GL_DEPTH_TEST);
     glDepthMask( GL_TRUE);
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // DEBUG check volume values
-    /*
-    float *texdata = new float[this->volumeSize*this->volumeSize*this->volumeSize];
-    memset( texdata, 0, sizeof(float)*(this->volumeSize*this->volumeSize*this->volumeSize));
-    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-    glGetTexImage( GL_TEXTURE_3D, 0, GL_LUMINANCE, GL_FLOAT, texdata);
-    glBindTexture( GL_TEXTURE_3D, 0);
-    int slab = 1;
-    for( z = 1; z <= this->volumeSize*this->volumeSize; ++z ) {
-        //std::cout << int( floor( texdata[slab*(this->volumeSize*this->volumeSize)+z] + 0.5)) << " ";
-        std::cout << texdata[z+slab*(this->volumeSize*this->volumeSize)] << " ";
-        if( z%this->volumeSize == 0 )
-            std::cout << std::endl;
-    }
-    delete[] texdata;
-    */
 }
 
 /*
