@@ -40,6 +40,14 @@ namespace protein {
 	class ProteinRendererBDP : public megamol::core::view::Renderer3DModule
     {
     public:
+
+        /** depth peeling modi */
+        enum DepthPeelingMode
+        {
+            BDP = 0,
+            ADAPTIVE_BDP = 1,
+            DUAL_DEPTHPEELING = 2
+        };
                 
         /** postprocessing modi */
         enum PostprocessingMode
@@ -218,7 +226,7 @@ namespace protein {
         /**
          * Creates the frame buffer object and textures needed for offscreen rendering.
          */
-        void CreateFBO();
+        void CreatePostProcessFBO();
 
         /**
          * Render the molecular surface using GPU raycasting.
@@ -318,7 +326,32 @@ namespace protein {
          * stores for every RS-edge the positions of the probes that cut it.
          */
         void CreateSingularityTexture( unsigned int idxRS);
-                
+
+
+        /**
+         * Creates the frame buffer object and textures needed for depth peeling.
+         */
+        void CreateDepthPeelingFBO();
+
+        /**
+         * Creates a display list for the bounding box vertices
+         * 
+         * @param bbox The bounding box of the protein
+         */
+        inline void createBBoxDisplayList(megamol::core::BoundingBoxes& bbox);
+
+        /**
+         * Creates the min max depth buffer
+         *
+         * @param call The calling call.
+         */
+        void createMinMaxDepthBuffer(megamol::core::Call& call);
+
+        /**
+         * Render the min max depth buffer (DEBUG output)
+         */
+        void renderMinMaxDepthBuffer(void);
+
     private:
 
         /**
@@ -379,6 +412,7 @@ namespace protein {
         megamol::core::param::ParamSlot debugParam;
         megamol::core::param::ParamSlot drawSESParam;
         megamol::core::param::ParamSlot drawSASParam;
+        megamol::core::param::ParamSlot depthPeelingParam;
 
         bool drawRS;
         bool drawSES;
@@ -409,8 +443,10 @@ namespace protein {
         // shader for cheap transparency (postprocessing/blending)
         vislib::graphics::gl::GLSLShader transparencyShader;
 
-        // the bounding box of the protein
-        vislib::math::Cuboid<float> bBox;
+        // shader creating min max depth buffer
+        vislib::graphics::gl::GLSLShader createDepthBufferShader;
+        // DEBUG: render min max depth buffer
+        vislib::graphics::gl::GLSLShader renderDepthBufferShader;
 
         // epsilon value for float-comparison
         float epsilon;
@@ -430,6 +466,8 @@ namespace protein {
         ColoringMode currentColoringMode;
         /** postprocessing mode */
         PostprocessingMode postprocessing;
+        /** current depth peeeling mode*/
+        DepthPeelingMode depthpeeling;
         
         /** vertex and attribute arrays for raycasting the tori */
         std::vector<vislib::Array<float> > torusVertexArray;
@@ -461,12 +499,19 @@ namespace protein {
         GLuint blendFBO;
         GLuint horizontalFilterFBO;
         GLuint verticalFilterFBO;
+        GLuint minmaxFBO;
+
         GLuint texture0;
         GLuint depthTex0;
         GLuint texture1;
         GLuint depthTex1;
         GLuint hFilter;
         GLuint vFilter;
+        GLuint minmaxDepthBuffer;
+
+        // display list for bbox
+        GLuint bboxList;
+
         // width and height of view
         unsigned int width;
         unsigned int height;
@@ -487,7 +532,7 @@ namespace protein {
         // data of the singularity texture
         float *singTexData;
         
-        // texture indices for interior clipping / cutting planes 
+        // texture indices for interior clipping cutting planes 
         // (convex spherical cutouts)
         std::vector<GLuint> cutPlanesTexture;
         // sizes of the cutting planes textures
