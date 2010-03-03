@@ -24,4 +24,9 @@
   Value="%mmcorePath%"
   PerformEnvironmentSet="true"
   />
+  <UserMacro
+  Name="ExpatPath"
+  Value="%expatPath%"
+  PerformEnvironmentSet="true"
+  />
 </VisualStudioPropertySheet>

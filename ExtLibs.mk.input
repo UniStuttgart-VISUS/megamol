@@ -20,3 +20,11 @@ ifeq (%withTweakbar%$1$0$, 1)
 	DebugLinkerFlags += -lAntTweakBar$(BITS)
 	ReleaseLinkerFlags += -lAntTweakBar$(BITS)
 endif
+
+ifeq (%withUserExpat%$1$0$, 1)
+    expatpath := %expatPath%
+    IncludeDir := $(IncludeDir) $(expatpath)/include
+    LIBS := $(LIBS) expat$(BITS)
+else
+    LIBS := $(LIBS) expat
+endif

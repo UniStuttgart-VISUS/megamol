@@ -12,11 +12,20 @@
     <Tool
           Name="VCLinkerTool"
           AdditionalLibraryDirectories="%withTweakbar%!$(TweakbarPath)\lib!!"
-          AdditionalDependencies="%withTweakbar%!AntTweakBar$(BitsD).lib!!"
 	/>
-    <UserMacro
-          Name="TweakbarPath"
-          Value="%tweakbarpath%"
-          PerformEnvironmentSet="true"
+  <UserMacro
+        Name="TweakbarPath"
+        Value="%tweakbarpath%"
+        PerformEnvironmentSet="true"
+	/>
+  <UserMacro
+        Name="LibTweakbarRelease"
+        Value="%withTweakbar%!AntTweakBar$(Bits).lib!!"
+        PerformEnvironmentSet="true"
+	/>
+  <UserMacro
+        Name="LibTweakbarDebug"
+        Value="%withTweakbar%!AntTweakBar%debugTweakbar%|$(BitsD)|$(Bits)|.lib!!"
+        PerformEnvironmentSet="true"
 	/>
 </VisualStudioPropertySheet>

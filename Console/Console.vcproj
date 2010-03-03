@@ -69,7 +69,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib $(LibTweakbarDebug)"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -154,7 +154,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib $(LibTweakbarDebug)"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -236,7 +236,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib $(LibTweakbarRelease)"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -321,7 +321,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib"
+				AdditionalDependencies="MegaMolCore$(BitsD).lib vislibbase$(BitsD).lib vislibsys$(BitsD).lib opengl32.lib $(LibTweakbarRelease)"
 				OutputFile="$(OutDir)\MegaMolCon$(BitsD).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
