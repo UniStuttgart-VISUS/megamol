@@ -11,7 +11,6 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/SocketException.h"
-#include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
 #include "vislib/TcpCommChannel.h"
 #include "vislib/Trace.h"
@@ -68,30 +67,6 @@ void vislib::net::CommServer::Configure(
         const wchar_t *bindAddress) {
     VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
     this->bindAddress = bindAddress;
-    this->serverEndPoint = serverEndPoint;
-}
-
-
-/*
- * vislib::net::CommServer::Configure
- */
-void vislib::net::CommServer::Configure(
-        AbstractServerEndPoint *serverEndPoint,
-        const char *bindAddress) {
-    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-    this->bindAddress = A2W(bindAddress);
-    this->serverEndPoint = serverEndPoint;
-}
-
-
-/*
- * vislib::net::CommServer::Configure
- */
-void vislib::net::CommServer::Configure(
-        SmartRef<AbstractServerEndPoint>& serverEndPoint,
-        const char *bindAddress) {
-    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-    this->bindAddress = A2W(bindAddress);
     this->serverEndPoint = serverEndPoint;
 }
 
@@ -172,9 +147,11 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
     }
 
     /* Enter server loop if no error so far. */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer is entering the server "
-        "loop ...\n");
     if (retval == 0) {
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer is entering the server "
+            "loop ...\n");
+        this->fireServerStarted();
+
         try {
             while (doServe) {
                 SmartRef<AbstractCommChannel> channel 
@@ -287,7 +264,8 @@ bool vislib::net::CommServer::fireNewConnection(
     this->listeners.Unlock();
 
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "CommServer informed "
-        "listeners about new connection. Was accepted: %d\n", retval);
+        "listeners about new connection. Was accepted: %s\n", 
+        retval ? "yes" : "no");
     return retval;
 }
 
@@ -308,8 +286,8 @@ bool vislib::net::CommServer::fireServerError(
     this->listeners.Unlock();
 
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "CommServer "
-        "received exit request from registered error listener: %d\n", 
-        retval);
+        "received exit request from registered error listener: %s\n", 
+        retval ? "yes" : "no");
     return retval;
 }
 

@@ -15,11 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/IPAddress.h"   // Must be included at begin!
+#include "vislib/IPAgnosticAddress.h"   // Must be included at begin!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Interlocked.h"
-#include "vislib/IPAddress6.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Socket.h"
@@ -272,6 +271,48 @@ namespace cluster {
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
                 const IPAddress6& bindAddress, const IPAddress6& bcastAddress,
+                const USHORT bindPort = DEFAULT_PORT);
+
+            /**
+             * Create a new configuration with all parameters manually 
+             * configured.
+             *
+             * The mode of the discovery service depends on the address family
+             * of 'bindAddress' and 'bcastAddress', which must be the same.
+             *
+             * @param responseAddress This is the "call back address" of the 
+             *                        current node/adapter, on which 
+             *                        user-defined communication should be 
+             *                        initiated. The DiscoveryService does not 
+             *                        use this address itself (it is a pure 
+             *                        payload for it), but communicates it to
+             *                        all other nodes, which then can use it.
+             *                        These addresses should uniquely identify
+             *                        each process in the cluster, i. e. no node
+             *                        should specify the same 'responseAddr' as
+             *                        some other does.
+             * @param bindAddress     The adapter to bind the service locally
+             *                        to. The discovery thread will bind to 
+             *                        'bindPort' on this adapter.
+             * @param bcastAddress    The broadcast address of the network. All
+             *                        requests (alive-messages) will be sent to 
+             *                        this address. The destination port of 
+             *                        messages is derived 'bindPort'. 
+             *                        You can use the 
+             *                        vislib::net::NetworkInformation class to
+             *                        obtain the broadcast address of your 
+             *                        subnet.
+             * @param bindPort        The port to bind the receiver thread to.
+             *                        All discovery requests are directed to
+             *                        this port.
+             *
+             * @throws IllegalParamException If the address families of 
+             *                               'bindAddress' and 'bcastAddress' do
+             *                               not match.
+             */
+            DiscoveryConfig(const IPEndPoint& responseAddress, 
+                const IPAgnosticAddress& bindAddress, 
+                const IPAgnosticAddress& bcastAddress,
                 const USHORT bindPort = DEFAULT_PORT);
 
             /**

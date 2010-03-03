@@ -164,6 +164,24 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         responseAddress(responseAddress) {
 }
 
+/*
+ * vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig
+ */
+vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
+        const IPEndPoint& responseAddress, 
+        const IPAgnosticAddress& bindAddress, 
+        const IPAgnosticAddress& bcastAddress,
+        const USHORT bindPort)
+        : bcastAddress(bcastAddress, bindPort),
+        bindAddress(bindAddress, bindPort),
+        responseAddress(responseAddress) {
+    if (this->bindAddress.GetAddressFamily() 
+            != this->bcastAddress.GetAddressFamily()) {
+        this->~DiscoveryConfig();
+        throw IllegalParamException("bindAddress", __FILE__, __LINE__);
+    }
+}
+
 
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig
@@ -354,6 +372,8 @@ vislib::net::cluster::DiscoveryService::DiscoveryService(void)
 vislib::net::cluster::DiscoveryService::~DiscoveryService(void) {
     try {
         this->Stop();
+        VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService was stopped in dtor. "
+            "Any shutdown exceptions traced before can be safely ignored.\n");
     } catch (...) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Stopping the discovery threads crashed "
             "in the dtor. This should never happen.\n");
@@ -812,14 +832,16 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
         this->socket.Shutdown();
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Error while shutting down cluster "
-            "discovery receiver socket: %s. This is normally no problem.\n",
+            "discovery receiver socket: %s. This is normally no problem and "
+            "indicates that you already stopped the receiver before.\n",
             e.GetMsgA());
     }
     try {
         this->socket.Close();   // TODO: Should perhaps be protected by crit sect?
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Error while closing cluster "
-            "discovery receiver socket: %s. This is normally no problem.\n",
+            "discovery receiver socket: %s. This is normally no problem and "
+            "indicates that you already stopped the receiver before.\n",
             e.GetMsgA());
     }
 
