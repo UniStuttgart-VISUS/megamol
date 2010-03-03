@@ -8235,6 +8235,71 @@ void main(void) {
       </snippet>
     </shader>
 
+    <shader name="createDepthBufferVertex">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+
+void main(void) {
+
+    gl_Position  = ftransform();
+
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="createDepthBufferFragment">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+
+void main(void) {
+
+    gl_FragColor.xy = vec2(-gl_FragCoord.z, gl_FragCoord.z);
+
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="renderDepthBufferVertex">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+
+void main(void) {
+
+    gl_Position  = ftransform();
+
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="renderDepthBufferFragment">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+
+uniform int minmax;
+uniform vec2 texOffset;
+uniform sampler2D depthBuffer;
+
+void main(void) {
+
+    vec2 depthValues;
+    vec4 color;
+    depthValues = texture2D(depthBuffer, (gl_FragCoord.xy * 4.0 + vec2( 0.5, 0.5)) * texOffset).xy;
+    color = vec4(1.0 - abs(depthValues.x), depthValues.y, 0.0, 1.0); 
+
+    gl_FragColor = color;
+}
+
+
+-->      </snippet>
+    </shader>
+
   </namespace>
   
 </btf>

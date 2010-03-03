@@ -52,7 +52,8 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     debugParam( "drawRS", "Draw the Reduced Surface: "),
     drawSESParam( "drawSES", "Draw the SES: "),
     drawSASParam( "drawSAS", "Draw the SAS: "),
-    fogstartParam( "fogStart", "Fog Start: ")
+    fogstartParam( "fogStart", "Fog Start: "),
+    depthPeelingParam( "depthPeeling", "Depth Peeling Mode: ")
 {    
     this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
@@ -63,6 +64,16 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     this->probeRadius = 1.4f;
     // set transparency
     this->transparency = 0.5f;
+
+    // ----- en-/disable depth peeling -----
+    this->depthpeeling = BDP;
+    //this->depthpeeling = ADAPTIVE_BDP;
+    //this->depthpeeling = DUAL_DEPTHPEELING;
+    param::EnumParam *dpm = new param::EnumParam ( int ( this->depthpeeling ) );
+    dpm->SetTypePair( BDP, "BDP");
+    dpm->SetTypePair( ADAPTIVE_BDP, "AdaptiveBDP");
+    dpm->SetTypePair( DUAL_DEPTHPEELING, "DualDepthPeeling");
+    this->depthPeelingParam << dpm;
 
     // ----- en-/disable postprocessing -----
     this->postprocessing = NONE;
@@ -160,10 +171,14 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     this->blendFBO = 0;
     this->horizontalFilterFBO = 0;
     this->verticalFilterFBO = 0;
+    this->minmaxFBO = 0;
+
     this->texture0 = 0;
     this->depthTex0 = 0;
     this->hFilter = 0;
     this->vFilter = 0;
+    this->minmaxDepthBuffer = 0;
+
     // width and height of the screen
     this->width = 0;
     this->height = 0;
@@ -194,6 +209,7 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     this->MakeSlotAvailable( &this->debugParam );
     this->MakeSlotAvailable( &this->drawSESParam );
     this->MakeSlotAvailable( &this->drawSASParam );
+    this->MakeSlotAvailable( &this->depthPeelingParam );
 }
 
 
@@ -202,28 +218,33 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
  */
 ProteinRendererBDP::~ProteinRendererBDP(void)
 {
-    if( colorFBO )
-    {
-        glDeleteFramebuffersEXT( 1, &colorFBO);
-        glDeleteFramebuffersEXT( 1, &blendFBO);
-        glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT( 1, &verticalFilterFBO);
-        glDeleteTextures( 1, &texture0);
-        glDeleteTextures( 1, &depthTex0);
-        glDeleteTextures( 1, &texture1);
-        glDeleteTextures( 1, &depthTex1);
-        glDeleteTextures( 1, &hFilter);
-        glDeleteTextures( 1, &vFilter);
+    if(this->colorFBO) {
+        glDeleteFramebuffersEXT( 1, &this->colorFBO);
+        glDeleteFramebuffersEXT( 1, &this->blendFBO);
+        glDeleteFramebuffersEXT( 1, &this->horizontalFilterFBO);
+        glDeleteFramebuffersEXT( 1, &this->verticalFilterFBO);
+        glDeleteTextures( 1, &this->texture0);
+        glDeleteTextures( 1, &this->depthTex0);
+        glDeleteTextures( 1, &this->texture1);
+        glDeleteTextures( 1, &this->depthTex1);
+        glDeleteTextures( 1, &this->hFilter);
+        glDeleteTextures( 1, &this->vFilter);
     }
+    if(this->minmaxFBO) {
+        glDeleteFramebuffersEXT( 1, &this->minmaxFBO);
+        glDeleteTextures( 1, &this->minmaxDepthBuffer);
+    }
+
     // delete singularity texture
-    for( unsigned int i = 0; i < this->singularityTexture.size(); ++i )
+    for( unsigned int i = 0; i < this->singularityTexture.size(); ++i)
         glDeleteTextures( 1, &this->singularityTexture[i]);
     // delete cutting planes textures and data
-    for( unsigned int i = 0; i < this->cutPlanesTexture.size(); ++i )
+    for( unsigned int i = 0; i < this->cutPlanesTexture.size(); ++i)
         glDeleteTextures( 1, &this->cutPlanesTexture[i]);
     for( unsigned int i = 0; i < this->cutPlanesTexData.size(); ++i)
         this->cutPlanesTexData[i].Clear(true);
-    // release
+
+    // release shader
     this->cylinderShader.Release();
     this->sphereShader.Release();
     this->sphereClipInteriorShader.Release();
@@ -234,7 +255,12 @@ ProteinRendererBDP::~ProteinRendererBDP(void)
     this->vfilterShader.Release();
     this->silhouetteShader.Release();
     this->transparencyShader.Release();
+    this->createDepthBufferShader.Release();
+    this->renderDepthBufferShader.Release();
     
+    // delete display list
+    glDeleteLists(this->bboxList, 1);
+
     this->Release();
 }
 
@@ -270,7 +296,6 @@ bool ProteinRendererBDP::create( void )
     glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
 
-
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
     
@@ -281,6 +306,58 @@ bool ProteinRendererBDP::create( void )
     CoreInstance *ci = this->GetCoreInstance();
     if( !ci ) return false;
     
+    //////////////////////////////////////////////////////////////////
+    // load the shader source for the min max depth buffer renderer //
+    //////////////////////////////////////////////////////////////////
+
+    // shader for creating the min max depth buffer
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::createDepthBufferVertex", vertSrc ) )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for create depth bufffer shader", this->ClassName() );
+        return false;
+    }
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::createDepthBufferFragment", fragSrc ) )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for create depth bufffer shader", this->ClassName() );
+        return false;
+    }
+    try
+    {
+        if( !this->createDepthBufferShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
+        {
+            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+        }
+    }
+    catch( vislib::Exception e )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create min max depth bufffer shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
+
+    // shader for rendering the min max depth buffer (DEBUG output)
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::renderDepthBufferVertex", vertSrc ) )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for render depth bufffer shader", this->ClassName() );
+        return false;
+    }
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::renderDepthBufferFragment", fragSrc ) )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for render depth bufffer shader", this->ClassName() );
+        return false;
+    }
+    try
+    {
+        if( !this->renderDepthBufferShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
+        {
+            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
+        }
+    }
+    catch( vislib::Exception e )
+    {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create render depth bufffer shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
+
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
@@ -587,22 +664,28 @@ bool ProteinRendererBDP::Render( Call& call )
 
     // ==================== check parameters ====================
     
+    if ( this->depthPeelingParam.IsDirty() )
+    {
+        this->depthpeeling = static_cast<DepthPeelingMode>(this->depthPeelingParam.Param<param::EnumParam>()->Value() );
+        this->depthPeelingParam.ResetDirty();
+    }
+
     if ( this->postprocessingParam.IsDirty() )
     {
-        this->postprocessing = static_cast<PostprocessingMode>(  this->postprocessingParam.Param<param::EnumParam>()->Value() );
+        this->postprocessing = static_cast<PostprocessingMode>(this->postprocessingParam.Param<param::EnumParam>()->Value() );
         this->postprocessingParam.ResetDirty();
     }
     
     if( this->rendermodeParam.IsDirty() )
     {
-        this->currentRendermode = static_cast<RenderMode>( this->rendermodeParam.Param<param::EnumParam>()->Value() );
+        this->currentRendermode = static_cast<RenderMode>(this->rendermodeParam.Param<param::EnumParam>()->Value() );
         this->rendermodeParam.ResetDirty();
         this->preComputationDone = false;
     }
     
     if( this->coloringmodeParam.IsDirty() )
     {
-        this->currentColoringMode = static_cast<ColoringMode>(  this->coloringmodeParam.Param<param::EnumParam>()->Value() );
+        this->currentColoringMode = static_cast<ColoringMode>(this->coloringmodeParam.Param<param::EnumParam>()->Value() );
         this->MakeColorTable( protein);
         this->preComputationDone = false;
         this->coloringmodeParam.ResetDirty();
@@ -736,16 +819,29 @@ bool ProteinRendererBDP::Render( Call& call )
         // set the precomputation of the data as done
         this->preComputationDone = true;
     }
-    
-    if( this->postprocessing != NONE && (
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height ) )
+
+    // create bounding box display list for min max depth buffer
+    if(!::glIsList(this->bboxList)) {
+        this->createBBoxDisplayList(dynamic_cast<view::CallRender3D*>( &call )->AccessBoundingBoxes());
+    }
+
+    if(static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
+        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height )
     {
         this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
         this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
-        this->CreateFBO();
+
+        this->CreateDepthPeelingFBO();
+
+        if( this->postprocessing != NONE ) {
+            this->CreatePostProcessFBO();
+        }
+
     }
-    
+
+    //create min max depth buffer (before transformations are done) 
+    this->createMinMaxDepthBuffer(call);
+
     // ==================== Scale & Translate ====================
     
     glPushMatrix();
@@ -763,14 +859,17 @@ bool ProteinRendererBDP::Render( Call& call )
     glScalef ( scale, scale, scale );
     glTranslatef ( xoff, yoff, zoff );
     
+
     // ==================== Start actual rendering ====================
-    
+
     glDisable( GL_BLEND);
-    //glEnable( GL_NORMALIZE);
+    glDisable( GL_LIGHTING);
+
     glEnable( GL_DEPTH_TEST);
-    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-    glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
-    
+    //glEnable( GL_NORMALIZE);
+    //glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    //glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
+
     if( this->postprocessing == TRANSPARENCY )
     {
         glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->blendFBO);
@@ -809,6 +908,9 @@ bool ProteinRendererBDP::Render( Call& call )
         this->RenderSESGpuRaycastingSimple( protein);
     }
 
+    //render min max-depth-buffer (DEBUG output)
+    this->renderMinMaxDepthBuffer();
+
     //////////////////////////////////
     // apply postprocessing effects //
     //////////////////////////////////
@@ -824,7 +926,7 @@ bool ProteinRendererBDP::Render( Call& call )
         else if( this->postprocessing == TRANSPARENCY )
             this->PostprocessingTransparency( 0.5f);
     }
-    
+
     glPopMatrix();
     
     fpsCounter.FrameEnd();
@@ -1030,9 +1132,40 @@ void ProteinRendererBDP::PostprocessingTransparency( float transparency)
 
 
 /*
+ * Create the fbo and texture needed for depth peeling
+ */
+void ProteinRendererBDP::CreateDepthPeelingFBO() {
+
+    if(this->minmaxFBO) {
+        glDeleteFramebuffersEXT( 1, &this->minmaxFBO);
+        glDeleteTextures( 1, &this->minmaxDepthBuffer);
+    }
+    glGenFramebuffersEXT( 1, &this->minmaxFBO);
+    glGenTextures( 1, &this->minmaxDepthBuffer);
+
+    // minmax depth buffer FBO
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->minmaxFBO);
+    glBindTexture( GL_TEXTURE_2D, this->minmaxDepthBuffer);
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RG32F, this->width, this->height, 0, GL_RGB, GL_FLOAT, NULL); // ????
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, this->minmaxDepthBuffer, 0);
+    glBindTexture( GL_TEXTURE_2D, 0);
+
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+    GLint maxbuffers;
+    glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &maxbuffers);
+    std::cout << "GL_MAX_COLOR_ATTACHMENTS_EXT: " << (int)maxbuffers << std::endl;
+}
+
+
+/*
  * Create the fbo and texture needed for offscreen rendering
  */
-void ProteinRendererBDP::CreateFBO()
+void ProteinRendererBDP::CreatePostProcessFBO()
 {
     if( colorFBO )
     {
@@ -1040,6 +1173,7 @@ void ProteinRendererBDP::CreateFBO()
         glDeleteFramebuffersEXT( 1, &blendFBO);
         glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
         glDeleteFramebuffersEXT( 1, &verticalFilterFBO);
+
         glDeleteTextures( 1, &texture0);
         glDeleteTextures( 1, &depthTex0);
         glDeleteTextures( 1, &texture1);
@@ -1051,13 +1185,14 @@ void ProteinRendererBDP::CreateFBO()
     glGenFramebuffersEXT( 1, &blendFBO);
     glGenFramebuffersEXT( 1, &horizontalFilterFBO);
     glGenFramebuffersEXT( 1, &verticalFilterFBO);
+
     glGenTextures( 1, &texture0);
     glGenTextures( 1, &depthTex0);
     glGenTextures( 1, &texture1);
     glGenTextures( 1, &depthTex1);
     glGenTextures( 1, &hFilter);
     glGenTextures( 1, &vFilter);
-    
+
     // color and depth FBO
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->colorFBO);
     // init texture0 (color)
@@ -1123,7 +1258,7 @@ void ProteinRendererBDP::CreateFBO()
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, vFilter, 0);
     glBindTexture( GL_TEXTURE_2D, 0);
-    
+
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
@@ -1515,6 +1650,124 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
             
     // delete pointers
     delete[] clearColor;
+}
+
+
+/*
+ * createMinMaxDepthBuffer
+ */
+void ProteinRendererBDP::createMinMaxDepthBuffer(Call& call) {
+
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->minmaxFBO);
+
+    glClearColor(-1.0, -1.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_MAX);
+
+    this->createDepthBufferShader.Enable();
+
+    glCallList(this->bboxList);
+
+    this->createDepthBufferShader.Disable();
+
+    // reset blend equation
+    glBlendEquation(GL_FUNC_ADD);
+
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
+}
+
+
+/*
+ * renderMinMaxDepthBuffer
+ */
+void ProteinRendererBDP::renderMinMaxDepthBuffer(void) {
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glOrtho( 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
+    glBindTexture( GL_TEXTURE_2D, this->minmaxDepthBuffer);
+
+    this->renderDepthBufferShader.Enable();
+
+    glUniform2fARB( this->renderDepthBufferShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+    glUniform1iARB( this->renderDepthBufferShader.ParameterLocation( "depthBuffer"), 0);
+    glBegin(GL_QUADS);
+        glVertex2f( 0.0f, 0.0f);
+        glVertex2f( 0.25f, 0.0f);
+        glVertex2f( 0.25f, 0.25f);
+        glVertex2f( 0.0f, 0.25f);
+    glEnd();
+
+    this->renderDepthBufferShader.Disable();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glBindTexture( GL_TEXTURE_2D, 0);
+}
+
+
+/*
+ * renderBBox
+ */
+void ProteinRendererBDP::createBBoxDisplayList(BoundingBoxes& bbox) {
+    const vislib::math::Cuboid<float>& boundingBox = bbox.WorldSpaceBBox();
+    
+    glDeleteLists(this->bboxList, 1);
+
+    this->bboxList = glGenLists(1);
+
+    glNewList(this->bboxList, GL_COMPILE);
+        glBegin(GL_QUADS);
+            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+
+            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+
+            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+
+            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+
+            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+
+            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+        glEnd();
+    glEndList();
 }
 
 
