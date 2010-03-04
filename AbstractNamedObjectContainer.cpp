@@ -125,7 +125,7 @@ AbstractNamedObject *AbstractNamedObjectContainer::FindNamedObject(const char *n
     while (*name != 0) {
         next = ::strstr(name, "::");
         if (next != NULL) {
-            n = vislib::StringA(name, next - name);
+            n = vislib::StringA(name, static_cast<int>(next - name));
             name = next + 2;
         } else {
             n = name;

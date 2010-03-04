@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 #
 # configure.win.pl
 # MegaMol Core
@@ -6,11 +7,14 @@
 # Alle Rechte vorbehalten.
 #
 use Cwd qw{abs_path};
+use strict;
+use warnings 'all';
 my $incpath = abs_path($0);
 $incpath =~ s/\/[^\/]+$//;
 push @INC, "$incpath/configperl";
-require "configperl.inc";
+require configperl;
 
+my ($a, $b, $c);
 my @pps = ();
 my @fps = ();
 my @cfps = ();
