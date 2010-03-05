@@ -189,7 +189,6 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
 
     /* Clean up connection and socket library. */
     this->Terminate();
-    this->serverEndPoint.Release();
 
     try {
         Socket::Cleanup();
