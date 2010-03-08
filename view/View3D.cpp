@@ -15,6 +15,7 @@
 #include "view/CameraParamOverride.h"
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
+#include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
 #include "param/Vector3fParam.h"
@@ -25,9 +26,13 @@
 #include "vislib/Log.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Point.h"
+#include "vislib/Quaternion.h"
 #include "vislib/String.h"
 #include "vislib/StringSerialiser.h"
 #include "vislib/sysfunctions.h"
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+#include "vislib/KeyCode.h"
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 #include "vislib/Trace.h"
 #include "vislib/Vector.h"
 
@@ -57,7 +62,28 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         lightColDifSlot("light::diffuseCol", "Diffuse light colour"),
         lightColAmbSlot("light::ambientCol", "Ambient light colour"),
         stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection"),
-        stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection") {
+        stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+        , viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
+        viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
+        viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted"),
+        viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)"),
+        viewKeyRotRightSlot("viewKey::RotRight", "Rotates the view to the right (around the up-axis)"),
+        viewKeyRotUpSlot("viewKey::RotUp", "Rotates the view to the top (around the right-axis)"),
+        viewKeyRotDownSlot("viewKey::RotDown", "Rotates the view to the bottom (around the right-axis)"),
+        viewKeyRollLeftSlot("viewKey::RollLeft", "Rotates the view counter-clockwise (around the view-axis)"),
+        viewKeyRollRightSlot("viewKey::RollRight", "Rotates the view clockwise (around the view-axis)"),
+        viewKeyZoomInSlot("viewKey::ZoomIn", "Zooms in (moves the camera)"),
+        viewKeyZoomOutSlot("viewKey::ZoomOut", "Zooms out (moves the camera)"),
+        viewKeyMoveLeftSlot("viewKey::MoveLeft", "Moves to the left"),
+        viewKeyMoveRightSlot("viewKey::MoveRight", "Moves to the right"),
+        viewKeyMoveUpSlot("viewKey::MoveUp", "Moves to the top"),
+        viewKeyMoveDownSlot("viewKey::MoveDown", "Moves to the bottom")
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+        {
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+    using vislib::sys::KeyCode;
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
     this->camParams = this->cam.Parameters();
     this->camOverrides = new CameraParamOverride(this->camParams);
@@ -133,6 +159,69 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
 
     this->stereoFocusDistSlot << new param::FloatParam(this->camParams->FocalDistance(false), 0.0f);
     this->MakeSlotAvailable(&this->stereoFocusDistSlot);
+
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+    this->viewKeyMoveStepSlot << new param::FloatParam(0.1f, 0.001f);
+    this->MakeSlotAvailable(&this->viewKeyMoveStepSlot);
+
+    this->viewKeyAngleStepSlot << new param::FloatParam(15.0f, 0.001f, 360.0f);
+    this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
+
+    param::EnumParam *vrpsev = new param::EnumParam(1);
+    vrpsev->SetTypePair(0, "Position");
+    vrpsev->SetTypePair(1, "Look-At");
+    this->viewKeyRotPointSlot << vrpsev;
+    this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
+
+    this->viewKeyRotLeftSlot << new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotLeftSlot);
+
+    this->viewKeyRotRightSlot << new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotRightSlot);
+
+    this->viewKeyRotUpSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotUpSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotUpSlot);
+
+    this->viewKeyRotDownSlot << new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotDownSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotDownSlot);
+
+    this->viewKeyRollLeftSlot << new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyRollLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRollLeftSlot);
+
+    this->viewKeyRollRightSlot << new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyRollRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRollRightSlot);
+
+    this->viewKeyZoomInSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyZoomInSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyZoomInSlot);
+
+    this->viewKeyZoomOutSlot << new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyZoomOutSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyZoomOutSlot);
+
+    this->viewKeyMoveLeftSlot << new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveLeftSlot);
+
+    this->viewKeyMoveRightSlot << new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveRightSlot);
+
+    this->viewKeyMoveUpSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveUpSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveUpSlot);
+
+    this->viewKeyMoveDownSlot << new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+
 }
 
 
@@ -491,23 +580,23 @@ bool view::View3D::create(void) {
     this->zoomer1.SetTestButton(2 /* mid mouse button */);
     this->zoomer1.SetModifierTestCount(2);
     this->zoomer1.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
-    this->zoomer1.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
+    this->zoomer1.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
 
     this->zoomer2.SetCameraParams(this->camParams);
     this->zoomer2.SetTestButton(2 /* mid mouse button */);
     this->zoomer2.SetModifierTestCount(2);
     this->zoomer2.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+        vislib::graphics::InputModifiers::MODIFIER_ALT, true);
     this->zoomer2.SetModifierTest(1,
-        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
 
     this->lookAtDist.SetCameraParams(this->camParams);
     this->lookAtDist.SetTestButton(2 /* mid mouse button */);
     this->lookAtDist.SetModifierTestCount(1);
     this->lookAtDist.SetModifierTest(0,
-        vislib::graphics::InputModifiers::MODIFIER_ALT, true);
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
 
     this->cursor2d.SetCameraParams(this->camParams);
     this->cursor2d.RegisterCursorEvent(&this->rotator1);
@@ -827,3 +916,102 @@ bool view::View3D::onResetView(param::ParamSlot& p) {
     this->ResetView();
     return true;
 }
+
+
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+
+/*
+ * view::View3D::viewKeyPressed
+ */
+bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
+
+    if ((&p == &this->viewKeyRotLeftSlot)
+            || (&p == &this->viewKeyRotRightSlot)
+            || (&p == &this->viewKeyRotUpSlot)
+            || (&p == &this->viewKeyRotDownSlot)
+            || (&p == &this->viewKeyRollLeftSlot)
+            || (&p == &this->viewKeyRollRightSlot)) {
+        // rotate
+        float angle = vislib::math::AngleDeg2Rad(this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value());
+        vislib::math::Quaternion<float> q;
+        int ptIdx = this->viewKeyRotPointSlot.Param<param::EnumParam>()->Value();
+        // ptIdx == 0 : Position
+        // ptIdx == 1 : LookAt
+
+        if (&p == &this->viewKeyRotLeftSlot) {
+            q.Set(angle, this->camParams->Up());
+        } else if (&p == &this->viewKeyRotRightSlot) {
+            q.Set(-angle, this->camParams->Up());
+        } else if (&p == &this->viewKeyRotUpSlot) {
+            q.Set(angle, this->camParams->Right());
+        } else if (&p == &this->viewKeyRotDownSlot) {
+            q.Set(-angle, this->camParams->Right());
+        } else if (&p == &this->viewKeyRollLeftSlot) {
+            q.Set(angle, this->camParams->Front());
+        } else if (&p == &this->viewKeyRollRightSlot) {
+            q.Set(-angle, this->camParams->Front());
+        }
+
+        vislib::math::Vector<float, 3> pos(this->camParams->Position().PeekCoordinates());
+        vislib::math::Vector<float, 3> lat(this->camParams->LookAt().PeekCoordinates());
+        vislib::math::Vector<float, 3> up(this->camParams->Up());
+
+        if (ptIdx == 0) {
+            lat -= pos;
+            lat = q * lat;
+            up = q * up;
+            lat += pos;
+
+        } else if (ptIdx == 1) {
+            pos -= lat;
+            pos = q * pos;
+            up = q * up;
+            pos += lat;
+        }
+
+        this->camParams->SetView(
+            vislib::math::Point<float, 3>(pos.PeekComponents()),
+            vislib::math::Point<float, 3>(lat.PeekComponents()),
+            up);
+
+    } else if ((&p == &this->viewKeyZoomInSlot)
+            || (&p == &this->viewKeyZoomOutSlot)
+            || (&p == &this->viewKeyMoveLeftSlot)
+            || (&p == &this->viewKeyMoveRightSlot)
+            || (&p == &this->viewKeyMoveUpSlot)
+            || (&p == &this->viewKeyMoveDownSlot)) {
+        // move
+        float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+        vislib::math::Vector<float, 3> move;
+
+        if (&p == &this->viewKeyZoomInSlot) {
+            move = this->camParams->Front();
+            move *= step;
+        } else if (&p == &this->viewKeyZoomOutSlot) {
+            move = this->camParams->Front();
+            move *= -step;
+        } else if (&p == &this->viewKeyMoveLeftSlot) {
+            move = this->camParams->Right();
+            move *= -step;
+        } else if (&p == &this->viewKeyMoveRightSlot) {
+            move = this->camParams->Right();
+            move *= step;
+        } else if (&p == &this->viewKeyMoveUpSlot) {
+            move = this->camParams->Up();
+            move *= step;
+        } else if (&p == &this->viewKeyMoveDownSlot) {
+            move = this->camParams->Up();
+            move *= -step;
+        }
+
+        this->camParams->SetView(
+            this->camParams->Position() + move,
+            this->camParams->LookAt() + move,
+            vislib::math::Vector<float, 3>(this->camParams->Up()));
+
+    }
+
+    return true;
+}
+
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */

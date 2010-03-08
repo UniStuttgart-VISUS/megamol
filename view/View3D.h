@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#define ENABLE_KEYBOARD_VIEW_CONTROL 1
+
 #include "BoundingBoxes.h"
 #include "view/AbstractView3D.h"
 #include "CalleeSlot.h"
@@ -245,6 +247,19 @@ namespace view {
          */
         bool onResetView(param::ParamSlot& p);
 
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+
+        /**
+         * Event handler for view keys
+         *
+         * @param p The parameter slot of the view key hit
+         *
+         * @return true
+         */
+        bool viewKeyPressed(param::ParamSlot& p);
+
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+
         /** The scene camera */
         vislib::graphics::gl::CameraOpenGL cam;
 
@@ -358,6 +373,55 @@ namespace view {
 
         /** The ambient light colour */
         float lightColAmb[4];
+
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+
+        /** The move step size in world coordinates */
+        param::ParamSlot viewKeyMoveStepSlot;
+
+        /** The angle rotate step in degrees */
+        param::ParamSlot viewKeyAngleStepSlot;
+
+        /** The point around which the view will be roateted */
+        param::ParamSlot viewKeyRotPointSlot;
+
+        /** Rotates the view to the left (around the up-axis) */
+        param::ParamSlot viewKeyRotLeftSlot;
+
+        /** Rotates the view to the right (around the up-axis) */
+        param::ParamSlot viewKeyRotRightSlot;
+
+        /** Rotates the view to the top (around the right-axis) */
+        param::ParamSlot viewKeyRotUpSlot;
+
+        /** Rotates the view to the bottom (around the right-axis) */
+        param::ParamSlot viewKeyRotDownSlot;
+
+        /** Rotates the view counter-clockwise (around the view-axis) */
+        param::ParamSlot viewKeyRollLeftSlot;
+
+        /** Rotates the view clockwise (around the view-axis) */
+        param::ParamSlot viewKeyRollRightSlot;
+
+        /** Zooms in */
+        param::ParamSlot viewKeyZoomInSlot;
+
+        /** Zooms out */
+        param::ParamSlot viewKeyZoomOutSlot;
+
+        /** Moves to the left */
+        param::ParamSlot viewKeyMoveLeftSlot;
+
+        /** Moves to the right */
+        param::ParamSlot viewKeyMoveRightSlot;
+
+        /** Moves to the top */
+        param::ParamSlot viewKeyMoveUpSlot;
+
+        /** Moves to the bottom */
+        param::ParamSlot viewKeyMoveDownSlot;
+
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
     };
 
