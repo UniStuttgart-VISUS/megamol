@@ -16,6 +16,7 @@
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
+#include "vislib/CameraLookAtDist.h"
 #include "vislib/CameraOpenGL.h"
 #include "vislib/CameraParamsStore.h"
 #include "vislib/CameraRotate2D.h"
@@ -208,6 +209,11 @@ namespace view {
         inline void renderBBoxFrontside(void);
 
         /**
+         * Renders the cross for the look-at point
+         */
+        void renderLookAt(void);
+
+        /**
          * Renders the soft cursor
          */
         void renderSoftCursor(void);
@@ -266,6 +272,9 @@ namespace view {
         /** camera angle zoom */
         vislib::graphics::CameraZoom2DAngle zoomer2;
 
+        /** camera look-at distance changer */
+        vislib::graphics::CameraLookAtDist lookAtDist;
+
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;
 
@@ -286,6 +295,9 @@ namespace view {
 
         /** Bool flag showing the bounding box */
         param::ParamSlot showBBox;
+
+        /** Flag showing the look at point */
+        param::ParamSlot showLookAt;
 
         /** The stored camera settings */
         param::ParamSlot cameraSettingsSlot;

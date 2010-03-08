@@ -39,12 +39,13 @@ using namespace megamol::core;
  */
 view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         camOverrides(), cursor2d(), modkeys(), rotator1(),
-        rotator2(), zoomer1(), zoomer2(),
+        rotator2(), zoomer1(), zoomer2(), lookAtDist(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         lightDir(0.5f, -1.0f, -1.0f), isCamLight(true), bboxs(),
         animPlay("animPlay", "Bool parameter to play/stop the animation"),
         animSpeed("animSpeed", "Float parameter of animation speed in time frames per second"),
         showBBox("showBBox", "Bool parameter to show/hide the bounding box"),
+        showLookAt("showLookAt", "Flag showing the look at point"),
         cameraSettingsSlot("camsettings", "The stored camera settings"),
         storeCameraSettingsSlot("storecam", "Triggers the storage of the camera settings"),
         restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings"),
@@ -83,6 +84,8 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->MakeSlotAvailable(&this->animSpeed);
     this->showBBox << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBox);
+    this->showLookAt << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->showLookAt);
 
     this->cameraSettingsSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->cameraSettingsSlot);
@@ -280,6 +283,9 @@ void view::View3D::Render(void) {
     if (this->showBBox.Param<param::BoolParam>()->Value()) {
         this->renderBBoxBackside();
     }
+    if (this->showLookAt.Param<param::BoolParam>()->Value()) {
+        this->renderLookAt();
+    }
     ::glPushMatrix();
 
     // call for render
@@ -345,6 +351,7 @@ void view::View3D::ResetView(void) {
         bbc, SceneSpaceVector3D(0.0f, 1.0f, 0.0f));
 
     this->zoomer1.SetSpeed(dist);
+    this->lookAtDist.SetSpeed(dist);
 }
 
 
@@ -482,21 +489,32 @@ bool view::View3D::create(void) {
 
     this->zoomer1.SetCameraParams(this->camParams);
     this->zoomer1.SetTestButton(2 /* mid mouse button */);
-    this->zoomer1.SetModifierTestCount(1);
+    this->zoomer1.SetModifierTestCount(2);
     this->zoomer1.SetModifierTest(0,
         vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+    this->zoomer1.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
     this->zoomer2.SetCameraParams(this->camParams);
     this->zoomer2.SetTestButton(2 /* mid mouse button */);
-    this->zoomer2.SetModifierTestCount(1);
+    this->zoomer2.SetModifierTestCount(2);
     this->zoomer2.SetModifierTest(0,
         vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+    this->zoomer2.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
+
+    this->lookAtDist.SetCameraParams(this->camParams);
+    this->lookAtDist.SetTestButton(2 /* mid mouse button */);
+    this->lookAtDist.SetModifierTestCount(1);
+    this->lookAtDist.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, true);
 
     this->cursor2d.SetCameraParams(this->camParams);
     this->cursor2d.RegisterCursorEvent(&this->rotator1);
     this->cursor2d.RegisterCursorEvent(&this->rotator2);
     this->cursor2d.RegisterCursorEvent(&this->zoomer1);
     this->cursor2d.RegisterCursorEvent(&this->zoomer2);
+    this->cursor2d.RegisterCursorEvent(&this->lookAtDist);
     this->cursor2d.SetInputModifiers(&this->modkeys);
 
     this->modkeys.RegisterObserver(&this->cursor2d);
@@ -616,6 +634,67 @@ void view::View3D::renderBBoxFrontside(void) {
 
     ::glDepthFunc(GL_LESS);
     ::glPolygonMode(GL_FRONT, GL_FILL);
+}
+
+
+/*
+ * view::View3D::renderLookAt
+ */
+void view::View3D::renderLookAt(void) {
+    const vislib::math::Cuboid<float>& boundingBox
+        = this->bboxs.WorldSpaceBBox();
+    vislib::math::Point<float, 3> minp(
+        vislib::math::Min(boundingBox.Left(), boundingBox.Right()),
+        vislib::math::Min(boundingBox.Bottom(), boundingBox.Top()),
+        vislib::math::Min(boundingBox.Back(), boundingBox.Front()));
+    vislib::math::Point<float, 3> maxp(
+        vislib::math::Max(boundingBox.Left(), boundingBox.Right()),
+        vislib::math::Max(boundingBox.Bottom(), boundingBox.Top()),
+        vislib::math::Max(boundingBox.Back(), boundingBox.Front()));
+    vislib::math::Point<float, 3> lap = this->cam.Parameters()->LookAt();
+    bool xin = true;
+    if (lap.X() < minp.X()) { lap.SetX(minp.X()); xin = false; }
+    else if (lap.X() > maxp.X()) { lap.SetX(maxp.X()); xin = false; }
+    bool yin = true;
+    if (lap.Y() < minp.Y()) { lap.SetY(minp.Y()); yin = false; }
+    else if (lap.Y() > maxp.Y()) { lap.SetY(maxp.Y()); yin = false; }
+    bool zin = true;
+    if (lap.Z() < minp.Z()) { lap.SetZ(minp.Z()); zin = false; }
+    else if (lap.Z() > maxp.Z()) { lap.SetZ(maxp.Z()); zin = false; }
+
+    ::glDisable(GL_LIGHTING);
+    ::glLineWidth(1.4f);
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ::glEnable(GL_DEPTH_TEST);
+
+    ::glBegin(GL_LINES);
+
+    ::glColor3ub(255, 0, 0);
+
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(maxp.X(), lap.Y(), lap.Z());
+    ::glColor3ub(192, 192, 192);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(minp.X(), lap.Y(), lap.Z());
+
+    ::glColor3ub(0, 255, 0);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), maxp.Y(), lap.Z());
+    ::glColor3ub(192, 192, 192);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), minp.Y(), lap.Z());
+
+    ::glColor3ub(0, 0, 255);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), lap.Y(), maxp.Z());
+    ::glColor3ub(192, 192, 192);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), lap.Y(), minp.Z());
+
+    ::glEnd();
+
+    ::glEnable(GL_LIGHTING);
 }
 
 
