@@ -57,7 +57,7 @@ void DiscoveryTestApp::Initialise(CmdLineProviderW& inOutCmdLine) {
 /*
  * DiscoveryTestApp::OnNodeFound
  */
-void DiscoveryTestApp::OnNodeFound(const DiscoveryService& src,
+void DiscoveryTestApp::OnNodeFound(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer) throw() {
     std::cout << "Discovery service \"" << src.GetName().PeekBuffer() 
         << "\" discovered new peer node " << src[hPeer].ToStringA().PeekBuffer()
@@ -77,7 +77,7 @@ void DiscoveryTestApp::OnNodeFound(const DiscoveryService& src,
 /*
  * DiscoveryTestApp::OnNodeLost
  */
-void DiscoveryTestApp::OnNodeLost(const DiscoveryService& src,
+void DiscoveryTestApp::OnNodeLost(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer,
         const DiscoveryListener::NodeLostReason reason) throw() {
     std::cout << "Discovery service " << src.GetName().PeekBuffer() 
@@ -94,7 +94,7 @@ void DiscoveryTestApp::OnNodeLost(const DiscoveryService& src,
 /*
  * DiscoveryTestApp::OnUserMessage
  */
-void DiscoveryTestApp::OnUserMessage(const DiscoveryService& src,
+void DiscoveryTestApp::OnUserMessage(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer, 
         const UINT32 msgType, const BYTE *msgBody) throw() {
     std::cout << "Discovery service " << src.GetName().PeekBuffer() 

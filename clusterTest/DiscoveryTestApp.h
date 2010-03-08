@@ -30,15 +30,15 @@ public:
 
     virtual void Initialise(vislib::sys::CmdLineProviderW& inOutCmdLine);
 
-    virtual void OnNodeFound(const vislib::net::cluster::DiscoveryService& src,
+    virtual void OnNodeFound(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer) throw();
 
-    virtual void OnNodeLost(const vislib::net::cluster::DiscoveryService& src,
+    virtual void OnNodeLost(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
         const vislib::net::cluster::DiscoveryListener::NodeLostReason reason) 
         throw();
 
-    virtual void OnUserMessage(const vislib::net::cluster::DiscoveryService& src,
+    virtual void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer, 
         const UINT32 msgType, const BYTE *msgBody) throw();
 

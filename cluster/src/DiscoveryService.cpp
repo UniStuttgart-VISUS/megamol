@@ -1265,7 +1265,7 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
  */
 void vislib::net::cluster::DiscoveryService::fireUserMessage(
         const IPEndPoint& sender, const UINT32 msgType, 
-        const BYTE *msgBody) const {
+        const BYTE *msgBody) {
     INT_PTR idx = 0;        // Index of sender PeerNode.
 
     this->peerNodesCritSect.Lock();

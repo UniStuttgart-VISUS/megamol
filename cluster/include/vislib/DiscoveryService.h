@@ -1186,7 +1186,7 @@ namespace cluster {
           * @param msgBody The body of the message.
           */
          void fireUserMessage(const IPEndPoint& sender, const UINT32 msgType, 
-            const BYTE *msgBody) const; 
+            const BYTE *msgBody); 
 
         /**
          * Answer whether 'hPeer' is a valid peer node handle.

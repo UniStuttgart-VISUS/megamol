@@ -43,6 +43,24 @@ namespace sys {
         virtual ~Runnable(void);
 
         /**
+         * The thread will call this method immediately after it was started
+         * in the context of the new thread and before Run() is called. The
+         * 'userData' parameter is the same as will be passed to Run().
+         *
+         * @param userData The user data to be passed to Run().
+         */
+        virtual void OnThreadStarted(void *userData);
+
+        /**
+         * The thread will call this method immediately before it will be 
+         * started. This is done in the context of the old thread. The
+         * 'userData' parameter is the same as will be passed to Run().
+         *
+         * @param userData The user data to be passed to Run().
+         */
+        virtual void OnThreadStarting(void *userData);
+
+        /**
          * Perform the work of a thread.
          *
          * @param userData A pointer to user data that are passed to the thread,

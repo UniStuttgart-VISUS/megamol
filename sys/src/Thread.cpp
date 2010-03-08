@@ -208,6 +208,11 @@ bool vislib::sys::Thread::Start(void *userData) {
     /* Set the user data. */
     this->threadFuncParam.userData = userData;
 
+    /* Inform the runnable that we are about to start a thread. */
+    if (this->runnable != NULL) {
+        this->runnable->OnThreadStarting(userData);
+    }
+
 #ifdef _WIN32
     /* Close possible old handle. */
     if (this->handle != NULL) {
@@ -347,6 +352,7 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
 #endif /* !_WIN32 */
 
     if (t->runnable != NULL) {
+        t->runnable->OnThreadStarted(tfp->userData);
         retval = t->runnable->Run(tfp->userData);
     } else {
         ASSERT(t->runnableFunc != NULL);

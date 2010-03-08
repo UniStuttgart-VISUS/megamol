@@ -61,6 +61,40 @@ namespace net {
         void AddListener(SimpleMessageDispatchListener *listener);
 
         /**
+         * Get the communication channel the dispatcher is receiving data from.
+         * Callers should never receive from this channel on their own!
+         *
+         * @return The channel used for receiving data. DO NOT RECEIVE DATA ON
+         *         THIS CHANNEL!
+         */
+        inline SmartRef<AbstractInboundCommChannel>& GetChannel(void) {
+            return this->channel;
+        }
+
+        /**
+         * Startup callback of the thread. The Thread class will call that 
+         * before Run().
+         *
+         * Note: The static type of 'channel', which is passed to the Start() 
+         * method of Thread must be AbstractCommChannel. The channel itself must
+         * have a dynamic type of AbstractInboundCommChannel, but the 
+         * inheritance graph of the comm channel requires the static type of the
+         * pointer being AbstractCommChannel and nothing else! Otherwise, the
+         * thread will crash (in the debug version, we assert against this 
+         * error).
+         *
+         * Note: Never use a SmartRef for 'channel'! Dereference the SmartRef
+         * using operator-> and cast the result to AbstractCommChannel * if
+         * necessary.
+         *
+         * @param channel A pointer to an AbstractCommChannel, which is
+         *                used to receive data. The channel must have been 
+         *                opened before. The object will add to the reference
+         *                count of the channel.
+         */
+        virtual void OnThreadStarting(void *channel);
+
+        /**
          * Removes, if registered, 'listener' from the list of objects informed
          * about events events.
          * 
@@ -76,7 +110,19 @@ namespace net {
         /**
          * Perform the work of a thread.
          *
-         * @param channel A pointer to an AbstractInboundCommChannel, which is
+         * Note: The static type of 'channel', which is passed to the Start() 
+         * method of Thread must be AbstractCommChannel. The channel itself must
+         * have a dynamic type of AbstractInboundCommChannel, but the 
+         * inheritance graph of the comm channel requires the static type of the
+         * pointer being AbstractCommChannel and nothing else! Otherwise, the
+         * thread will crash (in the debug version, we assert against this 
+         * error).
+         *
+         * Note: Never use a SmartRef for 'channel'! Dereference the SmartRef
+         * using operator-> and cast the result to AbstractCommChannel * if
+         * necessary.
+         *
+         * @param channel A pointer to an AbstractCommChannel, which is
          *                used to receive data. The channel must have been 
          *                opened before. The object will add to the reference
          *                count of the channel.

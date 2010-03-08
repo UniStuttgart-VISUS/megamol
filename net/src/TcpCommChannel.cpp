@@ -54,7 +54,7 @@ vislib::net::TcpCommChannel::Accept(void) {
     Socket socket = this->socket.Accept();
     socket.SetNoDelay(this->IsSetNoDelay());
 
-    return SmartRef<AbstractCommChannel>(new TcpCommChannel(socket), false);
+    return SmartRef<AbstractCommChannel>(new TcpCommChannel(), false);
 }
 
 

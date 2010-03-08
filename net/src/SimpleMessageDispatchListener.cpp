@@ -38,7 +38,7 @@ vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(
  * vislib::net::SimpleMessageDispatchListener::OnCommunicationError
  */
 bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
-        const SimpleMessageDispatcher& src, 
+        SimpleMessageDispatcher& src, 
         const vislib::Exception& exception) throw() {
     VLSTACKTRACE("SimpleMessageDispatchListener::OnCommunicationError", 
         __FILE__, __LINE__);
@@ -50,7 +50,7 @@ bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
  * vislib::net::SimpleMessageDispatchListener::OnDispatcherExited
  */
 void vislib::net::SimpleMessageDispatchListener::OnDispatcherExited(
-        const SimpleMessageDispatcher& src) throw() {
+        SimpleMessageDispatcher& src) throw() {
     VLSTACKTRACE("SimpleMessageDispatchListener::OnDispatcherExited", 
         __FILE__, __LINE__);
 }
@@ -60,7 +60,7 @@ void vislib::net::SimpleMessageDispatchListener::OnDispatcherExited(
  * vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted
  */
 void vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted(
-        const SimpleMessageDispatcher& src) throw() {
+        SimpleMessageDispatcher& src) throw() {
     VLSTACKTRACE("SimpleMessageDispatchListener::OnDispatcherStarted", 
         __FILE__, __LINE__);
 }

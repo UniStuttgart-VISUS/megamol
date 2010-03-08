@@ -66,7 +66,7 @@ namespace net {
          *         receiving messages, false will cause the dispatcher to
          *         exit.
          */
-        virtual bool OnCommunicationError(const SimpleMessageDispatcher& src,
+        virtual bool OnCommunicationError(SimpleMessageDispatcher& src,
             const vislib::Exception& exception) throw();
 
         /**
@@ -78,8 +78,7 @@ namespace net {
          *
          * @param src The SimpleMessageDispatcher that exited.
          */
-        virtual void OnDispatcherExited(
-            const SimpleMessageDispatcher& src) throw();
+        virtual void OnDispatcherExited(SimpleMessageDispatcher& src) throw();
 
         /**
          * This method is called immediately before the message dispatcher loop
@@ -92,8 +91,7 @@ namespace net {
          *
          * @param src The SimpleMessageDispatcher that exited.
          */
-        virtual void OnDispatcherStarted(
-            const SimpleMessageDispatcher& src) throw();
+        virtual void OnDispatcherStarted(SimpleMessageDispatcher& src) throw();
 
 
         /**
@@ -115,7 +113,7 @@ namespace net {
          *         receiving messages, false will cause the dispatcher to
          *         exit.
          */
-        virtual bool OnMessageReceived(const SimpleMessageDispatcher& src,
+        virtual bool OnMessageReceived(SimpleMessageDispatcher& src,
             const AbstractSimpleMessage& msg) throw() = 0;
 
     };

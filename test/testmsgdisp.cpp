@@ -20,10 +20,10 @@ static const long CNT_MSGS = 1;
 vislib::sys::Semaphore semWaitRecv(0l, CNT_MSGS);
 
 class Listener : public vislib::net::SimpleMessageDispatchListener {
-    virtual bool OnMessageReceived(const vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw();
+    virtual bool OnMessageReceived(vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw();
 };
 
-bool Listener::OnMessageReceived(const vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
+bool Listener::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
     std::cout << "Received Message " << msg.GetHeader().GetMessageID() << std::endl;
     ::semWaitRecv.Unlock();
     return true;
@@ -52,8 +52,8 @@ void TestMsgDisp(void) {
     serverChannel->Close();
 
     /* Start the dispatcher thread. */
-    vislib::net::AbstractInboundCommChannel *cc = recvChannel.operator ->();
-    dispatcher.Start(recvChannel.operator ->());
+    vislib::net::AbstractCommChannel *cc = dynamic_cast<vislib::net::AbstractCommChannel *>(recvChannel.operator ->());
+    dispatcher.Start(cc);
 
     msg.GetHeader().SetBodySize(0);
     msg.GetHeader().SetMessageID(27);

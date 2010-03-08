@@ -27,7 +27,7 @@ vislib::net::cluster::DiscoveryListener::~DiscoveryListener(void) {
  * vislib::net::cluster::DiscoveryListener::OnUserMessage
  */
 void vislib::net::cluster::DiscoveryListener::OnUserMessage(
-        const DiscoveryService& src, 
+        DiscoveryService& src, 
         const DiscoveryService::PeerHandle& hPeer, 
         const UINT32 msgType, const BYTE *msgBody) throw() {
     /* Does nothing. */

@@ -50,6 +50,17 @@ void vislib::net::SimpleMessageDispatcher::AddListener(
 
 
 /*
+ * vislib::net::SimpleMessageDispatcher::OnThreadStarting
+ */
+void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *channel) {
+    VLSTACKTRACE("SimpleMessageDispatcher::Run", __FILE__, __LINE__);
+    ASSERT(channel != NULL);
+    this->channel = dynamic_cast<AbstractInboundCommChannel *>(
+        static_cast<AbstractCommChannel *>(channel));
+}
+
+
+/*
  * vislib::net::SimpleMessageDispatcher::RemoveListener
  */
 void vislib::net::SimpleMessageDispatcher::RemoveListener(
@@ -66,8 +77,13 @@ void vislib::net::SimpleMessageDispatcher::RemoveListener(
 DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
     VLSTACKTRACE("SimpleMessageDispatcher::Run", __FILE__, __LINE__);
     ASSERT(channel != NULL);
+    ASSERT(!this->channel.IsNull());
+    // The assertion of 'this->channel' might fail event if 'channel' is 
+    // non-NULL in case that the static type of the parameter passed into
+    // the Start() method of the thread was not AbstractCommChannel *. In
+    // this case, the dynamic_cast in OnThreadStarting() will fail and the
+    // smart reference becomes NULL.
 
-    this->channel = static_cast<AbstractInboundCommChannel *>(channel);
     bool doReceive = true;
     
     try {

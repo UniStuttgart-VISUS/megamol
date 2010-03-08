@@ -63,7 +63,7 @@ namespace cluster {
          *              address associated with this handle can be retrieved
          *              via src[hPeer].
          */
-        virtual void OnNodeFound(const DiscoveryService& src, 
+        virtual void OnNodeFound(DiscoveryService& src, 
             const DiscoveryService::PeerHandle& hPeer) throw() = 0;
 
         /**
@@ -80,7 +80,7 @@ namespace cluster {
          * @param hPeer  The handle of the peer that was removed.
          * @param reason The reason why the node was removed from the cluster.
          */
-        virtual void OnNodeLost(const DiscoveryService& src,
+        virtual void OnNodeLost(DiscoveryService& src,
             const DiscoveryService::PeerHandle& hPeer, 
             const NodeLostReason reason) throw() = 0;
 
@@ -97,7 +97,7 @@ namespace cluster {
          *                probably dependent on the 'msgType'. The caller 
          *                remains owner of the memory designated by 'msgBody'.
          */
-        virtual void OnUserMessage(const DiscoveryService& src,
+        virtual void OnUserMessage(DiscoveryService& src,
             const DiscoveryService::PeerHandle& hPeer, 
             const UINT32 msgType, const BYTE *msgBody) throw();
     };
