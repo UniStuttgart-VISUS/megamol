@@ -247,7 +247,7 @@ namespace math {
          * @param axis  The vector specifying the rotation axis.
          */
         template<class Tp, class Sp>
-        void Set(const T& angle, AbstractVector<Tp, 3, Sp>& axis);
+        void Set(const T& angle, const AbstractVector<Tp, 3, Sp>& axis);
 
         /**
          * Set the i-component (= x-component) of the quaternion.
@@ -614,15 +614,16 @@ namespace math {
     template<class T, class S>
     template<class Tp, class Sp>
     void AbstractQuaternion<T, S>::Set(const T& angle, 
-            AbstractVector<Tp, 3, Sp>& axis) {
-            T len = axis.Normalise();
+            const AbstractVector<Tp, 3, Sp>& axis) {
+        Vector<Tp, 3> ax(axis);
+        T len = ax.Normalise();
         double halfAngle = 0.5 * static_cast<double>(angle);
 
         if (!IsEqual(len, static_cast<T>(0))){
             len = static_cast<T>(::sin(halfAngle) / len);
-            this->components[IDX_X] = axis.X() * len;
-            this->components[IDX_Y] = axis.Y() * len;
-            this->components[IDX_Z] = axis.Z() * len;
+            this->components[IDX_X] = ax.X() * len;
+            this->components[IDX_Y] = ax.Y() * len;
+            this->components[IDX_Z] = ax.Z() * len;
             this->components[IDX_W] = static_cast<T>(::cos(halfAngle));
 
         } else {

@@ -94,7 +94,7 @@ void vislib::graphics::CameraLookAtDist::Trigger(
 
         // move
         front *= delta;
-        lookAt -= front;
+        lookAt += front;
         this->CameraParams()->SetLookAt(lookAt);
 
     }
