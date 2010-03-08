@@ -344,6 +344,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\CameraLookAtDist.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CameraMove2D.cpp"
 				>
 			</File>
@@ -471,6 +475,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\Camera.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\CameraLookAtDist.h"
 				>
 			</File>
 			<File
