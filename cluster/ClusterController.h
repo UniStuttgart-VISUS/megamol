@@ -139,7 +139,7 @@ namespace cluster {
          *              via src[hPeer].
          */
         virtual void OnNodeFound(
-            const vislib::net::cluster::DiscoveryService& src,
+            vislib::net::cluster::DiscoveryService& src,
             const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer)
             throw();
 
@@ -158,7 +158,7 @@ namespace cluster {
          * @param reason The reason why the node was removed from the cluster.
          */
         virtual void OnNodeLost(
-            const vislib::net::cluster::DiscoveryService& src,
+            vislib::net::cluster::DiscoveryService& src,
             const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
             const vislib::net::cluster::DiscoveryListener::NodeLostReason
                 reason) throw();
@@ -177,7 +177,7 @@ namespace cluster {
          *                remains owner of the memory designated by 'msgBody'.
          */
         virtual void OnUserMessage(
-            const vislib::net::cluster::DiscoveryService& src,
+            vislib::net::cluster::DiscoveryService& src,
             const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer, 
             const UINT32 msgType, const BYTE *msgBody) throw();
 

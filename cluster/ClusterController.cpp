@@ -319,7 +319,7 @@ DWORD cluster::ClusterController::Run(void *userData) {
 /*
  * cluster::ClusterController::OnNodeFound
  */
-void cluster::ClusterController::OnNodeFound(const DiscoveryService& src,
+void cluster::ClusterController::OnNodeFound(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer) throw() {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster Node found: %s\n",
         src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
@@ -337,7 +337,7 @@ void cluster::ClusterController::OnNodeFound(const DiscoveryService& src,
 /*
  * cluster::ClusterController::OnNodeLost
  */
-void cluster::ClusterController::OnNodeLost(const DiscoveryService& src,
+void cluster::ClusterController::OnNodeLost(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer,
         const DiscoveryListener::NodeLostReason reason) throw() {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster Node lost: %s\n",
@@ -356,7 +356,7 @@ void cluster::ClusterController::OnNodeLost(const DiscoveryService& src,
 /*
  * cluster::ClusterController::OnUserMessage
  */
-void cluster::ClusterController::OnUserMessage(const DiscoveryService& src,
+void cluster::ClusterController::OnUserMessage(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer,
         const UINT32 msgType, const BYTE *msgBody) throw() {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
