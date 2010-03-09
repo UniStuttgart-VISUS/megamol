@@ -25,7 +25,7 @@ namespace moldyn {
     /**
      * Call for multi-stream particle data.
      */
-    class MultiParticleDataCall : public AbstractGetData3DCall {
+    class MEGAMOLCORE_API MultiParticleDataCall : public AbstractGetData3DCall {
     public:
 
         /**
@@ -35,7 +35,7 @@ namespace moldyn {
          *       be extended to be able to handle data for arbitrary glyphs.
          *       This also applies to interpolation of data.
          */
-        class Particles {
+        class MEGAMOLCORE_API Particles {
         public:
 
             /** possible values for the vertex data */
@@ -407,8 +407,14 @@ namespace moldyn {
 
     private:
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** Array of lists of particles */
         vislib::Array<Particles> lists;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
     };
 
