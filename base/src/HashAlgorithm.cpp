@@ -30,7 +30,9 @@ vislib::HashAlgorithm::~HashAlgorithm(void) {
 bool vislib::HashAlgorithm::ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
         const BYTE *input, const SIZE_T cntInput) {
     this->Initialise();
-    return this->TransformFinalBlock(outHash, inOutSize, input, cntInput);
+    this->TransformFinalBlock(outHash, inOutSize, input, cntInput);
+    // Fix for ticket #64. It is, however, unclear why this is required.
+    return this->GetHashValue(outHash, inOutSize);
 }
 
 

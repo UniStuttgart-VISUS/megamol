@@ -88,16 +88,17 @@ void TestMD5(void) {
     BYTE *hashVal = new BYTE[hashSize];
     TEXT = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
     hash2.TransformFinalBlock(hashVal, hashSize, reinterpret_cast<const BYTE*>(TEXT), ::strlen(TEXT));
-    // hash2.GetHashValue(hashVal, hashSize); <= with this line the code works! Why?
+//    hash2.ComputeHash(hashVal, hashSize, reinterpret_cast<const BYTE*>(TEXT), ::strlen(TEXT));
+//    hash2.GetHashValue(hashVal, hashSize); //<= with this line the code works! Why?
     vislib::StringA hashStr, tmp;
     for (SIZE_T i =0; i < hashSize; i++) {
         tmp.Format("%.2x", hashVal[i]);
         hashStr += tmp;
     }
     delete[] hashVal;
+    //std::cout << "hash bytes " << hashStr << " hash.ToString " << hash.ToStringA().PeekBuffer();
+    //AssertEqualCaseInsensitive("MD5 string equal to reference", hashStr, hash.ToStringA());
     AssertEqualCaseInsensitive("MD5 string equal to reference", hashStr, "57edf4a22be3c955ac49da2e2107b67a");
-
-
 }
 
 
