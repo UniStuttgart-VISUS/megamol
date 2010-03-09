@@ -185,7 +185,8 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error(msg.PeekBuffer());
             return true;
         }
-        this->vd->AddModule(md, vislib::StringA(instName));
+        this->modName = instName;
+        this->vd->AddModule(md, this->modName);
         return true;
     }
 
@@ -257,7 +258,16 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"param\" tag without a value ignored");
             return true;
         }
-        this->vd->AddParamValue(vislib::StringA(name), vislib::TString(value));
+        if (this->modName.IsEmpty()) {
+            this->vd->AddParamValue(vislib::StringA(name), vislib::TString(value));
+        } else {
+            vislib::StringA n(name);
+            if (!n.StartsWith("::")) {
+                n.Prepend("::");
+                n.Prepend(this->modName);
+            }
+            this->vd->AddParamValue(n, vislib::TString(value));
+        }
         return true;
     }
 
@@ -286,8 +296,11 @@ bool utility::ProjectParser::EndTag(unsigned int num, unsigned int level,
         this->vd = NULL;
         return true;
     }
-    if (MMXML_STRING("module").Equals(name)
-            || MMXML_STRING("call").Equals(name)
+    if (MMXML_STRING("module").Equals(name)) {
+        this->modName.Clear();
+        return true;
+    }
+    if (MMXML_STRING("call").Equals(name)
             || MMXML_STRING("param").Equals(name)
             /*|| MMXML_STRING("instance").Equals(name)*/) {
         return true;

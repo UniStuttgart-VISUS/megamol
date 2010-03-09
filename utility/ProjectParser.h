@@ -123,6 +123,9 @@ namespace utility {
         /** The view description which is currently created by the parser */
         ViewDescription *vd;
 
+        /** The name of the currently created module */
+        vislib::StringA modName;
+
         /** The view descriptions parsed from the project file */
         vislib::SingleLinkedList<ViewDescription*> viewDescs;
 
