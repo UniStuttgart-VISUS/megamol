@@ -28,6 +28,8 @@
 #include <algorithm>
 #include <list>
 
+#define NUM_BUFFERS 8  // DON'T CHANGE !
+
 namespace megamol {
 namespace protein {
 
@@ -342,15 +344,23 @@ namespace protein {
 
         /**
          * Creates the min max depth buffer
-         *
-         * @param call The calling call.
          */
-        void createMinMaxDepthBuffer(megamol::core::Call& call);
+        void createMinMaxDepthBuffer(void);
+
+        /**
+         * Render depth peeling result (blending)
+         */
+        void renderDepthPeeling(void);
 
         /**
          * Render the min max depth buffer (DEBUG output)
          */
         void renderMinMaxDepthBuffer(void);
+
+        /**
+         * Creates display list for a fullscreen quad
+         */
+        void createFullscreenQuadDisplayList(void);
 
     private:
 
@@ -412,6 +422,8 @@ namespace protein {
         megamol::core::param::ParamSlot debugParam;
         megamol::core::param::ParamSlot drawSESParam;
         megamol::core::param::ParamSlot drawSASParam;
+
+        // not used yet ...
         megamol::core::param::ParamSlot depthPeelingParam;
 
         bool drawRS;
@@ -442,9 +454,11 @@ namespace protein {
         vislib::graphics::gl::GLSLShader silhouetteShader;
         // shader for cheap transparency (postprocessing/blending)
         vislib::graphics::gl::GLSLShader transparencyShader;
-
         // shader creating min max depth buffer
         vislib::graphics::gl::GLSLShader createDepthBufferShader;
+        // shader for blending depth peeling result
+        vislib::graphics::gl::GLSLShader renderDepthPeelingShader;
+
         // DEBUG: render min max depth buffer
         vislib::graphics::gl::GLSLShader renderDepthBufferShader;
 
@@ -494,23 +508,31 @@ namespace protein {
         std::vector<vislib::Array<float> > sphereColors;
         std::vector<vislib::Array<float> > sphereSurfVector;
 
-        // FBOs and textures for postprocessing
+        // FBOs
         GLuint colorFBO;
         GLuint blendFBO;
         GLuint horizontalFilterFBO;
         GLuint verticalFilterFBO;
-        GLuint minmaxFBO;
+        GLuint depthBufferFBO;
+        GLuint depthPeelingFBO;
 
+        // textures for FBOs
         GLuint texture0;
         GLuint depthTex0;
         GLuint texture1;
         GLuint depthTex1;
         GLuint hFilter;
         GLuint vFilter;
-        GLuint minmaxDepthBuffer;
+        GLuint depthBuffer;
+        GLuint depthPeelingTex[NUM_BUFFERS];
+
+        // FBO color buffer indices
+        GLuint colorBufferIndex[NUM_BUFFERS];
 
         // display list for bbox
         GLuint bboxList;
+        // display list for fullscreen quad
+        GLuint fsQuadList;
 
         // width and height of view
         unsigned int width;
