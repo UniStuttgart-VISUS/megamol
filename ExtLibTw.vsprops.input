@@ -25,7 +25,7 @@
 	/>
   <UserMacro
         Name="LibTweakbarDebug"
-        Value="%withTweakbar%!AntTweakBar%debugTweakbar%|$(BitsD)|$(Bits)|.lib!!"
+        Value="%withTweakbar%!AntTweakBar%debugTweakbar%|$(BitsD)|$(Bits)c|.lib!!"
         PerformEnvironmentSet="true"
 	/>
 </VisualStudioPropertySheet>

@@ -60,7 +60,7 @@ $b = FlagParameter->new();
     push @fps, $b;
 $b = FlagParameter->new();
     $b->id("debugTweakbar");
-    $b->description("Enable the use of the Debug version of the AntTweakBar library (Requires DirectX SDK installed)");
+    $b->description("Enable the use of the Debug version of the AntTweakBar library (Requires DirectX SDK installed; otherwise AntTweakBarC must be available)");
     $b->placeholder("%debugTweakbar%");
     $b->value(0);
     push @fps, $b;
