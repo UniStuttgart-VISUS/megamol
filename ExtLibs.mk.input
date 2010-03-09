@@ -22,9 +22,10 @@ ifeq (%withTweakbar%$1$0$, 1)
 endif
 
 ifeq (%withUserExpat%$1$0$, 1)
-    expatpath := %expatPath%
-    IncludeDir := $(IncludeDir) $(expatpath)/include
-    LIBS := $(LIBS) expat$(BITS)
+	expatpath := %expatPath%
+	LinkerFlags += -L$(expatpath)/lib
+	IncludeDir := $(IncludeDir) $(expatpath)/include
+	LIBS := $(LIBS) expat$(BITS)
 else
-    LIBS := $(LIBS) expat
+	LIBS := $(LIBS) expat
 endif
