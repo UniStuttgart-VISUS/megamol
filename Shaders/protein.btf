@@ -7342,8 +7342,12 @@ void main(void) {
         // ============ sort fragment into right bucket: ============
 
         // calculate right bucket (16 pairs = 32)
-        float k = floor(16.0*(gl_FragDepth - minmaxDepth.x) / (minmaxDepth.y - minmaxDepth.x));
-        int layer = int(floor(k / 2.0));
+
+        if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+
+        float k = floor(8.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+
+        int layer = int(floor(k/2.0));
 
         if(mod(k, 2.0) == 0.0) {
             gl_FragData[layer].x = 1.0 - gl_FragDepth;
@@ -7441,8 +7445,11 @@ void main(void) {
         // ============ sort fragment into right bucket: ============
 
         // calculate right bucket (16 pairs = 32)
-        float k = floor(16.0*(gl_FragDepth - minmaxDepth.x) / (minmaxDepth.y - minmaxDepth.x));
-        int layer = int(floor(k / 2.0));
+        if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+
+        float k = floor(8.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+
+        int layer = int(floor(k/2.0));
 
         if(mod(k, 2.0) == 0.0) {
             gl_FragData[layer].x = 1.0 - gl_FragDepth;
@@ -8370,6 +8377,7 @@ void main(void) {
 
 void main(void) {
 
+    //if(gl_FragCoord.z > 1.0 || gl_FragCoord.z < 0.0) { discard; }
     gl_FragColor.xy = vec2(-gl_FragCoord.z, gl_FragCoord.z);
 
 }
@@ -8396,22 +8404,17 @@ void main(void) {
       <snippet type="string">
         <!--
 
-#define MAX_DEPTH 1.0
-
 uniform vec2 texOffset;
 uniform float scaleFactor = 4.0;
-
 uniform sampler2D depthBuffer;
 
 void main(void) {
 
     vec2 texCoord = (gl_FragCoord.xy * scaleFactor + vec2( 0.5, 0.5)) * texOffset;
-
+    // ...
     if((texCoord.x > 1.0) || (texCoord.y > 1.0)) { discard; }
-
     vec2 depthValues = texture2D(depthBuffer, texCoord.xy).xy;
-
-    gl_FragColor = vec4(clamp(MAX_DEPTH + depthValues.x, 0.0, 1.0), clamp(depthValues.y, 0.0, 1.0), 0.0, 1.0); 
+    gl_FragColor = vec4(1.0 + depthValues.x, 0.0 , depthValues.y, 1.0); 
 }
 
 -->     
@@ -8437,78 +8440,64 @@ void main(void) {
       <snippet type="string">
         <!--
 
+#define MAX_DEPTH 1.0
+
 uniform sampler2D Layer0to3Tex;
 uniform sampler2D Layer4to7Tex;
 uniform sampler2D Layer8to11Tex;
 uniform sampler2D Layer12to15Tex;
-uniform sampler2D Layer16to19Tex;
+/*uniform sampler2D Layer16to19Tex;
 uniform sampler2D Layer20to23Tex;
 uniform sampler2D Layer24to27Tex;
-uniform sampler2D Layer28to31Tex;
+uniform sampler2D Layer28to31Tex;*/
 
 uniform vec2 texOffset;
-
-uniform float alpha = 0.5;
+uniform float alpha;
 
 void main(void) {
 
     vec2 texCoord = (gl_FragCoord.xy + vec2( 0.5, 0.5)) * texOffset;
 
-    vec4 color = vec4(0.3, 0.3, 0.3, 1.0);
-    vec4 white = vec4(0.3, 0.3, 0.3, 1.0);
+    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 white = vec4(0.1, 0.1, 0.1, 0.1);
 
-    int i;
+    vec4 layer1 = texture2D(Layer0to3Tex, texCoord);
+    vec4 layer2 = texture2D(Layer4to7Tex, texCoord);
+    vec4 layer3 = texture2D(Layer8to11Tex, texCoord);
+    vec4 layer4 = texture2D(Layer12to15Tex, texCoord);
+    /*vec4 layer5 = texture2D(Layer16to19Tex, texCoord);
+    vec4 layer6 = texture2D(Layer20to23Tex, texCoord);
+    vec4 layer7 = texture2D(Layer24to27Tex, texCoord);
+    vec4 layer8 = texture2D(Layer28to31Tex, texCoord);*/
 
-    vec4 layer = texture2D(Layer0to3Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
+    for(int i = 0; i < 4; ++i) {
+        if(layer1[i] > 0.0f) {
+            color = color + vec4(0.25, 0.0, 0.0, 0.0);
         }
-    }
-    layer = texture2D(Layer4to7Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
+        if(layer2[i] > 0.0f) {
+            color = color + vec4(0.0, 0.25, 0.0, 0.0);
         }
-    }
-    layer = texture2D(Layer8to11Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
+        if(layer3[i] > 0.0f) {
+            color = color + vec4(0.0, 0.0, 0.25, 0.0);
         }
-    }
-    layer = texture2D(Layer12to15Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
+        if(layer4[i] > 0.0f) {
+            color = color + vec4(0.0, 0.0, 0.0, 0.0);
         }
-    }
-    layer = texture2D(Layer16to19Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
+        /*if(layer5[i] > 0.0f) {
+            color = color + white;
         }
-    }
-    layer = texture2D(Layer20to23Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
+        if(layer6[i] > 0.0f) {
+            color = color + white;
         }
-    }
-    layer = texture2D(Layer24to27Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
+        if(layer7[i] > 0.0f) {
+            color = color + white;
         }
-    }
-    layer = texture2D(Layer28to31Tex, texCoord);
-    for(i = 0; i < 4; ++i) {
-        if(layer[i] > 0.0) {
-            color = color + white*alpha;
-        }
+        if(layer8[i] > 0.0f) {
+            color = color + white;
+        }*/
     }
 
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_FragColor = color + vec4(0.0, 0.0, 0.0, 1.0);;
 }
 
 -->    
