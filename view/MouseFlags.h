@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.std.h"
 #include "vislib/types.h"
 
 
@@ -26,62 +27,62 @@ namespace view {
     /**
      * Indicates that the left mouse button is pressed
      */
-    extern const MouseFlags MOUSEFLAG_BUTTON_LEFT_DOWN;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_BUTTON_LEFT_DOWN;
 
     /**
      * Indicates that the right mouse button is pressed
      */
-    extern const MouseFlags MOUSEFLAG_BUTTON_RIGHT_DOWN;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_BUTTON_RIGHT_DOWN;
 
     /**
      * Indicates that the middle mouse button is pressed
      */
-    extern const MouseFlags MOUSEFLAG_BUTTON_MIDDLE_DOWN;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_BUTTON_MIDDLE_DOWN;
 
     /**
      * Indicates that the left mouse button changed its state
      */
-    extern const MouseFlags MOUSEFLAG_BUTTON_LEFT_CHANGED;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_BUTTON_LEFT_CHANGED;
 
     /**
      * Indicates that the right mouse button changed its state
      */
-    extern const MouseFlags MOUSEFLAG_BUTTON_RIGHT_CHANGED;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_BUTTON_RIGHT_CHANGED;
 
     /**
      * Indicates that the middle mouse button changed its state
      */
-    extern const MouseFlags MOUSEFLAG_BUTTON_MIDDLE_CHANGED;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_BUTTON_MIDDLE_CHANGED;
 
     /**
      * Indicates that the shift modifier key is pressed
      */
-    extern const MouseFlags MOUSEFLAG_MODKEY_SHIFT_DOWN;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_MODKEY_SHIFT_DOWN;
 
     /**
      * Indicates that the ctrl modifier key is pressed
      */
-    extern const MouseFlags MOUSEFLAG_MODKEY_CTRL_DOWN;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_MODKEY_CTRL_DOWN;
 
     /**
      * Indicates that the alt modifier key is pressed
      */
-    extern const MouseFlags MOUSEFLAG_MODKEY_ALT_DOWN;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_MODKEY_ALT_DOWN;
 
     /**
      * Indicates that the shift modifier key changed its state
      */
-    extern const MouseFlags MOUSEFLAG_MODKEY_SHIFT_CHANGED;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_MODKEY_SHIFT_CHANGED;
 
     /**
      * Indicates that the ctrl modifier key changed its state
      */
-    extern const MouseFlags MOUSEFLAG_MODKEY_CTRL_CHANGED;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_MODKEY_CTRL_CHANGED;
 
     /**
      * Indicates that the alt modifier key changed its state
      */
-    extern const MouseFlags MOUSEFLAG_MODKEY_ALT_CHANGED;
+    extern MEGAMOLCORE_API const MouseFlags MOUSEFLAG_MODKEY_ALT_CHANGED;
 
     /**
      * Resets all 'changed' flags
