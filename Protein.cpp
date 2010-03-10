@@ -16,6 +16,7 @@
 #include "ProteinRendererBDP.h"
 #include "ProteinVolumeRenderer.h"
 #include "ProteinMovementRenderer.h"
+#include "ProteinRendererCBOpenCL.h"
 
 #include "ProteinData.h"
 #include "NetCDFData.h"
@@ -78,11 +79,14 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
+	int moduleCount = 11;
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-    return 11;
-#else
-    return 10;
+    moduleCount++;
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
+#if (defined(WITH_OPENCL) && (WITH_OPENCL))
+    moduleCount++;
+#endif /* (defined(WITH_OPENCL) && (WITH_OPENCL)) */
+    return moduleCount;
 }
 
 
@@ -103,7 +107,16 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
 		case 9: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinMovementRenderer>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
         case 10: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+		#define NETCDF_OFFSET 1
+#else
+		#define NETCDF_OFFSET 0
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
+#if (defined(WITH_OPENCL) && (WITH_OPENCL))
+		case 10 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
+		#define OPENCL_OFFSET 1
+#else
+		#define OPENCL_OFFSET 0
+#endif /* (defined(WITH_OPENCL) && (WITH_OPENCL)) */
         default: return NULL;
     }
     return NULL;

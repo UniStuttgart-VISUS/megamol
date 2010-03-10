@@ -441,6 +441,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinRendererCBOpenCL.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ProteinRendererSES.cpp"
 				>
 			</File>
@@ -571,6 +575,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinRendererCBOpenCL.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ProteinRendererSES.h"
 				>
 			</File>
@@ -628,14 +636,38 @@
 			<File
 				RelativePath=".\Shaders\protein.btf"
 				>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Shaders\solpath.btf"
 				>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Shaders\volume.btf"
 				>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -672,6 +704,22 @@
 			<File
 				RelativePath=".\Makefile"
 				>
+			</File>
+		</Filter>
+		<Filter
+			Name="OpenCL Files"
+			>
+			<File
+				RelativePath=".\Shaders\contourbuildupKernel.cl"
+				>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 	</Files>

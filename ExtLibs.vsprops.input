@@ -6,13 +6,13 @@
   >
   <Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="%withNETCDF%!$(NETCDFPath)\include!!"
-		PreprocessorDefinitions="%withNETCDF%!WITH_NETCDF!!"
+		AdditionalIncludeDirectories="%withNETCDF%!$(NETCDFPath)\include, !! %withOPENCL%!$(OPENCLPath)\OpenCL\common\inc, !!"
+		PreprocessorDefinitions="%withNETCDF%!WITH_NETCDF, !! %withOPENCL%!WITH_OPENCL, !!"
 	/>
   <Tool
 		Name="VCLinkerTool"
-		AdditionalLibraryDirectories="%withNETCDF%!$(NETCDFPath)\lib$(BitsD)!!"
-		AdditionalDependencies="%withNETCDF%!netcdf$(Bits).lib!!"
+		AdditionalLibraryDirectories="%withNETCDF%!$(NETCDFPath)\lib$(BitsD), !! %withOPENCL%!$(OPENCLPath)\OpenCL\common\lib\x64!!"
+		AdditionalDependencies="%withNETCDF%!netcdf$(Bits).lib!! %withOPENCL%!OpenCL.lib!!"
 	/>
   <UserMacro
   Name="OutputBin"
@@ -32,6 +32,11 @@
   <UserMacro
 		Name="NETCDFPath"
 		Value="%netcdfPath%"
+		PerformEnvironmentSet="true"
+	/>
+  <UserMacro
+		Name="OPENCLPath"
+		Value="%openclPath%"
 		PerformEnvironmentSet="true"
 	/>
 </VisualStudioPropertySheet>
