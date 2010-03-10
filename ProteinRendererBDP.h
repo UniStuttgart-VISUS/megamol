@@ -527,7 +527,7 @@ namespace protein {
         GLuint depthPeelingTex[NUM_BUFFERS];
 
         // FBO color buffer indices
-        GLuint colorBufferIndex[NUM_BUFFERS];
+        GLenum colorBufferIndex[NUM_BUFFERS];
 
         // display list for bbox
         GLuint bboxList;

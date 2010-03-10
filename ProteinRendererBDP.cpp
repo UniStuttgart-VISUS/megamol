@@ -9,8 +9,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#define MAX_DEPTH 1.0
-
 #include "ProteinRendererBDP.h"
 
 #include "CoreInstance.h"
@@ -867,7 +865,7 @@ bool ProteinRendererBDP::Render( Call& call )
     }
 
     // create bounding box display list for min max depth buffer
-    if(!::glIsList(this->bboxList)) {
+    if(!glIsList(this->bboxList)) {
         this->createBBoxDisplayList(dynamic_cast<view::CallRender3D*>( &call )->AccessBoundingBoxes());
     }
 
@@ -958,20 +956,13 @@ bool ProteinRendererBDP::Render( Call& call )
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }*/
 
-
-    glDisable( GL_BLEND);
-
     // start rendering to depth peeling fbo
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthPeelingFBO);
 
-    glDrawBuffers(NUM_BUFFERS, colorBufferIndex);
+    glDrawBuffers(NUM_BUFFERS, this->colorBufferIndex);
 
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear( GL_COLOR_BUFFER_BIT );
-
-    // bind min max depth buffer
-    glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
-    glActiveTexture(GL_TEXTURE1);
 
     // render the SES
     if( this->currentRendermode == GPU_RAYCASTING )
@@ -984,26 +975,19 @@ bool ProteinRendererBDP::Render( Call& call )
         //this->RenderSESGpuRaycastingSimple( protein);
     }
 
-    // unbind min max depth buffer
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture( GL_TEXTURE_2D, 0);
-
     // stop rendering  
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
 
     glPopMatrix();
-  
     
     // ========= Create BDP result and blend it over background =========
 
-    /*
     glEnable(GL_BLEND);
-	glBlendEquationEXT(GL_FUNC_ADD);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // render depth peeling result
     this->renderDepthPeeling();
-    */
 
     //////////////////////////////////
     // apply postprocessing effects //
@@ -1021,8 +1005,8 @@ bool ProteinRendererBDP::Render( Call& call )
             this->PostprocessingTransparency( 0.5f);
     }*/
 
-    glDisable(GL_BLEND);
     glEnable( GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 
     //render min max-depth-buffer (DEBUG output)
     this->renderMinMaxDepthBuffer();
@@ -1030,7 +1014,7 @@ bool ProteinRendererBDP::Render( Call& call )
     glPopAttrib();
 
     fpsCounter.FrameEnd();
-    std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
+    //std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
 
     return true;
 }
@@ -1332,7 +1316,11 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
     float *clearColor = new float[4];
     glGetFloatv( GL_COLOR_CLEAR_VALUE, clearColor);
     vislib::math::Vector<float, 3> fogCol( clearColor[0], clearColor[1], clearColor[2]);
-    
+
+    // bind min max depth buffer
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
+
     unsigned int cntRS;
     
     for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
@@ -1458,8 +1446,9 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
-        
+       
         // bind texture
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
         // enable sphere shader
         this->sphereShader.Enable();
@@ -1529,6 +1518,10 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         // end DEBUG
         
     }
+
+    // unbind min max depth buffer
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture( GL_TEXTURE_2D, 0);
             
     // delete pointers
     delete[] clearColor;
@@ -1707,35 +1700,39 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
  */
 void ProteinRendererBDP::renderDepthPeeling(void) {
 
-    unsigned int i;
-
-    for(i = 0; i < NUM_BUFFERS; ++i) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[i]);
-    }
+    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[0]);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[1]);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[2]);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[3]);
 
     this->renderDepthPeelingShader.Enable();
 
     glUniform2fARB( this->renderDepthPeelingShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
-    glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alpha"), 0.5f);
+    glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alpha"), 0.3f);
 
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer0to3Tex"), 0);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer4to7Tex"), 1);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer8to11Tex"), 2);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer12to15Tex"), 3);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer16to19Tex"), 4);
+    /*glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer16to19Tex"), 4);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer20to23Tex"), 5);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer24to27Tex"), 6);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer28to31Tex"), 7);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer28to31Tex"), 7);*/
 
     glCallList(this->fsQuadList);
 
     this->renderDepthPeelingShader.Disable();
 
-    for(i = 0; i < NUM_BUFFERS; ++i) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture( GL_TEXTURE_2D, 0);
-    }
+    glBindTexture( GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture( GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture( GL_TEXTURE_2D, 0);
 
 }
 
@@ -1747,7 +1744,7 @@ void ProteinRendererBDP::createMinMaxDepthBuffer() {
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthBufferFBO);
 
-    glClearColor(-MAX_DEPTH, -MAX_DEPTH, 0.0, 0.0);
+    glClearColor(-1.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     this->createDepthBufferShader.Enable();
