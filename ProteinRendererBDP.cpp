@@ -304,15 +304,15 @@ bool ProteinRendererBDP::create( void )
     GLint maxBuffers;
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &maxBuffers);
     if(maxBuffers < NUM_BUFFERS) {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "GL_MAX_COLOR_ATTACHMENTS_EXT (=%i) is less than NUM_BUFFERS (=%i).\n", maxBuffers, NUM_BUFFERS );
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "NUM_BUFFERS (=%i) is greater than GL_MAX_COLOR_ATTACHMENTS_EXT (=%i).\n", NUM_BUFFERS, maxBuffers );
         return false;
     }
 
-    // check maximum active texture units used fragment prog
+    // check maximum active texture units useable in fragment program
     GLint maxTexUnits;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &maxTexUnits);
     if(maxTexUnits < NUM_BUFFERS) {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "GL_MAX_TEXTURE_UNITS (=%i) is less than NUM_BUFFERS (=%i).\n", maxTexUnits, NUM_BUFFERS );
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "NUM_BUFFERS (=%i) is greater than GL_MAX_TEXTURE_UNITS (=%i).\n", NUM_BUFFERS, maxTexUnits );
         return false;
     }
    
@@ -1330,7 +1330,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             //////////////////////////////////
             // ray cast the tori on the GPU //
             //////////////////////////////////
-            /*
+            
             // enable torus shader
             this->torusShader.Enable();
             // set shader variables
@@ -1341,6 +1341,10 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
             glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
             glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
+
+            glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+            glUniform1iARB( this->sphereShader.ParameterLocation( "depthBuffer"), 0);
+
             // get attribute locations
             GLuint attribInParams = glGetAttribLocationARB( this->torusShader, "inParams");
             GLuint attribQuatC = glGetAttribLocationARB( this->torusShader, "quatC");
@@ -1348,7 +1352,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             GLuint attribInColors = glGetAttribLocationARB( this->torusShader, "inColors");
             GLuint attribInCuttingPlane = glGetAttribLocationARB( this->torusShader, "inCuttingPlane");
             // set color to orange
-            glColor3f( 1.0f, 0.75f, 0.0f);
+            //glColor3f( 1.0f, 0.75f, 0.0f);
             glEnableClientState( GL_VERTEX_ARRAY);
             // enable vertex attribute arrays for the attribute locations
             glEnableVertexAttribArrayARB( attribInParams);
@@ -1374,13 +1378,14 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glDisableClientState(GL_VERTEX_ARRAY);
             // enable torus shader
             this->torusShader.Disable();
-            */
+            
             
             /////////////////////////////////////////////////
             // ray cast the spherical triangles on the GPU //
             /////////////////////////////////////////////////
-            /*
+            
             // bind texture
+            glActiveTexture(GL_TEXTURE1);
             glBindTexture( GL_TEXTURE_2D, this->singularityTexture[cntRS]);
             // enable spherical triangle shader
             this->sphericalTriangleShader.Enable();
@@ -1391,9 +1396,15 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
             glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
             glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-            glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
-                                 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
             glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->transparency);
+
+            glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+            glUniform1iARB( this->sphereShader.ParameterLocation( "depthBuffer"), 0);
+
+            glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffsetSing"),
+                                 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
+            glUniform1iARB( this->sphereShader.ParameterLocation( "tex"), 1);
+
             // get attribute locations
             GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
             GLuint attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
@@ -1404,7 +1415,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
             GLuint attribFrontBack = glGetAttribLocationARB( this->sphericalTriangleShader, "attribFrontBack");
             // set color to turquoise (= Tuerkis)
-            glColor3f( 0.0f, 0.75f, 1.0f);
+            //glColor3f( 0.0f, 0.75f, 1.0f);
             glEnableClientState( GL_VERTEX_ARRAY);
             // enable vertex attribute arrays for the attribute locations
             glEnableVertexAttribArrayARB( attribVec1);
@@ -1439,14 +1450,14 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             this->sphericalTriangleShader.Disable();
             // unbind texture
             glBindTexture( GL_TEXTURE_2D, 0);
-            */
+            
         }
         
 
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
-       
+      
         // bind texture
         glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
@@ -1459,12 +1470,13 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
         glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-        glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetCP"),
-                             1.0f/(float)this->cutPlanesTexWidth[cntRS], 1.0f/(float)this->cutPlanesTexHeight[cntRS] );
-        glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetDB"), 1.0f/(float)this->width, 1.0f/(float)this->height );
         glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
 
+        glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
         glUniform1iARB( this->sphereShader.ParameterLocation( "depthBuffer"), 0);
+
+        glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetCutPlanes"),
+                             1.0f/(float)this->cutPlanesTexWidth[cntRS], 1.0f/(float)this->cutPlanesTexHeight[cntRS] );
         glUniform1iARB( this->sphereShader.ParameterLocation( "tex"), 1);
 
         // get attribute locations
@@ -1491,6 +1503,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         this->sphereShader.Disable();
         // unbind texture
         glBindTexture( GL_TEXTURE_2D, 0);
+        
 
         // DEBUG
         // drawing surfVectors as yellow lines
@@ -1700,40 +1713,36 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
  */
 void ProteinRendererBDP::renderDepthPeeling(void) {
 
-    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[0]);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[1]);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[2]);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[3]);
+    int i;
+
+    for(i = 0; i < NUM_BUFFERS; ++i) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[i]);
+    }
 
     this->renderDepthPeelingShader.Enable();
 
     glUniform2fARB( this->renderDepthPeelingShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
     glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alpha"), 0.3f);
 
+    // TODO: create NUM_BUFFERS textures ...
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer0to3Tex"), 0);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer4to7Tex"), 1);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer8to11Tex"), 2);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer12to15Tex"), 3);
-    /*glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer16to19Tex"), 4);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer16to19Tex"), 4);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer20to23Tex"), 5);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer24to27Tex"), 6);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer28to31Tex"), 7);*/
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer28to31Tex"), 7);
 
     glCallList(this->fsQuadList);
 
     this->renderDepthPeelingShader.Disable();
 
-    glBindTexture( GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture( GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture( GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture( GL_TEXTURE_2D, 0);
-
+    for(i = 0; i < NUM_BUFFERS; ++i) {
+        glActiveTexture(GL_TEXTURE0 + NUM_BUFFERS-1 - i);
+        glBindTexture( GL_TEXTURE_2D, 0);
+    }
 }
 
 
