@@ -7204,18 +7204,16 @@ void main(void) {
       <snippet type="string">
         <!--
 
-// active texture 0
-uniform sampler2D depthBuffer;
-// texture for cutting planes
-uniform sampler2D tex;
-
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
 
-uniform vec2 texOffsetDB;  // depth buffer
-uniform vec2 texOffsetCP;  // cutting planes
+uniform vec2 texOffsetDepthBuffer;
+uniform sampler2D depthBuffer;
+
+uniform vec2 texOffsetCutPlanes;   
+uniform sampler2D tex;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -7230,11 +7228,16 @@ void main(void) {
     int i;
     float lambda;
     vec3 ray, planeNormal, planePos, surfPos, sphereintersection;
-    vec4 coord, color;
+    vec4 coord, fragColor;
     bool discardExt, discardInt;
    
     // get min and max depth of pixel location
-    vec2  minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDB).xy;
+    vec2  minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
+
+    // init fragment data with zero
+    for(int i = 0; i < 8; ++i) {
+        gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
+    }
 
     // transform fragment coordinates from window coordinates to view coordinates.
     coord = gl_FragCoord 
@@ -7264,7 +7267,7 @@ void main(void) {
 
     // clip sphereintersection against edge cutting planes
     for(i = 0; i < int(texCoord.x); i++) {
-        planePos = texture2D( tex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCP).xyz;
+        planePos = texture2D( tex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCutPlanes).xyz;
         planeNormal = normalize(planePos);
         if(dot(planeNormal, (sphereintersection - planePos)) > 0.0f) { discardExt = true; }
     }
@@ -7288,11 +7291,11 @@ void main(void) {
         //color = vec3( 0.17, 0.5, 0.8);
         //color = vec3( 0.19, 0.52, 0.82);
 
-        vec3 RGBcolor = vec3( 0.0, 0.98, 0.23); // ext
+        vec3 color = vec3( 0.0, 0.98, 0.23); // ext
         //color = vec3( 0.98, 0.98, 0.0); // int
 
         // phong lighting with directional light
-        vec4 color = vec4(LocalLighting(ray, normal, lightPos.xyz, RGBcolor), 1.0); // gl_FragColor
+        vec4 fragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
 
         // calculate depth
     #ifdef DEPTH
@@ -7309,52 +7312,41 @@ void main(void) {
 
     #ifdef FOGGING_SES
         float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-        color.rgb = mix( fogCol, gl_FragColor.rgb, f); // gl_FragColor.rgb
+        fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor.rgb
     #endif // FOGGING_SES
-        color.a = alpha;  // gl_FragColor.a
+        fragColor.a = alpha;  // gl_FragColor.a
 
     #ifdef AXISHINTS
         // debug-axis-hints
         vec3 colorX = vec3( 1.0, 1.0, 0.0);
         float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
-        { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
-        { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
-        { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
-        if (mc < 0.05) { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
-        // debug-axis-hints
-        /*
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
-        if (mc < 0.05)            { gl_FragColor.a = 1.0; }
-        if (abs(normal.x) > 0.98) { gl_FragColor.a = 1.0; }
-        if (abs(normal.y) > 0.98) { gl_FragColor.a = 1.0; }
-        if (abs(normal.z) > 0.98) { gl_FragColor.a = 1.0; }
-        if (normal.x < -0.99)     { gl_FragColor.a = 1.0; }
-        if (normal.y < -0.99)     { gl_FragColor.a = 1.0; }
-        if (normal.z < -0.99)     { gl_FragColor.a = 1.0; }
-        */
 
         // ============ code color into float ... ============
 
-        // ============ sort fragment into right bucket: ============
+        // ============ sort fragment into right bucket ============
 
-        // calculate right bucket (16 pairs = 32)
+        // USE OGL_DEPTH_SES
+        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
 
-        if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
-
-        float k = floor(8.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-
-        int layer = int(floor(k/2.0));
-
-        if(mod(k, 2.0) == 0.0) {
-            gl_FragData[layer].x = 1.0 - gl_FragDepth;
-            gl_FragData[layer].y = gl_FragDepth;
+        // calculate bucket pair (16 pairs -> 32 depth values)
+        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+        // index of render target
+        int rt = int(floor(bucket/2.0));
+        // choose right pair in render target
+        if(mod(int(bucket), 2) == 0) {
+            gl_FragData[rt].x = 1.0 - gl_FragDepth;
+            gl_FragData[rt].y = gl_FragDepth;
         } else {
-            gl_FragData[layer].z = 1.0 - gl_FragDepth;
-            gl_FragData[layer].w = gl_FragDepth;
+            gl_FragData[rt].z = 1.0 - gl_FragDepth;
+            gl_FragData[rt].w = gl_FragDepth;
         }
     }
 
@@ -7367,7 +7359,7 @@ void main(void) {
 
     // clip sphereintersection against edge cutting planes
     for(i = 0; i < int(texCoord.x); i++) {
-        planePos = texture2D( tex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCP).xyz;
+        planePos = texture2D( tex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCutPlanes).xyz;
         planeNormal = normalize(planePos);
         if(dot(planeNormal, (sphereintersection - planePos)) > 0.0f) { discardInt = true; }
     }
@@ -7392,10 +7384,10 @@ void main(void) {
         //RGBcolor = vec3( 0.19, 0.52, 0.82);
 
         //RGBcolor = vec3( 0.0, 0.98, 0.23); // ext
-        vec3 RGBcolor = vec3( 0.98, 0.98, 0.0); // int
+        vec3 color = vec3( 0.98, 0.98, 0.0); // int
 
         // phong lighting with directional light
-        color = vec4(LocalLighting(ray, normal, lightPos.xyz, RGBcolor), 1.0); // gl_FragColor
+        fragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
 
         // calculate depth
     #ifdef DEPTH
@@ -7412,51 +7404,41 @@ void main(void) {
 
     #ifdef FOGGING_SES
         float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-        color.rgb = mix( fogCol, gl_FragColor.rgb, f); // gl_FragColor.rgb
+        fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor.rgb
     #endif // FOGGING_SES
-        color.a = alpha;  // gl_FragColor.a
+        fragColor.a = alpha;  // gl_FragColor.a
 
     #ifdef AXISHINTS
         // debug-axis-hints
         vec3 colorX = vec3( 1.0, 1.0, 0.0);
         float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
-        { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
-        { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
-        { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
-        if (mc < 0.05) { color = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
-        // debug-axis-hints
-        /*
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
-        if (mc < 0.05)            { gl_FragColor.a = 1.0; }
-        if (abs(normal.x) > 0.98) { gl_FragColor.a = 1.0; }
-        if (abs(normal.y) > 0.98) { gl_FragColor.a = 1.0; }
-        if (abs(normal.z) > 0.98) { gl_FragColor.a = 1.0; }
-        if (normal.x < -0.99)     { gl_FragColor.a = 1.0; }
-        if (normal.y < -0.99)     { gl_FragColor.a = 1.0; }
-        if (normal.z < -0.99)     { gl_FragColor.a = 1.0; }
-        */
 
         // ============ code color into float ... ============
 
-        // ============ sort fragment into right bucket: ============
+        // ============ sort fragment into right bucket ============
 
-        // calculate right bucket (16 pairs = 32)
-        if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+        // USE OGL_DEPTH_SES
+        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
 
-        float k = floor(8.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-
-        int layer = int(floor(k/2.0));
-
-        if(mod(k, 2.0) == 0.0) {
-            gl_FragData[layer].x = 1.0 - gl_FragDepth;
-            gl_FragData[layer].y = gl_FragDepth;
+        // calculate bucket pair (16 pairs -> 32 depth values)
+        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+        // index of render target
+        int rt = int(floor(bucket/2.0));
+        // choose right pair in render target
+        if(mod(int(bucket), 2) == 0) {
+            gl_FragData[rt].x = 1.0 - gl_FragDepth;
+            gl_FragData[rt].y = gl_FragDepth;
         } else {
-            gl_FragData[layer].z = 1.0 - gl_FragDepth;
-            gl_FragData[layer].w = gl_FragDepth;
+            gl_FragData[rt].z = 1.0 - gl_FragDepth;
+            gl_FragData[rt].w = gl_FragDepth;
         }
     }
 
@@ -7664,6 +7646,9 @@ uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
 
+uniform vec2 texOffsetDepthBuffer;
+uniform sampler2D depthBuffer;
+
 varying vec4 objPos;
 varying vec4 camPos;
 varying vec4 lightPos;
@@ -7686,8 +7671,16 @@ varying vec3 cuttingPlane;
 void main(void) {
     vec4 coord;
     vec3 ray, tmp;
-
+    vec4 fragColor;
     bool discardInt, discardExt;
+
+    // get min and max depth of pixel location
+    vec2  minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
+
+    // init fragment data with zero
+    for(int i = 0; i < 8; ++i) {
+        gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
+    }
 
     // transform fragment coordinates from window coordinates to view coordinates.
     coord = gl_FragCoord 
@@ -7741,6 +7734,9 @@ void main(void) {
     if( lambdas.w > lambda && lambdas.w < second && numRoots > 3 ) { second = lambdas.w; }
     */
 
+
+// INT fragment =========================================================
+
     // test for intersection of interior faces
     discardInt = false;
     float first = lambdas.y; // first intersection
@@ -7773,6 +7769,9 @@ void main(void) {
     }
     if( acos( dot( normPlane, cuttingPlane)) > ( abs( maxAngle)/2.0 + epsilon) ) { discardInt = true; }
 
+
+    // second INT fragment =========================================================
+
     if(discardInt && (numRoots > 2) && (lambdas.w > 0.0f)) {
         discardInt = false;
         float third = lambdas.w; // third intersection
@@ -7804,10 +7803,106 @@ void main(void) {
         if( acos( dot( normPlane, cuttingPlane)) > ( abs( maxAngle)/2.0 + epsilon) ) { discardInt = true; }
     }
 
-    // test for intersection of exterior face
+    if(!discardInt) {
+
+        // compute inward-facing normal
+        vec3 normal;
+        //normal = ( intersection - vec3( normalize( intersection.xy), 0.0));
+        float factor01 = ( dot( intersection, intersection) - r2 - R2);
+        normal.x = 4.0*intersection.x*factor01;
+        normal.y = 4.0*intersection.y*factor01;
+        normal.z = 4.0*intersection.z*factor01 + 8.0*R2*intersection.z;
+        normal = -normalize( normal);
+        
+        float d = ( dot( intersection, vec3( 0.0, 0.0, 1.0)) - colors.z) / colors.w;
+        // chose color for lighting
+        vec3 color = mix( decodeColor( colors.x), decodeColor( colors.y), d);
+    #ifdef FLATSHADE_SES
+        if( d <= 0.5 )
+            color = decodeColor( colors.x);
+        else
+            color = decodeColor( colors.y);
+    #endif // FLATSHADE_SES
+        // uniform color
+        //color = vec3( 1.0, 0.75, 0.0);
+        color = vec3( 0.98, 0.82, 0.0 ); // for VIS
+        //color = vec3( 0.02, 0.75, 0.02);
+        //color = vec3( 0.19, 0.52, 0.82);
+        
+        // phong lighting with directional light
+        fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
+        
+        // calculate depth
+    #ifdef DEPTH
+        tmp = intersection;
+        intersection.x = dot( rotMatT0, tmp.xyz);
+        intersection.y = dot( rotMatT1, tmp.xyz);
+        intersection.z = dot( rotMatT2, tmp.xyz);
+
+        intersection += objPos.xyz;
+
+        vec4 Ding = vec4( intersection, 1.0);
+        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    #ifdef OGL_DEPTH_SES
+        gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    #else
+        //gl_FragDepth = ( depth + zValues.y) / zValues.z;
+        gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+    #endif // OGL_DEPTH_SES
+    #endif // DEPTH
+
+    #ifdef FOGGING_SES
+        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
+    #endif // FOGGING_SES
+        fragColor.a = alpha; // gl_FragColor
+        
+        tmp = normal;
+        normal.x = dot( rotMatT0, tmp.xyz);
+        normal.y = dot( rotMatT1, tmp.xyz);
+        normal.z = dot( rotMatT2, tmp.xyz);
+        
+    #ifdef AXISHINTS    
+        // debug-axis-hints
+        vec3 colorX = vec3( 1.0, 1.0, 0.0);
+        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
+        { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+    #endif // AXISHINTS
+
+        // ============ code color into float ... ============
+
+        // ============ sort fragment into right bucket ============
+
+        // USE OGL_DEPTH_SES
+        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+
+        // calculate bucket pair (16 pairs -> 32 depth values)
+        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+        // index of render target
+        int rt = int(floor(bucket/2.0));
+        // choose right pair in render target
+        if(mod(int(bucket), 2) == 0) {
+            gl_FragData[rt].x = 1.0 - gl_FragDepth;
+            gl_FragData[rt].y = gl_FragDepth;
+        } else {
+            gl_FragData[rt].z = 1.0 - gl_FragDepth;
+            gl_FragData[rt].w = gl_FragDepth;
+        }
+    }
+
+// EXT fragment =========================================================
     discardExt = false;
+
     float second = lambdas.x;
-    vec3 intersection2 = a + ray * second;
+    intersection = a + ray * second;
+
     // handle singularity
     if( r > R )
     {
@@ -7815,119 +7910,125 @@ void main(void) {
         //float cutRad2 = r2 - radius2;
         //float cutRad2 = 2.0 * ( r2 - r * R) - r2 + 2.0 * r * R - R2;
         float cutRad2 = r2 - R2;
-        if( dot( intersection2, intersection2) < cutRad2 )
+        if( dot( intersection, intersection) < cutRad2 )
         {
             second = lambdas.x;
             if( lambdas.y > second && numRoots > 1 ) { second = lambdas.y; }
             if( lambdas.z > second && numRoots > 2 ) { second = lambdas.z; }
             if( lambdas.w > second && numRoots > 3 ) { second = lambdas.w; }
-            intersection2 = a + ray * second;
+            intersection = a + ray * second;
         }
     }
     // discard fragment if the intersection point lies outside the sphere
-    if( length( intersection2 - visibilitySphere.xyz) > visibilitySphere.w ) { discardExt = true; }
+    if( length( intersection - visibilitySphere.xyz) > visibilitySphere.w ) { discardExt = true; }
     
     // discard fragment if the intersection point lies outside the 'pie slice'
     normPlane;
     if( maxAngle > 0.0 )
     {
-        normPlane = normalize( cross( vec3( 0.0, 0.0, 1.0), intersection2));
+        normPlane = normalize( cross( vec3( 0.0, 0.0, 1.0), intersection));
     } else  {
-        normPlane = normalize( cross( intersection2, vec3( 0.0, 0.0, 1.0)));
+        normPlane = normalize( cross( intersection, vec3( 0.0, 0.0, 1.0)));
     }
     if( acos( dot( normPlane, cuttingPlane)) > ( abs( maxAngle)/2.0 + epsilon) ) { discardExt = true; }
 
-    if(discardExt && discardInt) { // no fragment
-        discard;
-    } else if(!discardExt && discardInt) { // only exterior fragment
-        intersection = intersection2;
-    } else if(!discardExt && !discardInt) { // if both fragments are valid: select nearest fragment
-        float d1 = dot((a - intersection), (a - intersection));
-        float d2 = dot((a - intersection2), (a - intersection2));
-        if(d2 < d1) {
-            discardInt = true;
-            intersection = intersection2;
-        } else {
-            discardExt = true;
-        }
-    } // else: interior fragment (default)
 
-    // compute inward-facing normal
-    vec3 normal;
-    //normal = ( intersection - vec3( normalize( intersection.xy), 0.0));
-    float factor01 = ( dot( intersection, intersection) - r2 - R2);
-    normal.x = 4.0*intersection.x*factor01;
-    normal.y = 4.0*intersection.y*factor01;
-    normal.z = 4.0*intersection.z*factor01 + 8.0*R2*intersection.z;
-    normal = -normalize( normal);
-    if(discardExt) {
-        normal *= -1.0f;
-    }
-    
-    float d = ( dot( intersection, vec3( 0.0, 0.0, 1.0)) - colors.z) / colors.w;
-    // chose color for lighting
-    vec3 color = mix( decodeColor( colors.x), decodeColor( colors.y), d);
-#ifdef FLATSHADE_SES
-    if( d <= 0.5 )
-        color = decodeColor( colors.x);
-    else
-        color = decodeColor( colors.y);
-#endif // FLATSHADE_SES
-    // uniform color
-    //color = vec3( 1.0, 0.75, 0.0);
-    color = vec3( 0.98, 0.82, 0.0 ); // for VIS
-    if(discardExt) {
+    if(!discardExt) {
+        // compute inward-facing normal
+        vec3 normal;
+        //normal = ( intersection - vec3( normalize( intersection.xy), 0.0));
+        float factor01 = ( dot( intersection, intersection) - r2 - R2);
+        normal.x = 4.0*intersection.x*factor01;
+        normal.y = 4.0*intersection.y*factor01;
+        normal.z = 4.0*intersection.z*factor01 + 8.0*R2*intersection.z;
+        normal = normalize( normal);
+        
+        float d = ( dot( intersection, vec3( 0.0, 0.0, 1.0)) - colors.z) / colors.w;
+        // chose color for lighting
+        vec3 color = mix( decodeColor( colors.x), decodeColor( colors.y), d);
+    #ifdef FLATSHADE_SES
+        if( d <= 0.5 )
+            color = decodeColor( colors.x);
+        else
+            color = decodeColor( colors.y);
+    #endif // FLATSHADE_SES
+        // uniform color
+        //color = vec3( 1.0, 0.75, 0.0);
         color = vec3( 0.98, 0.0, 0.98 ); // for VIS
+        //color = vec3( 0.02, 0.75, 0.02);
+        //color = vec3( 0.19, 0.52, 0.82);
+        
+        // phong lighting with directional light
+        fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
+        
+        // calculate depth
+    #ifdef DEPTH
+        tmp = intersection;
+        intersection.x = dot( rotMatT0, tmp.xyz);
+        intersection.y = dot( rotMatT1, tmp.xyz);
+        intersection.z = dot( rotMatT2, tmp.xyz);
+
+        intersection += objPos.xyz;
+
+        vec4 Ding = vec4( intersection, 1.0);
+        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    #ifdef OGL_DEPTH_SES
+        gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    #else
+        //gl_FragDepth = ( depth + zValues.y) / zValues.z;
+        gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+    #endif // OGL_DEPTH_SES
+    #endif // DEPTH
+
+    #ifdef FOGGING_SES
+        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
+    #endif // FOGGING_SES
+        fragColor.a = alpha; // gl_FragColor
+        
+        tmp = normal;
+        normal.x = dot( rotMatT0, tmp.xyz);
+        normal.y = dot( rotMatT1, tmp.xyz);
+        normal.z = dot( rotMatT2, tmp.xyz);
+        
+    #ifdef AXISHINTS    
+        // debug-axis-hints
+        vec3 colorX = vec3( 1.0, 1.0, 0.0);
+        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
+        { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+    #endif // AXISHINTS
+
+        // ============ code color into float ... ============
+
+        // ============ sort fragment into right bucket ============
+
+        // USE OGL_DEPTH_SES
+        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+
+        // calculate bucket pair (16 pairs -> 32 depth values)
+        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+        // index of render target
+        int rt = int(floor(bucket/2.0));
+        // choose right pair in render target
+        if(mod(int(bucket), 2) == 0) {
+            gl_FragData[rt].x = 1.0 - gl_FragDepth;
+            gl_FragData[rt].y = gl_FragDepth;
+        } else {
+            gl_FragData[rt].z = 1.0 - gl_FragDepth;
+            gl_FragData[rt].w = gl_FragDepth;
+        }
     }
-    //color = vec3( 0.02, 0.75, 0.02);
-    //color = vec3( 0.19, 0.52, 0.82);
-    
-    // phong lighting with directional light
-    gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
-    
-    // calculate depth
-#ifdef DEPTH
-    tmp = intersection;
-    intersection.x = dot( rotMatT0, tmp.xyz);
-    intersection.y = dot( rotMatT1, tmp.xyz);
-    intersection.z = dot( rotMatT2, tmp.xyz);
 
-    intersection += objPos.xyz;
-
-    vec4 Ding = vec4( intersection, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
-#ifdef OGL_DEPTH_SES
-    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
-#else
-    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
-    gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
-#endif // OGL_DEPTH_SES
-#endif // DEPTH
-
-#ifdef FOGGING_SES
-    float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
-#endif // FOGGING_SES
-    gl_FragColor.a = alpha;
-    
-    tmp = normal;
-    normal.x = dot( rotMatT0, tmp.xyz);
-    normal.y = dot( rotMatT1, tmp.xyz);
-    normal.z = dot( rotMatT2, tmp.xyz);
-    
-#ifdef AXISHINTS    
-    // debug-axis-hints
-    vec3 colorX = vec3( 1.0, 1.0, 0.0);
-    float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
-    if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
-    { gl_FragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); }
-    if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
-    { gl_FragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); }
-    if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
-    { gl_FragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); }
-    if (mc < 0.05) { gl_FragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); }
-#endif // AXISHINTS
+    if(discardExt && discardInt) { 
+        discard;
+    }
 }
 -->
       </snippet>
@@ -7941,7 +8042,6 @@ void main(void) {
     uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
     uniform vec3 zValues;
     uniform vec3 fogCol;
-    uniform vec2 texOffset;
     
     #ifndef CALC_CAM_SYS
     uniform vec3 camIn;
@@ -8097,10 +8197,13 @@ void main(void) {
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
-uniform vec2 texOffset;
-// texture sampler
-uniform sampler2D tex;
 uniform float alpha = 0.5;
+
+uniform vec2 texOffsetDepthBuffer;
+uniform sampler2D depthBuffer;
+
+uniform vec2 texOffsetSing;
+uniform sampler2D tex;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -8123,11 +8226,20 @@ varying vec3 texCoord3;
         <!--
 
 void main(void) {
-    vec4 coord;
+    vec4 coord, fragColor;
     vec3 ray;
-    float lambda;
+    int i;
     float rad = inVec1.w;
     float squarRad = inVec2.w;
+    bool discardInt, discardExt;
+
+    // get min and max depth of pixel location
+    vec2  minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
+
+    // init fragment data with zero
+    for(i = 0; i < 8; ++i) {
+        gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
+    }
 
     // transform fragment coordinates from window coordinates to view coordinates.
     coord = gl_FragCoord 
@@ -8148,14 +8260,16 @@ void main(void) {
     float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
     
     if (radicand < 0.0) { discard; }
-    
-    lambda = d1 + sqrt(radicand);                           // lambda for interior face
+
+// INT fragment =========================================================
+    discardInt = false;
+
+    float lambda = d1 + sqrt(radicand);                     // lambda for interior face
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
 
     // compute the actual position of the intersection with the sphere
     vec3 pos1 = sphereintersection + objPos.xyz;
 
-    bool discardInt = false;
     // cut with plane 1
     vec3 planeNormal = normalize( cross( inVec1.xyz, inVec2.xyz));
     float d = dot( objPos.xyz, planeNormal);
@@ -8176,14 +8290,13 @@ void main(void) {
     if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discardInt = true; }
 
     // Singularity handling:
-    int i;
     vec3 probePos;
     int numProbes = min( int(texCoord1.x), 16);
     if( numProbes > 0 )
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
         }
     }
@@ -8192,7 +8305,7 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
         }
     }
@@ -8201,156 +8314,263 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
         }
     }
 
-    // if interior face is discard test for external face
-    if(discardInt) {
-        lambda = d1 - sqrt(radicand); 
-        sphereintersection = lambda * ray + camPos.xyz;    // intersection point
-        pos1 = sphereintersection + objPos.xyz;
-        // cut with plane 1
-        planeNormal = normalize( cross( inVec1.xyz, inVec2.xyz));
-        d = dot( objPos.xyz, planeNormal);
-        dist1 = dot( pos1, planeNormal) - d;
-        dist2 = dot( inVec3.xyz + objPos.xyz, planeNormal) - d;
-        if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
-        // cut with plane 2
-        planeNormal = normalize( cross( inVec2.xyz, inVec3.xyz));
-        d = dot( objPos.xyz, planeNormal);
-        dist1 = dot( pos1, planeNormal) - d;
-        dist2 = dot( inVec1.xyz + objPos.xyz, planeNormal) - d;
-        if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
-        // cut with plane 3
-        planeNormal = normalize( cross( inVec1.xyz, inVec3.xyz));
-        d = dot( objPos.xyz, planeNormal);
-        dist1 = dot( pos1, planeNormal) - d;
-        dist2 = dot( inVec2.xyz + objPos.xyz, planeNormal) - d;
-        if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discard; }
+    if(!discardInt) {
 
-        // Singularity handling:
-        numProbes = min( int(texCoord1.x), 16);
-        if( numProbes > 0 )
-        {
-            for( i = 0; i < numProbes; i++ )
-            {
-                probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-            }
-        }
-        numProbes = min( int(texCoord2.x), 16);
-        if( numProbes > 0 )
-        {
-            for( i = 0; i < numProbes; i++ )
-            {
-                probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-            }
-        }
-        numProbes = min( int(texCoord3.x), 16);
-        if( numProbes > 0 )
-        {
-            for( i = 0; i < numProbes; i++ )
-            {
-                probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-                if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
-            }
-        }
-    }
-
-    // discard the point if it is eaten away by one of the neighbouring probes
-    // ==> check first, if one of the probes is nearly dual to the object position
-    /*
-    if( ( dot1( inProbe1.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe1.xyz) < squarRad ) ) || 
-        ( dot1( inProbe2.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe2.xyz) < squarRad ) ) || 
-            ( dot1( inProbe3.xyz - objPos.xyz) > 0.1 && ( dot1( pos1 - inProbe3.xyz) < squarRad ) ) ||
-            ( dot1( pos1 - dualProbe) < inVec3.w ) ) { discard; }
-    */
-
-    // "calc" normal at intersection point
-    vec3 normal = -sphereintersection / rad;
-    if(discardInt) {
+        // "calc" normal at intersection point
         vec3 normal = sphereintersection / rad;
-    }
-#ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, lightPos.w);
-#endif // SMALL_SPRITE_LIGHTING
+    #ifdef SMALL_SPRITE_LIGHTING
+        normal = mix(-ray, normal, lightPos.w);
+    #endif // SMALL_SPRITE_LIGHTING
 
-    // ========== START compute color ==========
-    // compute auxiliary direction vectors
-    vec3 u = inVec1.xyz - inVec2.xyz;
-    vec3 v = inVec3.xyz - inVec2.xyz;
-    // base point and direction of ray from the origin to the intersection point
-    vec3 w = -inVec2.xyz;
-    vec3 dRay = normalize( sphereintersection);
-    // cross products for computing the determinant
-    vec3 wXu = cross( w, u);
-    vec3 dXv = cross( dRay, v);
-    // compute inverse determinant
-    float invdet = 1.0 / dot( dXv, u);
-    // compute weights
-    float beta = dot( dXv, w) * invdet;
-    float gamma = dot( wXu, dRay) * invdet;
-    float alpha2 = 1.0 - ( beta + gamma);
-    // compute color
-    vec3 color = decodeColor( inColors.y) * alpha2 + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
-#ifdef FLATSHADE_SES
-    if( alpha2 > beta && alpha2 > gamma )
-        color = decodeColor( inColors.y);
-    else if( beta > alpha2 && beta > gamma )
-        color = decodeColor( inColors.x);
-    else
-        color = decodeColor( inColors.z);
-#endif // FLATSHADE_SES
-    // ========== END compute color ==========
-    // uniform color
-    //color = vec3( 0.0, 0.75, 1.0);
-    color = vec3( 0.0, 0.6, 0.6 ); // for VIS
-    if(discardInt) {
+        // ========== START compute color ==========
+        // compute auxiliary direction vectors
+        vec3 u = inVec1.xyz - inVec2.xyz;
+        vec3 v = inVec3.xyz - inVec2.xyz;
+        // base point and direction of ray from the origin to the intersection point
+        vec3 w = -inVec2.xyz;
+        vec3 dRay = normalize( sphereintersection);
+        // cross products for computing the determinant
+        vec3 wXu = cross( w, u);
+        vec3 dXv = cross( dRay, v);
+        // compute inverse determinant
+        float invdet = 1.0 / dot( dXv, u);
+        // compute weights
+        float beta = dot( dXv, w) * invdet;
+        float gamma = dot( wXu, dRay) * invdet;
+        float alpha2 = 1.0 - ( beta + gamma);
+        // compute color
+        vec3 color = decodeColor( inColors.y) * alpha2 + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
+    #ifdef FLATSHADE_SES
+        if( alpha2 > beta && alpha2 > gamma )
+            color = decodeColor( inColors.y);
+        else if( beta > alpha2 && beta > gamma )
+            color = decodeColor( inColors.x);
+        else
+            color = decodeColor( inColors.z);
+    #endif // FLATSHADE_SES
+        // ========== END compute color ==========
+        // uniform color
+        //color = vec3( 0.0, 0.75, 1.0);
         color = vec3( 0.6, 0.0, 0.0 );
+        //color = vec3( texCoord2.xy, 0.0);
+        //color = vec3( 0.8, 0.0, 0.2);
+        //color = vec3( 0.19, 0.52, 0.82);
+        
+        // phong lighting with directional light
+        fragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
+        
+        // calculate depth
+    #ifdef DEPTH
+        vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    #ifdef OGL_DEPTH_SES
+        gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    #else
+        //gl_FragDepth = ( depth + zValues.y) / zValues.z;
+        gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+    #endif // OGL_DEPTH_SES
+    #endif // DEPTH
+
+    #ifdef FOGGING_SES
+        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
+    #endif // FOGGING_SES
+        fragColor.a = alpha; // gl_FragColor
+        
+    #ifdef AXISHINTS
+        // debug-axis-hints
+        vec3 colorX = vec3( 1.0, 1.0, 0.0);
+        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+    #endif // AXISHINTS
+
+        // ============ code color into float ... ============
+
+        // ============ sort fragment into right bucket ============
+
+        // USE OGL_DEPTH_SES
+        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+
+        // calculate bucket pair (16 pairs -> 32 depth values)
+        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+        // index of render target
+        int rt = int(floor(bucket/2.0));
+        // choose right pair in render target
+        if(mod(int(bucket), 2) == 0) {
+            gl_FragData[rt].x = 1.0 - gl_FragDepth;
+            gl_FragData[rt].y = gl_FragDepth;
+        } else {
+            gl_FragData[rt].z = 1.0 - gl_FragDepth;
+            gl_FragData[rt].w = gl_FragDepth;
+        }
     }
-    //color = vec3( texCoord2.xy, 0.0);
-    //color = vec3( 0.8, 0.0, 0.2);
-    //color = vec3( 0.19, 0.52, 0.82);
-    
-    // phong lighting with directional light
-    gl_FragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    
-    // calculate depth
-#ifdef DEPTH
-    vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
-#ifdef OGL_DEPTH_SES
-    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
-#else
-    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
-    gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
-#endif // OGL_DEPTH_SES
-#endif // DEPTH
 
-#ifdef FOGGING_SES
-    float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
-#endif // FOGGING_SES
-    gl_FragColor.a = alpha;
-    
-#ifdef AXISHINTS
-    // debug-axis-hints
-    vec3 colorX = vec3( 1.0, 1.0, 0.0);
-    float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
-    if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
-    { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-    if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
-    { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-    if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
-    { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-    if (mc < 0.05) { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-#endif // AXISHINTS
+// EXT fragment =========================================================
+    discardExt = false;
 
+    lambda = d1 - sqrt(radicand); 
+    sphereintersection = lambda * ray + camPos.xyz;    // intersection point
+    pos1 = sphereintersection + objPos.xyz;
+    // cut with plane 1
+    planeNormal = normalize( cross( inVec1.xyz, inVec2.xyz));
+    d = dot( objPos.xyz, planeNormal);
+    dist1 = dot( pos1, planeNormal) - d;
+    dist2 = dot( inVec3.xyz + objPos.xyz, planeNormal) - d;
+    if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discardExt = true; }
+    // cut with plane 2
+    planeNormal = normalize( cross( inVec2.xyz, inVec3.xyz));
+    d = dot( objPos.xyz, planeNormal);
+    dist1 = dot( pos1, planeNormal) - d;
+    dist2 = dot( inVec1.xyz + objPos.xyz, planeNormal) - d;
+    if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discardExt = true; }
+    // cut with plane 3
+    planeNormal = normalize( cross( inVec1.xyz, inVec3.xyz));
+    d = dot( objPos.xyz, planeNormal);
+    dist1 = dot( pos1, planeNormal) - d;
+    dist2 = dot( inVec2.xyz + objPos.xyz, planeNormal) - d;
+    if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discardExt = true; }
 
+    // Singularity handling:
+    numProbes = min( int(texCoord1.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
+        }
+    }
+    numProbes = min( int(texCoord2.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
+        }
+    }
+    numProbes = min( int(texCoord3.x), 16);
+    if( numProbes > 0 )
+    {
+        for( i = 0; i < numProbes; i++ )
+        {
+            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
+        }
+    }
+
+    if(!discardExt) {
+        // "calc" normal at intersection point
+        vec3 normal = -sphereintersection / rad;
+    #ifdef SMALL_SPRITE_LIGHTING
+        normal = mix(-ray, normal, lightPos.w);
+    #endif // SMALL_SPRITE_LIGHTING
+
+        // ========== START compute color ==========
+        // compute auxiliary direction vectors
+        vec3 u = inVec1.xyz - inVec2.xyz;
+        vec3 v = inVec3.xyz - inVec2.xyz;
+        // base point and direction of ray from the origin to the intersection point
+        vec3 w = -inVec2.xyz;
+        vec3 dRay = normalize( sphereintersection);
+        // cross products for computing the determinant
+        vec3 wXu = cross( w, u);
+        vec3 dXv = cross( dRay, v);
+        // compute inverse determinant
+        float invdet = 1.0 / dot( dXv, u);
+        // compute weights
+        float beta = dot( dXv, w) * invdet;
+        float gamma = dot( wXu, dRay) * invdet;
+        float alpha2 = 1.0 - ( beta + gamma);
+        // compute color
+        vec3 color = decodeColor( inColors.y) * alpha2 + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
+    #ifdef FLATSHADE_SES
+        if( alpha2 > beta && alpha2 > gamma )
+            color = decodeColor( inColors.y);
+        else if( beta > alpha2 && beta > gamma )
+            color = decodeColor( inColors.x);
+        else
+            color = decodeColor( inColors.z);
+    #endif // FLATSHADE_SES
+        // ========== END compute color ==========
+        // uniform color
+        //color = vec3( 0.0, 0.75, 1.0);
+        color = vec3( 0.0, 0.6, 0.6 ); // for VIS
+        //color = vec3( texCoord2.xy, 0.0);
+        //color = vec3( 0.8, 0.0, 0.2);
+        //color = vec3( 0.19, 0.52, 0.82);
+        
+        // phong lighting with directional light
+        fragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
+        
+        // calculate depth
+    #ifdef DEPTH
+        vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    #ifdef OGL_DEPTH_SES
+        gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    #else
+        //gl_FragDepth = ( depth + zValues.y) / zValues.z;
+        gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+    #endif // OGL_DEPTH_SES
+    #endif // DEPTH
+
+    #ifdef FOGGING_SES
+        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
+    #endif // FOGGING_SES
+        fragColor.a = alpha; // gl_FragColor
+        
+    #ifdef AXISHINTS
+        // debug-axis-hints
+        vec3 colorX = vec3( 1.0, 1.0, 0.0);
+        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
+        { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+        if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
+    #endif // AXISHINTS
+
+        // ============ code color into float ... ============
+
+        // ============ sort fragment into right bucket ============
+
+        // USE OGL_DEPTH_SES
+        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+
+        // calculate bucket pair (16 pairs -> 32 depth values)
+        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+        // index of render target
+        int rt = int(floor(bucket/2.0));
+        // choose right pair in render target
+        if(mod(int(bucket), 2) == 0) {
+            gl_FragData[rt].x = 1.0 - gl_FragDepth;
+            gl_FragData[rt].y = gl_FragDepth;
+        } else {
+            gl_FragData[rt].z = 1.0 - gl_FragDepth;
+            gl_FragData[rt].w = gl_FragDepth;
+        }
+    }
+
+    if(discardExt && discardInt) { 
+        discard;
+    }
 }
 -->
       </snippet>
@@ -8377,7 +8597,7 @@ void main(void) {
 
 void main(void) {
 
-    //if(gl_FragCoord.z > 1.0 || gl_FragCoord.z < 0.0) { discard; }
+    // gl_FragCoord.z is in [0.0, 1.0]
     gl_FragColor.xy = vec2(-gl_FragCoord.z, gl_FragCoord.z);
 
 }
@@ -8411,9 +8631,8 @@ uniform sampler2D depthBuffer;
 void main(void) {
 
     vec2 texCoord = (gl_FragCoord.xy * scaleFactor + vec2( 0.5, 0.5)) * texOffset;
-    // ...
     if((texCoord.x > 1.0) || (texCoord.y > 1.0)) { discard; }
-    vec2 depthValues = texture2D(depthBuffer, texCoord.xy).xy;
+    vec2 depthValues = texture2D(depthBuffer, texCoord).xy;
     gl_FragColor = vec4(1.0 + depthValues.x, 0.0 , depthValues.y, 1.0); 
 }
 
@@ -8440,16 +8659,14 @@ void main(void) {
       <snippet type="string">
         <!--
 
-#define MAX_DEPTH 1.0
-
 uniform sampler2D Layer0to3Tex;
 uniform sampler2D Layer4to7Tex;
 uniform sampler2D Layer8to11Tex;
 uniform sampler2D Layer12to15Tex;
-/*uniform sampler2D Layer16to19Tex;
+uniform sampler2D Layer16to19Tex;
 uniform sampler2D Layer20to23Tex;
 uniform sampler2D Layer24to27Tex;
-uniform sampler2D Layer28to31Tex;*/
+uniform sampler2D Layer28to31Tex;
 
 uniform vec2 texOffset;
 uniform float alpha;
@@ -8459,45 +8676,107 @@ void main(void) {
     vec2 texCoord = (gl_FragCoord.xy + vec2( 0.5, 0.5)) * texOffset;
 
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    vec4 white = vec4(0.1, 0.1, 0.1, 0.1);
+    vec4 white = vec4(0.1, 0.1, 0.1, 0.0);
 
     vec4 layer1 = texture2D(Layer0to3Tex, texCoord);
     vec4 layer2 = texture2D(Layer4to7Tex, texCoord);
     vec4 layer3 = texture2D(Layer8to11Tex, texCoord);
     vec4 layer4 = texture2D(Layer12to15Tex, texCoord);
-    /*vec4 layer5 = texture2D(Layer16to19Tex, texCoord);
+    vec4 layer5 = texture2D(Layer16to19Tex, texCoord);
     vec4 layer6 = texture2D(Layer20to23Tex, texCoord);
     vec4 layer7 = texture2D(Layer24to27Tex, texCoord);
-    vec4 layer8 = texture2D(Layer28to31Tex, texCoord);*/
+    vec4 layer8 = texture2D(Layer28to31Tex, texCoord);
 
-    for(int i = 0; i < 4; ++i) {
-        if(layer1[i] > 0.0f) {
-            color = color + vec4(0.25, 0.0, 0.0, 0.0);
-        }
-        if(layer2[i] > 0.0f) {
-            color = color + vec4(0.0, 0.25, 0.0, 0.0);
-        }
-        if(layer3[i] > 0.0f) {
-            color = color + vec4(0.0, 0.0, 0.25, 0.0);
-        }
-        if(layer4[i] > 0.0f) {
-            color = color + vec4(0.0, 0.0, 0.0, 0.0);
-        }
-        /*if(layer5[i] > 0.0f) {
+    /*
+    for(int i = 0; i < 2; ++i) {
+        if(layer1[i*2+1] > 0.0f) {
             color = color + white;
         }
-        if(layer6[i] > 0.0f) {
+        if(layer2[i*2+1] > 0.0f) {
             color = color + white;
         }
-        if(layer7[i] > 0.0f) {
+        if(layer3[i*2+1] > 0.0f) {
             color = color + white;
         }
-        if(layer8[i] > 0.0f) {
+        if(layer4[i*2+1] > 0.0f) {
             color = color + white;
-        }*/
+        }
+        if(layer5[i*2+1] > 0.0f) {
+            color = color + white;
+        }
+        if(layer6[i*2+1] > 0.0f) {
+            color = color + white;
+        }
+        if(layer7[i*2+1] > 0.0f) {
+            color = color + white;
+        }
+        if(layer8[i*2+1] > 0.0f) {
+            color = color + white;
+        }
+    }*/
+
+    float epsilon = 0.0001;
+
+    for(int i = 0; i < 2; i++) {
+        if(layer1[i*2] > 0.0f) {
+            if(abs(1.0 - layer1[i*2] - layer1[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
+        if(layer2[i*2] > 0.0f) {
+            if(abs(1.0 - layer2[i*2] - layer2[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
+        if(layer3[i*2] > 0.0f) {
+            if(abs(1.0 - layer3[i*2] - layer3[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
+        if(layer4[i*2] > 0.0f) {
+            if(abs(1.0 - layer4[i*2] - layer4[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
+        if(layer5[i*2] > 0.0f) {
+            if(abs(1.0 - layer5[i*2] - layer5[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
+        if(layer6[i*2] > 0.0f) {
+            if(abs(1.0 - layer6[i*2] - layer6[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
+        if(layer7[i*2] > 0.0f) {
+            if(abs(1.0 - layer7[i*2] - layer7[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
+        if(layer8[i*2] > 0.0f) {
+            if(abs(1.0 - layer8[i*2] - layer8[i*2+1]) > epsilon) {
+                color = color + white*2.0;
+            } else {
+                color = color + white;
+            }
+        }
     }
 
-    gl_FragColor = color + vec4(0.0, 0.0, 0.0, 1.0);;
+    gl_FragColor = clamp(color, vec4(0.0), vec4(1.0)) + vec4(0.0, 0.0, 0.0, 1.0);
 }
 
 -->    
