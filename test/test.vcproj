@@ -456,6 +456,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\testpolynom.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\testpoolallocator.cpp"
 				>
 			</File>
@@ -643,6 +647,10 @@
 			</File>
 			<File
 				RelativePath=".\testpointers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\testpolynom.h"
 				>
 			</File>
 			<File

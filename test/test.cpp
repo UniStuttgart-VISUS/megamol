@@ -57,6 +57,7 @@
 #include "testbezier.h"
 #include "testcomm.h"
 #include "testmsgdisp.h"
+#include "testpolynom.h"
 
 
 /* type for test functions */
@@ -101,6 +102,7 @@ VislibTest tests[] = {
     {_T("Rectangle"), ::TestRectangle, "Tests vislib::math::Rectangle"},
     {_T("Vector"), ::TestVector, "Tests vislib::math::Vector"},
     {_T("Point"), ::TestPoint, "Tests vislib::math::Point"},
+    {_T("Polynom"), ::TestPolynom, "Tests vislib::math::Polynom"},
     {_T("Frustum"), ::TestFrustum, "Tests vislib::math::WorldSpaceFrustum"},
     {_T("Bezier"), ::TestBezier, "Tests vislib::math::BezierCurve"},
     // net
