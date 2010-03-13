@@ -42,8 +42,35 @@ namespace math {
             }
         }
 
+        /**
+         * Copy ctor
+         *
+         * @param src The object to clone from
+         */
+        template<class Tp, class Sp>
+        Polynom(const AbstractPolynom<Tp, D, Sp> src) : Super() {
+            Super::operator=(src);
+        }
+
         /** Dtor. */
         ~Polynom(void);
+
+        /**
+         * Assignment operator
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this
+         *
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         *        than D.
+         */
+        template<class Tp, unsigned int Dp>
+        inline Polynom<T, D>& operator=(
+                const Polynom<Tp, Dp>& rhs) {
+            Super::operator=(rhs);
+            return *this;
+        }
 
     protected:
 

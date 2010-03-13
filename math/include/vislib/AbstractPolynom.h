@@ -44,23 +44,37 @@ namespace math {
         /** Dtor. */
         ~AbstractPolynom(void);
 
-        ///**
-        // * Finds the roots of the polynom. If roots only touch the x-axis they
-        // * will be present more than once in the output. If the output array
-        // * as not enough space to store all found roots only up to 'size'
-        // * roots will be stored. The order of the roots is undefined.
-        // *
-        // * A polynom of degree D has a maximum number of D roots.
-        // *
-        // * @param outRoots Pointer to the array to receive the found roots
-        // * @param size The size of the array to receive the found roots in
-        // *             number of elements.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
-        //    return this->findRoots<D>(outRoots, size);
-        //}
+        /**
+         * Finds the roots of the polynom. If roots only touch the x-axis they
+         * will be present more than once in the output. If the output array
+         * as not enough space to store all found roots only up to 'size'
+         * roots will be stored. The order of the roots is undefined.
+         *
+         * A polynom of degree D has a maximum number of D roots.
+         *
+         * @param outRoots Pointer to the array to receive the found roots
+         * @param size The size of the array to receive the found roots in
+         *             number of elements.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
+            if (size == 0) return 0;
+            switch (this->EffectiveDegree()) {
+                case 0: return 0;
+                case 1: return this->findRootsDeg1(outRoots, size);
+                case 2: return this->findRootsDeg2(outRoots, size);
+                case 3: return this->findRootsDeg3(outRoots, size);
+                case 4: return this->findRootsDeg4(outRoots, size);
+                default: break;
+            }
+
+            // TODO: Implement numeric root finding (bairstow?)
+
+            throw UnsupportedOperationException("FindRoots", __FILE__, __LINE__);
+
+            return 0;
+        }
 
         /**
          * Assignment operator
@@ -68,10 +82,14 @@ namespace math {
          * @param rhs The right hand side operand
          *
          * @return A reference to this
+         *
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         *        than D.
          */
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractPolynom<T, D, S>& operator=(
-            const AbstractPolynom<T, D, S>& rhs) {
-            *this = rhs;
+                const AbstractPolynom<Tp, Dp, Sp>& rhs) {
+            Super::operator=(rhs);
             return *this;
         }
 
@@ -128,34 +146,36 @@ namespace math {
          * @return The number of valid roots in the out parameter.
          */
         inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
-            return this->findRoots<1>(outRoots, size);
+            if (size == 0) return 0;
+            if (IsEqual(this->coefficients[1], static_cast<T>(0))) return 0;
+            return this->findRootsDeg1(outRoots, size);
         }
 
-        ///**
-        // * Finds the root of the polynom.
-        // *
-        // * A polynom of degree 1 has a maximum number of 1 root.
-        // *
-        // * @param outRoot1 Variable to receive the root.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T& outRoot) const {
-        //    return this->findRoots<1>(&outRoot, 1);
-        //}
+        /**
+         * Finds the root of the polynom.
+         *
+         * A polynom of degree 1 has a maximum number of 1 root.
+         *
+         * @param outRoot1 Variable to receive the root.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T& outRoot) const {
+            return this->FindRoots(&outRoot, 1);
+        }
 
-        ///**
-        // * Finds the root of the polynom.
-        // *
-        // * A polynom of degree 1 has a maximum number of 1 root.
-        // *
-        // * @param outRoot Variable to receive the root.
-        // *
-        // * @return True if there is a root and it has been written to outRoot.
-        // */
-        //inline bool FindRoot(T& outRoot) const {
-        //    return (this->findRoots<1>(&outRoot, 1) == 1);
-        //}
+        /**
+         * Finds the root of the polynom.
+         *
+         * A polynom of degree 1 has a maximum number of 1 root.
+         *
+         * @param outRoot Variable to receive the root.
+         *
+         * @return True if there is a root and it has been written to outRoot.
+         */
+        inline bool FindRoot(T& outRoot) const {
+            return (this->FindRoots(&outRoot, 1) == 1);
+        }
 
         /**
          * Assignment operator
@@ -163,10 +183,14 @@ namespace math {
          * @param rhs The right hand side operand
          *
          * @return A reference to this
+         *
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         *        than D.
          */
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractPolynom<T, 1, S>& operator=(
-            const AbstractPolynom<T, 1, S>& rhs) {
-            *this = rhs;
+                const AbstractPolynom<Tp, Dp, Sp>& rhs) {
+            Super::operator=(rhs);
             return *this;
         }
 
@@ -206,43 +230,50 @@ namespace math {
         /** Dtor. */
         ~AbstractPolynom(void);
 
-        ///**
-        // * Finds the roots of the polynom. If roots only touch the x-axis they
-        // * will be present more than once in the output. If the output array
-        // * as not enough space to store all found roots only up to 'size'
-        // * roots will be stored. The order of the roots is undefined.
-        // *
-        // * A polynom of degree D has a maximum number of D roots.
-        // *
-        // * @param outRoots Pointer to the array to receive the found roots
-        // * @param size The size of the array to receive the found roots in
-        // *             number of elements.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
-        //    return this->findRoots<2>(outRoots, size);
-        //}
+        /**
+         * Finds the roots of the polynom. If roots only touch the x-axis they
+         * will be present more than once in the output. If the output array
+         * as not enough space to store all found roots only up to 'size'
+         * roots will be stored. The order of the roots is undefined.
+         *
+         * A polynom of degree D has a maximum number of D roots.
+         *
+         * @param outRoots Pointer to the array to receive the found roots
+         * @param size The size of the array to receive the found roots in
+         *             number of elements.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
+            if (size == 0) return 0;
+            if (IsEqual(this->coefficients[2], static_cast<T>(0))) {
+                if (IsEqual(this->coefficients[1], static_cast<T>(0))) {
+                    return 0;
+                }
+                return this->findRootsDeg1(outRoots, size);
+            }
+            return this->findRootsDeg2(outRoots, size);
+        }
 
-        ///**
-        // * Finds the roots of the polynom. If roots only touch the x-axis they
-        // * will be present more than once in the output. The order of the roots
-        // * is undefined.
-        // *
-        // * A polynom of degree 2 has a maximum number of 2 roots.
-        // *
-        // * @param outRoot1 Variable to receive the first root.
-        // * @param outRoot2 Variable to receive the second root.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T& outRoot1, T& outRoot2) const {
-        //    T r[2];
-        //    unsigned int rv = this->findRoots<2>(r, 2);
-        //    if (r > 0) outRoot1 = r[0];
-        //    if (r > 1) outRoot2 = r[1];
-        //    return rv;
-        //}
+        /**
+         * Finds the roots of the polynom. If roots only touch the x-axis they
+         * will be present more than once in the output. The order of the roots
+         * is undefined.
+         *
+         * A polynom of degree 2 has a maximum number of 2 roots.
+         *
+         * @param outRoot1 Variable to receive the first root.
+         * @param outRoot2 Variable to receive the second root.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T& outRoot1, T& outRoot2) const {
+            T r[2];
+            unsigned int rv = this->FindRoots(r, 2);
+            if (r > 0) outRoot1 = r[0];
+            if (r > 1) outRoot2 = r[1];
+            return rv;
+        }
 
         /**
          * Assignment operator
@@ -250,10 +281,14 @@ namespace math {
          * @param rhs The right hand side operand
          *
          * @return A reference to this
+         *
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         *        than D.
          */
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractPolynom<T, 2, S>& operator=(
-            const AbstractPolynom<T, 2, S>& rhs) {
-            *this = rhs;
+                const AbstractPolynom<Tp, Dp, Sp>& rhs) {
+            Super::operator=(rhs);
             return *this;
         }
 
@@ -282,37 +317,6 @@ namespace math {
         // intentionally empty
     }
 
-        //if (size == 0) return 0; // can't store anything
-
-        //T a = this->coefficients[2] * static_cast<T>(2);
-        //if (IsEqual(a, static_cast<T>(0))) {
-        //    // linear!
-        //    if (IsEqual(this->coefficients[1], static_cast<T>(0))) {
-        //        return 0; // no root!
-        //    }
-        //    outRoots[0] = -this->coefficients[0] / this->coefficients[1];
-        //    return 1;
-        //}
-
-        //T b = this->coefficients[1] * this->coefficients[1]
-        //    - this->coefficients[0] * this->coefficients[2] * static_cast<T>(4);
-
-        //if (IsEqual(b, static_cast<T>(0))) {
-        //    // one root
-        //    outRoots[0] = -this->coefficients[1] / a;
-        //    return 1;
-        //} else if (b > static_cast<T>(0))) {
-        //    // two roots
-        //    outRoots[0] = (-this->coefficients[1] + b) / a;
-        //    if (size > 1) {
-        //        outRoots[1] = (-this->coefficients[1] - b) / a;
-        //        return 2;
-        //    }
-        //    return 1;
-        //}
-
-        //return 0; // no roots
-
 
     /**
      * Partial template specialisation for polynoms of degree 3.
@@ -324,46 +328,56 @@ namespace math {
         /** Dtor. */
         ~AbstractPolynom(void);
 
-        ///**
-        // * Finds the roots of the polynom. If roots only touch the x-axis they
-        // * will be present more than once in the output. If the output array
-        // * as not enough space to store all found roots only up to 'size'
-        // * roots will be stored. The order of the roots is undefined.
-        // *
-        // * A polynom of degree D has a maximum number of D roots.
-        // *
-        // * @param outRoots Pointer to the array to receive the found roots
-        // * @param size The size of the array to receive the found roots in
-        // *             number of elements.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
-        //    return this->findRoots<3>(outRoots, size);
-        //}
+        /**
+         * Finds the roots of the polynom. If roots only touch the x-axis they
+         * will be present more than once in the output. If the output array
+         * as not enough space to store all found roots only up to 'size'
+         * roots will be stored. The order of the roots is undefined.
+         *
+         * A polynom of degree D has a maximum number of D roots.
+         *
+         * @param outRoots Pointer to the array to receive the found roots
+         * @param size The size of the array to receive the found roots in
+         *             number of elements.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
+            if (size == 0) return 0;
+            if (IsEqual(this->coefficients[3], static_cast<T>(0))) {
+                if (IsEqual(this->coefficients[2], static_cast<T>(0))) {
+                    if (IsEqual(this->coefficients[1], static_cast<T>(0))) {
+                        return 0;
+                    }
+                    return this->findRootsDeg1(outRoots, size);
+                }
+                return this->findRootsDeg2(outRoots, size);
+            }
+            return this->findRootsDeg3(outRoots, size);
+        }
 
-        ///**
-        // * Finds the roots of the polynom. If roots only touch the x-axis they
-        // * will be present more than once in the output. The order of the roots
-        // * is undefined.
-        // *
-        // * A polynom of degree 3 has a maximum number of 3 roots.
-        // *
-        // * @param outRoot1 Variable to receive the first root.
-        // * @param outRoot2 Variable to receive the second root.
-        // * @param outRoot3 Variable to receive the third root.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T& outRoot1, T& outRoot2, T& outRoot3)
-        //        const {
-        //    T r[3];
-        //    unsigned int rv = this->findRoots<3>(r, 3);
-        //    if (r > 0) outRoot1 = r[0];
-        //    if (r > 1) outRoot2 = r[1];
-        //    if (r > 2) outRoot3 = r[2];
-        //    return rv;
-        //}
+        /**
+         * Finds the roots of the polynom. If roots only touch the x-axis they
+         * will be present more than once in the output. The order of the roots
+         * is undefined.
+         *
+         * A polynom of degree 3 has a maximum number of 3 roots.
+         *
+         * @param outRoot1 Variable to receive the first root.
+         * @param outRoot2 Variable to receive the second root.
+         * @param outRoot3 Variable to receive the third root.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T& outRoot1, T& outRoot2, T& outRoot3)
+                const {
+            T r[3];
+            unsigned int rv = this->FindRoots(r, 3);
+            if (r > 0) outRoot1 = r[0];
+            if (r > 1) outRoot2 = r[1];
+            if (r > 2) outRoot3 = r[2];
+            return rv;
+        }
 
         /**
          * Assignment operator
@@ -371,10 +385,14 @@ namespace math {
          * @param rhs The right hand side operand
          *
          * @return A reference to this
+         *
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         *        than D.
          */
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractPolynom<T, 3, S>& operator=(
-            const AbstractPolynom<T, 3, S>& rhs) {
-            *this = rhs;
+                const AbstractPolynom<Tp, Dp, Sp>& rhs) {
+            Super::operator=(rhs);
             return *this;
         }
 
@@ -414,48 +432,62 @@ namespace math {
         /** Dtor. */
         ~AbstractPolynom(void);
 
-        ///**
-        // * Finds the roots of the polynom. If roots only touch the x-axis they
-        // * will be present more than once in the output. If the output array
-        // * as not enough space to store all found roots only up to 'size'
-        // * roots will be stored. The order of the roots is undefined.
-        // *
-        // * A polynom of degree D has a maximum number of D roots.
-        // *
-        // * @param outRoots Pointer to the array to receive the found roots
-        // * @param size The size of the array to receive the found roots in
-        // *             number of elements.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
-        //    return this->findRoots<4>(outRoots, size);
-        //}
+        /**
+         * Finds the roots of the polynom. If roots only touch the x-axis they
+         * will be present more than once in the output. If the output array
+         * as not enough space to store all found roots only up to 'size'
+         * roots will be stored. The order of the roots is undefined.
+         *
+         * A polynom of degree D has a maximum number of D roots.
+         *
+         * @param outRoots Pointer to the array to receive the found roots
+         * @param size The size of the array to receive the found roots in
+         *             number of elements.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
+            if (size == 0) return 0;
+            if (IsEqual(this->coefficients[4], static_cast<T>(0))) {
+                if (IsEqual(this->coefficients[3], static_cast<T>(0))) {
+                    if (IsEqual(this->coefficients[2], static_cast<T>(0))) {
+                        if (IsEqual(this->coefficients[1],
+                                static_cast<T>(0))) {
+                            return 0;
+                        }
+                        return this->findRootsDeg1(outRoots, size);
+                    }
+                    return this->findRootsDeg2(outRoots, size);
+                }
+                return this->findRootsDeg3(outRoots, size);
+            }
+            return this->findRootsDeg4(outRoots, size);
+        }
 
-        ///**
-        // * Finds the roots of the polynom. If roots only touch the x-axis they
-        // * will be present more than once in the output. The order of the roots
-        // * is undefined.
-        // *
-        // * A polynom of degree 4 has a maximum number of 4 roots.
-        // *
-        // * @param outRoot1 Variable to receive the first root.
-        // * @param outRoot2 Variable to receive the second root.
-        // * @param outRoot3 Variable to receive the third root.
-        // * @param outRoot4 Variable to receive the fourth root.
-        // *
-        // * @return The number of valid roots in the out parameter.
-        // */
-        //inline unsigned int FindRoots(T& outRoot1, T& outRoot2, T& outRoot3,
-        //        T& outRoot4) const {
-        //    T r[4];
-        //    unsigned int rv = this->findRoots<4>(r, 4);
-        //    if (r > 0) outRoot1 = r[0];
-        //    if (r > 1) outRoot2 = r[1];
-        //    if (r > 2) outRoot3 = r[2];
-        //    if (r > 3) outRoot4 = r[3];
-        //    return rv;
-        //}
+        /**
+         * Finds the roots of the polynom. If roots only touch the x-axis they
+         * will be present more than once in the output. The order of the roots
+         * is undefined.
+         *
+         * A polynom of degree 4 has a maximum number of 4 roots.
+         *
+         * @param outRoot1 Variable to receive the first root.
+         * @param outRoot2 Variable to receive the second root.
+         * @param outRoot3 Variable to receive the third root.
+         * @param outRoot4 Variable to receive the fourth root.
+         *
+         * @return The number of valid roots in the out parameter.
+         */
+        inline unsigned int FindRoots(T& outRoot1, T& outRoot2, T& outRoot3,
+                T& outRoot4) const {
+            T r[4];
+            unsigned int rv = this->findRoots<4>(r, 4);
+            if (r > 0) outRoot1 = r[0];
+            if (r > 1) outRoot2 = r[1];
+            if (r > 2) outRoot3 = r[2];
+            if (r > 3) outRoot4 = r[3];
+            return rv;
+        }
 
         /**
          * Assignment operator
@@ -463,10 +495,14 @@ namespace math {
          * @param rhs The right hand side operand
          *
          * @return A reference to this
+         *
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         *        than D.
          */
+        template<class Tp, unsigned int Dp, class Sp>
         inline AbstractPolynom<T, 4, S>& operator=(
-            const AbstractPolynom<T, 4, S>& rhs) {
-            *this = rhs;
+                const AbstractPolynom<Tp, Dp, Sp>& rhs) {
+            Super::operator=(rhs);
             return *this;
         }
 

@@ -14,8 +14,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/mathfunctions.h"
 #include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/UnsupportedOperationException.h"
 
 
@@ -43,20 +44,44 @@ namespace math {
     class AbstractPolynomImpl {
     public:
 
-        ///** 
-        // * Typedef for a polynom with "deep storage" class. Objects of this type
-        // * are used as return value for methods and operators that must create
-        // * and return new instances.
-        // */
-        //typedef C<T, D, T[D]> DeepStoragePolynom;
-
         /** Dtor. */
         ~AbstractPolynomImpl(void);
+
+        /**
+         * Tests if the polynom 'src' can be assigned to this object. This is
+         * possible if the effective degree of 'src' is equal or smaller than
+         * D.
+         *
+         * @param src The polynom to test
+         *
+         * @return True if 'src' can be assigned to this object.
+         */
+        template<class Tp, unsigned int Dp, class Sp,
+            template<class Tp, unsigned int Dp, class Sp> class Cp>
+        inline bool CanAssign(
+                const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& src) const {
+            return (src.EffectiveDegree() <= D);
+        }
 
         /**
          * Sets all coefficients to zero.
          */
         void Clear(void);
+
+        /**
+         * Calculates the derivative of this polynom
+         *
+         * @return The derivative of this polynom
+         */
+        C<T, D - 1, T[D]> Derivative(void) const;
+
+        /**
+         * Answers the effective degree of the polynom. The effective degree
+         * is less than D if a_d is zero.
+         *
+         * @return The effective degree of the polynom.
+         */
+        unsigned int EffectiveDegree(void) const;
 
         /**
          * Answer whether all coefficients are zero.
@@ -126,9 +151,14 @@ namespace math {
          * @param rhs The right hand side operand
          *
          * @return A reference to this
+         *
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
+         *        than D.
          */
+        template<class Tp, unsigned int Dp, class Sp,
+            template<class Tp, unsigned int Dp, class Sp> class Cp>
         AbstractPolynomImpl<T, D, S, C>& operator=(
-            const AbstractPolynomImpl<T, D, S, C>& rhs);
+            const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs);
 
         /**
          * Test for equality
@@ -137,7 +167,9 @@ namespace math {
          *
          * @return true if this and rhs are equal
          */
-        bool operator==(const AbstractPolynomImpl<T, D, S, C>& rhs) const;
+        template<class Tp, unsigned int Dp, class Sp,
+            template<class Tp, unsigned int Dp, class Sp> class Cp>
+        bool operator==(const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs) const;
 
         /**
          * Test for inequality
@@ -146,7 +178,9 @@ namespace math {
          *
          * @return false if this and rhs are equal
          */
-        inline bool operator!=(const AbstractPolynomImpl<T, D, S, C>& rhs)
+        template<class Tp, unsigned int Dp, class Sp,
+            template<class Tp, unsigned int Dp, class Sp> class Cp>
+        inline bool operator!=(const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs)
                 const {
             return !(*this == rhs);
         }
@@ -156,80 +190,55 @@ namespace math {
         /** Ctor. */
         inline AbstractPolynomImpl(void) { };
 
-        ///**
-        // * Finds the roots of a polynom of degree 'Dp'
-        // *
-        // * @param outRoots The array to receive the roots
-        // * @param size The size of 'outRoots' in number of elements
-        // *
-        // * @return The number of roots written to 'outRoots'
-        // */
-        //template<unsigned int Dp>
-        //unsigned int findRoots(T *outRoots, unsigned int size) const; // {
-
-        //    // TODO: Implement some newton
-
-        //    throw vislib::UnsupportedOperationException("findRoots", __FILE__, __LINE__);
-
-        //    return 0;
-        //}
-
-        ///**
-        // * Finds the roots of a polynom of degree 'Dp'
-        // *
-        // * @param outRoots The array to receive the roots
-        // * @param size The size of 'outRoots' in number of elements
-        // *
-        // * @return The number of roots written to 'outRoots'
-        // */
-        //template<>
-        //unsigned int findRoots<1>(T *outRoots, unsigned int size) const {
-        //    return 0;
-        //}
-
-        ///**
-        // * Finds the roots of a polynom of degree 'Dp'
-        // *
-        // * @param outRoots The array to receive the roots
-        // * @param size The size of 'outRoots' in number of elements
-        // *
-        // * @return The number of roots written to 'outRoots'
-        // */
-        //template<>
-        //unsigned int findRoots<2>(T *outRoots, unsigned int size) const {
-        //    return 0;
-        //}
-
-        ///**
-        // * Finds the roots of a polynom of degree 'Dp'
-        // *
-        // * @param outRoots The array to receive the roots
-        // * @param size The size of 'outRoots' in number of elements
-        // *
-        // * @return The number of roots written to 'outRoots'
-        // */
-        //template<>
-        //unsigned int findRoots<3>(T *outRoots, unsigned int size) const {
-        //    return 0;
-        //}
-
-        ///**
-        // * Finds the roots of a polynom of degree 'Dp'
-        // *
-        // * @param outRoots The array to receive the roots
-        // * @param size The size of 'outRoots' in number of elements
-        // *
-        // * @return The number of roots written to 'outRoots'
-        // */
-        //template<>
-        //unsigned int findRoots<4>(T *outRoots, unsigned int size) const {
-        //    return 0;
-        //}
+        /**
+         * Finds the roots of the polynom for the linear case
+         *
+         * @param outRoots Array to receive the found roots
+         * @param size The size of 'outRoots' in number of elements
+         *
+         * @return The found roots
+         */
+        unsigned int findRootsDeg1(T *outRoots, unsigned int size) const;
 
         /**
-         * The polynom coefficients.
+         * Finds the roots of the polynom for the quadratic case
+         *
+         * @param outRoots Array to receive the found roots
+         * @param size The size of 'outRoots' in number of elements
+         *
+         * @return The found roots
+         */
+        unsigned int findRootsDeg2(T *outRoots, unsigned int size) const;
+
+        /**
+         * Finds the roots of the polynom for the cubic case
+         *
+         * @param outRoots Array to receive the found roots
+         * @param size The size of 'outRoots' in number of elements
+         *
+         * @return The found roots
+         */
+        unsigned int findRootsDeg3(T *outRoots, unsigned int size) const;
+
+        /**
+         * Finds the roots of the polynom for the quartic case
+         *
+         * @param outRoots Array to receive the found roots
+         * @param size The size of 'outRoots' in number of elements
+         *
+         * @return The found roots
+         */
+        unsigned int findRootsDeg4(T *outRoots, unsigned int size) const;
+
+        /**
+         * The D + 1 polynom coefficients
          */
         S coefficients;
+
+        /* Allow access to the coefficients */
+        template<class Tf1, unsigned int Df1, class Sf1,
+            template<class Tf2, unsigned int Df2, class Sf2> class Cf1>
+            friend class AbstractPolynomImpl;
 
     };
 
@@ -243,14 +252,6 @@ namespace math {
         // intentionally empty
     }
 
-    //template<class T, unsigned int D, class S,
-    //    template<class T, unsigned int D, class S> class C>
-    //template<unsigned int Dp>
-    //unsigned int AbstractPolynomImpl<T, D, S, C>::findRoots(T* outRoots, unsigned int size) const {
-
-    //    return 0;
-    //}
-
 
     /*
      * AbstractPolynomImpl<T, D, S, C>::Clear
@@ -258,9 +259,41 @@ namespace math {
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
     void AbstractPolynomImpl<T, D, S, C>::Clear(void) {
-        for (unsigned int i = 0; i < D; i++) {
+        for (unsigned int i = 0; i <= D; i++) {
             this->coefficients[i] = static_cast<T>(0);
         }
+    }
+
+
+    /*
+     * AbstractPolynomImpl<T, D, S, C>::Derivative
+     */
+    template<class T, unsigned int D, class S,
+        template<class T, unsigned int D, class S> class C>
+    C<T, D - 1, T[D]> AbstractPolynomImpl<T, D, S, C>::Derivative(void) const {
+        C<T, D - 1, T[D]> rv;
+
+        for (unsigned int i = 0; i < D; i++) {
+            rv.coefficients[i] = this->coefficients[i + 1] *
+                static_cast<T>(i + 1);
+        }
+
+        return rv;
+    }
+
+    /*
+     * AbstractPolynomImpl<T, D, S, C>::EffectiveDegree
+     */
+    template<class T, unsigned int D, class S,
+        template<class T, unsigned int D, class S> class C>
+    unsigned int AbstractPolynomImpl<T, D, S, C>::EffectiveDegree(void) const {
+        for (unsigned int i = D; i > 0; i--) {
+            if (!vislib::math::IsEqual(this->coefficients[i],
+                    static_cast<T>(0))) {
+                return i;
+            }
+        }
+        return 0;
     }
 
 
@@ -270,7 +303,7 @@ namespace math {
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
     bool AbstractPolynomImpl<T, D, S, C>::IsZero(void) const {
-        for (unsigned int i = 0; i < D; i++) {
+        for (unsigned int i = 0; i <= D; i++) {
             if (!vislib::math::IsEqual(this->coefficients[i],
                     static_cast<T>(0))) {
                 return false;
@@ -289,7 +322,7 @@ namespace math {
         T val = this->coefficients[0];
         T xp = static_cast<T>(1);
 
-        for (unsigned int i = 1; i < D; i++) {
+        for (unsigned int i = 1; i <= D; i++) {
             xp *= x;
             val += this->coefficients[i] * xp;
         }
@@ -303,12 +336,23 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
+    template<class Tp, unsigned int Dp, class Sp,
+        template<class Tp, unsigned int Dp, class Sp> class Cp>
     AbstractPolynomImpl<T, D, S, C>&
     AbstractPolynomImpl<T, D, S, C>::operator=(
-            const AbstractPolynomImpl<T, D, S, C>& rhs) {
-        for (unsigned int i = 0; i < D; i++) {
-            this->coefficients[i] = rhs.coefficients[i];
+            const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs) {
+        unsigned int rhsed = rhs.EffectiveDegree();
+        if (rhsed > D) {
+            throw vislib::IllegalParamException("rhs", __FILE__, __LINE__);
         }
+
+        for (unsigned int i = 0; i <= rhsed; i++) {
+            this->coefficients[i] = static_cast<T>(rhs.coefficients[i]);
+        }
+        for (unsigned int i = rhsed + 1; i <= D; i++) {
+            this->coefficients[i] = static_cast<T>(0);
+        }
+
         return *this;
     }
 
@@ -318,73 +362,113 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
+    template<class Tp, unsigned int Dp, class Sp,
+        template<class Tp, unsigned int Dp, class Sp> class Cp>
     bool AbstractPolynomImpl<T, D, S, C>::operator==(
-            const AbstractPolynomImpl<T, D, S, C>& rhs) const {
-        for (unsigned int i = 0; i < D; i++) {
+            const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs) const {
+
+        for (unsigned int i = 0; i <= ((D < Dp) ? D : Dp); i++) {
             if (!vislib::math::IsEqual(this->coefficients[i],
-                    rhs.coefficients[i])) {
+                    static_cast<T>(rhs.coefficients[i]))) {
                 return false;
             }
         }
+        for (unsigned int i = ((D < Dp) ? D : Dp) + 1; i <= D; i++) {
+            if (!vislib::math::IsEqual(this->coefficients[i],
+                    static_cast<T>(0))) {
+                return false;
+            }
+        }
+        for (unsigned int i = ((D < Dp) ? D : Dp) + 1; i <= Dp; i++) {
+            if (!vislib::math::IsEqual(rhs.coefficients[i],
+                    static_cast<Tp>(0))) {
+                return false;
+            }
+        }
+
         return true;
     }
 
 
-    ///*
-    // * AbstractPolynomImpl<T, D, S, C>::findRootsDeg1
-    // */
-    //template<class T, unsigned int D, class S,
-    //    template<class T, unsigned int D, class S> class C>
-    //unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg1(
-    //        T *outRoots, unsigned int size) const {
+    /*
+     * AbstractPolynomImpl<T, D, S, C>::findRootsDeg1
+     */
+    template<class T, unsigned int D, class S,
+        template<class T, unsigned int D, class S> class C>
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg1(
+            T *outRoots, unsigned int size) const {
+        ASSERT(!IsEqual(this->coefficients[1], static_cast<T>(0)));
+        ASSERT(size > 0);
 
-    //    if (size < 1) return 0; // not enough size to store
-
-    //    if (IsEqual(this->coefficients[1], static_cast<T>(0))) return 0;
-    //        // line is parallel to x-axis
-
-    //    outRoots[0] = -this->coefficients[0] / this->coefficients[1];
-    //    return 1;
-
-    //    throw vislib::UnsupportedOperationException("FindRoots",
-    //        __FILE__, __LINE__);
-    //}
+        outRoots[0] = -this->coefficients[0] / this->coefficients[1];
+        return 1;
+    }
 
 
-    ///*
-    // * AbstractPolynomImpl<T, D, S, C>::findRootsDeg2
-    // */
-    //template<class T, unsigned int D, class S,
-    //    template<class T, unsigned int D, class S> class C>
-    //unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg2(
-    //        T *outRoots, unsigned int size) const {
-    //    throw vislib::UnsupportedOperationException("FindRoots",
-    //        __FILE__, __LINE__);
-    //}
+    /*
+     * AbstractPolynomImpl<T, D, S, C>::findRootsDeg2
+     */
+    template<class T, unsigned int D, class S,
+        template<class T, unsigned int D, class S> class C>
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg2(
+            T *outRoots, unsigned int size) const {
+        ASSERT(!IsEqual(this->coefficients[2], static_cast<T>(0)));
+        ASSERT(size > 0);
+
+        T a = this->coefficients[2] * static_cast<T>(2);
+        T b = this->coefficients[1] * this->coefficients[1]
+            - this->coefficients[0] * this->coefficients[2] * static_cast<T>(4);
+
+        if (IsEqual(b, static_cast<T>(0))) {
+            // one root
+            outRoots[0] = -this->coefficients[1] / a;
+            return 1;
+        } else if (b > static_cast<T>(0)) {
+            // two roots
+            outRoots[0] = (-this->coefficients[1] + b) / a;
+            if (size > 1) {
+                outRoots[1] = (-this->coefficients[1] - b) / a;
+                return 2;
+            }
+            return 1;
+        }
+
+        return 0; // no roots
+    }
 
 
-    ///*
-    // * AbstractPolynomImpl<T, D, S, C>::findRootsDeg3
-    // */
-    //template<class T, unsigned int D, class S,
-    //    template<class T, unsigned int D, class S> class C>
-    //unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg3(
-    //        T *outRoots, unsigned int size) const {
-    //    throw vislib::UnsupportedOperationException("FindRoots",
-    //        __FILE__, __LINE__);
-    //}
+    /*
+     * AbstractPolynomImpl<T, D, S, C>::findRootsDeg3
+     */
+    template<class T, unsigned int D, class S,
+        template<class T, unsigned int D, class S> class C>
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg3(
+            T *outRoots, unsigned int size) const {
+        ASSERT(!IsEqual(this->coefficients[3], static_cast<T>(0)));
+        ASSERT(size > 0);
+
+        // TODO: Implement
+
+        throw vislib::UnsupportedOperationException("findRootsDeg3",
+            __FILE__, __LINE__);
+    }
 
 
-    ///*
-    // * AbstractPolynomImpl<T, D, S, C>::findRootsDeg4
-    // */
-    //template<class T, unsigned int D, class S,
-    //    template<class T, unsigned int D, class S> class C>
-    //unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg4(
-    //        T *outRoots, unsigned int size) const {
-    //    throw vislib::UnsupportedOperationException("FindRoots",
-    //        __FILE__, __LINE__);
-    //}
+    /*
+     * AbstractPolynomImpl<T, D, S, C>::findRootsDeg4
+     */
+    template<class T, unsigned int D, class S,
+        template<class T, unsigned int D, class S> class C>
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg4(
+            T *outRoots, unsigned int size) const {
+        ASSERT(!IsEqual(this->coefficients[4], static_cast<T>(0)));
+        ASSERT(size > 0);
+
+        // TODO: Implement
+
+        throw vislib::UnsupportedOperationException("findRootsDeg4",
+            __FILE__, __LINE__);
+    }
 
 
 } /* end namespace math */
