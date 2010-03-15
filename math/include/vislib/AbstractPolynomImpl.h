@@ -59,10 +59,8 @@ namespace math {
          *
          * @return True if 'src' can be assigned to this object.
          */
-        template<class Tp, unsigned int Dp, class Sp,
-            template<class Tp, unsigned int Dp, class Sp> class Cp>
-        inline bool CanAssign(
-                const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& src) const {
+        template<class Tp, unsigned int Dp, class Sp>
+        inline bool CanAssign(const C<Tp, Dp, Sp>& src) const {
             return (src.EffectiveDegree() <= D);
         }
 
@@ -158,10 +156,8 @@ namespace math {
          * @throw IllegalParamException if 'rhs' has an effective degree larger
          *        than D.
          */
-        template<class Tp, unsigned int Dp, class Sp,
-            template<class Tp, unsigned int Dp, class Sp> class Cp>
-        AbstractPolynomImpl<T, D, S, C>& operator=(
-            const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs);
+        template<class Tp, unsigned int Dp, class Sp>
+        AbstractPolynomImpl<T, D, S, C>& operator=(const C<Tp, Dp, Sp>& rhs);
 
         /**
          * Test for equality
@@ -170,9 +166,8 @@ namespace math {
          *
          * @return true if this and rhs are equal
          */
-        template<class Tp, unsigned int Dp, class Sp,
-            template<class Tp, unsigned int Dp, class Sp> class Cp>
-        bool operator==(const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs) const;
+        template<class Tp, unsigned int Dp, class Sp>
+        bool operator==(const C<Tp, Dp, Sp>& rhs) const;
 
         /**
          * Test for inequality
@@ -181,9 +176,8 @@ namespace math {
          *
          * @return false if this and rhs are equal
          */
-        template<class Tp, unsigned int Dp, class Sp,
-            template<class Tp, unsigned int Dp, class Sp> class Cp>
-        inline bool operator!=(const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs)
+        template<class Tp, unsigned int Dp, class Sp>
+        inline bool operator!=(const C<Tp, Dp, Sp>& rhs)
                 const {
             return !(*this == rhs);
         }
@@ -368,11 +362,9 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
-    template<class Tp, unsigned int Dp, class Sp,
-        template<class Tp, unsigned int Dp, class Sp> class Cp>
+    template<class Tp, unsigned int Dp, class Sp>
     AbstractPolynomImpl<T, D, S, C>&
-    AbstractPolynomImpl<T, D, S, C>::operator=(
-            const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs) {
+    AbstractPolynomImpl<T, D, S, C>::operator=(const C<Tp, Dp, Sp>& rhs) {
         unsigned int rhsed = rhs.EffectiveDegree();
         if (rhsed > D) {
             throw vislib::IllegalParamException("rhs", __FILE__, __LINE__);
@@ -394,10 +386,9 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
-    template<class Tp, unsigned int Dp, class Sp,
-        template<class Tp, unsigned int Dp, class Sp> class Cp>
+    template<class Tp, unsigned int Dp, class Sp>
     bool AbstractPolynomImpl<T, D, S, C>::operator==(
-            const AbstractPolynomImpl<Tp, Dp, Sp, Cp>& rhs) const {
+            const C<Tp, Dp, Sp>& rhs) const {
 
         for (unsigned int i = 0; i <= ((D < Dp) ? D : Dp); i++) {
             if (!vislib::math::IsEqual(this->coefficients[i],
