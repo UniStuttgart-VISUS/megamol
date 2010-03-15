@@ -52,6 +52,19 @@ namespace math {
             Super::operator=(src);
         }
 
+        /**
+         * Ctor.
+         *
+         * @param coefficients Pointer to the coefficients of the polynom.
+         *                     Must be an array of type T and size (D + 1).
+         *                     The values will be copied.
+         */
+        explicit Polynom(const T* coefficients) : Super() {
+            for (unsigned int i = 0; i <= D; i++) {
+                this->coefficients[i] = coefficients[i];
+            }
+        }
+
         /** Dtor. */
         ~Polynom(void);
 
@@ -62,12 +75,11 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw IllegalParamException if 'rhs' has an effective degree larger
-         *        than D.
+         * @throw IllegalParamException if 'rhs' has an effective degree
+         *        larger than D.
          */
         template<class Tp, unsigned int Dp>
-        inline Polynom<T, D>& operator=(
-                const Polynom<Tp, Dp>& rhs) {
+        inline Polynom<T, D>& operator=(const Polynom<Tp, Dp>& rhs) {
             Super::operator=(rhs);
             return *this;
         }

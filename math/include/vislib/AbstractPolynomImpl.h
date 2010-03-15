@@ -18,6 +18,9 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/UnsupportedOperationException.h"
+#ifndef M_PI
+#define M_PI       3.14159265358979323846
+#endif /* !M_PI */
 
 
 namespace vislib {
@@ -187,48 +190,77 @@ namespace math {
 
     protected:
 
-        /** Ctor. */
-        inline AbstractPolynomImpl(void) { };
-
         /**
          * Finds the roots of the polynom for the linear case
          *
+         * @param a0 The const coefficient
+         * @param a1 The linear coefficient
          * @param outRoots Array to receive the found roots
          * @param size The size of 'outRoots' in number of elements
          *
          * @return The found roots
          */
-        unsigned int findRootsDeg1(T *outRoots, unsigned int size) const;
+        static unsigned int findRootsDeg1(const T& a0, const T& a1,
+            T *outRoots, unsigned int size);
 
         /**
          * Finds the roots of the polynom for the quadratic case
          *
+         * @param a0 The const coefficient
+         * @param a1 The linear coefficient
+         * @param a2 The quadratic coefficient
          * @param outRoots Array to receive the found roots
          * @param size The size of 'outRoots' in number of elements
          *
          * @return The found roots
          */
-        unsigned int findRootsDeg2(T *outRoots, unsigned int size) const;
+        static unsigned int findRootsDeg2(const T& a0, const T& a1,
+            const T& a2, T *outRoots, unsigned int size);
 
         /**
          * Finds the roots of the polynom for the cubic case
          *
+         * @param a0 The const coefficient
+         * @param a1 The linear coefficient
+         * @param a2 The quadratic coefficient
+         * @param a3 The cubic coefficient
          * @param outRoots Array to receive the found roots
          * @param size The size of 'outRoots' in number of elements
          *
          * @return The found roots
          */
-        unsigned int findRootsDeg3(T *outRoots, unsigned int size) const;
+        static unsigned int findRootsDeg3(const T& a0, const T& a1,
+            const T& a2, const T& a3, T *outRoots, unsigned int size);
 
         /**
          * Finds the roots of the polynom for the quartic case
          *
+         * @param a0 The const coefficient
+         * @param a1 The linear coefficient
+         * @param a2 The quadratic coefficient
+         * @param a3 The cubic coefficient
+         * @param a4 The quartic coefficient
          * @param outRoots Array to receive the found roots
          * @param size The size of 'outRoots' in number of elements
          *
          * @return The found roots
          */
-        unsigned int findRootsDeg4(T *outRoots, unsigned int size) const;
+        static unsigned int findRootsDeg4(const T& a0, const T& a1,
+            const T& a2, const T& a3, const T& a4, T *outRoots,
+            unsigned int size);
+
+        /**
+         * Removed double roots from the array 'outRoots'
+         *
+         * @param outRoots Pointer to the array of found roots
+         * @param size The number of valid entries in 'outRoots'
+         *
+         * @return The numer of unique roots now in 'outRoots'
+         */
+        static unsigned int uniqueRoots(T *outRoots, unsigned int size);
+
+        /** Ctor. */
+        inline AbstractPolynomImpl(void) { };
 
         /**
          * The D + 1 polynom coefficients
@@ -395,12 +427,13 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
-    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg1(
-            T *outRoots, unsigned int size) const {
-        ASSERT(!IsEqual(this->coefficients[1], static_cast<T>(0)));
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg1(const T& a0,
+            const T& a1, T *outRoots, unsigned int size) {
+        ASSERT(!IsEqual(a1, static_cast<T>(0)));
         ASSERT(size > 0);
 
-        outRoots[0] = -this->coefficients[0] / this->coefficients[1];
+        outRoots[0] = -a0 / a1;
+
         return 1;
     }
 
@@ -410,24 +443,23 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
-    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg2(
-            T *outRoots, unsigned int size) const {
-        ASSERT(!IsEqual(this->coefficients[2], static_cast<T>(0)));
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg2(const T& a0,
+            const T& a1, const T& a2, T *outRoots, unsigned int size) {
+        ASSERT(!IsEqual(a2, static_cast<T>(0)));
         ASSERT(size > 0);
 
-        T a = this->coefficients[2] * static_cast<T>(2);
-        T b = this->coefficients[1] * this->coefficients[1]
-            - this->coefficients[0] * this->coefficients[2] * static_cast<T>(4);
+        T a = a2 * static_cast<T>(2);
+        T b = a1 * a1 - a0 * a2 * static_cast<T>(4);
 
         if (IsEqual(b, static_cast<T>(0))) {
             // one root
-            outRoots[0] = -this->coefficients[1] / a;
+            outRoots[0] = -a1 / a;
             return 1;
         } else if (b > static_cast<T>(0)) {
             // two roots
-            outRoots[0] = (-this->coefficients[1] + b) / a;
+            outRoots[0] = (-a1 + b) / a;
             if (size > 1) {
-                outRoots[1] = (-this->coefficients[1] - b) / a;
+                outRoots[1] = (-a1 - b) / a;
                 return 2;
             }
             return 1;
@@ -442,15 +474,92 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
-    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg3(
-            T *outRoots, unsigned int size) const {
-        ASSERT(!IsEqual(this->coefficients[3], static_cast<T>(0)));
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg3(const T& a0,
+            const T& a1, const T& a2, const T& a3, T *outRoots,
+            unsigned int size) {
+        ASSERT(!IsEqual(a3, static_cast<T>(0)));
         ASSERT(size > 0);
+        // calculation following description at
+        // http://www.mathe.tu-freiberg.de/~hebisch/cafe/kubisch.html
+        // (14.03.2010)
 
-        // TODO: Implement
+        T p = (static_cast<T>(3) * a3 * a1) - (a2 * a2);
+        T q = (static_cast<T>(27) * a3 * a3 * a0)
+            - (static_cast<T>(9) * a3 * a2 * a1)
+            + (static_cast<T>(2) * a2 * a2 * a2);
 
-        throw vislib::UnsupportedOperationException("findRootsDeg3",
-            __FILE__, __LINE__);
+        if (IsEqual(p, static_cast<T>(0))) { // special case
+            // y1 per double calculation; not nice, but ok for now
+            T y1 = static_cast<T>(::pow(static_cast<double>(-q), 1.0 / 3.0));
+            outRoots[0] = (y1 - a2) / (static_cast<T>(3) * a3);
+            if (size > 1) {
+                // quadratic polynom through polynom division
+                T y23[2];
+                T qa0 = (static_cast<T>(3) * p) - (y1 * y1);
+                T qa1 = -y1;
+                T qa2 = static_cast<T>(1);
+                unsigned int qrc = findRootsDeg2(qa0, qa1, qa2, y23, 2);
+                if (qrc > 0) {
+                    outRoots[1] = (y23[0] - a2) / (static_cast<T>(3) * a3);
+                }
+                if ((qrc > 1) && (size > 2)) {
+                    outRoots[2] = (y23[1] - a2) / (static_cast<T>(3) * a3);
+                    return uniqueRoots(outRoots, 3);
+                }
+                return uniqueRoots(outRoots, 2);
+            }
+            return 1;
+        }
+        // p != 0
+
+        T dis = (q * q) + (static_cast<T>(4) * p * p * p);
+        if (dis < static_cast<T>(0)) {
+            // casus irreducibilis
+            ASSERT(p < static_cast<T>(0)); // or square-root would be complex
+
+            double cosphi = static_cast<double>(-q)
+                / (2.0 * ::sqrt(-static_cast<double>(p * p * p)));
+            double phi = ::acos(cosphi);
+            double sqrtNegP = ::sqrt(static_cast<double>(-p));
+            double phiThird = phi / 3.0;
+            double piThird = M_PI / 3.0;
+
+            T y1 = static_cast<T>(2.0 * sqrtNegP * ::cos(phiThird));
+            T y2 = static_cast<T>(-2.0 * sqrtNegP * ::cos(phiThird + piThird));
+            T y3 = static_cast<T>(-2.0 * sqrtNegP * ::cos(phiThird - piThird));
+
+            outRoots[0] = (y1 - a2) / (static_cast<T>(3) * a3);
+            if (size > 1) {
+                outRoots[1] = (y2 - a2) / (static_cast<T>(3) * a3);
+                if (size > 2) {
+                    outRoots[2] = (y3 - a2) / (static_cast<T>(3) * a3);
+                    return uniqueRoots(outRoots, 3);
+                }
+                return uniqueRoots(outRoots, 2);
+            }
+            return 1;
+        }
+
+        double sqrtDis = ::sqrt(static_cast<double>(dis));
+        T u = static_cast<T>(0.5) * static_cast<T>(
+            ::pow(-4.0 * static_cast<double>(q) + 4.0 * sqrtDis,
+                1.0 / 3.0));
+        T v = static_cast<T>(0.5) * static_cast<T>(
+            ::pow(-4.0 * static_cast<double>(q) - 4.0 * sqrtDis,
+                1.0 / 3.0));
+        T y1 = u + v;
+        outRoots[0] = (y1 - a2) / (static_cast<T>(3) * a3);
+
+        if (size > 1) {
+            if (IsEqual(u, v)) {
+                T y2 = static_cast<T>(-0.5) * (u + v);
+                outRoots[1] = (y2 - a2) / (static_cast<T>(3) * a3);
+                return uniqueRoots(outRoots, 2);
+            } // else second and thrid root are complex
+              // (we only return real roots)
+        }
+
+        return 1;
     }
 
 
@@ -459,15 +568,47 @@ namespace math {
      */
     template<class T, unsigned int D, class S,
         template<class T, unsigned int D, class S> class C>
-    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg4(
-            T *outRoots, unsigned int size) const {
-        ASSERT(!IsEqual(this->coefficients[4], static_cast<T>(0)));
+    unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg4(const T& a0,
+            const T& a1, const T& a2, const T& a3, const T& a4, T *outRoots,
+            unsigned int size) {
+        ASSERT(!IsEqual(a4, static_cast<T>(0)));
         ASSERT(size > 0);
 
         // TODO: Implement
 
         throw vislib::UnsupportedOperationException("findRootsDeg4",
             __FILE__, __LINE__);
+    }
+
+
+    /*
+     * AbstractPolynomImpl<T, D, S, C>::uniqueRoots
+     */
+    template<class T, unsigned int D, class S,
+        template<class T, unsigned int D, class S> class C>
+    unsigned int AbstractPolynomImpl<T, D, S, C>::uniqueRoots(T *outRoots,
+            unsigned int size) {
+        if (size <= 1) return size;
+        if (size == 2) return (IsEqual(outRoots[0], outRoots[1])) ? 1 : 2;
+
+        // O(n^2) search to keep the implementation simple
+        // change this if the degree of the polynom gets LARGE
+        bool found;
+        unsigned int cnt = 1;
+        for (unsigned int i = 1; i < size; i++) {
+            found = false;
+            for (unsigned int j = 0; j < cnt; j++) {
+                if (IsEqual(outRoots[i], outRoots[j])) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                outRoots[cnt++] = outRoots[i];
+            }
+        }
+
+        return cnt;
     }
 
 

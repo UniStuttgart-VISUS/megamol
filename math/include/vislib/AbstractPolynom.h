@@ -62,16 +62,25 @@ namespace math {
             if (size == 0) return 0;
             switch (this->EffectiveDegree()) {
                 case 0: return 0;
-                case 1: return this->findRootsDeg1(outRoots, size);
-                case 2: return this->findRootsDeg2(outRoots, size);
-                case 3: return this->findRootsDeg3(outRoots, size);
-                case 4: return this->findRootsDeg4(outRoots, size);
+                case 1: return findRootsDeg1(this->coefficients[0],
+                            this->coefficients[1], outRoots, size);
+                case 2: return findRootsDeg2(this->coefficients[0],
+                            this->coefficients[1], this->coefficients[2],
+                            outRoots, size);
+                case 3: return findRootsDeg3(this->coefficients[0],
+                            this->coefficients[1], this->coefficients[2],
+                            this->coefficients[3], outRoots, size);
+                case 4: return findRootsDeg4(this->coefficients[0],
+                            this->coefficients[1], this->coefficients[2],
+                            this->coefficients[3], this->coefficients[4],
+                            outRoots, size);
                 default: break;
             }
 
             // TODO: Implement numeric root finding (bairstow?)
 
-            throw UnsupportedOperationException("FindRoots", __FILE__, __LINE__);
+            throw UnsupportedOperationException("FindRoots",
+                __FILE__, __LINE__);
 
             return 0;
         }
@@ -125,7 +134,8 @@ namespace math {
      * Partial template specialisation for polynoms of degree 1.
      */
     template<class T, class S>
-    class AbstractPolynom<T, 1, S> : public AbstractPolynomImpl<T, 1, S, AbstractPolynom> {
+    class AbstractPolynom<T, 1, S> :
+        public AbstractPolynomImpl<T, 1, S, AbstractPolynom> {
     public:
 
         /** Dtor. */
@@ -148,7 +158,8 @@ namespace math {
         inline unsigned int FindRoots(T *outRoots, unsigned int size) const {
             if (size == 0) return 0;
             if (IsEqual(this->coefficients[1], static_cast<T>(0))) return 0;
-            return this->findRootsDeg1(outRoots, size);
+            return findRootsDeg1(this->coefficients[0], this->coefficients[1],
+                outRoots, size);
         }
 
         /**
@@ -224,7 +235,8 @@ namespace math {
      * Partial template specialisation for polynoms of degree 2.
      */
     template<class T, class S>
-    class AbstractPolynom<T, 2, S> : public AbstractPolynomImpl<T, 2, S, AbstractPolynom> {
+    class AbstractPolynom<T, 2, S> :
+        public AbstractPolynomImpl<T, 2, S, AbstractPolynom> {
     public:
 
         /** Dtor. */
@@ -250,9 +262,11 @@ namespace math {
                 if (IsEqual(this->coefficients[1], static_cast<T>(0))) {
                     return 0;
                 }
-                return this->findRootsDeg1(outRoots, size);
+                return findRootsDeg1(this->coefficients[0],
+                    this->coefficients[1], outRoots, size);
             }
-            return this->findRootsDeg2(outRoots, size);
+            return findRootsDeg2(this->coefficients[0], this->coefficients[1],
+                this->coefficients[2], outRoots, size);
         }
 
         /**
@@ -322,7 +336,8 @@ namespace math {
      * Partial template specialisation for polynoms of degree 3.
      */
     template<class T, class S>
-    class AbstractPolynom<T, 3, S> : public AbstractPolynomImpl<T, 3, S, AbstractPolynom> {
+    class AbstractPolynom<T, 3, S> :
+        public AbstractPolynomImpl<T, 3, S, AbstractPolynom> {
     public:
 
         /** Dtor. */
@@ -349,11 +364,15 @@ namespace math {
                     if (IsEqual(this->coefficients[1], static_cast<T>(0))) {
                         return 0;
                     }
-                    return this->findRootsDeg1(outRoots, size);
+                    return findRootsDeg1(this->coefficients[0],
+                        this->coefficients[1], outRoots, size);
                 }
-                return this->findRootsDeg2(outRoots, size);
+                return findRootsDeg2(this->coefficients[0],
+                    this->coefficients[1], this->coefficients[2], outRoots,
+                    size);
             }
-            return this->findRootsDeg3(outRoots, size);
+            return findRootsDeg3(this->coefficients[0], this->coefficients[1],
+                this->coefficients[2], this->coefficients[3], outRoots, size);
         }
 
         /**
@@ -426,7 +445,8 @@ namespace math {
      * Partial template specialisation for polynoms of degree 4.
      */
     template<class T, class S>
-    class AbstractPolynom<T, 4, S> : public AbstractPolynomImpl<T, 4, S, AbstractPolynom> {
+    class AbstractPolynom<T, 4, S> :
+        public AbstractPolynomImpl<T, 4, S, AbstractPolynom> {
     public:
 
         /** Dtor. */
@@ -455,13 +475,20 @@ namespace math {
                                 static_cast<T>(0))) {
                             return 0;
                         }
-                        return this->findRootsDeg1(outRoots, size);
+                        return findRootsDeg1(this->coefficients[0],
+                            this->coefficients[1], outRoots, size);
                     }
-                    return this->findRootsDeg2(outRoots, size);
+                    return findRootsDeg2(this->coefficients[0],
+                        this->coefficients[1], this->coefficients[2],
+                        outRoots, size);
                 }
-                return this->findRootsDeg3(outRoots, size);
+                return findRootsDeg3(this->coefficients[0],
+                    this->coefficients[1], this->coefficients[2],
+                    this->coefficients[3], outRoots, size);
             }
-            return this->findRootsDeg4(outRoots, size);
+            return findRootsDeg4(this->coefficients[0], this->coefficients[1],
+                this->coefficients[2], this->coefficients[3],
+                this->coefficients[4], outRoots, size);
         }
 
         /**
