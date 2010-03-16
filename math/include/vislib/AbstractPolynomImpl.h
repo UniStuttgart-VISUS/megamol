@@ -448,6 +448,7 @@ namespace math {
             return 1;
         } else if (b > static_cast<T>(0)) {
             // two roots
+            b = static_cast<T>(::sqrt(static_cast<double>(b)));
             outRoots[0] = (-a1 + b) / a;
             if (size > 1) {
                 outRoots[1] = (-a1 - b) / a;
@@ -565,10 +566,100 @@ namespace math {
         ASSERT(!IsEqual(a4, static_cast<T>(0)));
         ASSERT(size > 0);
 
-        // TODO: Implement
+        // Implementation of Ferrari-Lagrange method for solving
+        //  x^4 + ax^3 + bx^2 + cx + d = 0
+        T a = a3 / a4;
+        T b = a2 / a4;
+        T c = a1 / a4;
+        T d = a0 / a4;
 
-        throw vislib::UnsupportedOperationException("findRootsDeg4",
-            __FILE__, __LINE__);
+        T asq = a * a;
+        T p = b;
+        T q = a * c - static_cast<T>(4) * d;
+        T r = (asq - static_cast<T>(4) * b) * d + c * c;
+        T y;
+        { // finds the smallest x for cubic polynom x^3 + px^2 + qx + r = 0;
+            T cr[3];
+            unsigned int crc
+                = findRootsDeg3(r, q, p, static_cast<T>(1), cr, 3);
+            ASSERT(crc > 0);
+            if (crc == 3) y = Min(Min(cr[0], cr[1]), cr[2]);
+            else if (crc == 2) y = Min(cr[0], cr[1]);
+            else y = cr[0];
+        }
+
+        T esq = static_cast<T>(0.25) * asq - b - y;
+        if (IsEqual(esq, static_cast<T>(0))) return 0;
+
+        T fsq = static_cast<T>(0.25) * y * y - d;
+        if (IsEqual(fsq, static_cast<T>(0))) return 0;
+
+        T ef = -(static_cast<T>(0.25) * a * y + static_cast<T>(0.5) * c);
+        T e, f;
+
+        if (((a > static_cast<T>(0)) && (y > static_cast<T>(0))
+                    && (c > static_cast<T>(0)))
+                || ((a > static_cast<T>(0)) && (y < static_cast<T>(0))
+                    && (c < static_cast<T>(0)))
+                || ((a < static_cast<T>(0)) && (y < static_cast<T>(0))
+                    && (c > static_cast<T>(0)))
+                || ((a < static_cast<T>(0)) && (y > static_cast<T>(0))
+                    && (c < static_cast<T>(0)))
+                || IsEqual(a, static_cast<T>(0))
+                || IsEqual(y, static_cast<T>(0))
+                || IsEqual(c, static_cast<T>(0))) {
+            /* use ef - */
+
+            if ((b < static_cast<T>(0)) && (y < static_cast<T>(0))
+                    && (esq > static_cast<T>(0))) {
+                e = static_cast<T>(::sqrt(static_cast<double>(esq)));
+                f = ef / e;
+            } else if ((d < static_cast<T>(0)) && (fsq > static_cast<T>(0))) {
+                f = static_cast<T>(::sqrt(static_cast<double>(fsq)));
+                e = ef / f;
+            } else {
+                e = static_cast<T>(::sqrt(static_cast<double>(esq)));
+                f = static_cast<T>(::sqrt(static_cast<double>(fsq)));
+                if (ef < static_cast<T>(0)) f = -f;
+            }
+        } else {
+            e = static_cast<T>(::sqrt(static_cast<double>(esq)));
+            f = static_cast<T>(::sqrt(static_cast<double>(fsq)));
+            if (ef < static_cast<T>(0)) f = -f;
+        }
+
+        /* note that e >= nought */
+        T ainv2 = a * static_cast<T>(0.5);
+        T g = ainv2 - e;
+        T gg = ainv2 + e;
+
+        if (((b > static_cast<T>(0)) && (y > static_cast<T>(0)))
+                || ((b < static_cast<T>(0)) && (y < static_cast<T>(0)))) {
+            if ((a > static_cast<T>(0)) && !IsEqual(e, static_cast<T>(0))) {
+                g = (b + y) / gg;
+            } else if (!IsEqual(e, static_cast<T>(0))) {
+                gg = (b + y) / g;
+            }
+        }
+
+        T h, hh;
+        if (IsEqual(y, static_cast<T>(0)) && IsEqual(f, static_cast<T>(0))) {
+            h = hh = static_cast<T>(0);
+        } else if (((f > static_cast<T>(0)) && (y < static_cast<T>(0)))
+                || ((f < static_cast<T>(0)) && (y > static_cast<T>(0)))) {
+            hh = static_cast<T>(-0.5) * y + f;
+            h = d / hh;
+        } else {
+            h = static_cast<T>(-0.5) * y - f;
+            hh = d / h;
+        }
+
+        unsigned int cnt = findRootsDeg2(hh, gg, static_cast<T>(1), outRoots, size);
+        if ((size - cnt) > 0) {
+            cnt += findRootsDeg2(h, g, static_cast<T>(1), outRoots + cnt, size - cnt);
+        }
+
+        return cnt;
     }
 
 
