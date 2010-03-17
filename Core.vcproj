@@ -423,6 +423,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DataFileSequencer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\InstanceDescription.cpp"
 				>
 			</File>
@@ -591,6 +595,10 @@
 			</File>
 			<File
 				RelativePath=".\CoreInstance.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DataFileSequencer.h"
 				>
 			</File>
 			<File

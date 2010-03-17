@@ -14,6 +14,7 @@
 #include "cluster/ClusterController.h"
 #include "cluster/ClusterViewMaster.h"
 #include "cluster/PowerwallView.h"
+#include "DataFileSequencer.h"
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
 #include "moldyn/AddParticleColours.h"
@@ -63,6 +64,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<cluster::ClusterController>();
         instance->registerAutoDescription<cluster::ClusterViewMaster>();
         instance->registerAutoDescription<cluster::PowerwallView>();
+        instance->registerAutoDescription<DataFileSequencer>();
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();

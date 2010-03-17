@@ -137,7 +137,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
         }
 
         SIZE_T cnt = 0;
-        const SIZE_T blockGrow = 10000;
+        const SIZE_T blockGrow = 100000;
         while (!file.IsEOF()) {
             vislib::StringA line = vislib::sys::ReadLineFromFileA(file);
             float x, y, z, rad;
