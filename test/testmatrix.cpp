@@ -10,10 +10,11 @@
 
 #include <iostream>
 
-#include "vislib/Quaternion.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Matrix.h"
 #include "vislib/Matrix4.h"
+#include "vislib/Polynom.h"
+#include "vislib/Quaternion.h"
 
 
 void TestMatrix(void) {
@@ -26,7 +27,7 @@ void TestMatrix(void) {
     Matrix<double, 4, COLUMN_MAJOR> m3;
     Matrix<double, 4, ROW_MAJOR> m4;
     Matrix4<double, COLUMN_MAJOR> m5;
-
+    Matrix<double, 3, COLUMN_MAJOR> m6;
 
     ::AssertTrue("Default ctor creates id matrix.", m1.IsIdentity());
     ::AssertTrue("Default ctor creates id matrix.", m2.IsIdentity());
@@ -241,5 +242,118 @@ void TestMatrix(void) {
     ::AssertNearlyEqual("Rotation from quaterion @ 1, 3.", rm1.GetAt(1, 3), 0.0);
     ::AssertNearlyEqual("Rotation from quaterion @ 2, 3.", rm1.GetAt(2, 3), 0.0);
     ::AssertNearlyEqual("Rotation from quaterion @ 3, 3.", rm1.GetAt(3, 3), 1.0);
+
+/*
+http://de.wikipedia.org/wiki/Charakteristisches_Polynom
+0 2 -1
+2 -1 1
+2 -1 3
+charakteristisches Polynom:
+    -x^3 + 2x^2 + 4x - 8
+reelle Eigenwerte:
+    {-2, 2, (2)}
+Eigenvektor zu Eigenwert -2:
+    {-3, 4, 2}
+Eigenvektor zu Eigenwert 2:
+    {1, 0, -2}
+*/
+    m6.SetAt(0, 0, 0.0);
+    m6.SetAt(1, 0, 2.0);
+    m6.SetAt(2, 0, -1.0);
+
+    m6.SetAt(0, 1, 2.0);
+    m6.SetAt(1, 1, -1.0);
+    m6.SetAt(2, 1, 1.0);
+
+    m6.SetAt(0, 2, 2.0);
+    m6.SetAt(1, 2, -1.0);
+    m6.SetAt(2, 2, 3.0);
+
+    Polynom<double, 3> cp6(m6.CharacteristicPolynom());
+    if (IsEqual(cp6[3], 1.0)) cp6 *= -1.0;
+    AssertNearlyEqual("Coefficient a0 = -8", cp6[0], -8.0);
+    AssertNearlyEqual("Coefficient a1 = 4", cp6[1], 4.0);
+    AssertNearlyEqual("Coefficient a2 = 2", cp6[2], 2.0);
+    AssertNearlyEqual("Coefficient a3 = -1", cp6[3], -1.0);
+
+    double ev[4];
+    unsigned int evc;
+    double evt;
+
+    evc = cp6.FindRoots(ev, 4);
+    AssertEqual("Found two eigenvalues", evc, 2U);
+
+    evt = 2.0;
+    AssertTrue("Eigenvalue 2 found", IsEqual(ev[0], evt) || IsEqual(ev[1], evt));
+    evt = -2.0;
+    AssertTrue("Eigenvalue -2 found", IsEqual(ev[0], evt) || IsEqual(ev[1], evt));
+
+
+/*
+http://www.arndt-bruenner.de/mathe/scripts/eigenwert.htm
+  -3  -4  -8   4
+   5  -7   8   1
+  -5   4  -7   7
+  -3   5   7  -6
+charakteristisches Polynom:
+    x^4 + 23x^3 + 99x^2 - 675x - 3416
+reelle Eigenwerte:
+    {-12,589159228961312; -11,096724174256692; -4,613900261118899; 5,299783664336905}
+Eigenvektor zu Eigenwert -12,589159228961312: 
+    (0,05939964936610216; -0,8369818269339811; 0,5360406456563438; 0,0927012903997002)
+Eigenvektor zu Eigenwert -11,096724174256692: 
+    (-0,06271378020655696; -0,8667725283798831; 0,4604325354943767; 0,18103658767323305)
+Eigenvektor zu Eigenwert -4,613900261118899: 
+    (0,6759032660943609; 0,7055384845142796; -0,21288595069057908; 0,007056468722919981)
+Eigenvektor zu Eigenwert 5,299783664336905: 
+    (-0,4245882668759824; 0,2734502816046086; 0,6093868049835593; 0,611226201200128)
+*/
+    m1.SetAt(0, 0, -3.0);
+    m1.SetAt(1, 0, -4.0);
+    m1.SetAt(2, 0, -8.0);
+    m1.SetAt(3, 0, 4.0);
+
+    m1.SetAt(0, 1, 5.0);
+    m1.SetAt(1, 1, -7.0);
+    m1.SetAt(2, 1, 8.0);
+    m1.SetAt(3, 1, 1.0);
+
+    m1.SetAt(0, 2, -5.0);
+    m1.SetAt(1, 2, 4.0);
+    m1.SetAt(2, 2, -7.0);
+    m1.SetAt(3, 2, 7.0);
+
+    m1.SetAt(0, 3, -3.0);
+    m1.SetAt(1, 3, 5.0);
+    m1.SetAt(2, 3, 7.0);
+    m1.SetAt(3, 3, -6.0);
+
+    Polynom<double, 4> cp1(m1.CharacteristicPolynom());
+    if (IsEqual(cp1[4], -1.0)) cp1 *= -1.0;
+    AssertNearlyEqual("Coefficient a0 = -3416", cp1[0], -3416.0);
+    AssertNearlyEqual("Coefficient a1 = -675", cp1[1], -675.0);
+    AssertNearlyEqual("Coefficient a2 = 99", cp1[2], 99.0);
+    AssertNearlyEqual("Coefficient a3 = 23", cp1[3], 23.0);
+    AssertNearlyEqual("Coefficient a4 = 1", cp1[4], 1.0);
+
+    evc = cp1.FindRoots(ev, 4);
+    AssertEqual("Found four eigenvalues", evc, 4U);
+
+    evt = -12.589159228961312;
+    AssertTrue("Eigenvalue -12.589159228961312 found", IsEqual(ev[0], evt)
+        || IsEqual(ev[1], evt) || IsEqual(ev[2], evt)
+        || IsEqual(ev[3], evt));
+    evt = -11.096724174256692;
+    AssertTrue("Eigenvalue -11.096724174256692 found", IsEqual(ev[0], evt)
+        || IsEqual(ev[1], evt) || IsEqual(ev[2], evt)
+        || IsEqual(ev[3], evt));
+    evt = -4.613900261118899;
+    AssertTrue("Eigenvalue -4.613900261118899 found", IsEqual(ev[0], evt)
+        || IsEqual(ev[1], evt) || IsEqual(ev[2], evt)
+        || IsEqual(ev[3], evt));
+    evt = 5.299783664336905;
+    AssertTrue("Eigenvalue 5.299783664336905 found", IsEqual(ev[0], evt)
+        || IsEqual(ev[1], evt) || IsEqual(ev[2], evt)
+        || IsEqual(ev[3], evt));
 
 }

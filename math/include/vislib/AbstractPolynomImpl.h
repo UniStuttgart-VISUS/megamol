@@ -147,6 +147,62 @@ namespace math {
         }
 
         /**
+         * Addition on each coefficient (y-shift)
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this
+         */
+        inline AbstractPolynomImpl<T, D, S, C>& operator+=(const T& rhs) {
+            for (unsigned int i = 0; i <= D; i++) {
+                this->coefficients[i] += rhs;
+            }
+            return *this;
+        }
+
+        /**
+         * Subtraction on each coefficient (y-shift)
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this
+         */
+        inline AbstractPolynomImpl<T, D, S, C>& operator-=(const T& rhs) {
+            for (unsigned int i = 0; i <= D; i++) {
+                this->coefficients[i] -= rhs;
+            }
+            return *this;
+        }
+
+        /**
+         * Scalar multiplication
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this
+         */
+        inline AbstractPolynomImpl<T, D, S, C>& operator*=(const T& rhs) {
+            for (unsigned int i = 0; i <= D; i++) {
+                this->coefficients[i] *= rhs;
+            }
+            return *this;
+        }
+
+        /**
+         * Scalar division
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this
+         */
+        inline AbstractPolynomImpl<T, D, S, C>& operator/=(const T& rhs) {
+            for (unsigned int i = 0; i <= D; i++) {
+                this->coefficients[i] /= rhs;
+            }
+            return *this;
+        }
+
+        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
@@ -659,7 +715,7 @@ namespace math {
             cnt += findRootsDeg2(h, g, static_cast<T>(1), outRoots + cnt, size - cnt);
         }
 
-        return cnt;
+        return uniqueRoots(outRoots, cnt);
     }
 
 

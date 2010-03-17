@@ -208,6 +208,25 @@ namespace math {
          */
         inline AbstractMatrix(void) : Super() {}
 
+        /**
+         * Allow AbstractMatrixImpl to assign from itself to the AbstractMatrix
+         * subclass. This is required for implementing serveral arithmetic 
+         * operations in AbstractMatrixImpl, which must initialise their return
+         * value by copying themselves.
+         *
+         * This ctor is private as it should only be used on deep-storage 
+         * instantiations. Shallow storage instantiations MUST NEVER EXPOSE OR 
+         * USE this ctor.
+         *
+         * @param rhs The object to be cloned.
+         */
+        template<class S1>
+        inline AbstractMatrix(const AbstractMatrixImpl<T, 4, L, S1, 
+                vislib::math::AbstractMatrix>& rhs) : Super() {
+            ::memcpy(this->components, rhs.PeekComponents(), 
+                Super::CNT_COMPONENTS * sizeof(T));
+        }
+
         /* Allow instances created by the implementation class. */
         template<class Tf1, unsigned int Df1, MatrixLayout Lf1, class Sf1,
             template<class Tf2, unsigned int Df2, MatrixLayout Lf2, class Sf2> 

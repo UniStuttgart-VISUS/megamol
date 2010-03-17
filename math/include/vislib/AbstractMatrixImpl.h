@@ -23,6 +23,7 @@
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Point.h"
+#include "vislib/Polynom.h"
 #include "vislib/ShallowVector.h"
 #include "vislib/String.h"
 #include "vislib/Vector.h"
@@ -85,11 +86,37 @@ namespace math {
         T Determinant(void) const;
 
         /**
+         * Calculates the characteristic polynom of the matrix
+         *
+         * @return The characteristic polynom of the matrix
+         */
+        Polynom<T, D> CharacteristicPolynom(void) const;
+
+        /**
          * Dump the matrix to the specified stream.
          *
          * @param out The stream to dump the matrix to.
          */
         void Dump(std::ostream& out) const;
+
+        /**
+         * Finds the eigenvalues of the matrix by finding the roots of the
+         * characteristic polynom. The order of the eigenvalues is undefined.
+         * The method will output at most 'size' eigenvalues into the array
+         * 'outEigenvalues' points to. A matrix with size D x D has (at most)
+         * D eigenvalues.
+         *
+         * @param outEigenvalues Pointer to the array to receive the
+         *                       eigenvalues
+         * @param size The size of 'outEigenvalues' in number of elements
+         *
+         * @return The number of eigenvalues written
+         */
+        inline unsigned int FindEigenvalues(T* outEigenvalues,
+                unsigned int size) const {
+            return this->CharacteristicPolynom().FindRoots(outEigenvalues,
+                size);
+        }
 
         /**
          * Get the matrix component at the specified position.
@@ -691,6 +718,49 @@ namespace math {
 
         return retval;
 #undef A
+    }
+
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::CharacteristicPolynom
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    Polynom<T, D>
+    AbstractMatrixImpl<T, D, L, S, C>::CharacteristicPolynom(void) const {
+        // method of Faddejew-Leverrier
+        // http://de.wikipedia.org/wiki/Algorithmus_von_Faddejew-Leverrier
+        Polynom<T, D> c;
+        DeepStorageMatrix B[D + 1];
+        DeepStorageMatrix Tmp;
+
+        B[0].SetNull();
+        c[D] = static_cast<T>(1);
+
+        for (unsigned int k = 1; k <= D; k++) {
+            B[k] = (*this);
+            B[k] *= B[k - 1];
+            for (unsigned int i = 0; i < D; i++) {
+                B[k](i, i) += c[D - k + 1];
+            }
+
+            Tmp = (*this);
+            Tmp *= B[k];
+
+            c[D - k] = Tmp.Trace() * static_cast<T>(-1) / static_cast<T>(k);
+        }
+
+        B[0] = (*this);
+        B[0] *= B[D];
+        for (unsigned int i = 0; i < D; i++) {
+            B[0](i, i) += c[0];
+        }
+
+        if (!B[0].IsNull()) {
+            printf("Matrix-Argl!\n");
+        }
+
+        return c;
     }
 
 
