@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include "vislib/assert.h"
+#include "vislib/Exception.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
@@ -89,6 +90,8 @@ namespace math {
          * Calculates the characteristic polynom of the matrix
          *
          * @return The characteristic polynom of the matrix
+         *
+         * @throw Exception if the calculation of the polynom fails.
          */
         Polynom<T, D> CharacteristicPolynom(void) const;
 
@@ -731,33 +734,35 @@ namespace math {
         // method of Faddejew-Leverrier
         // http://de.wikipedia.org/wiki/Algorithmus_von_Faddejew-Leverrier
         Polynom<T, D> c;
-        DeepStorageMatrix B[D + 1];
-        DeepStorageMatrix Tmp;
+        DeepStorageMatrix B[2];
 
         B[0].SetNull();
         c[D] = static_cast<T>(1);
+        B[1].SetNull(); // B1 = A * B0 = A * 0 = 0
 
         for (unsigned int k = 1; k <= D; k++) {
-            B[k] = (*this);
-            B[k] *= B[k - 1];
+            unsigned int a = k % 2;
+            unsigned int b = 1 - a;
+
             for (unsigned int i = 0; i < D; i++) {
-                B[k](i, i) += c[D - k + 1];
+                B[a](i, i) += c[D - k + 1];
             }
 
-            Tmp = (*this);
-            Tmp *= B[k];
+            B[b] = (*this);
+            B[b] *= B[a];
 
-            c[D - k] = Tmp.Trace() * static_cast<T>(-1) / static_cast<T>(k);
+            c[D - k] = B[b].Trace() * static_cast<T>(-1) / static_cast<T>(k);
         }
 
-        B[0] = (*this);
-        B[0] *= B[D];
+        B[1 - (D % 2)] = (*this);
+        B[0] *= B[1];
         for (unsigned int i = 0; i < D; i++) {
             B[0](i, i) += c[0];
         }
 
         if (!B[0].IsNull()) {
-            printf("Matrix-Argl!\n");
+            throw Exception("Characteristic polynom calculation failed",
+                __FILE__, __LINE__);
         }
 
         return c;
