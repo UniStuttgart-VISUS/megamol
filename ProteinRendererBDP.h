@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <list>
 
-#define NUM_BUFFERS 8  // DON'T CHANGE !
+#define _BDP_NUM_BUFFERS 8  // DON'T CHANGE !
 
 namespace megamol {
 namespace protein {
@@ -46,9 +46,11 @@ namespace protein {
         /** depth peeling modi */
         enum DepthPeelingMode
         {
-            BDP = 0,
-            ADAPTIVE_BDP = 1,
-            DUAL_DEPTHPEELING = 2
+            BDP_D = 0,
+            BDP_C = 1,
+            ADAPTIVE_BDP_C = 2, 
+            ADAPTIVE_BDP_F = 3,
+            DUAL_DEPTHPEELING = 4
         };
                 
         /** postprocessing modi */
@@ -98,7 +100,7 @@ namespace protein {
          */
         static const char *Description(void) 
         {
-            return "Offers protein surface renderings.";
+            return "Offers semi-transparent protein surface renderings.";
         }
 
         /**
@@ -226,6 +228,11 @@ namespace protein {
         vislib::math::Vector<float, 3> DecodeColor( int codedColor) const;
 
         /**
+         * Creates the frame buffer object and textures needed for depth peeling.
+         */
+        void CreateDepthPeelingFBO();
+
+        /**
          * Creates the frame buffer object and textures needed for offscreen rendering.
          */
         void CreatePostProcessFBO();
@@ -243,7 +250,12 @@ namespace protein {
          * @param protein Pointer to the protein data interface.
          */
         void RenderSESGpuRaycastingSimple( const CallProteinData *protein);
-        
+
+        /**
+         * Render depth peeling result (blending)
+         */
+        void renderDepthPeeling(void);
+
         /**
          * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
          *
@@ -329,28 +341,12 @@ namespace protein {
          */
         void CreateSingularityTexture( unsigned int idxRS);
 
-
-        /**
-         * Creates the frame buffer object and textures needed for depth peeling.
-         */
-        void CreateDepthPeelingFBO();
-
-        /**
-         * Creates a display list for the bounding box vertices
-         * 
-         * @param bbox The bounding box of the protein
-         */
-        inline void createBBoxDisplayList(megamol::core::BoundingBoxes& bbox);
-
         /**
          * Creates the min max depth buffer
+         * 
+         * @param bbox Bounding box of protein
          */
-        void createMinMaxDepthBuffer(void);
-
-        /**
-         * Render depth peeling result (blending)
-         */
-        void renderDepthPeeling(void);
+        void createMinMaxDepthBuffer(megamol::core::BoundingBoxes& bbox);
 
         /**
          * Render the min max depth buffer (DEBUG output)
@@ -392,12 +388,6 @@ namespace protein {
          * @return The return value of the function.
          */
         virtual bool Render( megamol::core::Call& call);
-
-        /**
-         * Deinitialises this renderer. This is only called if there was a 
-         * successful call to "initialise" before.
-         */
-        virtual void deinitialise(void);
         
         /**********************************************************************
          * variables
@@ -422,13 +412,23 @@ namespace protein {
         megamol::core::param::ParamSlot debugParam;
         megamol::core::param::ParamSlot drawSESParam;
         megamol::core::param::ParamSlot drawSASParam;
-
+        megamol::core::param::ParamSlot alphaParam;
         // not used yet ...
         megamol::core::param::ParamSlot depthPeelingParam;
 
+        // parameter values
         bool drawRS;
         bool drawSES;
         bool drawSAS;
+        float alpha;
+        /** current render mode */
+        RenderMode currentRendermode;
+        /** current coloring mode */
+        ColoringMode currentColoringMode;
+        /** postprocessing mode */
+        PostprocessingMode postprocessing;
+        /** current depth peeeling mode*/
+        DepthPeelingMode depthpeeling;
 
         /** the reduced surface(s) */
         std::vector<ReducedSurface*> reducedSurface;
@@ -474,15 +474,6 @@ namespace protein {
         /** 'true' if the data for the current render mode is computed, 'false' otherwise */
         bool preComputationDone;
 
-        /** current render mode */
-        RenderMode currentRendermode;
-        /** current coloring mode */
-        ColoringMode currentColoringMode;
-        /** postprocessing mode */
-        PostprocessingMode postprocessing;
-        /** current depth peeeling mode*/
-        DepthPeelingMode depthpeeling;
-        
         /** vertex and attribute arrays for raycasting the tori */
         std::vector<vislib::Array<float> > torusVertexArray;
         std::vector<vislib::Array<float> > torusInParamArray;
@@ -524,13 +515,11 @@ namespace protein {
         GLuint hFilter;
         GLuint vFilter;
         GLuint depthBuffer;
-        GLuint depthPeelingTex[NUM_BUFFERS];
+        GLuint depthPeelingTex[_BDP_NUM_BUFFERS];
 
         // FBO color buffer indices
-        GLenum colorBufferIndex[NUM_BUFFERS];
+        GLenum colorBufferIndex[_BDP_NUM_BUFFERS];
 
-        // display list for bbox
-        GLuint bboxList;
         // display list for fullscreen quad
         GLuint fsQuadList;
 
@@ -574,8 +563,6 @@ namespace protein {
         
         // start value for fogging
         float fogStart;
-        // transparency value
-        float transparency;
         
         // fps counter
         vislib::graphics::FpsCounter fpsCounter;
