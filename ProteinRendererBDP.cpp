@@ -53,7 +53,8 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     drawSESParam( "drawSES", "Draw the SES: "),
     drawSASParam( "drawSAS", "Draw the SAS: "),
     fogstartParam( "fogStart", "Fog Start: "),
-    depthPeelingParam( "depthPeeling", "Depth Peeling Mode: ")
+    depthPeelingParam( "depthPeeling", "Depth Peeling Mode: "),
+    alphaParam( "alpha", "Alpha value for blending: ")
 {    
     this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
@@ -62,16 +63,18 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     this->epsilon = vislib::math::FLOAT_EPSILON;
     // set probe radius
     this->probeRadius = 1.4f;
-    // set transparency
-    this->transparency = 0.5f;
 
     // ----- en-/disable depth peeling -----
-    this->depthpeeling = BDP;
-    //this->depthpeeling = ADAPTIVE_BDP;
+    this->depthpeeling = BDP_D;
+    //this->depthpeeling = BDP_C;
+    //this->depthpeeling = ADAPTIVE_BDP_C;
+    //this->depthpeeling = ADAPTIVE_BDP_F;
     //this->depthpeeling = DUAL_DEPTHPEELING;
     param::EnumParam *dpm = new param::EnumParam ( int ( this->depthpeeling ) );
-    dpm->SetTypePair( BDP, "BDP");
-    dpm->SetTypePair( ADAPTIVE_BDP, "AdaptiveBDP");
+    dpm->SetTypePair( BDP_D, "BDPd");
+    dpm->SetTypePair( BDP_C, "BDPc");
+    dpm->SetTypePair( ADAPTIVE_BDP_C, "AdaptiveBDPc");
+    dpm->SetTypePair( ADAPTIVE_BDP_F, "AdaptiveBDPf");
     dpm->SetTypePair( DUAL_DEPTHPEELING, "DualDepthPeeling");
     this->depthPeelingParam << dpm;
 
@@ -161,6 +164,11 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     param::BoolParam *saspm = new param::BoolParam( this->drawSAS );
     this->drawSASParam << saspm;
 
+    // ----- set start alpha value -----
+    this->alpha = 0.25f;
+    param::FloatParam *ap = new param::FloatParam( this->alpha, 0.0f, 1.0f );
+    this->alphaParam << ap;
+
     // fill amino acid color table
     this->FillAminoAcidColorTable();
     // fill rainbow color table
@@ -212,6 +220,7 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     this->MakeSlotAvailable( &this->drawSESParam );
     this->MakeSlotAvailable( &this->drawSASParam );
     this->MakeSlotAvailable( &this->depthPeelingParam );
+    this->MakeSlotAvailable( &this->alphaParam );
 }
 
 
@@ -239,7 +248,7 @@ ProteinRendererBDP::~ProteinRendererBDP(void)
 
     if(this->depthPeelingFBO) {
         glDeleteFramebuffersEXT( 1, &this->depthPeelingFBO);
-        glDeleteTextures( NUM_BUFFERS, this->depthPeelingTex);
+        glDeleteTextures( _BDP_NUM_BUFFERS, this->depthPeelingTex);
     }
 
     // delete singularity texture
@@ -267,7 +276,7 @@ ProteinRendererBDP::~ProteinRendererBDP(void)
     this->renderDepthBufferShader.Release();
     
     // delete display list
-    glDeleteLists(this->bboxList, 1);
+    glDeleteLists(this->fsQuadList, 1);
 
     this->Release();
 }
@@ -290,34 +299,30 @@ bool ProteinRendererBDP::create( void )
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float") )
+    if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4") )
         return false;
     
     if ( !GLSLShader::InitialiseExtensions() )
         return false;
     
-    // check maximum multiple render targets
-    if(NUM_BUFFERS != 8) {
-        // internal error ... 
-        return false;
-    }
+    // check maximum number of multiple render targets
     GLint maxBuffers;
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &maxBuffers);
-    if(maxBuffers < NUM_BUFFERS) {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "NUM_BUFFERS (=%i) is greater than GL_MAX_COLOR_ATTACHMENTS_EXT (=%i).\n", NUM_BUFFERS, maxBuffers );
+    if(maxBuffers < _BDP_NUM_BUFFERS) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "_BDP_NUM_BUFFERS (=%i) is greater than GL_MAX_COLOR_ATTACHMENTS_EXT (=%i).\n", _BDP_NUM_BUFFERS, maxBuffers );
         return false;
     }
 
     // check maximum active texture units useable in fragment program
     GLint maxTexUnits;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &maxTexUnits);
-    if(maxTexUnits < NUM_BUFFERS) {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "NUM_BUFFERS (=%i) is greater than GL_MAX_TEXTURE_UNITS (=%i).\n", NUM_BUFFERS, maxTexUnits );
+    if(maxTexUnits < _BDP_NUM_BUFFERS) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "_BDP_NUM_BUFFERS (=%i) is greater than GL_MAX_TEXTURE_UNITS (=%i).\n", _BDP_NUM_BUFFERS, maxTexUnits );
         return false;
     }
    
     // init color buffer indices
-    for(unsigned int i = 0; i < NUM_BUFFERS; ++i) {
+    for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
         this->colorBufferIndex[i] = GL_COLOR_ATTACHMENT0_EXT + i;
     }
 
@@ -792,6 +797,11 @@ bool ProteinRendererBDP::Render( Call& call )
         this->drawSASParam.ResetDirty();
         this->preComputationDone = false;
     }
+    if( this->alphaParam.IsDirty() )
+    {
+        this->alpha = this->alphaParam.Param<param::FloatParam>()->Value();
+        this->alphaParam.ResetDirty();
+    }
 
     if( recomputeColors )
     {
@@ -848,6 +858,7 @@ bool ProteinRendererBDP::Render( Call& call )
                 this->ComputeRaycastingArrays( cntRS);
             }
         }
+        // additional time breakpoint ...
     }
     
     if( !this->preComputationDone )
@@ -857,16 +868,13 @@ bool ProteinRendererBDP::Render( Call& call )
         this->maxValue = protein->MaximumTemperatureFactor();
         // compute the color table
         this->MakeColorTable( protein, recomputeColors);
+
         // compute the data needed for the current render mode
         if( this->currentRendermode == GPU_RAYCASTING )
             this->ComputeRaycastingArrays();
+
         // set the precomputation of the data as done
         this->preComputationDone = true;
-    }
-
-    // create bounding box display list for min max depth buffer
-    if(!glIsList(this->bboxList)) {
-        this->createBBoxDisplayList(dynamic_cast<view::CallRender3D*>( &call )->AccessBoundingBoxes());
     }
 
     if(static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
@@ -903,18 +911,20 @@ bool ProteinRendererBDP::Render( Call& call )
     glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
 
+    // used for depth buffer and rendering scene to MRTs
     glEnable(GL_BLEND);
     glBlendEquation(GL_MAX);
 
     // ==================== Create Min Max Depth Buffer ====================
 
     //create min max depth buffer (before scale & translate) 
-    this->createMinMaxDepthBuffer();
+    this->createMinMaxDepthBuffer(dynamic_cast<view::CallRender3D*>( &call )->AccessBoundingBoxes());
 
     // ==================== Start actual SES rendering ====================
 
-    // Scale & Translate
     glPushMatrix();
+
+    // Scale & Translate
 
     float scale, xoff, yoff, zoff;
     vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
@@ -928,7 +938,8 @@ bool ProteinRendererBDP::Render( Call& call )
     glScalef ( scale, scale, scale );
     glTranslatef ( xoff, yoff, zoff );
 
-    // render ...
+    // Rendering
+
     /*if( this->postprocessing == TRANSPARENCY )
     {
         glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->blendFBO);
@@ -959,7 +970,7 @@ bool ProteinRendererBDP::Render( Call& call )
     // start rendering to depth peeling fbo
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthPeelingFBO);
 
-    glDrawBuffers(NUM_BUFFERS, this->colorBufferIndex);
+    glDrawBuffers(_BDP_NUM_BUFFERS, this->colorBufferIndex);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear( GL_COLOR_BUFFER_BIT );
@@ -982,11 +993,9 @@ bool ProteinRendererBDP::Render( Call& call )
     
     // ========= Create BDP result and blend it over background =========
 
-    glEnable(GL_BLEND);
-	glBlendEquation(GL_FUNC_ADD);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     // render depth peeling result
+    glEnable(GL_BLEND);              // test effect ...!
+	glBlendEquation(GL_FUNC_ADD);
     this->renderDepthPeeling();
 
     //////////////////////////////////
@@ -1005,12 +1014,12 @@ bool ProteinRendererBDP::Render( Call& call )
             this->PostprocessingTransparency( 0.5f);
     }*/
 
+    //render min max-depth-buffer (DEBUG output)
     glEnable( GL_DEPTH_TEST);
     glDisable(GL_BLEND);
-
-    //render min max-depth-buffer (DEBUG output)
     this->renderMinMaxDepthBuffer();
 
+    // restore attributes
     glPopAttrib();
 
     fpsCounter.FrameEnd();
@@ -1023,16 +1032,11 @@ bool ProteinRendererBDP::Render( Call& call )
 /*
  * postprocessing: use screen space ambient occlusion
  */
-void ProteinRendererBDP::PostprocessingSSAO()
-{
-    glBindTexture( GL_TEXTURE_2D, this->depthTex0);
-    // --> this seems to be unnecessary since no mipmap but the original resolution is used
-    //glGenerateMipmapEXT( GL_TEXTURE_2D);
-
-    //glPushAttrib( GL_LIGHTING_BIT);
-    //glDisable( GL_LIGHTING);
+void ProteinRendererBDP::PostprocessingSSAO() {
 
     // apply horizontal filter
+    glBindTexture( GL_TEXTURE_2D, this->depthTex0);
+
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->horizontalFilterFBO);
     
     this->hfilterShader.Enable();
@@ -1045,6 +1049,8 @@ void ProteinRendererBDP::PostprocessingSSAO()
     this->hfilterShader.Disable();
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
+
+    glBindTexture( GL_TEXTURE_2D, 0);
 
     // apply vertical filter to horizontally filtered image and compute colors
     glBindTexture( GL_TEXTURE_2D, this->hFilter);
@@ -1063,8 +1069,6 @@ void ProteinRendererBDP::PostprocessingSSAO()
 
     this->vfilterShader.Disable();
 
-    //glPopAttrib();
-
     glBindTexture( GL_TEXTURE_2D, 0);
     glActiveTexture( GL_TEXTURE0);
     glBindTexture( GL_TEXTURE_2D, 0);
@@ -1074,10 +1078,7 @@ void ProteinRendererBDP::PostprocessingSSAO()
 /*
  * postprocessing: use silhouette shader
  */
-void ProteinRendererBDP::PostprocessingSilhouette()
-{
-    //glPushAttrib( GL_LIGHTING_BIT);
-    //glDisable( GL_LIGHTING);
+void ProteinRendererBDP::PostprocessingSilhouette() {
 
     glBindTexture( GL_TEXTURE_2D, this->depthTex0);
     glActiveTexture( GL_TEXTURE1);
@@ -1091,11 +1092,10 @@ void ProteinRendererBDP::PostprocessingSilhouette()
 
     glColor4f( this->silhouetteColor.GetX(), this->silhouetteColor.GetY(), 
         this->silhouetteColor.GetZ(),  1.0f);
+
     glCallList(this->fsQuadList);
 
     this->silhouetteShader.Disable();
-
-    //glPopAttrib();
 
     glBindTexture( GL_TEXTURE_2D, 0);
     glActiveTexture( GL_TEXTURE0);
@@ -1168,14 +1168,14 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
     // FBOs for bucket depth peeling
     if(this->depthPeelingFBO) {
         glDeleteFramebuffersEXT( 1, &this->depthPeelingFBO);
-        glDeleteTextures( NUM_BUFFERS, this->depthPeelingTex);
+        glDeleteTextures( _BDP_NUM_BUFFERS, this->depthPeelingTex);
     }
     glGenFramebuffersEXT( 1, &this->depthPeelingFBO);
-    glGenTextures( NUM_BUFFERS, this->depthPeelingTex);
+    glGenTextures( _BDP_NUM_BUFFERS, this->depthPeelingTex);
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthPeelingFBO);
 
-    for(unsigned int i = 0; i < NUM_BUFFERS; ++i) {
+    for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
         glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[i]);
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL); 
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1333,6 +1333,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             
             // enable torus shader
             this->torusShader.Enable();
+
             // set shader variables
             glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
             glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, cameraInfo->Front().PeekComponents());
@@ -1340,10 +1341,12 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, cameraInfo->Up().PeekComponents());
             glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
             glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-            glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
+            glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->alpha);
 
-            glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
-            glUniform1iARB( this->sphereShader.ParameterLocation( "depthBuffer"), 0);
+            glUniform2fARB( this->torusShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+            glUniform1iARB( this->torusShader.ParameterLocation( "depthBuffer"), 0);
+
+            glUniform1iARB( this->torusShader.ParameterLocation( "DPmode"), (int)this->depthpeeling );
 
             // get attribute locations
             GLuint attribInParams = glGetAttribLocationARB( this->torusShader, "inParams");
@@ -1351,15 +1354,15 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             GLuint attribInSphere = glGetAttribLocationARB( this->torusShader, "inSphere");
             GLuint attribInColors = glGetAttribLocationARB( this->torusShader, "inColors");
             GLuint attribInCuttingPlane = glGetAttribLocationARB( this->torusShader, "inCuttingPlane");
-            // set color to orange
-            //glColor3f( 1.0f, 0.75f, 0.0f);
-            glEnableClientState( GL_VERTEX_ARRAY);
+
             // enable vertex attribute arrays for the attribute locations
+            glEnableClientState( GL_VERTEX_ARRAY);
             glEnableVertexAttribArrayARB( attribInParams);
             glEnableVertexAttribArrayARB( attribQuatC);
             glEnableVertexAttribArrayARB( attribInSphere);
             glEnableVertexAttribArrayARB( attribInColors);
             glEnableVertexAttribArrayARB( attribInCuttingPlane);
+
             // set vertex and attribute pointers and draw them
             glVertexAttribPointerARB( attribInParams, 3, GL_FLOAT, 0, 0, this->torusInParamArray[cntRS].PeekElements());
             glVertexAttribPointerARB( attribQuatC, 4, GL_FLOAT, 0, 0, this->torusQuatCArray[cntRS].PeekElements());
@@ -1376,9 +1379,9 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glDisableVertexAttribArrayARB( attribInColors);
             glDisableVertexAttribArrayARB( attribInCuttingPlane);
             glDisableClientState(GL_VERTEX_ARRAY);
+
             // enable torus shader
             this->torusShader.Disable();
-            
             
             /////////////////////////////////////////////////
             // ray cast the spherical triangles on the GPU //
@@ -1387,8 +1390,10 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             // bind texture
             glActiveTexture(GL_TEXTURE1);
             glBindTexture( GL_TEXTURE_2D, this->singularityTexture[cntRS]);
+
             // enable spherical triangle shader
             this->sphericalTriangleShader.Enable();
+
             // set shader variables
             glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
@@ -1396,14 +1401,16 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
             glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
             glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-            glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->transparency);
+            glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->alpha);
 
-            glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
-            glUniform1iARB( this->sphereShader.ParameterLocation( "depthBuffer"), 0);
+            glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+            glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "depthBuffer"), 0);
 
             glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffsetSing"),
                                  1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
-            glUniform1iARB( this->sphereShader.ParameterLocation( "tex"), 1);
+            glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "singTex"), 1);
+
+            glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "DPmode"), (int)this->depthpeeling );
 
             // get attribute locations
             GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
@@ -1414,10 +1421,9 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
             GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
             GLuint attribFrontBack = glGetAttribLocationARB( this->sphericalTriangleShader, "attribFrontBack");
-            // set color to turquoise (= Tuerkis)
-            //glColor3f( 0.0f, 0.75f, 1.0f);
-            glEnableClientState( GL_VERTEX_ARRAY);
+
             // enable vertex attribute arrays for the attribute locations
+            glEnableClientState( GL_VERTEX_ARRAY);
             glEnableVertexAttribArrayARB( attribVec1);
             glEnableVertexAttribArrayARB( attribVec2);
             glEnableVertexAttribArrayARB( attribVec3);
@@ -1426,6 +1432,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glEnableVertexAttribArrayARB( attribTexCoord3);
             glEnableVertexAttribArrayARB( attribColors);
             glEnableVertexAttribArrayARB( attribFrontBack);
+
             // set vertex and attribute pointers and draw them
             glVertexAttribPointerARB( attribVec1, 4, GL_FLOAT, 0, 0, this->sphericTriaVec1[cntRS].PeekElements());
             glVertexAttribPointerARB( attribVec2, 4, GL_FLOAT, 0, 0, this->sphericTriaVec2[cntRS].PeekElements());
@@ -1446,23 +1453,26 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glDisableVertexAttribArrayARB( attribTexCoord3);
             glDisableVertexAttribArrayARB( attribColors);
             glDisableClientState(GL_VERTEX_ARRAY);
+
             // disable spherical triangle shader
             this->sphericalTriangleShader.Disable();
+
             // unbind texture
             glBindTexture( GL_TEXTURE_2D, 0);
             
         }
         
-
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
-      
+        
         // bind texture
         glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
+
         // enable sphere shader
         this->sphereShader.Enable();
+
         // set shader variables
         glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
@@ -1470,23 +1480,27 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
         glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-        glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
+        glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->alpha);
 
         glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetDepthBuffer"), 1.0f/(float)this->width, 1.0f/(float)this->height );
         glUniform1iARB( this->sphereShader.ParameterLocation( "depthBuffer"), 0);
 
         glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetCutPlanes"),
                              1.0f/(float)this->cutPlanesTexWidth[cntRS], 1.0f/(float)this->cutPlanesTexHeight[cntRS] );
-        glUniform1iARB( this->sphereShader.ParameterLocation( "tex"), 1);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "cutPlaneTex"), 1);
+
+        glUniform1iARB( this->sphereShader.ParameterLocation( "DPmode"), (int)this->depthpeeling );
 
         // get attribute locations
         GLuint attribTexCoord = glGetAttribLocationARB( this->sphereShader, "attribTexCoord");
         GLuint attribSurfVector = glGetAttribLocationARB( this->sphereShader,  "attribSurfVector");
+
         // enable vertex attribute arrays for the attribute locations
         glEnableClientState( GL_VERTEX_ARRAY);
         glEnableClientState( GL_COLOR_ARRAY);
         glEnableVertexAttribArrayARB( attribTexCoord);
         glEnableVertexAttribArrayARB( attribSurfVector);
+
         // set vertex, color and attribute pointers and draw them
         glVertexAttribPointerARB( attribTexCoord, 3, GL_FLOAT, 0, 0, this->sphereTexCoord[cntRS].PeekElements());
         glVertexAttribPointerARB( attribSurfVector, 4, GL_FLOAT, 0, 0, this->sphereSurfVector[cntRS].PeekElements());
@@ -1499,12 +1513,13 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glDisableVertexAttribArrayARB( attribSurfVector);
         glDisableClientState( GL_COLOR_ARRAY);
         glDisableClientState( GL_VERTEX_ARRAY);
+
         // disable sphere shader
         this->sphereShader.Disable();
+
         // unbind texture
         glBindTexture( GL_TEXTURE_2D, 0);
         
-
         // DEBUG
         // drawing surfVectors as yellow lines
         /*
@@ -1529,7 +1544,6 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glEnable( GL_LIGHTING);
         */
         // end DEBUG
-        
     }
 
     // unbind min max depth buffer
@@ -1583,7 +1597,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, cameraInfo->Up().PeekComponents());
         glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-        glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
+        glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->alpha);
         // get attribute locations
         GLuint attribInParams = glGetAttribLocationARB( this->torusShader, "inParams");
         GLuint attribQuatC = glGetAttribLocationARB( this->torusShader, "quatC");
@@ -1633,7 +1647,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
         glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
                              1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
-        glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->transparency);
+        glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->alpha);
         // get attribute locations
         GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
         GLuint attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
@@ -1691,7 +1705,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
         glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-        glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
+        glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->alpha);
         // set vertex and color pointers and draw them
         glColorPointer( 3, GL_FLOAT, 0, this->sphereColors[cntRS].PeekElements());
         glVertexPointer( 4, GL_FLOAT, 0, this->sphereVertexArray[cntRS].PeekElements());
@@ -1715,7 +1729,8 @@ void ProteinRendererBDP::renderDepthPeeling(void) {
 
     int i;
 
-    for(i = 0; i < NUM_BUFFERS; ++i) {
+    // bind textures
+    for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[i]);
     }
@@ -1723,24 +1738,27 @@ void ProteinRendererBDP::renderDepthPeeling(void) {
     this->renderDepthPeelingShader.Enable();
 
     glUniform2fARB( this->renderDepthPeelingShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
-    glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alpha"), 0.3f);
+    glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alpha"), this->alpha);
 
-    // TODO: create NUM_BUFFERS textures ...
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer0to3Tex"), 0);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer4to7Tex"), 1);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer8to11Tex"), 2);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer12to15Tex"), 3);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer16to19Tex"), 4);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer20to23Tex"), 5);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer24to27Tex"), 6);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "Layer28to31Tex"), 7);
+    glUniform1iARB( this->sphereShader.ParameterLocation( "DPmode"), (int)this->depthpeeling );
+
+    // TODO: create _BDP_NUM_BUFFERS textures ...
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket0"), 0);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket1"), 1);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket2"), 2);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket3"), 3);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket4"), 4);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket5"), 5);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket6"), 6);
+    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket7"), 7);
 
     glCallList(this->fsQuadList);
 
     this->renderDepthPeelingShader.Disable();
 
-    for(i = 0; i < NUM_BUFFERS; ++i) {
-        glActiveTexture(GL_TEXTURE0 + NUM_BUFFERS-1 - i);
+    // unbind textures
+    for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
+        glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS-1 - i);
         glBindTexture( GL_TEXTURE_2D, 0);
     }
 }
@@ -1749,16 +1767,51 @@ void ProteinRendererBDP::renderDepthPeeling(void) {
 /*
  * createMinMaxDepthBuffer
  */
-void ProteinRendererBDP::createMinMaxDepthBuffer() {
+void ProteinRendererBDP::createMinMaxDepthBuffer(BoundingBoxes& bbox) {
+
+    const vislib::math::Cuboid<float>& boundingBox = bbox.WorldSpaceBBox();
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthBufferFBO);
 
+    // red:   -MAX_DEPTH 
+    // green:  MIN_DEPTH
     glClearColor(-1.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     this->createDepthBufferShader.Enable();
 
-    glCallList(this->bboxList);
+    // render bounding box
+    glBegin(GL_QUADS);
+        glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+        glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+        glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+
+        glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+        glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+        glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+
+        glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+        glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+        glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+
+        glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+        glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+        glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+
+        glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+        glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+        glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+
+        glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+        glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+        glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+    glEnd();
 
     this->createDepthBufferShader.Disable();
 
@@ -1777,8 +1830,8 @@ void ProteinRendererBDP::renderMinMaxDepthBuffer(void) {
 
     this->renderDepthBufferShader.Enable();
 
-    glUniform2fARB( this->renderDepthBufferShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
     glUniform1fARB( this->renderDepthBufferShader.ParameterLocation( "scaleFactor"), scaleFactor);
+    glUniform2fARB( this->renderDepthBufferShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
     glUniform1iARB( this->renderDepthBufferShader.ParameterLocation( "depthBuffer"), 0);
 
     glCallList(this->fsQuadList);
@@ -1827,54 +1880,6 @@ void ProteinRendererBDP::createFullscreenQuadDisplayList(void) {
         glPopMatrix();
 
 	glEndList();
-}
-
-
-/*
- * renderBBox
- */
-void ProteinRendererBDP::createBBoxDisplayList(BoundingBoxes& bbox) {
-    const vislib::math::Cuboid<float>& boundingBox = bbox.WorldSpaceBBox();
-    
-    glDeleteLists(this->bboxList, 1);
-
-    this->bboxList = glGenLists(1);
-
-    glNewList(this->bboxList, GL_COMPILE);
-
-        glBegin(GL_QUADS);
-            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
-            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
-            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
-            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
-
-            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
-            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
-            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
-            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
-
-            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
-            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
-            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
-            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
-
-            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
-            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
-            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
-            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
-
-            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
-            glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
-            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
-            glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
-
-            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
-            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
-            glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
-            glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
-        glEnd();
-
-    glEndList();
 }
 
 
@@ -2354,7 +2359,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
     
     // compute singulatity textures
     this->CreateSingularityTextures();
-    
+   
     // compute cutting planes textures (needs outNormals!)
     this->CreateCutPlanesTextures();
 
@@ -2668,7 +2673,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                     }
                 }
             }                
-            
+
             // look if surface parts are distributed over more than one hemisphere
             maxDist = 0.0f;
 	        for(j = 0; j < edgeCount-1; ++j) {
@@ -4111,41 +4116,6 @@ void ProteinRendererBDP::RenderProbeGPU(
 
     // disable sphere shader
     this->sphereShader.Disable();
-}
-
-
-/*
- * ProteinRendererBDP::deinitialise
- */
-void ProteinRendererBDP::deinitialise(void)
-{
-    if( colorFBO )
-    {
-        glDeleteFramebuffersEXT( 1, &colorFBO);
-        glDeleteFramebuffersEXT( 1, &blendFBO);
-        glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT( 1, &verticalFilterFBO);
-        glDeleteTextures( 1, &texture0);
-        glDeleteTextures( 1, &depthTex0);
-        glDeleteTextures( 1, &texture1);
-        glDeleteTextures( 1, &depthTex1);
-        glDeleteTextures( 1, &hFilter);
-        glDeleteTextures( 1, &vFilter);
-    }
-    // delete singularity texture
-    for( unsigned int i = 0; i < singularityTexture.size(); ++i )
-        glDeleteTextures( 1, &singularityTexture[i]);
-    // release shaders
-    this->cylinderShader.Release();
-    this->sphereShader.Release();
-    this->sphereClipInteriorShader.Release();
-    this->sphericalTriangleShader.Release();
-    this->torusShader.Release();
-    this->lightShader.Release();
-    this->hfilterShader.Release();
-    this->vfilterShader.Release();
-    this->silhouetteShader.Release();
-    this->transparencyShader.Release();
 }
 
 

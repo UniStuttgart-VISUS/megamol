@@ -7048,6 +7048,52 @@ float dot1( vec3 v1)
 -->
     </snippet>
 
+    <snippet name="codeColorBDP" type="string">
+      <!--
+
+#extension GL_EXT_gpu_shader4 : enable
+
+float codeColorBDP( vec4 fragColor)
+{
+    vec4 fc = clamp(fragColor, vec4(0.0), vec4(1.0));
+    float codedColor = 0.0;
+   
+    uint r = uint(floor(fc.r*255.0)) << uint(24);
+    uint g = uint(floor(fc.g*255.0)) << uint(16);
+    uint b = uint(floor(fc.b*255.0)) << uint(8);
+    uint a = uint(floor(fc.a*127.0));
+
+    codedColor = float(r | g | b | a);
+
+    return codedColor;
+}
+
+-->
+    </snippet>
+
+
+    <snippet name="decodeColorBDP" type="string">
+      <!--
+
+#extension GL_EXT_gpu_shader4 : enable
+
+vec4 decodeColorBDP( float codedColor)
+{
+    uint cc = uint(codedColor);
+    vec4 decodedColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+    decodedColor.r = float(cc >> uint(24)) / 255.0;
+    decodedColor.g = float((cc << uint(8))  >> uint(24)) / 255.0;
+    decodedColor.b = float((cc << uint(16)) >> uint(24)) / 255.0;
+    decodedColor.a = float((cc << uint(24)) >> uint(24)) / 127.0;
+
+    return decodedColor;
+}
+
+-->
+    </snippet>
+
+
     <shader name="sphereVertex">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
@@ -7080,11 +7126,19 @@ varying vec2 centerFragment;
 
 void main(void) {
 
+    vec2 winHalf, d, p, q, h, dd, mins, maxs;
+    vec3 testPos, cpj1, cpm1, cpj2, cpm2, c2;
+    vec4 inPos, projPos, tmp;
+
+#ifdef CALC_CAM_SYS
+    vec3 camIn, camUp, camRight;
+#endif // CALC_CAM_SYS
+
     texCoord   = attribTexCoord;
     surfVector = attribSurfVector;
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    inPos = gl_Vertex;
     rad = inPos.w;
     squarRad = rad * rad;
     inPos.w = 1.0;
@@ -7106,35 +7160,27 @@ void main(void) {
     gl_FrontColor = gl_Color;
 
     // Sphere-Touch-Plane-Approach
-    vec2 winHalf = 2.0 / viewAttr.zw; // window size
-
-    vec2 d, p, q, h, dd;
+    winHalf = 2.0 / viewAttr.zw; // window size
 
     // get camera orthonormal coordinate system
-    vec4 tmp;
-
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
     tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
-    vec3 camIn = normalize(tmp.xyz);
+    camIn = normalize(tmp.xyz);
     tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
-    vec3 camUp = tmp.xyz;
-    vec3 camRight = normalize(cross(camIn, camUp));
+    camUp = tmp.xyz;
+    camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
 #endif // CALC_CAM_SYS
 
-    vec2 mins, maxs;
-    vec3 testPos;
-    vec4 projPos;
-
     // projected camera vector
-    vec3 c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
+    c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
 
-    vec3 cpj1 = camIn * c2.z + camRight * c2.x;
-    vec3 cpm1 = camIn * c2.x - camRight * c2.z;
+    cpj1 = camIn * c2.z + camRight * c2.x;
+    cpm1 = camIn * c2.x - camRight * c2.z;
 
-    vec3 cpj2 = camIn * c2.z + camUp * c2.y;
-    vec3 cpm2 = camIn * c2.y - camUp * c2.z;
+    cpj2 = camIn * c2.z + camUp * c2.y;
+    cpm2 = camIn * c2.y - camUp * c2.z;
 
     d.x = length(cpj1);
     d.y = length(cpj2);
@@ -7201,6 +7247,7 @@ void main(void) {
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
+      <snippet name="codeColorBDP"/>
       <snippet type="string">
         <!--
 
@@ -7208,12 +7255,13 @@ uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
+uniform int DPmode = 0;
 
 uniform vec2 texOffsetDepthBuffer;
 uniform sampler2D depthBuffer;
 
-uniform vec2 texOffsetCutPlanes;   
-uniform sampler2D tex;
+uniform vec2 texOffsetCutPlanes;
+uniform sampler2D cutPlaneTex;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -7225,17 +7273,18 @@ varying vec4 surfVector;
 
 void main(void) {
 
-    int i;
-    float lambda;
-    vec3 ray, planeNormal, planePos, surfPos, sphereintersection;
-    vec4 coord, fragColor;
+    int i, rt;
+    float lambda, d1, d2s, radicand, bucket, f, depthW, depth, mc;
     bool discardExt, discardInt;
-   
+    vec2 minmaxDepth;
+    vec3 ray, planeNormal, planePos, surfPos, sphereintersection, normal, color, colorX;
+    vec4 coord, fragColor, Ding;
+
     // get min and max depth of pixel location
-    vec2  minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
+     minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
 
     // init fragment data with zero
-    for(int i = 0; i < 8; ++i) {
+    for(int i = 0; i < gl_MaxDrawBuffers; ++i) {
         gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
     }
 
@@ -7253,21 +7302,20 @@ void main(void) {
     ray = normalize(coord.xyz - camPos.xyz);
 
     // calculate the geometry-ray-intersection
-    float d1 = -dot(camPos.xyz, ray);                           // projected length of the cam-sphere-vector onto the ray
-    float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;          // off axis of cam-sphere-vector and ray
-    float radicand = squarRad - d2s;                            // square of difference of projected length and lambda
+    d1 = -dot(camPos.xyz, ray);                           // projected length of the cam-sphere-vector onto the ray
+    d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;          // off axis of cam-sphere-vector and ray
+    radicand = squarRad - d2s;                            // square of difference of projected length and lambda
     
     if (radicand < 0.0) { discard; }
 
 // EXT fragment =========================================================
-
     lambda = d1 - sqrt(radicand);                              
     sphereintersection = lambda * ray + camPos.xyz;      // exterior intersection point
     discardExt = false;
 
     // clip sphereintersection against edge cutting planes
     for(i = 0; i < int(texCoord.x); i++) {
-        planePos = texture2D( tex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCutPlanes).xyz;
+        planePos = texture2D( cutPlaneTex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCutPlanes).xyz;
         planeNormal = normalize(planePos);
         if(dot(planeNormal, (sphereintersection - planePos)) > 0.0f) { discardExt = true; }
     }
@@ -7277,31 +7325,28 @@ void main(void) {
     if(dot(surfPos, surfPos) > surfVector.w) { discardExt = true; }
 
     if(!discardExt) {
-
         // "calc" normal at intersection point
-        vec3 normal = sphereintersection / rad;
+        normal = sphereintersection / rad;
     #ifdef SMALL_SPRITE_LIGHTING
         normal = mix(-ray, normal, lightPos.w);
     #endif // SMALL_SPRITE_LIGHTING
 
         // chose color for lighting
-        //vec3 color = gl_Color.rgb;
+        color = gl_Color.rgb;
         // uniform color
         //color = vec3( 0.98, 0.23, 0.0); // for VIS
         //color = vec3( 0.17, 0.5, 0.8);
         //color = vec3( 0.19, 0.52, 0.82);
-
-        vec3 color = vec3( 0.0, 0.98, 0.23); // ext
-        //color = vec3( 0.98, 0.98, 0.0); // int
+        //color = vec3( 0.0, 0.0, 0.98); // ext
 
         // phong lighting with directional light
-        vec4 fragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
+        fragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
 
         // calculate depth
     #ifdef DEPTH
-        vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+        Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+        depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     #ifdef OGL_DEPTH_SES
         gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     #else
@@ -7311,15 +7356,15 @@ void main(void) {
     #endif // DEPTH
 
     #ifdef FOGGING_SES
-        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor.rgb
     #endif // FOGGING_SES
         fragColor.a = alpha;  // gl_FragColor.a
 
     #ifdef AXISHINTS
         // debug-axis-hints
-        vec3 colorX = vec3( 1.0, 1.0, 0.0);
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        colorX = vec3( 1.0, 1.0, 0.0);
+        mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
         { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
@@ -7329,37 +7374,42 @@ void main(void) {
         if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
 
-        // ============ code color into float ... ============
-
         // ============ sort fragment into right bucket ============
-
-        // USE OGL_DEPTH_SES
-        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
-
-        // calculate bucket pair (16 pairs -> 32 depth values)
-        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-        // index of render target
-        int rt = int(floor(bucket/2.0));
-        // choose right pair in render target
-        if(mod(int(bucket), 2) == 0) {
-            gl_FragData[rt].x = 1.0 - gl_FragDepth;
-            gl_FragData[rt].y = gl_FragDepth;
-        } else {
-            gl_FragData[rt].z = 1.0 - gl_FragDepth;
-            gl_FragData[rt].w = gl_FragDepth;
+        if(DPmode == 0) {
+            // USE OGL_DEPTH_SES depth has to be in [0.0, 1.0]
+            //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+            // calculate bucket pair (16 pairs -> 32 depth values)
+            bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/2.0));
+            // choose right pair in render target 
+            // (set maximum value because first fragment could have been writing too)
+            if(mod(int(bucket), 2) == 0) {
+                gl_FragData[rt].x = 1.0 - gl_FragDepth;
+                gl_FragData[rt].y = gl_FragDepth;
+            } else {
+                gl_FragData[rt].z = 1.0 - gl_FragDepth;
+                gl_FragData[rt].w = gl_FragDepth;
+            }
+        } else if(DPmode == 1) {
+            // calculate 32 subintervalls
+            bucket = floor(32.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/4.0));
+            // choose right component in render target
+            gl_FragData[rt][int(mod(bucket, 4))] = codeColorBDP(fragColor); // + gl_FragData[rt][mod(int(bucket), 4)] / 2 ???
         }
     }
 
 
 // INT fragment =========================================================
-
     lambda = d1 + sqrt(radicand);
     sphereintersection = lambda * ray + camPos.xyz;      // interior intersection point
     discardInt = false;
 
     // clip sphereintersection against edge cutting planes
     for(i = 0; i < int(texCoord.x); i++) {
-        planePos = texture2D( tex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCutPlanes).xyz;
+        planePos = texture2D( cutPlaneTex, ( texCoord.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetCutPlanes).xyz;
         planeNormal = normalize(planePos);
         if(dot(planeNormal, (sphereintersection - planePos)) > 0.0f) { discardInt = true; }
     }
@@ -7369,31 +7419,28 @@ void main(void) {
     if(dot(surfPos, surfPos) > surfVector.w) { discardInt = true; }
 
     if(!discardInt) {
-
         // "calc" normal at intersection point
-        vec3 normal = sphereintersection / rad;
+        normal = - sphereintersection / rad;
     #ifdef SMALL_SPRITE_LIGHTING
         normal = mix(-ray, normal, lightPos.w);
     #endif // SMALL_SPRITE_LIGHTING
 
         // chose color for lighting
-        //vec3 RGBcolor = gl_Color.rgb;
+        color = gl_Color.rgb;
         // uniform color
-        //RGBcolor = vec3( 0.98, 0.23, 0.0); // for VIS
-        //RGBcolor = vec3( 0.17, 0.5, 0.8);
-        //RGBcolor = vec3( 0.19, 0.52, 0.82);
-
-        //RGBcolor = vec3( 0.0, 0.98, 0.23); // ext
-        vec3 color = vec3( 0.98, 0.98, 0.0); // int
+        //color = vec3( 0.98, 0.23, 0.0); // for VIS
+        //color = vec3( 0.17, 0.5, 0.8);
+        //color = vec3( 0.19, 0.52, 0.82);
+        //color = vec3( 0.0, 0.98, 0.0); // int
 
         // phong lighting with directional light
         fragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0); // gl_FragColor
 
         // calculate depth
     #ifdef DEPTH
-        vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+        Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+        depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     #ifdef OGL_DEPTH_SES
         gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     #else
@@ -7403,15 +7450,15 @@ void main(void) {
     #endif // DEPTH
 
     #ifdef FOGGING_SES
-        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor.rgb
     #endif // FOGGING_SES
         fragColor.a = alpha;  // gl_FragColor.a
 
     #ifdef AXISHINTS
         // debug-axis-hints
-        vec3 colorX = vec3( 1.0, 1.0, 0.0);
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        colorX = vec3( 1.0, 1.0, 0.0);
+        mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
         { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
@@ -7421,24 +7468,30 @@ void main(void) {
         if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
 
-        // ============ code color into float ... ============
-
         // ============ sort fragment into right bucket ============
-
-        // USE OGL_DEPTH_SES
-        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
-
-        // calculate bucket pair (16 pairs -> 32 depth values)
-        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-        // index of render target
-        int rt = int(floor(bucket/2.0));
-        // choose right pair in render target
-        if(mod(int(bucket), 2) == 0) {
-            gl_FragData[rt].x = 1.0 - gl_FragDepth;
-            gl_FragData[rt].y = gl_FragDepth;
-        } else {
-            gl_FragData[rt].z = 1.0 - gl_FragDepth;
-            gl_FragData[rt].w = gl_FragDepth;
+        if(DPmode == 0) {
+            // USE OGL_DEPTH_SES depth has to be in [0.0, 1.0]
+            //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+            // calculate bucket pair (16 pairs -> 32 depth values)
+            bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/2.0));
+            // choose right pair in render target 
+            // (set maximum value because first fragment could have been writing too)
+            if(mod(int(bucket), 2) == 0) {
+                gl_FragData[rt].x = max(gl_FragData[rt].x, 1.0 - gl_FragDepth);
+                gl_FragData[rt].y = max(gl_FragData[rt].y, gl_FragDepth);
+            } else {
+                gl_FragData[rt].z = max(gl_FragData[rt].z, 1.0 - gl_FragDepth);
+                gl_FragData[rt].w = max(gl_FragData[rt].w, gl_FragDepth);
+            }
+        } else if(DPmode == 1) {
+            // calculate 32 subintervalls
+            bucket = floor(32.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/4.0));
+            // choose right component in render target
+            gl_FragData[rt][int(mod(bucket, 4))] = codeColorBDP(fragColor); // + gl_FragData[rt][mod(int(bucket), 4)] / 2 ???
         }
     }
 
@@ -7487,11 +7540,18 @@ varying vec4 colors;
 varying vec3 cuttingPlane;
 
 void main(void) {
+
     const vec4 quatConst = vec4(1.0, -1.0, 0.5, 0.0);
-    vec4 tmp, tmp1;
+    vec2 winHalf, d, p, q, h, dd, mins, maxs;
+    vec3 testPos, c2, cpj1, cpm1, cpj2, cpm2;
+    vec4 tmp, tmp1, inPos, projPos;
+
+#ifdef CALC_CAM_SYS
+    vec3 camIn, camUp, camRight;
+#endif // CALC_CAM_SYS
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    inPos = gl_Vertex;
 
     radii.x = inParams.x;
     radii.y = radii.x * radii.x;
@@ -7545,34 +7605,27 @@ void main(void) {
     lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
     // Sphere-Touch-Plane-Approach
-    vec2 winHalf = 2.0 / viewAttr.zw; // window size
-
-    vec2 d, p, q, h, dd;
+    winHalf = 2.0 / viewAttr.zw; // window size
 
     // get camera orthonormal coordinate system
-
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
     tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
-    vec3 camIn = normalize(tmp.xyz);
+    camIn = normalize(tmp.xyz);
     tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
-    vec3 camUp = tmp.xyz;
-    vec3 camRight = normalize(cross(camIn, camUp));
+    camUp = tmp.xyz;
+    camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
 #endif // CALC_CAM_SYS
 
-    vec2 mins, maxs;
-    vec3 testPos;
-    vec4 projPos;
-
     // projected camera vector
-    vec3 c2 = vec3(dot(tmp.xyz, camRight), dot(tmp.xyz, camUp), dot(tmp.xyz, camIn));
+    c2 = vec3(dot(tmp.xyz, camRight), dot(tmp.xyz, camUp), dot(tmp.xyz, camIn));
 
-    vec3 cpj1 = camIn * c2.z + camRight * c2.x;
-    vec3 cpm1 = camIn * c2.x - camRight * c2.z;
+    cpj1 = camIn * c2.z + camRight * c2.x;
+    cpm1 = camIn * c2.x - camRight * c2.z;
 
-    vec3 cpj2 = camIn * c2.z + camUp * c2.y;
-    vec3 cpm2 = camIn * c2.y - camUp * c2.z;
+    cpj2 = camIn * c2.z + camUp * c2.y;
+    cpm2 = camIn * c2.y - camUp * c2.z;
 
     d.x = length(cpj1);
     d.y = length(cpj2);
@@ -7614,6 +7667,7 @@ void main(void) {
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
+
     testPos -= 2.0 * cpm2;
     projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
     projPos /= projPos.w;
@@ -7639,12 +7693,15 @@ void main(void) {
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
       <snippet name="rootsolver"/>
+      <snippet name="codeColorBDP"/>
       <snippet type="string">
         <!--
+
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
+uniform int DPmode = 0;
 
 uniform vec2 texOffsetDepthBuffer;
 uniform sampler2D depthBuffer;
@@ -7663,22 +7720,28 @@ varying float maxAngle;
 
 varying vec4 colors;
 varying vec3 cuttingPlane;
+
 -->
       </snippet>
       <snippet name="decodecolor"/>
       <snippet type="string">
         <!--
+
 void main(void) {
-    vec4 coord;
-    vec3 ray, tmp;
-    vec4 fragColor;
+
+    int numRoots, rt;
+    float K, A, B, C, D, first, second, third, cutRad2, d, factor01, depth, depthW, f, mc, bucket;
+    float epsilon = 0.0001;
+    vec2  minmaxDepth;
+    vec3 ray, tmp, a, intersection, normPlane, normal, color, colorX;
+    vec4 fragColor, coord, lambdas, Ding;
     bool discardInt, discardExt;
 
     // get min and max depth of pixel location
-    vec2  minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
+     minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
 
     // init fragment data with zero
-    for(int i = 0; i < 8; ++i) {
+    for(int i = 0; i < gl_MaxDrawBuffers; ++i) {
         gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
     }
 
@@ -7702,19 +7765,19 @@ void main(void) {
     #define R2 radii.w
 
     // calculate the base point of the ray
-    vec3 a = camPos.xyz + ( length( camPos.xyz) - (R + r)) * ray;
+    a = camPos.xyz + ( length( camPos.xyz) - (R + r)) * ray;
     
     // compute coefficients of the quartic equation for the ray-torus-intersection
-    float K = dot( a, a) - ( R2 + r2);
-    float A = 4.0 * dot( a, ray);
-    float B = 2.0 * ( 2.0 * dot( a, ray) * dot( a, ray) + K + 2.0 * R2 * ray.z*ray.z);
-    float C = 4.0 * ( K * dot( a, ray) + 2.0 * R2 * a.z * ray.z);
-    float D = K*K + 4.0 * R2 * ( a.z*a.z - r2);
+    K = dot( a, a) - ( R2 + r2);
+    A = 4.0 * dot( a, ray);
+    B = 2.0 * ( 2.0 * dot( a, ray) * dot( a, ray) + K + 2.0 * R2 * ray.z*ray.z);
+    C = 4.0 * ( K * dot( a, ray) + 2.0 * R2 * a.z * ray.z);
+    D = K*K + 4.0 * R2 * ( a.z*a.z - r2);
     
-    vec4 lambdas = vec4( 0.0, 0.0, 0.0, 0.0);
+    lambdas = vec4( 0.0, 0.0, 0.0, 0.0);
     // ==> various quartic root solvers (only stabilized ferrari shows good results and performance)
     //int numRoots = quartic( A, B, C, D, lambdas);
-    int numRoots = ferrari( A, B, C, D, lambdas);
+    numRoots = ferrari( A, B, C, D, lambdas);
     //int numRoots = neumark( A, B, C, D, lambdas);
     //int numRoots = simpleFerrari( A, B, C, D, lambdas);
     //int numRoots = descartes( A, B, C, D, lambdas);
@@ -7736,15 +7799,13 @@ void main(void) {
 
 
 // INT fragment =========================================================
-
-    // test for intersection of interior faces
     discardInt = false;
-    float first = lambdas.y; // first intersection
-    vec3 intersection = a + ray * first;
+    first = lambdas.y; // first intersection
+    intersection = a + ray * first;
+
     // handle singularity
-    if( r > R )
-    {
-        float cutRad2 = r2 - R2;
+    if( r > R ) {
+        cutRad2 = r2 - R2;
         if( dot( intersection, intersection) < cutRad2 )
         {
             first = lambdas.x;
@@ -7759,8 +7820,6 @@ void main(void) {
     if( length( intersection - visibilitySphere.xyz) > visibilitySphere.w ) { discardInt = true; }
     
     // discard fragment if the intersection point lies outside the 'pie slice'
-    vec3 normPlane;
-    float epsilon = 0.0001;
     if( maxAngle > 0.0 )
     {
         normPlane = normalize( cross( vec3( 0.0, 0.0, 1.0), intersection));
@@ -7769,17 +7828,15 @@ void main(void) {
     }
     if( acos( dot( normPlane, cuttingPlane)) > ( abs( maxAngle)/2.0 + epsilon) ) { discardInt = true; }
 
-
     // second INT fragment =========================================================
-
     if(discardInt && (numRoots > 2) && (lambdas.w > 0.0f)) {
         discardInt = false;
-        float third = lambdas.w; // third intersection
+        third = lambdas.w; // third intersection
         intersection = a + ray * third; 
+
         // handle singularity
-        if( r > R )
-        {
-            float cutRad2 = r2 - R2;
+        if( r > R ) {
+            cutRad2 = r2 - R2;
             if( dot( intersection, intersection) < cutRad2 )
             {
                 third = lambdas.x;
@@ -7804,19 +7861,17 @@ void main(void) {
     }
 
     if(!discardInt) {
-
         // compute inward-facing normal
-        vec3 normal;
         //normal = ( intersection - vec3( normalize( intersection.xy), 0.0));
-        float factor01 = ( dot( intersection, intersection) - r2 - R2);
+        factor01 = ( dot( intersection, intersection) - r2 - R2);
         normal.x = 4.0*intersection.x*factor01;
         normal.y = 4.0*intersection.y*factor01;
         normal.z = 4.0*intersection.z*factor01 + 8.0*R2*intersection.z;
-        normal = -normalize( normal);
+        normal = normalize( normal);
         
-        float d = ( dot( intersection, vec3( 0.0, 0.0, 1.0)) - colors.z) / colors.w;
+        d = ( dot( intersection, vec3( 0.0, 0.0, 1.0)) - colors.z) / colors.w;
         // chose color for lighting
-        vec3 color = mix( decodeColor( colors.x), decodeColor( colors.y), d);
+        color = mix( decodeColor( colors.x), decodeColor( colors.y), d);
     #ifdef FLATSHADE_SES
         if( d <= 0.5 )
             color = decodeColor( colors.x);
@@ -7825,7 +7880,7 @@ void main(void) {
     #endif // FLATSHADE_SES
         // uniform color
         //color = vec3( 1.0, 0.75, 0.0);
-        color = vec3( 0.98, 0.82, 0.0 ); // for VIS
+        //color = vec3( 0.98, 0.98, 0.0 ); // for VIS
         //color = vec3( 0.02, 0.75, 0.02);
         //color = vec3( 0.19, 0.52, 0.82);
         
@@ -7841,9 +7896,9 @@ void main(void) {
 
         intersection += objPos.xyz;
 
-        vec4 Ding = vec4( intersection, 1.0);
-        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+        Ding = vec4( intersection, 1.0);
+        depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     #ifdef OGL_DEPTH_SES
         gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     #else
@@ -7853,7 +7908,7 @@ void main(void) {
     #endif // DEPTH
 
     #ifdef FOGGING_SES
-        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
         fragColor.a = alpha; // gl_FragColor
@@ -7865,8 +7920,8 @@ void main(void) {
         
     #ifdef AXISHINTS    
         // debug-axis-hints
-        vec3 colorX = vec3( 1.0, 1.0, 0.0);
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        colorX = vec3( 1.0, 1.0, 0.0);
+        mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
         { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
@@ -7876,40 +7931,44 @@ void main(void) {
         if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
 
-        // ============ code color into float ... ============
-
         // ============ sort fragment into right bucket ============
-
-        // USE OGL_DEPTH_SES
-        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
-
-        // calculate bucket pair (16 pairs -> 32 depth values)
-        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-        // index of render target
-        int rt = int(floor(bucket/2.0));
-        // choose right pair in render target
-        if(mod(int(bucket), 2) == 0) {
-            gl_FragData[rt].x = 1.0 - gl_FragDepth;
-            gl_FragData[rt].y = gl_FragDepth;
-        } else {
-            gl_FragData[rt].z = 1.0 - gl_FragDepth;
-            gl_FragData[rt].w = gl_FragDepth;
+        if(DPmode == 0) {
+            // USE OGL_DEPTH_SES depth has to be in [0.0, 1.0]
+            //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+            // calculate bucket pair (16 pairs -> 32 depth values)
+            bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/2.0));
+            // choose right pair in render target 
+            // (set maximum value because first fragment could have been writing too)
+            if(mod(int(bucket), 2) == 0) {
+                gl_FragData[rt].x = 1.0 - gl_FragDepth;
+                gl_FragData[rt].y = gl_FragDepth;
+            } else {
+                gl_FragData[rt].z = 1.0 - gl_FragDepth;
+                gl_FragData[rt].w = gl_FragDepth;
+            }
+        } else if(DPmode == 1) {
+            // calculate 32 subintervalls
+            bucket = floor(32.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/4.0));
+            // choose right component in render target
+            gl_FragData[rt][int(mod(bucket, 4))] = codeColorBDP(fragColor); // + gl_FragData[rt][mod(int(bucket), 4)] / 2 ???
         }
     }
 
 // EXT fragment =========================================================
     discardExt = false;
-
-    float second = lambdas.x;
+    second = lambdas.x;
     intersection = a + ray * second;
 
     // handle singularity
-    if( r > R )
-    {
+    if( r > R ) {
         //float radius2 = r2 - 2.0 * ( r2 -r*R) + r2 - 2.0 * r * R + R2;
         //float cutRad2 = r2 - radius2;
         //float cutRad2 = 2.0 * ( r2 - r * R) - r2 + 2.0 * r * R - R2;
-        float cutRad2 = r2 - R2;
+        cutRad2 = r2 - R2;
         if( dot( intersection, intersection) < cutRad2 )
         {
             second = lambdas.x;
@@ -7923,7 +7982,6 @@ void main(void) {
     if( length( intersection - visibilitySphere.xyz) > visibilitySphere.w ) { discardExt = true; }
     
     // discard fragment if the intersection point lies outside the 'pie slice'
-    normPlane;
     if( maxAngle > 0.0 )
     {
         normPlane = normalize( cross( vec3( 0.0, 0.0, 1.0), intersection));
@@ -7935,17 +7993,16 @@ void main(void) {
 
     if(!discardExt) {
         // compute inward-facing normal
-        vec3 normal;
         //normal = ( intersection - vec3( normalize( intersection.xy), 0.0));
-        float factor01 = ( dot( intersection, intersection) - r2 - R2);
+        factor01 = ( dot( intersection, intersection) - r2 - R2);
         normal.x = 4.0*intersection.x*factor01;
         normal.y = 4.0*intersection.y*factor01;
         normal.z = 4.0*intersection.z*factor01 + 8.0*R2*intersection.z;
-        normal = normalize( normal);
+        normal = - normalize( normal);
         
-        float d = ( dot( intersection, vec3( 0.0, 0.0, 1.0)) - colors.z) / colors.w;
+        d = ( dot( intersection, vec3( 0.0, 0.0, 1.0)) - colors.z) / colors.w;
         // chose color for lighting
-        vec3 color = mix( decodeColor( colors.x), decodeColor( colors.y), d);
+        color = mix( decodeColor( colors.x), decodeColor( colors.y), d);
     #ifdef FLATSHADE_SES
         if( d <= 0.5 )
             color = decodeColor( colors.x);
@@ -7954,7 +8011,7 @@ void main(void) {
     #endif // FLATSHADE_SES
         // uniform color
         //color = vec3( 1.0, 0.75, 0.0);
-        color = vec3( 0.98, 0.0, 0.98 ); // for VIS
+        //color = vec3( 0.98, 0.0, 0.98 ); // for VIS
         //color = vec3( 0.02, 0.75, 0.02);
         //color = vec3( 0.19, 0.52, 0.82);
         
@@ -7970,9 +8027,9 @@ void main(void) {
 
         intersection += objPos.xyz;
 
-        vec4 Ding = vec4( intersection, 1.0);
-        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+        Ding = vec4( intersection, 1.0);
+        depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     #ifdef OGL_DEPTH_SES
         gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     #else
@@ -7982,7 +8039,7 @@ void main(void) {
     #endif // DEPTH
 
     #ifdef FOGGING_SES
-        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
         fragColor.a = alpha; // gl_FragColor
@@ -7994,8 +8051,8 @@ void main(void) {
         
     #ifdef AXISHINTS    
         // debug-axis-hints
-        vec3 colorX = vec3( 1.0, 1.0, 0.0);
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        colorX = vec3( 1.0, 1.0, 0.0);
+        mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
         { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
@@ -8005,24 +8062,30 @@ void main(void) {
         if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, tmp, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
 
-        // ============ code color into float ... ============
-
         // ============ sort fragment into right bucket ============
-
-        // USE OGL_DEPTH_SES
-        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
-
-        // calculate bucket pair (16 pairs -> 32 depth values)
-        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-        // index of render target
-        int rt = int(floor(bucket/2.0));
-        // choose right pair in render target
-        if(mod(int(bucket), 2) == 0) {
-            gl_FragData[rt].x = 1.0 - gl_FragDepth;
-            gl_FragData[rt].y = gl_FragDepth;
-        } else {
-            gl_FragData[rt].z = 1.0 - gl_FragDepth;
-            gl_FragData[rt].w = gl_FragDepth;
+        if(DPmode == 0) {
+            // USE OGL_DEPTH_SES depth has to be in [0.0, 1.0]
+            //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+            // calculate bucket pair (16 pairs -> 32 depth values)
+            bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/2.0));
+            // choose right pair in render target 
+            // (set maximum value because first fragment could have been writing too)
+            if(mod(int(bucket), 2) == 0) {
+                gl_FragData[rt].x = max(gl_FragData[rt].x, 1.0 - gl_FragDepth);
+                gl_FragData[rt].y = max(gl_FragData[rt].y, gl_FragDepth);
+            } else {
+                gl_FragData[rt].z = max(gl_FragData[rt].z, 1.0 - gl_FragDepth);
+                gl_FragData[rt].w = max(gl_FragData[rt].w, gl_FragDepth);
+            }
+        } else if(DPmode == 1) {
+            // calculate 32 subintervalls
+            bucket = floor(32.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/4.0));
+            // choose right component in render target
+            gl_FragData[rt][int(mod(bucket, 4))] = codeColorBDP(fragColor); // + gl_FragData[rt][mod(int(bucket), 4)] / 2 ???
         }
     }
 
@@ -8035,41 +8098,51 @@ void main(void) {
     </shader>
 
     <shader name="sphericalTriangleVertex">
-      <snippet type="version">130</snippet>
+      <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
       <snippet type="string">
         <!--
-    uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-    uniform vec3 zValues;
-    uniform vec3 fogCol;
-    
-    #ifndef CALC_CAM_SYS
-    uniform vec3 camIn;
-    uniform vec3 camUp;
-    uniform vec3 camRight;
-    #endif // CALC_CAM_SYS
-    
-    attribute vec4 attribVec1;
-    attribute vec4 attribVec2;
-    attribute vec4 attribVec3;
-    attribute vec3 attribColors;
-    attribute vec3 attribTexCoord1;
-    attribute vec3 attribTexCoord2;
-    attribute vec3 attribTexCoord3;
-    
-    varying vec4 objPos;
-    varying vec4 camPos;
-    varying vec4 lightPos;
-    
-    varying vec4 inVec1;
-    varying vec4 inVec2;
-    varying vec4 inVec3;
-    varying vec3 inColors;
-    varying vec3 texCoord1;
-    varying vec3 texCoord2;
-    varying vec3 texCoord3;
-    
-    void main(void) {
+
+uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
+uniform vec3 zValues;
+uniform vec3 fogCol;
+
+#ifndef CALC_CAM_SYS
+uniform vec3 camIn;
+uniform vec3 camUp;
+uniform vec3 camRight;
+#endif // CALC_CAM_SYS
+
+attribute vec4 attribVec1;
+attribute vec4 attribVec2;
+attribute vec4 attribVec3;
+attribute vec3 attribColors;
+attribute vec3 attribTexCoord1;
+attribute vec3 attribTexCoord2;
+attribute vec3 attribTexCoord3;
+
+varying vec4 objPos;
+varying vec4 camPos;
+varying vec4 lightPos;
+
+varying vec4 inVec1;
+varying vec4 inVec2;
+varying vec4 inVec3;
+varying vec3 inColors;
+varying vec3 texCoord1;
+varying vec3 texCoord2;
+varying vec3 texCoord3;
+
+void main(void) {
+
+    vec2 winHalf, d, p, q, h, dd, mins, maxs;
+    vec3 testPos, cpj1, cpm1, cpj2, cpm2, c2;
+    vec4 inPos, projPos, tmp;
+
+#ifdef CALC_CAM_SYS
+    vec3 camIn, camUp, camRight;
+#endif // CALC_CAM_SYS
+
     inVec1 = attribVec1;
     inVec2 = attribVec2;
     inVec3 = attribVec3;
@@ -8080,7 +8153,7 @@ void main(void) {
     texCoord3 = attribTexCoord3;
     
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    inPos = gl_Vertex;
     inVec1.w = inPos.w;           // radius
     inVec2.w = inPos.w * inPos.w; // radius squared
     inPos.w = 1.0;
@@ -8102,35 +8175,27 @@ void main(void) {
     lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
     
     // Sphere-Touch-Plane-Approach
-    vec2 winHalf = 2.0 / viewAttr.zw; // window size
-    
-    vec2 d, p, q, h, dd;
+    winHalf = 2.0 / viewAttr.zw; // window size
     
     // get camera orthonormal coordinate system
-    vec4 tmp;
-    
     #ifdef CALC_CAM_SYS
-    // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
-    vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
-    vec3 camUp = tmp.xyz;
-    vec3 camRight = normalize(cross(camIn, camUp));
-    camUp = cross(camIn, camRight);
+        // camera coordinate system in object space
+        tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+        camIn = normalize(tmp.xyz);
+        tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+        camUp = tmp.xyz;
+        camRight = normalize(cross(camIn, camUp));
+        camUp = cross(camIn, camRight);
     #endif // CALC_CAM_SYS
     
-    vec2 mins, maxs;
-    vec3 testPos;
-    vec4 projPos;
-    
     // projected camera vector
-    vec3 c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
+    c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
     
-    vec3 cpj1 = camIn * c2.z + camRight * c2.x;
-    vec3 cpm1 = camIn * c2.x - camRight * c2.z;
+    cpj1 = camIn * c2.z + camRight * c2.x;
+    cpm1 = camIn * c2.x - camRight * c2.z;
     
-    vec3 cpj2 = camIn * c2.z + camUp * c2.y;
-    vec3 cpm2 = camIn * c2.y - camUp * c2.z;
+    cpj2 = camIn * c2.z + camUp * c2.y;
+    cpm2 = camIn * c2.y - camUp * c2.z;
     
     d.x = length(cpj1);
     d.y = length(cpj2);
@@ -8192,18 +8257,21 @@ void main(void) {
       <snippet type="version">130</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
+      <snippet name="codeColorBDP"/>
       <snippet type="string">
         <!--
+
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
+uniform int DPmode = 0;
 
 uniform vec2 texOffsetDepthBuffer;
 uniform sampler2D depthBuffer;
 
 uniform vec2 texOffsetSing;
-uniform sampler2D tex;
+uniform sampler2D singTex;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -8226,18 +8294,23 @@ varying vec3 texCoord3;
         <!--
 
 void main(void) {
-    vec4 coord, fragColor;
-    vec3 ray;
-    int i;
+
+    int i, numProbes, rt;
     float rad = inVec1.w;
     float squarRad = inVec2.w;
+    float d1, d2s, radicand, lambda, d, dist1, dist2, f, mc, depth, depthW, bucket;
+    float invdet, beta, gamma, alpha2;
     bool discardInt, discardExt;
+    vec2  minmaxDepth;
+    vec3 ray, sphereintersection, pos1, planeNormal, probePos, normal, color, colorX;
+    vec3 u, v, w, dRay, wXu, dXv;
+    vec4 coord, fragColor, Ding;
 
     // get min and max depth of pixel location
-    vec2  minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
+    minmaxDepth = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.5, 0.5))*texOffsetDepthBuffer).xy;
 
     // init fragment data with zero
-    for(i = 0; i < 8; ++i) {
+    for(i = 0; i < gl_MaxDrawBuffers; ++i) {
         gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
     }
 
@@ -8255,26 +8328,24 @@ void main(void) {
     ray = normalize(coord.xyz - camPos.xyz);
 
     // calculate the geometry-ray-intersection
-    float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
-    float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
-    float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
+    d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
+    d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
+    radicand = squarRad - d2s;                        // square of difference of projected length and lambda
     
     if (radicand < 0.0) { discard; }
 
 // INT fragment =========================================================
     discardInt = false;
-
-    float lambda = d1 + sqrt(radicand);                     // lambda for interior face
-    vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
+    lambda = d1 + sqrt(radicand);                     // lambda for interior face
+    sphereintersection = lambda * ray + camPos.xyz;    // intersection point
 
     // compute the actual position of the intersection with the sphere
-    vec3 pos1 = sphereintersection + objPos.xyz;
-
+    pos1 = sphereintersection + objPos.xyz;
     // cut with plane 1
-    vec3 planeNormal = normalize( cross( inVec1.xyz, inVec2.xyz));
-    float d = dot( objPos.xyz, planeNormal);
-    float dist1 = dot( pos1, planeNormal) - d;
-    float dist2 = dot( inVec3.xyz + objPos.xyz, planeNormal) - d;
+    planeNormal = normalize( cross( inVec1.xyz, inVec2.xyz));
+    d = dot( objPos.xyz, planeNormal);
+    dist1 = dot( pos1, planeNormal) - d;
+    dist2 = dot( inVec3.xyz + objPos.xyz, planeNormal) - d;
     if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discardInt = true; }
     // cut with plane 2
     planeNormal = normalize( cross( inVec2.xyz, inVec3.xyz));
@@ -8290,13 +8361,12 @@ void main(void) {
     if( ( dist2 < 0.0 && dist1 > 0.0 ) || ( dist2 > 0.0 && dist1 < 0.0 ) ) { discardInt = true; }
 
     // Singularity handling:
-    vec3 probePos;
-    int numProbes = min( int(texCoord1.x), 16);
+    numProbes = min( int(texCoord1.x), 16);
     if( numProbes > 0 )
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            probePos = texture2D( singTex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
         }
     }
@@ -8305,7 +8375,7 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            probePos = texture2D( singTex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
         }
     }
@@ -8314,37 +8384,36 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            probePos = texture2D( singTex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
         }
     }
 
     if(!discardInt) {
-
         // "calc" normal at intersection point
-        vec3 normal = sphereintersection / rad;
+        normal = - sphereintersection / rad;
     #ifdef SMALL_SPRITE_LIGHTING
         normal = mix(-ray, normal, lightPos.w);
     #endif // SMALL_SPRITE_LIGHTING
 
         // ========== START compute color ==========
         // compute auxiliary direction vectors
-        vec3 u = inVec1.xyz - inVec2.xyz;
-        vec3 v = inVec3.xyz - inVec2.xyz;
+        u = inVec1.xyz - inVec2.xyz;
+        v = inVec3.xyz - inVec2.xyz;
         // base point and direction of ray from the origin to the intersection point
-        vec3 w = -inVec2.xyz;
-        vec3 dRay = normalize( sphereintersection);
+        w = -inVec2.xyz;
+        dRay = normalize( sphereintersection);
         // cross products for computing the determinant
-        vec3 wXu = cross( w, u);
-        vec3 dXv = cross( dRay, v);
+        wXu = cross( w, u);
+        dXv = cross( dRay, v);
         // compute inverse determinant
-        float invdet = 1.0 / dot( dXv, u);
+        invdet = 1.0 / dot( dXv, u);
         // compute weights
-        float beta = dot( dXv, w) * invdet;
-        float gamma = dot( wXu, dRay) * invdet;
-        float alpha2 = 1.0 - ( beta + gamma);
+        beta = dot( dXv, w) * invdet;
+        gamma = dot( wXu, dRay) * invdet;
+        alpha2 = 1.0 - ( beta + gamma);
         // compute color
-        vec3 color = decodeColor( inColors.y) * alpha2 + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
+        color = decodeColor( inColors.y) * alpha2 + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
     #ifdef FLATSHADE_SES
         if( alpha2 > beta && alpha2 > gamma )
             color = decodeColor( inColors.y);
@@ -8356,7 +8425,7 @@ void main(void) {
         // ========== END compute color ==========
         // uniform color
         //color = vec3( 0.0, 0.75, 1.0);
-        color = vec3( 0.6, 0.0, 0.0 );
+        //color = vec3( 0.98, 0.98, 0.0 ); //int
         //color = vec3( texCoord2.xy, 0.0);
         //color = vec3( 0.8, 0.0, 0.2);
         //color = vec3( 0.19, 0.52, 0.82);
@@ -8366,9 +8435,9 @@ void main(void) {
         
         // calculate depth
     #ifdef DEPTH
-        vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+        Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+        depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     #ifdef OGL_DEPTH_SES
         gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     #else
@@ -8378,15 +8447,15 @@ void main(void) {
     #endif // DEPTH
 
     #ifdef FOGGING_SES
-        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
         fragColor.a = alpha; // gl_FragColor
         
     #ifdef AXISHINTS
         // debug-axis-hints
-        vec3 colorX = vec3( 1.0, 1.0, 0.0);
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        colorX = vec3( 1.0, 1.0, 0.0);
+        mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
         { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
@@ -8396,32 +8465,38 @@ void main(void) {
         if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
 
-        // ============ code color into float ... ============
-
         // ============ sort fragment into right bucket ============
-
-        // USE OGL_DEPTH_SES
-        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
-
-        // calculate bucket pair (16 pairs -> 32 depth values)
-        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-        // index of render target
-        int rt = int(floor(bucket/2.0));
-        // choose right pair in render target
-        if(mod(int(bucket), 2) == 0) {
-            gl_FragData[rt].x = 1.0 - gl_FragDepth;
-            gl_FragData[rt].y = gl_FragDepth;
-        } else {
-            gl_FragData[rt].z = 1.0 - gl_FragDepth;
-            gl_FragData[rt].w = gl_FragDepth;
+        if(DPmode == 0) {
+            // USE OGL_DEPTH_SES depth has to be in [0.0, 1.0]
+            //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+            // calculate bucket pair (16 pairs -> 32 depth values)
+            bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/2.0));
+            // choose right pair in render target 
+            // (set maximum value because first fragment could have been writing too)
+            if(mod(int(bucket), 2) == 0) {
+                gl_FragData[rt].x = 1.0 - gl_FragDepth;
+                gl_FragData[rt].y = gl_FragDepth;
+            } else {
+                gl_FragData[rt].z = 1.0 - gl_FragDepth;
+                gl_FragData[rt].w = gl_FragDepth;
+            }
+        } else if(DPmode == 1) {
+            // calculate 32 subintervalls
+            bucket = floor(32.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/4.0));
+            // choose right component in render target
+            gl_FragData[rt][int(mod(bucket, 4))] = codeColorBDP(fragColor); // + gl_FragData[rt][mod(int(bucket), 4)] / 2 ???
         }
     }
 
 // EXT fragment =========================================================
     discardExt = false;
-
     lambda = d1 - sqrt(radicand); 
     sphereintersection = lambda * ray + camPos.xyz;    // intersection point
+
     pos1 = sphereintersection + objPos.xyz;
     // cut with plane 1
     planeNormal = normalize( cross( inVec1.xyz, inVec2.xyz));
@@ -8448,7 +8523,7 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            probePos = texture2D( singTex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
         }
     }
@@ -8457,7 +8532,7 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            probePos = texture2D( singTex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
         }
     }
@@ -8466,36 +8541,36 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+            probePos = texture2D( singTex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffsetSing).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
         }
     }
 
     if(!discardExt) {
         // "calc" normal at intersection point
-        vec3 normal = -sphereintersection / rad;
+        normal = sphereintersection / rad;
     #ifdef SMALL_SPRITE_LIGHTING
         normal = mix(-ray, normal, lightPos.w);
     #endif // SMALL_SPRITE_LIGHTING
 
         // ========== START compute color ==========
         // compute auxiliary direction vectors
-        vec3 u = inVec1.xyz - inVec2.xyz;
-        vec3 v = inVec3.xyz - inVec2.xyz;
+        u = inVec1.xyz - inVec2.xyz;
+        v = inVec3.xyz - inVec2.xyz;
         // base point and direction of ray from the origin to the intersection point
-        vec3 w = -inVec2.xyz;
-        vec3 dRay = normalize( sphereintersection);
+        w = -inVec2.xyz;
+        dRay = normalize( sphereintersection);
         // cross products for computing the determinant
-        vec3 wXu = cross( w, u);
-        vec3 dXv = cross( dRay, v);
+        wXu = cross( w, u);
+        dXv = cross( dRay, v);
         // compute inverse determinant
-        float invdet = 1.0 / dot( dXv, u);
+        invdet = 1.0 / dot( dXv, u);
         // compute weights
-        float beta = dot( dXv, w) * invdet;
-        float gamma = dot( wXu, dRay) * invdet;
-        float alpha2 = 1.0 - ( beta + gamma);
+        beta = dot( dXv, w) * invdet;
+        gamma = dot( wXu, dRay) * invdet;
+        alpha2 = 1.0 - ( beta + gamma);
         // compute color
-        vec3 color = decodeColor( inColors.y) * alpha2 + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
+        color = decodeColor( inColors.y) * alpha2 + decodeColor( inColors.x) * beta + decodeColor( inColors.z) * gamma;
     #ifdef FLATSHADE_SES
         if( alpha2 > beta && alpha2 > gamma )
             color = decodeColor( inColors.y);
@@ -8507,7 +8582,7 @@ void main(void) {
         // ========== END compute color ==========
         // uniform color
         //color = vec3( 0.0, 0.75, 1.0);
-        color = vec3( 0.0, 0.6, 0.6 ); // for VIS
+        //color = vec3( 0.0, 0.98, 0.98 ); // ext
         //color = vec3( texCoord2.xy, 0.0);
         //color = vec3( 0.8, 0.0, 0.2);
         //color = vec3( 0.19, 0.52, 0.82);
@@ -8517,9 +8592,9 @@ void main(void) {
         
         // calculate depth
     #ifdef DEPTH
-        vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-        float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-        float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+        Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+        depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+        depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     #ifdef OGL_DEPTH_SES
         gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     #else
@@ -8529,15 +8604,15 @@ void main(void) {
     #endif // DEPTH
 
     #ifdef FOGGING_SES
-        float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
+        f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColor.rgb = mix( fogCol, fragColor.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
         fragColor.a = alpha; // gl_FragColor
         
     #ifdef AXISHINTS
         // debug-axis-hints
-        vec3 colorX = vec3( 1.0, 1.0, 0.0);
-        float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
+        colorX = vec3( 1.0, 1.0, 0.0);
+        mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
         if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
         { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
         if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
@@ -8547,24 +8622,30 @@ void main(void) {
         if (mc < 0.05) { fragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); } // gl_FragColor
     #endif // AXISHINTS
 
-        // ============ code color into float ... ============
-
         // ============ sort fragment into right bucket ============
-
-        // USE OGL_DEPTH_SES
-        //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
-
-        // calculate bucket pair (16 pairs -> 32 depth values)
-        float bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
-        // index of render target
-        int rt = int(floor(bucket/2.0));
-        // choose right pair in render target
-        if(mod(int(bucket), 2) == 0) {
-            gl_FragData[rt].x = 1.0 - gl_FragDepth;
-            gl_FragData[rt].y = gl_FragDepth;
-        } else {
-            gl_FragData[rt].z = 1.0 - gl_FragDepth;
-            gl_FragData[rt].w = gl_FragDepth;
+        if(DPmode == 0) {
+            // USE OGL_DEPTH_SES depth has to be in [0.0, 1.0]
+            //if((gl_FragDepth < -minmaxDepth.x) || (gl_FragDepth > minmaxDepth.y)) { discard; }
+            // calculate bucket pair (16 pairs -> 32 depth values)
+            bucket = floor(16.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/2.0));
+            // choose right pair in render target 
+            // (set maximum value because first fragment could have been writing too)
+            if(mod(int(bucket), 2) == 0) {
+                gl_FragData[rt].x = max(gl_FragData[rt].x, 1.0 - gl_FragDepth);
+                gl_FragData[rt].y = max(gl_FragData[rt].y, gl_FragDepth);
+            } else {
+                gl_FragData[rt].z = max(gl_FragData[rt].z, 1.0 - gl_FragDepth);
+                gl_FragData[rt].w = max(gl_FragData[rt].w, gl_FragDepth);
+            }
+        } else if(DPmode == 1) {
+            // calculate 32 subintervalls
+            bucket = floor(32.0*(gl_FragDepth - (-minmaxDepth.x)) / (minmaxDepth.y - (-minmaxDepth.x)));
+            // index of render target
+            rt = int(floor(bucket/4.0));
+            // choose right component in render target
+            gl_FragData[rt][int(mod(bucket, 4))] = codeColorBDP(fragColor); // + gl_FragData[rt][mod(int(bucket), 4)] / 2 ???
         }
     }
 
@@ -8624,8 +8705,9 @@ void main(void) {
       <snippet type="string">
         <!--
 
-uniform vec2 texOffset;
 uniform float scaleFactor = 4.0;
+
+uniform vec2 texOffset;
 uniform sampler2D depthBuffer;
 
 void main(void) {
@@ -8656,127 +8738,156 @@ void main(void) {
 
     <shader name="depthPeelingFragment">
       <snippet type="version">120</snippet>
+      <snippet name="decodeColorBDP"/>
       <snippet type="string">
         <!--
 
-uniform sampler2D Layer0to3Tex;
-uniform sampler2D Layer4to7Tex;
-uniform sampler2D Layer8to11Tex;
-uniform sampler2D Layer12to15Tex;
-uniform sampler2D Layer16to19Tex;
-uniform sampler2D Layer20to23Tex;
-uniform sampler2D Layer24to27Tex;
-uniform sampler2D Layer28to31Tex;
+uniform sampler2D bucket0;
+uniform sampler2D bucket1;
+uniform sampler2D bucket2;
+uniform sampler2D bucket3;
+uniform sampler2D bucket4;
+uniform sampler2D bucket5;
+uniform sampler2D bucket6;
+uniform sampler2D bucket7;
 
 uniform vec2 texOffset;
-uniform float alpha;
+uniform float alpha = 0.5f;
+uniform int DPmode = 0;
 
 void main(void) {
 
+    int i;
+    float epsilon = 0.01;
     vec2 texCoord = (gl_FragCoord.xy + vec2( 0.5, 0.5)) * texOffset;
+    vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 
-    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    vec4 white = vec4(0.1, 0.1, 0.1, 0.0);
+    if(DPmode == 0) {
 
-    vec4 layer1 = texture2D(Layer0to3Tex, texCoord);
-    vec4 layer2 = texture2D(Layer4to7Tex, texCoord);
-    vec4 layer3 = texture2D(Layer8to11Tex, texCoord);
-    vec4 layer4 = texture2D(Layer12to15Tex, texCoord);
-    vec4 layer5 = texture2D(Layer16to19Tex, texCoord);
-    vec4 layer6 = texture2D(Layer20to23Tex, texCoord);
-    vec4 layer7 = texture2D(Layer24to27Tex, texCoord);
-    vec4 layer8 = texture2D(Layer28to31Tex, texCoord);
+        vec4 layer1 = texture2D(bucket0, texCoord);
+        vec4 layer2 = texture2D(bucket1, texCoord);
+        vec4 layer3 = texture2D(bucket2, texCoord);
+        vec4 layer4 = texture2D(bucket3, texCoord);
+        vec4 layer5 = texture2D(bucket4, texCoord);
+        vec4 layer6 = texture2D(bucket5, texCoord);
+        vec4 layer7 = texture2D(bucket6, texCoord);
+        vec4 layer8 = texture2D(bucket7, texCoord);
 
-    /*
-    for(int i = 0; i < 2; ++i) {
-        if(layer1[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-        if(layer2[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-        if(layer3[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-        if(layer4[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-        if(layer5[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-        if(layer6[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-        if(layer7[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-        if(layer8[i*2+1] > 0.0f) {
-            color = color + white;
-        }
-    }*/
+        vec4 white = vec4(0.1, 0.1, 0.1, 0.0);
 
-    float epsilon = 0.0001;
+        for(i = 0; i < 2; i++) {
+            if(layer1[i*2] > 0.0f) {
+                if(abs(1.0 - layer1[i*2] - layer1[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+            if(layer2[i*2] > 0.0f) {
+                if(abs(1.0 - layer2[i*2] - layer2[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+            if(layer3[i*2] > 0.0f) {
+                if(abs(1.0 - layer3[i*2] - layer3[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+            if(layer4[i*2] > 0.0f) {
+                if(abs(1.0 - layer4[i*2] - layer4[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+            if(layer5[i*2] > 0.0f) {
+                if(abs(1.0 - layer5[i*2] - layer5[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+            if(layer6[i*2] > 0.0f) {
+                if(abs(1.0 - layer6[i*2] - layer6[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+            if(layer7[i*2] > 0.0f) {
+                if(abs(1.0 - layer7[i*2] - layer7[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+            if(layer8[i*2] > 0.0f) {
+                if(abs(1.0 - layer8[i*2] - layer8[i*2+1]) > epsilon) {
+                    color = color + white*2.0;
+                } else {
+                    color = color + white;
+                }
+            }
+        }
 
-    for(int i = 0; i < 2; i++) {
-        if(layer1[i*2] > 0.0f) {
-            if(abs(1.0 - layer1[i*2] - layer1[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+    } else if(DPmode == 1) {
+
+        vec4 layer = texture2D(bucket7, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
-        if(layer2[i*2] > 0.0f) {
-            if(abs(1.0 - layer2[i*2] - layer2[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+        layer = texture2D(bucket6, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
-        if(layer3[i*2] > 0.0f) {
-            if(abs(1.0 - layer3[i*2] - layer3[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+        layer = texture2D(bucket5, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
-        if(layer4[i*2] > 0.0f) {
-            if(abs(1.0 - layer4[i*2] - layer4[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+        layer = texture2D(bucket4, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
-        if(layer5[i*2] > 0.0f) {
-            if(abs(1.0 - layer5[i*2] - layer5[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+        layer = texture2D(bucket3, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
-        if(layer6[i*2] > 0.0f) {
-            if(abs(1.0 - layer6[i*2] - layer6[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+        layer = texture2D(bucket2, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
-        if(layer7[i*2] > 0.0f) {
-            if(abs(1.0 - layer7[i*2] - layer7[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+        layer = texture2D(bucket1, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
-        if(layer8[i*2] > 0.0f) {
-            if(abs(1.0 - layer8[i*2] - layer8[i*2+1]) > epsilon) {
-                color = color + white*2.0;
-            } else {
-                color = color + white;
+        layer = texture2D(bucket0, texCoord);
+        for(i = 0; i < 4; ++i) {
+            if(layer[i] > 0.0) {
+                color = color*(1.0 - alpha) + decodeColorBDP(layer[i])*alpha;
             }
         }
     }
 
-    gl_FragColor = clamp(color, vec4(0.0), vec4(1.0)) + vec4(0.0, 0.0, 0.0, 1.0);
+    gl_FragColor = clamp(color, vec4(0.0), vec4(1.0));
+    gl_FragColor.a = 1.0;
 }
 
 -->    
