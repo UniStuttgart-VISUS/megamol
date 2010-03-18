@@ -288,6 +288,44 @@ Eigenvektor zu Eigenwert 2:
     evt = -2.0;
     AssertTrue("Eigenvalue -2 found", IsEqual(ev[0], evt) || IsEqual(ev[1], evt));
 
+    Vector<double, 3> eigenvectors6[3];
+
+    try {
+        evc = m6.FindEigenvalues(ev, eigenvectors6, 3);
+        AssertEqual("Found two eigenvalues", evc, 2U);
+
+        double te6[2];
+        Vector<double, 3> tv6[2];
+        te6[0] = -2.0;
+        tv6[0].Set(-3.0, 4.0, 2.0);
+        te6[1] = 2.0;
+        tv6[1].Set(1.0, 0.0, -2.0);
+
+        for (int i = 0; i < 2; i++) {
+            int p = -1;
+            for (unsigned int j = 0; j < evc; j++) {
+                if (ev[j] == te6[i]) {
+                    p = i;
+                    break;
+                }
+            }
+            vislib::StringA msg;
+            msg.Format("Eigenvalue %f found", te6[i]);
+            if (p < 0) {
+                AssertTrue(msg, false);
+                continue;
+            }
+            AssertTrue(msg, true);
+
+            msg.Format("Eigenvector %d correct", i);
+            AssertTrue(msg, tv6[i].IsParallel(eigenvectors6[p]));
+        }
+    } catch(vislib::Exception ex) {
+        printf("Exception: %s\n", ex.GetMsgA());
+        AssertTrue("Find eigenvalues", false);
+    } catch(...) {
+        AssertTrue("Find eigenvalues", false);
+    }
 
 /*
 http://www.arndt-bruenner.de/mathe/scripts/eigenwert.htm
@@ -355,5 +393,61 @@ Eigenvektor zu Eigenwert 5,299783664336905:
     AssertTrue("Eigenvalue 5.299783664336905 found", IsEqual(ev[0], evt)
         || IsEqual(ev[1], evt) || IsEqual(ev[2], evt)
         || IsEqual(ev[3], evt));
+
+
+    Vector<double, 4> eigenvectors1[4];
+
+    try {
+        evc = m1.FindEigenvalues(ev, eigenvectors1, 4);
+        AssertEqual("Found four eigenvalues", evc, 4U);
+
+        double te1[4];
+        Vector<double, 4> tv1[4];
+        te1[0] = -12.589159228961312;
+        tv1[0][0] = 0.05939964936610216;
+        tv1[0][1] = -0.8369818269339811;
+        tv1[0][2] = 0.5360406456563438;
+        tv1[0][3] = 0.0927012903997002;
+        te1[1] = -11.096724174256692;
+        tv1[1][0] = -0.06271378020655696;
+        tv1[1][1] = -0.8667725283798831;
+        tv1[1][2] = 0.4604325354943767;
+        tv1[1][3] = 0.18103658767323305;
+        te1[2] = -4.613900261118899;
+        tv1[2][0] = 0.6759032660943609;
+        tv1[2][1] = 0.7055384845142796;
+        tv1[2][2] = -0.21288595069057908;
+        tv1[2][3] = 0.007056468722919981;
+        te1[3] = 5.299783664336905;
+        tv1[3][0] = -0.4245882668759824;
+        tv1[3][1] = 0.2734502816046086;
+        tv1[3][2] = 0.6093868049835593;
+        tv1[3][3] = 0.611226201200128;
+
+        for (int i = 0; i < 4; i++) {
+            int p = -1;
+            for (unsigned int j = 0; j < evc; j++) {
+                if (ev[j] == te1[i]) {
+                    p = i;
+                    break;
+                }
+            }
+            vislib::StringA msg;
+            msg.Format("Eigenvalue %f found", te1[i]);
+            if (p < 0) {
+                AssertTrue(msg, false);
+                continue;
+            }
+            AssertTrue(msg, true);
+
+            msg.Format("Eigenvector %d correct", i);
+            AssertTrue(msg, tv1[i].IsParallel(eigenvectors1[p]));
+        }
+    } catch(vislib::Exception ex) {
+        printf("Exception: %s\n", ex.GetMsgA());
+        AssertTrue("Find eigenvalues", false);
+    } catch(...) {
+        AssertTrue("Find eigenvalues", false);
+    }
 
 }

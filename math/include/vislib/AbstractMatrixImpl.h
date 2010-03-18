@@ -20,6 +20,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/Exception.h"
+#include "vislib/forceinline.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
@@ -77,49 +78,11 @@ namespace math {
         ~AbstractMatrixImpl(void);
 
         /**
-         * Answer the determinant of this matrix.
-         *
-         * Note that the implementation uses a Gaussian elimination and is 
-         * therefore very slow.
-         *
-         * @return The determinant of the matrix.
-         */
-        T Determinant(void) const;
-
-        /**
-         * Calculates the characteristic polynom of the matrix
-         *
-         * @return The characteristic polynom of the matrix
-         *
-         * @throw Exception if the calculation of the polynom fails.
-         */
-        Polynom<T, D> CharacteristicPolynom(void) const;
-
-        /**
          * Dump the matrix to the specified stream.
          *
          * @param out The stream to dump the matrix to.
          */
         void Dump(std::ostream& out) const;
-
-        /**
-         * Finds the eigenvalues of the matrix by finding the roots of the
-         * characteristic polynom. The order of the eigenvalues is undefined.
-         * The method will output at most 'size' eigenvalues into the array
-         * 'outEigenvalues' points to. A matrix with size D x D has (at most)
-         * D eigenvalues.
-         *
-         * @param outEigenvalues Pointer to the array to receive the
-         *                       eigenvalues
-         * @param size The size of 'outEigenvalues' in number of elements
-         *
-         * @return The number of eigenvalues written
-         */
-        inline unsigned int FindEigenvalues(T* outEigenvalues,
-                unsigned int size) const {
-            return this->CharacteristicPolynom().FindRoots(outEigenvalues,
-                size);
-        }
 
         /**
          * Get the matrix component at the specified position.
@@ -573,6 +536,84 @@ namespace math {
     protected:
 
         /**
+         * Calculates the characteristic polynom of the matrix
+         *
+         * @return The characteristic polynom of the matrix
+         *
+         * @throw Exception if the calculation of the polynom fails.
+         */
+        Polynom<T, D> characteristicPolynom(void) const;
+
+        /**
+         * Calculates the determinant of the 2x2 matrix
+         *  a00 a10
+         *  a01 a11
+         *
+         * @param a00 A coefficient of the matrix
+         * @param a10 A coefficient of the matrix
+         * @param a01 A coefficient of the matrix
+         * @param a11 A coefficient of the matrix
+         *
+         * @return The determinant of the matrix
+         */
+        static VISLIB_FORCEINLINE T determinant2x2(const T& a00, const T& a10,
+            const T& a01, const T& a11);
+
+        /**
+         * Calculates the determinant of the 3x3 matrix
+         *  a00 a10 a20
+         *  a01 a11 a21
+         *  a02 a12 a22
+         *
+         * @param a00 A coefficient of the matrix
+         * @param a10 A coefficient of the matrix
+         * @param a20 A coefficient of the matrix
+         * @param a01 A coefficient of the matrix
+         * @param a11 A coefficient of the matrix
+         * @param a21 A coefficient of the matrix
+         * @param a02 A coefficient of the matrix
+         * @param a12 A coefficient of the matrix
+         * @param a22 A coefficient of the matrix
+         *
+         * @return The determinant of the matrix
+         */
+        static VISLIB_FORCEINLINE T determinant3x3(const T& a00, const T& a10,
+            const T& a20, const T& a01, const T& a11, const T& a21,
+            const T& a02, const T& a12, const T& a22);
+
+        /**
+         * Calculates the determinant of the 4x4 matrix
+         *  a00 a10 a20 a30
+         *  a01 a11 a21 a31
+         *  a02 a12 a22 a32
+         *  a03 a13 a23 a33
+         *
+         * @param a00 A coefficient of the matrix
+         * @param a10 A coefficient of the matrix
+         * @param a20 A coefficient of the matrix
+         * @param a30 A coefficient of the matrix
+         * @param a01 A coefficient of the matrix
+         * @param a11 A coefficient of the matrix
+         * @param a21 A coefficient of the matrix
+         * @param a31 A coefficient of the matrix
+         * @param a02 A coefficient of the matrix
+         * @param a12 A coefficient of the matrix
+         * @param a22 A coefficient of the matrix
+         * @param a32 A coefficient of the matrix
+         * @param a03 A coefficient of the matrix
+         * @param a13 A coefficient of the matrix
+         * @param a23 A coefficient of the matrix
+         * @param a33 A coefficient of the matrix
+         *
+         * @return The determinant of the matrix
+         */
+        static VISLIB_FORCEINLINE T determinant4x4(const T& a00, const T& a10,
+            const T& a20, const T& a30, const T& a01, const T& a11,
+            const T& a21, const T& a31, const T& a02, const T& a12,
+            const T& a22, const T& a32, const T& a03, const T& a13,
+            const T& a23, const T& a33);
+
+        /**
          * Compute the index of the matrix element at 'row', 'col' depending
          * on the matrix size and layout of the instantiation. No bounds check
          * is done.
@@ -638,134 +679,6 @@ namespace math {
     template<class T, unsigned int D, MatrixLayout L, class S,
         template<class T, unsigned int D, MatrixLayout L, class S> class C>
     AbstractMatrixImpl<T, D, L, S, C>::~AbstractMatrixImpl(void) {
-    }
-
-
-    /*
-     * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::Determinant
-     */
-    template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
-    T AbstractMatrixImpl<T, D, L, S, C>::Determinant(void) const {
-#define A(r, c) a[(r) * D + (c)]
-        double a[D * D];                    // input matrix for algorithm
-        double f;                           // Multiplication factor.
-        double max;                         // Row pivotising.
-        unsigned int pRow;                  // Pivot row.
-        unsigned int s;                     // Current eliminination step.
-        T retval = static_cast<T>(1);       // The resulting determinant.
-
-        /*
-         * Create double precision row-major matrix copy as well-defined basis
-         * for Gauﬂ elimination. 
-         */
-        for (unsigned int r = 0; r < D; r++) {
-            for (unsigned int c = 0; c < D; c++) {
-                A(r, c) = static_cast<double>(this->components[indexOf(r, c)]);
-            }
-        }
-
-        /* Gauﬂ elimination. */
-        s = 0;
-        do {
-
-            /* Pivotising. */
-            max = ::fabs(A(s, s));
-            pRow = s; 
-            for (unsigned int r = s + 1; r < D; r++) {
-                if (::fabs(A(r, s)) > max) {
-                    max = ::fabs(A(r, s));
-                    pRow = r;
-                }
-            }
-
-            if (max < DOUBLE_EPSILON) {
-                /*
-                 * Matrix is not invertable, because the column cannot be 
-                 * deleted. The determinant is zero, iff the matrix is not
-                 * invertable.
-                 */
-                return static_cast<T>(0);
-            }
-
-            if (pRow != s) {
-                // if necessary, exchange the row
-                double h;
-
-                for (unsigned int c = s ; c < D; c++) {
-                    h = A(s, c);
-                    A(s, c) = A(pRow, c);
-                    A(pRow, c) = h;
-                }
-
-                retval *= -1.0; // Exchaning rows changes sign.
-            } 
-
-            /* Elimination. */
-            for (unsigned int r = s + 1; r < D; r++ ) {
-                f = -A(r, s) / A(s, s);
-                for (unsigned int c = s; c < D; c++) {
-                    A(r, c) += f * A(s, c);
-                } 
-            }
-
-            s++;
-        } while (s < D);
-
-        /* Compute determinant as product of the diagonal. */
-        ASSERT(D > 0);
-        ASSERT(::fabs(retval) == 1.0);
-        for (unsigned int i = 0; i < D; i++) {
-            retval *= A(i, i);
-        }
-
-        return retval;
-#undef A
-    }
-
-
-    /*
-     * AbstractMatrixImpl<T, D, L, S, C>::CharacteristicPolynom
-     */
-    template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
-    Polynom<T, D>
-    AbstractMatrixImpl<T, D, L, S, C>::CharacteristicPolynom(void) const {
-        // method of Faddejew-Leverrier
-        // http://de.wikipedia.org/wiki/Algorithmus_von_Faddejew-Leverrier
-        Polynom<T, D> c;
-        DeepStorageMatrix B[2];
-
-        B[0].SetNull();
-        c[D] = static_cast<T>(1);
-        B[1].SetNull(); // B1 = A * B0 = A * 0 = 0
-
-        for (unsigned int k = 1; k <= D; k++) {
-            unsigned int a = k % 2;
-            unsigned int b = 1 - a;
-
-            for (unsigned int i = 0; i < D; i++) {
-                B[a](i, i) += c[D - k + 1];
-            }
-
-            B[b] = (*this);
-            B[b] *= B[a];
-
-            c[D - k] = B[b].Trace() * static_cast<T>(-1) / static_cast<T>(k);
-        }
-
-        B[1 - (D % 2)] = (*this);
-        B[0] *= B[1];
-        for (unsigned int i = 0; i < D; i++) {
-            B[0](i, i) += c[0];
-        }
-
-        if (!B[0].IsNull()) {
-            throw Exception("Characteristic polynom calculation failed",
-                __FILE__, __LINE__);
-        }
-
-        return c;
     }
 
 
@@ -1336,7 +1249,100 @@ namespace math {
             } /* end for (unsigned int c = 0; c < D; c++) */
         } /* end for (unsigned int r = 0; r < D; r++) */
     }
-    
+
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::characteristicPolynom
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    Polynom<T, D>
+    AbstractMatrixImpl<T, D, L, S, C>::characteristicPolynom(void) const {
+        // method of Faddejew-Leverrier
+        // http://de.wikipedia.org/wiki/Algorithmus_von_Faddejew-Leverrier
+        Polynom<T, D> c;
+        DeepStorageMatrix B[2];
+
+        B[0].SetNull();
+        c[D] = static_cast<T>(1);
+        B[1].SetNull(); // B1 = A * B0 = A * 0 = 0
+
+        for (unsigned int k = 1; k <= D; k++) {
+            unsigned int a = k % 2;
+            unsigned int b = 1 - a;
+
+            for (unsigned int i = 0; i < D; i++) {
+                B[a](i, i) += c[D - k + 1];
+            }
+
+            B[b] = (*this);
+            B[b] *= B[a];
+
+            c[D - k] = B[b].Trace() * static_cast<T>(-1) / static_cast<T>(k);
+        }
+
+        B[1 - (D % 2)] = (*this);
+        B[0] *= B[1];
+        for (unsigned int i = 0; i < D; i++) {
+            B[0](i, i) += c[0];
+        }
+
+        if (!B[0].IsNull()) {
+            throw Exception("Characteristic polynom calculation failed",
+                __FILE__, __LINE__);
+        }
+
+        return c;
+    }
+
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::determinant2x2
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    T AbstractMatrixImpl<T, D, L, S, C>::determinant2x2(const T& a00,
+            const T& a10, const T& a01, const T& a11) {
+        return a00 * a11 - a01 * a10;
+    }
+
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::determinant3x3
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    T AbstractMatrixImpl<T, D, L, S, C>::determinant3x3(const T& a00,
+            const T& a10, const T& a20, const T& a01, const T& a11,
+            const T& a21, const T& a02, const T& a12, const T& a22) {
+        // rule of sarrus
+        return a00 * a11 * a22 + a01 * a12 * a20 + a02 * a10 * a21
+            - a02 * a11 * a20 - a01 * a10 * a22 - a00 * a12 * a21;
+    }
+
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::determinant4x4
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    T AbstractMatrixImpl<T, D, L, S, C>::determinant4x4(const T& a00,
+            const T& a10, const T& a20, const T& a30, const T& a01,
+            const T& a11, const T& a21, const T& a31, const T& a02,
+            const T& a12, const T& a22, const T& a32, const T& a03,
+            const T& a13, const T& a23, const T& a33) {
+        // Method: 1 x laplace + sarrus
+        return a02
+            * determinant3x3(a10, a20, a30, a11, a21, a31, a13, a23, a33)
+            - a12
+            * determinant3x3(a00, a20, a30, a01, a21, a31, a03, a23, a33)
+            + a22
+            * determinant3x3(a00, a10, a30, a01, a11, a31, a03, a13, a33)
+            - a32
+            * determinant3x3(a00, a10, a20, a01, a11, a21, a03, a13, a23);
+    }
+
+
 } /* end namespace math */
 } /* end namespace vislib */
 
