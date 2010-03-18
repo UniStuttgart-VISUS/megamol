@@ -62,7 +62,7 @@ namespace core {
          */
         virtual ~DataFileSequencer(void);
 
-    protected:
+    private:
 
         /**
          * Implementation of 'Create'.
@@ -72,9 +72,31 @@ namespace core {
         virtual bool create(void);
 
         /**
-         * Implementation of 'Release'.
+         * Searches for the filename slot in the module graph
+         *
+         * @return The found filename slot or NULL if the slot was not found.
          */
-        virtual void release(void);
+        param::ParamSlot * findFilenameSlot(void);
+
+        /**
+         * Gets the filename value
+         *
+         * @param slot The parameter slot
+         * @param outName The string receiving the value
+         *
+         * @return True on success
+         */
+        bool GetFilename(param::ParamSlot& slot, vislib::TString& outName) const;
+
+        /**
+         * Transforms the filename into a format string
+         *
+         * @param inoutName The filename to be transformed
+         * @param outValue The number value of the current file
+         *
+         * @return True on success
+         */
+        bool GetFormat(vislib::TString& inoutName, int& outValue) const;
 
         /**
          * Switches to the next file
@@ -94,7 +116,20 @@ namespace core {
          */
         bool onPrevFile(param::ParamSlot& param);
 
-    private:
+        /**
+         * Implementation of 'Release'.
+         */
+        virtual void release(void);
+
+        /**
+         * Sets the filename value
+         *
+         * @param slot The parameter slot
+         * @param name The new value
+         *
+         * @return True on success
+         */
+        bool SetFilename(param::ParamSlot& slot, const vislib::TString& name) const;
 
         /**
          * Connection to the view manipulated to make this module part of the
