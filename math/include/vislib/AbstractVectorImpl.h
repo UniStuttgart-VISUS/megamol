@@ -479,7 +479,7 @@ namespace math {
     template<class Tp, class Sp>
     bool AbstractVectorImpl<T, D, S, C>::IsParallel(
             const C<Tp, D, Sp>& rhs) const {
-        T factor; // this = factor * rhs
+        T factor = static_cast<T>(0); // this = factor * rhs
         bool inited = false; // if factor is initialized
 
         for (unsigned int d = 0; d < D; d++) {
@@ -505,6 +505,7 @@ namespace math {
                     } else {
                         factor = this->components[d] 
                             / static_cast<T>(rhs.components[d]);
+                        inited = true;
                     }
                 }
             }

@@ -142,7 +142,7 @@ void TestSHA1(void) {
     SHA1HashProvider hash2;
     hashSize = hash2.GetHashSize();
     BYTE *hashVal = new BYTE[hashSize];
-    char *TEXT = "01234567012345670123456701234567" "01234567012345670123456701234567";
+    const char *TEXT = "01234567012345670123456701234567" "01234567012345670123456701234567";
     hash2.TransformFinalBlock(hashVal, hashSize, reinterpret_cast<const BYTE*>(TEXT), ::strlen(TEXT));
 //    hash2.ComputeHash(hashVal, hashSize, reinterpret_cast<const BYTE*>(TEXT), ::strlen(TEXT));
 //    hash2.GetHashValue(hashVal, hashSize); //<= with this line the code works! Why?

@@ -304,8 +304,94 @@ Eigenvektor zu Eigenwert 2:
         for (int i = 0; i < 2; i++) {
             int p = -1;
             for (unsigned int j = 0; j < evc; j++) {
-                if (ev[j] == te6[i]) {
-                    p = i;
+                if (IsEqual(ev[j], te6[i])) {
+                    p = j;
+                    break;
+                }
+            }
+            vislib::StringA msg;
+            msg.Format("Eigenvalue %f found", te6[i]);
+            if (p < 0) {
+                AssertTrue(msg, false);
+                continue;
+            }
+            AssertTrue(msg, true);
+
+            msg.Format("Eigenvector %d correct", i);
+            AssertTrue(msg, tv6[i].IsParallel(eigenvectors6[p]));
+        }
+    } catch(vislib::Exception ex) {
+        printf("Exception: %s\n", ex.GetMsgA());
+        AssertTrue("Find eigenvalues", false);
+    } catch(...) {
+        AssertTrue("Find eigenvalues", false);
+    }
+
+/*
+http://www.arndt-bruenner.de/mathe/scripts/eigenwert2.htm
+Symetrische Matrix
+1 2 3
+2 4 5
+3 5 6
+charakteristisches Polynom:
+    -x^3 + 11x^2 + 4x - 1
+reelle Eigenwerte:
+    {-0,5157294715892572 ;  0,1709151888271795 ;  11,344814282762078}
+Eigenvektoren:
+ zum Eigenwert -0,5157294715892572:
+   [ -1,2469796037174667 ; -0,5549581320873715 ; 1 ]
+ zum Eigenwert 0,1709151888271795:
+   [ 1,8019377358048385 ; -2,246979603717467 ; 1 ]
+ zum Eigenwert 11,344814282762078:
+   [ 0,4450418679126288 ; 0,8019377358048381 ; 1 ]
+*/
+    m6.SetAt(0, 0, 1.0);
+    m6.SetAt(1, 0, 2.0);
+    m6.SetAt(2, 0, 3.0);
+
+    m6.SetAt(0, 1, 2.0);
+    m6.SetAt(1, 1, 4.0);
+    m6.SetAt(2, 1, 5.0);
+
+    m6.SetAt(0, 2, 3.0);
+    m6.SetAt(1, 2, 5.0);
+    m6.SetAt(2, 2, 6.0);
+
+    cp6 = m6.CharacteristicPolynom();
+    if (IsEqual(cp6[3], 1.0)) cp6 *= -1.0;
+    AssertNearlyEqual("Coefficient a0 = -1", cp6[0], -1.0);
+    AssertNearlyEqual("Coefficient a1 = 4", cp6[1], 4.0);
+    AssertNearlyEqual("Coefficient a2 = 11", cp6[2], 11.0);
+    AssertNearlyEqual("Coefficient a3 = -1", cp6[3], -1.0);
+
+    evc = cp6.FindRoots(ev, 4);
+    AssertEqual("Found three eigenvalues", evc, 3U);
+
+    evt = -0.5157294715892572;
+    AssertTrue("Eigenvalue -0.5157294715892572 found", IsEqual(ev[0], evt) || IsEqual(ev[1], evt) || IsEqual(ev[2], evt));
+    evt = 0.1709151888271795;
+    AssertTrue("Eigenvalue 0.1709151888271795 found", IsEqual(ev[0], evt) || IsEqual(ev[1], evt) || IsEqual(ev[2], evt));
+    evt = 11.344814282762078;
+    AssertTrue("Eigenvalue 11.344814282762078 found", IsEqual(ev[0], evt) || IsEqual(ev[1], evt) || IsEqual(ev[2], evt));
+
+    try {
+        evc = m6.FindEigenvalues(ev, eigenvectors6, 3);
+        AssertEqual("Found three eigenvalues", evc, 3U);
+
+        double te6[3];
+        Vector<double, 3> tv6[3];
+        te6[0] = -0.5157294715892572;
+        tv6[0].Set(-1.2469796037174667, -0.5549581320873715, 1.0);
+        te6[1] = 0.1709151888271795;
+        tv6[1].Set(1.8019377358048385, -2.246979603717467, 1.0);
+        te6[2] = 11.344814282762078;
+        tv6[2].Set(0.4450418679126288, 0.8019377358048381, 1.0);
+
+        for (int i = 0; i < 3; i++) {
+            int p = -1;
+            for (unsigned int j = 0; j < evc; j++) {
+                if (IsEqual(ev[j], te6[i])) {
+                    p = j;
                     break;
                 }
             }
@@ -427,8 +513,8 @@ Eigenvektor zu Eigenwert 5,299783664336905:
         for (int i = 0; i < 4; i++) {
             int p = -1;
             for (unsigned int j = 0; j < evc; j++) {
-                if (ev[j] == te1[i]) {
-                    p = i;
+                if (IsEqual(ev[j], te1[i])) {
+                    p = j;
                     break;
                 }
             }

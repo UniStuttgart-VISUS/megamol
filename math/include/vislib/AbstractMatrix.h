@@ -132,29 +132,6 @@ namespace math {
     private:
 
         /**
-         * Computes 'sqrt(a * a + b * b)' without destructive underflow or
-         * overflow.
-         *
-         * @param a The first operand
-         * @param b The second operand
-         *
-         * @return The result
-         */
-        static inline double pythag(double a, double b) {
-            double absa = ::fabs(a);
-            double absb = ::fabs(b);
-            if (absa > absb) {
-                absb /= absa;
-                absb *= absb;
-                return absa * sqrt(1.0 + absb);
-            }
-            if (IsEqual(absb, 0.0)) return 0.0;
-            absa /= absb;
-            absa *= absa;
-            return absb * sqrt(1.0 + absa);
-        }
-
-        /**
          * Allow AbstractMatrixImpl to assign from itself to the AbstractMatrix
          * subclass. This is required for implementing serveral arithmetic 
          * operations in AbstractMatrixImpl, which must initialise their return
@@ -197,178 +174,16 @@ namespace math {
     unsigned int AbstractMatrix<T, D, L, S>::FindEigenvalues(
             T *outEigenvalues, Vector<T, D> *outEigenvectors,
             unsigned int size) const {
+        if (this->IsSymmetric()) {
+            return this->findEigenvaluesSym(outEigenvalues,
+                outEigenvectors, size);
+        }
+        if (outEigenvectors == NULL) {
+            return this->CharacteristicPolynom().FindRoots(
+                outEigenvalues, size);
+        }
 
-                //
-                // THIS Implementation is completely wrong
-                //
-                // It only works for SYMMETRIC matrices
-                //
-
-//        if (((outEigenvalues == NULL) && (outEigenvectors == NULL))
-//                || (size == 0)) return 0;
-//#define A(r, c) a[(r) * D + (c)]
-//        double a[D * D];                    // input matrix for algorithm
-//        double d[D];                        // diagonal elements
-//        double e[D];                        // off-diagonal elements
-//
-//        for (unsigned int r = 0; r < D; r++) {
-//            for (unsigned int c = 0; c < D; c++) {
-//                A(r, c) = static_cast<double>(this->components[indexOf(r, c)]);
-//            }
-//        }
-//
-//        // 1. Householder reduction.
-//        int l, k, j, i;
-//        double scale, hh, h, g, f;
-//
-//        for (i = D; i >= 2; i--) {
-//            l = i - 1;
-//            h = scale = 0.0;
-//            if (l > 1) {
-//                for (k = 1; k <= l; k++) {
-//                    scale += ::fabs(A(i - 1, k - 1));
-//                }
-//                if (IsEqual(scale, 0.0)) {
-//                    e[i - 1] = A(i - 1, l - 1);
-//                } else {
-//                    for (k = 1; k <= l; k++) {
-//                        A(i - 1, k - 1) /= scale;
-//                        h += A(i - 1, k - 1) * A(i - 1, k - 1);
-//                    }
-//                    f = A(i - 1, l - 1);
-//                    g = ((f >= 0.0) ? -::sqrt(h) : ::sqrt(h));
-//                    e[i - 1] = scale * g;
-//                    h -= f * g;
-//                    A(i - 1, l - 1) = f - g;
-//                    f = 0.0;
-//                    for (j = 1; j <= l; j++) {
-//                        A(j - 1, i - 1) = A(i - 1, j - 1) / h;
-//                        g = 0.0;
-//                        for (k = 1; k <= j; k++) {
-//                            g += A(j - 1, k - 1) * A(i - 1, k - 1);
-//                        }
-//                        for (k = j + 1; k <= l; k++) {
-//                            g += A(k - 1, j - 1) * A(i - 1, k - 1);
-//                        }
-//                        e[j - 1] = g / h;
-//                        f += e[j - 1] * A(i - 1, j - 1);
-//                    }
-//                    hh = f / (h + h);
-//                    for (j = 1; j <= l; j++) {
-//                        f = A(i - 1, j - 1);
-//                        e[j - 1] = g = e[j - 1] - hh * f;
-//                        for (k = 1; k <= j; k++) {
-//                            A(j - 1, k - 1) -= (f * e[k - 1]
-//                                + g * A(i - 1, k - 1));
-//                        }
-//                    }
-//                }
-//            } else {
-//                e[i - 1] = A(i - 1, l - 1);
-//            }
-//            d[i - 1] = h;
-//        }
-//        d[0] = 0.0;
-//        e[0] = 0.0;
-//        for (i = 1; i <= D; i++) {
-//            l = i - 1;
-//            if (!IsEqual(d[i - 1], 0.0)) {
-//                for (j = 1; j <= l ; j++) {
-//                    g = 0.0;
-//                    for (k = 1; k <= l; k++) {
-//                        g += A(i - 1, k - 1) * A(k - 1, j - 1);
-//                    }
-//                    for (k = 1; k <= l; k++) {
-//                        A(k - 1, j - 1) -= g * A(k - 1, i - 1);
-//                    }
-//                }
-//            }
-//            d[i - 1] = A(i - 1, i - 1);
-//            A(i - 1, i - 1) = 1.0;
-//            for (j = 1; j <= l; j++) {
-//                A(j - 1, i - 1) = A(i - 1, j - 1) = 0.0;
-//            }
-//        }
-//
-//        // 2. Calculation von eigenvalues and eigenvectors (QL algorithm)
-//#ifdef SIGN
-//#error SIGN macro already in use! Code rewrite required!
-//#endif
-//#define SIGN(a, b) ((b) >= 0.0 ? ::fabs(a) : -::fabs(a))
-//
-//        int m, iter;
-//        double s, r, p, dd, c, b;
-//        const int MAX_ITER = 30;
-//
-//        for (i = 2; i <= D; i++) {
-//            e[i - 2] = e[i - 1];
-//        }
-//        e[D - 1] = 0.0;
-//
-//        for (l = 1; l <= D; l++) {
-//            iter = 0;
-//            do {
-//                for (m = l; m <= D - 1; m++) {
-//                    dd = ::fabs(d[m - 1]) + ::fabs(d[m - 1 + 1]);
-//                    if (IsEqual(::fabs(e[m - 1]) + dd, dd)) break;
-//                }
-//                if (m != l) {
-//                    if (iter++ == MAX_ITER) {
-//                        throw vislib::Exception(
-//                            "Too many iterations in FindEigenvalues",
-//                            __FILE__, __LINE__);
-//                    }
-//                    g = (d[l - 1 + 1] - d[l - 1]) / (2.0 * e[l - 1]);
-//                    r = pythag(g, 1.0);
-//                    g = d[m - 1] - d[l - 1] + e [l - 1] / (g + SIGN(r, g));
-//                    s = c = 1.0;
-//                    p = 0.0;
-//                    for (i = m - 1; i >= l ; i--) {
-//                        f = s * e[i - 1];
-//                        b = c * e[i - 1];
-//                        e[i - 1 + 1] = r = pythag(f, g);
-//                        if (IsEqual(r, 0.0)) {
-//                            d[i - 1 + 1] -= p;
-//                            e[m - 1] = 0.0;
-//                            break;
-//                        }
-//                        s = f / r;
-//                        c = g / r;
-//                        g = d[i - 1 + 1] - p;
-//                        r = (d[i - 1] - g) * s + 2.0 * c * b;
-//                        d[i - 1 + 1] = g + (p = s * r);
-//                        g = c * r - b;
-//                        for (k = 1; k <= D; k++) {
-//                            f = A(k - 1, i - 1 + 1);
-//                            A(k - 1, i - 1 + 1) = s * A(k - 1, i - 1) + c * f;
-//                            A(k - 1, i - 1) = c * A(k - 1, i - 1) - s * f;
-//                        }
-//                    }
-//                    if (IsEqual(r, 0.0) && (i >= l)) continue;
-//                    d[l - 1] -= p;
-//                    e[l - 1] = g;
-//                    e[m - 1] = 0.0;
-//                }
-//            } while (m != l);
-//        }
-//#undef SIGN
-//
-//        // 3. output
-//        if (outEigenvalues != NULL){
-//            for (i = 0; i < static_cast<int>(Min(D, size)); i++) {
-//                outEigenvalues[i] = static_cast<T>(d[i]);
-//            }
-//        }
-//        if (outEigenvectors != NULL){
-//            for (i = 0; i < static_cast<int>(Min(D, size)); i++) {
-//                for (j = 0; j < static_cast<int>(D); j++) {
-//                    outEigenvectors[i][j] = static_cast<T>(A(i, j));
-//                }
-//            }
-//        }
-//
-//#undef A
-//        return Min(D, size);
+        // TODO: Implement something better
 
         throw vislib::UnsupportedOperationException("FindEigenvalues",
             __FILE__, __LINE__);
@@ -480,7 +295,17 @@ namespace math {
          * @throw Exception if the calculation of the polynom fails.
          */
         inline Polynom<T, 2> CharacteristicPolynom(void) const {
-            return Super::characteristicPolynom();
+            Polynom<T, 2> rv;
+            // x^2 - trace(A)x + det(A)
+            rv[0] = Super::determinant2x2(
+                this->components[Super::indexOf(0, 0)],
+                this->components[Super::indexOf(1, 0)],
+                this->components[Super::indexOf(0, 1)],
+                this->components[Super::indexOf(1, 1)]);
+            rv[1] = -(this->components[Super::indexOf(0, 0)]
+                + this->components[Super::indexOf(1, 1)]);
+            rv[2] = static_cast<T>(1);
+            return rv;
         }
 
         /**
@@ -610,11 +435,55 @@ namespace math {
     unsigned int AbstractMatrix<T, 2, L, S>::FindEigenvalues(
             T *outEigenvalues, Vector<T, 2> *outEigenvectors,
             unsigned int size) const {
+        if (((outEigenvalues == NULL) && (outEigenvectors == NULL))
+            || (size == 0)) return 0;
 
-        throw vislib::UnsupportedOperationException("FindEigenvalues",
-            __FILE__, __LINE__);
+        // implementation based on:
+        // http://www.iazd.uni-hannover.de/~erne/Mathematik1/dateien/maple/
+        //    MB_5_2.html
 
-        return 0;
+        T ev[2];
+        T evv[2][2];
+        unsigned int evc = this->CharacteristicPolynom().FindRoots(ev, 2);
+        if (evc == 0) return 0; // no eigenvalues
+        if (evc == 1) ev[1] = ev[0];
+
+        if (IsEqual(this->components[Super::indexof(1, 0)],
+                static_cast<T>(0))) {
+            if (IsEqual(this->components[Super::indexof(0, 1)],
+                    static_cast<T>(0))) {
+                evv[0][0] = static_cast<T>(1);
+                evv[0][1] = static_cast<T>(0);
+                evv[1][0] = static_cast<T>(0);
+                evv[1][1] = static_cast<T>(1);
+            } else {
+                evv[0][0] = ev[0] - this->components[Super::indexof(1, 1)];
+                evv[0][1] = this->components[Super::indexof(1, 0)];
+                evv[1][0] = ev[1] - this->components[Super::indexof(1, 1)];
+                evv[1][1] = this->components[Super::indexof(1, 0)];
+            }
+        } else {
+            evv[0][0] = this->components[Super::indexof(0, 1)];
+            evv[0][1] = ev[0] - this->components[Super::indexof(0, 0)];
+            evv[1][0] = this->components[Super::indexof(0, 1)];
+            evv[1][1] = ev[1] - this->components[Super::indexof(0, 0)];
+        }
+
+        if (outEigenvalues != NULL) {
+            outEigenvalues[0] = ev[0];
+            if (size > 1) {
+                outEigenvalues[1] = ev[1];
+            }
+        }
+
+        if (outEigenvectors != NULL) {
+            outEigenvectors[0].Set(evv[0][0], evv[0][1]);
+            if (size > 1) {
+                outEigenvectors[1].Set(evv[1][0], evv[1][1]);
+            }
+        }
+
+        return (size > 1) ? 2 : 1;
     }
 
 
@@ -638,7 +507,27 @@ namespace math {
          * @throw Exception if the calculation of the polynom fails.
          */
         inline Polynom<T, 3> CharacteristicPolynom(void) const {
-            return Super::characteristicPolynom();
+            Polynom<T, 3> p;
+            p[0] = this->Determinant();
+            p[1] = -(
+                Super::determinant2x2(
+                    this->components[Super::indexOf(1, 1)],
+                    this->components[Super::indexOf(2, 1)],
+                    this->components[Super::indexOf(1, 2)],
+                    this->components[Super::indexOf(2, 2)])
+                + Super::determinant2x2(
+                    this->components[Super::indexOf(0, 0)],
+                    this->components[Super::indexOf(2, 0)],
+                    this->components[Super::indexOf(0, 2)],
+                    this->components[Super::indexOf(2, 2)])
+                + Super::determinant2x2(
+                    this->components[Super::indexOf(0, 0)],
+                    this->components[Super::indexOf(1, 0)],
+                    this->components[Super::indexOf(0, 1)],
+                    this->components[Super::indexOf(1, 1)]));
+            p[2] = this->Trace();
+            p[3] = static_cast<T>(-1);
+            return p;
         }
 
         /**
@@ -790,6 +679,16 @@ namespace math {
     unsigned int AbstractMatrix<T, 3, L, S>::FindEigenvalues(
             T *outEigenvalues, Vector<T, 3> *outEigenvectors,
             unsigned int size) const {
+        if (this->IsSymmetric()) {
+            return this->findEigenvaluesSym(outEigenvalues,
+                outEigenvectors, size);
+        }
+        if (outEigenvectors == NULL) {
+            return this->CharacteristicPolynom().FindRoots(
+                outEigenvalues, size);
+        }
+
+        // TODO: Implement something better
 
         throw vislib::UnsupportedOperationException("FindEigenvalues",
             __FILE__, __LINE__);
@@ -865,6 +764,9 @@ namespace math {
          * @throw Exception if the calculation of the polynom fails.
          */
         inline Polynom<T, 4> CharacteristicPolynom(void) const {
+
+            // TODO: Implement something better
+
             return Super::characteristicPolynom();
         }
 
@@ -1024,6 +926,16 @@ namespace math {
     unsigned int AbstractMatrix<T, 4, L, S>::FindEigenvalues(
             T *outEigenvalues, Vector<T, 4> *outEigenvectors,
             unsigned int size) const {
+        if (this->IsSymmetric()) {
+            return this->findEigenvaluesSym(outEigenvalues,
+                outEigenvectors, size);
+        }
+        if (outEigenvectors == NULL) {
+            return this->CharacteristicPolynom().FindRoots(
+                outEigenvalues, size);
+        }
+
+        // TODO: Implement something better
 
         throw vislib::UnsupportedOperationException("FindEigenvalues",
             __FILE__, __LINE__);

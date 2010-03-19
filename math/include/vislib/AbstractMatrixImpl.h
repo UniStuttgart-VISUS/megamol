@@ -162,6 +162,13 @@ namespace math {
         bool IsNull(void) const;
 
         /**
+         * Answer, whether the matrix is symmetric.
+         *
+         * @return true, if the matrix is symmetric, false otherwise.
+         */
+        bool IsSymmetric(void) const;
+
+        /**
          * Direct access to the matrix components. The object remains owner
          * of the memory designated by the returned pointer.
          *
@@ -655,6 +662,24 @@ namespace math {
         template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
         void assign(const C<Tp, Dp, Lp, Sp>& rhs);
 
+        /**
+         * Numerically find the eigenvalues of a SYMMETRIC matrix! Except for
+         * this limitation this method behaves like 'FindEigenvalues'.
+         *
+         * @param outEigenvalues Pointer to the array receiving the found
+         *                       eigenvalues. If null, no eigenvalues will be
+         *                       stored.
+         * @param outEigenvectors Pointer to the array receiving the found
+         *                        eigenvectors. If null, no eigenvectors will
+         *                        be stored.
+         * @param size The size of 'outEigenvalues' and 'outEigenvectors' in
+         *             number of elements.
+         *
+         * @return The number of results written to the output arrays.
+         */
+        unsigned int findEigenvaluesSym(T *outEigenvalues,
+            Vector<T, D> *outEigenvectors, unsigned int size) const;
+
         /** 
          * The matrix components. Their memory layout is defined by the
          * template parameter L.
@@ -669,6 +694,30 @@ namespace math {
         //    class Cf1>
         //friend DeepStorageMatrix operator *(const T lhs, 
         //    Cf1<Tf2, Df2, Lf2, Sf2> rhs);
+    private:
+
+        /**
+         * Computes 'sqrt(a * a + b * b)' without destructive underflow or
+         * overflow.
+         *
+         * @param a The first operand
+         * @param b The second operand
+         *
+         * @return The result
+         */
+        static inline double pythag(double a, double b) {
+            double absa = ::fabs(a);
+            double absb = ::fabs(b);
+            if (absa > absb) {
+                absb /= absa;
+                absb *= absb;
+                return absa * sqrt(1.0 + absb);
+            }
+            if (IsEqual(absb, 0.0)) return 0.0;
+            absa /= absb;
+            absa *= absa;
+            return absb * sqrt(1.0 + absa);
+        }
 
     };
 
@@ -833,17 +882,10 @@ namespace math {
     bool AbstractMatrixImpl<T, D, L, S, C>::IsIdentity(void) const {
         for (unsigned int r = 0; r < D; r++) {
             for (unsigned int c = 0; c < D; c++) {
-                if (r == c) {
-                    if (!IsEqual(this->components[indexOf(r, c)], 
-                            static_cast<T>(1))) {
-                        return false;
-                    }
-                } else {
-                    if (!IsEqual(this->components[indexOf(r, c)], 
-                            static_cast<T>(0))) {
-                        return false;
-                    }
-                } /* end if (r == c) */
+                if (!IsEqual(this->components[indexOf(r, c)], 
+                        static_cast<T>((r == c) ? 1 : 0))) {
+                    return false;
+                }
             } /* end for (unsigned int c = 0; c < D; c++) */
         } /* end for (unsigned int r = 0; r < D; r++) */
 
@@ -863,6 +905,24 @@ namespace math {
             }
         }
 
+        return true;
+    }
+
+
+    /*
+     * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::IsSymmetric
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+    bool AbstractMatrixImpl<T, D, L, S, C>::IsSymmetric(void) const {
+        for (unsigned int r = 1; r < D; r++) {
+            for (unsigned int c = 0; c < r; c++) {
+                if (!IsEqual(this->components[indexOf(r, c)], 
+                        this->components[indexOf(c, r)])) {
+                    return false;
+                }
+            } /* end for (unsigned int c = 0; c < D; c++) */
+        } /* end for (unsigned int r = 0; r < D; r++) */
         return true;
     }
 
@@ -1342,6 +1402,182 @@ namespace math {
             * determinant3x3(a00, a10, a20, a01, a11, a21, a03, a13, a23);
     }
 
+
+    /*
+     * AbstractMatrixImpl<T, D, L, S, C>::findEigenvaluesSym
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    unsigned int AbstractMatrixImpl<T, D, L, S, C>::findEigenvaluesSym(T *outEigenvalues,
+            Vector<T, D> *outEigenvectors, unsigned int size) const {
+
+        if (((outEigenvalues == NULL) && (outEigenvectors == NULL))
+                || (size == 0)) return 0;
+
+#define A(r, c) a[(r) * D + (c)]
+        double a[D * D];                    // input matrix for algorithm
+        double d[D];                        // diagonal elements
+        double e[D];                        // off-diagonal elements
+
+        for (unsigned int r = 0; r < D; r++) {
+            for (unsigned int c = 0; c < D; c++) {
+                A(r, c) = static_cast<double>(this->components[indexOf(r, c)]);
+            }
+        }
+
+        // 1. Householder reduction.
+        int l, k, j, i;
+        double scale, hh, h, g, f;
+
+        for (i = D; i >= 2; i--) {
+            l = i - 1;
+            h = scale = 0.0;
+            if (l > 1) {
+                for (k = 1; k <= l; k++) {
+                    scale += ::fabs(A(i - 1, k - 1));
+                }
+                if (IsEqual(scale, 0.0)) {
+                    e[i - 1] = A(i - 1, l - 1);
+                } else {
+                    for (k = 1; k <= l; k++) {
+                        A(i - 1, k - 1) /= scale;
+                        h += A(i - 1, k - 1) * A(i - 1, k - 1);
+                    }
+                    f = A(i - 1, l - 1);
+                    g = ((f >= 0.0) ? -::sqrt(h) : ::sqrt(h));
+                    e[i - 1] = scale * g;
+                    h -= f * g;
+                    A(i - 1, l - 1) = f - g;
+                    f = 0.0;
+                    for (j = 1; j <= l; j++) {
+                        A(j - 1, i - 1) = A(i - 1, j - 1) / h;
+                        g = 0.0;
+                        for (k = 1; k <= j; k++) {
+                            g += A(j - 1, k - 1) * A(i - 1, k - 1);
+                        }
+                        for (k = j + 1; k <= l; k++) {
+                            g += A(k - 1, j - 1) * A(i - 1, k - 1);
+                        }
+                        e[j - 1] = g / h;
+                        f += e[j - 1] * A(i - 1, j - 1);
+                    }
+                    hh = f / (h + h);
+                    for (j = 1; j <= l; j++) {
+                        f = A(i - 1, j - 1);
+                        e[j - 1] = g = e[j - 1] - hh * f;
+                        for (k = 1; k <= j; k++) {
+                            A(j - 1, k - 1) -= (f * e[k - 1]
+                                + g * A(i - 1, k - 1));
+                        }
+                    }
+                }
+            } else {
+                e[i - 1] = A(i - 1, l - 1);
+            }
+            d[i - 1] = h;
+        }
+        d[0] = 0.0;
+        e[0] = 0.0;
+        for (i = 1; i <= static_cast<int>(D); i++) {
+            l = i - 1;
+            if (!IsEqual(d[i - 1], 0.0)) {
+                for (j = 1; j <= l ; j++) {
+                    g = 0.0;
+                    for (k = 1; k <= l; k++) {
+                        g += A(i - 1, k - 1) * A(k - 1, j - 1);
+                    }
+                    for (k = 1; k <= l; k++) {
+                        A(k - 1, j - 1) -= g * A(k - 1, i - 1);
+                    }
+                }
+            }
+            d[i - 1] = A(i - 1, i - 1);
+            A(i - 1, i - 1) = 1.0;
+            for (j = 1; j <= l; j++) {
+                A(j - 1, i - 1) = A(i - 1, j - 1) = 0.0;
+            }
+        }
+
+        // 2. Calculation von eigenvalues and eigenvectors (QL algorithm)
+#ifdef SIGN
+#error SIGN macro already in use! Code rewrite required!
+#endif
+#define SIGN(a, b) ((b) >= 0.0 ? ::fabs(a) : -::fabs(a))
+
+        int m, iter;
+        double s, r, p, dd, c, b;
+        const int MAX_ITER = 30;
+
+        for (i = 2; i <= static_cast<int>(D); i++) {
+            e[i - 2] = e[i - 1];
+        }
+        e[D - 1] = 0.0;
+
+        for (l = 1; l <= static_cast<int>(D); l++) {
+            iter = 0;
+            do {
+                for (m = l; m <= static_cast<int>(D) - 1; m++) {
+                    dd = ::fabs(d[m - 1]) + ::fabs(d[m - 1 + 1]);
+                    if (IsEqual(::fabs(e[m - 1]) + dd, dd)) break;
+                }
+                if (m != l) {
+                    if (iter++ == MAX_ITER) {
+                        throw vislib::Exception(
+                            "Too many iterations in FindEigenvalues",
+                            __FILE__, __LINE__);
+                    }
+                    g = (d[l - 1 + 1] - d[l - 1]) / (2.0 * e[l - 1]);
+                    r = pythag(g, 1.0);
+                    g = d[m - 1] - d[l - 1] + e [l - 1] / (g + SIGN(r, g));
+                    s = c = 1.0;
+                    p = 0.0;
+                    for (i = m - 1; i >= l ; i--) {
+                        f = s * e[i - 1];
+                        b = c * e[i - 1];
+                        e[i - 1 + 1] = r = pythag(f, g);
+                        if (IsEqual(r, 0.0)) {
+                            d[i - 1 + 1] -= p;
+                            e[m - 1] = 0.0;
+                            break;
+                        }
+                        s = f / r;
+                        c = g / r;
+                        g = d[i - 1 + 1] - p;
+                        r = (d[i - 1] - g) * s + 2.0 * c * b;
+                        d[i - 1 + 1] = g + (p = s * r);
+                        g = c * r - b;
+                        for (k = 1; k <= static_cast<int>(D); k++) {
+                            f = A(k - 1, i - 1 + 1);
+                            A(k - 1, i - 1 + 1) = s * A(k - 1, i - 1) + c * f;
+                            A(k - 1, i - 1) = c * A(k - 1, i - 1) - s * f;
+                        }
+                    }
+                    if (IsEqual(r, 0.0) && (i >= l)) continue;
+                    d[l - 1] -= p;
+                    e[l - 1] = g;
+                    e[m - 1] = 0.0;
+                }
+            } while (m != l);
+        }
+#undef SIGN
+
+        // 3. output
+        if (outEigenvalues != NULL){
+            for (i = 0; i < static_cast<int>(Min(D, size)); i++) {
+                outEigenvalues[i] = static_cast<T>(d[i]);
+            }
+        }
+        if (outEigenvectors != NULL){
+            for (i = 0; i < static_cast<int>(Min(D, size)); i++) {
+                for (j = 0; j < static_cast<int>(D); j++) {
+                    outEigenvectors[i][j] = static_cast<T>(A(i, j));
+                }
+            }
+        }
+
+#undef A
+        return Min(D, size);
+    }
 
 } /* end namespace math */
 } /* end namespace vislib */
