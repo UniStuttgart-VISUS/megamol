@@ -17,6 +17,7 @@
 #include <cmath>
 
 #include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/types.h"
 #include "vislib/Vector.h"
@@ -248,6 +249,26 @@ namespace math {
          */
         template<class Tp, class Sp>
         void Set(const T& angle, const AbstractVector<Tp, 3, Sp>& axis);
+
+        /**
+         * Tries to set the quarternion from rotation matrix components.
+         *
+         * @param m11 Matrix component row 1, column 1.
+         * @param m12 Matrix component row 1, column 2.
+         * @param m13 Matrix component row 1, column 3.
+         * @param m21 Matrix component row 2, column 1.
+         * @param m22 Matrix component row 2, column 2.
+         * @param m23 Matrix component row 2, column 3.
+         * @param m31 Matrix component row 3, column 1.
+         * @param m32 Matrix component row 3, column 2.
+         * @param m33 Matrix component row 3, column 3.
+         *
+         * @throw IllegalParamException if the matrix components do not seem
+         *                              to form a rotation-only matrix.
+         */
+        void SetFromRotationMatrix(const T& m11, const T& m12, const T& m13,
+                const T& m21, const T& m22, const T& m23,
+                const T& m31, const T& m32, const T& m33);
 
         /**
          * Set the i-component (= x-component) of the quaternion.
@@ -631,6 +652,47 @@ namespace math {
                 = this->components[IDX_Z] = static_cast<T>(0);
             this->components[IDX_W] = static_cast<T>(1);
         }
+    }
+
+
+    /*
+     * AbstractQuaternion<T, S>::SetFromRotationMatrix
+     */
+    template<class T, class S>
+    void AbstractQuaternion<T, S>::SetFromRotationMatrix(const T& m11,
+            const T& m12, const T& m13, const T& m21, const T& m22,
+            const T& m23, const T& m31, const T& m32, const T& m33) {
+        Vector<T, 3> xi(m11, m21, m31);
+        Vector<T, 3> yi(m12, m22, m32);
+        Vector<T, 3> zi(m13, m23, m33);
+
+        xi.Normalise(); // we could throw here, but let's be nice.
+        yi.Normalise();
+        zi.Normalise();
+
+        Vector<T, 3> xo(static_cast<T>(1), static_cast<T>(0),
+            static_cast<T>(0));
+        Vector<T, 3> yo(static_cast<T>(0), static_cast<T>(1),
+            static_cast<T>(0));
+        Vector<T, 3> zo(static_cast<T>(0), static_cast<T>(0),
+            static_cast<T>(1));
+
+        AbstractQuaternion<T, T[4]> q1;
+        T angle = ::acos(xo.Dot(xi));
+        Vector<T, 3> axis = xo.Cross(xi);
+        axis.Normalise();
+        q1.Set(angle, axis);
+
+        Vector<T, 3> mb = q1 * xo;
+        if (mb != yi) {
+            q1.Set(-angle, axis);
+            mb = q1 * xo;
+        }
+        ASSERT(mb == yi);
+        T l = mb.Length();
+
+
+        *this = q1;
     }
 
 

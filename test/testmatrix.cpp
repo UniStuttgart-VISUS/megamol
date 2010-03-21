@@ -8,7 +8,11 @@
 
 #include "testhelper.h"
 
+#define USE_MATH_DEFINES
+#include <cmath>
 #include <iostream>
+#include <climits>
+#include <time.h>
 
 #include "vislib/mathfunctions.h"
 #include "vislib/Matrix.h"
@@ -536,4 +540,26 @@ Eigenvektor zu Eigenwert 5,299783664336905:
         AssertTrue("Find eigenvalues", false);
     }
 
+    ::srand(static_cast<unsigned int>(::time(NULL)));
+    for (unsigned int tc = 0; tc < 10; tc++) {
+        double a1 = static_cast<double>(::rand() % SHRT_MAX) / static_cast<double>(SHRT_MAX) * 2.0 * M_PI;
+        double a2 = (static_cast<double>(::rand() % SHRT_MAX) / static_cast<double>(SHRT_MAX - 1) - 0.5) * M_PI;
+        double a3 = (static_cast<double>(::rand() % SHRT_MAX) / static_cast<double>(SHRT_MAX) - 0.5) * 2.0 * M_PI;
+
+        Vector<double, 3> v(cos(a2) * cos(a1), cos(a2) * sin(a1), sin(a2));
+        Quaternion<double> qi(a3, v);
+        Quaternion<double> qo;
+        Matrix<double, 3, COLUMN_MAJOR> m3d;
+        Matrix<double, 4, COLUMN_MAJOR> m4d(qi);
+        m3d = qi;
+
+        //AssertTrue("Quaternion convertes to rotation matrix", m3d.IsRotation());
+        //AssertTrue("Quaternion convertes to rotation matrix", m4d.IsRotation());
+
+        qo = m3d;
+        AssertEqual("Quaternion reconstructed from matrix", qo, qi);
+        qo = m4d;
+        AssertEqual("Quaternion reconstructed from matrix", qo, qi);
+
+    }
 }

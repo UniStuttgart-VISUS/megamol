@@ -15,6 +15,7 @@
 
 
 #include "vislib/AbstractMatrixImpl.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/Quaternion.h"
 
 
@@ -622,8 +623,11 @@ namespace math {
          * Answer the quaternion representing the rotation of this matrix.
          *
          * @return A quaternion representing the rotation.
+         *
+         * @throw IllegalStateException if the matrix is not a rotation-only
+         *                              matrix.
          */
-        //operator Quaternion<T>(void) const;
+        operator Quaternion<T>(void) const;
 
     protected:
 
@@ -735,13 +739,24 @@ namespace math {
     /*
      * vislib::math::AbstractMatrix<T, 3, L, S>::operator Quaternion<T>
      */
-    //template<class T, MatrixLayout L, class S>
-    //AbstractMatrix<T, 3, L, S>::operator Quaternion<T>(void) const {
-    //    double r = Sqrt(1.0 + this->components[Super::indexOf(0, 0)]
-    //        + this->components[Super::indexOf(1, 1)]
-    //        + this->components[Super::indexOf(2, 2]);
-    //    TODO: Implement
-    //}
+    template<class T, MatrixLayout L, class S>
+    AbstractMatrix<T, 3, L, S>::operator Quaternion<T>(void) const {
+        Quaternion<T> q;
+        try {
+            q.SetFromRotationMatrix(this->components[Super::indexOf(0, 0)],
+                this->components[Super::indexOf(0, 1)],
+                this->components[Super::indexOf(0, 2)],
+                this->components[Super::indexOf(1, 0)],
+                this->components[Super::indexOf(1, 1)],
+                this->components[Super::indexOf(1, 2)],
+                this->components[Super::indexOf(2, 0)],
+                this->components[Super::indexOf(2, 1)],
+                this->components[Super::indexOf(2, 2)]);
+        } catch(...) {
+            throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
+        }
+        return q;
+    }
 
 
     /**
@@ -869,8 +884,11 @@ namespace math {
          * Answer the quaternion representing the rotation of this matrix.
          *
          * @return A quaternion representing the rotation.
+         *
+         * @throw IllegalStateException if the matrix is not a rotation-only
+         *                              matrix.
          */
-        //operator Quaternion<T>(void) const;
+        operator Quaternion<T>(void) const;
 
     protected:
 
@@ -989,13 +1007,24 @@ namespace math {
     /*
      * vislib::math::AbstractMatrix<T, 4, L, S>::operator Quaternion<T>
      */
-    //template<class T, MatrixLayout L, class S>
-    //AbstractMatrix<T, 4, L, S>::operator Quaternion<T>(void) const {
-    //    double r = Sqrt(1.0 + this->components[Super::indexOf(0, 0)]
-    //        + this->components[Super::indexOf(1, 1)]
-    //        + this->components[Super::indexOf(2, 2]);
-    //    TODO: Implement
-    //}
+    template<class T, MatrixLayout L, class S>
+    AbstractMatrix<T, 4, L, S>::operator Quaternion<T>(void) const {
+        Quaternion<T> q;
+        try {
+            q.SetFromRotationMatrix(this->components[Super::indexOf(0, 0)],
+                this->components[Super::indexOf(0, 1)],
+                this->components[Super::indexOf(0, 2)],
+                this->components[Super::indexOf(1, 0)],
+                this->components[Super::indexOf(1, 1)],
+                this->components[Super::indexOf(1, 2)],
+                this->components[Super::indexOf(2, 0)],
+                this->components[Super::indexOf(2, 1)],
+                this->components[Super::indexOf(2, 2)]);
+        } catch(...) {
+            throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
+        }
+        return q;
+    }
 
 } /* end namespace math */
 } /* end namespace vislib */
