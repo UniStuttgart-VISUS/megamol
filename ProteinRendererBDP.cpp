@@ -892,10 +892,6 @@ bool ProteinRendererBDP::Render( Call& call )
 
     // ==================== Set OpenGL States ====================
 
-    // save color buffer bit (because of blend equation....) -> necessary ?
-    // | GL_POLYGON_BIT | GL_LIGHTING_BIT | GL_ENABLE_BIT);
-    glPushAttrib(GL_COLOR_BUFFER_BIT);
-
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_CULL_FACE);
@@ -973,6 +969,8 @@ bool ProteinRendererBDP::Render( Call& call )
     glDrawBuffers(_BDP_NUM_BUFFERS, this->colorBufferIndex);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    //glClearColor(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
+
     glClear( GL_COLOR_BUFFER_BIT );
 
     // render the SES
@@ -994,13 +992,40 @@ bool ProteinRendererBDP::Render( Call& call )
     // ========= Create BDP result and blend it over background =========
 
     // render depth peeling result
-    glEnable(GL_BLEND);              // test effect ...!
-	glBlendEquation(GL_FUNC_ADD);
+    glDisable(GL_DEPTH_TEST);
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     this->renderDepthPeeling();
 
-    //////////////////////////////////
-    // apply postprocessing effects //
-    //////////////////////////////////
+    // >>>>>>>>>> DEBUG
+    // drawing surfVectors as yellow lines
+    /*glDisable( GL_LIGHTING);
+    glLineWidth( 1.0f);
+    glEnable( GL_LINE_WIDTH);
+    glPushAttrib( GL_POLYGON_BIT);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
+    unsigned int i;
+    for( i = 0; i < ((unsigned int)this->sphereVertexArray[0].Count())/4; i++ )
+    {
+        glColor3f( 1.0f, 1.0f, 0.0f);
+        glBegin( GL_LINES );
+            glVertex3f( this->sphereVertexArray[0][4*i], this->sphereVertexArray[0][4*i+1], this->sphereVertexArray[0][4*i+2]);
+            glVertex3f( this->sphereVertexArray[0][4*i] + this->sphereSurfVector[0][4*i]*1.5f, 
+                        this->sphereVertexArray[0][4*i+1] + this->sphereSurfVector[0][4*i+1]*1.5f, 
+                        this->sphereVertexArray[0][4*i+2] + this->sphereSurfVector[0][4*i+2]*1.5f);
+        glEnd(); //GL_LINES
+    }
+    glPopAttrib();
+    glDisable( GL_LINE_WIDTH);
+    glEnable( GL_LIGHTING);*/
+    // <<<<<<<<<< end DEBUG
+
+
+    // ========= Apply postprocessing effects =========
+
     /*if( this->postprocessing != NONE )
     {
         // stop rendering to frame buffer object
@@ -1015,12 +1040,9 @@ bool ProteinRendererBDP::Render( Call& call )
     }*/
 
     //render min max-depth-buffer (DEBUG output)
-    glEnable( GL_DEPTH_TEST);
+    /*glEnable( GL_DEPTH_TEST);
     glDisable(GL_BLEND);
-    this->renderMinMaxDepthBuffer();
-
-    // restore attributes
-    glPopAttrib();
+    this->renderMinMaxDepthBuffer();*/
 
     fpsCounter.FrameEnd();
     //std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
@@ -1519,31 +1541,6 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
 
         // unbind texture
         glBindTexture( GL_TEXTURE_2D, 0);
-        
-        // DEBUG
-        // drawing surfVectors as yellow lines
-        /*
-        glDisable( GL_LIGHTING);
-        glLineWidth( 1.0f);
-        glEnable( GL_LINE_WIDTH);
-        glPushAttrib( GL_POLYGON_BIT);
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
-        unsigned int i;
-        for( i = 0; i < ((unsigned int)this->sphereVertexArray[cntRS].Count())/4; i++ )
-        {
-            glColor3f( 1.0f, 1.0f, 0.0f);
-            glBegin( GL_LINES );
-                glVertex3f( this->sphereVertexArray[cntRS][4*i], this->sphereVertexArray[cntRS][4*i+1], this->sphereVertexArray[cntRS][4*i+2]);
-                glVertex3f( this->sphereVertexArray[cntRS][4*i] + this->sphereSurfVector[cntRS][4*i]*1.5f, 
-                            this->sphereVertexArray[cntRS][4*i+1] + this->sphereSurfVector[cntRS][4*i+1]*1.5f, 
-                            this->sphereVertexArray[cntRS][4*i+2] + this->sphereSurfVector[cntRS][4*i+2]*1.5f);
-            glEnd(); //GL_LINES
-        }
-        glPopAttrib();
-        glDisable( GL_LINE_WIDTH);
-        glEnable( GL_LIGHTING);
-        */
-        // end DEBUG
     }
 
     // unbind min max depth buffer
@@ -2332,7 +2329,7 @@ void ProteinRendererBDP::RenderDebugStuff(
  */
 void ProteinRendererBDP::ComputeRaycastingArrays()
 {    
-    //time_t t = clock();
+    time_t t = clock();
 
     unsigned int cntRS;
     unsigned int i;
@@ -2676,8 +2673,8 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
 
             // look if surface parts are distributed over more than one hemisphere
             maxDist = 0.0f;
-	        for(j = 0; j < edgeCount-1; ++j) {
-                for(k = j+1; k < edgeCount; ++k) {
+	        for(j = 0; j < vecList.Count()-1; ++j) {
+                for(k = j+1; k < vecList.Count(); ++k) {
 		            dist = vecList[j].Dot(vecList[k]);
 		            if(dist < 0.0f) { maxDist = 1.0f; } // angle > pi/2
                 }
@@ -2697,7 +2694,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
 
                 // calculate max distance to surfVector
 		        maxDist = 0.0f;
-		        for(j = 0; j < edgeCount; ++j) {
+		        for(j = 0; j < vecList.Count(); ++j) {
 			        tempVec = (vecList[j]*atomRadius) - surfVector;
 			        dist = tempVec.Dot(tempVec);
 			        if(dist > maxDist) { maxDist = dist; }
@@ -2712,7 +2709,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
     }
 
     // print the time of the computation
-    //std::cout << "computation of arrays for GPU ray casting finished:" << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+    std::cout << "computation of arrays for GPU ray casting finished:" << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
 }
 
 
@@ -3014,6 +3011,8 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
             edgeVector += tempVec;
         }
 
+        std::cout << ">> edgeCount: " << edgeCount << " vedList.Count(): " << vecList.Count() << std::endl;
+
         // look if there are several unconnected surface parts
         edgeCounter = 1;
         firstEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
@@ -3070,8 +3069,8 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         
         // look if surface parts are distributed over more than one hemisphere
         maxDist = 0.0f;
-        for(j = 0; j < edgeCount-1; ++j) {
-            for(k = j+1; k < edgeCount; ++k) {
+        for(j = 0; j < vecList.Count()-1; ++j) {
+            for(k = j+1; k < vecList.Count(); ++k) {
 	            dist = vecList[j].Dot(vecList[k]);
 	            if(dist < 0.0f) { maxDist = 1.0f; } // angle > pi/2
             }
@@ -3091,12 +3090,12 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
 
             // calculate max distance to surfVector
 	        maxDist = 0.0f;
-	        for(j = 0; j < edgeCount; ++j) {
+	        for(j = 0; j < vecList.Count(); ++j) {
 		        tempVec = (vecList[j]*atomRadius) - surfVector;
 		        dist = tempVec.Dot(tempVec);
 		        if(dist > maxDist) { maxDist = dist; }
 	        }
-            }
+        }
     
         this->sphereSurfVector[idxRS].Append(surfVector.GetX());
         this->sphereSurfVector[idxRS].Append(surfVector.GetY());
