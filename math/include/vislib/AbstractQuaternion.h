@@ -687,7 +687,7 @@ namespace math {
 
         } else if (xi == -xo) {
             // rot 180°
-            q1.Set(M_PI, yo);
+            q1.Set(static_cast<T>(M_PI), yo);
 
         } else {
             // rot something
@@ -719,7 +719,7 @@ namespace math {
         } else if (yi == -yb) {
             // rot 180°
             AbstractQuaternion<T, T[4]> q2;
-            q2.Set(M_PI, xi);
+            q2.Set(static_cast<T>(M_PI), xi);
             q1 = q2 * q1;
 
         } else {
