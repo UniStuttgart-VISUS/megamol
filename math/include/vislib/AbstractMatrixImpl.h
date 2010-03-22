@@ -162,6 +162,14 @@ namespace math {
         bool IsNull(void) const;
 
         /**
+         * Answer, whether the matrix is orthogonal.
+         * Note: O(n^3) matrix multiplication
+         *
+         * @return true, if the matrix is orthogonal, false otherwise.
+         */
+        bool IsOrthogonal(void) const;
+
+        /**
          * Answer, whether the matrix is symmetric.
          *
          * @return true, if the matrix is symmetric, false otherwise.
@@ -910,6 +918,31 @@ namespace math {
 
 
     /*
+     * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::IsOrthogonal
+     */
+    template<class T, unsigned int D, MatrixLayout L, class S,
+        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+    bool AbstractMatrixImpl<T, D, L, S, C>::IsOrthogonal(void) const {
+        // Test: A * A^T = I
+
+        for (unsigned int r = 0; r < D; r++) {
+            for (unsigned int c = 0; c < D; c++) {
+                T t = static_cast<T>(0);
+                for (unsigned int i = 0; i < D; i++) {
+                    t += this->components[indexOf(r, i)]
+                        * this->components[indexOf(i, c)];
+                }
+                if (!IsEqual(t, static_cast<T>((r == c) ? 1 : 0))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    /*
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::IsSymmetric
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
@@ -1116,7 +1149,7 @@ namespace math {
 
         for (unsigned int r = 0; r < D; r++) {
             for (unsigned int c = 0; c < D; c++) {
-                retval[r] += this->components[indexOf(r, c)] * rhs[r];
+                retval[r] += this->components[indexOf(r, c)] * rhs[c];
             }
         }
 
@@ -1144,7 +1177,7 @@ namespace math {
         /* Compute normal product of D - 1 vector. */
         for (unsigned int r = 0; r < D - 1; r++) {
             for (unsigned int c = 0; c < D - 1; c++) {
-                retval[r] += this->components[indexOf(r, c)] * rhs[r];
+                retval[r] += this->components[indexOf(r, c)] * rhs[c];
             }
         }
 
