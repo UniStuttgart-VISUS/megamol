@@ -13,7 +13,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
 #include <cmath>
 
 #include "vislib/assert.h"
@@ -22,6 +21,9 @@
 #include "vislib/types.h"
 #include "vislib/Vector.h"
 
+#ifndef M_PI
+#define M_PI       3.14159265358979323846
+#endif /* !M_PI */
 
 namespace vislib {
 namespace math {
@@ -678,19 +680,76 @@ namespace math {
             static_cast<T>(1));
 
         AbstractQuaternion<T, T[4]> q1;
-        T angle = ::acos(xo.Dot(xi));
-        Vector<T, 3> axis = xo.Cross(xi);
-        axis.Normalise();
-        q1.Set(angle, axis);
+        if (xi == xo) {
+            // rot 0°
+            q1.Set(static_cast<T>(0), static_cast<T>(0),
+                static_cast<T>(0), static_cast<T>(1));
 
-        Vector<T, 3> mb = q1 * xo;
-        if (mb != yi) {
-            q1.Set(-angle, axis);
-            mb = q1 * xo;
+        } else if (xi == -xo) {
+            // rot 180°
+            q1.Set(M_PI, yo);
+
+        } else {
+            // rot something
+            T angle = ::acos(xo.Dot(xi));
+            Vector<T, 3> axis = xo.Cross(xi);
+            axis.Normalise();
+            q1.Set(angle, axis);
+
+            Vector<T, 3> xb = q1 * xo;
+            if (xb != xi) {
+                q1.Set(-angle, axis);
+                xb = q1 * xo;
+            }
+            if (xb != xi) {
+                throw IllegalParamException("Matrix is not rotation-only",
+                    __FILE__, __LINE__);
+            }
+
         }
-        ASSERT(mb == yi);
-        T l = mb.Length();
 
+        Vector<T, 3> yb = q1 * yo;
+        if (yi == yb) {
+            // rot 0°
+            if ((q1 * zo) != zi) {
+                throw IllegalParamException("Matrix is not rotation-only",
+                    __FILE__, __LINE__);
+            }
+
+        } else if (yi == -yb) {
+            // rot 180°
+            AbstractQuaternion<T, T[4]> q2;
+            q2.Set(M_PI, xi);
+            q1 = q2 * q1;
+
+        } else {
+            // rot something
+            AbstractQuaternion<T, T[4]> q2;
+            T angle = ::acos(yb.Dot(yi));
+            Vector<T, 3> axis = yb.Cross(yi);
+            axis.Normalise();
+            q2.Set(angle, axis);
+
+            Vector<T, 3> yc = q2 * yb;
+            if (yc != yi) {
+                q2.Set(-angle, axis);
+                yc = q2 * yb;
+            }
+            if (yc != yi) {
+                throw IllegalParamException("Matrix is not rotation-only",
+                    __FILE__, __LINE__);
+            }
+            q1 = q2 * q1;
+
+        }
+
+        Vector<T, 3> xb = q1 * xo;
+        yb = q1 * yo;
+        Vector<T, 3> zb = q1 * zo;
+        if ((xb != xi) || (yb != yi) || (zb!= zi)) {
+            throw IllegalParamException("Matrix is not rotation-only",
+                __FILE__, __LINE__);
+        }
 
         *this = q1;
     }

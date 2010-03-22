@@ -44,4 +44,14 @@ void TestQuaternion(void) {
     Vector<double, 3> v3 = q3 * Vector<double, 3>(1.0, 0.0f, 0.0);
     AssertEqual("Combined rotation works", v2, v3);
 
+    v1.Set(1.0, -2.0, 3.0);
+    v1.Normalise();
+    double a = M_PI * 0.987654321;
+    q1.Set(a, v1);
+    double b;
+    q1.AngleAndAxis(b, v2);
+
+    AssertNearlyEqual("Angle reconstructed", a, b);
+    AssertEqual("Axis reconstructed", v1, v2);
+
 }

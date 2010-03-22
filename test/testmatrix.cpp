@@ -30,7 +30,8 @@ void TestMatrix(void) {
     Matrix<double, 4, ROW_MAJOR> m2;
     Matrix<double, 4, COLUMN_MAJOR> m3;
     Matrix<double, 4, ROW_MAJOR> m4;
-    Matrix4<double, COLUMN_MAJOR> m5;
+    //Matrix4<double, COLUMN_MAJOR> m5; // marked deprecated
+    Matrix<double, 4, COLUMN_MAJOR> m5;
     Matrix<double, 3, COLUMN_MAJOR> m6;
 
     ::AssertTrue("Default ctor creates id matrix.", m1.IsIdentity());
@@ -225,7 +226,8 @@ void TestMatrix(void) {
 
     Vector<double, 3> axis(1.0, 0.0, 0.0);
     Quaternion<double> q1(1.0, axis);
-    Matrix4<double, COLUMN_MAJOR> rm1(q1);
+    //Matrix4<double, COLUMN_MAJOR> rm1(q1); // marked deprecated
+    Matrix<double, 4, COLUMN_MAJOR> rm1(q1);
 
     ::AssertNearlyEqual("Rotation from quaterion @ 0, 0.", rm1.GetAt(0, 0), 1.0);
     ::AssertNearlyEqual("Rotation from quaterion @ 1, 0.", rm1.GetAt(1, 0), 0.0);
@@ -246,6 +248,8 @@ void TestMatrix(void) {
     ::AssertNearlyEqual("Rotation from quaterion @ 1, 3.", rm1.GetAt(1, 3), 0.0);
     ::AssertNearlyEqual("Rotation from quaterion @ 2, 3.", rm1.GetAt(2, 3), 0.0);
     ::AssertNearlyEqual("Rotation from quaterion @ 3, 3.", rm1.GetAt(3, 3), 1.0);
+
+    ::AssertTrue("Rotation Matrix", rm1.IsRotation());
 
 /*
 http://de.wikipedia.org/wiki/Charakteristisches_Polynom
@@ -272,6 +276,8 @@ Eigenvektor zu Eigenwert 2:
     m6.SetAt(0, 2, 2.0);
     m6.SetAt(1, 2, -1.0);
     m6.SetAt(2, 2, 3.0);
+
+    ::AssertFalse("Not a rotation matrix", m6.IsRotation());
 
     Polynom<double, 3> cp6(m6.CharacteristicPolynom());
     if (IsEqual(cp6[3], 1.0)) cp6 *= -1.0;
@@ -456,6 +462,8 @@ Eigenvektor zu Eigenwert 5,299783664336905:
     m1.SetAt(2, 3, 7.0);
     m1.SetAt(3, 3, -6.0);
 
+    ::AssertFalse("Not a rotation matrix", m1.IsRotation());
+
     Polynom<double, 4> cp1(m1.CharacteristicPolynom());
     if (IsEqual(cp1[4], -1.0)) cp1 *= -1.0;
     AssertNearlyEqual("Coefficient a0 = -3416", cp1[0], -3416.0);
@@ -553,8 +561,13 @@ Eigenvektor zu Eigenwert 5,299783664336905:
         Matrix<double, 4, COLUMN_MAJOR> m4d(qi);
         m3d = qi;
 
-        //AssertTrue("Quaternion convertes to rotation matrix", m3d.IsRotation());
-        //AssertTrue("Quaternion convertes to rotation matrix", m4d.IsRotation());
+        v.Set(1.0, 0.0, 0.0);
+        Vector<double, 3> v2 = qi * v;
+        Vector<double, 3> v3 = m3d * v;
+
+        AssertTrue("Quaternion convertes to rotation matrix", m3d.IsRotation());
+        AssertTrue("Quaternion convertes to rotation matrix", m4d.IsRotation());
+        AssertEqual("Matrix and quaternion describe the same rotation", v2, v3);
 
         qo = m3d;
         AssertEqual("Quaternion reconstructed from matrix", qo, qi);
@@ -562,4 +575,16 @@ Eigenvektor zu Eigenwert 5,299783664336905:
         AssertEqual("Quaternion reconstructed from matrix", qo, qi);
 
     }
+
+    {
+        Quaternion<double> qi(M_PI, Vector<double, 3>(1.0, 0.0, 0.0));
+        Matrix<double, 3, COLUMN_MAJOR> m3d(qi);
+        Quaternion<double> qo = m3d;
+        AssertEqual("Quaternion reconstructed from matrix", qo, qi);
+        qi.Set(M_PI, Vector<double, 3>(0.0, 1.0, 0.0));
+        m3d = qi;
+        qo = m3d;
+        AssertEqual("Quaternion reconstructed from matrix", qo, qi);
+    }
+
 }

@@ -68,7 +68,7 @@ namespace math {
          * @param axis  The rotation axis.
          */
         template<class Tp, class Sp>
-        inline Quaternion(const T& angle, AbstractVector<Tp, 3, Sp>& axis) {
+        inline Quaternion(const T& angle, const AbstractVector<Tp, 3, Sp>& axis) {
             this->Set(angle, axis);
         }
 
