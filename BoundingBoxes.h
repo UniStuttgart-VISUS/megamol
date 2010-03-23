@@ -71,6 +71,7 @@ namespace core {
             this->clipBoxValid = false;
             this->osScale = 0.0;
             this->osBBoxValid = false;
+            this->osClipBoxValid = false;
             this->wsBBoxValid = false;
             this->wsClipBoxValid = false;
         }
