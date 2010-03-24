@@ -248,17 +248,17 @@ namespace math {
     }
 
 
-	/**
-	 * Swaps two values.
-	 *
-	 * @param a The first value.
-	 * @param b The second value.
-	 */
-	template<class T> inline void Swap(T& a,  T& b) {
-		T tmp = a;
-		a = b;
-		b = tmp;
-	}
+    /**
+     * Swaps two values.
+     *
+     * @param a The first value.
+     * @param b The second value.
+     */
+    template<class T> inline void Swap(T& a,  T& b) {
+        T tmp = a;
+        a = b;
+        b = tmp;
+    }
 
 
     /**
@@ -305,6 +305,23 @@ namespace math {
     inline AngleDeg AngleRad2Deg(const AngleRad &angle) {
         return static_cast<AngleDeg>(angle * static_cast<AngleRad>(180.0)
             / static_cast<AngleRad>(PI_DOUBLE));
+    }
+
+
+    /**
+     * Compares to object using the 'IsEqual' funtion and the '<' operator
+     *
+     * @param lhs The left hand side operand
+     * @param rhs The right hand side operand
+     *
+     * @return  0 if lhs and rhs are equal,
+     *         -1 if lhs < rhs,
+     *          1 else.
+     */
+    template<class T> inline int Compare(const T& lhs, const T& rhs) {
+        if (IsEqual(lhs, rhs)) return 0;
+        if (lhs < rhs) return -1;
+        return 1;
     }
 
 
