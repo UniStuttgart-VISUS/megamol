@@ -136,38 +136,97 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
             return true;
         }
 
-        SIZE_T cnt = 0;
-        const SIZE_T blockGrow = 100000;
+        SIZE_T cnt;
+        const SIZE_T blockGrow = 1000000;
+
+        vislib::sys::File::FileSize s1 = file.Tell();
+        verstr = vislib::sys::ReadLineFromFileA(file);
+        vislib::sys::File::FileSize s2 = file.Tell();
+        file.Seek(static_cast<vislib::sys::File::FileOffset>(s1));
+        s2 -= s1; // s2 is now size of line
+        vislib::sys::File::FileSize fileSize = file.GetSize();
+        s1 = fileSize - s1;
+
+        cnt = 1 + static_cast<SIZE_T>(s1 / s2);
+        SIZE_T blocks = 1 + cnt / blockGrow;
+        this->data.AssertSize(blocks * 19 * blockGrow, false);
+        cnt = 0;
+
+        unsigned int t1 = vislib::sys::GetTicksOfDay();
+
+        const SIZE_T bufferSize = 1024 * 1024 * 8;
+        char *buffer = new char[bufferSize];
+        vislib::StringA lineOnBreak;
+        float x, y, z, rad;
+        int r, g, b;
         while (!file.IsEOF()) {
-            vislib::StringA line = vislib::sys::ReadLineFromFileA(file);
-            float x, y, z, rad;
-            int r, g, b;
+            SIZE_T read = file.Read(buffer, bufferSize);
+            SIZE_T sspos = 0;
+            SIZE_T sepos = 0;
+            while (sepos < read) {
+                while ((sepos < read) && (buffer[sepos] != '\n') && (buffer[sepos] != '\r')) {
+                    sepos++;
+                }
+                if ((sepos < read) || file.IsEOF()) {
+                    // handle string input
+                    const char *line;
+                    if ((sepos == read) || !lineOnBreak.IsEmpty()) {
+                        lineOnBreak += vislib::StringA(buffer + sspos, static_cast<unsigned int>(sepos - sspos));
+                        line = lineOnBreak.PeekBuffer();
+                    } else {
+                        buffer[sepos] = 0;
+                        line = buffer + sspos;
+                    }
 
-            if (
+                    if (
 #ifdef _WIN32
-                sscanf_s
+                        sscanf_s
 #else /* _WIN32 */
-                sscanf
+                        sscanf
 #endif /* _WIN32 */
-                    (line, "%f %f %f %f %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b) == 7) {
+                            (line, "%f %f %f %f %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b) == 7) {
 
-                if (r < 0) r = 0; else if (r > 255) r = 255;
-                if (g < 0) g = 0; else if (g > 255) g = 255;
-                if (b < 0) b = 0; else if (b > 255) b = 255;
+                        if (r < 0) r = 0; else if (r > 255) r = 255;
+                        if (g < 0) g = 0; else if (g > 255) g = 255;
+                        if (b < 0) b = 0; else if (b > 255) b = 255;
 
-                SIZE_T blocks = (cnt + 1) / blockGrow;
-                if (((cnt + 1) % blockGrow) > 0) blocks++;
-                this->data.AssertSize(blocks * 19 * blockGrow, true);
-                *this->data.AsAt<float>(cnt * 19 + 0) = x;
-                *this->data.AsAt<float>(cnt * 19 + 4) = y;
-                *this->data.AsAt<float>(cnt * 19 + 8) = z;
-                *this->data.AsAt<float>(cnt * 19 + 12) = rad;
-                *this->data.AsAt<unsigned char>(cnt * 19 + 16) = static_cast<unsigned char>(r);
-                *this->data.AsAt<unsigned char>(cnt * 19 + 17) = static_cast<unsigned char>(g);
-                *this->data.AsAt<unsigned char>(cnt * 19 + 18) = static_cast<unsigned char>(b);
-                cnt++;
+                        blocks = this->data.GetSize() / (19 * blockGrow);
+                        if ((1 + cnt / blockGrow) > blocks) {
+                            blocks = 1 + cnt / blockGrow;
+                        }
+                        this->data.AssertSize(blocks * 19 * blockGrow, true);
+
+                        *this->data.AsAt<float>(cnt * 19 + 0) = x;
+                        *this->data.AsAt<float>(cnt * 19 + 4) = y;
+                        *this->data.AsAt<float>(cnt * 19 + 8) = z;
+                        *this->data.AsAt<float>(cnt * 19 + 12) = rad;
+                        *this->data.AsAt<unsigned char>(cnt * 19 + 16) = static_cast<unsigned char>(r);
+                        *this->data.AsAt<unsigned char>(cnt * 19 + 17) = static_cast<unsigned char>(g);
+                        *this->data.AsAt<unsigned char>(cnt * 19 + 18) = static_cast<unsigned char>(b);
+                        cnt++;
+                    }
+
+                    lineOnBreak.Clear();
+                    sepos++;
+                    sspos = sepos;
+                } else {
+                    // store line part for the next loop cycle
+                    lineOnBreak += vislib::StringA(buffer + sspos, static_cast<unsigned int>(sepos - sspos));
+                }
             }
+
         }
+
+        delete[] buffer;
+        unsigned int t2 = vislib::sys::GetTicksOfDay();
+
+        // pure FileIO (no parsing):
+        //  File.Read + Loop:   Loaded 6265625 spheres in 6355 milliseconds
+        //  ReadLineFromFileA:  Loaded 6265625 spheres in 40615 milliseconds
+        // with parsing:
+        //  scanf:              Loaded 6265625 spheres in 78893 milliseconds
+        //                      Loaded 0 spheres in      115283 milliseconds
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Loaded %u spheres in %u milliseconds", cnt, t2 - t1);
 
         this->data.EnforceSize(cnt * 19, true);
 
