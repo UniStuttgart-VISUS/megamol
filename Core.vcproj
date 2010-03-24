@@ -1822,6 +1822,10 @@
 					RelativePath=".\misc\BezierMeshRenderer.h"
 					>
 				</File>
+				<File
+					RelativePath=".\misc\SiffCSplineFitter.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -1836,6 +1840,10 @@
 				</File>
 				<File
 					RelativePath=".\misc\BezierMeshRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\SiffCSplineFitter.cpp"
 					>
 				</File>
 			</Filter>

@@ -157,6 +157,7 @@ bool misc::BezierMeshRenderer::Render(Call& call) {
     ::glFrontFace(GL_CCW);
     ::glDisable(GL_BLEND);
     ::glEnable(GL_LIGHTING);
+    ::glDisable(GL_CULL_FACE); // FUCK YOU
 
     if ((this->objsHash != bdc->DataHash())
             || this->curveSectionsSlot.IsDirty()
@@ -184,7 +185,12 @@ bool misc::BezierMeshRenderer::Render(Call& call) {
 
             Pt p1 = curve.ControlPoint(0); // point
             Vec3 t1;
-            curve.CalcTangent(t1, 0.0f).Normalise(); // tangent
+            curve.CalcTangent(t1, 0.0f);
+            if (t1.IsNull()) {
+                t1.Set(0.0f, 0.0f, 1.0f);
+            } else {
+                t1.Normalise(); // tangent
+            }
             Vec3 vp1(1.0f, 0.0f, 0.0f); // primary
             if (t1.IsParallel(vp1)) vp1.Set(0.0f, 1.0f, 0.0f);
             Vec3 vs1 = t1.Cross(vp1); // secondary
@@ -217,7 +223,12 @@ bool misc::BezierMeshRenderer::Render(Call& call) {
                 vs2 = vs1;
 
                 curve.CalcPoint(p1, t);
-                curve.CalcTangent(t1, t).Normalise();
+                curve.CalcTangent(t1, t);
+                if (t1.IsNull()) {
+                    t1.Set(0.0f, 0.0f, 1.0f);
+                } else {
+                    t1.Normalise(); // tangent
+                }
                 if (t1.IsParallel(vp1)) {
                     vp1 = vs1.Cross(t1);
                     vp1.Normalise();

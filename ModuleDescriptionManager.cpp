@@ -17,6 +17,7 @@
 #include "DataFileSequencer.h"
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
+#include "misc/SiffCSplineFitter.h"
 #include "moldyn/AddParticleColours.h"
 #include "moldyn/DataGridder.h"
 #include "moldyn/GrimRenderer.h"
@@ -67,6 +68,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<DataFileSequencer>();
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
+        instance->registerAutoDescription<misc::SiffCSplineFitter>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();
         instance->registerAutoDescription<moldyn::DataGridder>();
         instance->registerAutoDescription<moldyn::GrimRenderer>();
