@@ -328,8 +328,11 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
 /*
  * vislib::graphics::gl::FramebufferObject::EnableMultipleV
  */
-GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(UINT cntColourAttachments, UINT* colourAttachments) {
-    if (cntColourAttachments <= 1) {
+GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
+        UINT cntColourAttachments, const UINT* colourAttachments) {
+    if (cntColourAttachments == 0) {
+        return this->Enable();
+    } else if (cntColourAttachments == 1) {
         return this->Enable(*colourAttachments);
     }
 
@@ -371,17 +374,18 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(UINT cntColourAt
 /*
  * vislib::graphics::gl::FramebufferObject::EnableMultiple
  */
-GLenum vislib::graphics::gl::FramebufferObject::EnableMultiple(UINT cntColourAttachments, ...) {
-   va_list argptr;
-   va_start(argptr, cntColourAttachments);
-   UINT *atts = new UINT[cntColourAttachments];
-   for (UINT i = 0; i < cntColourAttachments; i++) {
-       atts[i] = va_arg(argptr, int);
-   }
-   va_end(argptr);
-   GLenum rv = this->EnableMultipleV(cntColourAttachments, atts);
-   delete[] atts;
-   return rv;
+GLenum vislib::graphics::gl::FramebufferObject::EnableMultiple(
+        UINT cntColourAttachments, ...) {
+    va_list argptr;
+    va_start(argptr, cntColourAttachments);
+    UINT *atts = new UINT[cntColourAttachments];
+    for (UINT i = 0; i < cntColourAttachments; i++) {
+        atts[i] = va_arg(argptr, UINT);
+    }
+    va_end(argptr);
+    GLenum rv = this->EnableMultipleV(cntColourAttachments, atts);
+    delete[] atts;
+    return rv;
 }
 
 

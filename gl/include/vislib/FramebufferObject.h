@@ -306,7 +306,8 @@ namespace gl {
          * Does not set and unsets read buffer!
          * OpenGL morons defined GL_COLOR_ATTACHMENT0_EXT to use
          */
-        GLenum EnableMultipleV(UINT cntColourAttachments, UINT* colourAttachments);
+        GLenum EnableMultipleV(UINT cntColourAttachments,
+            const UINT* colourAttachments);
 
         /**
          * TODO: Document
