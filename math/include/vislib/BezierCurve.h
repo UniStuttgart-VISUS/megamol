@@ -133,6 +133,28 @@ namespace math {
         }
 
         /**
+         * Accesses the idx-th control point
+         *
+         * @param idx The index of the control point to be set (0..E)
+         *
+         * @return A reference to the idx-th control point
+         */
+        VISLIB_FORCEINLINE T& operator[](unsigned int idx) {
+            return this->ControlPoint(idx);
+        }
+
+        /**
+         * Accesses the idx-th control point read-only
+         *
+         * @param idx The index of the control point to be set (0..E)
+         *
+         * @return A const reference to the idx-th control point
+         */
+        VISLIB_FORCEINLINE const T& operator[](unsigned int idx) const {
+            return this->ControlPoint(idx);
+        }
+
+        /**
          * Test for equality.
          *
          * @param rhs The right hand side operand
