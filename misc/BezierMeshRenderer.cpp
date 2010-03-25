@@ -157,7 +157,6 @@ bool misc::BezierMeshRenderer::Render(Call& call) {
     ::glFrontFace(GL_CCW);
     ::glDisable(GL_BLEND);
     ::glEnable(GL_LIGHTING);
-    ::glDisable(GL_CULL_FACE); // FUCK YOU
 
     if ((this->objsHash != bdc->DataHash())
             || this->curveSectionsSlot.IsDirty()
@@ -177,8 +176,6 @@ bool misc::BezierMeshRenderer::Render(Call& call) {
         }
 
         ::glNewList(this->objs, GL_COMPILE_AND_EXECUTE);
-
-        //::glColor3ub(0, 255, 0); // TODO: move into data
 
         for (unsigned int i = 0; i < bdc->Count(); i++) {
             const vislib::math::BezierCurve<Pt, 3> &curve = bdc->Curves()[i];

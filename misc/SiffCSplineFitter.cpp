@@ -228,12 +228,17 @@ void misc::SiffCSplineFitter::assertData(void) {
  * misc::SiffCSplineFitter::addSpline
  */
 void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB) {
+    typedef vislib::math::ShallowPoint<float, 3> ShallowPoint;
+    typedef vislib::math::Point<float, 3> Point;
+    typedef vislib::math::Vector<float, 3> Vector;
+    typedef vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> BezierCurve;
+
     if (cnt == 0) return;
     int p = 0;
+    BezierCurve curve;
     for (unsigned int i = 1; i < cnt; i++) {
-        float d = vislib::math::ShallowPoint<float, 3>(pos + p * 3).Distance(
-            vislib::math::ShallowPoint<float, 3>(pos + i * 3));
-        if (d > 0.5f * rad) {
+        float d = ShallowPoint(pos + p * 3).Distance(ShallowPoint(pos + i * 3));
+        if (d > 0.25f * rad) {
             p++;
             pos[p * 3 + 0] = pos[i * 3 + 0];
             pos[p * 3 + 1] = pos[i * 3 + 1];
@@ -246,39 +251,37 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
     cnt = static_cast<unsigned int>(1 + p);
 
     // split at jumps
-    unsigned int s = 0;
-    bool splitted = false;
-    for (unsigned int i = 1; i < cnt; i++) {
-        float d = vislib::math::ShallowPoint<float, 3>(pos + (i - 1) * 3).Distance(
-            vislib::math::ShallowPoint<float, 3>(pos + i * 3));
-        if (d > 2.0f * rad) {
-            this->addSpline(pos + s * 3, i - s, rad, colR, colG, colB);
-            s = i;
-            splitted = true;
-        }
-    }
-    if (splitted) {
-        pos += s * 3;
-        cnt -= s;
-    }
+    //unsigned int s = 0;
+    //bool splitted = false;
+    //for (unsigned int i = 1; i < cnt; i++) {
+    //    float d = ShallowPoint(pos + (i - 1) * 3).Distance(ShallowPoint(pos + i * 3));
+    //    if (d > 2.0f * rad) {
+    //        this->addSpline(pos + s * 3, i - s, rad, colR, colG, colB);
+    //        s = i;
+    //        splitted = true;
+    //    }
+    //}
+    //if (splitted) {
+    //    pos += s * 3;
+    //    cnt -= s;
+    //}
 
     if (cnt == 1) {
         // super trivial nonsense
-        vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> curve;
-        curve.ControlPoint(0).Set(pos[0] + 0.25f * rad, pos[1], pos[2], rad, colR, colG, colB);
-        curve.ControlPoint(1).Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
-        curve.ControlPoint(2).Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
-        curve.ControlPoint(3).Set(pos[0] - 0.25f * rad, pos[1], pos[2], rad, colR, colG, colB);
+        curve[0].Set(pos[0] + 0.05f * rad, pos[1], pos[2], rad, colR, colG, colB);
+        curve[1].Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
+        curve[2].Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
+        curve[3].Set(pos[0] - 0.05f * rad, pos[1], pos[2], rad, colR, colG, colB);
         this->curves.Add(curve);
         return;
     }
 
     if (cnt <= 4) {
         // trivial nonsense
-        vislib::math::ShallowPoint<float, 3> p1(pos);
-        vislib::math::Point<float, 3> p2;
-        vislib::math::Point<float, 3> p3;
-        vislib::math::ShallowPoint<float, 3> p4(pos + (cnt - 1) * 3);
+        ShallowPoint p1(pos);
+        Point p2;
+        Point p3;
+        ShallowPoint p4(pos + (cnt - 1) * 3);
         if (cnt == 2) {
             p2 = p1.Interpolate(p4, 0.33f);
             p3 = p1.Interpolate(p4, 0.66f);
@@ -291,53 +294,106 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
             p3.Set(pos[6], pos[7], pos[8]);
         }
 
-        vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> curve;
-        curve.ControlPoint(0).Set(p1[0], p1[1], p1[2], rad, colR, colG, colB);
-        curve.ControlPoint(1).Set(p2[0], p2[1], p2[2], rad, colR, colG, colB);
-        curve.ControlPoint(2).Set(p3[0], p3[1], p3[2], rad, colR, colG, colB);
-        curve.ControlPoint(3).Set(p4[0], p4[1], p4[2], rad, colR, colG, colB);
+        curve[0].Set(p1, rad, colR, colG, colB);
+        curve[1].Set(p2, rad, colR, colG, colB);
+        curve[2].Set(p3, rad, colR, colG, colB);
+        curve[3].Set(p4, rad, colR, colG, colB);
         this->curves.Add(curve);
         return;
     }
 
     // looping and/or fitting
     // first fit a polyline
-    vislib::Array<vislib::math::Point<float, 3> >lines;
-    lines.Add(vislib::math::Point<float, 3>(pos[0], pos[1], pos[2]));
-    lines.Add(vislib::math::Point<float, 3>(pos[(cnt - 1) * 3], pos[(cnt - 1) * 3 + 1], pos[(cnt - 1) * 3 + 2]));
+    vislib::Array<Point> lines;
+    vislib::Array<unsigned int> indices;
+
+    indices.Add(0);
+    lines.Add(ShallowPoint(pos));
+    indices.Add(cnt - 1);
+    lines.Add(ShallowPoint(pos + (cnt - 1) * 3));
+
+    bool refined = true;
+    while (refined) {
+        refined = false;
+        for (unsigned int l = 1; l < lines.Count(); l++) {
+            // The line segment
+            ShallowPoint p1(pos + indices[l - 1] * 3);
+            ShallowPoint p2(pos + indices[l] * 3);
+            Vector lv = p2 - p1;
+            float ll = lv.Normalise();
+
+            unsigned int maxP = UINT_MAX;
+            float maxDist = -1.0f;
+
+            for (unsigned int p = indices[l - 1] + 1; p < indices[l]; p++) {
+                ShallowPoint pn(pos + p * 3);
+                Vector pv = pn - p1;
+                float l = lv.Dot(pv);
+                float dist;
+
+                if (l < 0.0) {
+                    dist = pn.Distance(p1);
+                } else if (l > ll) {
+                    dist = pn.Distance(p2);
+                } else {
+                    dist = pn.Distance(p1 + lv * l);
+                }
+
+                if (maxDist < dist) {
+                    maxDist = dist;
+                    maxP = p;
+                }
+            }
+
+            if (maxDist > rad) {
+                indices.Insert(l, maxP);
+                lines.Insert(l, ShallowPoint(pos + maxP * 3));
+                l++;
+                refined = true;
+            }
+
+        }
+    }
 
     // approx lines though curved (bullshit but good enough for the IEEE-VIS)
     if (lines.Count() == 2) {
-        vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> curve;
-        curve.ControlPoint(0).Set(lines[0][0], lines[0][1], lines[0][2], rad, colR, colG, colB);
-        curve.ControlPoint(1).Set(lines[0][0] * 0.667f + lines[1][0] * 0.333f, lines[0][1] * 0.667f + lines[1][1] * 0.333f, lines[0][2] * 0.667f + lines[1][2] * 0.333f, rad, colR, colG, colB);
-        curve.ControlPoint(1).Set(lines[0][0] * 0.333f + lines[1][0] * 0.667f, lines[0][1] * 0.333f + lines[1][1] * 0.667f, lines[0][2] * 0.333f + lines[1][2] * 0.667f, rad, colR, colG, colB);
-        curve.ControlPoint(3).Set(lines[1][0], lines[1][1], lines[1][2], rad, colR, colG, colB);
+        curve[0].Set(lines[0], rad, colR, colG, colB);
+        curve[1].Set(lines[0].Interpolate(lines[1], 0.333f), rad, colR, colG, colB);
+        curve[2].Set(lines[0].Interpolate(lines[1], 0.667f), rad, colR, colG, colB);
+        curve[3].Set(lines[1], rad, colR, colG, colB);
         this->curves.Add(curve);
+        return;
     }
 
-    //vislib::Array<float> dist(cnt - 1, 0.0f);
-    //for (unsigned int i = 0; i < cnt - 1; i++) {
-    //    dist[i] = vislib::math::ShallowPoint<float, 3>(pos + i * 3).Distance(
-    //        vislib::math::ShallowPoint<float, 3>(pos + (i + 1) * 3));
+    // first curve
+    curve[0].Set(lines[0], rad, colR, colG, colB);
+    curve[1].Set(lines[0].Interpolate(lines[1], 0.667f), rad, colR, colG, colB);
+
+    // inner curves
+    for (unsigned int i = 2; i < lines.Count() - 1; i++) {
+        curve[2].Set(lines[i - 1].Interpolate(lines[i], 0.25f), rad, colR, colG, colB);
+        curve[3].Set(lines[i - 1].Interpolate(lines[i], 0.5f), rad, colR, colG, colB);
+        this->curves.Add(curve);
+        curve[0] = curve[3];
+        curve[1].Set(lines[i - 1].Interpolate(lines[i], 0.75f), rad, colR, colG, colB);
+    }
+
+    // last curve
+    curve[2].Set(lines[lines.Count() - 2].Interpolate(lines[lines.Count() - 1], 0.333f), rad, colR, colG, colB);
+    curve[3].Set(lines[lines.Count() - 1], rad, colR, colG, colB);
+    this->curves.Add(curve);
+
+    // bullshit for debugging
+    //for (unsigned int i = 1; i < lines.Count(); i++) {
+    //    unsigned int j = i - 1;
+    //    vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> curve;
+    //    curve.ControlPoint(0).Set(lines[j][0], lines[j][1], lines[j][2], rad, colR, colG, colB);
+    //    curve.ControlPoint(1).Set(lines[j][0] * 0.667f + lines[i][0] * 0.333f, lines[j][1] * 0.667f + lines[i][1] * 0.333f, lines[j][2] * 0.667f + lines[i][2] * 0.333f, rad, colR, colG, colB);
+    //    curve.ControlPoint(2).Set(lines[j][0] * 0.333f + lines[i][0] * 0.667f, lines[j][1] * 0.333f + lines[i][1] * 0.667f, lines[j][2] * 0.333f + lines[i][2] * 0.667f, rad, colR, colG, colB);
+    //    curve.ControlPoint(3).Set(lines[i][0], lines[i][1], lines[i][2], rad, colR, colG, colB);
+    //    this->curves.Add(curve);
     //}
-    //dist.Sort(vislib::math::Compare); // distances between positions ascending
 
-    // compress and split
-    // split whenever the spline jumps more than the media distance
-    //  possibly rejoin later ift jump is not a cyclic boundery condition
-    // compress line whenever a position change is less then 
-
-    //float *p1 = pos;
-    //float *p2 = pos + (3 * ((cnt / 3) - 1));
-    //float *p3 = pos + (3 * ((2 * cnt / 3) - 1));
-    //float *p4 = pos + (3 * (cnt - 1));
-
-    //vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> curve;
-    //curve.ControlPoint(0).Set(p1[0], p1[1], p1[2], rad, colR, colG, colB);
-    //curve.ControlPoint(1).Set(p2[0], p2[1], p2[2], rad, colR, colG, colB);
-    //curve.ControlPoint(2).Set(p3[0], p3[1], p3[2], rad, colR, colG, colB);
-    //curve.ControlPoint(3).Set(p4[0], p4[1], p4[2], rad, colR, colG, colB);
-    //this->curves.Add(curve);
+    // TODO: Rejoin splitted segments? How?
 
 }

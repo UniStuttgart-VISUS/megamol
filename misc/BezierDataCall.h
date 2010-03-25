@@ -180,6 +180,24 @@ namespace misc {
             }
 
             /**
+             * Sets all values
+             *
+             * @param pos The position
+             * @param rad The radius
+             * @param r The red colour component
+             * @param g The red colour component
+             * @param b The red colour component
+             */
+            void Set(const vislib::math::Point<float, 3> &pos, float rad,
+                    unsigned char r, unsigned char g, unsigned char b) {
+                this->pos = pos;
+                this->rad = rad;
+                this->r = r;
+                this->g = g;
+                this->b = b;
+            }
+
+            /**
              * Sets the blue colour component
              *
              * @param b The new value
