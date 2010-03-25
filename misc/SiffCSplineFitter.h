@@ -103,13 +103,17 @@ namespace misc {
          */
         void assertData(void);
 
-        void addSpline(float *pos, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB);
+        void addSpline(float *pos, float *times, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB);
+
+        void timeColour(float time, unsigned char &outR, unsigned char &outG, unsigned char &outB);
 
         /** The slot for requesting data */
         CalleeSlot getDataSlot;
 
         /** The slot for fetching siff data */
         CallerSlot inDataSlot;
+
+        param::ParamSlot colourMapSlot;
 
         /** The bounding box of positions*/
         float minX, minY, minZ, maxX, maxY, maxZ;

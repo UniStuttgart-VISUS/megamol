@@ -9,7 +9,8 @@
 #include "SiffCSplineFitter.h"
 #include "BezierDataCall.h"
 #include "moldyn/MultiParticleDataCall.h"
-#include "param/FilePathParam.h"
+//#include "param/FilePathParam.h"
+#include "param/EnumParam.h"
 #include "vislib/BezierCurve.h"
 #include "vislib/Log.h"
 #include "vislib/mathfunctions.h"
@@ -18,7 +19,6 @@
 /*
 #include <climits>
 #include "param/BoolParam.h"
-#include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "utility/ColourParser.h"
 #include "vislib/forceinline.h"
@@ -39,11 +39,15 @@ using namespace megamol::core;
 misc::SiffCSplineFitter::SiffCSplineFitter(void) : Module(),
         getDataSlot("getdata", "The slot exposing the loaded data"),
         inDataSlot("indata", "The slot for fetching siff data"),
+        colourMapSlot("colourMapping", "The parameter controlling the colour mapping"),
         minX(-1.0f), minY(-1.0f), minZ(-1.0f), maxX(1.0f), maxY(1.0f),
         maxZ(1.0f), curves(), datahash(0), inhash(0) {
 
-    //this->filenameSlot << new param::FilePathParam("");
-    //this->MakeSlotAvailable(&this->filenameSlot);
+    param::EnumParam *ep = new param::EnumParam(1);
+    ep->SetTypePair(0, "site colour");
+    ep->SetTypePair(1, "time");
+    this->colourMapSlot << ep;
+    this->MakeSlotAvailable(&this->colourMapSlot);
 
     this->getDataSlot.SetCallback("BezierDataCall", "GetData",
         &SiffCSplineFitter::getDataCallback);
@@ -137,8 +141,9 @@ void misc::SiffCSplineFitter::assertData(void) {
     vislib::math::Cuboid<float> bbox = mpdc->AccessBoundingBoxes().ClipBox();
 
     if (!(*mpdc)(0)) return;
-    if (mpdc->DataHash() == this->inhash) return; // data did not change
+    if (!this->colourMapSlot.IsDirty() && (mpdc->DataHash() == this->inhash)) return; // data did not change
 
+    this->colourMapSlot.ResetDirty();
     this->inhash = mpdc->DataHash();
     this->datahash++;
     this->curves.Clear();
@@ -202,6 +207,7 @@ void misc::SiffCSplineFitter::assertData(void) {
     unsigned char colR, colG, colB;
     float rad;
     float *pos = new float[frameCnt * 3];
+    float *times = new float[frameCnt * 2];
 
     for (unsigned int i = 0; i < frameSize; i++) {
         colR = cdata[0];
@@ -214,24 +220,28 @@ void misc::SiffCSplineFitter::assertData(void) {
             pos[j * 3] = reinterpret_cast<const float*>(vdata + off)[0];
             pos[j * 3 + 1] = reinterpret_cast<const float*>(vdata + off)[1];
             pos[j * 3 + 2] = reinterpret_cast<const float*>(vdata + off)[2];
+            times[j * 2] = times[j * 2 + 1] = ((frameCnt > 1) ? (static_cast<float>(j) / static_cast<float>(frameCnt - 1)) : 0.0f);
         }
 
-        this->addSpline(pos, frameCnt, rad, colR, colG, colB);
+        this->addSpline(pos, times, frameCnt, rad, colR, colG, colB);
 
     }
 
     delete[] pos;
+    delete[] times;
 }
 
 
 /*
  * misc::SiffCSplineFitter::addSpline
  */
-void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB) {
+void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB) {
     typedef vislib::math::ShallowPoint<float, 3> ShallowPoint;
     typedef vislib::math::Point<float, 3> Point;
     typedef vislib::math::Vector<float, 3> Vector;
     typedef vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> BezierCurve;
+
+    const bool useTimeColour = (this->colourMapSlot.Param<param::EnumParam>()->Value() == 1);
 
     if (cnt == 0) return;
     int p = 0;
@@ -243,6 +253,10 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
             pos[p * 3 + 0] = pos[i * 3 + 0];
             pos[p * 3 + 1] = pos[i * 3 + 1];
             pos[p * 3 + 2] = pos[i * 3 + 2];
+            times[p * 2 + 0] = times[i * 2 + 0];
+            times[p * 2 + 1] = times[i * 2 + 1];
+        } else {
+            times[p * 2 + 1] = times[i * 2 + 1];
         }
     }
     ////if (1 + p < cnt) {
@@ -250,27 +264,52 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
     ////}
     cnt = static_cast<unsigned int>(1 + p);
 
-    // split at jumps
-    //unsigned int s = 0;
-    //bool splitted = false;
-    //for (unsigned int i = 1; i < cnt; i++) {
-    //    float d = ShallowPoint(pos + (i - 1) * 3).Distance(ShallowPoint(pos + i * 3));
-    //    if (d > 2.0f * rad) {
-    //        this->addSpline(pos + s * 3, i - s, rad, colR, colG, colB);
-    //        s = i;
-    //        splitted = true;
-    //    }
-    //}
-    //if (splitted) {
-    //    pos += s * 3;
-    //    cnt -= s;
-    //}
+    // split cyclic boundary jumps
+    unsigned int s = 0;
+    bool splitted = false;
+
+    const float bminB = 0.15f;
+    const float bmaxB = 1.0f - bminB;
+    float bminX = this->maxX * bminB + this->minX * bmaxB;
+    float bmaxX = this->maxX * bmaxB + this->minX * bminB;
+    float bminY = this->maxY * bminB + this->minY * bmaxB;
+    float bmaxY = this->maxY * bmaxB + this->minY * bminB;
+    float bminZ = this->maxZ * bminB + this->minZ * bmaxB;
+    float bmaxZ = this->maxZ * bmaxB + this->minZ * bminB;
+
+    for (unsigned int i = 1; i < cnt; i++) {
+        ShallowPoint p1(pos + (i - 1) * 3);
+        ShallowPoint p2(pos + i * 3);
+        float d = p1.Distance(p2);
+        if (d < 2.0f * rad) continue;
+        // test if is a cb-jump
+
+        if (       ((p1.X() < bminX) && (p2.X() > bmaxX)) // cb-jump in X
+                || ((p2.X() < bminX) && (p1.X() > bmaxX)) // cb-jump in X
+                || ((p1.Y() < bminY) && (p2.Y() > bmaxY)) // cb-jump in Y
+                || ((p2.Y() < bminY) && (p1.Y() > bmaxY)) // cb-jump in Y
+                || ((p1.Z() < bminZ) && (p2.Z() > bmaxZ)) // cb-jump in Z
+                || ((p2.Z() < bminZ) && (p1.Z() > bmaxZ)) ) { // cb-jump in Z
+
+            this->addSpline(pos + s * 3, times + s * 2, i - s, rad, colR, colG, colB);
+            s = i;
+            splitted = true;
+        }
+    }
+    if (splitted) {
+        pos += s * 3;
+        times += s * 2;
+        cnt -= s;
+    }
 
     if (cnt == 1) {
         // super trivial nonsense
+        if (useTimeColour) this->timeColour(times[0], colR, colG, colB);
         curve[0].Set(pos[0] + 0.05f * rad, pos[1], pos[2], rad, colR, colG, colB);
+        if (useTimeColour) this->timeColour((times[0] + times[1]) * 0.5f, colR, colG, colB);
         curve[1].Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
         curve[2].Set(pos[0], pos[1], pos[2], rad, colR, colG, colB);
+        if (useTimeColour) this->timeColour(times[1], colR, colG, colB);
         curve[3].Set(pos[0] - 0.05f * rad, pos[1], pos[2], rad, colR, colG, colB);
         this->curves.Add(curve);
         return;
@@ -278,26 +317,39 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
 
     if (cnt <= 4) {
         // trivial nonsense
+        unsigned char r1, r2, r3, r4, g1, g2, g3, g4, b1, b2, b3, b4;
+        r1 = r2 = r3 = r4 = colR;
+        g1 = g2 = g3 = g4 = colG;
+        b1 = b2 = b3 = b4 = colB;
+
         ShallowPoint p1(pos);
+        if (useTimeColour) this->timeColour(times[0], r1, g1, b1);
         Point p2;
         Point p3;
         ShallowPoint p4(pos + (cnt - 1) * 3);
+        if (useTimeColour) this->timeColour(times[(cnt - 1) * 2 + 1], r4, g4, b4);
         if (cnt == 2) {
             p2 = p1.Interpolate(p4, 0.33f);
+            if (useTimeColour) this->timeColour(times[1] * 0.333f + times[2] * 0.667f, r2, g2, b2);
             p3 = p1.Interpolate(p4, 0.66f);
+            if (useTimeColour) this->timeColour(times[1] * 0.667f + times[2] * 0.333f, r3, g3, b3);
         } else if (cnt == 3) {
             p2.Set(pos[3], pos[4], pos[5]);
+            if (useTimeColour) this->timeColour(times[1] * 0.333f + (times[2] + times[3]) * 0.5f * 0.667f, r2, g2, b2);
             p3 = p2.Interpolate(p4, 0.33f);
+            if (useTimeColour) this->timeColour(times[4] * 0.333f + (times[2] + times[3]) * 0.5f * 0.667f, r3, g3, b3);
             p2 = p2.Interpolate(p1, 0.33f);
         } else if (cnt == 4) {
             p2.Set(pos[3], pos[4], pos[5]);
+            if (useTimeColour) this->timeColour(times[2] * 0.667f + times[3] * 0.333f, r2, g2, b2);
             p3.Set(pos[6], pos[7], pos[8]);
+            if (useTimeColour) this->timeColour(times[4] * 0.333f + times[5] * 0.667f, r3, g3, b3);
         }
 
-        curve[0].Set(p1, rad, colR, colG, colB);
-        curve[1].Set(p2, rad, colR, colG, colB);
-        curve[2].Set(p3, rad, colR, colG, colB);
-        curve[3].Set(p4, rad, colR, colG, colB);
+        curve[0].Set(p1, rad, r1, g1, b1);
+        curve[1].Set(p2, rad, r2, g2, b2);
+        curve[2].Set(p3, rad, r3, g3, b3);
+        curve[3].Set(p4, rad, r4, g4, b4);
         this->curves.Add(curve);
         return;
     }
@@ -312,13 +364,15 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
     indices.Add(cnt - 1);
     lines.Add(ShallowPoint(pos + (cnt - 1) * 3));
 
+    const float distEps = rad * 0.5f;
+
     bool refined = true;
     while (refined) {
         refined = false;
         for (unsigned int l = 1; l < lines.Count(); l++) {
             // The line segment
             ShallowPoint p1(pos + indices[l - 1] * 3);
-            ShallowPoint p2(pos + indices[l] * 3);
+            ShallowPoint p2(pos + indices[l] * 3); 
             Vector lv = p2 - p1;
             float ll = lv.Normalise();
 
@@ -345,7 +399,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
                 }
             }
 
-            if (maxDist > rad) {
+            if (maxDist > distEps) {
                 indices.Insert(l, maxP);
                 lines.Insert(l, ShallowPoint(pos + maxP * 3));
                 l++;
@@ -357,43 +411,89 @@ void misc::SiffCSplineFitter::addSpline(float *pos, unsigned int cnt, float rad,
 
     // approx lines though curved (bullshit but good enough for the IEEE-VIS)
     if (lines.Count() == 2) {
+        if (useTimeColour) this->timeColour(times[indices[0] * 2], colR, colG, colB);
         curve[0].Set(lines[0], rad, colR, colG, colB);
+        if (useTimeColour) this->timeColour(
+            (times[indices[0] * 2] * 0.667f + times[indices[0] * 2 + 1] * 0.333f) * 0.667f +
+            (times[indices[1] * 2] * 0.667f + times[indices[1] * 2 + 1] * 0.333f) * 0.333f
+            , colR, colG, colB);
         curve[1].Set(lines[0].Interpolate(lines[1], 0.333f), rad, colR, colG, colB);
+        if (useTimeColour) this->timeColour(
+            (times[indices[0] * 2] * 0.333f + times[indices[0] * 2 + 1] * 0.667f) * 0.333f +
+            (times[indices[1] * 2] * 0.333f + times[indices[1] * 2 + 1] * 0.667f) * 0.667f
+            , colR, colG, colB);
         curve[2].Set(lines[0].Interpolate(lines[1], 0.667f), rad, colR, colG, colB);
+        if (useTimeColour) this->timeColour(times[indices[1] * 2 + 1], colR, colG, colB);
         curve[3].Set(lines[1], rad, colR, colG, colB);
         this->curves.Add(curve);
         return;
     }
 
     // first curve
+    if (useTimeColour) this->timeColour(times[indices[0] * 2], colR, colG, colB);
     curve[0].Set(lines[0], rad, colR, colG, colB);
+    if (useTimeColour) this->timeColour(
+        (times[indices[0] * 2] * 0.333f + times[indices[0] * 2 + 1] * 0.667f) * 0.333f +
+        (times[indices[1] * 2] * 0.333f + times[indices[1] * 2 + 1] * 0.667f) * 0.667f
+        , colR, colG, colB);
     curve[1].Set(lines[0].Interpolate(lines[1], 0.667f), rad, colR, colG, colB);
 
     // inner curves
     for (unsigned int i = 2; i < lines.Count() - 1; i++) {
+        if (useTimeColour) this->timeColour(
+            (times[indices[i - 1] * 2] * 0.75f + times[indices[i - 1] * 2 + 1] * 0.25f) * 0.75f +
+            (times[indices[i] * 2] * 0.75f + times[indices[i] * 2 + 1] * 0.25f) * 0.25f
+            , colR, colG, colB);
         curve[2].Set(lines[i - 1].Interpolate(lines[i], 0.25f), rad, colR, colG, colB);
+        if (useTimeColour) this->timeColour(
+            (times[indices[i - 1] * 2] * 0.5f + times[indices[i - 1] * 2 + 1] * 0.5f) * 0.5f +
+            (times[indices[i] * 2] * 0.5f + times[indices[i] * 2 + 1] * 0.5f) * 0.5f
+            , colR, colG, colB);
         curve[3].Set(lines[i - 1].Interpolate(lines[i], 0.5f), rad, colR, colG, colB);
         this->curves.Add(curve);
         curve[0] = curve[3];
+        if (useTimeColour) this->timeColour(
+            (times[indices[i - 1] * 2] * 0.25f + times[indices[i - 1] * 2 + 1] * 0.75f) * 0.25f +
+            (times[indices[i] * 2] * 0.25f + times[indices[i] * 2 + 1] * 0.75f) * 0.75f
+            , colR, colG, colB);
         curve[1].Set(lines[i - 1].Interpolate(lines[i], 0.75f), rad, colR, colG, colB);
     }
 
     // last curve
+    if (useTimeColour) this->timeColour(
+        (times[indices[lines.Count() - 2] * 2] * 0.667f + times[indices[lines.Count() - 2] * 2 + 1] * 0.333f) * 0.667f +
+        (times[indices[lines.Count() - 1] * 2] * 0.667f + times[indices[lines.Count() - 1] * 2 + 1] * 0.333f) * 0.333f
+        , colR, colG, colB);
     curve[2].Set(lines[lines.Count() - 2].Interpolate(lines[lines.Count() - 1], 0.333f), rad, colR, colG, colB);
     curve[3].Set(lines[lines.Count() - 1], rad, colR, colG, colB);
     this->curves.Add(curve);
 
-    // bullshit for debugging
-    //for (unsigned int i = 1; i < lines.Count(); i++) {
-    //    unsigned int j = i - 1;
-    //    vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3> curve;
-    //    curve.ControlPoint(0).Set(lines[j][0], lines[j][1], lines[j][2], rad, colR, colG, colB);
-    //    curve.ControlPoint(1).Set(lines[j][0] * 0.667f + lines[i][0] * 0.333f, lines[j][1] * 0.667f + lines[i][1] * 0.333f, lines[j][2] * 0.667f + lines[i][2] * 0.333f, rad, colR, colG, colB);
-    //    curve.ControlPoint(2).Set(lines[j][0] * 0.333f + lines[i][0] * 0.667f, lines[j][1] * 0.333f + lines[i][1] * 0.667f, lines[j][2] * 0.333f + lines[i][2] * 0.667f, rad, colR, colG, colB);
-    //    curve.ControlPoint(3).Set(lines[i][0], lines[i][1], lines[i][2], rad, colR, colG, colB);
-    //    this->curves.Add(curve);
-    //}
+}
 
-    // TODO: Rejoin splitted segments? How?
 
+/*
+ * misc::SiffCSplineFitter::timeColour
+ */
+void misc::SiffCSplineFitter::timeColour(float time, unsigned char &outR, unsigned char &outG, unsigned char &outB) {
+    if (time < 0.0f) time = 0.0f;
+    else if (time > 1.0f) time = 1.0f;
+    time *= 3.0f;
+    float r1, r2, g1, g2, b1, b2;
+
+    if (time < 1.0f) {
+        r1 = 1.0f; g1 = 0.0f; b1 = 0.0f;
+        r2 = 0.0f; g2 = 1.0f; b2 = 0.0f;
+    } else if (time < 2.0f) {
+        r1 = 1.0f; g1 = 1.0f; b1 = 0.0f;
+        r2 = -1.0f; g2 = 0.0f; b2 = 1.0f;
+        time -= 1.0f;
+    } else {
+        r1 = 0.0f; g1 = 1.0f; b1 = 1.0f;
+        r2 = 0.0f; g2 = -1.0f; b2 = 0.0f;
+        time -= 2.0f;
+    }
+
+    outR = static_cast<unsigned char>(255.0f * (r1 + r2 * time));
+    outG = static_cast<unsigned char>(255.0f * (g1 + g2 * time));
+    outB = static_cast<unsigned char>(255.0f * (b1 + b2 * time));
 }
