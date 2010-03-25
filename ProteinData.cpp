@@ -16,6 +16,7 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/sysfunctions.h"
+#include "vislib/stringtokeniser.h"
 #include <string>
 #include <iostream>
 
@@ -147,6 +148,13 @@ bool protein::ProteinData::tryLoadFile(void)
     using vislib::sys::File;
     using vislib::sys::Log;
 
+	// clear all containers
+	this->ClearData();
+	// add all elements from the periodic table to m_atomTypes
+	this->FillAtomTypesWithPeriodicTable();
+	// add all amino acid names to m_aminoAcidNames
+	this->FillAminoAcidNames();
+
 	// temporary variables
 	unsigned int counterChainId, counterResSeq, counterAtom;
 	vislib::StringA tmpStr;
@@ -154,6 +162,8 @@ bool protein::ProteinData::tryLoadFile(void)
 	bool retval = false;
 	// is this the first ATOM-line?
 	bool firstAtom = true;
+	// next file
+	bool newFile = true;
 	// file 
     MemmappedFile file;
 	// get filename 
@@ -165,129 +175,119 @@ bool protein::ProteinData::tryLoadFile(void)
         return false;
     }
 
-	if ( !file.Open ( fn, File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY ) )
-	{
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-		                           "%s: Unable to open file \"%s\"", this->ClassName(),
-											vislib::StringA ( fn ).PeekBuffer() );
-        return false;
+    //vislib::StringTokeniser<vislib::TCharTraits> filenames( fn, ' ');
+    vislib::Array<vislib::TString> filenames = vislib::StringTokeniser<vislib::TCharTraits>::Split( fn, ' ', true);
+
+    for( unsigned int cnt = 0; cnt < filenames.Count(); ++ cnt ) {
+
+	    //if( !file.Open( fn, File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY ) ) {
+        if( !file.Open( filenames[cnt], File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY ) ) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+		                               "%s: Unable to open file \"%s\"", this->ClassName(),
+											    vislib::StringA ( fn ).PeekBuffer() );
+            return false;
+        }
+        newFile = true;
+
+	    vislib::StringA str( filenames[cnt]);
+	    // check, if file extension is 'pdb'
+	    str.ToLowerCase();
+	    if( !str.EndsWith( ".pdb") )
+		    continue;
+	    str.Clear();
+
+	    // => check for PDB file indicator: the file must contain at least one 'ATOM' ?
+
+	    // while file pointer is not at 'end of file'
+	    while( !file.IsEOF() ) {
+		    vislib::StringA str;
+		    // read next line from file
+		    str = vislib::sys::ReadLineFromFileA( file );
+		    // skip empty lines
+		    if( str.Length() <= 0 ) continue;
+    	    
+		    if( str.StartsWithInsensitive( "ATOM") ) {
+			    // check if the current atom is at an alternate location
+			    if( !str.Substring( 16, 1 ).Equals( " ", false) &&
+			        !str.Substring( 16, 1 ).Equals( "A", false) )
+				    // only add one occurence of the ATOM (either ' ' or 'A')
+				    continue;
+			    ////////////////////////////////////////////////////////////////////////////
+			    // Add all ATOM entries to the 'atomEntry'-vector for further processing. //
+			    // Write chainIDs and resSeq to maps to be able to recover amino acids.   //
+			    ////////////////////////////////////////////////////////////////////////////
+			    if( firstAtom ) {
+				    // start the first chain
+				    this->tmp_atomEntries.resize(1);
+				    // start the fist amino acid
+				    this->tmp_atomEntries.back().resize(1);
+				    // add the first atom to the amino acid
+				    this->tmp_atomEntries.back().back().push_back( str);
+
+				    // add the chainId to the map
+				    this->tmp_chainIdMap[str.Substring( 21, 1)[0]] = 0;
+				    this->tmp_resSeqMap.SetCount( tmp_resSeqMap.Count() + 1);
+				    // add the resSeq to the map
+				    this->tmp_resSeqMap.Last()[str.Substring( 22, 4).PeekBuffer()] = 0;
+				    // the first atom entry is read --> set firstAtom to 'false'
+				    firstAtom = false;
+                    newFile = false;
+			    } else {
+				    // if a new chain starts:
+				    if( !this->tmp_atomEntries.back().back().back().Substring( 21, 1).Equals( str.Substring( 21, 1)) || newFile ) {
+					    // start a new chain
+					    this->tmp_atomEntries.resize( this->tmp_atomEntries.size() + 1);
+					    // start a new amino acid
+					    this->tmp_atomEntries.back().resize(1);
+					    // add the ATOM string to the last amino acid
+					    this->tmp_atomEntries.back().back().push_back( str);
+    					
+					    // add the chainId to the map
+					    this->tmp_chainIdMap[str.Substring( 21, 1)[0]] = (unsigned int)this->tmp_atomEntries.size()-1;
+					    this->tmp_resSeqMap.SetCount( this->tmp_resSeqMap.Count() + 1);
+					    // add the resSeq to the map
+					    this->tmp_resSeqMap.Last()[str.Substring( 22, 4).PeekBuffer()] = 0;
+				    }
+				    // if a new amino acid starts:
+				    else if( !tmp_atomEntries.back().back().back().Substring( 22, 4).Equals( str.Substring( 22, 4)) ) {
+					    // start a new amino acid
+					    this->tmp_atomEntries.back().resize( this->tmp_atomEntries.back().size() + 1);
+					    // add the ATOM string to the last amino acid
+					    this->tmp_atomEntries.back().back().push_back( str);
+    					
+					    // add the resSeq to the map
+					    this->tmp_resSeqMap.Last()[str.Substring( 22, 4).PeekBuffer()] = (unsigned int)this->tmp_atomEntries.back().size()-1;
+				    }
+				    // if no new chain and no new amino acid starts:
+				    else {
+					    // add the ATOM string to the last amino acid
+					    this->tmp_atomEntries.back().back().push_back( str);
+				    }
+    				newFile = false;	
+			    }
+		    }
+            else if( str.StartsWithInsensitive( "HETATM") ) {
+			    // TODO: handle HETATM entries --> atoms of solvent molecules
+		    }
+		    else if( str.StartsWithInsensitive( "CONECT") ) {
+			    // TODO: handle CONECT entries to get the connections of the solvent molecules atoms
+		    }
+		    else if( str.StartsWithInsensitive( "END") ) {
+			    retval = true;
+			    break;
+		    }
+		    else if( str.StartsWithInsensitive( "ENDMDL") ) {
+			    retval = true;
+			    break;
+		    }
+	    }
+
+        file.Close();
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+	                               "%s: File \"%s\" loaded successfully\n",
+	                               this->ClassName(), vislib::StringA ( fn ).PeekBuffer() );
+        
     }
-
-	vislib::StringA str( fn);
-	// check, if file extension is 'pdb'
-	str.ToLowerCase();
-	if( !str.EndsWith( ".pdb") )
-		return false;
-	str.Clear();
-
-	// => check for PDB file indicator: the file must contain at least one 'ATOM' ?
-
-	// clear all containers
-	this->ClearData();
-	// add all elements from the periodic table to m_atomTypes
-	this->FillAtomTypesWithPeriodicTable();
-	// add all amino acid names to m_aminoAcidNames
-	this->FillAminoAcidNames();
-
-	// while file pointer is not at 'end of file'
-	while( !file.IsEOF() )
-	{
-		vislib::StringA str;
-		// read next line from file
-		str = vislib::sys::ReadLineFromFileA( file );
-		// skip empty lines
-		if( str.Length() <= 0 ) continue;
-	    
-		if( str.StartsWithInsensitive( "ATOM") )
-		{
-			// check if the current atom is at an alternate location
-			if( !str.Substring( 16, 1 ).Equals( " ", false) &&
-			    !str.Substring( 16, 1 ).Equals( "A", false) )
-				// only add one occurence of the ATOM (either ' ' or 'A')
-				continue;
-			////////////////////////////////////////////////////////////////////////////
-			// Add all ATOM entries to the 'atomEntry'-vector for further processing. //
-			// Write chainIDs and resSeq to maps to be able to recover amino acids.   //
-			////////////////////////////////////////////////////////////////////////////
-			if( firstAtom )
-			{
-				// start the first chain
-				this->tmp_atomEntries.resize(1);
-				// start the fist amino acid
-				this->tmp_atomEntries.back().resize(1);
-				// add the first atom to the amino acid
-				this->tmp_atomEntries.back().back().push_back( str);
-
-				// add the chainId to the map
-				this->tmp_chainIdMap[str.Substring( 21, 1)[0]] = 0;
-				this->tmp_resSeqMap.SetCount( tmp_resSeqMap.Count() + 1);
-				// add the resSeq to the map
-				this->tmp_resSeqMap.Last()[str.Substring( 22, 4).PeekBuffer()] = 0;
-				// the first atom entry is read --> set firstAtom to 'false'
-				firstAtom = false;
-			}
-			else
-			{
-				// if a new chain starts:
-				if( !this->tmp_atomEntries.back().back().back().Substring( 21, 1).Equals( str.Substring( 21, 1)) )
-				{
-					// start a new chain
-					this->tmp_atomEntries.resize( this->tmp_atomEntries.size() + 1);
-					// start a new amino acid
-					this->tmp_atomEntries.back().resize(1);
-					// add the ATOM string to the last amino acid
-					this->tmp_atomEntries.back().back().push_back( str);
-					
-					// add the chainId to the map
-					this->tmp_chainIdMap[str.Substring( 21, 1)[0]] = (unsigned int)this->tmp_atomEntries.size()-1;
-					this->tmp_resSeqMap.SetCount( this->tmp_resSeqMap.Count() + 1);
-					// add the resSeq to the map
-					this->tmp_resSeqMap.Last()[str.Substring( 22, 4).PeekBuffer()] = 0;
-				}
-				// if a new amino acid starts:
-				else if( !tmp_atomEntries.back().back().back().Substring( 22, 4).Equals( str.Substring( 22, 4)) )
-				{
-					// start a new amino acid
-					this->tmp_atomEntries.back().resize( this->tmp_atomEntries.back().size() + 1);
-					// add the ATOM string to the last amino acid
-					this->tmp_atomEntries.back().back().push_back( str);
-					
-					// add the resSeq to the map
-					this->tmp_resSeqMap.Last()[str.Substring( 22, 4).PeekBuffer()] = (unsigned int)this->tmp_atomEntries.back().size()-1;
-				}
-				// if no new chain and no new amino acid starts:
-				else
-				{
-					// add the ATOM string to the last amino acid
-					this->tmp_atomEntries.back().back().push_back( str);
-				}
-					
-			}
-		}
-		else if( str.StartsWithInsensitive( "HETATM") )
-		{
-			// TODO: handle HETATM entries --> atoms of solvent molecules
-		}
-		else if( str.StartsWithInsensitive( "CONECT") )
-		{
-			// TODO: handle CONECT entries to get the connections of the solvent molecules atoms
-		}
-		else if( str.StartsWithInsensitive( "END") )
-		{
-			retval = true;
-			break;
-		}
-		else if( str.StartsWithInsensitive( "ENDMDL") )
-		{
-			retval = true;
-			break;
-		}
-	}
-
-    file.Close();
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-	                           "%s: File \"%s\" loaded successfully\n",
-	                           this->ClassName(), vislib::StringA ( fn ).PeekBuffer() );
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	// loop over all atom entries in the 'tmp_atomEntries'-vector to get chains, amino acids and atoms //
