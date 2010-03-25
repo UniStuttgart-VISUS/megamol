@@ -8962,7 +8962,7 @@ void main(void) {
     }
 
     // set and clamp rgb color
-    gl_FragColor.rgb = clamp(firstColorSkipped, vec3(0.0), vec3(1.0));
+    gl_FragColor.rgb = clamp(color, vec3(0.0), vec3(1.0));
 
     // set alpha value for fragment
     if(color == vec3(0.0)) {
