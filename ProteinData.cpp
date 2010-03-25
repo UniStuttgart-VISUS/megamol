@@ -176,7 +176,7 @@ bool protein::ProteinData::tryLoadFile(void)
     }
 
     //vislib::StringTokeniser<vislib::TCharTraits> filenames( fn, ' ');
-    vislib::Array<vislib::TString> filenames = vislib::StringTokeniser<vislib::TCharTraits>::Split( fn, ' ', true);
+    vislib::Array<vislib::TString> filenames = vislib::StringTokeniser<vislib::TCharTraits>::Split( fn, ';', true);
 
     for( unsigned int cnt = 0; cnt < filenames.Count(); ++ cnt ) {
 
