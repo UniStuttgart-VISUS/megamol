@@ -364,7 +364,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
     indices.Add(cnt - 1);
     lines.Add(ShallowPoint(pos + (cnt - 1) * 3));
 
-    const float distEps = rad * 0.5f;
+    const float distEps = rad * 0.75f;
 
     bool refined = true;
     while (refined) {
@@ -429,6 +429,19 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
         return;
     }
 
+    float maxLen = 1.0f;
+    for (unsigned int i = 1; i < indices.Count(); i++) {
+        float len = static_cast<float>(indices[i] - indices[i - 1]);
+        len /= lines[i - 1].Distance(lines[i]);
+        if (maxLen < len) maxLen = len;
+    }
+    vislib::Array<float> radii(indices.Count() - 1, 1.0f);
+    for (unsigned int i = 1; i < indices.Count(); i++) {
+        float len = static_cast<float>(indices[i] - indices[i - 1]);
+        len /= lines[i - 1].Distance(lines[i]);
+        radii[i - 1] = len / maxLen;
+    }
+
     // first curve
     if (useTimeColour) this->timeColour(times[indices[0] * 2], colR, colG, colB);
     curve[0].Set(lines[0], rad, colR, colG, colB);
@@ -436,7 +449,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
         (times[indices[0] * 2] * 0.333f + times[indices[0] * 2 + 1] * 0.667f) * 0.333f +
         (times[indices[1] * 2] * 0.333f + times[indices[1] * 2 + 1] * 0.667f) * 0.667f
         , colR, colG, colB);
-    curve[1].Set(lines[0].Interpolate(lines[1], 0.667f), rad, colR, colG, colB);
+    curve[1].Set(lines[0].Interpolate(lines[1], 0.667f), rad * radii[0], colR, colG, colB);
 
     // inner curves
     for (unsigned int i = 2; i < lines.Count() - 1; i++) {
@@ -444,19 +457,19 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
             (times[indices[i - 1] * 2] * 0.75f + times[indices[i - 1] * 2 + 1] * 0.25f) * 0.75f +
             (times[indices[i] * 2] * 0.75f + times[indices[i] * 2 + 1] * 0.25f) * 0.25f
             , colR, colG, colB);
-        curve[2].Set(lines[i - 1].Interpolate(lines[i], 0.25f), rad, colR, colG, colB);
+        curve[2].Set(lines[i - 1].Interpolate(lines[i], 0.25f), rad * radii[i - 1], colR, colG, colB);
         if (useTimeColour) this->timeColour(
             (times[indices[i - 1] * 2] * 0.5f + times[indices[i - 1] * 2 + 1] * 0.5f) * 0.5f +
             (times[indices[i] * 2] * 0.5f + times[indices[i] * 2 + 1] * 0.5f) * 0.5f
             , colR, colG, colB);
-        curve[3].Set(lines[i - 1].Interpolate(lines[i], 0.5f), rad, colR, colG, colB);
+        curve[3].Set(lines[i - 1].Interpolate(lines[i], 0.5f), rad * 0.5f * (radii[i - 1] + radii[i]), colR, colG, colB);
         this->curves.Add(curve);
         curve[0] = curve[3];
         if (useTimeColour) this->timeColour(
             (times[indices[i - 1] * 2] * 0.25f + times[indices[i - 1] * 2 + 1] * 0.75f) * 0.25f +
             (times[indices[i] * 2] * 0.25f + times[indices[i] * 2 + 1] * 0.75f) * 0.75f
             , colR, colG, colB);
-        curve[1].Set(lines[i - 1].Interpolate(lines[i], 0.75f), rad, colR, colG, colB);
+        curve[1].Set(lines[i - 1].Interpolate(lines[i], 0.75f), rad * radii[i], colR, colG, colB);
     }
 
     // last curve
@@ -464,7 +477,7 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
         (times[indices[lines.Count() - 2] * 2] * 0.667f + times[indices[lines.Count() - 2] * 2 + 1] * 0.333f) * 0.667f +
         (times[indices[lines.Count() - 1] * 2] * 0.667f + times[indices[lines.Count() - 1] * 2 + 1] * 0.333f) * 0.333f
         , colR, colG, colB);
-    curve[2].Set(lines[lines.Count() - 2].Interpolate(lines[lines.Count() - 1], 0.333f), rad, colR, colG, colB);
+    curve[2].Set(lines[lines.Count() - 2].Interpolate(lines[lines.Count() - 1], 0.333f), rad * radii[radii.Count() - 1], colR, colG, colB);
     curve[3].Set(lines[lines.Count() - 1], rad, colR, colG, colB);
     this->curves.Add(curve);
 
