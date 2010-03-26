@@ -115,6 +115,9 @@ namespace misc {
         /** The number of section along the profile */
         param::ParamSlot profileSectionsSlot;
 
+        /** Controlls the type of the curve caps */
+        param::ParamSlot capTypeSlot;
+
         /** The display list storing the objects */
         unsigned int objs;
 
