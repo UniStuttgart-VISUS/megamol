@@ -142,11 +142,10 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const vislib::net::IPEndPoint &responseAddress, 
-        const vislib::net::IPAddress &bindAddress, 
         const vislib::net::IPAddress &bcastAddress, 
         const USHORT bindPort) 
         : bcastAddress(bcastAddress, bindPort),
-        bindAddress(bindAddress, bindPort),
+        bindAddress(IPAddress::ANY, bindPort),
         responseAddress(responseAddress) {
 }
 
@@ -156,11 +155,10 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const vislib::net::IPEndPoint &responseAddress, 
-        const vislib::net::IPAddress6 &bindAddress, 
         const vislib::net::IPAddress6 &bcastAddress, 
         const USHORT bindPort) 
         : bcastAddress(bcastAddress, bindPort),
-        bindAddress(bindAddress, bindPort),
+        bindAddress(IPAddress6::ANY, bindPort),
         responseAddress(responseAddress) {
 }
 
@@ -169,17 +167,12 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const IPEndPoint& responseAddress, 
-        const IPAgnosticAddress& bindAddress, 
         const IPAgnosticAddress& bcastAddress,
         const USHORT bindPort)
         : bcastAddress(bcastAddress, bindPort),
-        bindAddress(bindAddress, bindPort),
+        bindAddress(static_cast<IPEndPoint::AddressFamily>(
+        bcastAddress.GetAddressFamily()), bindPort),
         responseAddress(responseAddress) {
-    if (this->bindAddress.GetAddressFamily() 
-            != this->bcastAddress.GetAddressFamily()) {
-        this->~DiscoveryConfig();
-        throw IllegalParamException("bindAddress", __FILE__, __LINE__);
-    }
 }
 
 
@@ -188,14 +181,15 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const IPEndPoint& responseAddress, 
-        const IPAddress& bindAddress, 
         const USHORT bindPort)
-        : bindAddress(bindAddress, bindPort),
+        : bcastAddress(responseAddress.GetAddressFamily(), bindPort),
+        bindAddress(responseAddress.GetAddressFamily(), bindPort),
         responseAddress(responseAddress) {
     NetworkInformation::AdapterList candidates;
     NetworkInformation::Confidence confidence = NetworkInformation::INVALID;
 
-    NetworkInformation::GetAdaptersForUnicastAddress(candidates, bindAddress);
+    NetworkInformation::GetAdaptersForUnicastAddress(candidates, 
+        responseAddress.GetIPAddress());
 
     for (SIZE_T i = 0; i < candidates.Count(); i++) {
         this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
@@ -388,11 +382,11 @@ void vislib::net::cluster::DiscoveryService::AddListener(
         DiscoveryListener *listener) {
     ASSERT(listener != NULL);
 
-    this->listenersCritSect.Lock();
+    this->listeners.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
         this->listeners.Append(listener);
     }
-    this->listenersCritSect.Unlock();
+    this->listeners.Unlock();
 }
 
 
@@ -441,32 +435,22 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress6(
 
 
 /*
- * vislib::net::cluster::DiscoveryService::IsRunning
+ * vislib::net::cluster::DiscoveryService::GetState
  */
-bool vislib::net::cluster::DiscoveryService::IsRunning(void) const {
-    SIZE_T cntConfigs = this->configs.Count();
-    // TODO: reimplement this with a state enumeration
+vislib::net::cluster::DiscoveryService::State 
+vislib::net::cluster::DiscoveryService::GetState(void) const {
+    State retval = STATE_STOPPED;
     
-    if (!this->senderThread.IsRunning()) {
-        return false;
+    if (this->senderThread.IsRunning()) {
+        reinterpret_cast<int&>(retval) |= STATE_SENDER_RUNNING;
     }
+    //for (SIZE_T i = 0; i < cntConfigs; i++) {
+    //    if (!this->configs[i].GetRecvThread().IsRunning()) {
+    //        return false;
+    //    }
+    //}
 
-    for (SIZE_T i = 0; i < cntConfigs; i++) {
-        if (!this->configs[i].GetRecvThread().IsRunning()) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-/*
- * vislib::net::cluster::DiscoveryService::IsStopped
- */
-bool vislib::net::cluster::DiscoveryService::IsStopped(void) const {
-    // TODO: reimplement this with a state enumeration
-    return !this->IsRunning();
+    return retval;
 }
 
 
@@ -476,10 +460,7 @@ bool vislib::net::cluster::DiscoveryService::IsStopped(void) const {
 void vislib::net::cluster::DiscoveryService::RemoveListener(
         DiscoveryListener *listener) {
     ASSERT(listener != NULL);
-
-    this->listenersCritSect.Lock();
     this->listeners.RemoveAll(listener);
-    this->listenersCritSect.Unlock();
 }
 
 
@@ -676,7 +657,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
      */
     VLTRACE(Trace::LEVEL_VL_VERBOSE, "The discovery receiver thread is "
         "preparing its socket on %s ...\n", 
-        config->GetBindAddressForReceiver().ToStringA().PeekBuffer());
+        config->GetBindAddress().ToStringA().PeekBuffer());
     try {
         Socket::Startup();
         this->socket.Create(config->GetProtocolFamily(), Socket::TYPE_DGRAM, 
@@ -685,7 +666,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
         this->socket.SetReuseAddr(true);
 //        this->socket.SetExclusiveAddrUse(
 //            !config->GetDiscoveryService().IsShareSockets());
-        this->socket.Bind(config->GetBindAddressForReceiver());
+        this->socket.Bind(config->GetBindAddress());
         //socket.SetLinger(false, 0);     // Force hard close.
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery receiver thread could not "
@@ -837,7 +818,7 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
             e.GetMsgA());
     }
     try {
-        this->socket.Close();   // TODO: Should perhaps be protected by crit sect?
+        this->socket.Close();
     } catch (SocketException e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Error while closing cluster "
             "discovery receiver socket: %s. This is normally no problem and "
@@ -859,8 +840,7 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
  * vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(
-        void) : Super(IPEndPoint(), IPAddress::ANY, IPAddress::ANY, 
-        DEFAULT_PORT), cds(NULL) {
+        void) : Super(IPEndPoint(), IPAddress::ANY, DEFAULT_PORT), cds(NULL) {
 }
 
 
@@ -1247,13 +1227,13 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
             this->cntResponseChances, discoverySource);
         this->peerNodes.Append(hPeer);
 
-        this->listenersCritSect.Lock();
+        this->listeners.Lock();
         ConstIterator<ListenerList::Iterator> it 
             = this->listeners.GetConstIterator();
         while (it.HasNext()) {
             it.Next()->OnNodeFound(*this, hPeer);
         }
-        this->listenersCritSect.Unlock();
+        this->listeners.Unlock();
     }
 
     this->peerNodesCritSect.Unlock();
@@ -1271,7 +1251,7 @@ void vislib::net::cluster::DiscoveryService::fireUserMessage(
     this->peerNodesCritSect.Lock();
     
     if ((idx = this->peerFromDiscoveryAddr(sender)) >= 0) {
-        this->listenersCritSect.Lock();
+        this->listeners.Lock();
 
         ConstIterator<ListenerList::Iterator> it 
             = this->listeners.GetConstIterator();
@@ -1282,7 +1262,7 @@ void vislib::net::cluster::DiscoveryService::fireUserMessage(
                 msgBody);
         }
 
-        this->listenersCritSect.Unlock();
+        this->listeners.Unlock();
     }
     
     this->peerNodesCritSect.Unlock();
@@ -1404,7 +1384,7 @@ void vislib::net::cluster::DiscoveryService::removePeerNode(
         const IPEndPoint& address) {
     INT_PTR idx = 0;
     
-    this->listenersCritSect.Lock();
+    this->listeners.Lock();
 
     if ((idx = this->peerFromResponseAddress(address)) >= 0) {
         PeerHandle hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
@@ -1424,7 +1404,7 @@ void vislib::net::cluster::DiscoveryService::removePeerNode(
         this->peerNodes.Erase(idx);
     }
 
-    this->listenersCritSect.Unlock();
+    this->listeners.Unlock();
 }
 
 

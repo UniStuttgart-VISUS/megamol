@@ -218,9 +218,6 @@ namespace cluster {
              *                        each process in the cluster, i. e. no node
              *                        should specify the same 'responseAddr' as
              *                        some other does.
-             * @param bindAddress     The adapter to bind the service locally
-             *                        to. The discovery thread will bind to 
-             *                        'bindPort' on this adapter.
              * @param bcastAddress    The broadcast address of the network. All
              *                        requests (alive-messages) will be sent to 
              *                        this address. The destination port of 
@@ -234,7 +231,7 @@ namespace cluster {
              *                        this port.
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
-                const IPAddress& bindAddress, const IPAddress& bcastAddress,
+                const IPAddress& bcastAddress,
                 const USHORT bindPort = DEFAULT_PORT);
 
             /**
@@ -254,9 +251,6 @@ namespace cluster {
              *                        each process in the cluster, i. e. no node
              *                        should specify the same 'responseAddr' as
              *                        some other does.
-             * @param bindAddress     The adapter to bind the service locally
-             *                        to. The discovery thread will bind to 
-             *                        'bindPort' on this adapter.
              * @param bcastAddress    The broadcast address of the network. All
              *                        requests (alive-messages) will be sent to 
              *                        this address. The destination port of 
@@ -270,7 +264,7 @@ namespace cluster {
              *                        this port.
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
-                const IPAddress6& bindAddress, const IPAddress6& bcastAddress,
+                const IPAddress6& bcastAddress,
                 const USHORT bindPort = DEFAULT_PORT);
 
             /**
@@ -278,7 +272,7 @@ namespace cluster {
              * configured.
              *
              * The mode of the discovery service depends on the address family
-             * of 'bindAddress' and 'bcastAddress', which must be the same.
+             * of and 'bcastAddress'.
              *
              * @param responseAddress This is the "call back address" of the 
              *                        current node/adapter, on which 
@@ -291,9 +285,6 @@ namespace cluster {
              *                        each process in the cluster, i. e. no node
              *                        should specify the same 'responseAddr' as
              *                        some other does.
-             * @param bindAddress     The adapter to bind the service locally
-             *                        to. The discovery thread will bind to 
-             *                        'bindPort' on this adapter.
              * @param bcastAddress    The broadcast address of the network. All
              *                        requests (alive-messages) will be sent to 
              *                        this address. The destination port of 
@@ -305,28 +296,9 @@ namespace cluster {
              * @param bindPort        The port to bind the receiver thread to.
              *                        All discovery requests are directed to
              *                        this port.
-             *
-             * @throws IllegalParamException If the address families of 
-             *                               'bindAddress' and 'bcastAddress' do
-             *                               not match.
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
-                const IPAgnosticAddress& bindAddress, 
                 const IPAgnosticAddress& bcastAddress,
-                const USHORT bindPort = DEFAULT_PORT);
-
-            /**
-             * Create a new configuration with all automatically detected 
-             * broadcast address. The broadcast address of the subnet of 
-             * 'bindAddress' is used. Therefore, a valid adapter must be 
-             * specified and IPAddress::ANY is not acceptable.
-             *
-             * @param responseAddress
-             * @param bindAddress
-             * @param bindPort
-             */
-            DiscoveryConfig(const IPEndPoint& responseAddress, 
-                const IPAddress& bindAddress, 
                 const USHORT bindPort = DEFAULT_PORT);
 
             /**
@@ -340,6 +312,32 @@ namespace cluster {
             //DiscoveryConfig(const IPEndPoint& responseAddress, 
             //    const IPAddress6& bindAddress, 
             //    const USHORT bindPort = DEFAULT_PORT);
+
+            /**
+             * Create a new configuration that uses the broadcast address of the
+             * subnet 'responseAddress' is in.
+             *
+             * @param responseAddress This is the "call back address" of the 
+             *                        current node/adapter, on which 
+             *                        user-defined communication should be 
+             *                        initiated. The DiscoveryService does not 
+             *                        use this address itself (it is a pure 
+             *                        payload for it), but communicates it to
+             *                        all other nodes, which then can use it.
+             *                        These addresses should uniquely identify
+             *                        each process in the cluster, i. e. no node
+             *                        should specify the same 'responseAddr' as
+             *                        some other does.
+             * @param bindPort        The port to bind the receiver thread to.
+             *                        All discovery requests are directed to
+             *                        this port.
+             *
+             * @throws IllegalParamException If the broadcast address to send
+             *                               alive beacons to cannot be 
+             *                               determined from 'responseAddress'.
+             */
+            DiscoveryConfig(const IPEndPoint& responseAddress,
+                const USHORT bindPort = DEFAULT_PORT);
 
             /**
              * Clone 'rhs'.
@@ -371,22 +369,6 @@ namespace cluster {
             inline const IPEndPoint& GetBindAddress(void) const {
                 return this->bindAddress;
             }
-
-            /**
-             * Answer the end point that the local receiver will be bound to. 
-             * Note that this might be different than the address the revceiver 
-             * was requested to bind to as we must handle the wrong behaviour of
-             * Linux.
-             *
-             * @return The local socket end point.
-             */
-#ifdef _WIN32
-            inline const IPEndPoint& GetBindAddressForReceiver(void) const {
-                return this->bindAddress;
-            }
-#else /* _WIN32 */
-            IPEndPoint GetBindAddressForReceiver(void) const;
-#endif /* _WIN32 */
 
             /**
              * Get the address family of the protocol that the discovery thread 
@@ -463,6 +445,16 @@ namespace cluster {
 
         }; /* end class DiscoveryConfig */
 
+        /**
+         * This enumeration defines possibles states of the discovery service
+         * as a whole.
+         */
+        typedef enum State_t {
+            STATE_STOPPED = 0x00,
+            STATE_RECEIVER_RUNNING = 0x01,
+            STATE_SENDER_RUNNING = 0x02,
+            STATE_RUNNING = 0x01 + 0x02
+        } State;
 
         /** 
          * The handle that identifies a peer node. 
@@ -658,6 +650,13 @@ namespace cluster {
         }
 
         /**
+         * Answer the state of the discovery service.
+         *
+         * @return The state of the discovery service.
+         */
+        State GetState(void) const;
+
+        /**
          * Answer whether the discovery service will not send MSG_TYPE_IAMALIVE 
          * for being added to the peer list of other nodes.
          *
@@ -674,7 +673,9 @@ namespace cluster {
          *
          * @return true, if the service is running, false otherwise.
          */
-        bool IsRunning(void) const;
+        inline bool IsRunning(void) const {
+            return (this->GetState() == STATE_RUNNING);
+        }
 
         /**
          * Answer whether the 'idx'th known peer node is this node. 
@@ -713,7 +714,9 @@ namespace cluster {
          *
          * @return true, if the service is stopped, false otherwise.
          */
-        bool IsStopped(void) const;
+        inline bool IsStopped(void) const {
+            return (this->GetState() == STATE_STOPPED);
+        }
 
         /**
          * Removes, if registered, 'listener' from the list of objects informed
@@ -1139,7 +1142,8 @@ namespace cluster {
         typedef Array<DiscoveryConfigEx> ConfigList;
 
         /** A shortcut to the listener list type. */
-        typedef SingleLinkedList<DiscoveryListener *> ListenerList;
+        typedef SingleLinkedList<DiscoveryListener *, 
+            vislib::sys::CriticalSection> ListenerList;
 
         /** An array for storing the known peer nodes. */
         typedef Array<PeerHandle> PeerNodeList;
@@ -1318,13 +1322,13 @@ namespace cluster {
         /** This list holds the objects to be informed about new nodes. */
         ListenerList listeners;
 
-        /** Critical section for protecting 'listeners'. */
-        mutable sys::CriticalSection listenersCritSect;
-
         /** The name of the cluster this discovery service should form. */
         StringA name;
 
-        /** The thread performing the node discovery. */
+        /** 
+         * The thread sending the alive beacons of this node to the broadcast
+         * addresses specified in the discovery service configurations.
+         */
         sys::RunnableThread<Sender> senderThread;
 
         /** This array holds the peer nodes. */
