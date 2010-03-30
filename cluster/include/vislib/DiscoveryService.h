@@ -502,7 +502,7 @@ namespace cluster {
             - sizeof(struct sockaddr_storage);
 
         /** The first message ID that can be used for a user message. */
-        static const UINT32 MSG_TYPE_USER;
+        static const UINT32 MSG_TYPE_USER = 16;
 
         /**
          * Create a new instance.

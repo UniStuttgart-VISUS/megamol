@@ -346,10 +346,12 @@ const UINT32 vislib::net::cluster::DiscoveryService::FLAG_OBSERVE_ONLY = 0x1;
 const UINT32 vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS = 0x2;
 
 
-/*
- * vislib::net::cluster::DiscoveryService::MSG_TYPE_USER
- */
-const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_USER = 16;
+//#ifndef _WIN32
+///*
+// * vislib::net::cluster::DiscoveryService::MSG_TYPE_USER
+// */
+//const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_USER;
+//#endif /* _WIN32 */
 
 
 /*
