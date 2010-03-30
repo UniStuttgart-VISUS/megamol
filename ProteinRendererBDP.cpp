@@ -877,8 +877,8 @@ bool ProteinRendererBDP::Render( Call& call )
         this->preComputationDone = true;
     }
 
-    if(static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height )
+    if((static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width) ||
+       (static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height))
     {
         this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
         this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
@@ -963,13 +963,19 @@ bool ProteinRendererBDP::Render( Call& call )
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }*/
 
+    /*glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendColor(this->alpha,this->alpha, this->alpha, this->alpha);
+    glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);*/
+
+    glEnable(GL_DEPTH_TEST);
+
     // start rendering to depth peeling fbo
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthPeelingFBO);
 
     glDrawBuffers(_BDP_NUM_BUFFERS, this->colorBufferIndex);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    //glClearColor(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
 
     glClear( GL_COLOR_BUFFER_BIT );
 
@@ -1022,7 +1028,6 @@ bool ProteinRendererBDP::Render( Call& call )
     glDisable( GL_LINE_WIDTH);
     glEnable( GL_LIGHTING);*/
     // <<<<<<<<<< end DEBUG
-
 
     // ========= Apply postprocessing effects =========
 
