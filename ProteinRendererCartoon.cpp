@@ -658,7 +658,7 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
     /////////////////////////////////////////////////////////////////
     // TEMP START
     /////////////////////////////////////////////////////////////////
-#if 1
+#if 0
     ColoringMode tmpCm = this->m_currentColoringMode;
     this->m_currentColoringMode = ELEMENT;
     this->MakeColorTable( protein, true);
