@@ -12,7 +12,6 @@
 
 #include "CallProteinData.h"
 #include "CallerSlot.h"
-#include "CallFrame.h"
 #include "ReducedSurface.h"
 #include "ReducedSurfaceSimplified.h"
 #include "view/Renderer3DModule.h"
@@ -27,6 +26,9 @@
 #include <set>
 #include <algorithm>
 #include <list>
+
+
+#define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
 #define _BDP_NUM_BUFFERS 8  // DON'T CHANGE !
 
@@ -46,11 +48,9 @@ namespace protein {
         /** depth peeling modi */
         enum DepthPeelingMode
         {
-            BDP_D = 0,
-            BDP_C = 1,
-            ADAPTIVE_BDP_C = 2, 
-            ADAPTIVE_BDP_F = 3,
-            DUAL_DEPTHPEELING = 4
+            NONE_BDP = 0,
+            DEPTH_BDP = 1,
+            COLOR_BDP = 2
         };
                 
         /** postprocessing modi */
@@ -395,6 +395,7 @@ namespace protein {
         
         // caller slot
         megamol::core::CallerSlot protDataCallerSlot;
+        megamol::core::CallerSlot interiorProteinCallerSlot;
         
         // camera information
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -412,14 +413,19 @@ namespace protein {
         megamol::core::param::ParamSlot debugParam;
         megamol::core::param::ParamSlot drawSESParam;
         megamol::core::param::ParamSlot drawSASParam;
-        megamol::core::param::ParamSlot alphaParam;
-        // not used yet ...
         megamol::core::param::ParamSlot depthPeelingParam;
+        megamol::core::param::ParamSlot alphaParam;
+        megamol::core::param::ParamSlot flipNormalsParam;
+        megamol::core::param::ParamSlot alphaGradientParam;
+        megamol::core::param::ParamSlot interiorProteinParam;
 
         // parameter values
         bool drawRS;
         bool drawSES;
         bool drawSAS;
+        bool flipNormals;
+        bool interiorProtein;
+        float alphaGradient;
         float alpha;
         /** current render mode */
         RenderMode currentRendermode;
@@ -458,6 +464,8 @@ namespace protein {
         vislib::graphics::gl::GLSLShader createDepthBufferShader;
         // shader for blending depth peeling result
         vislib::graphics::gl::GLSLShader renderDepthPeelingShader;
+        // shader for rendering interior protein into bucket fbo
+        vislib::graphics::gl::GLSLShader interiorProteinShader;
 
         // DEBUG: render min max depth buffer
         vislib::graphics::gl::GLSLShader renderDepthBufferShader;
@@ -506,6 +514,9 @@ namespace protein {
         GLuint verticalFilterFBO;
         GLuint depthBufferFBO;
         GLuint depthPeelingFBO;
+
+        // FBO for cartoon rendering the protein
+        vislib::graphics::gl::FramebufferObject interiorProteinFBO;
 
         // textures for FBOs
         GLuint texture0;
