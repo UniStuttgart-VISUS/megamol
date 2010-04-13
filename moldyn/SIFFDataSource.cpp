@@ -160,7 +160,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
         float x, y, z, rad;
         int r, g, b;
         while (!file.IsEOF()) {
-            SIZE_T read = file.Read(buffer, bufferSize);
+            SIZE_T read = static_cast<SIZE_T>(file.Read(buffer, bufferSize));
             SIZE_T sspos = 0;
             SIZE_T sepos = 0;
             while (sepos < read) {
