@@ -8790,32 +8790,42 @@ uniform vec2 texOffset;
 
 void main(void) {
     
-    int i;
+    int i, rt;
     vec2 texCoord = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
     vec3 minmaxDepth;
+    float bucket;
+
+    float depth = texture2D(intProtDepthTex, texCoord).x;
+    vec4 color = texture2D(intProtColorTex, texCoord);
 
     // get min and max depth of pixel location
-     minmaxDepth.xy = texture2D( depthBuffer, texCoord).xy;
-     minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
+    minmaxDepth.xy = texture2D( depthBuffer, texCoord).xy;
+    minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
     // init fragment data with zero
     for(i = 0; i < gl_MaxDrawBuffers; ++i) {
         gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
     }
 
-    /*if(DPmode == 1) {
-        
-
-    } else  { // DPmode == 2
-
-
-    }*/
-
-    vec4 color = texture2D(intProtColorTex, texCoord);
-    color.a = 1.0f;
-
-    gl_FragData[4].x = codeColorBDP(color);
-
-   
+    if(DPmode == 1) {
+        // calculate bucket pair (16 pairs -> 32 depth values)
+        bucket = floor(16.0*(depth + minmaxDepth.x) / minmaxDepth.z);
+        // index of render target
+        rt = int(floor(bucket/2.0));
+        // choose right pair in render target
+        if(mod(int(bucket), 2) == 0) {
+            gl_FragData[rt].x = 1.0 - depth;
+            gl_FragData[rt].y = depth;
+        } else {
+            gl_FragData[rt].z = 1.0 - depth;
+            gl_FragData[rt].w = depth;
+        }
+    } else if(DPmode == 2) {
+        // calculate right subintervall
+        bucket = floor(32.0*(depth + minmaxDepth.x) / minmaxDepth.z);
+        // choose right component in render target
+        color.a = 0.75;
+        gl_FragData[int(floor(bucket/4.0))][int(mod(bucket, 4.0))] = codeColorBDP(color);
+    }   
 }
 -->
       </snippet>
@@ -8918,6 +8928,7 @@ uniform sampler2D depthBuffer;
 
 uniform vec2 texOffset;
 uniform float alpha = 0.5;
+uniform float alphaIntProtein = 0.5;
 uniform float alphaGradient = 0.0;
 uniform int DPmode = 0;
 
@@ -9023,7 +9034,9 @@ void main(void) {
                 if(layer[3-j] > 0.0) { 
                     firstColorSkipped = color; 
                     decodecolor = decodeColorBDP(layer[3-j]);
-                    if(abs(decodecolor.a - 0.5) < 0.05) {
+                    if(abs(decodecolor.a - 0.75) < 0.05) { // special alpha for interior protein
+                        color = color*(1.0 - alphaIntProtein) + decodecolor.rgb*alphaIntProtein;
+                    } else if(abs(decodecolor.a - 0.5) < 0.05) { // ...
                         color = color*(1.0 - alpha)*(1.0 - alpha) + decodecolor.rgb*alpha; 
                     } else {
                         color = color*(1.0 - alpha) + decodecolor.rgb*alpha; 
