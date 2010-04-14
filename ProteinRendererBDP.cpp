@@ -684,6 +684,8 @@ bool ProteinRendererBDP::create( void )
 
 	// ...
 
+    CHECK_FOR_OGL_ERROR();
+
     return true;
 }
 
@@ -939,8 +941,9 @@ bool ProteinRendererBDP::Render( Call& call ) {
         this->MakeColorTable( protein, recomputeColors);
 
         // compute the data needed for the current render mode
-        if( this->currentRendermode == GPU_RAYCASTING )
+        if( this->currentRendermode == GPU_RAYCASTING ) {
             this->ComputeRaycastingArrays();
+        }
 
         // set the precomputation of the data as done
         this->preComputationDone = true;
@@ -963,7 +966,31 @@ bool ProteinRendererBDP::Render( Call& call ) {
     }
 
 
+    // ==================== render interior protein into fbo ====================
+
+    if(this->interiorProtein && (this->depthpeeling != NONE_BDP)) {
+
+        view::CallRender3D *cr3d = this->interiorProteinCallerSlot.CallAs<view::CallRender3D>();
+
+        // if something went wrong --> return
+        if( !cr3d) return false;
+
+        cr3d->SetOutputBuffer(&this->interiorProteinFBO , (int)this->width, (int)this->height);
+        cr3d->EnableOutputBuffer();
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+        // execute the call
+        if ( ! ( *cr3d )() )
+            return false;
+
+        cr3d->DisableOutputBuffer();
+        CHECK_FOR_OGL_ERROR();
+    }
+
     // ==================== Set OpenGL States ====================
+
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -985,39 +1012,10 @@ bool ProteinRendererBDP::Render( Call& call ) {
         glDepthFunc(GL_LEQUAL);
     }
 
+    // ==================== Create Min Max Depth Buffer ====================
+
     if(this->depthpeeling != NONE_BDP) {
-
-        // ==================== Create Min Max Depth Buffer ====================
-
         this->createMinMaxDepthBuffer(dynamic_cast<view::CallRender3D*>( &call )->AccessBoundingBoxes());
-
-        // ==================== render interior protein into fbo ====================
-
-        if(this->interiorProtein) {
-
-            view::CallRender3D *cr3d = this->interiorProteinCallerSlot.CallAs<view::CallRender3D>();
-
-            // if something went wrong --> return
-            if( !cr3d) return false;
-
-            cr3d->SetOutputBuffer(&this->interiorProteinFBO , (int)this->width, (int)this->height);
-            cr3d->EnableOutputBuffer();
-
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-            // execute the call
-            if ( ! ( *cr3d )() )
-                return false;
-
-            cr3d->DisableOutputBuffer();
-
-            this->interiorProteinFBO.DrawColourTexture();
-            CHECK_FOR_OGL_ERROR();
-
-            this->interiorProteinFBO.DrawDepthTexture();
-            CHECK_FOR_OGL_ERROR();
-        }
     }
 
     // ==================== Start actual SES rendering ====================
@@ -1106,6 +1104,9 @@ bool ProteinRendererBDP::Render( Call& call ) {
             glBindTexture(GL_TEXTURE_2D, 0);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, 0);
+
+            CHECK_FOR_OGL_ERROR();
+
         }
     }
 
@@ -1137,30 +1138,6 @@ bool ProteinRendererBDP::Render( Call& call ) {
     // render depth peeling result
     if(this->depthpeeling != NONE_BDP) {
         this->renderDepthPeeling();
-    } else {
-        // >>>>>>>>>> DEBUG
-        // drawing surfVectors as yellow lines
-        /*
-        glLineWidth( 1.0f);
-        glEnable( GL_LINE_WIDTH);
-        glPushAttrib( GL_POLYGON_BIT);
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
-        unsigned int i;
-        for( i = 0; i < ((unsigned int)this->sphereVertexArray[0].Count())/4; i++ )
-        {
-            glColor3f( 1.0f, 1.0f, 0.0f);
-            glBegin( GL_LINES );
-                glVertex3f( this->sphereVertexArray[0][4*i], this->sphereVertexArray[0][4*i+1], this->sphereVertexArray[0][4*i+2]);
-                glVertex3f( this->sphereVertexArray[0][4*i] + this->sphereSurfVector[0][4*i]*1.5f, 
-                            this->sphereVertexArray[0][4*i+1] + this->sphereSurfVector[0][4*i+1]*1.5f, 
-                            this->sphereVertexArray[0][4*i+2] + this->sphereSurfVector[0][4*i+2]*1.5f);
-            glEnd(); //GL_LINES
-        }
-        glPopAttrib();
-        glDisable( GL_LINE_WIDTH);
-        glEnable( GL_LIGHTING);
-        */
-        // <<<<<<<<<< end DEBUG
     }
 
     // ========= Apply postprocessing effects =========
@@ -1691,6 +1668,31 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
 
         // unbind texture
         glBindTexture( GL_TEXTURE_2D, 0);
+
+        // >>>>>>>>>> DEBUG
+
+        // drawing surfVectors as yellow lines
+        if(this->depthpeeling == NONE_BDP) {
+            glLineWidth( 1.0f);
+            glEnable( GL_LINE_WIDTH);
+            glPushAttrib( GL_POLYGON_BIT);
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
+            unsigned int i;
+            for( i = 0; i < ((unsigned int)this->sphereVertexArray[cntRS].Count())/4; i++ )
+            {
+                glColor3f( 1.0f, 1.0f, 0.0f);
+                glBegin( GL_LINES );
+                    glVertex3f( this->sphereVertexArray[cntRS][4*i], this->sphereVertexArray[cntRS][4*i+1], this->sphereVertexArray[cntRS][4*i+2]);
+                    glVertex3f( this->sphereVertexArray[cntRS][4*i] + this->sphereSurfVector[cntRS][4*i]*1.5f, 
+                                this->sphereVertexArray[cntRS][4*i+1] + this->sphereSurfVector[cntRS][4*i+1]*1.5f, 
+                                this->sphereVertexArray[cntRS][4*i+2] + this->sphereSurfVector[cntRS][4*i+2]*1.5f);
+                glEnd(); //GL_LINES
+            }
+            glPopAttrib();
+            glDisable( GL_LINE_WIDTH);
+        }
+        
+        // <<<<<<<<<< end DEBUG
     }
     
     if(this->depthpeeling != NONE_BDP) {
@@ -1699,6 +1701,8 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glBindTexture( GL_TEXTURE_2D, 0);
     }
             
+    CHECK_FOR_OGL_ERROR();
+
     // delete pointers
     delete[] clearColor;
 }
@@ -1892,6 +1896,7 @@ void ProteinRendererBDP::renderDepthPeeling(void) {
 
     glUniform2fARB( this->renderDepthPeelingShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
     glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alpha"), this->alpha);
+    glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alphaIntProtein"), 0.95f);
     glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "DPmode"), (int)this->depthpeeling );
 
@@ -1915,6 +1920,8 @@ void ProteinRendererBDP::renderDepthPeeling(void) {
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS - i);
         glBindTexture( GL_TEXTURE_2D, 0);
     }
+
+    CHECK_FOR_OGL_ERROR();
 }
 
 
