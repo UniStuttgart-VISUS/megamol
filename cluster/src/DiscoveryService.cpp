@@ -507,7 +507,11 @@ UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
     
     this->peerNodesCritSect.Lock();
 
-    if ((hPeer == NULL) || !hPeer->isValid()) {
+    // mueller: In contrast to other methods, we allow non-NULL handles that
+    // are invalid (not part of the cluster) here.
+    // TODO: Should check discoveryAddress for validity?
+    //if ((hPeer == NULL) || !hPeer->isValid()) {
+    if ((hPeer == NULL)) {
         this->peerNodesCritSect.Unlock();
         throw IllegalParamException("hPeer", __FILE__, __LINE__);
     }
@@ -664,7 +668,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
         Socket::Startup();
         this->socket.Create(config->GetProtocolFamily(), Socket::TYPE_DGRAM, 
             Socket::PROTOCOL_UDP);
-        this->socket.SetBroadcast(true);
+//        this->socket.SetBroadcast(true);
         this->socket.SetReuseAddr(true);
 //        this->socket.SetExclusiveAddrUse(
 //            !config->GetDiscoveryService().IsShareSockets());
@@ -713,7 +717,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
                  * rather than to the broadcast address.
                  */
                 config->GetDiscoveryService().fireUserMessage(peerAddr, 
-                    msg.MsgType, msg.UserData);
+                    config, msg.MsgType, msg.UserData);
                 continue;
             }
 
@@ -929,13 +933,16 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
     Socket *socket = NULL;
     
     // We use different sockets for discovery messages, which are broadcasted,
-    // and user messages, which might be unicasted. Both sockets are created
-    // lazily the first time they are used.
+    // and user messages, which are always unicasted (messages to all nodes are 
+    // send as a set of unicast packets). The use of two sockets ensures that
+    // there are no MT problems between user messages and the discovery sender
+    // thread and that there is no need for synchronisation. Both sockets are 
+    // created lazily the first time they are used.
     if (message.MsgType < MSG_TYPE_USER) {
         if (!this->socketSend.IsValid()) {
-            // Create a bind address for the sender socket from the receiver 
-            // address.
-            IPEndPoint bindAddr(this->bindAddress, 0);
+            //// Create a bind address for the sender socket from the receiver 
+            //// address.
+            //IPEndPoint bindAddr(this->bindAddress, 0);
 
             try {
                 VLTRACE(Trace::LEVEL_VL_VERBOSE, "Lazy creation of discovery "
@@ -1246,26 +1253,34 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
  * vislib::net::cluster::DiscoveryService::fireUserMessage
  */
 void vislib::net::cluster::DiscoveryService::fireUserMessage(
-        const IPEndPoint& sender, const UINT32 msgType, 
-        const BYTE *msgBody) {
+        const IPEndPoint& sender, DiscoveryConfigEx *discoverySource, 
+        const UINT32 msgType, const BYTE *msgBody) {
     INT_PTR idx = 0;        // Index of sender PeerNode.
+    PeerHandle hPeer;       // Handle or meta-handle of PeerNode.
 
     this->peerNodesCritSect.Lock();
     
     if ((idx = this->peerFromDiscoveryAddr(sender)) >= 0) {
-        this->listeners.Lock();
-
-        ConstIterator<ListenerList::Iterator> it 
-            = this->listeners.GetConstIterator();
-        while (it.HasNext()) {
-            it.Next()->OnUserMessage(*this, 
-                this->peerNodes[static_cast<SIZE_T>(idx)], 
-                msgType,
-                msgBody);
-        }
-
-        this->listeners.Unlock();
+        hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
+    } else {
+        hPeer = new PeerNode(sender,  
+            IPEndPoint(IPAddress6::UNSPECIFIED, 0),
+            this->cntResponseChances, discoverySource);
     }
+
+    this->listeners.Lock();
+
+    ConstIterator<ListenerList::Iterator> it 
+        = this->listeners.GetConstIterator();
+    while (it.HasNext()) {
+        it.Next()->OnUserMessage(*this, 
+            hPeer, 
+            (idx >= 0),
+            msgType,
+            msgBody);
+    }
+
+    this->listeners.Unlock();
     
     this->peerNodesCritSect.Unlock();
 }
@@ -1356,7 +1371,7 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
     if (msgType < MSG_TYPE_USER) {
         throw IllegalParamException("msgType", __FILE__, __LINE__);
     }
-    if (msgBody == NULL) {
+    if ((msgBody == NULL) && (msgSize > 0)) {
         throw IllegalParamException("msgBody", __FILE__, __LINE__);
     }
     if (msgSize > MAX_USER_DATA) {
@@ -1368,7 +1383,7 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
     ASSERT(reinterpret_cast<BYTE *>(&(outMsg.UserData)) 
        == reinterpret_cast<BYTE *>(&outMsg) + 2 * sizeof(UINT32));
     ASSERT(msgType >= MSG_TYPE_USER);
-    ASSERT(msgBody != NULL);
+    ASSERT((msgBody != NULL) || (msgSize == 0));
     ASSERT(msgSize <= MAX_USER_DATA);
 
     /* Prepare the message. */

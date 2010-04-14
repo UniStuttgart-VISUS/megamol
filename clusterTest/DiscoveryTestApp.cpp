@@ -95,7 +95,8 @@ void DiscoveryTestApp::OnNodeLost(DiscoveryService& src,
  * DiscoveryTestApp::OnUserMessage
  */
 void DiscoveryTestApp::OnUserMessage(DiscoveryService& src,
-        const DiscoveryService::PeerHandle& hPeer, 
+        const DiscoveryService::PeerHandle& hPeer,
+        const bool isClusterMember,
         const UINT32 msgType, const BYTE *msgBody) throw() {
     std::cout << "Discovery service " << src.GetName().PeekBuffer() 
         << " received user message " << msgType 

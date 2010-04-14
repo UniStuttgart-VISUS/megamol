@@ -905,7 +905,8 @@ namespace cluster {
          * @return The socket address that has been specified by the peer node
          *         for user communication.
          *
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle for
+         *                               a cluster member.
          */
         IPEndPoint operator [](const PeerHandle& hPeer) const;
 
@@ -1158,12 +1159,15 @@ namespace cluster {
          *
          * This method is thread-safe.
          *
-         * @param discoveryAddr The socket address the discovery service of the
-         *                      peer node sent the message. Note, that the 
-         *                      port is automatically corrected to the correct
-         *                      service port and must not be set by the caller.
-         * @param responseAddr  The user communication address the peer node 
-         *                      reported.
+         * @param discoveryAddr   The socket address the discovery service of 
+         *                        the peer node sent the message. Note, that 
+         *                        the port is automatically corrected to the 
+         *                        correct service port and must not be set by 
+         *                        the caller.
+         * @param discoverySource The configuration of the receiver that 
+         *                        discovered the new node.
+         * @param responseAddr    The user communication address the peer node
+         *                        reported.
          */
         void addPeerNode(const IPEndPoint& discoveryAddr, 
             DiscoveryConfigEx *discoverySource,
@@ -1185,12 +1189,15 @@ namespace cluster {
           *
           * This method is thread-safe.
           *
-          * @param sender  The socket address of the message sender.
-          * @param msgType The message type.
-          * @param msgBody The body of the message.
+          * @param sender          The socket address of the message sender.
+          * @param discoverySource The configuration of the receiver that 
+          *                        received the user message.
+          * @param msgType         The message type.
+          * @param msgBody         The body of the message.
           */
-         void fireUserMessage(const IPEndPoint& sender, const UINT32 msgType, 
-            const BYTE *msgBody); 
+         void fireUserMessage(const IPEndPoint& sender, 
+             DiscoveryConfigEx *discoverySource, const UINT32 msgType, 
+             const BYTE *msgBody); 
 
         /**
          * Answer whether 'hPeer' is a valid peer node handle.

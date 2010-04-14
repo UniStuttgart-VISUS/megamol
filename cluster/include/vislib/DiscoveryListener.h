@@ -85,20 +85,37 @@ namespace cluster {
             const NodeLostReason reason) throw() = 0;
 
         /**
-         * This method is
+         * This method is called once the discovery service receives a user
+         * message (user defined payload).
          *
          * This method should return very quickly and should not perform
          * excessive work as it is executed in the discovery thread.
          *
-         * @param src     The discovery service that fired the event.
-         * @param hPeer   Handle of the peer node that sent the message.
-         * @param msgType The message type identifier.
-         * @param msgBody The message body data. These are user defined and
-         *                probably dependent on the 'msgType'. The caller 
-         *                remains owner of the memory designated by 'msgBody'.
+         * Remarks regarding 'hPeer': The peer handle can be used to send an
+         * answer message to the sender of this message. It can be used for
+         * other operations on 'src' in case the peer node is a member of the
+         * cluster, i. e. if 'isClusterMember' is true. Otherwise, operations
+         * on 'src' might fail and indicate an invalid handle. It is guaranteed
+         * that SendUserMessage() will work for non-member handles.
+         *
+         * @param src             The discovery service that fired the event.
+         * @param hPeer           Handle of the peer node that sent the message.
+         * @param isClusterMember This flag is set if the node designated by 
+         *                        'hPeer' is a known peer node of the cluster
+         *                        managed by 'src'. If not, the message was 
+         *                        received from an observer node. Please be 
+         *                        aware that 'hPeer' is of limited use in this
+         *                        case.
+         * @param msgType         The message type identifier.
+         * @param msgBody         The message body data. These are user defined 
+         *                        and probably dependent on the 'msgType'. The 
+         *                        callee remains owner of the memory designated 
+         *                        by 'msgBody'. It is valid until the callback 
+         *                        is left.
          */
         virtual void OnUserMessage(DiscoveryService& src,
             const DiscoveryService::PeerHandle& hPeer, 
+            const bool isClusterMember,
             const UINT32 msgType, const BYTE *msgBody) throw();
     };
 

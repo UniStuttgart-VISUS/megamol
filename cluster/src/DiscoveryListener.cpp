@@ -29,6 +29,7 @@ vislib::net::cluster::DiscoveryListener::~DiscoveryListener(void) {
 void vislib::net::cluster::DiscoveryListener::OnUserMessage(
         DiscoveryService& src, 
         const DiscoveryService::PeerHandle& hPeer, 
+        const bool isClusterMember,
         const UINT32 msgType, const BYTE *msgBody) throw() {
     /* Does nothing. */
 }
