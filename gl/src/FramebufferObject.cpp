@@ -616,11 +616,8 @@ void vislib::graphics::gl::FramebufferObject::createTexture(GLuint& outID,
 GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
         const GLuint id, const GLint minFilter, const GLint magFilter) const {
     USES_GL_VERIFY;
-    GLint oldTexState = 0;
-    GLint oldTexId = 0;
 
-    GL_VERIFY_RETURN(::glGetIntegerv(GL_TEXTURE_2D, &oldTexState));
-    GL_VERIFY_RETURN(::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTexId));
+    ::glPushAttrib(GL_TEXTURE_BIT | GL_TRANSFORM_BIT);
 
     GL_VERIFY_RETURN(::glEnable(GL_TEXTURE_2D));
     GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, id));
@@ -652,11 +649,7 @@ GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
     ::glMatrixMode(GL_PROJECTION);
     ::glPopMatrix();
 
-    if (oldTexState != 0) {
-        ::glBindTexture(GL_TEXTURE_2D, oldTexId);
-    } else {
-        ::glDisable(GL_TEXTURE_2D);
-    }
+    ::glPopAttrib();
 
     return ::glGetError();
 }
