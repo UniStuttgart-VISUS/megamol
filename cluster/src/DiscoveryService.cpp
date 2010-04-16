@@ -257,34 +257,6 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::~DiscoveryConfig(
 }
 
 
-#ifndef _WIN32
-/*
- * ...::cluster::DiscoveryService::DiscoveryConfig::GetBindAddressForReceiver
- */
-vislib::net::IPEndPoint vislib::net::cluster::DiscoveryService::DiscoveryConfig\
-::GetBindAddressForReceiver(void) const {
-    IPEndPoint anyEndPoint = this->bindAddress;
-
-    switch (anyEndPoint.GetAddressFamily()) {
-        case IPEndPoint::FAMILY_INET:
-            anyEndPoint.SetIPAddress(IPAddress::ANY);
-            break;
-
-        case IPEndPoint::FAMILY_INET6:
-            anyEndPoint.SetIPAddress(IPAddress6::ANY);
-            break;
-
-        default:
-            throw vislib::IllegalStateException("Cannot convert an unspecified "
-                "address family for binding.", __FILE__, __LINE__);
-            break;
-    }
-
-    return anyEndPoint;    
-}
-#endif /* !_WIN32 */
-
-
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryConfig::operator =
  */
