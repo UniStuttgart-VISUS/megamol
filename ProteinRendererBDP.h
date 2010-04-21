@@ -50,7 +50,8 @@ namespace protein {
         {
             NONE_BDP = 0,
             DEPTH_BDP = 1,
-            COLOR_BDP = 2
+            COLOR_BDP = 2,
+            ADAPTIVE_BDP = 3
         };
                 
         /** postprocessing modi */
@@ -252,9 +253,14 @@ namespace protein {
         void RenderSESGpuRaycastingSimple( const CallProteinData *protein);
 
         /**
-         * Render depth peeling result (blending)
+         * Render depth peeling result
          */
-        void renderDepthPeeling(void);
+        void RenderDepthPeeling(void);
+
+        /**
+         * Render interior protein for BDP
+         */
+        void RenderInteriorProtein(void);
 
         /**
          * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
@@ -346,17 +352,24 @@ namespace protein {
          * 
          * @param bbox Bounding box of protein
          */
-        void createMinMaxDepthBuffer(megamol::core::BoundingBoxes& bbox);
+        void CreateMinMaxDepthBuffer(megamol::core::BoundingBoxes& bbox);
 
         /**
          * Render the min max depth buffer (DEBUG output)
          */
-        void renderMinMaxDepthBuffer(void);
+        void RenderMinMaxDepthBuffer(void);
 
         /**
          * Creates display list for a fullscreen quad
          */
-        void createFullscreenQuadDisplayList(void);
+        void CreateFullscreenQuadDisplayList(void);
+
+        /**
+         * Create and equalizes the depth histogram
+         *
+         * @param protein ...
+         */
+        void RenderDepthHistogram(const CallProteinData *protein);
 
     private:
 
@@ -417,16 +430,16 @@ namespace protein {
         megamol::core::param::ParamSlot alphaParam;
         megamol::core::param::ParamSlot flipNormalsParam;
         megamol::core::param::ParamSlot alphaGradientParam;
-        megamol::core::param::ParamSlot interiorProteinParam;
+        megamol::core::param::ParamSlot interiorProtAlphaParam;
 
         // parameter values
         bool drawRS;
         bool drawSES;
         bool drawSAS;
         bool flipNormals;
-        bool interiorProtein;
         float alphaGradient;
         float alpha;
+        float interiorProtAlpha;
         /** current render mode */
         RenderMode currentRendermode;
         /** current coloring mode */
@@ -434,7 +447,7 @@ namespace protein {
         /** postprocessing mode */
         PostprocessingMode postprocessing;
         /** current depth peeeling mode*/
-        DepthPeelingMode depthpeeling;
+        int depthPeelingMode;
 
         /** the reduced surface(s) */
         std::vector<ReducedSurface*> reducedSurface;
@@ -466,6 +479,8 @@ namespace protein {
         vislib::graphics::gl::GLSLShader renderDepthPeelingShader;
         // shader for rendering interior protein into bucket fbo
         vislib::graphics::gl::GLSLShader interiorProteinShader;
+        // shader for depth histogram equalization
+        vislib::graphics::gl::GLSLShader histogramEqualShader;
 
         // DEBUG: render min max depth buffer
         vislib::graphics::gl::GLSLShader renderDepthBufferShader;
@@ -514,6 +529,8 @@ namespace protein {
         GLuint verticalFilterFBO;
         GLuint depthBufferFBO;
         GLuint depthPeelingFBO;
+        GLuint histogramFBO;
+        GLuint equalizedHistFBO;
 
         // FBO for cartoon rendering the protein
         vislib::graphics::gl::FramebufferObject interiorProteinFBO;
@@ -527,6 +544,8 @@ namespace protein {
         GLuint vFilter;
         GLuint depthBuffer;
         GLuint depthPeelingTex[_BDP_NUM_BUFFERS];
+        GLuint histogramTex[_BDP_NUM_BUFFERS];
+        GLuint equalizedHistTex[_BDP_NUM_BUFFERS];
 
         // FBO color buffer indices
         GLenum colorBufferIndex[_BDP_NUM_BUFFERS];
@@ -584,3 +603,4 @@ namespace protein {
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_BUCKETDEPTHPEELING_H_INCLUDED */
+
