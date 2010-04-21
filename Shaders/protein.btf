@@ -7060,7 +7060,7 @@ float codeColorBDP( vec4 fragColor)
 {
     vec4 fc = clamp(fragColor, vec4(0.0), vec4(1.0));
     float codedColor;
-   
+
     uint r = uint(fc.r*255.0) << uint(24);
     uint g = uint(fc.g*255.0) << uint(16);
     uint b = uint(fc.b*255.0) << uint(8);
@@ -7249,12 +7249,22 @@ void main(void) {
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
-uniform float alpha = 0.5;
+uniform float alpha;
+uniform float alphaGradient;
 uniform int DPmode = 0;
 uniform int flipNormals = 0;
 
-uniform vec2 texOffsetDepthBuffer;
+uniform vec2 texOffset;
 uniform sampler2D depthBuffer;
+
+uniform sampler2D equalHistTex0;
+uniform sampler2D equalHistTex1;
+uniform sampler2D equalHistTex2;
+uniform sampler2D equalHistTex3;
+uniform sampler2D equalHistTex4;
+uniform sampler2D equalHistTex5;
+uniform sampler2D equalHistTex6;
+uniform sampler2D equalHistTex7;
 
 uniform vec2 texOffsetCutPlanes;
 uniform sampler2D cutPlaneTex;
@@ -7273,15 +7283,16 @@ void main(void) {
     vec3 ray, planeNormal, planePos, surfPos, sphereintersection, normal, color, colorX;
     vec4 coord, Ding;
 
-    int i, rt;
+    int i, j, rt;
+	vec2 texCoordHist;
     vec3 minmaxDepth;
-    vec4 fragColorInt, fragColorExt;
+    vec4 fragColorInt, fragColorExt, histogram;
     float bucketInt, bucketExt, tmpIntDepth;
     bool discardInt, discardExt;
 
     if(DPmode != 0) {
         // get min and max depth of pixel location
-         minmaxDepth.xy = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.25, 0.25))*texOffsetDepthBuffer).xy;
+         minmaxDepth.xy = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.25, 0.25))*texOffset).xy;
          minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
         // init fragment data with zero
         for(i = 0; i < gl_MaxDrawBuffers; ++i) {
@@ -7369,6 +7380,8 @@ void main(void) {
         fragColorInt.rgb = mix( fogCol, fragColorInt.rgb, f); // gl_FragColor.rgb
     #endif // FOGGING_SES
 
+        fragColorInt.a = 1.0;
+
     #ifdef AXISHINTS
         // debug-axis-hints
         colorX = vec3( 1.0, 1.0, 0.0);
@@ -7407,6 +7420,31 @@ void main(void) {
             bucketInt = floor(32.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
             // choose right component in render target
             gl_FragData[int(floor(bucketInt / 4.0))][int(mod(bucketInt, 4.0))] = codeColorBDP(fragColorInt);
+        } else if(DPmode == 3) {
+            // calculate right subintervall for histogramm
+            bucketInt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
+            // choose right component in render target
+            gl_FragData[int(floor(bucketInt / 128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = float(uint(1) << uint(mod(mod(bucketInt, 128.0), 32.0)));
+        } else if(DPmode == 4) {
+            // search histogram component with right depth intervall
+			texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
+            for(i = 0; i < 8; ++i) {
+				if(i == 0) { histogram = texture2D(equalHistTex0, texCoordHist); }
+				if(i == 1) { histogram = texture2D(equalHistTex1, texCoordHist); }
+				if(i == 2) { histogram = texture2D(equalHistTex2, texCoordHist); }
+				if(i == 3) { histogram = texture2D(equalHistTex3, texCoordHist); }
+				if(i == 4) { histogram = texture2D(equalHistTex4, texCoordHist); }
+				if(i == 5) { histogram = texture2D(equalHistTex5, texCoordHist); }
+				if(i == 6) { histogram = texture2D(equalHistTex6, texCoordHist); }
+				if(i == 7) { histogram = texture2D(equalHistTex7, texCoordHist); }
+        
+                for(j = 0; j < 4; ++j) {
+                    if(gl_FragDepth < histogram[j]) {
+                        gl_FragData[i][j] = codeColorBDP(fragColorInt);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -7467,6 +7505,8 @@ void main(void) {
         fragColorExt.rgb = mix( fogCol, fragColorExt.rgb, f); // gl_FragColor.rgb
     #endif // FOGGING_SES
 
+        fragColorExt.a = 1.0;
+
     #ifdef AXISHINTS
         // debug-axis-hints
         colorX = vec3( 1.0, 1.0, 0.0);
@@ -7515,10 +7555,39 @@ void main(void) {
             bucketExt = floor(32.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z);
             // choose right component in render target
             if(!discardInt && (bucketExt == bucketInt)) {
-                fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
-                fragColorExt.a = 0.5;
+				if(alphaGradient > 0.0) {
+					fragColorExt = fragColorInt*(1.0 - clamp((1.5 - (float(4*(7-int(floor(bucketExt/4.0)))+(3-int(mod(bucketExt, 4.0)))) / ((1.01-alphaGradient) * 31.0) * (1.0-alpha))), 0.0, 1.0)) + fragColorExt;
+				} else {
+					fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
+				}
+				fragColorExt.a = 0.5;
             }
             gl_FragData[int(floor(bucketExt/4.0))][int(mod(bucketExt, 4.0))] = codeColorBDP(fragColorExt);
+        } else if(DPmode == 3) {
+            // calculate right subintervall for histogramm
+            bucketExt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
+            // choose right component in render target
+            gl_FragData[int(floor(bucketExt / 128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = float(uint(1) << uint(mod(mod(bucketExt, 128.0), 32.0)));
+        } else if(DPmode == 4) {
+            // search histogram component with right depth intervall
+			texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
+            for(i = 0; i < 8; ++i) {
+				if(i == 0) { histogram = texture2D(equalHistTex0, texCoordHist); }
+				if(i == 1) { histogram = texture2D(equalHistTex1, texCoordHist); }
+				if(i == 2) { histogram = texture2D(equalHistTex2, texCoordHist); }
+				if(i == 3) { histogram = texture2D(equalHistTex3, texCoordHist); }
+				if(i == 4) { histogram = texture2D(equalHistTex4, texCoordHist); }
+				if(i == 5) { histogram = texture2D(equalHistTex5, texCoordHist); }
+				if(i == 6) { histogram = texture2D(equalHistTex6, texCoordHist); }
+				if(i == 7) { histogram = texture2D(equalHistTex7, texCoordHist); }
+        
+                for(j = 0; j < 4; ++j) {
+                    if(gl_FragDepth < histogram[j]) {
+                        gl_FragData[i][j] = codeColorBDP(fragColorExt);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -7724,11 +7793,21 @@ uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
+uniform float alphaGradient;
 uniform int DPmode = 0;
 uniform int flipNormals = 0;
 
-uniform vec2 texOffsetDepthBuffer;
+uniform vec2 texOffset;
 uniform sampler2D depthBuffer;
+
+uniform sampler2D equalHistTex0;
+uniform sampler2D equalHistTex1;
+uniform sampler2D equalHistTex2;
+uniform sampler2D equalHistTex3;
+uniform sampler2D equalHistTex4;
+uniform sampler2D equalHistTex5;
+uniform sampler2D equalHistTex6;
+uniform sampler2D equalHistTex7;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -7760,15 +7839,16 @@ void main(void) {
     vec3 ray, tmp, a, intersection, normPlane, normal, color, colorX;
     vec4 coord, lambdas, Ding;
 
-    int i, rt;
+    int i, j, rt;
+	vec2 texCoordHist;
     vec3 minmaxDepth;
-    vec4 fragColorInt, fragColorExt;
+    vec4 fragColorInt, fragColorExt, histogram;
     float bucketInt, bucketExt, tmpIntDepth;
     bool discardInt, discardExt;
 
     if(DPmode != 0) {
         // get min and max depth of pixel location
-         minmaxDepth.xy = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.25, 0.25))*texOffsetDepthBuffer).xy;
+         minmaxDepth.xy = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.25, 0.25))*texOffset).xy;
          minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
         // init fragment data with zero
         for(i = 0; i < gl_MaxDrawBuffers; ++i) {
@@ -7951,6 +8031,8 @@ void main(void) {
         fragColorInt.rgb = mix( fogCol, fragColorInt.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
         
+        fragColorInt.a = 1.0;
+
     #ifdef AXISHINTS    
         tmp = normal;
         normal.x = dot( rotMatT0, tmp.xyz);
@@ -7994,6 +8076,31 @@ void main(void) {
             bucketInt = floor(32.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z);
             // choose right component in render target
             gl_FragData[int(floor(bucketInt / 4.0))][int(mod(bucketInt, 4.0))] = codeColorBDP(fragColorInt);
+        } else if(DPmode == 3) {
+            // calculate right subintervall for histogramm
+            bucketInt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
+            // choose right component in render target
+            gl_FragData[int(floor(bucketInt / 128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = float(uint(1) << uint(mod(mod(bucketInt, 128.0), 32.0)));
+        } else if(DPmode == 4) {
+            // search histogram component with right depth intervall
+			texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
+            for(i = 0; i < 8; ++i) {
+				if(i == 0) { histogram = texture2D(equalHistTex0, texCoordHist); }
+				if(i == 1) { histogram = texture2D(equalHistTex1, texCoordHist); }
+				if(i == 2) { histogram = texture2D(equalHistTex2, texCoordHist); }
+				if(i == 3) { histogram = texture2D(equalHistTex3, texCoordHist); }
+				if(i == 4) { histogram = texture2D(equalHistTex4, texCoordHist); }
+				if(i == 5) { histogram = texture2D(equalHistTex5, texCoordHist); }
+				if(i == 6) { histogram = texture2D(equalHistTex6, texCoordHist); }
+				if(i == 7) { histogram = texture2D(equalHistTex7, texCoordHist); }
+        
+                for(j = 0; j < 4; ++j) {
+                    if(gl_FragDepth < histogram[j]) {
+                        gl_FragData[i][j] = codeColorBDP(fragColorInt);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -8085,6 +8192,8 @@ void main(void) {
         f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColorExt.rgb = mix( fogCol, fragColorExt.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
+
+        fragColorExt.a = 1.0;
         
     #ifdef AXISHINTS    
         tmp = normal;
@@ -8139,10 +8248,39 @@ void main(void) {
             bucketExt = floor(32.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z);
             // choose right component in render target
             if(!discardInt && (bucketExt == bucketInt)) {
-                fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
-                fragColorExt.a = 0.5;
+				if(alphaGradient > 0.0) {
+					fragColorExt = fragColorInt*(1.0 - clamp((1.5 - (float(4*(7-int(floor(bucketExt/4.0)))+(3-int(mod(bucketExt, 4.0)))) / ((1.01-alphaGradient) * 31.0) * (1.0-alpha))), 0.0, 1.0)) + fragColorExt;
+				} else {
+					fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
+				}
+				fragColorExt.a = 0.5;
             }
             gl_FragData[int(floor(bucketExt/4.0))][int(mod(bucketExt, 4.0))] = codeColorBDP(fragColorExt);
+        } else if(DPmode == 3) {
+            // calculate right subintervall for histogramm
+            bucketExt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
+            // choose right component in render target
+            gl_FragData[int(floor(bucketExt / 128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = float(uint(1) << uint(mod(mod(bucketExt, 128.0), 32.0)));
+        } else if(DPmode == 4) {
+            // search histogram component with right depth intervall
+			texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
+            for(i = 0; i < 8; ++i) {
+				if(i == 0) { histogram = texture2D(equalHistTex0, texCoordHist); }
+				if(i == 1) { histogram = texture2D(equalHistTex1, texCoordHist); }
+				if(i == 2) { histogram = texture2D(equalHistTex2, texCoordHist); }
+				if(i == 3) { histogram = texture2D(equalHistTex3, texCoordHist); }
+				if(i == 4) { histogram = texture2D(equalHistTex4, texCoordHist); }
+				if(i == 5) { histogram = texture2D(equalHistTex5, texCoordHist); }
+				if(i == 6) { histogram = texture2D(equalHistTex6, texCoordHist); }
+				if(i == 7) { histogram = texture2D(equalHistTex7, texCoordHist); }
+        
+                for(j = 0; j < 4; ++j) {
+                    if(gl_FragDepth < histogram[j]) {
+                        gl_FragData[i][j] = codeColorBDP(fragColorExt);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -8319,13 +8457,23 @@ uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
+uniform float alphaGradient;
 uniform int DPmode = 0;
 uniform int flipNormals = 0;
 
-uniform vec2 texOffsetDepthBuffer;
+uniform vec2 texOffset;
 uniform sampler2D depthBuffer;
 
-uniform vec2 texOffsetSing;
+uniform sampler2D equalHistTex0;
+uniform sampler2D equalHistTex1;
+uniform sampler2D equalHistTex2;
+uniform sampler2D equalHistTex3;
+uniform sampler2D equalHistTex4;
+uniform sampler2D equalHistTex5;
+uniform sampler2D equalHistTex6;
+uniform sampler2D equalHistTex7;
+
+uniform vec2 texOffsetSingularity;
 uniform sampler2D singTex;
 
 varying vec4 objPos;
@@ -8360,15 +8508,16 @@ void main(void) {
     vec3 u, v, w, dRay, wXu, dXv;
     vec4 coord, Ding;
 
-    int i, rt;
+    int i, j, rt;
+	vec2 texCoordHist;
     vec3 minmaxDepth;
-    vec4 fragColorInt, fragColorExt;
+    vec4 fragColorInt, fragColorExt, histogram;
     float bucketInt, bucketExt, tmpIntDepth;
     bool discardInt, discardExt;
 
     if(DPmode != 0) {
         // get min and max depth of pixel location
-         minmaxDepth.xy = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.25, 0.25))*texOffsetDepthBuffer).xy;
+         minmaxDepth.xy = texture2D( depthBuffer, (gl_FragCoord.xy + vec2( 0.25, 0.25))*texOffset).xy;
          minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
         // init fragment data with zero
         for(i = 0; i < gl_MaxDrawBuffers; ++i) {
@@ -8433,7 +8582,7 @@ void main(void) {
         {
             for( i = 0; i < numProbes; i++ )
             {
-                probePos = texture2D( singTex, ( texCoord1.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+                probePos = texture2D( singTex, ( texCoord1.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSingularity).xyz;
                 if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
             }
         }
@@ -8444,7 +8593,7 @@ void main(void) {
         {
             for( i = 0; i < numProbes; i++ )
             {
-                probePos = texture2D( singTex, ( texCoord2.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+                probePos = texture2D( singTex, ( texCoord2.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSingularity).xyz;
                 if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
             }
         }
@@ -8455,7 +8604,7 @@ void main(void) {
         {
             for( i = 0; i < numProbes; i++ )
             {
-                probePos = texture2D( singTex, ( texCoord3.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+                probePos = texture2D( singTex, ( texCoord3.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSingularity).xyz;
                 if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardInt = true; }
             }
         }
@@ -8525,6 +8674,8 @@ void main(void) {
         fragColorInt.rgb = mix( fogCol, fragColorInt.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
         
+        fragColorInt.a = 1.0;
+
     #ifdef AXISHINTS
         // debug-axis-hints
         colorX = vec3( 1.0, 1.0, 0.0);
@@ -8563,6 +8714,31 @@ void main(void) {
             bucketInt = floor(32.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z);
             // choose right component in render target
             gl_FragData[int(floor(bucketInt / 4.0))][int(mod(bucketInt, 4.0))] = codeColorBDP(fragColorInt);
+        } else if(DPmode == 3) {
+            // calculate right subintervall for histogramm
+            bucketInt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
+            // choose right component in render target
+            gl_FragData[int(floor(bucketInt / 128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = float(uint(1) << uint(mod(mod(bucketInt, 128.0), 32.0)));
+        } else if(DPmode == 4) {
+            // search histogram component with right depth intervall
+			texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
+            for(i = 0; i < 8; ++i) {
+				if(i == 0) { histogram = texture2D(equalHistTex0, texCoordHist); }
+				if(i == 1) { histogram = texture2D(equalHistTex1, texCoordHist); }
+				if(i == 2) { histogram = texture2D(equalHistTex2, texCoordHist); }
+				if(i == 3) { histogram = texture2D(equalHistTex3, texCoordHist); }
+				if(i == 4) { histogram = texture2D(equalHistTex4, texCoordHist); }
+				if(i == 5) { histogram = texture2D(equalHistTex5, texCoordHist); }
+				if(i == 6) { histogram = texture2D(equalHistTex6, texCoordHist); }
+				if(i == 7) { histogram = texture2D(equalHistTex7, texCoordHist); }
+        
+                for(j = 0; j < 4; ++j) {
+                    if(gl_FragDepth < histogram[j]) {
+                        gl_FragData[i][j] = codeColorBDP(fragColorInt);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -8603,7 +8779,7 @@ void main(void) {
         {
             for( i = 0; i < numProbes; i++ )
             {
-                probePos = texture2D( singTex, ( texCoord1.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+                probePos = texture2D( singTex, ( texCoord1.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSingularity).xyz;
                 if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
             }
         }
@@ -8614,7 +8790,7 @@ void main(void) {
         {
             for( i = 0; i < numProbes; i++ )
             {
-                probePos = texture2D( singTex, ( texCoord2.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+                probePos = texture2D( singTex, ( texCoord2.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSingularity).xyz;
                 if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
             }
         }
@@ -8625,7 +8801,7 @@ void main(void) {
         {
             for( i = 0; i < numProbes; i++ )
             {
-                probePos = texture2D( singTex, ( texCoord3.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSing).xyz;
+                probePos = texture2D( singTex, ( texCoord3.yz + vec2( 0.25, 0.25) + vec2( float( i), 0.0))*texOffsetSingularity).xyz;
                 if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discardExt = true; }
             }
         }
@@ -8698,6 +8874,8 @@ void main(void) {
         f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
         fragColorExt.rgb = mix( fogCol, fragColorExt.rgb, f); // gl_FragColor
     #endif // FOGGING_SES
+
+        fragColorExt.a = 1.0;
         
     #ifdef AXISHINTS
         // debug-axis-hints
@@ -8747,10 +8925,39 @@ void main(void) {
             bucketExt = floor(32.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z);
             // choose right component in render target
             if(!discardInt && (bucketExt == bucketInt)) {
-                fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
-                fragColorExt.a = 0.5;
+				if(alphaGradient > 0.0) {
+					fragColorExt = fragColorInt*(1.0 - clamp((1.5 - (float(4*(7-int(floor(bucketExt/4.0)))+(3-int(mod(bucketExt, 4.0)))) / ((1.01-alphaGradient) * 31.0) * (1.0-alpha))), 0.0, 1.0)) + fragColorExt;
+				} else {
+					fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
+				}
+				fragColorExt.a = 0.5;
             }
             gl_FragData[int(floor(bucketExt/4.0))][int(mod(bucketExt, 4.0))] = codeColorBDP(fragColorExt);
+        } else if(DPmode == 3) {
+            // calculate right subintervall for histogramm
+            bucketExt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
+            // choose right component in render target
+            gl_FragData[int(floor(bucketExt / 128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = float(uint(1) << uint(mod(mod(bucketExt, 128.0), 32.0)));
+        } else if(DPmode == 4) {
+            // search histogram component with right depth intervall
+			texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
+            for(i = 0; i < 8; ++i) {
+				if(i == 0) { histogram = texture2D(equalHistTex0, texCoordHist); }
+				if(i == 1) { histogram = texture2D(equalHistTex1, texCoordHist); }
+				if(i == 2) { histogram = texture2D(equalHistTex2, texCoordHist); }
+				if(i == 3) { histogram = texture2D(equalHistTex3, texCoordHist); }
+				if(i == 4) { histogram = texture2D(equalHistTex4, texCoordHist); }
+				if(i == 5) { histogram = texture2D(equalHistTex5, texCoordHist); }
+				if(i == 6) { histogram = texture2D(equalHistTex6, texCoordHist); }
+				if(i == 7) { histogram = texture2D(equalHistTex7, texCoordHist); }
+        
+                for(j = 0; j < 4; ++j) {
+                    if(gl_FragDepth < histogram[j]) {
+                        gl_FragData[i][j] = codeColorBDP(fragColorExt);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -8784,15 +8991,24 @@ uniform sampler2D intProtColorTex;
 uniform sampler2D intProtDepthTex;
 uniform sampler2D depthBuffer;
 
+uniform sampler2D equalHistTex0;
+uniform sampler2D equalHistTex1;
+uniform sampler2D equalHistTex2;
+uniform sampler2D equalHistTex3;
+uniform sampler2D equalHistTex4;
+uniform sampler2D equalHistTex5;
+uniform sampler2D equalHistTex6;
+uniform sampler2D equalHistTex7;
+
 uniform int DPmode = 0;
-uniform float alpha = 0.0;
 uniform vec2 texOffset;
 
 void main(void) {
     
-    int i, rt;
+    int i, j, rt;
     vec2 texCoord = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
     vec3 minmaxDepth;
+    vec4 histogram;
     float bucket;
 
     float depth = texture2D(intProtDepthTex, texCoord).x;
@@ -8805,6 +9021,8 @@ void main(void) {
     for(i = 0; i < gl_MaxDrawBuffers; ++i) {
         gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
     }
+
+    color.a = 1.0;
 
     if(DPmode == 1) {
         // calculate bucket pair (16 pairs -> 32 depth values)
@@ -8823,10 +9041,114 @@ void main(void) {
         // calculate right subintervall
         bucket = floor(32.0*(depth + minmaxDepth.x) / minmaxDepth.z);
         // choose right component in render target
-        color.a = 0.75;
         gl_FragData[int(floor(bucket/4.0))][int(mod(bucket, 4.0))] = codeColorBDP(color);
-    }   
+    } else if(DPmode == 3) {
+        // calculate right subintervall for histogramm
+        bucket = floor(1024.0*(depth + minmaxDepth.x) / minmaxDepth.z );
+        // choose right component in render target
+		gl_FragData[int(floor(bucket / 128.0))][int(floor(mod(bucket, 128.0)/32.0))] = float(uint(1) << uint(mod(mod(bucket, 128.0), 32.0)));
+    } else if(DPmode == 4) {
+        // search histogram component with right depth intervall
+        for(i = 0; i < 8; ++i) {
+            if(i == 0) { histogram = texture2D(equalHistTex0, texCoord); }
+            if(i == 1) { histogram = texture2D(equalHistTex1, texCoord); }
+            if(i == 2) { histogram = texture2D(equalHistTex2, texCoord); }
+            if(i == 3) { histogram = texture2D(equalHistTex3, texCoord); }
+            if(i == 4) { histogram = texture2D(equalHistTex4, texCoord); }
+            if(i == 5) { histogram = texture2D(equalHistTex5, texCoord); }
+            if(i == 6) { histogram = texture2D(equalHistTex6, texCoord); }
+            if(i == 7) { histogram = texture2D(equalHistTex7, texCoord); }
+    
+            for(j = 0; j < 4; ++j) {
+                if(depth < histogram[j]) {
+                    gl_FragData[i][j] = codeColorBDP(color);
+                    break;
+                }
+            }
+        }
+    }
 }
+-->
+      </snippet>
+    </shader>
+
+    <shader name="histogramEqualVertex">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+
+void main(void) {
+
+    gl_Position  = ftransform();
+
+}
+
+
+-->
+      </snippet>
+    </shader>
+
+    <shader name="histogramEqualFragment">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D depthBuffer;
+
+uniform sampler2D histTex0;
+uniform sampler2D histTex1;
+uniform sampler2D histTex2;
+uniform sampler2D histTex3;
+uniform sampler2D histTex4;
+uniform sampler2D histTex5;
+uniform sampler2D histTex6;
+uniform sampler2D histTex7;
+
+uniform vec2 texOffset;
+
+void main(void) {
+
+    int i, j, counter;
+	float tmpVal;
+
+    vec3 minmaxDepth;
+	vec4 histogram;
+    vec2 texCoord = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
+
+    // get min and max depth of pixel location
+    minmaxDepth.xy = texture2D( depthBuffer, texCoord).xy;
+    minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
+    // init fragment data with zero
+    for(i = 0; i < gl_MaxDrawBuffers; ++i) {
+        gl_FragData[i] = vec4(0.0, 0.0, 0.0, 0.0);
+    }
+
+    counter = 0;
+
+    for(i = 0; i < 8; ++i) {
+        if(i == 0) { histogram = texture2D(histTex0, texCoord); }
+        if(i == 1) { histogram = texture2D(histTex1, texCoord); }
+        if(i == 2) { histogram = texture2D(histTex2, texCoord); }
+        if(i == 3) { histogram = texture2D(histTex3, texCoord); }
+        if(i == 4) { histogram = texture2D(histTex4, texCoord); }
+        if(i == 5) { histogram = texture2D(histTex5, texCoord); }
+        if(i == 6) { histogram = texture2D(histTex6, texCoord); }
+        if(i == 7) { histogram = texture2D(histTex7, texCoord); }
+/* ???????
+        for(j = 0; j < 128; ++j) {
+			tmpVal = float(int(uint(histogram[int(j/32)]))) - pow(2.0,mod(j,32));
+			if(tmpVal =0 0.0) {
+                gl_FragData[int(counter/8)][int(mod(float(counter),4.0))] = (-minmaxDepth.x + (float(128*i+j+1)) /1024.0 * (minmaxDepth.z));
+                counter = counter + 1;
+                if(counter > 31) break;
+            }
+        }
+??????? */
+    }
+}
+
 -->
       </snippet>
     </shader>
@@ -8924,28 +9246,35 @@ uniform sampler2D bucket4;
 uniform sampler2D bucket5;
 uniform sampler2D bucket6;
 uniform sampler2D bucket7;
+
+uniform sampler2D interiorDepth;
+uniform sampler2D interiorColor;
 uniform sampler2D depthBuffer;
 
 uniform vec2 texOffset;
-uniform float alpha = 0.5;
-uniform float alphaIntProtein = 0.5;
-uniform float alphaGradient = 0.0;
+uniform float alpha;
+uniform float interiorProtAlpha;
+uniform float alphaGradient;
 uniform int DPmode = 0;
 
 void main(void) {
 
-    vec2 texCoord = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
-
-    int i, j;
-    float epsilon = 0.001;
-    float thickness, first, backAlpha;
+    int i, j, k;
+    float thickness, first, usedAlpha, intDepth;
     bool gotfirst;
-    vec3 firstColorSkipped, color, minmaxDepth;
-    vec4 layer, decodecolor;
+	vec3 minmaxDepth;
+    vec3 firstColorSkipped, color;
+    vec4 layer, decodecolor, intColor;
+
+    float absorption = 4.0;
+    float epsilon = 0.001;
+
+    vec2 texCoord = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
 
     if(DPmode == 1) {// depth
 
         thickness = 0.0f;
+        gotfirst = false;
         color = vec3(0.0, 1.0, 0.0);
 
         for(i = 0; i < 8; ++i) {
@@ -9000,25 +9329,28 @@ void main(void) {
             color = vec3(1.0, 0.0, 0.0);
         }
 
-        gl_FragColor.rgb = color * exp(-4.0*thickness);
+        gl_FragColor.rgb = color * exp(-absorption*thickness);
         if(thickness > 0.0f) {
             gl_FragColor.a = 1.0;
         } else {
             gl_FragColor.a = 0.0;
         }
 
-    } else if(DPmode == 2) {  // color
+	} else if(DPmode == 2) {  // 
 
         // back to front alpha blending: C_new = C_back*(1.0- alpha) + C_front*alpha
 
         color = vec3(0.0, 0.0, 0.0);
         firstColorSkipped = vec3(0.0, 0.0, 0.0);
 
-        backAlpha = clamp(alpha + alphaGradient, 0.0, 1.0);
-
-        // get min and max depth of pixel location
-         minmaxDepth.xy = texture2D( depthBuffer, texCoord).xy;
-         minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
+		if(interiorProtAlpha > 0.0) {
+			intDepth = texture2D(interiorDepth, texCoord).x;
+			intColor = texture2D(interiorColor, texCoord);
+			// get min and max depth of pixel location
+			minmaxDepth.xy = texture2D( depthBuffer, texCoord).xy;
+			minmaxDepth.z = (minmaxDepth.y + minmaxDepth.x);
+			k = int(floor(32.0*(intDepth + minmaxDepth.x) / minmaxDepth.z));
+		}
 
         for(i = 0; i < 8; ++i) {
             if(i == 0) { layer = texture2D(bucket7, texCoord); }
@@ -9031,16 +9363,21 @@ void main(void) {
             if(i == 7) { layer = texture2D(bucket0, texCoord); }
 
             for(j = 0; j < 4; ++j) {
+
+				if((interiorProtAlpha > 0.0) && ((4*(7-i) + (3-j)) == k)) {
+					color = color*(1.0 - interiorProtAlpha) + intColor.rgb*interiorProtAlpha;
+				}
+
                 if(layer[3-j] > 0.0) { 
                     firstColorSkipped = color; 
                     decodecolor = decodeColorBDP(layer[3-j]);
-                    if(abs(decodecolor.a - 0.75) < 0.05) { // special alpha for interior protein
-                        color = color*(1.0 - alphaIntProtein) + decodecolor.rgb*alphaIntProtein;
-                    } else if(abs(decodecolor.a - 0.5) < 0.05) { // ...
-                        color = color*(1.0 - alpha)*(1.0 - alpha) + decodecolor.rgb*alpha; 
-                    } else {
-                        color = color*(1.0 - alpha) + decodecolor.rgb*alpha; 
+
+                    usedAlpha = alpha;
+					if(alphaGradient > 0.0) {
+                        usedAlpha = clamp((1.5 - (float(4*i+j) / ((1.01-alphaGradient) * 31.0) * (1.0-usedAlpha))), 0.0, 1.0);
                     }
+
+					color = color*(1.0 - usedAlpha) + decodecolor.rgb*usedAlpha; 
                 }
             }
         }
@@ -9054,8 +9391,7 @@ void main(void) {
         } else {
             gl_FragColor.a = 1.0;
         }
-    }
-
+	}
 }
 
 -->    
