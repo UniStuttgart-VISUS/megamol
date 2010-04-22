@@ -41,7 +41,7 @@ namespace protein {
      * Computes the solvent excluded (Connolly) surface and 
      * renders the SES with Bucket Sort Depth Peeling.
      */
-	class ProteinRendererBDP : public megamol::core::view::Renderer3DModule
+    class ProteinRendererBDP : public megamol::core::view::Renderer3DModule
     {
     public:
 
@@ -258,11 +258,6 @@ namespace protein {
         void RenderDepthPeeling(void);
 
         /**
-         * Render interior protein for BDP
-         */
-        void RenderInteriorProtein(void);
-
-        /**
          * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
          *
          * @param protein Pointer to the protein data interface.
@@ -413,7 +408,7 @@ namespace protein {
         // camera information
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
         
-		megamol::core::param::ParamSlot postprocessingParam;
+        megamol::core::param::ParamSlot postprocessingParam;
         megamol::core::param::ParamSlot rendermodeParam;
         megamol::core::param::ParamSlot coloringmodeParam;
         megamol::core::param::ParamSlot silhouettecolorParam;
@@ -477,8 +472,6 @@ namespace protein {
         vislib::graphics::gl::GLSLShader createDepthBufferShader;
         // shader for blending depth peeling result
         vislib::graphics::gl::GLSLShader renderDepthPeelingShader;
-        // shader for rendering interior protein into bucket fbo
-        vislib::graphics::gl::GLSLShader interiorProteinShader;
         // shader for depth histogram equalization
         vislib::graphics::gl::GLSLShader histogramEqualShader;
 

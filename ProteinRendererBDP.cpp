@@ -181,7 +181,7 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
 
     // ----- alpha gradient param -----
     this->alphaGradient = 0.0;
-    param::FloatParam *agpm = new param::FloatParam( this->alphaGradient, 0.0f, 1.0f );
+    param::FloatParam *agpm = new param::FloatParam( this->alphaGradient, 0.0f);
     this->alphaGradientParam << agpm;
 
     // ----- draw interior protein structure param -----
@@ -312,9 +312,7 @@ ProteinRendererBDP::~ProteinRendererBDP(void)
     this->transparencyShader.Release();
     this->createDepthBufferShader.Release();
     this->renderDepthPeelingShader.Release();
-    this->interiorProteinShader.Release();
     this->histogramEqualShader.Release();
-
     this->renderDepthBufferShader.Release();
     
     // delete display list
@@ -408,32 +406,6 @@ bool ProteinRendererBDP::create( void )
     catch( vislib::Exception e )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create depth peeling shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // load the shader source for rendering interior protein into bucket fbo //
-    ///////////////////////////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::renderInteriorProteinVertex", vertSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName() );
-        return false;
-    }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::renderInteriorProteinFragment", fragSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
-        return false;
-    }
-    try
-    {
-        if( !this->interiorProteinShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
-        {
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create render interior protein shader : %s\n", this->ClassName(), e.GetMsgA() );
         return false;
     }
 
@@ -727,7 +699,7 @@ bool ProteinRendererBDP::create( void )
     // load the shader files for transparency           //
     //////////////////////////////////////////////////////
 
-	// ...
+    // ...
 
     CHECK_FOR_OGL_ERROR();
 
@@ -1032,6 +1004,9 @@ bool ProteinRendererBDP::Render( Call& call ) {
         // render interior protein to FBO
         if((this->interiorProtAlpha > 0.0f)) {
             view::CallRender3D *cr3d = this->interiorProteinCallerSlot.CallAs<view::CallRender3D>();
+
+            cr3d->SetCameraParameters(this->cameraInfo);
+
             // if something went wrong --> return
             if( !cr3d) return false;
 
@@ -1064,7 +1039,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
     glDisable(GL_NORMALIZE);
 
     if(this->depthPeelingMode == NONE_BDP) {
-	    glDisable(GL_BLEND);
+        glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
     }
@@ -1121,7 +1096,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
 
     if(this->depthPeelingMode != NONE_BDP) {
 
-        // precomputations for adaptive BDP
+        // adaptive BDP
         if(this->depthPeelingMode == ADAPTIVE_BDP) {
             this->RenderDepthHistogram(protein);
             // indicating second geometry pass of adaptive BDP
@@ -1142,15 +1117,15 @@ bool ProteinRendererBDP::Render( Call& call ) {
     }
 
     // render the SES
-	if( this->currentRendermode == GPU_RAYCASTING )
-	{
-		this->RenderSESGpuRaycasting( protein);
-	}
-	else if( this->currentRendermode == GPU_SIMPLIFIED )
-	{
-		// render the simplified SES via GPU ray casting
-		//this->RenderSESGpuRaycastingSimple( protein);
-	}
+    if( this->currentRendermode == GPU_RAYCASTING )
+    {
+        this->RenderSESGpuRaycasting( protein);
+    }
+    else if( this->currentRendermode == GPU_SIMPLIFIED )
+    {
+        // render the simplified SES via GPU ray casting
+        //this->RenderSESGpuRaycastingSimple( protein);
+    }
 
     glPopMatrix();
     
@@ -1169,7 +1144,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
         // enable rendering to "upper" defined output buffer ...
         dynamic_cast<view::CallRender3D*>(&call)->EnableOutputBuffer();
 
-        // render result
+        // render depth peeling result
         this->RenderDepthPeeling();
 
         //render min max-depth-buffer (DEBUG output)
@@ -1373,7 +1348,7 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
         for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
             glBindTexture( GL_TEXTURE_2D, this->histogramTex[i]);
-            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32UI_EXT, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_INT, NULL); 
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32UI, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_INT, NULL); 
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1574,7 +1549,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
             glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
             glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->alpha);
-			glUniform1fARB( this->torusShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
+            glUniform1fARB( this->torusShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
             glUniform1iARB( this->torusShader.ParameterLocation( "flipNormals"), (this->flipNormals)?(1):(0));
 
             glUniform2fARB( this->torusShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
@@ -1645,7 +1620,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
             glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
             glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->alpha);
-			glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
+            glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
             glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "flipNormals"), (this->flipNormals)?(1):(0));
 
             glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
@@ -1735,7 +1710,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
         glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->alpha);
-	    glUniform1fARB( this->sphereShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
+        glUniform1fARB( this->sphereShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
         glUniform1iARB( this->sphereShader.ParameterLocation( "flipNormals"), (this->flipNormals)?(1):(0));
 
         glUniform2fARB( this->sphereShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
@@ -2015,22 +1990,23 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[i]);
     }
-	
-	if((this->depthPeelingMode != ADAPTIVE_BDP) && (this->interiorProtAlpha > 0.0)) {
+    
+    // bind color and depth texture to consider interior protein for BDP
+    if((this->depthPeelingMode != ADAPTIVE_BDP) && (this->interiorProtAlpha > 0.0)) {
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS);
-		this->interiorProteinFBO.BindDepthTexture();
+        this->interiorProteinFBO.BindDepthTexture();
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS + 1);
-		this->interiorProteinFBO.BindColourTexture();
+        this->interiorProteinFBO.BindColourTexture();
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS + 2);
-		glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
-	}
+        glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
+    }
 
     this->renderDepthPeelingShader.Enable();
 
     glUniform2fARB( this->renderDepthPeelingShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
     glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alpha"), this->alpha);
-	glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
-	glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "interiorProtAlpha"), this->interiorProtAlpha);
+    glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
+    glUniform1fARB( this->renderDepthPeelingShader.ParameterLocation( "interiorProtAlpha"), this->interiorProtAlpha);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "DPmode"), (int)this->depthPeelingMode );
 
     // TODO: create _BDP_NUM_BUFFERS textures ...
@@ -2051,14 +2027,14 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
 
     this->renderDepthPeelingShader.Disable();
 
-	if((this->depthPeelingMode != ADAPTIVE_BDP) && (this->interiorProtAlpha > 0.0)) {
+    if((this->depthPeelingMode != ADAPTIVE_BDP) && (this->interiorProtAlpha > 0.0)) {
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS + 2);
-		glBindTexture( GL_TEXTURE_2D, 0);
+        glBindTexture( GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS + 1);
-		glBindTexture( GL_TEXTURE_2D, 0);
+        glBindTexture( GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS);
-		glBindTexture( GL_TEXTURE_2D, 0);
-	}
+        glBindTexture( GL_TEXTURE_2D, 0);
+    }
 
     // unbind textures
     for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
@@ -2076,9 +2052,9 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
 void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
 
      // ------------ create depth histogram ------------
-    glLogicOp(GL_OR);
     glEnable(GL_BLEND);
     glBlendEquation(GL_LOGIC_OP);
+    glLogicOp(GL_OR);
     glDisable(GL_DEPTH_TEST);
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->histogramFBO);
@@ -2087,11 +2063,6 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear( GL_COLOR_BUFFER_BIT );
-
-    // sort interior protein layer into right bucket
-    if(this->interiorProtAlpha > 0.0f) {
-        this->RenderInteriorProtein();
-    }
 
     // render the SES
     if( this->currentRendermode == GPU_RAYCASTING )
@@ -2108,9 +2079,7 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
     
 
     // ------------ equalize histogram ------------
-    glEnable(GL_BLEND);
-	glBlendEquation(GL_MAX);
-    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 
     // bind textures
     glActiveTexture(GL_TEXTURE0);
@@ -2153,58 +2122,6 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
     // unbind textures
     for(int i = 0; i <= _BDP_NUM_BUFFERS; ++i) {
         glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS - i);
-        glBindTexture( GL_TEXTURE_2D, 0);
-    }
-
-    CHECK_FOR_OGL_ERROR();
-}
-
-
-/*
- * RenderInteriorProtein
- */
-void ProteinRendererBDP::RenderInteriorProtein(void) {
-
-    int i;
-
-    glActiveTexture(GL_TEXTURE0);
-    this->interiorProteinFBO.BindColourTexture();
-    glActiveTexture(GL_TEXTURE1);
-    this->interiorProteinFBO.BindDepthTexture();
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
-
-    for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
-        glActiveTexture(GL_TEXTURE3 + i);
-        glBindTexture( GL_TEXTURE_2D, this->equalizedHistTex[i]);
-    }
-
-    this->interiorProteinShader.Enable();
-
-    glUniform2fARB( this->interiorProteinShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
-
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "intProtColorTex"), 0);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "intProtDepthTex"), 1);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "depthBuffer"), 2);
-
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex0"), 3);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex1"), 4);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex2"), 5);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex3"), 6);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex4"), 7);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex5"), 8);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex6"), 9);
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "equalHistTex7"), 10);
-
-    glUniform1iARB( this->interiorProteinShader.ParameterLocation( "DPmode"), (int)this->depthPeelingMode );
-
-    glCallList(this->fsQuadList);
-
-    this->interiorProteinShader.Disable();
-
-    // unbind textures
-    for(int i = 0; i < _BDP_NUM_BUFFERS + 3; ++i) {
-        glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS + 2 - i);
         glBindTexture( GL_TEXTURE_2D, 0);
     }
 
@@ -2304,9 +2221,9 @@ void ProteinRendererBDP::CreateFullscreenQuadDisplayList(void) {
 
     glDeleteLists(this->fsQuadList, 1);
 
-	this->fsQuadList = glGenLists(1);
+    this->fsQuadList = glGenLists(1);
 
-	glNewList(this->fsQuadList, GL_COMPILE);
+    glNewList(this->fsQuadList, GL_COMPILE);
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -2318,15 +2235,15 @@ void ProteinRendererBDP::CreateFullscreenQuadDisplayList(void) {
 
         glOrtho( 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
-	    glBegin(GL_QUADS);
-	    {
-		    glVertex2f(0.0f, 0.0f); 
-		    glVertex2f(1.0f, 0.0f);
-		    glVertex2f(1.0f, 1.0f);
-		    glVertex2f(0.0f, 1.0f);
-	    }
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(0.0f, 0.0f); 
+            glVertex2f(1.0f, 0.0f);
+            glVertex2f(1.0f, 1.0f);
+            glVertex2f(0.0f, 1.0f);
+        }
 
-	    glEnd();
+        glEnd();
 
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
@@ -2334,7 +2251,7 @@ void ProteinRendererBDP::CreateFullscreenQuadDisplayList(void) {
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
 
-	glEndList();
+    glEndList();
 }
 
 
@@ -3006,13 +2923,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
         vislib::math::Vector<float, 3> vertexPos, surfVector, tempVec, edgeVector;
         vislib::Array<vislib::math::Vector<float, 3> > vecList;
         float maxDist, dist, atomRadius;
-        unsigned int j, k, edgeCount;
-        unsigned int edgeCounter;
-        const ReducedSurface::RSEdge * firstEdge;
-        const ReducedSurface::RSVertex * currentVertex;
-        ReducedSurface::RSEdge * lastEdge;
-        ReducedSurface::RSFace * lastFace;
-        ReducedSurface::RSEdge * currentEdge;
+        unsigned int j, edgeCount;
 
         // loop over all RS-vertices (i.e. all protein atoms)
         for( i = 0; i < this->reducedSurface[cntRS]->GetRSVertexCount(); ++i ) {
@@ -3073,96 +2984,28 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                     surfVector += tempVec;
                 }
 
-
                 tempVec = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(j)->GetTorusCenter() - vertexPos;
                 tempVec.Normalise();
                 edgeVector += tempVec;
+            }
+    
+            // if max angle of visible surface part is more than PI use edgeVector else surfVector
+            if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
+                surfVector = edgeVector * (-1.0f);
+            }
+            surfVector.Normalise();
+            surfVector *= atomRadius;
 
-
+            // calculate max distance to surfVector
+            maxDist = 0.0f;
+            for(j = 0; j < vecList.Count(); ++j) {
+                tempVec = (vecList[j]*atomRadius) - surfVector;
+                dist = tempVec.Dot(tempVec);
+                if(dist > maxDist) { maxDist = dist; }
             }
 
-            // look if there are several unconnected surface parts
-            edgeCounter = 1;
-            firstEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
-            currentVertex = this->reducedSurface[cntRS]->GetRSVertex(i);
-            lastEdge = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0);
-            lastFace = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
-            for(j = 1; j < edgeCount+1; ++j) {
-                currentEdge = lastFace->GetEdge1();
-                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                    if(currentEdge == firstEdge) {
-                        break;
-                    } else {
-                        lastEdge = currentEdge;
-                        if(currentEdge->GetFace1() != lastFace) {
-                            lastFace = currentEdge->GetFace1();
-                        } else {
-                            lastFace = currentEdge->GetFace2();
-                        }
-                        edgeCounter++;
-                        continue;
-                    }
-                }
-                currentEdge = lastFace->GetEdge2();
-                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                    if(currentEdge == firstEdge) {
-                        break;
-                    } else {
-                        lastEdge = currentEdge;
-                        if(currentEdge->GetFace1() != lastFace) {
-                            lastFace = currentEdge->GetFace1();
-                        } else {
-                            lastFace = currentEdge->GetFace2();
-                        }
-                        edgeCounter++;
-                        continue;
-                    }
-                }
-                currentEdge = lastFace->GetEdge3();
-                if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                    if(currentEdge == firstEdge) {
-                        break;
-                    } else {
-                        lastEdge = currentEdge;
-                        if(currentEdge->GetFace1() != lastFace) {
-                            lastFace = currentEdge->GetFace1();
-                        } else {
-                            lastFace = currentEdge->GetFace2();
-                        }
-                        edgeCounter++;
-                        continue;
-                    }
-                }
-            }                
-
-            // look if surface parts are distributed over more than one hemisphere
-            maxDist = 0.0f;
-	        for(j = 0; j < vecList.Count()-1; ++j) {
-                for(k = j+1; k < vecList.Count(); ++k) {
-		            dist = vecList[j].Dot(vecList[k]);
-		            if(dist < 0.0f) { maxDist = 1.0f; } // angle > pi/2
-                }
-	        } 
-
-            // choose surfvector depending on surface parts and visible part
-            if((edgeCounter != edgeCount) && (maxDist == 1.0f)) {
-                surfVector.Set(0.0f, 0.0f, 0.0f);
-                maxDist = atomRadius*atomRadius * 2.5f;
-            } else {
-                // if max angle of visible surface part is more than PI use edgeVector else surfVector
-                if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
-                    surfVector = edgeVector * (-1.0f);
-                }
-                surfVector.Normalise();
-                surfVector *= atomRadius;
-
-                // calculate max distance to surfVector
-		        maxDist = 0.0f;
-		        for(j = 0; j < vecList.Count(); ++j) {
-			        tempVec = (vecList[j]*atomRadius) - surfVector;
-			        dist = tempVec.Dot(tempVec);
-			        if(dist > maxDist) { maxDist = dist; }
-		        }
+            if(maxDist > 2.0f*atomRadius*atomRadius*1.5f) {
+                maxDist = 4.5f*atomRadius*atomRadius;
             }
 
             this->sphereSurfVector[cntRS].Append(surfVector.GetX());
@@ -3405,13 +3248,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
     vislib::math::Vector<float, 3> vertexPos, surfVector, tempVec, edgeVector;
     vislib::Array<vislib::math::Vector<float, 3> > vecList;
     float maxDist, dist, atomRadius;
-    unsigned int j, k, edgeCount;
-    unsigned int edgeCounter;
-    const ReducedSurface::RSEdge * firstEdge;
-    const ReducedSurface::RSVertex * currentVertex;
-    ReducedSurface::RSEdge * lastEdge;
-    ReducedSurface::RSFace * lastFace;
-    ReducedSurface::RSEdge * currentEdge;
+    unsigned int j, edgeCount;
 
     // loop over all RS-vertices (i.e. all protein atoms)
     for( i = 0; i < this->reducedSurface[idxRS]->GetRSVertexCount(); ++i )
@@ -3460,107 +3297,41 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         for(j = 0; j < edgeCount; ++j ) {
             tempVec = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(j)->GetFace1()->GetProbeCenter() - vertexPos;
             tempVec.Normalise();
-            if(!(vecList.Contains(tempVec))) {  
+            if(!(vecList.Contains(tempVec))) {
                 vecList.Append(tempVec);
                 surfVector += tempVec;
             }
             tempVec = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(j)->GetFace2()->GetProbeCenter() - vertexPos;
             tempVec.Normalise();
-            if(!(vecList.Contains(tempVec))) {      
+            if(!(vecList.Contains(tempVec))) {
                 vecList.Append(tempVec);
                 surfVector += tempVec;
             }
+
             tempVec = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(j)->GetTorusCenter() - vertexPos;
             tempVec.Normalise();
             edgeVector += tempVec;
         }
 
-        std::cout << ">> edgeCount: " << edgeCount << " vedList.Count(): " << vecList.Count() << std::endl;
+        // if max angle of visible surface part is more than PI use edgeVector else surfVector
+        if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
+            surfVector = edgeVector * (-1.0f);
+        }
+        surfVector.Normalise();
+        surfVector *= atomRadius;
 
-        // look if there are several unconnected surface parts
-        edgeCounter = 1;
-        firstEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
-        currentVertex = this->reducedSurface[idxRS]->GetRSVertex(i);
-        lastEdge = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0);
-        lastFace = this->reducedSurface[idxRS]->GetRSVertex(i)->GetEdge(0)->GetFace1();
-        for(j = 1; j < edgeCount+1; ++j) {
-            currentEdge = lastFace->GetEdge1();
-            if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                if(currentEdge == firstEdge) {
-                    break;
-                } else {
-                    lastEdge = currentEdge;
-                    if(currentEdge->GetFace1() != lastFace) {
-                        lastFace = currentEdge->GetFace1();
-                    } else {
-                        lastFace = currentEdge->GetFace2();
-                    }
-                    edgeCounter++;
-                    continue;
-                }
-            }
-            currentEdge = lastFace->GetEdge2();
-            if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                if(currentEdge == firstEdge) {
-                    break;
-                } else {
-                    lastEdge = currentEdge;
-                    if(currentEdge->GetFace1() != lastFace) {
-                        lastFace = currentEdge->GetFace1();
-                    } else {
-                        lastFace = currentEdge->GetFace2();
-                    }
-                    edgeCounter++;
-                    continue;
-                }
-            }
-            currentEdge = lastFace->GetEdge3();
-            if(((currentEdge->GetVertex1() == currentVertex) || (currentEdge->GetVertex2() == currentVertex)) && (currentEdge != lastEdge)) {
-                if(currentEdge == firstEdge) {
-                    break;
-                } else {
-                    lastEdge = currentEdge;
-                    if(currentEdge->GetFace1() != lastFace) {
-                        lastFace = currentEdge->GetFace1();
-                    } else {
-                        lastFace = currentEdge->GetFace2();
-                    }
-                    edgeCounter++;
-                    continue;
-                }
-            }
-        }                
-        
-        // look if surface parts are distributed over more than one hemisphere
+        // calculate max distance to surfVector
         maxDist = 0.0f;
-        for(j = 0; j < vecList.Count()-1; ++j) {
-            for(k = j+1; k < vecList.Count(); ++k) {
-	            dist = vecList[j].Dot(vecList[k]);
-	            if(dist < 0.0f) { maxDist = 1.0f; } // angle > pi/2
-            }
+        for(j = 0; j < vecList.Count(); ++j) {
+            tempVec = (vecList[j]*atomRadius) - surfVector;
+            dist = tempVec.Dot(tempVec);
+            if(dist > maxDist) { maxDist = dist; }
         }
 
-        // choose surfvector depending on surface parts and visible part
-        if((edgeCounter != edgeCount) && (maxDist == 1.0f)) {
-            surfVector.Set(0.0f, 0.0f, 0.0f);
-            maxDist = atomRadius*atomRadius * 2.5f;
-        } else {
-            // if max angle of visible surface part is more than PI use edgeVector else surfVector
-            if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
-                surfVector = edgeVector * (-1.0f);
-            }
-            surfVector.Normalise();
-            surfVector *= atomRadius;
-
-            // calculate max distance to surfVector
-	        maxDist = 0.0f;
-	        for(j = 0; j < vecList.Count(); ++j) {
-		        tempVec = (vecList[j]*atomRadius) - surfVector;
-		        dist = tempVec.Dot(tempVec);
-		        if(dist > maxDist) { maxDist = dist; }
-	        }
+        if(maxDist > 2.0f*atomRadius*atomRadius*1.5f) {
+            maxDist = 4.5f*atomRadius*atomRadius;
         }
-    
+
         this->sphereSurfVector[idxRS].Append(surfVector.GetX());
         this->sphereSurfVector[idxRS].Append(surfVector.GetY());
         this->sphereSurfVector[idxRS].Append(surfVector.GetZ());
