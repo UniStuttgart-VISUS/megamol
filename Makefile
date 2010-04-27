@@ -16,7 +16,7 @@ TargetName := TriSoup
 InputRootDir := $(InputDir)
 InputDirs := .
 IncludeDir := $(IncludeDir) $(mmcorepath)
-VISlibs := graphics sys math base
+VISlibs := gl graphics sys math base
 
 
 # Additional compiler flags
