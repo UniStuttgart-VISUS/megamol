@@ -414,17 +414,34 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress6(
 vislib::net::cluster::DiscoveryService::State 
 vislib::net::cluster::DiscoveryService::GetState(void) const {
     State retval = STATE_STOPPED;
+    SIZE_T cntConfigs = this->configs.Count();
     
     if (this->senderThread.IsRunning()) {
         reinterpret_cast<int&>(retval) |= STATE_SENDER_RUNNING;
     }
-    //for (SIZE_T i = 0; i < cntConfigs; i++) {
-    //    if (!this->configs[i].GetRecvThread().IsRunning()) {
-    //        return false;
-    //    }
-    //}
+
+    if (cntConfigs > 0) {
+        reinterpret_cast<int&>(retval) |= STATE_RECEIVER_RUNNING;
+    }
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
+        if (!this->configs[i].GetRecvThread().IsRunning()) {
+            reinterpret_cast<int&>(retval) &= ~STATE_RECEIVER_RUNNING;
+            break;
+        }
+    }
 
     return retval;
+}
+
+
+/*
+ * vislib::net::cluster::DiscoveryService::IsRunning
+ */
+bool vislib::net::cluster::DiscoveryService::IsRunning(void) const {
+    State state = this->GetState();
+
+    return ((state == STATE_RUNNING) 
+        || ((state == STATE_RECEIVER_RUNNING) && this->IsObserver()));
 }
 
 

@@ -671,11 +671,12 @@ namespace cluster {
          * Answer whether the discovery service is running. This is the case, if
          * both, the sender and the receiver thread are running.
          *
+         * If the discovery service is in observer mode, only the receivers are
+         * required to run in order for this method to return true.
+         *
          * @return true, if the service is running, false otherwise.
          */
-        inline bool IsRunning(void) const {
-            return (this->GetState() == STATE_RUNNING);
-        }
+        bool IsRunning(void) const;
 
         /**
          * Answer whether the 'idx'th known peer node is this node. 
