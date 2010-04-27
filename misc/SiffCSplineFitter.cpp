@@ -16,8 +16,8 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/Point.h"
 #include "vislib/ShallowPoint.h"
-/*
 #include <climits>
+/*
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
 #include "utility/ColourParser.h"
