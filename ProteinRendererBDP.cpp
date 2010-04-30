@@ -345,6 +345,14 @@ bool ProteinRendererBDP::create( void )
     if ( !GLSLShader::InitialiseExtensions() )
         return false;
     
+    // check for GL_EXT_blend_logic_op ...
+    vislib::TString extString((char *)glGetString(GL_EXTENSIONS));
+    if(extString.Contains(vislib::TString("GL_EXT_blend_logic_op"),0)) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_WARN, "GL_EXT_blend_logic_op is supported ...\n");
+    } else {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "GL_EXT_blend_logic_op  is NOT supported ...\n");
+    }
+
     // check maximum number of multiple render targets
     GLint maxBuffers;
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &maxBuffers);
@@ -899,7 +907,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
         //////////////////////////////////////////////////////////////////
         // Compute the simplified chains
         //////////////////////////////////////////////////////////////////
-        /*for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
+        for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
         {
             delete this->simpleRS[cntRS];
         }
@@ -914,8 +922,8 @@ bool ProteinRendererBDP::Render( Call& call ) {
         // compute the color table
         this->MakeColorTable( protein, true);
         // compute the arrays for ray casting
-        this->ComputeRaycastingArraysSimple();*/
-        
+        this->ComputeRaycastingArraysSimple();
+       
     }
     else
     {
@@ -1124,7 +1132,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
     else if( this->currentRendermode == GPU_SIMPLIFIED )
     {
         // render the simplified SES via GPU ray casting
-        //this->RenderSESGpuRaycastingSimple( protein);
+        this->RenderSESGpuRaycastingSimple( protein);
     }
 
     glPopMatrix();
@@ -1815,13 +1823,15 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
 {
     // TODO: attribute locations nicht jedes mal neu abfragen!
 
+    int i;
+
     // set viewport
     float viewportStuff[4] =
     {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()
+        this->cameraInfo->TileRect().Left(),
+        this->cameraInfo->TileRect().Bottom(),
+        this->cameraInfo->TileRect().Width(),
+        this->cameraInfo->TileRect().Height()
     };
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -1832,6 +1842,20 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
     float *clearColor = new float[4];
     glGetFloatv( GL_COLOR_CLEAR_VALUE, clearColor);
     vislib::math::Vector<float, 3> fogCol( clearColor[0], clearColor[1], clearColor[2]);
+
+    if(this->depthPeelingMode != NONE_BDP) {
+        // bind min max depth buffer
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
+        
+        // bind equalized histogram
+        if(this->depthPeelingMode == 4) {
+            for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
+                glActiveTexture(GL_TEXTURE2 + i);
+                glBindTexture( GL_TEXTURE_2D, this->equalizedHistTex[i]);
+            }
+        }
+    }
     
     unsigned int cntRS;
     
@@ -1840,8 +1864,10 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         //////////////////////////////////
         // ray cast the tori on the GPU //
         //////////////////////////////////
+        
         // enable torus shader
         this->torusShader.Enable();
+
         // set shader variables
         glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
         glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, cameraInfo->Front().PeekComponents());
@@ -1850,21 +1876,38 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
         glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->alpha);
+        glUniform1fARB( this->torusShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
+        glUniform1iARB( this->torusShader.ParameterLocation( "flipNormals"), (this->flipNormals)?(1):(0));
+
+        glUniform2fARB( this->torusShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+        glUniform1iARB( this->torusShader.ParameterLocation( "depthBuffer"), 1);
+
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex0"), 2);
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex1"), 3);
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex2"), 4);
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex3"), 5);
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex4"), 6);
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex5"), 7);
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex6"), 8);
+        glUniform1iARB( this->torusShader.ParameterLocation( "equalHistTex7"), 9);
+
+        glUniform1iARB( this->torusShader.ParameterLocation( "DPmode"), (int)this->depthPeelingMode );
+
         // get attribute locations
         GLuint attribInParams = glGetAttribLocationARB( this->torusShader, "inParams");
         GLuint attribQuatC = glGetAttribLocationARB( this->torusShader, "quatC");
         GLuint attribInSphere = glGetAttribLocationARB( this->torusShader, "inSphere");
         GLuint attribInColors = glGetAttribLocationARB( this->torusShader, "inColors");
         GLuint attribInCuttingPlane = glGetAttribLocationARB( this->torusShader, "inCuttingPlane");
-        // set color to orange
-        glColor3f( 1.0f, 0.75f, 0.0f);
-        glEnableClientState( GL_VERTEX_ARRAY);
+
         // enable vertex attribute arrays for the attribute locations
+        glEnableClientState( GL_VERTEX_ARRAY);
         glEnableVertexAttribArrayARB( attribInParams);
         glEnableVertexAttribArrayARB( attribQuatC);
         glEnableVertexAttribArrayARB( attribInSphere);
         glEnableVertexAttribArrayARB( attribInColors);
         glEnableVertexAttribArrayARB( attribInCuttingPlane);
+
         // set vertex and attribute pointers and draw them
         glVertexAttribPointerARB( attribInParams, 3, GL_FLOAT, 0, 0, this->torusInParamArray[cntRS].PeekElements());
         glVertexAttribPointerARB( attribQuatC, 4, GL_FLOAT, 0, 0, this->torusQuatCArray[cntRS].PeekElements());
@@ -1873,6 +1916,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glVertexAttribPointerARB( attribInCuttingPlane, 3, GL_FLOAT, 0, 0, this->torusInCuttingPlaneArray[cntRS].PeekElements());
         glVertexPointer( 3, GL_FLOAT, 0, this->torusVertexArray[cntRS].PeekElements());
         glDrawArrays( GL_POINTS, 0, ((unsigned int)this->torusVertexArray[cntRS].Count())/3);
+
         // disable vertex attribute arrays for the attribute locations
         glDisableVertexAttribArrayARB( attribInParams);
         glDisableVertexAttribArrayARB( attribQuatC);
@@ -1880,16 +1924,21 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glDisableVertexAttribArrayARB( attribInColors);
         glDisableVertexAttribArrayARB( attribInCuttingPlane);
         glDisableClientState(GL_VERTEX_ARRAY);
+
         // enable torus shader
         this->torusShader.Disable();
-
+        
         /////////////////////////////////////////////////
         // ray cast the spherical triangles on the GPU //
         /////////////////////////////////////////////////
+        
         // bind texture
-        glBindTexture( GL_TEXTURE_2D, singularityTexture[cntRS]);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture( GL_TEXTURE_2D, this->singularityTexture[cntRS]);
+
         // enable spherical triangle shader
         this->sphericalTriangleShader.Enable();
+
         // set shader variables
         glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
@@ -1897,9 +1946,28 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
         glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-        glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
-                             1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
         glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->alpha);
+        glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "flipNormals"), (this->flipNormals)?(1):(0));
+
+        glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "depthBuffer"), 1);
+
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex0"), 2);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex1"), 3);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex2"), 4);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex3"), 5);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex4"), 6);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex5"), 7);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex6"), 8);
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "equalHistTex7"), 9);
+
+        glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffsetSingularity"),
+                             1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "singTex"), 0);
+
+        glUniform1iARB( this->sphericalTriangleShader.ParameterLocation( "DPmode"), (int)this->depthPeelingMode );
+
         // get attribute locations
         GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
         GLuint attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
@@ -1908,10 +1976,10 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         GLuint attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
         GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
         GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
-        // set color to turquoise
-        glColor3f( 0.0f, 0.75f, 1.0f);
-        glEnableClientState( GL_VERTEX_ARRAY);
+        GLuint attribFrontBack = glGetAttribLocationARB( this->sphericalTriangleShader, "attribFrontBack");
+
         // enable vertex attribute arrays for the attribute locations
+        glEnableClientState( GL_VERTEX_ARRAY);
         glEnableVertexAttribArrayARB( attribVec1);
         glEnableVertexAttribArrayARB( attribVec2);
         glEnableVertexAttribArrayARB( attribVec3);
@@ -1919,6 +1987,8 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glEnableVertexAttribArrayARB( attribTexCoord2);
         glEnableVertexAttribArrayARB( attribTexCoord3);
         glEnableVertexAttribArrayARB( attribColors);
+        glEnableVertexAttribArrayARB( attribFrontBack);
+
         // set vertex and attribute pointers and draw them
         glVertexAttribPointerARB( attribVec1, 4, GL_FLOAT, 0, 0, this->sphericTriaVec1[cntRS].PeekElements());
         glVertexAttribPointerARB( attribVec2, 4, GL_FLOAT, 0, 0, this->sphericTriaVec2[cntRS].PeekElements());
@@ -1929,6 +1999,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glVertexAttribPointerARB( attribColors, 3, GL_FLOAT, 0, 0, this->sphericTriaColors[cntRS].PeekElements());
         glVertexPointer( 4, GL_FLOAT, 0, this->sphericTriaVertexArray[cntRS].PeekElements());
         glDrawArrays( GL_POINTS, 0, ((unsigned int)this->sphericTriaVertexArray[cntRS].Count())/4);
+
         // disable vertex attribute arrays for the attribute locations
         glDisableVertexAttribArrayARB( attribVec1);
         glDisableVertexAttribArrayARB( attribVec2);
@@ -1938,18 +2009,24 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glDisableVertexAttribArrayARB( attribTexCoord3);
         glDisableVertexAttribArrayARB( attribColors);
         glDisableClientState(GL_VERTEX_ARRAY);
+
         // disable spherical triangle shader
         this->sphericalTriangleShader.Disable();
+
         // unbind texture
         glBindTexture( GL_TEXTURE_2D, 0);
     
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
+        
+        // bind texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
+
         // enable sphere shader
         this->sphereShader.Enable();
-        glEnableClientState( GL_VERTEX_ARRAY);
-        glEnableClientState( GL_COLOR_ARRAY);
+
         // set shader variables
         glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
@@ -1958,17 +2035,98 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
         glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
         glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->alpha);
-        // set vertex and color pointers and draw them
+        glUniform1fARB( this->sphereShader.ParameterLocation( "alphaGradient"), this->alphaGradient);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "flipNormals"), (this->flipNormals)?(1):(0));
+
+        glUniform2fARB( this->sphereShader.ParameterLocation( "texOffset"), 1.0f/(float)this->width, 1.0f/(float)this->height );
+        glUniform1iARB( this->sphereShader.ParameterLocation( "depthBuffer"), 1);
+
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex0"), 2);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex1"), 3);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex2"), 4);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex3"), 5);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex4"), 6);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex5"), 7);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex6"), 8);
+        glUniform1iARB( this->sphereShader.ParameterLocation( "equalHistTex7"), 9);
+
+        glUniform2fARB( this->sphereShader.ParameterLocation( "texOffsetCutPlanes"),
+                             1.0f/(float)this->cutPlanesTexWidth[cntRS], 1.0f/(float)this->cutPlanesTexHeight[cntRS] );
+        glUniform1iARB( this->sphereShader.ParameterLocation( "cutPlaneTex"), 0);
+
+        glUniform1iARB( this->sphereShader.ParameterLocation( "DPmode"), (int)this->depthPeelingMode );
+
+        // get attribute locations
+        GLuint attribTexCoord = glGetAttribLocationARB( this->sphereShader, "attribTexCoord");
+        GLuint attribSurfVector = glGetAttribLocationARB( this->sphereShader,  "attribSurfVector");
+
+        // enable vertex attribute arrays for the attribute locations
+        glEnableClientState( GL_VERTEX_ARRAY);
+        glEnableClientState( GL_COLOR_ARRAY);
+        glEnableVertexAttribArrayARB( attribTexCoord);
+        glEnableVertexAttribArrayARB( attribSurfVector);
+
+        // set vertex, color and attribute pointers and draw them
+        glVertexAttribPointerARB( attribTexCoord, 3, GL_FLOAT, 0, 0, this->sphereTexCoord[cntRS].PeekElements());
+        glVertexAttribPointerARB( attribSurfVector, 4, GL_FLOAT, 0, 0, this->sphereSurfVector[cntRS].PeekElements());
         glColorPointer( 3, GL_FLOAT, 0, this->sphereColors[cntRS].PeekElements());
         glVertexPointer( 4, GL_FLOAT, 0, this->sphereVertexArray[cntRS].PeekElements());
         glDrawArrays( GL_POINTS, 0, ((unsigned int)this->sphereVertexArray[cntRS].Count())/4);
-        // disable sphere shader
+
+        // disable vertex attribute arrays for the attribute locations
+        glDisableVertexAttribArrayARB( attribTexCoord);
+        glDisableVertexAttribArrayARB( attribSurfVector);
         glDisableClientState( GL_COLOR_ARRAY);
         glDisableClientState( GL_VERTEX_ARRAY);
+
         // disable sphere shader
         this->sphereShader.Disable();
+
+        // unbind texture
+        glBindTexture( GL_TEXTURE_2D, 0);
+
+        // >>>>>>>>>> DEBUG
+
+        // drawing surfVectors as yellow lines
+        if(this->depthPeelingMode == NONE_BDP) {
+            glLineWidth( 1.0f);
+            glEnable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
+            glPushAttrib(GL_POLYGON_BIT);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            unsigned int i;
+            for( i = 0; i < ((unsigned int)this->sphereVertexArray[cntRS].Count())/4; i++ )
+            {
+                glColor3f(1.0f, 1.0f, 0.0f);
+                glBegin(GL_LINES);
+                    glVertex3f( this->sphereVertexArray[cntRS][4*i], this->sphereVertexArray[cntRS][4*i+1], this->sphereVertexArray[cntRS][4*i+2]);
+                    glVertex3f( this->sphereVertexArray[cntRS][4*i] + this->sphereSurfVector[cntRS][4*i]*1.5f, 
+                                this->sphereVertexArray[cntRS][4*i+1] + this->sphereSurfVector[cntRS][4*i+1]*1.5f, 
+                                this->sphereVertexArray[cntRS][4*i+2] + this->sphereSurfVector[cntRS][4*i+2]*1.5f);
+                glEnd(); //GL_LINES
+            }
+            glPopAttrib();
+            glDisable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
+        }
+        
+        // <<<<<<<<<< end DEBUG
     }
             
+    if(this->depthPeelingMode != NONE_BDP) {
+        // unbind equalized histogram
+        if(this->depthPeelingMode == 4) {
+            for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
+                glActiveTexture(GL_TEXTURE2 + _BDP_NUM_BUFFERS -1 - i);
+                glBindTexture( GL_TEXTURE_2D, 0);
+            }
+        }
+
+        // unbind depth buffer
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture( GL_TEXTURE_2D, 0);
+    }
+            
+    CHECK_FOR_OGL_ERROR();
+
     // delete pointers
     delete[] clearColor;
 }
@@ -2038,7 +2196,7 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
 
     // unbind textures
     for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
-        glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS -1 - i);
+        glActiveTexture(GL_TEXTURE0 + _BDP_NUM_BUFFERS - 1 - i);
         glBindTexture( GL_TEXTURE_2D, 0);
     }
 
@@ -2051,11 +2209,14 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
  */
 void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
 
-     // ------------ create depth histogram ------------
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_LOGIC_OP);
-    glLogicOp(GL_OR);
+    // ------------ create depth histogram ------------
     glDisable(GL_DEPTH_TEST);
+
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    glEnable(GL_COLOR_LOGIC_OP);
+    glLogicOp(GL_OR);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_COLOR_LOGIC_OP);
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->histogramFBO);
 
@@ -2072,13 +2233,19 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
     else if( this->currentRendermode == GPU_SIMPLIFIED )
     {
         // render the simplified SES via GPU ray casting
-        //this->RenderSESGpuRaycastingSimple( protein);
+        this->RenderSESGpuRaycastingSimple( protein);
     }
-     // stop rendering to fbo
-     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
+
+    // stop rendering to fbo
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
     
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    glDisable(GL_COLOR_LOGIC_OP);
+
+    CHECK_FOR_OGL_ERROR();
 
     // ------------ equalize histogram ------------
+
     glDisable(GL_BLEND);
 
     // bind textures
@@ -2732,7 +2899,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
     // compute singulatity textures
     this->CreateSingularityTextures();
    
-    // compute cutting planes textures (needs outNormals!)
+    // compute cutting planes textures
     this->CreateCutPlanesTextures();
 
     for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
@@ -2922,6 +3089,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
         // variables for surface vector calculation
         vislib::math::Vector<float, 3> vertexPos, surfVector, tempVec, edgeVector;
         vislib::Array<vislib::math::Vector<float, 3> > vecList;
+        vislib::Array<vislib::math::Vector<float, 3> > edgeList;
         float maxDist, dist, atomRadius;
         unsigned int j, edgeCount;
 
@@ -2963,7 +3131,9 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             atomRadius = this->reducedSurface[cntRS]->GetRSVertex(i)->GetRadius();
             edgeCount = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdgeCount();
             vecList.AssertCapacity(edgeCount);
+            edgeList.AssertCapacity(edgeCount);
             vecList.Clear();
+            edgeList.Clear();
 
             // calculate intersections of the sphere with triangle patches.
             // the sum of these (normalised) intersections is the surfVector.
@@ -2986,13 +3156,17 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
 
                 tempVec = this->reducedSurface[cntRS]->GetRSVertex(i)->GetEdge(j)->GetTorusCenter() - vertexPos;
                 tempVec.Normalise();
-                edgeVector += tempVec;
+				if(!(edgeList.Contains(tempVec))) {
+                    edgeList.Append(tempVec);
+                    edgeVector += tempVec;
+				}
             }
-    
+                
             // if max angle of visible surface part is more than PI use edgeVector else surfVector
             if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
-                surfVector = edgeVector * (-1.0f);
-            }
+				surfVector = edgeVector * (-1.0f);
+			}
+
             surfVector.Normalise();
             surfVector *= atomRadius;
 
@@ -3370,11 +3544,15 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
     this->torusInCuttingPlaneArray.resize( this->simpleRS.size());
     this->sphereVertexArray.resize( this->simpleRS.size());
     this->sphereColors.resize( this->simpleRS.size());
-    
+    this->sphereTexCoord.resize( this->simpleRS.size());
+    this->sphereSurfVector.resize( this->simpleRS.size());    
     
     // compute singulatity textures
     this->CreateSingularityTexturesSimple();
     
+    // compute cutting planes textures
+    this->CreateCutPlanesTexturesSimple();
+
     for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
     {
         ///////////////////////////////////////////////////////////////////////
@@ -3565,13 +3743,28 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
         this->sphereColors[cntRS].AssertCapacity(
                 this->simpleRS[cntRS]->GetRSVertexCount() * 3);
         this->sphereColors[cntRS].Clear();
-        
+        this->sphereTexCoord[cntRS].AssertCapacity(
+                this->simpleRS[cntRS]->GetRSVertexCount() * 3);
+        this->sphereTexCoord[cntRS].Clear();
+        this->sphereSurfVector[cntRS].AssertCapacity(
+                this->simpleRS[cntRS]->GetRSVertexCount() * 4);
+        this->sphereSurfVector[cntRS].Clear();
+
+        // variables for surface vector calculation
+        vislib::math::Vector<float, 3> vertexPos, surfVector, tempVec, edgeVector;
+        vislib::Array<vislib::math::Vector<float, 3> > vecList;
+        vislib::Array<vislib::math::Vector<float, 3> > edgeList;
+        float maxDist, dist, atomRadius;
+        unsigned int j, edgeCount;
+
         // loop over all RS-vertices (i.e. all protein atoms)
         for( i = 0; i < this->simpleRS[cntRS]->GetRSVertexCount(); ++i )
         {
             // add only surface atoms (i.e. with not buried RS-vertices)
-            //if( this->simpleRS[cntRS]->GetRSVertex( i)->IsBuried() )
-            //    continue;
+			if( this->simpleRS[cntRS]->GetRSVertex( i)->IsBuried() ) {
+                continue;
+			}
+
             // set vertex color
             //this->sphereColors[cntRS].Append( col.GetX());
             //this->sphereColors[cntRS].Append( col.GetY());
@@ -3579,6 +3772,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             this->sphereColors[cntRS].Append( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSVertex( i)->GetIndex()).GetX());
             this->sphereColors[cntRS].Append( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSVertex( i)->GetIndex()).GetY());
             this->sphereColors[cntRS].Append( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSVertex( i)->GetIndex()).GetZ());
+
             // set vertex position
             this->sphereVertexArray[cntRS].Append(
                     this->simpleRS[cntRS]->GetRSVertex( i)->GetPosition().GetX());
@@ -3588,10 +3782,79 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
                     this->simpleRS[cntRS]->GetRSVertex( i)->GetPosition().GetZ());
             this->sphereVertexArray[cntRS].Append(
                     this->simpleRS[cntRS]->GetRSVertex( i)->GetRadius());
+
+            // set number of edges and texture coordinates
+            this->sphereTexCoord[cntRS].Append(
+                (float)this->simpleRS[cntRS]->GetRSVertex( i)->GetEdgeCount());
+            this->sphereTexCoord[cntRS].Append(
+                (float)this->simpleRS[cntRS]->GetRSVertex( i)->GetTexCoordX());
+            this->sphereTexCoord[cntRS].Append(
+                (float)this->simpleRS[cntRS]->GetRSVertex( i)->GetTexCoordY());
+            
+            // calculate and set surface vector and max distance for additonal sphere interior cliping
+            vertexPos = this->simpleRS[cntRS]->GetRSVertex(i)->GetPosition();
+            atomRadius = this->simpleRS[cntRS]->GetRSVertex(i)->GetRadius();
+            edgeCount = this->simpleRS[cntRS]->GetRSVertex(i)->GetEdgeCount();
+            vecList.AssertCapacity(edgeCount);
+            edgeList.AssertCapacity(edgeCount);
+            vecList.Clear();
+            edgeList.Clear();
+
+            // calculate intersections of the sphere with triangle patches.
+            // the sum of these (normalised) intersections is the surfVector.
+            // the sum of all (normalised) edges is the edgeVector.
+            surfVector.Set(0.0f, 0.0f, 0.0f);
+            edgeVector.Set(0.0f, 0.0f, 0.0f);
+            for(j = 0; j < edgeCount; ++j ) {
+                tempVec = this->simpleRS[cntRS]->GetRSVertex(i)->GetEdge(j)->GetFace1()->GetProbeCenter() - vertexPos;
+                tempVec.Normalise();
+                if(!(vecList.Contains(tempVec))) {
+                    vecList.Append(tempVec);
+                    surfVector += tempVec;
+                }
+                tempVec = this->simpleRS[cntRS]->GetRSVertex(i)->GetEdge(j)->GetFace2()->GetProbeCenter() - vertexPos;
+                tempVec.Normalise();
+                if(!(vecList.Contains(tempVec))) {
+                    vecList.Append(tempVec);
+                    surfVector += tempVec;
+                }
+
+                tempVec = this->simpleRS[cntRS]->GetRSVertex(i)->GetEdge(j)->GetTorusCenter() - vertexPos;
+                tempVec.Normalise();
+				if(!(edgeList.Contains(tempVec))) {
+                    edgeList.Append(tempVec);
+                    edgeVector += tempVec;
+				}
+            }
+                
+            // if max angle of visible surface part is more than PI use edgeVector else surfVector
+            if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
+				surfVector = edgeVector * (-1.0f);
+			}
+
+            surfVector.Normalise();
+            surfVector *= atomRadius;
+
+            // calculate max distance to surfVector
+            maxDist = 0.0f;
+            for(j = 0; j < vecList.Count(); ++j) {
+                tempVec = (vecList[j]*atomRadius) - surfVector;
+                dist = tempVec.Dot(tempVec);
+                if(dist > maxDist) { maxDist = dist; }
+            }
+
+            if(maxDist > 2.0f*atomRadius*atomRadius*1.5f) {
+                maxDist = 4.5f*atomRadius*atomRadius;
+            }
+
+            this->sphereSurfVector[cntRS].Append(surfVector.GetX());
+            this->sphereSurfVector[cntRS].Append(surfVector.GetY());
+            this->sphereSurfVector[cntRS].Append(surfVector.GetZ());
+            this->sphereSurfVector[cntRS].Append(maxDist);
         }
     }
     // print the time of the computation
-    //std::cout << "computation of arrays for GPU ray casting finished:" << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+    //std::cout << "computation of simple RS arrays for GPU ray casting finished:" << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
 }
 
 
@@ -3741,7 +4004,131 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
 
         // texture generation
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F_ARB, this->cutPlanesTexWidth[cntRS], this->cutPlanesTexHeight[cntRS], 0, GL_RGB, GL_FLOAT, 
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[cntRS], this->cutPlanesTexHeight[cntRS], 0, GL_RGB, GL_FLOAT, 
+                this->cutPlanesTexData[cntRS].PeekElements());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glBindTexture( GL_TEXTURE_2D, 0);
+    }
+/*
+    std::cout << "Create texture: " <<
+        ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+*/
+}
+
+
+/*
+ * Creates the cutting planes texture for sphere interior clipping.
+ */
+void ProteinRendererBDP::CreateCutPlanesTexturesSimple()
+{
+/*
+    time_t t = clock();
+*/
+    unsigned int cnt1, cnt2, cntRS;
+    
+    // delete old cutting planes textures
+    for( cnt1 = 0; cnt1 < this->cutPlanesTexture.size(); ++cnt1 )
+    {
+        glDeleteTextures( 1, &this->cutPlanesTexture[cnt1]);
+    }
+    // check if the cutting planes texture has the right size
+    if( this->simpleRS.size() != this->cutPlanesTexture.size() )
+    {
+        // store old cutting planes texture size
+        unsigned int cutPlanesTexSizeOld = (unsigned int)this->cutPlanesTexture.size();
+        // resize cutting planes texture to fit the number of reduced surfaces
+        this->cutPlanesTexture.resize( this->simpleRS.size());
+        // generate a new texture for each new cutting planes texture
+        for( cnt1 = cutPlanesTexSizeOld; cnt1 < this->cutPlanesTexture.size(); ++cnt1 )
+        {
+            glGenTextures( 1, &this->cutPlanesTexture[cnt1]);
+        }
+    }
+    // resize cutting planes texture dimension and data arrays
+    this->cutPlanesTexWidth.resize( this->simpleRS.size());
+    this->cutPlanesTexHeight.resize( this->simpleRS.size());
+    this->cutPlanesTexData.resize( this->simpleRS.size());
+    
+    // get maximum texture size
+    GLint texSize;
+    glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
+
+    // TODO: compute proper number of maximum edges per vertex
+    unsigned int maxNumEdges = 16;
+
+    unsigned int coordX;
+    unsigned int coordY;
+    unsigned int edgeCount;
+    vislib::math::Vector<float, 3> X1, zAxis, rotAxis, edgeVector, vertexPos, final;
+    float atomRadius;
+    zAxis.Set( 0.0f, 0.0f, 1.0f);
+
+    for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
+    {
+        // set width and height of texture
+        if( (unsigned int)texSize < this->simpleRS[cntRS]->GetRSVertexCount() )
+        {
+            this->cutPlanesTexHeight[cntRS] = texSize;
+            this->cutPlanesTexWidth[cntRS] = maxNumEdges * (int)ceil( double(
+                this->simpleRS[cntRS]->GetRSVertexCount()) / (double)texSize);
+        }
+        else
+        {
+            this->cutPlanesTexHeight[cntRS] = this->simpleRS[cntRS]->GetRSVertexCount();
+            this->cutPlanesTexWidth[cntRS] = maxNumEdges;
+        }
+        // generate float-array for texture with the appropriate dimension
+        if( !this->cutPlanesTexData[cntRS].IsEmpty() )
+            this->cutPlanesTexData[cntRS].Clear(true);
+        this->cutPlanesTexData[cntRS].AssertCapacity(this->cutPlanesTexWidth[cntRS]*this->cutPlanesTexHeight[cntRS]*3);
+
+        coordX = 0;
+        coordY = 0;
+        for( cnt1 = 0; cnt1 < this->simpleRS[cntRS]->GetRSVertexCount(); ++cnt1 ) {
+            if( this->simpleRS[cntRS]->GetRSVertex( cnt1)->IsBuried() ) { continue; }
+
+            this->simpleRS[cntRS]->GetRSVertex( cnt1)->SetTexCoord( coordX, coordY);
+            coordY++;
+            if( coordY == this->cutPlanesTexHeight[cntRS] ) {
+                coordY = 0;
+                coordX = coordX + maxNumEdges;
+            }
+
+            edgeCount = this->simpleRS[cntRS]->GetRSVertex( cnt1)->GetEdgeCount();
+            vertexPos = this->simpleRS[cntRS]->GetRSVertex( cnt1)->GetPosition();
+            atomRadius = this->simpleRS[cntRS]->GetRSVertex( cnt1)->GetRadius();
+
+            for( cnt2 = 0; cnt2 < maxNumEdges; ++cnt2 ) {
+                if(cnt2 < edgeCount) {
+                    ReducedSurfaceSimplified::RSEdge* currentEdge = this->simpleRS[cntRS]->GetRSVertex( cnt1)->GetEdge(cnt2);
+                    edgeVector = currentEdge->GetTorusCenter() - vertexPos;
+                    rotAxis = edgeVector.Cross( zAxis);
+                    rotAxis.Normalise();
+                    X1 = edgeVector + rotAxis * currentEdge->GetTorusRadius();
+                    X1.Normalise();
+                    X1 *= atomRadius;
+                    edgeVector.Normalise();
+                    final = edgeVector * (edgeVector.Dot(X1));
+
+                    this->cutPlanesTexData[cntRS].Append(final.GetX());
+                    this->cutPlanesTexData[cntRS].Append(final.GetY());
+                    this->cutPlanesTexData[cntRS].Append(final.GetZ());
+
+                } else {
+                    this->cutPlanesTexData[cntRS].Append(0.0f);
+                    this->cutPlanesTexData[cntRS].Append(0.0f);
+                    this->cutPlanesTexData[cntRS].Append(0.0f);
+                }
+            }
+        }
+
+        // texture generation
+        glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[cntRS], this->cutPlanesTexHeight[cntRS], 0, GL_RGB, GL_FLOAT, 
                 this->cutPlanesTexData[cntRS].PeekElements());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -3854,7 +4241,7 @@ void ProteinRendererBDP::CreateCutPlanesTexture( unsigned int idxRS)
 
     // texture generation
     glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[idxRS]);
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F_ARB, this->cutPlanesTexWidth[idxRS], this->cutPlanesTexHeight[idxRS], 0, GL_RGB, GL_FLOAT, 
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[idxRS], this->cutPlanesTexHeight[idxRS], 0, GL_RGB, GL_FLOAT, 
             this->cutPlanesTexData[idxRS].PeekElements());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
