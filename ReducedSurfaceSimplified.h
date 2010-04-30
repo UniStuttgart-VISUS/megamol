@@ -147,6 +147,12 @@ namespace protein {
 			void SetTreated() { treated = true; };
 			/** Set the RS-vertex as not treated */
 			void SetNotTreated() { treated = false; };
+            /** Set texture coordinates for cutting planes */
+            void SetTexCoord( unsigned int x, unsigned int y) { texCoordX = x; texCoordY = y; };
+            /** Get texture coordinates for cutting planes */
+            unsigned int GetTexCoordX() const { return texCoordX; };
+            unsigned int GetTexCoordY() const { return texCoordY; };
+
 		private:
 			// the atom index of the corresponding atom in the protein data source
 			unsigned int idx;
@@ -160,6 +166,9 @@ namespace protein {
 			float radius;
 			// 'true' if the RS-vertex was handled during RS-creation, else 'false'
 			bool treated;
+            // index for cutting planes texture access
+            unsigned int texCoordX, texCoordY;
+
 		};
 
 		/**

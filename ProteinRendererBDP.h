@@ -324,6 +324,13 @@ namespace protein {
          */
         void CreateCutPlanesTexture( unsigned int idxRS);
 
+        /*
+         * Create the cutting planes textures for sphere interior clipping
+         * which store for every RS-vertex (of all molecular surfaces) the positions 
+         * (and implicit the normals) of the planes cutting tori and spheres.
+         */
+        void CreateCutPlanesTexturesSimple();
+
         /**
          * Create the singularity textureS which stores for every RS-edge (of all
          * molecular surfaces) the positions of the probes that cut it.
