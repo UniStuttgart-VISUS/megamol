@@ -887,10 +887,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\special\ClusterSignRenderer.h"
-					>
-				</File>
-				<File
 					RelativePath=".\special\ColStereoDisplay.h"
 					>
 				</File>
@@ -1148,42 +1144,6 @@
 				</File>
 				<File
 					RelativePath=".\special\ClusterDisplayTile.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\special\ClusterSignRenderer.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -3038,6 +2998,10 @@
 				</File>
 				<File
 					RelativePath=".\cluster\ClusterViewMaster.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\HelvUC.inc"
 					>
 				</File>
 				<File
