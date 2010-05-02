@@ -1571,6 +1571,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\view\graphicsresources.h"
+					>
+				</File>
+				<File
 					RelativePath=".\view\LinearTransferFunction.h"
 					>
 				</File>
@@ -1664,6 +1668,10 @@
 				</File>
 				<File
 					RelativePath=".\view\DataSourceModule.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\view\graphicsresources.cpp"
 					>
 				</File>
 				<File
@@ -3001,7 +3009,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\cluster\HelvUC.inc"
+					RelativePath=".\cluster\InfoIconRenderer.h"
 					>
 				</File>
 				<File
@@ -3030,6 +3038,14 @@
 				</File>
 				<File
 					RelativePath=".\cluster\ClusterViewMaster.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\HelvUC.inc"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\InfoIconRenderer.cpp"
 					>
 				</File>
 				<File

@@ -13,7 +13,7 @@
 
 #include "view/AbstractTileView.h"
 #include "cluster/ClusterControllerClient.h"
-#include "vislib/AbstractFont.h"
+#include "cluster/InfoIconRenderer.h"
 #include "vislib/String.h"
 
 
@@ -74,107 +74,16 @@ namespace cluster {
          */
         void renderFallbackView(void);
 
+        /**
+         * Gets the info message and icon for the fallback view
+         *
+         * @param outMsg The message to be shows in the fallback view
+         * @param outState The state icon to be shows in the fallback view
+         */
+        virtual void getFallbackMessageInfo(vislib::TString& outMsg,
+            InfoIconRenderer::IconState& outState);
+
     private:
-
-        /** possible icon states */
-        enum IconState {
-            ICONSTATE_ERROR,
-            ICONSTATE_OK,
-            ICONSTATE_WAIT,
-            ICONSTATE_WORK
-        };
-
-        /** The number of vertices to be used to render the corners */
-        const static int cornerPtCnt;
-
-        /** The radius for the big corners */
-        const static float cornerBigRad;
-
-        /** The radius for the medium corners */
-        const static float cornerMidRad;
-
-        /** The radius for the small corners */
-        const static float cornerSmlRad;
-
-        /** The size of the borders */
-        const static float borderSize;
-
-        /**
-         * Answers the font to be used for the info text messages
-         *
-         * @return The font to be used for the info text messages
-         */
-        static const vislib::graphics::AbstractFont& infoFont(void);
-
-        /**
-         * Creates the caption for the info icon border
-         *
-         * @return The caption for the info icon border
-         */
-        static vislib::TString infoIconBorderCaption(void);
-
-        /**
-         * Renders the error info icon with the specified colour
-         *
-         * @param colR The red colour component
-         * @param colG The green colour component
-         * @param colB The blue colour component
-         * @param message The message to be displayed along with the icon
-         */
-        static void renderErrorInfoIcon(unsigned char colR,
-            unsigned char colG, unsigned char colB,
-            const vislib::TString& message = vislib::TString::EMPTY);
-
-        /**
-         * Renders the info icon border with the specified colour
-         *
-         * @param colR The red colour component
-         * @param colG The green colour component
-         * @param colB The blue colour component
-         */
-        static void renderInfoIconBorder(unsigned char colR,
-            unsigned char colG, unsigned char colB);
-
-        /**
-         * Renders the OK info icon with the specified colour
-         *
-         * @param colR The red colour component
-         * @param colG The green colour component
-         * @param colB The blue colour component
-         * @param message The message to be displayed along with the icon
-         */
-        static void renderOKInfoIcon(unsigned char colR,
-            unsigned char colG, unsigned char colB,
-            const vislib::TString& message = vislib::TString::EMPTY);
-
-        /**
-         * Renders the wait info icon with the specified colour
-         *
-         * @param colR The red colour component
-         * @param colG The green colour component
-         * @param colB The blue colour component
-         * @param message The message to be displayed along with the icon
-         */
-        static void renderWaitInfoIcon(unsigned char colR,
-            unsigned char colG, unsigned char colB,
-            const vislib::TString& message = vislib::TString::EMPTY);
-
-        /**
-         * Renders the working info icon with the specified colour
-         *
-         * @param colR The red colour component
-         * @param colG The green colour component
-         * @param colB The blue colour component
-         * @param message The message to be displayed along with the icon
-         */
-        static void renderWorkingInfoIcon(unsigned char colR,
-            unsigned char colG, unsigned char colB,
-            const vislib::TString& message = vislib::TString::EMPTY);
-
-        /**
-         * Sets up all important OpenGL rendering states
-         */
-        static void setupRendering(void);
 
     };
 
