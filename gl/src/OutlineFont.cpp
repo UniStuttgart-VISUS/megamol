@@ -551,7 +551,7 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
                 // soft break
                 if (knowLastWhite) {
                     i = lastWhiteSpace;
-                    pos = lastWhiteGlyph;
+                    pos = lastWhiteGlyph + 1;
                     lineLength = 0.0f;
                     knowLastWhite = false;
                     nextAsNewLine = true;
