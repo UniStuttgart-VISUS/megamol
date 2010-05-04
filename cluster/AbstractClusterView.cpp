@@ -129,26 +129,4 @@ void cluster::AbstractClusterView::getFallbackMessageInfo(vislib::TString& outMs
         InfoIconRenderer::IconState& outState) {
     outState = InfoIconRenderer::ICONSTATE_UNKNOWN;
     outMsg = _T("State unknown");
-
-    // TODO: Build real message and icon state
-    int t = vislib::sys::GetTicksOfDay() % 50000 / 10000;
-    t = 0;
-    outState = static_cast<InfoIconRenderer::IconState>(t);
-    switch (t) {
-        case 0:
-            outMsg = _T("DEBUG: I don't know what I am doing");
-            break;
-        case 1:
-            outMsg = _T("DEBUG: I don't feel so good");
-            break;
-        case 2:
-            outMsg = _T("DEBUG: Everything looks fine from here");
-            break;
-        case 3:
-            outMsg = _T("DEBUG: Give me some time");
-            break;
-        case 4:
-            outMsg = _T("DEBUG: Working for you ...");
-            break;
-    }
 }

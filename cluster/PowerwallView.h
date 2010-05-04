@@ -77,6 +77,15 @@ namespace cluster {
          */
         virtual void release(void);
 
+        /**
+         * Gets the info message and icon for the fallback view
+         *
+         * @param outMsg The message to be shows in the fallback view
+         * @param outState The state icon to be shows in the fallback view
+         */
+        virtual void getFallbackMessageInfo(vislib::TString& outMsg,
+            InfoIconRenderer::IconState& outState);
+
     private:
 
     };

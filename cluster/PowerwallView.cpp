@@ -80,3 +80,16 @@ void cluster::PowerwallView::release(void) {
     // TODO: Implement
 
 }
+
+
+/*
+ * cluster::PowerwallView::getFallbackMessageInfo
+ */
+void cluster::PowerwallView::getFallbackMessageInfo(vislib::TString& outMsg,
+        InfoIconRenderer::IconState& outState) {
+
+    // TODO: Implement
+
+    outState = InfoIconRenderer::ICONSTATE_WAIT;
+    outMsg = _T("Still waiting for an implementation");
+}
