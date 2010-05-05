@@ -94,6 +94,9 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->config.instanceLog = &this->log;
     this->logRedirection.SetTarget(&this->log);
 
+    // Normalize timer with time offset to something less crappy shitty hateworthy
+    this->timeOffset = -this->GetInstanceTime();
+
 #ifdef _DEBUG
     // Use a randomized time offset to debug the offset synchronization
     { // use a guid to initialize the pseudo-random generator
@@ -101,7 +104,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         guid.Create();
         ::srand(guid.HashCode());
     }
-    this->timeOffset = static_cast<double>(::rand()) * 0.01;
+    this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
 #endif
 
     // redirect default log to instance log of last instance

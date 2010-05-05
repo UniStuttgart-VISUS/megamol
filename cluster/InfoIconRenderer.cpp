@@ -344,7 +344,6 @@ void cluster::InfoIconRenderer::RenderInfoIconBorder(unsigned char colR,
 void cluster::InfoIconRenderer::RenderOKInfoIcon(unsigned char colR,
         unsigned char colG, unsigned char colB,
         const vislib::TString& message) {
-    const float border = 2.0f * borderSize;
 
     setupRendering();
     ::glColor3ub(colR, colG, colB);

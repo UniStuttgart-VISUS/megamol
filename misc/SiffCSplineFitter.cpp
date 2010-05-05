@@ -178,7 +178,7 @@ void misc::SiffCSplineFitter::assertData(void) {
 
     // count sites and frames
     // sites are always in same order in each frame
-    const int ccdtestsize = 10; // sequence of 10 sites as frame detector
+    const unsigned int ccdtestsize = 10; // sequence of 10 sites as frame detector
     const unsigned char *ccd = cdata + cstride * ccdtestsize;
     unsigned int frameSize = 0; // number of sites per frame
     for (unsigned int i = ccdtestsize; i < cnt - ccdtestsize; i++, ccd += cstride) {

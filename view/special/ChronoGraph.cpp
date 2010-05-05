@@ -58,8 +58,7 @@ bool view::special::ChronoGraph::Render(view::CallRender2D& call) {
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    float time = static_cast<float>(
-        this->GetCoreInstance()->GetInstanceTime());
+    float time = static_cast<float>(this->GetCoreInstance()->GetInstanceTime());
 
     this->renderInfoGrid(time,
         call.GetBoundingBox().Left(),
@@ -135,7 +134,7 @@ void view::special::ChronoGraph::renderInfoGrid(float time, float x, float y, fl
 void view::special::ChronoGraph::renderInfoCircle(float time, float x, float y, float w, float h) {
     const int steps = 100;
     float a, cx, cy, px, py;
-    float rad = 0.5f * vislib::math::Min(::abs(w), ::abs(h));
+    float rad = 0.5f * vislib::math::Min(::fabs(w), ::fabs(h));
 
     ::glEnable(GL_LINE_SMOOTH);
     ::glLineWidth(1.2f);
@@ -152,9 +151,9 @@ void view::special::ChronoGraph::renderInfoCircle(float time, float x, float y, 
 
     ::glBegin(GL_LINES);
 
-    rad = 0.5f * ::sqrtf(w * w + h * h);
+    //rad = 0.5f * ::sqrtf(w * w + h * h);
     ::glColor4ub(255, 255, 255, 191);
-    a = 2.0f * static_cast<float>(M_PI) * 0.01f * ::fmodf(time, 100.0f);
+    a = -2.0f * static_cast<float>(M_PI) * 0.01f * ::fmodf(time, 100.0f);
     w *= 0.5f;
     h *= 0.5f;
     cx = x + w;
