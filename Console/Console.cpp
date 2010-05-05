@@ -852,14 +852,13 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             if (::mmvSupportContextMenu(win->HWnd())) {
                 ::mmvInstallContextMenu(win->HWnd());
 
+#ifdef WITH_TWEAKBAR
                 /* TODO: Move GUI */
                 /*if (::mmvSupportParameterGUI(win->HWnd()))*/ {
                     ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 2);
                     ::mmvInstallContextMenuCommandA(win->HWnd(), "Deactivate GUI", 3);
                     if (hideGUI) {
-#ifdef WITH_TWEAKBAR
                         win->DeactivateGUI();
-#endif /* WITH_TWEAKBAR */
                     }
                 } /* else {
                     if (hideGUI || showGUI) {
@@ -868,6 +867,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                             "Parameter GUI is not supported by the viewer");
                     }
                 } */
+#endif /* WITH_TWEAKBAR */
 
                 if (!parameterFile.IsEmpty()) {
                     ::mmvInstallContextMenuCommandA(win->HWnd(),
