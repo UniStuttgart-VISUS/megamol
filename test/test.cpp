@@ -140,6 +140,7 @@ VislibTest tests[] = {
     {_T("TrayIcon"), ::TestTrayIcon, "Tests vislib::sys::TrayIcon"},
     {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
+    {_T("PerfCounter"), ::TestPerformanceCounter, "Tests the performance counter"},
     // end guard. Do not remove. Must be last entry.
     {NULL, NULL, NULL}
 };

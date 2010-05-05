@@ -456,7 +456,15 @@ void TestSystemMessage(void) {
 
 void TestPerformanceCounter(void) {
     for (int i = 0; i < 100; i++) {
-        ::_tprintf(_T("%lu\n"), (unsigned long)vislib::sys::PerformanceCounter::Query());
+        ::_tprintf(_T("%lu\n"), (unsigned long)vislib::sys::PerformanceCounter::Query(true));
+	::_tprintf(_T("%f\n"), vislib::sys::PerformanceCounter::QueryMillis());
+        int c = 0;
+        for (int j = 0; j < 1000; j++) {
+            for (int k = 0; k < j; k++) {
+                c += k;
+            }
+        }
+        c = c / 2;
     }
 }
 
