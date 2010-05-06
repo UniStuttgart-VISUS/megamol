@@ -77,10 +77,10 @@ namespace core {
 
             if (call == NULL) {
                 if (this->call != NULL) {
+                    this->SetStatusDisconnected();
                     megamol::core::Call *c = this->call;
                     this->call = NULL;
                     delete c;
-                    this->SetStatusDisconnected();
                 }
                 if (this->Parent()) this->Parent()->UnlockModuleGraph();
                 return true;
