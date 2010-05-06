@@ -321,7 +321,7 @@ void MEGAMOLCORE_CALLBACK megamol::console::Window::initGUI(const char *paramNam
 
     if (context == NULL) { return; }
     if (!::mmcGetParameterA(*context->hCore, paramName, *hParam)) { return; }
-    if (!::mmcIsParameterRelevant(context->wnd->HView(), *hParam)) { return; }
+    //if (!::mmcIsParameterRelevant(context->wnd->HView(), *hParam)) { return; }
 
     unsigned int len = 0;
     ::mmcGetParameterTypeDescription(*hParam, NULL, &len);
