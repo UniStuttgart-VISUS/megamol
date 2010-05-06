@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "PowerwallView.h"
+#include "CallRegisterAtController.h"
 
 using namespace megamol::core;
 
@@ -88,8 +89,32 @@ void cluster::PowerwallView::release(void) {
 void cluster::PowerwallView::getFallbackMessageInfo(vislib::TString& outMsg,
         InfoIconRenderer::IconState& outState) {
 
+    cluster::CallRegisterAtController *crac
+        = this->registerSlot.CallAs<cluster::CallRegisterAtController>();
+    if (crac == NULL) {
+        outState = InfoIconRenderer::ICONSTATE_ERROR;
+        outMsg = _T("Not connected to the cluster controller");
+        return;
+    }
+
+    if (!(*crac)(cluster::CallRegisterAtController::CALL_GETSTATUS)) {
+        outState = InfoIconRenderer::ICONSTATE_ERROR;
+        outMsg = _T("Unable to contact cluster controller");
+        return;
+    }
+
+    if (!crac->GetStatusRunning()) {
+        outState = InfoIconRenderer::ICONSTATE_ERROR;
+        outMsg = _T("Cluster discovery service is not running");
+        return;
+    }
+
+    outState = InfoIconRenderer::ICONSTATE_WORK;
+    outMsg.Format(_T("Discovering cluster with %d nodes"), crac->GetStatusPeerCount());
+
+
     // TODO: Implement
 
-    outState = InfoIconRenderer::ICONSTATE_WAIT;
-    outMsg = _T("Still waiting for an implementation");
+    //outState = InfoIconRenderer::ICONSTATE_WAIT;
+    //outMsg = _T("Still waiting for an implementation");
 }

@@ -64,10 +64,15 @@ cluster::ClusterController::ClusterController() : job::AbstractJobThread(),
         this->cdsRunSlot.ForceSetDirty();
     }
 
-    this->registerSlot.SetCallback("CallRegisterAtController", "register",
+    this->registerSlot.SetCallback(cluster::CallRegisterAtController::ClassName(),
+        cluster::CallRegisterAtController::FunctionName(cluster::CallRegisterAtController::CALL_REGISTER),
         &ClusterController::registerModule);
-    this->registerSlot.SetCallback("CallRegisterAtController", "unregister",
+    this->registerSlot.SetCallback(cluster::CallRegisterAtController::ClassName(),
+        cluster::CallRegisterAtController::FunctionName(cluster::CallRegisterAtController::CALL_UNREGISTER),
         &ClusterController::unregisterModule);
+    this->registerSlot.SetCallback(cluster::CallRegisterAtController::ClassName(),
+        cluster::CallRegisterAtController::FunctionName(cluster::CallRegisterAtController::CALL_GETSTATUS),
+        &ClusterController::queryStatus);
     this->MakeSlotAvailable(&this->registerSlot);
 }
 
@@ -234,7 +239,7 @@ DWORD cluster::ClusterController::Run(void *userData) {
                     vislib::net::IPEndPoint endPoint;
                     float wildness;
 
-                    wildness = NetworkInformation::GuessLocalEndPoint(endPoint, address);
+                    wildness = NetworkInformation::GuessLocalEndPoint(endPoint, address); // unique address to identify this computer
 
                     if (wildness > 0.8f) {
                         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -255,12 +260,10 @@ DWORD cluster::ClusterController::Run(void *userData) {
                         if (endPoint.GetAddressFamily() == vislib::net::IPEndPoint::FAMILY_INET6) {
                             cfg = new DiscoveryService::DiscoveryConfig(
                                 endPoint,
-                                endPoint.GetIPAddress6(),
                                 endPoint.GetPort());
                         } else {
                             cfg = new DiscoveryService::DiscoveryConfig(
                                 endPoint,
-                                endPoint.GetIPAddress(),
                                 endPoint.GetPort());
                         }
 
@@ -268,6 +271,9 @@ DWORD cluster::ClusterController::Run(void *userData) {
                             DiscoveryService::DEFAULT_REQUEST_INTERVAL,
                             DiscoveryService::DEFAULT_REQUEST_INTERVAL / 2,
                             2); // using 2 to ensure that slow systems have enough time
+
+                        // give new theads a chance to start
+                        vislib::sys::Thread::Sleep(125);
 
                         if (this->discoveryService.IsRunning()) {
                             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
@@ -455,5 +461,20 @@ bool cluster::ClusterController::unregisterModule(Call& call) {
     vislib::sys::AutoLock lock(this->clientsLock);
     c->Client()->ctrlr = NULL;
     this->clients.RemoveAll(c->Client());
+    return true;
+}
+
+
+/*
+ * cluster::ClusterController::queryStatus
+ */
+bool cluster::ClusterController::queryStatus(Call& call) {
+    CallRegisterAtController *c = dynamic_cast<CallRegisterAtController *>(&call);
+    if (c == NULL) return false;
+
+    c->SetStatus(
+        this->discoveryService.IsRunning(),
+        static_cast<unsigned int>(this->discoveryService.CountPeers()));
+
     return true;
 }

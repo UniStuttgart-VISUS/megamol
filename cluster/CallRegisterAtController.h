@@ -29,6 +29,15 @@ namespace cluster {
     class CallRegisterAtController : public Call {
     public:
 
+        /** Call number to register */
+        static const unsigned int CALL_REGISTER = 0;
+
+        /** Call number to unregister */
+        static const unsigned int CALL_UNREGISTER = 1;
+
+        /** Call number to query the status */
+        static const unsigned int CALL_GETSTATUS = 2;
+
         /**
          * Answer the name of the objects of this description.
          *
@@ -53,7 +62,7 @@ namespace cluster {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 2;
+            return 3;
         }
 
         /**
@@ -65,8 +74,9 @@ namespace cluster {
          */
         static const char * FunctionName(unsigned int idx) {
             switch (idx) {
-                case 0: return "register";
-                case 1: return "unregister";
+                case CALL_REGISTER: return "register";
+                case CALL_UNREGISTER: return "unregister";
+                case CALL_GETSTATUS: return "getstatus";
                 default: return NULL;
             }
         }
@@ -100,6 +110,24 @@ namespace cluster {
         }
 
         /**
+         * Gets the Flag whether or not the discovery service is running
+         *
+         * @return The flag whether or not the discovery service is running
+         */
+        inline bool GetStatusRunning(void) const {
+            return this->statRun;
+        }
+
+        /**
+         * Gets the number of connected peers
+         *
+         * @return The number of connected peers
+         */
+        inline unsigned int GetStatusPeerCount(void) const {
+            return this->statPeerCnt;
+        }
+
+        /**
          * Sets the client to be un-/registered
          *
          * @param c The client to be un-/registered
@@ -108,10 +136,28 @@ namespace cluster {
             this->client = c;
         }
 
+        /**
+         * Sets the status of the controller
+         *
+         * @param running Flag whether or not the discovery service is running
+         * @param peerCount The number of connected peers
+         */
+        inline void SetStatus(bool running, unsigned int peerCount) {
+            this->statRun = running;
+            this->statPeerCnt = peerCount;
+            // TODO: more to come
+        }
+
     private:
 
         /** The client to be un-/registered */
         ClusterControllerClient *client;
+
+        /** Flag whether or not the discovery service is running */
+        bool statRun;
+
+        /** The number of connected peers */
+        unsigned int statPeerCnt;
 
     };
 

@@ -220,6 +220,15 @@ namespace cluster {
          */
         bool unregisterModule(Call& call);
 
+        /**
+         * A module queries the status of the controller
+         *
+         * @param call The calling call.
+         *
+         * @return 'true'
+         */
+        bool queryStatus(Call& call);
+
         /** The name of the rendering cluster */
         param::ParamSlot cdsNameSlot;
 

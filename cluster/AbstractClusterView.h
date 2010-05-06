@@ -15,6 +15,7 @@
 #include "cluster/ClusterControllerClient.h"
 #include "cluster/InfoIconRenderer.h"
 #include "vislib/String.h"
+//#include "vislib/AbstractClientEndPoint.h"
 
 
 namespace megamol {
@@ -84,6 +85,9 @@ namespace cluster {
             InfoIconRenderer::IconState& outState);
 
     private:
+
+        ///** The client end point connected to the head node view */
+        //vislib::net::AbstractClientEndPoint *commEP;
 
     };
 

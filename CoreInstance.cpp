@@ -160,11 +160,11 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     //vd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl"); // TODO: Dependant instance!
     vd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "pwview::register", "::cctrl::register");
 
-    // DEBUG! TODO: Remove
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View2D"), "view");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("ChronoGraph"), "watch");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRender2D"), "view::rendering", "watch::rendering");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRenderView"), "pwview::renderView", "view::render");
+    //// DEBUG! TODO: Remove
+    //vd->AddModule(ModuleDescriptionManager::Instance()->Find("View2D"), "view");
+    //vd->AddModule(ModuleDescriptionManager::Instance()->Find("ChronoGraph"), "watch");
+    //vd->AddCall(CallDescriptionManager::Instance()->Find("CallRender2D"), "view::rendering", "watch::rendering");
+    //vd->AddCall(CallDescriptionManager::Instance()->Find("CallRenderView"), "pwview::renderView", "view::render");
 
     vd->SetViewModuleID("pwview");
     this->builtinViewDescs.Register(vd);
@@ -188,11 +188,11 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
-     // TODO: Replace (is deprecated)
-    jd = new JobDescription("imagemaker");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ScreenShooter"), "imgmaker");
-    jd->SetJobModuleID("imgmaker");
-    this->builtinJobDescs.Register(jd);
+    // // TODO: Replace (is deprecated)
+    //jd = new JobDescription("imagemaker");
+    //jd->AddModule(ModuleDescriptionManager::Instance()->Find("ScreenShooter"), "imgmaker");
+    //jd->SetJobModuleID("imgmaker");
+    //this->builtinJobDescs.Register(jd);
 
     // TODO: Debug
     jd = new JobDescription("DEBUGjob");
