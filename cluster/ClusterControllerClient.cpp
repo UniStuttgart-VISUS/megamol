@@ -21,6 +21,7 @@ cluster::ClusterControllerClient::ClusterControllerClient(void)
         ctrlr(NULL) {
 
     this->registerSlot.SetCompatibleCall<CallRegisterAtControllerDescription>();
+    this->registerSlot.AddListener(this);
     // must be published in derived class to avoid diamond-inheritance
 }
 
@@ -105,4 +106,32 @@ void cluster::ClusterControllerClient::SendUserMsg(
         return;
     }
     this->ctrlr->SendUserMsg(hPeer, msgType, msgBody, msgSize);
+}
+
+
+/*
+ * cluster::ClusterControllerClient::OnConnect
+ */
+void cluster::ClusterControllerClient::OnConnect(AbstractSlot& slot) {
+    if (&slot != &this->registerSlot) return;
+    CallRegisterAtController *crac
+        = this->registerSlot.CallAs<CallRegisterAtController>();
+    if (crac != NULL) {
+        crac->SetClient(this);
+        (*crac)(CallRegisterAtController::CALL_REGISTER);
+    }
+}
+
+
+/*
+ * cluster::ClusterControllerClient::OnDisconnect
+ */
+void cluster::ClusterControllerClient::OnDisconnect(AbstractSlot& slot) {
+    if (&slot != &this->registerSlot) return;
+    CallRegisterAtController *crac
+        = this->registerSlot.CallAs<CallRegisterAtController>();
+    if (crac != NULL) {
+        crac->SetClient(this);
+        (*crac)(CallRegisterAtController::CALL_UNREGISTER);
+    }
 }

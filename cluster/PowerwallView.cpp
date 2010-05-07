@@ -109,8 +109,13 @@ void cluster::PowerwallView::getFallbackMessageInfo(vislib::TString& outMsg,
         return;
     }
 
+    unsigned int nodeCnt = crac->GetStatusPeerCount();
+
     outState = InfoIconRenderer::ICONSTATE_WORK;
-    outMsg.Format(_T("Discovering cluster with %d nodes"), crac->GetStatusPeerCount());
+    outMsg.Format(_T("Discovering cluster %s: found %u node%s; %s head"),
+        vislib::TString(crac->GetStatusClusterName()),
+        nodeCnt, (nodeCnt == 1) ? _T("") : _T("s"),
+        this->isConnectedToHead() ? _T("with") : _T("without") );
 
 
     // TODO: Implement

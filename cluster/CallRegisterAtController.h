@@ -110,12 +110,12 @@ namespace cluster {
         }
 
         /**
-         * Gets the Flag whether or not the discovery service is running
+         * Gets the name of the cluster
          *
-         * @return The flag whether or not the discovery service is running
+         * @return The name of the cluster
          */
-        inline bool GetStatusRunning(void) const {
-            return this->statRun;
+        inline const vislib::StringA& GetStatusClusterName(void) const {
+            return this->statClstrName;
         }
 
         /**
@@ -125,6 +125,15 @@ namespace cluster {
          */
         inline unsigned int GetStatusPeerCount(void) const {
             return this->statPeerCnt;
+        }
+
+        /**
+         * Gets the Flag whether or not the discovery service is running
+         *
+         * @return The flag whether or not the discovery service is running
+         */
+        inline bool GetStatusRunning(void) const {
+            return this->statRun;
         }
 
         /**
@@ -141,10 +150,13 @@ namespace cluster {
          *
          * @param running Flag whether or not the discovery service is running
          * @param peerCount The number of connected peers
+         * @param clstrName The name of the cluster
          */
-        inline void SetStatus(bool running, unsigned int peerCount) {
+        inline void SetStatus(bool running, unsigned int peerCount,
+                const vislib::StringA& clstrName) {
             this->statRun = running;
             this->statPeerCnt = peerCount;
+            this->statClstrName = clstrName;
             // TODO: more to come
         }
 
@@ -158,6 +170,9 @@ namespace cluster {
 
         /** The number of connected peers */
         unsigned int statPeerCnt;
+
+        /** The name of the cluster */
+        vislib::StringA statClstrName;
 
     };
 

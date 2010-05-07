@@ -11,29 +11,11 @@
 using namespace megamol::core;
 
 
-///*
-// * cluster::CallRegisterAtController::CALL_REGISTER
-// */
-//const unsigned int cluster::CallRegisterAtController::CALL_REGISTER = 0;
-//
-//
-///*
-// * cluster::CallRegisterAtController::CALL_UNREGISTER
-// */
-//const unsigned int cluster::CallRegisterAtController::CALL_UNREGISTER = 1;
-//
-//
-///*
-// * cluster::CallRegisterAtController::CALL_GETSTATUS
-// */
-//const unsigned int cluster::CallRegisterAtController::CALL_GETSTATUS = 2;
-
-
 /*
  * cluster::CallRegisterAtController::CallRegisterAtController
  */
 cluster::CallRegisterAtController::CallRegisterAtController(void) : Call(),
-        client(NULL), statRun(false), statPeerCnt(0) {
+        client(NULL), statRun(false), statPeerCnt(0), statClstrName() {
     // intentionally empty
 }
 

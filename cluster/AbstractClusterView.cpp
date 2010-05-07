@@ -9,6 +9,8 @@
 #include "cluster/AbstractClusterView.h"
 #include "cluster/InfoIconRenderer.h"
 #include <GL/gl.h>
+#include "vislib/AutoLock.h"
+#include "vislib/Log.h"
 #include "vislib/sysfunctions.h"
 
 
@@ -19,10 +21,16 @@ using namespace megamol::core;
  * cluster::AbstractClusterView::AbstractClusterView
  */
 cluster::AbstractClusterView::AbstractClusterView(void)
-        : view::AbstractTileView(), ClusterControllerClient() {
+        : view::AbstractTileView(), ClusterControllerClient(),
+        setupThread(&AbstractClusterView::setupProcedure),
+        setupState(SETUPSTATE_PRECONNECT), setupStateLock(),
+        commChnlCtrl(), commChnlCam(), ctrlMsgDispatch(), camMsgDispatch() {
 
     // slot initialized in 'ClusterControllerClient::ctor'
     this->MakeSlotAvailable(&this->registerSlot);
+
+    this->ctrlMsgDispatch.AddListener(this);
+    this->camMsgDispatch.AddListener(this);
 
     // TODO: Implement
 
@@ -33,6 +41,14 @@ cluster::AbstractClusterView::AbstractClusterView(void)
  * cluster::AbstractClusterView::~AbstractClusterView
  */
 cluster::AbstractClusterView::~AbstractClusterView(void) {
+    this->setupStateLock.Lock();
+    this->setupState = SETUPSTATE_DISCONNECTED;
+    if (this->setupThread.IsRunning()) {
+        this->setupStateLock.Unlock();
+        this->setupThread.Join();
+    } else {
+        this->setupStateLock.Unlock();
+    }
 
     // TODO: Implement
 
@@ -68,6 +84,72 @@ void cluster::AbstractClusterView::SetCursor2DPosition(float x, float y) {
  */
 void cluster::AbstractClusterView::SetInputModifier(mmcInputModifier mod, bool down) {
     // intentionally empty to disallow local user input
+}
+
+
+/*
+ * cluster::AbstractClusterView::OnClusterAvailable
+ */
+void cluster::AbstractClusterView::OnClusterAvailable(void) {
+    ClusterControllerClient::OnClusterAvailable();
+
+    vislib::sys::AutoLock(this->setupStateLock);
+
+    if (((this->setupState == SETUPSTATE_ERROR)
+            || (this->setupState == SETUPSTATE_PRECONNECT)
+            || (this->setupState == SETUPSTATE_DISCONNECTED))
+            && !this->setupThread.IsRunning()) {
+        this->setupState = SETUPSTATE_PRECONNECT;
+        this->setupThread.Start(static_cast<AbstractClusterView*>(this));
+    }
+
+}
+
+
+/*
+ * cluster::ClusterControllerClient::OnClusterUnavailable
+ */
+void cluster::AbstractClusterView::OnClusterUnavailable(void) {
+    ClusterControllerClient::OnClusterUnavailable();
+
+    this->setupStateLock.Lock();
+    this->setupState = SETUPSTATE_DISCONNECTED;
+    if (this->setupThread.IsRunning()) {
+        this->setupStateLock.Unlock();
+        this->setupThread.Join();
+    } else {
+        this->setupStateLock.Unlock();
+    }
+
+}
+
+
+/*
+ * cluster::AbstractClusterView::OnUserMsg
+ */
+void cluster::AbstractClusterView::OnUserMsg(
+        const cluster::ClusterController::PeerHandle& hPeer,
+        const UINT32 msgType, const BYTE *msgBody) {
+
+    if (msgType == ClusterControllerClient::USRMSG_QUERYHEAD) {
+        printf("QUERYHEAD message received :-)\n");
+    }
+
+    //TODO: Implement
+
+}
+
+
+/*
+ * cluster::AbstractClusterView::OnMessageReceived
+ */
+bool cluster::AbstractClusterView::OnMessageReceived(
+        vislib::net::SimpleMessageDispatcher& src,
+        const vislib::net::AbstractSimpleMessage& msg) throw() {
+
+    //TODO: Implement
+
+    return true;
 }
 
 
@@ -129,4 +211,59 @@ void cluster::AbstractClusterView::getFallbackMessageInfo(vislib::TString& outMs
         InfoIconRenderer::IconState& outState) {
     outState = InfoIconRenderer::ICONSTATE_UNKNOWN;
     outMsg = _T("State unknown");
+}
+
+
+/*
+ * cluster::AbstractClusterView::isConnectedToHead
+ */
+bool cluster::AbstractClusterView::isConnectedToHead(void) const {
+    vislib::sys::AutoLock(this->setupStateLock);
+    return (this->setupState == SETUPSTATE_CONNECTED);
+}
+
+
+/*
+ * cluster::AbstractClusterView::setupProcedure
+ */
+DWORD cluster::AbstractClusterView::setupProcedure(void *userData) {
+    using vislib::sys::Log;
+    bool loop = true;
+
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster setup procedure started");
+
+    cluster::AbstractClusterView* This = static_cast<cluster::AbstractClusterView*>(userData);
+    if (This == NULL) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cluster setup procedure failed: 'This' invalid");
+        return -1;
+    }
+
+    while (loop) {
+        vislib::sys::Thread::Sleep(250);
+
+        This->setupStateLock.Lock();
+        switch (This->setupState) {
+            case SETUPSTATE_ERROR: // fall through
+            case SETUPSTATE_DISCONNECTED:
+                loop = false; // abort thread
+                break;
+            case SETUPSTATE_PRECONNECT:
+                This->setupStateLock.Unlock();
+                // searching for a head node to connect
+                This->SendUserMsg(ClusterControllerClient::USRMSG_QUERYHEAD, reinterpret_cast<BYTE*>(&loop), 1);
+
+                // don't be that aggressive
+                vislib::sys::Thread::Sleep(750);
+                break;
+            case SETUPSTATE_CONNECTED:
+                // successfully finished thread
+                loop = false;
+                break;
+        }
+        This->setupStateLock.Unlock();
+    }
+
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster setup procedure finished");
+
+    return 0;
 }

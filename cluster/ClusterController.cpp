@@ -362,9 +362,11 @@ void cluster::ClusterController::OnNodeLost(DiscoveryService& src,
 /*
  * cluster::ClusterController::OnUserMessage
  */
-void cluster::ClusterController::OnUserMessage(DiscoveryService& src,
-        const DiscoveryService::PeerHandle& hPeer,
-        const UINT32 msgType, const BYTE *msgBody) throw() {
+void cluster::ClusterController::OnUserMessage(
+        vislib::net::cluster::DiscoveryService& src,
+        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
+        const bool isClusterMember, const UINT32 msgType,
+        const BYTE *msgBody) throw() {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
         src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
     vislib::sys::AutoLock lock(this->clientsLock);
@@ -474,7 +476,8 @@ bool cluster::ClusterController::queryStatus(Call& call) {
 
     c->SetStatus(
         this->discoveryService.IsRunning(),
-        static_cast<unsigned int>(this->discoveryService.CountPeers()));
+        static_cast<unsigned int>(this->discoveryService.CountPeers()),
+        this->discoveryService.GetName());
 
     return true;
 }

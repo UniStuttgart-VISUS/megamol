@@ -14,6 +14,8 @@
 #include "CallerSlot.h"
 #include "cluster/ClusterController.h"
 #include "Module.h"
+#include "AbstractSlot.h"
+#include "vislib/DiscoveryService.h"
 
 
 namespace megamol {
@@ -23,11 +25,15 @@ namespace cluster {
     /**
      * Interface class for clients of cluster controllers
      */
-    class ClusterControllerClient {
+    class ClusterControllerClient : public AbstractSlot::Listener {
     public:
 
         /** ClusterController will de/register itself */
         friend class ClusterController;
+
+        /** The user message to query the head node in the cluster */
+        static const UINT32 USRMSG_QUERYHEAD
+            = vislib::net::cluster::DiscoveryService::MSG_TYPE_USER + 0;
 
         /**
          * Ctor
@@ -99,6 +105,20 @@ namespace cluster {
             const SIZE_T msgSize);
 
     protected:
+
+        /**
+         * This method is called when an object connects to the slot.
+         *
+         * @param slot The slot that triggered this event.
+         */
+        virtual void OnConnect(AbstractSlot& slot);
+
+        /**
+         * This method is called when an object disconnects from the slot.
+         *
+         * @param slot The slot that triggered this event.
+         */
+        virtual void OnDisconnect(AbstractSlot& slot);
 
         /** The caller to register the client at the controller */
         CallerSlot registerSlot;

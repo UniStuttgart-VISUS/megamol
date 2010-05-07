@@ -15,6 +15,8 @@
 #include "cluster/ClusterControllerClient.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
+#include "vislib/AbstractServerEndPoint.h"
+#include "vislib/SmartRef.h"
 
 
 namespace megamol {
@@ -91,6 +93,12 @@ namespace cluster {
 
         /** The slot connecting to the view to be used */
         CallerSlot viewSlot;
+
+        /** The communication channel for control commands */
+        vislib::SmartRef<vislib::net::AbstractServerEndPoint> commChnlCtrl;
+
+        /** The communication channel for camera updates */
+        vislib::SmartRef<vislib::net::AbstractServerEndPoint> commChnlCam;
 
     };
 

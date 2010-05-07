@@ -27,7 +27,8 @@ using namespace megamol::core;
 cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
         cluster::ClusterControllerClient(),
         viewNameSlot("viewname", "The name of the view to be used"),
-        viewSlot("view", "The view to be used (this value is set automatically") {
+        viewSlot("view", "The view to be used (this value is set automatically"),
+        commChnlCtrl(), commChnlCam() {
 
     this->MakeSlotAvailable(&this->registerSlot);
 
