@@ -167,6 +167,54 @@ vislib::StringW vislib::sys::Path::Canonicalise(const StringW& path) {
 
 
 /*
+ * vislib::sys::Path::ChangeExtension
+ */
+vislib::StringA vislib::sys::Path::ChangeExtension(const char *path,
+        const char *extension) {
+    const char EXT_SEP = '.';
+    StringA retval(path);
+    StringA::Size extStart = retval.FindLast(EXT_SEP);
+    StringA ext(extension);
+
+    if (!ext.IsEmpty() && !ext.StartsWith(EXT_SEP)) {
+        ext.Prepend(EXT_SEP);
+    }
+
+    if (extStart != StringA::INVALID_POS) {
+        /* Found a valid extension, remove that one before adding new. */
+        retval.Truncate(extStart);
+    }
+
+    retval += ext;
+    return retval;
+}
+
+
+/*
+ * vislib::sys::Path::ChangeExtension
+ */
+vislib::StringW vislib::sys::Path::ChangeExtension(const wchar_t *path,
+        const wchar_t *extension) {
+    const wchar_t EXT_SEP = '.';
+    StringW retval(path);
+    StringW::Size extStart = retval.FindLast(EXT_SEP);
+    StringW ext(extension);
+
+    if (!ext.IsEmpty() && !ext.StartsWith(EXT_SEP)) {
+        ext.Prepend(EXT_SEP);
+    }
+
+    if (extStart != StringW::INVALID_POS) {
+        /* Found a valid extension, remove that one before adding new. */
+        retval.Truncate(extStart);
+    }
+
+    retval += ext;
+    return retval;
+}
+
+
+/*
  * vislib::sys::Path::Concatenate
  */
 vislib::StringA vislib::sys::Path::Concatenate(const StringA& lhs,
@@ -495,6 +543,40 @@ vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
 #else /* _WIN32 */
     return StringW(GetCurrentDirectoryA());
 #endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Path::GetDirectoryName
+ */
+vislib::StringA vislib::sys::Path::GetDirectoryName(const char *path) {
+    StringA retval(path);
+    StringA::Size end = retval.FindLast(SEPARATOR_A);
+
+    if (end == StringA::INVALID_POS) {
+        retval.Clear();
+    } else {
+        retval.Truncate(end);
+    }
+
+    return retval;
+}
+
+
+/*
+ * vislib::sys::Path::GetDirectoryName
+ */
+vislib::StringW vislib::sys::Path::GetDirectoryName(const wchar_t *path) {
+    StringW retval(path);
+    StringW::Size end = retval.FindLast(SEPARATOR_A);
+
+    if (end == StringW::INVALID_POS) {
+        retval.Clear();
+    } else {
+        retval.Truncate(end);
+    }
+
+    return retval;
 }
 
 

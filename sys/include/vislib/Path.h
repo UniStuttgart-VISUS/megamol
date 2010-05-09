@@ -60,6 +60,49 @@ namespace sys {
         static StringW Canonicalise(const StringW& path);
 
         /**
+         * Return a new path that has 'extension' as new extension.
+         *
+         * The 'extension' parameter can contain multiple periods and any valid 
+         * path characters, and can be any length.
+         *
+         * The 'path' parameter can contain multiple periods. In this case, the
+         * text after the last period will be replaced.
+         *
+         * If 'extension' is NULL or empty, the returned string contains the 
+         * contents of path without the last extension.
+         *
+         * @param path      The path to be modified.
+         * @param extension The new extension (with or without a leading 
+         *                  period). Specifying NULL or an empty string will
+         *                  remove an existing extension.
+         *
+         * @return The modified path.
+         */
+        static StringA ChangeExtension(const char *path, const char *extension);
+
+        /**
+         * Return a new path that has 'extension' as new extension.
+         *
+         * The 'extension' parameter can contain multiple periods and any valid 
+         * path characters, and can be any length.
+         *
+         * The 'path' parameter can contain multiple periods. In this case, the
+         * text after the last period will be replaced.
+         *
+         * If 'extension' is NULL or empty, the returned string contains the 
+         * contents of path without the last extension.
+         *
+         * @param path      The path to be modified.
+         * @param extension The new extension (with or without a leading 
+         *                  period). Specifying NULL or an empty string will
+         *                  remove an existing extension.
+         *
+         * @return The modified path.
+         */
+        static StringW ChangeExtension(const wchar_t *path, 
+            const wchar_t *extension);
+
+        /**
          * Compares two paths. Both paths are considdered equal if the 
          * canonicalised absolute paths are equal. Under windows the
          * comparision is done case insensitive. Under linux the comparision
@@ -186,6 +229,32 @@ namespace sys {
          *                        directory.
          */
         static StringW GetCurrentDirectoryW(void);
+
+        /**
+         * Answer the directory path containing the given path.
+         *
+         * If 'path' designates a file, the directory containing the file is 
+         * returned.
+         *
+         * If 'path' designates a directory, the directory containing this 
+         * directory is returned.
+         *
+         * @param path Path of a file or directory.
+         */
+        static StringA GetDirectoryName(const char *path);
+
+        /**
+         * Answer the directory path containing the given path.
+         *
+         * If 'path' designates a file, the directory containing the file is 
+         * returned.
+         *
+         * If 'path' designates a directory, the directory containing this 
+         * directory is returned.
+         *
+         * @param path Path of a file or directory.
+         */
+        static StringW GetDirectoryName(const wchar_t *path);
 
         /**
          * Answer the current temp directory.
