@@ -22,6 +22,7 @@
 #include "vislib/Socket.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemInformation.h"
+#include "vislib/Trace.h"
 
 using namespace megamol::core;
 using vislib::sys::Log;
@@ -367,15 +368,21 @@ void cluster::ClusterController::OnUserMessage(
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
         const bool isClusterMember, const UINT32 msgType,
         const BYTE *msgBody) throw() {
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
-        src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
-    vislib::sys::AutoLock lock(this->clientsLock);
-    vislib::SingleLinkedList<ClusterControllerClient *>::Iterator iter
-        = this->clients.GetIterator();
-    while (iter.HasNext()) {
-        ClusterControllerClient *c = iter.Next();
-        if (c == NULL) continue;
-        c->OnUserMsg(hPeer, msgType, msgBody);
+    try {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
+            src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
+        vislib::sys::AutoLock lock(this->clientsLock);
+        vislib::SingleLinkedList<ClusterControllerClient *>::Iterator iter
+            = this->clients.GetIterator();
+        while (iter.HasNext()) {
+            ClusterControllerClient *c = iter.Next();
+            if (c == NULL) continue;
+            c->OnUserMsg(hPeer, msgType, msgBody);
+        }
+    } catch(vislib::Exception ex) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Illegal vislib exception in OnUserMessage \"%s\"\n", ex.GetMsgA());
+    } catch(...) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Illegal exception in OnUserMessage\n");
     }
 }
 
