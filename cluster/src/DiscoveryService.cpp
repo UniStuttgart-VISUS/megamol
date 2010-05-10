@@ -370,19 +370,19 @@ void vislib::net::cluster::DiscoveryService::AddListener(
 vislib::net::IPAddress 
 vislib::net::cluster::DiscoveryService::GetDiscoveryAddress4(
         const PeerHandle& hPeer) const {
-    IPAddress retval = IPAddress::NONE;
+    //IPAddress retval = IPAddress::NONE;
     
-    this->peerNodesCritSect.Lock();
+    //this->peerNodesCritSect.Lock();
 
-    if ((hPeer == NULL) || !hPeer->isValid()) {
-        this->peerNodesCritSect.Unlock();
-        throw IllegalParamException("hPeer", __FILE__, __LINE__);
-    } else {
-        retval = hPeer->getDiscoveryAddress4();
-        this->peerNodesCritSect.Unlock();
-    }
+    //if ((hPeer == NULL) || !hPeer->isValid()) {
+    //    this->peerNodesCritSect.Unlock();
+    //    throw IllegalParamException("hPeer", __FILE__, __LINE__);
+    //} else {
+    //    retval = hPeer->getDiscoveryAddress4();
+    //    this->peerNodesCritSect.Unlock();
+    //}
 
-    return retval;
+    return hPeer->getDiscoveryAddress4();
 }
 
 
@@ -392,19 +392,19 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress4(
 vislib::net::IPAddress6 
 vislib::net::cluster::DiscoveryService::GetDiscoveryAddress6(
         const PeerHandle& hPeer) const {
-    IPAddress6 retval;
+    //IPAddress6 retval;
     
-    this->peerNodesCritSect.Lock();
+    //this->peerNodesCritSect.Lock();
 
-    if ((hPeer == NULL) || !hPeer->isValid()) {
-        this->peerNodesCritSect.Unlock();
-        throw IllegalParamException("hPeer", __FILE__, __LINE__);
-    } else {
-        retval = hPeer->getDiscoveryAddress6();
-        this->peerNodesCritSect.Unlock();
-    }
+    //if ((hPeer == NULL) || !hPeer->isValid()) {
+    //    this->peerNodesCritSect.Unlock();
+    //    throw IllegalParamException("hPeer", __FILE__, __LINE__);
+    //} else {
+    //    retval = hPeer->getDiscoveryAddress6();
+    //    this->peerNodesCritSect.Unlock();
+    //}
 
-    return retval;
+    return hPeer->getDiscoveryAddress6();
 }
 
 
@@ -1303,7 +1303,9 @@ INT_PTR vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
     INT_PTR retval = -1;
 
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
-        if (this->peerNodes[i]->discoveryAddress == addr) {
+        // TODO: Endpoint test for multiple discovery instances on one node
+        if (this->peerNodes[i]->discoveryAddress.GetIPAddress()
+                == addr.GetIPAddress()) {
             retval = i;
             break;
         }

@@ -581,13 +581,12 @@ namespace cluster {
          * communication.
          *
          * This method is thread-safe.
+         * It is safe to call this method with an illegal handle.
          *
          * @param hPeer The handle of the peer node.
          *
          * @return The IP address of the adapter that is used by 'hPeer' for 
          *         the discovery communication.
-         *
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
         IPAddress GetDiscoveryAddress4(const PeerHandle& hPeer) const;
 
@@ -596,13 +595,12 @@ namespace cluster {
          * communication. 
          *
          * This method is thread-safe.
+         * It is safe to call this method with an illegal handle.
          *
          * @param hPeer The handle of the peer node.
          *
          * @return The IP address of the adapter that is used by 'hPeer' for the
          *         discovery communication.
-         *
-         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
         IPAddress6 GetDiscoveryAddress6(const PeerHandle& hPeer) const;
 
