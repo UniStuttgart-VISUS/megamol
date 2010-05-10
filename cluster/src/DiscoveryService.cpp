@@ -785,6 +785,10 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
 
     } /* end while (this->isRunning) */
 
+    // This was presumably a "normal" shutdown or an error - in both cases, we 
+    // do not want to keep the peer nodes.
+    config->GetDiscoveryService().ClearPeers();
+
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
