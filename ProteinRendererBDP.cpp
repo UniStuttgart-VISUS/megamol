@@ -339,19 +339,23 @@ bool ProteinRendererBDP::create( void )
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4") )
+	if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_blend_minmax") ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Failed to initialize OpenGL extensions.\n");
         return false;
+	}
     
-    if ( !GLSLShader::InitialiseExtensions() )
+	if ( !GLSLShader::InitialiseExtensions() ) {
+		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Failed to initialize GLSL shader.\n");
         return false;
+	}
     
     // check for GL_EXT_blend_logic_op ...
-    vislib::TString extString((char *)glGetString(GL_EXTENSIONS));
+    /*vislib::TString extString((char *)glGetString(GL_EXTENSIONS));
     if(extString.Contains(vislib::TString("GL_EXT_blend_logic_op"),0)) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_WARN, "GL_EXT_blend_logic_op is supported ...\n");
     } else {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "GL_EXT_blend_logic_op  is NOT supported ...\n");
-    }
+    }*/
 
     // check maximum number of multiple render targets
     GLint maxBuffers;
@@ -1109,11 +1113,11 @@ bool ProteinRendererBDP::Render( Call& call ) {
             this->RenderDepthHistogram(protein);
             // indicating second geometry pass of adaptive BDP
             this->depthPeelingMode = 4;
-        }
+		}
 
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_MAX);
-        glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_MAX);
+		glDisable(GL_DEPTH_TEST);
 
         // start rendering to depth peeling fbo
         glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthPeelingFBO);
@@ -1140,7 +1144,6 @@ bool ProteinRendererBDP::Render( Call& call ) {
     // ========= render BDP result =========
 
     if(this->depthPeelingMode != NONE_BDP) {
-
         // reset depth peeling mode
         if(this->depthPeelingMode == 4) {
             this->depthPeelingMode = ADAPTIVE_BDP;
@@ -1356,7 +1359,7 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
         for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
             glBindTexture( GL_TEXTURE_2D, this->histogramTex[i]);
-            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32UI, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_INT, NULL); 
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_INT, NULL); 
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2210,13 +2213,11 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
 void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
 
     // ------------ create depth histogram ------------
+    glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    glEnable(GL_COLOR_LOGIC_OP);
     glLogicOp(GL_OR);
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_COLOR_LOGIC_OP);
+    glEnable(GL_COLOR_LOGIC_OP);
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->histogramFBO);
 
@@ -2238,15 +2239,15 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
 
     // stop rendering to fbo
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
-    
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     glDisable(GL_COLOR_LOGIC_OP);
 
     CHECK_FOR_OGL_ERROR();
 
     // ------------ equalize histogram ------------
 
-    glDisable(GL_BLEND);
+    glEnable(GL_BLEND);
+	glBlendEquation(GL_MAX);
 
     // bind textures
     glActiveTexture(GL_TEXTURE0);
