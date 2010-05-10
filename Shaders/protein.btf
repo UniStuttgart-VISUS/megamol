@@ -1723,7 +1723,7 @@ void main(void) {
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 
 varying vec4 diffuse,ambient;
 varying vec3 normal,lightDir,halfVector;
@@ -1747,7 +1747,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -2325,7 +2325,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 
 varying vec4 diffuse,ambient;
 varying vec3 normal,lightDir,halfVector;
@@ -2367,7 +2367,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -2475,7 +2475,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -2697,7 +2697,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -2999,7 +2999,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 
 
 void main(void)
@@ -3020,7 +3020,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 
 
 void main(void)
@@ -3037,7 +3037,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -3147,7 +3147,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -3363,7 +3363,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -3668,7 +3668,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 
 void main(void)
 {
@@ -3690,7 +3690,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 
 void main(void)
 {    
@@ -3706,7 +3706,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -3926,7 +3926,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -4190,7 +4190,7 @@ void main(void)
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS) / Michael Krone. Alle Rechte vorbehalten.
  */
 
-#version 120
+//#version 120
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 
@@ -7061,10 +7061,10 @@ float codeColorBDP( vec4 fragColor)
     vec4 fc = clamp(fragColor, vec4(0.0), vec4(1.0));
     float codedColor;
 
-    uint r = uint(fc.r*255.0) << uint(24);
+	uint r = uint(fc.r*255.0) << uint(24);
     uint g = uint(fc.g*255.0) << uint(16);
     uint b = uint(fc.b*255.0) << uint(8);
-    uint a = uint(fc.a*127.0);
+	uint a = 0; //uint(fc.a*127.0);
 
     codedColor = float(r | g | b | a);
 
@@ -7080,7 +7080,7 @@ vec4 decodeColorBDP( float codedColor)
     decodedColor.r = float(cc >> uint(24)) / 255.0;
     decodedColor.g = float((cc << uint(8))  >> uint(24)) / 255.0;
     decodedColor.b = float((cc << uint(16)) >> uint(24)) / 255.0;
-    decodedColor.a = float((cc << uint(24)) >> uint(24)) / 127.0;
+    decodedColor.a = 0.0; //float((cc << uint(24)) >> uint(24)) / 127.0;
 
     return decodedColor;
 }
@@ -7283,7 +7283,7 @@ void main(void) {
     vec3 ray, planeNormal, planePos, surfPos, sphereintersection, normal, color, colorX;
     vec4 coord, Ding;
 
-    int i, j, rt;
+    int i, j, rt, tmpi, tmpj;
     vec2 texCoordHist;
     vec3 minmaxDepth;
     vec4 fragColorInt, fragColorExt, histogram;
@@ -7442,6 +7442,8 @@ void main(void) {
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
                         gl_FragData[i][j] = codeColorBDP(fragColorInt);
+						tmpi = i;
+						tmpj = j;
                         break;
                     }
                     lastDepth = histogram[j];
@@ -7535,7 +7537,7 @@ void main(void) {
             rt = int(floor(bucketExt/2.0));
             // choose right pair in render target
             // (set maximum value because first fragment could have been writing too)
-            if(!discardInt && (bucketExt == bucketInt)) {
+			if(!discardInt && (bucketExt == bucketInt)) {
                 if(mod(int(bucketExt), 2) == 0) {
                     gl_FragData[rt].x = max(1.0 - tmpIntDepth, 1.0 - gl_FragDepth);
                     gl_FragData[rt].y = max(tmpIntDepth, gl_FragDepth);
@@ -7586,6 +7588,9 @@ void main(void) {
         
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
+						if(!discardInt && (i == tmpi) && (j == tmpj)) {
+							fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
+						}
                         gl_FragData[i][j] = codeColorBDP(fragColorExt);
                         break;
                     }
@@ -7843,7 +7848,7 @@ void main(void) {
     vec3 ray, tmp, a, intersection, normPlane, normal, color, colorX;
     vec4 coord, lambdas, Ding;
 
-    int i, j, rt;
+    int i, j, rt, tmpi, tmpj;
     vec2 texCoordHist;
     vec3 minmaxDepth;
     vec4 fragColorInt, fragColorExt, histogram;
@@ -8102,6 +8107,8 @@ void main(void) {
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
                         gl_FragData[i][j] = codeColorBDP(fragColorInt);
+						tmpi = i;
+						tmpj = j;
                         break;
                     }
                     lastDepth = histogram[j];
@@ -8283,6 +8290,9 @@ void main(void) {
         
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
+						if(!discardInt && (i == tmpi) && (j == tmpj)) {
+							fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
+						}
                         gl_FragData[i][j] = codeColorBDP(fragColorExt);
                         break;
                     }
@@ -8516,7 +8526,7 @@ void main(void) {
     vec3 u, v, w, dRay, wXu, dXv;
     vec4 coord, Ding;
 
-    int i, j, rt;
+    int i, j, rt, tmpi, tmpj;
     vec2 texCoordHist;
     vec3 minmaxDepth;
     vec4 fragColorInt, fragColorExt, histogram;
@@ -8744,6 +8754,8 @@ void main(void) {
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
                         gl_FragData[i][j] = codeColorBDP(fragColorInt);
+						tmpi = i;
+						tmpj = j;
                         break;
                     }
                     lastDepth = histogram[j];
@@ -8964,6 +8976,9 @@ void main(void) {
         
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
+						if(!discardInt && (i == tmpi) && (j == tmpj)) {
+							fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
+						}
                         gl_FragData[i][j] = codeColorBDP(fragColorExt);
                         break;
                     }
@@ -9086,20 +9101,21 @@ uniform int DPmode = 0;
 void main(void) {
 
     int i, j, k;
-    float thickness, first, usedAlpha, intDepth;
+    float thickness, tmpFirst, first, last, usedAlpha, intDepth;
     bool gotfirst;
     vec3 minmaxDepth;
     vec3 firstColorSkipped, color;
     vec4 layer, decodecolor, intColor;
 
     float absorption = 4.0;
-    float epsilon = 0.0001;
+    float epsilon = 0.001;
 
     vec2 texCoord = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
 
     if(DPmode == 1) {// depth
 
         thickness = 0.0f;
+		first = 0.0;
         gotfirst = false;
         color = vec3(0.0, 1.0, 0.0);
 
@@ -9113,39 +9129,39 @@ void main(void) {
             if(i == 6) { layer = texture2D(bucket6, texCoord); }
             if(i == 7) { layer = texture2D(bucket7, texCoord); }
 
-            if(layer[0] > 0.0f) {
-                if(abs(1.0 - layer[0] - layer[1]) > epsilon) { 
+            if(layer[0] > 0.0) {
+                if((layer[1] - (1.0 - layer[0])) > epsilon) { 
                     if(gotfirst) {
-                        thickness += ((1.0-layer[0]) - first);
-                        first = layer[1];
+                        thickness += ((1.0-layer[0]) - tmpFirst);
+                        tmpFirst = layer[1];
                     } else {
                         thickness += (layer[1] - (1.0-layer[0]));
                     }
                 } else {  
                     if(gotfirst) {
-                        thickness += (layer[1] - first);
+                        thickness += (layer[1] - tmpFirst);
                         gotfirst = false;
                     } else {
                         gotfirst = true;
-                        first = layer[1];
+                        tmpFirst = layer[1];
                     }
                 }
             }
-            if(layer[2] > 0.0f) {
-                if(abs(1.0 - layer[2] - layer[3]) > epsilon) {
+            if(layer[2] > 0.0) {
+                if((layer[3] - (1.0 - layer[2])) > epsilon) {
                     if(gotfirst) {
-                        thickness += ((1.0-layer[2]) - first);
-                        first = layer[3];
+                        thickness += ((1.0-layer[2]) - tmpFirst);
+                        tmpFirst = layer[3];
                     } else {
                         thickness += (layer[3] - (1.0-layer[2]));
                     }
                 } else {  
                     if(gotfirst) {
-                        thickness += (layer[3] - first);
+                        thickness += (layer[3] - tmpFirst);
                         gotfirst = false;
                     } else {
                         gotfirst = true;
-                        first = layer[3];
+                        tmpFirst = layer[3];
                     }
                 }
             }
@@ -9156,7 +9172,7 @@ void main(void) {
         }
 
         gl_FragColor.rgb = color * exp(-absorption*thickness);
-        if(thickness > 0.0f) {
+        if(thickness > 0.0) {
             gl_FragColor.a = 1.0;
         } else {
             gl_FragColor.a = 0.0;
@@ -9203,11 +9219,11 @@ void main(void) {
                         usedAlpha = clamp((2.0 - (float(4*i+j+1) / 32.0 * alphaGradient)), 0.0, 1.0);
                     }
 
-					/*if(abs(decodecolor.a - 0.25) < 0.05) {
-						color = color*(1.0 - usedAlpha)*(1.0 - usedAlpha) + decodecolor.rgb*usedAlpha;
-					} else {
-						color = color*(1.0 - usedAlpha) + decodecolor.rgb*usedAlpha; 
-					}*/
+					//if(abs(decodecolor.a - 0.5) < 0.01) {
+					//	color = color*(1.0 - usedAlpha)*(1.0 - usedAlpha) + decodecolor.rgb*usedAlpha;
+					//} else {
+					//	color = color*(1.0 - usedAlpha) + decodecolor.rgb*usedAlpha; 
+					//}
 					color = color*(1.0 - usedAlpha) + decodecolor.rgb*usedAlpha; 
                 }
             }
@@ -9239,7 +9255,7 @@ void main(void) {
             for(j = 0; j < 4; ++j) {
                 if(layer[3-j] > 0.0) { 
                     decodecolor = decodeColorBDP(layer[3-j]);
-                    color = color*(1.0 - alpha) + decodecolor.rgb*alpha; 
+				    color = color*(1.0 - alpha) + decodecolor.rgb*alpha; 
                 }
             }
         }
@@ -9252,6 +9268,71 @@ void main(void) {
         } else {
             gl_FragColor.a = 1.0;
         }
+
+
+        /*thickness = 0.0f;
+		first = 0.0;
+        gotfirst = false;
+        color = vec3(0.0, 1.0, 0.0);
+
+        for(i = 0; i < 8; ++i) {
+            if(i == 0) { layer = texture2D(bucket0, texCoord); }
+            if(i == 1) { layer = texture2D(bucket1, texCoord); }
+            if(i == 2) { layer = texture2D(bucket2, texCoord); }
+            if(i == 3) { layer = texture2D(bucket3, texCoord); }
+            if(i == 4) { layer = texture2D(bucket4, texCoord); }
+            if(i == 5) { layer = texture2D(bucket5, texCoord); }
+            if(i == 6) { layer = texture2D(bucket6, texCoord); }
+            if(i == 7) { layer = texture2D(bucket7, texCoord); }
+
+            if(layer[0] > 0.0) {
+				if(gotfirst) {
+					thickness += (layer[0] - first);
+					gotfirst = false;
+				} else {
+					first = layer[0];
+					gotfirst = true;
+				}
+            }
+            if(layer[1] > 0.0) {
+				if(gotfirst) {
+					thickness += (layer[1] - first);
+					gotfirst = false;
+				} else {
+					first = layer[1];
+					gotfirst = true;
+				}
+            }
+            if(layer[2] > 0.0) {
+				if(gotfirst) {
+					thickness += (layer[2] - first);
+					gotfirst = false;
+				} else {
+					first = layer[2];
+					gotfirst = true;
+				}
+            }
+            if(layer[3] > 0.0) {
+				if(gotfirst) {
+					thickness += (layer[3] - first);
+					gotfirst = false;
+				} else {
+					first = layer[3];
+					gotfirst = true;
+				}
+            }
+        }
+
+        //if(gotfirst) {
+        //    color = vec3(1.0, 0.0, 0.0);
+        //}
+
+        gl_FragColor.rgb = color * exp(-absorption*thickness);
+        if(thickness > 0.0) {
+            gl_FragColor.a = 1.0;
+        } else {
+            gl_FragColor.a = 0.0;
+        }*/
     }
 }
 
@@ -9311,6 +9392,7 @@ void main(void) {
     }
 
     counter = 0;
+
     for(i = 0; i < 8; ++i) {
         if(i == 0) { histogram = texture2D(histTex0, texCoord); }
         if(i == 1) { histogram = texture2D(histTex1, texCoord); }
@@ -9321,8 +9403,9 @@ void main(void) {
         if(i == 6) { histogram = texture2D(histTex6, texCoord); }
         if(i == 7) { histogram = texture2D(histTex7, texCoord); }
 
-        /*for(j = 0; j < 4; ++j) {
+        for(j = 0; j < 4; ++j) {
             tmpVal = uint(histogram[j]);
+			if(tmpVal == uint(0)) continue;
             for(k = 0; k < 32; ++k) {
                 if(uint(tmpVal & uint(uint(1) << uint(k))) == tmpVal) {
                     gl_FragData[int(counter/4)][int(mod(counter,4))] = -minmaxDepth.x + (float(128*i+32*j+k+1) / 1024.0 * minmaxDepth.z);    
@@ -9330,8 +9413,7 @@ void main(void) {
                     if(counter > 31) break;
                 }
             }
-        }*/
-
+        }
     }
 }
 
