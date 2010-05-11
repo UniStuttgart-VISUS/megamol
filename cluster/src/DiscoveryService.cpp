@@ -547,7 +547,6 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
         ? requestIntervalIntensive
         : math::Max(requestInterval / 2, static_cast<UINT>(1));
     this->cntResponseChances = cntResponseChances;
-    this->IsRunning = true;
 
     /* Start the threads. */
     this->senderThread.Start(this);
@@ -646,6 +645,9 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
     ASSERT(reinterpret_cast<BYTE *>(&(msg.SenderBody)) 
        == reinterpret_cast<BYTE *>(&msg) + 2 * sizeof(UINT32));
+
+    // Reset termiation flag.
+    this->isRunning = true;
 
     /* 
      * Prepare a datagram socket listening for requests on the specified 
@@ -1049,6 +1051,9 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
     ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
     ASSERT(reinterpret_cast<BYTE *>(&(request.SenderBody)) 
        == reinterpret_cast<BYTE *>(&request) + 2 * sizeof(UINT32));
+
+    // Reset termiation flag.
+    this->isRunning = true;
 
     VLTRACE(Trace::LEVEL_VL_INFO, "The discovery sender thread is "
         "starting ...\n");
