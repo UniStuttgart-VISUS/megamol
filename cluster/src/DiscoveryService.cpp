@@ -547,6 +547,7 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
         ? requestIntervalIntensive
         : math::Max(requestInterval / 2, static_cast<UINT>(1));
     this->cntResponseChances = cntResponseChances;
+    this->IsRunning = true;
 
     /* Start the threads. */
     this->senderThread.Start(this);
