@@ -856,22 +856,29 @@ namespace vislib {
         /**
          * Answer whether this string starts with the character 'c'.
          *
-         * @param c The character to be searched at the begin.
+         * @param c               The character to be searched at the begin.
+         * @param isCaseSensitive If true, the string will be compared 
+         *                        case-sensitive, otherwise, the comparison
+         *                        will be case-insensitive.
          *
          * @return true, if this string starts with 'c', false otherwise.
          */
-        bool StartsWith(const Char c) const;
+        bool StartsWith(const Char c, const bool isCaseSensitive = true) const;
 
         /**
          * Answer whether this string starts with the string 'str'.
          *
          * Note that for 'str' being a NULL pointer, the result is always false.
          *
-         * @param str The string to be searched at the begin.
+         * @param str             The string to be searched at the begin.
+         * @param isCaseSensitive If true, the string will be compared 
+         *                        case-sensitive, otherwise, the comparison
+         *                        will be case-insensitive.
          *
          * @return true, if this string starts with 'str', false otherwise.
          */
-        bool StartsWith(const Char *str) const;
+        bool StartsWith(const Char *str, 
+            const bool isCaseSensitive = true) const;
 
         /**
          * Answer whether this string starts with the string 'str'.
@@ -892,7 +899,9 @@ namespace vislib {
          *
          * @return true, if this string starts with 'c', false otherwise.
          */
-        bool StartsWithInsensitive(const Char c) const;
+        inline bool StartsWithInsensitive(const Char c) const {
+            return this->StartsWith(c, false);
+        }
 
         /**
          * Answer whether this string starts with the string 'str'. The 
@@ -904,7 +913,9 @@ namespace vislib {
          *
          * @return true, if this string starts with 'str', false otherwise.
          */
-        bool StartsWithInsensitive(const Char *str) const;
+        inline bool StartsWithInsensitive(const Char *str) const {
+            return this->StartsWith(str, false);
+        }
 
         /**
          * Answer whether this string starts with the string 'str'. The 
@@ -2067,22 +2078,33 @@ namespace vislib {
     /*
      * vislib::String<T>::StartsWith
      */
-    template<class T> bool String<T>::StartsWith(const Char c) const {
-        return (this->data[0] == c);
+    template<class T> bool String<T>::StartsWith(const Char c,
+            const bool isCaseSensitive) const {
+        return isCaseSensitive 
+            ? (this->data[0] == c) 
+            : (T::ToLower(this->data[0]) == T::ToLower(c));
     }
 
 
     /*
      * vislib::String<T>::StartsWith
      */
-    template<class T> bool String<T>::StartsWith(const Char *str) const {
+    template<class T> bool String<T>::StartsWith(const Char *str,
+            const bool isCaseSensitive) const {
         if (str != NULL) {
             const Char *s = str;
             const Char *d = this->data;
 
-            while (*s == *d) {
-                s++;
-                d++;
+            if (isCaseSensitive) {
+                while ((*s != 0) && (*s == *d)) {
+                    s++;
+                    d++;
+                }
+            } else {
+                while ((*s != 0) && (T::ToLower(*s) == T::ToLower(*d))) {
+                    s++;
+                    d++;
+                }
             }
             return (*s == 0);   // 's' must have been consumed completely.
 
@@ -2091,36 +2113,6 @@ namespace vislib {
             return false;
         }
     }
-
-
-    /*
-     * vislib::String<T>::StartsWithInsensitive
-     */
-    template<class T> bool String<T>::StartsWithInsensitive(const Char c) const {
-        return (T::ToLower(this->data[0]) == T::ToLower(c));
-    }
-
-
-    /*
-     * vislib::String<T>::StartsWithInsensitive
-     */
-    template<class T> bool String<T>::StartsWithInsensitive(const Char *str) const {
-        if (str != NULL) {
-            const Char *s = str;
-            const Char *d = this->data;
-
-            while (T::ToLower(*s) == T::ToLower(*d)) {
-                s++;
-                d++;
-            }
-            return (*s == 0);   // 's' must have been consumed completely.
-
-        } else {
-            /* Cannot start with 'str', if 'str' invalid. */
-            return false;
-        }
-    }
-
 
     /*
      * vislib::String<T>::Substring
