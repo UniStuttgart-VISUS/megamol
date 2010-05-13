@@ -11,6 +11,7 @@
 #include "cluster/ClusterControllerClient.h"
 #include "CoreInstance.h"
 #include "param/BoolParam.h"
+#include "param/IntParam.h"
 #include "param/StringParam.h"
 #include "utility/Configuration.h"
 #include "vislib/assert.h"
@@ -27,13 +28,15 @@
 using namespace megamol::core;
 using vislib::sys::Log;
 using vislib::net::cluster::DiscoveryService;
+using vislib::net::IPAgnosticAddress;
+using vislib::net::IPEndPoint;
 using vislib::net::NetworkInformation;
 
 
 /*
  * cluster::ClusterController::DEFAULT_CLUSTERNAME
  */
-const char * cluster::ClusterController::DEFAULT_CLUSTERNAME = "MM04RndCluster";
+const char * cluster::ClusterController::DEFAULT_CLUSTERNAME = "MM04RC";
 
 
 /*
@@ -42,7 +45,7 @@ const char * cluster::ClusterController::DEFAULT_CLUSTERNAME = "MM04RndCluster";
 cluster::ClusterController::ClusterController() : job::AbstractJobThread(),
         Module(), vislib::net::cluster::DiscoveryListener(),
         cdsNameSlot("cdsName", "Name of the rendering cluster"),
-        cdsAddressSlot("cdsAddress", "The ip end point address including port to be used by the cluster discovery service."),
+        cdsPortSlot("cdsPort", "The ip port to be used by the cluster discovery service."),
         cdsRunSlot("cdsRun", "Start/Stop flag for the cluster discovery"),
         discoveryService(),
         registerSlot("register", "Slot to register modules at, which wish to use this controller"),
@@ -54,10 +57,8 @@ cluster::ClusterController::ClusterController() : job::AbstractJobThread(),
     this->cdsNameSlot << new param::StringParam(DEFAULT_CLUSTERNAME);
     this->MakeSlotAvailable(&this->cdsNameSlot);
 
-    vislib::TString addressValue;
-    addressValue.Format(_T("%s:%d"), this->defaultAddress().PeekBuffer(), this->defaultPort());
-    this->cdsAddressSlot << new param::StringParam(addressValue); // TODO: make a good guess
-    this->MakeSlotAvailable(&this->cdsAddressSlot);
+    this->cdsPortSlot << new param::IntParam(this->defaultPort(), 0, USHRT_MAX);
+    this->MakeSlotAvailable(&this->cdsPortSlot);
 
     this->cdsRunSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->cdsRunSlot);
@@ -157,9 +158,32 @@ bool cluster::ClusterController::create(void) {
         this->cdsNameSlot.Param<param::StringParam>()->SetValue(
             cfg.ConfigValue("cdsname").PeekBuffer());
     }
-    if (cfg.IsConfigValueSet("cdsaddress")) {
-        this->cdsAddressSlot.Param<param::StringParam>()->SetValue(
-            cfg.ConfigValue("cdsaddress").PeekBuffer());
+    if (cfg.IsConfigValueSet("cdsaddress")) { // for legacy configuration
+        try {
+            vislib::StringW port = cfg.ConfigValue("cdsaddress");
+            vislib::StringW::Size pos = port.FindLast(L':');
+            if (pos == vislib::StringW::INVALID_POS) {
+                throw vislib::Exception(
+                    "cdsaddress configuration value does not seem to contain a port",
+                    __FILE__, __LINE__);
+            }
+            this->cdsPortSlot.Param<param::IntParam>()->SetValue(
+                vislib::CharTraitsW::ParseInt(port.Substring(pos + 1)));
+        } catch(...) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+                "Unable to parse configuration value \"cdsaddress\" as port int. "
+                "Configuration value ignored.");
+        }
+    }
+    if (cfg.IsConfigValueSet("cdsport")) {
+        try {
+            this->cdsPortSlot.Param<param::IntParam>()->SetValue(
+                vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cdsport")));
+        } catch(...) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+                "Unable to parse configuration value \"cdsport\" as int. "
+                "Configuration value ignored.");
+        }
     }
     if (cfg.IsConfigValueSet("cdsrun")) {
         try {
@@ -211,7 +235,7 @@ DWORD cluster::ClusterController::Run(void *userData) {
     while (!this->shouldTerminate()) {
 
         // update cluster discovery settings
-        if (this->cdsNameSlot.IsDirty() || this->cdsAddressSlot.IsDirty() || this->cdsRunSlot.IsDirty()) {
+        if (this->cdsNameSlot.IsDirty() || this->cdsPortSlot.IsDirty() || this->cdsRunSlot.IsDirty()) {
             // stop current cluster discovery service
             this->stopDiscoveryService();
 
@@ -227,7 +251,7 @@ DWORD cluster::ClusterController::Run(void *userData) {
 
             // reset dirty flags of settings
             this->cdsNameSlot.ResetDirty();
-            this->cdsAddressSlot.ResetDirty();
+            this->cdsPortSlot.ResetDirty();
             this->cdsRunSlot.ResetDirty();
 
             bool run = this->cdsRunSlot.Param<param::BoolParam>()->Value();
@@ -235,38 +259,36 @@ DWORD cluster::ClusterController::Run(void *userData) {
                 try {
                     vislib::StringA name(
                         this->cdsNameSlot.Param<param::StringParam>()->Value());
-                    vislib::TString address = this->cdsAddressSlot.Param<param::StringParam>()->Value();
+                    unsigned short port = static_cast<unsigned short>(this->cdsPortSlot.Param<param::IntParam>()->Value());
+                    vislib::SmartPtr<DiscoveryService::DiscoveryConfig> cfg;
 
-                    vislib::net::IPEndPoint endPoint;
-                    float wildness;
+                    { // choose first ethernet adapter in UP state
+                        NetworkInformation::AdapterList adapters;
+                        NetworkInformation::GetAdaptersForType(adapters, NetworkInformation::Adapter::TYPE_ETHERNET);
+                        while (adapters.Count() > 0) {
+                            if (adapters[0].GetStatus() != NetworkInformation::Adapter::OPERSTATUS_UP) {
+                                adapters.RemoveFirst();
+                            } else break;
+                        }
+                        if (adapters.Count() > 0) {
+                            NetworkInformation::UnicastAddressList ual = adapters[0].GetUnicastAddresses();
+                            for (SIZE_T i = 0; ual.Count(); i++) {
+                                if (ual[i].GetAddressFamily() == IPAgnosticAddress::FAMILY_INET) {
+                                    cfg = new DiscoveryService::DiscoveryConfig(IPEndPoint(ual[i].GetAddress(), port), port);
+                                    break;
+                                }
+                            }
+                            if (cfg.IsNull() && (ual.Count() > 0)) {
+                                cfg = new DiscoveryService::DiscoveryConfig(IPEndPoint(ual[0].GetAddress(), port), port);
+                            }
+                        }
+                    }
 
-                    wildness = NetworkInformation::GuessLocalEndPoint(endPoint, address); // unique address to identify this computer
-
-                    if (wildness > 0.8f) {
-                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                            "Guessing ip end point \"%s\" from input \"%s\" with wildness \"%f\". Too wild! Service will not be started.\n",
-                            endPoint.ToStringA().PeekBuffer(),
-                            vislib::StringA(address).PeekBuffer(),
-                            wildness);
+                    if (cfg.IsNull()) {
+                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to choose identifing network adapter.\n");
                         this->cdsRunSlot.Param<param::BoolParam>()->SetValue(false, false);
 
                     } else {
-                        Log::DefaultLog.WriteMsg((wildness > 0.1f) ? Log::LEVEL_WARN : Log::LEVEL_INFO,
-                            "Guessing ip end point \"%s\" from input \"%s\" with wildness \"%f\".\n",
-                            endPoint.ToStringA().PeekBuffer(),
-                            vislib::StringA(address).PeekBuffer(),
-                            wildness);
-
-                        vislib::SmartPtr<DiscoveryService::DiscoveryConfig> cfg;
-                        if (endPoint.GetAddressFamily() == vislib::net::IPEndPoint::FAMILY_INET6) {
-                            cfg = new DiscoveryService::DiscoveryConfig(
-                                endPoint,
-                                endPoint.GetPort());
-                        } else {
-                            cfg = new DiscoveryService::DiscoveryConfig(
-                                endPoint,
-                                endPoint.GetPort());
-                        }
 
                         this->discoveryService.Start(name, cfg.operator->(), 1, 0, 0,
                             DiscoveryService::DEFAULT_REQUEST_INTERVAL,
@@ -384,39 +406,6 @@ void cluster::ClusterController::OnUserMessage(
     } catch(...) {
         VLTRACE(VISLIB_TRCELVL_ERROR, "Illegal exception in OnUserMessage\n");
     }
-}
-
-
-/*
- * cluster::ClusterController::defaultAddress
- */
-vislib::TString cluster::ClusterController::defaultAddress(void) {
-    NetworkInformation::AdapterList adapters;
-    NetworkInformation::GetAdaptersForType(adapters, NetworkInformation::Adapter::TYPE_ETHERNET);
-    while (adapters.Count() > 0) {
-        if (adapters[0].GetStatus() != NetworkInformation::Adapter::OPERSTATUS_UP) {
-            adapters.RemoveFirst();
-        } else break;
-    }
-    if (adapters.Count() > 0) {
-        NetworkInformation::UnicastAddressList ual = adapters[0].GetUnicastAddresses();
-        for (SIZE_T i = 0; ual.Count(); i++) {
-            if (ual[i].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET) {
-                return W2T(ual[i].GetAddress().ToStringW());
-            }
-        }
-        if (ual.Count() > 0) {
-            vislib::StringW addressValue(ual[0].GetAddress().ToStringW());
-            if (ual[0].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET6) {
-                addressValue.Prepend(L"[");
-                addressValue.Append(L"]");
-                return addressValue;
-            }
-        }
-    }
-    vislib::TString addressValue;
-    vislib::sys::SystemInformation::ComputerName(addressValue);
-    return addressValue;
 }
 
 

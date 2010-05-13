@@ -15,7 +15,16 @@
 #include "cluster/ClusterController.h"
 #include "Module.h"
 #include "AbstractSlot.h"
+#include "param/ParamSlot.h"
+#include "vislib/AbstractCommChannel.h"
+#include "vislib/AbstractSimpleMessage.h"
 #include "vislib/DiscoveryService.h"
+#include "vislib/IPEndPoint.h"
+#include "vislib/RunnableThread.h"
+#include "vislib/SimpleMessageDispatcher.h"
+#include "vislib/SimpleMessageDispatchListener.h"
+#include "vislib/SmartRef.h"
+#include "vislib/TcpCommChannel.h"
 
 
 namespace megamol {
@@ -25,7 +34,8 @@ namespace cluster {
     /**
      * Interface class for clients of cluster controllers
      */
-    class ClusterControllerClient : public AbstractSlot::Listener {
+    class ClusterControllerClient : public AbstractSlot::Listener,
+        public vislib::net::SimpleMessageDispatchListener {
     public:
 
         /** ClusterController will de/register itself */
@@ -34,6 +44,10 @@ namespace cluster {
         /** The user message to query the head node in the cluster */
         static const UINT32 USRMSG_QUERYHEAD
             = vislib::net::cluster::DiscoveryService::MSG_TYPE_USER + 0;
+
+        /** The user message to query the head node in the cluster */
+        static const UINT32 USRMSG_HEADHERE
+            = vislib::net::cluster::DiscoveryService::MSG_TYPE_USER + 1;
 
         /**
          * Ctor
@@ -80,7 +94,7 @@ namespace cluster {
          * @param msgBody The data of the message
          */
         virtual void OnUserMsg(const ClusterController::PeerHandle& hPeer,
-            const UINT32 msgType, const BYTE *msgBody);
+            const UINT32 msgType, const BYTE *msgBody) = 0;
 
         /**
          * Sends a message to all nodes in the cluster.
@@ -123,10 +137,62 @@ namespace cluster {
         /** The caller to register the client at the controller */
         CallerSlot registerSlot;
 
+        /** Slot specifying the communication address */
+        param::ParamSlot ctrlCommAddressSlot;
+
+        /**
+         * Update callback when the control communication address changes
+         *
+         * @param address The new address string to be used
+         */
+        virtual void OnCtrlCommAddressChanged(const vislib::TString& address) = 0;
+
+        /**
+         * Stops the control message communication
+         */
+        void stopCtrlComm(void);
+
+        /**
+         * Starts a server end for the control message communication
+         *
+         * @return A reference to the server communication channel
+         */
+        vislib::SmartRef<vislib::net::TcpCommChannel> startCtrlCommServer(void);
+
+        /**
+         * Starts a client end for the control message communication
+         *
+         * @param address The address of the server
+         *
+         * @return The comm channel on success
+         */
+        vislib::net::AbstractCommChannel * startCtrlCommClient(const vislib::net::IPEndPoint& address);
+
+        /**
+         * asnwers if the control message communication channel is connected to the given address.
+         *
+         * @param address The ip addess including port to test
+         *
+         * @return True if the control message communication channel is connected to the given address.
+         */
+        bool isCtrlCommConnectedTo(const char *address) const;
+
     private:
+
+        /**
+         * Update callback when the control communication address changes
+         *
+         * @param slot Must be 'ctrlCommAddressSlot'
+         *
+         * @return true
+         */
+        bool onCtrlCommAddressChanged(param::ParamSlot& slot);
 
         /** The cluster controller */
         ClusterController *ctrlr;
+
+        /** The control command communication channel */
+        vislib::SmartRef<vislib::net::TcpCommChannel> ctrlChannel;
 
     };
 

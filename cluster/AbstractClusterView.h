@@ -15,10 +15,7 @@
 #include "cluster/ClusterControllerClient.h"
 #include "cluster/InfoIconRenderer.h"
 #include "vislib/AbstractClientEndPoint.h"
-#include "vislib/AbstractSimpleMessage.h"
 #include "vislib/CriticalSection.h"
-#include "vislib/SimpleMessageDispatcher.h"
-#include "vislib/SimpleMessageDispatchListener.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
 #include "vislib/Thread.h"
@@ -33,8 +30,7 @@ namespace cluster {
      * Abstract base class of override rendering views
      */
     class AbstractClusterView : public view::AbstractTileView,
-        public ClusterControllerClient,
-        public vislib::net::SimpleMessageDispatchListener {
+        public ClusterControllerClient {
     public:
 
         /** Ctor. */
@@ -96,6 +92,42 @@ namespace cluster {
             const UINT32 msgType, const BYTE *msgBody);
 
         /**
+         * This method is called once a communication error occurs.
+         *
+         * This method should return very quickly and should not perform
+         * excessive work as it is executed in the discovery thread.
+         *
+         * The return value of the method can be used to stop the message
+         * dispatcher. The default implementation returns true for continuing
+         * after an error.
+         *
+         * Note that the dispatcher will stop if any of the registered listeners
+         * returns false.
+         *
+         * @param src       The SimpleMessageDispatcher which caught the 
+         *                  communication error.
+         * @param exception The exception that was caught (this exception
+         *                  represents the error that occurred).
+         *
+         * @return true in order to make the SimpleMessageDispatcher continue
+         *         receiving messages, false will cause the dispatcher to
+         *         exit.
+         */
+        virtual bool OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
+            const vislib::Exception& exception) throw();
+
+        /**
+         * This method is called immediately after the message dispatcher loop
+         * was left and the dispatching method is being exited.
+         *
+         * This method should return very quickly and should not perform
+         * excessive work as it is executed in the discovery thread.
+         *
+         * @param src The SimpleMessageDispatcher that exited.
+         */
+        virtual void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw();
+
+        /**
          * This method is called every time a message is received.
          *
          * This method should return very quickly and should not perform
@@ -137,9 +169,11 @@ namespace cluster {
         /**
          * Answer if this node is connected to the head node
          *
+         * @param address If not NULL specifies the address of the head node
+         *
          * @return 'true' if this node is connected to the head node
          */
-        bool isConnectedToHead(void) const;
+        bool isConnectedToHead(const char *address = NULL) const;
 
     private:
 
@@ -160,8 +194,18 @@ namespace cluster {
          */
         static DWORD setupProcedure(void *userData);
 
+        /**
+         * Update callback when the control communication address changes
+         *
+         * @param address The new address string to be used
+         */
+        virtual void OnCtrlCommAddressChanged(const vislib::TString& address);
+
         /** The thread controlling the setup procedure */
         vislib::sys::Thread setupThread;
+
+        /** The control message dispatcher */
+        vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> ctrlMsgDisp;
 
         /** The current setup state */
         SetupState setupState;
@@ -169,17 +213,17 @@ namespace cluster {
         /** The setup state variable lock */
         mutable vislib::sys::CriticalSection setupStateLock;
 
-        /** The client end point connected to the head node view for control commands */
-        vislib::SmartRef<vislib::net::AbstractClientEndPoint> commChnlCtrl;
+        ///** The client end point connected to the head node view for control commands */
+        //vislib::SmartRef<vislib::net::AbstractClientEndPoint> commChnlCtrl;
 
-        /** The client end point connected to the head node view for camera updates */
-        vislib::SmartRef<vislib::net::AbstractClientEndPoint> commChnlCam;
+        ///** The client end point connected to the head node view for camera updates */
+        //vislib::SmartRef<vislib::net::AbstractClientEndPoint> commChnlCam;
 
-        /** Message dispatcher for control commands */
-        vislib::net::SimpleMessageDispatcher ctrlMsgDispatch;
+        ///** Message dispatcher for control commands */
+        //vislib::net::SimpleMessageDispatcher ctrlMsgDispatch;
 
-        /** Message dispatcher for camera updates */
-        vislib::net::SimpleMessageDispatcher camMsgDispatch;
+        ///** Message dispatcher for camera updates */
+        //vislib::net::SimpleMessageDispatcher camMsgDispatch;
 
     };
 

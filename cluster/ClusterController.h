@@ -199,13 +199,6 @@ namespace cluster {
     private:
 
         /**
-         * Answer the default address
-         *
-         * @return The default address
-         */
-        vislib::TString defaultAddress(void);
-
-        /**
          * Answer the default port
          *
          * @return The default port
@@ -247,8 +240,8 @@ namespace cluster {
         /** The name of the rendering cluster */
         param::ParamSlot cdsNameSlot;
 
-        /** The ip end point address including port to be used by the cluster discovery service. */
-        param::ParamSlot cdsAddressSlot;
+        /** The ip port to be used by the cluster discovery service. */
+        param::ParamSlot cdsPortSlot;
 
         /** Flag to start or stop the cluster discovery service */
         param::ParamSlot cdsRunSlot;
