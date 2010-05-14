@@ -339,7 +339,7 @@ bool ProteinRendererBDP::create( void )
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-	if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_blend_minmax") ) {
+	if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_EXT_texture_integer GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_blend_minmax") ) {
 		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Failed to initialize OpenGL extensions.\n");
         return false;
 	}
@@ -1359,7 +1359,8 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
         for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
             glBindTexture( GL_TEXTURE_2D, this->histogramTex[i]);
-            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_INT, NULL); 
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32UI_EXT, this->width, this->height, 0, GL_RGBA_INTEGER_EXT, GL_UNSIGNED_INT, NULL); 
+			//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL); 
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
