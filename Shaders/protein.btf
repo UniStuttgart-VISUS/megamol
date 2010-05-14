@@ -7283,7 +7283,7 @@ void main(void) {
     vec3 ray, planeNormal, planePos, surfPos, sphereintersection, normal, color, colorX;
     vec4 coord, Ding;
 
-    int i, j, rt, tmpi, tmpj;
+    int i, j, rt;
     vec2 texCoordHist;
     vec3 minmaxDepth;
     vec4 fragColorInt, fragColorExt, histogram;
@@ -7424,7 +7424,7 @@ void main(void) {
             // calculate right subintervall for histogramm
             bucketInt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
             // choose right component in render target
-            gl_FragData[int(floor(bucketInt / 128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = float(uint(1) << uint(mod(bucketInt,32.0)));
+            gl_FragData[int(floor(bucketInt / 128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = uint(uint(1) << uint(mod(bucketInt,32.0)));
         } else if(DPmode == 4) {
             // search histogram component with right depth intervall
             texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
@@ -7442,8 +7442,6 @@ void main(void) {
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
                         gl_FragData[i][j] = codeColorBDP(fragColorInt);
-						tmpi = i;
-						tmpj = j;
                         break;
                     }
                     lastDepth = histogram[j];
@@ -7571,7 +7569,7 @@ void main(void) {
             // calculate right subintervall for histogramm
             bucketExt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
             // choose right component in render target
-            gl_FragData[int(floor(bucketExt / 128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = float(uint(1) << uint(mod(bucketExt,32.0)));
+            gl_FragData[int(floor(bucketExt/128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = uint(uint(1) << uint(mod(bucketExt,32.0)));
         } else if(DPmode == 4) {
             // search histogram component with right depth intervall
             texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
@@ -7588,9 +7586,6 @@ void main(void) {
         
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
-						if(!discardInt && (i == tmpi) && (j == tmpj)) {
-							fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
-						}
                         gl_FragData[i][j] = codeColorBDP(fragColorExt);
                         break;
                     }
@@ -7848,7 +7843,7 @@ void main(void) {
     vec3 ray, tmp, a, intersection, normPlane, normal, color, colorX;
     vec4 coord, lambdas, Ding;
 
-    int i, j, rt, tmpi, tmpj;
+    int i, j, rt;
     vec2 texCoordHist;
     vec3 minmaxDepth;
     vec4 fragColorInt, fragColorExt, histogram;
@@ -8089,7 +8084,7 @@ void main(void) {
             // calculate right subintervall for histogramm
             bucketInt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
             // choose right component in render target
-            gl_FragData[int(floor(bucketInt / 128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = float(uint(1) << uint(mod(bucketInt,32.0)));
+            gl_FragData[int(floor(bucketInt/128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = uint(uint(1) << uint(mod(bucketInt,32.0)));
         } else if(DPmode == 4) {
             // search histogram component with right depth intervall
             texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
@@ -8107,8 +8102,6 @@ void main(void) {
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
                         gl_FragData[i][j] = codeColorBDP(fragColorInt);
-						tmpi = i;
-						tmpj = j;
                         break;
                     }
                     lastDepth = histogram[j];
@@ -8273,7 +8266,7 @@ void main(void) {
             // calculate right subintervall for histogramm
             bucketExt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
             // choose right component in render target
-            gl_FragData[int(floor(bucketExt / 128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = float(uint(1) << uint(mod(bucketExt,32.0)));
+            gl_FragData[int(floor(bucketExt/128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = uint(uint(1) << uint(mod(bucketExt,32.0)));
         } else if(DPmode == 4) {
             // search histogram component with right depth intervall
             texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
@@ -8290,9 +8283,6 @@ void main(void) {
         
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
-						if(!discardInt && (i == tmpi) && (j == tmpj)) {
-							fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
-						}
                         gl_FragData[i][j] = codeColorBDP(fragColorExt);
                         break;
                     }
@@ -8526,7 +8516,7 @@ void main(void) {
     vec3 u, v, w, dRay, wXu, dXv;
     vec4 coord, Ding;
 
-    int i, j, rt, tmpi, tmpj;
+    int i, j, rt;
     vec2 texCoordHist;
     vec3 minmaxDepth;
     vec4 fragColorInt, fragColorExt, histogram;
@@ -8736,7 +8726,7 @@ void main(void) {
             // calculate right subintervall for histogramm
             bucketInt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
             // choose right component in render target
-            gl_FragData[int(floor(bucketInt / 128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = float(uint(1) << uint(mod(bucketInt,32.0)));
+            gl_FragData[int(floor(bucketInt/128.0))][int(floor(mod(bucketInt, 128.0)/32.0))] = uint(uint(1) << uint(mod(bucketInt,32.0)));
         } else if(DPmode == 4) {
             // search histogram component with right depth intervall
             texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
@@ -8754,8 +8744,6 @@ void main(void) {
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
                         gl_FragData[i][j] = codeColorBDP(fragColorInt);
-						tmpi = i;
-						tmpj = j;
                         break;
                     }
                     lastDepth = histogram[j];
@@ -8959,7 +8947,7 @@ void main(void) {
             // calculate right subintervall for histogramm
             bucketExt = floor(1024.0*(gl_FragDepth + minmaxDepth.x) / minmaxDepth.z );
             // choose right component in render target
-            gl_FragData[int(floor(bucketExt / 128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = float(uint(1) << uint(mod(bucketExt,32.0)));
+            gl_FragData[int(floor(bucketExt/128.0))][int(floor(mod(bucketExt, 128.0)/32.0))] = uint(uint(1) << uint(mod(bucketExt,32.0)));
         } else if(DPmode == 4) {
             // search histogram component with right depth intervall
             texCoordHist = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
@@ -8976,9 +8964,6 @@ void main(void) {
         
                 for(j = 0; j < 4; ++j) {
                     if((gl_FragDepth >= lastDepth) && (gl_FragDepth < histogram[j])) {
-						if(!discardInt && (i == tmpi) && (j == tmpj)) {
-							fragColorExt = fragColorInt*(1.0 - alpha) + fragColorExt;
-						}
                         gl_FragData[i][j] = codeColorBDP(fragColorExt);
                         break;
                     }
@@ -9323,9 +9308,9 @@ void main(void) {
             }
         }
 
-        //if(gotfirst) {
-        //    color = vec3(1.0, 0.0, 0.0);
-        //}
+        if(gotfirst) {
+            color = vec3(1.0, 0.0, 0.0);
+        }
 
         gl_FragColor.rgb = color * exp(-absorption*thickness);
         if(thickness > 0.0) {
@@ -9364,14 +9349,14 @@ void main(void) {
 
 uniform sampler2D depthBuffer;
 
-uniform sampler2D histTex0;
-uniform sampler2D histTex1;
-uniform sampler2D histTex2;
-uniform sampler2D histTex3;
-uniform sampler2D histTex4;
-uniform sampler2D histTex5;
-uniform sampler2D histTex6;
-uniform sampler2D histTex7;
+uniform usampler2D histTex0;
+uniform usampler2D histTex1;
+uniform usampler2D histTex2;
+uniform usampler2D histTex3;
+uniform usampler2D histTex4;
+uniform usampler2D histTex5;
+uniform usampler2D histTex6;
+uniform usampler2D histTex7;
 
 uniform vec2 texOffset;
 
@@ -9379,7 +9364,7 @@ void main(void) {
 
     int i, j, k, counter;
     uint tmpVal;
-    vec4 histogram;
+    uvec4 histogram;
     vec3 minmaxDepth;
     vec2 texCoord = (gl_FragCoord.xy + vec2(0.25, 0.25)) * texOffset;
 
@@ -9393,7 +9378,7 @@ void main(void) {
 
     counter = 0;
 
-    for(i = 0; i < 8; ++i) {
+    for(i = 4; i < 8; ++i) {
         if(i == 0) { histogram = texture2D(histTex0, texCoord); }
         if(i == 1) { histogram = texture2D(histTex1, texCoord); }
         if(i == 2) { histogram = texture2D(histTex2, texCoord); }
@@ -9404,10 +9389,10 @@ void main(void) {
         if(i == 7) { histogram = texture2D(histTex7, texCoord); }
 
         for(j = 0; j < 4; ++j) {
-            tmpVal = uint(histogram[j]);
+            tmpVal = histogram[j];
 			if(tmpVal == uint(0)) continue;
             for(k = 0; k < 32; ++k) {
-                if(uint(tmpVal & uint(uint(1) << uint(k))) == tmpVal) {
+				if(uint(tmpVal & uint(uint(1) << uint(k))) == uint(uint(1) << uint(k))) {
                     gl_FragData[int(counter/4)][int(mod(counter,4))] = -minmaxDepth.x + (float(128*i+32*j+k+1) / 1024.0 * minmaxDepth.z);    
                     counter++;
                     if(counter > 31) break;
