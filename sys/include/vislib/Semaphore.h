@@ -78,8 +78,11 @@ namespace sys {
          * @param maxCount     The maximum count for the semaphore object, which
          *                     must be greater than zero. If the value is less 
          *                     than 1, it will be corrected to be 1.
+         * @param outIsNew     If not NULL, the ctor returns whether the 
+         *                     semaphore was created (true) or opened (false).
          */
-        Semaphore(const char *name, long initialCount = 1, long maxCount = 1);
+        Semaphore(const char *name, long initialCount = 1, long maxCount = 1,
+            bool *outIsNew = NULL);
 
         /** 
          * Open or create a new semaphore with the specified name. The ctor 
@@ -97,8 +100,11 @@ namespace sys {
          * @param maxCount     The maximum count for the semaphore object, which
          *                     must be greater than zero. If the value is less 
          *                     than 1, it will be corrected to be 1.
+         * @param outIsNew     If not NULL, the ctor returns whether the 
+         *                     semaphore was created (true) or opened (false).
          */
-        Semaphore(const wchar_t *name, long initialCount = 1, long maxCount = 1);
+        Semaphore(const wchar_t *name, long initialCount = 1, long maxCount = 1,
+            bool *outIsNew = NULL);
 
         /** Dtor. */
         ~Semaphore(void);

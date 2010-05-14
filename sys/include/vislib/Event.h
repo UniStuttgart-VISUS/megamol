@@ -32,7 +32,7 @@ namespace sys {
      * the event is in signaled state, threads calling the Wait function
      * can proceed, in non-signaled state the threads are blocked.
      *
-     * There event can be used as auto-reset and manual-reset event. An
+     * The event can be used as auto-reset and manual-reset event. An
      * auto-reset event resets its state to non-signaled after one thread
      * has been released. A manual-reset event stays signaled until it is
      * explicitly reset.
@@ -50,6 +50,9 @@ namespace sys {
         /** 
          * Create a new event.
          *
+         * The default ctor creates an auto-reset event, which is initially
+         * non-signaled.
+         *
          * @param isManualReset       Make the event a manual-reset event. If 
          *                            the flag is not set, an auto-reset event 
          *                            is created.
@@ -58,6 +61,64 @@ namespace sys {
          */
         Event(const bool isManualReset = false, 
             const bool isInitiallySignaled = false);
+
+        /**
+         * Opens an existing event with the specified name 'name' or creates a 
+         * new named event if no such event exists.
+         *
+         * Windows: If an existing event is opened, the 'isManualReset' and 
+         * 'isInitiallySignaled' parameters are ignored as these are defined by
+         * the original creator of the event.
+         *
+         * Linux: The user must ensure that the 'isManualReset' flag is set
+         * correctly when opening an existing event to match the value of the
+         * original creator. The behaviour of the event is undefined if this
+         * condition is not met.
+         *
+         * The default ctor creates an auto-reset event, which is initially
+         * non-signaled.
+         *
+         * @param name                The name of the event.
+         * @param isManualReset       Make the event a manual-reset event. If 
+         *                            the flag is not set, an auto-reset event 
+         *                            is created.
+         * @param isInitiallySignaled Specifies whether the event is initially
+         *                            signaled.
+         * @param outIsNew            If not NULL, the ctor returns whether the
+         *                            semaphore was created (true) or opened 
+         *                            (false).
+         */
+        Event(const char *name, const bool isManualReset = false,
+            const bool isInitiallySignaled = false, bool *outIsNew = NULL);
+
+        /**
+         * Opens an existing event with the specified name 'name' or creates a 
+         * new named event if no such event exists.
+         *
+         * Windows: If an existing event is opened, the 'isManualReset' and 
+         * 'isInitiallySignaled' parameters are ignored as these are defined by
+         * the original creator of the event.
+         *
+         * Linux: The user must ensure that the 'isManualReset' flag is set
+         * correctly when opening an existing event to match the value of the
+         * original creator. The behaviour of the event is undefined if this
+         * condition is not met.
+         *
+         * The default ctor creates an auto-reset event, which is initially
+         * non-signaled.
+         *
+         * @param name                The name of the event.
+         * @param isManualReset       Make the event a manual-reset event. If 
+         *                            the flag is not set, an auto-reset event 
+         *                            is created.
+         * @param isInitiallySignaled Specifies whether the event is initially
+         *                            signaled.
+         * @param outIsNew            If not NULL, the ctor returns whether the
+         *                            semaphore was created (true) or opened 
+         *                            (false).
+         */
+        Event(const wchar_t *name, const bool isManualReset = false,
+            const bool isInitiallySignaled = false, bool *outIsNew = NULL);
 
         /** Dtor. */
         ~Event(void);
@@ -96,25 +157,25 @@ namespace sys {
 
     protected:
 
-		/**
-		 * Forbidden copy ctor.
-		 *
-		 * @param rhs The object to be cloned.
-		 *
-		 * @throws UnsupportedOperationException Unconditionally.
-		 */
-		Event(const Event& rhs);
+        /**
+         * Forbidden copy ctor.
+         *
+         * @param rhs The object to be cloned.
+         *
+         * @throws UnsupportedOperationException Unconditionally.
+         */
+        Event(const Event& rhs);
 
-		/**
-		 * Forbidden assignment.
-		 *
-		 * @param rhs The right hand side operand.
-		 *
-		 * @return *this.
-		 *
-		 * @throws IllegalParamException If (this != &rhs).
-		 */
-		Event& operator =(const Event& rhs);
+        /**
+         * Forbidden assignment.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return *this.
+         *
+         * @throws IllegalParamException If (this != &rhs).
+         */
+        Event& operator =(const Event& rhs);
 
     private:
 

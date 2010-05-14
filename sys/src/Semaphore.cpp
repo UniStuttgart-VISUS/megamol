@@ -34,7 +34,7 @@ vislib::sys::Semaphore::Semaphore(long initialCount, long maxCount) {
 
 #else /* _WIN32 */
     this->handle = new sem_t;
-    ::sem_init(this->handle, 0, initialCount); 
+    ::sem_init(this->handle, 0, initialCount);
 
 #endif /* _WIN32 */
 }
@@ -44,14 +44,21 @@ vislib::sys::Semaphore::Semaphore(long initialCount, long maxCount) {
  * vislib::sys::Semaphore::Semaphore
  */
 vislib::sys::Semaphore::Semaphore(const char *name, long initialCount, 
-        long maxCount) {
+        long maxCount, bool *outIsNew) {
     Semaphore::enforceParamAssertions(initialCount, maxCount);
+
+    if (outIsNew != NULL) {
+        *outIsNew = false;
+    }
 
 #ifdef _WIN32
     /* Try to open existing semaphore first. */
     if ((this->handle = ::OpenSemaphoreA(SYNCHRONIZE | SEMAPHORE_MODIFY_STATE, 
             FALSE, name)) == NULL) {
         this->handle = ::CreateSemaphoreA(NULL, initialCount, maxCount, name);
+        if (outIsNew != NULL) {
+            *outIsNew = true;
+        }
     }
     ASSERT(this->handle != NULL);
 
@@ -60,12 +67,21 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
         this->name = TranslateWinIpc2PosixName(name);
         VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%s\"\n", 
             this->name.PeekBuffer());
-        this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, DFT_PERMS,
-            initialCount);
+        if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0) 
+                == SEM_FAILED) {
+            this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, 
+                DFT_PERMS, initialCount);
+            if (outIsNew != NULL) {
+                *outIsNew = true;
+            }
+        }
         ASSERT(this->handle !=  SEM_FAILED);
     } else {
         this->handle = new sem_t;
         ::sem_init(this->handle, 0, initialCount); 
+        if (outIsNew != NULL) {
+            *outIsNew = true;
+        }
     }
 
 #endif /* _WIN32 */
@@ -76,14 +92,21 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
  * vislib::sys::Semaphore::Semaphore
  */
 vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount, 
-        long maxCount) {
+        long maxCount, bool *outIsNew) {
     Semaphore::enforceParamAssertions(initialCount, maxCount);
+
+    if (outIsNew != NULL) {
+        *outIsNew = false;
+    }
 
 #ifdef _WIN32
     /* Try to open existing semaphore first. */
     if ((this->handle = ::OpenSemaphoreW(SYNCHRONIZE | SEMAPHORE_MODIFY_STATE, 
             FALSE, name)) == NULL) {
         this->handle = ::CreateSemaphoreW(NULL, initialCount, maxCount, name);
+        if (outIsNew != NULL) {
+            *outIsNew = true;
+        }
     }
     ASSERT(this->handle != NULL);
 
@@ -92,12 +115,21 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
         this->name = TranslateWinIpc2PosixName(name);
         VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
             this->name.PeekBuffer());
-        this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, DFT_PERMS,
-            initialCount);
+        if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0) 
+                == SEM_FAILED) {
+            this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, 
+                DFT_PERMS, initialCount);
+            if (outIsNew != NULL) {
+                *outIsNew = true;
+            }
+        }
         ASSERT(this->handle !=  SEM_FAILED);
     } else {
         this->handle = new sem_t;
-        ::sem_init(this->handle, 0, initialCount); 
+        ::sem_init(this->handle, 0, initialCount);
+        if (outIsNew != NULL) {
+            *outIsNew = true;
+        }
     }
 
 #endif /* _WIN32 */

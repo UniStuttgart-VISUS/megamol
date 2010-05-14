@@ -48,6 +48,64 @@ vislib::sys::Event::Event(const bool isManualReset,
 
 
 /*
+ * vislib::sys::Event::Event
+ */
+vislib::sys::Event::Event(const char *name, const bool isManualReset, 
+        const bool isInitiallySignaled, bool *outIsNew) 
+#ifndef _WIN32
+        : isManualReset(isManualReset), 
+        semaphore(name, isInitiallySignaled ? 1 : 0, 1, outIsNew)
+#endif /* _WIN32 */
+{
+#ifdef _WIN32
+    if (outIsNew != NULL) {
+        *outIsNew = false;
+    }
+
+    /* Try to open existing event first. */
+    if ((this->handle = ::OpenEventA(SYNCHRONIZE | EVENT_MODIFY_STATE,
+            FALSE, name)) == NULL) {
+        this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE, FALSE,
+            name);
+        if (outIsNew != NULL) {
+            *outIsNew = true;
+        }
+    }
+    ASSERT(this->handle != NULL);
+#endif /* _WIN32 */
+}
+
+
+/*
+ * vislib::sys::Event::Event
+ */
+vislib::sys::Event::Event(const wchar_t *name, const bool isManualReset, 
+        const bool isInitiallySignaled, bool *outIsNew) 
+#ifndef _WIN32
+        : isManualReset(isManualReset), 
+        semaphore(name, isInitiallySignaled ? 1 : 0, 1, outIsNew)
+#endif /* _WIN32 */
+{
+#ifdef _WIN32
+    if (outIsNew != NULL) {
+        *outIsNew = false;
+    }
+
+    /* Try to open existing event first. */
+    if ((this->handle = ::OpenEventW(SYNCHRONIZE | EVENT_MODIFY_STATE,
+            FALSE, name)) == NULL) {
+        this->handle = ::CreateEventW(NULL, isManualReset ? TRUE : FALSE, FALSE,
+            name);
+        if (outIsNew != NULL) {
+            *outIsNew = true;
+        }
+    }
+    ASSERT(this->handle != NULL);
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::Event::~Event
  */
 vislib::sys::Event::~Event(void) {
