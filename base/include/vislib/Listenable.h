@@ -35,7 +35,7 @@ namespace vislib {
         /**
          * Base class for listeners classes
          */
-        virtual class Listener {
+        class Listener {
         public:
 
             /** Ctor */
