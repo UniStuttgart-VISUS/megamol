@@ -20,16 +20,12 @@ using namespace megamol::core;
  * cluster::ClusterControllerClient::ClusterControllerClient
  */
 cluster::ClusterControllerClient::ClusterControllerClient(void)
-        : registerSlot("register", "The slot to register the client at the controller"),
-        ctrlCommAddressSlot("ctrlCommAddress", "Specifies the address string (including port) used to communicate control commands"),
-        ctrlr(NULL), ctrlChannel(NULL) {
+        : AbstractSlot::Listener(), vislib::Listenable<ClusterControllerClient>(),
+        registerSlot("register", "The slot to register the client at the controller"),
+        ctrlr(NULL) {
 
     this->registerSlot.SetCompatibleCall<CallRegisterAtControllerDescription>();
     this->registerSlot.AddListener(this);
-    // must be published in derived class to avoid diamond-inheritance
-
-    this->ctrlCommAddressSlot << new param::StringParam("");
-    this->ctrlCommAddressSlot.SetUpdateCallback(&ClusterControllerClient::onCtrlCommAddressChanged);
     // must be published in derived class to avoid diamond-inheritance
 
 }
@@ -39,42 +35,6 @@ cluster::ClusterControllerClient::ClusterControllerClient(void)
  * cluster::ClusterControllerClient::~ClusterControllerClient
  */
 cluster::ClusterControllerClient::~ClusterControllerClient(void) {
-    this->ctrlr = NULL; // DO NOT DELETE
-    this->stopCtrlComm(); // just to be dead sure
-}
-
-
-/*
- * cluster::ClusterControllerClient::OnClusterAvailable
- */
-void cluster::ClusterControllerClient::OnClusterAvailable(void) {
-    // intentionally empty
-}
-
-
-/*
- * cluster::ClusterControllerClient::OnClusterUnavailable
- */
-void cluster::ClusterControllerClient::OnClusterUnavailable(void) {
-    // intentionally empty
-}
-
-
-/*
- * cluster::ClusterControllerClient::OnNodeFound
- */
-void cluster::ClusterControllerClient::OnNodeFound(
-        const cluster::ClusterController::PeerHandle& hPeer) {
-    // intentionally empty
-}
-
-
-/*
- * cluster::ClusterControllerClient::OnNodeLost
- */
-void cluster::ClusterControllerClient::OnNodeLost(
-        const cluster::ClusterController::PeerHandle& hPeer) {
-    // intentionally empty
 }
 
 
@@ -138,71 +98,66 @@ void cluster::ClusterControllerClient::OnDisconnect(AbstractSlot& slot) {
 
 
 /*
- * cluster::ClusterControllerClient::stopCtrlComm
+ * cluster::ClusterControllerClient::onClusterAvailable
  */
-void cluster::ClusterControllerClient::stopCtrlComm(void) {
-    if (!this->ctrlChannel.IsNull()) {
-        try {
-            this->ctrlChannel->Close();
-            this->ctrlChannel.Release();
-        } catch(...) {
-            this->ctrlChannel.Release();
-        }
-        this->ctrlChannel = NULL;
+void cluster::ClusterControllerClient::onClusterAvailable(void) {
+    ListenerIterator iter = this->GetListeners();
+    while (iter.HasNext()) {
+        Listener *l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL) continue;
+        l->OnClusterDiscoveryAvailable(*this);
     }
 }
 
 
 /*
- * cluster::ClusterControllerClient::startCtrlCommServer
+ * cluster::ClusterControllerClient::onClusterUnavailable
  */
-vislib::SmartRef<vislib::net::TcpCommChannel> cluster::ClusterControllerClient::startCtrlCommServer(void) {
-    this->stopCtrlComm();
-    this->ctrlChannel = new vislib::net::TcpCommChannel();
-    // rest has to be done in derived server/master class
-    return this->ctrlChannel;
-}
-
-
-/*
- * cluster::ClusterControllerClient::startCtrlCommClient
- */
-vislib::net::AbstractCommChannel * cluster::ClusterControllerClient::startCtrlCommClient(const vislib::net::IPEndPoint& address) {
-    try {
-        this->stopCtrlComm();
-        this->ctrlChannel = new vislib::net::TcpCommChannel();
-        this->ctrlChannel->Connect(address);
-        return dynamic_cast<vislib::net::AbstractCommChannel *>(this->ctrlChannel.operator ->());
-
-    } catch(vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to connect to server: %s\n", ex.GetMsgA());
-    } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to connect to server: unexpected exception\n");
+void cluster::ClusterControllerClient::onClusterUnavailable(void) {
+    ListenerIterator iter = this->GetListeners();
+    while (iter.HasNext()) {
+        Listener *l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL) continue;
+        l->OnClusterDiscoveryUnavailable(*this);
     }
-    return NULL;
 }
 
 
 /*
- * cluster::ClusterControllerClient::isCtrlCommConnectedTo
+ * cluster::ClusterControllerClient::onNodeFound
  */
-bool cluster::ClusterControllerClient::isCtrlCommConnectedTo(const char *address) const {
-    vislib::net::IPEndPoint ep1, ep2;
-    if (address == NULL) return false;
-    if (this->ctrlChannel.IsNull()) return false;
-    vislib::net::NetworkInformation::GuessRemoteEndPoint(ep1, address);
-    vislib::net::NetworkInformation::GuessRemoteEndPoint(ep2, this->ctrlCommAddressSlot.Param<param::StringParam>()->Value());
-    return (ep1 == ep2);
+void cluster::ClusterControllerClient::onNodeFound(const cluster::ClusterController::PeerHandle& hPeer) {
+    ListenerIterator iter = this->GetListeners();
+    while (iter.HasNext()) {
+        Listener *l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL) continue;
+        l->OnClusterNodeFound(*this, hPeer);
+    }
 }
 
 
 /*
- * cluster::ClusterControllerClient::onCtrlCommAddressChanged
+ * cluster::ClusterControllerClient::onNodeLost
  */
-bool cluster::ClusterControllerClient::onCtrlCommAddressChanged(param::ParamSlot& slot) {
-    ASSERT(&slot == &this->ctrlCommAddressSlot);
-    this->OnCtrlCommAddressChanged(slot.Param<param::StringParam>()->Value());
-    return true;
+void cluster::ClusterControllerClient::onNodeLost(const cluster::ClusterController::PeerHandle& hPeer) {
+    ListenerIterator iter = this->GetListeners();
+    while (iter.HasNext()) {
+        Listener *l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL) continue;
+        l->OnClusterNodeLost(*this, hPeer);
+    }
+}
+
+
+
+/*
+ * cluster::ClusterControllerClient::onUserMsg
+ */
+void cluster::ClusterControllerClient::onUserMsg(const ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType, const BYTE *msgBody) {
+    ListenerIterator iter = this->GetListeners();
+    while (iter.HasNext()) {
+        Listener *l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL) continue;
+        l->OnClusterUserMessage(*this, hPeer, isClusterMember, msgType, msgBody);
+    }
 }

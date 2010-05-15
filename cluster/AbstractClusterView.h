@@ -30,7 +30,7 @@ namespace cluster {
      * Abstract base class of override rendering views
      */
     class AbstractClusterView : public view::AbstractTileView,
-        public ClusterControllerClient {
+        public ClusterControllerClient::Listener {
     public:
 
         /** Ctor. */
@@ -71,85 +71,6 @@ namespace cluster {
          */
         virtual void SetInputModifier(mmcInputModifier mod, bool down);
 
-        /**
-         * Informs the client that the cluster is now available.
-         */
-        virtual void OnClusterAvailable(void);
-
-        /**
-         * Informs the client that the cluster is no longer available.
-         */
-        virtual void OnClusterUnavailable(void);
-
-        /**
-         * A message has been received.
-         *
-         * @param hPeer The peer which sent the message
-         * @param msgType The type value of the message
-         * @param msgBody The data of the message
-         */
-        virtual void OnUserMsg(const ClusterController::PeerHandle& hPeer,
-            const UINT32 msgType, const BYTE *msgBody);
-
-        /**
-         * This method is called once a communication error occurs.
-         *
-         * This method should return very quickly and should not perform
-         * excessive work as it is executed in the discovery thread.
-         *
-         * The return value of the method can be used to stop the message
-         * dispatcher. The default implementation returns true for continuing
-         * after an error.
-         *
-         * Note that the dispatcher will stop if any of the registered listeners
-         * returns false.
-         *
-         * @param src       The SimpleMessageDispatcher which caught the 
-         *                  communication error.
-         * @param exception The exception that was caught (this exception
-         *                  represents the error that occurred).
-         *
-         * @return true in order to make the SimpleMessageDispatcher continue
-         *         receiving messages, false will cause the dispatcher to
-         *         exit.
-         */
-        virtual bool OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
-            const vislib::Exception& exception) throw();
-
-        /**
-         * This method is called immediately after the message dispatcher loop
-         * was left and the dispatching method is being exited.
-         *
-         * This method should return very quickly and should not perform
-         * excessive work as it is executed in the discovery thread.
-         *
-         * @param src The SimpleMessageDispatcher that exited.
-         */
-        virtual void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw();
-
-        /**
-         * This method is called every time a message is received.
-         *
-         * This method should return very quickly and should not perform
-         * excessive work as it is executed in the discovery thread.
-         *
-         * The return value of the method can be used to stop the message
-         * dispatcher, e. g. if an exit message was received. 
-         *
-         * Note that the dispatcher will stop if any of the registered listeners
-         * returns false.
-         *
-         * @param src The SimpleMessageDispatcher that received the message.
-         * @param msg The message that was received.
-         *
-         * @return true in order to make the SimpleMessageDispatcher continue
-         *         receiving messages, false will cause the dispatcher to
-         *         exit.
-         */
-        virtual bool OnMessageReceived(
-            vislib::net::SimpleMessageDispatcher& src,
-            const vislib::net::AbstractSimpleMessage& msg) throw();
-
     protected:
 
         /**
@@ -175,55 +96,10 @@ namespace cluster {
          */
         bool isConnectedToHead(const char *address = NULL) const;
 
+        /** The cluster control client */
+        ClusterControllerClient ccc;
+
     private:
-
-        /** Possible setup states */
-        enum SetupState {
-            SETUPSTATE_ERROR,
-            SETUPSTATE_PRECONNECT,
-            SETUPSTATE_CONNECTED,
-            SETUPSTATE_DISCONNECTED
-        };
-
-        /**
-         * The code controlling the setup procedure
-         *
-         * @param userData Pointer to this AbstractClusterView
-         *
-         * @return The return code of the setup procedure
-         */
-        static DWORD setupProcedure(void *userData);
-
-        /**
-         * Update callback when the control communication address changes
-         *
-         * @param address The new address string to be used
-         */
-        virtual void OnCtrlCommAddressChanged(const vislib::TString& address);
-
-        /** The thread controlling the setup procedure */
-        vislib::sys::Thread setupThread;
-
-        /** The control message dispatcher */
-        vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> ctrlMsgDisp;
-
-        /** The current setup state */
-        SetupState setupState;
-
-        /** The setup state variable lock */
-        mutable vislib::sys::CriticalSection setupStateLock;
-
-        ///** The client end point connected to the head node view for control commands */
-        //vislib::SmartRef<vislib::net::AbstractClientEndPoint> commChnlCtrl;
-
-        ///** The client end point connected to the head node view for camera updates */
-        //vislib::SmartRef<vislib::net::AbstractClientEndPoint> commChnlCam;
-
-        ///** Message dispatcher for control commands */
-        //vislib::net::SimpleMessageDispatcher ctrlMsgDispatch;
-
-        ///** Message dispatcher for camera updates */
-        //vislib::net::SimpleMessageDispatcher camMsgDispatch;
 
     };
 

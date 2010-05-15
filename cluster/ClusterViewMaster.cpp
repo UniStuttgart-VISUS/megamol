@@ -29,13 +29,12 @@ using namespace megamol::core;
  * cluster::ClusterViewMaster::ClusterViewMaster
  */
 cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
-        cluster::ClusterControllerClient(),
+        ClusterControllerClient::Listener(), ccc(),
         viewNameSlot("viewname", "The name of the view to be used"),
-        viewSlot("view", "The view to be used (this value is set automatically"),
-        commCtrlServer(), commCtrlServerShutdown(false) {
+        viewSlot("view", "The view to be used (this value is set automatically") {
 
-    this->MakeSlotAvailable(&this->registerSlot);
-    this->MakeSlotAvailable(&this->ctrlCommAddressSlot);
+    this->ccc.AddListener(this);
+    this->MakeSlotAvailable(&this->ccc.RegisterSlot());
 
     this->viewNameSlot << new param::StringParam("");
     this->viewNameSlot.SetUpdateCallback(&ClusterViewMaster::onViewNameChanged);
@@ -44,8 +43,6 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
     this->viewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
     // TODO: this->viewSlot.SetVisibility(false);
     this->MakeSlotAvailable(&this->viewSlot);
-
-    this->commCtrlServer.AddListener(this);
 
     // TODO: Implement
 
@@ -67,8 +64,8 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
  * cluster::ClusterViewMaster::create
  */
 bool cluster::ClusterViewMaster::create(void) {
-    this->ctrlCommAddressSlot.Param<param::StringParam>()->SetValue(
-        this->defaultServerAddress());
+    //this->ctrlCommAddressSlot.Param<param::StringParam>()->SetValue(
+    //    this->defaultServerAddress());
 
     // TODO: Implement
 
@@ -80,63 +77,63 @@ bool cluster::ClusterViewMaster::create(void) {
  * cluster::ClusterViewMaster::release
  */
 void cluster::ClusterViewMaster::release(void) {
-    if (this->commCtrlServer.IsRunning()) {
-        this->commCtrlServerShutdown = true;
-        this->commCtrlServer.Terminate(false);
-        this->commCtrlServerShutdown = false;
-    }
-    this->stopCtrlComm();
+    //if (this->commCtrlServer.IsRunning()) {
+    //    this->commCtrlServerShutdown = true;
+    //    this->commCtrlServer.Terminate(false);
+    //    this->commCtrlServerShutdown = false;
+    //}
+    //this->stopCtrlComm();
 
     // TODO: Implement
 
 }
 
 
-/*
- * cluster::ClusterViewMaster::OnUserMsg
- */
-void cluster::ClusterViewMaster::OnUserMsg(
-        const cluster::ClusterController::PeerHandle& hPeer,
-        const UINT32 msgType, const BYTE *msgBody) {
-    using vislib::sys::Log;
+///*
+// * cluster::ClusterViewMaster::OnUserMsg
+// */
+//void cluster::ClusterViewMaster::OnUserMsg(
+//        const cluster::ClusterController::PeerHandle& hPeer,
+//        const UINT32 msgType, const BYTE *msgBody) {
+//    using vislib::sys::Log;
+//
+//    switch (msgType) {
+//        case ClusterControllerClient::USRMSG_QUERYHEAD:
+//            try {
+//                if (this->commCtrlServer.IsRunning()) {
+//                    vislib::StringA address(this->commCtrlServer.GetBindAddressA());
+//                    this->SendUserMsg(hPeer, ClusterControllerClient::USRMSG_HEADHERE,
+//                        reinterpret_cast<const BYTE *>(address.PeekBuffer()), address.Length() + 1);
+//                }
+//            } catch(vislib::Exception ex) {
+//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "Unable to send answer to USRMSG_QUERYHEAD: %s\n", ex.GetMsgA());
+//            } catch(...) {
+//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//                    "Unable to send answer to USRMSG_QUERYHEAD: unexpected exception\n");
+//            }
+//            break;
+//    }
+//
+//}
 
-    switch (msgType) {
-        case ClusterControllerClient::USRMSG_QUERYHEAD:
-            try {
-                if (this->commCtrlServer.IsRunning()) {
-                    vislib::StringA address(this->commCtrlServer.GetBindAddressA());
-                    this->SendUserMsg(hPeer, ClusterControllerClient::USRMSG_HEADHERE,
-                        reinterpret_cast<const BYTE *>(address.PeekBuffer()), address.Length() + 1);
-                }
-            } catch(vislib::Exception ex) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "Unable to send answer to USRMSG_QUERYHEAD: %s\n", ex.GetMsgA());
-            } catch(...) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "Unable to send answer to USRMSG_QUERYHEAD: unexpected exception\n");
-            }
-            break;
-    }
 
-}
-
-
-/*
- * cluster::ClusterViewMaster::OnMessageReceived
- */
-bool cluster::ClusterViewMaster::OnMessageReceived(
-        vislib::net::SimpleMessageDispatcher& src,
-        const vislib::net::AbstractSimpleMessage& msg) throw() {
-
-    //if (this->setupState != SETUPSTATE_CONNECTED) {
-    //    vislib::sys::AutoLock(this->setupStateLock);
-    //    this->setupState = SETUPSTATE_CONNECTED;
-    //}
-
-    //TODO: Implement
-
-    return true;
-}
+///*
+// * cluster::ClusterViewMaster::OnMessageReceived
+// */
+//bool cluster::ClusterViewMaster::OnMessageReceived(
+//        vislib::net::SimpleMessageDispatcher& src,
+//        const vislib::net::AbstractSimpleMessage& msg) throw() {
+//
+//    //if (this->setupState != SETUPSTATE_CONNECTED) {
+//    //    vislib::sys::AutoLock(this->setupStateLock);
+//    //    this->setupState = SETUPSTATE_CONNECTED;
+//    //}
+//
+//    //TODO: Implement
+//
+//    return true;
+//}
 
 
 /*
@@ -232,170 +229,170 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
 }
 
 
-/*
- * cluster::ClusterViewMaster::OnCtrlCommAddressChanged
- */
-void cluster::ClusterViewMaster::OnCtrlCommAddressChanged(const vislib::TString& address) {
-    if (this->commCtrlServer.IsRunning()) {
-        this->commCtrlServerShutdown = true;
-        this->commCtrlServer.Terminate(false);
-        this->commCtrlServerShutdown = false;
-    }
-    this->stopCtrlComm();
-
-    vislib::net::IPEndPoint ep;
-    float wildness = vislib::net::NetworkInformation::GuessLocalEndPoint(ep, address);
-
-    if (wildness > 0.8f) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Wildness for server end-point \"%s\" from input \"%s\" is too large: %f > 0.8\n",
-            ep.ToStringA().PeekBuffer(), vislib::StringA(address).PeekBuffer(), wildness);
-        return;
-    }
-
-    vislib::SmartRef<vislib::net::TcpCommChannel> c = this->startCtrlCommServer();
-
-    if (!c.IsNull()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-            "Server started at end-point \"%s\" guessed from \"%s\" with wildness %f\n",
-            ep.ToStringA().PeekBuffer(), vislib::StringA(address).PeekBuffer(), wildness);
-    } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Failed to start server at end-point \"%s\" guessed from \"%s\" with wildness %f\n",
-            ep.ToStringA().PeekBuffer(), vislib::StringA(address).PeekBuffer(), wildness);
-        return;
-    }
-
-    this->commCtrlServer.Configure(c.operator->(), ep.ToStringA());
-    this->commCtrlServer.Start(NULL);
-
-}
-
-
-/*
- * cluster::ClusterViewMaster::OnServerError
- */
-bool cluster::ClusterViewMaster::OnServerError(const vislib::net::CommServer& src,
-        const vislib::Exception& exception) throw() {
-    // Downgrading Errors to Infos on shutdown
-    vislib::sys::Log::DefaultLog.WriteMsg(
-        this->commCtrlServerShutdown ? (vislib::sys::Log::LEVEL_INFO + 50) : vislib::sys::Log::LEVEL_ERROR,
-        "Server-Error: %s\n", exception.GetMsgA());
-    return true;
-}
+///*
+// * cluster::ClusterViewMaster::OnCtrlCommAddressChanged
+// */
+//void cluster::ClusterViewMaster::OnCtrlCommAddressChanged(const vislib::TString& address) {
+//    if (this->commCtrlServer.IsRunning()) {
+//        this->commCtrlServerShutdown = true;
+//        this->commCtrlServer.Terminate(false);
+//        this->commCtrlServerShutdown = false;
+//    }
+//    this->stopCtrlComm();
+//
+//    vislib::net::IPEndPoint ep;
+//    float wildness = vislib::net::NetworkInformation::GuessLocalEndPoint(ep, address);
+//
+//    if (wildness > 0.8f) {
+//        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+//            "Wildness for server end-point \"%s\" from input \"%s\" is too large: %f > 0.8\n",
+//            ep.ToStringA().PeekBuffer(), vislib::StringA(address).PeekBuffer(), wildness);
+//        return;
+//    }
+//
+//    vislib::SmartRef<vislib::net::TcpCommChannel> c = this->startCtrlCommServer();
+//
+//    if (!c.IsNull()) {
+//        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+//            "Server started at end-point \"%s\" guessed from \"%s\" with wildness %f\n",
+//            ep.ToStringA().PeekBuffer(), vislib::StringA(address).PeekBuffer(), wildness);
+//    } else {
+//        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+//            "Failed to start server at end-point \"%s\" guessed from \"%s\" with wildness %f\n",
+//            ep.ToStringA().PeekBuffer(), vislib::StringA(address).PeekBuffer(), wildness);
+//        return;
+//    }
+//
+//    this->commCtrlServer.Configure(c.operator->(), ep.ToStringA());
+//    this->commCtrlServer.Start(NULL);
+//
+//}
 
 
-/*
- * cluster::ClusterViewMaster::OnNewConnection
- */
-bool cluster::ClusterViewMaster::OnNewConnection(const vislib::net::CommServer& src,
-        vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
-    try {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-            "Incoming connection from %s\n", "CURRENTLY UNKNOWN");
-
-        vislib::net::SimpleMessage sm;
-        sm.GetHeader().SetMessageID(15);
-        sm.GetHeader().SetBodySize(0);
-        channel.DynamicCast<vislib::net::AbstractOutboundCommChannel>()->Send(static_cast<void*>(sm), sm.GetMessageSize(), 0, true);
-        // TODO: Implement and return true on taking of ownershipf of channel
-    } catch(...) {
-    }
-    return false;
-}
+///*
+// * cluster::ClusterViewMaster::OnServerError
+// */
+//bool cluster::ClusterViewMaster::OnServerError(const vislib::net::CommServer& src,
+//        const vislib::Exception& exception) throw() {
+//    // Downgrading Errors to Infos on shutdown
+//    vislib::sys::Log::DefaultLog.WriteMsg(
+//        this->commCtrlServerShutdown ? (vislib::sys::Log::LEVEL_INFO + 50) : vislib::sys::Log::LEVEL_ERROR,
+//        "Server-Error: %s\n", exception.GetMsgA());
+//    return true;
+//}
 
 
-/*
- * cluster::ClusterViewMaster::OnServerExited
- */
-void cluster::ClusterViewMaster::OnServerExited(const vislib::net::CommServer& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Server exited\n");
-}
+///*
+// * cluster::ClusterViewMaster::OnNewConnection
+// */
+//bool cluster::ClusterViewMaster::OnNewConnection(const vislib::net::CommServer& src,
+//        vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
+//    try {
+//        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+//            "Incoming connection from %s\n", "CURRENTLY UNKNOWN");
+//
+//        vislib::net::SimpleMessage sm;
+//        sm.GetHeader().SetMessageID(15);
+//        sm.GetHeader().SetBodySize(0);
+//        channel.DynamicCast<vislib::net::AbstractOutboundCommChannel>()->Send(static_cast<void*>(sm), sm.GetMessageSize(), 0, true);
+//        // TODO: Implement and return true on taking of ownershipf of channel
+//    } catch(...) {
+//    }
+//    return false;
+//}
 
 
-/*
- * cluster::ClusterViewMaster::OnServerStarted
- */
-void cluster::ClusterViewMaster::OnServerStarted(const vislib::net::CommServer& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Server started\n");
-}
+///*
+// * cluster::ClusterViewMaster::OnServerExited
+// */
+//void cluster::ClusterViewMaster::OnServerExited(const vislib::net::CommServer& src) throw() {
+//    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Server exited\n");
+//}
+//
+//
+///*
+// * cluster::ClusterViewMaster::OnServerStarted
+// */
+//void cluster::ClusterViewMaster::OnServerStarted(const vislib::net::CommServer& src) throw() {
+//    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Server started\n");
+//}
 
 
-/*
- * cluster::ClusterViewMaster::defaultPort
- */
-UINT16 cluster::ClusterViewMaster::defaultPort(void) const {
-    return 17126;
-}
+///*
+// * cluster::ClusterViewMaster::defaultPort
+// */
+//UINT16 cluster::ClusterViewMaster::defaultPort(void) const {
+//    return 17126;
+//}
 
 
-/*
- * cluster::ClusterViewMaster::defaultServerAddress
- */
-vislib::TString cluster::ClusterViewMaster::defaultServerAddress(void) const {
-    using vislib::sys::Log;
-    using vislib::net::NetworkInformation;
-    const utility::Configuration& cfg
-        = this->GetCoreInstance()->Configuration();
-    vislib::TString host;
-    unsigned short port = this->defaultPort();
-
-    if (cfg.IsConfigValueSet("cmvaddress")) { // host and port
-        return cfg.ConfigValue("cmvaddress");
-    }
-    if (cfg.IsConfigValueSet("cmvhost")) {
-        host = cfg.ConfigValue("cmvhost");
-    }
-    if (cfg.IsConfigValueSet("cmvport")) {
-        try {
-            port = vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cmvport"));
-        } catch(...) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-                "Unable to parse configuration value \"cmvport\" as int. "
-                "Configuration value ignored.");
-        }
-    }
-
-    if (host.IsEmpty()) {
-        NetworkInformation::AdapterList adapters;
-        NetworkInformation::GetAdaptersForType(adapters, NetworkInformation::Adapter::TYPE_ETHERNET);
-        while (adapters.Count() > 0) {
-            if (adapters[0].GetStatus() != NetworkInformation::Adapter::OPERSTATUS_UP) {
-                adapters.RemoveFirst();
-            } else break;
-        }
-        if (adapters.Count() > 0) {
-            NetworkInformation::UnicastAddressList ual = adapters[0].GetUnicastAddresses();
-            for (SIZE_T i = 0; ual.Count(); i++) {
-                if (ual[i].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET) {
-                    host = ual[i].GetAddress()
-#if defined(UNICODE) || defined(_UNICODE)
-                        .ToStringW();
-#else /* defined(UNICODE) || defined(_UNICODE) */
-                        .ToStringA();
-#endif /* defined(UNICODE) || defined(_UNICODE) */
-                    break;
-                }
-            }
-            if (host.IsEmpty() && (ual.Count() > 0)) {
-                    host = ual[0].GetAddress()
-#if defined(UNICODE) || defined(_UNICODE)
-                        .ToStringW();
-#else /* defined(UNICODE) || defined(_UNICODE) */
-                        .ToStringA();
-#endif /* defined(UNICODE) || defined(_UNICODE) */
-                if (ual[0].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET6) {
-                    host.Prepend(L"[");
-                    host.Append(L"]");
-                }
-            }
-        }
-    }
-    if (host.IsEmpty()) {
-        vislib::sys::SystemInformation::ComputerName(host);
-    }
-
-    vislib::TString address;
-    address.Format(_T("%s:%u"), host.PeekBuffer(), port);
-    return address;
-}
+///*
+// * cluster::ClusterViewMaster::defaultServerAddress
+// */
+//vislib::TString cluster::ClusterViewMaster::defaultServerAddress(void) const {
+//    using vislib::sys::Log;
+//    using vislib::net::NetworkInformation;
+//    const utility::Configuration& cfg
+//        = this->GetCoreInstance()->Configuration();
+//    vislib::TString host;
+//    unsigned short port = this->defaultPort();
+//
+//    if (cfg.IsConfigValueSet("cmvaddress")) { // host and port
+//        return cfg.ConfigValue("cmvaddress");
+//    }
+//    if (cfg.IsConfigValueSet("cmvhost")) {
+//        host = cfg.ConfigValue("cmvhost");
+//    }
+//    if (cfg.IsConfigValueSet("cmvport")) {
+//        try {
+//            port = vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cmvport"));
+//        } catch(...) {
+//            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+//                "Unable to parse configuration value \"cmvport\" as int. "
+//                "Configuration value ignored.");
+//        }
+//    }
+//
+//    if (host.IsEmpty()) {
+//        NetworkInformation::AdapterList adapters;
+//        NetworkInformation::GetAdaptersForType(adapters, NetworkInformation::Adapter::TYPE_ETHERNET);
+//        while (adapters.Count() > 0) {
+//            if (adapters[0].GetStatus() != NetworkInformation::Adapter::OPERSTATUS_UP) {
+//                adapters.RemoveFirst();
+//            } else break;
+//        }
+//        if (adapters.Count() > 0) {
+//            NetworkInformation::UnicastAddressList ual = adapters[0].GetUnicastAddresses();
+//            for (SIZE_T i = 0; ual.Count(); i++) {
+//                if (ual[i].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET) {
+//                    host = ual[i].GetAddress()
+//#if defined(UNICODE) || defined(_UNICODE)
+//                        .ToStringW();
+//#else /* defined(UNICODE) || defined(_UNICODE) */
+//                        .ToStringA();
+//#endif /* defined(UNICODE) || defined(_UNICODE) */
+//                    break;
+//                }
+//            }
+//            if (host.IsEmpty() && (ual.Count() > 0)) {
+//                    host = ual[0].GetAddress()
+//#if defined(UNICODE) || defined(_UNICODE)
+//                        .ToStringW();
+//#else /* defined(UNICODE) || defined(_UNICODE) */
+//                        .ToStringA();
+//#endif /* defined(UNICODE) || defined(_UNICODE) */
+//                if (ual[0].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET6) {
+//                    host.Prepend(L"[");
+//                    host.Append(L"]");
+//                }
+//            }
+//        }
+//    }
+//    if (host.IsEmpty()) {
+//        vislib::sys::SystemInformation::ComputerName(host);
+//    }
+//
+//    vislib::TString address;
+//    address.Format(_T("%s:%u"), host.PeekBuffer(), port);
+//    return address;
+//}

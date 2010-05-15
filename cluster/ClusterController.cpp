@@ -217,7 +217,7 @@ void cluster::ClusterController::release(void) {
     while (iter.HasNext()) {
         ClusterControllerClient *c = iter.Next();
         if (c == NULL) continue;
-        c->OnClusterUnavailable();
+        c->onClusterUnavailable();
         c->ctrlr = NULL; // implicitly disconnect clients
     }
     this->clients.Clear();
@@ -245,7 +245,7 @@ DWORD cluster::ClusterController::Run(void *userData) {
             while (iter.HasNext()) {
                 ClusterControllerClient *c = iter.Next();
                 if (c == NULL) continue;
-                c->OnClusterUnavailable();
+                c->onClusterUnavailable();
             }
             this->clientsLock.Unlock();
 
@@ -309,7 +309,7 @@ DWORD cluster::ClusterController::Run(void *userData) {
                             while (iter.HasNext()) {
                                 ClusterControllerClient *c = iter.Next();
                                 if (c == NULL) continue;
-                                c->OnClusterAvailable();
+                                c->onClusterAvailable();
                             }
 
                         } else {
@@ -358,7 +358,7 @@ void cluster::ClusterController::OnNodeFound(DiscoveryService& src,
     while (iter.HasNext()) {
         ClusterControllerClient *c = iter.Next();
         if (c == NULL) continue;
-        c->OnNodeFound(hPeer);
+        c->onNodeFound(hPeer);
     }
 }
 
@@ -377,7 +377,7 @@ void cluster::ClusterController::OnNodeLost(DiscoveryService& src,
     while (iter.HasNext()) {
         ClusterControllerClient *c = iter.Next();
         if (c == NULL) continue;
-        c->OnNodeLost(hPeer);
+        c->onNodeLost(hPeer);
     }
 }
 
@@ -399,7 +399,7 @@ void cluster::ClusterController::OnUserMessage(
         while (iter.HasNext()) {
             ClusterControllerClient *c = iter.Next();
             if (c == NULL) continue;
-            c->OnUserMsg(hPeer, msgType, msgBody);
+            c->onUserMsg(hPeer, isClusterMember, msgType, msgBody);
         }
     } catch(vislib::Exception ex) {
         VLTRACE(VISLIB_TRCELVL_ERROR, "Illegal vislib exception in OnUserMessage \"%s\"\n", ex.GetMsgA());
@@ -443,7 +443,7 @@ bool cluster::ClusterController::registerModule(Call& call) {
         c->Client()->ctrlr = this;
         if (this->discoveryService.IsRunning()) {
             // inform client that cluster is now available
-            c->Client()->OnClusterAvailable();
+            c->Client()->onClusterAvailable();
         }
     }
     return true;

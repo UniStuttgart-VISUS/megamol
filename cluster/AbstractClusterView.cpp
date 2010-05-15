@@ -24,15 +24,10 @@ using namespace megamol::core;
  * cluster::AbstractClusterView::AbstractClusterView
  */
 cluster::AbstractClusterView::AbstractClusterView(void)
-        : view::AbstractTileView(), ClusterControllerClient(),
-        setupThread(&AbstractClusterView::setupProcedure),
-        ctrlMsgDisp(), setupState(SETUPSTATE_PRECONNECT), setupStateLock() {
+        : view::AbstractTileView(), ClusterControllerClient::Listener(), ccc() {
 
-    // slot initialized in 'ClusterControllerClient::ctor'
-    this->MakeSlotAvailable(&this->registerSlot);
-    this->MakeSlotAvailable(&this->ctrlCommAddressSlot);
-
-    this->ctrlMsgDisp.AddListener(this);
+    this->ccc.AddListener(this);
+    this->MakeSlotAvailable(&this->ccc.RegisterSlot());
 
     // TODO: Implement
 
@@ -43,18 +38,6 @@ cluster::AbstractClusterView::AbstractClusterView(void)
  * cluster::AbstractClusterView::~AbstractClusterView
  */
 cluster::AbstractClusterView::~AbstractClusterView(void) {
-    this->setupStateLock.Lock();
-    this->setupState = SETUPSTATE_DISCONNECTED;
-    if (this->setupThread.IsRunning()) {
-        this->setupStateLock.Unlock();
-        this->setupThread.Join();
-    } else {
-        this->setupStateLock.Unlock();
-    }
-    if (this->ctrlMsgDisp.IsRunning()) {
-        this->ctrlMsgDisp.Terminate(false); // waits for thread to finish
-    }
-    this->stopCtrlComm();
 
     // TODO: Implement
 
@@ -90,110 +73,6 @@ void cluster::AbstractClusterView::SetCursor2DPosition(float x, float y) {
  */
 void cluster::AbstractClusterView::SetInputModifier(mmcInputModifier mod, bool down) {
     // intentionally empty to disallow local user input
-}
-
-
-/*
- * cluster::AbstractClusterView::OnClusterAvailable
- */
-void cluster::AbstractClusterView::OnClusterAvailable(void) {
-    ClusterControllerClient::OnClusterAvailable();
-
-    vislib::sys::AutoLock(this->setupStateLock);
-
-    if (((this->setupState == SETUPSTATE_ERROR)
-            || (this->setupState == SETUPSTATE_PRECONNECT)
-            || (this->setupState == SETUPSTATE_DISCONNECTED))
-            && !this->setupThread.IsRunning()) {
-        this->setupState = SETUPSTATE_PRECONNECT;
-        this->setupThread.Start(static_cast<AbstractClusterView*>(this));
-    }
-
-}
-
-
-/*
- * cluster::ClusterControllerClient::OnClusterUnavailable
- */
-void cluster::AbstractClusterView::OnClusterUnavailable(void) {
-    ClusterControllerClient::OnClusterUnavailable();
-
-    this->setupStateLock.Lock();
-    this->setupState = SETUPSTATE_DISCONNECTED;
-    if (this->setupThread.IsRunning()) {
-        this->setupStateLock.Unlock();
-        this->setupThread.Join();
-    } else {
-        this->setupStateLock.Unlock();
-    }
-
-}
-
-
-/*
- * cluster::AbstractClusterView::OnUserMsg
- */
-void cluster::AbstractClusterView::OnUserMsg(
-        const cluster::ClusterController::PeerHandle& hPeer,
-        const UINT32 msgType, const BYTE *msgBody) {
-    switch(msgType) {
-        case ClusterControllerClient::USRMSG_HEADHERE: {
-            const char *address = reinterpret_cast<const char *>(msgBody);
-            if (this->isConnectedToHead()) {
-                if (!this->isConnectedToHead(address)) {
-                    if (this->ctrlMsgDisp.IsRunning()) {
-                        this->ctrlMsgDisp.Terminate(false); // waits for thread to finish
-                    }
-                    this->stopCtrlComm();
-                } else break;
-            }
-            this->ctrlCommAddressSlot.Param<param::StringParam>()->SetValue(address);
-        } break;
-    }
-
-}
-
-
-/*
- * cluster::AbstractClusterView::OnCommunicationError
- */
-bool cluster::AbstractClusterView::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
-        const vislib::Exception& exception) throw() {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 100,
-        "OnCommunicationError: %s\n", exception.GetMsgA());
-    return true;
-}
-
-
-/*
- * cluster::AbstractClusterView::OnDispatcherExited
- */
-void cluster::AbstractClusterView::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 10, "OnDispatcherExited\n");
-    vislib::sys::AutoLock(this->setupStateLock);
-
-    this->setupState = SETUPSTATE_DISCONNECTED;
-    if (!this->setupThread.IsRunning()) {
-        this->setupThread.Start(static_cast<AbstractClusterView*>(this));
-    }
-}
-
-
-/*
- * cluster::AbstractClusterView::OnMessageReceived
- */
-bool cluster::AbstractClusterView::OnMessageReceived(
-        vislib::net::SimpleMessageDispatcher& src,
-        const vislib::net::AbstractSimpleMessage& msg) throw() {
-
-    if (this->setupState != SETUPSTATE_CONNECTED) {
-        vislib::sys::AutoLock(this->setupStateLock);
-        this->setupState = SETUPSTATE_CONNECTED;
-    }
-
-    //TODO: Implement
-
-    return true;
 }
 
 
@@ -262,83 +141,9 @@ void cluster::AbstractClusterView::getFallbackMessageInfo(vislib::TString& outMs
  * cluster::AbstractClusterView::isConnectedToHead
  */
 bool cluster::AbstractClusterView::isConnectedToHead(const char *address) const {
-    vislib::sys::AutoLock(this->setupStateLock);
-    if (this->setupState == SETUPSTATE_CONNECTED) {
-        return (address == NULL) || this->isCtrlCommConnectedTo(address);
-    }
+    //vislib::sys::AutoLock(this->setupStateLock);
+    //if (this->setupState == SETUPSTATE_CONNECTED) {
+    //    return (address == NULL) || this->isCtrlCommConnectedTo(address);
+    //}
     return false;
-}
-
-
-/*
- * cluster::AbstractClusterView::setupProcedure
- */
-DWORD cluster::AbstractClusterView::setupProcedure(void *userData) {
-    using vislib::sys::Log;
-    bool loop = true;
-
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster setup procedure started");
-
-    cluster::AbstractClusterView* This = static_cast<cluster::AbstractClusterView*>(userData);
-    if (This == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cluster setup procedure failed: 'This' invalid");
-        return -1;
-    }
-
-    while (loop) {
-        vislib::sys::Thread::Sleep(250);
-
-        This->setupStateLock.Lock();
-        switch (This->setupState) {
-            case SETUPSTATE_ERROR: // fall through
-            case SETUPSTATE_DISCONNECTED:
-                loop = false; // abort thread
-                break;
-            case SETUPSTATE_PRECONNECT:
-                This->setupStateLock.Unlock();
-                // searching for a head node to connect
-                This->SendUserMsg(ClusterControllerClient::USRMSG_QUERYHEAD, NULL, 0);
-
-                // don't be that aggressive
-                vislib::sys::Thread::Sleep(750);
-                break;
-            case SETUPSTATE_CONNECTED:
-                // successfully finished thread
-                loop = false;
-                break;
-        }
-        This->setupStateLock.Unlock();
-    }
-
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster setup procedure finished");
-
-    return 0;
-}
-
-
-/*
- * cluster::AbstractClusterView::OnCtrlCommAddressChanged
- */
-void cluster::AbstractClusterView::OnCtrlCommAddressChanged(const vislib::TString& address) {
-    if (this->isConnectedToHead()) {
-        if (!this->isConnectedToHead(vislib::StringA(address))) {
-            this->stopCtrlComm();
-        } else return;
-    }
-
-    vislib::net::IPEndPoint ep;
-    vislib::net::NetworkInformation::GuessRemoteEndPoint(ep, address);
-    vislib::net::AbstractCommChannel *cc = this->startCtrlCommClient(ep);
-    if (cc != NULL) {
-        this->ctrlMsgDisp.Start(cc);
-
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-            "Connect to server at \"%s\"\n",
-            vislib::StringA(address).PeekBuffer());
-
-    } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to connect to server at \"%s\"\n",
-            vislib::StringA(address).PeekBuffer());
-    }
 }
