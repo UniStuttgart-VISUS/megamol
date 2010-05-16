@@ -84,63 +84,11 @@ bool cluster::ClusterViewMaster::create(void) {
  * cluster::ClusterViewMaster::release
  */
 void cluster::ClusterViewMaster::release(void) {
-    //if (this->commCtrlServer.IsRunning()) {
-    //    this->commCtrlServerShutdown = true;
-    //    this->commCtrlServer.Terminate(false);
-    //    this->commCtrlServerShutdown = false;
-    //}
-    //this->stopCtrlComm();
+    this->ctrlServer.Stop();
 
     // TODO: Implement
 
 }
-
-
-///*
-// * cluster::ClusterViewMaster::OnUserMsg
-// */
-//void cluster::ClusterViewMaster::OnUserMsg(
-//        const cluster::ClusterController::PeerHandle& hPeer,
-//        const UINT32 msgType, const BYTE *msgBody) {
-//    using vislib::sys::Log;
-//
-//    switch (msgType) {
-//        case ClusterControllerClient::USRMSG_QUERYHEAD:
-//            try {
-//                if (this->commCtrlServer.IsRunning()) {
-//                    vislib::StringA address(this->commCtrlServer.GetBindAddressA());
-//                    this->SendUserMsg(hPeer, ClusterControllerClient::USRMSG_HEADHERE,
-//                        reinterpret_cast<const BYTE *>(address.PeekBuffer()), address.Length() + 1);
-//                }
-//            } catch(vislib::Exception ex) {
-//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                    "Unable to send answer to USRMSG_QUERYHEAD: %s\n", ex.GetMsgA());
-//            } catch(...) {
-//                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-//                    "Unable to send answer to USRMSG_QUERYHEAD: unexpected exception\n");
-//            }
-//            break;
-//    }
-//
-//}
-
-
-///*
-// * cluster::ClusterViewMaster::OnMessageReceived
-// */
-//bool cluster::ClusterViewMaster::OnMessageReceived(
-//        vislib::net::SimpleMessageDispatcher& src,
-//        const vislib::net::AbstractSimpleMessage& msg) throw() {
-//
-//    //if (this->setupState != SETUPSTATE_CONNECTED) {
-//    //    vislib::sys::AutoLock(this->setupStateLock);
-//    //    this->setupState = SETUPSTATE_CONNECTED;
-//    //}
-//
-//    //TODO: Implement
-//
-//    return true;
-//}
 
 
 /*
@@ -255,6 +203,18 @@ void cluster::ClusterViewMaster::OnClusterUserMessage(cluster::ClusterController
             }
             break;
     }
+
+}
+
+
+/*
+ * cluster::ClusterViewMaster::OnControlChannelMessage
+ */
+void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannelServer& server, cluster::ControlChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        "Message received %u\n", static_cast<unsigned int>(msg.GetHeader().GetMessageID()));
+
+    // TODO: Implement
 
 }
 

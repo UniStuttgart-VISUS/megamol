@@ -101,6 +101,15 @@ namespace cluster {
          */
         void OnClusterUserMessage(ClusterControllerClient& sender, const ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType, const BYTE *msgBody);
 
+        /**
+         * A message has been received over the control channel.
+         *
+         * @param sender The sending object
+         * @param channel The control channel
+         * @param msg The received message
+         */
+        void OnControlChannelMessage(ControlChannelServer& server, ControlChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
+
     private:
 
         /**

@@ -112,7 +112,7 @@ bool cluster::ControlChannelServer::OnNewConnection(const vislib::net::CommServe
     vislib::SmartRef<vislib::net::AbstractBidiCommChannel> bidiChannel = channel.DynamicCast<vislib::net::AbstractBidiCommChannel>();
     ASSERT(!bidiChannel.IsNull()); // internal error like problem (should never happen)
     try {
-        this->clients.Add(cluster::ControlChannel());
+        this->clients.Append(cluster::ControlChannel());
         this->clients.Last().Open(bidiChannel);
         this->clients.Last().AddListener(this);
 

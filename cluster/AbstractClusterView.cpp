@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "cluster/AbstractClusterView.h"
 #include "cluster/InfoIconRenderer.h"
+#include "cluster/NetMessages.h"
 #include "CoreInstance.h"
 #include "param/StringParam.h"
 #include <GL/gl.h>
@@ -102,8 +103,6 @@ void cluster::AbstractClusterView::commPing(void) {
     if (!this->ctrlChannel.IsOpen()) {
         this->ccc.SendUserMsg(ClusterControllerClient::USRMSG_QUERYHEAD, NULL, 0);
     }
-    // blublub
-    // TODO: Implement
 
 }
 
@@ -195,6 +194,15 @@ void cluster::AbstractClusterView::OnClusterUserMessage(cluster::ClusterControll
  */
 void cluster::AbstractClusterView::OnControlChannelConnect(ControlChannel& sender) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Connected to head node\n");
+
+    // init by syncing time
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_QUERY_TIMESYNC);
+    msg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
+    msg.AssertBodySize();
+    msg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip = 0;
+    this->ctrlChannel.SendMessage(msg);
+
 }
 
 

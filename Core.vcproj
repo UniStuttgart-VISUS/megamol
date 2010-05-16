@@ -3021,6 +3021,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cluster\NetMessages.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cluster\PowerwallView.h"
 					>
 				</File>
@@ -3062,6 +3066,10 @@
 				</File>
 				<File
 					RelativePath=".\cluster\InfoIconRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\NetMessages.cpp"
 					>
 				</File>
 				<File
