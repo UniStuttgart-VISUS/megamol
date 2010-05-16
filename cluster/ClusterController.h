@@ -18,8 +18,6 @@
 #include "vislib/CriticalSection.h"
 #include "vislib/DiscoveryListener.h"
 #include "vislib/DiscoveryService.h"
-//#include "vislib/IPAddress.h"
-//#include "vislib/IPAddress6.h"
 
 
 namespace megamol {
@@ -237,6 +235,15 @@ namespace cluster {
          */
         bool queryStatus(Call& call);
 
+        /**
+         * Event handler for the shutdown-cluster button
+         *
+         * @param slot Must be shutdownClusterButton
+         *
+         * @return true
+         */
+        bool onShutdownCluster(param::ParamSlot& slot);
+
         /** The name of the rendering cluster */
         param::ParamSlot cdsNameSlot;
 
@@ -245,6 +252,9 @@ namespace cluster {
 
         /** Flag to start or stop the cluster discovery service */
         param::ParamSlot cdsRunSlot;
+
+        /** Button slot to shut down the whole cluster */
+        param::ParamSlot shutdownClusterSlot;
 
         /** The discovery service object */
         vislib::net::cluster::DiscoveryService discoveryService;

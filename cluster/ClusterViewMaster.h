@@ -13,6 +13,7 @@
 
 #include "CallerSlot.h"
 #include "cluster/ClusterControllerClient.h"
+#include "cluster/ControlChannelServer.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "vislib/AbstractServerEndPoint.h"
@@ -30,7 +31,8 @@ namespace cluster {
     /**
      * Abstract base class of override rendering views
      */
-    class ClusterViewMaster : public Module, public ClusterControllerClient::Listener {
+    class ClusterViewMaster : public Module, protected ClusterControllerClient::Listener,
+        protected ControlChannelServer::Listener {
     public:
 
         /**
@@ -89,16 +91,65 @@ namespace cluster {
          */
         bool onViewNameChanged(param::ParamSlot& slot);
 
+        /**
+         * A message has been received.
+         *
+         * @param sender The sending object
+         * @param hPeer The peer which sent the message
+         * @param msgType The type value of the message
+         * @param msgBody The data of the message
+         */
+        void OnClusterUserMessage(ClusterControllerClient& sender, const ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType, const BYTE *msgBody);
+
     private:
+
+        /**
+         * Answer the default server host of this machine, either IP-Address or computer name
+         *
+         * @return The default server host
+         */
+        vislib::TString defaultServerHost(void) const;
+
+        /**
+         * Answer the default server port of this machine
+         *
+         * @return The default server port
+         */
+        unsigned short defaultServerPort(void) const;
+
+        /**
+         * Answer the default server address of this machine
+         *
+         * @return The default server address
+         */
+        vislib::TString defaultServerAddress(void) const;
+
+        /**
+         * Callback when the server address is changed
+         *
+         * @param slot Must be serverAddressSlot
+         *
+         * @return True
+         */
+        bool onServerAddressChanged(param::ParamSlot& slot);
 
         /** The cluster control client */
         ClusterControllerClient ccc;
+
+        /** The control channel server */
+        ControlChannelServer ctrlServer;
 
         /** The name of the view to be used */
         param::ParamSlot viewNameSlot;
 
         /** The slot connecting to the view to be used */
         CallerSlot viewSlot;
+
+        /** The TCP/IP address of the server including the port */
+        param::ParamSlot serverAddressSlot;
+
+        /** Endpoint for the server */
+        vislib::net::IPEndPoint serverEndPoint;
 
     };
 

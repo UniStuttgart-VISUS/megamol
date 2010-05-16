@@ -8,13 +8,15 @@
 #include "stdafx.h"
 #include "cluster/AbstractClusterView.h"
 #include "cluster/InfoIconRenderer.h"
+#include "CoreInstance.h"
 #include "param/StringParam.h"
 #include <GL/gl.h>
 #include "vislib/AutoLock.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Log.h"
-#include "vislib/sysfunctions.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/sysfunctions.h"
+#include "vislib/TcpCommChannel.h"
 
 
 using namespace megamol::core;
@@ -24,10 +26,17 @@ using namespace megamol::core;
  * cluster::AbstractClusterView::AbstractClusterView
  */
 cluster::AbstractClusterView::AbstractClusterView(void)
-        : view::AbstractTileView(), ClusterControllerClient::Listener(), ccc() {
+        : view::AbstractTileView(), ClusterControllerClient::Listener(), ControlChannel::Listener(),
+        ccc(), ctrlChannel(), lastPingTime(0),
+        serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port") {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
+    this->ctrlChannel.AddListener(this);
+
+    this->serverAddressSlot << new param::StringParam("");
+    this->serverAddressSlot.SetUpdateCallback(&AbstractClusterView::onServerAddressChanged);
+    this->MakeSlotAvailable(&this->serverAddressSlot);
 
     // TODO: Implement
 
@@ -38,6 +47,12 @@ cluster::AbstractClusterView::AbstractClusterView(void)
  * cluster::AbstractClusterView::~AbstractClusterView
  */
 cluster::AbstractClusterView::~AbstractClusterView(void) {
+    try {
+        if (this->ctrlChannel.IsOpen()) {
+            this->ctrlChannel.Close();
+        }
+    } catch(...) {
+    }
 
     // TODO: Implement
 
@@ -73,6 +88,23 @@ void cluster::AbstractClusterView::SetCursor2DPosition(float x, float y) {
  */
 void cluster::AbstractClusterView::SetInputModifier(mmcInputModifier mod, bool down) {
     // intentionally empty to disallow local user input
+}
+
+
+/*
+ * cluster::AbstractClusterView::commPing
+ */
+void cluster::AbstractClusterView::commPing(void) {
+    unsigned int ping = vislib::sys::GetTicksOfDay() / 1000;
+    if (ping == this->lastPingTime) return;
+    this->lastPingTime = ping;
+
+    if (!this->ctrlChannel.IsOpen()) {
+        this->ccc.SendUserMsg(ClusterControllerClient::USRMSG_QUERYHEAD, NULL, 0);
+    }
+    // blublub
+    // TODO: Implement
+
 }
 
 
@@ -138,12 +170,95 @@ void cluster::AbstractClusterView::getFallbackMessageInfo(vislib::TString& outMs
 
 
 /*
- * cluster::AbstractClusterView::isConnectedToHead
+ * cluster::AbstractClusterView::OnClusterUserMessage
  */
-bool cluster::AbstractClusterView::isConnectedToHead(const char *address) const {
-    //vislib::sys::AutoLock(this->setupStateLock);
-    //if (this->setupState == SETUPSTATE_CONNECTED) {
-    //    return (address == NULL) || this->isCtrlCommConnectedTo(address);
-    //}
-    return false;
+void cluster::AbstractClusterView::OnClusterUserMessage(cluster::ClusterControllerClient& sender,
+        const cluster::ClusterController::PeerHandle& hPeer, bool isClusterMember,
+        const UINT32 msgType, const BYTE *msgBody) {
+
+    switch (msgType) {
+        case ClusterControllerClient::USRMSG_HEADHERE:
+            this->serverAddressSlot.Param<param::StringParam>()->SetValue(reinterpret_cast<const char *>(msgBody));
+            break;
+        case ClusterControllerClient::USRMSG_SHUTDOWN:
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Cluster Shutdown message received. Terminating application.\n");
+            this->GetCoreInstance()->Shutdown();
+            break;
+    }
+
+}
+
+
+/*
+ * cluster::AbstractClusterView::OnControlChannelConnect
+ */
+void cluster::AbstractClusterView::OnControlChannelConnect(ControlChannel& sender) {
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Connected to head node\n");
+}
+
+
+/*
+ * cluster::AbstractClusterView::OnControlChannelDisconnect
+ */
+void cluster::AbstractClusterView::OnControlChannelDisconnect(ControlChannel& sender) {
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Disconnected from head node\n");
+    this->serverAddressSlot.Param<param::StringParam>()->SetValue("", false);
+}
+
+
+/*
+ * cluster::AbstractClusterView::onServerAddressChanged
+ */
+bool cluster::AbstractClusterView::onServerAddressChanged(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->serverAddressSlot);
+    vislib::StringA address(this->serverAddressSlot.Param<param::StringParam>()->Value());
+
+    if (address.IsEmpty()) {
+        try {
+            if (this->ctrlChannel.IsOpen()) {
+                this->ctrlChannel.Close();
+            }
+        } catch(...) {
+        }
+        return true;
+    }
+
+    vislib::net::IPEndPoint ep;
+    float wildness = vislib::net::NetworkInformation::GuessRemoteEndPoint(ep, address);
+
+    try {
+        if (this->ctrlChannel.IsOpen()) {
+            this->ctrlChannel.Close();
+        }
+    } catch(...) {
+    }
+
+    if (wildness > 0.8) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Guessed server end point \"%s\" from \"%s\" with too high wildness: %f\n",
+            ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
+        this->serverAddressSlot.Param<param::StringParam>()->SetValue("", false);
+        return true;
+    }
+
+    vislib::sys::Log::DefaultLog.WriteMsg((wildness > 0.3) ? vislib::sys::Log::LEVEL_WARN : vislib::sys::Log::LEVEL_INFO,
+        "Starting server on \"%s\" guessed from \"%s\" with wildness: %f\n",
+        ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
+
+    vislib::SmartRef<vislib::net::TcpCommChannel> channel = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
+    try {
+        channel->Connect(ep);
+        this->ctrlChannel.Open(channel.DynamicCast<vislib::net::AbstractBidiCommChannel>());
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to connect to server: %s\n", ex.GetMsgA());
+        this->serverAddressSlot.Param<param::StringParam>()->SetValue("", false);
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to connect to server: unexpected exception\n");
+        this->serverAddressSlot.Param<param::StringParam>()->SetValue("", false);
+    }
+
+    return true;
 }

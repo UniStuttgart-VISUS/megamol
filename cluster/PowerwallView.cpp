@@ -39,6 +39,8 @@ cluster::PowerwallView::~PowerwallView(void) {
 void cluster::PowerwallView::Render(void) {
     view::CallRenderView *crv = this->getCallRenderView();
 
+    this->commPing();
+
     this->checkParameters();
 
     if (crv != NULL) {
@@ -89,6 +91,12 @@ void cluster::PowerwallView::release(void) {
 void cluster::PowerwallView::getFallbackMessageInfo(vislib::TString& outMsg,
         InfoIconRenderer::IconState& outState) {
 
+    if (this->ctrlChannel.IsOpen()) {
+        outState = InfoIconRenderer::ICONSTATE_OK;
+        outMsg = _T("Connected to master node");
+        return;
+    }
+
     cluster::CallRegisterAtController *crac
         = this->ccc.RegisterSlot().CallAs<cluster::CallRegisterAtController>();
     if (crac == NULL) {
@@ -112,10 +120,9 @@ void cluster::PowerwallView::getFallbackMessageInfo(vislib::TString& outMsg,
     unsigned int nodeCnt = crac->GetStatusPeerCount();
 
     outState = InfoIconRenderer::ICONSTATE_WORK;
-    outMsg.Format(_T("Discovering cluster %s:\nfound %u node%s; %s head"),
+    outMsg.Format(_T("Discovering cluster %s:\nfound %u node%s"),
         vislib::TString(crac->GetStatusClusterName()),
-        nodeCnt, (nodeCnt == 1) ? _T("") : _T("s"),
-    /*    this->isConnectedToHead() ? _T("with") : */_T("without") );
+        nodeCnt, (nodeCnt == 1) ? _T("") : _T("s"));
 
 
     // TODO: Implement

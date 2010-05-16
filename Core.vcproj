@@ -3009,6 +3009,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cluster\ControlChannel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\ControlChannelServer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cluster\InfoIconRenderer.h"
 					>
 				</File>
@@ -3038,6 +3046,14 @@
 				</File>
 				<File
 					RelativePath=".\cluster\ClusterViewMaster.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\ControlChannel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\ControlChannelServer.cpp"
 					>
 				</File>
 				<File

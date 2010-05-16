@@ -13,6 +13,7 @@
 
 #include "view/AbstractTileView.h"
 #include "cluster/ClusterControllerClient.h"
+#include "cluster/ControlChannel.h"
 #include "cluster/InfoIconRenderer.h"
 #include "vislib/AbstractClientEndPoint.h"
 #include "vislib/CriticalSection.h"
@@ -30,7 +31,7 @@ namespace cluster {
      * Abstract base class of override rendering views
      */
     class AbstractClusterView : public view::AbstractTileView,
-        public ClusterControllerClient::Listener {
+        protected ClusterControllerClient::Listener, protected ControlChannel::Listener {
     public:
 
         /** Ctor. */
@@ -74,6 +75,11 @@ namespace cluster {
     protected:
 
         /**
+         * A ping function to be called at least once per second
+         */
+        void commPing(void);
+
+        /**
          * Renders a fallback view holding information about the cluster
          */
         void renderFallbackView(void);
@@ -88,18 +94,51 @@ namespace cluster {
             InfoIconRenderer::IconState& outState);
 
         /**
-         * Answer if this node is connected to the head node
+         * A message has been received.
          *
-         * @param address If not NULL specifies the address of the head node
-         *
-         * @return 'true' if this node is connected to the head node
+         * @param sender The sending object
+         * @param hPeer The peer which sent the message
+         * @param msgType The type value of the message
+         * @param msgBody The data of the message
          */
-        bool isConnectedToHead(const char *address = NULL) const;
+        void OnClusterUserMessage(ClusterControllerClient& sender, const ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType, const BYTE *msgBody);
+
+        /**
+         * Informs that the control channel is now connected an can send and receive messages
+         *
+         * @param sender The sending object
+         */
+        virtual void OnControlChannelConnect(ControlChannel& sender);
+
+        /**
+         * Informs that the control channel is no longer connected.
+         *
+         * @param sender The sending object
+         */
+        virtual void OnControlChannelDisconnect(ControlChannel& sender);
 
         /** The cluster control client */
         ClusterControllerClient ccc;
 
+        /** The control channel */
+        ControlChannel ctrlChannel;
+
     private:
+
+        /**
+         * Callback when the server address is changed
+         *
+         * @param slot Must be serverAddressSlot
+         *
+         * @return True
+         */
+        bool onServerAddressChanged(param::ParamSlot& slot);
+
+        /** The ping counter */
+        unsigned int lastPingTime;
+
+        /** The TCP/IP address of the server including the port */
+        param::ParamSlot serverAddressSlot;
 
     };
 

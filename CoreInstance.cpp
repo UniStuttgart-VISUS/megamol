@@ -1005,6 +1005,28 @@ void megamol::core::CoreInstance::CleanupModuleGraph(void) {
 
 
 /*
+ * megamol::core::CoreInstance::Shutdown
+ */
+void megamol::core::CoreInstance::Shutdown(void) {
+    AbstractNamedObjectContainer::ChildList::Iterator iter
+        = this->namespaceRoot.GetChildIterator();
+    while (iter.HasNext()) {
+        AbstractNamedObject *child = iter.Next();
+        ViewInstance *vi = dynamic_cast<ViewInstance*>(child);
+        JobInstance *ji = dynamic_cast<JobInstance*>(child);
+
+        if (vi != NULL) {
+            vi->RequestClose();
+            vi->Terminate();
+        }
+        if (ji != NULL) {
+            ji->Terminate();
+        }
+    }
+}
+
+
+/*
  * megamol::core::CoreInstance::addProject
  */
 void megamol::core::CoreInstance::addProject(

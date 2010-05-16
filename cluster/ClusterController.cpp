@@ -11,6 +11,7 @@
 #include "cluster/ClusterControllerClient.h"
 #include "CoreInstance.h"
 #include "param/BoolParam.h"
+#include "param/ButtonParam.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
 #include "utility/Configuration.h"
@@ -47,6 +48,7 @@ cluster::ClusterController::ClusterController() : job::AbstractJobThread(),
         cdsNameSlot("cdsName", "Name of the rendering cluster"),
         cdsPortSlot("cdsPort", "The ip port to be used by the cluster discovery service."),
         cdsRunSlot("cdsRun", "Start/Stop flag for the cluster discovery"),
+        shutdownClusterSlot("shutdownCluster", "Shuts down the whole cluster"),
         discoveryService(),
         registerSlot("register", "Slot to register modules at, which wish to use this controller"),
         clients(), clientsLock() {
@@ -65,6 +67,10 @@ cluster::ClusterController::ClusterController() : job::AbstractJobThread(),
     if (this->cdsRunSlot.Param<param::BoolParam>()->Value()) {
         this->cdsRunSlot.ForceSetDirty();
     }
+
+    this->shutdownClusterSlot << new param::ButtonParam();
+    this->shutdownClusterSlot.SetUpdateCallback(&ClusterController::onShutdownCluster);
+    this->MakeSlotAvailable(&this->shutdownClusterSlot);
 
     this->registerSlot.SetCallback(cluster::CallRegisterAtController::ClassName(),
         cluster::CallRegisterAtController::FunctionName(cluster::CallRegisterAtController::CALL_REGISTER),
@@ -391,8 +397,8 @@ void cluster::ClusterController::OnUserMessage(
         const bool isClusterMember, const UINT32 msgType,
         const BYTE *msgBody) throw() {
     try {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
-            src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
+        //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
+        //    src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
         vislib::sys::AutoLock lock(this->clientsLock);
         vislib::SingleLinkedList<ClusterControllerClient *>::Iterator iter
             = this->clients.GetIterator();
@@ -474,6 +480,21 @@ bool cluster::ClusterController::queryStatus(Call& call) {
         this->discoveryService.IsRunning(),
         static_cast<unsigned int>(this->discoveryService.CountPeers()),
         this->discoveryService.GetName());
+
+    return true;
+}
+
+
+/*
+ * cluster::ClusterController::onShutdownCluster
+ */
+bool cluster::ClusterController::onShutdownCluster(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->shutdownClusterSlot);
+
+    for (unsigned int I = 0; I < 4; I++) {
+        this->SendUserMsg(ClusterControllerClient::USRMSG_SHUTDOWN, NULL, 0);
+        vislib::sys::Thread::Sleep(250);
+    }
 
     return true;
 }

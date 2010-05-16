@@ -41,6 +41,10 @@ namespace cluster {
         static const UINT32 USRMSG_HEADHERE
             = vislib::net::cluster::DiscoveryService::MSG_TYPE_USER + 1;
 
+        /** The user message to shut down all cluster nodes */
+        static const UINT32 USRMSG_SHUTDOWN
+            = vislib::net::cluster::DiscoveryService::MSG_TYPE_USER + 2;
+
         /**
          * Class for listener object
          */

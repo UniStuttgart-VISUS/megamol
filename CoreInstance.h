@@ -315,6 +315,11 @@ namespace core {
             this->closeViewJob(obj);
         }
 
+        /**
+         * Shuts down the application by terminating all jobs and closing all views
+         */
+        void Shutdown(void);
+
     private:
 
         /**
