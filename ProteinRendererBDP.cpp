@@ -1359,8 +1359,7 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
         for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
             glBindTexture( GL_TEXTURE_2D, this->histogramTex[i]);
-            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32UI_EXT, this->width, this->height, 0, GL_RGBA_INTEGER_EXT, GL_UNSIGNED_INT, NULL); 
-			//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL); 
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32I_EXT, this->width, this->height, 0, GL_RGBA_INTEGER_EXT, GL_INT, NULL); 
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1699,6 +1698,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             this->sphericalTriangleShader.Disable();
 
             // unbind texture
+			glActiveTexture(GL_TEXTURE0);
             glBindTexture( GL_TEXTURE_2D, 0);
             
         }
@@ -1770,12 +1770,12 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         this->sphereShader.Disable();
 
         // unbind texture
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture( GL_TEXTURE_2D, 0);
-
+		
         // >>>>>>>>>> DEBUG
-
         // drawing surfVectors as yellow lines
-        if(this->depthPeelingMode == NONE_BDP) {
+        /*if(this->depthPeelingMode == NONE_BDP) {
             glLineWidth( 1.0f);
             glEnable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
             glPushAttrib(GL_POLYGON_BIT);
@@ -1793,8 +1793,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             }
             glPopAttrib();
             glDisable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
-        }
-        
+        }*/
         // <<<<<<<<<< end DEBUG
     }
 
