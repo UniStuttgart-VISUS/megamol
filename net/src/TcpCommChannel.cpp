@@ -38,10 +38,11 @@ vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags)
 /*
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket) 
+vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags) 
         : AbstractBidiCommChannel(), AbstractClientEndPoint() , 
-        AbstractServerEndPoint(), socket(socket) {
+        AbstractServerEndPoint(), socket(socket), flags(flags) {
     VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
+    socket.SetNoDelay(this->IsSetNoDelay());
 }
 
 
@@ -54,7 +55,8 @@ vislib::net::TcpCommChannel::Accept(void) {
     Socket socket = this->socket.Accept();
     socket.SetNoDelay(this->IsSetNoDelay());
 
-    return SmartRef<AbstractCommChannel>(new TcpCommChannel(), false);
+    return SmartRef<AbstractCommChannel>(
+        new TcpCommChannel(socket, this->flags), false);
 }
 
 

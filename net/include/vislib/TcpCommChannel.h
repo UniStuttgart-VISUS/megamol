@@ -61,7 +61,7 @@ namespace net {
          *
          * @param socket The socket to be used.
          */
-        explicit TcpCommChannel(Socket& socket);
+        explicit TcpCommChannel(Socket& socket, const UINT64 flags = 0);
 
         /**
          * Permit incoming connection attempt on the communication channel.
