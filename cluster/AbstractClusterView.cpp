@@ -17,6 +17,7 @@
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/sysfunctions.h"
+#include "vislib/SystemInformation.h"
 #include "vislib/TcpCommChannel.h"
 
 
@@ -192,15 +193,13 @@ void cluster::AbstractClusterView::OnClusterUserMessage(cluster::ClusterControll
 /*
  * cluster::AbstractClusterView::OnControlChannelConnect
  */
-void cluster::AbstractClusterView::OnControlChannelConnect(ControlChannel& sender) {
+void cluster::AbstractClusterView::OnControlChannelConnect(cluster::ControlChannel& sender) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Connected to head node\n");
 
     // init by syncing time
     vislib::net::SimpleMessage msg;
     msg.GetHeader().SetMessageID(cluster::netmessages::MSG_QUERY_TIMESYNC);
-    msg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
-    msg.AssertBodySize();
-    msg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip = 0;
+    msg.GetHeader().SetBodySize(0);
     this->ctrlChannel.SendMessage(msg);
 
 }
@@ -209,9 +208,93 @@ void cluster::AbstractClusterView::OnControlChannelConnect(ControlChannel& sende
 /*
  * cluster::AbstractClusterView::OnControlChannelDisconnect
  */
-void cluster::AbstractClusterView::OnControlChannelDisconnect(ControlChannel& sender) {
+void cluster::AbstractClusterView::OnControlChannelDisconnect(cluster::ControlChannel& sender) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Disconnected from head node\n");
     this->serverAddressSlot.Param<param::StringParam>()->SetValue("", false);
+}
+
+
+/*
+ * cluster::AbstractClusterView::OnControlChannelMessage
+ */
+void cluster::AbstractClusterView::OnControlChannelMessage(cluster::ControlChannel& sender,
+        const vislib::net::AbstractSimpleMessage& msg) {
+    vislib::net::SimpleMessage outMsg;
+
+    switch (msg.GetHeader().GetMessageID()) {
+        case cluster::netmessages::MSG_SHUTDOWN:
+            this->GetCoreInstance()->Shutdown();
+            break;
+
+        case cluster::netmessages::MSG_PING_TIMESYNC:
+            ASSERT(msg.GetHeader().GetBodySize() == sizeof(cluster::netmessages::TimeSyncData));
+            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_PING_TIMESYNC);
+            outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
+            outMsg.AssertBodySize();
+            ::memcpy(outMsg.GetBody(), msg.GetBody(), sizeof(cluster::netmessages::TimeSyncData));
+            outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()
+                ->clntTimes[outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip]
+                = this->GetCoreInstance()->GetInstanceTime();
+            sender.SendMessage(outMsg);
+            break;
+
+        case cluster::netmessages::MSG_DONE_TIMESYNC: {
+            ASSERT(msg.GetHeader().GetBodySize() == sizeof(cluster::netmessages::TimeSyncData));
+            const cluster::netmessages::TimeSyncData &dat
+                = *msg.GetBodyAs<cluster::netmessages::TimeSyncData>();
+            double offsets[cluster::netmessages::MAX_TIME_SYNC_PING];
+
+            printf("TimeSync Done:\n");
+            for (unsigned int i = 0; i < cluster::netmessages::MAX_TIME_SYNC_PING; i++) {
+                printf("    %f (%f)=> %f (%f)\n",
+                    dat.srvrTimes[i], (dat.srvrTimes[i + 1] + dat.srvrTimes[i]) * 0.5,
+                    dat.clntTimes[i], ((dat.srvrTimes[i] + dat.srvrTimes[i + 1]) * 0.5) - dat.clntTimes[i]);
+            }
+            printf("    %f\n", dat.srvrTimes[cluster::netmessages::MAX_TIME_SYNC_PING]);
+
+            for (unsigned int i = 0; i < cluster::netmessages::MAX_TIME_SYNC_PING; i++) {
+                offsets[i] = ((dat.srvrTimes[i] + dat.srvrTimes[i + 1]) * 0.5) - dat.clntTimes[i];
+                printf("Offset %d: %f\n", i, offsets[i]);
+            }
+            double offset = 0.0;
+            for (unsigned int i = 0; i < cluster::netmessages::MAX_TIME_SYNC_PING; i++) {
+                offset += offsets[i];
+            }
+            offset /= static_cast<double>(cluster::netmessages::MAX_TIME_SYNC_PING);
+
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Time sync finished with offset %f", offset);
+            this->GetCoreInstance()->OffsetInstanceTime(offset);
+
+        } break;
+
+        case cluster::netmessages::MSG_TIME_SANITYCHECK:
+            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_TIME_SANITYCHECK);
+            outMsg.GetHeader().SetBodySize(sizeof(double));
+            outMsg.AssertBodySize();
+            *outMsg.GetBodyAs<double>() = this->GetCoreInstance()->GetInstanceTime();
+            sender.SendMessage(outMsg);
+            break;
+
+        case cluster::netmessages::MSG_WHATSYOURNAME: {
+            vislib::StringA myname;
+            vislib::sys::SystemInformation::ComputerName(myname);
+            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_MYNAMEIS);
+            outMsg.GetHeader().SetBodySize(myname.Length() + 1);
+            outMsg.AssertBodySize();
+            ::memcpy(outMsg.GetBody(), myname.PeekBuffer(), myname.Length() + 1);
+            sender.SendMessage(outMsg);
+        } break;
+
+        case cluster::netmessages::MSG_MYNAMEIS:
+            ASSERT(msg.GetHeader().GetBodySize() > 0);
+            sender.SetCounterpartName(msg.GetBodyAs<char>());
+            break;
+
+        default:
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Unhandled message received: %u\n", static_cast<unsigned int>(msg.GetHeader().GetMessageID()));
+            break;
+    }
 }
 
 

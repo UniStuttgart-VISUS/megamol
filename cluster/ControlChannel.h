@@ -18,6 +18,7 @@
 #include "vislib/SimpleMessageDispatcher.h"
 #include "vislib/SimpleMessageDispatchListener.h"
 #include "vislib/SmartRef.h"
+#include "vislib/String.h"
 
 
 namespace megamol {
@@ -89,6 +90,15 @@ namespace cluster {
         void Close(void);
 
         /**
+         * Answer the counterparts name
+         *
+         * @return The counterparts name
+         */
+        inline const vislib::StringA& CounterpartName(void) const {
+            return this->counterpartName;
+        }
+
+        /**
          * Answer if the channel is open and ready to send or receive
          *
          * @return True if the channel is open.
@@ -110,6 +120,15 @@ namespace cluster {
          * @param msg The message to be send
          */
         void SendMessage(const vislib::net::AbstractSimpleMessage& msg);
+
+        /**
+         * Sets the name of the connection counterpart
+         *
+         * @param name The name of the connection counterpart
+         */
+        void SetCounterpartName(const char *name) {
+            this->counterpartName = name;
+        }
 
         /**
          * Test for equality
@@ -213,6 +232,9 @@ namespace cluster {
 
         /** The receiver thread */
         vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> receiver;
+
+        /** The name of the connection counterpart */
+        vislib::StringA counterpartName;
 
     };
 

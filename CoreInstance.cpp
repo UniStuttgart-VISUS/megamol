@@ -87,6 +87,10 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), plugins() {
 
+
+    printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
+
+
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
@@ -960,6 +964,9 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
  * megamol::core::CoreInstance::GetInstanceTime
  */
 double megamol::core::CoreInstance::GetInstanceTime(void) const {
+#ifdef _WIN32
+    ::SetThreadAffinityMask(::GetCurrentThread(), 0x00000001);
+#endif /* _WIN32 */
     return vislib::sys::PerformanceCounter::QueryMillis()
         * 0.001 + this->timeOffset;
 }

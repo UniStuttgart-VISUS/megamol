@@ -128,6 +128,13 @@ namespace cluster {
          */
         void Stop(void);
 
+        /**
+         * Sends a message to all nodes in the cluster.
+         *
+         * @param msg The message to be send
+         */
+        void MultiSendMessage(const vislib::net::AbstractSimpleMessage& msg);
+
     protected:
 
         /**

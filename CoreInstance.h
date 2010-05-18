@@ -287,7 +287,7 @@ namespace core {
         }
 
         /**
-         * Answer the time of this instance.
+         * Answer the time of this instance in seconds.
          *
          * @return The time of this instance.
          */

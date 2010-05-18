@@ -6,13 +6,15 @@
  */
 
 #include "stdafx.h"
-#include "ClusterViewMaster.h"
+#include "cluster/ClusterViewMaster.h"
 #include "AbstractNamedObject.h"
 #include "AbstractNamedObjectContainer.h"
 #include "CallDescriptionManager.h"
 #include "CalleeSlot.h"
 #include "CoreInstance.h"
+#include "cluster/NetMessages.h"
 #include "ModuleNamespace.h"
+#include "param/ButtonParam.h"
 #include "param/StringParam.h"
 #include "utility/Configuration.h"
 #include "view/AbstractView.h"
@@ -21,6 +23,7 @@
 #include "vislib/Log.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/SystemInformation.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/NetworkInformation.h"
 
 using namespace megamol::core;
@@ -34,7 +37,8 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
         viewNameSlot("viewname", "The name of the view to be used"),
         viewSlot("view", "The view to be used (this value is set automatically"),
         serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port"),
-        serverEndPoint() {
+        serverEndPoint(),
+        sanityCheckTimeSlot("sanityCheckTime", "Runs a time sync sanity check on all cluster nodes.") {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -52,6 +56,9 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
     this->serverAddressSlot.SetUpdateCallback(&ClusterViewMaster::onServerAddressChanged);
     this->MakeSlotAvailable(&this->serverAddressSlot);
 
+    this->sanityCheckTimeSlot << new param::ButtonParam();
+    this->sanityCheckTimeSlot.SetUpdateCallback(&ClusterViewMaster::onDoSanityCheckTime);
+    this->MakeSlotAvailable(&this->sanityCheckTimeSlot);
     // TODO: Implement
 
 }
@@ -210,11 +217,72 @@ void cluster::ClusterViewMaster::OnClusterUserMessage(cluster::ClusterController
 /*
  * cluster::ClusterViewMaster::OnControlChannelMessage
  */
-void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannelServer& server, cluster::ControlChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        "Message received %u\n", static_cast<unsigned int>(msg.GetHeader().GetMessageID()));
+void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannelServer& server,
+        cluster::ControlChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
+    vislib::net::SimpleMessage outMsg;
 
-    // TODO: Implement
+    switch (msg.GetHeader().GetMessageID()) {
+        case cluster::netmessages::MSG_QUERY_TIMESYNC:
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Time sync started");
+            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_PING_TIMESYNC);
+            outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
+            outMsg.AssertBodySize();
+            ::memset(outMsg.GetBody(), 0, sizeof(cluster::netmessages::TimeSyncData));
+            outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[0] = this->GetCoreInstance()->GetInstanceTime();
+            channel.SendMessage(outMsg);
+            break;
+
+        case cluster::netmessages::MSG_PING_TIMESYNC:
+            ASSERT(msg.GetHeader().GetBodySize() == sizeof(cluster::netmessages::TimeSyncData));
+            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_PING_TIMESYNC);
+            outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
+            outMsg.AssertBodySize();
+            ::memcpy(outMsg.GetBody(), msg.GetBody(), sizeof(cluster::netmessages::TimeSyncData));
+            {
+                UINT32 &trip = outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip;
+                trip++;
+                outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[trip] = this->GetCoreInstance()->GetInstanceTime();
+                if (trip == cluster::netmessages::MAX_TIME_SYNC_PING) {
+                    outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_DONE_TIMESYNC);
+                }
+            }
+            channel.SendMessage(outMsg);
+            break;
+
+        case cluster::netmessages::MSG_WHATSYOURNAME: {
+            vislib::StringA myname;
+            vislib::sys::SystemInformation::ComputerName(myname);
+            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_MYNAMEIS);
+            outMsg.GetHeader().SetBodySize(myname.Length() + 1);
+            outMsg.AssertBodySize();
+            ::memcpy(outMsg.GetBody(), myname.PeekBuffer(), myname.Length() + 1);
+            channel.SendMessage(outMsg);
+        } break;
+
+        case cluster::netmessages::MSG_MYNAMEIS:
+            ASSERT(msg.GetHeader().GetBodySize() > 0);
+            channel.SetCounterpartName(msg.GetBodyAs<char>());
+            break;
+
+        case cluster::netmessages::MSG_TIME_SANITYCHECK:
+            ASSERT(msg.GetHeader().GetBodySize() == sizeof(double));
+            {
+                double remoteTime = *msg.GetBodyAs<double>();
+                double localTime = this->GetCoreInstance()->GetInstanceTime();
+                double diff = vislib::math::Abs(localTime - remoteTime);
+                UINT level = vislib::sys::Log::LEVEL_INFO;
+                if (diff > 0.1) level = vislib::sys::Log::LEVEL_ERROR;
+                else if (diff > 0.03) level = vislib::sys::Log::LEVEL_WARN;
+                vislib::sys::Log::DefaultLog.WriteMsg(level, "%s is off by %f seconds\n",
+                    channel.CounterpartName().PeekBuffer(), diff);
+            }
+            break;
+
+        default:
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Unhandled message received: %u\n", static_cast<unsigned int>(msg.GetHeader().GetMessageID()));
+            break;
+    }
 
 }
 
@@ -343,6 +411,20 @@ bool cluster::ClusterViewMaster::onServerAddressChanged(param::ParamSlot& slot) 
 
     this->ctrlServer.Start(this->serverEndPoint);
 
+    return true;
+}
+
+
+/*
+ * cluster::ClusterViewMaster::onDoSanityCheckTime
+ */
+bool cluster::ClusterViewMaster::onDoSanityCheckTime(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->sanityCheckTimeSlot);
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_TIME_SANITYCHECK);
+    msg.GetHeader().SetBodySize(0);
+    msg.AssertBodySize();
+    this->ctrlServer.MultiSendMessage(msg);
     return true;
 }
 

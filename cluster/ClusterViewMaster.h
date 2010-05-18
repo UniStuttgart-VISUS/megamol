@@ -142,6 +142,15 @@ namespace cluster {
          */
         bool onServerAddressChanged(param::ParamSlot& slot);
 
+        /**
+         * Sends a sanity check time request to all connected client nodes
+         *
+         * @param slot Must be sanityCheckTimeSlot
+         *
+         * @return True;
+         */
+        bool onDoSanityCheckTime(param::ParamSlot& slot);
+
         /** The cluster control client */
         ClusterControllerClient ccc;
 
@@ -159,6 +168,9 @@ namespace cluster {
 
         /** Endpoint for the server */
         vislib::net::IPEndPoint serverEndPoint;
+
+        /** Performs a sanitycheck of the times on all cluster nodes */
+        param::ParamSlot sanityCheckTimeSlot;
 
     };
 

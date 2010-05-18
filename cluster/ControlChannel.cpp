@@ -20,7 +20,7 @@ using namespace megamol::core;
 cluster::ControlChannel::ControlChannel(void)
         : vislib::Listenable<ControlChannel>(),
         vislib::net::SimpleMessageDispatchListener(),
-        channel() {
+        channel(), counterpartName("Unknown") {
     // Intentionally empty
     this->receiver.AddListener(this);
 }

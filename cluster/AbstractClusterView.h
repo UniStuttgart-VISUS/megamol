@@ -101,7 +101,8 @@ namespace cluster {
          * @param msgType The type value of the message
          * @param msgBody The data of the message
          */
-        void OnClusterUserMessage(ClusterControllerClient& sender, const ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType, const BYTE *msgBody);
+        void OnClusterUserMessage(ClusterControllerClient& sender, const ClusterController::PeerHandle& hPeer,
+            bool isClusterMember, const UINT32 msgType, const BYTE *msgBody);
 
         /**
          * Informs that the control channel is now connected an can send and receive messages
@@ -116,6 +117,15 @@ namespace cluster {
          * @param sender The sending object
          */
         virtual void OnControlChannelDisconnect(ControlChannel& sender);
+
+        /**
+         * A message has been received over the control channel.
+         *
+         * @param sender The sending object
+         * @param msg The received message
+         */
+        virtual void OnControlChannelMessage(ControlChannel& sender,
+            const vislib::net::AbstractSimpleMessage& msg);
 
         /** The cluster control client */
         ClusterControllerClient ccc;

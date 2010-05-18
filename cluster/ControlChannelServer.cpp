@@ -7,8 +7,11 @@
 
 #include "stdafx.h"
 #include "cluster/ControlChannelServer.h"
+#include "cluster/NetMessages.h"
 #include "vislib/assert.h"
 #include "vislib/Log.h"
+#include "vislib/String.h"
+#include "vislib/SystemInformation.h"
 
 using namespace megamol::core;
 
@@ -63,6 +66,23 @@ void cluster::ControlChannelServer::Stop(void) {
         this->server.Terminate(false);
     }
     this->clients.Clear();
+}
+
+
+/*
+ * cluster::ControlChannelServer::MultiSendMessage
+ */
+void cluster::ControlChannelServer::MultiSendMessage(const vislib::net::AbstractSimpleMessage& msg) {
+    vislib::SingleLinkedList<cluster::ControlChannel>::Iterator iter = this->clients.GetIterator();
+    while (iter.HasNext()) {
+        cluster::ControlChannel& channel = iter.Next();
+        try {
+            channel.SendMessage(msg);
+        } catch(...) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to send message to %s", channel.CounterpartName().PeekBuffer());
+        }
+    }
 }
 
 
@@ -122,6 +142,19 @@ bool cluster::ControlChannelServer::OnNewConnection(const vislib::net::CommServe
             if (l == NULL) continue;
             l->OnControlChannelConnect(*this, this->clients.Last());
         }
+
+        vislib::net::SimpleMessage simsg;
+        simsg.GetHeader().SetMessageID(cluster::netmessages::MSG_WHATSYOURNAME);
+        simsg.GetHeader().SetBodySize(0);
+        simsg.AssertBodySize();
+        this->clients.Last().SendMessage(simsg);
+        vislib::StringA myname;
+        vislib::sys::SystemInformation::ComputerName(myname);
+        simsg.GetHeader().SetMessageID(cluster::netmessages::MSG_MYNAMEIS);
+        simsg.GetHeader().SetBodySize(myname.Length() + 1);
+        simsg.AssertBodySize();
+        ::memcpy(simsg.GetBody(), myname.PeekBuffer(), myname.Length() + 1);
+        this->clients.Last().SendMessage(simsg);
 
         return true; // connection accepted
     } catch(vislib::Exception ex) {
