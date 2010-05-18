@@ -9,6 +9,7 @@
 #include "cluster/ControlChannelServer.h"
 #include "cluster/NetMessages.h"
 #include "vislib/assert.h"
+#include "vislib/AutoLock.h"
 #include "vislib/Log.h"
 #include "vislib/String.h"
 #include "vislib/SystemInformation.h"
@@ -20,10 +21,9 @@ using namespace megamol::core;
  * cluster::ControlChannelServer::ControlChannelServer
  */
 cluster::ControlChannelServer::ControlChannelServer(void)
-        : vislib::Listenable<ControlChannelServer>(), clients(), server(),
-        commChannel() {
+        : vislib::Listenable<ControlChannelServer>(), clientsLock(),
+        clients(), server(), commChannel() {
     this->server.AddListener(this);
-    // TODO: Implement
 }
 
 
@@ -31,8 +31,8 @@ cluster::ControlChannelServer::ControlChannelServer(void)
  * cluster::ControlChannelServer::~ControlChannelServer
  */
 cluster::ControlChannelServer::~ControlChannelServer(void) {
-    this->clients.Clear();
-    // TODO: Implement
+    this->server.RemoveListener(this);
+    this->Stop();
 }
 
 
@@ -53,7 +53,9 @@ void cluster::ControlChannelServer::Start(vislib::net::IPEndPoint& ep) {
         this->commChannel = new vislib::net::TcpCommChannel(
             vislib::net::TcpCommChannel::FLAG_NODELAY);
     }
-    this->server.Configure(this->commChannel.DynamicCast<vislib::net::AbstractServerEndPoint>(), ep.ToStringA());
+    this->server.Configure(
+        this->commChannel.DynamicCast<vislib::net::AbstractServerEndPoint>(),
+        ep.ToStringA());
     this->server.Start(NULL);
 }
 
@@ -65,6 +67,11 @@ void cluster::ControlChannelServer::Stop(void) {
     if (this->server.IsRunning()) {
         this->server.Terminate(false);
     }
+    vislib::sys::AutoLock(this->clientsLock);
+    vislib::SingleLinkedList<cluster::ControlChannel>::Iterator iter = this->clients.GetIterator();
+    while (iter.HasNext()) {
+        iter.Next().RemoveListener(this);
+    }
     this->clients.Clear();
 }
 
@@ -73,6 +80,7 @@ void cluster::ControlChannelServer::Stop(void) {
  * cluster::ControlChannelServer::MultiSendMessage
  */
 void cluster::ControlChannelServer::MultiSendMessage(const vislib::net::AbstractSimpleMessage& msg) {
+    vislib::sys::AutoLock(this->clientsLock);
     vislib::SingleLinkedList<cluster::ControlChannel>::Iterator iter = this->clients.GetIterator();
     while (iter.HasNext()) {
         cluster::ControlChannel& channel = iter.Next();
@@ -90,6 +98,7 @@ void cluster::ControlChannelServer::MultiSendMessage(const vislib::net::Abstract
  * cluster::ControlChannelServer::OnControlChannelDisconnect
  */
 void cluster::ControlChannelServer::OnControlChannelDisconnect(cluster::ControlChannel& sender) {
+    vislib::sys::AutoLock(this->clientsLock);
     if (this->clients.Contains(sender)) {
         sender.RemoveListener(this);
         vislib::Listenable<ControlChannelServer>::ListenerIterator iter = this->GetListeners();
@@ -132,6 +141,7 @@ bool cluster::ControlChannelServer::OnNewConnection(const vislib::net::CommServe
     vislib::SmartRef<vislib::net::AbstractBidiCommChannel> bidiChannel = channel.DynamicCast<vislib::net::AbstractBidiCommChannel>();
     ASSERT(!bidiChannel.IsNull()); // internal error like problem (should never happen)
     try {
+        vislib::sys::AutoLock(this->clientsLock);
         this->clients.Append(cluster::ControlChannel());
         this->clients.Last().Open(bidiChannel);
         this->clients.Last().AddListener(this);

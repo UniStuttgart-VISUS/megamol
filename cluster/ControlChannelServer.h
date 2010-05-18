@@ -11,16 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-//#include "CallerSlot.h"
-//#include "cluster/ClusterController.h"
-//#include "Module.h"
-//#include "AbstractSlot.h"
-//#include "param/ParamSlot.h"
-//#include "vislib/DiscoveryService.h"
 #include "cluster/ControlChannel.h"
 #include "vislib/AbstractSimpleMessage.h"
 #include "vislib/CommServer.h"
 #include "vislib/CommServerListener.h"
+#include "vislib/CriticalSection.h"
 #include "vislib/Listenable.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/SmartRef.h"
@@ -224,6 +219,9 @@ namespace cluster {
         virtual void OnServerStarted(const vislib::net::CommServer& src) throw();
 
     private:
+
+        /** The lock object to access the clients list */
+        vislib::sys::CriticalSection clientsLock;
 
         /** The list of active control channels */
         vislib::SingleLinkedList<ControlChannel> clients;

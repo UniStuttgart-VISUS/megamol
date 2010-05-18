@@ -50,6 +50,8 @@ cluster::AbstractClusterView::AbstractClusterView(void)
  */
 cluster::AbstractClusterView::~AbstractClusterView(void) {
     try {
+        this->ccc.RemoveListener(this);
+        this->ctrlChannel.RemoveListener(this);
         if (this->ctrlChannel.IsOpen()) {
             this->ctrlChannel.Close();
         }

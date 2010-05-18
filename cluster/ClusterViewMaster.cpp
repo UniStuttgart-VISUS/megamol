@@ -68,6 +68,8 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
  * cluster::ClusterViewMaster::~ClusterViewMaster
  */
 cluster::ClusterViewMaster::~ClusterViewMaster(void) {
+    this->ccc.RemoveListener(this);
+    this->ctrlServer.RemoveListener(this);
     this->Release();
 
     // TODO: Implement
