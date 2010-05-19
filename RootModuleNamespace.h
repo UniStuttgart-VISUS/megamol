@@ -15,6 +15,7 @@
 #include "ModuleNamespace.h"
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
+#include "vislib/RawStorage.h"
 
 
 namespace megamol {
@@ -71,6 +72,14 @@ namespace core {
          * Unlocks the module namespace
          */
         virtual void UnlockModuleGraph(void);
+
+        /**
+         * Serializes the whole module graph into raw memory.
+         * The deserialization method is located in CoreInstance
+         *
+         * @param outmem The memory to receive the serialized module graph
+         */
+        void SerializeGraph(vislib::RawStorage& outmem);
 
     protected:
 

@@ -34,6 +34,15 @@ namespace cluster {
         protected ClusterControllerClient::Listener, protected ControlChannel::Listener {
     public:
 
+        /** Possible setup states */
+        enum SetupState {
+            SETUP_UNKNOWN,
+            SETUP_TIME,
+            SETUP_GRAPH,
+            SETUP_CAMERA,
+            SETUP_COMPLETE
+        };
+
         /** Ctor. */
         AbstractClusterView(void);
 
@@ -144,11 +153,24 @@ namespace cluster {
          */
         bool onServerAddressChanged(param::ParamSlot& slot);
 
+        /**
+         * Continues the setup
+         *
+         * @param state The setup state to perform next
+         */
+        void continueSetup(SetupState state = SETUP_UNKNOWN);
+
         /** The ping counter */
         unsigned int lastPingTime;
 
         /** The TCP/IP address of the server including the port */
         param::ParamSlot serverAddressSlot;
+
+        /** The current setup state */
+        SetupState setupState;
+
+        /** Data received from the network to setup the module graph */
+        vislib::net::SimpleMessage *graphInitData;
 
     };
 

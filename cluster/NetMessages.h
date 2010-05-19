@@ -20,11 +20,13 @@ namespace cluster {
 
 namespace netmessages {
 
+    /************************************************************************/
+
     /** Message sent to shut down a node */
     const UINT32 MSG_SHUTDOWN = 1;
 
     /** Message sent to the head node to initize time sync */
-    const UINT32 MSG_QUERY_TIMESYNC = 2;
+    const UINT32 MSG_REQUEST_TIMESYNC = 2;
 
     /** A ping message for time sync */
     const UINT32 MSG_PING_TIMESYNC = 3;
@@ -47,8 +49,28 @@ namespace netmessages {
     /** Tells the own name */
     const UINT32 MSG_MYNAMEIS = 7;
 
+    /** Message requesting graph setup information from the master node */
+    const UINT32 MSG_REQUEST_GRAPHSETUP = 8;
+
+    /** Message with graph setup information from the master node */
+    const UINT32 MSG_GRAPHSETUP = 9;
+
+    /** Informs all client nodes that they are required to perform a resetup */
+    const UINT32 MSG_REQUEST_RESETUP = 10;
+
+    /** Message requesting camera setup information */
+    const UINT32 MSG_REQUEST_CAMERASETUP = 11;
+
+    /** Sets the view to be shown by the cluster */
+    const UINT32 MSG_SET_CLUSTERVIEW = 12;
+
+    ///** Message with camera setup information */
+    //const UINT32 MSG_CAMERASETUP = ;
+
+    /************************************************************************/
+
     /** The number of pings used for time syncing */
-    const unsigned int MAX_TIME_SYNC_PING = 10;
+    const unsigned int MAX_TIME_SYNC_PING = 20;
 
     /** Data for time sync messages */
     typedef struct _timesyncdata_t {

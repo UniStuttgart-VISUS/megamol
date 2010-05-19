@@ -30,7 +30,8 @@ using namespace megamol::core;
 cluster::AbstractClusterView::AbstractClusterView(void)
         : view::AbstractTileView(), ClusterControllerClient::Listener(), ControlChannel::Listener(),
         ccc(), ctrlChannel(), lastPingTime(0),
-        serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port") {
+        serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port"),
+        setupState(SETUP_UNKNOWN), graphInitData(NULL) {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -57,6 +58,10 @@ cluster::AbstractClusterView::~AbstractClusterView(void) {
         }
     } catch(...) {
     }
+
+    vislib::net::SimpleMessage *m = this->graphInitData;
+    this->graphInitData = NULL;
+    delete m;
 
     // TODO: Implement
 
@@ -118,6 +123,14 @@ void cluster::AbstractClusterView::renderFallbackView(void) {
     ::glViewport(0, 0, this->getViewportWidth(), this->getViewportHeight());
     ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT);
+
+    vislib::net::SimpleMessage *initmsg = this->graphInitData;
+    if (initmsg != NULL) {
+        this->graphInitData = NULL;
+        this->GetCoreInstance()->SetupGraphFromNetwork(*initmsg);
+        this->continueSetup();
+        return;
+    }
 
     if ((this->getViewportHeight() <= 1) || (this->getViewportWidth() <= 1)) return;
 
@@ -198,12 +211,7 @@ void cluster::AbstractClusterView::OnClusterUserMessage(cluster::ClusterControll
 void cluster::AbstractClusterView::OnControlChannelConnect(cluster::ControlChannel& sender) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Connected to head node\n");
 
-    // init by syncing time
-    vislib::net::SimpleMessage msg;
-    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_QUERY_TIMESYNC);
-    msg.GetHeader().SetBodySize(0);
-    this->ctrlChannel.SendMessage(msg);
-
+    this->continueSetup(SETUP_TIME);
 }
 
 
@@ -221,6 +229,7 @@ void cluster::AbstractClusterView::OnControlChannelDisconnect(cluster::ControlCh
  */
 void cluster::AbstractClusterView::OnControlChannelMessage(cluster::ControlChannel& sender,
         const vislib::net::AbstractSimpleMessage& msg) {
+    using vislib::sys::Log;
     vislib::net::SimpleMessage outMsg;
 
     switch (msg.GetHeader().GetMessageID()) {
@@ -241,31 +250,45 @@ void cluster::AbstractClusterView::OnControlChannelMessage(cluster::ControlChann
             break;
 
         case cluster::netmessages::MSG_DONE_TIMESYNC: {
+            if (this->setupState != SETUP_TIME) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+                    "Setup step order problem: TimeSync-Message received during setup step #%d\n",
+                    static_cast<int>(this->setupState));
+                break; // setup step order screwed up
+            }
+
             ASSERT(msg.GetHeader().GetBodySize() == sizeof(cluster::netmessages::TimeSyncData));
             const cluster::netmessages::TimeSyncData &dat
                 = *msg.GetBodyAs<cluster::netmessages::TimeSyncData>();
             double offsets[cluster::netmessages::MAX_TIME_SYNC_PING];
 
-            printf("TimeSync Done:\n");
+            vislib::StringA msg("TimeSync Done:\n");
+            vislib::StringA line;
             for (unsigned int i = 0; i < cluster::netmessages::MAX_TIME_SYNC_PING; i++) {
-                printf("    %f (%f)=> %f (%f)\n",
+                line.Format("    %f (%f)=> %f (%f)\n",
                     dat.srvrTimes[i], (dat.srvrTimes[i + 1] + dat.srvrTimes[i]) * 0.5,
                     dat.clntTimes[i], ((dat.srvrTimes[i] + dat.srvrTimes[i + 1]) * 0.5) - dat.clntTimes[i]);
+                msg += line;
             }
-            printf("    %f\n", dat.srvrTimes[cluster::netmessages::MAX_TIME_SYNC_PING]);
-
+            line.Format("    %f\n", dat.srvrTimes[cluster::netmessages::MAX_TIME_SYNC_PING]);
+            msg += line;
             for (unsigned int i = 0; i < cluster::netmessages::MAX_TIME_SYNC_PING; i++) {
                 offsets[i] = ((dat.srvrTimes[i] + dat.srvrTimes[i + 1]) * 0.5) - dat.clntTimes[i];
-                printf("Offset %d: %f\n", i, offsets[i]);
+                line.Format("Offset %d: %f\n", i, offsets[i]);
+                msg += line;
             }
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 500, msg);
+
             double offset = 0.0;
             for (unsigned int i = 0; i < cluster::netmessages::MAX_TIME_SYNC_PING; i++) {
                 offset += offsets[i];
             }
             offset /= static_cast<double>(cluster::netmessages::MAX_TIME_SYNC_PING);
 
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Time sync finished with offset %f", offset);
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time sync finished with offset %f", offset);
             this->GetCoreInstance()->OffsetInstanceTime(offset);
+
+            this->continueSetup();
 
         } break;
 
@@ -292,8 +315,52 @@ void cluster::AbstractClusterView::OnControlChannelMessage(cluster::ControlChann
             sender.SetCounterpartName(msg.GetBodyAs<char>());
             break;
 
+        case cluster::netmessages::MSG_REQUEST_RESETUP:
+            this->continueSetup(SETUP_GRAPH); // restart setup process from graph setup
+            break;
+
+        case cluster::netmessages::MSG_GRAPHSETUP:
+            if (this->setupState != SETUP_GRAPH) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+                    "Setup step order problem: Graph-Setup-Message received during setup step #%d\n",
+                    static_cast<int>(this->setupState));
+                break; // setup step order screwed up
+            }
+            if (this->graphInitData == NULL) {
+                this->LockModuleGraph(true);
+                this->disconnectOutgoingRenderCall(); // this will result in rendering the fallback view at least once
+                this->UnlockModuleGraph();
+                this->GetCoreInstance()->CleanupModuleGraph();
+
+                this->graphInitData = new vislib::net::SimpleMessage(msg);
+
+            } else {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "Failed to setup module graph: still pending init data\n");
+            }
+            break;
+
+        case cluster::netmessages::MSG_SET_CLUSTERVIEW: {
+            CallDescription *desc = CallDescriptionManager::Instance()->Find("CallRenderView");
+            if (desc != NULL) {
+                Call *c = this->GetCoreInstance()->InstantiateCall(
+                    this->FullName() + "::renderView",
+                    vislib::StringA(msg.GetBodyAs<char>()) + "::render",
+                    desc);
+                if (c == NULL) {
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "Unable to connect cluster display to view %s\n",
+                        msg.GetBodyAs<char>());
+                }
+            } else {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "Internal Error: \"CallRenderView\" is not registered\n");
+            }
+            // TODO: Implement further??
+        } break;
+
         default:
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
                 "Unhandled message received: %u\n", static_cast<unsigned int>(msg.GetHeader().GetMessageID()));
             break;
     }
@@ -354,4 +421,58 @@ bool cluster::AbstractClusterView::onServerAddressChanged(param::ParamSlot& slot
     }
 
     return true;
+}
+
+
+/*
+ * cluster::AbstractClusterView::continueSetup
+ */
+void cluster::AbstractClusterView::continueSetup(cluster::AbstractClusterView::SetupState state) {
+    if (state == SETUP_UNKNOWN) {
+        switch (this->setupState) {
+            case SETUP_TIME: this->setupState = SETUP_GRAPH; break;
+            case SETUP_GRAPH: this->setupState = SETUP_CAMERA; break;
+            case SETUP_CAMERA: this->setupState = SETUP_COMPLETE; break;
+            case SETUP_COMPLETE: /* no change */ break;
+            default: this->setupState = SETUP_UNKNOWN; break;
+        }
+    } else {
+        this->setupState = state;
+    }
+
+    if (this->setupState == SETUP_COMPLETE) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Setup complete");
+        return;
+    }
+    if (this->setupState == SETUP_UNKNOWN) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Setup in undefined stated. Restarting.");
+        this->setupState = SETUP_TIME;
+    }
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 50, "Entering setup state #%d\n", static_cast<int>(this->setupState));
+
+    vislib::net::SimpleMessage msg;
+    switch (this->setupState) {
+        case SETUP_TIME:
+            msg.GetHeader().SetMessageID(cluster::netmessages::MSG_REQUEST_TIMESYNC);
+            msg.GetHeader().SetBodySize(0);
+            msg.AssertBodySize();
+            this->ctrlChannel.SendMessage(msg);
+            break;
+        case SETUP_GRAPH:
+            msg.GetHeader().SetMessageID(cluster::netmessages::MSG_REQUEST_GRAPHSETUP);
+            msg.GetHeader().SetBodySize(0);
+            msg.AssertBodySize();
+            this->ctrlChannel.SendMessage(msg);
+            break;
+        case SETUP_CAMERA:
+            msg.GetHeader().SetMessageID(cluster::netmessages::MSG_REQUEST_CAMERASETUP);
+            msg.GetHeader().SetBodySize(0);
+            msg.AssertBodySize();
+            this->ctrlChannel.SendMessage(msg);
+            break;
+        default:
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Setup state #%d not implemented\n", static_cast<int>(this->setupState));
+            break;
+    }
 }

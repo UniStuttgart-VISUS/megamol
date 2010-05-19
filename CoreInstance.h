@@ -16,15 +16,18 @@
 #include "api/MegaMolCore.std.h"
 #include "utility/Configuration.h"
 #include "utility/LogEchoTarget.h"
+#include "vislib/AbstractSimpleMessage.h"
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
+#include "vislib/DynamicLinkLibrary.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/Log.h"
-#include "vislib/String.h"
-#include "vislib/SingleLinkedList.h"
-#include "vislib/Pair.h"
 #include "vislib/Map.h"
+#include "vislib/Pair.h"
+#include "vislib/PtrArray.h"
+#include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/String.h"
 #include "ObjectDescription.h"
 #include "ObjectDescriptionManager.h"
 #include "JobDescription.h"
@@ -38,8 +41,6 @@
 #include "param/AbstractParam.h"
 #include "utility/ShaderSourceFactory.h"
 #include "ParamValueSetRequest.h"
-#include "vislib/PtrArray.h"
-#include "vislib/DynamicLinkLibrary.h"
 
 
 namespace megamol {
@@ -320,6 +321,26 @@ namespace core {
          */
         void Shutdown(void);
 
+        /**
+         * Sets up the module graph based on the serialized graph description
+         * from the head node of the network rendering cluster.
+         *
+         * @param dat The serialized graph description
+         */
+        void SetupGraphFromNetwork(const vislib::net::AbstractSimpleMessage& dat);
+
+        /**
+         * Instantiates a call.
+         *
+         * @param fromPath The full namespace path of the caller slot
+         * @param toPath The full namespace path of the callee slot
+         * @param desc The call description
+         *
+         * @return The new call or 'NULL' in case of an error
+         */
+        Call* InstantiateCall(const vislib::StringA fromPath,
+            const vislib::StringA toPath, CallDescription* desc);
+
     private:
 
         /**
@@ -488,18 +509,6 @@ namespace core {
          */
         Module* instantiateModule(const vislib::StringA path,
             ModuleDescription* desc);
-
-        /**
-         * Instantiates a call.
-         *
-         * @param fromPath The full namespace path of the caller slot
-         * @param toPath The full namespace path of the callee slot
-         * @param desc The call description
-         *
-         * @return The new call or 'NULL' in case of an error
-         */
-        Call* instantiateCall(const vislib::StringA fromPath,
-            const vislib::StringA toPath, CallDescription* desc);
 
         /**
          * Enumerates all parameters. The callback function is called for each

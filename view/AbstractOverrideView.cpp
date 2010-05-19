@@ -108,6 +108,14 @@ void view::AbstractOverrideView::UpdateFreeze(bool freeze) {
 
 
 /*
+ * view::AbstractOverrideView::disconnectOutgoingRenderCall
+ */
+void view::AbstractOverrideView::disconnectOutgoingRenderCall(void) {
+    this->renderViewSlot.ConnectCall(NULL);
+}
+
+
+/*
  * view::AbstractOverrideView::packMouseCoordinates
  */
 void view::AbstractOverrideView::packMouseCoordinates(float &x, float &y) {

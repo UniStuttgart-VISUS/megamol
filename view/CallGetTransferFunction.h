@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.h"
 #include "Call.h"
 #include "CallAutoDescription.h"
 
@@ -23,7 +24,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class CallGetTransferFunction : public Call {
+    class MEGAMOLCORE_API CallGetTransferFunction : public Call {
     public:
 
         /**

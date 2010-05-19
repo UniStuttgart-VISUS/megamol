@@ -6,9 +6,25 @@
  */
 #include "stdafx.h"
 #include "RootModuleNamespace.h"
+#include "AbstractNamedObject.h"
+#include "AbstractNamedObjectContainer.h"
+#include "CallDescription.h"
+#include "CallDescriptionManager.h"
+#include "CallerSlot.h"
+#include "CalleeSlot.h"
+#include "Module.h"
+#include "ModuleDescription.h"
+#include "ModuleDescriptionManager.h"
+#include "param/ButtonParam.h"
+#include "param/ParamSlot.h"
+#include "vislib/assert.h"
+#include "vislib/Array.h"
 #include "vislib/Log.h"
+#include "vislib/Stack.h"
 #include "vislib/StackTrace.h"
+#include "vislib/String.h"
 #include "vislib/Trace.h"
+#include "vislib/UTF8Encoder.h"
 
 using namespace megamol::core;
 
@@ -106,9 +122,8 @@ void RootModuleNamespace::LockModuleGraph(bool write) {
 //    vislib::StackTrace::GetStackString(stack.AllocateBuffer(size), size);
 //    VLTRACE(VISLIB_TRCELVL_INFO, "LockModuleGraph:\n%s\n", stack.PeekBuffer());
 //#endif
-
     this->lock.Lock();
-    // TODO: Implement
+    // TODO: multi-read-exclusive-write-lock
 }
 
 
@@ -125,5 +140,148 @@ void RootModuleNamespace::UnlockModuleGraph(void) {
 //    VLTRACE(VISLIB_TRCELVL_INFO, "UnlockModuleGraph:\n%s\n", stack.PeekBuffer());
 //#endif
     this->lock.Unlock();
-    // TODO: Implement
+}
+
+
+/*
+ * RootModuleNamespace::Serialize
+ */
+void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
+    ASSERT(this->Parent() == NULL);
+
+    // TODO: Only use module sub-graph containing the observed viewing module!!!
+
+    vislib::Array<vislib::StringA> modClasses;
+    vislib::Array<vislib::StringA> modNames;
+
+    vislib::Array<vislib::StringA> callClasses;
+    vislib::Array<vislib::StringA> callFrom;
+    vislib::Array<vislib::StringA> callTo;
+
+    vislib::Array<vislib::StringA> paramName;
+    vislib::Array<vislib::StringA> paramValue;
+
+    // collect data
+    vislib::Stack<AbstractNamedObject *> stack;
+    stack.Push(this);
+    while (!stack.IsEmpty()) {
+        AbstractNamedObject *ano = stack.Pop();
+        ASSERT(ano != NULL);
+        AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer *>(ano);
+        Module *mod = dynamic_cast<Module *>(ano);
+        CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano);
+        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano);
+        param::ParamSlot *param = dynamic_cast<param::ParamSlot *>(ano);
+
+        if (anoc != NULL) {
+            AbstractNamedObjectContainer::ChildList::Iterator anoccli = anoc->GetChildIterator();
+            while (anoccli.HasNext()) {
+                stack.Push(anoccli.Next());
+            }
+        }
+
+        if (mod != NULL) {
+            ModuleDescription *d = NULL;
+            ModuleDescriptionManager::DescriptionIterator i = ModuleDescriptionManager::Instance()->GetIterator();
+            while (i.HasNext()) {
+                ModuleDescription *id = i.Next();
+                if (id->IsDescribing(mod)) {
+                    d = id;
+                    break;
+                }
+            }
+            ASSERT(d != NULL);
+
+            modClasses.Append(d->ClassName());
+            modNames.Append(mod->FullName());
+        }
+
+        if (caller != NULL) {
+            Call *c = caller->CallAs<Call>();
+            if (c == NULL) continue;
+            CallDescription *d = NULL;
+            CallDescriptionManager::DescriptionIterator i = CallDescriptionManager::Instance()->GetIterator();
+            while (i.HasNext()) {
+                CallDescription *id = i.Next();
+                if (id->IsDescribing(c)) {
+                    d = id;
+                    break;
+                }
+            }
+            ASSERT(d != NULL);
+            ASSERT(c->PeekCalleeSlot() != NULL);
+            ASSERT(c->PeekCallerSlot() != NULL);
+
+            callClasses.Append(d->ClassName());
+            callFrom.Append(c->PeekCallerSlot()->FullName());
+            callTo.Append(c->PeekCalleeSlot()->FullName());
+        }
+
+        if (param != NULL) {
+            if (param->Parameter().IsNull()) continue;
+            if (param->Param<param::ButtonParam>() != NULL) continue; // ignore button parameters (we do not want to press them)
+            paramName.Append(param->FullName());
+            vislib::TString v = param->Parameter()->ValueString();
+            vislib::StringA vUTF8;
+            vislib::UTF8Encoder::Encode(vUTF8, v);
+            paramValue.Append(vUTF8);
+        }
+
+    }
+
+    // serialize data
+    ASSERT(modClasses.Count() == modNames.Count());
+    ASSERT(callClasses.Count() == callFrom.Count());
+    ASSERT(callClasses.Count() == callTo.Count());
+    ASSERT(paramName.Count() == paramValue.Count());
+
+    SIZE_T overallSize = 3 * sizeof(UINT64);
+    for (SIZE_T i = 0; i < modClasses.Count(); i++) {
+        overallSize += modClasses[i].Length() + 1;
+        overallSize += modNames[i].Length() + 1;
+    }
+    for (SIZE_T i = 0; i < callClasses.Count(); i++) {
+        overallSize += callClasses[i].Length() + 1;
+        overallSize += callFrom[i].Length() + 1;
+        overallSize += callTo[i].Length() + 1;
+    }
+    for (SIZE_T i = 0; i < paramName.Count(); i++) {
+        overallSize += paramName[i].Length() + 1;
+        overallSize += paramValue[i].Length() + 1;
+    }
+    outmem.EnforceSize(overallSize);
+    outmem.As<UINT64>()[0] = static_cast<UINT64>(modClasses.Count());
+    outmem.As<UINT64>()[1] = static_cast<UINT64>(callClasses.Count());
+    outmem.As<UINT64>()[2] = static_cast<UINT64>(paramName.Count());
+    overallSize = 3 * sizeof(UINT64);
+    SIZE_T l;
+    for (SIZE_T i = 0; i < modClasses.Count(); i++) {
+        l = modClasses[i].Length() + 1;
+        ::memcpy(outmem.At(overallSize), modClasses[i].PeekBuffer(), l);
+        overallSize += l;
+        l = modNames[i].Length() + 1;
+        ::memcpy(outmem.At(overallSize), modNames[i].PeekBuffer(), l);
+        overallSize += l;
+    }
+    for (SIZE_T i = 0; i < callClasses.Count(); i++) {
+        l = callClasses[i].Length() + 1;
+        ::memcpy(outmem.At(overallSize), callClasses[i].PeekBuffer(), l);
+        overallSize += l;
+        l = callFrom[i].Length() + 1;
+        ::memcpy(outmem.At(overallSize), callFrom[i].PeekBuffer(), l);
+        overallSize += l;
+        l = callTo[i].Length() + 1;
+        ::memcpy(outmem.At(overallSize), callTo[i].PeekBuffer(), l);
+        overallSize += l;
+    }
+    for (SIZE_T i = 0; i < paramName.Count(); i++) {
+        l = paramName[i].Length() + 1;
+        ::memcpy(outmem.At(overallSize), paramName[i].PeekBuffer(), l);
+        overallSize += l;
+        l = paramValue[i].Length() + 1;
+        ::memcpy(outmem.At(overallSize), paramValue[i].PeekBuffer(), l);
+        overallSize += l;
+    }
+
+    ASSERT(overallSize == outmem.GetSize());
 }

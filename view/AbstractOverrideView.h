@@ -122,6 +122,11 @@ namespace view {
             return this->viewportHeight;
         }
 
+        /**
+         * Disconnects the outgoing render call
+         */
+        void disconnectOutgoingRenderCall(void);
+
     private:
 
         /** Slot for outgoing rendering requests to other views */

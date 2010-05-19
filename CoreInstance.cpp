@@ -24,6 +24,8 @@
 #include "Call.h"
 #include "CallDescription.h"
 #include "CallDescriptionManager.h"
+#include "cluster/ClusterController.h"
+#include "cluster/ClusterViewMaster.h"
 #include "Module.h"
 #include "ModuleDescription.h"
 #include "ModuleDescriptionManager.h"
@@ -43,6 +45,7 @@
 #include "vislib/Trace.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/UTF8Encoder.h"
 #include "vislib/vislibversion.h"
 
 
@@ -86,11 +89,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), plugins() {
-
-
-    printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
-
-
+    //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
@@ -163,12 +162,6 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("PowerwallView"), "pwview");
     //vd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl"); // TODO: Dependant instance!
     vd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "pwview::register", "::cctrl::register");
-
-    //// DEBUG! TODO: Remove
-    //vd->AddModule(ModuleDescriptionManager::Instance()->Find("View2D"), "view");
-    //vd->AddModule(ModuleDescriptionManager::Instance()->Find("ChronoGraph"), "watch");
-    //vd->AddCall(CallDescriptionManager::Instance()->Find("CallRender2D"), "view::rendering", "watch::rendering");
-    //vd->AddCall(CallDescriptionManager::Instance()->Find("CallRenderView"), "pwview::renderView", "view::render");
 
     vd->SetViewModuleID("pwview");
     this->builtinViewDescs.Register(vd);
@@ -593,7 +586,7 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
             continue;
         }
 
-        Call *call = this->instantiateCall(fromFullName, toFullName, desc);
+        Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
         }
@@ -701,7 +694,7 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
             continue;
         }
 
-        Call *call = this->instantiateCall(fromFullName, toFullName, desc);
+        Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
         }
@@ -823,7 +816,7 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
             continue;
         }
 
-        Call *call = this->instantiateCall(fromFullName, toFullName, desc);
+        Call *call = this->InstantiateCall(fromFullName, toFullName, desc);
         if (call == NULL) {
             hasErrors = true;
         }
@@ -964,9 +957,9 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
  * megamol::core::CoreInstance::GetInstanceTime
  */
 double megamol::core::CoreInstance::GetInstanceTime(void) const {
-#ifdef _WIN32
-    ::SetThreadAffinityMask(::GetCurrentThread(), 0x00000001);
-#endif /* _WIN32 */
+//#ifdef _WIN32 // not a good idea when running more than one megamol on one machine
+//    ::SetThreadAffinityMask(::GetCurrentThread(), 0x00000001);
+//#endif /* _WIN32 */
     return vislib::sys::PerformanceCounter::QueryMillis()
         * 0.001 + this->timeOffset;
 }
@@ -1030,6 +1023,133 @@ void megamol::core::CoreInstance::Shutdown(void) {
             ji->Terminate();
         }
     }
+}
+
+
+/*
+ * megamol::core::CoreInstance::SetupGraphFromNetwork
+ */
+void megamol::core::CoreInstance::SetupGraphFromNetwork(const vislib::net::AbstractSimpleMessage& dat) {
+    using vislib::sys::Log;
+    this->namespaceRoot.LockModuleGraph(true);
+    try {
+
+        UINT64 cntMods = *dat.GetBodyAs<UINT64>();
+        UINT64 cntCalls = *dat.GetBodyAsAt<UINT64>(sizeof(UINT64));
+        UINT64 cntParams = *dat.GetBodyAsAt<UINT64>(sizeof(UINT64) * 2);
+        SIZE_T pos = sizeof(UINT64) * 3;
+
+        //printf("\n\nGraph Setup:\n");
+        for (UINT64 i = 0; i < cntMods; i++) {
+            vislib::StringA modClass(dat.GetBodyAsAt<char>(pos));
+            pos += modClass.Length() + 1;
+            vislib::StringA modName(dat.GetBodyAsAt<char>(pos));
+            pos += modName.Length() + 1;
+
+            if (modClass.Equals(cluster::ClusterViewMaster::ClassName())
+                    || modClass.Equals(cluster::ClusterController::ClassName())) {
+                // these are infra structure modules and not to be synced
+                continue;
+            }
+
+            ModuleDescription *d = ModuleDescriptionManager::Instance()->Find(modClass);
+            if (d == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "Unable to instantiate module %s(%s): class description not found\n",
+                    modName.PeekBuffer(), modClass.PeekBuffer());
+                continue;
+            }
+            Module *m = this->instantiateModule(modName, d);
+            if (m == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "Unable to instantiate module %s(%s): instantiation failed\n",
+                    modName.PeekBuffer(), modClass.PeekBuffer());
+                continue;
+            }
+            //printf("    Modul: %s as %s\n", modClass.PeekBuffer(), modName.PeekBuffer());
+
+        }
+
+        for (UINT64 i = 0; i < cntCalls; i++) {
+            vislib::StringA callClass(dat.GetBodyAsAt<char>(pos));
+            pos += callClass.Length() + 1;
+            vislib::StringA callFrom(dat.GetBodyAsAt<char>(pos));
+            pos += callFrom.Length() + 1;
+            vislib::StringA callTo(dat.GetBodyAsAt<char>(pos));
+            pos += callTo.Length() + 1;
+
+            AbstractNamedObject *ano = this->namespaceRoot.FindNamedObject(callFrom);
+            if (ano == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 10, // could be a warning, but we intentionally omitted some modules
+                    "Not connecting call %s from missing module %s\n",
+                    callClass.PeekBuffer(), callFrom.PeekBuffer());
+                continue;
+            }
+            ano = this->namespaceRoot.FindNamedObject(callTo);
+            if (ano == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 10, // could be a warning, but we intentionally omitted some modules
+                    "Not connecting call %s to missing module %s\n",
+                    callClass.PeekBuffer(), callTo.PeekBuffer());
+                continue;
+            }
+
+            CallDescription *d = CallDescriptionManager::Instance()->Find(callClass);
+            if (d == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "Unable to instantiate call %s=>%s(%s): class description not found\n",
+                    callFrom.PeekBuffer(), callTo.PeekBuffer(), callClass.PeekBuffer());
+                continue;
+            }
+            Call *c = this->InstantiateCall(callFrom, callTo, d);
+            if (c == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                    "Unable to instantiate module %s=>%s(%s): instantiation failed\n",
+                    callFrom.PeekBuffer(), callTo.PeekBuffer(), callClass.PeekBuffer());
+                continue;
+            }
+            //printf("    Call: %s from %s to %s\n", callClass.PeekBuffer(), callFrom.PeekBuffer(), callTo.PeekBuffer());
+        }
+
+        for (UINT64 i = 0; i < cntParams; i++) {
+            vislib::StringA paramName(dat.GetBodyAsAt<char>(pos));
+            pos += paramName.Length() + 1;
+            vislib::StringA paramValue(dat.GetBodyAsAt<char>(pos));
+            pos += paramValue.Length() + 1;
+
+            AbstractNamedObject *ano = this->namespaceRoot.FindNamedObject(paramName);
+            if (ano == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 10, // could be a warning, but we intentionally omitted some modules
+                    "Parameter %s not found\n", paramName.PeekBuffer());
+                continue;
+            }
+            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(ano);
+            if (ps == NULL) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s is not a parameter slot\n", paramName.PeekBuffer());
+                continue;
+            }
+
+            if (ps->Parameter().IsNull()) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Parameter of %s is NULL\n", paramName.PeekBuffer());
+                continue;
+            }
+
+            vislib::TString value;
+            if (!vislib::UTF8Encoder::Decode(value, paramValue)) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to decode parameter value for %s\n", paramName.PeekBuffer());
+                continue;
+            }
+            ps->Parameter()->ParseValue(value);
+            //printf("    Param: %s to %s\n", paramName.PeekBuffer(), paramValue.PeekBuffer());
+        }
+        //printf("\n");
+
+    } catch(vislib::Exception ex) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to setup module graph from network message: %s\n",
+            ex.GetMsgA());
+    } catch(...) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
+    }
+    this->namespaceRoot.UnlockModuleGraph();
 }
 
 
@@ -1115,6 +1235,9 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
         SAFE_DELETE(mod);
 
     } else {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
+            "Created module \"%s\" (%s)",
+            desc->ClassName(), path.PeekBuffer());
         cns->AddChild(mod);
     }
 
@@ -1123,13 +1246,13 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
 
 
 /*
- * megamol::core::CoreInstance::instantiateCall
+ * megamol::core::CoreInstance::InstantiateCall
  */
-megamol::core::Call* megamol::core::CoreInstance::instantiateCall(
+megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
         const vislib::StringA fromPath, const vislib::StringA toPath,
         megamol::core::CallDescription* desc) {
     using vislib::sys::Log;
-    VLSTACKTRACE("instantiateCall", __FILE__, __LINE__);
+    VLSTACKTRACE("InstantiateCall", __FILE__, __LINE__);
 
     ASSERT(fromPath.StartsWith("::"));
     ASSERT(toPath.StartsWith("::"));
