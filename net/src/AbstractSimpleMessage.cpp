@@ -63,11 +63,11 @@ void vislib::net::AbstractSimpleMessage::SetBody(const void *body,
     void *b = NULL;
     SIZE_T bs = (bodySize == 0) ? this->header.GetBodySize() : bodySize;
     
-    if (bodySize == 0) {
-        b = this->GetBody();
-    } else {
-        b = this->assertStorage(bodySize);
+    if (bodySize != 0) {
+        this->header.SetBodySize(bodySize);
+        this->AssertBodySize();
     }
+    b = this->GetBody();
 
     ASSERT(b != NULL);
     ASSERT(body != NULL);
@@ -99,7 +99,7 @@ vislib::net::AbstractSimpleMessage::operator =(
     if ((this != &rhs) && (static_cast<const void *>(*this) 
             != static_cast<const void *>(rhs))) {
         void *data = this->assertStorage(rhs.GetHeader().GetBodySize());
-        ::memcpy(data, static_cast<const void *>(rhs), this->GetMessageSize());
+        ::memcpy(data, static_cast<const void *>(rhs), rhs.GetMessageSize());
     }
 
     return *this;
