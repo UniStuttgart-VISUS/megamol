@@ -356,7 +356,13 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "Internal Error: \"CallRenderView\" is not registered\n");
             }
-            // TODO: Implement further??
+            // TODO: Better connect a camera client to a camera server
+        } break;
+
+        case cluster::netmessages::MSG_SET_CAMERAVALUES: {
+
+            // TODO: Implement
+
         } break;
 
         default:

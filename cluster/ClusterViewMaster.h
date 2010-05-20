@@ -21,6 +21,7 @@
 #include "vislib/CommServerListener.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/SmartRef.h"
+#include "vislib/Thread.h"
 
 
 namespace megamol {
@@ -113,6 +114,15 @@ namespace cluster {
     private:
 
         /**
+         * The thread function for camera updates
+         *
+         * @param userData
+         *
+         * @return 0
+         */
+        static DWORD cameraUpdateThread(void *userData);
+
+        /**
          * Answer the default server host of this machine, either IP-Address or computer name
          *
          * @return The default server host
@@ -171,6 +181,9 @@ namespace cluster {
 
         /** Performs a sanitycheck of the times on all cluster nodes */
         param::ParamSlot sanityCheckTimeSlot;
+
+        /** The thread to update the camera settings */
+        vislib::sys::Thread camUpdateThread;
 
     };
 

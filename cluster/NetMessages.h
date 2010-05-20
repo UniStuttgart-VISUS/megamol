@@ -64,6 +64,9 @@ namespace netmessages {
     /** Sets the view to be shown by the cluster */
     const UINT32 MSG_SET_CLUSTERVIEW = 12;
 
+    /** Message containing all values of the current camera */
+    const UINT32 MSG_SET_CAMERAVALUES = 13;
+
     ///** Message with camera setup information */
     //const UINT32 MSG_CAMERASETUP = ;
 

@@ -54,6 +54,22 @@ view::View2D::~View2D(void) {
 
 
 /*
+ * view::View2D::GetCameraSyncNumber
+ */
+unsigned int view::View2D::GetCameraSyncNumber(void) const {
+    return 0; // TODO: Implement
+}
+
+
+/*
+ * view::View2D::SerialiseCamera
+ */
+void view::View2D::SerialiseCamera(vislib::Serialiser& serialiser) const {
+    // TODO: Implement
+}
+
+
+/*
  * view::View2D::Render
  */
 void view::View2D::Render(void) {

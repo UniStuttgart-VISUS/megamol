@@ -3009,7 +3009,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\cluster\ControlChannel.h"
+					RelativePath=".\cluster\CommChannel.h"
 					>
 				</File>
 				<File
@@ -3053,7 +3053,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\cluster\ControlChannel.cpp"
+					RelativePath=".\cluster\CommChannel.cpp"
 					>
 				</File>
 				<File

@@ -78,6 +78,20 @@ namespace view {
         virtual ~View3D(void);
 
         /**
+         * Answer the camera synchronization number.
+         *
+         * @return The camera synchronization number
+         */
+        virtual unsigned int GetCameraSyncNumber(void) const;
+
+        /**
+         * Serialises the camera of the view
+         *
+         * @param serialiser Serialises the camera of the view
+         */
+        virtual void SerialiseCamera(vislib::Serialiser& serialiser) const;
+
+        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
         virtual void Render(void);

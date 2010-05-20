@@ -17,11 +17,15 @@
 #include "param/ButtonParam.h"
 #include "param/StringParam.h"
 #include "utility/Configuration.h"
+#include "view/AbstractRenderingView.h"
 #include "view/AbstractView.h"
 #include "view/CallRenderView.h"
 #include "vislib/assert.h"
 #include "vislib/Log.h"
 #include "vislib/RawStorage.h"
+#include "vislib/RawStorageSerialiser.h"
+#include "vislib/ShallowSimpleMessage.h"
+#include "vislib/SimpleMessageHeaderData.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/mathfunctions.h"
@@ -39,7 +43,8 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
         viewSlot("view", "The view to be used (this value is set automatically"),
         serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port"),
         serverEndPoint(),
-        sanityCheckTimeSlot("sanityCheckTime", "Runs a time sync sanity check on all cluster nodes.") {
+        sanityCheckTimeSlot("sanityCheckTime", "Runs a time sync sanity check on all cluster nodes."),
+        camUpdateThread(&ClusterViewMaster::cameraUpdateThread) {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -72,6 +77,12 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
 cluster::ClusterViewMaster::~ClusterViewMaster(void) {
     this->ccc.RemoveListener(this);
     this->ctrlServer.RemoveListener(this);
+    if (this->camUpdateThread.IsRunning()) {
+        this->LockModuleGraph(true);
+        this->viewSlot.ConnectCall(NULL);
+        this->UnlockModuleGraph();
+        this->camUpdateThread.Join();
+    }
     this->Release();
 
     // TODO: Implement
@@ -96,6 +107,12 @@ bool cluster::ClusterViewMaster::create(void) {
  */
 void cluster::ClusterViewMaster::release(void) {
     this->ctrlServer.Stop();
+    if (this->camUpdateThread.IsRunning()) {
+        this->LockModuleGraph(true);
+        this->viewSlot.ConnectCall(NULL);
+        this->UnlockModuleGraph();
+        this->camUpdateThread.Join();
+    }
 
     // TODO: Implement
 
@@ -107,10 +124,15 @@ void cluster::ClusterViewMaster::release(void) {
  */
 bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
+    this->LockModuleGraph(true);
     if (!this->viewSlot.ConnectCall(NULL)) { // disconnect old call
         Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
             "Unable to disconnect call from slot \"%s\"\n",
             this->viewSlot.FullName().PeekBuffer());
+    }
+    this->UnlockModuleGraph();
+    if (this->camUpdateThread.IsRunning()) {
+        this->camUpdateThread.Join();
     }
 
     CalleeSlot *viewModSlot = NULL;
@@ -188,6 +210,8 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
             this->viewSlot.FullName().PeekBuffer());
         return true; // this is just for diryt flag reset
     }
+
+    this->camUpdateThread.Start(static_cast<void*>(this));
 
     vislib::net::SimpleMessage msg;
     msg.GetHeader().SetMessageID(cluster::netmessages::MSG_REQUEST_RESETUP);
@@ -331,6 +355,51 @@ void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannel
             break;
     }
 
+}
+
+
+/*
+ * cluster::ClusterViewMaster::cameraUpdateThread
+ */
+DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
+    const view::AbstractRenderingView *arv = NULL;
+    ClusterViewMaster *This = static_cast<ClusterViewMaster *>(userData);
+    unsigned int syncnumber = static_cast<unsigned int>(-1);
+    Call *call = NULL;
+    unsigned int csn = 0;
+    vislib::RawStorage mem;
+    vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
+    vislib::net::ShallowSimpleMessage msg(NULL);
+
+    while (true) {
+        This->LockModuleGraph(false);
+        arv = NULL;
+        call = This->viewSlot.CallAs<Call>();
+        if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
+            arv = dynamic_cast<const view::AbstractRenderingView*>(call->PeekCalleeSlot()->Parent());
+        }
+        This->UnlockModuleGraph();
+        if (arv == NULL) break;
+
+        csn = arv->GetCameraSyncNumber();
+        if (csn != syncnumber) {
+            syncnumber = csn;
+            serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData));
+            arv->SerialiseCamera(serialiser);
+
+            msg.SetStorage(mem, mem.GetSize());
+            msg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CAMERAVALUES);
+            msg.GetHeader().SetBodySize(mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData));
+
+            // TODO: Better use another server
+            This->ctrlServer.MultiSendMessage(msg);
+
+        }
+
+        vislib::sys::Thread::Sleep(1000 / 60); // ~60 fps
+    }
+
+    return 0;
 }
 
 

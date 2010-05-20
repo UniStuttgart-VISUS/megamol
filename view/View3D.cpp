@@ -235,6 +235,22 @@ view::View3D::~View3D(void) {
 
 
 /*
+ * view::View3D::GetCameraSyncNumber
+ */
+unsigned int view::View3D::GetCameraSyncNumber(void) const {
+    return this->camParams->SyncNumber();
+}
+
+
+/*
+ * view::View3D::SerialiseCamera
+ */
+void view::View3D::SerialiseCamera(vislib::Serialiser& serialiser) const {
+    this->camParams->Serialise(serialiser);
+}
+
+
+/*
  * view::View3D::Render
  */
 void view::View3D::Render(void) {
