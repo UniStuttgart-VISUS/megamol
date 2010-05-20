@@ -1,12 +1,12 @@
 /*
- * ControlChannel.h
+ * CommChannel.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CONTROLCHANNEL_H_INCLUDED
-#define MEGAMOLCORE_CONTROLCHANNEL_H_INCLUDED
+#ifndef MEGAMOLCORE_COMMCHANNEL_H_INCLUDED
+#define MEGAMOLCORE_COMMCHANNEL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -26,16 +26,16 @@ namespace core {
 namespace cluster {
 
     /**
-     * class for control communication channel end points
+     * class for communication channel end points
      */
-    class ControlChannel : public vislib::Listenable<ControlChannel>,
+    class CommChannel : public vislib::Listenable<CommChannel>,
         protected vislib::net::SimpleMessageDispatchListener {
     public:
 
         /**
          * Class for listener object
          */
-        class Listener : public vislib::Listenable<ControlChannel>::Listener {
+        class Listener : public vislib::Listenable<CommChannel>::Listener {
         public:
 
             /** Ctor */
@@ -51,7 +51,7 @@ namespace cluster {
              *
              * @param sender The sending object
              */
-            virtual void OnControlChannelConnect(ControlChannel& sender) {
+            virtual void OnCommChannelConnect(CommChannel& sender) {
             }
 
             /**
@@ -59,7 +59,7 @@ namespace cluster {
              *
              * @param sender The sending object
              */
-            virtual void OnControlChannelDisconnect(ControlChannel& sender) {
+            virtual void OnCommChannelDisconnect(CommChannel& sender) {
             }
 
             /**
@@ -68,7 +68,7 @@ namespace cluster {
              * @param sender The sending object
              * @param msg The received message
              */
-            virtual void OnControlChannelMessage(ControlChannel& sender,
+            virtual void OnCommChannelMessage(CommChannel& sender,
                     const vislib::net::AbstractSimpleMessage& msg) {
             }
 
@@ -77,12 +77,12 @@ namespace cluster {
         /**
          * Ctor
          */
-        ControlChannel(void);
+        CommChannel(void);
 
         /**
          * Dtor.
          */
-        virtual ~ControlChannel(void);
+        virtual ~CommChannel(void);
 
         /**
          * Closes the communication channel
@@ -137,7 +137,7 @@ namespace cluster {
          *
          * @return True if this and rhs are equal
          */
-        bool operator==(const ControlChannel& rhs) const;
+        bool operator==(const CommChannel& rhs) const;
 
         /**
          * Assignment operator. Calling this is only valid if the channel is NOT open.
@@ -146,7 +146,7 @@ namespace cluster {
          *
          * @return A reference to this object
          */
-        ControlChannel& operator=(const ControlChannel& rhs);
+        CommChannel& operator=(const CommChannel& rhs);
 
     protected:
 
@@ -225,7 +225,7 @@ namespace cluster {
         /**
          * Forbidden copy ctor
          */
-        ControlChannel(const ControlChannel& src);
+        CommChannel(const CommChannel& src);
 
         /** The communication channel */
         vislib::SmartRef<vislib::net::AbstractBidiCommChannel> channel;
@@ -243,4 +243,4 @@ namespace cluster {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CONTROLCHANNEL_H_INCLUDED */
+#endif /* MEGAMOLCORE_COMMCHANNEL_H_INCLUDED */

@@ -28,7 +28,7 @@ using namespace megamol::core;
  * cluster::AbstractClusterView::AbstractClusterView
  */
 cluster::AbstractClusterView::AbstractClusterView(void)
-        : view::AbstractTileView(), ClusterControllerClient::Listener(), ControlChannel::Listener(),
+        : view::AbstractTileView(), ClusterControllerClient::Listener(), CommChannel::Listener(),
         ccc(), ctrlChannel(), lastPingTime(0),
         serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port"),
         setupState(SETUP_UNKNOWN), graphInitData(NULL) {
@@ -206,9 +206,9 @@ void cluster::AbstractClusterView::OnClusterUserMessage(cluster::ClusterControll
 
 
 /*
- * cluster::AbstractClusterView::OnControlChannelConnect
+ * cluster::AbstractClusterView::OnCommChannelConnect
  */
-void cluster::AbstractClusterView::OnControlChannelConnect(cluster::ControlChannel& sender) {
+void cluster::AbstractClusterView::OnCommChannelConnect(cluster::CommChannel& sender) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Connected to head node\n");
 
     this->continueSetup(SETUP_TIME);
@@ -216,18 +216,18 @@ void cluster::AbstractClusterView::OnControlChannelConnect(cluster::ControlChann
 
 
 /*
- * cluster::AbstractClusterView::OnControlChannelDisconnect
+ * cluster::AbstractClusterView::OnCommChannelDisconnect
  */
-void cluster::AbstractClusterView::OnControlChannelDisconnect(cluster::ControlChannel& sender) {
+void cluster::AbstractClusterView::OnCommChannelDisconnect(cluster::CommChannel& sender) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Disconnected from head node\n");
     this->serverAddressSlot.Param<param::StringParam>()->SetValue("", false);
 }
 
 
 /*
- * cluster::AbstractClusterView::OnControlChannelMessage
+ * cluster::AbstractClusterView::OnCommChannelMessage
  */
-void cluster::AbstractClusterView::OnControlChannelMessage(cluster::ControlChannel& sender,
+void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& sender,
         const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     vislib::net::SimpleMessage outMsg;

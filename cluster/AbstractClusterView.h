@@ -13,7 +13,7 @@
 
 #include "view/AbstractTileView.h"
 #include "cluster/ClusterControllerClient.h"
-#include "cluster/ControlChannel.h"
+#include "cluster/CommChannel.h"
 #include "cluster/InfoIconRenderer.h"
 #include "vislib/AbstractClientEndPoint.h"
 #include "vislib/CriticalSection.h"
@@ -31,7 +31,7 @@ namespace cluster {
      * Abstract base class of override rendering views
      */
     class AbstractClusterView : public view::AbstractTileView,
-        protected ClusterControllerClient::Listener, protected ControlChannel::Listener {
+        protected ClusterControllerClient::Listener, protected CommChannel::Listener {
     public:
 
         /** Possible setup states */
@@ -118,14 +118,14 @@ namespace cluster {
          *
          * @param sender The sending object
          */
-        virtual void OnControlChannelConnect(ControlChannel& sender);
+        virtual void OnCommChannelConnect(CommChannel& sender);
 
         /**
          * Informs that the control channel is no longer connected.
          *
          * @param sender The sending object
          */
-        virtual void OnControlChannelDisconnect(ControlChannel& sender);
+        virtual void OnCommChannelDisconnect(CommChannel& sender);
 
         /**
          * A message has been received over the control channel.
@@ -133,14 +133,14 @@ namespace cluster {
          * @param sender The sending object
          * @param msg The received message
          */
-        virtual void OnControlChannelMessage(ControlChannel& sender,
+        virtual void OnCommChannelMessage(CommChannel& sender,
             const vislib::net::AbstractSimpleMessage& msg);
 
         /** The cluster control client */
         ClusterControllerClient ccc;
 
         /** The control channel */
-        ControlChannel ctrlChannel;
+        CommChannel ctrlChannel;
 
     private:
 

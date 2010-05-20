@@ -68,7 +68,7 @@ void cluster::ControlChannelServer::Stop(void) {
         this->server.Terminate(false);
     }
     vislib::sys::AutoLock(this->clientsLock);
-    vislib::SingleLinkedList<cluster::ControlChannel>::Iterator iter = this->clients.GetIterator();
+    vislib::SingleLinkedList<cluster::CommChannel>::Iterator iter = this->clients.GetIterator();
     while (iter.HasNext()) {
         iter.Next().RemoveListener(this);
     }
@@ -81,9 +81,9 @@ void cluster::ControlChannelServer::Stop(void) {
  */
 void cluster::ControlChannelServer::MultiSendMessage(const vislib::net::AbstractSimpleMessage& msg) {
     vislib::sys::AutoLock(this->clientsLock);
-    vislib::SingleLinkedList<cluster::ControlChannel>::Iterator iter = this->clients.GetIterator();
+    vislib::SingleLinkedList<cluster::CommChannel>::Iterator iter = this->clients.GetIterator();
     while (iter.HasNext()) {
-        cluster::ControlChannel& channel = iter.Next();
+        cluster::CommChannel& channel = iter.Next();
         try {
             channel.SendMessage(msg);
         } catch(...) {
@@ -95,9 +95,9 @@ void cluster::ControlChannelServer::MultiSendMessage(const vislib::net::Abstract
 
 
 /*
- * cluster::ControlChannelServer::OnControlChannelDisconnect
+ * cluster::ControlChannelServer::OnCommChannelDisconnect
  */
-void cluster::ControlChannelServer::OnControlChannelDisconnect(cluster::ControlChannel& sender) {
+void cluster::ControlChannelServer::OnCommChannelDisconnect(cluster::CommChannel& sender) {
     vislib::sys::AutoLock(this->clientsLock);
     if (this->clients.Contains(sender)) {
         sender.RemoveListener(this);
@@ -113,9 +113,9 @@ void cluster::ControlChannelServer::OnControlChannelDisconnect(cluster::ControlC
 
 
 /*
- * cluster::ControlChannelServer::OnControlChannelMessage
+ * cluster::ControlChannelServer::OnCommChannelMessage
  */
-void cluster::ControlChannelServer::OnControlChannelMessage(cluster::ControlChannel& sender, const vislib::net::AbstractSimpleMessage& msg) {
+void cluster::ControlChannelServer::OnCommChannelMessage(cluster::CommChannel& sender, const vislib::net::AbstractSimpleMessage& msg) {
     vislib::Listenable<ControlChannelServer>::ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
         Listener *l = dynamic_cast<Listener*>(iter.Next());
@@ -142,7 +142,7 @@ bool cluster::ControlChannelServer::OnNewConnection(const vislib::net::CommServe
     ASSERT(!bidiChannel.IsNull()); // internal error like problem (should never happen)
     try {
         vislib::sys::AutoLock(this->clientsLock);
-        this->clients.Append(cluster::ControlChannel());
+        this->clients.Append(cluster::CommChannel());
         this->clients.Last().Open(bidiChannel);
         this->clients.Last().AddListener(this);
 

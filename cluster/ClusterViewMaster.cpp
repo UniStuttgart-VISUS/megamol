@@ -226,7 +226,7 @@ void cluster::ClusterViewMaster::OnClusterUserMessage(cluster::ClusterController
  * cluster::ClusterViewMaster::OnControlChannelMessage
  */
 void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannelServer& server,
-        cluster::ControlChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
+        cluster::CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     vislib::net::SimpleMessage outMsg;
 

@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "cluster/ControlChannel.h"
+#include "cluster/CommChannel.h"
 #include "vislib/AbstractSimpleMessage.h"
 #include "vislib/CommServer.h"
 #include "vislib/CommServerListener.h"
@@ -30,7 +30,7 @@ namespace cluster {
      * class for control communication channel end points
      */
     class ControlChannelServer : public vislib::Listenable<ControlChannelServer>,
-        protected vislib::net::CommServerListener, protected ControlChannel::Listener {
+        protected vislib::net::CommServerListener, protected CommChannel::Listener {
     public:
 
         /**
@@ -67,28 +67,28 @@ namespace cluster {
              * Informs that the control channel is now connected an can send and receive messages
              *
              * @param sender The sending object
-             * @param channel The control channel
+             * @param channel The communication channel
              */
-            virtual void OnControlChannelConnect(ControlChannelServer& server, ControlChannel& channel) {
+            virtual void OnControlChannelConnect(ControlChannelServer& server, CommChannel& channel) {
             }
 
             /**
              * Informs that the control channel is no longer connected.
              *
              * @param sender The sending object
-             * @param channel The control channel
+             * @param channel The communication channel
              */
-            virtual void OnControlChannelDisconnect(ControlChannelServer& server, ControlChannel& channel) {
+            virtual void OnControlChannelDisconnect(ControlChannelServer& server, CommChannel& channel) {
             }
 
             /**
              * A message has been received over the control channel.
              *
              * @param sender The sending object
-             * @param channel The control channel
+             * @param channel The communication channel
              * @param msg The received message
              */
-            virtual void OnControlChannelMessage(ControlChannelServer& server, ControlChannel& channel,
+            virtual void OnControlChannelMessage(ControlChannelServer& server, CommChannel& channel,
                     const vislib::net::AbstractSimpleMessage& msg) {
             }
 
@@ -137,7 +137,7 @@ namespace cluster {
          *
          * @param sender The sending object
          */
-        virtual void OnControlChannelDisconnect(cluster::ControlChannel& sender);
+        virtual void OnCommChannelDisconnect(cluster::CommChannel& sender);
 
         /**
          * A message has been received over the control channel.
@@ -145,7 +145,7 @@ namespace cluster {
          * @param sender The sending object
          * @param msg The received message
          */
-        virtual void OnControlChannelMessage(cluster::ControlChannel& sender, const vislib::net::AbstractSimpleMessage& msg);
+        virtual void OnCommChannelMessage(cluster::CommChannel& sender, const vislib::net::AbstractSimpleMessage& msg);
 
         /**
          * This method is called once a network error occurs.
@@ -224,7 +224,7 @@ namespace cluster {
         vislib::sys::CriticalSection clientsLock;
 
         /** The list of active control channels */
-        vislib::SingleLinkedList<ControlChannel> clients;
+        vislib::SingleLinkedList<CommChannel> clients;
 
         /** The comm channel to use */
         vislib::SmartRef<vislib::net::TcpCommChannel> commChannel;

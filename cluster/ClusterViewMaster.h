@@ -108,7 +108,7 @@ namespace cluster {
          * @param channel The control channel
          * @param msg The received message
          */
-        void OnControlChannelMessage(ControlChannelServer& server, ControlChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
+        void OnControlChannelMessage(ControlChannelServer& server, CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
 
     private:
 
