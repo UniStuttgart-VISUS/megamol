@@ -92,6 +92,13 @@ namespace view {
         virtual void SerialiseCamera(vislib::Serialiser& serialiser) const;
 
         /**
+         * Deserialises the camera of the view
+         *
+         * @param serialiser Deserialises the camera of the view
+         */
+        virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
+
+        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
         virtual void Render(void);

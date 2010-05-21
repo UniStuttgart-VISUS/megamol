@@ -70,6 +70,14 @@ void view::View2D::SerialiseCamera(vislib::Serialiser& serialiser) const {
 
 
 /*
+ * view::View2D::DeserialiseCamera
+ */
+void view::View2D::DeserialiseCamera(vislib::Serialiser& serialiser) {
+    // TODO: Implement
+}
+
+
+/*
  * view::View2D::Render
  */
 void view::View2D::Render(void) {

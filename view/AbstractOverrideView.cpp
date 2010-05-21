@@ -35,6 +35,30 @@ view::AbstractOverrideView::~AbstractOverrideView(void) {
 
 
 /*
+ * view::AbstractOverrideView::GetCameraSyncNumber
+ */
+unsigned int view::AbstractOverrideView::GetCameraSyncNumber(void) const {
+    return 0; // TODO: Implement
+}
+
+
+/*
+ * view::AbstractOverrideView::SerialiseCamera
+ */
+void view::AbstractOverrideView::SerialiseCamera(vislib::Serialiser& serialiser) const {
+    // TODO: Implement
+}
+
+
+/*
+ * view::AbstractOverrideView::DeserialiseCamera
+ */
+void view::AbstractOverrideView::DeserialiseCamera(vislib::Serialiser& serialiser) {
+    // TODO: Implement
+}
+
+
+/*
  * view::AbstractOverrideView::ResetView
  */
 void view::AbstractOverrideView::ResetView(void) {
@@ -112,6 +136,17 @@ void view::AbstractOverrideView::UpdateFreeze(bool freeze) {
  */
 void view::AbstractOverrideView::disconnectOutgoingRenderCall(void) {
     this->renderViewSlot.ConnectCall(NULL);
+}
+
+
+/*
+ * view::AbstractOverrideView::getConnectedView
+ */
+view::AbstractView *view::AbstractOverrideView::getConnectedView(void) const {
+    Call* c = const_cast<CallerSlot*>(&this->renderViewSlot)->CallAs<Call>();
+    if ((c == NULL) || (c->PeekCalleeSlot() == NULL)) return NULL;
+    return const_cast<view::AbstractView*>(
+        dynamic_cast<const view::AbstractView*>(c->PeekCalleeSlot()->Parent()));
 }
 
 

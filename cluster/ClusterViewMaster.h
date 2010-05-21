@@ -16,6 +16,7 @@
 #include "cluster/ControlChannelServer.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
+#include "param/ParamUpdateListener.h"
 #include "vislib/AbstractServerEndPoint.h"
 #include "vislib/CommServer.h"
 #include "vislib/CommServerListener.h"
@@ -33,7 +34,7 @@ namespace cluster {
      * Abstract base class of override rendering views
      */
     class ClusterViewMaster : public Module, protected ClusterControllerClient::Listener,
-        protected ControlChannelServer::Listener {
+        protected ControlChannelServer::Listener, protected param::ParamUpdateListener {
     public:
 
         /**
@@ -100,7 +101,7 @@ namespace cluster {
          * @param msgType The type value of the message
          * @param msgBody The data of the message
          */
-        void OnClusterUserMessage(ClusterControllerClient& sender, const ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType, const BYTE *msgBody);
+        virtual void OnClusterUserMessage(ClusterControllerClient& sender, const ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType, const BYTE *msgBody);
 
         /**
          * A message has been received over the control channel.
@@ -109,7 +110,14 @@ namespace cluster {
          * @param channel The control channel
          * @param msg The received message
          */
-        void OnControlChannelMessage(ControlChannelServer& server, CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
+        virtual void OnControlChannelMessage(ControlChannelServer& server, CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
+
+        /**
+         * Callback called when a parameter is updated
+         *
+         * @param slot The parameter updated
+         */
+        virtual void ParamUpdated(param::ParamSlot& slot);
 
     private:
 

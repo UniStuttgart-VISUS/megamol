@@ -251,6 +251,14 @@ void view::View3D::SerialiseCamera(vislib::Serialiser& serialiser) const {
 
 
 /*
+ * view::View3D::DeserialiseCamera
+ */
+void view::View3D::DeserialiseCamera(vislib::Serialiser& serialiser) {
+    this->camParams->Deserialise(serialiser);
+}
+
+
+/*
  * view::View3D::Render
  */
 void view::View3D::Render(void) {

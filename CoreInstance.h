@@ -39,6 +39,7 @@
 #include "ViewInstanceRequest.h"
 #include "AbstractSlot.h"
 #include "param/AbstractParam.h"
+#include "param/ParamUpdateListener.h"
 #include "utility/ShaderSourceFactory.h"
 #include "ParamValueSetRequest.h"
 
@@ -341,6 +342,33 @@ namespace core {
         Call* InstantiateCall(const vislib::StringA fromPath,
             const vislib::StringA toPath, CallDescription* desc);
 
+        /**
+         * Fired whenever a parameter updates it's value
+         *
+         * @param slot The parameter slot
+         */
+        void ParameterValueUpdate(param::ParamSlot& slot);
+
+        /**
+         * Adds a ParamUpdateListener to the list of registered listeners
+         *
+         * @param pul The ParamUpdateListener to add
+         */
+        inline void RegisterParamUpdateListener(param::ParamUpdateListener *pul) {
+            if (!this->paramUpdateListeners.Contains(pul)) {
+                this->paramUpdateListeners.Add(pul);
+            }
+        }
+
+        /**
+         * Removes a ParamUpdateListener from the list of registered listeners
+         *
+         * @param pul The ParamUpdateListener to remove
+         */
+        inline void UnregisterParamUpdateListener(param::ParamUpdateListener *pul) {
+            this->paramUpdateListeners.RemoveAll(pul);
+        }
+
     private:
 
         /**
@@ -607,6 +635,9 @@ namespace core {
 
         /** The loaded plugins */
         vislib::PtrArray<vislib::sys::DynamicLinkLibrary> plugins;
+
+        /** List of registered param update listeners */
+        vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */

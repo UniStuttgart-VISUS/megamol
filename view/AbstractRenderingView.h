@@ -13,7 +13,6 @@
 
 #include "param/ParamSlot.h"
 #include "view/AbstractView.h"
-#include "vislib/Serialiser.h"
 
 
 namespace megamol {
@@ -32,20 +31,6 @@ namespace view {
 
         /** Dtor. */
         virtual ~AbstractRenderingView(void);
-
-        /**
-         * Answer the camera synchronization number.
-         *
-         * @return The camera synchronization number
-         */
-        virtual unsigned int GetCameraSyncNumber(void) const = 0;
-
-        /**
-         * Serialises the camera of the view
-         *
-         * @param serialiser Serialises the camera of the view
-         */
-        virtual void SerialiseCamera(vislib::Serialiser& serialiser) const = 0;
 
     protected:
 

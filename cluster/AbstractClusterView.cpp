@@ -11,11 +11,13 @@
 #include "cluster/NetMessages.h"
 #include "CoreInstance.h"
 #include "param/StringParam.h"
+#include "view/AbstractView.h"
 #include <GL/gl.h>
 #include "vislib/AutoLock.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/RawStorageSerialiser.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/TcpCommChannel.h"
@@ -357,12 +359,28 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
                     "Internal Error: \"CallRenderView\" is not registered\n");
             }
             // TODO: Better connect a camera client to a camera server
+
+            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_REQUEST_CAMERAVALUES);
+            outMsg.GetHeader().SetBodySize(0);
+            outMsg.AssertBodySize();
+            sender.SendMessage(outMsg);
         } break;
 
         case cluster::netmessages::MSG_SET_CAMERAVALUES: {
+            view::AbstractView *av = this->getConnectedView();
+            if (av != NULL) {
+                vislib::RawStorageSerialiser rss(static_cast<const BYTE*>(msg.GetBody()), msg.GetHeader().GetBodySize());
+                av->DeserialiseCamera(rss);
+            }
+        } break;
 
-            // TODO: Implement
-
+        case cluster::netmessages::MSG_SET_PARAMVALUE: {
+            vislib::StringA name(msg.GetBodyAs<char>());
+            vislib::StringA value(msg.GetBodyAsAt<char>(name.Length() + 1));
+            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(name, true));
+            if (ps != NULL) {
+                ps->Parameter()->ParseValue(value);
+            }
         } break;
 
         default:

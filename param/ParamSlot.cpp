@@ -7,6 +7,8 @@
 
 #include "stdafx.h"
 #include "param/ParamSlot.h"
+#include "CoreInstance.h"
+#include "Module.h"
 #include "param/AbstractParam.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -68,9 +70,15 @@ bool param::ParamSlot::isSlotAvailable(void) const {
 void param::ParamSlot::update(void) {
     bool oldDirty = this->IsDirty();
     AbstractParamSlot::update();
-    if ((oldDirty != this->IsDirty()) && (this->callback != NULL)) {
-        if (this->callback->Update(const_cast<Module*>(
-                reinterpret_cast<const Module*>(this->Owner())), *this)) {
+
+    Module *m = dynamic_cast<Module*>(this->Parent());
+    if ((m != NULL) && m->IsCoreInstanceAvailable()) {
+        m->GetCoreInstance()->ParameterValueUpdate(*this);
+    }
+
+    if (oldDirty != this->IsDirty()) {
+        if ((this->callback != NULL) && (this->callback->Update(const_cast<Module*>(
+                reinterpret_cast<const Module*>(this->Owner())), *this))) {
             this->ResetDirty();
         }
     }

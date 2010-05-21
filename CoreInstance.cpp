@@ -88,7 +88,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         shaderSourceFactory(config), log(), logRedirection(), logEchoTarget(),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
-        timeOffset(0.0), plugins() {
+        timeOffset(0.0), plugins(), paramUpdateListeners() {
     //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -1150,6 +1150,17 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const vislib::net::Abstr
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
     }
     this->namespaceRoot.UnlockModuleGraph();
+}
+
+
+/*
+ * megamol::core::CoreInstance::ParameterValueUpdate
+ */
+void megamol::core::CoreInstance::ParameterValueUpdate(megamol::core::param::ParamSlot& slot) {
+    vislib::SingleLinkedList<param::ParamUpdateListener*>::Iterator i = this->paramUpdateListeners.GetIterator();
+    while (i.HasNext()) {
+        i.Next()->ParamUpdated(slot);
+    }
 }
 
 

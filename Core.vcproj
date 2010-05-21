@@ -2135,6 +2135,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\param\ParamUpdateListener.h"
+					>
+				</File>
+				<File
 					RelativePath=".\param\StringParam.h"
 					>
 				</File>
@@ -2196,6 +2200,10 @@
 				</File>
 				<File
 					RelativePath=".\param\ParamSlot.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\param\ParamUpdateListener.cpp"
 					>
 				</File>
 				<File

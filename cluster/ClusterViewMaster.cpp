@@ -17,7 +17,6 @@
 #include "param/ButtonParam.h"
 #include "param/StringParam.h"
 #include "utility/Configuration.h"
-#include "view/AbstractRenderingView.h"
 #include "view/AbstractView.h"
 #include "view/CallRenderView.h"
 #include "vislib/assert.h"
@@ -30,6 +29,7 @@
 #include "vislib/SystemInformation.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/UTF8Encoder.h"
 
 using namespace megamol::core;
 
@@ -38,7 +38,8 @@ using namespace megamol::core;
  * cluster::ClusterViewMaster::ClusterViewMaster
  */
 cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
-        ClusterControllerClient::Listener(), ccc(), ctrlServer(),
+        ClusterControllerClient::Listener(), ControlChannelServer::Listener(),
+        param::ParamUpdateListener(), ccc(), ctrlServer(),
         viewNameSlot("viewname", "The name of the view to be used"),
         viewSlot("view", "The view to be used (this value is set automatically"),
         serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port"),
@@ -95,6 +96,7 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
  */
 bool cluster::ClusterViewMaster::create(void) {
     this->serverAddressSlot.Param<param::StringParam>()->SetValue(this->defaultServerAddress());
+    this->GetCoreInstance()->RegisterParamUpdateListener(this);
 
     // TODO: Implement
 
@@ -106,6 +108,7 @@ bool cluster::ClusterViewMaster::create(void) {
  * cluster::ClusterViewMaster::release
  */
 void cluster::ClusterViewMaster::release(void) {
+    this->GetCoreInstance()->UnregisterParamUpdateListener(this);
     this->ctrlServer.Stop();
     if (this->camUpdateThread.IsRunning()) {
         this->LockModuleGraph(true);
@@ -345,7 +348,30 @@ void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannel
             outMsg.AssertBodySize();
             ::memcpy(outMsg.GetBody(), viewname.PeekBuffer(), viewname.Length() + 1);
             channel.SendMessage(outMsg);
-            // TODO: Implement
+        } break;
+
+        case cluster::netmessages::MSG_REQUEST_CAMERAVALUES: {
+            Call *call = this->viewSlot.CallAs<Call>();
+            this->LockModuleGraph(false);
+            const view::AbstractView *av = NULL;
+            if ((call != NULL) && (call->PeekCalleeSlot() != NULL)) {
+                av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+            }
+            this->UnlockModuleGraph();
+            if (av != NULL) {
+                vislib::RawStorage mem;
+                mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
+                vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
+                vislib::net::ShallowSimpleMessage cmsg(mem);
+                serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData));
+                av->SerialiseCamera(serialiser);
+
+                cmsg.SetStorage(mem, mem.GetSize());
+                cmsg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CAMERAVALUES);
+                cmsg.GetHeader().SetBodySize(mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData));
+
+                channel.SendMessage(cmsg);
+            }
 
         } break;
 
@@ -359,33 +385,59 @@ void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannel
 
 
 /*
+ * cluster::ClusterViewMaster::ParamUpdated
+ */
+void cluster::ClusterViewMaster::ParamUpdated(param::ParamSlot& slot) {
+    if (!this->ctrlServer.IsRunning()) return;
+
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_PARAMVALUE);
+    vislib::StringA name = slot.FullName();
+    vislib::StringA::Size nameL = name.Length() + 1;
+    vislib::StringA value;
+    vislib::StringA::Size valueL;
+    vislib::UTF8Encoder::Encode(value, slot.Parameter()->ValueString());
+    valueL = value.Length() + 1;
+
+    msg.GetHeader().SetBodySize(nameL + valueL);
+    msg.AssertBodySize();
+    ::memcpy(msg.GetBody(), name.PeekBuffer(), nameL);
+    ::memcpy(msg.GetBodyAsAt<void>(nameL), value.PeekBuffer(), valueL);
+
+    this->ctrlServer.MultiSendMessage(msg);
+
+}
+
+
+/*
  * cluster::ClusterViewMaster::cameraUpdateThread
  */
 DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
-    const view::AbstractRenderingView *arv = NULL;
+    const view::AbstractView *av = NULL;
     ClusterViewMaster *This = static_cast<ClusterViewMaster *>(userData);
     unsigned int syncnumber = static_cast<unsigned int>(-1);
     Call *call = NULL;
     unsigned int csn = 0;
     vislib::RawStorage mem;
+    mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
     vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
-    vislib::net::ShallowSimpleMessage msg(NULL);
+    vislib::net::ShallowSimpleMessage msg(mem);
 
     while (true) {
         This->LockModuleGraph(false);
-        arv = NULL;
+        av = NULL;
         call = This->viewSlot.CallAs<Call>();
         if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
-            arv = dynamic_cast<const view::AbstractRenderingView*>(call->PeekCalleeSlot()->Parent());
+            av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
         }
         This->UnlockModuleGraph();
-        if (arv == NULL) break;
+        if (av == NULL) break;
 
-        csn = arv->GetCameraSyncNumber();
+        csn = av->GetCameraSyncNumber();
         if (csn != syncnumber) {
             syncnumber = csn;
             serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData));
-            arv->SerialiseCamera(serialiser);
+            av->SerialiseCamera(serialiser);
 
             msg.SetStorage(mem, mem.GetSize());
             msg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CAMERAVALUES);

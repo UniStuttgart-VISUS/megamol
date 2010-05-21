@@ -73,6 +73,15 @@ namespace core {
         }
 
         /**
+         * Gets the instance of the core owning this module.
+         *
+         * @return The instance of the core owning this module.
+         */
+        inline bool IsCoreInstanceAvailable(void) const {
+            return (this->coreInst != NULL);
+        }
+
+        /**
          * Releases the module and all resources. Do not overwrite this method!
          * Overwrite 'release'!
          */

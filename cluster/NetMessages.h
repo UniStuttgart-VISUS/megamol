@@ -67,6 +67,12 @@ namespace netmessages {
     /** Message containing all values of the current camera */
     const UINT32 MSG_SET_CAMERAVALUES = 13;
 
+    /** Message containing a parameter value pair */
+    const UINT32 MSG_SET_PARAMVALUE = 14;
+
+    /** Message requesting camera values */
+    const UINT32 MSG_REQUEST_CAMERAVALUES = 15;
+
     ///** Message with camera setup information */
     //const UINT32 MSG_CAMERASETUP = ;
 

@@ -36,6 +36,27 @@ namespace view {
         virtual ~AbstractOverrideView(void);
 
         /**
+         * Answer the camera synchronization number.
+         *
+         * @return The camera synchronization number
+         */
+        virtual unsigned int GetCameraSyncNumber(void) const;
+
+        /**
+         * Serialises the camera of the view
+         *
+         * @param serialiser Serialises the camera of the view
+         */
+        virtual void SerialiseCamera(vislib::Serialiser& serialiser) const;
+
+        /**
+         * Deserialises the camera of the view
+         *
+         * @param serialiser Deserialises the camera of the view
+         */
+        virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
+
+        /**
          * Resets the view. This normally sets the camera parameters to
          * default values.
          */
@@ -126,6 +147,13 @@ namespace view {
          * Disconnects the outgoing render call
          */
         void disconnectOutgoingRenderCall(void);
+
+        /**
+         * Answer the connected view
+         *
+         * @return The connected view or NULL if no view is connected
+         */
+        view::AbstractView *getConnectedView(void) const;
 
     private:
 
