@@ -50,3 +50,12 @@ void vislib::net::ShallowSimpleMessage::SetStorage(void *storage,
     this->storage = storage;
     this->cntStorage = (cntStorage > 0) ? cntStorage : this->GetMessageSize();
 }
+
+
+/*
+ * vislib::net::ShallowSimpleMessage::assertStorage
+ */
+bool vislib::net::ShallowSimpleMessage::assertStorage(void *& outStorage, const SIZE_T size) {
+    // intentionally empty atm
+    return false;
+}

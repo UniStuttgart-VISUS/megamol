@@ -126,6 +126,27 @@ namespace net {
             return *this;
         }
 
+    protected:
+
+        /**
+        * Ensure that whatever type of storage is used has enough memory to 
+        * store a message (including header) with the specified size. The caller
+        * must add the size of the header.
+        *
+        * This implementation does NOTHING! The owner of the external storage
+        * used by this object is responsible for the memory requirement.
+        *
+        * @param outStorage This variable receives the pointer to the begin of
+        *                   the storage.
+        * @param size       The size of the memory to be allocated in bytes.
+        *
+        * @return false as it remains the same 
+        *         (i. e. the pointer has not been changed).
+        *
+        * @throws Exception or derived in case of an error.
+        */
+        virtual bool assertStorage(void *& outStorage, const SIZE_T size);
+
     private:
 
         /** Superclass typedef. */
