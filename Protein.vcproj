@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="Protein"
 	ProjectGUID="{B68B06CD-66AF-475E-BF71-36EA0DED696B}"
 	RootNamespace="Protein"
@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(VISlibPath)\net\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -124,7 +124,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(VISlibPath)\net\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -204,7 +204,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(VISlibPath)\net\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -224,7 +224,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -286,7 +286,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(VISlibPath)\net\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -306,7 +306,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
