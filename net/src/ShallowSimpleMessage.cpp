@@ -20,6 +20,7 @@ vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
     ASSERT((cntStorage == 0) 
         || (cntStorage >= sizeof(SimpleMessageHeaderData)));
 
+    this->GetHeader().SetData(static_cast<SimpleMessageHeaderData*>(storage));
     // Note: Cannot do that in initialiser!
     if (this->cntStorage == 0) {
         this->cntStorage = this->GetMessageSize();
@@ -48,6 +49,7 @@ void vislib::net::ShallowSimpleMessage::SetStorage(void *storage,
     
     // Note: Order of assignments is important!
     this->storage = storage;
+    this->GetHeader().SetData(static_cast<SimpleMessageHeaderData*>(storage));
     this->cntStorage = (cntStorage > 0) ? cntStorage : this->GetMessageSize();
 }
 

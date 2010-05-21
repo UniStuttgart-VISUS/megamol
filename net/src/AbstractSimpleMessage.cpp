@@ -84,7 +84,9 @@ void vislib::net::AbstractSimpleMessage::SetHeader(
     // If that asserts, the child class probably does not initialise correctly.
     ASSERT(this->header.PeekData() != NULL);
     this->header = header;
-    this->assertStorage(this->GetHeader().GetBodySize());
+    if (reallocateBody) {
+        this->assertStorage(this->GetHeader().GetBodySize());
+    }
 }
 
 
