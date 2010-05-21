@@ -68,6 +68,7 @@ void cluster::PowerwallView::Render(void) {
  * cluster::PowerwallView::create
  */
 bool cluster::PowerwallView::create(void) {
+    this->initTileViewParameters();
 
     // TODO: Implement
 

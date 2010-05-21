@@ -7,6 +7,8 @@
 
 #include "stdafx.h"
 #include "AbstractTileView.h"
+#include "CoreInstance.h"
+#include "utility/Configuration.h"
 #include "param/EnumParam.h"
 #include "param/Vector2fParam.h"
 #include "param/Vector4fParam.h"
@@ -58,6 +60,147 @@ view::AbstractTileView::AbstractTileView(void) : AbstractOverrideView(),
  */
 view::AbstractTileView::~AbstractTileView(void) {
     // Intentionally empty
+}
+
+
+/*
+ * view::AbstractTileView::initTileViewParameters
+ */
+void view::AbstractTileView::initTileViewParameters(void) {
+    using vislib::sys::Log;
+    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
+
+    if (cfg.IsConfigValueSet("tveye")) {
+        vislib::StringA v(cfg.ConfigValue("tveye"));
+        bool seteye = true;
+
+        if (v.Equals("left", false)) {
+            this->eye = CameraParameters::LEFT_EYE;
+        } else if (v.Equals("lefteye", false)) {
+            this->eye = CameraParameters::LEFT_EYE;
+        } else if (v.Equals("left eye", false)) {
+            this->eye = CameraParameters::LEFT_EYE;
+        } else if (v.Equals("l", false)) {
+            this->eye = CameraParameters::LEFT_EYE;
+        } else if (v.Equals("right", false)) {
+            this->eye = CameraParameters::RIGHT_EYE;
+        } else if (v.Equals("righteye", false)) {
+            this->eye = CameraParameters::RIGHT_EYE;
+        } else if (v.Equals("right eye", false)) {
+            this->eye = CameraParameters::RIGHT_EYE;
+        } else if (v.Equals("r", false)) {
+            this->eye = CameraParameters::RIGHT_EYE;
+        } else {
+            try {
+                int ei = vislib::CharTraitsA::ParseInt(v);
+                if (ei == 0) {
+                    this->eye = CameraParameters::LEFT_EYE;
+                } else if (ei == 1) {
+                    this->eye = CameraParameters::RIGHT_EYE;
+                } else {
+                    seteye = false;
+                }
+            } catch(...) {
+                seteye = false;
+            }
+        }
+        if (seteye) {
+            this->eyeSlot.Param<param::EnumParam>()->SetValue(static_cast<int>(this->eye));
+        } else {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to parse configuration value \"tveye\"\n");
+        }
+    }
+
+    if (cfg.IsConfigValueSet("tvproj")) {
+        vislib::StringA v(cfg.ConfigValue("tvproj"));
+        bool setproj = true;
+
+        if (v.Equals("mono", false)) {
+            this->projType = CameraParameters::MONO_PERSPECTIVE;
+        } else if (v.Equals("stereo", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("stereo", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("stereo", false)) {
+            this->projType = CameraParameters::STEREO_PARALLEL;
+        } else if (v.Equals("stereo", false)) {
+            this->projType = CameraParameters::STEREO_TOE_IN;
+        } else if (v.Equals("stereooffaxis", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("stereoparallel", false)) {
+            this->projType = CameraParameters::STEREO_PARALLEL;
+        } else if (v.Equals("stereotoein", false)) {
+            this->projType = CameraParameters::STEREO_TOE_IN;
+        } else if (v.Equals("stereo off axis", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("stereo parallel", false)) {
+            this->projType = CameraParameters::STEREO_PARALLEL;
+        } else if (v.Equals("stereo toe in", false)) {
+            this->projType = CameraParameters::STEREO_TOE_IN;
+        } else if (v.Equals("off axis", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("parallel", false)) {
+            this->projType = CameraParameters::STEREO_PARALLEL;
+        } else if (v.Equals("toe in", false)) {
+            this->projType = CameraParameters::STEREO_TOE_IN;
+        } else if (v.Equals("offaxis", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("toein", false)) {
+            this->projType = CameraParameters::STEREO_TOE_IN;
+        } else if (v.Equals("stereo offaxis", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("stereo toein", false)) {
+            this->projType = CameraParameters::STEREO_TOE_IN;
+        } else if (v.Equals("stereooff axis", false)) {
+            this->projType = CameraParameters::STEREO_OFF_AXIS;
+        } else if (v.Equals("stereotoe in", false)) {
+            this->projType = CameraParameters::STEREO_TOE_IN;
+        } else {
+            try {
+                int pi = vislib::CharTraitsA::ParseInt(v);
+                if (pi == 0) {
+                    this->projType = CameraParameters::MONO_PERSPECTIVE;
+                } else if (pi == 1) {
+                    this->projType = CameraParameters::STEREO_OFF_AXIS;
+                } else if (pi == 2) {
+                    this->projType = CameraParameters::STEREO_PARALLEL;
+                } else if (pi == 3) {
+                    this->projType = CameraParameters::STEREO_TOE_IN;
+                } else {
+                    setproj = false;
+                }
+            } catch(...) {
+                setproj = false;
+            }
+        }
+
+        if (setproj) {
+            this->projTypeSlot.Param<param::EnumParam>()->SetValue(static_cast<int>(this->projType));
+        } else {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to parse configuration value \"tvproj\"\n");
+        }
+    }
+
+    if (cfg.IsConfigValueSet("tvview")) {
+        try {
+            if (!this->virtSizeSlot.Param<param::Vector2fParam>()->ParseValue(cfg.ConfigValue("tvview"))) {
+                throw new vislib::Exception("ex", __FILE__, __LINE__);
+            }
+        } catch(...) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to parse configuration value \"tvview\"\n");
+        }
+    }
+
+    if (cfg.IsConfigValueSet("tvtile")) {
+        try {
+            if (!this->tileSlot.Param<param::Vector4fParam>()->ParseValue(cfg.ConfigValue("tvtile"))) {
+                throw new vislib::Exception("ex", __FILE__, __LINE__);
+            }
+        } catch(...) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to parse configuration value \"tvtile\"\n");
+        }
+    }
+
 }
 
 

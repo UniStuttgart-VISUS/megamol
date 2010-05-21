@@ -36,6 +36,9 @@ namespace view {
 
     protected:
 
+        /** Initialises the tile view parameters */
+        void initTileViewParameters(void);
+
         /** checks parameter slot changes */
         void checkParameters(void);
 
