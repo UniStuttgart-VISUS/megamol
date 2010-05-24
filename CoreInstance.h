@@ -16,7 +16,7 @@
 #include "api/MegaMolCore.std.h"
 #include "utility/Configuration.h"
 #include "utility/LogEchoTarget.h"
-#include "vislib/AbstractSimpleMessage.h"
+#include "vislib/AbstractSimpleMessage.h" // TODO: Remove dependancy
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/DynamicLinkLibrary.h"

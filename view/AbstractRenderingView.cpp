@@ -7,11 +7,74 @@
 
 #include "stdafx.h"
 #include "AbstractRenderingView.h"
+#include <GL/gl.h>
 #include "param/BoolParam.h"
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
+#include "view/special/TitleRenderer.h"
 
 using namespace megamol::core;
+
+
+/*
+ * view::AbstractRenderingView::AbstractTitleRenderer::AbstractTitleRenderer
+ */
+view::AbstractRenderingView::AbstractTitleRenderer::AbstractTitleRenderer(void) {
+    // intentionally empty
+}
+
+
+/*
+ * view::AbstractRenderingView::AbstractTitleRenderer::~AbstractTitleRenderer
+ */
+view::AbstractRenderingView::AbstractTitleRenderer::~AbstractTitleRenderer(void) {
+    // intentionally empty
+}
+
+
+/*
+ * view::AbstractRenderingView::EmptyTitleRenderer::EmptyTitleRenderer
+ */
+view::AbstractRenderingView::EmptyTitleRenderer::EmptyTitleRenderer(void) {
+    // intentionally empty
+}
+
+
+/*
+ * view::AbstractRenderingView::EmptyTitleRenderer::~EmptyTitleRenderer
+ */
+view::AbstractRenderingView::EmptyTitleRenderer::~EmptyTitleRenderer(void) {
+    // intentionally empty
+}
+
+
+/*
+ * view::AbstractRenderingView::EmptyTitleRenderer::Create
+ */
+bool view::AbstractRenderingView::EmptyTitleRenderer::Create(void) {
+    // intentionally empty
+    return true;
+}
+
+
+/*
+ * view::AbstractRenderingView::EmptyTitleRenderer::Render
+ */
+void view::AbstractRenderingView::EmptyTitleRenderer::Render(
+        float tileX, float tileY, float tileW, float tileH,
+        float virtW, float virtH, bool stereo, bool leftEye,
+        double time) {
+    ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    ::glClear(GL_COLOR_BUFFER_BIT);
+}
+
+
+/*
+ * view::AbstractRenderingView::EmptyTitleRenderer::Release
+ */
+void view::AbstractRenderingView::EmptyTitleRenderer::Release(void){
+    // intentionally empty
+}
 
 
 /*
@@ -20,7 +83,8 @@ using namespace megamol::core;
 view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
         overrideBkgndCol(NULL), overrideViewport(NULL),
         bkgndColSlot("backCol", "The views background colour"),
-        softCursor(false), softCursorSlot("softCursor", "Bool flag to activate software cursor rendering") {
+        softCursor(false), softCursorSlot("softCursor", "Bool flag to activate software cursor rendering"),
+        titleRenderer(NULL) {
 
     this->bkgndCol[0] = 0.0f;
     this->bkgndCol[1] = 0.0f;
@@ -40,6 +104,7 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
  * view::AbstractRenderingView::~AbstractRenderingView
  */
 view::AbstractRenderingView::~AbstractRenderingView(void) {
+    this->removeTitleRenderer();
     this->overrideBkgndCol = NULL; // DO NOT DELETE
     this->overrideViewport = NULL; // DO NOT DELETE
 }
@@ -68,4 +133,38 @@ bool view::AbstractRenderingView::showSoftCursor(void) const {
         this->softCursor = this->softCursorSlot.Param<param::BoolParam>()->Value();
     }
     return this->softCursor;
+}
+
+
+/*
+ * view::AbstractRenderingView::renderTitle
+ */
+void view::AbstractRenderingView::renderTitle(
+        float tileX, float tileY, float tileW, float tileH,
+        float virtW, float virtH, bool stereo, bool leftEye,
+        double time) const {
+    if (!this->titleRenderer) {
+        this->titleRenderer = new special::TitleRenderer();
+        if (!this->titleRenderer->Create()) {
+            delete this->titleRenderer;
+            this->titleRenderer = new EmptyTitleRenderer();
+            ASSERT(this->titleRenderer->Create());
+        }
+    }
+
+    this->titleRenderer->Render(tileX, tileY, tileW, tileH,
+        virtW, virtH, stereo, leftEye, time);
+
+}
+
+
+/*
+ * view::AbstractRenderingView::removeTitleRenderer
+ */
+void view::AbstractRenderingView::removeTitleRenderer(void) const {
+    if (this->titleRenderer) {
+        this->titleRenderer->Release();
+        delete this->titleRenderer;
+        this->titleRenderer = NULL;
+    }
 }

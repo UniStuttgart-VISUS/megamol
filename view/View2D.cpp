@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "View2D.h"
+#include "CoreInstance.h"
 #include "view/CallRenderView.h"
 #include "view/CallRender2D.h"
 #include "view/MouseFlags.h"
@@ -120,7 +121,13 @@ void view::View2D::Render(void) {
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
     if (cr2d == NULL) {
+        this->renderTitle(0.0f, 0.0f, this->width, this->height,
+            this->width, this->height, false, false,
+            this->GetCoreInstance()->GetInstanceTime());
+        //this->fpsCounter.FrameEnd();
         return;
+    } else {
+        this->removeTitleRenderer();
     }
     if (this->firstImg) {
         this->firstImg = false;
@@ -424,6 +431,7 @@ bool view::View2D::create(void) {
  * view::View2D::release
  */
 void view::View2D::release(void) {
+    this->removeTitleRenderer();
     // intentionally empty
 }
 

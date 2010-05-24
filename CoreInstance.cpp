@@ -136,12 +136,14 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
     // 'View3D' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
+    this->builtinViewDescs.Register(vd);
 
     // empty View3D
     vd = new ViewDescription("emptyview3d");
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
     // 'View3D' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
+    this->builtinViewDescs.Register(vd);
 
     // empty View2D
     vd = new ViewDescription("emptyview2d");
@@ -162,7 +164,6 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("PowerwallView"), "pwview");
     //vd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl"); // TODO: Dependant instance!
     vd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "pwview::register", "::cctrl::register");
-
     vd->SetViewModuleID("pwview");
     this->builtinViewDescs.Register(vd);
 

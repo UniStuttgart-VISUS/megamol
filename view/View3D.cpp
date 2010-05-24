@@ -20,6 +20,7 @@
 #include "param/StringParam.h"
 #include "param/Vector3fParam.h"
 #include "CallRender3D.h"
+#include "CoreInstance.h"
 #include "utility/ColourParser.h"
 #include "vislib/CameraParamsStore.h"
 #include "vislib/Exception.h"
@@ -292,7 +293,21 @@ void view::View3D::Render(void) {
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (cr3d == NULL) {
+        this->renderTitle(
+            this->cam.Parameters()->TileRect().Left(),
+            this->cam.Parameters()->TileRect().Bottom(),
+            this->cam.Parameters()->TileRect().Width(),
+            this->cam.Parameters()->TileRect().Height(),
+            this->cam.Parameters()->VirtualViewSize().Width(),
+            this->cam.Parameters()->VirtualViewSize().Height(),
+            (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC)
+                && (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
+            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE,
+            this->GetCoreInstance()->GetInstanceTime());
+        this->fpsCounter.FrameEnd();
         return; // empty enought
+    } else {
+        this->removeTitleRenderer();
     }
 
     cr3d->SetOutputBuffer(GL_BACK); // TODO: Handle incoming buffers!
@@ -642,6 +657,7 @@ bool view::View3D::create(void) {
  * view::View3D::release
  */
 void view::View3D::release(void) {
+    this->removeTitleRenderer();
     this->cursor2d.UnregisterCursorEvent(&this->rotator1);
     this->cursor2d.UnregisterCursorEvent(&this->rotator2);
     this->cursor2d.UnregisterCursorEvent(&this->zoomer1);

@@ -891,10 +891,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\special\MegaMolLogo.h"
-					>
-				</File>
-				<File
 					RelativePath=".\special\RenderMaster.h"
 					>
 				</File>
@@ -1180,42 +1176,6 @@
 				</File>
 				<File
 					RelativePath=".\special\ColStereoDisplay.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\special\MegaMolLogo.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1721,6 +1681,14 @@
 						RelativePath=".\view\special\DemoRenderer2D.h"
 						>
 					</File>
+					<File
+						RelativePath=".\view\special\MegaMolLogo.h"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\TitleRenderer.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="Source Files"
@@ -1731,6 +1699,18 @@
 					</File>
 					<File
 						RelativePath=".\view\special\DemoRenderer2D.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\MegaMolLogo.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\MegaMolLogoData.inl"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\TitleRenderer.cpp"
 						>
 					</File>
 				</Filter>

@@ -26,6 +26,48 @@ namespace view {
     class AbstractRenderingView : public AbstractView {
     public:
 
+        /**
+         * Interface definition
+         */
+        class AbstractTitleRenderer {
+        public:
+
+            /** Ctor */
+            AbstractTitleRenderer(void);
+
+            /** Dtor */
+            virtual ~AbstractTitleRenderer(void);
+
+            /**
+             * Create the renderer and allocates all resources
+             *
+             * @return True on success
+             */
+            virtual bool Create(void) = 0;
+
+            /**
+             * Renders the title scene
+             *
+             * @param tileX The view tile x coordinate
+             * @param tileY The view tile y coordinate
+             * @param tileW The view tile width
+             * @param tileH The view tile height
+             * @param virtW The virtual view width
+             * @param virtH The virtual view height
+             * @param stereo Flag if stereo rendering is to be performed
+             * @param leftEye Flag if the stereo rendering is done for the left eye view
+             * @param time The core time
+             */
+            virtual void Render(float tileX, float tileY, float tileW, float tileH,
+                float virtW, float virtH, bool stereo, bool leftEye, double time) = 0;
+
+            /**
+             * Releases the renderer and all of its resources
+             */
+            virtual void Release(void) = 0;
+
+        };
+
         /** Ctor. */
         AbstractRenderingView(void);
 
@@ -48,6 +90,27 @@ namespace view {
          */
         bool showSoftCursor(void) const;
 
+        /**
+         * Renders the title scene
+         *
+         * @param tileX The view tile x coordinate
+         * @param tileY The view tile y coordinate
+         * @param tileW The view tile width
+         * @param tileH The view tile height
+         * @param virtW The virtual view width
+         * @param virtH The virtual view height
+         * @param stereo Flag if stereo rendering is to be performed
+         * @param leftEye Flag if the stereo rendering is done for the left eye view
+         * @param time The core time
+         */
+        void renderTitle(float tileX, float tileY, float tileW, float tileH,
+            float virtW, float virtH, bool stereo, bool leftEye, double time) const;
+
+        /**
+         * Removes the title renderer
+         */
+        void removeTitleRenderer(void) const;
+
         /** Pointer to the override background colour */
         float *overrideBkgndCol;
 
@@ -55,6 +118,48 @@ namespace view {
         int *overrideViewport;
 
     private:
+
+        /**
+         * Fallback class just clearing the screen
+         */
+        class EmptyTitleRenderer : public AbstractTitleRenderer {
+        public:
+
+            /** Ctor */
+            EmptyTitleRenderer(void);
+
+            /** Dtor */
+            virtual ~EmptyTitleRenderer(void);
+
+            /**
+             * Create the renderer and allocates all resources
+             *
+             * @return True on success
+             */
+            virtual bool Create(void);
+
+            /**
+             * Renders the title scene
+             *
+             * @param tileX The view tile x coordinate
+             * @param tileY The view tile y coordinate
+             * @param tileW The view tile width
+             * @param tileH The view tile height
+             * @param virtW The virtual view width
+             * @param virtH The virtual view height
+             * @param stereo Flag if stereo rendering is to be performed
+             * @param leftEye Flag if the stereo rendering is done for the left eye view
+             * @param time The core time
+             */
+            virtual void Render(float tileX, float tileY, float tileW, float tileH,
+                float virtW, float virtH, bool stereo, bool leftEye, double time);
+
+            /**
+             * Releases the renderer and all of its resources
+             */
+            virtual void Release(void);
+
+        };
 
         /** The background colour for the view */
         mutable float bkgndCol[3];
@@ -67,6 +172,9 @@ namespace view {
 
         /** Bool flag to activate software cursor rendering */
         mutable param::ParamSlot softCursorSlot;
+
+        /** The title renderer */
+        mutable AbstractTitleRenderer* titleRenderer;
 
     };
 

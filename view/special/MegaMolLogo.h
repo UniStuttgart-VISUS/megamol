@@ -1,7 +1,7 @@
 /*
  * MegaMolLogo.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -17,6 +17,7 @@
 
 namespace megamol {
 namespace core {
+namespace view {
 namespace special {
 
     /**
@@ -52,21 +53,43 @@ namespace special {
          */
         virtual void Release(void);
 
+        /**
+         * Answer the maximum x coordinate
+         *
+         * @return The maximum x coordinate
+         */
+        inline float MaxX(void) const {
+            return this->maxX;
+        }
+
     private:
 
         /** vertex pointer */
-        void *vertices;
+        float *vertices;
 
         /** colour pointer */
-        void *colours;
+        unsigned char *colours;
 
-        /** number of elements */
-        unsigned int count;
+        /** The triangles index pointer */
+        unsigned int *triIdxs;
+
+        /** number of triangle indices*/
+        unsigned int triIdxCnt;
+
+        /** The lines index pointer */
+        unsigned int *lineIdxs;
+
+        /** number of lines indices*/
+        unsigned int lineIdxCnt;
+
+        /** The maximum x coordinate */
+        float maxX;
 
     };
 
 
 } /* end namespace special */
+} /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
