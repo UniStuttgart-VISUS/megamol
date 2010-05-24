@@ -302,8 +302,7 @@ void view::View3D::Render(void) {
             this->cam.Parameters()->VirtualViewSize().Height(),
             (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC)
                 && (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
-            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE,
-            this->GetCoreInstance()->GetInstanceTime());
+            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE);
         this->fpsCounter.FrameEnd();
         return; // empty enought
     } else {

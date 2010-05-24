@@ -122,8 +122,7 @@ void view::View2D::Render(void) {
 
     if (cr2d == NULL) {
         this->renderTitle(0.0f, 0.0f, this->width, this->height,
-            this->width, this->height, false, false,
-            this->GetCoreInstance()->GetInstanceTime());
+            this->width, this->height, false, false);
         //this->fpsCounter.FrameEnd();
         return;
     } else {

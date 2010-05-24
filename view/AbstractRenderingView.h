@@ -56,10 +56,11 @@ namespace view {
              * @param virtH The virtual view height
              * @param stereo Flag if stereo rendering is to be performed
              * @param leftEye Flag if the stereo rendering is done for the left eye view
-             * @param time The core time
+             * @param core The core
              */
             virtual void Render(float tileX, float tileY, float tileW, float tileH,
-                float virtW, float virtH, bool stereo, bool leftEye, double time) = 0;
+                float virtW, float virtH, bool stereo, bool leftEye,
+                class ::megamol::core::CoreInstance *core) = 0;
 
             /**
              * Releases the renderer and all of its resources
@@ -101,10 +102,9 @@ namespace view {
          * @param virtH The virtual view height
          * @param stereo Flag if stereo rendering is to be performed
          * @param leftEye Flag if the stereo rendering is done for the left eye view
-         * @param time The core time
          */
         void renderTitle(float tileX, float tileY, float tileW, float tileH,
-            float virtW, float virtH, bool stereo, bool leftEye, double time) const;
+            float virtW, float virtH, bool stereo, bool leftEye) const;
 
         /**
          * Removes the title renderer
@@ -149,10 +149,11 @@ namespace view {
              * @param virtH The virtual view height
              * @param stereo Flag if stereo rendering is to be performed
              * @param leftEye Flag if the stereo rendering is done for the left eye view
-             * @param time The core time
+             * @param core The core
              */
             virtual void Render(float tileX, float tileY, float tileW, float tileH,
-                float virtW, float virtH, bool stereo, bool leftEye, double time);
+                float virtW, float virtH, bool stereo, bool leftEye,
+                class ::megamol::core::CoreInstance *core);
 
             /**
              * Releases the renderer and all of its resources

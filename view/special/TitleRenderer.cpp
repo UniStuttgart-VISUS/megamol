@@ -10,18 +10,69 @@
 #include "TitleRenderer.h"
 #include <cmath>
 #include "MegaMolLogo.h"
+#include "CoreInstance.h"
 #include "vislib/assert.h"
 #include "vislib/graphicstypes.h"
+#include "vislib/Matrix.h"
 #include "vislib/OpenGLVISLogo.h"
+#include "vislib/ShaderSource.h"
+#include "vislib/Vector.h"
 
 using namespace megamol::core;
+
+
+/*
+ * view::special::TitleRenderer::AbstractIcon::AbstractIcon
+ */
+view::special::TitleRenderer::AbstractIcon::AbstractIcon(void)
+        : vislib::graphics::AbstractVISLogo() {
+    // Intentionally empty
+}
+
+
+/*
+ * view::special::TitleRenderer::AbstractIcon::~AbstractIcon
+ */
+view::special::TitleRenderer::AbstractIcon::~AbstractIcon(void) {
+    // Intentionally empty
+}
+
+
+/*
+ * view::special::TitleRenderer::AbstractIcon::cylLen
+ */
+const float view::special::TitleRenderer::AbstractIcon::cylLen = 1.8f;
+
+
+/*
+ * view::special::TitleRenderer::AbstractIcon::cylRad
+ */
+const float view::special::TitleRenderer::AbstractIcon::cylRad = 0.1f;
+
+
+/*
+ * view::special::TitleRenderer::AbstractIcon::s1Rad
+ */
+const float view::special::TitleRenderer::AbstractIcon::s1Rad = 0.5f;
+
+
+/*
+ * view::special::TitleRenderer::AbstractIcon::s2Rad
+ */
+const float view::special::TitleRenderer::AbstractIcon::s2Rad = 0.3f;
+
+
+/*
+ * view::special::TitleRenderer::AbstractIcon::sDist
+ */
+const float view::special::TitleRenderer::AbstractIcon::sDist = 0.7f;
 
 
 /*
  * view::special::TitleRenderer::FallbackIcon::FallbackIcon
  */
 view::special::TitleRenderer::FallbackIcon::FallbackIcon(void)
-        : vislib::graphics::AbstractVISLogo(), quadric(NULL) {
+        : AbstractIcon(), quadric(NULL) {
     // Intentionally empty
 }
 
@@ -48,34 +99,27 @@ void view::special::TitleRenderer::FallbackIcon::Create(void) {
  * view::special::TitleRenderer::FallbackIcon::Draw
  */
 void view::special::TitleRenderer::FallbackIcon::Draw(void) {
-    const float cylLen = 1.8f;
-    const float cylRad = 0.1f;
-    const float s1Rad = 0.5f;
-    const float s2Rad = 0.3f;
-    const float sDist = 0.7f;
-
     const unsigned int cylSlices = 24;
     const unsigned int sphereSlices = 48;
     const unsigned int sphereStacks = 48;
 
     ::glPushMatrix();
-
     ::glScalef(2.0f / cylLen, 2.0f / cylLen, 2.0f / cylLen);
 
     ::glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
     ::glColor3ub(255, 0, 0);
     ::gluCylinder(this->quadric, cylRad, cylRad, 0.5 * cylLen, cylSlices, 1);
-    ::glTranslatef(0.0f, 0.0f, 0.5 * cylLen);
+    ::glTranslatef(0.0f, 0.0f, 0.5f * cylLen);
     ::gluDisk(this->quadric, 0.0, cylRad, cylSlices, 1);
 
     ::glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
     ::glColor3ub(0, 255, 0);
-    ::glTranslatef(0.0f, 0.0f, 0.5 * cylLen);
+    ::glTranslatef(0.0f, 0.0f, 0.5f * cylLen);
     ::gluCylinder(this->quadric, cylRad, cylRad, 0.5 * cylLen, cylSlices, 1);
-    ::glTranslatef(0.0f, 0.0f, 0.5 * cylLen);
+    ::glTranslatef(0.0f, 0.0f, 0.5f * cylLen);
     ::gluDisk(this->quadric, 0.0, cylRad, cylSlices, 1);
 
-    ::glTranslatef(0.0f, 0.0f, -0.5 * cylLen);
+    ::glTranslatef(0.0f, 0.0f, -0.5f * cylLen);
     ::glColor3ub(0x80, 0xC0, 0xFF);
     ::glTranslatef(0.0f, 0.0f, (s1Rad - s2Rad) * -0.5f);
     ::glTranslatef(0.0f, 0.0f, 0.5f * sDist);
@@ -99,11 +143,190 @@ void view::special::TitleRenderer::FallbackIcon::Release(void) {
 
 
 /*
+ * view::special::TitleRenderer::GPURaycastIcon::GPURaycastIcon
+ */
+view::special::TitleRenderer::GPURaycastIcon::GPURaycastIcon(CoreInstance *core)
+        : AbstractIcon(), error(false), core(core), shader(NULL) {
+    // Intentionally empty
+}
+
+
+/*
+ * view::special::TitleRenderer::GPURaycastIcon::~GPURaycastIcon
+ */
+view::special::TitleRenderer::GPURaycastIcon::~GPURaycastIcon(void) {
+    this->Release();
+    this->core = NULL; // DO NOT DELETE
+    ASSERT(this->shader == NULL);
+}
+
+
+/*
+ * view::special::TitleRenderer::GPURaycastIcon::Create
+ */
+void view::special::TitleRenderer::GPURaycastIcon::Create(void) {
+    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+        this->error = true;
+        return;
+    }
+
+    vislib::graphics::gl::ShaderSource vertexShader;
+    vislib::graphics::gl::ShaderSource fragmentShader;
+
+    if (!this->core->ShaderSourceFactory().MakeShaderSource("titlelogo::vertex", vertexShader)) {
+        this->error = true;
+        return;
+    }
+    if (!this->core->ShaderSourceFactory().MakeShaderSource("titlelogo::fragment", fragmentShader)) {
+        this->error = true;
+        return;
+    }
+
+    try {
+        this->shader = new vislib::graphics::gl::GLSLShader();
+        if (!this->shader->Compile(vertexShader.Code(), vertexShader.Count(), fragmentShader.Code(), fragmentShader.Count())) {
+            this->error = true;
+            delete this->shader;
+            this->shader = NULL;
+            return;
+        }
+        if (this->shader->BindAttribute(8, "inParams") != GL_NO_ERROR) {
+            this->error = true;
+            delete this->shader;
+            this->shader = NULL;
+            return;
+        }
+        if (this->shader->BindAttribute(9, "quatC") != GL_NO_ERROR) {
+            this->error = true;
+            delete this->shader;
+            this->shader = NULL;
+            return;
+        }
+        if (this->shader->BindAttribute(10, "inPos") != GL_NO_ERROR) {
+            this->error = true;
+            delete this->shader;
+            this->shader = NULL;
+            return;
+        }
+        if (!this->shader->Link()) {
+            this->error = true;
+            delete this->shader;
+            this->shader = NULL;
+            return;
+        }
+    } catch (vislib::Exception ex) {
+        const char *msg = ex.GetMsgA();
+        this->error = true;
+        delete this->shader;
+        this->shader = NULL;
+    } catch (...) {
+        this->error = true;
+        delete this->shader;
+        this->shader = NULL;
+    }
+}
+
+
+/*
+ * view::special::TitleRenderer::GPURaycastIcon::Draw
+ */
+void view::special::TitleRenderer::GPURaycastIcon::Draw(void) {
+    if (!this->shader) return;
+
+    ::glPushMatrix();
+    ::glScalef(2.0f / cylLen, 2.0f / cylLen, 2.0f / cylLen);
+
+    const float xExt = 0.5f * cylLen;
+    const float yzExt = vislib::math::Max(s1Rad, s2Rad);
+
+    double proj[16];
+    double modview[16];
+    int viewport[4];
+    ::glGetDoublev(GL_PROJECTION_MATRIX, proj);
+    ::glGetDoublev(GL_MODELVIEW_MATRIX, modview);
+    ::glGetIntegerv(GL_VIEWPORT, viewport);
+
+    vislib::math::Vector<double, 3> os[8];
+    vislib::math::Vector<double, 3> ws[4];
+    os[0].Set(xExt, yzExt , yzExt);
+    os[1].Set(-xExt, yzExt , yzExt);
+    os[2].Set(xExt, -yzExt, yzExt);
+    os[3].Set(-xExt, -yzExt, yzExt);
+    os[4].Set(xExt, yzExt, -yzExt);
+    os[5].Set(-xExt, yzExt, -yzExt);
+    os[6].Set(xExt, -yzExt, -yzExt);
+    os[7].Set(-xExt, -yzExt, -yzExt);
+
+    for (unsigned int i = 0; i < 8; i++) {
+        ::gluProject(os[i].X(), os[i].Y(), os[i].Z(), modview, proj, viewport,
+            ws[0].PeekComponents(), ws[0].PeekComponents() + 1, ws[0].PeekComponents() + 2);
+        if (i == 0) {
+            ws[1] = ws[0];
+            ws[2] = ws[0];
+        } else {
+            ws[1].Set(vislib::math::Min(ws[1].X(), ws[0].X()),
+                vislib::math::Min(ws[1].Y(), ws[0].Y()),
+                vislib::math::Min(ws[1].Z(), ws[0].Z()));
+            ws[2].Set(vislib::math::Max(ws[2].X(), ws[0].X()),
+                vislib::math::Max(ws[2].Y(), ws[0].Y()),
+                vislib::math::Max(ws[2].Z(), ws[0].Z()));
+        }
+    }
+
+    ws[0] = ws[1];
+    ws[2].SetZ(ws[0].Z());
+    ws[3] = ws[2];
+    ws[1].SetY(ws[2].Y());
+    ws[3].SetY(ws[0].Y());
+
+    for (unsigned int i = 0; i < 4; i++) {
+        ::gluUnProject(ws[i].X(), ws[i].Y(), ws[i].Z(), modview, proj, viewport,
+            os[i].PeekComponents(), os[i].PeekComponents() + 1, os[i].PeekComponents() + 2);
+    }
+
+    this->shader->Enable();
+    this->shader->SetParameter("viewAttr", static_cast<float>(viewport[0]), static_cast<float>(viewport[1]),
+        2.0f / static_cast<float>(viewport[2]), 2.0f / static_cast<float>(viewport[3]));
+
+    ::glBegin(GL_QUADS);
+    ::glColor3ub(0x80, 0xC0, 0xFF);
+    ::glVertexAttrib4fARB(8, s1Rad, sDist, cylRad, cylLen);
+    ::glVertexAttrib4fARB(9, 0.0f, 0.0f, 0.0f, 1.0f);
+    ::glVertexAttrib3fARB(10, 0.5f * (s2Rad - s1Rad), 0.0f, 0.0f);
+    for (int i = 3; i >= 0; i--) {
+        ::glVertex4d(os[i].X(), os[i].Y(), os[i].Z(), s2Rad);
+    }
+    ::glEnd();
+
+    this->shader->Disable();
+
+    ::glPopMatrix();
+}
+
+
+/*
+ * view::special::TitleRenderer::GPURaycastIcon::Release
+ */
+void view::special::TitleRenderer::GPURaycastIcon::Release(void) {
+    // DO NOT DELETE this->core
+    if (this->shader) {
+        this->shader->Release();
+        delete this->shader;
+        this->shader = NULL;
+    }
+}
+
+
+/*
  * view::special::TitleRenderer::TitleRenderer
  */
 view::special::TitleRenderer::TitleRenderer()
         : view::AbstractRenderingView::AbstractTitleRenderer(), title(NULL),
-        titleWidth(0.0f), icon(NULL), camera() {
+        titleWidth(0.0f), icon(NULL),
+#ifdef ICON_DEBUGGING
+        i2(NULL),
+#endif /* ICON_DEBUGGING */
+        camera() {
     // intentionally empty
 }
 
@@ -126,9 +349,7 @@ bool view::special::TitleRenderer::Create(void) {
     this->title->Create();
     this->titleWidth = dynamic_cast<MegaMolLogo*>(this->title)->MaxX();
 
-    // TODO: Implement
-    this->icon = new FallbackIcon();
-    this->icon->Create();
+    this->icon = NULL; // needs to be evaluated lazy
 
     const float distance = 10.0f;
     const float stereoDisp = 1.0f;
@@ -151,9 +372,29 @@ bool view::special::TitleRenderer::Create(void) {
 void view::special::TitleRenderer::Render(
         float tileX, float tileY, float tileW, float tileH,
         float virtW, float virtH, bool stereo, bool leftEye,
-        double time) {
+        CoreInstance *core) {
+    if (this->icon == NULL) {
+        this->icon = new GPURaycastIcon(core);
+        this->icon->Create();
+        if (dynamic_cast<GPURaycastIcon*>(this->icon)->HasError()) {
+            delete this->icon;
+            this->icon = new FallbackIcon();
+            this->icon->Create();
+        }
+#ifdef ICON_DEBUGGING
+        this->i2 = new FallbackIcon();
+        this->i2->Create();
+#endif /* ICON_DEBUGGING */
+    }
     if (!this->title || !this->icon) return;
-
+#ifdef ICON_DEBUGGING
+    if (!this->i2) return;
+    {
+        vislib::graphics::AbstractVISLogo *ai = this->icon;
+        this->icon = i2;
+        this->i2 = ai;
+    }
+#endif /* ICON_DEBUGGING */
     const float titleScale = 0.5f;
     const float titleGap = 0.0f;
     const float viewBorderScale = 1.25f;
@@ -180,7 +421,7 @@ void view::special::TitleRenderer::Render(
     ::glTranslatef(((this->titleWidth * titleScale) + titleGap) * 0.5f, 0.0f, 0.0f);
 
     ::glPushMatrix();
-    ::glRotated(15.0 * time, 0.0, 1.0, 0.0);
+    ::glRotated(15.0 * core->GetInstanceTime(), 0.0, -1.0, 0.0);
     ::glRotatef(45.0f, 0.0f, 0.0f, -1.0f);
 
     ::glEnable(GL_CULL_FACE);
@@ -215,6 +456,13 @@ void view::special::TitleRenderer::Release(void) {
         delete this->icon;
         this->icon = NULL;
     }
+#ifdef ICON_DEBUGGING
+    if (this->i2) {
+        this->i2->Release();
+        delete this->i2;
+        this->i2 = NULL;
+    }
+#endif /* ICON_DEBUGGING */
 }
 
 
