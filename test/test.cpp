@@ -118,6 +118,7 @@ VislibTest tests[] = {
     {_T("Comm"), ::TestComm, "Tests the communication abstraction layer"},
     {_T("MsgDisp"), ::TestMsgDisp, "Tests the message dispatching facility on TCP/IP"},
     // sys
+    {_T("ASCIIFileBuffer"), ::TestAsciiFile, "Tests vislib::sys::ASCIIFileBuffer (ON KLASSIK)"},
     {_T("CmdLineParser"), ::TestCmdLineParser, "Tests vislib::sys::CmdLineParser"},
     {_T("ConColors"), ::TestConsoleColours, "Tests colored console output using vislib::sys::Console"},
     {_T("DateTime"), ::TestDateTime, "Tests vislib::sys::DateTime"},

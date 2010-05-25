@@ -32,4 +32,6 @@ void TestFileNameSequence(void);
 
 void TestBitmapCodecSimple(void);
 
+void TestAsciiFile(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

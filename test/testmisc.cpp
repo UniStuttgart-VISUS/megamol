@@ -8,6 +8,7 @@
 #include "testhelper.h"
 
 #include "vislib/Array.h"
+#include "vislib/ASCIIFileBuffer.h"
 #include "vislib/Console.h"
 #include "vislib/ConsoleProgressBar.h"
 #include "vislib/ColumnFormatter.h"
@@ -17,6 +18,7 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemMessage.h"
+#include "vislib/sysfunctions.h"
 #include "vislib/Path.h"
 #include "vislib/Trace.h"
 #include "vislib/FileNameSequence.h"
@@ -694,5 +696,44 @@ void TestBitmapCodecSimple(void) {
     ////AssertEqual("Image width correct", bmpCodec.Image()->Width(), 868U);
     ////AssertEqual("Image height correct", bmpCodec.Image()->Height(), 1100U);
     ////AssertTrue("Test Image saved", ppmCodec.Save("C:\\tmp\\test_4_rle.ppm"));
+
+}
+
+
+/*
+ * TestAsciiFile
+ */
+void TestAsciiFile(void) {
+    const char *filename = "D:\\data\\random.imd";
+    vislib::sys::ASCIIFileBuffer afb;
+    vislib::sys::PerformanceCounter pc(true);
+
+    pc.SetMark();
+    AssertTrue("Loading text file", afb.LoadFile(filename));
+    UINT64 e = pc.Difference();
+    AssertEqual<SIZE_T>("All lines loaded", afb.Count(), 40000008UL);
+    //printf("%d\n", afb.Count());
+    printf("Loaded in %f seconds\n", pc.ToMillis(e) / 1000.0);
+
+    AssertEqual<SIZE_T>("Length of line 0 correct", vislib::CharTraitsA::SafeStringLength(afb[0]), 17);
+    AssertEqual<SIZE_T>("Length of line 1 correct", vislib::CharTraitsA::SafeStringLength(afb[1]), 9);
+    AssertEqual<SIZE_T>("Length of line 2 correct", vislib::CharTraitsA::SafeStringLength(afb[2]), 11);
+    AssertEqual<SIZE_T>("Length of line 3 correct", vislib::CharTraitsA::SafeStringLength(afb[3]), 11);
+    AssertEqual<SIZE_T>("Length of line 4 correct", vislib::CharTraitsA::SafeStringLength(afb[4]), 11);
+    AssertEqual<SIZE_T>("Length of line 5 correct", vislib::CharTraitsA::SafeStringLength(afb[5]), 76);
+    AssertEqual<SIZE_T>("Length of line 6 correct", vislib::CharTraitsA::SafeStringLength(afb[6]), 3);
+    AssertEqual<SIZE_T>("Length of line 7 correct", vislib::CharTraitsA::SafeStringLength(afb[7]), 49);
+    AssertEqual<SIZE_T>("Length of line 8 correct", vislib::CharTraitsA::SafeStringLength(afb[8]), 48);
+    AssertEqual<SIZE_T>("Length of line 9 correct", vislib::CharTraitsA::SafeStringLength(afb[9]), 48);
+
+    vislib::sys::MemmappedFile file;
+    AssertTrue("Opening file again", file.Open(filename,
+        vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY));
+    pc.SetMark();
+    while (!file.IsEOF()) {
+        vislib::sys::ReadLineFromFileA(file);
+    }
+    e = pc.Difference();
+    printf("Manually loaded in %f seconds\n", pc.ToMillis(e) / 1000.0);
 
 }
