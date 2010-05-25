@@ -48,10 +48,11 @@ namespace protein {
         /** depth peeling modi */
         enum DepthPeelingMode
         {
-            NONE_BDP = 0,
+            NO_BDP = 0,
             DEPTH_BDP = 1,
             COLOR_BDP = 2,
-            ADAPTIVE_BDP = 3
+            ADAPTIVE_DEPTH_BDP = 3,
+            ADAPTIVE_COLOR_BDP = 4
         };
                 
         /** postprocessing modi */
@@ -59,17 +60,14 @@ namespace protein {
         {
             NONE = 0,
             AMBIENT_OCCLUSION = 1,
-            SILHOUETTE = 2,
-            TRANSPARENCY = 3
+            SILHOUETTE = 2
         };
 
         /** render modi */
         enum RenderMode
         {
             GPU_RAYCASTING = 0,
-            //POLYGONAL = 1,
-            //POLYGONAL_GPU = 2,
-            GPU_SIMPLIFIED = 3
+            GPU_SIMPLIFIED = 1
         };
 
         /** coloring modi for the atoms */
@@ -275,11 +273,6 @@ namespace protein {
         void PostprocessingSilhouette();
         
         /**
-         * Postprocessing: transparency (blend two images)
-         */
-        void PostprocessingTransparency( float transparency);
-        
-        /**
          * Fill amino acid color table.
          */
         void FillAminoAcidColorTable();
@@ -430,6 +423,7 @@ namespace protein {
         megamol::core::param::ParamSlot drawSASParam;
         megamol::core::param::ParamSlot depthPeelingParam;
         megamol::core::param::ParamSlot alphaParam;
+        megamol::core::param::ParamSlot absorptionParam;
         megamol::core::param::ParamSlot flipNormalsParam;
         megamol::core::param::ParamSlot alphaGradientParam;
         megamol::core::param::ParamSlot interiorProtAlphaParam;
@@ -441,6 +435,7 @@ namespace protein {
         bool flipNormals;
         float alphaGradient;
         float alpha;
+		float absorption;
         float interiorProtAlpha;
         /** current render mode */
         RenderMode currentRendermode;
@@ -449,7 +444,10 @@ namespace protein {
         /** postprocessing mode */
         PostprocessingMode postprocessing;
         /** current depth peeeling mode*/
-        int depthPeelingMode;
+        DepthPeelingMode depthPeelingMode;
+
+		// indicating geometry pass when rendering adaptive BDP
+		int geometryPass;
 
         /** the reduced surface(s) */
         std::vector<ReducedSurface*> reducedSurface;
@@ -473,8 +471,6 @@ namespace protein {
         vislib::graphics::gl::GLSLShader vfilterShader;
         // shader for silhouette drawing (postprocessing)
         vislib::graphics::gl::GLSLShader silhouetteShader;
-        // shader for cheap transparency (postprocessing/blending)
-        vislib::graphics::gl::GLSLShader transparencyShader;
         // shader creating min max depth buffer
         vislib::graphics::gl::GLSLShader createDepthBufferShader;
         // shader for blending depth peeling result
