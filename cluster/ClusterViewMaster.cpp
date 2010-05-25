@@ -327,7 +327,7 @@ void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannel
             this->UnlockModuleGraph();
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Sending module graph setup (%d Bytes)", static_cast<int>(mem.GetSize()));
             outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_GRAPHSETUP);
-            outMsg.GetHeader().SetBodySize(mem.GetSize());
+            outMsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(mem.GetSize()));
             outMsg.AssertBodySize();
             ::memcpy(outMsg.GetBody(), mem, mem.GetSize());
             channel.SendMessage(outMsg);
@@ -368,7 +368,8 @@ void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannel
 
                 cmsg.SetStorage(mem, mem.GetSize());
                 cmsg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CAMERAVALUES);
-                cmsg.GetHeader().SetBodySize(mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData));
+                cmsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(
+                    mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData)));
 
                 channel.SendMessage(cmsg);
             }
@@ -441,7 +442,8 @@ DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
 
             msg.SetStorage(mem, mem.GetSize());
             msg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CAMERAVALUES);
-            msg.GetHeader().SetBodySize(mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData));
+            msg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(
+                mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData)));
 
             // TODO: Better use another server
             This->ctrlServer.MultiSendMessage(msg);

@@ -101,7 +101,7 @@ void megamol::core::view::special::MegaMolLogo::Create(void) {
         }
     }
 
-    this->lineIdxCnt = lines.Count() * 2;
+    this->lineIdxCnt = static_cast<unsigned int>(lines.Count() * 2);
     this->lineIdxs = new unsigned int[this->lineIdxCnt];
     for (unsigned int i = 0; i < lines.Count(); i++) {
         this->lineIdxs[i * 2] = lines[i].First();
