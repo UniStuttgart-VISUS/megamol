@@ -27,7 +27,7 @@ namespace net {
      * This exception is thrown if an AbstractCommChannel or a derived class 
      * detects a graceful disconnect of the peer node.
      */
-    class PeerDisconnectedException : Exception {
+    class PeerDisconnectedException : public Exception {
 
     public:
 
