@@ -15,6 +15,7 @@
 #include "Call.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
+#include "glh/glh_genext.h"
 #include "vislib/CameraParameters.h"
 #include "vislib/Cuboid.h"
 #include "vislib/forceinline.h"
@@ -124,6 +125,26 @@ namespace moldyn {
         class CellInfo {
         public:
 
+            class CacheItem {
+            public:
+                GLuint data[2];
+                CacheItem() {
+                    this->data[0] = 0;
+                    this->data[1] = 0;
+                }
+                ~CacheItem() {
+                    if (this->data[0] != 0) {
+                        ::glDeleteBuffersARB(2, this->data);
+                    }
+                    this->data[0] = 0;
+                    this->data[1] = 0;
+                }
+                inline bool operator==(const CacheItem& rhs) {
+                    return (this->data[0] == rhs.data[0])
+                        && (this->data[1] == rhs.data[1]);
+                }
+            };
+
             /** Flag if the cell is visible now (inside the frustum; not occluded) */
             bool isvisible;
 
@@ -138,6 +159,9 @@ namespace moldyn {
 
             /** The occlusion query object */
             unsigned int oQuery;
+
+            /** gpu-ram caching variables */
+            vislib::Array<CacheItem> cache;
 
             /**
              * Ctor
@@ -179,6 +203,9 @@ namespace moldyn {
         /** The sphere shader */
         vislib::graphics::gl::GLSLShader sphereShader;
 
+        /** The vanilla sphere shader */
+        vislib::graphics::gl::GLSLShader vanillaSphereShader;
+
         /** The shader to init the depth fbo */
         vislib::graphics::gl::GLSLShader initDepthShader;
 
@@ -194,6 +221,12 @@ namespace moldyn {
         /** The shader to init the depth buffer with points */
         vislib::graphics::gl::GLSLShader initDepthPointShader;
 
+        /** Von Guido aus */
+        vislib::graphics::gl::GLSLShader vertCntShader;
+
+        /** Von Guido aus */
+        vislib::graphics::gl::GLSLShader vertCntShade2r;
+
         /** The frame buffer object for the depth estimate */
         vislib::graphics::gl::FramebufferObject fbo;
 
@@ -206,6 +239,21 @@ namespace moldyn {
         /** The call for Transfer function */
         CallerSlot getTFSlot;
 
+        /** Flag to activate per cell culling */
+        param::ParamSlot useCellCullSlot;
+
+        /** Flag to activate per vertex culling */
+        param::ParamSlot useVertCullSlot;
+
+        /** Flag to activate output of percentage of culled cells */
+        param::ParamSlot speakCellPercSlot;
+
+        /** Flag to activate output of number of vertices */
+        param::ParamSlot speakVertCountSlot;
+
+        /** De-/Activates deferred shading with normal generation */
+        param::ParamSlot deferredShadingSlot;
+
         /** A simple black-to-white transfer function texture as fallback */
         unsigned int greyTF;
 
@@ -214,6 +262,27 @@ namespace moldyn {
 
         /** Cell rendering informations */
         vislib::Array<CellInfo> cellInfos;
+
+        /** Bytes of the GPU-Memory available for caching */
+        SIZE_T cacheSize;
+
+        /** Bytes of the GPU-Memory used by the caching */
+        SIZE_T cacheSizeUsed;
+
+        /** Frame buffer object used for deferred shading */
+        vislib::graphics::gl::FramebufferObject dsFBO;
+
+        /** The sphere shader */
+        vislib::graphics::gl::GLSLShader deferredSphereShader;
+
+        /** The vanilla sphere shader */
+        vislib::graphics::gl::GLSLShader deferredVanillaSphereShader;
+
+        /** The shader to render far-away, solid-coloured points */
+        vislib::graphics::gl::GLSLShader deferredPointShader;
+
+        /** The deferred shader */
+        vislib::graphics::gl::GLSLShader deferredShader;
 
     };
 

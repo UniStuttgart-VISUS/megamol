@@ -42,7 +42,8 @@ namespace moldyn {
             enum VertexDataType {
                 VERTDATA_NONE, //< indicates that this object is void
                 VERTDATA_FLOAT_XYZ, //< use global radius
-                VERTDATA_FLOAT_XYZR
+                VERTDATA_FLOAT_XYZR,
+                VERTDATA_SHORT_XYZ //< quantized positions and global radius
             };
 
             /** possible values for the colour data */

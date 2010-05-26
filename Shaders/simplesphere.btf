@@ -33,6 +33,10 @@ varying vec4 lightPos;
 varying float squarRad;
 varying float rad;
 
+#ifdef DEFERRED_SHADING
+varying float pointSize;
+#endif
+
 #ifdef RETICLE
 varying vec2 centerFragment;
 #endif // RETICLE
@@ -177,6 +181,9 @@ void main(void) {
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, (od > clipDat.w) ? 0.0 : 1.0);
     maxs = (maxs - mins) * 0.5 * winHalf;
     gl_PointSize = max(maxs.x, maxs.y) + 0.5;
+#ifdef DEFERRED_SHADING
+    pointSize = gl_PointSize;
+#endif
 ]]>
         </snippet>
         <snippet type="string">
@@ -203,7 +210,7 @@ void main(void) {
         <snippet type="version">110</snippet>
         <snippet name="common::defines"/>
         <snippet name="common::lighting::simple"/>
-        <snippet type="string">
+        <snippet name="body1" type="string">
             <![CDATA[
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
@@ -314,11 +321,17 @@ void main(void) {
     if (normal.y < -0.99)     { color = vec3(0.5); }
     if (normal.z < -0.99)     { color = vec3(0.5); }
 #endif // AXISHINTS
-
+]]>
+</snippet>
+<snippet name="out-lighting" type="string">
+            <![CDATA[
     // phong lighting with directional light
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color.rgb), color.a);
     //gl_FragColor = color;
-
+]]>
+  </snippet>
+  <snippet name="out-depth" type="string">
+    <![CDATA[
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
@@ -338,7 +351,10 @@ void main(void) {
 #else // DISCARD_COLOR_MARKER
 
 #endif // DEPTH
-
+]]>
+</snippet>
+<snippet name="footer" type="string">
+<![CDATA[
 #ifdef RETICLE
     coord = gl_FragCoord 
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
@@ -348,7 +364,6 @@ void main(void) {
         gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
-
 //    gl_FragColor.rgb = normal;
 }
 ]]>

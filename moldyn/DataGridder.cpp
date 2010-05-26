@@ -10,9 +10,11 @@
 #include <climits>
 #include "MultiParticleDataCall.h"
 #include "ParticleGridDataCall.h"
+#include "param/BoolParam.h"
 #include "param/IntParam.h"
 #include "vislib/Array.h"
 #include "vislib/Cuboid.h"
+#include "vislib/Log.h"
 #include "vislib/Pair.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
@@ -29,6 +31,7 @@ moldyn::DataGridder::DataGridder(void) : Module(),
         gridSizeXSlot("gridsizex", "The grid size in x direction"),
         gridSizeYSlot("gridsizey", "The grid size in y direction"),
         gridSizeZSlot("gridsizez", "The grid size in z direction"),
+        quantizeSlot("quantize", "Quantize the data to shorts"),
         datahash(0), frameID(UINT_MAX), gridSizeX(0), gridSizeY(0),
         gridSizeZ(0), types(), grid(), vertData(), colData() {
 
@@ -49,6 +52,9 @@ moldyn::DataGridder::DataGridder(void) : Module(),
 
     this->gridSizeZSlot << new param::IntParam(5, 1);
     this->MakeSlotAvailable(&this->gridSizeZSlot);
+
+    this->quantizeSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->quantizeSlot);
 
 }
 
@@ -112,11 +118,13 @@ bool moldyn::DataGridder::getData(Call& call) {
     *static_cast<AbstractGetData3DCall*>(mpdc) = *pgdc;
     if (!(*mpdc)(0)) return false; // unable to get data
 
+    // test if update of grid is required
     if ((mpdc->DataHash() == 0) // data not hashable
             || (mpdc->DataHash() != this->datahash) // new data
             || this->gridSizeXSlot.IsDirty() // grid changed
             || this->gridSizeYSlot.IsDirty()
             || this->gridSizeZSlot.IsDirty()
+            || this->quantizeSlot.IsDirty()
             || (mpdc->FrameID() != this->frameID)) { // new frame
         // renew the grid
 
@@ -126,6 +134,7 @@ bool moldyn::DataGridder::getData(Call& call) {
         this->gridSizeXSlot.ResetDirty();
         this->gridSizeYSlot.ResetDirty();
         this->gridSizeZSlot.ResetDirty();
+        this->quantizeSlot.ResetDirty();
 
         // allocate new grid
         this->gridSizeX = this->gridSizeXSlot.Param<param::IntParam>()->Value();
@@ -144,6 +153,12 @@ bool moldyn::DataGridder::getData(Call& call) {
         for (unsigned int i = 0; i < typeCnt; i++) {
             ParticleGridDataCall::ParticleType &t = this->types[i];
             MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
+
+            if (p.GetVertexDataType() == moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "[Critical] Unable to grid already quantized data!\n");
+                throw vislib::Exception("Critical Error: Unable to grid already quantized data!\n", __FILE__, __LINE__);
+            }
            
             t.SetColourDataType(p.GetColourDataType());
             t.SetColourMapIndexValues(p.GetMinColourIndexValue(), p.GetMaxColourIndexValue());
@@ -152,9 +167,10 @@ bool moldyn::DataGridder::getData(Call& call) {
             t.SetVertexDataType(p.GetVertexDataType());
         }
 
-        // index buffer action blub
+        // Generate an index buffer storing for each particle which cell it will be safed in.
+        // array<per-type-count, grid-idx&type>
         vislib::Array<vislib::Pair<SIZE_T, unsigned int> > indexBuffer;
-        SIZE_T oaCnt = 0;
+        SIZE_T oaCnt = 0; // over-all count
         for (unsigned int i = 0; i < typeCnt; i++) {
             oaCnt += static_cast<SIZE_T>(mpdc->AccessParticles(i).GetCount());
         }
@@ -169,14 +185,20 @@ bool moldyn::DataGridder::getData(Call& call) {
             switch (p.GetVertexDataType()) {
                 case MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue; // done with that type already!
+
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vertStep = vislib::math::Max(vertStep, 12U);
                     break;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vertStep = vislib::math::Max(vertStep, 16U);
                     break;
+
+                case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                 default:
-                    continue; // there is something wrong
+                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                        "Internal Error at %s[%d]\n", __FILE__, __LINE__);
+                    throw vislib::Exception("Internal Error\n", __FILE__, __LINE__);
+                    break;
             }
 
             for (SIZE_T j = 0; j < c; j++, oaCnt++, vertPtr += vertStep) {
@@ -194,13 +216,16 @@ bool moldyn::DataGridder::getData(Call& call) {
             }
         }
         ASSERT(indexBuffer.Count() == oaCnt);
+        // sort that all particles for each cell are in succession
         indexBuffer.Sort(&DataGridder::doSort);
 
-        // data buffer setup
+        // data grid setup
         this->vertData.SetCount(gridSize * typeCnt);
         this->colData.SetCount(gridSize * typeCnt);
 
         // copy data to grid cells
+        // DO NOT QUANTIZE HERE! The cell bounding box is not yet valid
+        // Just store floats for now and quantize later on
         SIZE_T start = 0, pos = 0, cnt = indexBuffer.Count();
         for (unsigned int j = 0; j < gridSize; j++) {
             for (unsigned int i = 0; i < typeCnt; i++) {
@@ -243,14 +268,20 @@ bool moldyn::DataGridder::getData(Call& call) {
                 switch (p.GetVertexDataType()) {
                     case MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue; // done with that type already!
+
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vertSize = 12;
                         break;
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vertSize = 16;
                         break;
+
+                    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     default:
-                        continue; // there is something wrong
+                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                            "Internal Error at %s[%d]\n", __FILE__, __LINE__);
+                        throw vislib::Exception("Internal Error\n", __FILE__, __LINE__);
+                        break;
                 }
                 if (vertStep < vertSize) {
                     vertStep = vertSize;
@@ -341,9 +372,64 @@ bool moldyn::DataGridder::getData(Call& call) {
             this->grid[i].SetBoundingBox(vislib::math::Cuboid<float>(minX, minY, minZ, maxX, maxY, maxZ));
         }
 
-        // data grid complete
+        if (this->quantizeSlot.Param<param::BoolParam>()->Value()) {
+            // quantize data!
+
+            for (unsigned int j = 0; j < typeCnt; j++) {
+                unsigned int vertSize;
+                switch (this->types[j].GetVertexDataType()) {
+                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                        vertSize = 3;
+                        break;
+                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                        vertSize = 4;
+                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                            "Unable to quantize radius for type %u; using %f\n",
+                            j, this->types[j].GetGlobalRadius());
+                        break;
+                    default:
+                        continue;
+                }
+
+                for (unsigned int i = 0; i < gridSize; i++) {
+                    short *qverts = const_cast<short*>( //< because i know i own the memory and there is sufficient
+                        static_cast<const short*>(
+                        this->grid[i].AccessParticleLists()[j].GetVertexData()));
+                    const float *verts = static_cast<const float*>(
+                        this->grid[i].AccessParticleLists()[j].GetVertexData());
+                    const vislib::math::Cuboid<float>& bbox = this->grid[i].GetBoundingBox();
+                    SIZE_T cnt = this->grid[i].AccessParticleLists()[j].GetCount();
+
+                    for (SIZE_T k = 0; k < cnt; k++, verts += vertSize, qverts += 3) {
+
+                        float v = (verts[0] - bbox.Left()) / bbox.LongestEdge();
+                        if (v < 0.0f) v = 0.0f; else if (v > 1.0f) v = 1.0f;
+                        v *= static_cast<float>(SHRT_MAX);
+                        qverts[0] = static_cast<short>(v + 0.5f);
+
+                        v = (verts[1] - bbox.Bottom()) / bbox.LongestEdge();
+                        if (v < 0.0f) v = 0.0f; else if (v > 1.0f) v = 1.0f;
+                        v *= static_cast<float>(SHRT_MAX);
+                        qverts[1] = static_cast<short>(v + 0.5f);
+
+                        v = (verts[2] - bbox.Back()) / bbox.LongestEdge();
+                        if (v < 0.0f) v = 0.0f; else if (v > 1.0f) v = 1.0f;
+                        v *= static_cast<float>(SHRT_MAX);
+                        qverts[2] = static_cast<short>(v + 0.5f);
+                    }
+                }
+
+                this->types[j].SetVertexDataType(MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ);
+            }
+
+        }
+
+        //
+        // data grid update complete
+        //
     }
 
+    // send data to caller
     pgdc->SetDataHash(this->datahash);
     pgdc->SetFrameID(this->frameID);
     pgdc->SetUnlocker(NULL);

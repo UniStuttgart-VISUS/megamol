@@ -122,6 +122,9 @@ namespace moldyn {
         /** The grid size in z direction */
         param::ParamSlot gridSizeZSlot;
 
+        /** Flag to quantize the coordinates to shorts */
+        param::ParamSlot quantizeSlot;
+
         /** The data hash code */
         SIZE_T datahash;
 
