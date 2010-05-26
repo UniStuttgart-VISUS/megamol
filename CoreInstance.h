@@ -16,7 +16,6 @@
 #include "api/MegaMolCore.std.h"
 #include "utility/Configuration.h"
 #include "utility/LogEchoTarget.h"
-#include "vislib/AbstractSimpleMessage.h" // TODO: Remove dependancy
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/DynamicLinkLibrary.h"
@@ -326,9 +325,10 @@ namespace core {
          * Sets up the module graph based on the serialized graph description
          * from the head node of the network rendering cluster.
          *
-         * @param dat The serialized graph description
+         * @param data The serialized graph description (Pointer to an
+         *             vislib::net::AbstractSimpleMessage)
          */
-        void SetupGraphFromNetwork(const vislib::net::AbstractSimpleMessage& dat);
+        void SetupGraphFromNetwork(const void *data);
 
         /**
          * Instantiates a call.

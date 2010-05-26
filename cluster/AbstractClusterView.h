@@ -145,6 +145,39 @@ namespace cluster {
     private:
 
         /**
+         * Utility class to initialize the camera
+         */
+        class InitCameraHookHandler : public view::AbstractView::Hooks {
+        public:
+
+            /**
+             * Empty ctor.
+             */
+            InitCameraHookHandler(cluster::CommChannel *channel);
+
+            /**
+             * Empty but virtual dtor.
+             */
+            virtual ~InitCameraHookHandler(void);
+
+            /**
+             * Hook method to be called before the view is rendered.
+             *
+             * @param view The calling view
+             */
+            virtual void BeforeRender(AbstractView *view);
+
+        private:
+
+            /** The communication channel */
+            cluster::CommChannel *channel;
+
+            /** counter */
+            unsigned int frameCnt;
+
+        };
+
+        /**
          * Callback when the server address is changed
          *
          * @param slot Must be serverAddressSlot

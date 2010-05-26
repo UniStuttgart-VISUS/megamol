@@ -27,6 +27,51 @@ using namespace megamol::core;
 
 
 /*
+ * cluster::AbstractClusterView::InitCameraHookHandler::InitCameraHookHandler
+ */
+cluster::AbstractClusterView::InitCameraHookHandler::InitCameraHookHandler(cluster::CommChannel *channel)
+        : view::AbstractView::Hooks(), frameCnt(0), channel(channel) {
+}
+
+
+/*
+ * cluster::AbstractClusterView::InitCameraHookHandler::~InitCameraHookHandler
+ */
+cluster::AbstractClusterView::InitCameraHookHandler::~InitCameraHookHandler(void) {
+    this->channel = NULL;
+}
+
+
+/*
+ * cluster::AbstractClusterView::InitCameraHookHandler::BeforeRender
+ */
+void cluster::AbstractClusterView::InitCameraHookHandler::BeforeRender(view::AbstractView *view) {
+    this->frameCnt++;
+    if (this->frameCnt > 3) {
+        vislib::net::SimpleMessage outMsg;
+
+        view->UnregisterHook(this);
+
+        outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_REQUEST_CAMERAVALUES);
+        outMsg.GetHeader().SetBodySize(0);
+        outMsg.AssertBodySize();
+        if (this->channel != NULL) {
+            this->channel->SendMessage(outMsg);
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Camera initialization request sent.\n");
+
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Failed to send camera initialization request.\n");
+
+        }
+
+        delete this;
+    }
+}
+
+
+/*
  * cluster::AbstractClusterView::AbstractClusterView
  */
 cluster::AbstractClusterView::AbstractClusterView(void)
@@ -126,10 +171,11 @@ void cluster::AbstractClusterView::renderFallbackView(void) {
     ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT);
 
-    vislib::net::SimpleMessage *initmsg = this->graphInitData;
+    vislib::net::AbstractSimpleMessage *initmsg = this->graphInitData;
     if (initmsg != NULL) {
         this->graphInitData = NULL;
-        this->GetCoreInstance()->SetupGraphFromNetwork(*initmsg);
+        this->GetCoreInstance()->SetupGraphFromNetwork(static_cast<void*>(initmsg));
+        delete initmsg;
         this->continueSetup();
         return;
     }
@@ -358,12 +404,12 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "Internal Error: \"CallRenderView\" is not registered\n");
             }
-            // TODO: Better connect a camera client to a camera server
 
-            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_REQUEST_CAMERAVALUES);
-            outMsg.GetHeader().SetBodySize(0);
-            outMsg.AssertBodySize();
-            sender.SendMessage(outMsg);
+            view::AbstractView *view = this->getConnectedView();
+            if (view != NULL) {
+                view->RegisterHook(new InitCameraHookHandler(&sender));
+            }
+
         } break;
 
         case cluster::netmessages::MSG_SET_CAMERAVALUES: {

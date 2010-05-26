@@ -34,6 +34,7 @@
 #include "utility/ProjectParser.h"
 #include "utility/xml/XmlReader.h"
 #include "job/JobThread.h"
+#include "vislib/AbstractSimpleMessage.h"
 #include "vislib/AutoLock.h"
 #include "vislib/Log.h"
 #include "vislib/functioncast.h"
@@ -1030,8 +1031,14 @@ void megamol::core::CoreInstance::Shutdown(void) {
 /*
  * megamol::core::CoreInstance::SetupGraphFromNetwork
  */
-void megamol::core::CoreInstance::SetupGraphFromNetwork(const vislib::net::AbstractSimpleMessage& dat) {
+void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
     using vislib::sys::Log;
+    using vislib::net::AbstractSimpleMessage;
+
+    const AbstractSimpleMessage *dataPtr
+        = static_cast<const AbstractSimpleMessage *>(data);
+    const AbstractSimpleMessage &dat = *dataPtr;
+
     this->namespaceRoot.LockModuleGraph(true);
     try {
 
