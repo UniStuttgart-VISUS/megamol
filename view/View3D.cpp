@@ -63,7 +63,8 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         lightColDifSlot("light::diffuseCol", "Diffuse light colour"),
         lightColAmbSlot("light::ambientCol", "Ambient light colour"),
         stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection"),
-        stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
+        stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection"),
+        overrideCall(NULL)
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
         , viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
         viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
@@ -232,6 +233,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
 view::View3D::~View3D(void) {
     this->Release();
     SAFE_DELETE(this->frozenValues);
+    this->overrideCall = NULL; // DO NOT DELETE
 }
 
 
@@ -309,7 +311,11 @@ void view::View3D::Render(void) {
         this->removeTitleRenderer();
     }
 
-    cr3d->SetOutputBuffer(GL_BACK); // TODO: Handle incoming buffers!
+    if (this->overrideCall != NULL) {
+        this->overrideCall->EnableOutputBuffer();
+    } else {
+        cr3d->SetOutputBuffer(GL_BACK);
+    }
 
     // camera settings
     if (this->stereoEyeDistSlot.IsDirty()) {
@@ -414,6 +420,10 @@ void view::View3D::Render(void) {
         this->renderLookAt();
     }
     ::glPushMatrix();
+
+    if (this->overrideCall) {
+        (*static_cast<AbstractCallRender*>(cr3d)) = *this->overrideCall;
+    }
 
     // call for render
     if (cr3d != NULL) {
@@ -545,7 +555,11 @@ bool view::View3D::OnRenderView(Call& call) {
         this->overrideBkgndCol = overBC; // hurk
     }
 
+    this->overrideCall = dynamic_cast<AbstractCallRender*>(&call);
+
     this->Render();
+
+    this->overrideCall = NULL;
 
     if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
         this->cam.SetParameters(this->frozenValues ? this->frozenValues->camParams : this->camParams);

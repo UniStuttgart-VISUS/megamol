@@ -48,6 +48,10 @@ void view::AbstractCallRender::EnableOutputBuffer(void) {
         ::glDrawBuffer(this->outputBuffer);
         ::glReadBuffer(this->outputBuffer);
     }
+    ::glViewport(this->outputViewport.Left(),
+        this->outputViewport.Bottom(),
+        this->outputViewport.Width(),
+        this->outputViewport.Height());
 }
 
 

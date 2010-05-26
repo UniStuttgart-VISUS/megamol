@@ -94,7 +94,7 @@ moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
     this->useVertCullSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->useVertCullSlot);
 
-    this->speakCellPercSlot << new param::BoolParam(true);
+    this->speakCellPercSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->speakCellPercSlot);
 
     this->speakVertCountSlot << new param::BoolParam(false);
@@ -703,8 +703,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
     ::glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     float viewportStuff[4] = {
-        cr->GetCameraParameters()->TileRect().Left(),
-        cr->GetCameraParameters()->TileRect().Bottom(),
+        0.0f, 0.0f,
+        //cr->GetCameraParameters()->TileRect().Left(),
+        //cr->GetCameraParameters()->TileRect().Bottom(),
         cr->GetCameraParameters()->TileRect().Width(),
         cr->GetCameraParameters()->TileRect().Height()};
     float defaultPointSize = vislib::math::Max(viewportStuff[2], viewportStuff[3]);
@@ -1311,7 +1312,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 #endif
         } else {
 
-            // TODO: REACTIVATE TARGET FBO
+            // REACTIVATE TARGET FBO
             cr->EnableOutputBuffer();
 
         }
@@ -1860,6 +1861,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
     }
 
     //// DEBUG OUTPUT OF FBO
+    //cr->EnableOutputBuffer();
     //::glEnable(GL_TEXTURE_2D);
     //::glDisable(GL_LIGHTING);
     //::glDisable(GL_DEPTH_TEST);

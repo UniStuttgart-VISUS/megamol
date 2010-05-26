@@ -14,6 +14,7 @@
 #define ENABLE_KEYBOARD_VIEW_CONTROL 1
 
 #include "BoundingBoxes.h"
+#include "view/AbstractCallRender.h"
 #include "view/AbstractView3D.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
@@ -394,6 +395,9 @@ namespace view {
 
         /** The ambient light colour */
         float lightColAmb[4];
+
+        /** The incoming call */
+        AbstractCallRender *overrideCall;
 
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
 
