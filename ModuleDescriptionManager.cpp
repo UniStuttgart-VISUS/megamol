@@ -28,16 +28,12 @@
 #include "moldyn/SimpleSphereRenderer.h"
 #include "moldyn/VIMDataSource.h"
 //#include "special/AnaglyphStereoDisplay.h"
-//#include "special/ClusterDisplay.h"
 //#include "special/ColStereoDisplay.h"
-//#include "special/RenderMaster.h"
-//#include "special/TitleSceneView.h"
-//#include "special/ScreenShooter.h"
-//#include "special/VisLogoRenderer.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
 #include "view/special/ChronoGraph.h"
 #include "view/special/DemoRenderer2D.h"
+#include "view/special/ScreenShooter.h"
 #include "view/SwitchRenderer3D.h"
 #include "view/TileView.h"
 #include "view/View2D.h"
@@ -79,16 +75,12 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
         //instance->registerAutoDescription<special::AnaglyphStereoDisplay>();
-        //instance->registerAutoDescription<special::ClusterDisplay>();
         //instance->registerAutoDescription<special::ColStereoDisplay>();
-        //instance->registerAutoDescription<special::RenderMaster>();
-        //instance->registerAutoDescription<special::ScreenShooter>();
-        //instance->registerAutoDescription<special::TitleSceneView>();
-        //instance->registerAutoDescription<special::VisLogoRenderer>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();
         instance->registerAutoDescription<view::special::ChronoGraph>();
         instance->registerAutoDescription<view::special::DemoRenderer2D>();
+        instance->registerAutoDescription<view::special::ScreenShooter>();
         instance->registerAutoDescription<view::SwitchRenderer3D>();
         instance->registerAutoDescription<view::TileView>();
         instance->registerAutoDescription<view::View2D>();

@@ -1,7 +1,7 @@
 /*
  * ScreenShooter.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -20,6 +20,7 @@
 
 namespace megamol {
 namespace core {
+namespace view {
 namespace special {
 
 
@@ -152,6 +153,7 @@ namespace special {
 
 
 } /* end namespace special */
+} /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 

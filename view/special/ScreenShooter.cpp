@@ -1,7 +1,7 @@
 /*
  * ScreenShooter.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -10,6 +10,7 @@
 #include <GL/gl.h>
 #include "AbstractNamedObject.h"
 #include "AbstractNamedObjectContainer.h"
+#include "CoreInstance.h"
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
 #include "param/EnumParam.h"
@@ -31,6 +32,7 @@
 
 namespace megamol {
 namespace core {
+namespace view {
 namespace special {
 
     /**
@@ -170,6 +172,7 @@ namespace special {
     }
 
 } /* end namespace special */
+} /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
@@ -177,17 +180,19 @@ using namespace megamol::core;
 
 
 /*
- * special::ScreenShooter::IsAvailable
+ * view::special::ScreenShooter::IsAvailable
  */
-bool special::ScreenShooter::IsAvailable(void) {
-    return vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable();
+bool view::special::ScreenShooter::IsAvailable(void) {
+    return true;
+    // required extensions must be tested lazy,
+    //     because open gl can still be missing
 }
 
 
 /*
- * special::ScreenShooter::release
+ * view::special::ScreenShooter::release
  */
-special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
+view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
         viewNameSlot("view", "The name of the view instance to be used"),
         imgWidthSlot("imgWidth", "The width in pixel of the resulting image"),
         imgHeightSlot("imgHeight", "The height in pixel of the resulting image"),
@@ -235,66 +240,66 @@ special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
 
 
 /*
- * special::ScreenShooter::release
+ * view::special::ScreenShooter::release
  */
-special::ScreenShooter::~ScreenShooter() {
+view::special::ScreenShooter::~ScreenShooter() {
     this->Release();
 }
 
 
 /*
- * special::ScreenShooter::release
+ * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::IsRunning(void) const {
+bool view::special::ScreenShooter::IsRunning(void) const {
     return this->running;
 }
 
 
 /*
- * special::ScreenShooter::release
+ * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::Start(void) {
+bool view::special::ScreenShooter::Start(void) {
     this->running = true;
     return true;
 }
 
 
 /*
- * special::ScreenShooter::release
+ * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::Terminate(void) {
+bool view::special::ScreenShooter::Terminate(void) {
     this->running = false;
     return true;
 }
 
 
 /*
- * special::ScreenShooter::release
+ * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::create(void) {
+bool view::special::ScreenShooter::create(void) {
     // Intentionally empty. Initialization is lazy.
     return true;
 }
 
 
 /*
- * special::ScreenShooter::release
+ * view::special::ScreenShooter::release
  */
-void special::ScreenShooter::release(void) {
+void view::special::ScreenShooter::release(void) {
     // intentionally empty.
 }
 
 
 /*
- * special::ScreenShooter::BeforeRender
+ * view::special::ScreenShooter::BeforeRender
  */
-void special::ScreenShooter::BeforeRender(view::AbstractView *view) {
+void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     using vislib::sys::Log;
     vislib::graphics::gl::FramebufferObject fbo;
     ShooterData data;
     vislib::sys::Thread t2(&myPngStoreData);
 
-    view->UnregisterHook(this); // grumpf
+    view->UnregisterHook(this); // avoid recursive calling
 
     data.imgWidth = static_cast<UINT>(vislib::math::Max(0, this->imgWidthSlot.Param<param::IntParam>()->Value()));
     data.imgHeight = static_cast<UINT>(vislib::math::Max(0, this->imgHeightSlot.Param<param::IntParam>()->Value()));
@@ -373,7 +378,7 @@ void special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
         // check how complex the upcoming action is
-        if ((data.imgWidth < data.tileWidth) && (data.imgHeight < data.tileHeight)) {
+        if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
             // we can render the whole image in just one call!
 
             if (!fbo.Create(data.imgWidth, data.imgHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
@@ -395,14 +400,13 @@ void special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                 default: /* don't set bkgnd */ break;
             }
             // don't set projection
-            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                0.0f, 0.0f, static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
-            crv.SetViewportSize(data.imgWidth, data.imgHeight);
-
             if (fbo.Enable() != GL_NO_ERROR) {
                 throw vislib::Exception("Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
             }
-            glViewport(0, 0, crv.ViewportWidth(), crv.ViewportHeight());
+            glViewport(0, 0, data.imgWidth, data.imgHeight);
+            crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, data.imgWidth, data.imgHeight));
+            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
+                0.0f, 0.0f, static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             view->OnRenderView(crv); // glClear by SFX
             glFlush();
             fbo.Disable();
@@ -594,17 +598,16 @@ void special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                         default: /* don't set bkgnd */ break;
                     }
                     // don't set projection
-                    crv.SetViewportSize(tileW, tileH);
-                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                        static_cast<float>(tileX), static_cast<float>(tileY),
-                        static_cast<float>(tileW), static_cast<float>(tileH));
-
                     if (fbo.Enable() != GL_NO_ERROR) {
                         throw vislib::Exception(
                             "Failed to create Screenshot: Cannot enable Framebuffer object",
                             __FILE__, __LINE__);
                     }
                     glViewport(0, 0, tileW, tileH);
+                    crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
+                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
+                        static_cast<float>(tileX), static_cast<float>(tileY),
+                        static_cast<float>(tileW), static_cast<float>(tileH));
                     view->OnRenderView(crv); // glClear by SFX
                     glFlush();
                     fbo.Disable();
@@ -747,26 +750,16 @@ void special::ScreenShooter::BeforeRender(view::AbstractView *view) {
 
     if (closeAfter) {
         this->running = false;
-        AbstractNamedObject *ano = dynamic_cast<AbstractNamedObject*>(view);
-        ano->LockModuleGraph(true); // graph is locked for read, now we lock for write!
-        AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano->RootModule());
-        AbstractNamedObjectContainer::ChildList::Iterator anoci = anoc->GetChildIterator();
-        while (anoci.HasNext()) {
-            ViewInstance *vi = dynamic_cast<ViewInstance*>(anoci.Next());
-            if ((vi != NULL) && (vi->View() == view)) {
-                vi->Terminate();
-            }
-        }
-        ano->UnlockModuleGraph();
+        this->GetCoreInstance()->Shutdown();
     }
 
 }
 
 
 /*
- * special::ScreenShooter::triggerButtonClicked
+ * view::special::ScreenShooter::triggerButtonClicked
  */
-bool special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) {
+bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) {
     // happy trigger finger hit button action happend
     using vislib::sys::Log;
     ASSERT(&slot == &this->triggerButtonSlot);

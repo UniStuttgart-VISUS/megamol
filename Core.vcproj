@@ -870,10 +870,6 @@
 					RelativePath=".\special\ColStereoDisplay.h"
 					>
 				</File>
-				<File
-					RelativePath=".\special\ScreenShooter.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -952,42 +948,6 @@
 				</File>
 				<File
 					RelativePath=".\special\ColStereoDisplay.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\special\ScreenShooter.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1246,6 +1206,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\view\special\ScreenShooter.h"
+						>
+					</File>
+					<File
 						RelativePath=".\view\special\TitleRenderer.h"
 						>
 					</File>
@@ -1267,6 +1231,10 @@
 					</File>
 					<File
 						RelativePath=".\view\special\MegaMolLogoData.inl"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\ScreenShooter.cpp"
 						>
 					</File>
 					<File

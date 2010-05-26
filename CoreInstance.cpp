@@ -188,10 +188,11 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->builtinJobDescs.Register(jd);
 
     // // TODO: Replace (is deprecated)
-    //jd = new JobDescription("imagemaker");
-    //jd->AddModule(ModuleDescriptionManager::Instance()->Find("ScreenShooter"), "imgmaker");
-    //jd->SetJobModuleID("imgmaker");
-    //this->builtinJobDescs.Register(jd);
+    // job to produce images
+    jd = new JobDescription("imagemaker");
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ScreenShooter"), "imgmaker");
+    jd->SetJobModuleID("imgmaker");
+    this->builtinJobDescs.Register(jd);
 
     // TODO: Debug
     jd = new JobDescription("DEBUGjob");
