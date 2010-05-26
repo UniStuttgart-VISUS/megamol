@@ -169,6 +169,24 @@ namespace cluster {
          */
         bool onDoSanityCheckTime(param::ParamSlot& slot);
 
+        /**
+         * Enters remote view pause mode
+         *
+         * @param slot Must be PauseRemoteViewSlot
+         *
+         * @return True;
+         */
+        bool onPauseRemoteViewClicked(param::ParamSlot& slot);
+
+        /**
+         * Resumes from remote view pause mode
+         *
+         * @param slot Must be ResumeRemoteViewSlot
+         *
+         * @return True;
+         */
+        bool onResumeRemoteViewClicked(param::ParamSlot& slot);
+
         /** The cluster control client */
         ClusterControllerClient ccc;
 
@@ -192,6 +210,12 @@ namespace cluster {
 
         /** The thread to update the camera settings */
         vislib::sys::Thread camUpdateThread;
+
+        /** The slot to enter view pause */
+        param::ParamSlot pauseRemoteViewSlot;
+
+        /** The slot to resume from view pause */
+        param::ParamSlot resumeRemoteViewSlot;
 
     };
 

@@ -637,6 +637,7 @@ vislib::TString cluster::InfoIconRenderer::infoIconBorderCaption(void) {
         t = _T("Unnamed Computer");
     }
     rv.Format(_T(" %s "), t.PeekBuffer());
+    rv.ToUpperCase();
     return rv;
 }
 

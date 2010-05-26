@@ -80,6 +80,15 @@ namespace cluster {
         CommChannel(void);
 
         /**
+         * Copy ctor
+         * Using this ctor is only legal if 'src' has no members set to any
+         * non-default values.
+         *
+         * @param src The object to clone from.
+         */
+        CommChannel(const CommChannel& src);
+
+        /**
          * Dtor.
          */
         virtual ~CommChannel(void);
@@ -221,11 +230,6 @@ namespace cluster {
         virtual bool OnMessageReceived(vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw();
 
     private:
-
-        /**
-         * Forbidden copy ctor
-         */
-        CommChannel(const CommChannel& src);
 
         /** The communication channel */
         vislib::SmartRef<vislib::net::AbstractBidiCommChannel> channel;

@@ -22,7 +22,7 @@ using namespace megamol::core;
  */
 cluster::ControlChannelServer::ControlChannelServer(void)
         : vislib::Listenable<ControlChannelServer>(), clientsLock(),
-        clients(), server(), commChannel() {
+        clients(), commChannel(), server() {
     this->server.AddListener(this);
 }
 
@@ -53,9 +53,10 @@ void cluster::ControlChannelServer::Start(vislib::net::IPEndPoint& ep) {
         this->commChannel = new vislib::net::TcpCommChannel(
             vislib::net::TcpCommChannel::FLAG_NODELAY);
     }
-    this->server.Configure(
-        this->commChannel.DynamicCast<vislib::net::AbstractServerEndPoint>(),
-        ep.ToStringA());
+    vislib::SmartRef<vislib::net::AbstractServerEndPoint> endpoint = 
+        this->commChannel.DynamicCast<vislib::net::AbstractServerEndPoint>();
+    vislib::StringA address = ep.ToStringA();
+    this->server.Configure(endpoint, address);
     this->server.Start(NULL);
 }
 

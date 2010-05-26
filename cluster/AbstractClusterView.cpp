@@ -30,7 +30,7 @@ using namespace megamol::core;
  * cluster::AbstractClusterView::InitCameraHookHandler::InitCameraHookHandler
  */
 cluster::AbstractClusterView::InitCameraHookHandler::InitCameraHookHandler(cluster::CommChannel *channel)
-        : view::AbstractView::Hooks(), frameCnt(0), channel(channel) {
+        : view::AbstractView::Hooks(), channel(channel), frameCnt(0) {
 }
 
 
@@ -87,9 +87,6 @@ cluster::AbstractClusterView::AbstractClusterView(void)
     this->serverAddressSlot << new param::StringParam("");
     this->serverAddressSlot.SetUpdateCallback(&AbstractClusterView::onServerAddressChanged);
     this->MakeSlotAvailable(&this->serverAddressSlot);
-
-    // TODO: Implement
-
 }
 
 
@@ -109,9 +106,6 @@ cluster::AbstractClusterView::~AbstractClusterView(void) {
     vislib::net::SimpleMessage *m = this->graphInitData;
     this->graphInitData = NULL;
     delete m;
-
-    // TODO: Implement
-
 }
 
 

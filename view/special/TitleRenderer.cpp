@@ -215,7 +215,7 @@ void view::special::TitleRenderer::GPURaycastIcon::Create(void) {
             return;
         }
     } catch (vislib::Exception ex) {
-        const char *msg = ex.GetMsgA();
+        //const char *msg = ex.GetMsgA();
         this->error = true;
         delete this->shader;
         this->shader = NULL;

@@ -27,6 +27,20 @@ cluster::CommChannel::CommChannel(void)
 
 
 /*
+ * cluster::CommChannel::CommChannel
+ */
+cluster::CommChannel::CommChannel(const cluster::CommChannel& src) 
+        : vislib::Listenable<CommChannel>(),
+        vislib::net::SimpleMessageDispatchListener(),
+        channel(), counterpartName("Unknown") {
+    if (!(src == *this)) {
+        throw vislib::UnsupportedOperationException("copy ctor",
+            __FILE__, __LINE__);
+    }
+}
+
+
+/*
  * cluster::CommChannel::~CommChannel
  */
 cluster::CommChannel::~CommChannel(void) {
@@ -163,12 +177,4 @@ bool cluster::CommChannel::OnMessageReceived(vislib::net::SimpleMessageDispatche
         l->OnCommChannelMessage(*this, msg);
     }
     return true; // keep receiver running
-}
-
-
-/*
- * cluster::CommChannel::CommChannel
- */
-cluster::CommChannel::CommChannel(const cluster::CommChannel& src) {
-    throw vislib::UnsupportedOperationException("copy ctor", __FILE__, __LINE__);
 }

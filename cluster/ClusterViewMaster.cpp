@@ -44,8 +44,10 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
         viewSlot("view", "The view to be used (this value is set automatically"),
         serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port"),
         serverEndPoint(),
-        sanityCheckTimeSlot("sanityCheckTime", "Runs a time sync sanity check on all cluster nodes."),
-        camUpdateThread(&ClusterViewMaster::cameraUpdateThread) {
+        sanityCheckTimeSlot("RemoteView::sanityCheckTime", "Runs a time sync sanity check on all cluster nodes."),
+        camUpdateThread(&ClusterViewMaster::cameraUpdateThread),
+        pauseRemoteViewSlot("RemoteView::Pause", "Enters remote view pause mode"),
+        resumeRemoteViewSlot("RemoteView::Resume", "Resumes from remote view pause mode") {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -66,6 +68,14 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
     this->sanityCheckTimeSlot << new param::ButtonParam();
     this->sanityCheckTimeSlot.SetUpdateCallback(&ClusterViewMaster::onDoSanityCheckTime);
     this->MakeSlotAvailable(&this->sanityCheckTimeSlot);
+
+    this->pauseRemoteViewSlot << new param::ButtonParam();
+    this->pauseRemoteViewSlot.SetUpdateCallback(&ClusterViewMaster::onPauseRemoteViewClicked);
+    this->MakeSlotAvailable(&this->pauseRemoteViewSlot);
+
+    this->resumeRemoteViewSlot << new param::ButtonParam();
+    this->resumeRemoteViewSlot.SetUpdateCallback(&ClusterViewMaster::onResumeRemoteViewClicked);
+    this->MakeSlotAvailable(&this->resumeRemoteViewSlot);
 
     // TODO: Implement
 
@@ -594,6 +604,36 @@ bool cluster::ClusterViewMaster::onDoSanityCheckTime(param::ParamSlot& slot) {
     msg.GetHeader().SetMessageID(cluster::netmessages::MSG_TIME_SANITYCHECK);
     msg.GetHeader().SetBodySize(0);
     msg.AssertBodySize();
+    this->ctrlServer.MultiSendMessage(msg);
+    return true;
+}
+
+
+/*
+ * cluster::ClusterViewMaster::onPauseRemoteViewClicked
+ */
+bool cluster::ClusterViewMaster::onPauseRemoteViewClicked(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->pauseRemoteViewSlot);
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_REMOTEVIEW_PAUSE);
+    msg.GetHeader().SetBodySize(1);
+    msg.AssertBodySize();
+    *msg.GetBodyAs<char>() = 1;
+    this->ctrlServer.MultiSendMessage(msg);
+    return true;
+}
+
+
+/*
+ * cluster::ClusterViewMaster::onResumeRemoteViewClicked
+ */
+bool cluster::ClusterViewMaster::onResumeRemoteViewClicked(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->resumeRemoteViewSlot);
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_REMOTEVIEW_PAUSE);
+    msg.GetHeader().SetBodySize(1);
+    msg.AssertBodySize();
+    *msg.GetBodyAs<char>() = 0;
     this->ctrlServer.MultiSendMessage(msg);
     return true;
 }

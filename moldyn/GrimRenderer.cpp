@@ -69,8 +69,8 @@ moldyn::GrimRenderer::CellInfo::~CellInfo(void) {
  * moldyn::GrimRenderer::GrimRenderer
  */
 moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
-        sphereShader(), vanillaSphereShader(), initDepthMapShader(),
-        initDepthShader(), depthMipShader(), pointShader(),
+        sphereShader(), vanillaSphereShader(), initDepthShader(),
+        initDepthMapShader(), depthMipShader(), pointShader(),
         initDepthPointShader(), vertCntShader(), vertCntShade2r(), fbo(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),

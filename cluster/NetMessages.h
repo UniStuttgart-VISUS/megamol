@@ -73,6 +73,9 @@ namespace netmessages {
     /** Message requesting camera values */
     const UINT32 MSG_REQUEST_CAMERAVALUES = 15;
 
+    /** Message to activate or deactive the view pause mode */
+    const UINT32 MSG_REMOTEVIEW_PAUSE = 16;
+
     ///** Message with camera setup information */
     //const UINT32 MSG_CAMERASETUP = ;
 

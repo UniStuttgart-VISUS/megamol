@@ -169,7 +169,7 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
         ASSERT(ano != NULL);
         AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer *>(ano);
         Module *mod = dynamic_cast<Module *>(ano);
-        CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano);
+        //CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano);
         CallerSlot *caller = dynamic_cast<CallerSlot *>(ano);
         param::ParamSlot *param = dynamic_cast<param::ParamSlot *>(ano);
 

@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "cluster/AbstractClusterView.h"
+#include "vislib/FramebufferObject.h"
 
 
 namespace megamol {
@@ -78,6 +79,15 @@ namespace cluster {
         virtual void release(void);
 
         /**
+         * A message has been received over the control channel.
+         *
+         * @param sender The sending object
+         * @param msg The received message
+         */
+        virtual void OnCommChannelMessage(CommChannel& sender,
+            const vislib::net::AbstractSimpleMessage& msg);
+
+        /**
          * Gets the info message and icon for the fallback view
          *
          * @param outMsg The message to be shows in the fallback view
@@ -87,6 +97,12 @@ namespace cluster {
             InfoIconRenderer::IconState& outState);
 
     private:
+
+        /** The pause flag for the view */
+        bool pauseView;
+
+        /** The fbo shown if the remote rendering is paused */
+        vislib::graphics::gl::FramebufferObject *pauseFbo;
 
     };
 
