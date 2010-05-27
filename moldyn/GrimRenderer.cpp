@@ -15,6 +15,7 @@
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender3D.h"
 #include <GL/gl.h>
+#include <climits>
 #include "glh/glh_genext.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
