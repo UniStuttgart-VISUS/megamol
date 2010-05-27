@@ -849,7 +849,7 @@ bool ProteinRendererSES::Render( Call& call )
 	glPopMatrix();
 	
 	fpsCounter.FrameEnd();
-	std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
+	//std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
 
 	return true;
 }
