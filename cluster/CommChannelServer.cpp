@@ -11,6 +11,7 @@
 #include "vislib/assert.h"
 #include "vislib/AutoLock.h"
 #include "vislib/Log.h"
+#include "vislib/SocketException.h"
 #include "vislib/String.h"
 #include "vislib/SystemInformation.h"
 
@@ -71,7 +72,12 @@ void cluster::CommChannelServer::Stop(void) {
     vislib::sys::AutoLock(this->clientsLock);
     vislib::SingleLinkedList<cluster::CommChannel>::Iterator iter = this->clients.GetIterator();
     while (iter.HasNext()) {
-        iter.Next().RemoveListener(this);
+        cluster::CommChannel &c = iter.Next();
+        c.RemoveListener(this);
+        try {
+            c.Close();
+        } catch(...) {
+        }
     }
     this->clients.Clear();
 }
@@ -87,6 +93,16 @@ void cluster::CommChannelServer::MultiSendMessage(const vislib::net::AbstractSim
         cluster::CommChannel& channel = iter.Next();
         try {
             channel.SendMessage(msg);
+        } catch(vislib::net::SocketException skex) {
+            if ((static_cast<int>(skex.GetErrorCode()) != 10054) 
+                    && (static_cast<int>(skex.GetErrorCode()) != 10053)) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Unable to send message to %s: [%d] %s", channel.CounterpartName().PeekBuffer(),
+                    static_cast<int>(skex.GetErrorCode()), skex.GetMsgA());
+            }
+        } catch(vislib::Exception ex) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to send message to %s: %s", channel.CounterpartName().PeekBuffer(), ex.GetMsgA());
         } catch(...) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                 "Unable to send message to %s", channel.CounterpartName().PeekBuffer());
@@ -106,7 +122,7 @@ void cluster::CommChannelServer::OnCommChannelDisconnect(cluster::CommChannel& s
         while (iter.HasNext()) {
             Listener *l = dynamic_cast<Listener*>(iter.Next());
             if (l == NULL) continue;
-            l->OnControlChannelDisconnect(*this, sender);
+            l->OnCommChannelDisconnect(*this, sender);
         }
         this->clients.RemoveAll(sender);
     }
@@ -121,7 +137,7 @@ void cluster::CommChannelServer::OnCommChannelMessage(cluster::CommChannel& send
     while (iter.HasNext()) {
         Listener *l = dynamic_cast<Listener*>(iter.Next());
         if (l == NULL) continue;
-        l->OnControlChannelMessage(*this, sender, msg);
+        l->OnCommChannelMessage(*this, sender, msg);
     }
 }
 
@@ -151,7 +167,7 @@ bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& 
         while (iter.HasNext()) {
             Listener *l = dynamic_cast<Listener*>(iter.Next());
             if (l == NULL) continue;
-            l->OnControlChannelConnect(*this, this->clients.Last());
+            l->OnCommChannelConnect(*this, this->clients.Last());
         }
 
         vislib::net::SimpleMessage simsg;

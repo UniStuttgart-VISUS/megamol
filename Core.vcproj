@@ -2353,6 +2353,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cluster\NetVSyncBarrier.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\NetVSyncBarrierServer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cluster\PowerwallView.h"
 					>
 				</File>
@@ -2398,6 +2406,14 @@
 				</File>
 				<File
 					RelativePath=".\cluster\NetMessages.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\NetVSyncBarrier.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\NetVSyncBarrierServer.cpp"
 					>
 				</File>
 				<File

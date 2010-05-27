@@ -20,7 +20,8 @@ using namespace megamol::core;
  */
 cluster::PowerwallView::PowerwallView(void) : AbstractClusterView(),
         pauseView(false), pauseFbo(NULL),
-        netVSyncSlot("netVSync", "Activates or deactivates the network v-sync") {
+        netVSyncSlot("netVSync", "Activates or deactivates the network v-sync"),
+        netVSyncBarrier(NULL) {
 
     this->netVSyncSlot << new param::BoolParam(false);
     this->netVSyncSlot.SetUpdateCallback(&PowerwallView::onNetVSyncChanged);
@@ -35,6 +36,7 @@ cluster::PowerwallView::PowerwallView(void) : AbstractClusterView(),
 cluster::PowerwallView::~PowerwallView(void) {
     this->Release();
     ASSERT(this->pauseFbo == NULL);
+    ASSERT(this->netVSyncBarrier == NULL);
 }
 
 
@@ -43,6 +45,10 @@ cluster::PowerwallView::~PowerwallView(void) {
  */
 void cluster::PowerwallView::Render(void) {
     view::CallRenderView *crv = this->getCallRenderView();
+
+    if (this->netVSyncBarrier != NULL) {
+        this->netVSyncBarrier->Cross(1);
+    }
 
     this->commPing();
 
@@ -78,6 +84,20 @@ void cluster::PowerwallView::Render(void) {
         ::glBindTexture(GL_TEXTURE_2D, 0);
         ::glDisable(GL_TEXTURE_2D);
 
+        float a = 128.0f / 255.0f;
+        ::glColor4f(1.0f, 1.0f, 1.0f, a);
+
+        ::glBegin(GL_QUADS); // TODO: FIX THIS
+        ::glVertex2f(0.01f, 0.01f);
+        ::glVertex2f(0.02f, 0.01f);
+        ::glVertex2f(0.02f, 0.04f);
+        ::glVertex2f(0.01f, 0.04f);
+        ::glVertex2f(0.03f, 0.01f);
+        ::glVertex2f(0.04f, 0.01f);
+        ::glVertex2f(0.04f, 0.04f);
+        ::glVertex2f(0.03f, 0.04f);
+        ::glEnd();
+
         if (!this->pauseView) {
             this->pauseFbo->Release();
             SAFE_DELETE(this->pauseFbo);
@@ -85,8 +105,6 @@ void cluster::PowerwallView::Render(void) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 "Remote view unpaused\n");
         }
-
-        return;
 
     } else if (this->pauseView) {
         try {
@@ -165,8 +183,6 @@ void cluster::PowerwallView::Render(void) {
         ::glBindTexture(GL_TEXTURE_2D, 0);
         ::glDisable(GL_TEXTURE_2D);
 
-        return;
-
     } else if (crv != NULL) {
         crv->ResetAll();
         crv->SetProjection(this->getProjType(), this->getEye());
@@ -177,14 +193,20 @@ void cluster::PowerwallView::Render(void) {
         }
         crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
 
-        if ((*crv)(view::CallRenderView::CALL_RENDER)) {
-            // successfully rendered client view
-            return;
+        if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
+            this->renderFallbackView();
         }
+
+    } else {
+        this->renderFallbackView();
 
     }
 
-    this->renderFallbackView();
+    if (this->netVSyncBarrier != NULL) {
+        ::glFlush();
+        this->netVSyncBarrier->Cross(2);
+    }
+
 }
 
 
@@ -205,6 +227,12 @@ void cluster::PowerwallView::release(void) {
         this->pauseFbo->Release();
         SAFE_DELETE(this->pauseFbo);
         this->pauseView = false;
+    }
+    if (this->netVSyncBarrier != NULL) {
+        NetVSyncBarrier *b = this->netVSyncBarrier;
+        this->netVSyncBarrier = NULL;
+        b->Disconnect();
+        delete b;
     }
 }
 
@@ -272,6 +300,38 @@ void cluster::PowerwallView::OnCommChannelMessage(cluster::CommChannel& sender,
                 (msg.GetBodyAs<char>()[0] != 0));
         } break;
 
+        case cluster::netmessages::MSG_NETVSYNC_JOIN: {
+            vislib::StringA vsyncServerAddress(msg.GetBodyAs<char>());
+            if (this->netVSyncBarrier == NULL) {
+                NetVSyncBarrier *b = new NetVSyncBarrier();
+                try {
+                    if (b->Connect(vsyncServerAddress)) {
+                        this->netVSyncBarrier = b;
+                    } else {
+                        delete b;
+                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                            "Unable to connect to network v-sync server \"%s\"\n",
+                            vsyncServerAddress.PeekBuffer());
+                    }
+                } catch(vislib::Exception ex) {
+                } catch(...) {
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                    "Already connected to network v-sync server\n");
+            }
+        } break;
+
+        case cluster::netmessages::MSG_SET_CLUSTERVIEW: {
+            cluster::AbstractClusterView::OnCommChannelMessage(sender, msg);
+            if (this->netVSyncSlot.Param<param::BoolParam>()->Value()) {
+                outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_NETVSYNC_JOIN);
+                outMsg.GetHeader().SetBodySize(0);
+                outMsg.AssertBodySize();
+                sender.SendMessage(outMsg);
+            }
+        } break;
+
         default:
             cluster::AbstractClusterView::OnCommChannelMessage(sender, msg);
             break;
@@ -288,7 +348,31 @@ bool cluster::PowerwallView::onNetVSyncChanged(param::ParamSlot& slot) {
     bool v = this->netVSyncSlot.Param<param::BoolParam>()->Value();
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Network V-Sync requested %s\n", v ? "on" : "off");
 
-    // TODO: Implement
+    if (v) {
+        // use v-sync barrier
+        if (this->netVSyncBarrier == NULL) {
+            vislib::net::SimpleMessage msg;
+            msg.GetHeader().SetMessageID(cluster::netmessages::MSG_NETVSYNC_JOIN);
+            msg.GetHeader().SetBodySize(0);
+            msg.AssertBodySize();
+            this->ctrlChannel.SendMessage(msg);
+
+        } else {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Network V-Sync barrier already on");
+        }
+
+    } else {
+        // stop using v-sync barrier
+        if (this->netVSyncBarrier != NULL) {
+            NetVSyncBarrier *b = this->netVSyncBarrier;
+            this->netVSyncBarrier = NULL;
+            b->Disconnect();
+            delete b;
+
+        } else {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Network V-Sync barrier already off");
+        }
+    }
 
     return true;
 }

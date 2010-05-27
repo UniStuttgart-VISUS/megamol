@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "cluster/AbstractClusterView.h"
+#include "cluster/NetVSyncBarrier.h"
 #include "param/ParamSlot.h"
 #include "vislib/FramebufferObject.h"
 
@@ -116,6 +117,9 @@ namespace cluster {
 
         /** Flag whether or not to use network VSync */
         param::ParamSlot netVSyncSlot;
+
+        /** The network v-sync barrier */
+        NetVSyncBarrier *netVSyncBarrier;
 
     };
 

@@ -49,7 +49,9 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
         pauseRemoteViewSlot("RemoteView::Pause", "Enters remote view pause mode"),
         resumeRemoteViewSlot("RemoteView::Resume", "Resumes from remote view pause mode"),
         forceNetVSyncOnSlot("RemoteView::NetVSyncOn", "Forces network v-sync on"),
-        forceNetVSyncOffSlot("RemoteView::NetVSyncOff", "Forces network v-sync off") {
+        forceNetVSyncOffSlot("RemoteView::NetVSyncOff", "Forces network v-sync off"),
+        netVSyncBarrier(NULL),
+        netVSyncBarrierAddressSlot("RemoteView::NetVSyncAddress", "The local end-point address used for the server of the network v-sync") {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -87,6 +89,9 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
     this->forceNetVSyncOffSlot.SetUpdateCallback(&ClusterViewMaster::onForceNetVSyncOffClicked);
     this->MakeSlotAvailable(&this->forceNetVSyncOffSlot);
 
+    this->netVSyncBarrierAddressSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->netVSyncBarrierAddressSlot);
+
     // TODO: Implement
 
 }
@@ -105,6 +110,7 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
         this->camUpdateThread.Join();
     }
     this->Release();
+    ASSERT(this->netVSyncBarrier == NULL);
 
     // TODO: Implement
 
@@ -117,6 +123,7 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
 bool cluster::ClusterViewMaster::create(void) {
     this->serverAddressSlot.Param<param::StringParam>()->SetValue(this->defaultServerAddress());
     this->GetCoreInstance()->RegisterParamUpdateListener(this);
+    this->netVSyncBarrierAddressSlot.Param<param::StringParam>()->SetValue(this->defaultVSyncServerAddress());
 
     // TODO: Implement
 
@@ -135,6 +142,10 @@ void cluster::ClusterViewMaster::release(void) {
         this->viewSlot.ConnectCall(NULL);
         this->UnlockModuleGraph();
         this->camUpdateThread.Join();
+    }
+    if (this->netVSyncBarrier != NULL) {
+        this->netVSyncBarrier->Stop();
+        SAFE_DELETE(this->netVSyncBarrier);
     }
 
     // TODO: Implement
@@ -270,9 +281,9 @@ void cluster::ClusterViewMaster::OnClusterUserMessage(cluster::ClusterController
 
 
 /*
- * cluster::ClusterViewMaster::OnControlChannelMessage
+ * cluster::ClusterViewMaster::OnCommChannelMessage
  */
-void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::CommChannelServer& server,
+void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer& server,
         cluster::CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     vislib::net::SimpleMessage outMsg;
@@ -394,6 +405,33 @@ void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::CommChannelSer
                 channel.SendMessage(cmsg);
             }
 
+        } break;
+
+        case cluster::netmessages::MSG_NETVSYNC_JOIN: {
+            vislib::StringA nvsyncAddress(this->netVSyncBarrierAddressSlot.Param<param::StringParam>()->Value());
+            if (this->netVSyncBarrier == NULL) {
+                this->netVSyncBarrier = new cluster::NetVSyncBarrierServer();
+                try {
+                    if (!this->netVSyncBarrier->Start(nvsyncAddress)) {
+                        throw vislib::Exception("'Start' returned false", __FILE__, __LINE__);
+                    }
+                } catch(vislib::Exception ex) {
+                    SAFE_DELETE(this->netVSyncBarrier);
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to start network v-sync barrier server: %s\n",
+                        ex.GetMsgA());
+                } catch(...) {
+                    SAFE_DELETE(this->netVSyncBarrier);
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to start network v-sync barrier server: \n");
+                }
+            }
+
+            if (this->netVSyncBarrier != NULL) {
+                outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_NETVSYNC_JOIN);
+                outMsg.GetHeader().SetBodySize(nvsyncAddress.Length() + 1);
+                outMsg.AssertBodySize();
+                ::memcpy(outMsg.GetBody(), nvsyncAddress.PeekBuffer(), nvsyncAddress.Length() + 1);
+                channel.SendMessage(outMsg);
+            }
         } break;
 
         default:
@@ -560,6 +598,34 @@ vislib::TString cluster::ClusterViewMaster::defaultServerAddress(void) const {
 
     vislib::TString address;
     address.Format(_T("%s:%u"), this->defaultServerHost().PeekBuffer(), this->defaultServerPort());
+    return address;
+}
+
+
+/*
+ * cluster::ClusterViewMaster::defaultVSyncServerAddress
+ */
+vislib::TString cluster::ClusterViewMaster::defaultVSyncServerAddress(void) const {
+    const utility::Configuration& cfg
+        = this->GetCoreInstance()->Configuration();
+
+    if (cfg.IsConfigValueSet("cmvvsyncaddress")) { // host and port
+        return cfg.ConfigValue("cmvvsyncaddress");
+    }
+
+    unsigned short netysyncport = 17226;
+    try {
+        if (cfg.IsConfigValueSet("cmvvsyncport")) {
+            netysyncport = static_cast<unsigned short>(vislib::CharTraitsW::ParseInt(
+                cfg.ConfigValue("cmvvsyncport")));
+        }
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+            "Unable to parse configuration value \"cmvnetysyncportport\" as int. Configuration value ignored.");
+    }
+
+    vislib::TString address;
+    address.Format(_T("%s:%u"), this->defaultServerHost().PeekBuffer(), netysyncport);
     return address;
 }
 

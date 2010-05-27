@@ -69,7 +69,7 @@ namespace cluster {
              * @param sender The sending object
              * @param channel The communication channel
              */
-            virtual void OnControlChannelConnect(CommChannelServer& server, CommChannel& channel) {
+            virtual void OnCommChannelConnect(CommChannelServer& server, CommChannel& channel) {
             }
 
             /**
@@ -78,7 +78,7 @@ namespace cluster {
              * @param sender The sending object
              * @param channel The communication channel
              */
-            virtual void OnControlChannelDisconnect(CommChannelServer& server, CommChannel& channel) {
+            virtual void OnCommChannelDisconnect(CommChannelServer& server, CommChannel& channel) {
             }
 
             /**
@@ -88,7 +88,7 @@ namespace cluster {
              * @param channel The communication channel
              * @param msg The received message
              */
-            virtual void OnControlChannelMessage(CommChannelServer& server, CommChannel& channel,
+            virtual void OnCommChannelMessage(CommChannelServer& server, CommChannel& channel,
                     const vislib::net::AbstractSimpleMessage& msg) = 0;
 
         };

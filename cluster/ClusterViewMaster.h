@@ -14,6 +14,7 @@
 #include "CallerSlot.h"
 #include "cluster/ClusterControllerClient.h"
 #include "cluster/CommChannelServer.h"
+#include "cluster/NetVSyncBarrierServer.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "param/ParamUpdateListener.h"
@@ -110,7 +111,7 @@ namespace cluster {
          * @param channel The control channel
          * @param msg The received message
          */
-        virtual void OnControlChannelMessage(CommChannelServer& server, CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
+        virtual void OnCommChannelMessage(CommChannelServer& server, CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
 
         /**
          * Callback called when a parameter is updated
@@ -150,6 +151,13 @@ namespace cluster {
          * @return The default server address
          */
         vislib::TString defaultServerAddress(void) const;
+
+        /**
+         * Answer the default server address of this machine
+         *
+         * @return The default server address
+         */
+        vislib::TString defaultVSyncServerAddress(void) const;
 
         /**
          * Callback when the server address is changed
@@ -240,6 +248,12 @@ namespace cluster {
 
         /** The slot to force the network v-sync off */
         param::ParamSlot forceNetVSyncOffSlot;
+
+        /** The network v-sync barrier server */
+        NetVSyncBarrierServer *netVSyncBarrier;
+
+        /** The network v-sync barrier address slot */
+        param::ParamSlot netVSyncBarrierAddressSlot;
 
     };
 

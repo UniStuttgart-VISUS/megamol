@@ -54,6 +54,11 @@ cluster::ClusterController::ClusterController() : job::AbstractJobThread(),
         clients(), clientsLock() {
     vislib::net::Socket::Startup();
 
+#ifdef _DEBUG
+    // otherwise i will die!
+    vislib::Trace::GetInstance().SetLevel(0);
+#endif /* _DEBUG */
+
     this->discoveryService.AddListener(this);
 
     this->cdsNameSlot << new param::StringParam(DEFAULT_CLUSTERNAME);
