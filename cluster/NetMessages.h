@@ -76,8 +76,17 @@ namespace netmessages {
     /** Message to activate or deactive the view pause mode */
     const UINT32 MSG_REMOTEVIEW_PAUSE = 16;
 
-    ///** Message with camera setup information */
-    //const UINT32 MSG_CAMERASETUP = ;
+    /** Message to force the network VSync option into a specific state */
+    const UINT32 MSG_FORCENETVSYNC = 17;
+
+    /** Message to join the network VSync barrier */
+    const UINT32 MSG_NETVSYNC_JOIN = 18;
+
+    /** Message to leave the network VSync barrier */
+    const UINT32 MSG_NETVSYNC_LEAVE = 19;
+
+    /** Message to cross the network VSync barrier */
+    const UINT32 MSG_NETVSYNC_CROSS = 20;
 
     /************************************************************************/
 

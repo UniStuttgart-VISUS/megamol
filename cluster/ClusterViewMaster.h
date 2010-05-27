@@ -13,7 +13,7 @@
 
 #include "CallerSlot.h"
 #include "cluster/ClusterControllerClient.h"
-#include "cluster/ControlChannelServer.h"
+#include "cluster/CommChannelServer.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "param/ParamUpdateListener.h"
@@ -34,7 +34,7 @@ namespace cluster {
      * Abstract base class of override rendering views
      */
     class ClusterViewMaster : public Module, protected ClusterControllerClient::Listener,
-        protected ControlChannelServer::Listener, protected param::ParamUpdateListener {
+        protected CommChannelServer::Listener, protected param::ParamUpdateListener {
     public:
 
         /**
@@ -110,7 +110,7 @@ namespace cluster {
          * @param channel The control channel
          * @param msg The received message
          */
-        virtual void OnControlChannelMessage(ControlChannelServer& server, CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
+        virtual void OnControlChannelMessage(CommChannelServer& server, CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg);
 
         /**
          * Callback called when a parameter is updated
@@ -172,7 +172,7 @@ namespace cluster {
         /**
          * Enters remote view pause mode
          *
-         * @param slot Must be PauseRemoteViewSlot
+         * @param slot Must be pauseRemoteViewSlot
          *
          * @return True;
          */
@@ -181,17 +181,35 @@ namespace cluster {
         /**
          * Resumes from remote view pause mode
          *
-         * @param slot Must be ResumeRemoteViewSlot
+         * @param slot Must be resumeRemoteViewSlot
          *
          * @return True;
          */
         bool onResumeRemoteViewClicked(param::ParamSlot& slot);
 
+        /**
+         * Forces network v-sync on
+         *
+         * @param slot Must be forceNetVSyncOnSlot
+         *
+         * @return True;
+         */
+        bool onForceNetVSyncOnClicked(param::ParamSlot& slot);
+
+        /**
+         * Forces network v-sync off
+         *
+         * @param slot Must be forceNetVSyncOffSlot
+         *
+         * @return True;
+         */
+        bool onForceNetVSyncOffClicked(param::ParamSlot& slot);
+
         /** The cluster control client */
         ClusterControllerClient ccc;
 
         /** The control channel server */
-        ControlChannelServer ctrlServer;
+        CommChannelServer ctrlServer;
 
         /** The name of the view to be used */
         param::ParamSlot viewNameSlot;
@@ -216,6 +234,12 @@ namespace cluster {
 
         /** The slot to resume from view pause */
         param::ParamSlot resumeRemoteViewSlot;
+
+        /** The slot to force the network v-sync on */
+        param::ParamSlot forceNetVSyncOnSlot;
+
+        /** The slot to force the network v-sync off */
+        param::ParamSlot forceNetVSyncOffSlot;
 
     };
 

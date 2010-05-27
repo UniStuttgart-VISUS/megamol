@@ -2341,7 +2341,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\cluster\ControlChannelServer.h"
+					RelativePath=".\cluster\CommChannelServer.h"
 					>
 				</File>
 				<File
@@ -2385,7 +2385,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\cluster\ControlChannelServer.cpp"
+					RelativePath=".\cluster\CommChannelServer.cpp"
 					>
 				</File>
 				<File

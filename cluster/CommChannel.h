@@ -69,8 +69,7 @@ namespace cluster {
              * @param msg The received message
              */
             virtual void OnCommChannelMessage(CommChannel& sender,
-                    const vislib::net::AbstractSimpleMessage& msg) {
-            }
+                    const vislib::net::AbstractSimpleMessage& msg) = 0;
 
         };
 

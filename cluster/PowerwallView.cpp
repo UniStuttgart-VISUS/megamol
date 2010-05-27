@@ -9,6 +9,7 @@
 #include "PowerwallView.h"
 #include "CallRegisterAtController.h"
 #include "cluster/NetMessages.h"
+#include "param/BoolParam.h"
 #include "vislib/Log.h"
 
 using namespace megamol::core;
@@ -18,8 +19,13 @@ using namespace megamol::core;
  * cluster::PowerwallView::PowerwallView
  */
 cluster::PowerwallView::PowerwallView(void) : AbstractClusterView(),
-        pauseView(false), pauseFbo(NULL) {
-    // intentionally empty
+        pauseView(false), pauseFbo(NULL),
+        netVSyncSlot("netVSync", "Activates or deactivates the network v-sync") {
+
+    this->netVSyncSlot << new param::BoolParam(false);
+    this->netVSyncSlot.SetUpdateCallback(&PowerwallView::onNetVSyncChanged);
+    this->MakeSlotAvailable(&this->netVSyncSlot);
+
 }
 
 
@@ -260,8 +266,29 @@ void cluster::PowerwallView::OnCommChannelMessage(cluster::CommChannel& sender,
                 "Remote view pause %s\n", this->pauseView ? "set" : "unset");
         } break;
 
+        case cluster::netmessages::MSG_FORCENETVSYNC: {
+            ASSERT(msg.GetHeader().GetBodySize() == 1);
+            this->netVSyncSlot.Param<param::BoolParam>()->SetValue(
+                (msg.GetBodyAs<char>()[0] != 0));
+        } break;
+
         default:
             cluster::AbstractClusterView::OnCommChannelMessage(sender, msg);
             break;
     }
+}
+
+
+/*
+ * cluster::PowerwallView::onNetVSyncChanged
+ */
+bool cluster::PowerwallView::onNetVSyncChanged(param::ParamSlot& slot) {
+    using vislib::sys::Log;
+    ASSERT(&this->netVSyncSlot == &slot);
+    bool v = this->netVSyncSlot.Param<param::BoolParam>()->Value();
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Network V-Sync requested %s\n", v ? "on" : "off");
+
+    // TODO: Implement
+
+    return true;
 }

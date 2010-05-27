@@ -1,12 +1,12 @@
 /*
- * ControlChannelServer.h
+ * CommChannelServer.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CONTROLCHANNELSERVER_H_INCLUDED
-#define MEGAMOLCORE_CONTROLCHANNELSERVER_H_INCLUDED
+#ifndef MEGAMOLCORE_CommChannelServer_H_INCLUDED
+#define MEGAMOLCORE_CommChannelServer_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -29,14 +29,14 @@ namespace cluster {
     /**
      * class for control communication channel end points
      */
-    class ControlChannelServer : public vislib::Listenable<ControlChannelServer>,
+    class CommChannelServer : public vislib::Listenable<CommChannelServer>,
         protected vislib::net::CommServerListener, protected CommChannel::Listener {
     public:
 
         /**
          * Class for listener object
          */
-        class Listener : public vislib::Listenable<ControlChannelServer>::Listener {
+        class Listener : public vislib::Listenable<CommChannelServer>::Listener {
         public:
 
             /** Ctor */
@@ -52,7 +52,7 @@ namespace cluster {
              *
              * @param sender The sending object
              */
-            virtual void OnControlChannelServerStarted(ControlChannelServer& server) {
+            virtual void OnCommChannelServerStarted(CommChannelServer& server) {
             }
 
             /**
@@ -60,7 +60,7 @@ namespace cluster {
              *
              * @param sender The sending object
              */
-            virtual void OnControlChannelServerStopped(ControlChannelServer& server) {
+            virtual void OnCommChannelServerStopped(CommChannelServer& server) {
             }
 
             /**
@@ -69,7 +69,7 @@ namespace cluster {
              * @param sender The sending object
              * @param channel The communication channel
              */
-            virtual void OnControlChannelConnect(ControlChannelServer& server, CommChannel& channel) {
+            virtual void OnControlChannelConnect(CommChannelServer& server, CommChannel& channel) {
             }
 
             /**
@@ -78,7 +78,7 @@ namespace cluster {
              * @param sender The sending object
              * @param channel The communication channel
              */
-            virtual void OnControlChannelDisconnect(ControlChannelServer& server, CommChannel& channel) {
+            virtual void OnControlChannelDisconnect(CommChannelServer& server, CommChannel& channel) {
             }
 
             /**
@@ -88,21 +88,20 @@ namespace cluster {
              * @param channel The communication channel
              * @param msg The received message
              */
-            virtual void OnControlChannelMessage(ControlChannelServer& server, CommChannel& channel,
-                    const vislib::net::AbstractSimpleMessage& msg) {
-            }
+            virtual void OnControlChannelMessage(CommChannelServer& server, CommChannel& channel,
+                    const vislib::net::AbstractSimpleMessage& msg) = 0;
 
         };
 
         /**
          * Ctor
          */
-        ControlChannelServer(void);
+        CommChannelServer(void);
 
         /**
          * Dtor.
          */
-        virtual ~ControlChannelServer(void);
+        virtual ~CommChannelServer(void);
 
         /**
          * Answer wether the server is running
@@ -239,4 +238,4 @@ namespace cluster {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CONTROLCHANNELSERVER_H_INCLUDED */
+#endif /* MEGAMOLCORE_CommChannelServer_H_INCLUDED */

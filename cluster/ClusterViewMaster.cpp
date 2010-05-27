@@ -38,7 +38,7 @@ using namespace megamol::core;
  * cluster::ClusterViewMaster::ClusterViewMaster
  */
 cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
-        ClusterControllerClient::Listener(), ControlChannelServer::Listener(),
+        ClusterControllerClient::Listener(), CommChannelServer::Listener(),
         param::ParamUpdateListener(), ccc(), ctrlServer(),
         viewNameSlot("viewname", "The name of the view to be used"),
         viewSlot("view", "The view to be used (this value is set automatically"),
@@ -47,7 +47,9 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
         sanityCheckTimeSlot("RemoteView::sanityCheckTime", "Runs a time sync sanity check on all cluster nodes."),
         camUpdateThread(&ClusterViewMaster::cameraUpdateThread),
         pauseRemoteViewSlot("RemoteView::Pause", "Enters remote view pause mode"),
-        resumeRemoteViewSlot("RemoteView::Resume", "Resumes from remote view pause mode") {
+        resumeRemoteViewSlot("RemoteView::Resume", "Resumes from remote view pause mode"),
+        forceNetVSyncOnSlot("RemoteView::NetVSyncOn", "Forces network v-sync on"),
+        forceNetVSyncOffSlot("RemoteView::NetVSyncOff", "Forces network v-sync off") {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -76,6 +78,14 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
     this->resumeRemoteViewSlot << new param::ButtonParam();
     this->resumeRemoteViewSlot.SetUpdateCallback(&ClusterViewMaster::onResumeRemoteViewClicked);
     this->MakeSlotAvailable(&this->resumeRemoteViewSlot);
+
+    this->forceNetVSyncOnSlot << new param::ButtonParam();
+    this->forceNetVSyncOnSlot.SetUpdateCallback(&ClusterViewMaster::onForceNetVSyncOnClicked);
+    this->MakeSlotAvailable(&this->forceNetVSyncOnSlot);
+
+    this->forceNetVSyncOffSlot << new param::ButtonParam();
+    this->forceNetVSyncOffSlot.SetUpdateCallback(&ClusterViewMaster::onForceNetVSyncOffClicked);
+    this->MakeSlotAvailable(&this->forceNetVSyncOffSlot);
 
     // TODO: Implement
 
@@ -262,7 +272,7 @@ void cluster::ClusterViewMaster::OnClusterUserMessage(cluster::ClusterController
 /*
  * cluster::ClusterViewMaster::OnControlChannelMessage
  */
-void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::ControlChannelServer& server,
+void cluster::ClusterViewMaster::OnControlChannelMessage(cluster::CommChannelServer& server,
         cluster::CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     vislib::net::SimpleMessage outMsg;
@@ -631,6 +641,36 @@ bool cluster::ClusterViewMaster::onResumeRemoteViewClicked(param::ParamSlot& slo
     ASSERT(&slot == &this->resumeRemoteViewSlot);
     vislib::net::SimpleMessage msg;
     msg.GetHeader().SetMessageID(cluster::netmessages::MSG_REMOTEVIEW_PAUSE);
+    msg.GetHeader().SetBodySize(1);
+    msg.AssertBodySize();
+    *msg.GetBodyAs<char>() = 0;
+    this->ctrlServer.MultiSendMessage(msg);
+    return true;
+}
+
+
+/*
+ * cluster::ClusterViewMaster::onForceNetVSyncOnClicked
+ */
+bool cluster::ClusterViewMaster::onForceNetVSyncOnClicked(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->forceNetVSyncOnSlot);
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_FORCENETVSYNC);
+    msg.GetHeader().SetBodySize(1);
+    msg.AssertBodySize();
+    *msg.GetBodyAs<char>() = 1;
+    this->ctrlServer.MultiSendMessage(msg);
+    return true;
+}
+
+
+/*
+ * cluster::ClusterViewMaster::onForceNetVSyncOffClicked
+ */
+bool cluster::ClusterViewMaster::onForceNetVSyncOffClicked(param::ParamSlot& slot) {
+    ASSERT(&slot == &this->forceNetVSyncOffSlot);
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(cluster::netmessages::MSG_FORCENETVSYNC);
     msg.GetHeader().SetBodySize(1);
     msg.AssertBodySize();
     *msg.GetBodyAs<char>() = 0;
