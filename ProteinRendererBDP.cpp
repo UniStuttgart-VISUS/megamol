@@ -363,8 +363,8 @@ bool ProteinRendererBDP::create( void )
     // check maximum active texture units useable in fragment program
     GLint maxTexUnits;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &maxTexUnits);
-    if(maxTexUnits < 20) { // exact ... !
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "_BDP_NUM_BUFFERS (=%i) is greater than GL_MAX_TEXTURE_UNITS (=%i).\n", _BDP_NUM_BUFFERS, maxTexUnits );
+    if(maxTexUnits < 16) { 
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Maximum used texture units (=16) is greater than GL_MAX_TEXTURE_UNITS (=%i).\n", _BDP_NUM_BUFFERS, maxTexUnits );
         return false;
     }
    
@@ -1089,7 +1089,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
 			glDisable(GL_DEPTH_TEST);
 			glLogicOp(GL_OR);
 			glEnable(GL_COLOR_LOGIC_OP);
-		} else {*/
+		} else {   ....  //glDisable(GL_COLOR_LOGIC_OP);*/
 			glEnable(GL_BLEND);
 			glBlendEquation(GL_MAX);
 			glDisable(GL_DEPTH_TEST);
@@ -1122,7 +1122,6 @@ bool ProteinRendererBDP::Render( Call& call ) {
     if(this->depthPeelingMode != NO_BDP) {
 
 		if((this->depthPeelingMode == ADAPTIVE_COLOR_BDP) || (this->depthPeelingMode == ADAPTIVE_DEPTH_BDP)) {
-			//glDisable(GL_COLOR_LOGIC_OP);
 			this->geometryPass = 1;
 		}
 
@@ -1136,7 +1135,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
         this->RenderDepthPeeling();
 
         //render min max-depth-buffer (DEBUG output)
-        this->RenderMinMaxDepthBuffer();
+        //this->RenderMinMaxDepthBuffer();
     }
 
     // ========= Apply postprocessing effects =========
@@ -1283,7 +1282,7 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     // histogram FBO for adaptive BDP
-    if(this->depthPeelingMode == ADAPTIVE_COLOR_BDP) {
+    if((this->depthPeelingMode == ADAPTIVE_COLOR_BDP) || (this->depthPeelingMode == ADAPTIVE_DEPTH_BDP)) {
 
         if(this->histogramFBO) {
             glDeleteFramebuffersEXT( 1, &this->histogramFBO);
@@ -2077,7 +2076,7 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
     }
     
     // bind color and depth texture to consider interior protein for BDP
-    if(((this->depthPeelingMode == ADAPTIVE_COLOR_BDP) || (this->depthPeelingMode == COLOR_BDP)) && (this->interiorProtAlpha > 0.0)) {
+    if((this->depthPeelingMode == COLOR_BDP) && (this->interiorProtAlpha > 0.0)) {
 		textureIndex++;
         glActiveTexture(textureIndex);
         this->interiorProteinFBO.BindDepthTexture();
@@ -2087,14 +2086,6 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
 		textureIndex++;
         glActiveTexture(textureIndex);
         glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
-    }
-
-	if(this->depthPeelingMode == ADAPTIVE_COLOR_BDP) {
-        for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
-			textureIndex++;
-            glActiveTexture(textureIndex);
-            glBindTexture( GL_TEXTURE_2D, this->equalizedHistTex[i]);
-        }
 	}
 
     this->renderDepthPeelingShader.Enable();
@@ -2116,18 +2107,9 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket6"), 6);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket7"), 7);
 
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "interiorDepth"), 8);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "interiorColor"), 9);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthBuffer"), 10);
-
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist0"), 11);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist1"), 12);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist2"), 13);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist3"), 14);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist4"), 15);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist5"), 16);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist6"), 17);
-    glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthHist7"), 18);
+	glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "interiorDepth"), 8);
+	glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "interiorColor"), 9);
+	glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthBuffer"), 10);
 
     glCallList(this->fsQuadList);
 
@@ -2246,9 +2228,7 @@ void ProteinRendererBDP::CreateMinMaxDepthBuffer(BoundingBoxes& bbox) {
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthBufferFBO);
 
-    // red:   -MAX_DEPTH: -1.0
-    // green:  MIN_DEPTH:  0.0
-    glClearColor(-1.0, 0.0, 0.0, 0.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     this->createDepthBufferShader.Enable();
@@ -3103,8 +3083,10 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             // if max angle of visible surface part is more than PI use edgeVector else surfVector
             if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
 				surfVector = edgeVector * (-1.0f);
-			}
-
+			} 
+			/*else {
+				surfVector = edgeVector;
+			}*/
             surfVector.Normalise();
             surfVector *= atomRadius;
 
@@ -3119,6 +3101,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             if(maxDist > 2.0f*atomRadius*atomRadius*1.5f) {
                 maxDist = 4.5f*atomRadius*atomRadius;
             }
+			//maxDist *= 1.1f;
 
             this->sphereSurfVector[cntRS].Append(surfVector.GetX());
             this->sphereSurfVector[cntRS].Append(surfVector.GetY());
@@ -3428,7 +3411,10 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         // if max angle of visible surface part is more than PI use edgeVector else surfVector
         if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
             surfVector = edgeVector * (-1.0f);
-        }
+        } 
+		/*else {
+				surfVector = edgeVector;
+		}*/
         surfVector.Normalise();
         surfVector *= atomRadius;
 
@@ -3443,6 +3429,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         if(maxDist > 2.0f*atomRadius*atomRadius*1.5f) {
             maxDist = 4.5f*atomRadius*atomRadius;
         }
+		//maxDist *= 1.1f;
 
         this->sphereSurfVector[idxRS].Append(surfVector.GetX());
         this->sphereSurfVector[idxRS].Append(surfVector.GetY());
@@ -3768,8 +3755,10 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             // if max angle of visible surface part is more than PI use edgeVector else surfVector
             if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
 				surfVector = edgeVector * (-1.0f);
-			}
-
+			} 
+			/*else {
+				surfVector = edgeVector;
+			}*/
             surfVector.Normalise();
             surfVector *= atomRadius;
 
@@ -3784,6 +3773,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             if(maxDist > 2.0f*atomRadius*atomRadius*1.5f) {
                 maxDist = 4.5f*atomRadius*atomRadius;
             }
+			//maxDist *= 1.1f;
 
             this->sphereSurfVector[cntRS].Append(surfVector.GetX());
             this->sphereSurfVector[cntRS].Append(surfVector.GetY());
@@ -3870,7 +3860,6 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
     // get maximum texture size
     GLint texSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-	std::cout << "TEXSIZE:" << texSize << std::endl;
 
     // TODO: compute proper number of maximum edges per vertex
     unsigned int maxNumEdges = 32;
@@ -3918,7 +3907,7 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
             atomRadius = this->reducedSurface[cntRS]->GetRSVertex( cnt1)->GetRadius();
 
 			if(maxNumEdges < edgeCount){
-				std::cout << "FUCK" << std::endl;
+				std::cout << ">>>>>>>>>>>>> maxNumEdges < edgeCount" << std::endl;
 			}
 
             for( cnt2 = 0; cnt2 < maxNumEdges; ++cnt2 ) {
@@ -3932,6 +3921,10 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
                     X1 *= atomRadius;
                     edgeVector.Normalise();
                     final = edgeVector * (edgeVector.Dot(X1));
+
+					if(edgeVector.Dot(final) < 0.0) {
+						std::cout << ">>>>>>>>>>>>> edgeVector.Dot(final) < 0.0" << std::endl;
+					}
 
                     this->cutPlanesTexData[cntRS].Append(final.GetX());
                     this->cutPlanesTexData[cntRS].Append(final.GetY());
