@@ -1563,6 +1563,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\moldyn\MMPLDWriter.h"
+					>
+				</File>
+				<File
 					RelativePath=".\moldyn\MultiParticleDataCall.h"
 					>
 				</File>
@@ -1608,6 +1612,10 @@
 				</File>
 				<File
 					RelativePath=".\moldyn\MipDepthSphereRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\MMPLDWriter.cpp"
 					>
 				</File>
 				<File

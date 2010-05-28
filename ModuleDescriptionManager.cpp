@@ -23,6 +23,7 @@
 #include "moldyn/GrimRenderer.h"
 #include "moldyn/IMDAtomDataSource.h"
 #include "moldyn/MipDepthSphereRenderer.h"
+#include "moldyn/MMPLDWriter.h"
 #include "moldyn/OracleSphereRenderer.h"
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleSphereRenderer.h"
@@ -72,6 +73,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<moldyn::GrimRenderer>();
         instance->registerAutoDescription<moldyn::IMDAtomDataSource>();
         instance->registerAutoDescription<moldyn::MipDepthSphereRenderer>();
+        instance->registerAutoDescription<moldyn::MMPLDWriter>();
         instance->registerAutoDescription<moldyn::SIFFDataSource>();
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
