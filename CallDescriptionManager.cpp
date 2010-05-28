@@ -12,6 +12,7 @@
 #include "vislib/assert.h"
 
 #include "misc/BezierDataCall.h"
+#include "DataWriterCtrlCall.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "moldyn/ParticleGridDataCall.h"
 #include "cluster/CallRegisterAtController.h"
@@ -20,14 +21,6 @@
 #include "view/CallRender2D.h"
 #include "view/CallRender3D.h"
 #include "view/CallRenderView.h"
-//#include "volume/CallVolumeData.h"
-//
-//#include "featuretracking/CallGetData.h"
-//#include "featuretracking/CallLinkingBrushing.h"
-
-//#include "protein/CallProteinData.h"
-//#include "protein/CallFrame.h"
-//#include "vismol2/Mol20DataCall.h"
 
 using namespace megamol::core;
 
@@ -53,15 +46,7 @@ CallDescriptionManager::Instance() {
         instance->registerAutoDescription<view::CallRender2D>();
         instance->registerAutoDescription<view::CallRender3D>();
         instance->registerAutoDescription<view::CallRenderView>();
-//        instance->registerAutoDescription<vismol2::Mol20DataCall>();
-
-//		instance->registerAutoDescription<volume::CallVolumeData>();
-
-//		instance->registerAutoDescription<featuretracking::CallGetData>();
-//		instance->registerAutoDescription<featuretracking::CallLinkingBrushing>();
-
-        //instance->registerAutoDescription<protein::CallProteinData>();
-        //instance->registerAutoDescription<protein::CallFrame>();
+        instance->registerAutoDescription<DataWriterCtrlCall>();
     }
     return instance;
 }

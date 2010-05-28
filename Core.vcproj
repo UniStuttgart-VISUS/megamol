@@ -367,6 +367,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\AbstractDataWriter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\AbstractGetData3DCall.cpp"
 				>
 			</File>
@@ -424,6 +428,10 @@
 			</File>
 			<File
 				RelativePath=".\DataFileSequencer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DataWriterCtrlCall.cpp"
 				>
 			</File>
 			<File
@@ -542,6 +550,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\AbstractDataWriter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\AbstractGetData3DCall.h"
 				>
 			</File>
@@ -599,6 +611,10 @@
 			</File>
 			<File
 				RelativePath=".\DataFileSequencer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DataWriterCtrlCall.h"
 				>
 			</File>
 			<File
@@ -1271,7 +1287,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\job\AbstractJobThread.h"
+					RelativePath=".\job\AbstractThreadedJob.h"
+					>
+				</File>
+				<File
+					RelativePath=".\job\DataWriterJob.h"
 					>
 				</File>
 				<File
@@ -1287,7 +1307,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\job\AbstractJobThread.cpp"
+					RelativePath=".\job\AbstractThreadedJob.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\job\DataWriterJob.cpp"
 					>
 				</File>
 				<File
