@@ -33,6 +33,7 @@
 #include "view/LinearTransferFunction.h"
 #include "view/special/ChronoGraph.h"
 #include "view/special/DemoRenderer2D.h"
+#include "view/special/QuadBufferStereoView.h"
 #include "view/special/ScreenShooter.h"
 #include "view/SwitchRenderer3D.h"
 #include "view/TileView.h"
@@ -80,6 +81,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<view::LinearTransferFunction>();
         instance->registerAutoDescription<view::special::ChronoGraph>();
         instance->registerAutoDescription<view::special::DemoRenderer2D>();
+        instance->registerAutoDescription<view::special::QuadBufferStereoView>();
         instance->registerAutoDescription<view::special::ScreenShooter>();
         instance->registerAutoDescription<view::SwitchRenderer3D>();
         instance->registerAutoDescription<view::TileView>();

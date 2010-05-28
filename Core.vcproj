@@ -1194,6 +1194,10 @@
 					Name="Header Files"
 					>
 					<File
+						RelativePath=".\view\special\AbstractStereoView.h"
+						>
+					</File>
+					<File
 						RelativePath=".\view\special\ChronoGraph.h"
 						>
 					</File>
@@ -1203,6 +1207,10 @@
 					</File>
 					<File
 						RelativePath=".\view\special\MegaMolLogo.h"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\QuadBufferStereoView.h"
 						>
 					</File>
 					<File
@@ -1218,6 +1226,10 @@
 					Name="Source Files"
 					>
 					<File
+						RelativePath=".\view\special\AbstractStereoView.cpp"
+						>
+					</File>
+					<File
 						RelativePath=".\view\special\ChronoGraph.cpp"
 						>
 					</File>
@@ -1231,6 +1243,10 @@
 					</File>
 					<File
 						RelativePath=".\view\special\MegaMolLogoData.inl"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\QuadBufferStereoView.cpp"
 						>
 					</File>
 					<File
