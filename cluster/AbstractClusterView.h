@@ -84,6 +84,11 @@ namespace cluster {
     protected:
 
         /**
+         * Initializes parameter values on 'create'
+         */
+        void initClusterViewParameters(void);
+
+        /**
          * A ping function to be called at least once per second
          */
         void commPing(void);

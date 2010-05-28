@@ -142,6 +142,17 @@ void cluster::AbstractClusterView::SetInputModifier(mmcInputModifier mod, bool d
 
 
 /*
+ * cluster::AbstractClusterView::initClusterViewParameters
+ */
+void cluster::AbstractClusterView::initClusterViewParameters(void) {
+    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
+    if (cfg.IsConfigValueSet("cmvshost")) {
+        this->serverAddressSlot.Param<param::StringParam>()->SetValue(cfg.ConfigValue("cmvshost"));
+    }
+}
+
+
+/*
  * cluster::AbstractClusterView::commPing
  */
 void cluster::AbstractClusterView::commPing(void) {
@@ -201,7 +212,7 @@ void cluster::AbstractClusterView::renderFallbackView(void) {
         }
         ::glTranslatef(-0.5f, -0.5f, 0.0f);
     }
-    const float border = 0.05f;
+    const float border = 0.2f;
     ::glTranslatef(border, border, 0.0f);
     ::glScalef(1.0f - 2.0f * border, 1.0f - 2.0f * border, 0.0f);
 

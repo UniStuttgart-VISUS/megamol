@@ -7,10 +7,13 @@
 
 #include "stdafx.h"
 #include "PowerwallView.h"
+#include "CoreInstance.h"
 #include "CallRegisterAtController.h"
 #include "cluster/NetMessages.h"
 #include "param/BoolParam.h"
 #include "vislib/Log.h"
+#include "vislib/mathfunctions.h"
+#include <cmath>
 
 using namespace megamol::core;
 
@@ -69,7 +72,7 @@ void cluster::PowerwallView::Render(void) {
         ::glLoadIdentity();
 
         this->pauseFbo->BindColourTexture();
-        ::glColor3ub(255, 0, 0);
+        ::glColor3ub(255, 255, 255);
         ::glBegin(GL_QUADS);
         ::glTexCoord2i(0, 0);
         ::glVertex2i(-1, -1);
@@ -83,11 +86,16 @@ void cluster::PowerwallView::Render(void) {
 
         ::glBindTexture(GL_TEXTURE_2D, 0);
         ::glDisable(GL_TEXTURE_2D);
+        ::glEnable(GL_BLEND);
+        ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        float a = 128.0f / 255.0f;
+        float a = ::sin(vislib::math::AngleDeg2Rad(
+            static_cast<float>(this->GetCoreInstance()->GetInstanceTime())
+            * 90.0f));
+        a = 0.125f + 0.25f * a * a;
         ::glColor4f(1.0f, 1.0f, 1.0f, a);
-
-        ::glBegin(GL_QUADS); // TODO: FIX THIS
+        ::glTranslatef(-0.75f, -0.75f, 0.0f);
+        ::glBegin(GL_QUADS);
         ::glVertex2f(0.01f, 0.01f);
         ::glVertex2f(0.02f, 0.01f);
         ::glVertex2f(0.02f, 0.04f);
@@ -215,6 +223,7 @@ void cluster::PowerwallView::Render(void) {
  */
 bool cluster::PowerwallView::create(void) {
     this->initTileViewParameters();
+    this->initClusterViewParameters();
     return true;
 }
 
