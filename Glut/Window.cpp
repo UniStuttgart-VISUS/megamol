@@ -51,6 +51,17 @@ megamol::viewer::Window::Window(megamol::viewer::Viewer& owner)
 #endif /* FREEGLUT_WITH_VIS_FUNCTIONS */
 
     ::glutShowWindow();
+
+#ifdef _DEBUG
+    GLboolean stereo;
+    ::glGetBooleanv(GL_STEREO, &stereo);
+    if (stereo == GL_TRUE) {
+        printf("Stereo Buffers supported!\n");
+    } else {
+        printf("No Stereo Buffers for you!\n");
+    }
+#endif
+
 }
 
 

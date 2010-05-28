@@ -579,6 +579,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     int retval = 0;
     bool showGUI = false;
     bool hideGUI = false;
+    bool useQuadBuffers = false;
 
 #ifndef _WIN32
     oldSignl =
@@ -592,6 +593,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     vSyncOff = parser->SetVSyncOff();
     showGUI = parser->ShowGUI();
     hideGUI = parser->HideGUI();
+    useQuadBuffers = parser->RequestOpenGLQuadBuffer();
 
     // run the application!
 #ifdef _WIN32
@@ -813,7 +815,14 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             return -24;
         }
 
-        if (!::mmvCreateViewerHandle(hView)) {
+        unsigned int conviewhints = MMV_VIEWHINT_NONE;
+        if (!useQuadBuffers) {
+            // ::mmcGetConfigurationValueA(
+        }
+        if (useQuadBuffers) {
+            conviewhints |= MMV_VIEWHINT_QUADBUFFER;
+        }
+        if (!::mmvCreateViewerHandle(hView, conviewhints)) {
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_ERROR,
                 "Unable to initialise a viewer instance.");

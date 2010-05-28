@@ -63,7 +63,8 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     setVSync(0, _T("vsync"), _T("(De-)Activates the vsync for all windows."), ParserOption::FLAG_UNIQUE,
         ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("Switch"), _T("'True' forces vsync enable, 'False' forces vsync disable"))),
     showGUI(0, _T("gui"), _T("Option to de-/activate the gui layer"), ParserOption::FLAG_UNIQUE,
-        ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("gui"), _T("'True' activates the gui, 'False' deactivates the gui")))
+        ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("gui"), _T("'True' activates the gui, 'False' deactivates the gui"))),
+    quadBuffer(0, _T("quadbuffer"), _T("Enables OpenGL Quad-Buffer support, if the viewer is started"))
 {
 
     this->parser.AddOption(&this->help);
@@ -86,6 +87,7 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     this->parser.AddOption(&this->forceViewer);
     this->parser.AddOption(&this->setVSync);
     this->parser.AddOption(&this->showGUI);
+    this->parser.AddOption(&this->quadBuffer);
 
     this->parser.AddOption(&this->projectFile);
     this->parser.AddOption(&this->instJobView);

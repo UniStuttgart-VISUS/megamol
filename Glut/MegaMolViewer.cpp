@@ -190,7 +190,7 @@ MEGAMOLVIEWER_API mmvHandleType MEGAMOLVIEWER_CALL(mmvGetHandleType)(void *hndl)
 /*
  * mmvCreateViewerHandle
  */
-MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateViewerHandle)(void *hView) {
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateViewerHandle)(void *hView, unsigned int hints) {
     VLSTACKTRACE("mmvCreateViewerHandle", __FILE__, __LINE__);
 
     if (mmvIsHandleValid(hView) != 0) {
@@ -204,7 +204,7 @@ MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateViewerHandle)(void *hView) {
     if (viewer == NULL) {
         return false; // out of memory or initialisation failed.
     }
-    if (!viewer->Initialise()) {
+    if (!viewer->Initialise(hints)) {
         delete viewer;
         return false; // initialisation failed.
     }

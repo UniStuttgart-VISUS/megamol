@@ -9,6 +9,7 @@
 #include "Viewer.h"
 #include "visglut.h"
 #include "Window.h"
+#include "vislib/CmdLineProvider.h"
 
 
 /*
@@ -35,25 +36,20 @@ megamol::viewer::Viewer::~Viewer(void) {
 /*
  * megamol::viewer::Viewer::Initialise
  */
-bool megamol::viewer::Viewer::Initialise(void) {
-    int argc = 1;
-    char *argv[] = {
-#ifdef _WIN32
-        "dummyApp",
-        "-direct",  // force direct rendering context. no indirect crap!
-#else /* _WIN32 */
-        strdup("dummyApp"),
-        strdup("-direct"),
-#endif /* _WIN32 */
-        NULL}; // faked command line
-    ::glutInit(&argc, argv);
-    // TODO: glutInitDisplayMode should be configurable?
-    ::glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+bool megamol::viewer::Viewer::Initialise(unsigned int hints) {
+    vislib::sys::CmdLineProviderA cmdLine("dummyApp -direct");
+    unsigned int displayMode = GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA;
+
+    ::glutInit(&cmdLine.ArgC(), cmdLine.ArgV());
+
+    if ((hints & MMV_VIEWHINT_QUADBUFFER) == MMV_VIEWHINT_QUADBUFFER) {
+        displayMode |= GLUT_STEREO;
+    }
+
+    ::glutInitDisplayMode(displayMode);
     ::glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
         GLUT_ACTION_CONTINUE_EXECUTION);
-#ifndef _WIN32
-    free(argv[0]);
-#endif /* !_WIN32 */
+
     return true;
 }
 

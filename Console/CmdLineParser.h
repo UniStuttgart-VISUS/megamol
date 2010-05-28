@@ -337,6 +337,15 @@ namespace utility {
             return false;
         }
 
+        /**
+         * Answer if opengl quad buffers should be requested.
+         *
+         * @return true if opengl quad buffers should be requested.
+         */
+        inline bool RequestOpenGLQuadBuffer(void) const {
+            return this->quadBuffer.GetFirstOccurrence() != NULL;
+        }
+
     private:
 
         /** the default value of the flag of the cmd line echo */
@@ -434,6 +443,9 @@ namespace utility {
 
         /** Parser option to de-/activate the gui layer */
         ParserOption showGUI;
+
+        /** Flag to request quad-buffer support */
+        ParserOption quadBuffer;
 
     };
 

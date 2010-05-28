@@ -38,9 +38,11 @@ namespace viewer {
         /**
          * Initialises the viewer object.
          *
+         * @param hints initialization hints
+         *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialise(void);
+        bool Initialise(unsigned int hints);
 
         /**
          * The main loop trigger

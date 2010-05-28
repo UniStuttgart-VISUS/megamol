@@ -93,7 +93,11 @@ typedef struct mmvMouseMoveParamsStruct {
     int mouseY;
 } mmvMouseMoveParams;
 
-/** Flags for window hits */
+/** Flags for view hints */
+#define MMV_VIEWHINT_NONE           0x00000000
+#define MMV_VIEWHINT_QUADBUFFER     0x00000001
+
+/** Flags for window hints */
 #define MMV_WINHINT_NONE            0x00000000
 #define MMV_WINHINT_NODECORATIONS   0x00000001
 #define MMV_WINHINT_HIDECURSOR      0x00000002
@@ -230,10 +234,12 @@ MEGAMOLVIEWER_API mmvHandleType MEGAMOLVIEWER_CALL(mmvGetHandleType)(
  * handle is placed there.
  *
  * @param hView Points to the memory receiving the view instance handle.
+ * @param hints The viewer initialization hints
  *
  * @return 'true' on success, 'false' otherwise.
  */
-MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateViewerHandle)(void *hView);
+MEGAMOLVIEWER_API bool MEGAMOLVIEWER_CALL(mmvCreateViewerHandle)(void *hView,
+    unsigned int hints);
 
 /**
  * Initializes the vislib stack trace.
