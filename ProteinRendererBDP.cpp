@@ -76,7 +76,8 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     //this->depthPeelingMode = NO_BDP;
     this->depthPeelingMode = DEPTH_BDP;
     //this->depthPeelingMode = COLOR_BDP;
-    //this->depthPeelingMode = ADAPTIVE_COLOR_BDP;
+    ////this->depthPeelingMode = ADAPTIVE_ DEPTH_BDP;
+    ////this->depthPeelingMode = ADAPTIVE_COLOR_BDP;
     param::EnumParam *dpm = new param::EnumParam ( int ( this->depthPeelingMode ) );
     dpm->SetTypePair( NO_BDP, "noBDP");
     dpm->SetTypePair( DEPTH_BDP, "depthBDP");
@@ -212,9 +213,9 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     this->hFilter = 0;
     this->vFilter = 0;
     this->depthBuffer = 0;
-    //this->depthPeeelingTex = ...;
-    //this->histogramTex = ...;
-    //this->equalizedHistTex = ...;
+    //this->depthPeeelingTex = ...
+    //this->histogramTex     = ...
+    //this->equalizedHistTex = ...
 
     // width and height of the screen
     this->width = 0;
@@ -260,6 +261,7 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
  */
 ProteinRendererBDP::~ProteinRendererBDP(void)
 {
+    // delete FBOs
     if(this->colorFBO) {
         glDeleteFramebuffersEXT( 1, &this->colorFBO);
         glDeleteFramebuffersEXT( 1, &this->blendFBO);
@@ -276,22 +278,18 @@ ProteinRendererBDP::~ProteinRendererBDP(void)
         glDeleteFramebuffersEXT( 1, &this->depthBufferFBO);
         glDeleteTextures( 1, &this->depthBuffer);
     }
-
     if(this->depthPeelingFBO) {
         glDeleteFramebuffersEXT( 1, &this->depthPeelingFBO);
         glDeleteTextures( _BDP_NUM_BUFFERS, this->depthPeelingTex);
     }
-
     if(this->histogramFBO) {
         glDeleteFramebuffersEXT( 1, &this->histogramFBO);
         glDeleteTextures( _BDP_NUM_BUFFERS, this->histogramTex);
     }
-
     if(this->equalizedHistFBO) {
         glDeleteFramebuffersEXT( 1, &this->equalizedHistFBO);
         glDeleteTextures( _BDP_NUM_BUFFERS, this->equalizedHistTex);
     }
-
     this->interiorProteinFBO.Release();
 
     // delete singularity texture
@@ -342,11 +340,11 @@ bool ProteinRendererBDP::create( void )
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
+    // check used extensions
 	if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_EXT_texture_integer GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_blend_minmax") ) {
 		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Failed to initialize OpenGL extensions.\n");
         return false;
 	}
-    
 	if ( !GLSLShader::InitialiseExtensions() ) {
 		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Failed to initialize GLSL shader.\n");
         return false;
@@ -421,12 +419,12 @@ bool ProteinRendererBDP::create( void )
     //////////////////////////////////////////////////////////////
     if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::histogramEqualVertex", vertSrc ) )
     {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName() );
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for depth histogram equalization shader", this->ClassName() );
         return false;
     }
     if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::bdp::histogramEqualFragment", fragSrc ) )
     {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for depth histogram equalization shader", this->ClassName() );
         return false;
     }
     try
@@ -1075,7 +1073,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
 
     if(this->depthPeelingMode != NO_BDP) {
 
-        // adaptive BDP
+        // adaptive BDP handling
         if((this->depthPeelingMode == ADAPTIVE_COLOR_BDP) || (this->depthPeelingMode == ADAPTIVE_DEPTH_BDP)) {
 		    this->geometryPass = 1;
             this->RenderDepthHistogram(protein);
@@ -1083,17 +1081,9 @@ bool ProteinRendererBDP::Render( Call& call ) {
             this->geometryPass = 2;
 		}
 
-		// TESTEN !!!!!
-		/*if((this->depthPeelingMode == ADAPTIVE_COLOR_BDP) || (this->depthPeelingMode == COLOR_BDP)) {
-			glDisable(GL_BLEND);
-			glDisable(GL_DEPTH_TEST);
-			glLogicOp(GL_OR);
-			glEnable(GL_COLOR_LOGIC_OP);
-		} else {   ....  //glDisable(GL_COLOR_LOGIC_OP);*/
-			glEnable(GL_BLEND);
-			glBlendEquation(GL_MAX);
-			glDisable(GL_DEPTH_TEST);
-		//}
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_MAX);
+		glDisable(GL_DEPTH_TEST);
 
 		// start rendering to depth peeling fbo
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->depthPeelingFBO);
@@ -1112,7 +1102,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
 	else if( this->currentRendermode == GPU_SIMPLIFIED )
 	{
 		// render the simplified SES via GPU ray casting
-		this->RenderSESGpuRaycastingSimple( protein);
+		//this->RenderSESGpuRaycastingSimple( protein);
 	}
 
 	glPopMatrix();
@@ -1121,6 +1111,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
 
     if(this->depthPeelingMode != NO_BDP) {
 
+        // reset geometry pass 
 		if((this->depthPeelingMode == ADAPTIVE_COLOR_BDP) || (this->depthPeelingMode == ADAPTIVE_DEPTH_BDP)) {
 			this->geometryPass = 1;
 		}
@@ -1237,7 +1228,7 @@ void ProteinRendererBDP::PostprocessingSilhouette() {
  */
 void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
-    // minmax depth buffer FBO
+    // min max depth buffer FBO
     if(this->depthBufferFBO) {
         glDeleteFramebuffersEXT( 1, &this->depthBufferFBO);
         glDeleteTextures( 1, &this->depthBuffer);
@@ -1444,7 +1435,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
         
-        // bind equalized histogram
+        // bind equalized histogram in second geometry pass
         if(this->geometryPass == 2) {
             for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
                 glActiveTexture(GL_TEXTURE2 + i);
@@ -1692,7 +1683,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
 		
         // >>>>>>>>>> DEBUG
         // drawing surfVectors as yellow lines
-        if(this->depthPeelingMode == NO_BDP) {
+        /*if(this->depthPeelingMode == NO_BDP) {
             glLineWidth( 1.0f);
             glEnable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
             glPushAttrib(GL_POLYGON_BIT);
@@ -1710,7 +1701,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             }
             glPopAttrib();
             glDisable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
-        }
+        }*/
         // <<<<<<<<<< end DEBUG
     }
 
@@ -2011,7 +2002,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         // >>>>>>>>>> DEBUG
 
         // drawing surfVectors as yellow lines
-        if(this->depthPeelingMode == NO_BDP) {
+        /*if(this->depthPeelingMode == NO_BDP) {
             glLineWidth( 1.0f);
             glEnable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
             glPushAttrib(GL_POLYGON_BIT);
@@ -2029,8 +2020,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
             }
             glPopAttrib();
             glDisable(GL_LINE_SMOOTH); // GL_LINE_WIDTH
-        }
-        
+        }*/
         // <<<<<<<<<< end DEBUG
     }
             
@@ -2068,7 +2058,7 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
 
 	textureIndex = int(GL_TEXTURE0);
 
-    // bind textures
+    // bind bucket array
     for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
 		if(i != 0) textureIndex++;
         glActiveTexture(textureIndex);
@@ -2107,6 +2097,7 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket6"), 6);
     glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "bucket7"), 7);
 
+    // only used for rendering interior protein ...
 	glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "interiorDepth"), 8);
 	glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "interiorColor"), 9);
 	glUniform1iARB( this->renderDepthPeelingShader.ParameterLocation( "depthBuffer"), 10);
@@ -2134,6 +2125,7 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
 	glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
 
+    // enable logic operation for color channels
     glLogicOp(GL_OR);
     glEnable(GL_COLOR_LOGIC_OP);
 
@@ -2152,12 +2144,13 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
     else if( this->currentRendermode == GPU_SIMPLIFIED )
     {
         // render the simplified SES via GPU ray casting
-        this->RenderSESGpuRaycastingSimple( protein);
+        //this->RenderSESGpuRaycastingSimple( protein);
     }
 
     // stop rendering to fbo
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
 
+    // disable logic operation for color channels
     glDisable(GL_COLOR_LOGIC_OP);
 
     CHECK_FOR_OGL_ERROR();
@@ -2167,10 +2160,11 @@ void ProteinRendererBDP::RenderDepthHistogram(const CallProteinData *protein) {
     glEnable(GL_BLEND);
 	glBlendEquation(GL_MAX);
 
-    // bind textures
+    // bind depth buffer
     glActiveTexture(GL_TEXTURE0);
     glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
 
+    // bind histogram
     for(int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
         glActiveTexture(GL_TEXTURE1 + i);
         glBindTexture( GL_TEXTURE_2D, this->histogramTex[i]);
@@ -3055,7 +3049,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
 
             // calculate intersections of the sphere with triangle patches.
             // the sum of these (normalised) intersections is the surfVector.
-            // the sum of all (normalised) edges is the edgeVector.
+            // the sum of all (normalised) RS-edges is the edgeVector.
             surfVector.Set(0.0f, 0.0f, 0.0f);
             edgeVector.Set(0.0f, 0.0f, 0.0f);
             for(j = 0; j < edgeCount; ++j ) {
@@ -3386,7 +3380,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
 
         // calculate intersections of the sphere with triangle patches.
         // the sum of these (normalised) intersections is the surfVector.
-        // the sum of all (normalised) edges is the edgeVector.
+        // the sum of all (normalised) RS-edges is the edgeVector.
         surfVector.Set(0.0f, 0.0f, 0.0f);
         edgeVector.Set(0.0f, 0.0f, 0.0f);
         for(j = 0; j < edgeCount; ++j ) {
@@ -3727,7 +3721,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
 
             // calculate intersections of the sphere with triangle patches.
             // the sum of these (normalised) intersections is the surfVector.
-            // the sum of all (normalised) edges is the edgeVector.
+            // the sum of all (normalised) RS-edges is the edgeVector.
             surfVector.Set(0.0f, 0.0f, 0.0f);
             edgeVector.Set(0.0f, 0.0f, 0.0f);
             for(j = 0; j < edgeCount; ++j ) {
@@ -3862,6 +3856,7 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
 
     // TODO: compute proper number of maximum edges per vertex
+    // 32 is a save upper bound ...
     unsigned int maxNumEdges = 32;
 
     unsigned int coordX;
@@ -3906,12 +3901,9 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
             vertexPos = this->reducedSurface[cntRS]->GetRSVertex( cnt1)->GetPosition();
             atomRadius = this->reducedSurface[cntRS]->GetRSVertex( cnt1)->GetRadius();
 
-			if(maxNumEdges < edgeCount){
-				std::cout << ">>>>>>>>>>>>> maxNumEdges < edgeCount" << std::endl;
-			}
-
             for( cnt2 = 0; cnt2 < maxNumEdges; ++cnt2 ) {
                 if(cnt2 < edgeCount) {
+                    // calculate vector on RS-edge pointing to intersection of the cutting plane with the RS-edge
                     ReducedSurface::RSEdge* currentEdge = this->reducedSurface[cntRS]->GetRSVertex( cnt1)->GetEdge(cnt2);
                     edgeVector = currentEdge->GetTorusCenter() - vertexPos;
                     rotAxis = edgeVector.Cross( zAxis);
@@ -3921,10 +3913,6 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
                     X1 *= atomRadius;
                     edgeVector.Normalise();
                     final = edgeVector * (edgeVector.Dot(X1));
-
-					if(edgeVector.Dot(final) < 0.0) {
-						std::cout << ">>>>>>>>>>>>> edgeVector.Dot(final) < 0.0" << std::endl;
-					}
 
                     this->cutPlanesTexData[cntRS].Append(final.GetX());
                     this->cutPlanesTexData[cntRS].Append(final.GetY());
@@ -4040,6 +4028,7 @@ void ProteinRendererBDP::CreateCutPlanesTexturesSimple()
 
             for( cnt2 = 0; cnt2 < maxNumEdges; ++cnt2 ) {
                 if(cnt2 < edgeCount) {
+                    // calculate vector on RS-edge pointing to intersection of the cutting plane with the RS-edge
                     ReducedSurfaceSimplified::RSEdge* currentEdge = this->simpleRS[cntRS]->GetRSVertex( cnt1)->GetEdge(cnt2);
                     edgeVector = currentEdge->GetTorusCenter() - vertexPos;
                     rotAxis = edgeVector.Cross( zAxis);
@@ -4154,6 +4143,7 @@ void ProteinRendererBDP::CreateCutPlanesTexture( unsigned int idxRS)
 
         for( cnt2 = 0; cnt2 < maxNumEdges; ++cnt2 ) {
             if(cnt2 < edgeCount) {
+                // calculate vector on RS-edge pointing to intersection of the cutting plane with the RS-edge
                 ReducedSurface::RSEdge* currentEdge = this->reducedSurface[idxRS]->GetRSVertex( cnt1)->GetEdge(cnt2);
                 edgeVector = currentEdge->GetTorusCenter() - vertexPos;
                 rotAxis = edgeVector.Cross( zAxis);
