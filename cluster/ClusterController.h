@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "job/AbstractJobThread.h"
+#include "job/AbstractThreadedJob.h"
 #include "CalleeSlot.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
@@ -31,7 +31,7 @@ namespace cluster {
     /**
      * Class implementing the cluster rendering master job
      */
-    class ClusterController : public job::AbstractJobThread, public Module,
+    class ClusterController : public job::AbstractThreadedJob, public Module,
         public vislib::net::cluster::DiscoveryListener {
     public:
 

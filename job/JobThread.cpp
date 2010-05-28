@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * job::JobThread::JobThread
  */
-job::JobThread::JobThread() : AbstractJobThread(), Module() {
+job::JobThread::JobThread() : AbstractThreadedJob(), Module() {
     // intentionally empty ATM
 }
 

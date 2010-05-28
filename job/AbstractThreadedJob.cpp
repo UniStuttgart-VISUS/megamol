@@ -1,30 +1,30 @@
 /*
- * AbstractJobThread.cpp
+ * AbstractThreadedJob.cpp
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "AbstractJobThread.h"
+#include "AbstractThreadedJob.h"
 #include "vislib/Log.h"
 
 using namespace megamol::core;
 
 
 /*
- * job::AbstractJobThread::AbstractJobThread
+ * job::AbstractThreadedJob::AbstractThreadedJob
  */
-job::AbstractJobThread::AbstractJobThread() : AbstractJob(),
+job::AbstractThreadedJob::AbstractThreadedJob() : AbstractJob(),
         vislib::sys::Runnable(), thread(NULL), terminationRequest(false) {
     // intentionally empty
 }
 
 
 /*
- * job::AbstractJobThread::~AbstractJobThread
+ * job::AbstractThreadedJob::~AbstractThreadedJob
  */
-job::AbstractJobThread::~AbstractJobThread() {
+job::AbstractThreadedJob::~AbstractThreadedJob() {
     if (!this->thread.IsNull()) {
         if (this->thread->IsRunning()) {
             this->thread->Terminate(false);
@@ -34,17 +34,17 @@ job::AbstractJobThread::~AbstractJobThread() {
 
 
 /*
- * job::AbstractJobThread::IsRunning
+ * job::AbstractThreadedJob::IsRunning
  */
-bool job::AbstractJobThread::IsRunning(void) const {
+bool job::AbstractThreadedJob::IsRunning(void) const {
     return !this->thread.IsNull() && this->thread->IsRunning();
 }
 
 
 /*
- * job::AbstractJobThread::Start
+ * job::AbstractThreadedJob::Start
  */
-bool job::AbstractJobThread::Start(void) {
+bool job::AbstractThreadedJob::Start(void) {
     try {
         this->terminationRequest = false;
         this->thread = new vislib::sys::Thread(this);
@@ -59,9 +59,9 @@ bool job::AbstractJobThread::Start(void) {
 
 
 /*
- * job::AbstractJobThread::Terminate
+ * job::AbstractThreadedJob::Terminate
  */
-bool job::AbstractJobThread::Terminate(void) {
+bool job::AbstractThreadedJob::Terminate(void) {
     this->terminationRequest = true;
     return true;
 }

@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "job/AbstractJobThread.h"
+#include "job/AbstractThreadedJob.h"
 #include "Module.h"
 
 
@@ -24,7 +24,7 @@ namespace job {
     /**
      * Class implementing a simple thread for the job.
      */
-    class JobThread : public AbstractJobThread, public Module {
+    class JobThread : public AbstractThreadedJob, public Module {
     public:
 
         /**

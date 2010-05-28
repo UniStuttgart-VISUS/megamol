@@ -1,12 +1,12 @@
 /*
- * AbstractJobThread.h
+ * AbstractThreadedJob.h
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTJOBTHREAD_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTJOBTHREAD_H_INCLUDED
+#ifndef MEGAMOLCORE_ABSTRACTTHREADEDJOB_H_INCLUDED
+#define MEGAMOLCORE_ABSTRACTTHREADEDJOB_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -25,19 +25,19 @@ namespace job {
     /**
      * Abstract base class for theaded jobs
      */
-    class AbstractJobThread : public AbstractJob,
+    class AbstractThreadedJob : public AbstractJob,
         public vislib::sys::Runnable {
     public:
 
         /**
          * Ctor
          */
-        AbstractJobThread();
+        AbstractThreadedJob();
 
         /**
          * Dtor
          */
-        virtual ~AbstractJobThread();
+        virtual ~AbstractThreadedJob();
 
         /**
          * Answers whether or not this job is still running.
@@ -88,4 +88,4 @@ namespace job {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_ABSTRACTJOBTHREAD_H_INCLUDED */
+#endif /* MEGAMOLCORE_ABSTRACTTHREADEDJOB_H_INCLUDED */
