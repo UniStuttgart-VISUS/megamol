@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CoreInstance.h"
+#include "JobDescription.h"
 #include "ViewDescription.h"
 #include "utility/xml/ConditionalParser.h"
 #include "utility/xml/XmlReader.h"
@@ -50,6 +51,18 @@ namespace utility {
             if (this->viewDescs.IsEmpty()) return NULL;
             ViewDescription* rv = this->viewDescs.First();
             this->viewDescs.RemoveFirst();
+            return rv;
+        }
+
+        /**
+         * Gets the list of job descriptions parsed from the project
+         *
+         * @return The list of job descriptions parsed from the project
+         */
+        inline JobDescription* PopJobDescription(void) {
+            if (this->jobDescs.IsEmpty()) return NULL;
+            JobDescription* rv = this->jobDescs.First();
+            this->jobDescs.RemoveFirst();
             return rv;
         }
 
@@ -123,11 +136,17 @@ namespace utility {
         /** The view description which is currently created by the parser */
         ViewDescription *vd;
 
+        /** The view description which is currently created by the parser */
+        JobDescription *jd;
+
         /** The name of the currently created module */
         vislib::StringA modName;
 
         /** The view descriptions parsed from the project file */
         vislib::SingleLinkedList<ViewDescription*> viewDescs;
+
+        /** The job descriptions parsed from the project file */
+        vislib::SingleLinkedList<JobDescription*> jobDescs;
 
     };
 

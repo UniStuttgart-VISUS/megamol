@@ -22,7 +22,7 @@ using namespace megamol::core::utility::xml;
  * utility::ProjectParser::ProjectParser
  */
 utility::ProjectParser::ProjectParser(void)
-    : xml::ConditionalParser(), vd(NULL), viewDescs() {
+    : xml::ConditionalParser(), vd(NULL), jd(), viewDescs(), jobDescs() {
     // intentionally empty
 }
 
@@ -34,12 +34,21 @@ utility::ProjectParser::~ProjectParser(void) {
     if (vd != NULL) {
         SAFE_DELETE(vd);
     }
+    if (jd != NULL) {
+        SAFE_DELETE(jd);
+    }
     vislib::SingleLinkedList<ViewDescription*>::Iterator
         iter = this->viewDescs.GetIterator();
     while (iter.HasNext()) {
         delete iter.Next();
     }
     this->viewDescs.Clear();
+    vislib::SingleLinkedList<JobDescription*>::Iterator
+        jter = this->jobDescs.GetIterator();
+    while (jter.HasNext()) {
+        delete jter.Next();
+    }
+    this->jobDescs.Clear();
 }
 
 
@@ -123,6 +132,10 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"view\" tag nested within another \"view\" tag ignored");
             return true;
         }
+        if (this->jd != NULL) {
+            this->Error("\"view\" tag nested within \"job\" tag ignored");
+            return true;
+        }
         const MMXML_CHAR *vdname = NULL;
         const MMXML_CHAR *viewmodname = NULL;
         for (int i = 0; attrib[i]; i += 2) {
@@ -151,9 +164,46 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
         return true;
     }
 
+    if (MMXML_STRING("job").Equals(name)) {
+        if (this->jd != NULL) {
+            this->Error("\"job\" tag nested within another \"job\" tag ignored");
+            return true;
+        }
+        if (this->vd != NULL) {
+            this->Error("\"job\" tag nested within \"view\" tag ignored");
+            return true;
+        }
+        const MMXML_CHAR *jdname = NULL;
+        const MMXML_CHAR *jobmodname = NULL;
+        for (int i = 0; attrib[i]; i += 2) {
+            if (MMXML_STRING("name").Equals(attrib[i])) {
+                jdname = attrib[i + 1];
+            } else
+            if (MMXML_STRING("jobmod").Equals(attrib[i])) {
+                jobmodname = attrib[i + 1];
+            } else {
+                this->WarnUnexpectedAttribut(name, attrib[i]);
+            }
+        }
+        if (jdname == NULL) {
+            this->Error("\"job\" tag without a name ignored");
+            return true;
+        }
+
+        this->jd = new JobDescription(vislib::StringA(jdname));
+
+        if (jobmodname == NULL) {
+            this->Warning("\"job\" tag without \"jobmod\" might result in unexpected behaviour");
+        } else {
+            jd->SetJobModuleID(vislib::StringA(jobmodname));
+        }
+
+        return true;
+    }
+
     if (MMXML_STRING("module").Equals(name)) {
-        if (this->vd == NULL) {
-            this->Error("\"module\" tag outside a \"view\" tag ignored");
+        if ((this->vd == NULL) && (this->jd == NULL)) {
+            this->Error("\"module\" tag outside a \"view\" tag or a \"job\" tag ignored");
             return true;
         }
         const MMXML_CHAR *className = NULL;
@@ -186,13 +236,18 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             return true;
         }
         this->modName = instName;
-        this->vd->AddModule(md, this->modName);
+        if (this->vd != NULL) {
+            this->vd->AddModule(md, this->modName);
+        } else {
+            ASSERT(this->jd != NULL);
+            this->jd->AddModule(md, this->modName);
+        }
         return true;
     }
 
     if (MMXML_STRING("call").Equals(name)) {
-        if (this->vd == NULL) {
-            this->Error("\"call\" tag outside a \"view\" tag ignored");
+        if ((this->vd == NULL) && (this->jd == NULL)) {
+            this->Error("\"call\" tag outside a \"view\" tag or a \"job\" tag ignored");
             return true;
         }
         const MMXML_CHAR *className = NULL;
@@ -229,13 +284,18 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"call\" class not found");
             return true;
         }
-        this->vd->AddCall(cd, vislib::StringA(fromName), vislib::StringA(toName));
+        if (this->vd != NULL) {
+            this->vd->AddCall(cd, vislib::StringA(fromName), vislib::StringA(toName));
+        } else {
+            ASSERT(this->jd != NULL);
+            this->jd->AddCall(cd, vislib::StringA(fromName), vislib::StringA(toName));
+        }
         return true;
     }
 
     if (MMXML_STRING("param").Equals(name)) {
-        if (this->vd == NULL) {
-            this->Error("\"param\" tag outside a \"view\" tag ignored");
+        if ((this->vd == NULL) && (this->jd == NULL)) {
+            this->Error("\"param\" tag outside a \"view\" tag a \"job\" tag ignored");
             return true;
         }
         const MMXML_CHAR *name = NULL;
@@ -259,20 +319,29 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             return true;
         }
         if (this->modName.IsEmpty()) {
-            this->vd->AddParamValue(vislib::StringA(name), vislib::TString(value));
+            if (this->vd != NULL) {
+                this->vd->AddParamValue(vislib::StringA(name), vislib::TString(value));
+            } else {
+                ASSERT(this->jd != NULL);
+                this->jd->AddParamValue(vislib::StringA(name), vislib::TString(value));
+            }
         } else {
             vislib::StringA n(name);
             if (!n.StartsWith("::")) {
                 n.Prepend("::");
                 n.Prepend(this->modName);
             }
-            this->vd->AddParamValue(n, vislib::TString(value));
+            if (this->vd != NULL) {
+                this->vd->AddParamValue(n, vislib::TString(value));
+            } else {
+                ASSERT(this->jd != NULL);
+                this->jd->AddParamValue(n, vislib::TString(value));
+            }
         }
         return true;
     }
 
     // TODO: Implement instance tag
-    // TODO: Implement job tag
     //       etc.
 
     return false;
@@ -294,6 +363,12 @@ bool utility::ProjectParser::EndTag(unsigned int num, unsigned int level,
         ASSERT(this->vd != NULL);
         this->viewDescs.Add(this->vd);
         this->vd = NULL;
+        return true;
+    }
+    if (MMXML_STRING("job").Equals(name)) {
+        ASSERT(this->jd != NULL);
+        this->jobDescs.Add(this->jd);
+        this->jd = NULL;
         return true;
     }
     if (MMXML_STRING("module").Equals(name)) {

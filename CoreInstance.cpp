@@ -87,7 +87,7 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void *data,
 megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         preInit(new PreInit), config(),
         shaderSourceFactory(config), log(), logRedirection(), logEchoTarget(),
-        builtinViewDescs(), projViewDescs(), builtinJobDescs(),
+        builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), plugins(), paramUpdateListeners() {
     //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
@@ -426,7 +426,9 @@ megamol::core::CoreInstance::FindViewDescription(const char *name) {
 megamol::core::JobDescription*
 megamol::core::CoreInstance::FindJobDescription(const char *name) {
     JobDescription *d = NULL;
-    // TODO: Search in project jobs
+    if (d == NULL) {
+        d = this->projJobDescs.Find(name);
+    }
     if (d == NULL) {
         d = this->builtinJobDescs.Find(name);
     }
@@ -1187,6 +1189,13 @@ void megamol::core::CoreInstance::addProject(
             vd = parser.PopViewDescription();
             if (vd != NULL) {
                 this->projViewDescs.Register(vd);
+            } else break;
+        }
+        JobDescription *jd = NULL;
+        while (true) {
+            jd = parser.PopJobDescription();
+            if (jd != NULL) {
+                this->projJobDescs.Register(jd);
             } else break;
         }
     } else {

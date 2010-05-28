@@ -621,6 +621,10 @@ namespace core {
         megamol::core::ObjectDescriptionManager<megamol::core::JobDescription>
             builtinJobDescs;
 
+        /** The manager of the builtin job descriptions */
+        megamol::core::ObjectDescriptionManager<megamol::core::JobDescription>
+            projJobDescs;
+
         /** The list of pending views to be instantiated */
         vislib::SingleLinkedList<ViewInstanceRequest> pendingViewInstRequests;
 
