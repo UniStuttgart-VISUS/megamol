@@ -1214,6 +1214,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\view\special\AnaglyphStereoView.h"
+						>
+					</File>
+					<File
 						RelativePath=".\view\special\ChronoGraph.h"
 						>
 					</File>
@@ -1243,6 +1247,10 @@
 					>
 					<File
 						RelativePath=".\view\special\AbstractStereoView.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\view\special\AnaglyphStereoView.cpp"
 						>
 					</File>
 					<File

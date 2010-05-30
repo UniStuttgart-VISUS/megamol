@@ -32,6 +32,7 @@
 //#include "special/ColStereoDisplay.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
+#include "view/special/AnaglyphStereoView.h"
 #include "view/special/ChronoGraph.h"
 #include "view/special/DemoRenderer2D.h"
 #include "view/special/QuadBufferStereoView.h"
@@ -82,6 +83,7 @@ ModuleDescriptionManager::Instance() {
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();
+        instance->registerAutoDescription<view::special::AnaglyphStereoView>();
         instance->registerAutoDescription<view::special::ChronoGraph>();
         instance->registerAutoDescription<view::special::DemoRenderer2D>();
         instance->registerAutoDescription<view::special::QuadBufferStereoView>();
