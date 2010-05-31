@@ -146,6 +146,9 @@ namespace moldyn {
         /** The colour data */
         vislib::Array<vislib::RawStorage> colData;
 
+        /** the out-going hash */
+        SIZE_T outhash;
+
     };
 
 } /* end namespace moldyn */

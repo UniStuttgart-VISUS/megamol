@@ -31,7 +31,7 @@
 
 // #define SPEAK_CELL_USAGE 1
 //#define SPEAK_VRAM_CACHE_USAGE 1
-#define VRAM_UPLOAD_QUOTA 3
+#define VRAM_UPLOAD_QUOTA 0
 //#define VRAM_UPLOAD_QUOTA 25
 //#define VRAM_UPLOAD_QUOTA 100
 //#define SUPSAMP_LOOP 1
@@ -81,7 +81,8 @@ moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
         speakVertCountSlot("speakVertCount", "Flag to activate output of number of vertices"),
         deferredShadingSlot("deferredShading", "De-/Activates deferred shading with normal generation"),
         greyTF(0), cellDists(), cellInfos(0), cacheSize(0), cacheSizeUsed(0),
-        deferredSphereShader(), deferredVanillaSphereShader(), deferredPointShader(), deferredShader() {
+        deferredSphereShader(), deferredVanillaSphereShader(), deferredPointShader(), deferredShader(),
+        inhash(0) {
 
     this->getDataSlot.SetCompatibleCall<moldyn::ParticleGridDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -405,6 +406,21 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 
     // fetch real data
     if (!(*pgdc)(0)) return false;
+    if (this->inhash != pgdc->DataHash()) {
+        this->inhash = pgdc->DataHash();
+        // invalidate ALL VBOs
+        SIZE_T cnt = this->cellInfos.Count();
+        for (SIZE_T i = 0; i < cnt; i++) {
+            SIZE_T cnt2 = this->cellInfos[i].cache.Count();
+            for (SIZE_T j = 0; j < cnt2; j++) {
+                ::glDeleteBuffersARB(2, this->cellInfos[i].cache[j].data);
+                this->cellInfos[i].cache[j].data[0] = 0;
+                this->cellInfos[i].cache[j].data[1] = 0;
+            }
+        }
+        this->cacheSizeUsed = 0;
+    }
+
     unsigned int cellcnt = pgdc->CellsCount();
     unsigned int typecnt = pgdc->TypesCount();
 
@@ -518,7 +534,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
         info.dots = (sphereImgRad < 0.75f);
 
         info.isvisible = true;
-        // TODO: Test against the viewing frustum
+        // Testing against the viewing frustum would be nice, but I don't care
 
     }
     dists.Sort(&GrimRenderer::depthSort);

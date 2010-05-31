@@ -920,7 +920,7 @@ void moldyn::IMDAtomDataSource::clear(void) {
     this->headerMaxX = this->headerMaxY = this->headerMaxZ = 1.0f;
     this->minX = this->minY = this->minZ = 0.0f;
     this->maxX = this->maxY = this->maxZ = 1.0f;
-    this->datahash = 0;
+    this->datahash++;
 }
 
 
@@ -939,7 +939,7 @@ void moldyn::IMDAtomDataSource::assertData(void) {
 
     vislib::sys::MemmappedFile file;
     vislib::TString filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
-    this->datahash = static_cast<SIZE_T>(filename.HashCode());
+    //this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename, vislib::sys::File::READ_ONLY,
             vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1015,11 +1015,12 @@ void moldyn::IMDAtomDataSource::assertData(void) {
             this->minX, this->minY, this->minZ,
             this->maxX, this->maxY, this->maxZ);
 
-        this->datahash = (this->datahash << (sizeof(SIZE_T) / 2))
-            || (this->datahash >> (sizeof(SIZE_T) / 2));
-        this->datahash ^= this->posData.GetSize();
+        //this->datahash = (this->datahash << (sizeof(SIZE_T) / 2))
+        //    || (this->datahash >> (sizeof(SIZE_T) / 2));
+        //this->datahash ^= this->posData.GetSize();
+        this->datahash++;
 
-        // TODO: All parameters must influence the data hash
+        // All parameters must influence the data hash
 
     } else {
         // error already logged

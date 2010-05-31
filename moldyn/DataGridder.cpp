@@ -33,7 +33,7 @@ moldyn::DataGridder::DataGridder(void) : Module(),
         gridSizeZSlot("gridsizez", "The grid size in z direction"),
         quantizeSlot("quantize", "Quantize the data to shorts"),
         datahash(0), frameID(UINT_MAX), gridSizeX(0), gridSizeY(0),
-        gridSizeZ(0), types(), grid(), vertData(), colData() {
+        gridSizeZ(0), types(), grid(), vertData(), colData(), outhash(0) {
 
     this->inDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
@@ -427,10 +427,13 @@ bool moldyn::DataGridder::getData(Call& call) {
         //
         // data grid update complete
         //
+
+        mpdc->Unlock();
+        this->outhash++;
     }
 
     // send data to caller
-    pgdc->SetDataHash(this->datahash);
+    pgdc->SetDataHash(this->outhash);
     pgdc->SetFrameID(this->frameID);
     pgdc->SetUnlocker(NULL);
     pgdc->SetGridDataRef(this->gridSizeX, this->gridSizeY, this->gridSizeZ, this->grid.PeekElements());

@@ -284,6 +284,9 @@ namespace moldyn {
         /** The deferred shader */
         vislib::graphics::gl::GLSLShader deferredShader;
 
+        /** The hash of the incoming data */
+        SIZE_T inhash;
+
     };
 
 } /* end namespace moldyn */
