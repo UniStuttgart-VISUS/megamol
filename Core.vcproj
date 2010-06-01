@@ -1571,6 +1571,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\moldyn\MMPLDDataSource.h"
+					>
+				</File>
+				<File
 					RelativePath=".\moldyn\MMPLDWriter.h"
 					>
 				</File>
@@ -1620,6 +1624,10 @@
 				</File>
 				<File
 					RelativePath=".\moldyn\MipDepthSphereRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\MMPLDDataSource.cpp"
 					>
 				</File>
 				<File

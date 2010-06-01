@@ -23,12 +23,12 @@
 #include "moldyn/GrimRenderer.h"
 #include "moldyn/IMDAtomDataSource.h"
 #include "moldyn/MipDepthSphereRenderer.h"
+#include "moldyn/MMPLDDataSource.h"
 #include "moldyn/MMPLDWriter.h"
 #include "moldyn/OracleSphereRenderer.h"
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleSphereRenderer.h"
 #include "moldyn/VIMDataSource.h"
-//#include "special/AnaglyphStereoDisplay.h"
 //#include "special/ColStereoDisplay.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
@@ -74,12 +74,12 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<moldyn::GrimRenderer>();
         instance->registerAutoDescription<moldyn::IMDAtomDataSource>();
         instance->registerAutoDescription<moldyn::MipDepthSphereRenderer>();
+        instance->registerAutoDescription<moldyn::MMPLDDataSource>();
         instance->registerAutoDescription<moldyn::MMPLDWriter>();
         instance->registerAutoDescription<moldyn::SIFFDataSource>();
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
-        //instance->registerAutoDescription<special::AnaglyphStereoDisplay>();
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();
