@@ -1,12 +1,12 @@
 /*
- * MMPLDDataSource.h
+ * MMPGDDataSource.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMPLDDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_MMPLDDATASOURCE_H_INCLUDED
+#ifndef MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
+#define MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -14,7 +14,7 @@
 #include "view/AnimDataModule.h"
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
-#include "moldyn/MultiParticleDataCall.h"
+#include "moldyn/ParticleGridDataCall.h"
 #include "vislib/Cuboid.h"
 #include "vislib/File.h"
 #include "vislib/RawStorage.h"
@@ -28,9 +28,9 @@ namespace moldyn {
 
 
     /**
-     * Data source module for MMPLD files
+     * Data source module for MMPGD files
      */
-    class MMPLDDataSource : public view::AnimDataModule {
+    class MMPGDDataSource : public view::AnimDataModule {
     public:
 
         /**
@@ -39,7 +39,7 @@ namespace moldyn {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "MMPLDDataSource";
+            return "MMPGDDataSource";
         }
 
         /**
@@ -48,7 +48,7 @@ namespace moldyn {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Data source module for MMPLD files.";
+            return "Data source module for MMPGD files.";
         }
 
         /**
@@ -61,10 +61,10 @@ namespace moldyn {
         }
 
         /** Ctor. */
-        MMPLDDataSource(void);
+        MMPGDDataSource(void);
 
         /** Dtor. */
-        virtual ~MMPLDDataSource(void);
+        virtual ~MMPGDDataSource(void);
 
     protected:
 
@@ -139,12 +139,18 @@ namespace moldyn {
              *
              * @param call The call to receive the data
              */
-            void SetData(MultiParticleDataCall& call);
+            void SetData(ParticleGridDataCall& call);
 
         private:
 
             /** position data per type */
             vislib::RawStorage dat;
+
+            /** The types */
+            ParticleGridDataCall::ParticleType *types;
+
+            /** The cells */
+            ParticleGridDataCall::GridCell *cells;
 
         };
 
@@ -152,7 +158,7 @@ namespace moldyn {
          * Helper class to unlock frame data when 'CallSimpleSphereData' is
          * used.
          */
-        class Unlocker : public MultiParticleDataCall::Unlocker {
+        class Unlocker : public ParticleGridDataCall::Unlocker {
         public:
 
             /**
@@ -160,7 +166,7 @@ namespace moldyn {
              *
              * @param frame The frame to unlock
              */
-            Unlocker(Frame& frame) : MultiParticleDataCall::Unlocker(),
+            Unlocker(Frame& frame) : ParticleGridDataCall::Unlocker(),
                     frame(&frame) {
                 // intentionally empty
             }
@@ -237,4 +243,4 @@ namespace moldyn {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_MMPLDDATASOURCE_H_INCLUDED */
+#endif /* MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED */

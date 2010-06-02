@@ -8,21 +8,12 @@
 #include "stdafx.h"
 #include "MMPLDDataSource.h"
 #include "param/FilePathParam.h"
-//#include "param/StringParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
 #include "vislib/Log.h"
 #include "vislib/MemmappedFile.h"
-//#include "vislib/Path.h"
-//#include "vislib/PtrArray.h"
-//#include "vislib/RawStorageWriter.h"
-//#include "vislib/ShallowPoint.h"
-//#include "vislib/ShallowQuaternion.h"
 #include "vislib/String.h"
-//#include "vislib/StringTokeniser.h"
-//#include "vislib/sysfunctions.h"
 #include "vislib/SystemInformation.h"
-//#include "vislib/Trace.h"
 
 using namespace megamol::core;
 
@@ -148,7 +139,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
  * moldyn::MMPLDDataSource::MMPLDDataSource
  */
 moldyn::MMPLDDataSource::MMPLDDataSource(void) : view::AnimDataModule(),
-        filename("filename", "The path to the trisoup file to load."),
+        filename("filename", "The path to the MMPLD file to load."),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
@@ -340,6 +331,8 @@ bool moldyn::MMPLDDataSource::getDataCallback(Call& caller) {
         f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
         if (f == NULL) return false;
         c2->SetUnlocker(new Unlocker(*f));
+        c2->SetFrameID(f->FrameNumber());
+        c2->SetDataHash(0);
         f->SetData(*c2);
     }
 

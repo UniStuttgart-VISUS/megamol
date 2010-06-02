@@ -16,6 +16,7 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
+#include "vislib/Cuboid.h"
 #include "vislib/forceinline.h"
 
 
@@ -33,9 +34,9 @@ namespace moldyn {
         /**
          * Class holding all information about one particle type
          *
-         * TODO: This class currenty can only hold data for spheres and should
-         *       be extended to be able to handle data for arbitrary glyphs.
-         *       This also applies to interpolation of data.
+         * This class currenty can only hold data for spheres and should
+         * be extended to be able to handle data for arbitrary glyphs.
+         * This also applies to interpolation of data.
          */
         class ParticleType {
         public:
