@@ -1555,6 +1555,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\moldyn\DataFileSequence.h"
+					>
+				</File>
+				<File
 					RelativePath=".\moldyn\DataGridder.h"
 					>
 				</File>
@@ -1616,6 +1620,10 @@
 				>
 				<File
 					RelativePath=".\moldyn\AddParticleColours.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\DataFileSequence.cpp"
 					>
 				</File>
 				<File
