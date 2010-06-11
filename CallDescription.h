@@ -42,6 +42,13 @@ namespace core {
         virtual const char *ClassName(void) const = 0;
 
         /**
+         * Clones this object
+         *
+         * @return The new clone
+         */
+        virtual CallDescription *Clone(void) const = 0;
+
+        /**
          * Creates a new call object.
          *
          * @return The newly created call object.

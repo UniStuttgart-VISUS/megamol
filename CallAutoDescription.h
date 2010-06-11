@@ -45,6 +45,15 @@ namespace core {
         }
 
         /**
+         * Clones this object
+         *
+         * @return The new clone
+         */
+        virtual CallDescription *Clone(void) const {
+            return new CallAutoDescription<T>();
+        }
+
+        /**
          * Creates a new call object.
          *
          * @return The newly created call object.

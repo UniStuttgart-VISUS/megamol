@@ -27,6 +27,9 @@ namespace core {
         : public ObjectDescriptionManager<CallDescription> {
     public:
 
+        /** Type to iterate descriptions */
+        typedef ObjectDescriptionManager<CallDescription>::DescriptionIterator DescriptionIterator;
+
         /**
          * Returns the only instance of this class.
          *

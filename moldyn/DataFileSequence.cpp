@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "DataFileSequence.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "moldyn/ParticleGrilDataCall.h"
+#include "CallDescriptionManager.h"
+#include "CallDescription.h"
 #include "param/StringParam.h"
 #include "param/IntParam.h"
 #include "vislib/Log.h"
@@ -34,7 +34,7 @@ moldyn::DataFileSequence::DataFileSequence(void) : Module(),
         inDataSlot("inData", "The slot for requesting data from the source"),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0) {
 
-    this->fileNameTemplateSlot << new param::StringParam();
+    this->fileNameTemplateSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->fileNameTemplateSlot);
 
     this->fileNumberMinSlot << new param::IntParam(0, 0);
@@ -46,16 +46,16 @@ moldyn::DataFileSequence::DataFileSequence(void) : Module(),
     this->fileNumberStepSlot << new param::IntParam(1, 1);
     this->MakeSlotAvailable(&this->fileNumberStepSlot);
 
-    this->fileNameSlotNameSlot << new param::StringParam();
+    this->fileNameSlotNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->fileNameSlotNameSlot);
 
-    // TODO: Better enumerate compatible calls
-    this->outDataSlot.SetCallback("MultiParticleDataCall", "GetData", &DataFileSequence::getDataCallback);
-    this->outDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &DataFileSequence::getExtentCallback);
-    this->inDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
-    this->outDataSlot.SetCallback("ParticleGridDataCall", "GetData", &DataFileSequence::getDataCallback);
-    this->outDataSlot.SetCallback("ParticleGridDataCall", "GetExtent", &DataFileSequence::getExtentCallback);
-    this->inDataSlot.SetCompatibleCall<ParticleGridDataCallDescription>();
+    CallDescriptionManager::DescriptionIterator iter(CallDescriptionManager::Instance()->GetIterator());
+    const CallDescription *cd = NULL;
+    while ((cd = this->moveToNextCompatibleCall(iter)) != NULL) {
+        this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataFileSequence::getDataCallback);
+        this->outDataSlot.SetCallback(cd->ClassName(), "GetExtent", &DataFileSequence::getExtentCallback);
+        this->inDataSlot.SetCompatibleCall(*cd);
+    }
 
     this->MakeSlotAvailable(&this->outDataSlot);
     this->MakeSlotAvailable(&this->inDataSlot);
@@ -74,9 +74,6 @@ moldyn::DataFileSequence::~DataFileSequence(void) {
  * moldyn::DataFileSequence::create
  */
 bool moldyn::DataFileSequence::create(void) {
-    //if (!this->filenameSlot.Param<param::FilePathParam>()->Value().IsEmpty()) {
-    //    this->filenameChanged(this->filenameSlot);
-    //}
     return true;
 }
 
@@ -85,8 +82,23 @@ bool moldyn::DataFileSequence::create(void) {
  * moldyn::DataFileSequence::release
  */
 void moldyn::DataFileSequence::release(void) {
-    //this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    //this->data.EnforceSize(0);
+}
+
+
+/*
+ * moldyn::DataFileSequence::moveToNextCompatibleCall
+ */
+const CallDescription* moldyn::DataFileSequence::moveToNextCompatibleCall(
+        CallDescriptionManager::DescriptionIterator &iterator) const {
+    while (iterator.HasNext()) {
+        const CallDescription *d = iterator.Next();
+        if ((d->FunctionCount() == 2)
+                && vislib::StringA("GetData").Equals(d->FunctionName(0), false)
+                && vislib::StringA("GetExtent").Equals(d->FunctionName(1), false)) {
+            return d;
+        }
+    }
+    return NULL;
 }
 
 
@@ -94,6 +106,9 @@ void moldyn::DataFileSequence::release(void) {
  * moldyn::DataFileSequence::getDataCallback
  */
 bool moldyn::DataFileSequence::getDataCallback(Call& caller) {
+    if (!this->checkConnections(&caller)) return false;
+    this->checkParameters();
+
     //MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
     //if (c2 == NULL) return false;
 
@@ -119,6 +134,9 @@ bool moldyn::DataFileSequence::getDataCallback(Call& caller) {
  * moldyn::DataFileSequence::getExtentCallback
  */
 bool moldyn::DataFileSequence::getExtentCallback(Call& caller) {
+    if (!this->checkConnections(&caller)) return false;
+    this->checkParameters();
+
     //MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
     //if (c2 == NULL) return false;
 
@@ -129,4 +147,38 @@ bool moldyn::DataFileSequence::getExtentCallback(Call& caller) {
 
     //return true;
     return false;
+}
+
+
+/*
+ * moldyn::DataFileSequence::checkConnections
+ */
+bool moldyn::DataFileSequence::checkConnections(Call *outCall) {
+    if (this->inDataSlot.GetStatus() != AbstractSlot::STATUS_CONNECTED) return false;
+    if (this->outDataSlot.GetStatus() != AbstractSlot::STATUS_CONNECTED) return false;
+    Call *inCall = this->inDataSlot.CallAs<Call>();
+    if ((inCall == NULL) || (outCall == NULL)) return false;
+    CallDescriptionManager::DescriptionIterator iter(CallDescriptionManager::Instance()->GetIterator());
+    const CallDescription *cd = NULL;
+    while ((cd = this->moveToNextCompatibleCall(iter)) != NULL) {
+        if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall)) return true;
+        // both slot connected with similar calls
+    }
+    return false;
+}
+
+
+/*
+ * moldyn::DataFileSequence::checkParameters
+ */
+void moldyn::DataFileSequence::checkParameters(void) {
+    if (this->fileNameTemplateSlot.IsDirty()
+            || this->fileNumberMinSlot.IsDirty()
+            || this->fileNumberMaxSlot.IsDirty()
+            || this->fileNumberStepSlot.IsDirty()
+            || this->fileNameSlotNameSlot.IsDirty()) {
+
+        // TODO: Implement
+
+    }
 }

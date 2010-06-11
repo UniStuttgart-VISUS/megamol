@@ -12,16 +12,16 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Module.h"
-#include "param/ParamSlot.h"
+#include "CallDescriptionManager.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
+#include "param/ParamSlot.h"
 #include "vislib/Cuboid.h"
 
 
 namespace megamol {
 namespace core {
 namespace moldyn {
-
 
 
     /**
@@ -79,6 +79,18 @@ namespace moldyn {
          */
         virtual void release(void);
 
+        /**
+         * Moves the iterator directly behind the next description of the
+         * next call compatible with this module
+         *
+         * @param iterator The iterator to iterate
+         *
+         * @return The call description iterated to, or NULL if there are no
+         *         more compatible calls
+         */
+        const CallDescription* moveToNextCompatibleCall(
+            CallDescriptionManager::DescriptionIterator &iterator) const;
+
     private:
 
         /**
@@ -98,6 +110,21 @@ namespace moldyn {
          * @return 'true' on success, 'false' on failure.
          */
         bool getExtentCallback(Call& caller);
+
+        /**
+         * Checks if the callee and the caller slot are connected with the
+         * same call classes
+         *
+         * @param outCall The incoming call requesting data
+         *
+         * @return True if everything is fine.
+         */
+        bool checkConnections(Call *outCall);
+
+        /**
+         * Checks the module parameters for updates
+         */
+        void checkParameters(void);
 
         /** The file name template */
         param::ParamSlot fileNameTemplateSlot;

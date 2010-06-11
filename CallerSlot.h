@@ -139,6 +139,22 @@ namespace core {
         }
 
         /**
+         * Registers a call as compatible call with this caller slot. Calls of
+         * this class can then be connected to this slot.
+         *
+         * @param desc The description object to be added.
+         */
+        inline void SetCompatibleCall(const CallDescription& desc) {
+            for (unsigned int i = 0; i < this->compDesc.Count(); i++) {
+                if (vislib::StringA(this->compDesc[i]->ClassName())
+                        .Equals(desc.ClassName())) {
+                    return;
+                }
+            }
+            this->compDesc.Append(desc.Clone());
+        }
+
+        /**
          * Answers whether this caller is connected to the specified callee.
          *
          * @param target The callee slot
