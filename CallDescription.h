@@ -89,6 +89,14 @@ namespace core {
          */
         virtual bool IsDescribing(const Call * call) const = 0;
 
+        /**
+         * Assignment crowbar
+         *
+         * @param tar The targeted object
+         * @param src The source object
+         */
+        virtual void AssignmentCrowbar(Call * tar, const Call * src) const = 0;
+
     protected:
 
         /**

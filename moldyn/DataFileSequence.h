@@ -126,6 +126,36 @@ namespace moldyn {
          */
         void checkParameters(void);
 
+        /**
+         * Update when the file name template changes
+         *
+         * @param slot Must be 'fileNameTemplateSlot'
+         *
+         * @return true
+         */
+        bool onFileNameTemplateChanged(param::ParamSlot& slot);
+
+        /**
+         * Update when the file name slot name changes
+         *
+         * @param slot Must be 'fileNameSlotNameSlot'
+         *
+         * @return true
+         */
+        bool onFileNameSlotNameChanged(param::ParamSlot& slot);
+
+        /**
+         * Finds the parameter slot for the file name
+         *
+         * @return The parameter slot for the file name or NULL if not found
+         */
+        param::ParamSlot *findFileNameSlot(void);
+
+        /**
+         * Asserts the data is available blablabla
+         */
+        void assertData(void);
+
         /** The file name template */
         param::ParamSlot fileNameTemplateSlot;
 
@@ -152,6 +182,27 @@ namespace moldyn {
 
         /** The data hash */
         SIZE_T datahash;
+
+        /** The file name template */
+        vislib::TString fileNameTemplate;
+
+        /** The minimum file number */
+        unsigned int fileNumMin;
+
+        /** The maximum file number */
+        unsigned int fileNumMax;
+
+        /** The file number increase step */
+        unsigned int fileNumStep;
+
+        /** Needs to update the data */
+        bool needDataUpdate;
+
+        /** The actual number of frames available */
+        unsigned int frameCnt;
+
+        /** The last frame index requested */
+        unsigned int lastIdxRequested;
 
     };
 

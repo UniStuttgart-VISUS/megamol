@@ -306,7 +306,7 @@ bool moldyn::GrimRenderer::GetCapabilities(Call& call) {
     cr->SetCapabilities(
         view::CallRender3D::CAP_RENDER
         | view::CallRender3D::CAP_LIGHTING
-        //| view::CallRender3D::CAP_ANIMATION
+        | view::CallRender3D::CAP_ANIMATION
         );
 
     return true;
@@ -396,6 +396,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
     unsigned int cial2 = glGetAttribLocationARB(*daPointShader, "colIdx");
 
     // ask for extend to calculate the data scaling
+    pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
     if (!(*pgdc)(1)) return false;
     float scaling = pgdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
     if (scaling > 0.0000001) {
@@ -405,6 +406,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
     }
 
     // fetch real data
+    pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
     if (!(*pgdc)(0)) return false;
     if (this->inhash != pgdc->DataHash()) {
         this->inhash = pgdc->DataHash();

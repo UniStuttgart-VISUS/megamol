@@ -104,6 +104,18 @@ namespace core {
             return dynamic_cast<const T*>(call) != NULL;
         }
 
+        /**
+         * Assignment crowbar
+         *
+         * @param tar The targeted object
+         * @param src The source object
+         */
+        virtual void AssignmentCrowbar(Call * tar, const Call * src) const {
+            T* t = dynamic_cast<T*>(tar);
+            const T* s = dynamic_cast<const T*>(src);
+            *t = *s;
+        }
+
     };
 
 

@@ -708,6 +708,21 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView) {
 
 
 /*
+ * mmcStartJob
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void *hJob) {
+    VLSTACKTRACE("mmcStartJob", __FILE__, __LINE__);
+    megamol::core::JobInstance *job
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::JobInstance>(hJob);
+    if ((job != NULL) && (job->Job() != NULL)) {
+        return job->Job()->Start();
+    }
+    return false;
+}
+
+
+/*
  * mmcTerminateJob
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void *hJob) {

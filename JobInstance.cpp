@@ -63,9 +63,10 @@ bool JobInstance::Initialize(ModuleNamespace *ns, job::AbstractJob *job) {
     ASSERT(!ns->GetChildIterator().HasNext());
 
     this->job = job;
-    if (!this->job->Start()) {
-        return false;
-    }
+    // Job must be started AFTER setting the parameter values
+    //if (!this->job->Start()) {
+    //    return false;
+    //}
 
     return true;
 }

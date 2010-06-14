@@ -37,6 +37,14 @@ namespace core {
          */
         static CallDescriptionManager * Instance();
 
+        /**
+         * Assignment crowbar
+         *
+         * @param tar The targeted object
+         * @param src The source object
+         */
+        void AssignmentCrowbar(Call *tar, Call *src);
+
     private:
 
         /** Private ctor. */

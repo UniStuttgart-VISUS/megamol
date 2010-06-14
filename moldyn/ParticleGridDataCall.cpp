@@ -227,5 +227,9 @@ moldyn::ParticleGridDataCall::~ParticleGridDataCall(void) {
 moldyn::ParticleGridDataCall& moldyn::ParticleGridDataCall::operator=(
         const moldyn::ParticleGridDataCall& rhs) {
     AbstractGetData3DCall::operator=(rhs);
+
+    this->SetGridDataRef(rhs.cntCellsX, rhs.cntCellsY, rhs.cntCellsZ, rhs.cells);
+    this->SetTypeDataRef(rhs.cntTypes, rhs.types);
+
     return *this;
 }

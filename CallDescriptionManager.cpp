@@ -52,6 +52,23 @@ CallDescriptionManager::Instance() {
 }
 
 
+/*
+ * CallDescriptionManager::AssignmentCrowbar
+ */
+void CallDescriptionManager::AssignmentCrowbar(Call *tar, Call *src) {
+    DescriptionIterator iter = this->GetIterator();
+    while (iter.HasNext()) {
+        const CallDescription *desc = iter.Next();
+        if (desc->IsDescribing(tar)) {
+            if (desc->IsDescribing(src)) {
+                desc->AssignmentCrowbar(tar, src);
+            } else {
+                // TODO: ARGLHARGLGARGLGARG
+            }
+        }
+    }
+}
+
 
 /*
  * CallDescriptionManager::CallDescriptionManager

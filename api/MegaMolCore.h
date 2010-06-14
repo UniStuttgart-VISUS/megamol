@@ -572,6 +572,15 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob);
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView);
 
 /**
+ * Starts a job.
+ *
+ * @param hJob The job to be terminated.
+ *
+ * @return 'true' if the job has been started
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void *hJob);
+
+/**
  * Termiantes a job.
  *
  * @param hJob The job to be terminated.
