@@ -73,6 +73,20 @@ bool megamol::console::JobManager::CheckJobs(void) {
 
 
 /*
+ * megamol::console::JobManager::StartJobs
+ */
+void megamol::console::JobManager::StartJobs(void) {
+    vislib::SingleLinkedList<vislib::SmartPtr<CoreHandle> >::Iterator iter
+        = this->jobs.GetIterator();
+
+    while (iter.HasNext()) {
+        vislib::SmartPtr<CoreHandle>& hndl = iter.Next();
+        ::mmcStartJob(hndl->operator void*());
+    }
+}
+
+
+/*
  * megamol::console::JobManager::TerminateJobs
  */
 void megamol::console::JobManager::TerminateJobs(void) {

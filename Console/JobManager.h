@@ -48,6 +48,11 @@ namespace console {
         bool CheckJobs(void);
 
         /**
+         * Starts all jobs
+         */
+        void StartJobs(void);
+
+        /**
          * Tries to terminate all jobs still running.
          */
         void TerminateJobs(void);

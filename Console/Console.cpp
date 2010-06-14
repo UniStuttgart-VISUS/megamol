@@ -1007,6 +1007,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         }
     }
 
+    megamol::console::JobManager::Instance()->StartJobs();
+
     for (SIZE_T i = 0; i < winPoss.Count(); i += 2) {
         setWindowPosition(winPoss[i], winPoss[i + 1]);
     }
