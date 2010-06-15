@@ -430,6 +430,7 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
             vislib::StringA value(msg.GetBodyAsAt<char>(name.Length() + 1));
             param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(name, true));
             if (ps != NULL) {
+                //printf("SET[%s]=%s\n", name.PeekBuffer(), value.PeekBuffer());
                 ps->Parameter()->ParseValue(value);
             }
         } break;
@@ -481,7 +482,9 @@ bool cluster::AbstractClusterView::onServerAddressChanged(param::ParamSlot& slot
         "Starting server on \"%s\" guessed from \"%s\" with wildness: %f\n",
         ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
 
-    vislib::SmartRef<vislib::net::TcpCommChannel> channel = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
+    vislib::SmartRef<vislib::net::TcpCommChannel> channel = new vislib::net::TcpCommChannel(
+        vislib::net::TcpCommChannel::FLAG_NODELAY | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
+
     try {
         channel->Connect(ep);
         this->ctrlChannel.Open(channel.DynamicCast<vislib::net::AbstractBidiCommChannel>());

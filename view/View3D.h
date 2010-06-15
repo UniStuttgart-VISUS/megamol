@@ -282,6 +282,24 @@ namespace view {
 
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
+        /**
+         * Event animation started/stopped
+         *
+         * @param p Must be animPlaySlot
+         *
+         * @return true
+         */
+        bool onAnimPlayChanged(param::ParamSlot& p);
+
+        /**
+         * Event animation speed changed
+         *
+         * @param p Must be animSpeedSlot
+         *
+         * @return true
+         */
+        bool onAnimSpeedChanged(param::ParamSlot& p);
+
         /** The scene camera */
         vislib::graphics::gl::CameraOpenGL cam;
 

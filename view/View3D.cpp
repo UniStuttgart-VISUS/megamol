@@ -109,8 +109,10 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
 
     // simple animation time controlling (TODO: replace)
     this->animPlaySlot << new param::BoolParam(false);
+    this->animPlaySlot.SetUpdateCallback(&View3D::onAnimPlayChanged);
     this->MakeSlotAvailable(&this->animPlaySlot);
     this->animSpeedSlot << new param::FloatParam(4.0f, 0.01f, 100.0f);
+    this->animSpeedSlot.SetUpdateCallback(&View3D::onAnimSpeedChanged);
     this->MakeSlotAvailable(&this->animSpeedSlot);
     this->animTimeSlot << new param::FloatParam(this->timeFrame, 0.0f);
     this->MakeSlotAvailable(&this->animTimeSlot);
@@ -352,31 +354,27 @@ void view::View3D::Render(void) {
             }
         }
 
-        // TODO: Implement
+        unsigned int frameCnt = cr3d->TimeFramesCount();
+        if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
+            double time = this->GetCoreInstance()->GetInstanceTime()
+                * static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value())
+                + static_cast<double>(this->animOffsetSlot.Param<param::FloatParam>()->Value());
 
-        if (this->animPlay.Param<param::BoolParam>()->Value()) {
+            while (time < 0.0) { time += static_cast<double>(frameCnt); }
+            while (static_cast<unsigned int>(time) >= frameCnt) { time -= static_cast<double>(frameCnt); }
 
-            this->timeFrame = this->animOffsetSlot.Param<param::FloatParam>()->Value()
-                + this->GetCoreInstance()->GetInstanceTime()
-                * this->animSpeedSlot.Param<param::FloatParam>()->Value();
-
-            while (((unsigned int)this->timeFrame) >= cr3d->TimeFramesCount()) {
-                this->timeFrame -= cr3d->TimeFramesCount();
-            }
-
+            this->timeFrame = static_cast<float>(time);
             this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
 
-        }
+        } else if (this->animTimeSlot.IsDirty()) {
+            this->animTimeSlot.ResetDirty();
+            this->timeFrame = this->animTimeSlot.Param<param::FloatParam>()->Value();
+            if (static_cast<unsigned int>(this->timeFrame) >= frameCnt) {
+                this->timeFrame = static_cast<float>(frameCnt - 1);
+                this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
+            }
 
-        //if (this->animPlay.Param<param::BoolParam>()->Value()) {
-        //    float fps = this->animSpeed.Param<param::FloatParam>()->Value();
-        //    float seconds = float(vislib::sys::PerformanceCounter::ToMillis(
-        //        this->animTimer.Difference()) * 0.001);
-        //    this->timeFrame += fps * seconds;
-        //}
-        //if (((unsigned int)this->timeFrame) >= cr3d->TimeFramesCount()) {
-        //    this->timeFrame = 0.0f;
-        //}
+        }
 
         cr3d->SetTime(this->frozenValues ? this->frozenValues->time : this->timeFrame);
         cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
@@ -1089,3 +1087,38 @@ bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
 }
 
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+
+
+/*
+ * view::View3D::onAnimPlayChanged
+ */
+bool view::View3D::onAnimPlayChanged(param::ParamSlot& p) {
+    ASSERT(&p == &this->animPlaySlot);
+
+    if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
+        double speed = static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value());
+        double offset = static_cast<double>(this->timeFrame)
+            - this->GetCoreInstance()->GetInstanceTime() * speed;
+        this->animOffsetSlot.Param<param::FloatParam>()->SetValue(static_cast<float>(offset));
+    }
+
+    return true;
+}
+
+
+/*
+ * view::View3D::onAnimSpeedChanged
+ */
+bool view::View3D::onAnimSpeedChanged(param::ParamSlot& p) {
+    ASSERT(&p == &this->animSpeedSlot);
+
+    if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
+        // assuming 'this->timeFrame' is up-to-date
+        double speed = static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value());
+        double offset = static_cast<double>(this->timeFrame)
+            - this->GetCoreInstance()->GetInstanceTime() * speed;
+        this->animOffsetSlot.Param<param::FloatParam>()->SetValue(static_cast<float>(offset));
+    }
+
+    return true;
+}

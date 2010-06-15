@@ -94,6 +94,7 @@ AbstractNamedObject *AbstractNamedObjectContainer::findChild(
     ChildList::Iterator iter = this->children.GetIterator();
     while (iter.HasNext()) {
         AbstractNamedObject *child = iter.Next();
+        ASSERT(child != NULL);
         if (child->Name().Equals(name)) {
             return child;
         }
@@ -123,6 +124,11 @@ AbstractNamedObject *AbstractNamedObjectContainer::FindNamedObject(const char *n
     }
 
     while (*name != 0) {
+        if (c != NULL) {
+            f = c->findChild(name);
+            if (f != NULL) break;
+        }
+
         next = ::strstr(name, "::");
         if (next != NULL) {
             n = vislib::StringA(name, static_cast<int>(next - name));

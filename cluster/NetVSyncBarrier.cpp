@@ -51,7 +51,8 @@ bool cluster::NetVSyncBarrier::Connect(const vislib::StringA& address) {
         ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
 
     vislib::net::TcpCommChannel *tcp
-        = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
+        = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY
+            | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
     this->channel = tcp;
     tcp->Connect(ep);
 

@@ -52,7 +52,8 @@ void cluster::CommChannelServer::Start(vislib::net::IPEndPoint& ep) {
     this->Stop();
     if (this->commChannel.IsNull()) {
         this->commChannel = new vislib::net::TcpCommChannel(
-            vislib::net::TcpCommChannel::FLAG_NODELAY);
+            vislib::net::TcpCommChannel::FLAG_NODELAY
+            | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
     }
     vislib::SmartRef<vislib::net::AbstractServerEndPoint> endpoint = 
         this->commChannel.DynamicCast<vislib::net::AbstractServerEndPoint>();
