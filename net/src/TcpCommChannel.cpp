@@ -26,6 +26,12 @@ const UINT64 vislib::net::TcpCommChannel::FLAG_NODELAY = 0x00000001;
 
 
 /*
+ * vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS
+ */
+const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
+
+
+/*
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
 vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) 
@@ -43,6 +49,7 @@ vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags)
         AbstractServerEndPoint(), socket(socket), flags(flags) {
     VLSTACKTRACE("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
     socket.SetNoDelay(this->IsSetNoDelay());
+    socket.SetReuseAddr(this->IsSetReuseAddress());
 }
 
 
@@ -54,6 +61,7 @@ vislib::net::TcpCommChannel::Accept(void) {
     VLSTACKTRACE("TcpCommChannel::Accept", __FILE__, __LINE__);
     Socket socket = this->socket.Accept();
     socket.SetNoDelay(this->IsSetNoDelay());
+    socket.SetReuseAddr(this->IsSetReuseAddress());
 
     return SmartRef<AbstractCommChannel>(
         new TcpCommChannel(socket, this->flags), false);
@@ -120,6 +128,7 @@ void vislib::net::TcpCommChannel::Bind(const IPEndPoint address) {
 
     this->socket.Create(address, Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
     this->socket.SetNoDelay(this->IsSetNoDelay());
+    this->socket.SetReuseAddr(this->IsSetReuseAddress());
 
     this->socket.Bind(address);
 }
@@ -191,6 +200,7 @@ void vislib::net::TcpCommChannel::Connect(const IPEndPoint& address) {
 
     this->socket.Create(address, Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
     this->socket.SetNoDelay(this->IsSetNoDelay());
+    this->socket.SetReuseAddr(this->IsSetReuseAddress());
 
     this->socket.Connect(address);
 }

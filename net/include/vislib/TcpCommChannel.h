@@ -50,6 +50,13 @@ namespace net {
         static const UINT64 FLAG_NODELAY;
 
         /**
+         * This flag enables or disables the reuse of addresses already bound.
+         * Setting the flag has an effect on the communication channel itself 
+         * as well as on the child channels created in server mode.
+         */
+        static const UINT64 FLAG_REUSE_ADDRESS;
+
+        /**
          * Ctor.
          *
          * @param flags The flags for the channel.
@@ -165,6 +172,15 @@ namespace net {
          */
         inline bool IsSetNoDelay(void) const {
             return ((this->flags & FLAG_NODELAY) != 0);
+        }
+
+        /**
+         * Answer whether address reuse (SO_REUSEADDR) is enabled or not.
+         *
+         * @return true if address reuse is enabled, false otherwise.
+         */
+        inline bool IsSetReuseAddress(void) const {
+            return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
         }
 
         /**
