@@ -325,10 +325,19 @@ namespace view {
         BoundingBoxes bboxs;
 
         /** Bool parameter to play/stop the animation */
-        param::ParamSlot animPlay;
+        param::ParamSlot animPlaySlot;
 
         /** Float parameter of animation speed in time frames per second */
-        param::ParamSlot animSpeed;
+        param::ParamSlot animSpeedSlot;
+
+        /** The slot holding the current time */
+        param::ParamSlot animTimeSlot;
+
+        /** Slot used to synchronize the animation offset */
+        param::ParamSlot animOffsetSlot;
+
+        /** The current time to display */
+        float timeFrame;
 
         /** Bool flag showing the bounding box */
         param::ParamSlot showBBox;
@@ -347,12 +356,6 @@ namespace view {
 
         /** Triggers the reset of the view */
         param::ParamSlot resetViewSlot;
-
-        /** The current time to display */
-        float timeFrame;
-
-        /** The timer used to control the animation speed */
-        vislib::sys::PerformanceCounter animTimer;
 
         /** The frames per second counter */
         vislib::graphics::FpsCounter fpsCounter;

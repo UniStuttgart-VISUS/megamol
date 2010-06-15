@@ -48,16 +48,18 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         rotator2(), zoomer1(), zoomer2(), lookAtDist(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         lightDir(0.5f, -1.0f, -1.0f), isCamLight(true), bboxs(),
-        animPlay("animPlay", "Bool parameter to play/stop the animation"),
-        animSpeed("animSpeed", "Float parameter of animation speed in time frames per second"),
+        animPlaySlot("anim::play", "Bool parameter to play/stop the animation"),
+        animSpeedSlot("anim::speed", "Float parameter of animation speed in time frames per second"),
+        animTimeSlot("anim::time", "The slot holding the current time to display"),
+        animOffsetSlot("anim::offset", "Slot used to synchronize the animation offset"),
+        timeFrame(0.0f),
         showBBox("showBBox", "Bool parameter to show/hide the bounding box"),
         showLookAt("showLookAt", "Flag showing the look at point"),
         cameraSettingsSlot("camsettings", "The stored camera settings"),
         storeCameraSettingsSlot("storecam", "Triggers the storage of the camera settings"),
         restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
-        timeFrame(0.0f), animTimer(true), fpsCounter(10), fpsOutputTimer(0),
-        firstImg(false), frozenValues(NULL),
+        fpsCounter(10), fpsOutputTimer(0), firstImg(false), frozenValues(NULL),
         isCamLightSlot("light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system"),
         lightDirSlot("light::direction", "Direction vector of the light"),
         lightColDifSlot("light::diffuseCol", "Diffuse light colour"),
@@ -106,10 +108,15 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->bboxs.Clear();
 
     // simple animation time controlling (TODO: replace)
-    this->animPlay << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->animPlay);
-    this->animSpeed << new param::FloatParam(4.0f, 0.01f, 100.0f);
-    this->MakeSlotAvailable(&this->animSpeed);
+    this->animPlaySlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->animPlaySlot);
+    this->animSpeedSlot << new param::FloatParam(4.0f, 0.01f, 100.0f);
+    this->MakeSlotAvailable(&this->animSpeedSlot);
+    this->animTimeSlot << new param::FloatParam(this->timeFrame, 0.0f);
+    this->MakeSlotAvailable(&this->animTimeSlot);
+    this->animOffsetSlot << new param::FloatParam(0.0f);
+    this->MakeSlotAvailable(&this->animOffsetSlot);
+
     this->showBBox << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBox);
     this->showLookAt << new param::BoolParam(false);
@@ -345,17 +352,31 @@ void view::View3D::Render(void) {
             }
         }
 
+        // TODO: Implement
+
         if (this->animPlay.Param<param::BoolParam>()->Value()) {
-            float fps = this->animSpeed.Param<param::FloatParam>()->Value();
-            float seconds = float(vislib::sys::PerformanceCounter::ToMillis(
-                this->animTimer.Difference()) * 0.001);
-            this->timeFrame += fps * seconds;
-        }
-        if (((unsigned int)this->timeFrame) >= cr3d->TimeFramesCount()) {
-            this->timeFrame = 0.0f;
+
+            this->timeFrame = this->animOffsetSlot.Param<param::FloatParam>()->Value()
+                + this->GetCoreInstance()->GetInstanceTime()
+                * this->animSpeedSlot.Param<param::FloatParam>()->Value();
+
+            while (((unsigned int)this->timeFrame) >= cr3d->TimeFramesCount()) {
+                this->timeFrame -= cr3d->TimeFramesCount();
+            }
+
+            this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
+
         }
 
-        this->animTimer.SetMark();
+        //if (this->animPlay.Param<param::BoolParam>()->Value()) {
+        //    float fps = this->animSpeed.Param<param::FloatParam>()->Value();
+        //    float seconds = float(vislib::sys::PerformanceCounter::ToMillis(
+        //        this->animTimer.Difference()) * 0.001);
+        //    this->timeFrame += fps * seconds;
+        //}
+        //if (((unsigned int)this->timeFrame) >= cr3d->TimeFramesCount()) {
+        //    this->timeFrame = 0.0f;
+        //}
 
         cr3d->SetTime(this->frozenValues ? this->frozenValues->time : this->timeFrame);
         cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
