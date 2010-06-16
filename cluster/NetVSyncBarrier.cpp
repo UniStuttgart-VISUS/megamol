@@ -21,7 +21,7 @@ using namespace megamol::core;
 /*
  * cluster::NetVSyncBarrier::NetVSyncBarrier
  */
-cluster::NetVSyncBarrier::NetVSyncBarrier(void) : channel(NULL) {
+cluster::NetVSyncBarrier::NetVSyncBarrier(void) : channel(NULL), data(), dataSize(0) {
     // Intentionally empty
 }
 
@@ -31,6 +31,8 @@ cluster::NetVSyncBarrier::NetVSyncBarrier(void) : channel(NULL) {
  */
 cluster::NetVSyncBarrier::~NetVSyncBarrier(void) {
     this->Disconnect();
+    this->dataSize = 0;
+    this->data.EnforceSize(0);
 }
 
 
@@ -90,6 +92,7 @@ void cluster::NetVSyncBarrier::Cross(unsigned char id) {
 
     try {
         vislib::net::SimpleMessage msg;
+        this->dataSize = 0;
 
         //VLTRACE(VISLIB_TRCELVL_INFO, "Sending barrier request");
         // request
@@ -107,10 +110,12 @@ void cluster::NetVSyncBarrier::Cross(unsigned char id) {
             throw vislib::Exception("Only partial header received", __FILE__, __LINE__);
         }
         if (msg.GetHeader().GetBodySize() > 0) {
-            msg.AssertBodySize();
-            r = this->channel->Receive(msg.GetBody(), msg.GetHeader().GetBodySize(), 0, true);
+            this->data.AssertSize(msg.GetHeader().GetBodySize());
+            r = this->channel->Receive(this->data, msg.GetHeader().GetBodySize(), 0, true);
             if (r != msg.GetHeader().GetBodySize()) {
                 throw vislib::Exception("Body not completely received", __FILE__, __LINE__);
+            } else {
+                this->dataSize = msg.GetHeader().GetBodySize();
             }
         }
         //VLTRACE(VISLIB_TRCELVL_INFO, "Barrier complete");

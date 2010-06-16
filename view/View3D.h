@@ -100,6 +100,25 @@ namespace view {
         virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
 
         /**
+         * Gets the time of the frame to be rendered
+         *
+         * @return The time of the frame to be rendered
+         */
+        virtual float GetFrameTime(void) const {
+            return this->timeFrame;
+        }
+
+        /**
+         * Sets the time of the frame to be rendered
+         *
+         * @param time The time of the frame to be rendered
+         */
+        virtual void SetFrameTime(float time) {
+            this->timeFrame = time;
+            this->timeFrameForced = true;
+        }
+
+        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
         virtual void Render(void);
@@ -356,6 +375,9 @@ namespace view {
 
         /** The current time to display */
         float timeFrame;
+
+        /** The time frame value is forced for the next frame */
+        bool timeFrameForced;
 
         /** Bool flag showing the bounding box */
         param::ParamSlot showBBox;

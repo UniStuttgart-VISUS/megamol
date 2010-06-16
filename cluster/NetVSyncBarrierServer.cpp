@@ -7,10 +7,13 @@
 
 #include "stdafx.h"
 #include "cluster/NetVSyncBarrierServer.h"
+#include "AbstractNamedObjectContainer.h"
 #include "cluster/NetMessages.h"
+#include "view/AbstractView.h"
 #include "vislib/assert.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/Log.h"
+#include "vislib/RawStorageSerialiser.h"
 
 using namespace megamol::core;
 
@@ -18,9 +21,9 @@ using namespace megamol::core;
 /*
  * cluster::NetVSyncBarrierServer::NetVSyncBarrierServer
  */
-cluster::NetVSyncBarrierServer::NetVSyncBarrierServer(void)
+cluster::NetVSyncBarrierServer::NetVSyncBarrierServer(AbstractNamedObject *owner)
         : server(), serverEndpoint(), peers(), currentBarrier(0),
-        waitingPeerCount(0), lock() {
+        waitingPeerCount(0), lock(), owner(owner), viewName() {
     this->server.AddListener(this);
 }
 
@@ -186,7 +189,24 @@ void cluster::NetVSyncBarrierServer::checkBarrier(void) {
         vislib::net::SimpleMessage outMsg;
         outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_NETVSYNC_CROSS);
         outMsg.GetHeader().SetBodySize(0);
-        outMsg.AssertBodySize();
+
+        if ((this->owner != NULL) && !this->viewName.IsEmpty()) {
+            this->owner->LockModuleGraph(false);
+            AbstractNamedObjectContainer *root = dynamic_cast<AbstractNamedObjectContainer*>(this->owner->RootModule());
+            if (root != NULL) {
+                view::AbstractView *view = dynamic_cast<view::AbstractView*>(root->FindNamedObject(this->viewName));
+                if (view != NULL) {
+                    vislib::RawStorage store;
+                    vislib::RawStorageSerialiser serialiser(&store);
+                    view->SerialiseCamera(serialiser);
+                    outMsg.GetHeader().SetBodySize(static_cast<unsigned int>(4 + store.GetSize()));
+                    outMsg.AssertBodySize();
+                    *outMsg.GetBodyAs<float>() = view->GetFrameTime();
+                    ::memcpy(outMsg.GetBodyAsAt<void>(4), store, store.GetSize());
+                }
+            }
+            this->owner->UnlockModuleGraph();
+        }
 
         this->server.MultiSendMessage(outMsg);
     }

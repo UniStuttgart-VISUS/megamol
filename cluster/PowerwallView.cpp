@@ -13,6 +13,7 @@
 #include "param/BoolParam.h"
 #include "vislib/Log.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/RawStorageSerialiser.h"
 #include <cmath>
 
 using namespace megamol::core;
@@ -200,6 +201,20 @@ void cluster::PowerwallView::Render(void) {
                 this->getTileX(), this->getTileY(), this->getTileW(), this->getTileH());
         }
         crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
+
+        if ((this->netVSyncBarrier != NULL) && (this->netVSyncBarrier->GetDataSize() > 0)) {
+            //printf("Barrier with %u bytes data\n", this->netVSyncBarrier->GetDataSize());
+            view::AbstractView *view = NULL;
+            if (crv->PeekCalleeSlot() != NULL) view = dynamic_cast<view::AbstractView*>(
+                const_cast<AbstractNamedObject*>(crv->PeekCalleeSlot()->Parent()));
+            if (view != NULL){
+                vislib::RawStorageSerialiser camera(
+                    this->netVSyncBarrier->GetData() + 4,
+                    this->netVSyncBarrier->GetDataSize() - 4);
+                view->DeserialiseCamera(camera);
+                view->SetFrameTime(*reinterpret_cast<const float*>(this->netVSyncBarrier->GetData()));
+            }
+        }
 
         if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
             this->renderFallbackView();

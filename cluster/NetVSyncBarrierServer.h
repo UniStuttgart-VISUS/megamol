@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "AbstractNamedObject.h"
 #include "cluster/CommChannelServer.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/SingleLinkedList.h"
@@ -31,8 +32,10 @@ namespace cluster {
 
         /**
          * Ctor.
+         *
+         * @param owner The owning object
          */
-        NetVSyncBarrierServer(void);
+        NetVSyncBarrierServer(AbstractNamedObject *owner);
 
         /**
          * ~Dtor.
@@ -54,6 +57,15 @@ namespace cluster {
          * Stopps the network barrier server
          */
         void Stop(void) throw();
+
+        /**
+         * Sets the name of the view
+         *
+         * @param viewname The name of the view
+         */
+        inline void SetViewName(const vislib::StringA& viewname) {
+            this->viewName = viewname;
+        }
 
     protected:
 
@@ -121,6 +133,12 @@ namespace cluster {
 
         /** The synchronization lock object */
         vislib::sys::CriticalSection lock;
+
+        /** The core instance */
+        AbstractNamedObject *owner;
+
+        /** The name of the view */
+        vislib::StringA viewName;
 
     };
 

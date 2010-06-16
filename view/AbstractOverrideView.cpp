@@ -59,6 +59,15 @@ void view::AbstractOverrideView::DeserialiseCamera(vislib::Serialiser& serialise
 
 
 /*
+ * view::AbstractOverrideView::GetFrameTime
+ */
+float view::AbstractOverrideView::GetFrameTime(void) const {
+    // TODO: Implement
+    return 0.0f;
+}
+
+
+/*
  * view::AbstractOverrideView::ResetView
  */
 void view::AbstractOverrideView::ResetView(void) {

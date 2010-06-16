@@ -52,7 +52,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         animSpeedSlot("anim::speed", "Float parameter of animation speed in time frames per second"),
         animTimeSlot("anim::time", "The slot holding the current time to display"),
         animOffsetSlot("anim::offset", "Slot used to synchronize the animation offset"),
-        timeFrame(0.0f),
+        timeFrame(0.0f), timeFrameForced(false),
         showBBox("showBBox", "Bool parameter to show/hide the bounding box"),
         showLookAt("showLookAt", "Flag showing the look at point"),
         cameraSettingsSlot("camsettings", "The stored camera settings"),
@@ -354,26 +354,29 @@ void view::View3D::Render(void) {
             }
         }
 
-        unsigned int frameCnt = cr3d->TimeFramesCount();
-        if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
-            double time = this->GetCoreInstance()->GetInstanceTime()
-                * static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value())
-                + static_cast<double>(this->animOffsetSlot.Param<param::FloatParam>()->Value());
+        if (this->timeFrameForced) {
+            this->timeFrameForced = false;
+        } else {
+            unsigned int frameCnt = cr3d->TimeFramesCount();
+            if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {
+                double time = this->GetCoreInstance()->GetInstanceTime()
+                    * static_cast<double>(this->animSpeedSlot.Param<param::FloatParam>()->Value())
+                    + static_cast<double>(this->animOffsetSlot.Param<param::FloatParam>()->Value());
 
-            while (time < 0.0) { time += static_cast<double>(frameCnt); }
-            while (static_cast<unsigned int>(time) >= frameCnt) { time -= static_cast<double>(frameCnt); }
+                while (time < 0.0) { time += static_cast<double>(frameCnt); }
+                while (static_cast<unsigned int>(time) >= frameCnt) { time -= static_cast<double>(frameCnt); }
 
-            this->timeFrame = static_cast<float>(time);
-            this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
-
-        } else if (this->animTimeSlot.IsDirty()) {
-            this->animTimeSlot.ResetDirty();
-            this->timeFrame = this->animTimeSlot.Param<param::FloatParam>()->Value();
-            if (static_cast<unsigned int>(this->timeFrame) >= frameCnt) {
-                this->timeFrame = static_cast<float>(frameCnt - 1);
+                this->timeFrame = static_cast<float>(time);
                 this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
-            }
 
+            } else if (this->animTimeSlot.IsDirty()) {
+                this->animTimeSlot.ResetDirty();
+                this->timeFrame = this->animTimeSlot.Param<param::FloatParam>()->Value();
+                if (static_cast<unsigned int>(this->timeFrame) >= frameCnt) {
+                    this->timeFrame = static_cast<float>(frameCnt - 1);
+                    this->animTimeSlot.Param<param::FloatParam>()->SetValue(this->timeFrame);
+                }
+            }
         }
 
         cr3d->SetTime(this->frozenValues ? this->frozenValues->time : this->timeFrame);

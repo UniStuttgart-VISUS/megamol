@@ -253,6 +253,10 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     msg.AssertBodySize();
     this->ctrlServer.MultiSendMessage(msg);
 
+    if (this->netVSyncBarrier != NULL) {
+        this->netVSyncBarrier->SetViewName(viewName);
+    }
+
     return true;
 }
 
@@ -410,7 +414,9 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
         case cluster::netmessages::MSG_NETVSYNC_JOIN: {
             vislib::StringA nvsyncAddress(this->netVSyncBarrierAddressSlot.Param<param::StringParam>()->Value());
             if (this->netVSyncBarrier == NULL) {
-                this->netVSyncBarrier = new cluster::NetVSyncBarrierServer();
+                this->netVSyncBarrier = new cluster::NetVSyncBarrierServer(this);
+                this->netVSyncBarrier->SetViewName(vislib::StringA(
+                    this->viewNameSlot.Param<param::StringParam>()->Value()));
                 try {
                     if (!this->netVSyncBarrier->Start(nvsyncAddress)) {
                         throw vislib::Exception("'Start' returned false", __FILE__, __LINE__);

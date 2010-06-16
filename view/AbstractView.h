@@ -101,6 +101,20 @@ namespace view {
         virtual void DeserialiseCamera(vislib::Serialiser& serialiser) = 0;
 
         /**
+         * Gets the time of the frame to be rendered
+         *
+         * @return The time of the frame to be rendered
+         */
+        virtual float GetFrameTime(void) const = 0;
+
+        /**
+         * Sets the time of the frame to be rendered
+         *
+         * @param time The time of the frame to be rendered
+         */
+        virtual void SetFrameTime(float time) = 0;
+
+        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
         virtual void Render(void) = 0;

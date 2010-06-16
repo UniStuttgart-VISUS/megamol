@@ -57,6 +57,22 @@ namespace view {
         virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
 
         /**
+         * Gets the time of the frame to be rendered
+         *
+         * @return The time of the frame to be rendered
+         */
+        virtual float GetFrameTime(void) const;
+
+        /**
+         * Sets the time of the frame to be rendered
+         *
+         * @param time The time of the frame to be rendered
+         */
+        virtual void SetFrameTime(float time) {
+            // TODO: Implement
+        }
+
+        /**
          * Resets the view. This normally sets the camera parameters to
          * default values.
          */
