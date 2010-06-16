@@ -66,9 +66,9 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         lightColAmbSlot("light::ambientCol", "Ambient light colour"),
         stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection"),
         stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection"),
-        overrideCall(NULL)
+        overrideCall(NULL),
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
-        , viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
+        viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
         viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
         viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted"),
         viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)"),
@@ -82,9 +82,11 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         viewKeyMoveLeftSlot("viewKey::MoveLeft", "Moves to the left"),
         viewKeyMoveRightSlot("viewKey::MoveRight", "Moves to the right"),
         viewKeyMoveUpSlot("viewKey::MoveUp", "Moves to the top"),
-        viewKeyMoveDownSlot("viewKey::MoveDown", "Moves to the bottom")
+        viewKeyMoveDownSlot("viewKey::MoveDown", "Moves to the bottom"),
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
-        {
+        toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box"),
+        toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
+        toggleAnimPlaySlot("toggleAnimPlay", "Button to toggle animation") {
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
     using vislib::sys::KeyCode;
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
@@ -232,6 +234,18 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D::viewKeyPressed);
     this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+
+    this->toggleAnimPlaySlot << new param::ButtonParam(' ');
+    this->toggleAnimPlaySlot.SetUpdateCallback(&View3D::onToggleButton);
+    this->MakeSlotAvailable(&this->toggleAnimPlaySlot);
+
+    this->toggleSoftCursorSlot << new param::ButtonParam('i' | KeyCode::KEY_MOD_CTRL);
+    this->toggleSoftCursorSlot.SetUpdateCallback(&View3D::onToggleButton);
+    this->MakeSlotAvailable(&this->toggleSoftCursorSlot);
+
+    this->toggleBBoxSlot << new param::ButtonParam('i' | KeyCode::KEY_MOD_ALT);
+    this->toggleBBoxSlot.SetUpdateCallback(&View3D::onToggleButton);
+    this->MakeSlotAvailable(&this->toggleBBoxSlot);
 
 }
 
@@ -1123,5 +1137,27 @@ bool view::View3D::onAnimSpeedChanged(param::ParamSlot& p) {
         this->animOffsetSlot.Param<param::FloatParam>()->SetValue(static_cast<float>(offset));
     }
 
+    return true;
+}
+
+
+/*
+ * view::View3D::onToggleButton
+ */
+bool view::View3D::onToggleButton(param::ParamSlot& p) {
+    param::BoolParam *bp = NULL;
+
+    if (&p == &this->toggleAnimPlaySlot) {
+        bp = this->animPlaySlot.Param<param::BoolParam>();
+    } else if (&p == &this->toggleSoftCursorSlot) {
+        this->toggleSoftCurse();
+        return true;
+    } else if (&p == &this->toggleBBoxSlot) {
+        bp = this->showBBox.Param<param::BoolParam>();
+    }
+
+    if (bp != NULL) {
+        bp->SetValue(!bp->Value());
+    }
     return true;
 }

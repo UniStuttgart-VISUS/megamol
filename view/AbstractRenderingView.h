@@ -111,6 +111,11 @@ namespace view {
          */
         void removeTitleRenderer(void) const;
 
+        /**
+         * TODO: Document me or I will softly curse you
+         */
+        void toggleSoftCurse(void);
+
         /** Pointer to the override background colour */
         float *overrideBkgndCol;
 

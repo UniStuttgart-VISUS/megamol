@@ -319,6 +319,8 @@ namespace view {
          */
         bool onAnimSpeedChanged(param::ParamSlot& p);
 
+        bool onToggleButton(param::ParamSlot& p);
+
         /** The scene camera */
         vislib::graphics::gl::CameraOpenGL cam;
 
@@ -490,6 +492,12 @@ namespace view {
         param::ParamSlot viewKeyMoveDownSlot;
 
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+
+        param::ParamSlot toggleBBoxSlot;
+
+        param::ParamSlot toggleSoftCursorSlot;
+
+        param::ParamSlot toggleAnimPlaySlot;
 
     };
 

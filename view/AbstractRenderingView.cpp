@@ -167,3 +167,11 @@ void view::AbstractRenderingView::removeTitleRenderer(void) const {
         this->titleRenderer = NULL;
     }
 }
+
+
+/*
+ * view::AbstractRenderingView::toggleSoftCurse
+ */
+void view::AbstractRenderingView::toggleSoftCurse(void) {
+    this->softCursorSlot.Param<param::BoolParam>()->SetValue(!this->softCursor);
+}
