@@ -1,16 +1,21 @@
 /*
  * TriSoupRenderer.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2010 by Sebastian Grottel
+ * Copyright (C) 2008-2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "TriSoupRenderer.h"
+#include "CallTriMeshData.h"
 #include "param/BoolParam.h"
-#include "param/ButtonParam.h"
-#include "view/CallRender3D.h"
 #include "param/EnumParam.h"
+#include "view/CallRender3D.h"
+#include <GL/gl.h>
+
+
+#include "param/ButtonParam.h"
 #include "param/StringParam.h"
 #include "param/FilePathParam.h"
 #include "vislib/KeyCode.h"
@@ -19,363 +24,266 @@
 #include "vislib/MemmappedFile.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/Vector.h"
-#include <GL/gl.h>
+
+using namespace megamol;
+using namespace megamol::trisoup;
+
+
 
 using namespace megamol::core;
 
 
 /*
- * misc::TriSoupRenderer::TriSoupRenderer
+ * TriSoupRenderer::TriSoupRenderer
  */
-misc::TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
-        filename("filename", "The path to the trisoup file to load."), cnt(0),
-        clusters(NULL), showVertices("showVertices", "Flag whether to show the verices of the object"),
+TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
+        getDataSlot("getData", "The slot to fetch the tri-mesh data"),
+        showVertices("showVertices", "Flag whether to show the verices of the object"),
         lighting("lighting", "Flag whether or not use lighting for the surface"),
-        surStyle("style", "The rendering style for the surface"),
-        testButton("test", "A test button for button testing"), bbox() {
+        cullface("cullface", "Flag whether or not use back-face culling for the surface"),
+        surStyle("style", "The rendering style for the surface") {
 
-    this->filename.SetParameter(new param::FilePathParam(""));
-    this->MakeSlotAvailable(&this->filename);
+    this->getDataSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->showVertices.SetParameter(new param::BoolParam(true));
+    this->showVertices.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showVertices);
 
     this->lighting.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->lighting);
+
+    this->cullface.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->cullface);
 
     param::EnumParam *ep = new param::EnumParam(0);
     ep->SetTypePair(0, "Filled");
     ep->SetTypePair(1, "Wireframe");
     this->surStyle << ep;
     this->MakeSlotAvailable(&this->surStyle);
-
-    this->testButton << new param::ButtonParam(vislib::sys::KeyCode('t'));
-    this->testButton.SetUpdateCallback(this, &TriSoupRenderer::bullchit);
-    this->MakeSlotAvailable(&this->testButton);
-
-    this->bbox.Set(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
-
 }
 
 
 /*
- * misc::TriSoupRenderer::~TriSoupRenderer
+ * TriSoupRenderer::~TriSoupRenderer
  */
-misc::TriSoupRenderer::~TriSoupRenderer(void) {
+TriSoupRenderer::~TriSoupRenderer(void) {
     this->Release();
-    this->cnt = 0;
-    ARY_SAFE_DELETE(this->clusters);
 }
 
 
 /*
- * misc::TriSoupRenderer::create
+ * TriSoupRenderer::create
  */
-bool misc::TriSoupRenderer::create(void) {
-    this->tryLoadFile();
-    this->filename.ResetDirty();
+bool TriSoupRenderer::create(void) {
+    // intentionally empty
     return true;
 }
 
 
 /*
- * misc::TriSoupRenderer::GetCapabilities
+ * TriSoupRenderer::GetCapabilities
  */
-bool misc::TriSoupRenderer::GetCapabilities(Call& call) {
+bool TriSoupRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    cr->SetCapabilities(
-        view::CallRender3D::CAP_RENDER
-        | view::CallRender3D::CAP_LIGHTING
-        );
+    cr->SetCapabilities(view::CallRender3D::CAP_RENDER | view::CallRender3D::CAP_LIGHTING);
 
     return true;
 }
 
 
 /*
- * misc::TriSoupRenderer::GetExtents
+ * TriSoupRenderer::GetExtents
  */
-bool misc::TriSoupRenderer::GetExtents(Call& call) {
+bool TriSoupRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
+    CallTriMeshData *ctmd = this->getDataSlot.CallAs<CallTriMeshData>();
+    if (ctmd == NULL) return false;
+    if (!(*ctmd)(1)) return false;
 
     cr->SetTimeFramesCount(1);
     cr->AccessBoundingBoxes().Clear();
-    cr->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-    cr->AccessBoundingBoxes().SetWorldSpaceBBox(this->bbox);
+    cr->AccessBoundingBoxes() = ctmd->AccessBoundingBoxes();
+    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
+    if (scale > 0.0f) scale = 2.0f / scale;
+    cr->AccessBoundingBoxes().MakeScaledWorld(scale);
 
     return true;
 }
 
 
 /*
- * misc::TriSoupRenderer::release
+ * TriSoupRenderer::release
  */
-void misc::TriSoupRenderer::release(void) {
-    this->cnt = 0;
-    ARY_SAFE_DELETE(this->clusters);
+void TriSoupRenderer::release(void) {
+    // intentionally empty
 }
 
 
 /*
- * misc::TriSoupRenderer::Render
+ * TriSoupRenderer::Render
  */
-bool misc::TriSoupRenderer::Render(Call& call) {
+bool TriSoupRenderer::Render(Call& call) {
+    CallTriMeshData *ctmd = this->getDataSlot.CallAs<CallTriMeshData>();
+    if (ctmd == NULL) return false;
 
-    if (this->filename.IsDirty()) {
-        // load the data.
-        this->tryLoadFile();
-        this->filename.ResetDirty();
-    }
+    if (!(*ctmd)(1)) return false;
+    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
+    if (scale > 0.0f) scale = 2.0f / scale;
+    ::glScalef(scale, scale, scale);
+
+    if (!(*ctmd)(0)) return false;
+
     bool normals = false;
     bool colors = false;
+    bool textures = false;
 
-    glEnable(GL_DEPTH_TEST);
+    ::glEnable(GL_DEPTH_TEST);
     if (this->lighting.Param<param::BoolParam>()->Value()) {
-        glEnable(GL_LIGHTING);
+        ::glEnable(GL_LIGHTING);
     } else {
-        glDisable(GL_LIGHTING);
+        ::glDisable(GL_LIGHTING);
     }
-    glDisable(GL_BLEND);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT); // Grrrrr. Arglarglargl
-    glEnable(GL_COLOR_MATERIAL);
+    ::glDisable(GL_BLEND);
+    ::glEnableClientState(GL_VERTEX_ARRAY);
+    ::glDisableClientState(GL_NORMAL_ARRAY);
+    ::glDisableClientState(GL_COLOR_ARRAY);
+    ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    if (this->cullface.Param<param::BoolParam>()->Value()) {
+        ::glEnable(GL_CULL_FACE);
+    } else {
+        ::glDisable(GL_CULL_FACE);
+    }
+    ::glEnable(GL_COLOR_MATERIAL);
+    ::glEnable(GL_TEXTURE_2D);
+    ::glBindTexture(GL_TEXTURE_2D, 0);
+    ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    ::glEnable(GL_NORMALIZE);
 
     if (this->surStyle.Param<param::EnumParam>()->Value() == 1) {
-        glPolygonMode(GL_BACK, GL_LINE);
+        ::glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
-    glColor3f(1.0f, 1.0f, 1.0f);
+    ::glColor3f(1.0f, 1.0f, 1.0f);
+    for (unsigned int i = 0; i < ctmd->Count(); i++) {
+        const CallTriMeshData::Mesh& obj = ctmd->Objects()[i];
 
-    for (unsigned int i = 0; i < this->cnt; i++) {
-        glVertexPointer(3, GL_FLOAT, 0, this->clusters[i].v);
-
-        if (this->clusters[i].n != NULL) {
+        ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointer());
+        if (obj.GetNormalPointer() != NULL) {
             if (!normals) {
-                glEnableClientState(GL_NORMAL_ARRAY);
+                ::glEnableClientState(GL_NORMAL_ARRAY);
                 normals = true;
             }
-            glNormalPointer(GL_FLOAT, 0, this->clusters[i].n);
-        } else {
-            if (normals) {
-                glDisableClientState(GL_NORMAL_ARRAY);
-                normals = false;
-            }
+            ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointer());
+        } else if (normals) {
+            ::glDisableClientState(GL_NORMAL_ARRAY);
+            normals = false;
         }
-
-        if (this->clusters[i].c != NULL) {
+        if (obj.GetColourPointer() != NULL) {
             if (!colors) {
-                glEnableClientState(GL_COLOR_ARRAY);
+                ::glEnableClientState(GL_COLOR_ARRAY);
                 colors = true;
             }
-            glColorPointer(3, GL_UNSIGNED_BYTE, 0, this->clusters[i].c);
-        } else {
-            if (colors) {
-                glDisableClientState(GL_COLOR_ARRAY);
-                colors = false;
-                glColor3f(1.0f, 1.0f, 1.0f);
+            ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointer());
+        } else if (colors) {
+            ::glDisableClientState(GL_COLOR_ARRAY);
+            colors = false;
+        }
+        if (obj.GetTextureCoordinatePointer() != NULL) {
+            if (!textures) {
+                ::glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                textures = true;
             }
+            ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointer());
+        } else if (textures) {
+            ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            textures = false;
         }
 
-        glDrawElements(GL_TRIANGLES, this->clusters[i].tc * 3,
-            GL_UNSIGNED_INT, this->clusters[i].t);
+        if (obj.GetMaterial() != NULL) {
+            const CallTriMeshData::Material &mat = *obj.GetMaterial();
+
+            ::glDisable(GL_COLOR_MATERIAL);
+            GLfloat mat_ambient[4] = { mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f };
+            GLfloat mat_diffuse[4] = { mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f };
+            GLfloat mat_specular[4] = { mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f };
+            GLfloat mat_emission[4] = { mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f };
+            GLfloat mat_shininess[1] = { mat.GetNs() };
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+
+            GLuint mapid = mat.GetMapID();
+            if (mapid > 0) {
+                //::glActiveTexture(GL_TEXTURE0);
+                ::glEnable(GL_COLOR_MATERIAL);
+                ::glBindTexture(GL_TEXTURE_2D, mapid);
+                ::glEnable(GL_TEXTURE_2D);
+                ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            }
+        } else {
+            GLfloat mat_ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+            GLfloat mat_diffuse[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
+            GLfloat mat_specular[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+            GLfloat mat_emission[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+            GLfloat mat_shininess[1] = { 0.0f };
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
+            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+            ::glBindTexture(GL_TEXTURE_2D, 0);
+            ::glEnable(GL_COLOR_MATERIAL);
+
+        }
+
+        if (obj.GetTriIndexPointer() != NULL) {
+            ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointer());
+        } else {
+            ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
+        }
     }
-    if (normals) {
-        glDisableClientState(GL_NORMAL_ARRAY);
+    if (normals) ::glDisableClientState(GL_NORMAL_ARRAY);
+    if (colors) ::glDisableClientState(GL_COLOR_ARRAY);
+    if (textures) ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    {
+        GLfloat mat_ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+        GLfloat mat_diffuse[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
+        GLfloat mat_specular[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        GLfloat mat_emission[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        GLfloat mat_shininess[1] = { 0.0f };
+        ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+        ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+        ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+        ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
+        ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+        ::glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if (this->showVertices.Param<param::BoolParam>()->Value()) {
-        glEnable(GL_POINT_SIZE);
-        glPointSize(3.0f);
-        glDisable(GL_LIGHTING);
+        ::glEnable(GL_POINT_SIZE);
+        ::glPointSize(3.0f);
+        ::glDisable(GL_LIGHTING);
 
-        glColor3f(1.0f, 0.0f, 0.0f);
-        for (unsigned int i = 0; i < this->cnt; i++) {
-            glVertexPointer(3, GL_FLOAT, 0, this->clusters[i].v);
-            glDrawArrays(GL_POINTS, 0, this->clusters[i].vc);
+        ::glColor3f(1.0f, 0.0f, 0.0f);
+        for (unsigned int i = 0; i < ctmd->Count(); i++) {
+            ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointer());
+            ::glDrawArrays(GL_POINTS, 0, ctmd->Objects()[i].GetVertexCount());
         }
     }
 
-    glEnable(GL_CULL_FACE);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisable(GL_POINT_SIZE);
-    glEnable(GL_BLEND);
+    ::glEnable(GL_CULL_FACE);
+    ::glDisableClientState(GL_VERTEX_ARRAY);
+    ::glDisable(GL_POINT_SIZE);
+    ::glEnable(GL_BLEND);
 
-    return true;
-}
-
-
-/*
- * misc::TriSoupRenderer::tryLoadFile
- */
-void misc::TriSoupRenderer::tryLoadFile(void) {
-    using vislib::sys::MemmappedFile;
-    using vislib::sys::File;
-    using vislib::sys::Log;
-
-#define FILE_READ(A, B) if ((B) != file.Read((A), (B))) {\
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,\
-            "Unable to load file \"%s\": data corruption",\
-            vislib::StringA(fn).PeekBuffer());\
-        this->cnt = 0;\
-        ARY_SAFE_DELETE(this->clusters);\
-        return;\
-    }
-
-    File::FileSize r;
-    MemmappedFile file;
-    const char theHeader[] = "Triangle Soup File 100\0\xFF";
-    char rb[100];
-    unsigned int ui;
-    float minX, minY, minZ, maxX, maxY, maxZ;
-    float xo, yo, zo, scale;
-
-    this->cnt = 0;
-    ARY_SAFE_DELETE(this->clusters);
-
-    const vislib::TString& fn
-        = this->filename.Param<param::FilePathParam>()->Value();
-    if (fn.IsEmpty()) {
-        // no file to load
-        return;
-    }
-
-    if (!file.Open(fn, File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to open file \"%s\"", vislib::StringA(fn).PeekBuffer());
-        return;
-    }
-
-    r = file.Read(rb, sizeof(theHeader) - 1);
-    if (memcmp(rb, theHeader, sizeof(theHeader) - 1) != 0) {
-        file.Close();
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load file \"%s\": Wrong format header",
-            vislib::StringA(fn).PeekBuffer());
-        return;
-    }
-
-    FILE_READ(&ui, sizeof(unsigned int));
-
-    FILE_READ(&minX, sizeof(float));
-    FILE_READ(&minY, sizeof(float));
-    FILE_READ(&minZ, sizeof(float));
-    FILE_READ(&maxX, sizeof(float));
-    FILE_READ(&maxY, sizeof(float));
-    FILE_READ(&maxZ, sizeof(float));
-
-    xo = (minX + maxX) * -0.5f;
-    yo = (minY + maxY) * -0.5f;
-    zo = (minZ + maxZ) * -0.5f;
-
-    scale = vislib::math::Abs(maxX - minX);
-    scale = vislib::math::Max(scale, vislib::math::Abs(maxY - minY));
-    scale = vislib::math::Max(scale, vislib::math::Abs(maxZ - minZ));
-    if (scale > 0.0f) {
-        scale = 2.0f / scale;
-    }
-
-    this->bbox.Set(
-        vislib::math::Abs(maxX - minX) * scale * -0.5f,
-        vislib::math::Abs(maxY - minY) * scale * -0.5f,
-        vislib::math::Abs(maxZ - minZ) * scale * -0.5f,
-        vislib::math::Abs(maxX - minX) * scale * 0.5f,
-        vislib::math::Abs(maxY - minY) * scale * 0.5f,
-        vislib::math::Abs(maxZ - minZ) * scale * 0.5f);
-
-    this->cnt = ui;
-    this->clusters = new Cluster[this->cnt];
-
-    for (unsigned int i = 0; i < this->cnt; i++) {
-        FILE_READ(&this->clusters[i].id, sizeof(unsigned int));
-        FILE_READ(&this->clusters[i].vc, sizeof(unsigned int));
-        this->clusters[i].v = new float[3 * this->clusters[i].vc];
-        FILE_READ(this->clusters[i].v,
-            sizeof(float) * 3 * this->clusters[i].vc);
-        for (unsigned int j = 0; j < this->clusters[i].vc; j++) {
-            this->clusters[i].v[j * 3] += xo;
-            this->clusters[i].v[j * 3 + 1] += yo;
-            this->clusters[i].v[j * 3 + 2] += zo;
-            this->clusters[i].v[j * 3] *= scale;
-            this->clusters[i].v[j * 3 + 1] *= scale;
-            this->clusters[i].v[j * 3 + 2] *= scale;
-        }
-        FILE_READ(&this->clusters[i].tc, sizeof(unsigned int));
-        this->clusters[i].t = new unsigned int[3 * this->clusters[i].tc];
-        FILE_READ(this->clusters[i].t,
-            sizeof(unsigned int) * 3 * this->clusters[i].tc);
-
-        // Calculate the vertex normals
-        unsigned int *nc = new unsigned int[this->clusters[i].vc];
-        ::memset(nc, 0, this->clusters[i].vc * sizeof(unsigned int));
-        this->clusters[i].n = new float[3 * this->clusters[i].vc];
-        for (unsigned int j = 0; j < 3 * this->clusters[i].vc; j++) {
-            this->clusters[i].n[j] = 0.0f;
-        }
-        for (unsigned int j = 0; j < this->clusters[i].tc; j++) {
-            unsigned int v1 = this->clusters[i].t[j * 3] * 3;
-            unsigned int v2 = this->clusters[i].t[j * 3 + 1] * 3;
-            unsigned int v3 = this->clusters[i].t[j * 3 + 2] * 3;
-            vislib::math::ShallowPoint<float, 3> p1(&this->clusters[i].v[v1]);
-            vislib::math::ShallowPoint<float, 3> p2(&this->clusters[i].v[v2]);
-            vislib::math::ShallowPoint<float, 3> p3(&this->clusters[i].v[v3]);
-            vislib::math::Vector<float, 3> e1 = p2 - p1;
-            vislib::math::Vector<float, 3> e2 = p1 - p3;
-            vislib::math::Vector<float, 3> n = e1.Cross(e2);
-            n.Normalise();
-
-            this->clusters[i].n[v1 + 0] += n.X();
-            this->clusters[i].n[v1 + 1] += n.Y();
-            this->clusters[i].n[v1 + 2] += n.Z();
-            this->clusters[i].n[v2 + 0] += n.X();
-            this->clusters[i].n[v2 + 1] += n.Y();
-            this->clusters[i].n[v2 + 2] += n.Z();
-            this->clusters[i].n[v3 + 0] += n.X();
-            this->clusters[i].n[v3 + 1] += n.Y();
-            this->clusters[i].n[v3 + 2] += n.Z();
-            nc[v1 / 3]++;
-            nc[v2 / 3]++;
-            nc[v3 / 3]++;
-
-        }
-        for (unsigned int j = 0; j < 3 * this->clusters[i].vc; j++) {
-            this->clusters[i].n[j] /= float(nc[j / 3]);
-        }
-        delete[] nc;
-
-        // Calculate fancy colors
-        this->clusters[i].c = new unsigned char[this->clusters[i].vc * 3];
-        for (unsigned int j = 0; j < 3 * this->clusters[i].vc; j += 3) {
-            float a = float(j) / float(3 * (this->clusters[i].vc - 1));
-            if (a < 0.0f) a = 0.0f; else if (a > 1.0f) a = 1.0f;
-            this->clusters[i].c[j + 2] = int(255.f * a);
-
-            //this->clusters[i].c[j + 2] = (j / 3) % 256;
-
-            this->clusters[i].c[j + 1] = 0;
-            this->clusters[i].c[j + 0] = 255 - this->clusters[i].c[j + 2];
-        }
-
-    }
-
-    file.Close();
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-        "File \"%s\" loaded successfully\n",
-        vislib::StringA(fn).PeekBuffer());
-}
-
-
-/*
- * misc::TriSoupRenderer::bullchit
- */
-bool misc::TriSoupRenderer::bullchit(param::ParamSlot& slot) {
-    vislib::sys::Log::DefaultLog.WriteMsg(2000,
-        "Hurglhurglhurgl!\n");
     return true;
 }

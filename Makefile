@@ -25,7 +25,7 @@ ExcludeFromBuild += ./dllmain.cpp
 
 
 # Libraries
-LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL
+LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU
 
 
 # Additional linker flags

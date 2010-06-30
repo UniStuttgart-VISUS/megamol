@@ -1,7 +1,8 @@
 /*
  * TriSoupRenderer.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2010 by Sebastian Grottel
+ * Copyright (C) 2008-2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -13,20 +14,20 @@
 
 #include "view/Renderer3DModule.h"
 #include "Call.h"
+#include "CallerSlot.h"
 #include "param/ParamSlot.h"
 #include "vislib/Cuboid.h"
 #include "vislib/memutils.h"
 
 
 namespace megamol {
-namespace core {
-namespace misc {
+namespace trisoup {
 
 
     /**
-     * Renderer for rendering the vis logo into the unit cube.
+     * Renderer for tri-mesh data
      */
-    class TriSoupRenderer : public view::Renderer3DModule {
+    class TriSoupRenderer : public core::view::Renderer3DModule {
     public:
 
         /**
@@ -44,7 +45,7 @@ namespace misc {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Renderer for triangle soups.";
+            return "Renderer for tri-mesh data";
         }
 
         /**
@@ -79,7 +80,7 @@ namespace misc {
          *
          * @return The return value of the function.
          */
-        virtual bool GetCapabilities(Call& call);
+        virtual bool GetCapabilities(core::Call& call);
 
         /**
          * The get extents callback. The module should set the members of
@@ -90,7 +91,7 @@ namespace misc {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(Call& call);
+        virtual bool GetExtents(core::Call& call);
 
         /**
          * Implementation of 'Release'.
@@ -104,98 +105,29 @@ namespace misc {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(Call& call);
+        virtual bool Render(core::Call& call);
 
     private:
 
-        /**
-         * Nested class storing the triangle mesh of a cluster.
-         */
-        class Cluster {
-        public:
-
-            /** Ctor */
-            Cluster(void) : id(0), tc(0), t(NULL), vc(0), v(NULL), n(NULL),
-                    c(NULL) {
-                // intentionally empty
-            }
-
-            /** Dtor. */
-            ~Cluster(void) {
-                this->tc = 0;
-                ARY_SAFE_DELETE(this->t);
-                this->vc = 0;
-                ARY_SAFE_DELETE(this->v);
-                ARY_SAFE_DELETE(this->n);
-                ARY_SAFE_DELETE(this->c);
-            }
-
-            /** Cluster ID */
-            unsigned int id;
-
-            /** Triangle count */
-            unsigned int tc;
-
-            /** Triangle vertex indices (3 times tc) */
-            unsigned int *t;
-
-            /** Vertex count */
-            unsigned int vc;
-
-            /** Vertices (3 times vc) */
-            float * v;
-
-            /** Normals (3 times vc) */
-            float * n;
-
-            /** Colors (3 times vc) */
-            unsigned char * c;
-
-        };
-
-        /**
-         * Tries to load the file 'filename' into memory
-         */
-        void tryLoadFile(void);
-
-        /**
-         * Just for debugging purposes.
-         *
-         * @param slot The calling slot.
-         *
-         * @return Always 'true' to reset the dirty flag.
-         */
-        bool bullchit(param::ParamSlot& slot);
-
-        /** The file name */
-        param::ParamSlot filename;
-
-        /** number of clusters stored */
-        unsigned int cnt;
-
-        /** array of clusters stored */
-        Cluster *clusters;
+        /** The slot to fetch the data */
+        core::CallerSlot getDataSlot;
 
         /** Flag whether or not to show vertices */
-        param::ParamSlot showVertices;
+        core::param::ParamSlot showVertices;
 
         /** Flag whether or not use lighting for the surface */
-        param::ParamSlot lighting;
+        core::param::ParamSlot lighting;
+
+        /** Flag whether or not use face culling for the surface */
+        core::param::ParamSlot cullface;
 
         /** The rendering style for the surface */
-        param::ParamSlot surStyle;
-
-        /** A test button parameter slot */
-        param::ParamSlot testButton;
-
-        /** The fancy bounding box */
-        vislib::math::Cuboid<float> bbox;
+        core::param::ParamSlot surStyle;
 
     };
 
 
-} /* end namespace misc */
-} /* end namespace core */
+} /* end namespace trisoup */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED */

@@ -1,7 +1,8 @@
 /*
  * TriSoup.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010 by Sebastian Grottel
+ * Copyright (C) 2009-2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -13,6 +14,9 @@
 #include "vislib/Log.h"
 #include "vislib/ThreadSafeStackTrace.h"
 #include "TriSoupRenderer.h"
+#include "CallTriMeshData.h"
+#include "TriSoupDataSource.h"
+#include "WavefrontObjDataSource.h"
 
 
 /*
@@ -56,7 +60,7 @@ TRISOUP_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 TRISOUP_API int mmplgModuleCount(void) {
-    return 1;
+    return 3;
 }
 
 
@@ -64,9 +68,10 @@ TRISOUP_API int mmplgModuleCount(void) {
  * mmplgModuleDescription
  */
 TRISOUP_API void* mmplgModuleDescription(int idx) {
-    if (idx == 0) {
-        return new megamol::core::ModuleAutoDescription<
-            megamol::core::misc::TriSoupRenderer>();
+    switch (idx) {
+        case 0: return new megamol::core::ModuleAutoDescription<megamol::trisoup::TriSoupRenderer>();
+        case 1: return new megamol::core::ModuleAutoDescription<megamol::trisoup::TriSoupDataSource>();
+        case 2: return new megamol::core::ModuleAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
     }
     return NULL;
 }
@@ -76,7 +81,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 TRISOUP_API int mmplgCallCount(void) {
-    return 0;
+    return 1;
 }
 
 
@@ -84,6 +89,9 @@ TRISOUP_API int mmplgCallCount(void) {
  * mmplgCallDescription
  */
 TRISOUP_API void* mmplgCallDescription(int idx) {
+    switch (idx) {
+        case 0 : return new megamol::trisoup::CallTriMeshDataDescription();
+    }
     return NULL;
 }
 

@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -224,7 +224,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -306,7 +306,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\TriSoup$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -348,6 +348,14 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\AbstractTriMeshDataSource.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CallTriMeshData.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\dllmain.cpp"
 				>
@@ -429,7 +437,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TriSoupDataSource.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TriSoupRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WavefrontObjDataSource.cpp"
 				>
 			</File>
 		</Filter>
@@ -438,6 +454,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\AbstractTriMeshDataSource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CallTriMeshData.h"
+				>
+			</File>
 			<File
 				RelativePath=".\stdafx.h"
 				>
@@ -451,7 +475,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TriSoupDataSource.h"
+				>
+			</File>
+			<File
 				RelativePath=".\TriSoupRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\WavefrontObjDataSource.h"
 				>
 			</File>
 		</Filter>
