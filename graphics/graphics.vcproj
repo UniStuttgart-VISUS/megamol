@@ -332,6 +332,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\BitmapCodecCollection.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\BitmapImage.cpp"
 				>
 			</File>
@@ -463,6 +467,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\AbstractVISLogo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\BitmapCodecCollection.h"
 				>
 			</File>
 			<File

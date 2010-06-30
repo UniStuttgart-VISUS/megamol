@@ -28,6 +28,10 @@ namespace graphics {
 
     /**
      * Abstract base class for all bitmap codecs implementations
+     *
+     * Add your new codec (derived class) to the list of built-in default
+     * codecs in 'BitmapCodecCollection::BuildDefaultCollection'
+     *
      */
     class AbstractBitmapCodec {
     public:
