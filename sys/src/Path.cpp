@@ -568,7 +568,7 @@ vislib::StringA vislib::sys::Path::GetDirectoryName(const char *path) {
  */
 vislib::StringW vislib::sys::Path::GetDirectoryName(const wchar_t *path) {
     StringW retval(path);
-    StringW::Size end = retval.FindLast(SEPARATOR_A);
+    StringW::Size end = retval.FindLast(SEPARATOR_W);
 
     if (end == StringW::INVALID_POS) {
         retval.Clear();
