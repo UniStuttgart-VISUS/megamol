@@ -704,17 +704,27 @@ void TestBitmapCodecSimple(void) {
  * TestAsciiFile
  */
 void TestAsciiFile(void) {
+#define KLASSIK_TEST 1
+#ifdef KLASSIK_TEST
     const char *filename = "D:\\data\\random.imd";
+#else
+    const char *filename = "C:\\VIS\\data\\demo.siff";
+#endif
     vislib::sys::ASCIIFileBuffer afb;
     vislib::sys::PerformanceCounter pc(true);
 
     pc.SetMark();
     AssertTrue("Loading text file", afb.LoadFile(filename));
     UINT64 e = pc.Difference();
+#ifdef KLASSIK_TEST
     AssertEqual<SIZE_T>("All lines loaded", afb.Count(), 40000008UL);
+#else
+    AssertEqual<SIZE_T>("All lines loaded", afb.Count(), 17UL);
+#endif
     //printf("%d\n", afb.Count());
     printf("Loaded in %f seconds\n", pc.ToMillis(e) / 1000.0);
 
+#ifdef KLASSIK_TEST
     AssertEqual<SIZE_T>("Length of line 0 correct", vislib::CharTraitsA::SafeStringLength(afb[0]), 17);
     AssertEqual<SIZE_T>("Length of line 1 correct", vislib::CharTraitsA::SafeStringLength(afb[1]), 9);
     AssertEqual<SIZE_T>("Length of line 2 correct", vislib::CharTraitsA::SafeStringLength(afb[2]), 11);
@@ -725,7 +735,20 @@ void TestAsciiFile(void) {
     AssertEqual<SIZE_T>("Length of line 7 correct", vislib::CharTraitsA::SafeStringLength(afb[7]), 49);
     AssertEqual<SIZE_T>("Length of line 8 correct", vislib::CharTraitsA::SafeStringLength(afb[8]), 48);
     AssertEqual<SIZE_T>("Length of line 9 correct", vislib::CharTraitsA::SafeStringLength(afb[9]), 48);
+#else
+    AssertEqual<SIZE_T>("Length of line 0 correct", vislib::CharTraitsA::SafeStringLength(afb[0]), 9);
+    AssertEqual<SIZE_T>("Length of line 1 correct", vislib::CharTraitsA::SafeStringLength(afb[1]), 21);
+    AssertEqual<SIZE_T>("Length of line 2 correct", vislib::CharTraitsA::SafeStringLength(afb[2]), 17);
+    AssertEqual<SIZE_T>("Length of line 3 correct", vislib::CharTraitsA::SafeStringLength(afb[3]), 17);
+    AssertEqual<SIZE_T>("Length of line 4 correct", vislib::CharTraitsA::SafeStringLength(afb[4]), 17);
+    AssertEqual<SIZE_T>("Length of line 5 correct", vislib::CharTraitsA::SafeStringLength(afb[5]), 22);
+    AssertEqual<SIZE_T>("Length of line 6 correct", vislib::CharTraitsA::SafeStringLength(afb[6]), 22);
+    AssertEqual<SIZE_T>("Length of line 7 correct", vislib::CharTraitsA::SafeStringLength(afb[7]), 22);
+    AssertEqual<SIZE_T>("Length of line 8 correct", vislib::CharTraitsA::SafeStringLength(afb[8]), 19);
+    AssertEqual<SIZE_T>("Length of line 9 correct", vislib::CharTraitsA::SafeStringLength(afb[9]), 20);
+#endif
 
+#ifdef KLASSIK_TEST
     vislib::sys::MemmappedFile file;
     AssertTrue("Opening file again", file.Open(filename,
         vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY));
@@ -735,5 +758,25 @@ void TestAsciiFile(void) {
     }
     e = pc.Difference();
     printf("Manually loaded in %f seconds\n", pc.ToMillis(e) / 1000.0);
-
+#else
+    pc.SetMark();
+    AssertTrue("Loading text file again (word-wise)", afb.LoadFile(filename, vislib::sys::ASCIIFileBuffer::PARSING_WORDS));
+    e = pc.Difference();
+    printf("Loaded (word-wise) in %f seconds\n", pc.ToMillis(e) / 1000.0);
+    AssertEqual<SIZE_T>("Still all lines loaded", afb.Count(), 17UL);
+    AssertEqual<SIZE_T>("Line 0 has 2 words", afb[0].Count(), 2);
+    AssertEqual("Line 0 word 0 correct", afb[0][0], "SIFFa");
+    AssertEqual("Line 0 word 1 correct", afb[0][1], "1.0");
+    AssertEqual<SIZE_T>("Line 1 has 1 words", afb[1].Count(), 7);
+    AssertEqual("Line 1 word 0 correct", afb[1][0], "0");
+    AssertEqual<SIZE_T>("Line 2 has 6 words", afb[2].Count(), 7);
+    AssertEqual("Line 2 word 0 correct", afb[2][0], "1");
+    AssertEqual<SIZE_T>("Line 3 has 7 words", afb[3].Count(), 7);
+    AssertEqual<SIZE_T>("Line 4 has 7 words", afb[4].Count(), 7);
+    AssertEqual<SIZE_T>("Line 5 has 7 words", afb[5].Count(), 7);
+    AssertEqual<SIZE_T>("Line 6 has 7 words", afb[6].Count(), 7);
+    AssertEqual<SIZE_T>("Line 7 has 7 words", afb[7].Count(), 7);
+    AssertEqual<SIZE_T>("Line 8 has 7 words", afb[8].Count(), 7);
+    AssertEqual<SIZE_T>("Line 9 has 7 words", afb[9].Count(), 7);
+#endif
 }
