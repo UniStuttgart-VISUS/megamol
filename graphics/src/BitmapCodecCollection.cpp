@@ -28,6 +28,7 @@ vislib::graphics::BitmapCodecCollection::BuildDefaultCollection(void) {
     defCol.AddCodec(new BmpBitmapCodec());
     defCol.AddCodec(new PpmBitmapCodec());
 
+    defCol.codecs.Trim();
     return defCol;
 }
 
@@ -95,7 +96,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
                     if (admem == NULL) {
                         admem = new char[MAX_AD_SIZE];
                         file.SeekToBegin();
-                        adsize = file.Read(admem, MAX_AD_SIZE);
+                        adsize = static_cast<SIZE_T>(file.Read(admem, MAX_AD_SIZE));
                     }
                     int adr = this->codecs[i]->AutoDetect(admem, adsize);
                     if (adr == 0) break; // not loadable by this codec
@@ -111,10 +112,10 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
                     rv = this->codecs[i]->Load(filename);
                 } else if (this->codecs[i]->CanLoadFromMemory()) {
                     vislib::RawStorage rs;
-                    SIZE_T s = file.GetSize();
+                    SIZE_T s(static_cast<SIZE_T>(file.GetSize()));
                     rs.EnforceSize(s);
                     file.SeekToBegin();
-                    SIZE_T r = file.Read(rs, s);
+                    SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
                     rv = this->codecs[i]->Load(rs);
                 }
 
@@ -175,7 +176,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
                     if (admem == NULL) {
                         admem = new char[MAX_AD_SIZE];
                         file.SeekToBegin();
-                        adsize = file.Read(admem, MAX_AD_SIZE);
+                        adsize = static_cast<SIZE_T>(file.Read(admem, MAX_AD_SIZE));
                     }
                     int adr = this->codecs[i]->AutoDetect(admem, adsize);
                     if (adr == 0) break; // not loadable by this codec
@@ -191,10 +192,10 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
                     rv = this->codecs[i]->Load(filename);
                 } else if (this->codecs[i]->CanLoadFromMemory()) {
                     vislib::RawStorage rs;
-                    SIZE_T s = file.GetSize();
+                    SIZE_T s(static_cast<SIZE_T>(file.GetSize()));
                     rs.EnforceSize(s);
                     file.SeekToBegin();
-                    SIZE_T r = file.Read(rs, s);
+                    SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
                     rv = this->codecs[i]->Load(rs);
                 }
 
@@ -251,7 +252,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
         if (admem == NULL) {
             admem = new char[MAX_AD_SIZE];
             file.Seek(filepos);
-            adsize = file.Read(admem, MAX_AD_SIZE);
+            adsize = static_cast<SIZE_T>(file.Read(admem, MAX_AD_SIZE));
         }
         int adr = this->codecs[i]->AutoDetect(admem, adsize);
         if (adr == 0) continue; // not loadable by this codec
@@ -264,10 +265,10 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
             rv = this->codecs[i]->Load(file);
         } else if (this->codecs[i]->CanLoadFromMemory()) {
             vislib::RawStorage rs;
-            SIZE_T s = file.GetSize() - filepos;
+            SIZE_T s(static_cast<SIZE_T>(file.GetSize() - filepos));
             rs.EnforceSize(s);
             file.Seek(filepos);
-            SIZE_T r = file.Read(rs, s);
+            SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
             rv = this->codecs[i]->Load(rs);
         }
 
@@ -293,10 +294,10 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
             rv = this->codecs[i]->Load(file);
         } else if (this->codecs[i]->CanLoadFromMemory()) {
             vislib::RawStorage rs;
-            SIZE_T s = file.GetSize() - filepos;
+            SIZE_T s(static_cast<SIZE_T>(file.GetSize() - filepos));
             rs.EnforceSize(s);
             file.Seek(filepos);
-            SIZE_T r = file.Read(rs, s);
+            SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
             rv = this->codecs[i]->Load(rs);
         }
 
