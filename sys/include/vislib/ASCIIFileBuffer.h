@@ -52,6 +52,13 @@ namespace sys {
              */
             LineBuffer();
 
+            /**
+             * copy ctor
+             *
+             * @param src The object to clone from
+             */
+            LineBuffer(const LineBuffer& src);
+
             /** Dtor */
             ~LineBuffer(void);
 
@@ -172,13 +179,6 @@ namespace sys {
              * @param words The words to set
              */
             LineBuffer(vislib::Array<char *>& words);
-
-            /**
-             * copy ctor
-             *
-             * @param src The object to clone from
-             */
-            LineBuffer(const LineBuffer& src);
 
             /**
              * Assignment operator

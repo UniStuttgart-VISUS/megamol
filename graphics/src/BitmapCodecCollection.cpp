@@ -82,7 +82,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
 
     // 1.: test depending on the file name extension
     const SIZE_T MAX_AD_SIZE = 1024;
-    SIZE_T adsize;
+    SIZE_T adsize = 0;
     char *admem = NULL;
     for (SIZE_T i = 0; i < this->codecs.Count(); i++) {
         if (!this->codecs[i]->CanLoad()) continue;
@@ -116,7 +116,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
                     rs.EnforceSize(s);
                     file.SeekToBegin();
                     SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
-                    rv = this->codecs[i]->Load(rs);
+                    rv = this->codecs[i]->Load(rs, r);
                 }
 
                 this->codecs[i]->Image() = NULL;
@@ -162,7 +162,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
 
     // 1.: test depending on the file name extension
     const SIZE_T MAX_AD_SIZE = 1024;
-    SIZE_T adsize;
+    SIZE_T adsize = 0;
     char *admem = NULL;
     for (SIZE_T i = 0; i < this->codecs.Count(); i++) {
         if (!this->codecs[i]->CanLoad()) continue;
@@ -196,7 +196,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
                     rs.EnforceSize(s);
                     file.SeekToBegin();
                     SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
-                    rv = this->codecs[i]->Load(rs);
+                    rv = this->codecs[i]->Load(rs, r);
                 }
 
                 this->codecs[i]->Image() = NULL;
@@ -242,7 +242,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
 
     // 1: test auto-detecting codecs
     const SIZE_T MAX_AD_SIZE = 1024;
-    SIZE_T adsize;
+    SIZE_T adsize = 0;
     char *admem = NULL;
     for (SIZE_T i = 0; i < this->codecs.Count(); i++) {
         if (!this->codecs[i]->CanAutoDetect()) continue;
@@ -269,7 +269,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
             rs.EnforceSize(s);
             file.Seek(filepos);
             SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
-            rv = this->codecs[i]->Load(rs);
+            rv = this->codecs[i]->Load(rs, r);
         }
 
         this->codecs[i]->Image() = NULL;
@@ -298,7 +298,7 @@ bool vislib::graphics::BitmapCodecCollection::LoadBitmapImage(
             rs.EnforceSize(s);
             file.Seek(filepos);
             SIZE_T r(static_cast<SIZE_T>(file.Read(rs, s)));
-            rv = this->codecs[i]->Load(rs);
+            rv = this->codecs[i]->Load(rs, r);
         }
 
         this->codecs[i]->Image() = NULL;

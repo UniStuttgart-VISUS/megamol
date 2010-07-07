@@ -68,7 +68,7 @@ namespace graphics {
          *
          * @param codec The codec to be added.
          */
-        inline void AddCodec(SmartPtr<AbstractBitmapCodec>& codec) {
+        inline void AddCodec(const SmartPtr<AbstractBitmapCodec>& codec) {
             if (!this->codecs.Contains(codec)) {
                 this->codecs.Add(codec);
             }
@@ -246,6 +246,7 @@ namespace graphics {
          */
         inline BitmapCodecCollection& operator=(const BitmapCodecCollection& rhs) {
             this->codecs = rhs.codecs;
+            return *this;
         }
 
         /**

@@ -21,6 +21,16 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer() : cnt(0) {
 
 
 /*
+ * vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer
+ */
+vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(
+        const vislib::sys::ASCIIFileBuffer::LineBuffer& src) : cnt(0) {
+    this->ptr.line = NULL;
+    *this = src;
+}
+
+
+/*
  * vislib::sys::ASCIIFileBuffer::LineBuffer::~LineBuffer
  */
 vislib::sys::ASCIIFileBuffer::LineBuffer::~LineBuffer(void) {
@@ -77,16 +87,6 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(
         ::memcpy(this->ptr.words, words.PeekElements(),
             sizeof(char *) * this->cnt);
     }
-}
-
-
-/*
- * vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer
- */
-vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(
-        const vislib::sys::ASCIIFileBuffer::LineBuffer& src) : cnt(0) {
-    this->ptr.line = NULL;
-    *this = src;
 }
 
 
