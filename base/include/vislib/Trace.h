@@ -172,12 +172,16 @@ namespace vislib {
         static const char *DEFAULT_PREFIX;
 
         /** The only instance of this class. */
-        static Trace instance;
+        static Trace& instance;
+
+    public: // TODO: Not good! Think of better solution!
 
         /** 
          * Ctor.
          */
         Trace(void);
+
+    private: // TODO: Not good! Think of better solution!
 
         /**
          * Forbidden copy ctor.

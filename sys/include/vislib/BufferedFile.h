@@ -141,7 +141,7 @@ namespace sys {
     private:
 
         /** the default buffer size when creating new buffers */
-        static File::FileSize defaultBufferSize;
+        static File::FileSize& defaultBufferSize;
 
         /**
          * Forbidden copy-ctor.

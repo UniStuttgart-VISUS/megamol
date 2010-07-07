@@ -75,7 +75,7 @@ namespace sys {
         static const UINT LEVEL_WARN;
 
         /** The default log object. */
-        static Log DefaultLog;
+        static Log& DefaultLog;
 
         /**
          * Nested abstract base class of echo output targets.

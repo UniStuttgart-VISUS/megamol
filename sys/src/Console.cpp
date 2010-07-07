@@ -33,6 +33,7 @@
 #include "vislib/SystemException.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/Thread.h"
+#include "vislib/vislibsymbolimportexport.inl"
 
 
 /*
@@ -69,9 +70,19 @@ const vislib::sys::Console::ConsoleLogEchoTarget vislib::sys::Console::LogEchoOu
 
 
 /*
+ * __vl_console_useColors
+ */
+VISLIB_STATICSYMBOL bool __vl_console_useColors
+#ifndef VISLIB_SYMBOL_IMPORT
+    = vislib::sys::Console::ColorsAvailable()
+#endif /* !VISLIB_SYMBOL_IMPORT */
+    ;
+
+
+/*
  * vislib::sys::Console::usecolors
  */
-bool vislib::sys::Console::useColors = vislib::sys::Console::ColorsAvailable();
+bool& vislib::sys::Console::useColors(__vl_console_useColors);
 
 
 /* 

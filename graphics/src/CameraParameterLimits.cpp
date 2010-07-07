@@ -10,6 +10,18 @@
 #include "vislib/CameraParameterLimits.h"
 #include "vislib/Float16.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/vislibsymbolimportexport.inl"
+
+
+/*
+ * __vl_CameraParameterLimits_defaultlimits
+ */
+VISLIB_STATICSYMBOL vislib::SmartPtr<vislib::graphics::CameraParameterLimits>
+    __vl_CameraParameterLimits_defaultlimits
+#ifndef VISLIB_SYMBOL_IMPORT
+        (new vislib::graphics::CameraParameterLimits())
+#endif /* !VISLIB_SYMBOL_IMPORT */
+        ;
 
 
 /* Default values */
@@ -26,9 +38,7 @@
  */
 vislib::SmartPtr<vislib::graphics::CameraParameterLimits>& 
 vislib::graphics::CameraParameterLimits::DefaultLimits(void) {
-    static vislib::SmartPtr<vislib::graphics::CameraParameterLimits> obj(
-        new vislib::graphics::CameraParameterLimits());
-    return obj;
+    return __vl_CameraParameterLimits_defaultlimits;
 }
 
 

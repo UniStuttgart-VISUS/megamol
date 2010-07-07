@@ -25,6 +25,7 @@
 #include <share.h>
 #include <sys/stat.h>
 #endif /* _WIN32 */
+#include "vislib/vislibsymbolimportexport.inl"
 
 
 #define TRACE_LVL Trace::LEVEL_INFO
@@ -199,9 +200,15 @@ const UINT vislib::sys::Log::LEVEL_WARN = 100;
 
 
 /*
+ * __vl_log_defaultlog
+ */
+VISLIB_STATICSYMBOL vislib::sys::Log __vl_log_defaultlog;
+
+
+/*
  * vislib::sys::Log::DefaultLog
  */
-vislib::sys::Log vislib::sys::Log::DefaultLog;
+vislib::sys::Log& vislib::sys::Log::DefaultLog(__vl_log_defaultlog);
 
 
 /*

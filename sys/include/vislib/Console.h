@@ -263,7 +263,7 @@ namespace sys {
         Console(void);
 
         /** flag activating the color functions */
-        static bool useColors;
+        static bool& useColors;
 
         /** default foreground color */
         static ColorType defaultFgcolor;

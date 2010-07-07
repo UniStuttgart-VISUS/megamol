@@ -259,7 +259,7 @@ namespace vislib {
     private:
 
         /** The stack trace manager of this module */
-        static SmartPtr<StackTrace> manager;
+        static SmartPtr<StackTrace> &manager;
 
     };
 

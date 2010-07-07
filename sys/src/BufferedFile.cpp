@@ -13,6 +13,7 @@
 #include "vislib/memutils.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/vislibsymbolimportexport.inl"
 
 #ifdef _WIN32
 #include <WinError.h>
@@ -24,9 +25,20 @@
 /*
  * vislib::sys::BufferedFile::defBufferSize
  */
-vislib::sys::File::FileSize vislib::sys::BufferedFile::defaultBufferSize 
+VISLIB_STATICSYMBOL vislib::sys::File::FileSize
+__vl_bufferedfile_defaultBufferSize 
+#ifndef VISLIB_SYMBOL_IMPORT
 //    = vislib::sys::SystemInformation::PageSize();
-    = 64 * 1024;
+    = 64 * 1024
+#endif /* !VISLIB_SYMBOL_IMPORT */
+    ;
+
+
+/*
+ * vislib::sys::BufferedFile::defBufferSize
+ */
+vislib::sys::File::FileSize& vislib::sys::BufferedFile::defaultBufferSize(
+    __vl_bufferedfile_defaultBufferSize);
 
 
 /*

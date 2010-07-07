@@ -10,9 +10,21 @@
 #include "vislib/Exception.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/vislibsymbolimportexport.inl"
 
 #include "vislib/BmpBitmapCodec.h"
 #include "vislib/PpmBitmapCodec.h"
+
+
+/*
+ * __vl_bitmapcodeccollection_defcol
+ */
+VISLIB_STATICSYMBOL vislib::graphics::BitmapCodecCollection
+__vl_bitmapcodeccollection_defcol
+#ifndef VISLIB_SYMBOL_IMPORT
+    = vislib::graphics::BitmapCodecCollection::BuildDefaultCollection()
+#endif /* !VISLIB_SYMBOL_IMPORT */
+    ;
 
 
 /*
@@ -38,8 +50,7 @@ vislib::graphics::BitmapCodecCollection::BuildDefaultCollection(void) {
  */
 vislib::graphics::BitmapCodecCollection&
 vislib::graphics::BitmapCodecCollection::DefaultCollection(void) {
-    static BitmapCodecCollection defCol = BuildDefaultCollection();
-    return defCol;
+    return __vl_bitmapcodeccollection_defcol;
 }
 
 

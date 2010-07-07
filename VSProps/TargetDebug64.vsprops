@@ -8,11 +8,11 @@
 		Name="VCCLCompilerTool"
 		RuntimeLibrary="3"
 	/>
-    <Tool
+	<Tool
 		Name="VCResourceCompilerTool"
 		PreprocessorDefinitions="_DEBUG;_WIN32;_WIN64"
 	/>
-    <UserMacro
+	<UserMacro
 		Name="Bits"
 		Value="64"
 		PerformEnvironmentSet="true"
@@ -24,18 +24,17 @@
 	/>
 	<UserMacro
 		Name="BitsD"
-		Value="64d"
-		PerformEnvironmentSet="true"
+		Value="$(Bits)$(SymbolExport)$(DebugD)"
 	/>
 	<UserMacro
 		Name="ArchName"
 		Value="x64"
 	/>
-    <UserMacro
+	<UserMacro
 		Name="RuntimeMT"
 		Value=""
 	/>
-    <UserMacro
+	<UserMacro
 		Name="RuntimeLib"
 		Value="MD"
 	/>

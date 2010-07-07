@@ -24,8 +24,7 @@
 	/>
 	<UserMacro
 		Name="BitsD"
-		Value="64mt"
-		PerformEnvironmentSet="true"
+		Value="$(Bits)mt$(SymbolExport)$(DebugD)"
 	/>
 	<UserMacro
 		Name="ArchName"
