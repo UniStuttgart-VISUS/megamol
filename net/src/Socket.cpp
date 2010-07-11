@@ -263,6 +263,61 @@ vislib::net::IPEndPoint vislib::net::Socket::GetLocalEndPoint(void) const {
 
 
 /*
+ * vislib::net::Socket::GetMulticastInterface
+ */
+void vislib::net::Socket::GetMulticastInterface(IPAddress& outAddr) const {
+    struct in_addr retval;
+    SIZE_T size = sizeof(retval);
+    this->GetOption(IPPROTO_IP, IP_MULTICAST_IF, &retval, size);
+    ASSERT(size == sizeof(retval));
+    outAddr = retval;
+}
+
+
+/*
+ * vislib::net::Socket::GetMulticastLoop
+ */
+bool vislib::net::Socket::GetMulticastLoop(const ProtocolFamily pf) const {
+    switch (pf) {
+        case FAMILY_INET:
+            return this->getOption(IPPROTO_IP, IP_MULTICAST_LOOP);
+            break;
+
+        case FAMILY_INET6:
+            return this->getOption(IPPROTO_IPV6, IPV6_MULTICAST_LOOP);
+            break;
+
+        default:
+            throw IllegalParamException("pf", __FILE__, __LINE__);
+            break;
+    }
+}
+
+
+/*
+ * vislib::net::Socket::GetMulticastTimeToLive
+ */
+BYTE vislib::net::Socket::GetMulticastTimeToLive(
+        const ProtocolFamily pf) const {
+    BYTE retval = 0;
+    SIZE_T size = sizeof(retval);
+
+    switch (pf) {
+        case FAMILY_INET:
+            this->GetOption(IPPROTO_IP, IP_MULTICAST_TTL, &retval, size);
+            break;
+
+        default:
+            throw IllegalParamException("pf", __FILE__, __LINE__);
+            break;
+    }
+
+    ASSERT(size == sizeof(retval));
+    return retval;
+}
+
+
+/*
  * vislib::net::Socket::GetOption
  */
 void vislib::net::Socket::GetOption(const INT level, const INT optName, 
@@ -350,12 +405,60 @@ void vislib::net::Socket::IOControl(const DWORD ioControlCode, void *inBuffer,
 
 
 /*
+ * vislib::net::Socket::LeaveMulticastGroup
+ */
+void vislib::net::Socket::LeaveMulticastGroup(const IPAddress& group,
+                                              const IPAddress& adapter) {
+    struct ip_mreq req;
+    req.imr_multiaddr = *static_cast<const struct in_addr *>(group);
+    req.imr_interface = *static_cast<const struct in_addr *>(adapter);
+    this->SetOption(IPPROTO_IP, IP_DROP_MEMBERSHIP, &req, sizeof(req));
+}
+
+
+/*
+ * vislib::net::Socket::LeaveMulticastGroup
+ */
+void vislib::net::Socket::LeaveMulticastGroup(const IPAddress6& group,
+                                              const unsigned int adapter) {
+    struct ipv6_mreq req;
+    req.ipv6mr_multiaddr = *static_cast<const struct in6_addr *>(group);
+    req.ipv6mr_interface = adapter;
+    this->SetOption(IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &req, sizeof(req));
+}
+
+
+/*
  * vislib::net::Socket::Listen
  */
 void vislib::net::Socket::Listen(const INT backlog) {
     if (::listen(this->handle, backlog) == SOCKET_ERROR) {
         throw SocketException(__FILE__, __LINE__);
     }
+}
+
+
+/*
+ * vislib::net::Socket::JoinMulticastGroup
+ */
+void vislib::net::Socket::JoinMulticastGroup(const IPAddress& group,
+                                             const IPAddress& adapter) {
+    struct ip_mreq req;
+    req.imr_multiaddr = *static_cast<const struct in_addr *>(group);
+    req.imr_interface = *static_cast<const struct in_addr *>(adapter);
+    this->SetOption(IPPROTO_IP, IP_ADD_MEMBERSHIP, &req, sizeof(req));
+}
+
+
+/*
+ * vislib::net::Socket::JoinMulticastGroup
+ */
+void vislib::net::Socket::JoinMulticastGroup(const IPAddress6& group,
+                                             const unsigned int adapter) {
+    struct ipv6_mreq req;
+    req.ipv6mr_multiaddr = *static_cast<const struct in6_addr *>(group);
+    req.ipv6mr_interface = adapter;
+    this->SetOption(IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &req, sizeof(req));
 }
 
 
@@ -573,6 +676,44 @@ SIZE_T vislib::net::Socket::Send(const IPEndPoint& toAddr, const void *data,
 #else /* _WIN32 */
         throw SocketException(ETIME, __FILE__, __LINE__);
 #endif /* _WIN32 */
+    }
+}
+
+
+/*
+ * vislib::net::Socket::SetMulticastLoop
+ */
+void vislib::net::Socket::SetMulticastLoop(const ProtocolFamily pf, 
+                                           const bool enable) {
+    switch (pf) {
+        case FAMILY_INET:
+            this->setOption(IPPROTO_IP, IP_MULTICAST_LOOP, enable);
+            break;
+
+        case FAMILY_INET6:
+            this->setOption(IPPROTO_IPV6, IPV6_MULTICAST_LOOP, enable);
+            break;
+
+        default:
+            throw IllegalParamException("pf", __FILE__, __LINE__);
+            break;
+    }
+}
+
+
+/*
+ * vislib::net::Socket::SetMulticastTimeToLive
+ */
+void vislib::net::Socket::SetMulticastTimeToLive(const ProtocolFamily pf, 
+                                                 const BYTE ttl) {
+    switch (pf) {
+        case FAMILY_INET:
+            this->SetOption(IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl));
+            break;
+
+        default:
+            throw IllegalParamException("pf", __FILE__, __LINE__);
+            break;
     }
 }
 

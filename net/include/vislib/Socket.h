@@ -395,6 +395,41 @@ namespace net {
         IPEndPoint GetLocalEndPoint(void) const;
 
         /**
+         * Gets the adapter that multicast packets shall be received from.
+         *
+         * @param outAddr Receives the IPAddress identifying the adapter.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        void GetMulticastInterface(IPAddress& outAddr) const;
+
+        /**
+         * Answer whether the socket receives multicast packets sent by this
+         * node and directed to a multicast group the node is member of.
+         *
+         * @param pf FAMILY_INET for retrieving the value for IPv4, 
+         *           FAMILIY_INET6 for IPv6.
+         *
+         * @return true if the socket receives local multicast packets, 
+         *         false otherwise.
+         *
+         * @throws IllegalParamException If 'pf' has an unsupported value.
+         * @throws SocketException If the operation fails.
+         */
+        bool GetMulticastLoop(const ProtocolFamily pf) const;
+
+        /**
+         * Gets the lifetime of multicast packets.
+         *
+         * @param pf FAMILY_INET for retrieving the value for IPv4.
+         * @return The number of routers multicast packets may pass.
+         *
+         * @throws IllegalParamException If 'pf' has an unsupported value.
+         * @throws SocketException If the operation fails.
+         */
+        BYTE GetMulticastTimeToLive(const ProtocolFamily pf) const;
+
+        /**
          * Answer the deactivation state of the Nagle algorithm for send 
          * coalescing.
          *
@@ -581,14 +616,70 @@ namespace net {
         }
 
         /**
+         * Leave the IPv4 multicast group identified by the mutlicast address 
+         * 'group'.
+         *
+         * @param group   The address of the multicast group.
+         * @param adapter The local address of the interface on which the 
+         *                multicast group should be joined or dropped. If ANY 
+         *                is used, the default multicast interface is used.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        void LeaveMulticastGroup(const IPAddress& group, 
+            const IPAddress& adapter = IPAddress::ANY);
+
+        /**
+         * Leave the IPv6 multicast group identified by the mutlicast address 
+         * 'group'.
+         *
+         * @param group   The address of the multicast group.
+         * @param adapter The interface index of the local interface on which
+         *                the multicast group should be joined or dropped. If 
+         *                0 is used, the default multicast interface is used.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        void LeaveMulticastGroup(const IPAddress6& group, 
+            const unsigned int adapter = 0);
+
+        /**
          * Place the socket in a state in which it is listening for an incoming 
          * connection.
          *
          * @param backlog Maximum length of the queue of pending connections.
          *
-         * @throws SocketException If the operation fails
+         * @throws SocketException If the operation fails.
          */
         virtual void Listen(const INT backlog = SOMAXCONN);
+
+        /**
+         * Join the IPv4 multicast group identified by the mutlicast address 
+         * 'group'.
+         *
+         * @param group   The address of the multicast group.
+         * @param adapter The local address of the interface on which the 
+         *                multicast group should be joined or dropped. If ANY 
+         *                is used, the default multicast interface is used.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        void JoinMulticastGroup(const IPAddress& group, 
+            const IPAddress& adapter = IPAddress::ANY);
+
+        /**
+         * Join the IPv6 multicast group identified by the mutlicast address 
+         * 'group'.
+         *
+         * @param group   The address of the multicast group.
+         * @param adapter The interface index of the local interface on which
+         *                the multicast group should be joined or dropped. If 
+         *                0 is used, the default multicast interface is used.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        void JoinMulticastGroup(const IPAddress6& group, 
+            const unsigned int adapter = 0);
 
         /**
          * Receives 'cntBytes' from the socket and saves them to the memory 
@@ -1011,6 +1102,59 @@ namespace net {
             this->setOption(SOL_SOCKET, SO_EXCLUSIVEADDRUSE, enable);
 #endif /* _WIN32 */
         }
+
+        /**
+         * Sets the adapter that multicast packets shall be received from.
+         * Setting IPAddress::ANY will revert to the system default 
+         * configuration.
+         *
+         * @param addr The IPAddress identifying the adapter to receive 
+         *             multicast packets from.
+         *
+         * @throws SocketException If the operation fails.
+         */
+        inline void SetMulticastInterface(const IPAddress& addr) {
+            this->SetOption(IPPROTO_IP, 
+                IP_MULTICAST_IF,
+                static_cast<const struct in_addr *>(addr), 
+                sizeof(struct in_addr));
+        };
+
+        /**
+         * Enable or disable the receipt of multicast packets sent by this
+         * socket to a multicast group the socket is member of.
+         *
+         * In Winsock, the IP_MULTICAST_LOOP option applies only to the 
+         * receive path. 
+         * In the UNIX version, the IP_MULTICAST_LOOP option applies to the 
+         * send path.
+         *
+         * @param pf     The protocol (FAMILY_INET, FAMILY_INET6) to 
+         *               address.
+         * @param enable The new activation state of the option.
+         *
+         * @throws IllegalParamException If 'pf' is unsupported.
+         * @throws SocketException If the operation fails.
+         */
+        void SetMulticastLoop(const ProtocolFamily pf, const bool enable);
+
+        /**
+         * Sets the lifetime of multicast packets.
+         *
+         * Setting this value to one will restrict multicast packets to the
+         * local subnet. Using larger values will enable routing of such 
+         * packets.
+         *
+         * @param pf     The protocol (FAMILY_INET) to address.
+         * @param ttl The number of routers multicast packets may pass.
+         *
+         * @throws IllegalParamException If 'pf' is unsupported.
+         * @throws SocketException If the operation fails.
+         */
+        void SetMulticastTimeToLive(const ProtocolFamily pf, const BYTE ttl);
+
+//IP_ADD_MEMBERSHIP           yes                      no
+//IP_DROP_MEMBERSHIP          yes                      no
 
         /**
          * Specifies the total per-socket buffer space reserved for sends. 

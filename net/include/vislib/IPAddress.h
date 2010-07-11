@@ -41,11 +41,26 @@ namespace net {
     public:
 
         /** 
+         * The all-hosts group multicast address addressing all nodes in the 
+         * subnet.
+         */
+        static const IPAddress ALL_NODES_ON_LINK;
+
+        /** 
+         * The all-routers multicast group address addressing all routers in the
+         * subnet.
+         */
+        static const IPAddress ALL_ROUTERS_ON_LINK;
+
+        /** 
          * Constant special IP address that allows receiving from all available
          * adapters and sending from the default (lowest-numbered adapter)
          * interface.
          */
         static const IPAddress ANY;
+
+        /** Constant broadcast address (255.255.255.255). */
+        static const IPAddress BROADCAST;
 
         /** Constant loopback address (127.0.0.1). */
         static const IPAddress LOCALHOST;

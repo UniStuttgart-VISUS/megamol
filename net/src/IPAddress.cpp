@@ -21,6 +21,20 @@
 
 
 /*
+ * vislib::net::IPAddress::ALL_NODES_ON_LINK
+ */
+const vislib::net::IPAddress vislib::net::IPAddress::ALL_NODES_ON_LINK(
+    ::in4addr_allnodesonlink);
+
+
+/*
+ * vislib::net::IPAddress::ALL_ROUTERS_ON_LINK
+ */
+const vislib::net::IPAddress vislib::net::IPAddress::ALL_ROUTERS_ON_LINK(
+    ::in4addr_allroutersonlink);
+
+
+/*
  * vislib::net::IPAddress::ANY
  */
 const vislib::net::IPAddress vislib::net::IPAddress::ANY(
@@ -28,9 +42,17 @@ const vislib::net::IPAddress vislib::net::IPAddress::ANY(
 
 
 /*
+ * vislib::net::IPAddress::BROADCAST
+ */
+const  vislib::net::IPAddress vislib::net::IPAddress::BROADCAST(
+    static_cast<unsigned long>(INADDR_BROADCAST));
+
+
+/*
  * vislib::net::IPAddress::LOCALHOST
  */
-const vislib::net::IPAddress vislib::net::IPAddress::LOCALHOST("127.0.0.1");
+const vislib::net::IPAddress vislib::net::IPAddress::LOCALHOST(
+    static_cast<unsigned long>(INADDR_LOOPBACK));
 
 
 /*

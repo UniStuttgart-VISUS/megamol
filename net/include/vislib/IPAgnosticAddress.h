@@ -111,6 +111,30 @@ namespace net {
          */
         static IPAgnosticAddress CreateAny(const AddressFamily addressFamily);
 
+        /** 
+         * The all-hosts group multicast address addressing all nodes in the 
+         * subnet.
+         */
+        static const IPAddress& ALL_NODES_ON_LINK4;
+
+        /** 
+         * The all-hosts group multicast address addressing all nodes in the 
+         * subnet.
+         */
+        static const IPAddress6& ALL_NODES_ON_LINK6;
+
+        /** 
+         * The all-routers multicast group address addressing all routers in the
+         * subnet.
+         */
+        static const IPAddress& ALL_ROUTERS_ON_LINK4;
+
+        /** 
+         * The all-routers multicast group address addressing all routers in the
+         * subnet.
+         */
+        static const IPAddress6& ALL_ROUTERS_ON_LINK6;
+
         /**
          * Provides an IP address that indicates that a server must listen for 
          * client activity on all network interfaces.

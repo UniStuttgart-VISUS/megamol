@@ -15,15 +15,15 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-    /* Forward declarations. */
+/* Forward declarations. */
 namespace vislib {
     class Exception;
 
-namespace net {
-    class AbstractInboundCommChannel;
-    class AbstractSimpleMessage;
-    class SimpleMessageDispatcher;
-} /* end namespace net */
+    namespace net {
+        class AbstractInboundCommChannel;
+        class AbstractSimpleMessage;
+        class SimpleMessageDispatcher;
+    } /* end namespace net */
 } /* end namespace vislib */
 
 namespace vislib {
@@ -92,7 +92,6 @@ namespace net {
          * @param src The SimpleMessageDispatcher that exited.
          */
         virtual void OnDispatcherStarted(SimpleMessageDispatcher& src) throw();
-
 
         /**
          * This method is called every time a message is received.

@@ -72,6 +72,24 @@ namespace net {
         static IPAddress6 Create(const wchar_t *hostNameOrAddress);
 
         /** 
+         * The all-hosts group multicast address addressing all nodes in the 
+         * link local (subnet) scope.
+         */
+        static const IPAddress6 ALL_NODES_ON_LINK;
+
+        /** 
+         * The all-routers group multicast address addressing all nodes in the
+         * link local (subnet) scope.
+         */
+        static const IPAddress6 ALL_ROUTERS_ON_LINK;
+
+        /** 
+         * The all-hosts group multicast address addressing all nodes in the 
+         * node local (interface) scope.
+         */
+        static const IPAddress6 ALL_NODES_ON_NODE;
+
+        /** 
          * Constant special IP address that allows receiving from all available
          * adapters and sending from the default (lowest-numbered adapter)
          * interface.
@@ -86,6 +104,18 @@ namespace net {
 
         /** Constant loopback address. */
         static const IPAddress6 LOOPBACK;
+
+        /** 
+         * The all-hosts group multicast address addressing all nodes in the 
+         * site local scope (packets may be routed, but not by border routers).
+         */
+        static const IPAddress6 MULTICAST_ALL_SITE_LOCAL_HOSTS;
+
+        /** 
+         * The all-routers group multicast address addressing all nodes in the 
+         * site local scope (packets may be routed, but not by border routers).
+         */
+        static const IPAddress6 MULTICAST_ALL_SITE_LOCAL_ROUTERS;
 
         /** Alias for ANY. */
         static const IPAddress6& UNSPECIFIED;

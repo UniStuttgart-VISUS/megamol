@@ -61,6 +61,38 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::CreateAny(
 
 
 /*
+ * vislib::net::IPAgnosticAddress::ALL_NODES_ON_LINK4
+ */
+const vislib::net::IPAddress& 
+vislib::net::IPAgnosticAddress::ALL_NODES_ON_LINK4
+    = vislib::net::IPAddress::ALL_NODES_ON_LINK;
+
+
+/*
+ * vislib::net::IPAgnosticAddress::ALL_NODES_ON_LINK6
+ */
+const vislib::net::IPAddress6& 
+vislib::net::IPAgnosticAddress::ALL_NODES_ON_LINK6
+    = vislib::net::IPAddress6::ALL_NODES_ON_LINK;
+
+
+/*
+ * vislib::net::IPAgnosticAddress::ALL_ROUTERS_ON_LINK4
+ */
+const vislib::net::IPAddress& 
+vislib::net::IPAgnosticAddress::ALL_ROUTERS_ON_LINK4
+    = vislib::net::IPAddress::ALL_ROUTERS_ON_LINK;
+
+
+/*
+ * vislib::net::IPAgnosticAddress::ALL_ROUTERS_ON_LINK6
+ */
+const vislib::net::IPAddress6& 
+vislib::net::IPAgnosticAddress::ALL_ROUTERS_ON_LINK6
+    = vislib::net::IPAddress6::ALL_ROUTERS_ON_LINK;
+
+
+/*
  * vislib::net::IPAgnosticAddress::ANY4
  */
 const vislib::net::IPAddress& vislib::net::IPAgnosticAddress::ANY4
