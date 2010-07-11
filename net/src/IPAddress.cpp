@@ -23,15 +23,23 @@
 /*
  * vislib::net::IPAddress::ALL_NODES_ON_LINK
  */
-const vislib::net::IPAddress vislib::net::IPAddress::ALL_NODES_ON_LINK(
-    ::in4addr_allnodesonlink);
+const vislib::net::IPAddress vislib::net::IPAddress::ALL_NODES_ON_LINK
+#ifdef _WIN32
+    (::in4addr_allnodesonlink);
+#else /* _WIN32 */
+    = vislib::net::IPAddress::Create("224.0.0.1");
+#endif /* _WIN32 */
 
 
 /*
  * vislib::net::IPAddress::ALL_ROUTERS_ON_LINK
  */
-const vislib::net::IPAddress vislib::net::IPAddress::ALL_ROUTERS_ON_LINK(
-    ::in4addr_allroutersonlink);
+const vislib::net::IPAddress vislib::net::IPAddress::ALL_ROUTERS_ON_LINK
+#ifdef _WIN32
+    (::in4addr_allroutersonlink);
+#else /* _WIN32 */
+    = vislib::net::IPAddress::Create("224.0.0.2");
+#endif /* _WIN32 */
 
 
 /*
