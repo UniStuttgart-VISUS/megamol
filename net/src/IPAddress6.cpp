@@ -43,33 +43,33 @@ vislib::net::IPAddress6 vislib::net::IPAddress6::Create(
 /*
  * vislib::net::IPAddress6::ALL_NODES_ON_LINK
  */
-const vislib::net::IPAddress6 vislib::net::IPAddress6::ALL_NODES_ON_LINK(
+const vislib::net::IPAddress6 vislib::net::IPAddress6::ALL_NODES_ON_LINK
 #ifdef _WIN32
-    ::in6addr_allnodesonlink);
+    (::in6addr_allnodesonlink);
 #else /* _WIN32 */
-    "ff02::1");
+    = vislib::net::IPAddress6::Create("ff02::1");
 #endif /* _WIN32 */
 
 
 /*
  * vislib::net::IPAddress6::ALL_ROUTERS_ON_LINK
  */
-const vislib::net::IPAddress6 vislib::net::IPAddress6::ALL_ROUTERS_ON_LINK(
+const vislib::net::IPAddress6 vislib::net::IPAddress6::ALL_ROUTERS_ON_LINK
 #ifdef _WIN32
-    ::in6addr_allroutersonlink);
+    (::in6addr_allroutersonlink);
 #else /* _WIN32 */
-    "ff02::2");
+    = vislib::net::IPAddress6::Create("ff02::2");
 #endif /* _WIN32 */
 
 
 /*
  * vislib::net::IPAddress6::ALL_NODES_ON_NODE
  */
-const vislib::net::IPAddress6 vislib::net::IPAddress6::ALL_NODES_ON_NODE(
+const vislib::net::IPAddress6 vislib::net::IPAddress6::ALL_NODES_ON_NODE
 #ifdef _WIN32
-    ::in6addr_allnodesonnode);
+    (::in6addr_allnodesonnode);
 #else /* _WIN32 */
-    "ff01::1");
+    = vislib::net::IPAddress6::Create("ff01::1");
 #endif /* _WIN32 */
 
 
