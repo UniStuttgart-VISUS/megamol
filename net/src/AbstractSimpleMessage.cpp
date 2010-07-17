@@ -64,7 +64,8 @@ void vislib::net::AbstractSimpleMessage::SetBody(const void *body,
     SIZE_T bs = (bodySize == 0) ? this->header.GetBodySize() : bodySize;
     
     if (bodySize != 0) {
-        this->header.SetBodySize(bodySize);
+        this->header.SetBodySize(
+            static_cast<vislib::net::SimpleMessageSize>(bodySize));
         this->AssertBodySize();
     }
     b = this->GetBody();

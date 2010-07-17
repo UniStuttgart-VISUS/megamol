@@ -204,6 +204,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				AdditionalIncludeDirectories="&quot;.\DXUT\Core&quot;;&quot;.\DXUT\Optional&quot;;&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\d3d\include&quot;;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE"
 				RuntimeLibrary="2"
@@ -284,6 +285,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				AdditionalIncludeDirectories="&quot;.\DXUT\Core&quot;;&quot;.\DXUT\Optional&quot;;&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;;&quot;$(SolutionDir)\graphics\include&quot;;&quot;$(SolutionDir)\sys\include&quot;;&quot;$(SolutionDir)\d3d\include&quot;;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE"
 				RuntimeLibrary="2"

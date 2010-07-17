@@ -169,6 +169,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0500"
 				RuntimeLibrary="2"
@@ -229,6 +230,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0500"
@@ -540,6 +542,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0500"
 				RuntimeLibrary="2"
@@ -600,6 +603,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0500"
@@ -661,6 +665,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0500"
 				RuntimeLibrary="2"
@@ -721,6 +726,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\base\include&quot;;&quot;$(SolutionDir)\math\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0500"
