@@ -40,6 +40,7 @@ using namespace megamol::core;
 protein::ProteinRenderer::ProteinRenderer(void) : Renderer3DModule (), 
 	m_protDataCallerSlot ("getData", "Connects the protein rendering with protein data storage"),
     m_callFrameCalleeSlot("callFrame", "Connects the protein rendering with frame call from RMS renderer"),
+    solventRendererCallerSlot ( "renderSolvent", "Connects the protein rendering with a solvent renderer" ),
     m_renderingModeParam("renderingMode", "Rendering Mode"), 
     m_coloringModeParam("coloringMode", "Coloring Mode"), 
     m_drawBackboneParam("drawBackbone", "Draw Backbone only"),
@@ -54,6 +55,9 @@ protein::ProteinRenderer::ProteinRenderer(void) : Renderer3DModule (),
     protein::CallFrameDescription dfd;
 	this->m_callFrameCalleeSlot.SetCallback (dfd.ClassName(), "CallFrame", &ProteinRenderer::ProcessFrameRequest);
     this->MakeSlotAvailable(&this->m_callFrameCalleeSlot);
+
+    this->solventRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->MakeSlotAvailable( &this->solventRendererCallerSlot);
 
 	// --- set the coloring mode ---
 
@@ -232,7 +236,9 @@ bool protein::ProteinRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER | view::CallRender3D::CAP_LIGHTING);
+    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER
+        | view::CallRender3D::CAP_LIGHTING
+        | view::CallRender3D::CAP_ANIMATION );
 
     return true;
 }
@@ -254,13 +260,18 @@ bool protein::ProteinRenderer::GetExtents(Call& call) {
         if (!(*protein)()) return false;
     }
 
+    cr3d->AccessBoundingBoxes() = protein->AccessBoundingBoxes();
+
     float scale, xoff, yoff, zoff;
     vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
     xoff = -bbc.X();
     yoff = -bbc.Y();
     zoff = -bbc.Z();
-    scale = 2.0f / vislib::math::Max(vislib::math::Max(protein->BoundingBox().Width(),
-        protein->BoundingBox().Height()), protein->BoundingBox().Depth());
+    if( !vislib::math::IsEqual( protein->BoundingBox().LongestEdge(), 0.0f) ) { 
+        scale = 2.0f / protein->BoundingBox().LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(protein->BoundingBox());
@@ -273,6 +284,16 @@ bool protein::ProteinRenderer::GetExtents(Call& call) {
         (protein->BoundingBox().Front() + zoff) * scale);
     bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
+
+    // get the pointer to CallRender3D (solvent renderer)
+    view::CallRender3D *solrencr3d = this->solventRendererCallerSlot.CallAs<view::CallRender3D>();
+    vislib::math::Point<float, 3> solrenbbc;
+    if( solrencr3d ) {
+        (*solrencr3d)(1); // GetExtents
+        BoundingBoxes &solrenbb = solrencr3d->AccessBoundingBoxes();
+        //this->solrenScale =  solrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
+        //this->solrenTranslate = ( solrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
+    }
 
     return true;
 }
@@ -287,8 +308,28 @@ bool protein::ProteinRenderer::GetExtents(Call& call) {
  */
 bool protein::ProteinRenderer::Render(Call& call)
 {
+    // cast the call to Render3D
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if (cr3d == NULL) return false;
+
+    // get the pointer to CallRender3D (protein renderer)
+    view::CallRender3D *solventrencr3d = this->solventRendererCallerSlot.CallAs<view::CallRender3D>();
 	// get pointer to CallProteinData
 	CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+
+	// get camera information
+    this->cameraInfo = cr3d->GetCameraParameters();
+
+    // =============== Sovent Rendering ===============
+    if( solventrencr3d ) {
+        // setup and call protein renderer
+        glPushMatrix();
+        //glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
+        //glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
+        *solventrencr3d = *cr3d;
+        (*solventrencr3d)();
+        glPopMatrix();
+    }
 
     if( protein == NULL) 
         return false;
@@ -303,8 +344,8 @@ bool protein::ProteinRenderer::Render(Call& call)
         if( !this->m_renderRMSData )
             return false;
     } else {
-        if( !(*protein)() ) 
-            return false;
+        //if( !(*protein)() ) return false;
+        if (!(*protein)(CallProteinData::CallForGetData)) return false;
     }
 
     // check last atom count with current atom count
@@ -312,9 +353,6 @@ bool protein::ProteinRenderer::Render(Call& call)
         this->atomCount = protein->ProteinAtomCount();
         this->RecomputeAll();
     }
-
-	// get camera information
-	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>(&call)->GetCameraParameters();
 
     // parameter refresh
     if( this->m_renderingModeParam.IsDirty() ) {
@@ -521,6 +559,7 @@ void protein::ProteinRenderer::RenderLines( const CallProteinData *prot)
 		unsigned int i;
 		unsigned int currentChain, currentAminoAcid, currentConnection;
 		unsigned int first, second;
+        vislib::math::Vector<float, 3> firstPos, secondPos;
 		// lines can not be lighted --> turn light off
 		glDisable(GL_LIGHTING);
 		
@@ -568,10 +607,14 @@ void protein::ProteinRenderer::RenderLines( const CallProteinData *prot)
 					first += chain.AminoAcid()[currentAminoAcid].FirstAtomIndex();
 					second = chain.AminoAcid()[currentAminoAcid].Connectivity()[currentConnection].Second();
 					second += chain.AminoAcid()[currentAminoAcid].FirstAtomIndex();
+                    firstPos = vislib::math::Vector<float, 3>( &protAtomPos[first*3]);
+                    secondPos = vislib::math::Vector<float, 3>( &protAtomPos[second*3]);
+                    if( ( firstPos - secondPos).Length() < 3.5f ) {
 					glColor3ubv( this->GetProteinAtomColor( first));
-					glVertex3f( protAtomPos[first*3+0], protAtomPos[first*3+1], protAtomPos[first*3+2]);
+                        glVertex3fv( firstPos.PeekComponents());
 					glColor3ubv( this->GetProteinAtomColor( second));
-					glVertex3f( protAtomPos[second*3+0], protAtomPos[second*3+1], protAtomPos[second*3+2]);
+                        glVertex3fv( secondPos.PeekComponents());
+                    }
 				}
 				// try to make the connection between this amino acid and its predecessor
 				// --> only possible if the current amino acid is not the first in this chain
@@ -581,10 +624,14 @@ void protein::ProteinRenderer::RenderLines( const CallProteinData *prot)
 					first += chain.AminoAcid()[currentAminoAcid-1].FirstAtomIndex();
 					second = chain.AminoAcid()[currentAminoAcid].NIndex();
 					second += chain.AminoAcid()[currentAminoAcid].FirstAtomIndex();
+                    firstPos = vislib::math::Vector<float, 3>( &protAtomPos[first*3]);
+                    secondPos = vislib::math::Vector<float, 3>( &protAtomPos[second*3]);
+                    if( ( firstPos - secondPos).Length() < 3.5f ) {
 					glColor3ubv( this->GetProteinAtomColor( first));
-					glVertex3f( protAtomPos[first*3+0], protAtomPos[first*3+1], protAtomPos[first*3+2]);
+                        glVertex3fv( firstPos.PeekComponents());
 					glColor3ubv( this->GetProteinAtomColor( second));
-					glVertex3f( protAtomPos[second*3+0], protAtomPos[second*3+1], protAtomPos[second*3+2]);
+                        glVertex3fv( secondPos.PeekComponents());
+                    }
 				}
 			}
 		}
@@ -786,10 +833,10 @@ void protein::ProteinRenderer::RenderStickRaycasting(
 	// -- draw  --
 	// -----------
 	float viewportStuff[4] = {
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()};
+		cameraInfo->TileRect().Left(),
+		cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(),
+		cameraInfo->TileRect().Height()};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
 	viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -803,9 +850,9 @@ void protein::ProteinRenderer::RenderStickRaycasting(
     glEnableClientState(GL_COLOR_ARRAY);
 	// set shader variables
 	glUniform4fvARB(this->m_sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	// set vertex and color pointers and draw them
 	glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
 	glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
@@ -817,9 +864,9 @@ void protein::ProteinRenderer::RenderStickRaycasting(
 	this->m_cylinderShader.Enable();
 	// set shader variables
 	glUniform4fvARB(this->m_cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	// get the attribute locations
 	m_attribLocInParams = glGetAttribLocationARB( this->m_cylinderShader, "inParams");
 	m_attribLocQuatC = glGetAttribLocationARB( this->m_cylinderShader, "quatC");
@@ -1030,10 +1077,10 @@ void protein::ProteinRenderer::RenderBallAndStick(
 	// -- draw  --
 	// -----------
 	float viewportStuff[4] = {
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()};
+		cameraInfo->TileRect().Left(),
+		cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(),
+		cameraInfo->TileRect().Height()};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
 	viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1047,9 +1094,9 @@ void protein::ProteinRenderer::RenderBallAndStick(
     glEnableClientState(GL_COLOR_ARRAY);
 	// set shader variables
 	glUniform4fvARB(this->m_sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	// set vertex and color pointers and draw them
 	glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
 	glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
@@ -1062,9 +1109,9 @@ void protein::ProteinRenderer::RenderBallAndStick(
 	this->m_cylinderShader.Enable();
 	// set shader variables
 	glUniform4fvARB(this->m_cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->m_cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	// get the attribute locations
 	m_attribLocInParams = glGetAttribLocationARB( this->m_cylinderShader, "inParams");
 	m_attribLocQuatC = glGetAttribLocationARB( this->m_cylinderShader, "quatC");
@@ -1135,10 +1182,10 @@ void protein::ProteinRenderer::RenderSpacefilling(
 	// -- draw  --
 	// -----------
 	float viewportStuff[4] = {
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()};
+		cameraInfo->TileRect().Left(),
+		cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(),
+		cameraInfo->TileRect().Height()};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
 	viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1152,9 +1199,9 @@ void protein::ProteinRenderer::RenderSpacefilling(
     glEnableClientState(GL_COLOR_ARRAY);
 	// set shader variables
 	glUniform4fvARB(this->m_sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	// set vertex and color pointers and draw them
 	glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
 	glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
@@ -1207,10 +1254,10 @@ void protein::ProteinRenderer::RenderSolventAccessibleSurface(
 	// -- draw  --
 	// -----------
 	float viewportStuff[4] = {
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()};
+		cameraInfo->TileRect().Left(),
+		cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(),
+		cameraInfo->TileRect().Height()};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
 	viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1224,9 +1271,9 @@ void protein::ProteinRenderer::RenderSolventAccessibleSurface(
     glEnableClientState(GL_COLOR_ARRAY);
 	// set shader variables
 	glUniform4fvARB(this->m_sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	// set vertex and color pointers and draw them
 	glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
 	glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
@@ -1414,10 +1461,13 @@ void protein::ProteinRenderer::MakeColorTable( const CallProteinData *prot, bool
 		} // ... END coloring mode STRUCTURE
 		else if( this->m_currentColoringMode == VALUE )
 		{
-			vislib::math::Vector<int, 3> colMax( 255,   0,   0);
-			vislib::math::Vector<int, 3> colMid( 255, 255, 255);
-			vislib::math::Vector<int, 3> colMin(   0,   0, 255);
-			vislib::math::Vector<int, 3> col;
+			//vislib::math::Vector<int, 3> colMax( 255,   0,   0);
+			//vislib::math::Vector<int, 3> colMid( 255, 255, 255);
+			//vislib::math::Vector<int, 3> colMin(   0,   0, 255);
+			vislib::math::Vector<float, 3> colMax( 250,  94,  82);
+			vislib::math::Vector<float, 3> colMid( 250, 250, 250);
+			vislib::math::Vector<float, 3> colMin(  37, 136, 195);
+			vislib::math::Vector<float, 3> col;
 			
 			float min( prot->MinimumTemperatureFactor() );
 			float max( prot->MaximumTemperatureFactor() );

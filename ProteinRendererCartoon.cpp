@@ -38,6 +38,7 @@ using namespace megamol::core;
 protein::ProteinRendererCartoon::ProteinRendererCartoon (void) : Renderer3DModule (), 
 	m_protDataCallerSlot ("getdata", "Connects the protein rendering with protein data storage"),
     m_callFrameCalleeSlot("callFrame", "Connects the protein rendering with frame call from RMS renderer"),
+    solventRendererCallerSlot ( "renderSolvent", "Connects the protein rendering with a solvent renderer" ),
     m_renderingModeParam("renderingMode", "Rendering Mode"), 
     m_coloringModeParam("coloringMode", "Coloring Mode"), 
 		m_smoothCartoonColoringParam ( "smoothCartoonColoring", "Use smooth coloring with Cartoon representation" ),
@@ -49,6 +50,9 @@ protein::ProteinRendererCartoon::ProteinRendererCartoon (void) : Renderer3DModul
     protein::CallFrameDescription dfd;
 	this->m_callFrameCalleeSlot.SetCallback (dfd.ClassName(), "CallFrame", &ProteinRendererCartoon::ProcessFrameRequest);
     this->MakeSlotAvailable(&this->m_callFrameCalleeSlot);
+
+    this->solventRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->MakeSlotAvailable( &this->solventRendererCallerSlot);
 
 	// check if geom-shader is supported
 	if( this->m_cartoonShader.AreExtensionsAvailable())
@@ -536,6 +540,16 @@ bool protein::ProteinRendererCartoon::GetExtents(Call& call) {
     bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
 
+    // get the pointer to CallRender3D (solvent renderer)
+    view::CallRender3D *solrencr3d = this->solventRendererCallerSlot.CallAs<view::CallRender3D>();
+    vislib::math::Point<float, 3> solrenbbc;
+    if( solrencr3d ) {
+        (*solrencr3d)(1); // GetExtents
+        BoundingBoxes &solrenbb = solrencr3d->AccessBoundingBoxes();
+        //this->solrenScale =  solrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
+        //this->solrenTranslate = ( solrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
+    }
+
     return true;
 }
 
@@ -549,26 +563,40 @@ bool protein::ProteinRendererCartoon::GetExtents(Call& call) {
  */
 bool protein::ProteinRendererCartoon::Render(Call& call)
 {
+    // cast the call to Render3D
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if (cr3d == NULL) return false;
+    // get the pointer to CallRender3D (protein renderer)
+    view::CallRender3D *solventrencr3d = this->solventRendererCallerSlot.CallAs<view::CallRender3D>();
 	// get pointer to CallProteinData
-	protein::CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+	CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
 
+	// get camera information
+    this->cameraInfo = cr3d->GetCameraParameters();
+
+    // =============== Sovent Rendering ===============
+    if( solventrencr3d ) {
+        // setup and call protein renderer
+        glPushMatrix();
+        //glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
+        //glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
+        *solventrencr3d = *cr3d;
+        (*solventrencr3d)();
+        glPopMatrix();
+    }
     if (protein == NULL) 
         return false;
 
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if(this->m_callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED)
-    {
+    if(this->m_callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
         if(!this->m_renderRMSData)
             return false;
-    }
-    else
-    {
+    } else {
         if(!(*protein)()) 
             return false;
     }
 
-	if( this->m_currentFrameId != protein->GetCurrentFrameId() )
-	{
+	if( this->m_currentFrameId != protein->GetCurrentFrameId() ) {
 		this->m_currentFrameId = protein->GetCurrentFrameId();
 		this->RecomputeAll();
 	}
@@ -579,8 +607,6 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
         this->RecomputeAll();
     }
 
-	// get camera information
-	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>(&call)->GetCameraParameters();
 
     // parameter refresh
     if (this->m_renderingModeParam.IsDirty()) 
@@ -658,7 +684,7 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
     /////////////////////////////////////////////////////////////////
     // TEMP START
     /////////////////////////////////////////////////////////////////
-#if 0
+#if 1
     ColoringMode tmpCm = this->m_currentColoringMode;
     this->m_currentColoringMode = ELEMENT;
     this->MakeColorTable( protein, true);
@@ -668,10 +694,10 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
     float stickRadius = 0.3f;
 
 	float viewportStuff[4] = {
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()
+		cameraInfo->TileRect().Left(),
+		cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(),
+		cameraInfo->TileRect().Height()
 	};
 	if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
 	if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
@@ -682,9 +708,9 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
 	this->sphereShader.Enable();
 	// set shader variables
 	glUniform4fvARB( this->sphereShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB( this->sphereShader.ParameterLocation ( "camIn" ), 1, m_cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB( this->sphereShader.ParameterLocation ( "camRight" ), 1, m_cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB( this->sphereShader.ParameterLocation ( "camUp" ), 1, m_cameraInfo->Up().PeekComponents() );
+	glUniform3fvARB( this->sphereShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
+	glUniform3fvARB( this->sphereShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
+	glUniform3fvARB( this->sphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
     glBegin( GL_POINTS);
 	// loop over all chains
 	for ( cntChain = 0; cntChain < protein->ProteinChainCount(); ++cntChain ) {
@@ -721,9 +747,9 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
 	this->cylinderShader.Enable();
 	// set shader variables
 	glUniform4fvARB( this->cylinderShader.ParameterLocation( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB( this->cylinderShader.ParameterLocation( "camIn" ), 1, m_cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB( this->cylinderShader.ParameterLocation( "camRight" ), 1, m_cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB( this->cylinderShader.ParameterLocation( "camUp" ), 1, m_cameraInfo->Up().PeekComponents() );
+	glUniform3fvARB( this->cylinderShader.ParameterLocation( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
+	glUniform3fvARB( this->cylinderShader.ParameterLocation( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
+	glUniform3fvARB( this->cylinderShader.ParameterLocation( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
     
     glBegin( GL_POINTS);
 	// loop over all chains

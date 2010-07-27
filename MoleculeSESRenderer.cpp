@@ -1,5 +1,5 @@
 /*
- * ProteinRendererSES.cpp
+ * MoleculeSESRenderer.cpp
  *
  * Copyright (C) 2009 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
@@ -8,21 +8,25 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "ProteinRendererSES.h"
+#include "MoleculeSESRenderer.h"
 #include "vislib/assert.h"
 #include "CoreInstance.h"
 #include "param/EnumParam.h"
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
 #include "param/IntParam.h"
+#include "param/StringParam.h"
 #include "vislib/File.h"
-#include "vislib/String.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
 #include "glh/glh_genext.h"
 #include "glh/glh_extensions.h"
+#include "utility/ColourParser.h"
+#include "vislib/ASCIIFileBuffer.h"
+#include "vislib/stringconverter.h"
+#include "vislib/stringtokeniser.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <iostream>
@@ -35,26 +39,28 @@ using namespace megamol::core;
 using namespace megamol::protein;
 
 /*
- * ProteinRendererSES::ProteinRendererSES
+ * MoleculeSESRenderer::MoleculeSESRenderer
  */
-ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
-	m_protDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
-	m_postprocessingParam( "postProcessingMode", "Enable Postprocessing Mode: "),
-	m_rendermodeParam( "renderingMode", "Choose Render Mode: "),
-	m_coloringmodeParam( "coloringMode", "Choose Coloring Mode: "),
-	m_silhouettecolorParam( "silhouetteColor", "Silhouette Color: "),
-	m_sigmaParam( "SSAOsigma", "Sigma value for SSAO: " ),
-	m_lambdaParam( "SSAOlambda", "Lambda value for SSAO: "),
-	m_minvaluecolorParam( "minValueColor", "Color for minimum value: "),
-	m_maxvaluecolorParam( "maxValueColor", "Color for maximum value: "),
-	m_meanvaluecolorParam( "meanValueColor", "Color for mean value: "),
+MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModule (),
+	molDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
+	postprocessingParam( "postProcessingMode", "Enable Postprocessing Mode: "),
+	rendermodeParam( "renderingMode", "Choose Render Mode: "),
+	coloringmodeParam( "coloringMode", "Choose Coloring Mode: "),
+	silhouettecolorParam( "silhouetteColor", "Silhouette Color: "),
+	sigmaParam( "SSAOsigma", "Sigma value for SSAO: " ),
+	lambdaParam( "SSAOlambda", "Lambda value for SSAO: "),
+    minGradColorParam( "minGradColor", "The color for the minimum value for gradient coloring" ),
+    midGradColorParam( "midGradColor", "The color for the middle value for gradient coloring" ),
+    maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
     debugParam( "drawRS", "Draw the Reduced Surface: "),
     drawSESParam( "drawSES", "Draw the SES: "),
     drawSASParam( "drawSAS", "Draw the SAS: "),
-	m_fogstartParam( "fogStart", "Fog Start: ")
+	fogstartParam( "fogStart", "Fog Start: "),
+    molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
+    colorTableFileParam( "colorTableFilename", "The filename of the color table.")
 {	
-	this->m_protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
-	this->MakeSlotAvailable ( &this->m_protDataCallerSlot );
+	this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
+	this->MakeSlotAvailable ( &this->molDataCallerSlot );
 
 	// set epsilon value for float-comparison
 	this->epsilon = vislib::math::FLOAT_EPSILON;
@@ -73,7 +79,7 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
 	ppm->SetTypePair( AMBIENT_OCCLUSION, "Screen Space Ambient Occlusion");
 	ppm->SetTypePair( SILHOUETTE, "Silhouette");
 	ppm->SetTypePair( TRANSPARENCY, "Transparency");
-	this->m_postprocessingParam << ppm;
+	this->postprocessingParam << ppm;
 
 	// ----- choose current render mode -----
 	this->currentRendermode = GPU_RAYCASTING;
@@ -83,59 +89,54 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
 	//this->currentRendermode = GPU_SIMPLIFIED;
 	param::EnumParam *rm = new param::EnumParam ( int ( this->currentRendermode ) );
 	rm->SetTypePair( GPU_RAYCASTING, "GPU Ray Casting");
-	rm->SetTypePair( GPU_RAYCASTING_INTERIOR_CLIPPING, "GPU Ray Casting (clip interior)");
-	rm->SetTypePair( GPU_SIMPLIFIED, "GPU Ray Casting (simplified)");
-	this->m_rendermodeParam << rm;
+	this->rendermodeParam << rm;
 
 	// ----- set the default color for the silhouette -----
 	this->SetSilhouetteColor( 1.0f, 1.0f, 1.0f);
 	param::IntParam *sc = new param::IntParam( this->codedSilhouetteColor, 0, 255255255 );
-	this->m_silhouettecolorParam << sc;
+	this->silhouettecolorParam << sc;
 
 	// ----- set sigma for screen space ambient occlusion (SSAO) -----
 	this->sigma = 5.0f;
 	param::FloatParam *ssaos = new param::FloatParam( this->sigma );
-	this->m_sigmaParam << ssaos;
+	this->sigmaParam << ssaos;
 
 	// ----- set lambda for screen space ambient occlusion (SSAO) -----
 	this->lambda = 10.0f;
 	param::FloatParam *ssaol = new param::FloatParam( this->lambda );
-	this->m_lambdaParam << ssaol;
+	this->lambdaParam << ssaol;
 
 	// ----- set start value for fogging -----
 	this->fogStart = 0.5f;
 	param::FloatParam *fs = new param::FloatParam( this->fogStart, 0.0f );
-	this->m_fogstartParam << fs;
+	this->fogstartParam << fs;
 
 	// ----- choose current coloring mode -----
-	this->currentColoringMode = ELEMENT;
-	//this->currentColoringMode = AMINOACID;
-	//this->currentColoringMode = STRUCTURE;
-	//this->currentColoringMode = CHAIN_ID;
-	//this->currentColoringMode = VALUE;
-	param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
-	cm->SetTypePair( ELEMENT, "Element");
-	cm->SetTypePair( AMINOACID, "AminoAcid");
-	cm->SetTypePair( STRUCTURE, "SecondaryStructure");
-	cm->SetTypePair( CHAIN_ID, "ChainID");
-	cm->SetTypePair( VALUE, "Value");
-	cm->SetTypePair( RAINBOW, "Rainbow");
-	cm->SetTypePair( CHARGE, "Charge");
-	cm->SetTypePair( OCCUPANCY, "Occupancy");
-	this->m_coloringmodeParam << cm;
+    //this->currentColoringMode = ELEMENT;
+    this->currentColoringMode = RESIDUE;
+    param::EnumParam *cm = new param::EnumParam(int(this->currentColoringMode));
+    cm->SetTypePair( ELEMENT, "Element");
+    cm->SetTypePair( RESIDUE, "Residue");
+    cm->SetTypePair( STRUCTURE, "Structure");
+    cm->SetTypePair( BFACTOR, "BFactor");
+    cm->SetTypePair( CHARGE, "Charge");
+    cm->SetTypePair( OCCUPANCY, "Occupancy");
+    cm->SetTypePair( CHAIN, "Chain");
+    cm->SetTypePair( MOLECULE, "Molecule");
+    cm->SetTypePair( RAINBOW, "Rainbow");
+    this->coloringmodeParam << cm;
 
-	// ----- set the default color for minimum value -----
-	this->SetMinValueColor( 0.0f, 0.0f, 1.0f);
-	param::IntParam *minc = new param::IntParam( this->codedMinValueColor, 0, 255255255 );
-	this->m_minvaluecolorParam << minc;
-	// ----- set the default color for mean value -----
-	this->SetMeanValueColor( 1.0f, 1.0f, 1.0f);
-	param::IntParam *meanc = new param::IntParam( this->codedMeanValueColor, 0, 255255255 );
-	this->m_meanvaluecolorParam << meanc;
-	// ----- set the default color for minimum value -----
-	this->SetMaxValueColor( 1.0f, 0.0f, 0.0f);
-	param::IntParam *maxc = new param::IntParam( this->codedMaxValueColor, 0, 255255255 );
-	this->m_maxvaluecolorParam << maxc;
+    // the color for the minimum value (gradient coloring
+    this->minGradColorParam.SetParameter(new param::StringParam( "#146496"));
+    this->MakeSlotAvailable( &this->minGradColorParam);
+
+    // the color for the middle value (gradient coloring
+    this->midGradColorParam.SetParameter(new param::StringParam( "#f0f0f0"));
+    this->MakeSlotAvailable( &this->midGradColorParam);
+
+    // the color for the maximum value (gradient coloring
+    this->maxGradColorParam.SetParameter(new param::StringParam( "#ae3b32"));
+    this->MakeSlotAvailable( &this->maxGradColorParam);
 
 	// ----- draw RS param -----
     this->drawRS = false;
@@ -151,9 +152,18 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
     this->drawSAS = false;
     param::BoolParam *saspm = new param::BoolParam( this->drawSAS );
     this->drawSASParam << saspm;
+    
+	// ----- molecular indices list param -----
+    this->molIdxList.Add( "0");
+    this->molIdxListParam.SetParameter(new param::StringParam( "0"));
+    this->MakeSlotAvailable( &this->molIdxListParam);
 
-	// fill amino acid color table
-	this->FillAminoAcidColorTable();
+    // fill color table with default values and set the filename param
+    vislib::StringA filename( "colors.txt");
+    this->ReadColorTableFromFile( filename);
+    this->colorTableFileParam.SetParameter(new param::StringParam( A2T( filename)));
+    this->MakeSlotAvailable( &this->colorTableFileParam);
+
 	// fill rainbow color table
 	this->MakeRainbowColorTable( 100);
 
@@ -178,77 +188,67 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
 	this->preComputationDone = false;
 	
 	// export parameters
-	this->MakeSlotAvailable( &this->m_rendermodeParam );
-	this->MakeSlotAvailable( &this->m_postprocessingParam );
-	this->MakeSlotAvailable( &this->m_coloringmodeParam );
-	this->MakeSlotAvailable( &this->m_silhouettecolorParam );
-	this->MakeSlotAvailable( &this->m_sigmaParam );
-	this->MakeSlotAvailable( &this->m_lambdaParam );
-	this->MakeSlotAvailable( &this->m_minvaluecolorParam );
-	this->MakeSlotAvailable( &this->m_meanvaluecolorParam );
-	this->MakeSlotAvailable( &this->m_maxvaluecolorParam );
-	this->MakeSlotAvailable( &this->m_fogstartParam );
+	this->MakeSlotAvailable( &this->rendermodeParam );
+	this->MakeSlotAvailable( &this->postprocessingParam );
+	this->MakeSlotAvailable( &this->coloringmodeParam );
+	this->MakeSlotAvailable( &this->silhouettecolorParam );
+	this->MakeSlotAvailable( &this->sigmaParam );
+	this->MakeSlotAvailable( &this->lambdaParam );
+	this->MakeSlotAvailable( &this->fogstartParam );
 	this->MakeSlotAvailable( &this->debugParam );
     this->MakeSlotAvailable( &this->drawSESParam );
     this->MakeSlotAvailable( &this->drawSASParam );
 	
-	this->m_renderRMSData = false;
-	this->m_frameLabel = NULL;
 }
 
 
 /*
- * ProteinRendererSES::~ProteinRendererSES
+ * MoleculeSESRenderer::~MoleculeSESRenderer
  */
-ProteinRendererSES::~ProteinRendererSES(void)
-{
-	if( colorFBO )
-	{
-		glDeleteFramebuffersEXT( 1, &colorFBO);
-		glDeleteFramebuffersEXT( 1, &blendFBO);
-		glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
-		glDeleteFramebuffersEXT( 1, &verticalFilterFBO);
-      glDeleteTextures( 1, &texture0);
-      glDeleteTextures( 1, &depthTex0);
-      glDeleteTextures( 1, &texture1);
-      glDeleteTextures( 1, &depthTex1);
-		glDeleteTextures( 1, &hFilter);
-		glDeleteTextures( 1, &vFilter);
-	}
-	// delete singularity texture
-	for( unsigned int i = 0; i < singularityTexture.size(); ++i )
-		glDeleteTextures( 1, &singularityTexture[i]);
-	// release
-	this->cylinderShader.Release();
-	this->sphereShader.Release();
-	this->sphereClipInteriorShader.Release();
-	this->sphericalTriangleShader.Release();
-	this->torusShader.Release();
-	this->lightShader.Release();
-	this->hfilterShader.Release();
-	this->vfilterShader.Release();
-	this->silhouetteShader.Release();
-	this->transparencyShader.Release();
-	
-	delete this->m_frameLabel;
-	this->Release();
+MoleculeSESRenderer::~MoleculeSESRenderer(void) {
+    if( colorFBO ) {
+        glDeleteFramebuffersEXT( 1, &colorFBO);
+        glDeleteFramebuffersEXT( 1, &blendFBO);
+        glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
+        glDeleteFramebuffersEXT( 1, &verticalFilterFBO);
+        glDeleteTextures( 1, &texture0);
+        glDeleteTextures( 1, &depthTex0);
+        glDeleteTextures( 1, &texture1);
+        glDeleteTextures( 1, &depthTex1);
+        glDeleteTextures( 1, &hFilter);
+        glDeleteTextures( 1, &vFilter);
+    }
+    // delete singularity texture
+    for( unsigned int i = 0; i < singularityTexture.size(); ++i )
+        glDeleteTextures( 1, &singularityTexture[i]);
+    // release
+    this->cylinderShader.Release();
+    this->sphereShader.Release();
+    this->sphereClipInteriorShader.Release();
+    this->sphericalTriangleShader.Release();
+    this->torusShader.Release();
+    this->lightShader.Release();
+    this->hfilterShader.Release();
+    this->vfilterShader.Release();
+    this->silhouetteShader.Release();
+    this->transparencyShader.Release();
+
+    this->Release();
 }
 
 
 /*
- * protein::ProteinRendererSES::release
+ * protein::MoleculeSESRenderer::release
  */
-void protein::ProteinRendererSES::release( void )
-{
+void protein::MoleculeSESRenderer::release( void ) {
 	
 }
 
 
 /*
- * ProteinRendererSES::create
+ * MoleculeSESRenderer::create
  */
-bool ProteinRendererSES::create( void )
-{
+bool MoleculeSESRenderer::create( void ) {
 	if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float") )
 		return false;
 	
@@ -535,26 +535,49 @@ bool ProteinRendererSES::create( void )
 
 
 /*
- * ProteinRendererSES::GetCapabilities
+ * MoleculeSESRenderer::GetCapabilities
  */
-bool ProteinRendererSES::GetCapabilities(Call& call) {
+bool MoleculeSESRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER | view::CallRender3D::CAP_LIGHTING);
+    cr3d->SetCapabilities(
+        view::CallRender3D::CAP_RENDER |
+        view::CallRender3D::CAP_LIGHTING | 
+        view::CallRender3D::CAP_ANIMATION );
 
     return true;
 }
 
 
 /*
- * ProteinRendererSES::GetExtents
+ * MoleculeSESRenderer::GetExtents
  */
-bool ProteinRendererSES::GetExtents(Call& call) {
+bool MoleculeSESRenderer::GetExtents(Call& call) {
+    
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if( cr3d == NULL ) return false;
+
+    MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+    if( mol == NULL ) return false;
+    if (!(*mol)(1)) return false;
+
+    float scale;
+    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
+
+    cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+    cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
+    cr3d->SetTimeFramesCount( mol->FrameCount());
+
+    /*
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    protein::CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+    protein::CallProteinData *protein = this->molDataCallerSlot.CallAs<protein::CallProteinData>();
     if (protein == NULL) return false;
     if (!(*protein)()) return false;
 
@@ -577,193 +600,118 @@ bool ProteinRendererSES::GetExtents(Call& call) {
         (protein->BoundingBox().Front() + zoff) * scale);
     bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
+    */
 
     return true;
 }
 
 
 /*
- * ProteinRendererSES::Render
+ * MoleculeSESRenderer::Render
  */
-bool ProteinRendererSES::Render( Call& call )
-{
-	fpsCounter.FrameBegin();
+bool MoleculeSESRenderer::Render( Call& call ) {
 	// temporary variables
 	unsigned int cntRS = 0;
-	bool recomputeColors = false;
-	bool render_debug = false;
 	
-	// get pointer to CallProteinData
-	protein::CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+    // cast the call to Render3D
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if( cr3d == NULL ) return false;
 
+    // get camera information
+    this->cameraInfo = cr3d->GetCameraParameters();
+
+    float callTime = cr3d->Time();
+
+	// get pointer to CallProteinData
+    MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
 	// if something went wrong --> return
-	if( !protein) return false;
+	if( !mol) return false;
 
 	// execute the call
-	if ( ! ( *protein )() )
-		return false;
-	
-	// get camera information
-	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>( &call )->GetCameraParameters();
-
-	// ==================== check parameters ====================
-	
-	if ( this->m_postprocessingParam.IsDirty() )
-	{
-		this->postprocessing = static_cast<PostprocessingMode>(  this->m_postprocessingParam.Param<param::EnumParam>()->Value() );
-		this->m_postprocessingParam.ResetDirty();
-	}
-	
-	if( this->m_rendermodeParam.IsDirty() )
-	{
-		this->currentRendermode = static_cast<RenderMode>( this->m_rendermodeParam.Param<param::EnumParam>()->Value() );
-		this->m_rendermodeParam.ResetDirty();
-		this->preComputationDone = false;
-	}
-	
-	if( this->m_coloringmodeParam.IsDirty() )
-	{
-		this->currentColoringMode = static_cast<ColoringMode>(  this->m_coloringmodeParam.Param<param::EnumParam>()->Value() );
-		this->MakeColorTable( protein);
-		this->preComputationDone = false;
-		this->m_coloringmodeParam.ResetDirty();
-	}
-	
-	if( this->m_silhouettecolorParam.IsDirty() )
-	{
-		this->SetSilhouetteColor( this->DecodeColor( this->m_silhouettecolorParam.Param<param::IntParam>()->Value() ) );
-		this->m_silhouettecolorParam.ResetDirty();
-	}
-	
-	if( this->m_sigmaParam.IsDirty() )
-	{
-		this->sigma = this->m_sigmaParam.Param<param::FloatParam>()->Value();
-		this->m_sigmaParam.ResetDirty();
-	}
-	
-	if( this->m_lambdaParam.IsDirty() )
-	{
-		this->lambda = this->m_lambdaParam.Param<param::FloatParam>()->Value();
-		this->m_lambdaParam.ResetDirty();
-	}
-	
-	if( this->m_minvaluecolorParam.IsDirty() )
-	{
-		this->SetMinValueColor( this->DecodeColor( this->m_minvaluecolorParam.Param<param::IntParam>()->Value() ) );
-		this->m_minvaluecolorParam.ResetDirty();
-		recomputeColors = true;
-	}
-	if( this->m_meanvaluecolorParam.IsDirty() )
-	{
-		this->SetMeanValueColor( this->DecodeColor( this->m_meanvaluecolorParam.Param<param::IntParam>()->Value() ) );
-		recomputeColors = true;
-	}
-	if( this->m_maxvaluecolorParam.IsDirty() )
-	{
-		this->SetMaxValueColor( this->DecodeColor( this->m_maxvaluecolorParam.Param<param::IntParam>()->Value() ) );
-		recomputeColors = true;
-	}
-	if( this->m_fogstartParam.IsDirty() )
-	{
-		this->fogStart = this->m_fogstartParam.Param<param::FloatParam>()->Value();
-		this->m_fogstartParam.ResetDirty();
-	}
-	if( this->debugParam.IsDirty() )
-	{
-		this->drawRS = this->debugParam.Param<param::BoolParam>()->Value();
-        this->debugParam.ResetDirty();
-	}
-    render_debug = this->drawRS;
-    if( this->drawSESParam.IsDirty() )
-	{
-        this->drawSES = this->drawSESParam.Param<param::BoolParam>()->Value();
-        this->drawSESParam.ResetDirty();
-	}
-    if( this->drawSASParam.IsDirty() )
-	{
-        this->drawSAS = this->drawSASParam.Param<param::BoolParam>()->Value();
-        this->drawSASParam.ResetDirty();
-        this->preComputationDone = false;
-	}
-
-	if( recomputeColors )
-	{
-		this->preComputationDone = false;
-	}
-	
-	// ==================== Precomputations ====================
-	
-	if( this->currentRendermode == GPU_SIMPLIFIED )
-	{
-		//////////////////////////////////////////////////////////////////
-		// Compute the simplified chains
-		//////////////////////////////////////////////////////////////////
-		for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
-		{
-			delete this->simpleRS[cntRS];
-		}
-		this->simpleRS.clear();
-		if( this->simpleRS.empty() )
-		{
-			this->simpleRS.push_back( new ReducedSurfaceSimplified( protein) );
-		}
-		// get minimum and maximum values for VALUE coloring mode
-		this->minValue = protein->MinimumTemperatureFactor();
-		this->maxValue = protein->MaximumTemperatureFactor();
-		// compute the color table
-		this->MakeColorTable( protein, true);
-		// compute the arrays for ray casting
-		this->ComputeRaycastingArraysSimple();
+    mol->SetFrameID(static_cast<int>( callTime));
+    if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 		
-	}
-	else
-	{
-		//////////////////////////////////////////////////////////////////////////////////////
-		// TODO: handle both cases for reduced surface creation
-		//////////////////////////////////////////////////////////////////////////////////////
-		if( this->reducedSurface.empty() )
-		{
-			time_t t = clock();
-			// create the reduced surface
-			this->reducedSurface.push_back( new ReducedSurface( protein) );
-			//unsigned int chainIds;
-			//for( chainIds = 0; chainIds < protein->ProteinChainCount(); ++chainIds )
-			//{
-			//	this->reducedSurface.push_back( new ReducedSurface( chainIds, protein) );
-			//}
+	// ==================== check parameters ====================
+    this->UpdateParameters( mol);
+
+	// ==================== Precomputations ====================
+
+    if( this->currentRendermode == GPU_RAYCASTING ) {
+        
+        /*
+        // init the reduced surfaces
+        if( this->reducedSurfaceAllFrames.empty() ) {
+            time_t t = clock();
+            // create the reduced surfaces
+            unsigned int chainIds;
+            this->reducedSurfaceAllFrames.resize( mol->FrameCount());
+            // compute RS for all frames
+            for( unsigned int cntFrames = 0; cntFrames < mol->FrameCount(); ++cntFrames ) {
+	            // execute the call
+                mol->SetFrameID(static_cast<int>( cntFrames));
+                if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+                // compute RS
+                for( chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds ) {
+                    this->reducedSurfaceAllFrames[cntFrames].push_back( 
+                        new ReducedSurface( atoi( this->molIdxList[chainIds]), mol, this->probeRadius) );
+		        }
+            }
+            int framecounter, molcounter;
+
+            for( framecounter = 0; framecounter < this->reducedSurfaceAllFrames.size(); ++framecounter ) {
+                // compute RS
+                for( unsigned int molcounter = 0; molcounter < this->reducedSurfaceAllFrames[framecounter].size(); ++molcounter ) {
+                    this->reducedSurfaceAllFrames[framecounter][molcounter]->ComputeReducedSurfaceMolecule();
+		        }
+            }
+			std::cout << "RS for all frames computed in: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+		}
+        unsigned int currentFrame = static_cast<unsigned int>( callTime);
+        this->reducedSurface.resize( this->reducedSurfaceAllFrames[cntRS].size());
+        for( cntRS = 0; cntRS < this->reducedSurfaceAllFrames[currentFrame].size(); ++cntRS ) {
+            this->reducedSurface[cntRS] = this->reducedSurfaceAllFrames[currentFrame][cntRS];
+        }
+        this->ComputeRaycastingArrays();
+        */
+
+        // ----------------------------------------------------------------------------
+
+        // init the reduced surfaces
+        if( this->reducedSurface.empty() ) {
+            time_t t = clock();
+            // create the reduced surface
+            unsigned int chainIds;
+            for( chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds ) {
+                this->reducedSurface.push_back( 
+                    new ReducedSurface( atoi( this->molIdxList[chainIds]), mol, this->probeRadius) );
+                this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
+			}
 			std::cout << "RS computed in: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
 		}
 		// update the data / the RS
-		for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
-		{
-			if( this->reducedSurface[cntRS]->UpdateData( 1.0f, 5.0f) )
-			{
+		for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS ) {
+			if( this->reducedSurface[cntRS]->UpdateData( 1.0f, 5.0f) ) {
 				this->ComputeRaycastingArrays( cntRS);
 			}
 		}
-		
 	}
 	
-	if( !this->preComputationDone )
-	{
-		// get minimum and maximum values for VALUE coloring mode
-		this->minValue = protein->MinimumTemperatureFactor();
-		this->maxValue = protein->MaximumTemperatureFactor();
+	if( !this->preComputationDone ) {
 		// compute the color table
-		this->MakeColorTable( protein, recomputeColors);
+		this->MakeColorTable( mol, true);
 		// compute the data needed for the current render mode
-		if( this->currentRendermode == GPU_RAYCASTING || this->currentRendermode == GPU_RAYCASTING_INTERIOR_CLIPPING )
+		if( this->currentRendermode == GPU_RAYCASTING )
 			this->ComputeRaycastingArrays();
 		// set the precomputation of the data as done
 		this->preComputationDone = true;
 	}
 	
 	if( this->postprocessing != NONE && (
-		static_cast<unsigned int>(m_cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-		static_cast<unsigned int>(m_cameraInfo->VirtualViewSize().GetHeight()) != this->height ) )
+		static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
+		static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetHeight()) != this->height ) )
 	{
-		this->width = static_cast<unsigned int>(m_cameraInfo->VirtualViewSize().GetWidth());
-		this->height = static_cast<unsigned int>(m_cameraInfo->VirtualViewSize().GetHeight());
+		this->width = static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetWidth());
+		this->height = static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetHeight());
 		this->CreateFBO();
 	}
 	
@@ -771,6 +719,7 @@ bool ProteinRendererSES::Render( Call& call )
 	
 	glPushMatrix();
 
+    /*
 	float scale, xoff, yoff, zoff;
 	vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
 
@@ -783,6 +732,17 @@ bool ProteinRendererSES::Render( Call& call )
 
 	glScalef ( scale, scale, scale );
 	glTranslatef ( xoff, yoff, zoff );
+    */
+
+    // compute scale factor and scale world
+    float scale;
+    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
+    glScalef( scale, scale, scale);
+
 	
 	// ==================== Start actual rendering ====================
 	
@@ -792,50 +752,36 @@ bool ProteinRendererSES::Render( Call& call )
 	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
 	
-	if( this->postprocessing == TRANSPARENCY )
-	{
+	if( this->postprocessing == TRANSPARENCY ) {
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->blendFBO);
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		if( render_debug )
-			this->RenderDebugStuff( protein);
+        if( this->drawRS )
+			this->RenderDebugStuff( mol);
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
-	}
-	else
-	{
-        if( render_debug ) {
-			this->RenderDebugStuff( protein);
+	} else {
+        if( this->drawRS ) {
+			this->RenderDebugStuff( mol);
             // DEMO
 	        glPopMatrix();
-	        fpsCounter.FrameEnd();
-	        //std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
 	        return true;
         }
 	}
 	
 	// start rendering to frame buffer object
-	if( this->postprocessing != NONE )
-	{
+	if( this->postprocessing != NONE ) {
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->colorFBO);
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 	
 	// render the SES
-	if( this->currentRendermode == GPU_RAYCASTING ||
-	    this->currentRendermode == GPU_RAYCASTING_INTERIOR_CLIPPING )
-	{
-		this->RenderSESGpuRaycasting( protein);
-	}
-	else if( this->currentRendermode == GPU_SIMPLIFIED )
-	{
-		// render the simplified SES via GPU ray casting
-		this->RenderSESGpuRaycastingSimple( protein);
+	if( this->currentRendermode == GPU_RAYCASTING ) {
+		this->RenderSESGpuRaycasting( mol);
 	}
 
 	//////////////////////////////////
 	// apply postprocessing effects //
 	//////////////////////////////////
-	if( this->postprocessing != NONE )
-	{
+	if( this->postprocessing != NONE ) {
 		// stop rendering to frame buffer object
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0);
 
@@ -849,18 +795,85 @@ bool ProteinRendererSES::Render( Call& call )
 	
 	glPopMatrix();
 	
-	fpsCounter.FrameEnd();
-	//std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
-
 	return true;
 }
 
 
 /*
+ * update parameters
+ */
+void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
+    // variables
+	bool recomputeColors = false;
+	// ==================== check parameters ====================
+	if ( this->postprocessingParam.IsDirty() ) {
+		this->postprocessing = static_cast<PostprocessingMode>(  this->postprocessingParam.Param<param::EnumParam>()->Value() );
+		this->postprocessingParam.ResetDirty();
+	}
+	if( this->rendermodeParam.IsDirty() ) {
+		this->currentRendermode = static_cast<RenderMode>( this->rendermodeParam.Param<param::EnumParam>()->Value() );
+		this->rendermodeParam.ResetDirty();
+		this->preComputationDone = false;
+	}
+	if( this->coloringmodeParam.IsDirty() ) {
+		this->currentColoringMode = static_cast<ColoringMode>(  this->coloringmodeParam.Param<param::EnumParam>()->Value() );
+		this->MakeColorTable( mol);
+		this->preComputationDone = false;
+		this->coloringmodeParam.ResetDirty();
+	}
+	if( this->silhouettecolorParam.IsDirty() ) {
+		this->SetSilhouetteColor( this->DecodeColor( this->silhouettecolorParam.Param<param::IntParam>()->Value() ) );
+		this->silhouettecolorParam.ResetDirty();
+	}
+	if( this->sigmaParam.IsDirty() ) {
+		this->sigma = this->sigmaParam.Param<param::FloatParam>()->Value();
+		this->sigmaParam.ResetDirty();
+	}
+	if( this->lambdaParam.IsDirty() ) {
+		this->lambda = this->lambdaParam.Param<param::FloatParam>()->Value();
+		this->lambdaParam.ResetDirty();
+    }
+	if( this->fogstartParam.IsDirty() ) {
+		this->fogStart = this->fogstartParam.Param<param::FloatParam>()->Value();
+		this->fogstartParam.ResetDirty();
+	}
+	if( this->debugParam.IsDirty() ) {
+		this->drawRS = this->debugParam.Param<param::BoolParam>()->Value();
+        this->debugParam.ResetDirty();
+	}
+    if( this->drawSESParam.IsDirty() ) {
+        this->drawSES = this->drawSESParam.Param<param::BoolParam>()->Value();
+        this->drawSESParam.ResetDirty();
+	}
+    if( this->drawSASParam.IsDirty() ) {
+        this->drawSAS = this->drawSASParam.Param<param::BoolParam>()->Value();
+        this->drawSASParam.ResetDirty();
+        this->preComputationDone = false;
+	}
+   
+    if( this->molIdxListParam.IsDirty() ) {
+        vislib::StringA tmpStr( this->molIdxListParam.Param<param::StringParam>()->Value());
+        this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split( tmpStr, ';', true);
+        this->molIdxListParam.ResetDirty();
+    }
+    // color table param
+    if( this->colorTableFileParam.IsDirty() ) {
+        this->ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::StringParam>()->Value());
+        this->colorTableFileParam.ResetDirty();
+        recomputeColors = true;
+    }
+
+	if( recomputeColors ) {
+		this->preComputationDone = false;
+	}
+
+}
+
+/*
  * postprocessing: use screen space ambient occlusion
  */
-void ProteinRendererSES::PostprocessingSSAO()
-{
+void MoleculeSESRenderer::PostprocessingSSAO() {
 	// START draw overlay
 	glBindTexture( GL_TEXTURE_2D, this->depthTex0);
 	// --> this seems to be unnecessary since no mipmap but the original resolution is used
@@ -938,8 +951,7 @@ void ProteinRendererSES::PostprocessingSSAO()
 /*
  * postprocessing: use silhouette shader
  */
-void ProteinRendererSES::PostprocessingSilhouette()
-{
+void MoleculeSESRenderer::PostprocessingSilhouette() {
 	// START draw overlay
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -994,8 +1006,7 @@ void ProteinRendererSES::PostprocessingSilhouette()
 /*
  * postprocessing: transparency (blend two images)
  */
-void ProteinRendererSES::PostprocessingTransparency( float transparency)
-{
+void MoleculeSESRenderer::PostprocessingTransparency( float transparency) {
 	// START draw overlay
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -1054,10 +1065,8 @@ void ProteinRendererSES::PostprocessingTransparency( float transparency)
 /*
  * Create the fbo and texture needed for offscreen rendering
  */
-void ProteinRendererSES::CreateFBO()
-{
-	if( colorFBO )
-	{
+void MoleculeSESRenderer::CreateFBO() {
+	if( colorFBO ) {
 		glDeleteFramebuffersEXT( 1, &colorFBO);
 		glDeleteFramebuffersEXT( 1, &blendFBO);
 		glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
@@ -1153,19 +1162,16 @@ void ProteinRendererSES::CreateFBO()
 /*
  * Render the molecular surface using GPU raycasting
  */
-void ProteinRendererSES::RenderSESGpuRaycasting(
-	const CallProteinData *protein)
-{
+void MoleculeSESRenderer::RenderSESGpuRaycasting(
+    const MolecularDataCall *mol) {
 	// TODO: attribute locations nicht jedes mal neu abfragen!
 
 	// set viewport
-	float viewportStuff[4] =
-	{
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()
-	};
+	float viewportStuff[4] = {
+		this->cameraInfo->TileRect().Left(),
+		this->cameraInfo->TileRect().Bottom(),
+		this->cameraInfo->TileRect().Width(),
+		this->cameraInfo->TileRect().Height() };
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
 	viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -1188,10 +1194,10 @@ void ProteinRendererSES::RenderSESGpuRaycasting(
 		    this->torusShader.Enable();
 		    // set shader variables
 		    glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
-		    glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, m_cameraInfo->Front().PeekComponents());
-		    glUniform3fvARB( this->torusShader.ParameterLocation( "camRight"), 1, m_cameraInfo->Right().PeekComponents());
-		    glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, m_cameraInfo->Up().PeekComponents());
-		    glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, m_cameraInfo->NearClip(), m_cameraInfo->FarClip());
+		    glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
+		    glUniform3fvARB( this->torusShader.ParameterLocation( "camRight"), 1, this->cameraInfo->Right().PeekComponents());
+		    glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, this->cameraInfo->Up().PeekComponents());
+		    glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
 		    glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
 		    glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
 		    // get attribute locations
@@ -1236,10 +1242,10 @@ void ProteinRendererSES::RenderSESGpuRaycasting(
 		    this->sphericalTriangleShader.Enable();
 		    // set shader variables
 		    glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		    glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-		    glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-		    glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
-		    glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, m_cameraInfo->NearClip(), m_cameraInfo->FarClip());
+		    glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+		    glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+		    glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+		    glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
 		    glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
 		    glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
 							     1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
@@ -1300,10 +1306,10 @@ void ProteinRendererSES::RenderSESGpuRaycasting(
 		glEnableClientState( GL_COLOR_ARRAY);
 		// set shader variables
 		glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-		glUniform3fvARB( this->sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-		glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
-		glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, m_cameraInfo->NearClip(), m_cameraInfo->FarClip());
+		glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+		glUniform3fvARB( this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+		glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+		glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
 		glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
 		glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
 		// set vertex and color pointers and draw them
@@ -1326,184 +1332,10 @@ void ProteinRendererSES::RenderSESGpuRaycasting(
 
 
 /*
- * Render the molecular surface using GPU raycasting
- */
-void ProteinRendererSES::RenderSESGpuRaycastingSimple(
-	const CallProteinData *protein)
-{
-	// TODO: attribute locations nicht jedes mal neu abfragen!
-
-	// set viewport
-	float viewportStuff[4] =
-	{
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()
-	};
-	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
-
-	// get clear color (i.e. background color) for fogging
-	float *clearColor = new float[4];
-	glGetFloatv( GL_COLOR_CLEAR_VALUE, clearColor);
-	vislib::math::Vector<float, 3> fogCol( clearColor[0], clearColor[1], clearColor[2]);
-	
-	unsigned int cntRS;
-	
-	for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
-	{
-		//////////////////////////////////
-		// ray cast the tori on the GPU //
-		//////////////////////////////////
-		// enable torus shader
-		this->torusShader.Enable();
-		// set shader variables
-		glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
-		glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, m_cameraInfo->Front().PeekComponents());
-		glUniform3fvARB( this->torusShader.ParameterLocation( "camRight"), 1, m_cameraInfo->Right().PeekComponents());
-		glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, m_cameraInfo->Up().PeekComponents());
-		glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, m_cameraInfo->NearClip(), m_cameraInfo->FarClip());
-		glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-		glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
-		// get attribute locations
-		GLuint attribInParams = glGetAttribLocationARB( this->torusShader, "inParams");
-		GLuint attribQuatC = glGetAttribLocationARB( this->torusShader, "quatC");
-		GLuint attribInSphere = glGetAttribLocationARB( this->torusShader, "inSphere");
-		GLuint attribInColors = glGetAttribLocationARB( this->torusShader, "inColors");
-		GLuint attribInCuttingPlane = glGetAttribLocationARB( this->torusShader, "inCuttingPlane");
-		// set color to orange
-		glColor3f( 1.0f, 0.75f, 0.0f);
-		glEnableClientState( GL_VERTEX_ARRAY);
-		// enable vertex attribute arrays for the attribute locations
-		glEnableVertexAttribArrayARB( attribInParams);
-		glEnableVertexAttribArrayARB( attribQuatC);
-		glEnableVertexAttribArrayARB( attribInSphere);
-		glEnableVertexAttribArrayARB( attribInColors);
-		glEnableVertexAttribArrayARB( attribInCuttingPlane);
-		// set vertex and attribute pointers and draw them
-		glVertexAttribPointerARB( attribInParams, 3, GL_FLOAT, 0, 0, this->torusInParamArray[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribQuatC, 4, GL_FLOAT, 0, 0, this->torusQuatCArray[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribInSphere, 4, GL_FLOAT, 0, 0, this->torusInSphereArray[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribInColors, 4, GL_FLOAT, 0, 0, this->torusColors[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribInCuttingPlane, 3, GL_FLOAT, 0, 0, this->torusInCuttingPlaneArray[cntRS].PeekElements());
-		glVertexPointer( 3, GL_FLOAT, 0, this->torusVertexArray[cntRS].PeekElements());
-		glDrawArrays( GL_POINTS, 0, ((unsigned int)this->torusVertexArray[cntRS].Count())/3);
-		// disable vertex attribute arrays for the attribute locations
-		glDisableVertexAttribArrayARB( attribInParams);
-		glDisableVertexAttribArrayARB( attribQuatC);
-		glDisableVertexAttribArrayARB( attribInSphere);
-		glDisableVertexAttribArrayARB( attribInColors);
-		glDisableVertexAttribArrayARB( attribInCuttingPlane);
-		glDisableClientState(GL_VERTEX_ARRAY);
-		// enable torus shader
-		this->torusShader.Disable();
-
-		/////////////////////////////////////////////////
-		// ray cast the spherical triangles on the GPU //
-		/////////////////////////////////////////////////
-		// bind texture
-		glBindTexture( GL_TEXTURE_2D, singularityTexture[cntRS]);
-		// enable spherical triangle shader
-		this->sphericalTriangleShader.Enable();
-		// set shader variables
-		glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-		glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-		glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
-		glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, m_cameraInfo->NearClip(), m_cameraInfo->FarClip());
-		glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-		glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
-							 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
-		glUniform1fARB( this->sphericalTriangleShader.ParameterLocation( "alpha"), this->transparency);
-		// get attribute locations
-		GLuint attribVec1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec1");
-		GLuint attribVec2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec2");
-		GLuint attribVec3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribVec3");
-		GLuint attribTexCoord1 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord1");
-		GLuint attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
-		GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
-		GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
-		// set color to turquoise
-		glColor3f( 0.0f, 0.75f, 1.0f);
-		glEnableClientState( GL_VERTEX_ARRAY);
-		// enable vertex attribute arrays for the attribute locations
-		glEnableVertexAttribArrayARB( attribVec1);
-		glEnableVertexAttribArrayARB( attribVec2);
-		glEnableVertexAttribArrayARB( attribVec3);
-		glEnableVertexAttribArrayARB( attribTexCoord1);
-		glEnableVertexAttribArrayARB( attribTexCoord2);
-		glEnableVertexAttribArrayARB( attribTexCoord3);
-		glEnableVertexAttribArrayARB( attribColors);
-		// set vertex and attribute pointers and draw them
-		glVertexAttribPointerARB( attribVec1, 4, GL_FLOAT, 0, 0, this->sphericTriaVec1[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribVec2, 4, GL_FLOAT, 0, 0, this->sphericTriaVec2[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribVec3, 4, GL_FLOAT, 0, 0, this->sphericTriaVec3[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribTexCoord1, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord1[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribTexCoord2, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord2[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribTexCoord3, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord3[cntRS].PeekElements());
-		glVertexAttribPointerARB( attribColors, 3, GL_FLOAT, 0, 0, this->sphericTriaColors[cntRS].PeekElements());
-		glVertexPointer( 4, GL_FLOAT, 0, this->sphericTriaVertexArray[cntRS].PeekElements());
-		glDrawArrays( GL_POINTS, 0, ((unsigned int)this->sphericTriaVertexArray[cntRS].Count())/4);
-		// disable vertex attribute arrays for the attribute locations
-		glDisableVertexAttribArrayARB( attribVec1);
-		glDisableVertexAttribArrayARB( attribVec2);
-		glDisableVertexAttribArrayARB( attribVec3);
-		glDisableVertexAttribArrayARB( attribTexCoord1);
-		glDisableVertexAttribArrayARB( attribTexCoord2);
-		glDisableVertexAttribArrayARB( attribTexCoord3);
-		glDisableVertexAttribArrayARB( attribColors);
-		glDisableClientState(GL_VERTEX_ARRAY);
-		// disable spherical triangle shader
-		this->sphericalTriangleShader.Disable();
-		// unbind texture
-		glBindTexture( GL_TEXTURE_2D, 0);
-	
-		/////////////////////////////////////
-		// ray cast the spheres on the GPU //
-		/////////////////////////////////////
-		// enable sphere shader
-		if( this->currentRendermode == GPU_SIMPLIFIED )
-			this->sphereShader.Enable();
-		else // GPU_RAYCASTING_INTERIOR_CLIPPING
-			this->sphereClipInteriorShader.Enable();
-		glEnableClientState( GL_VERTEX_ARRAY);
-		glEnableClientState( GL_COLOR_ARRAY);
-		// set shader variables
-		glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-		glUniform3fvARB( this->sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-		glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
-		glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, m_cameraInfo->NearClip(), m_cameraInfo->FarClip());
-		glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
-		glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
-		// set vertex and color pointers and draw them
-		glColorPointer( 3, GL_FLOAT, 0, this->sphereColors[cntRS].PeekElements());
-		glVertexPointer( 4, GL_FLOAT, 0, this->sphereVertexArray[cntRS].PeekElements());
-		glDrawArrays( GL_POINTS, 0, ((unsigned int)this->sphereVertexArray[cntRS].Count())/4);
-		// disable sphere shader
-		glDisableClientState( GL_COLOR_ARRAY);
-		glDisableClientState( GL_VERTEX_ARRAY);
-		// disable sphere shader
-		if( this->currentRendermode == GPU_SIMPLIFIED )
-			this->sphereShader.Disable();
-		else // GPU_RAYCASTING_INTERIOR_CLIPPING
-			this->sphereClipInteriorShader.Disable();
-	}
-			
-	// delete pointers
-	delete[] clearColor;
-}
-
-
-/*
  * Render debug stuff
  */
-void ProteinRendererSES::RenderDebugStuff(
-	const CallProteinData *protein)
-{
+void MoleculeSESRenderer::RenderDebugStuff(
+    const MolecularDataCall *mol) {
 	// --> USAGE: UNCOMMENT THE NEEDED PARTS
 	
 	// temporary variables
@@ -1581,10 +1413,10 @@ void ProteinRendererSES::RenderDebugStuff(
 	// set viewport
 	float viewportStuff[4] =
 	{
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()
+		this->cameraInfo->TileRect().Left(),
+		this->cameraInfo->TileRect().Bottom(),
+		this->cameraInfo->TileRect().Width(),
+		this->cameraInfo->TileRect().Height()
 	};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -1594,9 +1426,9 @@ void ProteinRendererSES::RenderDebugStuff(
 	this->sphereShader.Enable();
 	// set shader variables
 	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
 	glColor3f( 0.8f, 0.8f, 0.8f);
 	unsigned int i, j;
 	glBegin( GL_POINTS);
@@ -1617,7 +1449,7 @@ void ProteinRendererSES::RenderDebugStuff(
 	//////////////////////////////////////////////////////////////////////////
 	// Draw reduced surface
 	//////////////////////////////////////////////////////////////////////////
-	this->RenderAtomsGPU( protein, 0.2f);
+	this->RenderAtomsGPU( mol, 0.2f);
 	vislib::math::Quaternion<float> quatC;
 	quatC.Set( 0, 0, 0, 1);
 	vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
@@ -1626,10 +1458,10 @@ void ProteinRendererSES::RenderDebugStuff(
 	// set viewport
 	float viewportStuff[4] =
 	{
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()
+		this->cameraInfo->TileRect().Left(),
+		this->cameraInfo->TileRect().Bottom(),
+		this->cameraInfo->TileRect().Width(),
+		this->cameraInfo->TileRect().Height()
 	};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -1639,37 +1471,21 @@ void ProteinRendererSES::RenderDebugStuff(
 	this->cylinderShader.Enable();
 	// set shader variables
 	glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
 	// get the attribute locations
 	GLint attribLocInParams = glGetAttribLocation( this->cylinderShader, "inParams");
 	GLint attribLocQuatC = glGetAttribLocation( this->cylinderShader, "quatC");
 	GLint attribLocColor1 = glGetAttribLocation( this->cylinderShader, "color1");
 	GLint attribLocColor2 = glGetAttribLocation( this->cylinderShader, "color2");
 	glBegin( GL_POINTS);
-	if( this->currentRendermode == GPU_SIMPLIFIED )
-		max1 = (unsigned int)this->simpleRS.size();
-	else
-		max1 = (unsigned int)this->reducedSurface.size();
-	for( unsigned int cntRS = 0; cntRS < max1; ++cntRS)
-	{
-		if( this->currentRendermode == GPU_SIMPLIFIED )
-			max2 = this->simpleRS[cntRS]->GetRSEdgeCount();
-		else
-			max2 = this->reducedSurface[cntRS]->GetRSEdgeCount();
-		for( unsigned int j = 0; j < max2; ++j )
-		{
-			if( this->currentRendermode == GPU_SIMPLIFIED )
-			{
-				firstAtomPos = this->simpleRS[cntRS]->GetRSEdge( j)->GetVertex1()->GetPosition();
-				secondAtomPos = this->simpleRS[cntRS]->GetRSEdge( j)->GetVertex2()->GetPosition();
-			}
-			else
-			{
-				firstAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex1()->GetPosition();
-				secondAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex2()->GetPosition();
-			}
+	max1 = (unsigned int)this->reducedSurface.size();
+	for( unsigned int cntRS = 0; cntRS < max1; ++cntRS) {
+		max2 = this->reducedSurface[cntRS]->GetRSEdgeCount();
+		for( unsigned int j = 0; j < max2; ++j ) {
+			firstAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex1()->GetPosition();
+			secondAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex2()->GetPosition();
 	
 			// compute the quaternion for the rotation of the cylinder
 			dir = secondAtomPos - firstAtomPos;
@@ -1698,26 +1514,13 @@ void ProteinRendererSES::RenderDebugStuff(
 	unsigned int i;
 	for( unsigned int cntRS = 0; cntRS < max1; ++cntRS)
 	{
-		if( this->currentRendermode == GPU_SIMPLIFIED )
-			max2 = this->simpleRS[cntRS]->GetRSFaceCount();
-		else
-			max2 = this->reducedSurface[cntRS]->GetRSFaceCount();
+		max2 = this->reducedSurface[cntRS]->GetRSFaceCount();
 		for( i = 0; i < max2; ++i )
 		{
-			if( this->currentRendermode == GPU_SIMPLIFIED )
-			{
-				n1 = this->simpleRS[cntRS]->GetRSFace( i)->GetFaceNormal();
-				v1 = this->simpleRS[cntRS]->GetRSFace( i)->GetVertex1()->GetPosition();
-				v2 = this->simpleRS[cntRS]->GetRSFace( i)->GetVertex2()->GetPosition();
-				v3 = this->simpleRS[cntRS]->GetRSFace( i)->GetVertex3()->GetPosition();
-			}
-			else
-			{
-				n1 = this->reducedSurface[cntRS]->GetRSFace( i)->GetFaceNormal();
-				v1 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex1()->GetPosition();
-				v2 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetPosition();
-				v3 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetPosition();
-			}
+			n1 = this->reducedSurface[cntRS]->GetRSFace( i)->GetFaceNormal();
+			v1 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex1()->GetPosition();
+			v2 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetPosition();
+			v3 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetPosition();
 				
 			glBegin( GL_TRIANGLES );
 				glNormal3fv( n1.PeekComponents());
@@ -1945,8 +1748,7 @@ void ProteinRendererSES::RenderDebugStuff(
  * Compute the vertex and attribute arrays for the raycasting shaders
  * (spheres, spherical triangles & tori)
  */
-void ProteinRendererSES::ComputeRaycastingArrays()
-{	
+void MoleculeSESRenderer::ComputeRaycastingArrays() {	
 	//time_t t = clock();
 
 	unsigned int cntRS;
@@ -2030,9 +1832,9 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			this->sphericTriaTexCoord3[cntRS][i*3+1] = (float)this->reducedSurface[cntRS]->GetRSFace( i)->GetEdge3()->GetTexCoordX();
 			this->sphericTriaTexCoord3[cntRS][i*3+2] = (float)this->reducedSurface[cntRS]->GetRSFace( i)->GetEdge3()->GetTexCoordY();
 			// colors
-			this->sphericTriaColors[cntRS][i*3+0] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()]);
-			this->sphericTriaColors[cntRS][i*3+1] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()]);
-			this->sphericTriaColors[cntRS][i*3+2] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()]);
+			this->sphericTriaColors[cntRS][i*3+0] = CodeColor( this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()]);
+			this->sphericTriaColors[cntRS][i*3+1] = CodeColor( this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()]);
+			this->sphericTriaColors[cntRS][i*3+2] = CodeColor( this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()]);
 			// sphere center
 			this->sphericTriaVertexArray[cntRS][i*4+0] = this->reducedSurface[cntRS]->GetRSFace( i)->GetProbeCenter().GetX();
 			this->sphericTriaVertexArray[cntRS][i*4+1] = this->reducedSurface[cntRS]->GetRSFace( i)->GetProbeCenter().GetY();
@@ -2126,8 +1928,8 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			this->torusInSphereArray[cntRS][i*4+2] = C.GetZ();
 			this->torusInSphereArray[cntRS][i*4+3] = distance;
 			// colors
-			this->torusColors[cntRS][i*4+0] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetIndex()]);
-			this->torusColors[cntRS][i*4+1] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetIndex()]);
+			this->torusColors[cntRS][i*4+0] = CodeColor( this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetIndex()]);
+			this->torusColors[cntRS][i*4+1] = CodeColor( this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetIndex()]);
 			this->torusColors[cntRS][i*4+2] = d;
 			//this->torusColors[cntRS][i*4+3] = ( X2 - X1).Length();
 			this->torusColors[cntRS][i*4+3] = ( X2 + this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis) - d;
@@ -2162,9 +1964,9 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			if( this->reducedSurface[cntRS]->GetRSVertex( i)->IsBuried() )
 				continue;
 			// set vertex color
-			this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetX());
-			this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetY());
-			this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetZ());
+			this->sphereColors[cntRS].Append( this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetX());
+			this->sphereColors[cntRS].Append( this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetY());
+			this->sphereColors[cntRS].Append( this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetZ());
 			// set vertex position
 			this->sphereVertexArray[cntRS].Append(
 					this->reducedSurface[cntRS]->GetRSVertex( i)->GetPosition().GetX());
@@ -2190,8 +1992,7 @@ void ProteinRendererSES::ComputeRaycastingArrays()
  * Compute the vertex and attribute arrays for the raycasting shaders
  * (spheres, spherical triangles & tori)
  */
-void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
-{
+void MoleculeSESRenderer::ComputeRaycastingArrays( unsigned int idxRS) {
 	// do nothing if the given index is out of bounds
 	if( idxRS > this->reducedSurface.size() )
 		return;
@@ -2279,9 +2080,9 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		this->sphericTriaTexCoord3[idxRS][i*3+1] = (float)this->reducedSurface[idxRS]->GetRSFace( i)->GetEdge3()->GetTexCoordX();
 		this->sphericTriaTexCoord3[idxRS][i*3+2] = (float)this->reducedSurface[idxRS]->GetRSFace( i)->GetEdge3()->GetTexCoordY();
 		// colors
-		this->sphericTriaColors[idxRS][i*3+0] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex1()->GetIndex()]);
-		this->sphericTriaColors[idxRS][i*3+1] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex2()->GetIndex()]);
-		this->sphericTriaColors[idxRS][i*3+2] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex3()->GetIndex()]);
+		this->sphericTriaColors[idxRS][i*3+0] = CodeColor( this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex1()->GetIndex()]);
+		this->sphericTriaColors[idxRS][i*3+1] = CodeColor( this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex2()->GetIndex()]);
+		this->sphericTriaColors[idxRS][i*3+2] = CodeColor( this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex3()->GetIndex()]);
 		// sphere center
 		this->sphericTriaVertexArray[idxRS][i*4+0] = this->reducedSurface[idxRS]->GetRSFace( i)->GetProbeCenter().GetX();
 		this->sphericTriaVertexArray[idxRS][i*4+1] = this->reducedSurface[idxRS]->GetRSFace( i)->GetProbeCenter().GetY();
@@ -2375,8 +2176,8 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		this->torusInSphereArray[idxRS][i*4+2] = C.GetZ();
 		this->torusInSphereArray[idxRS][i*4+3] = distance;
 		// colors
-		this->torusColors[idxRS][i*4+0] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetIndex()]);
-		this->torusColors[idxRS][i*4+1] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetIndex()]);
+		this->torusColors[idxRS][i*4+0] = CodeColor( this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetIndex()]);
+		this->torusColors[idxRS][i*4+1] = CodeColor( this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetIndex()]);
 		this->torusColors[idxRS][i*4+2] = d;
 		this->torusColors[idxRS][i*4+3] = ( X2 + this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis) - d;
 		// cutting plane
@@ -2410,9 +2211,9 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		if( this->reducedSurface[idxRS]->GetRSVertex( i)->IsBuried() )
 			continue;
 		// set vertex color
-		this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetX());
-		this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetY());
-		this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetZ());
+		this->sphereColors[idxRS].Append( this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetX());
+		this->sphereColors[idxRS].Append( this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetY());
+		this->sphereColors[idxRS].Append( this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetZ());
 		// set vertex position
 		this->sphereVertexArray[idxRS].Append(
 				this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetX());
@@ -2447,277 +2248,20 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 
 
 /*
- * Compute all vertex, attribute and color arrays used for ray casting 
- * the simplified molecular surface.
- */
-void ProteinRendererSES::ComputeRaycastingArraysSimple()
-{
-	//time_t t = clock();
-
-	unsigned int cntRS;
-	unsigned int i;
-	//vislib::math::Vector<float, 3> col( 0.45f, 0.75f, 0.15f);
-	//float codedcol = this->CodeColor( col);
-	
-	// resize lists of vertex, attribute and color arrays
-	this->sphericTriaVertexArray.resize( this->simpleRS.size());
-	this->sphericTriaVec1.resize( this->simpleRS.size());
-	this->sphericTriaVec2.resize( this->simpleRS.size());
-	this->sphericTriaVec3.resize( this->simpleRS.size());
-	this->sphericTriaTexCoord1.resize( this->simpleRS.size());
-	this->sphericTriaTexCoord2.resize( this->simpleRS.size());
-	this->sphericTriaTexCoord3.resize( this->simpleRS.size());
-	this->sphericTriaColors.resize( this->simpleRS.size());
-	this->torusVertexArray.resize( this->simpleRS.size());
-	this->torusInParamArray.resize( this->simpleRS.size());
-	this->torusQuatCArray.resize( this->simpleRS.size());
-	this->torusInSphereArray.resize( this->simpleRS.size());
-	this->torusColors.resize( this->simpleRS.size());
-	this->torusInCuttingPlaneArray.resize( this->simpleRS.size());
-	this->sphereVertexArray.resize( this->simpleRS.size());
-	this->sphereColors.resize( this->simpleRS.size());
-	
-	
-	// compute singulatity textures
-	this->CreateSingularityTexturesSimple();
-	
-	for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
-	{
-		///////////////////////////////////////////////////////////////////////
-		// compute arrays for ray casting the spherical triangles on the GPU //
-		///////////////////////////////////////////////////////////////////////
-		vislib::math::Vector<float, 3> tmpVec;
-		vislib::math::Vector<float, 3> tmpDualProbe( 1.0f, 1.0f, 1.0f);
-		float dualProbeRad = 0.0f;
-		
-		this->sphericTriaVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
-		this->sphericTriaVec1[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
-		this->sphericTriaVec2[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
-		this->sphericTriaVec3[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
-		this->sphericTriaTexCoord1[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
-		this->sphericTriaTexCoord2[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
-		this->sphericTriaTexCoord3[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
-		this->sphericTriaColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
-	
-		// loop over all RS-faces
-		for( i = 0; i < this->simpleRS[cntRS]->GetRSFaceCount(); ++i )
-		{
-			// if the face has a dual face --> store the probe of this face
-			if( this->simpleRS[cntRS]->GetRSFace( i)->GetDualFace() != NULL )
-			{
-				tmpDualProbe = this->simpleRS[cntRS]->GetRSFace( i)->GetDualFace()->GetProbeCenter();
-				dualProbeRad = this->probeRadius;
-			}
-			// first RS-vertex
-			tmpVec = this->simpleRS[cntRS]->GetRSFace( i)->GetVertex1()->GetPosition() - this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter();
-			this->sphericTriaVec1[cntRS][i*4+0] = tmpVec.GetX();
-			this->sphericTriaVec1[cntRS][i*4+1] = tmpVec.GetY();
-			this->sphericTriaVec1[cntRS][i*4+2] = tmpVec.GetZ();
-			this->sphericTriaVec1[cntRS][i*4+3] = 1.0f;
-			// second RS-vertex
-			tmpVec = this->simpleRS[cntRS]->GetRSFace( i)->GetVertex2()->GetPosition() - this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter();
-			this->sphericTriaVec2[cntRS][i*4+0] = tmpVec.GetX();
-			this->sphericTriaVec2[cntRS][i*4+1] = tmpVec.GetY();
-			this->sphericTriaVec2[cntRS][i*4+2] = tmpVec.GetZ();
-			this->sphericTriaVec2[cntRS][i*4+3] = 1.0f;
-			// third RS-vertex
-			tmpVec = this->simpleRS[cntRS]->GetRSFace( i)->GetVertex3()->GetPosition() - this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter();
-			this->sphericTriaVec3[cntRS][i*4+0] = tmpVec.GetX();
-			this->sphericTriaVec3[cntRS][i*4+1] = tmpVec.GetY();
-			this->sphericTriaVec3[cntRS][i*4+2] = tmpVec.GetZ();
-			this->sphericTriaVec3[cntRS][i*4+3] = dualProbeRad*dualProbeRad;
-			// store number of cutting probes and texture coordinates for each edge
-			this->sphericTriaTexCoord1[cntRS][i*3+0] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge1()->cuttingProbes.size();
-			this->sphericTriaTexCoord1[cntRS][i*3+1] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge1()->GetTexCoordX();
-			this->sphericTriaTexCoord1[cntRS][i*3+2] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge1()->GetTexCoordY();
-			this->sphericTriaTexCoord2[cntRS][i*3+0] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge2()->cuttingProbes.size();
-			this->sphericTriaTexCoord2[cntRS][i*3+1] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge2()->GetTexCoordX();
-			this->sphericTriaTexCoord2[cntRS][i*3+2] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge2()->GetTexCoordY();
-			this->sphericTriaTexCoord3[cntRS][i*3+0] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge3()->cuttingProbes.size();
-			this->sphericTriaTexCoord3[cntRS][i*3+1] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge3()->GetTexCoordX();
-			this->sphericTriaTexCoord3[cntRS][i*3+2] = (float)this->simpleRS[cntRS]->GetRSFace( i)->GetEdge3()->GetTexCoordY();
-			// colors
-			//this->sphericTriaColors[cntRS][i*3+0] = 125255.0f;
-			//this->sphericTriaColors[cntRS][i*3+1] = 125255.0f;
-			//this->sphericTriaColors[cntRS][i*3+2] = 125255.0f;
-			//this->sphericTriaColors[cntRS][i*3+0] = codedcol;
-			//this->sphericTriaColors[cntRS][i*3+1] = codedcol;
-			//this->sphericTriaColors[cntRS][i*3+2] = codedcol;
-			this->sphericTriaColors[cntRS][i*3+0] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()));
-			this->sphericTriaColors[cntRS][i*3+1] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()));
-			this->sphericTriaColors[cntRS][i*3+2] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()));
-			// sphere center
-			this->sphericTriaVertexArray[cntRS][i*4+0] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetX();
-			this->sphericTriaVertexArray[cntRS][i*4+1] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetY();
-			this->sphericTriaVertexArray[cntRS][i*4+2] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetZ();
-			this->sphericTriaVertexArray[cntRS][i*4+3] = this->GetProbeRadius();
-		}
-	
-		////////////////////////////////////////////////////////
-		// compute arrays for ray casting the tori on the GPU //
-		////////////////////////////////////////////////////////
-		vislib::math::Quaternion<float> quatC;
-		vislib::math::Vector<float, 3> zAxis, torusAxis, rotAxis, P, X1, X2, C, planeNormal;
-		zAxis.Set( 0.0f, 0.0f, 1.0f);
-		float distance, d;
-		vislib::math::Vector<float, 3> tmpDir1, tmpDir2, tmpDir3, cutPlaneNorm;
-	
-		this->torusVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
-		this->torusInParamArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
-		this->torusQuatCArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
-		this->torusInSphereArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
-		this->torusColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
-		this->torusInCuttingPlaneArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
-	
-		// loop over all RS-edges
-		for( i = 0; i < this->simpleRS[cntRS]->GetRSEdgeCount(); ++i )
-		{
-			// get the rotation axis of the torus
-			torusAxis = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter();
-			torusAxis.Normalise();
-			// get the axis for rotating the torus rotations axis on the z-axis
-			rotAxis = torusAxis.Cross( zAxis);
-			rotAxis.Normalise();
-			// compute quaternion
-			quatC.Set( torusAxis.Angle( zAxis), rotAxis);
-			// compute the tangential point X2 of the spheres
-			P = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter() + rotAxis *
-				this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusRadius();
-	
-			X1 = P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition();
-			X1.Normalise();
-			X1 *= this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetRadius();
-			X2 = P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
-			X2.Normalise();
-			X2 *= this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetRadius();
-			d = ( X1 + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis);
-	
-			C = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() -
-					this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
-			C = ( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length() /
-					( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() + 
-					( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length())) * C;
-			distance = ( X2 - C).Length();
-			C = ( C + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()) -
-					this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter();
-			
-			// compute normal of the cutting plane
-			tmpDir1 = this->simpleRS[cntRS]->GetRSEdge( i)->GetFace1()->GetProbeCenter();
-			tmpDir2 = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - tmpDir1;
-			tmpDir2.Normalise();
-			tmpDir2 *= this->probeRadius;
-			tmpDir2 = tmpDir2 + tmpDir1 - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter();
-			tmpDir3 = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - tmpDir1;
-			tmpDir3.Normalise();
-			tmpDir3 *= this->probeRadius;
-			tmpDir3 = tmpDir3 + tmpDir1 - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter();
-			// tmpDir2 and tmpDir3 now store the position of the intersection points for face 1
-			cutPlaneNorm = tmpDir2 - tmpDir3;
-			// cutPlaneNorm now stores the vector between the two intersection points for face 1
-			tmpDir1 = this->simpleRS[cntRS]->GetRSEdge( i)->GetFace2()->GetProbeCenter();
-			tmpDir2 = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - tmpDir1;
-			tmpDir2.Normalise();
-			tmpDir2 *= this->probeRadius;
-			tmpDir2 = tmpDir2 + tmpDir1 - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter();
-			// tmpDir2 now stores the position of the intersection point 1 for face 2
-			tmpDir2 = tmpDir2 - tmpDir3;
-			// tmpDir2 and tmpDir3 now span the plane containing the four intersection points
-			cutPlaneNorm = cutPlaneNorm.Cross( tmpDir2);
-			cutPlaneNorm = torusAxis.Cross( cutPlaneNorm);
-			cutPlaneNorm.Normalise();
-			
-			// attributes
-			this->torusInParamArray[cntRS][i*3+0] = this->probeRadius;
-			this->torusInParamArray[cntRS][i*3+1] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusRadius();
-			this->torusInParamArray[cntRS][i*3+2] = this->simpleRS[cntRS]->GetRSEdge( i)->GetRotationAngle();
-			this->torusQuatCArray[cntRS][i*4+0] = quatC.GetX();
-			this->torusQuatCArray[cntRS][i*4+1] = quatC.GetY();
-			this->torusQuatCArray[cntRS][i*4+2] = quatC.GetZ();
-			this->torusQuatCArray[cntRS][i*4+3] = quatC.GetW();
-			this->torusInSphereArray[cntRS][i*4+0] = C.GetX();
-			this->torusInSphereArray[cntRS][i*4+1] = C.GetY();
-			this->torusInSphereArray[cntRS][i*4+2] = C.GetZ();
-			this->torusInSphereArray[cntRS][i*4+3] = distance;
-			// colors
-			//this->torusColors[cntRS][i*4+0] = 250120000.0f;
-			//this->torusColors[cntRS][i*4+1] = 250120000.0f;
-			//this->torusColors[cntRS][i*4+0] = codedcol;
-			//this->torusColors[cntRS][i*4+1] = codedcol;
-			this->torusColors[cntRS][i*4+0] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetIndex()));
-			this->torusColors[cntRS][i*4+1] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetIndex()));
-			this->torusColors[cntRS][i*4+2] = d;
-			//this->torusColors[cntRS][i*4+3] = ( X2 - X1).Length();
-			this->torusColors[cntRS][i*4+3] = ( X2 + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis) - d;
-			// cutting plane
-			this->torusInCuttingPlaneArray[cntRS][i*3+0] = cutPlaneNorm.GetX();
-			this->torusInCuttingPlaneArray[cntRS][i*3+1] = cutPlaneNorm.GetY();
-			this->torusInCuttingPlaneArray[cntRS][i*3+2] = cutPlaneNorm.GetZ();
-			// torus center
-			this->torusVertexArray[cntRS][i*3+0] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter().GetX();
-			this->torusVertexArray[cntRS][i*3+1] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter().GetY();
-			this->torusVertexArray[cntRS][i*3+2] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter().GetZ();
-		}
-		
-		///////////////////////////////////////////////////////////
-		// compute arrays for ray casting the spheres on the GPU //
-		///////////////////////////////////////////////////////////	
-		/*
-		this->sphereVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSVertexCount() * 4);
-		this->sphereColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSVertexCount() * 3);
-		*/
-		this->sphereVertexArray[cntRS].AssertCapacity(
-				this->simpleRS[cntRS]->GetRSVertexCount() * 4);
-		this->sphereVertexArray[cntRS].Clear();
-		this->sphereColors[cntRS].AssertCapacity(
-				this->simpleRS[cntRS]->GetRSVertexCount() * 3);
-		this->sphereColors[cntRS].Clear();
-		
-		// loop over all RS-vertices (i.e. all protein atoms)
-		for( i = 0; i < this->simpleRS[cntRS]->GetRSVertexCount(); ++i )
-		{
-			// add only surface atoms (i.e. with not buried RS-vertices)
-			//if( this->simpleRS[cntRS]->GetRSVertex( i)->IsBuried() )
-			//	continue;
-			// set vertex color
-			//this->sphereColors[cntRS].Append( col.GetX());
-			//this->sphereColors[cntRS].Append( col.GetY());
-			//this->sphereColors[cntRS].Append( col.GetZ());
-			this->sphereColors[cntRS].Append( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSVertex( i)->GetIndex()).GetX());
-			this->sphereColors[cntRS].Append( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSVertex( i)->GetIndex()).GetY());
-			this->sphereColors[cntRS].Append( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSVertex( i)->GetIndex()).GetZ());
-			// set vertex position
-			this->sphereVertexArray[cntRS].Append(
-					this->simpleRS[cntRS]->GetRSVertex( i)->GetPosition().GetX());
-			this->sphereVertexArray[cntRS].Append(
-					this->simpleRS[cntRS]->GetRSVertex( i)->GetPosition().GetY());
-			this->sphereVertexArray[cntRS].Append(
-					this->simpleRS[cntRS]->GetRSVertex( i)->GetPosition().GetZ());
-			this->sphereVertexArray[cntRS].Append(
-					this->simpleRS[cntRS]->GetRSVertex( i)->GetRadius());
-		}
-	}
-	// print the time of the computation
-	//std::cout << "computation of arrays for GPU ray casting finished:" << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
-}
-
-
-/*
  * code a rgb-color into one float
  */
-float ProteinRendererSES::CodeColor( const vislib::math::Vector<float, 3> &col) const
-{
+float MoleculeSESRenderer::CodeColor( const vislib::math::Vector<float, 3> &col) const {
 	return float(
 		  (int)( col.GetX() * 255.0f)*1000000	// red
 		+ (int)( col.GetY() * 255.0f)*1000		// green
-		+ (int)( col.GetZ() * 255.0f) );			// blue
+		+ (int)( col.GetZ() * 255.0f) );		// blue
 }
 
 
 /*
  * decode a coded color to the original rgb-color
  */
-vislib::math::Vector<float, 3> ProteinRendererSES::DecodeColor( int codedColor) const
-{
+vislib::math::Vector<float, 3> MoleculeSESRenderer::DecodeColor( int codedColor) const {
 	int col = codedColor;
 	vislib::math::Vector<float, 3> color;
 	float red, green;
@@ -2742,11 +2286,8 @@ vislib::math::Vector<float, 3> ProteinRendererSES::DecodeColor( int codedColor) 
 /*
  * Creates the texture for singularity handling.
  */
-void ProteinRendererSES::CreateSingularityTextures()
-{
-/*
-	time_t t = clock();
-*/
+void MoleculeSESRenderer::CreateSingularityTextures() {
+	// time_t t = clock();
 	unsigned int cnt1, cnt2, cntRS;
 	
 	// delete old singularity textures
@@ -2854,140 +2395,14 @@ void ProteinRendererSES::CreateSingularityTextures()
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glBindTexture( GL_TEXTURE_2D, 0);
 	}
-/*
-	std::cout << "Create texture: " <<
-		( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
-*/
+	//std::cout << "Create texture: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
 }
 
 
 /*
  * Creates the texture for singularity handling.
  */
-void ProteinRendererSES::CreateSingularityTexturesSimple()
-{
-/*
-	time_t t = clock();
-*/
-	unsigned int cnt1, cnt2, cntRS;
-	
-	// delete old singularity textures
-	for( cnt1 = 0; cnt1 < this->singularityTexture.size(); ++cnt1 )
-	{
-		glDeleteTextures( 1, &singularityTexture[cnt1]);
-	}
-	// check if the singularity texture has the right size
-	if( this->simpleRS.size() != this->singularityTexture.size() )
-	{
-		// store old singularity texture size
-		unsigned int singTexSizeOld = (unsigned int)this->singularityTexture.size();
-		// resize singularity texture to fit the number of reduced surfaces
-		this->singularityTexture.resize( this->simpleRS.size());
-		// generate a new texture for each new singularity texture
-		for( cnt1 = singTexSizeOld; cnt1 < singularityTexture.size(); ++cnt1 )
-		{
-			glGenTextures( 1, &singularityTexture[cnt1]);
-		}
-	}
-	// resize singularity texture dimension arrays
-	this->singTexWidth.resize( this->simpleRS.size());
-	this->singTexHeight.resize( this->simpleRS.size());
-	
-	// get maximum texture size
-	GLint texSize;
-	glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-		
-	// TODO: compute proper maximum number of cutting probes
-	unsigned int numProbes = 16;
-	
-	for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
-	{
-		// set width and height of texture
-		if( (unsigned int)texSize < this->simpleRS[cntRS]->GetCutRSEdgesCount() )
-		{
-			this->singTexHeight[cntRS] = texSize;
-			this->singTexWidth[cntRS] = numProbes * (int)ceil( double(
-				this->simpleRS[cntRS]->GetCutRSEdgesCount()) / (double)texSize);
-		}
-		else
-		{
-			this->singTexHeight[cntRS] = this->simpleRS[cntRS]->GetCutRSEdgesCount();
-			this->singTexWidth[cntRS] = numProbes;
-		}
-		// generate float-array for texture with the appropriate dimension
-		if( this->singTexData )
-			delete[] this->singTexData;
-		this->singTexData = new float[this->singTexWidth[cntRS]*this->singTexHeight[cntRS]*3];
-		// write probes to singularity texture
-		unsigned int coordX = 0;
-		unsigned int coordY = 0;
-		unsigned int counter = 0;
-		for( cnt1 = 0; cnt1 < this->simpleRS[cntRS]->GetRSEdgeCount(); ++cnt1 )
-		{
-			if( this->simpleRS[cntRS]->GetRSEdge( cnt1)->cuttingProbes.empty() )
-			{
-				this->simpleRS[cntRS]->GetRSEdge( cnt1)->SetTexCoord( 0, 0);
-			}
-			else
-			{
-				// set texture coordinates
-				this->simpleRS[cntRS]->GetRSEdge( cnt1)->SetTexCoord( coordX, coordY);
-				// compute texture coordinates for next entry
-				coordY++;
-				if( coordY == this->singTexHeight[cntRS] )
-				{
-					coordY = 0;
-					coordX = coordX + numProbes;
-				}
-				// write probes to texture
-				for( cnt2 = 0; cnt2 < numProbes; ++cnt2 )
-				{
-					if( cnt2 < this->simpleRS[cntRS]->GetRSEdge( cnt1)->cuttingProbes.size() )
-					{
-						singTexData[counter] =
-								this->simpleRS[cntRS]->GetRSEdge( cnt1)->cuttingProbes[cnt2]->GetProbeCenter().GetX();
-						counter++;
-						singTexData[counter] =
-								this->simpleRS[cntRS]->GetRSEdge( cnt1)->cuttingProbes[cnt2]->GetProbeCenter().GetY();
-						counter++;
-						singTexData[counter] =
-								this->simpleRS[cntRS]->GetRSEdge( cnt1)->cuttingProbes[cnt2]->GetProbeCenter().GetZ();
-						counter++;
-					}
-					else
-					{
-						singTexData[counter] = 0.0f;
-						counter++;
-						singTexData[counter] = 0.0f;
-						counter++;
-						singTexData[counter] = 0.0f;
-						counter++;
-					}
-				}
-			}
-		}
-		// texture generation
-		glBindTexture( GL_TEXTURE_2D, singularityTexture[cntRS]);
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F_ARB, this->singTexWidth[cntRS], this->singTexHeight[cntRS], 0, GL_RGB, GL_FLOAT, this->singTexData);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glBindTexture( GL_TEXTURE_2D, 0);
-	}
-/*
-	std::cout << "Create texture: " <<
-		( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
-*/
-}
-
-
-/*
- * Creates the texture for singularity handling.
- */
-void ProteinRendererSES::CreateSingularityTexture( unsigned int idxRS)
-{
+void MoleculeSESRenderer::CreateSingularityTexture( unsigned int idxRS) {
 	// do nothing if the index is out of bounds
 	if( idxRS > this->reducedSurface.size() )
 		return;
@@ -3094,18 +2509,16 @@ void ProteinRendererSES::CreateSingularityTexture( unsigned int idxRS)
 /*
  * Render all atoms
  */
-void ProteinRendererSES::RenderAtomsGPU( 
-	const CallProteinData *protein, const float scale)
-{
+void MoleculeSESRenderer::RenderAtomsGPU( const MolecularDataCall *mol, const float scale) {
 	unsigned int cnt, cntRS, max1, max2;
 
 	// set viewport
 	float viewportStuff[4] =
 	{
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()
+		this->cameraInfo->TileRect().Left(),
+		this->cameraInfo->TileRect().Bottom(),
+		this->cameraInfo->TileRect().Width(),
+		this->cameraInfo->TileRect().Height()
 	};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -3116,48 +2529,29 @@ void ProteinRendererSES::RenderAtomsGPU(
 	this->sphereShader.Enable();
 	// set shader variables
 	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
 
 	glBegin( GL_POINTS);
 
 	glColor3f( 1.0f, 0.0f, 0.0f);
-	if( this->currentRendermode == GPU_SIMPLIFIED )
-		max1 = (unsigned int)this->simpleRS.size();
-	else
-		max1 = (unsigned int)this->reducedSurface.size();
+    max1 = (unsigned int)this->reducedSurface.size();
 	for( cntRS = 0; cntRS < max1; ++cntRS )
 	{
-		if( this->currentRendermode == GPU_SIMPLIFIED )
-			max2 = this->simpleRS[cntRS]->GetRSVertexCount();
-		else
-			max2 = this->reducedSurface[cntRS]->GetRSVertexCount();
+        max2 = this->reducedSurface[cntRS]->GetRSVertexCount();
 		// loop over all protein atoms
 		for( cnt = 0; cnt < max2; ++cnt )
 		{
-			if( this->currentRendermode == GPU_SIMPLIFIED )
-			{
-				//glColor3ubv( protein->AtomTypes()[protein->ProteinAtomData()[this->simpleRS[cntRS]->GetRSVertex( cnt)->GetIndex()].TypeIndex()].Colour());
-				glColor3f( 1.0f, 0.0f, 0.0f);
-				glVertex4f(
-					this->simpleRS[cntRS]->GetRSVertex( cnt)->GetPosition().GetX(),
-					this->simpleRS[cntRS]->GetRSVertex( cnt)->GetPosition().GetY(),
-					this->simpleRS[cntRS]->GetRSVertex( cnt)->GetPosition().GetZ(),
-					this->simpleRS[cntRS]->GetRSVertex( cnt)->GetRadius()*scale );
-			}
-			else
-			{
-				if( this->reducedSurface[cntRS]->GetRSVertex( cnt)->IsBuried() )
-					continue;
-				//glColor3ubv( protein->AtomTypes()[protein->ProteinAtomData()[this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetIndex()].TypeIndex()].Colour());
-				glColor3f( 1.0f, 0.0f, 0.0f);
-				glVertex4f(
-					this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetPosition().GetX(),
-					this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetPosition().GetY(),
-					this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetPosition().GetZ(),
-					this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetRadius()*scale );
-			}
+			if( this->reducedSurface[cntRS]->GetRSVertex( cnt)->IsBuried() )
+				continue;
+			//glColor3ubv( protein->AtomTypes()[protein->ProteinAtomData()[this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetIndex()].TypeIndex()].Colour());
+			glColor3f( 1.0f, 0.0f, 0.0f);
+			glVertex4f(
+				this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetPosition().GetX(),
+				this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetPosition().GetY(),
+				this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetPosition().GetZ(),
+				this->reducedSurface[cntRS]->GetRSVertex( cnt)->GetRadius()*scale );
 		}
 	}
 
@@ -3171,9 +2565,7 @@ void ProteinRendererSES::RenderAtomsGPU(
 /*
  * Renders the probe at postion 'm'
  */
-void ProteinRendererSES::RenderProbe( 
-	const vislib::math::Vector<float, 3> m)
-{
+void MoleculeSESRenderer::RenderProbe( const vislib::math::Vector<float, 3> m) {
 	GLUquadricObj *sphere = gluNewQuadric();
 	gluQuadricNormals( sphere, GL_SMOOTH);
 
@@ -3194,16 +2586,14 @@ void ProteinRendererSES::RenderProbe(
 /*
  * Renders the probe at postion 'm'
  */
-void ProteinRendererSES::RenderProbeGPU( 
-	const vislib::math::Vector<float, 3> m)
-{
+void MoleculeSESRenderer::RenderProbeGPU( const vislib::math::Vector<float, 3> m) {
 	// set viewport
 	float viewportStuff[4] =
 	{
-		m_cameraInfo->TileRect().Left(),
-		m_cameraInfo->TileRect().Bottom(),
-		m_cameraInfo->TileRect().Width(),
-		m_cameraInfo->TileRect().Height()
+		this->cameraInfo->TileRect().Left(),
+		this->cameraInfo->TileRect().Bottom(),
+		this->cameraInfo->TileRect().Width(),
+		this->cameraInfo->TileRect().Height()
 	};
 	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
 	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -3214,9 +2604,9 @@ void ProteinRendererSES::RenderProbeGPU(
 	this->sphereShader.Enable();
 	// set shader variables
 	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, m_cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, m_cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, m_cameraInfo->Up().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
 
 	glBegin( GL_POINTS);
 		glColor3f( 1.0f, 1.0f, 1.0f );
@@ -3229,384 +2619,405 @@ void ProteinRendererSES::RenderProbeGPU(
 
 
 /*
- * ProteinRendererSES::deinitialise
+ * MoleculeSESRenderer::deinitialise
  */
-void ProteinRendererSES::deinitialise(void)
-{
-	if( colorFBO )
-	{
-		glDeleteFramebuffersEXT( 1, &colorFBO);
-		glDeleteFramebuffersEXT( 1, &blendFBO);
-		glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
-		glDeleteFramebuffersEXT( 1, &verticalFilterFBO);
-      glDeleteTextures( 1, &texture0);
-      glDeleteTextures( 1, &depthTex0);
-		glDeleteTextures( 1, &texture1);
-		glDeleteTextures( 1, &depthTex1);
-		glDeleteTextures( 1, &hFilter);
-		glDeleteTextures( 1, &vFilter);
-	}
-	// delete singularity texture
-	for( unsigned int i = 0; i < singularityTexture.size(); ++i )
-		glDeleteTextures( 1, &singularityTexture[i]);
-	// release shaders
-	this->cylinderShader.Release();
-	this->sphereShader.Release();
-	this->sphereClipInteriorShader.Release();
-	this->sphericalTriangleShader.Release();
-	this->torusShader.Release();
-	this->lightShader.Release();
-	this->hfilterShader.Release();
-	this->vfilterShader.Release();
-	this->silhouetteShader.Release();
-	this->transparencyShader.Release();
+void MoleculeSESRenderer::deinitialise(void) {
+    if( colorFBO ) {
+        glDeleteFramebuffersEXT( 1, &colorFBO);
+        glDeleteFramebuffersEXT( 1, &blendFBO);
+        glDeleteFramebuffersEXT( 1, &horizontalFilterFBO);
+        glDeleteFramebuffersEXT( 1, &verticalFilterFBO);
+        glDeleteTextures( 1, &texture0);
+        glDeleteTextures( 1, &depthTex0);
+        glDeleteTextures( 1, &texture1);
+        glDeleteTextures( 1, &depthTex1);
+        glDeleteTextures( 1, &hFilter);
+        glDeleteTextures( 1, &vFilter);
+    }
+    // delete singularity texture
+    for( unsigned int i = 0; i < singularityTexture.size(); ++i )
+        glDeleteTextures( 1, &singularityTexture[i]);
+    // release shaders
+    this->cylinderShader.Release();
+    this->sphereShader.Release();
+    this->sphereClipInteriorShader.Release();
+    this->sphericalTriangleShader.Release();
+    this->torusShader.Release();
+    this->lightShader.Release();
+    this->hfilterShader.Release();
+    this->vfilterShader.Release();
+    this->silhouetteShader.Release();
+    this->transparencyShader.Release();
+}
+
+/*
+ * Read color table from file
+ */
+void MoleculeSESRenderer::ReadColorTableFromFile( vislib::StringA filename) {
+    // file buffer variable
+    vislib::sys::ASCIIFileBuffer file;
+    // delete old color table
+    this->colorLookupTable.SetCount( 0);
+    // try to load the color table file
+    if( file.LoadFile( filename) ) {
+        float r, g, b;
+        this->colorLookupTable.AssertCapacity( file.Count());
+        // get colors from file
+        for( unsigned int cnt = 0; cnt < file.Count(); ++cnt ) {
+            if( utility::ColourParser::FromString( file.Line( cnt), r, g, b) ) {
+                this->colorLookupTable.Add( vislib::math::Vector<float, 3>( r, g, b));
+            }
+        }
+    }
+    // if the file could not be loaded or contained no valid colors
+    if( this->colorLookupTable.Count() == 0 ) {
+        // set default color table
+        this->colorLookupTable.SetCount( 25);
+        this->colorLookupTable[0].Set( 0.5f, 0.5f, 0.5f);
+        this->colorLookupTable[1].Set( 1.0f, 0.0f, 0.0f);
+        this->colorLookupTable[2].Set( 1.0f, 1.0f, 0.0f);
+        this->colorLookupTable[3].Set( 0.0f, 1.0f, 0.0f);
+        this->colorLookupTable[4].Set( 0.0f, 1.0f, 1.0f);
+        this->colorLookupTable[5].Set( 0.0f, 0.0f, 1.0f);
+        this->colorLookupTable[6].Set( 1.0f, 0.0f, 1.0f);
+        this->colorLookupTable[7].Set( 0.5f, 0.0f, 0.0f);
+        this->colorLookupTable[8].Set( 0.5f, 0.5f, 0.0f);
+        this->colorLookupTable[9].Set( 0.0f, 0.5f, 0.0f);
+        this->colorLookupTable[10].Set( 0.00f, 0.50f, 0.50f);
+        this->colorLookupTable[11].Set( 0.00f, 0.00f, 0.50f);
+        this->colorLookupTable[12].Set( 0.50f, 0.00f, 0.50f);
+        this->colorLookupTable[13].Set( 1.00f, 0.50f, 0.00f);
+        this->colorLookupTable[14].Set( 0.00f, 0.50f, 1.00f);
+        this->colorLookupTable[15].Set( 1.00f, 0.50f, 1.00f);
+        this->colorLookupTable[16].Set( 0.50f, 0.25f, 0.00f);
+        this->colorLookupTable[17].Set( 1.00f, 1.00f, 0.50f);
+        this->colorLookupTable[18].Set( 0.50f, 1.00f, 0.50f);
+        this->colorLookupTable[19].Set( 0.75f, 1.00f, 0.00f);
+        this->colorLookupTable[20].Set( 0.50f, 0.00f, 0.75f);
+        this->colorLookupTable[21].Set( 1.00f, 0.50f, 0.50f);
+        this->colorLookupTable[22].Set( 0.75f, 1.00f, 0.75f);
+        this->colorLookupTable[23].Set( 0.75f, 0.75f, 0.50f);
+        this->colorLookupTable[24].Set( 1.00f, 0.75f, 0.50f);
+    }
 }
 
 
 /*
- * Fill amino acid color table
- */
-void ProteinRendererSES::FillAminoAcidColorTable()
-{
-	this->aminoAcidColorTable.Clear();
-	this->aminoAcidColorTable.SetCount( 25);
-	this->aminoAcidColorTable[0].Set( 0.5f, 0.5f, 0.5f);
-	this->aminoAcidColorTable[1].Set( 1.0f, 0.0f, 0.0f);
-	this->aminoAcidColorTable[2].Set( 1.0f, 1.0f, 0.0f);
-	this->aminoAcidColorTable[3].Set( 0.0f, 1.0f, 0.0f);
-	this->aminoAcidColorTable[4].Set( 0.0f, 1.0f, 1.0f);
-	this->aminoAcidColorTable[5].Set( 0.0f, 0.0f, 1.0f);
-	this->aminoAcidColorTable[6].Set( 1.0f, 0.0f, 1.0f);
-	this->aminoAcidColorTable[7].Set( 0.5f, 0.0f, 0.0f);
-	this->aminoAcidColorTable[8].Set( 0.5f, 0.5f, 0.0f);
-	this->aminoAcidColorTable[9].Set( 0.0f, 0.5f, 0.0f);
-	this->aminoAcidColorTable[10].Set( 0.0f, 0.5f, 0.5f);
-	this->aminoAcidColorTable[11].Set( 0.0f, 0.0f, 0.5f);
-	this->aminoAcidColorTable[12].Set( 0.5f, 0.0f, 0.5f);
-	this->aminoAcidColorTable[13].Set( 1.0f, 0.5f, 0.0f);
-	this->aminoAcidColorTable[14].Set( 0.0f, 0.5f, 1.0f);
-	this->aminoAcidColorTable[15].Set( 1.0f, 0.5f, 1.0f);
-	this->aminoAcidColorTable[16].Set( 0.5f, 0.25f, 0.0f);
-	this->aminoAcidColorTable[17].Set( 1.0f, 1.0f, 0.5f);
-	this->aminoAcidColorTable[18].Set( 0.5f, 1.0f, 0.5f);
-	this->aminoAcidColorTable[19].Set( 0.75f, 1.0f, 0.0f);
-	this->aminoAcidColorTable[20].Set( 0.5f, 0.0f, 0.75f);
-	this->aminoAcidColorTable[21].Set( 1.0f, 0.5f, 0.5f);
-	this->aminoAcidColorTable[22].Set( 0.75f, 1.0f, 0.75f);
-	this->aminoAcidColorTable[23].Set( 0.75f, 0.75f, 0.5f);
-	this->aminoAcidColorTable[24].Set( 1.0f, 0.75f, 0.5f);
-}
-
-
-/*
- * protein::ProteinRendererSES::makeRainbowColorTable
+ * protein::MoleculeSESRenderer::makeRainbowColorTable
  * Creates a rainbow color table with 'num' entries.
  */
-void ProteinRendererSES::MakeRainbowColorTable( unsigned int num)
-{
-	unsigned int n = (num/4);
-	// the color table should have a minimum size of 16
-	if( n < 4 )
-		n = 4;
-	this->rainbowColors.clear();
-	float f = 1.0f/float(n);
-	vislib::math::Vector<float,3> color;
-	color.Set( 1.0f, 0.0f, 0.0f);
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetY( vislib::math::Min( color.GetY() + f, 1.0f));
-		rainbowColors.push_back( color);
-	}
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetX( vislib::math::Max( color.GetX() - f, 0.0f));
-		rainbowColors.push_back( color);
-	}
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetZ( vislib::math::Min( color.GetZ() + f, 1.0f));
-		rainbowColors.push_back( color);
-	}
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetY( vislib::math::Max( color.GetY() - f, 0.0f));
-		rainbowColors.push_back( color);
-	}
+void MoleculeSESRenderer::MakeRainbowColorTable( unsigned int num) {
+    unsigned int n = (num/4);
+    // the color table should have a minimum size of 16
+    if( n < 4 )
+        n = 4;
+    this->rainbowColors.Clear();
+    this->rainbowColors.AssertCapacity( num);
+    float f = 1.0f/float(n);
+    vislib::math::Vector<float,3> color;
+    color.Set( 1.0f, 0.0f, 0.0f);
+    for( unsigned int i = 0; i < n; i++) {
+        color.SetY( vislib::math::Min( color.GetY() + f, 1.0f));
+        rainbowColors.Add( color);
+    }
+    for( unsigned int i = 0; i < n; i++) {
+        color.SetX( vislib::math::Max( color.GetX() - f, 0.0f));
+        rainbowColors.Add( color);
+    }
+    for( unsigned int i = 0; i < n; i++) {
+        color.SetZ( vislib::math::Min( color.GetZ() + f, 1.0f));
+        rainbowColors.Add( color);
+    }
+    for( unsigned int i = 0; i < n; i++) {
+        color.SetY( vislib::math::Max( color.GetY() - f, 0.0f));
+        rainbowColors.Add( color);
+    }
 }
 
 
 /*
  * returns the color of the atom 'idx' for the current coloring mode
  */
-vislib::math::Vector<float, 3> ProteinRendererSES::GetProteinAtomColor( unsigned int idx)
+vislib::math::Vector<float, 3> MoleculeSESRenderer::GetProteinAtomColor( unsigned int idx)
 {
-	if( idx < this->atomColor.size() )
-		return this->atomColor[idx];
+    if( idx < this->atomColorTable.Count() )
+		return this->atomColorTable[idx];
 	else
 		return vislib::math::Vector<float, 3>( 0.5f, 0.5f, 0.5f);
 }
 
 
-/*
- * Make color table for all atoms
- */
-void ProteinRendererSES::MakeColorTable( const CallProteinData *prot, bool forceRecompute)
-{
-	unsigned int i;
-	unsigned int currentChain, currentAminoAcid, currentAtom, currentSecStruct;
-	unsigned int cntCha, cntRes, cntAto;
-	CallProteinData::Chain chain;
-	vislib::math::Vector<float, 3> color;
-	// if recomputation is forced: clear current color table
-	if( forceRecompute )
-		this->atomColor.clear();
-	// only compute color table if necessary
-	if( this->atomColor.empty() )
-	{
-		this->atomColor.reserve( prot->ProteinAtomCount());
-		if( this->currentColoringMode == ELEMENT )
-		{
-			// resize atom color table
-			this->atomColor.resize( prot->ProteinAtomCount());
-			for( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				this->atomColor[i].SetX( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[0]) / 255.0f);
-				this->atomColor[i].SetY( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[1]) / 255.0f);
-				this->atomColor[i].SetZ( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[2]) / 255.0f);
-			}
-		} // ===== END coloring mode ELEMENT =====
-		else if( this->currentColoringMode == AMINOACID )
-		{
-			// loop over all chains
-			for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-			{
-				chain = prot->ProteinChain( currentChain);
-				// loop over all amino acids in the current chain
-				for( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-				{
-					// loop over all connections of the current amino acid
-					for( currentAtom = 0; 
-						 currentAtom < chain.AminoAcid()[currentAminoAcid].AtomCount();
-						 currentAtom++ )
-					{
-						i = chain.AminoAcid()[currentAminoAcid].NameIndex()+1;
-						i = i % (unsigned int)(this->aminoAcidColorTable.Count());
-						this->atomColor.push_back( this->aminoAcidColorTable[i]);
-					}
-				}
-			}
-		} // ===== END coloring mode AMINOACID =====
-		else if( this->currentColoringMode == STRUCTURE )
-		{
-			// loop over all chains
-			for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-			{
-				chain = prot->ProteinChain( currentChain);
-				// loop over all secondary structure elements in this chain
-				for( currentSecStruct = 0; 
-					 currentSecStruct < chain.SecondaryStructureCount();
-					 currentSecStruct++ )
-				{
-					i = chain.SecondaryStructure()[currentSecStruct].AtomCount();
-					// loop over all atoms in this secondary structure element
-					for( currentAtom = 0; currentAtom < i; currentAtom++ )
-					{
-						if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-							protein::CallProteinData::SecStructure::TYPE_HELIX )
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 1.0f, 0.0f, 0.0f));
-						}
-						else if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-							protein::CallProteinData::SecStructure::TYPE_SHEET )
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.0f, 0.0f, 1.0f));
-						}
-						else if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-							protein::CallProteinData::SecStructure::TYPE_TURN )
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 1.0f, 1.0f, 0.0f));
-						}
-						else
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.9f, 0.9f, 0.9f));
-						}
-					}
-				}
-			}
-			// add missing atom colors
-			if ( prot->ProteinAtomCount() > this->atomColor.size() )
-			{
-				currentAtom = (unsigned int)this->atomColor.size();
-				for ( ; currentAtom < prot->ProteinAtomCount(); ++currentAtom )
-				{
-					this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.3f, 0.9f, 0.3f));
-				}
-			}
-		} // ===== END coloring mode STRUCTURE =====
-		else if( this->currentColoringMode == CHAIN_ID )
-		{
-			// loop over all chains
-			for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-			{
-				chain = prot->ProteinChain( currentChain);
-				// loop over all amino acids in the current chain
-				for( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-				{
-					// loop over all connections of the current amino acid
-					for( currentAtom = 0; 
-						 currentAtom < chain.AminoAcid()[currentAminoAcid].AtomCount();
-						 currentAtom++ )
-					{
-						i = (currentChain + 1) % (unsigned int)(this->aminoAcidColorTable.Count());
-						this->atomColor.push_back( this->aminoAcidColorTable[i]);
-					}
-				}
-			}
-		} // ===== END coloring mode CHAIN_ID =====
-		else if( this->currentColoringMode == VALUE )
-		{
-			vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-			vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-			vislib::math::Vector<float, 3> colMin = this->minValueColor;
-			
-			float min( prot->MinimumTemperatureFactor() );
-			float max( prot->MaximumTemperatureFactor() );
-			float mid( ( max - min)/2.0f + min );
-			float val;
-			
-			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				if( min == max )
-				{
-					this->atomColor.push_back( colMid);
-					continue;
-				}
-				
-				val = prot->ProteinAtomData()[i].TempFactor();
-				// below middle value --> blend between min and mid color
-				if( val < mid )
-				{
-					color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
-					this->atomColor.push_back( color);
-				}
-				// above middle value --> blend between max and mid color
-				else if( val > mid )
-				{
-					color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
-					this->atomColor.push_back( color);
-				}
-				// middle value --> assign mid color
-				else
-				{
-					this->atomColor.push_back( colMid);
-				}
-			}
-		} // ===== END coloring mode VALUE =====
-		else if( this->currentColoringMode == RAINBOW )
-		{
-			for( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
-			{
-				for( cntRes = 0; cntRes < prot->ProteinChain( cntCha).AminoAcidCount(); ++cntRes )
-				{
-					i = int( ( float( cntRes) / float( prot->ProteinChain( cntCha).AminoAcidCount() ) ) * float( rainbowColors.size() ) ) % rainbowColors.size();
-					color = this->rainbowColors[i];
-					for( cntAto = 0;
-					     cntAto < prot->ProteinChain( cntCha).AminoAcid()[cntRes].AtomCount();
-					     ++cntAto )
-					{
-						this->atomColor.push_back( color);
-					}
-				}
-			}
-		} // ===== END coloring mode RAINBOW =====
-		else if ( this->currentColoringMode == CHARGE )
-		{
-			vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-			vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-			vislib::math::Vector<float, 3> colMin = this->minValueColor;
-			
-			float min( prot->MinimumCharge() );
-			float max( prot->MaximumCharge() );
-			float mid( ( max - min)/2.0f + min );
-			float charge;
-			
-			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				if( min == max )
-				{
-					this->atomColor.push_back( colMid);
-					continue;
-				}
-				
-				charge = prot->ProteinAtomData()[i].Charge();
-				// below middle value --> blend between min and mid color
-				if( charge < mid )
-				{
-					color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( charge - min );
-					this->atomColor.push_back( color);
-				}
-				// above middle value --> blend between max and mid color
-				else if( charge > mid )
-				{
-					color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( charge - mid );
-					this->atomColor.push_back( color);
-				}
-				// middle value --> assign mid color
-				else
-				{
-					this->atomColor.push_back( colMid);
-				}
-			}
-		} // ===== END coloring mode CHARGE =====
-		else if ( this->currentColoringMode == OCCUPANCY )
-		{
-			vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-			vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-			vislib::math::Vector<float, 3> colMin = this->minValueColor;		
+void MoleculeSESRenderer::MakeColorTable( const MolecularDataCall *mol, bool forceRecompute) {
+    // temporary variables
+    unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx, atomCnt;
+    vislib::math::Vector<float, 3> color;
+    float r, g, b;
 
-			float min( prot->MinimumOccupancy() );
-			float max( prot->MaximumOccupancy() );
-			float mid( ( max - min)/2.0f + min );
-			float charge;
-			
-			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				if( min == max )
-				{
-					this->atomColor.push_back( colMid);
-					continue;
-				}
-				
-				charge = prot->ProteinAtomData()[i].Occupancy();
-				// below middle value --> blend between min and mid color
-				if( charge < mid )
-				{
-					color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( charge - min );
-					this->atomColor.push_back( color);
-				}
-				// above middle value --> blend between max and mid color
-				else if( charge > mid )
-				{
-					color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( charge - mid );
-					this->atomColor.push_back( color);
-				}
-				// middle value --> assign mid color
-				else
-				{
-					this->atomColor.push_back( colMid);
-				}
-			}
-		} // ===== END coloring mode OCCUPANCY =====
-        else // default case (wrong parameter):
-		{
-			// resize atom color table
-			this->atomColor.resize( prot->ProteinAtomCount());
-			for( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				this->atomColor[i].SetX( 1.0f);
-				this->atomColor[i].SetY( 1.0f);
-				this->atomColor[i].SetZ( 1.0f);
-			}
-		} // ===== END uniform color =====
-	}
+    // if recomputation is forced: clear current color table
+    if( forceRecompute ) {
+        this->atomColorTable.Clear();
+    }
+    // reserve memory for all atoms
+    this->atomColorTable.AssertCapacity( mol->AtomCount() * 3 );
+
+    // only compute color table if necessary
+    if( this->atomColorTable.IsEmpty() ) {
+        if( this->currentColoringMode == ELEMENT ) {
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                color.SetX( float( mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Colour()[0]) / 255.0f );
+                color.SetY( float( mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Colour()[1]) / 255.0f );
+                color.SetZ( float( mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Colour()[2]) / 255.0f );
+                this->atomColorTable.Add( color);
+            }
+        } // ... END coloring mode ELEMENT
+        else if( this->currentColoringMode == RESIDUE ) {
+            unsigned int resTypeIdx;
+            // loop over all residues
+            for( cntRes = 0; cntRes < mol->ResidueCount(); ++cntRes ) {
+                // loop over all atoms of the current residue
+                idx = mol->Residues()[cntRes]->FirstAtomIndex();
+                cnt = mol->Residues()[cntRes]->AtomCount();
+                // get residue type index
+                resTypeIdx = mol->Residues()[cntRes]->Type();
+                for( cntAtom = idx; cntAtom < idx + cnt; ++cntAtom ) {
+                    this->atomColorTable.Add( this->colorLookupTable[resTypeIdx%this->colorLookupTable.Count()]);
+                }
+            }
+        } // ... END coloring mode RESIDUE
+        else if( this->currentColoringMode == STRUCTURE ) {
+            utility::ColourParser::FromString( "#00ff00", r, g, b);
+            vislib::math::Vector<float, 3> colNone( r, g, b);
+            utility::ColourParser::FromString( "#ff0000", r, g, b);
+            vislib::math::Vector<float, 3> colHelix( r, g, b);
+            utility::ColourParser::FromString( "#0000ff", r, g, b);
+            vislib::math::Vector<float, 3> colSheet( r, g, b);
+            utility::ColourParser::FromString( "#ffffff", r, g, b);
+            vislib::math::Vector<float, 3> colRCoil( r, g, b);
+            // loop over all atoms and fill the table with the default color
+            for( cntAtom = 0; cntAtom < mol->AtomCount(); ++cntAtom ) {
+                this->atomColorTable.Add( colNone);
+            }
+            // write colors for sec structure elements
+            MolecularDataCall::SecStructure::ElementType elemType;
+            for( cntSecS = 0; cntSecS < mol->SecondaryStructureCount(); ++cntSecS ) {
+                idx = mol->SecondaryStructures()[cntSecS].FirstAminoAcidIndex();
+                cnt = idx + mol->SecondaryStructures()[cntSecS].AminoAcidCount();
+                elemType = mol->SecondaryStructures()[cntSecS].Type();
+                for( cntRes = idx; cntRes < cnt; ++cntRes ) {
+                    atomIdx = mol->Residues()[cntRes]->FirstAtomIndex();
+                    atomCnt = atomIdx + mol->Residues()[cntRes]->AtomCount();
+                    for( cntAtom = atomIdx; cntAtom < atomCnt; ++cntAtom ) {
+                        if( elemType == MolecularDataCall::SecStructure::TYPE_HELIX ) {
+                            this->atomColorTable[cntAtom] = colHelix;
+                        } else if( elemType == MolecularDataCall::SecStructure::TYPE_SHEET ) {
+                            this->atomColorTable[cntAtom] = colSheet;
+                        } else if( elemType == MolecularDataCall::SecStructure::TYPE_COIL ) {
+                            this->atomColorTable[cntAtom] = colRCoil;
+                        }
+                    }
+                }
+            }
+        } // ... END coloring mode STRUCTURE
+        else if( this->currentColoringMode == BFACTOR ) {
+            float r, g, b;
+            // get min color
+            utility::ColourParser::FromString( 
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMin( r, g, b);
+            // get mid color
+            utility::ColourParser::FromString( 
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMid( r, g, b);
+            // get max color
+            utility::ColourParser::FromString( 
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMax( r, g, b);
+            // temp color variable
+            vislib::math::Vector<float, 3> col;
+
+            float min( mol->MinimumBFactor());
+            float max( mol->MaximumBFactor());
+            float mid( ( max - min)/2.0f + min );
+            float val;
+            
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                if( min == max ) {
+                    this->atomColorTable.Add( colMid);
+                    continue;
+                }
+                
+                val = mol->AtomBFactors()[cnt];
+                // below middle value --> blend between min and mid color
+                if( val < mid ) {
+                    col = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
+                    this->atomColorTable.Add( col);
+                }
+                // above middle value --> blend between max and mid color
+                else if( val > mid ) {
+                    col = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
+                    this->atomColorTable.Add( col);
+                }
+                // middle value --> assign mid color
+                else {
+                    this->atomColorTable.Add( colMid);
+                }
+            }
+        } // ... END coloring mode BFACTOR
+        else if( this->currentColoringMode == CHARGE ) {
+            float r, g, b;
+            // get min color
+            utility::ColourParser::FromString( 
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMin( r, g, b);
+            // get mid color
+            utility::ColourParser::FromString( 
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMid( r, g, b);
+            // get max color
+            utility::ColourParser::FromString( 
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMax( r, g, b);
+            // temp color variable
+            vislib::math::Vector<float, 3> col;
+
+            float min( mol->MinimumCharge());
+            float max( mol->MaximumCharge());
+            float mid( ( max - min)/2.0f + min );
+            float val;
+            
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                if( min == max ) {
+                    this->atomColorTable.Add( colMid);
+                    continue;
+                }
+                
+                val = mol->AtomCharges()[cnt];
+                // below middle value --> blend between min and mid color
+                if( val < mid ) {
+                    col = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
+                    this->atomColorTable.Add( col);
+                }
+                // above middle value --> blend between max and mid color
+                else if( val > mid ) {
+                    col = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
+                    this->atomColorTable.Add( col);
+                }
+                // middle value --> assign mid color
+                else {
+                    this->atomColorTable.Add( colMid);
+                }
+            }
+        } // ... END coloring mode CHARGE
+        else if( this->currentColoringMode == OCCUPANCY ) {
+            float r, g, b;
+            // get min color
+            utility::ColourParser::FromString( 
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMin( r, g, b);
+            // get mid color
+            utility::ColourParser::FromString( 
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMid( r, g, b);
+            // get max color
+            utility::ColourParser::FromString( 
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                r, g, b);
+            vislib::math::Vector<float, 3> colMax( r, g, b);
+            // temp color variable
+            vislib::math::Vector<float, 3> col;
+
+            float min( mol->MinimumOccupancy());
+            float max( mol->MaximumOccupancy());
+            float mid( ( max - min)/2.0f + min );
+            float val;
+            
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                if( min == max ) {
+                    this->atomColorTable.Add( colMid);
+                    continue;
+                }
+                
+                val = mol->AtomOccupancies()[cnt];
+                // below middle value --> blend between min and mid color
+                if( val < mid ) {
+                    col = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
+                    this->atomColorTable.Add( col);
+                }
+                // above middle value --> blend between max and mid color
+                else if( val > mid ) {
+                    col = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
+                    this->atomColorTable.Add( col);
+                }
+                // middle value --> assign mid color
+                else {
+                    this->atomColorTable.Add( colMid);
+                }
+            }
+        } // ... END coloring mode OCCUPANCY
+        else if( this->currentColoringMode == CHAIN ) {
+            // get the last atom of the last res of the last mol of the first chain
+            cntChain = 0;
+            cntMol = mol->Chains()[cntChain].MoleculeCount() - 1;
+            cntRes = mol->Molecules()[cntMol].FirstResidueIndex() + mol->Molecules()[cntMol].ResidueCount() - 1;
+            cntAtom = mol->Residues()[cntRes]->FirstAtomIndex() + mol->Residues()[cntRes]->AtomCount() - 1;
+            // get the first color
+            idx = 0;
+            color = this->colorLookupTable[idx%this->colorLookupTable.Count()];
+            // loop over all atoms
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                // check, if the last atom of the current chain is reached
+                if( cnt > cntAtom ) {
+                    // get the last atom of the last res of the last mol of the next chain
+                    cntChain++;
+                    cntMol = mol->Chains()[cntChain].FirstMoleculeIndex() + mol->Chains()[cntChain].MoleculeCount() - 1;
+                    cntRes = mol->Molecules()[cntMol].FirstResidueIndex() + mol->Molecules()[cntMol].ResidueCount() - 1;
+                    cntAtom = mol->Residues()[cntRes]->FirstAtomIndex() + mol->Residues()[cntRes]->AtomCount() - 1;
+                    // get the next color
+                    idx++;
+                    color = this->colorLookupTable[idx%this->colorLookupTable.Count()];
+                    
+                }
+                this->atomColorTable.Add( color);
+            }
+        } // ... END coloring mode CHAIN
+        else if( this->currentColoringMode == MOLECULE ) {
+            // get the last atom of the last res of the first mol
+            cntMol = 0;
+            cntRes = mol->Molecules()[cntMol].FirstResidueIndex() + mol->Molecules()[cntMol].ResidueCount() - 1;
+            cntAtom = mol->Residues()[cntRes]->FirstAtomIndex() + mol->Residues()[cntRes]->AtomCount() - 1;
+            // get the first color
+            idx = 0;
+            color = this->colorLookupTable[idx%this->colorLookupTable.Count()];
+            // loop over all atoms
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                // check, if the last atom of the current chain is reached
+                if( cnt > cntAtom ) {
+                    // get the last atom of the last res of the next mol
+                    cntMol++;
+                    cntRes = mol->Molecules()[cntMol].FirstResidueIndex() + mol->Molecules()[cntMol].ResidueCount() - 1;
+                    cntAtom = mol->Residues()[cntRes]->FirstAtomIndex() + mol->Residues()[cntRes]->AtomCount() - 1;
+                    // get the next color
+                    idx++;
+                    color = this->colorLookupTable[idx%this->colorLookupTable.Count()];
+                    
+                }
+                this->atomColorTable.Add( color);
+            }
+        } // ... END coloring mode MOLECULE
+        else if( this->currentColoringMode == RAINBOW ) {
+            for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+                idx = int( ( float( cnt) / float( mol->AtomCount())) * float( rainbowColors.Count()));
+                color = this->rainbowColors[idx];
+                this->atomColorTable.Add( color);
+            }
+        } // ... END coloring mode RAINBOW
+    }
 }

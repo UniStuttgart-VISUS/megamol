@@ -13,7 +13,7 @@
 
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
 
-#include "param/StringParam.h"
+#include "param/FilePathParam.h"
 #include "param/BoolParam.h"
 #include "vislib/BufferedFile.h"
 #include "vislib/sysfunctions.h"
@@ -99,7 +99,8 @@ protein::NetCDFData::NetCDFData ( void ) :
 		m_frameID( 0), m_numFrames( 0), m_numAtoms( 0), m_numAtomTypes( 0), m_numres( 0),
 		m_numAminoAcidNames( 0), m_numAtomsPerMol( NULL),
 		m_interpolFrame( this), m_animTimer(), m_lastFrame( NULL), m_lastTime(-1.0f),
-		m_scale ( 1.0f ), currentFrameId( 0), maxCharge( 0.0f), minCharge( 0.0f)
+		m_scale ( 1.0f ), currentFrameId( 0), maxCharge( 0.0f), minCharge( 0.0f),
+        datahash( 0)
 {
 	//numberOfConnections = 0;
 	//checkBondLength = false;
@@ -108,7 +109,9 @@ protein::NetCDFData::NetCDFData ( void ) :
 	this->m_animTimer.SetSource ( this );
 
 	CallProteinDataDescription cpdd;
-	this->m_generalDataSlot.SetCallback ( cpdd.ClassName(), "GetData", &NetCDFData::NetCDFDataCallback );
+	//this->m_generalDataSlot.SetCallback ( cpdd.ClassName(), "GetData", &NetCDFData::NetCDFDataCallback );
+    this->m_generalDataSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetData), &NetCDFData::NetCDFDataCallback);
+    this->m_generalDataSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetExtent), &NetCDFData::getExtent);
 	this->MakeSlotAvailable ( &this->m_generalDataSlot );
 
 	this->m_RMSFrameDataSlot1.SetCallback ( cpdd.ClassName(), "GetData", &NetCDFData::NetCDFDataCallback );
@@ -117,7 +120,7 @@ protein::NetCDFData::NetCDFData ( void ) :
 	this->m_RMSFrameDataSlot2.SetCallback ( cpdd.ClassName(), "GetData", &NetCDFData::NetCDFDataCallback );
 	this->MakeSlotAvailable ( &this->m_RMSFrameDataSlot2 );
 
-	this->m_filenameParam.SetParameter( new param::StringParam( "" ) );
+	this->m_filenameParam.SetParameter( new param::FilePathParam( "" ) );
 	this->MakeSlotAvailable ( &this->m_filenameParam );
 
 	// access to parameter from AnimDataTimer class
@@ -168,8 +171,10 @@ bool protein::NetCDFData::tryLoadFile ( void )
 	//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
 	//                                      "protein::NetCDFData::create called \n");
 
-    vislib::StringA tmp_netcdffile(this->m_filenameParam.Param<param::StringParam>()->Value());
-    vislib::StringA tmp_topfile(this->m_filenameParam.Param<param::StringParam>()->Value());
+    this->datahash++;
+
+    vislib::StringA tmp_netcdffile(this->m_filenameParam.Param<param::FilePathParam>()->Value());
+    vislib::StringA tmp_topfile(this->m_filenameParam.Param<param::FilePathParam>()->Value());
 
 	if (tmp_netcdffile.IsEmpty()) {
 		// no file to load
@@ -243,6 +248,35 @@ bool protein::NetCDFData::tryLoadFile ( void )
 	initFrameCache ( 10 );
 
 	return m_netcdfOpen;
+}
+
+
+/*
+ * protein::NetCDFData::getExtent
+ */
+bool protein::NetCDFData::getExtent( core::Call& call) {
+    CallProteinData *dc = dynamic_cast<CallProteinData*>( &call);
+    if ( dc == NULL ) return false;
+
+    if ( this->m_filenameParam.IsDirty() ) {
+        this->tryLoadFile();
+        this->m_filenameParam.ResetDirty();
+    }
+
+    vislib::math::Cuboid<float> bbox(
+        -1.0f * this->m_boundingBox[0] / 2.0f, -1.0f * this->m_boundingBox[1] / 2.0f,
+        -1.0f * this->m_boundingBox[2] / 2.0f, this->m_boundingBox[0] / 2.0f,
+        this->m_boundingBox[1] / 2.0f, this->m_boundingBox[2]/ 2.0f );
+
+    dc->AccessBoundingBoxes().Clear();
+    dc->AccessBoundingBoxes().SetObjectSpaceBBox( bbox);
+    dc->AccessBoundingBoxes().SetObjectSpaceClipBox( bbox);
+
+    dc->SetFrameCount( 1U);
+
+    dc->SetDataHash( this->datahash);
+
+    return true;
 }
 
 
@@ -397,7 +431,8 @@ bool protein::NetCDFData::NetCDFDataCallback( Call& call) {
 
 			// assign the disulfide bond table
 			disulfidBondsVec = m_interpolFrame.GetDisulfidBonds();
-			pdi->SetDisulfidBondsPointer ( disulfidBondsVec.size(), &disulfidBondsVec[0] );
+			//pdi->SetDisulfidBondsPointer ( disulfidBondsVec.size(), &disulfidBondsVec[0] );
+            pdi->SetDisulfidBondsPointer ( 0, 0 );
 			pdi->SetScaling ( this->m_scale );
 
 			// allocate the chains ... [kroneml, 21.04.2009]

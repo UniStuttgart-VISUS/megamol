@@ -14,7 +14,9 @@
 #include "param/EnumParam.h"
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
+#include "param/Vector3fParam.h"
 #include "utility/ShaderSourceFactory.h"
+#include "view/AbstractCallRender.h"
 #include "vislib/assert.h"
 #include "vislib/glverify.h"
 #include "vislib/File.h"
@@ -34,36 +36,44 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::protein;
 
 
 /*
  * protein::ProteinVolumeRenderer::ProteinVolumeRenderer (CTOR)
  */
 protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModule (),
-		protDataCallerSlot ( "getData", "Connects the protein rendering with protein data storage" ),
-		callFrameCalleeSlot ( "callFrame", "Connects the protein rendering with frame call from RMS renderer" ),
-		renderingModeParam ( "renderingMode", "Rendering Mode" ),
+		protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
+		callFrameCalleeSlot ( "callFrame", "Connects the volume rendering with frame call from RMS renderer" ),
+        protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
 		coloringModeParam ( "coloringMode", "Coloring Mode" ),
-		drawBackboneParam ( "drawBackbone", "Draw Backbone only" ),
-		drawDisulfideBondsParam ( "drawDisulfideBonds", "Draw Disulfide Bonds" ),
-		stickRadiusParam ( "stickRadius", "Stick Radius for spheres and sticks with STICK_ render modes" ),
-		probeRadiusParam ( "probeRadius", "Probe Radius for SAS rendering" ),
-		volIsoValueParam( "volIsoValue", "Isovalue for isosurface rendering"),
+		volIsoValue1Param( "volIsoValue1", "First isovalue for isosurface rendering"),
+		volIsoValue2Param( "volIsoValue2", "Second isovalue for isosurface rendering"),
 		volFilterRadiusParam( "volFilterRadius", "Filter Radius for volume generation"),
 		volDensityScaleParam( "volDensityScale", "Density scale factor for volume generation"),
 		volIsoOpacityParam( "volIsoOpacity", "Opacity of isosurface"),
+        volClipPlaneFlagParam( "volClipPlane", "Enable volume clipping"),
+        volClipPlane0NormParam( "clipPlane0Norm", "Volume clipping plane 0 normal"),
+        volClipPlane0DistParam( "clipPlane0Dist", "Volume clipping plane 0 distance"),
+        volClipPlaneOpacityParam( "clipPlaneOpacity", "Volume clipping plane opacity"),
         currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
         volFilterRadius( 1.75f), volDensityScale( 1.0f),
         width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
         volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
-		renderIsometric( true), isoValue( 0.6f), volIsoOpacity( 0.4f)
+		renderIsometric( true), meanDensityValue( 0.0f), isoValue1( 0.5f), isoValue2(-0.5f),
+        volIsoOpacity( 0.4f), volClipPlaneFlag( false), volClipPlaneOpacity( 0.4f)
 {
 	this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
+	this->protDataCallerSlot.SetCompatibleCall<CallVolumeDataDescription>();
+	this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable ( &this->protDataCallerSlot );
 
 	protein::CallFrameDescription dfd;
 	this->callFrameCalleeSlot.SetCallback ( dfd.ClassName(), "CallFrame", &ProteinVolumeRenderer::ProcessFrameRequest );
 	this->MakeSlotAvailable ( &this->callFrameCalleeSlot );
+
+    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
 	// --- set the coloring mode ---
 
@@ -85,43 +95,9 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 
 	this->coloringModeParam << cm;
 
-	// --- set the render mode ---
-
-	SetRenderMode( LINES);
-	//SetRenderMode( STICK_POLYGON);
-	//SetRenderMode( STICK_RAYCASTING);
-	//SetRenderMode( BALL_AND_STICK);
-	//SetRenderMode( SPACEFILLING);
-	param::EnumParam *rm = new param::EnumParam( int( this->currentRenderMode));
-
-	rm->SetTypePair( LINES, "Lines" );
-	//rm->SetTypePair(STICK_POLYGON, "StickPoly gonal");
-	rm->SetTypePair( STICK_RAYCASTING, "StickRaycasting" );
-	rm->SetTypePair( BALL_AND_STICK, "BallAndStick" );
-	rm->SetTypePair( SPACEFILLING, "SpaceFilling" );
-	rm->SetTypePair( SPACEFILLING_CLIP, "ClippedSpaceFilling" );
-	rm->SetTypePair( SAS, "SAS" );
-
-	this->renderingModeParam << rm;
-
-	// --- draw only the backbone, if 'true' ---
-	this->drawBackbone = false;
-	//this->drawBackboneParam.SetParameter(new view::BoolParam(this->drawBackbone));
-
-	// --- draw disulfide bonds, if 'true' ---
-	this->drawDisulfideBonds = false;
-	this->drawDisulfideBondsParam.SetParameter ( new param::BoolParam ( this->drawDisulfideBonds ) );
-
-	// --- set the radius for the stick rendering mode ---
-	this->radiusStick = 0.3f;
-	this->stickRadiusParam.SetParameter ( new param::FloatParam ( this->radiusStick, 0.0f ) );
-
-	// --- set the probe radius for sas rendering mode ---
-	this->probeRadius = 1.4f;
-	this->probeRadiusParam.SetParameter ( new param::FloatParam ( this->probeRadius, 0.0f ) );
-
-	// --- set up parameter for isovalue ---
-	this->volIsoValueParam.SetParameter( new param::FloatParam( this->isoValue, 0.0f ) );
+	// --- set up parameters for isovalues ---
+    this->volIsoValue1Param.SetParameter( new param::FloatParam( this->isoValue1) );
+    this->volIsoValue2Param.SetParameter( new param::FloatParam( this->isoValue2) );
 	// --- set up parameter for volume filter radius ---
 	this->volFilterRadiusParam.SetParameter( new param::FloatParam( this->volFilterRadius, 0.0f ) );
 	// --- set up parameter for volume density scale ---
@@ -129,37 +105,39 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 	// --- set up parameter for isosurface opacity ---
 	this->volIsoOpacityParam.SetParameter( new param::FloatParam( this->volIsoOpacity, 0.0f, 1.0f ) );
 
+    // set default clipping plane
+    this->volClipPlane.Clear();
+    this->volClipPlane.Add( vislib::math::Vector<double, 4>( 0.0, 1.0, 0.0, 0.2));
+
+    // --- set up parameter for volume clipping ---
+    this->volClipPlaneFlagParam.SetParameter( new param::BoolParam( this->volClipPlaneFlag));
+    // --- set up parameter for volume clipping plane normal ---
+    vislib::math::Vector<float, 3> cp0n(
+        this->volClipPlane[0].PeekComponents()[0], 
+        this->volClipPlane[0].PeekComponents()[1], 
+        this->volClipPlane[0].PeekComponents()[2]);
+    this->volClipPlane0NormParam.SetParameter( new param::Vector3fParam( cp0n) );
+    // --- set up parameter for volume clipping plane distance ---
+    float d = this->volClipPlane[0].PeekComponents()[3];
+    this->volClipPlane0DistParam.SetParameter( new param::FloatParam( d) );
+	// --- set up parameter for clipping plane opacity ---
+    this->volClipPlaneOpacityParam.SetParameter( new param::FloatParam( this->volClipPlaneOpacity, 0.0f, 1.0f ) );
+
 	this->MakeSlotAvailable( &this->coloringModeParam );
-	this->MakeSlotAvailable( &this->renderingModeParam );
-	//this->MakeSlotAvailable(&this->drawBackboneParam);
-	this->MakeSlotAvailable( &this->drawDisulfideBondsParam );
-	this->MakeSlotAvailable( &this->stickRadiusParam );
-	this->MakeSlotAvailable( &this->probeRadiusParam );
-	this->MakeSlotAvailable( &this->volIsoValueParam );
+	this->MakeSlotAvailable( &this->volIsoValue1Param );
+	this->MakeSlotAvailable( &this->volIsoValue2Param );
 	this->MakeSlotAvailable( &this->volFilterRadiusParam );
 	this->MakeSlotAvailable( &this->volDensityScaleParam );
 	this->MakeSlotAvailable( &this->volIsoOpacityParam );
-
-	// set empty display list to zero
-	this->proteinDisplayListLines = 0;
-	// set empty display list to zero
-	this->disulfideBondsDisplayList = 0;
-	// STICK_RAYCASTING render mode was not prepared yet
-	this->prepareStickRaycasting = true;
-	// BALL_AND_STICK render mode was not prepared yet
-	this->prepareBallAndStick = true;
-	// SPACEFILLING render mode was not prepared yet
-	this->prepareSpacefilling = true;
-	// SAS render mode was not prepared yet
-	this->prepareSAS = true;
+    this->MakeSlotAvailable( &this->volClipPlaneFlagParam );
+    this->MakeSlotAvailable( &this->volClipPlane0NormParam );
+    this->MakeSlotAvailable( &this->volClipPlane0DistParam );
+    this->MakeSlotAvailable( &this->volClipPlaneOpacityParam );
 
 	// fill amino acid color table
 	this->FillAminoAcidColorTable();
 	// fill rainbow color table
 	this->MakeRainbowColorTable( 100);
-
-	// draw dots for atoms when using LINES mode
-	this->drawDotsWithLine = true;
 
 	this->renderRMSData = false;
 	this->frameLabel = NULL;
@@ -169,8 +147,7 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 /*
  * protein::ProteinVolumeRenderer::~ProteinVolumeRenderer (DTOR)
  */
-protein::ProteinVolumeRenderer::~ProteinVolumeRenderer ( void )
-{
+protein::ProteinVolumeRenderer::~ProteinVolumeRenderer ( void ) {
 	delete this->frameLabel;
 	this->Release ();
 }
@@ -179,8 +156,7 @@ protein::ProteinVolumeRenderer::~ProteinVolumeRenderer ( void )
 /*
  * protein::ProteinVolumeRenderer::release
  */
-void protein::ProteinVolumeRenderer::release ( void )
-{
+void protein::ProteinVolumeRenderer::release ( void ) {
 
 }
 
@@ -188,8 +164,7 @@ void protein::ProteinVolumeRenderer::release ( void )
 /*
  * protein::ProteinVolumeRenderer::create
  */
-bool protein::ProteinVolumeRenderer::create ( void )
-{
+bool protein::ProteinVolumeRenderer::create ( void ) {
     if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
         return false;
 	if( !glh_init_extensions( "GL_ARB_vertex_program" ) )
@@ -356,6 +331,24 @@ bool protein::ProteinVolumeRenderer::create ( void )
 		return false;
 	}
 
+	// Load dual isosurface rendering shader
+	if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::volumeDualIsoVertex", vertSrc ) ) {
+		Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for dual isosurface rendering shader", this->ClassName() );
+		return false;
+	}
+	if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::volumeDualIsoFragment", fragSrc ) ) {
+		Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for two isosurface rendering shader", this->ClassName() );
+		return false;
+	}
+	try {
+        if ( !this->dualIsosurfaceShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
+			throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
+		}
+	} catch ( vislib::Exception e ) {
+		Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create dual isosurface rendering shader: %s\n", this->ClassName(), e.GetMsgA() );
+		return false;
+	}
+
 	return true;
 }
 
@@ -371,7 +364,9 @@ bool protein::ProteinVolumeRenderer::GetCapabilities( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER | view::CallRender3D::CAP_LIGHTING);
+    cr3d->SetCapabilities( view::CallRender3D::CAP_RENDER | 
+		view::CallRender3D::CAP_LIGHTING |
+        view::CallRender3D::CAP_ANIMATION);
 
     return true;
 }
@@ -384,34 +379,71 @@ bool protein::ProteinVolumeRenderer::GetExtents( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    protein::CallProteinData *protein = this->protDataCallerSlot.CallAs<protein::CallProteinData>();
-    if( protein == NULL ) return false;
+    CallProteinData *protein = this->protDataCallerSlot.CallAs<CallProteinData>();
+    CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
+	MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
+
+    float scale, xoff, yoff, zoff;
+    vislib::math::Cuboid<float> boundingBox;
+    vislib::math::Point<float, 3> bbc;
+
+    // try to get the bounding box from the active data call
+    if( protein ) {
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
     if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
         if( !this->renderRMSData ) return false;
     } else {
         if( !(*protein)() ) return false;
     }
+        // get bounding box
+        boundingBox = protein->BoundingBox();
+    } else if( volume ) {
+        // try to call the volume data
+        if( !(*volume)() ) return false;
+        // get bounding box
+        boundingBox = volume->BoundingBox();
+	} else if( mol ) {
+		// try to call the molecular data
+		if (!(*mol)(1)) return false;
+		// get the bounding box
+		boundingBox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+		// set the frame count
+		cr3d->SetTimeFramesCount( mol->FrameCount());
+	} else {
+        return false;
+    }
 
-    float scale, xoff, yoff, zoff;
-    vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
+    bbc = boundingBox.CalcCenter();
     xoff = -bbc.X();
     yoff = -bbc.Y();
     zoff = -bbc.Z();
-    scale = 2.0f / vislib::math::Max(vislib::math::Max( protein->BoundingBox().Width(),
-        protein->BoundingBox().Height()), protein->BoundingBox().Depth());
+	if( !vislib::math::IsEqual( boundingBox.LongestEdge(), 0.0f) ) { 
+		scale = 2.0f / boundingBox.LongestEdge();
+	} else {
+		scale = 1.0f;
+	}
 
     BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
-    bbox.SetObjectSpaceBBox(protein->BoundingBox());
+    bbox.SetObjectSpaceBBox( boundingBox);
     bbox.SetWorldSpaceBBox(
-        (protein->BoundingBox().Left() + xoff) * scale,
-        (protein->BoundingBox().Bottom() + yoff) * scale,
-        (protein->BoundingBox().Back() + zoff) * scale,
-        (protein->BoundingBox().Right() + xoff) * scale,
-        (protein->BoundingBox().Top() + yoff) * scale,
-        (protein->BoundingBox().Front() + zoff) * scale);
+        ( boundingBox.Left() + xoff) * scale,
+        ( boundingBox.Bottom() + yoff) * scale,
+        ( boundingBox.Back() + zoff) * scale,
+        ( boundingBox.Right() + xoff) * scale,
+        ( boundingBox.Top() + yoff) * scale,
+        ( boundingBox.Front() + zoff) * scale);
     bbox.SetObjectSpaceClipBox( bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox( bbox.WorldSpaceBBox());
+
+    // get the pointer to CallRender3D (protein renderer)
+    view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
+    vislib::math::Point<float, 3> protrenbbc;
+    if( protrencr3d ) {
+        (*protrencr3d)(1); // GetExtents
+        BoundingBoxes &protrenbb = protrencr3d->AccessBoundingBoxes();
+        this->protrenScale =  protrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
+        this->protrenTranslate = ( protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
+    }
 
     return true;
 }
@@ -422,15 +454,93 @@ bool protein::ProteinVolumeRenderer::GetExtents( Call& call) {
  */
 bool protein::ProteinVolumeRenderer::Render( Call& call )
 {
+    // cast the call to Render3D
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>( &call );
+    if( !cr3d ) return false;
+    // get the pointer to CallRender3D (protein renderer)
+    view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
 	// get pointer to CallProteinData
-	CallProteinData *protein = this->protDataCallerSlot.CallAs<protein::CallProteinData>();
+	CallProteinData *protein = this->protDataCallerSlot.CallAs<CallProteinData>();
+	// get pointer to CallVolumeData
+    CallVolumeData *volume = this->protDataCallerSlot.CallAs<CallVolumeData>();
+	// get pointer to MolecularDataCall
+	MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
-	if( protein == NULL )
+	// get camera information
+    this->cameraInfo = cr3d->GetCameraParameters();
+
+    // =============== Query Camera View Dimensions ===============
+    if( static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
+        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height ) {
+        this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
+        this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
+    }
+
+    // create the fbo, if necessary
+    if( !this->proteinFBO.IsValid() ) {
+        this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    }
+    // resize the fbo, if necessary
+    if( this->proteinFBO.GetWidth() != this->width || this->proteinFBO.GetHeight() != this->height ) {
+        this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    }
+
+    // =============== Protein Rendering ===============
+    // disable the output buffer
+    cr3d->DisableOutputBuffer();
+    // start rendering to the FBO for protein rendering
+    this->proteinFBO.Enable();
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    if( protrencr3d ) {
+        // setup and call protein renderer
+        glPushMatrix();
+        glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
+        glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
+        *protrencr3d = *cr3d;
+        protrencr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
+        (*protrencr3d)();
+        glPopMatrix();
+	}
+    // stop rendering to the FBO for protein rendering
+    this->proteinFBO.Disable();
+    // re-enable the output buffer
+    cr3d->EnableOutputBuffer();
+
+    // =============== Refresh all parameters ===============
+    this->ParameterRefresh();
+	// make the atom color table if necessary
+	this->MakeColorTable( protein, true);
+
+    unsigned int cpCnt;
+    for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
+        glClipPlane( GL_CLIP_PLANE0+cpCnt, this->volClipPlane[cpCnt].PeekComponents());
+    }
+
+    // =============== Volume Rendering ===============
+    // try to start volume rendering using protein data
+    if( protein ) {
+        return this->RenderProteinData( cr3d, protein);
+    }
+    // try to start volume rendering using volume data
+    if( volume ) {
+        return this->RenderVolumeData( cr3d, volume);
+    }
+    // try to start volume rendering using protein data
+    if( mol ) {
+        return this->RenderMolecularData( cr3d, mol);
+    }
+
 		return false;
+}
 
+
+/*
+ * Volume rendering using protein data.
+ */
+bool protein::ProteinVolumeRenderer::RenderProteinData( view::CallRender3D *call, CallProteinData *protein) {
+    // get the current frame id
 	if( this->currentFrameId != protein->GetCurrentFrameId() ) {
 		this->currentFrameId = protein->GetCurrentFrameId();
-		this->RecomputeAll();
 	}
 
 	// decide to use already loaded frame request from CallFrame or 'normal' rendering
@@ -445,65 +555,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call )
     // check last atom count with current atom count
     if( this->atomCount != protein->ProteinAtomCount() ) {
         this->atomCount = protein->ProteinAtomCount();
-        this->RecomputeAll();
-    }
-
-	// get camera information
-	this->cameraInfo = dynamic_cast<view::CallRender3D*>( &call )->GetCameraParameters();
-
-    // =============== Query Camera View Dimensions ===============
-    if( static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height ) {
-        this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
-        this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
-    }
-
-	// parameter refresh
-	if ( this->renderingModeParam.IsDirty() ) {
-		this->SetRenderMode ( static_cast<RenderMode> ( int ( this->renderingModeParam.Param<param::EnumParam>()->Value() ) ) );
-		this->renderingModeParam.ResetDirty();
 	}
-	if ( this->coloringModeParam.IsDirty() ) {
-		this->SetColoringMode ( static_cast<ColoringMode> ( int ( this->coloringModeParam.Param<param::EnumParam>()->Value() ) ) );
-		this->coloringModeParam.ResetDirty();
-	}
-	//if (this->drawBackboneParam.IsDirty())
-	//{
-	//	this->drawBackbone = this->drawBackboneParam.Param<view::BoolParam>()->Value();
-	//	this->drawBackboneParam.ResetDirty();
-	//}
-	if ( this->drawDisulfideBondsParam.IsDirty() ) {
-		this->drawDisulfideBonds = this->drawDisulfideBondsParam.Param<param::BoolParam>()->Value();
-		this->drawDisulfideBondsParam.ResetDirty();
-	}
-	if ( this->stickRadiusParam.IsDirty() ) {
-		this->SetRadiusStick ( this->stickRadiusParam.Param<param::FloatParam>()->Value() );
-		this->stickRadiusParam.ResetDirty();
-	}
-	if ( this->probeRadiusParam.IsDirty() ) {
-		this->SetRadiusProbe ( this->probeRadiusParam.Param<param::FloatParam>()->Value() );
-		this->probeRadiusParam.ResetDirty();
-	}
-	// volume parameters
-	if ( this->volIsoValueParam.IsDirty() ) {
-		this->isoValue = this->volIsoValueParam.Param<param::FloatParam>()->Value();
-		this->volIsoValueParam.ResetDirty();
-	}
-	if ( this->volFilterRadiusParam.IsDirty() ) {
-		this->volFilterRadius = this->volFilterRadiusParam.Param<param::FloatParam>()->Value();
-		this->volFilterRadiusParam.ResetDirty();
-	}
-	if ( this->volDensityScaleParam.IsDirty() ) {
-		this->volDensityScale = this->volDensityScaleParam.Param<param::FloatParam>()->Value();
-		this->volDensityScaleParam.ResetDirty();
-	}
-	if ( this->volIsoOpacityParam.IsDirty() ) {
-		this->volIsoOpacity = this->volIsoOpacityParam.Param<param::FloatParam>()->Value();
-		this->volIsoOpacityParam.ResetDirty();
-	}
-
-	// make the atom color table if necessary
-	this->MakeColorTable( protein );
 
 	glEnable ( GL_DEPTH_TEST );
 	glEnable ( GL_LIGHTING );
@@ -511,121 +563,37 @@ bool protein::ProteinVolumeRenderer::Render( Call& call )
 
 	glPushMatrix();
 
-	float xoff, yoff, zoff;
-	vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
-
-	xoff = -bbc.X();
-	yoff = -bbc.Y();
-	zoff = -bbc.Z();
-
-    this->translation =  protein->BoundingBox().GetLeftBottomBack();
-    this->translation *= -1.0f;
-
+    // translate scene for volume ray casting
 	this->scale = 2.0f / vislib::math::Max ( vislib::math::Max ( protein->BoundingBox().Width(),
 	                                   protein->BoundingBox().Height() ), protein->BoundingBox().Depth() );
-
-	//glScalef ( this->scale, this->scale, this->scale );
-	//glTranslatef ( xoff, yoff, zoff );
     vislib::math::Vector<float, 3> trans( protein->BoundingBox().GetSize().PeekDimension() );
     trans *= -this->scale*0.5f;
     glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ() );
 
-
-    // create the fbo, if necessary
-    if( !this->proteinFBO.IsValid() ) {
-        this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-    }
-    // resize the fbo, if necessary
-    if( this->proteinFBO.GetWidth() != this->width || this->proteinFBO.GetHeight() != this->height ) {
-        this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-    }
-
-    // start rendering to fbo
-    GL_VERIFY_EXPR( this->proteinFBO.Enable());
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-	if ( this->drawDisulfideBonds )
-	{
-		// ---------------------------------------------------------
-		// --- draw disulfide bonds                              ---
-		// ---------------------------------------------------------
-		this->RenderDisulfideBondsLine ( protein );
-	}
-
-	if ( currentRenderMode == LINES )
-	{
-		// -----------------------------------------------------------------------
-		// --- LINES                                                           ---
-		// --- render the sceleton of the protein using GL_POINTS and GL_LINES ---
-		// -----------------------------------------------------------------------
-		this->RenderLines ( protein );
-	}
-
-	if ( currentRenderMode == STICK_RAYCASTING )
-	{
-		// ------------------------------------------------------------
-		// --- STICK                                                ---
-		// --- render the protein using shaders / raycasting (glsl) ---
-		// ------------------------------------------------------------
-		this->RenderStickRaycasting ( protein );
-	}
-
-	if ( currentRenderMode == BALL_AND_STICK )
-	{
-		// ------------------------------------------------------------
-		// --- BALL & STICK                                         ---
-		// --- render the protein using shaders / raycasting (glsl) ---
-		// ------------------------------------------------------------
-		this->RenderBallAndStick ( protein );
-	}
-
-	if ( currentRenderMode == SPACEFILLING )
-	{
-		// ------------------------------------------------------------
-		// --- SPACEFILLING                                         ---
-		// --- render the protein using shaders / raycasting (glsl) ---
-		// ------------------------------------------------------------
-		this->RenderSpacefilling ( protein );
-	}
-
-	if ( currentRenderMode == SPACEFILLING_CLIP )
-	{
-		// ------------------------------------------------------------
-		// --- SPACEFILLING WITH CLIPPING PLANE                     ---
-		// --- render the protein using shaders / raycasting (glsl) ---
-		// ------------------------------------------------------------
-		vislib::math::Vector<float, 3> cpDir( -1.0f, -1.0f, 0.0f);
-		vislib::math::Vector<float, 3> cpBase =	bbc;
-		this->RenderClippedSpacefilling ( cpDir, cpBase, protein );
-	}
-
-	if ( currentRenderMode == SAS )
-	{
-		// ------------------------------------------------------------
-		// --- SAS (Solvent Accessible Surface)                     ---
-		// --- render the protein using shaders / raycasting (glsl) ---
-		// ------------------------------------------------------------
-		this->RenderSolventAccessibleSurface ( protein );
-	}
-
 	// ------------------------------------------------------------
 	// --- Volume Rendering                                     ---
-	// --- update & render the volume for the protein atoms     ---
+	// --- update & render the volume                           ---
 	// ------------------------------------------------------------
-
-    this->proteinFBO.Disable();
+    this->UpdateVolumeTexture( protein);
     CHECK_FOR_OGL_ERROR();
 
     this->proteinFBO.DrawColourTexture();
     CHECK_FOR_OGL_ERROR();
 
-    // update the volume
-    this->UpdateVolumeTexture( protein);
+    unsigned int cpCnt;
+    if( this->volClipPlaneFlag )
+        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
+            glEnable( GL_CLIP_PLANE0+cpCnt );
+    }
+
+	this->RenderVolume( protein->BoundingBox());
     CHECK_FOR_OGL_ERROR();
 
-    this->RenderVolume( protein);
-    CHECK_FOR_OGL_ERROR();
-    
+    if( this->volClipPlaneFlag )
+        for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
+            glDisable( GL_CLIP_PLANE0+cpCnt );
+    }
+
 	glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
 
 	glDisable ( GL_DEPTH_TEST );
@@ -636,9 +604,170 @@ bool protein::ProteinVolumeRenderer::Render( Call& call )
 	if ( this->renderRMSData )
 		this->DrawLabel( protein->GetRequestedRMSFrame() );
 
+    return true;
+	}
+
+
+
+/*
+ * Volume rendering using molecular data.
+ */
+bool protein::ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
+
+	// decide to use already loaded frame request from CallFrame or 'normal' rendering
+	if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED ) {
+		if( !this->renderRMSData )
+			return false;
+	} else {
+		if( !(*mol)() )
+			return false;
+	}
+
+    // check last atom count with current atom count
+	if( this->atomCount != mol->AtomCount() ) {
+        this->atomCount = mol->AtomCount();
+	}
+
+	glEnable ( GL_DEPTH_TEST );
+	glEnable ( GL_LIGHTING );
+	glEnable ( GL_VERTEX_PROGRAM_POINT_SIZE );
+
+	glPushMatrix();
+
+    // translate scene for volume ray casting
+	if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+		this->scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+	} else {
+		this->scale = 1.0f;
+	}
+    vislib::math::Vector<float, 3> trans( 
+		mol->AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension() );
+    trans *= -this->scale*0.5f;
+    glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ() );
+
+		// ------------------------------------------------------------
+	// --- Volume Rendering                                     ---
+	// --- update & render the volume                           ---
+		// ------------------------------------------------------------
+    this->UpdateVolumeTexture( mol);
+    CHECK_FOR_OGL_ERROR();
+
+    this->proteinFBO.DrawColourTexture();
+    CHECK_FOR_OGL_ERROR();
+
+	this->RenderVolume( mol->AccessBoundingBoxes().ObjectSpaceBBox());
+    CHECK_FOR_OGL_ERROR();
+    
+	glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
+
+	glDisable ( GL_DEPTH_TEST );
+    
+	glPopMatrix();
+    
+    return true;
+	}
+
+
+/*
+ * Volume rendering using volume data.
+ */
+bool protein::ProteinVolumeRenderer::RenderVolumeData( view::CallRender3D *call, CallVolumeData *volume) {
+	// try to call
+	if( !(*volume)() ) return false;
+
+	glEnable ( GL_DEPTH_TEST );
+	glEnable ( GL_VERTEX_PROGRAM_POINT_SIZE );
+
+	glPushMatrix();
+
+    // translate scene for volume ray casting
+	this->scale = 2.0f / vislib::math::Max( vislib::math::Max( 
+        volume->BoundingBox().Width(),volume->BoundingBox().Height() ),
+        volume->BoundingBox().Depth() );
+    vislib::math::Vector<float, 3> trans( volume->BoundingBox().GetSize().PeekDimension() );
+    trans *= -this->scale*0.5f;
+    glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ() );
+
+	// ------------------------------------------------------------
+	// --- Volume Rendering                                     ---
+	// --- update & render the volume                           ---
+	// ------------------------------------------------------------
+    this->UpdateVolumeTexture( volume);
+    CHECK_FOR_OGL_ERROR();
+
+    this->proteinFBO.DrawColourTexture();
+    CHECK_FOR_OGL_ERROR();
+
+    this->RenderVolume( volume);
+    CHECK_FOR_OGL_ERROR();
+    
+	glDisable ( GL_VERTEX_PROGRAM_POINT_SIZE );
+
+	glDisable ( GL_DEPTH_TEST );
+    
+	glPopMatrix();
+
 	return true;
 }
 
+/*
+ * refresh parameters
+ */
+void protein::ProteinVolumeRenderer::ParameterRefresh() {
+    
+	// parameter refresh
+	if( this->coloringModeParam.IsDirty() ) {
+		this->SetColoringMode ( static_cast<ColoringMode> ( int ( this->coloringModeParam.Param<param::EnumParam>()->Value() ) ) );
+		this->coloringModeParam.ResetDirty();
+	}
+	// volume parameters
+	if( this->volIsoValue1Param.IsDirty() ) {
+		this->isoValue1 = this->volIsoValue1Param.Param<param::FloatParam>()->Value();
+		this->volIsoValue1Param.ResetDirty();
+	}
+	if( this->volIsoValue2Param.IsDirty() ) {
+		this->isoValue2 = this->volIsoValue2Param.Param<param::FloatParam>()->Value();
+		this->volIsoValue2Param.ResetDirty();
+	}
+	if( this->volFilterRadiusParam.IsDirty() ) {
+		this->volFilterRadius = this->volFilterRadiusParam.Param<param::FloatParam>()->Value();
+		this->volFilterRadiusParam.ResetDirty();
+	}
+	if( this->volDensityScaleParam.IsDirty() ) {
+		this->volDensityScale = this->volDensityScaleParam.Param<param::FloatParam>()->Value();
+		this->volDensityScaleParam.ResetDirty();
+	}
+	if( this->volIsoOpacityParam.IsDirty() ) {
+		this->volIsoOpacity = this->volIsoOpacityParam.Param<param::FloatParam>()->Value();
+		this->volIsoOpacityParam.ResetDirty();
+	}
+    if( this->volClipPlaneFlagParam.IsDirty() ) {
+        this->volClipPlaneFlag = this->volClipPlaneFlagParam.Param<param::BoolParam>()->Value();
+        this->volClipPlaneFlagParam.ResetDirty();
+    }
+    vislib::math::Vector<float, 3> cp0n(
+        (float)this->volClipPlane[0].PeekComponents()[0],
+        (float)this->volClipPlane[0].PeekComponents()[1],
+        (float)this->volClipPlane[0].PeekComponents()[2]);
+    float cp0d = (float)this->volClipPlane[0].PeekComponents()[3];
+    if( this->volClipPlane0NormParam.IsDirty() ) {
+        cp0n = this->volClipPlane0NormParam.Param<param::Vector3fParam>()->Value();
+        if( !vislib::math::IsEqual<float>( cp0n.Length(), 1.0f) ) {
+            cp0n.Normalise();
+            this->volClipPlane0NormParam.Param<param::Vector3fParam>()->SetValue( cp0n);
+        }
+        this->volClipPlane0NormParam.ResetDirty();
+    }
+    if( this->volClipPlane0DistParam.IsDirty() ) {
+        cp0d = this->volClipPlane0DistParam.Param<param::FloatParam>()->Value();
+        this->volClipPlane0DistParam.ResetDirty();
+    }    
+    this->volClipPlane[0].Set( cp0n.X(), cp0n.Y(), cp0n.Z(), cp0d);
+	if( this->volClipPlaneOpacityParam.IsDirty() ) {
+		this->volClipPlaneOpacity = this->volClipPlaneOpacityParam.Param<param::FloatParam>()->Value();
+		this->volClipPlaneOpacityParam.ResetDirty();
+	}
+}
 
 /*
  * protein::ProteinVolumeRenderer::ProcessFrameRequest
@@ -707,891 +836,6 @@ void protein::ProteinVolumeRenderer::DrawLabel( unsigned int frameID )
 	glPopMatrix();
 
 	glPopAttrib();
-}
-
-
-/**
- * protein::ProteinVolumeRenderer::RenderLines
- */
-void protein::ProteinVolumeRenderer::RenderLines( const CallProteinData *prot )
-{
-	// built the display list if it was not yet created
-	if ( !glIsList ( this->proteinDisplayListLines ) )
-	{
-		// generate a new display list
-		this->proteinDisplayListLines = glGenLists ( 1 );
-		// compile new display list
-		glNewList ( this->proteinDisplayListLines, GL_COMPILE );
-
-		unsigned int i;
-		unsigned int currentChain, currentAminoAcid, currentConnection;
-		unsigned int first, second;
-		// lines can not be lighted --> turn light off
-		glDisable ( GL_LIGHTING );
-
-		protein::CallProteinData::Chain chain;
-		const float *protAtomPos = prot->ProteinAtomPositions();
-
-		glPushAttrib ( GL_ENABLE_BIT | GL_POINT_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
-		glEnable ( GL_BLEND );
-		glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		glEnable ( GL_LINE_SMOOTH );
-		glEnable ( GL_LINE_WIDTH );
-		glEnable ( GL_POINT_SMOOTH );
-		glEnable ( GL_POINT_SIZE );
-		glLineWidth ( 3.0f );
-		glPointSize ( 6.0f );
-
-		if ( this->drawDotsWithLine )
-		{
-			// draw atoms as points
-			glBegin ( GL_POINTS );
-			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				glColor3ubv ( this->GetProteinAtomColor ( i ) );
-				glVertex3f ( protAtomPos[i*3+0], protAtomPos[i*3+1], protAtomPos[i*3+2] );
-			}
-			glEnd(); // GL_POINTS
-		}
-
-		// draw connections as lines
-		glBegin ( GL_LINES );
-		// loop over all chains
-		for ( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-		{
-			chain = prot->ProteinChain ( currentChain );
-			// loop over all amino acids in the current chain
-			for ( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-			{
-				// loop over all connections of the current amino acid
-				for ( currentConnection = 0;
-				        currentConnection < chain.AminoAcid() [currentAminoAcid].Connectivity().Count();
-				        currentConnection++ )
-				{
-					first = chain.AminoAcid() [currentAminoAcid].Connectivity() [currentConnection].First();
-					first += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-					second = chain.AminoAcid() [currentAminoAcid].Connectivity() [currentConnection].Second();
-					second += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-					glColor3ubv ( this->GetProteinAtomColor ( first ) );
-					glVertex3f ( protAtomPos[first*3+0], protAtomPos[first*3+1], protAtomPos[first*3+2] );
-					glColor3ubv ( this->GetProteinAtomColor ( second ) );
-					glVertex3f ( protAtomPos[second*3+0], protAtomPos[second*3+1], protAtomPos[second*3+2] );
-				}
-				// try to make the connection between this amino acid and its predecessor
-				// --> only possible if the current amino acid is not the first in this chain
-				if ( currentAminoAcid > 0 )
-				{
-					first = chain.AminoAcid() [currentAminoAcid-1].CCarbIndex();
-					first += chain.AminoAcid() [currentAminoAcid-1].FirstAtomIndex();
-					second = chain.AminoAcid() [currentAminoAcid].NIndex();
-					second += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-					glColor3ubv ( this->GetProteinAtomColor ( first ) );
-					glVertex3f ( protAtomPos[first*3+0], protAtomPos[first*3+1], protAtomPos[first*3+2] );
-					glColor3ubv ( this->GetProteinAtomColor ( second ) );
-					glVertex3f ( protAtomPos[second*3+0], protAtomPos[second*3+1], protAtomPos[second*3+2] );
-				}
-			}
-		}
-		glEnd(); // GL_LINES
-
-		glPopAttrib();
-
-		glEndList();
-		vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO+200, "%s: Display list for LINES render mode built.", this->ClassName() );
-	}
-	else
-	{
-		//draw the display list
-		glCallList ( this->proteinDisplayListLines );
-	}
-	// turn light on after rendering
-	glEnable ( GL_LIGHTING );
-	glDisable ( GL_BLEND );
-
-}
-
-
-/*
- * protein::ProteinVolumeRenderer::RenderStickRaycasting
- */
-void protein::ProteinVolumeRenderer::RenderStickRaycasting (
-    const CallProteinData *prot )
-{
-	if ( this->prepareStickRaycasting )
-	{
-		unsigned int i1;
-		unsigned int first, second;
-		unsigned int currentChain, currentAminoAcid, currentConnection;
-		const unsigned char *color1;
-		const unsigned char *color2;
-
-		// -----------------------------
-		// -- computation for spheres --
-		// -----------------------------
-
-		// clear vertex array for spheres
-		this->vertSphereStickRay.Clear();
-		// clear color array for sphere colors
-		this->colorSphereStickRay.Clear();
-
-		// store the points (will be rendered as spheres by the shader)
-		for ( i1 = 0; i1 < prot->ProteinAtomCount(); i1++ )
-		{
-            this->vertSphereStickRay.Add( ( prot->ProteinAtomPositions()[i1*3+0] + this->translation.GetX() ) * this->scale );
-            this->vertSphereStickRay.Add( ( prot->ProteinAtomPositions()[i1*3+1] + this->translation.GetY() ) * this->scale );
-            this->vertSphereStickRay.Add( ( prot->ProteinAtomPositions()[i1*3+2] + this->translation.GetZ() ) * this->scale );
-            this->vertSphereStickRay.Add( radiusStick * this->scale );
-
-			color1 = this->GetProteinAtomColor ( i1 );
-			this->colorSphereStickRay.Add( color1[0] );
-			this->colorSphereStickRay.Add( color1[1] );
-			this->colorSphereStickRay.Add( color1[2] );
-		}
-
-		// -------------------------------
-		// -- computation for cylinders --
-		// -------------------------------
-		protein::CallProteinData::Chain chain;
-		vislib::math::Quaternion<float> quatC;
-		quatC.Set ( 0, 0, 0, 1 );
-		vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
-		vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
-		float angle;
-		// vertex array for cylinders
-		this->vertCylinderStickRay.Clear();
-		// color array for first cylinder colors
-		this->color1CylinderStickRay.Clear();
-		// color array for second cylinder colors
-		this->color2CylinderStickRay.Clear();
-		// attribute array for quaterions
-		this->quatCylinderStickRay.Clear();
-		// attribute array for in-parameters
-		this->inParaCylStickRaycasting.Clear();
-
-		// loop over all chains
-		for ( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-		{
-			chain = prot->ProteinChain ( currentChain );
-			// loop over all amino acids in the current chain
-			for ( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-			{
-				// loop over all connections of the current amino acid
-				for ( currentConnection = 0;
-				        currentConnection < chain.AminoAcid() [currentAminoAcid].Connectivity().Count();
-				        currentConnection++ )
-				{
-					first = chain.AminoAcid() [currentAminoAcid].Connectivity() [currentConnection].First();
-					first += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-					second = chain.AminoAcid() [currentAminoAcid].Connectivity() [currentConnection].Second();
-					second += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-
-					firstAtomPos.SetX( prot->ProteinAtomPositions()[first*3+0] );
-					firstAtomPos.SetY( prot->ProteinAtomPositions()[first*3+1] );
-					firstAtomPos.SetZ( prot->ProteinAtomPositions()[first*3+2] );
-                    firstAtomPos = ( firstAtomPos + this->translation) * this->scale;
-					color1 = this->GetProteinAtomColor ( first );
-
-					secondAtomPos.SetX ( prot->ProteinAtomPositions()[second*3+0] );
-					secondAtomPos.SetY ( prot->ProteinAtomPositions()[second*3+1] );
-					secondAtomPos.SetZ ( prot->ProteinAtomPositions()[second*3+2] );
-                    secondAtomPos = ( secondAtomPos + this->translation) * this->scale;
-					color2 = this->GetProteinAtomColor ( second );
-
-					// compute the quaternion for the rotation of the cylinder
-					dir = secondAtomPos - firstAtomPos;
-					tmpVec.Set ( 1.0f, 0.0f, 0.0f );
-					angle = - tmpVec.Angle ( dir );
-					ortho = tmpVec.Cross ( dir );
-					ortho.Normalise();
-					quatC.Set ( angle, ortho );
-					// compute the absolute position 'position' of the cylinder (center point)
-					position = firstAtomPos + ( dir/2.0f );
-
-                    this->inParaCylStickRaycasting.Add( radiusStick * this->scale );
-					this->inParaCylStickRaycasting.Add( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) );
-
-					this->quatCylinderStickRay.Add( quatC.GetX() );
-					this->quatCylinderStickRay.Add( quatC.GetY() );
-					this->quatCylinderStickRay.Add( quatC.GetZ() );
-					this->quatCylinderStickRay.Add( quatC.GetW() );
-
-					this->color1CylinderStickRay.Add( float ( int ( color1[0] ) ) /255.0f );
-					this->color1CylinderStickRay.Add( float ( int ( color1[1] ) ) /255.0f );
-					this->color1CylinderStickRay.Add( float ( int ( color1[2] ) ) /255.0f );
-
-					this->color2CylinderStickRay.Add( float ( int ( color2[0] ) ) /255.0f );
-					this->color2CylinderStickRay.Add( float ( int ( color2[1] ) ) /255.0f );
-					this->color2CylinderStickRay.Add( float ( int ( color2[2] ) ) /255.0f );
-
-					this->vertCylinderStickRay.Add( position.GetX() );
-					this->vertCylinderStickRay.Add( position.GetY() );
-					this->vertCylinderStickRay.Add( position.GetZ() );
-					this->vertCylinderStickRay.Add( 1.0f );
-				}
-				// try to make the connection between this amino acid and its predecessor
-				// --> only possible if the current amino acid is not the first in this chain
-				if ( currentAminoAcid > 0 )
-				{
-					first = chain.AminoAcid()[currentAminoAcid-1].CCarbIndex();
-					first += chain.AminoAcid()[currentAminoAcid-1].FirstAtomIndex();
-					second = chain.AminoAcid()[currentAminoAcid].NIndex();
-					second += chain.AminoAcid()[currentAminoAcid].FirstAtomIndex();
-
-					firstAtomPos.SetX( prot->ProteinAtomPositions()[first*3+0] );
-					firstAtomPos.SetY( prot->ProteinAtomPositions()[first*3+1] );
-					firstAtomPos.SetZ( prot->ProteinAtomPositions()[first*3+2] );
-                    firstAtomPos = ( firstAtomPos + this->translation) * this->scale;
-					color1 = this->GetProteinAtomColor ( first );
-
-					secondAtomPos.SetX ( prot->ProteinAtomPositions() [second*3+0] );
-					secondAtomPos.SetY ( prot->ProteinAtomPositions() [second*3+1] );
-					secondAtomPos.SetZ ( prot->ProteinAtomPositions() [second*3+2] );
-                    secondAtomPos = ( secondAtomPos + this->translation) * this->scale;
-					color2 = this->GetProteinAtomColor ( second );
-
-					// compute the quaternion for the rotation of the cylinder
-					dir = secondAtomPos - firstAtomPos;
-					tmpVec.Set ( 1.0f, 0.0f, 0.0f );
-					angle = - tmpVec.Angle ( dir );
-					ortho = tmpVec.Cross ( dir );
-					ortho.Normalise();
-					quatC.Set ( angle, ortho );
-					// compute the absolute position 'position' of the cylinder (center point)
-					position = firstAtomPos + ( dir/2.0f );
-
-					// don't draw bonds that are too long
-					if ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) > 3.5f )
-						continue;
-					
-                    this->inParaCylStickRaycasting.Add ( radiusStick * this->scale );
-					this->inParaCylStickRaycasting.Add ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) );
-
-					this->quatCylinderStickRay.Add( quatC.GetX() );
-					this->quatCylinderStickRay.Add( quatC.GetY() );
-					this->quatCylinderStickRay.Add( quatC.GetZ() );
-					this->quatCylinderStickRay.Add( quatC.GetW() );
-
-					this->color1CylinderStickRay.Add( float ( int ( color1[0] ) ) /255.0f );
-					this->color1CylinderStickRay.Add( float ( int ( color1[1] ) ) /255.0f );
-					this->color1CylinderStickRay.Add( float ( int ( color1[2] ) ) /255.0f );
-
-					this->color2CylinderStickRay.Add( float ( int ( color2[0] ) ) /255.0f );
-					this->color2CylinderStickRay.Add( float ( int ( color2[1] ) ) /255.0f );
-					this->color2CylinderStickRay.Add( float ( int ( color2[2] ) ) /255.0f );
-
-					this->vertCylinderStickRay.Add( position.GetX() );
-					this->vertCylinderStickRay.Add( position.GetY() );
-					this->vertCylinderStickRay.Add( position.GetZ() );
-					this->vertCylinderStickRay.Add( 1.0f );
-				}
-			}
-		}
-
-		this->prepareStickRaycasting = false;
-	}
-
-	// -----------
-	// -- draw  --
-	// -----------
-	float viewportStuff[4] =
-	{
-		cameraInfo->TileRect().Left(),
-		cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(),
-		cameraInfo->TileRect().Height()
-	};
-	if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
-	if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
-
-	glDisable ( GL_BLEND );
-
-	// enable sphere shader
-	this->sphereShader.Enable();
-	glEnableClientState ( GL_VERTEX_ARRAY );
-	glEnableClientState ( GL_COLOR_ARRAY );
-	// set shader variables
-	glUniform4fvARB ( this->sphereShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-	// set vertex and color pointers and draw them
-	glVertexPointer ( 4, GL_FLOAT, 0, this->vertSphereStickRay.PeekElements() );
-	glColorPointer ( 3, GL_UNSIGNED_BYTE, 0, this->colorSphereStickRay.PeekElements() );
-	glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertSphereStickRay.Count() /4 ) );
-	// disable sphere shader
-	this->sphereShader.Disable();
-
-	// enable cylinder shader
-	this->cylinderShader.Enable();
-	// set shader variables
-	glUniform4fvARB ( this->cylinderShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB ( this->cylinderShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB ( this->cylinderShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB ( this->cylinderShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-	// get the attribute locations
-	attribLocInParams = glGetAttribLocationARB ( this->cylinderShader, "inParams" );
-	attribLocQuatC = glGetAttribLocationARB ( this->cylinderShader, "quatC" );
-	attribLocColor1 = glGetAttribLocationARB ( this->cylinderShader, "color1" );
-	attribLocColor2 = glGetAttribLocationARB ( this->cylinderShader, "color2" );
-	// enable vertex attribute arrays for the attribute locations
-	glDisableClientState ( GL_COLOR_ARRAY );
-	glEnableVertexAttribArrayARB ( this->attribLocInParams );
-	glEnableVertexAttribArrayARB ( this->attribLocQuatC );
-	glEnableVertexAttribArrayARB ( this->attribLocColor1 );
-	glEnableVertexAttribArrayARB ( this->attribLocColor2 );
-	// set vertex and attribute pointers and draw them
-	glVertexPointer ( 4, GL_FLOAT, 0, this->vertCylinderStickRay.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylStickRaycasting.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinderStickRay.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1CylinderStickRay.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2CylinderStickRay.PeekElements() );
-	glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertCylinderStickRay.Count() /4 ) );
-	// disable vertex attribute arrays for the attribute locations
-	glDisableVertexAttribArrayARB ( this->attribLocInParams );
-	glDisableVertexAttribArrayARB ( this->attribLocQuatC );
-	glDisableVertexAttribArrayARB ( this->attribLocColor1 );
-	glDisableVertexAttribArrayARB ( this->attribLocColor2 );
-	glDisableClientState ( GL_VERTEX_ARRAY );
-	// disable cylinder shader
-	this->cylinderShader.Disable();
-
-}
-
-
-/*
- * protein::ProteinVolumeRenderer::RenderBallAndStick
- */
-void protein::ProteinVolumeRenderer::RenderBallAndStick (
-    const CallProteinData *prot )
-{
-	if ( this->prepareBallAndStick )
-	{
-		unsigned int i1;
-		unsigned int first, second;
-		unsigned int currentChain, currentAminoAcid, currentConnection;
-		const unsigned char *color1;
-		const unsigned char *color2;
-
-		// -----------------------------
-		// -- computation for spheres --
-		// -----------------------------
-
-		// clear vertex array for spheres
-		this->vertSphereStickRay.Clear();
-		// clear color array for sphere colors
-		this->colorSphereStickRay.Clear();
-
-        this->vertSphereStickRay.AssertCapacity( 4 * prot->ProteinAtomCount() );
-		this->colorSphereStickRay.AssertCapacity( 3 * prot->ProteinAtomCount() );
-		// store the points (will be rendered as spheres by the shader)
-		for ( i1 = 0; i1 < prot->ProteinAtomCount(); i1++ )
-		{
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+0] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+1] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+2] );
-			this->vertSphereStickRay.Add ( radiusStick );
-
-			color1 = this->GetProteinAtomColor ( i1 );
-			this->colorSphereStickRay.Add ( color1[0] );
-			this->colorSphereStickRay.Add ( color1[1] );
-			this->colorSphereStickRay.Add ( color1[2] );
-		}
-
-		// -------------------------------
-		// -- computation for cylinders --
-		// -------------------------------
-		protein::CallProteinData::Chain chain;
-		vislib::math::Quaternion<float> quatC;
-		quatC.Set ( 0, 0, 0, 1 );
-		vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
-		vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
-		float angle;
-		// vertex array for cylinders
-		this->vertCylinderStickRay.Clear();
-		// color array for first cylinder colors
-		this->color1CylinderStickRay.Clear();
-		// color array for second cylinder colors
-		this->color2CylinderStickRay.Clear();
-		// attribute array for quaterions
-		this->quatCylinderStickRay.Clear();
-		// attribute array for in-parameters
-		this->inParaCylStickRaycasting.Clear();
-
-		// loop over all chains
-		for ( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-		{
-			chain = prot->ProteinChain ( currentChain );
-			// loop over all amino acids in the current chain
-			for ( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-			{
-				// loop over all connections of the current amino acid
-				for ( currentConnection = 0;
-				        currentConnection < chain.AminoAcid() [currentAminoAcid].Connectivity().Count();
-				        currentConnection++ )
-				{
-					first = chain.AminoAcid() [currentAminoAcid].Connectivity() [currentConnection].First();
-					first += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-					second = chain.AminoAcid() [currentAminoAcid].Connectivity() [currentConnection].Second();
-					second += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-
-					firstAtomPos.SetX ( prot->ProteinAtomPositions() [first*3+0] );
-					firstAtomPos.SetY ( prot->ProteinAtomPositions() [first*3+1] );
-					firstAtomPos.SetZ ( prot->ProteinAtomPositions() [first*3+2] );
-					color1 = this->GetProteinAtomColor ( first );
-
-					secondAtomPos.SetX ( prot->ProteinAtomPositions() [second*3+0] );
-					secondAtomPos.SetY ( prot->ProteinAtomPositions() [second*3+1] );
-					secondAtomPos.SetZ ( prot->ProteinAtomPositions() [second*3+2] );
-					color2 = this->GetProteinAtomColor ( second );
-
-					// compute the quaternion for the rotation of the cylinder
-					dir = secondAtomPos - firstAtomPos;
-					tmpVec.Set ( 1.0f, 0.0f, 0.0f );
-					angle = - tmpVec.Angle ( dir );
-					ortho = tmpVec.Cross ( dir );
-					ortho.Normalise();
-					quatC.Set ( angle, ortho );
-					// compute the absolute position 'position' of the cylinder (center point)
-					position = firstAtomPos + ( dir/2.0f );
-
-					this->inParaCylStickRaycasting.Add ( radiusStick/3.0f );
-					this->inParaCylStickRaycasting.Add ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) );
-
-					this->quatCylinderStickRay.Add ( quatC.GetX() );
-					this->quatCylinderStickRay.Add ( quatC.GetY() );
-					this->quatCylinderStickRay.Add ( quatC.GetZ() );
-					this->quatCylinderStickRay.Add ( quatC.GetW() );
-
-					this->color1CylinderStickRay.Add ( float ( int ( color1[0] ) ) /255.0f );
-					this->color1CylinderStickRay.Add ( float ( int ( color1[1] ) ) /255.0f );
-					this->color1CylinderStickRay.Add ( float ( int ( color1[2] ) ) /255.0f );
-
-					this->color2CylinderStickRay.Add ( float ( int ( color2[0] ) ) /255.0f );
-					this->color2CylinderStickRay.Add ( float ( int ( color2[1] ) ) /255.0f );
-					this->color2CylinderStickRay.Add ( float ( int ( color2[2] ) ) /255.0f );
-
-					this->vertCylinderStickRay.Add ( position.GetX() );
-					this->vertCylinderStickRay.Add ( position.GetY() );
-					this->vertCylinderStickRay.Add ( position.GetZ() );
-					this->vertCylinderStickRay.Add ( 1.0f );
-				}
-				// try to make the connection between this amino acid and its predecessor
-				// --> only possible if the current amino acid is not the first in this chain
-				if ( currentAminoAcid > 0 )
-				{
-					first = chain.AminoAcid() [currentAminoAcid-1].CCarbIndex();
-					first += chain.AminoAcid() [currentAminoAcid-1].FirstAtomIndex();
-					second = chain.AminoAcid() [currentAminoAcid].NIndex();
-					second += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-
-					firstAtomPos.SetX ( prot->ProteinAtomPositions() [first*3+0] );
-					firstAtomPos.SetY ( prot->ProteinAtomPositions() [first*3+1] );
-					firstAtomPos.SetZ ( prot->ProteinAtomPositions() [first*3+2] );
-					color1 = this->GetProteinAtomColor ( first );
-
-					secondAtomPos.SetX ( prot->ProteinAtomPositions() [second*3+0] );
-					secondAtomPos.SetY ( prot->ProteinAtomPositions() [second*3+1] );
-					secondAtomPos.SetZ ( prot->ProteinAtomPositions() [second*3+2] );
-					color2 = this->GetProteinAtomColor ( second );
-
-					// compute the quaternion for the rotation of the cylinder
-					dir = secondAtomPos - firstAtomPos;
-					tmpVec.Set ( 1.0f, 0.0f, 0.0f );
-					angle = - tmpVec.Angle ( dir );
-					ortho = tmpVec.Cross ( dir );
-					ortho.Normalise();
-					quatC.Set ( angle, ortho );
-					// compute the absolute position 'position' of the cylinder (center point)
-					position = firstAtomPos + ( dir/2.0f );
-
-					// don't draw bonds that are too long
-					if ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) > 3.5f )
-						continue;
-
-					this->inParaCylStickRaycasting.Add ( radiusStick/3.0f );
-					this->inParaCylStickRaycasting.Add ( fabs ( ( firstAtomPos-secondAtomPos ).Length() ) );
-
-					this->quatCylinderStickRay.Add ( quatC.GetX() );
-					this->quatCylinderStickRay.Add ( quatC.GetY() );
-					this->quatCylinderStickRay.Add ( quatC.GetZ() );
-					this->quatCylinderStickRay.Add ( quatC.GetW() );
-
-					this->color1CylinderStickRay.Add ( float ( int ( color1[0] ) ) /255.0f );
-					this->color1CylinderStickRay.Add ( float ( int ( color1[1] ) ) /255.0f );
-					this->color1CylinderStickRay.Add ( float ( int ( color1[2] ) ) /255.0f );
-
-					this->color2CylinderStickRay.Add ( float ( int ( color2[0] ) ) /255.0f );
-					this->color2CylinderStickRay.Add ( float ( int ( color2[1] ) ) /255.0f );
-					this->color2CylinderStickRay.Add ( float ( int ( color2[2] ) ) /255.0f );
-
-					this->vertCylinderStickRay.Add ( position.GetX() );
-					this->vertCylinderStickRay.Add ( position.GetY() );
-					this->vertCylinderStickRay.Add ( position.GetZ() );
-					this->vertCylinderStickRay.Add ( 1.0f );
-				}
-			}
-		}
-		this->prepareBallAndStick = false;
-	}
-
-	// -----------
-	// -- draw  --
-	// -----------
-	float viewportStuff[4] =
-	{
-		cameraInfo->TileRect().Left(),
-		cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(),
-		cameraInfo->TileRect().Height()
-	};
-	if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
-	if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
-
-	glDisable ( GL_BLEND );
-
-	// enable sphere shader
-	this->sphereShader.Enable();
-	glEnableClientState ( GL_VERTEX_ARRAY );
-	glEnableClientState ( GL_COLOR_ARRAY );
-	// set shader variables
-	glUniform4fvARB ( this->sphereShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-	// set vertex and color pointers and draw them
-	glVertexPointer ( 4, GL_FLOAT, 0, this->vertSphereStickRay.PeekElements() );
-	glColorPointer ( 3, GL_UNSIGNED_BYTE, 0, this->colorSphereStickRay.PeekElements() );
-	glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertSphereStickRay.Count() /4 ) );
-	// disable sphere shader
-	glDisableClientState ( GL_COLOR_ARRAY );
-	this->sphereShader.Disable();
-
-	// enable cylinder shader
-	this->cylinderShader.Enable();
-	// set shader variables
-	glUniform4fvARB ( this->cylinderShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB ( this->cylinderShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB ( this->cylinderShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB ( this->cylinderShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-	// get the attribute locations
-	attribLocInParams = glGetAttribLocationARB ( this->cylinderShader, "inParams" );
-	attribLocQuatC = glGetAttribLocationARB ( this->cylinderShader, "quatC" );
-	attribLocColor1 = glGetAttribLocationARB ( this->cylinderShader, "color1" );
-	attribLocColor2 = glGetAttribLocationARB ( this->cylinderShader, "color2" );
-	// enable vertex attribute arrays for the attribute locations
-	glEnableVertexAttribArrayARB ( this->attribLocInParams );
-	glEnableVertexAttribArrayARB ( this->attribLocQuatC );
-	glEnableVertexAttribArrayARB ( this->attribLocColor1 );
-	glEnableVertexAttribArrayARB ( this->attribLocColor2 );
-	// set vertex and attribute pointers and draw them
-	glVertexPointer ( 4, GL_FLOAT, 0, this->vertCylinderStickRay.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylStickRaycasting.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinderStickRay.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1CylinderStickRay.PeekElements() );
-	glVertexAttribPointerARB ( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2CylinderStickRay.PeekElements() );
-	glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertCylinderStickRay.Count() /4 ) );
-	// disable vertex attribute arrays for the attribute locations
-	glDisableVertexAttribArrayARB ( this->attribLocInParams );
-	glDisableVertexAttribArrayARB ( this->attribLocQuatC );
-	glDisableVertexAttribArrayARB ( this->attribLocColor1 );
-	glDisableVertexAttribArrayARB ( this->attribLocColor2 );
-	glDisableClientState ( GL_VERTEX_ARRAY );
-	// disable cylinder shader
-	this->cylinderShader.Disable();
-
-}
-
-
-/*
- * protein::ProteinVolumeRenderer::RenderSpacefilling
- */
-void protein::ProteinVolumeRenderer::RenderSpacefilling (
-    const CallProteinData *prot )
-{
-	if ( this->prepareSpacefilling )
-	{
-		unsigned int i1;
-		const unsigned char *color1;
-
-		// -----------------------------
-		// -- computation for spheres --
-		// -----------------------------
-
-		// clear vertex array for spheres
-		this->vertSphereStickRay.Clear();
-		// clear color array for sphere colors
-		this->colorSphereStickRay.Clear();
-
-		// store the points (will be rendered as spheres by the shader)
-		for ( i1 = 0; i1 < prot->ProteinAtomCount(); i1++ )
-		{
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+0] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+1] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+2] );
-			this->vertSphereStickRay.Add ( prot->AtomTypes() [prot->ProteinAtomData() [i1].TypeIndex() ].Radius() );
-
-			color1 = this->GetProteinAtomColor ( i1 );
-			this->colorSphereStickRay.Add ( color1[0] );
-			this->colorSphereStickRay.Add ( color1[1] );
-			this->colorSphereStickRay.Add ( color1[2] );
-		}
-
-		this->prepareSpacefilling = false;
-	}
-
-	// -----------
-	// -- draw  --
-	// -----------
-	float viewportStuff[4] =
-	{
-		cameraInfo->TileRect().Left(),
-		cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(),
-		cameraInfo->TileRect().Height()
-	};
-	if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
-	if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
-
-	glDisable ( GL_BLEND );
-
-	// enable sphere shader
-	this->sphereShader.Enable();
-	glEnableClientState ( GL_VERTEX_ARRAY );
-	glEnableClientState ( GL_COLOR_ARRAY );
-	// set shader variables
-	glUniform4fvARB ( this->sphereShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-	// set vertex and color pointers and draw them
-	glVertexPointer ( 4, GL_FLOAT, 0, this->vertSphereStickRay.PeekElements() );
-	glColorPointer ( 3, GL_UNSIGNED_BYTE, 0, this->colorSphereStickRay.PeekElements() );
-	glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertSphereStickRay.Count() /4 ) );
-	// disable sphere shader
-	glDisableClientState ( GL_VERTEX_ARRAY );
-	glDisableClientState ( GL_COLOR_ARRAY );
-	this->sphereShader.Disable();
-}
-
-
-/*
- * protein::ProteinVolumeRenderer::RenderClippedSpacefilling
- */
-void protein::ProteinVolumeRenderer::RenderClippedSpacefilling (
-	const vislib::math::Vector<float, 3> cpDir, const vislib::math::Vector<float, 3> cpBase,
-	const CallProteinData *prot )
-{
-	if ( this->prepareSpacefilling )
-	{
-		unsigned int i1;
-		const unsigned char *color1;
-
-		// -----------------------------
-		// -- computation for spheres --
-		// -----------------------------
-
-		// clear vertex array for spheres
-		this->vertSphereStickRay.Clear();
-		// clear color array for sphere colors
-		this->colorSphereStickRay.Clear();
-
-		// store the points (will be rendered as spheres by the shader)
-		for ( i1 = 0; i1 < prot->ProteinAtomCount(); i1++ )
-		{
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+0] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+1] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+2] );
-			this->vertSphereStickRay.Add ( prot->AtomTypes() [prot->ProteinAtomData() [i1].TypeIndex() ].Radius() );
-
-			color1 = this->GetProteinAtomColor ( i1 );
-			this->colorSphereStickRay.Add ( color1[0] );
-			this->colorSphereStickRay.Add ( color1[1] );
-			this->colorSphereStickRay.Add ( color1[2] );
-		}
-
-		this->prepareSpacefilling = false;
-	}
-
-	// -----------
-	// -- draw  --
-	// -----------
-	float viewportStuff[4] =
-	{
-		cameraInfo->TileRect().Left(),
-		cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(),
-		cameraInfo->TileRect().Height()
-	};
-	if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
-	if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
-
-	glDisable ( GL_BLEND );
-
-	// enable sphere shader
-	this->clippedSphereShader.Enable();
-	glEnableClientState ( GL_VERTEX_ARRAY );
-	glEnableClientState ( GL_COLOR_ARRAY );
-	// set shader variables
-	glUniform4fvARB ( this->clippedSphereShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB ( this->clippedSphereShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB ( this->clippedSphereShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB ( this->clippedSphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-	glUniform3fvARB ( this->clippedSphereShader.ParameterLocation ( "clipPlaneDir" ), 1, cpDir.PeekComponents() );
-	glUniform3fvARB ( this->clippedSphereShader.ParameterLocation ( "clipPlaneBase" ), 1, cpBase.PeekComponents() );
-	// set vertex and color pointers and draw them
-	glVertexPointer ( 4, GL_FLOAT, 0, this->vertSphereStickRay.PeekElements() );
-	glColorPointer ( 3, GL_UNSIGNED_BYTE, 0, this->colorSphereStickRay.PeekElements() );
-	glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertSphereStickRay.Count() /4 ) );
-	// disable sphere shader
-	glDisableClientState ( GL_VERTEX_ARRAY );
-	glDisableClientState ( GL_COLOR_ARRAY );
-	this->clippedSphereShader.Disable();
-}
-
-
-/*
- * protein::ProteinVolumeRenderer::RenderSolventAccessibleSurface
- */
-void protein::ProteinVolumeRenderer::RenderSolventAccessibleSurface (
-    const CallProteinData *prot )
-{
-	if ( this->prepareSAS )
-	{
-		unsigned int i1;
-		const unsigned char *color1;
-
-		// -----------------------------
-		// -- computation for spheres --
-		// -----------------------------
-
-		// clear vertex array for spheres
-		this->vertSphereStickRay.Clear();
-		// clear color array for sphere colors
-		this->colorSphereStickRay.Clear();
-
-		// store the points (will be rendered as spheres by the shader)
-		for ( i1 = 0; i1 < prot->ProteinAtomCount(); i1++ )
-		{
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+0] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+1] );
-			this->vertSphereStickRay.Add ( prot->ProteinAtomPositions() [i1*3+2] );
-			this->vertSphereStickRay.Add ( prot->AtomTypes() [prot->ProteinAtomData() [i1].TypeIndex() ].Radius() + this->probeRadius );
-
-			color1 = this->GetProteinAtomColor ( i1 );
-			this->colorSphereStickRay.Add ( color1[0] );
-			this->colorSphereStickRay.Add ( color1[1] );
-			this->colorSphereStickRay.Add ( color1[2] );
-		}
-
-		this->prepareSAS = false;
-	}
-
-	// -----------
-	// -- draw  --
-	// -----------
-	float viewportStuff[4] =
-	{
-		cameraInfo->TileRect().Left(),
-		cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(),
-		cameraInfo->TileRect().Height()
-	};
-	if ( viewportStuff[2] < 1.0f ) viewportStuff[2] = 1.0f;
-	if ( viewportStuff[3] < 1.0f ) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
-
-	glDisable ( GL_BLEND );
-
-	// enable sphere shader
-	this->sphereShader.Enable();
-	glEnableClientState ( GL_VERTEX_ARRAY );
-	glEnableClientState ( GL_COLOR_ARRAY );
-	// set shader variables
-	glUniform4fvARB ( this->sphereShader.ParameterLocation ( "viewAttr" ), 1, viewportStuff );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camIn" ), 1, cameraInfo->Front().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camRight" ), 1, cameraInfo->Right().PeekComponents() );
-	glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
-	// set vertex and color pointers and draw them
-	glVertexPointer ( 4, GL_FLOAT, 0, this->vertSphereStickRay.PeekElements() );
-	glColorPointer ( 3, GL_UNSIGNED_BYTE, 0, this->colorSphereStickRay.PeekElements() );
-	glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertSphereStickRay.Count() /4 ) );
-	// disable sphere shader
-	glDisableClientState ( GL_VERTEX_ARRAY );
-	glDisableClientState ( GL_COLOR_ARRAY );
-	this->sphereShader.Disable();
-}
-
-
-/*
- * protein::ProteinVolumeRenderer::RenderDisulfideBondsLine
- */
-void protein::ProteinVolumeRenderer::RenderDisulfideBondsLine (
-    const CallProteinData *prot )
-{
-	// return if there are no disulfide bonds or drawDisulfideBonds is false
-	if ( prot->DisulfidBondsCount() <= 0 || !drawDisulfideBonds )
-		return;
-	// lines can not be lighted --> turn light off
-	glDisable ( GL_LIGHTING );
-	
-	// built the display list if it was not yet created
-	if ( !glIsList ( this->disulfideBondsDisplayList ) )
-	{
-		// generate a new display list
-		this->disulfideBondsDisplayList = glGenLists ( 1 );
-		// compile new display list
-		glNewList ( this->disulfideBondsDisplayList, GL_COMPILE );
-	
-		unsigned int i;
-		unsigned int first, second;
-
-		const float *protAtomPos = prot->ProteinAtomPositions();
-
-		glPushAttrib ( GL_ENABLE_BIT | GL_POINT_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
-		glEnable ( GL_BLEND );
-		glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		glEnable ( GL_LINE_SMOOTH );
-		glEnable ( GL_LINE_WIDTH );
-		//glEnable( GL_LINE_STIPPLE);
-		//glLineStipple( 1, 0xFF00);
-		glLineWidth ( 3.0f );
-
-		// set color of disulfide bonds to yellow
-		glColor3f ( 1.0f, 1.0f, 0.0f );
-		// draw bonds
-		glBegin ( GL_LINES );
-		for ( i = 0; i < prot->DisulfidBondsCount(); i++ )
-		{
-			first = prot->DisulfidBonds() [i].First();
-			second = prot->DisulfidBonds() [i].Second();
-			glVertex3f ( protAtomPos[first*3+0], protAtomPos[first*3+1], protAtomPos[first*3+2] );
-			glVertex3f ( protAtomPos[second*3+0], protAtomPos[second*3+1], protAtomPos[second*3+2] );
-		}
-		glEnd(); // GL_LINES
-
-		glPopAttrib();
-		
-		glEndList();
-		vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO+200, "%s: Display list for disulfide bonds built.", this->ClassName() );
-	}
-	else
-	{
-		//draw the display list
-		glCallList ( this->disulfideBondsDisplayList );
-	}
-	
-	// turn light on after rendering
-	glEnable ( GL_LIGHTING );
-	glDisable ( GL_BLEND );
 }
 
 
@@ -1852,26 +1096,6 @@ void protein::ProteinVolumeRenderer::MakeColorTable ( const CallProteinData *pro
 
 
 /*
- * protein::ProteinVolumeRenderer::RecomputeAll
- */
-void protein::ProteinVolumeRenderer::RecomputeAll()
-{
-	this->prepareBallAndStick = true;
-	this->prepareSpacefilling = true;
-	this->prepareStickRaycasting = true;
-	this->prepareSAS = true;
-
-	glDeleteLists ( this->disulfideBondsDisplayList, 1 );
-	this->disulfideBondsDisplayList = 0;
-
-	glDeleteLists ( this->proteinDisplayListLines, 1 );
-	this->proteinDisplayListLines = 0;
-
-	this->protAtomColorTable.Clear();
-}
-
-
-/*
  * protein::ProteinVolumeRenderer::FillaminoAcidColorTable
  */
 void protein::ProteinVolumeRenderer::FillAminoAcidColorTable()
@@ -1950,6 +1174,140 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
         // from CellVis: cellVis.cpp, initGL
         glGenTextures( 1, &this->volumeTex);
         glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+        glTexImage3D( GL_TEXTURE_3D, 0, //GL_LUMINANCE32F_ARB,
+                      GL_RGBA16F, 
+                      this->volumeSize, this->volumeSize, this->volumeSize, 0,
+                      //GL_LUMINANCE, GL_FLOAT, 0);
+                      GL_RGBA, GL_FLOAT, 0);
+        GLint param = GL_LINEAR;
+        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
+        GLint mode = GL_CLAMP_TO_EDGE;
+        //GLint mode = GL_REPEAT;
+        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
+        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
+        glBindTexture( GL_TEXTURE_3D, 0);
+        CHECK_FOR_OGL_ERROR();
+    }
+    // generate FBO, if necessary
+    if( !glIsFramebufferEXT( this->volFBO ) ) {
+        glGenFramebuffersEXT( 1, &this->volFBO);
+        CHECK_FOR_OGL_ERROR();
+    }
+
+    // counter variable
+    unsigned int z;
+
+    // store current frame buffer object ID
+    GLint prevFBO;
+    glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &prevFBO);
+
+    glMatrixMode( GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode( GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // store old viewport
+    GLint viewport[4];
+    glGetIntegerv( GL_VIEWPORT, viewport);
+    // set viewport
+    glViewport( 0, 0, this->volumeSize, this->volumeSize);
+
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->volFBO);
+    glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+
+    glColor4f( 0.0, 0.0, 0.0, 1.0);
+    
+    float bgColor[4];
+    glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
+    glClearColor( 0.1, 0.1, 0.1, 0.0);
+    // clear 3d texture
+    for( z = 0; z < this->volumeSize; ++z) {
+        // attach texture slice to FBO
+        glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->volumeTex, 0, z);
+        glClear( GL_COLOR_BUFFER_BIT);
+        //glRecti(-1, -1, 1, 1);
+    }
+    glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    // scale[i] = 1/extent[i] --- extent = size of the bbox
+    this->volScale[0] = 1.0f / ( protein->BoundingBox().Width() * this->scale);
+    this->volScale[1] = 1.0f / ( protein->BoundingBox().Height() * this->scale);
+    this->volScale[2] = 1.0f / ( protein->BoundingBox().Depth() * this->scale);
+    // scaleInv = 1 / scale = extend
+    this->volScaleInv[0] = 1.0f / this->volScale[0];
+    this->volScaleInv[1] = 1.0f / this->volScale[1];
+    this->volScaleInv[2] = 1.0f / this->volScale[2];
+    
+    this->updateVolumeShader.Enable();
+    vislib::math::Vector<float, 3> orig( protein->BoundingBox().GetLeftBottomBack().PeekCoordinates());
+    orig = ( orig + this->translation) * this->scale;
+    vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
+    // set shader params
+
+    glUniform1f( this->updateVolumeShader.ParameterLocation( "filterRadius"), this->volFilterRadius);
+    glUniform1f( this->updateVolumeShader.ParameterLocation( "densityScale"), this->volDensityScale);
+    glUniform3fv( this->updateVolumeShader.ParameterLocation( "scaleVol"), 1, this->volScale);
+    glUniform3fv( this->updateVolumeShader.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
+    glUniform3f( this->updateVolumeShader.ParameterLocation( "invVolRes"), 
+        1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
+    glUniform3fv( this->updateVolumeShader.ParameterLocation( "translate"), 1, orig.PeekComponents() );
+	glUniform1f( this->updateVolumeShader.ParameterLocation( "volSize"), float( this->volumeSize));
+    CHECK_FOR_OGL_ERROR();
+
+	for( z = 0; z < this->volumeSize; ++z ) {
+		// attach texture slice to FBO
+		glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
+		glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
+		// draw all atoms as points, using w for radius
+		glBegin( GL_POINTS);
+		for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
+            glColor3ubv( this->GetProteinAtomColor( cnt));
+			glVertex4f( ( protein->ProteinAtomPositions()[cnt*3+0] + this->translation.GetX()) * this->scale,
+				( protein->ProteinAtomPositions()[cnt*3+1] + this->translation.GetY()) * this->scale, 
+				( protein->ProteinAtomPositions()[cnt*3+2] + this->translation.GetZ()) * this->scale, 
+				protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius() * this->scale );
+		}
+		glEnd(); // GL_POINTS
+	}
+
+    this->updateVolumeShader.Disable();
+
+    // restore viewport
+    glViewport( viewport[0], viewport[1], viewport[2], viewport[3]);
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, prevFBO);
+
+    glDisable( GL_BLEND);
+    glEnable( GL_DEPTH_TEST);
+    glDepthMask( GL_TRUE);
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+/*
+ * Create a volume containing all molecule atoms
+ */
+void protein::ProteinVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
+    // generate volume, if necessary
+    if( !glIsTexture( this->volumeTex) ) {
+        // from CellVis: cellVis.cpp, initGL
+        glGenTextures( 1, &this->volumeTex);
+        glBindTexture( GL_TEXTURE_3D, this->volumeTex);
         glTexImage3D( GL_TEXTURE_3D, 0, GL_LUMINANCE32F_ARB,
                       this->volumeSize, this->volumeSize, this->volumeSize, 0,
                       GL_LUMINANCE, GL_FLOAT, 0);
@@ -1998,32 +1356,37 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
 
     glColor4f( 0.0, 0.0, 0.0, 1.0);
     
+    float bgColor[4];
+    glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
+    glClearColor( 0.1, 0.1, 0.1, 0.0);
     // clear 3d texture
     for( z = 0; z < this->volumeSize; ++z) {
         // attach texture slice to FBO
         glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->volumeTex, 0, z);
-        glRecti(-1, -1, 1, 1);
+        glClear( GL_COLOR_BUFFER_BIT);
+        //glRecti(-1, -1, 1, 1);
     }
+    glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
     glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
 
     // scale[i] = 1/extent[i] --- extent = size of the bbox
-    this->volScale[0] = 1.0f / ( protein->BoundingBox().Width() * this->scale);
-    this->volScale[1] = 1.0f / ( protein->BoundingBox().Height() * this->scale);
-    this->volScale[2] = 1.0f / ( protein->BoundingBox().Depth() * this->scale);
+	this->volScale[0] = 1.0f / ( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width() * this->scale);
+    this->volScale[1] = 1.0f / ( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height() * this->scale);
+    this->volScale[2] = 1.0f / ( mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth() * this->scale);
     // scaleInv = 1 / scale = extend
     this->volScaleInv[0] = 1.0f / this->volScale[0];
     this->volScaleInv[1] = 1.0f / this->volScale[1];
     this->volScaleInv[2] = 1.0f / this->volScale[2];
     
     this->updateVolumeShader.Enable();
-    vislib::math::Vector<float, 3> orig( protein->BoundingBox().GetLeftBottomBack().PeekCoordinates());
+    vislib::math::Vector<float, 3> orig( mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().PeekCoordinates());
     orig = ( orig + this->translation) * this->scale;
     vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
-    // set shader params
 
+    // set shader params
     glUniform1f( this->updateVolumeShader.ParameterLocation( "filterRadius"), this->volFilterRadius);
     glUniform1f( this->updateVolumeShader.ParameterLocation( "densityScale"), this->volDensityScale);
     glUniform3fv( this->updateVolumeShader.ParameterLocation( "scaleVol"), 1, this->volScale);
@@ -2040,11 +1403,12 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
 		glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
 		// draw all atoms as points, using w for radius
 		glBegin( GL_POINTS);
-		for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
-			glVertex4f( ( protein->ProteinAtomPositions()[cnt*3+0] + this->translation.GetX()) * this->scale,
-				( protein->ProteinAtomPositions()[cnt*3+1] + this->translation.GetY()) * this->scale, 
-				( protein->ProteinAtomPositions()[cnt*3+2] + this->translation.GetZ()) * this->scale, 
-				protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius() * this->scale );
+		for( unsigned int cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+			glVertex4f( 
+				( mol->AtomPositions()[3*cnt+0] + this->translation.X()) * this->scale,
+				( mol->AtomPositions()[3*cnt+1] + this->translation.Y()) * this->scale,
+				( mol->AtomPositions()[3*cnt+2] + this->translation.Z()) * this->scale,
+				mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius() * this->scale );
 		}
 		glEnd(); // GL_POINTS
 	}
@@ -2068,16 +1432,43 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
 }
 
 /*
+ * Create a volume containing the voxel map
+ */
+void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallVolumeData *volume) {
+    // generate volume, if necessary
+    if( !glIsTexture( this->volumeTex) ) {
+        glGenTextures( 1, &this->volumeTex);
+    }
+    // set voxel map to volume texture
+    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+    glTexImage3D( GL_TEXTURE_3D, 0, GL_LUMINANCE32F_ARB, 
+        volume->VolumeDimension().GetWidth(), 
+        volume->VolumeDimension().GetHeight(), 
+        volume->VolumeDimension().GetDepth(), 0, GL_LUMINANCE, GL_FLOAT, 
+        volume->VoxelMap() );
+    GLint param = GL_LINEAR;
+    glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
+    glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
+    //GLint mode = GL_CLAMP_TO_EDGE;
+    GLint mode = GL_REPEAT;
+    glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
+    glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
+    glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
+    glBindTexture( GL_TEXTURE_3D, 0);
+    CHECK_FOR_OGL_ERROR();
+}
+
+/*
  * draw the volume
  */
-void protein::ProteinVolumeRenderer::RenderVolume( const CallProteinData *protein) {
+void protein::ProteinVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
     const float stepWidth = 1.0f/ ( 2.0f * float( this->volumeSize));
     glDisable( GL_BLEND);
 
     GLint prevFBO;
     glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &prevFBO);
 
-    this->RayParamTextures( protein);
+	this->RayParamTextures( boundingbox);
     CHECK_FOR_OGL_ERROR();
 
     glDisable(GL_DEPTH_TEST);
@@ -2112,8 +1503,9 @@ void protein::ProteinVolumeRenderer::RenderVolume( const CallProteinData *protei
     glUniform1i( this->volumeShader.ParameterLocation( "rayStartSampler"), 2);
     glUniform1i( this->volumeShader.ParameterLocation( "rayLengthSampler"), 3);
 
-    glUniform1f( this->volumeShader.ParameterLocation( "isoValue"), this->isoValue);
+    glUniform1f( this->volumeShader.ParameterLocation( "isoValue"), this->isoValue1);
 	glUniform1f( this->volumeShader.ParameterLocation( "isoOpacity"), this->volIsoOpacity);
+    glUniform1f( this->volumeShader.ParameterLocation( "clipPlaneOpacity"), this->volClipPlaneOpacity);
 
     // transfer function
     glActiveTexture( GL_TEXTURE1);
@@ -2147,9 +1539,153 @@ void protein::ProteinVolumeRenderer::RenderVolume( const CallProteinData *protei
 }
 
 /*
+ * draw the volume
+ */
+void protein::ProteinVolumeRenderer::RenderVolume( const CallVolumeData *volume) {
+    // check average density value
+    if( vislib::math::Abs<float>( volume->MeanDensity() - this->meanDensityValue) > vislib::math::FLOAT_EPSILON ) {
+        this->meanDensityValue = volume->MeanDensity();
+        this->isoValue1 = this->meanDensityValue;
+        this->isoValue2 = -this->meanDensityValue;
+        this->volIsoValue1Param.Param<param::FloatParam>()->SetValue( this->isoValue1);
+        this->volIsoValue2Param.Param<param::FloatParam>()->SetValue( this->isoValue2);
+    }
+    // compute step width
+    const float stepWidth = 1.0f / ( 2.0f * float( volume->BoundingBox().LongestEdge()));
+    glDisable( GL_BLEND);
+    // store current FBO, if necessary
+    GLint prevFBO;
+    glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &prevFBO);
+    // generate the ray parameter textures for volume ray casting
+    this->RayParamTextures( volume);
+    CHECK_FOR_OGL_ERROR();
+    // disable depth test and masking
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    // use the previously stored FBO (if any)
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, prevFBO);
+
+    // start GPU volume ray casting
+    this->dualIsosurfaceShader.Enable();
+
+    glEnable( GL_BLEND);
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // scale[i] = 1/extent[i] --- extent = size of the bbox
+    this->volScale[0] = 1.0f / ( volume->BoundingBox().Width() * this->scale);
+    this->volScale[1] = 1.0f / ( volume->BoundingBox().Height() * this->scale);
+    this->volScale[2] = 1.0f / ( volume->BoundingBox().Depth() * this->scale);
+    // scaleInv = 1 / scale = extend
+    this->volScaleInv[0] = 1.0f / this->volScale[0];
+    this->volScaleInv[1] = 1.0f / this->volScale[1];
+    this->volScaleInv[2] = 1.0f / this->volScale[2];
+    
+    glUniform4fv( this->dualIsosurfaceShader.ParameterLocation( "scaleVol"), 1, this->volScale);
+    glUniform4fv( this->dualIsosurfaceShader.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
+    glUniform1f( this->dualIsosurfaceShader.ParameterLocation( "stepSize"), stepWidth);
+
+    glUniform1f( this->dualIsosurfaceShader.ParameterLocation( "alphaCorrection"), 
+        float( volume->BoundingBox().LongestEdge())/256.0f);
+    glUniform1i( this->dualIsosurfaceShader.ParameterLocation( "numIterations"), 255);
+    glUniform2f( this->dualIsosurfaceShader.ParameterLocation( "screenResInv"), 1.0f/ float(this->width), 1.0f/ float(this->height));
+
+    // bind depth texture
+    glUniform1i( this->dualIsosurfaceShader.ParameterLocation( "volumeSampler"), 0);
+    glUniform1i( this->dualIsosurfaceShader.ParameterLocation( "transferRGBASampler"), 1);
+    glUniform1i( this->dualIsosurfaceShader.ParameterLocation( "rayStartSampler"), 2);
+    glUniform1i( this->dualIsosurfaceShader.ParameterLocation( "rayLengthSampler"), 3);
+
+    glUniform2f( this->dualIsosurfaceShader.ParameterLocation( "isoValues"), this->isoValue1, this->isoValue2);
+	glUniform1f( this->dualIsosurfaceShader.ParameterLocation( "isoOpacity"), this->volIsoOpacity);
+    glUniform1f( this->volumeShader.ParameterLocation( "clipPlaneOpacity"), this->volClipPlaneOpacity);
+
+    // transfer function
+    glActiveTexture( GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_1D, 0);
+    // ray start positions
+    glActiveTexture( GL_TEXTURE2);
+    glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);
+    // ray direction and length
+    glActiveTexture( GL_TEXTURE3);
+    glBindTexture( GL_TEXTURE_2D, this->volRayLengthTex);
+
+    // volume texture
+    glActiveTexture( GL_TEXTURE0);
+    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+    CHECK_FOR_OGL_ERROR();
+
+    // draw a screen-filling quad
+    glRectf(-1.0f, -1.0f, 1.0f, 1.0f);
+    CHECK_FOR_OGL_ERROR();
+
+    this->dualIsosurfaceShader.Disable();
+
+    /*
+    this->volumeShader.Enable();
+
+    glEnable( GL_BLEND);
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // scale[i] = 1/extent[i] --- extent = size of the bbox
+    this->volScale[0] = 1.0f / ( volume->BoundingBox().Width() * this->scale);
+    this->volScale[1] = 1.0f / ( volume->BoundingBox().Height() * this->scale);
+    this->volScale[2] = 1.0f / ( volume->BoundingBox().Depth() * this->scale);
+    // scaleInv = 1 / scale = extend
+    this->volScaleInv[0] = 1.0f / this->volScale[0];
+    this->volScaleInv[1] = 1.0f / this->volScale[1];
+    this->volScaleInv[2] = 1.0f / this->volScale[2];
+    
+    glUniform4fv( this->volumeShader.ParameterLocation( "scaleVol"), 1, this->volScale);
+    glUniform4fv( this->volumeShader.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
+    glUniform1f( this->volumeShader.ParameterLocation( "stepSize"), stepWidth);
+
+    glUniform1f( this->volumeShader.ParameterLocation( "alphaCorrection"), 
+        float( volume->BoundingBox().LongestEdge())/256.0f);
+    glUniform1i( this->volumeShader.ParameterLocation( "numIterations"), 255);
+    glUniform2f( this->volumeShader.ParameterLocation( "screenResInv"), 1.0f/ float(this->width), 1.0f/ float(this->height));
+
+    // bind depth texture
+    glUniform1i( this->volumeShader.ParameterLocation( "volumeSampler"), 0);
+    glUniform1i( this->volumeShader.ParameterLocation( "transferRGBASampler"), 1);
+    glUniform1i( this->volumeShader.ParameterLocation( "rayStartSampler"), 2);
+    glUniform1i( this->volumeShader.ParameterLocation( "rayLengthSampler"), 3);
+
+    // transfer function
+    glActiveTexture( GL_TEXTURE1);
+    glBindTexture( GL_TEXTURE_1D, 0);
+    // ray start positions
+    glActiveTexture( GL_TEXTURE2);
+    glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);
+    // ray direction and length
+    glActiveTexture( GL_TEXTURE3);
+    glBindTexture( GL_TEXTURE_2D, this->volRayLengthTex);
+
+    // volume texture
+    glActiveTexture( GL_TEXTURE0);
+    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+    CHECK_FOR_OGL_ERROR();
+
+    // draw a screen-filling quad
+    glRectf(-1.0f, -1.0f, 1.0f, 1.0f);
+    CHECK_FOR_OGL_ERROR();
+
+    this->volumeShader.Disable();
+    */
+
+    glEnable( GL_DEPTH_TEST);
+    glDepthMask( GL_TRUE);
+    glDisable( GL_BLEND);
+    CHECK_FOR_OGL_ERROR();
+
+    // restore depth buffer
+    //glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->proteinFBO.GetDepthTextureID(), 0);
+    CHECK_FOR_OGL_ERROR();
+}
+
+/*
  * write the parameters of the ray to the textures
  */
-void protein::ProteinVolumeRenderer::RayParamTextures( const CallProteinData *protein) {
+void protein::ProteinVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;
@@ -2257,7 +1793,7 @@ void protein::ProteinVolumeRenderer::RayParamTextures( const CallProteinData *pr
     this->volRayStartShader.Enable();
 
     // ------------ !useSphere && iso -------------
-    vislib::math::Vector<float, 3> trans( protein->BoundingBox().GetSize().PeekDimension() );
+    vislib::math::Vector<float, 3> trans( boundingbox.GetSize().PeekDimension() );
     trans *= this->scale*0.5f;
     if( this->renderIsometric ) {
         glUniform3f( this->volRayStartShader.ParameterLocation( "translate"), 
@@ -2281,7 +1817,7 @@ void protein::ProteinVolumeRenderer::RayParamTextures( const CallProteinData *pr
     //enableClipPlanesVolume();
 
     // draw bBox
-    this->DrawBoundingBox( protein);
+	this->DrawBoundingBox( boundingbox);
 
     // draw nearest frontfaces
     glCullFace( GL_BACK);
@@ -2289,7 +1825,7 @@ void protein::ProteinVolumeRenderer::RayParamTextures( const CallProteinData *pr
     CHECK_FOR_OGL_ERROR();
     
     // draw bBox
-    this->DrawBoundingBox( protein);
+    this->DrawBoundingBox( boundingbox);
 
     this->volRayStartShader.Disable();
 
@@ -2343,7 +1879,7 @@ void protein::ProteinVolumeRenderer::RayParamTextures( const CallProteinData *pr
     glDepthFunc( GL_GREATER);
 
     // draw bBox
-    this->DrawBoundingBox( protein);
+    this->DrawBoundingBox( boundingbox);
 
     this->volRayLengthShader.Disable();
 
@@ -2376,9 +1912,220 @@ void protein::ProteinVolumeRenderer::RayParamTextures( const CallProteinData *pr
 }
 
 /*
+ * write the parameters of the ray to the textures
+ */
+void protein::ProteinVolumeRenderer::RayParamTextures( const CallVolumeData *volume) {
+
+    GLint param = GL_NEAREST;
+    GLint mode = GL_CLAMP_TO_EDGE;
+
+    // generate / resize ray start texture for volume ray casting
+    if( !glIsTexture( this->volRayStartTex) ) {
+        glGenTextures( 1, &this->volRayStartTex);
+        glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, 0);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
+    } else if( this->width != this->volRayTexWidth || this->height != this->volRayTexHeight ) {
+        glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, 0);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
+    }
+    // generate / resize ray length texture for volume ray casting
+    if( !glIsTexture( this->volRayLengthTex) ) {
+        glGenTextures( 1, &this->volRayLengthTex);
+        glBindTexture( GL_TEXTURE_2D, this->volRayLengthTex);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, 0);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
+    } else if( this->width != this->volRayTexWidth || this->height != this->volRayTexHeight ) {
+        glBindTexture( GL_TEXTURE_2D, this->volRayLengthTex);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, 0);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
+    }
+    // generate / resize ray distance texture for volume ray casting
+    if( !glIsTexture( this->volRayDistTex) ) {
+        glGenTextures( 1, &this->volRayDistTex);
+        glBindTexture( GL_TEXTURE_2D, this->volRayDistTex);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, 0);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
+    } else if( this->width != this->volRayTexWidth || this->height != this->volRayTexHeight ) {
+        glBindTexture( GL_TEXTURE_2D, this->volRayDistTex);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, 0);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
+    }
+    CHECK_FOR_OGL_ERROR();
+    glBindTexture( GL_TEXTURE_2D, 0);
+    // set vol ray dimensions
+    this->volRayTexWidth = this->width;
+    this->volRayTexHeight = this->height;
+
+    // generate FBO, if necessary
+    if( !glIsFramebufferEXT( this->volFBO ) ) {
+        glGenFramebuffersEXT( 1, &this->volFBO);
+        CHECK_FOR_OGL_ERROR();
+    }
+
+    GLuint db[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->volFBO);
+
+    // -------- ray start ------------
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D, this->volRayStartTex, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1,
+        GL_TEXTURE_2D, this->volRayDistTex, 0);
+    CHECK_FOR_OGL_ERROR();
+
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    // draw to two rendertargets (the second does not need to be cleared)
+    glDrawBuffers( 2, db);
+    //CHECK_FRAMEBUFFER_STATUS();
+
+    // draw near clip plane
+    glDisable( GL_DEPTH_TEST);
+    glDepthMask( GL_FALSE);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+
+    glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+
+    // the shader transforms camera coords back to object space
+    this->volRayStartEyeShader.Enable();
+
+	float u = this->cameraInfo->NearClip() * tan( this->cameraInfo->ApertureAngle() * float(vislib::math::PI_DOUBLE) / 360.0f);
+    float r = ( this->width / this->height)*u;
+
+    glBegin(GL_QUADS);
+        glVertex3f(-r, -u, -this->cameraInfo->NearClip());
+        glVertex3f( r, -u, -this->cameraInfo->NearClip());
+        glVertex3f( r,  u, -this->cameraInfo->NearClip());
+        glVertex3f(-r,  u, -this->cameraInfo->NearClip());
+    glEnd();
+    CHECK_FOR_OGL_ERROR();
+
+    this->volRayStartEyeShader.Disable();
+
+    glDrawBuffers( 1, db);
+
+    this->volRayStartShader.Enable();
+
+    // ------------ !useSphere && iso -------------
+    vislib::math::Vector<float, 3> trans( volume->BoundingBox().GetSize().PeekDimension() );
+    trans *= this->scale*0.5f;
+    if( this->renderIsometric ) {
+        glUniform3f( this->volRayStartShader.ParameterLocation( "translate"), 
+            0.0f, 0.0f, 0.0f);
+    } else {
+        glUniform3fv( this->volRayStartShader.ParameterLocation( "translate"), 
+            1, trans.PeekComponents() );
+    }
+
+    glDepthMask( GL_TRUE);
+    glEnable( GL_DEPTH_TEST);
+
+    glColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+    glColor4f( 0.0f, 0.0f, 0.0f, 1.0f);
+
+    glEnable( GL_CULL_FACE);
+
+    // draw nearest backfaces
+    glCullFace( GL_FRONT);
+
+    // draw bBox
+    this->DrawBoundingBox( volume->BoundingBox());
+
+    // draw nearest frontfaces
+    glCullFace( GL_BACK);
+    glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    CHECK_FOR_OGL_ERROR();
+    
+    // draw bBox
+    this->DrawBoundingBox( volume->BoundingBox());
+
+    this->volRayStartShader.Disable();
+    CHECK_FOR_OGL_ERROR();
+
+    // --------------------------------
+    // -------- ray length ------------
+    // --------------------------------
+    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->volFBO);
+    glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D, this->volRayLengthTex, 0);
+    CHECK_FOR_OGL_ERROR();
+
+    // get clear color
+    float clearCol[4];
+    glGetFloatv( GL_COLOR_CLEAR_VALUE, clearCol);
+    glClearColor( 0, 0, 0, 0);
+    glClearDepth( 0.0f);
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearDepth( 1.0f);
+    glDrawBuffers( 2, db);
+    glClearColor( clearCol[0], clearCol[1], clearCol[2], clearCol[3]);
+
+    //glUseProgram(_app->shader->volRayLength->progId);
+    this->volRayLengthShader.Enable();
+
+    glUniform1i( this->volRayLengthShader.ParameterLocation( "sourceTex"), 0);
+    glUniform1i( this->volRayLengthShader.ParameterLocation( "depthTex"), 1);
+    glUniform2f( this->volRayLengthShader.ParameterLocation( "screenResInv"),
+        1.0f / float(this->width), 1.0f / float(this->height));
+    glUniform2f( this->volRayLengthShader.ParameterLocation( "zNearFar"),
+        this->cameraInfo->NearClip(), this->cameraInfo->FarClip() );
+
+    if( this->renderIsometric ) {
+        glUniform3f( this->volRayLengthShader.ParameterLocation( "translate"), 
+            0.0f, 0.0f, 0.0f);
+    } else {
+        glUniform3fv( this->volRayLengthShader.ParameterLocation( "translate"), 
+            1, trans.PeekComponents() );
+    }
+    glUniform1f( this->volRayLengthShader.ParameterLocation( "scale"),
+        this->scale);
+
+    glActiveTexture( GL_TEXTURE1);
+    this->proteinFBO.BindDepthTexture();
+    glActiveTexture( GL_TEXTURE0);
+    glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);
+
+    // draw farthest backfaces
+    glCullFace( GL_FRONT);
+    glDepthFunc( GL_GREATER);
+
+    // draw bBox
+    this->DrawBoundingBox( volume->BoundingBox());
+
+    this->volRayLengthShader.Disable();
+
+    glDrawBuffers( 1, db);
+    glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1,
+        GL_TEXTURE_2D, 0, 0);
+
+    glDepthFunc( GL_LESS);
+    glCullFace( GL_BACK);
+    glDisable( GL_CULL_FACE);
+}
+
+/*
  * Draw the bounding box.
  */
-void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProteinData *protein) {
+void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cuboid<float> boundingbox) {
 
     vislib::math::Vector<float, 3> position;
     glBegin(GL_QUADS);
@@ -2386,27 +2133,27 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProtei
         // back side
         glNormal3f(0.0f, 0.0f, -1.0f);
         glColor3f( 1, 0, 0);
-        //glVertex3fv( protein->BoundingBox().GetLeftBottomBack().PeekCoordinates() );
-        position = protein->BoundingBox().GetLeftBottomBack();
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftBottomBack().PeekCoordinates() );
+        position = boundingbox.GetLeftBottomBack();
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetLeftTopBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftTopBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftTopBack().PeekCoordinates() );
+        position = (boundingbox.GetLeftTopBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightTopBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightTopBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightTopBack().PeekCoordinates() );
+        position = (boundingbox.GetRightTopBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightBottomBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightBottomBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightBottomBack().PeekCoordinates() );
+        position = (boundingbox.GetRightBottomBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
@@ -2414,27 +2161,27 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProtei
         // front side
         glNormal3f(0.0f, 0.0f, 1.0f);
         glColor3f( 0.5, 0, 0);
-        //glVertex3fv( protein->BoundingBox().GetLeftTopFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftTopFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftTopFront().PeekCoordinates() );
+        position = (boundingbox.GetLeftTopFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetLeftBottomFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftBottomFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftBottomFront().PeekCoordinates() );
+        position = (boundingbox.GetLeftBottomFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightBottomFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightBottomFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightBottomFront().PeekCoordinates() );
+        position = (boundingbox.GetRightBottomFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightTopFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightTopFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightTopFront().PeekCoordinates() );
+        position = (boundingbox.GetRightTopFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
@@ -2442,27 +2189,27 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProtei
         // top side
         glNormal3f(0.0f, 1.0f, 0.0f);
         glColor3f( 0, 1, 0);
-        //glVertex3fv( protein->BoundingBox().GetLeftTopBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftTopBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftTopBack().PeekCoordinates() );
+        position = (boundingbox.GetLeftTopBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetLeftTopFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftTopFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftTopFront().PeekCoordinates() );
+        position = (boundingbox.GetLeftTopFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightTopFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightTopFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightTopFront().PeekCoordinates() );
+        position = (boundingbox.GetRightTopFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightTopBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightTopBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightTopBack().PeekCoordinates() );
+        position = (boundingbox.GetRightTopBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
@@ -2470,27 +2217,27 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProtei
         // bottom side
         glNormal3f(0.0f, -1.0f, 0.0f);
         glColor3f( 0, 0.5, 0);
-        //glVertex3fv( protein->BoundingBox().GetLeftBottomFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftBottomFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftBottomFront().PeekCoordinates() );
+        position = (boundingbox.GetLeftBottomFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetLeftBottomBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftBottomBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftBottomBack().PeekCoordinates() );
+        position = (boundingbox.GetLeftBottomBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightBottomBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightBottomBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightBottomBack().PeekCoordinates() );
+        position = (boundingbox.GetRightBottomBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightBottomFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightBottomFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightBottomFront().PeekCoordinates() );
+        position = (boundingbox.GetRightBottomFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
@@ -2498,27 +2245,27 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProtei
         // left side
         glNormal3f(-1.0f, 0.0f, 0.0f);
         glColor3f( 0, 0, 1);
-        //glVertex3fv( protein->BoundingBox().GetLeftTopFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftTopFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftTopFront().PeekCoordinates() );
+        position = (boundingbox.GetLeftTopFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetLeftTopBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftTopBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftTopBack().PeekCoordinates() );
+        position = (boundingbox.GetLeftTopBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetLeftBottomBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftBottomBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftBottomBack().PeekCoordinates() );
+        position = (boundingbox.GetLeftBottomBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetLeftBottomFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetLeftBottomFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetLeftBottomFront().PeekCoordinates() );
+        position = (boundingbox.GetLeftBottomFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
@@ -2526,27 +2273,27 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProtei
         // right side
         glNormal3f(1.0f, 0.0f, 0.0f);
         glColor3f( 0, 0, 0.5);
-        //glVertex3fv( protein->BoundingBox().GetRightTopBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightTopBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightTopBack().PeekCoordinates() );
+        position = (boundingbox.GetRightTopBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightTopFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightTopFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightTopFront().PeekCoordinates() );
+        position = (boundingbox.GetRightTopFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightBottomFront().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightBottomFront());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightBottomFront().PeekCoordinates() );
+        position = (boundingbox.GetRightBottomFront());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
-        //glVertex3fv( protein->BoundingBox().GetRightBottomBack().PeekCoordinates() );
-        position = (protein->BoundingBox().GetRightBottomBack());
-        position = protein->BoundingBox().CalcCenter() + position * -1.0f;
+        //glVertex3fv( boundingbox.GetRightBottomBack().PeekCoordinates() );
+        position = (boundingbox.GetRightBottomBack());
+        position = boundingbox.CalcCenter() + position * -1.0f;
         position *= -this->scale;
         //position = ( position + this->translation ) * this->scale;
         glVertex3fv( position.PeekComponents() );
@@ -2557,9 +2304,10 @@ void protein::ProteinVolumeRenderer::DrawBoundingBoxTranslated( const CallProtei
 /*
  * Draw the bounding box.
  */
-void protein::ProteinVolumeRenderer::DrawBoundingBox( const CallProteinData *protein) {
+void protein::ProteinVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
 
-    vislib::math::Vector<float, 3> position( protein->BoundingBox().GetSize().PeekDimension() );
+    //vislib::math::Vector<float, 3> position( protein->BoundingBox().GetSize().PeekDimension() );
+    vislib::math::Vector<float, 3> position( boundingbox.GetSize().PeekDimension() );
     position *= this->scale;
 
     glBegin(GL_QUADS);
@@ -2602,4 +2350,29 @@ void protein::ProteinVolumeRenderer::DrawBoundingBox( const CallProteinData *pro
     }
     glEnd();
     CHECK_FOR_OGL_ERROR();
+
+    // draw slice for volume clipping
+    if( this->volClipPlaneFlag )
+        this->drawClippedPolygon( boundingbox);
+}
+
+/*
+ * draw the clipped polygon for correct clip plane rendering
+ */
+void ProteinVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boundingbox) {
+    if( !this->volClipPlaneFlag )
+        return;
+
+    //vislib::math::Vector<float, 3> position( protein->BoundingBox().GetSize().PeekDimension() );
+    vislib::math::Vector<float, 3> position( boundingbox.GetSize().PeekDimension() );
+    position *= this->scale;
+
+    // check for each clip plane
+    for( int i = 0; i < this->volClipPlane.Count(); ++i ) {
+        slices.setupSingleSlice( this->volClipPlane[i].PeekComponents(), position.PeekComponents());
+        float d = 0.0f;
+        glBegin(GL_TRIANGLE_FAN);
+            slices.drawSingleSlice(-(-d + this->volClipPlane[i].PeekComponents()[3]-0.0001f));
+        glEnd();
+    }
 }

@@ -19,8 +19,6 @@
 #define AXISHINTS
 #endif // DEBUG
 
-//#define DEBUG_COLOR
-
 //#define BULLSHIT
 
 #ifndef FLACH
@@ -36,6 +34,11 @@
             <snippet name="commondefines"/>
             <snippet type="string">
                 <!--
+
+#undef HALO
+//#define HALO
+#undef HALO_RAD
+#define HALO_RAD  0.1
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 
@@ -107,6 +110,11 @@ void main(void) {
     vec3 testPos;
     vec4 projPos;
 
+    
+#ifdef HALO
+    squarRad = (rad + HALO_RAD) * (rad + HALO_RAD);
+#endif // HALO
+    
     // projected camera vector
     vec3 c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
 
@@ -172,6 +180,10 @@ void main(void) {
 #endif // RETICLE
 
     // gl_PointSize = 32.0;
+    
+#ifdef HALO
+    squarRad = rad * rad;
+#endif // HALO
 }
 -->
             </snippet>
@@ -183,6 +195,11 @@ void main(void) {
             <snippet name="::common::lighting::simple"/>
             <snippet type="string">
                 <!--
+
+#undef HALO
+//#define HALO
+#undef HALO_RAD
+#define HALO_RAD  0.1
 
 uniform vec4 viewAttr;
 
@@ -200,6 +217,9 @@ void main(void) {
     vec4 coord;
     vec3 ray;
     float lambda;
+    vec3 color;
+    vec3 sphereintersection = vec3( 0.0);
+    vec3 normal;
 
     // transform fragment coordinates from window coordinates to view coordinates.
     coord = gl_FragCoord 
@@ -222,20 +242,37 @@ void main(void) {
     float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
     float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
 #ifdef CLIP
-    if (radicand < 0.0) { discard; }
-#endif // CLIP
     lambda = d1 - sqrt(radicand);                           // lambda
-    vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
 
+    float radicand2 = 0.0;
+#ifdef HALO
+    radicand2 = (rad+HALO_RAD)*(rad+HALO_RAD) - d2s;
+    if( radicand2 < 0.0 ) {
+        discard;
+    }
+    else if( radicand < 0.0 ) {
+        // idea for halo from Tarini et al. (tvcg 2006)
+        color = vec3(0.1);
+        normal = vec3(0.0, 1.0, 0.0);
+    }
+#else
+    if( radicand < 0.0 ) {
+        discard;
+    }
+#endif // HALO
+    else {
+        // chose color for lighting
+        color = gl_Color.rgb;
+        sphereintersection = lambda * ray + camPos.xyz;    // intersection point
+        // "calc" normal at intersection point
+        normal = sphereintersection / rad;
+    }
+    
+#endif // CLIP
 
-    // "calc" normal at intersection point
-    vec3 normal = sphereintersection / rad;
 #ifdef SMALL_SPRITE_LIGHTING
     normal = mix(-ray, normal, lightPos.w);
 #endif // SMALL_SPRITE_LIGHTING
-
-    // chose color for lighting
-    vec3 color = gl_Color.rgb;
 
 #ifdef AXISHINTS
     // debug-axis-hints
@@ -259,12 +296,14 @@ void main(void) {
     float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
     float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
     gl_FragColor.rgb = (radicand < 0.0) ? gl_Color.rgb : gl_FragColor.rgb;
 #endif // CLIP
 #endif // DEPTH
 
+    
 #ifdef RETICLE
     coord = gl_FragCoord 
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
@@ -7081,7 +7120,7 @@ float codeColorBDP( vec4 fragColor)
 	uint r = uint(fc.r*255.0) << uint(24);
     uint g = uint(fc.g*255.0) << uint(16);
     uint b = uint(fc.b*255.0) << uint(8);
-	uint a = uint(0); //uint(fc.a*127.0);
+	uint a = uint( 0); //uint(fc.a*127.0);
 
     codedColor = float(r | g | b | a);
 
@@ -9522,6 +9561,7 @@ void main(void) {
 
     counter = 0;
 
+/*
     for(i = 0; i < 8; ++i) {
         if(i == 0) { histogram = texture2D(histTex0, texCoord); }
         if(i == 1) { histogram = texture2D(histTex1, texCoord); }
@@ -9544,6 +9584,7 @@ void main(void) {
             }
         }
     }
+*/
 }
 
 -->

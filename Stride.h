@@ -21,6 +21,7 @@
 #include <vislib/Vector.h>
 #include "CallProteinData.h"
 #include "CallProteinMovementData.h"
+#include "MolecularDataCall.h"
 
 namespace megamol {
 namespace protein {	
@@ -57,7 +58,7 @@ namespace protein {
 #define MAX_TURN                  100
 #define MAX_BOND                  100
 #define MAX_ASSIGN                300
-#define MAX_AT_IN_RES             50
+#define MAX_AT_IN_RES             150 // 50
 #define MAX_AT_IN_HETERORES       200
 #define MAXRESDNR                 6
 #define MAXRESACC                 6
@@ -280,14 +281,17 @@ public:
 
 	Stride( megamol::protein::CallProteinData *pdi);
     Stride( megamol::protein::CallProteinMovementData *pdi);
+    Stride( megamol::protein::MolecularDataCall *mol);
 	virtual ~Stride(void);
 
 	bool WriteToInterface( megamol::protein::CallProteinData *pdi);
     bool WriteToInterface( megamol::protein::CallProteinMovementData *pdi);
+    bool WriteToInterface( megamol::protein::MolecularDataCall *mol);
 	
 protected:
 	void GetChains( megamol::protein::CallProteinData *pdi);
     void GetChains( megamol::protein::CallProteinMovementData *pdi);
+    void GetChains( megamol::protein::MolecularDataCall *mol);
 	bool ComputeSecondaryStructure();
 	
 	void DefaultCmd( COMMAND *Cmd );

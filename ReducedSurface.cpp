@@ -17,6 +17,7 @@
 #include <ctime>
 
 using namespace megamol;
+using namespace megamol::core;
 using namespace megamol::protein;
 
 /*
@@ -24,7 +25,7 @@ using namespace megamol::protein;
  */
 ReducedSurface::ReducedSurface( const CallProteinData *prot,
 										  float probeRad) :
-		protein( prot), globalRS( true), zeroVec3( 0, 0, 0)
+		protein( prot), molecule( 0), globalRS( true), zeroVec3( 0, 0, 0)
 {
 	// set the first atom index to 0
 	this->firstAtomIdx = 0;
@@ -46,7 +47,7 @@ ReducedSurface::ReducedSurface( const CallProteinData *prot,
 ReducedSurface::ReducedSurface( unsigned int chainId, 
 										  const CallProteinData *prot,
 										  float probeRad) :
-		protein( prot), globalRS( false), zeroVec3( 0, 0, 0)
+		protein( prot), molecule( 0), globalRS( false), zeroVec3( 0, 0, 0)
 {
 	if( chainId < this->protein->ProteinChainCount() )
 	{
@@ -84,22 +85,66 @@ ReducedSurface::ReducedSurface( unsigned int chainId,
 		this->ComputeReducedSurface();
 }
 
+ReducedSurface::ReducedSurface( unsigned int molId,
+        MolecularDataCall *mol, float probeRad) :
+		protein( 0), molecule( mol), globalRS( false), zeroVec3( 0, 0, 0) {
+    // check if the chain exists
+    if( molId < this->molecule->MoleculeCount() ) {
+        // set the first atom index
+        this->firstAtomIdx =
+            molecule->Residues()[molecule->Molecules()[molId].FirstResidueIndex()]->FirstAtomIndex();
+        // set the number of atoms to the total number of protein atoms
+        if( ( molId + 1) < this->molecule->MoleculeCount() ) {
+            this->numberOfAtoms = 
+                molecule->Residues()[molecule->Molecules()[molId+1].FirstResidueIndex()]->FirstAtomIndex() -
+                this->firstAtomIdx;
+        } else {
+            this->numberOfAtoms = this->molecule->AtomCount() - this->firstAtomIdx;
+		}
+	} else {
+		// chain index too high!
+		// --> set first atom and number of atoms to zero
+		this->firstAtomIdx = 0;
+		this->numberOfAtoms = 0;
+	}
+	
+	// set epsilon value for float-comparison
+	this->epsilon = vislib::math::FLOAT_EPSILON;
+	// set probe radius
+	this->probeRadius = probeRad;
+	// set number of cut edges to 0
+	this->countCutEdges = 0;
+    
+	// compute the reduced surface
+    if( this->molecule && this->numberOfAtoms > 0 ) {
+		//this->ComputeReducedSurfaceMolecule();
+
+        this->atoms.resize( this->molecule->AtomCount() * 4);
+        for( unsigned int i = 0; i < this->molecule->AtomCount(); ++i ) {
+            this->atoms[4*i+0] = this->molecule->AtomPositions()[3*i+0];
+            this->atoms[4*i+1] = this->molecule->AtomPositions()[3*i+1];
+            this->atoms[4*i+2] = this->molecule->AtomPositions()[3*i+2];
+            this->atoms[4*i+3] = this->molecule->AtomTypes()[this->molecule->AtomTypeIndices()[i]].Radius();
+        }
+    }
+}
+
 
 /*
  * ReducedSurface::~ReducedSurface
  */
-ReducedSurface::~ReducedSurface(void)
-{
+ReducedSurface::~ReducedSurface(void) {
 	// set protein data interface to NULL
 	this->protein = NULL;
+	// set molecular data interface to NULL
+	this->molecule = NULL;
 }
 
 
 /*
  * Compute the reduced surface
  */
-void ReducedSurface::ComputeReducedSurface()
-{	
+void ReducedSurface::ComputeReducedSurface() {
 	time_t t = clock();
 	time_t t_total = clock();
 	
@@ -370,6 +415,183 @@ void ReducedSurface::ComputeReducedSurface()
 	std::cout << "computation of RS-surface finished." <<
 		( double( clock() - t_total) / double( CLOCKS_PER_SEC) ) << std::endl;
 }
+
+
+/*
+ * Compute the reduced surface of a molecule
+ */
+void ReducedSurface::ComputeReducedSurfaceMolecule() {
+
+    if( this->atoms.empty() ) return;
+
+	time_t t = clock();
+	time_t t_total = clock();
+	
+	// counter variables
+	unsigned int cnt1, cnt2;
+	// clear the RS-vertices, -edges and -faces
+	for( cnt1 = 0; cnt1 < this->rsVertex.size(); ++cnt1 ) {
+		delete this->rsVertex[cnt1];
+	}
+	this->rsVertex.clear();
+	for( cnt1 = 0; cnt1 < this->rsEdge.size(); ++cnt1 ) {
+		delete this->rsEdge[cnt1];
+	}
+	this->rsEdge.clear();
+	for( cnt1 = 0; cnt1 < this->rsFace.size(); ++cnt1 ) {
+		delete this->rsFace[cnt1];
+	}
+	this->rsFace.clear();
+	// temporary position vector	
+	vislib::math::Vector<float, 3> tmpVec1;
+	// temporary radius
+	float radius;
+	// index of the atom with the smallest x-value
+	unsigned int xIdx = 0;
+	// index of the atom with the smallest y-value
+	unsigned int yIdx = 0;
+	// index of the atom with the smallest z-value
+	unsigned int zIdx = 0;
+	// create the voxel map
+    this->bBox = this->molecule->AccessBoundingBoxes().ObjectSpaceBBox();
+	// set voxel lenght --> diameter of the probe + maximum atom diameter
+	this->voxelLength = 2 * this->probeRadius + 2 * 3.0f;
+	unsigned int tmpSize = (unsigned int)ceilf( this->bBox.Width() / this->voxelLength);
+	this->voxelMap.clear();
+	this->voxelMapProbes.clear();
+	this->voxelMap.resize( tmpSize);
+	this->voxelMapProbes.resize( tmpSize);
+	for( cnt1 = 0; cnt1 < this->voxelMap.size(); ++cnt1 ) {
+		this->voxelMap[cnt1].resize( (unsigned int)ceilf( this->bBox.Height() / this->voxelLength) );
+		this->voxelMapProbes[cnt1].resize( (unsigned int)ceilf( this->bBox.Height() / this->voxelLength) );
+		for( cnt2 = 0; cnt2 < this->voxelMap[cnt1].size(); ++cnt2 ) {
+			this->voxelMap[cnt1][cnt2].resize(
+				(unsigned int)ceilf( this->bBox.Depth() / this->voxelLength) );
+			this->voxelMapProbes[cnt1][cnt2].resize(
+				(unsigned int)ceilf( this->bBox.Depth() / this->voxelLength) );
+		}
+	}
+	std::cout << "time for resizing voxel maps:  " <<
+		( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+	t = clock();
+	
+	// get all molecule atom positions
+	for( cnt1 = firstAtomIdx; cnt1 < ( firstAtomIdx + numberOfAtoms); ++cnt1 ) {
+		// get position of current atom
+        tmpVec1.SetX( this->atoms[4*cnt1+0]);
+		tmpVec1.SetY( this->atoms[4*cnt1+1]);
+		tmpVec1.SetZ( this->atoms[4*cnt1+2]);
+		
+		// get the radius of current atom
+        radius = this->atoms[4*cnt1+3];
+
+		// add new RS-vertex to the list
+		this->rsVertex.push_back( new RSVertex( tmpVec1, radius, cnt1));
+		
+		// add RS-vertex to voxel map cell
+		this->voxelMap[(unsigned int)std::min( (unsigned int)this->voxelMap.size()-1,
+				(unsigned int)std::max( 0, (int)floorf( (tmpVec1.GetX() - bBox.Left()) / voxelLength)))]
+			[(unsigned int)std::min( (unsigned int)this->voxelMap[0].size()-1,
+				(unsigned int)std::max( 0, (int)floorf( (tmpVec1.GetY() - bBox.Bottom()) / voxelLength)))]
+			[(unsigned int)std::min( (unsigned int)this->voxelMap[0][0].size()-1,
+				(unsigned int)std::max( 0,
+				(int)floorf( (tmpVec1.GetZ() - bBox.Back()) / voxelLength)))].push_back(
+			this->rsVertex.back());
+		// if this is the first atom OR the x-value is larger than the current smallest x
+		// --> store cnt as xIdx
+		if( this->rsVertex.size() > 0 ||
+			( this->rsVertex[xIdx]->GetPosition().GetX() - this->rsVertex[xIdx]->GetRadius()) >
+			( this->rsVertex.back()->GetPosition().GetX() - this->rsVertex.back()->GetRadius()) )
+		{
+			xIdx = (unsigned int)this->rsVertex.size() - 1;
+		}
+		// if this is the first atom OR the y-value is larger than the current smallest y
+		// --> store cnt as yIdx
+		if( this->rsVertex.size() > 0 ||
+			( this->rsVertex[yIdx]->GetPosition().GetY() - this->rsVertex[yIdx]->GetRadius()) >
+			( this->rsVertex.back()->GetPosition().GetY() - this->rsVertex.back()->GetRadius()) )
+		{
+			yIdx = (unsigned int)this->rsVertex.size() - 1;
+		}
+		// if this is the first atom OR the z-value is larger than the current smallest z
+		// --> store cnt as zIdx
+		if( this->rsVertex.size() > 0 ||
+			( this->rsVertex[zIdx]->GetPosition().GetZ() - this->rsVertex[zIdx]->GetRadius()) >
+			( this->rsVertex.back()->GetPosition().GetZ() - this->rsVertex.back()->GetRadius()) )
+		{
+			zIdx = (unsigned int)this->rsVertex.size() - 1;
+		}
+	}
+	
+	std::cout << "time for reading all atoms: " <<
+		( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+	t = clock();
+
+	// DEBUG
+    /*
+    for( cnt1 = 0; cnt1 < this->rsVertex.size(); ++cnt1 ) {
+        this->ComputeVicinityVertex( this->rsVertex[cnt1]);
+        if( this->vicinity.size() > 100 )
+            std::cout << "atom " << cnt1 << " vicinity size ------> " << this->vicinity.size() << std::endl;
+        else if( this->vicinity.size() > 70 )
+            std::cout << "atom " << cnt1 << " vicinity size ----> " << this->vicinity.size() << std::endl;
+    }
+    */
+	
+	// try to find the initial RS-face
+	if( !this->FindFirstRSFace( this->rsVertex[xIdx]) ) // --> on the x-axis
+		if( !this->FindFirstRSFace( this->rsVertex[yIdx]) ) // --> on the y-axis
+			if( !this->FindFirstRSFace( this->rsVertex[zIdx]) ) // --> on the z-axis
+			{
+				std::cout << "no first face found!" << std::endl;
+				return; // --> if no face was found: return
+			}
+
+	std::cout << "finding initial RS-face: " <<
+		( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+	t = clock();
+	
+	// for each edge of the first RS-face: find neighbours
+	cnt1 = 0;
+	while( cnt1 < this->rsEdge.size() )
+	{
+		this->ComputeRSFace( cnt1);
+		cnt1++;
+	}
+	
+	// remove all RS-edges with only one face from the list of RS-edges
+	std::vector<RSEdge*> tmpRSEdge;
+	for( cnt1 = 0; cnt1 < this->rsEdge.size(); ++cnt1 )
+	{
+		if( this->rsEdge[cnt1]->GetFace2() != NULL )
+		{
+			tmpRSEdge.push_back( this->rsEdge[cnt1]);
+		}
+		else
+		{
+			// remove RS-edge from vertices
+			this->rsEdge[cnt1]->GetVertex1()->RemoveEdge( this->rsEdge[cnt1]);
+			this->rsEdge[cnt1]->GetVertex2()->RemoveEdge( this->rsEdge[cnt1]);
+			// delete RS-edge
+			delete this->rsEdge[cnt1];
+		}
+	}
+	this->rsEdge = tmpRSEdge;
+	
+	std::cout << "time for treating RS-edges: " <<
+		( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+	t = clock();
+
+	// create singularity texture
+	this->ComputeSingularities();
+
+	std::cout << "find cutting probes per edge and create singularity texture... " <<
+		( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+
+	std::cout << "computation of RS-surface finished." <<
+		( double( clock() - t_total) / double( CLOCKS_PER_SEC) ) << std::endl;
+}
+
 
 
 /*
@@ -1433,6 +1655,14 @@ bool ReducedSurface::FindFirstRSFace( RSVertex* vertex)
 bool ReducedSurface::UpdateData( const float lowerThreshold,
 											const float upperThreshold)
 {
+    if( !this->protein ) {
+        if( this->molecule ) {
+            return UpdateDataMolecule( lowerThreshold, upperThreshold);
+        } else {
+            return false;
+        }
+    }
+
 	///////////////////////////////////////////////////////////////////
 	// update changed parts
 	///////////////////////////////////////////////////////////////////
@@ -1883,6 +2113,364 @@ bool ReducedSurface::UpdateData( const float lowerThreshold,
 	
 	//std::cout << "INFO: update data finished" << std::endl;
 	//std::cout << "INFO: time for recomputation: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+	
+	return false;
+}
+
+
+/*
+ * Read the next timestep and check for differences between the atoms.
+ */
+bool ReducedSurface::UpdateDataMolecule( const float lowerThreshold, const float upperThreshold) {
+	///////////////////////////////////////////////////////////////////
+	// update changed parts
+	///////////////////////////////////////////////////////////////////
+	
+	if( this->numberOfAtoms < 0 )
+		return false;
+	
+	if( this->rsEdge.size() > ( this->rsVertex.size() + this->rsVertex.size() + 1000) )
+	{
+		std::cout << "ERROR: too many RS-edges! " << this->rsEdge.size() << std::endl;
+		return false;
+	}
+	// counter variables
+	unsigned int cnt1, cnt2, cnt3;
+	// boolean variables: store exceedance of thresholds
+	bool lowerThresholdExceeded = false;
+	bool upperThresholdExceeded = false;
+	// set of pointers to RS-vertices whose atom positions differ more than 'lowerThreshold'
+	std::set<RSVertex*> changedRSVertices;
+	// set of pointers to RS-edges which has to be removed
+	std::set<RSEdge*> changedRSEdges;
+	// set of pointer to RS-faces which has to be removed
+	std::set<RSFace*> changedRSFaces;
+	// temporary vector (for intermediate result)
+	vislib::math::Vector<float, 3> tmpVec1;
+	// indices of the atoms with the smallest x-, y- and z-value
+	unsigned int xIdx = 0;
+	unsigned int yIdx = 0;
+	unsigned int zIdx = 0;
+	// indices of voxel map entries
+	unsigned int oldVoxelMapIdxX, oldVoxelMapIdxY, oldVoxelMapIdxZ, 
+		newVoxelMapIdxX, newVoxelMapIdxY, newVoxelMapIdxZ;
+	// difference between the current and the subsequent atom position
+	float difference;
+	// temporary vector for RS-edges
+	std::vector<RSEdge*> tmpRSEdge;
+	
+	// do nothing if the number of atoms differs
+    if( this->molecule->AtomCount() < ( firstAtomIdx + numberOfAtoms) ) {
+		std::cout << "ERROR: too few atoms!" << std::endl;
+		return false;
+	}
+	
+	// check each atom position and update if necessary
+	for( cnt1 = firstAtomIdx; cnt1 < ( firstAtomIdx + numberOfAtoms); ++cnt1 )
+	{
+		cnt3 = cnt1 - firstAtomIdx;
+		// get position of current atom
+        tmpVec1.SetX( this->molecule->AtomPositions()[cnt1*3+0]);
+		tmpVec1.SetY( this->molecule->AtomPositions()[cnt1*3+1]);
+		tmpVec1.SetZ( this->molecule->AtomPositions()[cnt1*3+2]);
+		// compute the difference
+		difference = ( this->rsVertex[cnt3]->GetPosition() - tmpVec1).Length();
+		
+		// check, if difference exceeds the upper threshold
+		if( difference > upperThreshold )
+		{
+			//std::cout << "INFO: upper threshold exceeded --> recompute everything new!" << std::endl;
+			upperThresholdExceeded = true;
+			/*
+			// recompute the reduced surface
+			this->ComputeReducedSurface( molecule);
+	
+			// recompute geometry
+			if( this->currentRendermode == GPU_RAYCASTING )
+				this->ComputeRaycastingArrays();
+			else if( this->currentRendermode == POLYGONAL_GPU )
+				this->ComputePolygonalArraysGPU( 0.5f);
+			else if( this->currentRendermode == POLYGONAL )
+				this->ComputePolygonalArrays( 0.5f, 1.0f);
+			
+			// exit update function
+			return true;
+			*/
+		}
+		
+		// check, if difference exceeds the lower threshold
+		if( difference > lowerThreshold )
+		{
+			// the lower threshold is exceeded
+			lowerThresholdExceeded = true;
+			// compute old voxel map index
+			oldVoxelMapIdxX = (unsigned int)std::max( 0, (int)floorf( (this->rsVertex[cnt3]->GetPosition().GetX() - bBox.Left()) / voxelLength));
+			oldVoxelMapIdxX = std::min( oldVoxelMapIdxX, (unsigned int)this->voxelMap.size()-1);
+			oldVoxelMapIdxY = (unsigned int)std::max( 0, (int)floorf( (this->rsVertex[cnt3]->GetPosition().GetY() - bBox.Bottom()) / voxelLength));
+			oldVoxelMapIdxY = std::min( oldVoxelMapIdxY, (unsigned int)this->voxelMap[oldVoxelMapIdxX].size()-1);
+			oldVoxelMapIdxZ = (unsigned int)std::max( 0, (int)floorf( (this->rsVertex[cnt3]->GetPosition().GetZ() - bBox.Back()) / voxelLength));
+			oldVoxelMapIdxZ = std::min( oldVoxelMapIdxZ, (unsigned int)this->voxelMap[oldVoxelMapIdxX][oldVoxelMapIdxY].size()-1);
+			// compute new voxel map index --> make sure the index is within bounds
+			newVoxelMapIdxX = (unsigned int)std::max( 0, (int)floorf( (tmpVec1.GetX() - bBox.Left()) / this->voxelLength));
+			newVoxelMapIdxX = std::min( newVoxelMapIdxX, (unsigned int)this->voxelMap.size()-1);
+			newVoxelMapIdxY = (unsigned int)std::max( 0, (int)floorf( (tmpVec1.GetY() - bBox.Bottom()) / this->voxelLength));
+			newVoxelMapIdxY = std::min( newVoxelMapIdxY, (unsigned int)this->voxelMap[newVoxelMapIdxX].size()-1);
+			newVoxelMapIdxZ = (unsigned int)std::max( 0, (int)floorf( (tmpVec1.GetZ() - bBox.Back()) / this->voxelLength));
+			newVoxelMapIdxZ = std::min( newVoxelMapIdxZ, (unsigned int)this->voxelMap[newVoxelMapIdxX][newVoxelMapIdxY].size()-1);
+			// if the new atom position lies in another voxel --> remove old and add new position
+			if( ( oldVoxelMapIdxX != newVoxelMapIdxX ) ||
+			    ( oldVoxelMapIdxY != newVoxelMapIdxY ) ||
+			    ( oldVoxelMapIdxZ != newVoxelMapIdxZ ) )
+			{
+				// add the rsVertex-pointer to the new voxel
+				this->voxelMap[newVoxelMapIdxX][newVoxelMapIdxY][newVoxelMapIdxZ].push_back( this->rsVertex[cnt3]);
+				// remove the rsVertex-pointer from the old voxel
+				this->voxelMap[oldVoxelMapIdxX][oldVoxelMapIdxY][oldVoxelMapIdxZ].erase(
+					std::find( this->voxelMap[oldVoxelMapIdxX][oldVoxelMapIdxY][oldVoxelMapIdxZ].begin(),
+						this->voxelMap[oldVoxelMapIdxX][oldVoxelMapIdxY][oldVoxelMapIdxZ].end(),
+						this->rsVertex[cnt3]));
+			}
+			// set new atom position
+			this->rsVertex[cnt3]->SetPosition( tmpVec1);
+			// set RS-vertex as not buried
+			this->rsVertex[cnt3]->SetAtomBuried( false);
+			// set RS-vertex as not treated
+			this->rsVertex[cnt3]->SetNotTreated();
+			// add the rsVertex-pointer to the list of changed atoms
+			changedRSVertices.insert( this->rsVertex[cnt3]);
+		}
+		
+		// if this is the first atom OR the x-value is larger than the current smallest x --> store cnt as xIdx
+		if( cnt1 == 0 || ( this->rsVertex[xIdx]->GetPosition().GetX() - this->rsVertex[xIdx]->GetRadius()) > ( this->rsVertex[cnt3]->GetPosition().GetX() - this->rsVertex[cnt3]->GetRadius()) )
+		{
+			xIdx = cnt3;
+		}
+		// if this is the first atom OR the y-value is larger than the current smallest y --> store cnt as yIdx
+		if( cnt1 == 0 || ( this->rsVertex[yIdx]->GetPosition().GetY() - this->rsVertex[yIdx]->GetRadius()) > ( this->rsVertex[cnt3]->GetPosition().GetY() - this->rsVertex[cnt3]->GetRadius()) )
+		{
+			yIdx = cnt3;
+		}
+		// if this is the first atom OR the z-value is larger than the current smallest z --> store cnt as zIdx
+		if( cnt1 == 0 || ( this->rsVertex[zIdx]->GetPosition().GetZ() - this->rsVertex[zIdx]->GetRadius()) > ( this->rsVertex[cnt3]->GetPosition().GetZ() - this->rsVertex[cnt3]->GetRadius()) )
+		{
+			zIdx = cnt3;
+		}
+	}
+		
+	//std::cout << "INFO: found all changed RS-vertices (" << changedRSVertices.size() << ")" << std::endl;
+	if( changedRSVertices.empty() )
+	{
+		return false;
+	}
+	
+	// find all RS-edges and -faces that have contact to at least one changed RS-vertex
+	std::set<RSVertex*>::iterator itVertex;
+	changedRSFaces.clear();
+	changedRSEdges.clear();
+	for( itVertex = changedRSVertices.begin(); itVertex != changedRSVertices.end(); ++itVertex )
+	{
+		for( cnt1 = 0; cnt1 < (*itVertex)->GetEdgeCount(); ++cnt1 )
+		{
+			changedRSFaces.insert( (*itVertex)->GetEdge( cnt1)->GetFace1());
+			changedRSFaces.insert( (*itVertex)->GetEdge( cnt1)->GetFace2());
+			changedRSEdges.insert( (*itVertex)->GetEdge( cnt1));
+		}
+	}
+	
+	// find all RS-faces, whose probe is cut by a moved atom
+	// TODO: this could be done in the loop above (and would be faster that way)
+	for( itVertex = changedRSVertices.begin(); itVertex != changedRSVertices.end(); ++itVertex )
+	{
+		this->ComputeProbeCutVertex( *itVertex);
+		// add all found RS-faces to the list of changed faces
+		if( this->cutFaces.size() > 0 )
+		{
+			for( cnt1 = 0; cnt1 < this->cutFaces.size(); ++cnt1 )
+			{
+				changedRSFaces.insert( this->cutFaces[cnt1]);
+			}
+			//std::cout << "INFO: found RS-faces whose probes are cut by moved atoms (" << this->cutFaces.size() << ")" << std::endl;
+		}
+	}
+	this->cutFaces.clear();
+	
+	//std::cout << "INFO: marked RS-faces (" << changedRSFaces.size() << ") and RS-edges (" << changedRSEdges.size() << ")" << std::endl;
+	//std::cout << "INFO: total number of RS-faces (" << this->rsFace.size() << ") and RS-edges (" << this->rsEdge.size() << ")" << std::endl;
+	
+	// delete all marked RS-faces
+	std::set<RSFace*>::iterator itFace;
+	std::vector<RSFace*>::iterator itProbe;
+	RSFace *face;
+	for( itFace = changedRSFaces.begin(); itFace != changedRSFaces.end(); ++itFace)
+	{
+		face = *itFace;
+		// remove RS-face from probe voxel map
+		oldVoxelMapIdxX = face->GetProbeIndex().GetX();
+		oldVoxelMapIdxY = face->GetProbeIndex().GetY();
+		oldVoxelMapIdxZ = face->GetProbeIndex().GetZ();
+		// find and remove old probe position
+		itProbe = std::find( this->voxelMapProbes[oldVoxelMapIdxX][oldVoxelMapIdxY][oldVoxelMapIdxZ].begin(),
+			this->voxelMapProbes[oldVoxelMapIdxX][oldVoxelMapIdxY][oldVoxelMapIdxZ].end(), face);
+		if( itProbe != this->voxelMapProbes[oldVoxelMapIdxX][oldVoxelMapIdxY][oldVoxelMapIdxZ].end() )
+		{
+			this->voxelMapProbes[oldVoxelMapIdxX][oldVoxelMapIdxY][oldVoxelMapIdxZ].erase( itProbe);
+			////std::cout << "SUCCESS: probe found in voxel map! ["<< oldVoxelMapIdxX << "][" << oldVoxelMapIdxY << "][" << oldVoxelMapIdxZ << "]" << std::endl;
+		}
+		else
+		{
+			std::cout << "ERROR: probe not found in voxel map! [" << oldVoxelMapIdxX << "][" << oldVoxelMapIdxY << "][" << oldVoxelMapIdxZ << "]" << std::endl;
+		}
+		
+		// remove RS-face from all RS-edges which belong to one of its three RS-vertices
+		for( cnt2 = 0; cnt2 < (*itFace)->GetVertex1()->GetEdgeCount(); ++cnt2 )
+		{
+			if( (*itFace)->GetVertex1()->GetEdge(cnt2)->GetFace2() == (*itFace) )
+			{
+				(*itFace)->GetVertex1()->GetEdge(cnt2)->SetRSFaces(
+						(*itFace)->GetVertex1()->GetEdge(cnt2)->GetFace1(), NULL);
+			}
+			if( (*itFace)->GetVertex1()->GetEdge(cnt2)->GetFace1() == (*itFace) )
+			{
+				(*itFace)->GetVertex1()->GetEdge(cnt2)->SetRSFaces(
+						(*itFace)->GetVertex1()->GetEdge(cnt2)->GetFace2(), NULL);
+			}
+			if( (*itFace)->GetVertex1()->GetEdge(cnt2)->GetFace1() == NULL &&
+				(*itFace)->GetVertex1()->GetEdge(cnt2)->GetFace2() == NULL )
+			{
+				 changedRSEdges.insert( (*itFace)->GetVertex1()->GetEdge(cnt2));
+			}
+		}
+		for( cnt2 = 0; cnt2 < (*itFace)->GetVertex2()->GetEdgeCount(); ++cnt2 )
+		{
+			if( (*itFace)->GetVertex2()->GetEdge(cnt2)->GetFace2() == (*itFace) )
+			{
+				(*itFace)->GetVertex2()->GetEdge(cnt2)->SetRSFaces(
+						(*itFace)->GetVertex2()->GetEdge(cnt2)->GetFace1(), NULL);
+			}
+			if( (*itFace)->GetVertex2()->GetEdge(cnt2)->GetFace1() == (*itFace) )
+			{
+				(*itFace)->GetVertex2()->GetEdge(cnt2)->SetRSFaces(
+						(*itFace)->GetVertex2()->GetEdge(cnt2)->GetFace2(), NULL);
+			}
+			if( (*itFace)->GetVertex2()->GetEdge(cnt2)->GetFace1() == NULL &&
+				(*itFace)->GetVertex2()->GetEdge(cnt2)->GetFace2() == NULL )
+			{
+				 changedRSEdges.insert( (*itFace)->GetVertex2()->GetEdge(cnt2));
+			}
+		}
+		for( cnt2 = 0; cnt2 < (*itFace)->GetVertex3()->GetEdgeCount(); ++cnt2 )
+		{
+			if( (*itFace)->GetVertex3()->GetEdge(cnt2)->GetFace2() == (*itFace) )
+			{
+				(*itFace)->GetVertex3()->GetEdge(cnt2)->SetRSFaces(
+						(*itFace)->GetVertex3()->GetEdge(cnt2)->GetFace1(), NULL);
+			}
+			if( (*itFace)->GetVertex3()->GetEdge(cnt2)->GetFace1() == (*itFace) )
+			{
+				(*itFace)->GetVertex3()->GetEdge(cnt2)->SetRSFaces(
+						(*itFace)->GetVertex3()->GetEdge(cnt2)->GetFace2(), NULL);
+			}
+			if( (*itFace)->GetVertex3()->GetEdge(cnt2)->GetFace1() == NULL &&
+				(*itFace)->GetVertex3()->GetEdge(cnt2)->GetFace2() == NULL )
+			{
+				 changedRSEdges.insert( (*itFace)->GetVertex3()->GetEdge(cnt2));
+			}
+		}
+		
+		// delete RS-face
+		itProbe = std::find( this->rsFace.begin(), this->rsFace.end(), (*itFace));
+		if( itProbe != this->rsFace.end() )
+		{
+			delete (*itProbe);
+			this->rsFace.erase( itProbe);
+		}
+		else
+		{
+			std::cout << "ERROR: RS-Face not found in list of RS-faces!" << std::endl;
+		}
+	}
+	
+	//std::cout << "INFO: deleted RS-faces" << std::endl;
+	
+	// remove all changed RS-edges from the list of RS-edges
+	std::set<RSEdge*>::iterator itEdge;
+	std::vector<RSEdge*>::iterator itDelEdge;
+	for( itEdge = changedRSEdges.begin(); itEdge != changedRSEdges.end(); ++itEdge )
+	{
+		// remove RS-edge from its two RS-vertices
+		(*itEdge)->GetVertex1()->RemoveEdge( (*itEdge));
+		(*itEdge)->GetVertex2()->RemoveEdge( (*itEdge));
+		// delete RS-edge
+		itDelEdge = std::find( this->rsEdge.begin(), this->rsEdge.end(), (*itEdge));
+		if( itDelEdge != this->rsEdge.end() )
+		{
+			delete (*itDelEdge);
+			this->rsEdge.erase( itDelEdge);
+		}
+		else
+		{
+			//std::cout << "ERROR: RS-edge not found in list of RS-edges!" << std::endl;
+		}
+	}
+	//std::cout << "INFO: number of RS-edges after deletion: " << this->rsEdge.size() << std::endl;
+	
+	//std::cout << "INFO: new number of RS-faces (" << this->rsFace.size() << ") and RS-edges (" << this->rsEdge.size() << ")" << std::endl;
+	
+	//std::cout << "INFO: time for updating data: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
+	//t = clock();
+	
+	//////////////////////////////////////////////////////////////////////////////
+	// deleted all changes partes, ready for recomputation
+	//////////////////////////////////////////////////////////////////////////////
+	if( lowerThresholdExceeded )
+	{
+		// check, if rsEdge is empty --> if true, find first face
+		if( this->rsEdge.empty() )
+		{
+			// try to find the initial RS-face
+			if( !this->FindFirstRSFace( this->rsVertex[xIdx]) ) // --> on the x-axis
+				if( !this->FindFirstRSFace( this->rsVertex[yIdx]) ) // --> on the y-axis
+					if( !this->FindFirstRSFace( this->rsVertex[zIdx]) ) // --> on the z-axis
+						return false; // --> if no face was found: return
+		}
+		
+		//std::cout << "INFO: computing new RS-faces from old RS-edges..." << std::endl;
+		
+		// for each edge: find neighbours
+		cnt1 = 0;
+		while( cnt1 < this->rsEdge.size() )
+		{
+			this->ComputeRSFace( cnt1);
+			cnt1++;
+		}
+		
+		//std::cout << "INFO: computed new RS-faces from old RS-edges" << std::endl;
+		
+		// remove all RS-edges with only one face from the list of RS-edges
+		std::vector<RSEdge*> tmpRSEdge;
+		for( cnt1 = 0; cnt1 < this->rsEdge.size(); ++cnt1 )
+		{
+			if( this->rsEdge[cnt1]->GetFace2() != NULL )
+				tmpRSEdge.push_back( this->rsEdge[cnt1]);
+			else
+			{
+				// remove RS-edge from vertices
+				this->rsEdge[cnt1]->GetVertex1()->RemoveEdge( this->rsEdge[cnt1]);
+				this->rsEdge[cnt1]->GetVertex2()->RemoveEdge( this->rsEdge[cnt1]);
+				// delete RS-edge
+				delete this->rsEdge[cnt1];
+			}
+		}
+		this->rsEdge = tmpRSEdge;
+		//std::cout << "INFO: deleted RS-edges with only one face" << std::endl;
+		
+		// recompute cutting probes and singularity texture
+		this->ComputeSingularities();
+		
+		return true;
+	}
+	
+	//std::cout << "INFO: update data finished" << std::endl;
 	
 	return false;
 }

@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Call.h"
+#include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/Pair.h"
@@ -53,8 +54,14 @@ namespace protein {
      * this structure might change over time!
      */
 
-	class CallProteinData : public megamol::core::Call {
+	class CallProteinData : public megamol::core::AbstractGetData3DCall {
     public:
+
+        /** Index of the 'GetData' function */
+        static const unsigned int CallForGetData;
+
+        /** Index of the 'GetExtent' function */
+        static const unsigned int CallForGetExtent;
 
         /**
          * Answer the name of the objects of this description.
@@ -80,7 +87,7 @@ namespace protein {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 1;
+            return 2;
         }
 
         /**
@@ -91,7 +98,12 @@ namespace protein {
          * @return The name of the requested function.
          */
         static const char * FunctionName(unsigned int idx) {
+            switch( idx) {
+                case 0:
             return "GetData";
+                case 1:
+                    return "GetExtend";
+            }
         }
 
         /** name alias for index pairs */
