@@ -128,10 +128,10 @@ namespace protein {
         unsigned int sphereCount;
 
         /** The data */
-        vislib::Array<vislib::Array<float>> data;
+        vislib::Array<vislib::Array<float> > data;
 
         /** The sphere charge */
-        vislib::Array<vislib::Array<float>> sphereCharge;
+        vislib::Array<vislib::Array<float> > sphereCharge;
         /** The maximum charge in the trajectory. */
         float maxCharge;
         /** The minimum charge in the trajectory. */

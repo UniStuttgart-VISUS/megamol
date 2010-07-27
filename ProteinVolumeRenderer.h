@@ -380,7 +380,7 @@ namespace protein {
         // flag wether clipping planes are enabled
         bool volClipPlaneFlag;
         // the array of clipping planes
-        vislib::Array<vislib::math::Vector<double, 4>> volClipPlane;
+        vislib::Array<vislib::math::Vector<double, 4> > volClipPlane;
         // view aligned slicing
         ViewSlicing slices;
 		// the opacity of the clipping plane

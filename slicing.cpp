@@ -27,7 +27,7 @@
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
-#include <vislib/vector.h>
+#include <vislib/Vector.h>
 #include "slicing.h"
 
 

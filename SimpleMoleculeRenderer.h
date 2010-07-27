@@ -256,9 +256,9 @@ namespace protein {
         ColoringMode currentColoringMode;
 
         /** The color lookup table (for chains, amino acids,...) */
-        vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
         /** The color lookup table which stores the rainbow colors */
-        vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
         /** The atom color table for rendering */
         vislib::Array<float> atomColorTable;

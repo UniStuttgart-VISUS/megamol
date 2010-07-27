@@ -18,8 +18,8 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/stringconverter.h"
-#include "vislib/stringtokeniser.h"
+#include "vislib/StringConverter.h"
+#include "vislib/StringTokeniser.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include <ctime>
 #include <iostream>
@@ -407,9 +407,11 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             }
         }
 
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+        //Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
     } else {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", T2A( filename)); // DEBUG
+        //Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", T2A( filename)); // DEBUG
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file."); // DEBUG
     }
 
 }

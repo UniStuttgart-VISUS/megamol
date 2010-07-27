@@ -25,8 +25,8 @@
 #include "glh/glh_extensions.h"
 #include "utility/ColourParser.h"
 #include "vislib/ASCIIFileBuffer.h"
-#include "vislib/stringconverter.h"
-#include "vislib/stringtokeniser.h"
+#include "vislib/StringConverter.h"
+#include "vislib/StringTokeniser.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <iostream>
@@ -2664,7 +2664,7 @@ void MoleculeSESRenderer::ReadColorTableFromFile( vislib::StringA filename) {
         this->colorLookupTable.AssertCapacity( file.Count());
         // get colors from file
         for( unsigned int cnt = 0; cnt < file.Count(); ++cnt ) {
-            if( utility::ColourParser::FromString( file.Line( cnt), r, g, b) ) {
+            if( utility::ColourParser::FromString( vislib::StringA( file.Line( cnt)), r, g, b) ) {
                 this->colorLookupTable.Add( vislib::math::Vector<float, 3>( r, g, b));
             }
         }
