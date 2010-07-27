@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "ProteinData.h"
-#include "param/StringParam.h"
+#include "param/FilePathParam.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/Log.h"
 #include "vislib/IllegalParamException.h"
@@ -29,13 +29,16 @@ using namespace megamol::core;
  */
 protein::ProteinData::ProteinData(void) : Module (),
         m_protDataCalleeSlot("providedata", "Connects the protein rendering with protein data storage"),
-		m_filename("filename", "The path to the protein data file to load.")
+		m_filename("filename", "The path to the protein data file to load."),
+        datahash( 0)
 {
-    CallProteinDataDescription cpdd;
-    this->m_protDataCalleeSlot.SetCallback(cpdd.ClassName(), "GetData", &ProteinData::ProtDataCallback);
+    //CallProteinDataDescription cpdd;
+    //this->m_protDataCalleeSlot.SetCallback(cpdd.ClassName(), "GetData", &ProteinData::ProtDataCallback);
+    this->m_protDataCalleeSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetData), &ProteinData::ProtDataCallback);
+    this->m_protDataCalleeSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetExtent), &ProteinData::getExtent);
     this->MakeSlotAvailable(&this->m_protDataCalleeSlot);
 
-    this->m_filename.SetParameter(new param::StringParam(""));
+    this->m_filename.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->m_filename);
 	
 	// secondary structure
@@ -47,9 +50,35 @@ protein::ProteinData::ProteinData(void) : Module (),
 /*
  * protein::ProteinData::~ProteinData
  */
-protein::ProteinData::~ProteinData(void)
-{
+protein::ProteinData::~ProteinData(void) {
     this->Release ();
+}
+
+
+/*
+ * protein::ProteinData::getExtent
+ */
+bool protein::ProteinData::getExtent( core::Call& call) {
+    CallProteinData *dc = dynamic_cast<CallProteinData*>( &call);
+    if ( dc == NULL ) return false;
+
+    if ( this->m_filename.IsDirty() ) {
+        this->tryLoadFile();
+        this->m_filename.ResetDirty();
+    }
+
+    vislib::math::Cuboid<float> bbox( this->m_minX, this->m_minY, this->m_minZ,
+        this->m_maxX, this->m_maxY, this->m_maxZ);
+
+    dc->AccessBoundingBoxes().Clear();
+    dc->AccessBoundingBoxes().SetObjectSpaceBBox( bbox);
+    dc->AccessBoundingBoxes().SetObjectSpaceClipBox( bbox);
+
+    dc->SetFrameCount( 1U);
+
+    dc->SetDataHash( this->datahash);
+
+    return true;
 }
 
 
@@ -100,15 +129,16 @@ bool protein::ProteinData::ProtDataCallback(Call& call) {
 		{
 			double elapsedTime = 0.0;
 			time_t t = clock();
-			if( m_stride ) delete m_stride;
-			m_stride = new Stride( pdi);
+			if( this->m_stride ) delete this->m_stride;
+			this->m_stride = new Stride( pdi);
 			this->m_secondaryStructureComputed = true;
 			elapsedTime = ( double( clock() - t) / double( CLOCKS_PER_SEC) );
 			vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO,
 					"%s: Computed secondary structure via Stride in %.4f seconds.\n",
 					this->ClassName(), elapsedTime );
 		}
-		m_stride->WriteToInterface( pdi );
+        if( this->m_stride )
+		    this->m_stride->WriteToInterface( pdi );
 
 		// set the disulfide bonds
 		pdi->SetDisulfidBondsPointer( (unsigned int)this->m_dsBonds.Count(), 
@@ -148,6 +178,8 @@ bool protein::ProteinData::tryLoadFile(void)
     using vislib::sys::File;
     using vislib::sys::Log;
 
+    this->datahash++;
+
 	// clear all containers
 	this->ClearData();
 	// add all elements from the periodic table to m_atomTypes
@@ -167,7 +199,7 @@ bool protein::ProteinData::tryLoadFile(void)
 	// file 
     MemmappedFile file;
 	// get filename 
-    const vislib::TString& fn = this->m_filename.Param<param::StringParam>()->Value();
+    const vislib::TString& fn = this->m_filename.Param<param::FilePathParam>()->Value();
 
 	if ( fn.IsEmpty() )
 	{
@@ -388,18 +420,15 @@ void protein::ProteinData::ClearData()
 
 	// clear temporary varibles
 	this->tmp_currentAtomIdx = 0;
-	for( i = 0; i < this->tmp_atomEntries.size(); i++ )
-	{
-		for( j = 0; j < this->tmp_atomEntries.at(i).size(); j++ )
-		{
+	for( i = 0; i < this->tmp_atomEntries.size(); i++ ) {
+		for( j = 0; j < this->tmp_atomEntries.at(i).size(); j++ ) {
 			this->tmp_atomEntries.at(i).at(j).clear();
 		}
 		this->tmp_atomEntries.at(i).clear();
 	}
 	this->tmp_atomEntries.clear();
 	this->tmp_chainIdMap.clear();
-	for( i = 0; i < this->tmp_resSeqMap.Count(); i++ )
-	{
+	for( i = 0; i < this->tmp_resSeqMap.Count(); i++ ) {
 		this->tmp_resSeqMap[i].clear();
 	}
 	this->tmp_resSeqMap.Clear();
@@ -409,13 +438,14 @@ void protein::ProteinData::ClearData()
 	this->tmp_aminoAcidNameIdx.clear();
 	this->m_atomTypes.Clear();
 	this->tmp_atomicNumbers.clear();
-	for( i = 0; i < this->m_aminoAcidChains.Count(); i++ )
-	{
+	for( i = 0; i < this->m_aminoAcidChains.Count(); i++ ) {
+        for( j = 0; j < this->m_aminoAcidChains[i].Count(); ++j ) {
+            this->m_aminoAcidChains[i][j].AccessConnectivity().Clear();
+        }
 		this->m_aminoAcidChains[i].Clear();
 	}
 	this->m_aminoAcidChains.Clear();
-	for( i = 0; i < m_secStruct.Count(); i++ )
-	{
+	for( i = 0; i < m_secStruct.Count(); i++ ) {
 		this->m_secStruct[i].Clear();
 	}
 	this->m_secStruct.Clear();
@@ -433,6 +463,14 @@ void protein::ProteinData::ClearData()
 	this->m_maxDimension = 1.0f;
 
 	this->tmp_cysteineSulfurAtoms.Clear();
+
+	this->m_secondaryStructureComputed = false;
+	this->m_minTempFactor = 0.0f;
+	this->m_maxTempFactor = 0.0f;
+	this->m_minOccupancy = 0.0f;
+	this->m_maxOccupancy = 0.0f;
+	this->m_minCharge = 0.0f;
+	this->m_maxCharge = 0.0f;
 }
 
 
@@ -464,7 +502,7 @@ bool protein::ProteinData::ReadSecondaryStructure()
 
     MemmappedFile file;
 	// get filename 
-    const vislib::TString& fn = this->m_filename.Param<param::StringParam>()->Value();
+    const vislib::TString& fn = this->m_filename.Param<param::FilePathParam>()->Value();
 
 	if ( fn.IsEmpty() )
 	{
@@ -1155,8 +1193,8 @@ bool protein::ProteinData::MakeConnections( unsigned int chainIdIdx, unsigned in
     unsigned int cnt1, cnt2, idx1, idx2;
     //vislib::math::Vector<float, 3> v1, v2;
     // loop over all atoms in this amino acid and fill the map with the names of the atoms
-    for ( cnt1 = 0; cnt1 < this->tmp_atomEntries[chainIdIdx][resSeqIdx].size() - 1; ++cnt1 ){
-        for ( cnt2 = cnt1 + 1; cnt2 < this->tmp_atomEntries[chainIdIdx][resSeqIdx].size(); ++cnt2 ){
+    for ( cnt1 = 0; cnt1 < this->m_aminoAcidChains[chainIdIdx][resSeqIdx].AtomCount() - 1; ++cnt1 ){
+        for ( cnt2 = cnt1 + 1; cnt2 < this->m_aminoAcidChains[chainIdIdx][resSeqIdx].AtomCount(); ++cnt2 ){
             idx1 = m_aminoAcidChains[chainIdIdx][resSeqIdx].FirstAtomIndex() + cnt1;
             idx2 = m_aminoAcidChains[chainIdIdx][resSeqIdx].FirstAtomIndex() + cnt2;
             vislib::math::Vector<float, 3> v1( &this->m_protAtomPos[idx1 * 3]);
@@ -1165,7 +1203,7 @@ bool protein::ProteinData::MakeConnections( unsigned int chainIdIdx, unsigned in
                 0.6f * ( this->m_atomTypes[this->m_protAtomData[idx1].TypeIndex()].Radius() +
                 this->m_atomTypes[this->m_protAtomData[idx2].TypeIndex()].Radius() ) ) {
                 m_aminoAcidChains[chainIdIdx][resSeqIdx].AccessConnectivity().Add (
-                    protein::CallProteinMovementData::IndexPair ( cnt1, cnt2 ) );
+                    protein::CallProteinData::IndexPair ( cnt1, cnt2 ) );
             }
         }
     }
@@ -1956,6 +1994,18 @@ void protein::ProteinData::ComputeBoundingBox()
 		else if( this->m_maxZ < this->m_protAtomPos[counter + 2] )
 			this->m_maxZ = this->m_protAtomPos[counter + 2];
 	}
+
+    /*
+    // DEBUG!!!! hard-coded Bounding Box for CalB/Wat-screenshot!
+    this->m_minX =  8.0f;
+    this->m_maxX = 113.0f;
+    this->m_minY =   9.0f;
+    this->m_maxY = 112.0f;
+    this->m_minZ =  -4.0f;
+    this->m_maxZ =  58.0f;
+    // ...DEBUG!!! Remove code above after use!
+    */
+
 	// add maximum atom radius to min/max-values to prevent atoms sticking out
 	this->m_minX +=-3.0f;
 	this->m_maxX += 3.0f;

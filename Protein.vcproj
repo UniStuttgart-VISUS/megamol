@@ -369,6 +369,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CallVolumeData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CCP4VolumeData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CoarseGrainDataLoader.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dllmain.cpp"
 				>
 				<FileConfiguration
@@ -409,7 +421,23 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\MolecularDataCall.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeCartoonRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeSESRenderer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NetCDFData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PDBLoader.cpp"
 				>
 			</File>
 			<File
@@ -465,6 +493,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleMoleculeRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\slicing.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SolPathDataCall.cpp"
 				>
 			</File>
@@ -474,6 +510,18 @@
 			</File>
 			<File
 				RelativePath=".\SolPathRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SolventRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SphereDataCall.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SphereRenderer.cpp"
 				>
 			</File>
 			<File
@@ -543,7 +591,35 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CallVolumeData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CCP4VolumeData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CoarseGrainDataLoader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MolecularDataCall.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeCartoonRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeSESRenderer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\NetCDFData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PDBLoader.h"
 				>
 			</File>
 			<File
@@ -599,6 +675,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleMoleculeRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\slicing.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SolPathDataCall.h"
 				>
 			</File>
@@ -608,6 +692,18 @@
 			</File>
 			<File
 				RelativePath=".\SolPathRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SolventRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SphereDataCall.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SphereRenderer.h"
 				>
 			</File>
 			<File
@@ -637,6 +733,30 @@
 				RelativePath=".\Shaders\protein.btf"
 				>
 				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
@@ -649,6 +769,30 @@
 				RelativePath=".\Shaders\solpath.btf"
 				>
 				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
@@ -660,6 +804,30 @@
 			<File
 				RelativePath=".\Shaders\volume.btf"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"

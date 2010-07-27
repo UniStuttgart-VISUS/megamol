@@ -90,6 +90,15 @@ namespace protein {
 		private:
 
 			/**
+         * Call callback to get the extent of the data
+         *
+         * @param c The calling call
+         *
+         * @return True on success
+         */
+        bool getExtent( megamol::core::Call& call);
+
+        /**
 				*
 				* NetCDFData callback.
 				*
@@ -496,6 +505,10 @@ namespace protein {
 
         /** the filename of the current netcdf file */
         vislib::StringA filename;
+        
+        /** The data hash */
+        SIZE_T datahash;
+
 	};
 
 } /* end namespace protein */

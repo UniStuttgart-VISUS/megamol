@@ -1,16 +1,16 @@
 /*
- * ProteinRendererSES.h
+ * MoleculeSESRenderer.h
  *
  * Copyright (C) 2009 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MOLSURFACERENDERER_H_INCLUDED
-#define MEGAMOL_MOLSURFACERENDERER_H_INCLUDED
+#ifndef MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED
+#define MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED
 #if (_MSC_VER > 1000)
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "CallProteinData.h"
+#include "MolecularDataCall.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "CallFrame.h"
@@ -18,15 +18,15 @@
 #include "view/CallRender3D.h"
 #include "vislib/SimpleFont.h"
 #include "ReducedSurface.h"
-#include "ReducedSurfaceSimplified.h"
 #include <vislib/GLSLShader.h>
 #include <vislib/GLSLGeometryShader.h>
 #include <vislib/Quaternion.h>
+#include <vislib/Array.h>
+#include <vislib/String.h>
 #include <vector>
 #include <set>
 #include <algorithm>
 #include <list>
-#include "vislib/FpsCounter.h"
 
 namespace megamol {
 namespace protein {
@@ -35,8 +35,7 @@ namespace protein {
 	 * Molecular Surface Renderer class.
 	 * Computes and renders the solvent excluded (Connolly) surface.
 	 */
-	class ProteinRendererSES : public megamol::core::view::Renderer3DModule
-	{
+	class MoleculeSESRenderer : public megamol::core::view::Renderer3DModule {
 	public:
 				
 		/** postprocessing modi */
@@ -56,17 +55,19 @@ namespace protein {
 			GPU_SIMPLIFIED = 4
 		};
 
-		/** coloring modi for the atoms */
-		enum ColoringMode {
-			ELEMENT   = 0,
-			AMINOACID = 1,
-			STRUCTURE = 2,
-			CHAIN_ID  = 3,
-			VALUE     = 4,
-			RAINBOW   = 5,
-			CHARGE    = 6,
-            OCCUPANCY = 7
-		};
+        /** The names of the coloring modes */
+        enum ColoringMode {
+            ELEMENT     = 0,
+            RESIDUE     = 1,
+            STRUCTURE   = 2,
+            BFACTOR     = 3,
+            CHARGE      = 4,
+            OCCUPANCY   = 5,
+            CHAIN       = 6,
+            MOLECULE    = 7,
+            RAINBOW     = 8,
+            CHAINBOW    = 9     // TODO
+        };
 
 		/**
 		 * Answer the name of this module.
@@ -74,7 +75,7 @@ namespace protein {
 		 * @return The name of this module.
 		 */
 		static const char *ClassName(void) {
-			return "ProteinRendererSES";
+			return "MoleculeSESRenderer";
 		}
 
 		/**
@@ -91,17 +92,16 @@ namespace protein {
 		 *
 		 * @return 'true' if the module is available, 'false' otherwise.
 		 */
-		static bool IsAvailable(void) 
-		{
+		static bool IsAvailable(void) {
 			//return true;
 			return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
 		}
 		
 		/** ctor */
-		ProteinRendererSES(void);
+		MoleculeSESRenderer(void);
 		
 		/** dtor */
-		virtual ~ProteinRendererSES(void);
+		virtual ~MoleculeSESRenderer(void);
 
 	   /**********************************************************************
 		 * 'get'-functions
@@ -122,22 +122,6 @@ namespace protein {
 			codedSilhouetteColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
 		void SetSilhouetteColor( vislib::math::Vector<float, 3> color) { 
 			SetSilhouetteColor( color.GetX(), color.GetY(), color.GetZ()); };
-
-		/** set the color for minimum value (VALUE coloring mode) */
-		void SetMinValueColor( float r, float g, float b) { minValueColor.Set( r, g, b);
-			codedMinValueColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-		void SetMinValueColor( vislib::math::Vector<float, 3> color) { 
-			SetMinValueColor( color.GetX(), color.GetY(), color.GetZ()); };
-		/** set the color for maximum value (VALUE coloring mode) */
-		void SetMaxValueColor( float r, float g, float b) { maxValueColor.Set( r, g, b);
-			codedMaxValueColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-		void SetMaxValueColor( vislib::math::Vector<float, 3> color) { 
-			SetMaxValueColor( color.GetX(), color.GetY(), color.GetZ()); };
-		/** set the color for mean value (VALUE coloring mode) */
-		void SetMeanValueColor( float r, float g, float b) { meanValueColor.Set( r, g, b);
-			codedMeanValueColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-		void SetMeanValueColor( vislib::math::Vector<float, 3> color) { 
-			SetMeanValueColor( color.GetX(), color.GetY(), color.GetZ()); };
 		
 	protected:
 		
@@ -159,7 +143,7 @@ namespace protein {
 		 * @param protein The protein data interface.
 		 * @param scale The scale factor for the atom radius.
 		 */
-		void RenderAtomsGPU( const CallProteinData *protein, 
+		void RenderAtomsGPU( const MolecularDataCall *mol, 
 			const float scale = 1.0f);
 
 		/**
@@ -182,12 +166,6 @@ namespace protein {
 		 * @param idxRS The index of the reduced surface.
 		 */
 		void ComputeRaycastingArrays( unsigned int idxRS);
-
-		/**
-		 * Compute all vertex, attribute and color arrays used for ray casting 
-		 * the simplified molecular surface.
-		 */
-		void ComputeRaycastingArraysSimple();
 
 		/**
 		 * Code a RGB-color into one float.
@@ -220,23 +198,14 @@ namespace protein {
 		 *
 		 * @param protein Pointer to the protein data interface.
 		 */
-		void RenderSESGpuRaycasting(
-			const CallProteinData *protein);
+		void RenderSESGpuRaycasting( const MolecularDataCall *mol);
 
-		/**
-		 * Render the molecular surface using GPU raycasting.
-		 *
-		 * @param protein Pointer to the protein data interface.
-		 */
-		void RenderSESGpuRaycastingSimple(
-			const CallProteinData *protein);
-		
 		/**
 		 * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
 		 *
 		 * @param protein Pointer to the protein data interface.
 		 */
-		void RenderDebugStuff( const CallProteinData *protein);
+		void RenderDebugStuff( const MolecularDataCall *mol);
 
 		/**
 		 * Postprocessing: use screen space ambient occlusion
@@ -253,10 +222,12 @@ namespace protein {
 		 */
 		void PostprocessingTransparency( float transparency);
 		
-		/**
-		 * Fill amino acid color table.
-		 */
-		void FillAminoAcidColorTable();
+        /**
+         * Read color table from file.
+         *
+         * @param filename The filename of the color table file.
+         */
+        void ReadColorTableFromFile( vislib::StringA filename);
 
 		/**
 		 * Creates a rainbow color table with 'num' entries.
@@ -279,19 +250,13 @@ namespace protein {
 		 * @param prot The protein data interface.
 		 * @param forceRecompute If 'true', the color Table is recomputed, otherwise only if necessary.
 		 */
-		void MakeColorTable( const CallProteinData *prot, bool forceRecompute = true);
+		void MakeColorTable( const MolecularDataCall *mol, bool forceRecompute = true);
 
 		/**
 		 * Create the singularity textureS which stores for every RS-edge (of all
 		 * molecular surfaces) the positions of the probes that cut it.
 		 */
 		void CreateSingularityTextures();
-		
-		/**
-		 * Create the singularity textureS which stores for every RS-edge (of all
-		 * molecular surfaces) the positions of the probes that cut it.
-		 */
-		void CreateSingularityTexturesSimple();
 		
 		/**
 		 * Create the singularity texture for the reduced surface 'idxRS' which
@@ -301,6 +266,13 @@ namespace protein {
 				
     private:
 
+        /**
+         * Update all parameter slots.
+         *
+         * @param mol   Pointer to the data call.
+         */
+        void UpdateParameters( const MolecularDataCall *mol);
+        
         /**
          * The get capabilities callback. The module should set the members
          * of 'call' to tell the caller its capabilities.
@@ -341,39 +313,48 @@ namespace protein {
 		 **********************************************************************/
 		
 		// caller slot
-		megamol::core::CallerSlot m_protDataCallerSlot;
+		megamol::core::CallerSlot molDataCallerSlot;
 		
+        /** camera information */
+        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+
 		// 'true' if there is rms data to be rendered
-		bool m_renderRMSData;
+		bool MoleculeSESRendererrenderRMSData;
 		
 		// label with id of current loaded frame
-		vislib::graphics::AbstractFont *m_frameLabel;
+		vislib::graphics::AbstractFont *MoleculeSESRendererframeLabel;
 		
 		// camera information
-		vislib::SmartPtr<vislib::graphics::CameraParameters> m_cameraInfo;
+		vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
 		
-		megamol::core::param::ParamSlot m_postprocessingParam;
-		megamol::core::param::ParamSlot m_rendermodeParam;
-		megamol::core::param::ParamSlot m_coloringmodeParam;
-		megamol::core::param::ParamSlot m_silhouettecolorParam;
-		megamol::core::param::ParamSlot m_sigmaParam;
-		megamol::core::param::ParamSlot m_lambdaParam;
-		megamol::core::param::ParamSlot m_minvaluecolorParam;
-		megamol::core::param::ParamSlot m_maxvaluecolorParam;
-		megamol::core::param::ParamSlot m_meanvaluecolorParam;
-		megamol::core::param::ParamSlot m_fogstartParam;
+		megamol::core::param::ParamSlot postprocessingParam;
+		megamol::core::param::ParamSlot rendermodeParam;
+		megamol::core::param::ParamSlot coloringmodeParam;
+		megamol::core::param::ParamSlot silhouettecolorParam;
+		megamol::core::param::ParamSlot sigmaParam;
+		megamol::core::param::ParamSlot lambdaParam;
+        /** parameter slot for min color of gradient color mode */
+        megamol::core::param::ParamSlot minGradColorParam;
+        /** parameter slot for mid color of gradient color mode */
+        megamol::core::param::ParamSlot midGradColorParam;
+        /** parameter slot for max color of gradient color mode */
+        megamol::core::param::ParamSlot maxGradColorParam;
+		megamol::core::param::ParamSlot fogstartParam;
         megamol::core::param::ParamSlot debugParam;
         megamol::core::param::ParamSlot drawSESParam;
         megamol::core::param::ParamSlot drawSASParam;
+        megamol::core::param::ParamSlot molIdxListParam;
+        /** parameter slot for color table filename */
+        megamol::core::param::ParamSlot colorTableFileParam;
 
         bool drawRS;
         bool drawSES;
         bool drawSAS;
 
 		/** the reduced surface(s) */
-		std::vector<ReducedSurface*> reducedSurface;
-		/** the simplified reduced surface(s) */
-		std::vector<ReducedSurfaceSimplified*> simpleRS;
+        std::vector<std::vector<ReducedSurface*>> reducedSurfaceAllFrames;
+		/** the reduced surface(s) */
+        std::vector<ReducedSurface*> reducedSurface;
 		
 		// shader for the cylinders (raycasting view)
 		vislib::graphics::gl::GLSLShader cylinderShader;
@@ -404,7 +385,7 @@ namespace protein {
 		// radius of the probe atom
 		float probeRadius;
 
-		std::vector<vislib::math::Vector<float, 3> > atomColor;
+        vislib::Array<vislib::math::Vector<float, 3>> atomColorTable;
 		unsigned int currentArray;
 
 		/** 'true' if the data for the current render mode is computed, 'false' otherwise */
@@ -459,10 +440,10 @@ namespace protein {
 		// lambda factor for screen space ambient occlusion
 		float lambda;
 		
-		// color table for amino acids
-		vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColorTable;
-		// color table for rainbow colors
-		std::vector<vislib::math::Vector<float,3> > rainbowColors;
+        /** The color lookup table (for chains, amino acids,...) */
+        vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+        /** The color lookup table which stores the rainbow colors */
+        vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
 
 		// texture for singularity handling (concave triangles)
 		std::vector<GLuint> singularityTexture;
@@ -481,24 +462,18 @@ namespace protein {
 		// silhouette color
 		vislib::math::Vector<float, 3> silhouetteColor;
 		int codedSilhouetteColor;
-
-		// minimum and maximum value for VALUE coloring mode
-		float minValue, maxValue;
-		// colors for min, max and mean value
-		vislib::math::Vector<float, 3> minValueColor, maxValueColor, meanValueColor;
-		int codedMinValueColor, codedMaxValueColor, codedMeanValueColor;
 		
 		// start value for fogging
 		float fogStart;
 		// transparency value
 		float transparency;
-		
-		// fps counter
-		vislib::graphics::FpsCounter fpsCounter;
+
+        // the list of molecular indices
+        vislib::Array<vislib::StringA> molIdxList;
 
 	};
 
 } /* end namespace protein */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_MOLSURFACERENDERER_H_INCLUDED */
+#endif /* MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED */

@@ -11,6 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include "CallProteinData.h"
+#include "MolecularDataCall.h"
 #include <vislib/Quaternion.h>
 #include <vector>
 #include <set>
@@ -237,6 +238,18 @@ namespace protein {
 							 const CallProteinData *prot, 
 							 float probeRad = 1.4f);
 		
+		/**
+		 * ctor
+		 * Computes the Reduced Surface for a specified amino acid chain of the 
+		 * given MolecularDataCall.
+		 *
+		 * @param molId     Index of the molecule.
+		 * @param mol       Pointer to the MolecularDataCall.
+		 * @param probeRad  The radius of the probe.
+		 */
+		ReducedSurface( unsigned int molId, MolecularDataCall *molecule, 
+            float probeRad = 1.4f);
+		
 		/** dtor */
 		virtual ~ReducedSurface(void);
 
@@ -300,9 +313,21 @@ namespace protein {
 		 */
 		bool UpdateData( const float lowerThreshold, const float upperThreshold);
 		
+		/**
+		 * Read the next timestep and check for differences between the atoms.
+		 *
+		 * @param protein The protein data source.
+		 * @param lowerThreshold The lower treshold.
+		 * @param upperThreshold The upper treshold.
+		 */
+		bool UpdateDataMolecule( const float lowerThreshold, const float upperThreshold);
+		
+		/** compute the reduced surface of a molecule */
+		void ComputeReducedSurfaceMolecule();
+
 	protected:
 
-		/** compute the reduced surface */
+		/** compute the reduced surface of a protein */
 		void ComputeReducedSurface();
 
 		/** 
@@ -404,6 +429,8 @@ namespace protein {
 	private:
 		// The pointer to the protein data interface
 		const CallProteinData *protein;
+		// The pointer to the protein data interface
+        MolecularDataCall *molecule;
 		
 		// Boolean flag for global (true) or single chain (false) computation
 		const bool globalRS;
@@ -442,6 +469,8 @@ namespace protein {
 		std::vector<std::vector<std::vector<std::vector<RSFace*> > > > voxelMapProbes;
 		// float voxel length
 		float voxelLength;
+
+        std::vector<float> atoms;
 		
 		// number of RS-edges, which are cut by at least one probe
 		unsigned int countCutEdges;

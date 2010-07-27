@@ -655,10 +655,22 @@ bool protein::CallProteinData::SolventMoleculeData::operator==(
 
 /****************************************************************************/
 
+
+/*
+ * CallProteinData::CallForGetData
+ */
+const unsigned int protein::CallProteinData::CallForGetData = 0;
+
+
+/*
+ * CallProteinData::CallForGetExtent
+ */
+const unsigned int protein::CallProteinData::CallForGetExtent = 1;
+
 /*
  * protein::CallProteinData::CallProteinData
  */
-protein::CallProteinData::CallProteinData(void) : Call(), 
+protein::CallProteinData::CallProteinData(void) : AbstractGetData3DCall(), 
         aminoAcidNameCnt(0), aminoAcidNameMemory(false), aminoAcidNames(NULL), 
         atomTypeMemory(false), atomTypes(NULL), chainCnt(0), chains(NULL),
         chainsMemory(false), dsBondsCnt(0), dsBonds(NULL), atomTypeCnt(0),

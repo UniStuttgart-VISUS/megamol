@@ -265,6 +265,8 @@ namespace protein {
 		megamol::core::CallerSlot m_protDataCallerSlot;
         // callee slot
         megamol::core::CalleeSlot m_callFrameCalleeSlot;
+		// caller slot
+		megamol::core::CallerSlot solventRendererCallerSlot;
 
         // 'true' if there is rms data to be rendered
         bool m_renderRMSData;
@@ -273,7 +275,7 @@ namespace protein {
 		vislib::graphics::AbstractFont *m_frameLabel;
 
 		// camera information
-		vislib::SmartPtr<vislib::graphics::CameraParameters> m_cameraInfo;
+		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 
         megamol::core::param::ParamSlot m_renderingModeParam;
         megamol::core::param::ParamSlot m_coloringModeParam;

@@ -57,6 +57,30 @@ Stride::Stride( megamol::protein::CallProteinMovementData *pdi) :
 	ComputeSecondaryStructure();
 }
 
+Stride::Stride( megamol::protein::MolecularDataCall *mol) :
+        Successful( false )
+{
+	// set protein chain count to zero
+	ProteinChainCnt = 0;
+	// set hydrogen bond count to zero
+	HydroBondCnt = 0;
+
+	ProteinChain = ( CHAIN  **)ckalloc( MAX_CHAIN*sizeof( CHAIN*));
+	HydroBond    = ( HBOND  **)ckalloc( MAXHYDRBOND*sizeof( HBOND*));
+	StrideCmd    = ( COMMAND *)ckalloc( sizeof( COMMAND));
+
+	// set default values for command variable
+	DefaultCmd( StrideCmd);
+	
+	// do nothing if Protein Data Interface is not valid
+	if( !mol ) return;
+	
+	// get chains from interface
+	GetChains( mol);
+	// try to compute the secondary structure
+	ComputeSecondaryStructure();
+}
+
 Stride::~Stride(void)
 {
 	// free variables
@@ -291,8 +315,100 @@ void Stride::GetChains( megamol::protein::CallProteinMovementData *pdi)
 	
 } 
 
-bool Stride::ComputeSecondaryStructure()
-{
+void Stride::GetChains( megamol::protein::MolecularDataCall *mol) {
+	int ChainCnt;
+	int cntCha, cntRes, cntAtm, idx, cnt, chain;
+	int atomCount, firstAtom;
+	register int i;
+	RESIDUE *r = 0;
+	CHAIN *c = 0;
+	char PdbIdent[5];
+	
+	strcpy( PdbIdent, "~~~~");
+	
+	//////////////////////////////////////////////////////
+	// build chains from Molecular Data Call
+	//////////////////////////////////////////////////////
+	
+    ProteinChainCnt = std::min( (unsigned int)mol->MoleculeCount(), (unsigned int)MAX_CHAIN);
+    chain = 0;
+	
+	// iterate over all chains
+	for( cntCha = 0; cntCha < ProteinChainCnt; ++cntCha) {
+		// inititalize the chain
+		InitChain( &ProteinChain[cntCha]);
+		ProteinChain[cntCha]->ChainId = cntCha;
+		ProteinChain[cntCha]->Id = cntCha;
+		ProteinChain[cntCha]->NAtom = 0;
+		// write number of residues in this chain
+        ProteinChain[cntCha]->NRes = mol->Molecules()[cntCha].ResidueCount();
+		// set data for all residues
+        idx = mol->Molecules()[cntCha].FirstResidueIndex();
+        cnt = idx + mol->Molecules()[cntCha].ResidueCount();
+        for( cntRes = 0; cntRes < ProteinChain[cntCha]->NRes; ++cntRes ) {
+            firstAtom = mol->Residues()[idx+cntRes]->FirstAtomIndex();
+            atomCount = mol->Residues()[idx+cntRes]->AtomCount();
+			ProteinChain[cntCha]->NAtom += atomCount;
+			
+			ProteinChain[cntCha]->Rsd[cntRes] = ( RESIDUE*)ckalloc( sizeof( RESIDUE));
+		
+			r = ProteinChain[cntCha]->Rsd[cntRes];
+			r->NAtom = atomCount;
+			r->ResNumb = cntRes;
+#ifdef _WIN32
+			_snprintf( r->PDB_ResNumb, RES_FIELD, "%i", cntRes);
+            _snprintf( r->ResType, RES_FIELD, mol->ResidueTypeNames()[mol->Residues()[cntRes]->Type()]);
+#else // _WIN32
+			snprintf( r->PDB_ResNumb, RES_FIELD, "%i", cntRes);
+            snprintf( r->ResType, RES_FIELD, mol->ResidueTypeNames()[mol->Residues()[cntRes]->Type()]);
+#endif // _WIN32
+			// set atomic values
+			for( cntAtm = 0; cntAtm < atomCount; ++cntAtm ) {
+#ifdef _WIN32
+                _snprintf( r->AtomType[cntAtm], AT_FIELD, mol->AtomTypes()[mol->AtomTypeIndices()[cntAtm + firstAtom]].Name());
+#else // _WIN32
+                snprintf( r->AtomType[cntAtm], AT_FIELD, mol->AtomTypes()[mol->AtomTypeIndices()[cntAtm + firstAtom]].Name());
+#endif // _WIN32
+                r->Coord[cntAtm][0] = mol->AtomPositions()[3*(firstAtom+cntAtm)+0];
+                r->Coord[cntAtm][1] = mol->AtomPositions()[3*(firstAtom+cntAtm)+1];
+                r->Coord[cntAtm][2] = mol->AtomPositions()[3*(firstAtom+cntAtm)+2];
+
+                r->Occupancy[cntAtm] = mol->AtomOccupancies()[firstAtom+cntAtm];
+				r->TempFactor[cntAtm] = mol->AtomBFactors()[firstAtom+cntAtm];
+				r->ResAtomIdx[cntAtm] = firstAtom + cntAtm;
+				
+				// printf( "CHAIN %5i, RESIDUE %5i (%s), ATOM %6i = (%s)\n", cntCha, cntRes, pdi->AminoAcidName( pdi->ProteinChain( cntCha).AminoAcid()[cntRes].NameIndex()).PeekBuffer(), cntAtm, pdi->AtomTypes()[pdi->ProteinAtomData()[cntAtm+firstAtom].TypeIndex()].Name().PeekBuffer() );
+			}
+		}
+	}
+		
+	for( ChainCnt = 0; ChainCnt < ProteinChainCnt; ++ChainCnt ) {
+		c = ProteinChain[ChainCnt];
+		if( c->NRes != 0 && !FindAtom( c, c->NRes-1, "CA", &i ) )
+			c->NRes--;
+		strcpy( c->File, StrideCmd->InputFile);
+
+		strcpy( c->PdbIdent, PdbIdent );
+		if ( c->NSheet != -1 ) c->NSheet++;
+		c->Resolution = 0.0f;
+		for( i = 0; i < c->NRes; ++i ) {
+			r = c->Rsd[i];
+			r->Inv = ( INVOLVED * ) ckalloc ( sizeof ( INVOLVED ) );
+			r->Prop = ( PROPERTY * ) ckalloc ( sizeof ( PROPERTY ) );
+			r->Inv->NBondDnr = 0;
+			r->Inv->NBondAcc = 0;
+			r->Inv->InterchainHBonds = STRIDE_NO;
+			r->Prop->Asn     = 'C';
+			r->Prop->PdbAsn  = 'C';
+			r->Prop->Solv    = 0.0;
+			r->Prop->Phi     = 360.0;
+			r->Prop->Psi     = 360.0;
+		}
+	}
+
+} 
+
+bool Stride::ComputeSecondaryStructure() {
 	int Cn, ValidChain = 0;
 	float **PhiPsiMapHelix, **PhiPsiMapSheet;
 	register int i;
@@ -347,10 +463,8 @@ bool Stride::ComputeSecondaryStructure()
 	return true;
 }
 
-bool Stride::WriteToInterface( megamol::protein::CallProteinData *pdi)
-{			
-	if( pdi )
-	{
+bool Stride::WriteToInterface( megamol::protein::CallProteinData *pdi) {
+	if( pdi ) {
 		register int Cn, i;
 		char type;
 		int firstRes;
@@ -363,8 +477,7 @@ bool Stride::WriteToInterface( megamol::protein::CallProteinData *pdi)
 		if ( !ExistsSecStr( ProteinChain, ProteinChainCnt ) )
 			return false;
 		
-		for ( Cn = 0; Cn < ProteinChainCnt; ++Cn )
-		{
+		for ( Cn = 0; Cn < ProteinChainCnt; ++Cn ) {
 			// do nothing if the current chain is not valid
 			if ( !ProteinChain[Cn]->Valid )
 				continue;
@@ -432,18 +545,14 @@ bool Stride::WriteToInterface( megamol::protein::CallProteinData *pdi)
 				*/
 			}
 		}
-	}
-	else
-	{
+	} else {
 		return false;
 	}
 	return true;
 }
 
-bool Stride::WriteToInterface( megamol::protein::CallProteinMovementData *pdi)
-{			
-	if( pdi )
-	{
+bool Stride::WriteToInterface( megamol::protein::CallProteinMovementData *pdi) {
+	if( pdi ) {
 		register int Cn, i;
 		char type;
 		int firstRes;
@@ -456,8 +565,7 @@ bool Stride::WriteToInterface( megamol::protein::CallProteinMovementData *pdi)
 		if ( !ExistsSecStr( ProteinChain, ProteinChainCnt ) )
 			return false;
 		
-		for ( Cn = 0; Cn < ProteinChainCnt; ++Cn )
-		{
+		for ( Cn = 0; Cn < ProteinChainCnt; ++Cn ) {
 			// do nothing if the current chain is not valid
 			if ( !ProteinChain[Cn]->Valid )
 				continue;
@@ -471,16 +579,12 @@ bool Stride::WriteToInterface( megamol::protein::CallProteinMovementData *pdi)
 			atmCnt = pdi->ProteinChain( Cn).AminoAcid()[0].AtomCount();
 			type = ProteinChain[Cn]->Rsd[0]->Prop->Asn;
 			
-			for ( i = 1; i < ProteinChain[Cn]->NRes; i++ )
-			{
+			for ( i = 1; i < ProteinChain[Cn]->NRes; i++ ) {
 				// update values if type did not change
-				if( ProteinChain[Cn]->Rsd[i]->Prop->Asn == type )
-				{
+				if( ProteinChain[Cn]->Rsd[i]->Prop->Asn == type ) {
 					resCnt++;
 					atmCnt += pdi->ProteinChain( Cn).AminoAcid()[i].AtomCount();
-				}
-				else
-				{
+				} else {
 					// write sec struct elem to vector if new elem starts
                     sec.push_back( CallProteinMovementData::SecStructure());
 					sec.back().SetPosition( firstAtm, atmCnt, firstRes, resCnt);
@@ -510,21 +614,85 @@ bool Stride::WriteToInterface( megamol::protein::CallProteinMovementData *pdi)
 			
 			// handled all residues of current chain, copy sec struct to interface
 			pdi->AccessChain( Cn).SetSecondaryStructureCount( sec.size());
-			for( i = 0; i < (int)sec.size(); ++i )
-			{
+			for( i = 0; i < (int)sec.size(); ++i ) {
 				pdi->AccessChain( Cn).AccessSecondaryStructure( i) = sec[i];
 			}
 		}
+	} else {
+		return false;
 	}
+	return true;
+	}
+
+bool Stride::WriteToInterface( MolecularDataCall *mol) {
+	if( mol ) {
+		register int Cn, i;
+		char type;
+		int firstRes;
+		int resCnt;
+        int idx = 0;
+		
+		std::vector<MolecularDataCall::SecStructure> sec;
+		
+		if ( !ExistsSecStr( ProteinChain, ProteinChainCnt ) )
+			return false;
+		
+		for ( Cn = 0; Cn < ProteinChainCnt; ++Cn ) {
+			// do nothing if the current chain is not valid
+			if ( !ProteinChain[Cn]->Valid )
+				continue;
+			
+			// set initial values for first sec struct elem
+            firstRes = mol->Molecules()[Cn].FirstResidueIndex();
+			resCnt = 1;
+			type = ProteinChain[Cn]->Rsd[0]->Prop->Asn;
+			
+			for ( i = 1; i < ProteinChain[Cn]->NRes; i++ ) {
+				// update values if type did not change
+				if( ProteinChain[Cn]->Rsd[i]->Prop->Asn == type ) {
+					resCnt++;
+				} else {
+					// write sec struct elem to vector if new elem starts
+					sec.push_back( MolecularDataCall::SecStructure());
+					sec.back().SetPosition( firstRes, resCnt);
+					if( type == 'G' || type == 'H' || type == 'I' )
+						sec.back().SetType( MolecularDataCall::SecStructure::TYPE_HELIX);
+					else if( type == 'E' )
+						sec.back().SetType( MolecularDataCall::SecStructure::TYPE_SHEET);
 	else
-	{
+						sec.back().SetType( MolecularDataCall::SecStructure::TYPE_COIL);
+					// start new sec struct elem
+					firstRes = i + mol->Molecules()[Cn].FirstResidueIndex();
+					resCnt = 1;
+					type = ProteinChain[Cn]->Rsd[i]->Prop->Asn;
+				}
+				
+				//printf( "CHAIN %4i RES %5i ASN %c\n", Cn, i, ProteinChain[Cn]->Rsd[i]->Prop->Asn);
+			}
+			// write last sec struct elem to vector
+			sec.push_back( MolecularDataCall::SecStructure());
+			sec.back().SetPosition( firstRes, resCnt);
+			if( type == 'G' || type == 'H' || type == 'I' )
+				sec.back().SetType( MolecularDataCall::SecStructure::TYPE_HELIX);
+			else if( type == 'E' )
+				sec.back().SetType( MolecularDataCall::SecStructure::TYPE_SHEET);
+			else
+				sec.back().SetType( MolecularDataCall::SecStructure::TYPE_COIL);
+            mol->SetMoleculeSecondaryStructure( Cn, idx, sec.size() - idx);
+            idx = sec.size();
+		}
+        // handled all residues of current chain, copy sec struct to interface
+        mol->SetSecondaryStructureCount( sec.size());
+        for( i = 0; i < (int)sec.size(); ++i ) {
+            mol->SetSecondaryStructure( i, sec[i]);
+        }
+	} else {
 		return false;
 	}
 	return true;
 }
 
-void Stride::DefaultCmd( COMMAND *Cmd )
-{
+void Stride::DefaultCmd( COMMAND *Cmd ) {
 
 	Cmd->SideChainHBond    = STRIDE_NO;
 	Cmd->MainChainHBond    = STRIDE_YES;
@@ -571,8 +739,7 @@ void Stride::DefaultCmd( COMMAND *Cmd )
 	Cmd->NProcessed = ( int ) strlen ( Cmd->Processed );
 }
 
-int Stride::ReadPDBFile( CHAIN **Chain, int *Cn, COMMAND *Cmd )
-{
+int Stride::ReadPDBFile( CHAIN **Chain, int *Cn, COMMAND *Cmd ) {
 
 	int ChainCnt, i;
 	BOOLEAN First_ATOM;
@@ -591,10 +758,8 @@ int Stride::ReadPDBFile( CHAIN **Chain, int *Cn, COMMAND *Cmd )
 	
 	First_ATOM = STRIDE_YES;
 
-	while ( fgets ( Buffer,BUFSZ,pdb ) )
-	{
-		if ( !strncmp ( Buffer,"ENDMDL",6 ) )
-		{
+	while ( fgets ( Buffer,BUFSZ,pdb ) ) {
+		if ( !strncmp ( Buffer,"ENDMDL",6 ) ) {
 			Process_ENDMDL ( Buffer,Chain,Cn );
 			break;
 		}
@@ -603,8 +768,7 @@ int Stride::ReadPDBFile( CHAIN **Chain, int *Cn, COMMAND *Cmd )
 	}
 	fclose ( pdb );
 
-	for ( ChainCnt=0; ChainCnt< *Cn; ChainCnt++ )
-	{
+	for ( ChainCnt=0; ChainCnt< *Cn; ChainCnt++ ) {
 		c = Chain[ChainCnt];
 		if ( c->NRes != 0  && !FindAtom ( c,c->NRes,"CA",&i ) )
 			c->NRes--;
@@ -643,8 +807,7 @@ int Stride::ReadPDBFile( CHAIN **Chain, int *Cn, COMMAND *Cmd )
 	return ( SUCCESS );
 }
 
-void Stride::die( const char *format, ... )
-{
+void Stride::die( const char *format, ... ) {
 	//void exit ( int return_code );
 	va_list ptr;
 	va_start ( ptr,format );
@@ -653,16 +816,13 @@ void Stride::die( const char *format, ... )
 	va_end ( ptr );
 }
 
-int Stride::CheckChain( CHAIN *Chain, COMMAND *Cmd)
-{
-
+int Stride::CheckChain( CHAIN *Chain, COMMAND *Cmd) {
   if( Cmd->NProcessed && !ChInStr( Cmd->Processed, SpaceToDash(Chain->Id)) ) {
     Chain->Valid = STRIDE_NO;
     return(FAILURE);
   }
 
-  if( Chain->NRes < 5 )
-  {
+  if( Chain->NRes < 5 ) {
 		//fprintf(stderr,"IGSTRIDE_NORED %s %c ",Chain->File,SpaceToDash(Chain->Id));
 		//fprintf(stderr,"(less than 5 residues)\n");
 		Chain->Valid = STRIDE_NO;
@@ -672,8 +832,7 @@ int Stride::CheckChain( CHAIN *Chain, COMMAND *Cmd)
   return(SUCCESS);
 }
 
-void Stride::BackboneAngles( CHAIN **Chain, int NChain )
-{
+void Stride::BackboneAngles( CHAIN **Chain, int NChain ) {
 	register int Res, Cn;
 
 	for ( Cn=0; Cn<NChain; Cn++ )
@@ -687,8 +846,7 @@ void Stride::BackboneAngles( CHAIN **Chain, int NChain )
 	}
 }
 
-float** Stride::DefaultHelixMap( COMMAND *Cmd)
-{
+float** Stride::DefaultHelixMap( COMMAND *Cmd) {
 	register int i;
 	
 	float **Map;
@@ -760,8 +918,7 @@ float** Stride::DefaultHelixMap( COMMAND *Cmd)
 	return(Map);
 }
 
-float** Stride::DefaultSheetMap( COMMAND *Cmd)
-{
+float** Stride::DefaultSheetMap( COMMAND *Cmd) {
 	register int i;
 	
 	float **Map;
@@ -833,8 +990,7 @@ float** Stride::DefaultSheetMap( COMMAND *Cmd)
 	return(Map); 
 }
 
-int Stride::PlaceHydrogens( CHAIN *Chain )
-{
+int Stride::PlaceHydrogens( CHAIN *Chain ) {
 
 	int Res, i, N, C, CA, H, PlacedCnt=0;
 	float Length_N_C, Length_N_CA, Length_N_H;
@@ -880,8 +1036,7 @@ int Stride::PlaceHydrogens( CHAIN *Chain )
 	return ( PlacedCnt );
 }
 
-int Stride::FindHydrogenBonds( CHAIN **Chain, int NChain, HBOND **HBond, COMMAND *Cmd )
-{
+int Stride::FindHydrogenBonds( CHAIN **Chain, int NChain, HBOND **HBond, COMMAND *Cmd ) {
 	DONOR **Dnr;
 	ACCEPTOR **Acc;
 	BOOLEAN *BondedDonor, *BondedAcceptor;
@@ -1110,8 +1265,7 @@ int Stride::FindHydrogenBonds( CHAIN **Chain, int NChain, HBOND **HBond, COMMAND
 	return ( hc );
 }
 
-int Stride::NoDoubleHBond( HBOND **HBond, int NHBond )
-{
+int Stride::NoDoubleHBond( HBOND **HBond, int NHBond ) {
 
 	int i, j, NExcl=0;
 
@@ -1137,8 +1291,7 @@ int Stride::NoDoubleHBond( HBOND **HBond, int NHBond )
 	return ( NExcl );
 }
 
-void Stride::DiscrPhiPsi( CHAIN **Chain, int NChain, COMMAND *Cmd )
-{
+void Stride::DiscrPhiPsi( CHAIN **Chain, int NChain, COMMAND *Cmd ) {
 	register int i, Res, Cn;
 	RESIDUE *r;
 

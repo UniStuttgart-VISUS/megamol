@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PROTEINDATA_H_INCLUDED
-#define MEGAMOLCORE_PROTEINDATA_H_INCLUDED
+#ifndef MMPROTEINPLUGIN_PROTEINDATA_H_INCLUDED
+#define MMPROTEINPLUGIN_PROTEINDATA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -100,6 +100,15 @@ namespace protein {
 		 * @return 'true' on success, 'false' otherwise.
 		 */
 		bool ProtDataCallback( megamol::core::Call& call);
+
+        /**
+         * Call callback to get the extent of the data
+         *
+         * @param c The calling call
+         *
+         * @return True on success
+         */
+        bool getExtent( megamol::core::Call& call);
 
 		/**********************************************************************
 		 * 'protein'-functions
@@ -222,6 +231,9 @@ namespace protein {
         /** The filename parameter */
         megamol::core::param::ParamSlot  m_filename;
 
+        /** The data hash */
+        SIZE_T datahash;
+
 		////////////////////////////////////////////////////////////
 		// variables for storing all data needed by the interface //
 		////////////////////////////////////////////////////////////
@@ -279,4 +291,4 @@ namespace protein {
 } /* end namespace protein */
 } /* end namespace megamol */
 
-#endif //MEGAMOLCORE_PROTEINDATA_H_INCLUDED
+#endif //MMPROTEINPLUGIN_PROTEINDATA_H_INCLUDED

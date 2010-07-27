@@ -17,14 +17,25 @@
 #include "ProteinVolumeRenderer.h"
 #include "ProteinMovementRenderer.h"
 #include "ProteinRendererCBOpenCL.h"
+#include "SolventRenderer.h"
+#include "SimpleMoleculeRenderer.h"
+#include "SphereRenderer.h"
+#include "MoleculeSESRenderer.h"
+#include "MoleculeCartoonRenderer.h"
 
 #include "ProteinData.h"
+#include "PDBLoader.h"
 #include "NetCDFData.h"
 #include "ProteinMovementData.h"
+#include "CCP4VolumeData.h"
+#include "CoarseGrainDataLoader.h"
 
 #include "CallProteinData.h"
 #include "CallFrame.h"
 #include "CallProteinMovementData.h"
+#include "CallVolumeData.h"
+#include "MolecularDataCall.h"
+#include "SphereDataCall.h"
 
 #include "CallAutoDescription.h"
 #include "ModuleAutoDescription.h"
@@ -79,7 +90,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-	int moduleCount = 11;
+	int moduleCount = 18;
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
     moduleCount++;
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
@@ -105,14 +116,22 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
 		case 7: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinVolumeRenderer>();
         case 8: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinMovementData>();
 		case 9: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinMovementRenderer>();
+        case 10: return new megamol::core::ModuleAutoDescription<megamol::protein::CCP4VolumeData>();
+        case 11: return new megamol::core::ModuleAutoDescription<megamol::protein::SolventRenderer>();
+        case 12: return new megamol::core::ModuleAutoDescription<megamol::protein::PDBLoader>();
+        case 13: return new megamol::core::ModuleAutoDescription<megamol::protein::SimpleMoleculeRenderer>();
+        case 14: return new megamol::core::ModuleAutoDescription<megamol::protein::CoarseGrainDataLoader>();
+        case 15: return new megamol::core::ModuleAutoDescription<megamol::protein::SphereRenderer>();
+        case 16: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeSESRenderer>();
+        case 17: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCartoonRenderer>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 10: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+        case 18: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
 		#define NETCDF_OFFSET 1
 #else
 		#define NETCDF_OFFSET 0
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
 #if (defined(WITH_OPENCL) && (WITH_OPENCL))
-		case 10 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
+		case 18 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
 		#define OPENCL_OFFSET 1
 #else
 		#define OPENCL_OFFSET 0
@@ -127,7 +146,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 4;
+    return 7;
 }
 
 
@@ -140,6 +159,9 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 1: return new megamol::core::CallAutoDescription<megamol::protein::CallFrame>();
         case 2: return new megamol::core::CallAutoDescription<megamol::protein::SolPathDataCall>();
         case 3: return new megamol::core::CallAutoDescription<megamol::protein::CallProteinMovementData>();
+        case 4: return new megamol::core::CallAutoDescription<megamol::protein::CallVolumeData>();
+        case 5: return new megamol::core::CallAutoDescription<megamol::protein::MolecularDataCall>();
+        case 6: return new megamol::core::CallAutoDescription<megamol::protein::SphereDataCall>();
         default: return NULL;
     }
     return NULL;
