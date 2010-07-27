@@ -742,6 +742,16 @@ namespace sys {
             }
 
             /**
+             * Returns the first argument following 'cur' in the parsers
+             * argument list which matches this option, or NULL if there is no
+             * such argument.
+             *
+             * @return Pointer to the first argument following 'cur' matching
+             *         this option, or NULL.
+             */
+            Argument *GetNextOccurrence(Argument *cur) const;
+
+            /**
              * Answer the short name of the option.
              *
              * @return the short name.
@@ -1647,6 +1657,33 @@ namespace sys {
         this->shortName = shortName;
         this->longName = longName;
         this->description = description;
+    }
+
+
+    /*
+     * CmdLineParser<T>::Option::GetNextOccurrence
+     */
+    template<class T>
+    typename CmdLineParser<T>::Argument *
+    CmdLineParser<T>::Option::GetNextOccurrence(
+            typename CmdLineParser<T>::Argument *cur) const {
+        if (this->parser == NULL) return NULL;
+        if (cur == NULL) return NULL;
+        unsigned int p = 0;
+        while ((p < this->parser->arglistSize) && (&this->parser->arglist[p] != cur)) {
+            p++;
+        }
+        p++;
+        if (p >= this->parser->arglistSize) return NULL;
+        while (p < this->parser->arglistSize) {
+            if (((this->parser->arglist[p].GetType() == Argument::TYPE_OPTION_LONGNAME)
+                    || (this->parser->arglist[p].GetType() == Argument::TYPE_OPTION_SHORTNAMES))
+                    && (this->parser->arglist[p].GetOption() == this)) {
+                return &this->parser->arglist[p];
+            }
+            p++;
+        }
+        return NULL;
     }
 
 
