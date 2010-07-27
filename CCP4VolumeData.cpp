@@ -17,7 +17,7 @@
 #include "vislib/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/stringtokeniser.h"
+#include "vislib/StringTokeniser.h"
 #include <string>
 #include <iostream>
 #include <fstream>

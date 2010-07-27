@@ -24,7 +24,7 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
-#include "vislib/stringtokeniser.h"
+#include "vislib/StringTokeniser.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <glh/glh_genext.h>

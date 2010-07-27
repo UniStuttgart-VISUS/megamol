@@ -346,12 +346,12 @@ namespace protein {
         float radiusCartoon;
 
         /** The color lookup table (for chains, amino acids,...) */
-        vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
         /** The color lookup table which stores the rainbow colors */
-        vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
         /** The atom color table for rendering */
-        vislib::Array<vislib::math::Vector<float, 3>> atomColorTable;
+        vislib::Array<vislib::math::Vector<float, 3> > atomColorTable;
         
         // the Id of the current frame (for dynamic data)
         unsigned int currentFrameId;

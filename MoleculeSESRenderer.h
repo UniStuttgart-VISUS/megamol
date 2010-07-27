@@ -352,7 +352,7 @@ namespace protein {
         bool drawSAS;
 
 		/** the reduced surface(s) */
-        std::vector<std::vector<ReducedSurface*>> reducedSurfaceAllFrames;
+        std::vector<std::vector<ReducedSurface*> > reducedSurfaceAllFrames;
 		/** the reduced surface(s) */
         std::vector<ReducedSurface*> reducedSurface;
 		
@@ -385,7 +385,7 @@ namespace protein {
 		// radius of the probe atom
 		float probeRadius;
 
-        vislib::Array<vislib::math::Vector<float, 3>> atomColorTable;
+        vislib::Array<vislib::math::Vector<float, 3> > atomColorTable;
 		unsigned int currentArray;
 
 		/** 'true' if the data for the current render mode is computed, 'false' otherwise */
@@ -441,9 +441,9 @@ namespace protein {
 		float lambda;
 		
         /** The color lookup table (for chains, amino acids,...) */
-        vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
         /** The color lookup table which stores the rainbow colors */
-        vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
 		// texture for singularity handling (concave triangles)
 		std::vector<GLuint> singularityTexture;

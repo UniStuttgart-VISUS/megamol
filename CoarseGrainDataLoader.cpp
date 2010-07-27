@@ -16,8 +16,8 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 #include "vislib/sysfunctions.h"
-#include "vislib/stringconverter.h"
-#include "vislib/stringtokeniser.h"
+#include "vislib/StringConverter.h"
+#include "vislib/StringTokeniser.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include <ctime>
 #include <iostream>
