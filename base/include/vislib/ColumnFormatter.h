@@ -516,7 +516,7 @@ namespace vislib {
                         const Char *sepBuf = this->separator.PeekBuffer();
                         while (*sepBuf != 0) {
                             buffer[pos++] = *(sepBuf++);
-                            ASSERT(pos < this->maxWidth + 1);
+                            ASSERT(pos <= this->maxWidth + 1);
                         }
                     }
 
@@ -539,7 +539,7 @@ namespace vislib {
                     const Char *sepBuf = this->separator.PeekBuffer();
                     while (*sepBuf != 0) {
                         buffer[pos++] = *(sepBuf++);
-                        ASSERT(pos < this->maxWidth + 1);
+                        ASSERT(pos <= this->maxWidth + 1);
                     }
                 }
 
@@ -547,7 +547,7 @@ namespace vislib {
                     // remaining column content fits into column
                     while (*col->rmTextBuf != 0) {
                         buffer[pos++] = *(col->rmTextBuf++);
-                        ASSERT(pos < this->maxWidth + 1);
+                        ASSERT(pos <= this->maxWidth + 1);
                     }
                     pos = col->colEnd;
                     continue;
@@ -577,7 +577,7 @@ namespace vislib {
                 for (unsigned int i = 0; i < textlen; i++) {
                     buffer[pos++] = *col->rmTextBuf;
                     col->rmTextBuf++;
-                    ASSERT(pos < this->maxWidth + 1);
+                    ASSERT(pos <= this->maxWidth + 1);
                 }
                 pos += len - textlen;
 
