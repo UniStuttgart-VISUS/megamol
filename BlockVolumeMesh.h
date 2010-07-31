@@ -13,6 +13,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractTriMeshDataSource.h"
+#include "CallerSlot.h"
 
 
 namespace megamol {
@@ -64,6 +65,12 @@ namespace trisoup {
         virtual void assertData(void);
 
     private:
+
+        /** The in data slot */
+        core::CallerSlot inDataSlot;
+
+        /** The incoming data hash */
+        SIZE_T inDataHash;
 
     };
 
