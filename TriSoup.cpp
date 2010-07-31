@@ -17,6 +17,8 @@
 #include "CallTriMeshData.h"
 #include "TriSoupDataSource.h"
 #include "WavefrontObjDataSource.h"
+#include "BlockVolumeMesh.h"
+#include "CallBinaryVolumeData.h"
 
 
 /*
@@ -60,7 +62,7 @@ TRISOUP_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 TRISOUP_API int mmplgModuleCount(void) {
-    return 3;
+    return 4;
 }
 
 
@@ -72,6 +74,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
         case 0: return new megamol::core::ModuleAutoDescription<megamol::trisoup::TriSoupRenderer>();
         case 1: return new megamol::core::ModuleAutoDescription<megamol::trisoup::TriSoupDataSource>();
         case 2: return new megamol::core::ModuleAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
+        case 3: return new megamol::core::ModuleAutoDescription<megamol::trisoup::BlockVolumeMesh>();
     }
     return NULL;
 }
@@ -81,7 +84,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 TRISOUP_API int mmplgCallCount(void) {
-    return 1;
+    return 2;
 }
 
 
@@ -90,7 +93,8 @@ TRISOUP_API int mmplgCallCount(void) {
  */
 TRISOUP_API void* mmplgCallDescription(int idx) {
     switch (idx) {
-        case 0 : return new megamol::trisoup::CallTriMeshDataDescription();
+        case 0: return new megamol::trisoup::CallTriMeshDataDescription();
+        case 1: return new megamol::trisoup::CallBinaryVolumeDataDescription();
     }
     return NULL;
 }

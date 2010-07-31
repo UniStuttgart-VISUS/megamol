@@ -353,6 +353,25 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AbstractTriMeshLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\BlockVolumeMesh.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\CallBinaryVolumeData.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CallTriMeshData.cpp"
 				>
 			</File>
@@ -456,6 +475,18 @@
 			>
 			<File
 				RelativePath=".\AbstractTriMeshDataSource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\AbstractTriMeshLoader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BlockVolumeMesh.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CallBinaryVolumeData.h"
 				>
 			</File>
 			<File

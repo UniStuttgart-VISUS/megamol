@@ -1,19 +1,18 @@
 /*
- * TriSoupDataSource.h
+ * BlockVolumeMesh.h
  *
  * Copyright (C) 2010 by Sebastian Grottel
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_TRISOUPDATASOURCE_H_INCLUDED
-#define MMTRISOUPPLG_TRISOUPDATASOURCE_H_INCLUDED
+#ifndef MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED
+#define MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "AbstractTriMeshLoader.h"
-#include "vislib/String.h"
+#include "AbstractTriMeshDataSource.h"
 
 
 namespace megamol {
@@ -21,9 +20,9 @@ namespace trisoup {
 
 
     /**
-     * Data source class for tri soup files
+     * Class creating a tri mesh from binary volume showing the blocks opaque
      */
-    class TriSoupDataSource : public AbstractTriMeshLoader {
+    class BlockVolumeMesh : public AbstractTriMeshDataSource {
     public:
 
         /**
@@ -32,7 +31,7 @@ namespace trisoup {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "TriSoupDataSource";
+            return "BlockVolumeMesh";
         }
 
         /**
@@ -41,7 +40,7 @@ namespace trisoup {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Data source for tri soup files";
+            return "Converts a binary volume into a tri mesh showing opaque blocks.";
         }
 
         /**
@@ -54,21 +53,15 @@ namespace trisoup {
         }
 
         /** Ctor */
-        TriSoupDataSource(void);
+        BlockVolumeMesh(void);
 
         /** Dtor */
-        virtual ~TriSoupDataSource(void);
+        virtual ~BlockVolumeMesh(void);
 
     protected:
 
-        /**
-         * Loads the specified file
-         *
-         * @param filename The file to load
-         *
-         * @return True on success
-         */
-        virtual bool load(const vislib::TString& filename);
+        /** Ensures that the data is loaded */
+        virtual void assertData(void);
 
     private:
 
@@ -77,4 +70,4 @@ namespace trisoup {
 } /* end namespace trisoup */
 } /* end namespace megamol */
 
-#endif /* MMTRISOUPPLG_TRISOUPDATASOURCE_H_INCLUDED */
+#endif /* MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED */

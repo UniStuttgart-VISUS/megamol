@@ -28,7 +28,7 @@ using namespace megamol::trisoup;
 /*
  * WavefrontObjDataSource::WavefrontObjDataSource
  */
-WavefrontObjDataSource::WavefrontObjDataSource(void) : AbstractTriMeshDataSource() {
+WavefrontObjDataSource::WavefrontObjDataSource(void) : AbstractTriMeshLoader() {
     // intentionally empty
 }
 

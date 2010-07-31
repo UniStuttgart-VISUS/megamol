@@ -57,14 +57,8 @@ namespace trisoup {
          */
         virtual void release(void);
 
-        /**
-         * Loads the specified file
-         *
-         * @param filename The file to load
-         *
-         * @return True on success
-         */
-        virtual bool load(const vislib::TString& filename) = 0;
+        /** Ensures that the data is loaded */
+        virtual void assertData(void) = 0;
 
         /** The objects */
         vislib::Array<Mesh> objs;
@@ -75,10 +69,10 @@ namespace trisoup {
         /** The bounding box */
         vislib::math::Cuboid<float> bbox;
 
-    private:
+        /** The data update hash */
+        SIZE_T datahash;
 
-        /** Ensures that the data is loaded */
-        inline void assertData(void);
+    private:
 
         /**
          * Gets the data from the source.
@@ -98,14 +92,8 @@ namespace trisoup {
          */
         bool getExtentCallback(core::Call& caller);
 
-        /** The file name */
-        core::param::ParamSlot filenameSlot;
-
         /** The slot for requesting data */
         core::CalleeSlot getDataSlot;
-
-        /** The data update hash */
-        SIZE_T datahash;
 
     };
 

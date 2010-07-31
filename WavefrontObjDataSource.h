@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "AbstractTriMeshDataSource.h"
+#include "AbstractTriMeshLoader.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
@@ -25,7 +25,7 @@ namespace trisoup {
     /**
      * Data source class for wavefront OBJ files
      */
-    class WavefrontObjDataSource : public AbstractTriMeshDataSource {
+    class WavefrontObjDataSource : public AbstractTriMeshLoader {
     public:
 
         /**
