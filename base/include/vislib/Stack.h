@@ -190,6 +190,8 @@ namespace vislib {
             cursor = cursor->next;
             SAFE_DELETE(tmp);
         }
+
+        this->top = NULL;
     }
 
 
