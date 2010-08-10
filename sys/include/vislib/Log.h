@@ -482,6 +482,76 @@ namespace sys {
         }
 
         /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_ERROR'.
+         *
+         * @param fmt The log message
+         */
+        void WriteError(const char *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_ERROR'.
+         *
+         * @param fmt The log message
+         */
+        void WriteError(const wchar_t *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_ERROR + lvlOff'. Not that a high level offset value might
+         * downgrade the message to warning or even info level.
+         *
+         * @param fmt The log message
+         * @param lvlOff The log level offset
+         */
+        void WriteError(const UINT lvlOff, const char *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_ERROR + lvlOff'. Not that a high level offset value might
+         * downgrade the message to warning or even info level.
+         *
+         * @param fmt The log message
+         * @param lvlOff The log level offset
+         */
+        void WriteError(const UINT lvlOff, const wchar_t *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_INFO'.
+         *
+         * @param fmt The log message
+         */
+        void WriteInfo(const char *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_INFO'.
+         *
+         * @param fmt The log message
+         */
+        void WriteInfo(const wchar_t *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_INFO + lvlOff'.
+         *
+         * @param fmt The log message
+         * @param lvlOff The log level offset
+         */
+        void WriteInfo(const UINT lvlOff, const char *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_INFO + lvlOff'.
+         *
+         * @param fmt The log message
+         * @param lvlOff The log level offset
+         */
+        void WriteInfo(const UINT lvlOff, const wchar_t *fmt, ...);
+
+        /**
          * Writes a formatted messages with the specified log level to the log
          * file. The format of the message is similar to the printf functions.
          * A new line character is automatically appended if the last 
@@ -505,6 +575,42 @@ namespace sys {
          * @param fmt The log message.
          */
         void WriteMsg(const UINT level, const wchar_t *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_WARN'.
+         *
+         * @param fmt The log message
+         */
+        void WriteWarn(const char *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_WARN'.
+         *
+         * @param fmt The log message
+         */
+        void WriteWarn(const wchar_t *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_WARN + lvlOff'. Not that a high level offset value might
+         * downgrade the message to info level.
+         *
+         * @param fmt The log message
+         * @param lvlOff The log level offset
+         */
+        void WriteWarn(const UINT lvlOff, const char *fmt, ...);
+
+        /**
+         * Writes a formatted error message to the log. The level will be
+         * 'LEVEL_WARN + lvlOff'. Not that a high level offset value might
+         * downgrade the message to info level.
+         *
+         * @param fmt The log message
+         * @param lvlOff The log level offset
+         */
+        void WriteWarn(const UINT lvlOff, const wchar_t *fmt, ...);
 
         /**
          * Assignment operator
@@ -557,13 +663,11 @@ namespace sys {
         static TimeStamp currentTimeStamp(void);
 
         /**
-         * Write a message prefix consisting of a time stamp and a log level 
-         * to the physical log file. The physical log file must be valid.
+         * Returns the file name suffix.
          *
-         * @param level The log level.
-         * @param tiemstamp The time stamp.
+         * @return The file name suffix.
          */
-        void writeMsgPrefix(UINT level, const TimeStamp& timestamp);
+        vislib::StringA getFileNameSuffix(void);
 
         /**
          * Returns the next free offline message object.
@@ -574,11 +678,31 @@ namespace sys {
         OfflineMessage *nextOfflineMessage(void);
 
         /**
-         * Returns the file name suffix.
+         * Writes a message to the log file, the echo log or the offline
+         * message buffer.
          *
-         * @return The file name suffix.
+         * @param level The log level of the message
+         * @param msg The log message
          */
-        vislib::StringA getFileNameSuffix(void);
+        void writeMsg(UINT level, const vislib::StringA& msg);
+
+        /**
+         * Writes a message to the log file, the echo log or the offline
+         * message buffer.
+         *
+         * @param level The log level of the message
+         * @param msg The log message
+         */
+        void writeMsg(UINT level, const vislib::StringW& msg);
+
+        /**
+         * Write a message prefix consisting of a time stamp and a log level 
+         * to the physical log file. The physical log file must be valid.
+         *
+         * @param level The log level.
+         * @param tiemstamp The time stamp.
+         */
+        void writeMsgPrefix(UINT level, const TimeStamp& timestamp);
 
         /** the empty log message string const */
         static const char *emptyLogMsg;
