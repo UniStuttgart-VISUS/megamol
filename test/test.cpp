@@ -94,6 +94,7 @@ VislibTest tests[] = {
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
+    {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},

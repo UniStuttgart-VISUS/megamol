@@ -969,6 +969,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ColourParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ColourRGBAu8.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Cursor2D.cpp"
 				>
 			</File>
@@ -986,6 +994,10 @@
 			</File>
 			<File
 				RelativePath=".\src\MouseInteractionAdapter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\NamedColours.cpp"
 				>
 			</File>
 			<File
@@ -1107,6 +1119,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\vislib\ColourParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\ColourRGBAu8.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\vislib\Cursor2D.h"
 				>
 			</File>
@@ -1128,6 +1148,10 @@
 			</File>
 			<File
 				RelativePath=".\include\vislib\MouseInteractionAdapter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\vislib\NamedColours.h"
 				>
 			</File>
 			<File

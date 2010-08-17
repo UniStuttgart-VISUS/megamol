@@ -26,6 +26,8 @@
 #include "vislib/PpmBitmapCodec.h"
 #include "vislib/BmpBitmapCodec.h"
 #include "vislib/RawStorage.h"
+#include "vislib/NamedColours.h"
+#include "vislib/ColourParser.h"
 
 // #define USE_UNICODE_COLUMNFORMATTER
 
@@ -779,4 +781,90 @@ void TestAsciiFile(void) {
     AssertEqual<SIZE_T>("Line 8 has 7 words", afb[8].Count(), 7);
     AssertEqual<SIZE_T>("Line 9 has 7 words", afb[9].Count(), 7);
 #endif
+}
+
+
+/*
+ * TestNamedColours
+ */
+void TestNamedColours(void) {
+    using vislib::graphics::NamedColours;
+    using vislib::graphics::ColourRGBAu8;
+    using vislib::graphics::ColourParser;
+
+    AssertEqual<SIZE_T>("CountNamedColours == 149", NamedColours::CountNamedColours(), 149);
+    for (SIZE_T i = 0; i < NamedColours::CountNamedColours(); i++) {
+        vislib::StringA n = NamedColours::GetNameByIndex(i);
+        const ColourRGBAu8& c = NamedColours::GetColourByIndex(i);
+        const char *n2 = NamedColours::GetNameByColour(c, false);
+        AssertNotEqual<const char*>("Named colour has name", n2, NULL);
+        if (n2 == NULL) continue;
+        // Do not test names, as there are some ambigious names (White = Transparent; Aqua = Cyan; ...)
+        //if (    !n.Equals("Transparent")
+        //        && !n.Equals("Fuchsia")
+        //        && !n.Equals("Aqua")) {
+        //    vislib::StringA msg;
+        //    msg.Format("Named colours name %s is correct", n.PeekBuffer());
+        //    AssertTrue(msg.PeekBuffer(), n.Equals(n2, false));
+        //}
+        const ColourRGBAu8 c1 = NamedColours::GetColourByName(n);
+        const ColourRGBAu8 c2 = NamedColours::GetColourByName(n2);
+        AssertEqual("Colour[i] == Colour[Name[i]]", c, c1);
+        AssertEqual("Colour[i] == Colour[Name[Colour[i]]]", c, c2);
+    }
+
+    AssertEqual("BurlyWood", NamedColours::BurlyWood, NamedColours::GetColourByName("BurlyWood"));
+    AssertEqual("Firebrick", NamedColours::Firebrick, NamedColours::GetColourByName("Firebrick"));
+    AssertEqual("HotPink", NamedColours::HotPink, NamedColours::GetColourByName("HotPink"));
+    AssertEqual("PeachPuff", NamedColours::PeachPuff, NamedColours::GetColourByName("PeachPuff"));
+    AssertEqual("PowderBlue", NamedColours::PowderBlue, NamedColours::GetColourByName("PowderBlue"));
+    AssertEqual("Thistle", NamedColours::Thistle, NamedColours::GetColourByName("Thistle"));
+
+    AssertNotEqual("BurlyWood != Firebrick", NamedColours::BurlyWood, NamedColours::Firebrick);
+    AssertNotEqual("HotPink != PeachPuff", NamedColours::HotPink, NamedColours::PeachPuff);
+    AssertNotEqual("PowderBlue != Thistle", NamedColours::PowderBlue, NamedColours::Thistle);
+    AssertNotEqual("BurlyWood != HotPink", NamedColours::BurlyWood, NamedColours::HotPink);
+    AssertNotEqual("BurlyWood != PowderBlue", NamedColours::BurlyWood, NamedColours::PowderBlue);
+    AssertNotEqual("HotPink != PowderBlue", NamedColours::HotPink, NamedColours::PowderBlue);
+
+    ColourRGBAu8 col;
+    ColourParser::FromString("AliceBlue", col);
+    AssertEqual("AliceBlue parsed correctly", col, NamedColours::AliceBlue);
+
+    AssertNoException("ColourParser::FromString #1", ColourParser::FromString("(1,0, 0,5, 0,25)", col, true));
+    AssertEqual("FromString #1 Colour correct", col, ColourRGBAu8(255, 128, 64, 255));
+
+    AssertNoException("ColourParser::FromString #2", ColourParser::FromString("(1,0,0,5,0,25,1,0)", col, true));
+    AssertEqual("FromString #2 Colour correct", col, ColourRGBAu8(255, 128, 64, 255));
+
+    AssertNoException("ColourParser::FromString #3", ColourParser::FromString("(1,0, 0.5, 0,25, 1.0)", col, true));
+    AssertEqual("FromString #3 Colour correct", col, ColourRGBAu8(255, 128, 64, 255));
+
+    vislib::StringA txt;
+    ColourParser::ToString(txt, NamedColours::Crimson, ColourParser::REPTYPE_HTML);
+    AssertTrue("Crimson in HTML correct", txt.Equals("#dc143c", false));
+    ColourParser::FromString(txt, col);
+    AssertEqual("Crimson parsed back correctly from html", col, NamedColours::Crimson);
+
+    ColourParser::ToString(txt, NamedColours::CornflowerBlue, ColourParser::REPTYPE_BYTE);
+    AssertTrue("CornflowerBlue in Bytes correct", txt.Equals("(100; 149; 237)", false));
+    ColourParser::FromString(txt, col);
+    AssertEqual("CornflowerBlue parsed back correctly from bytes", col, NamedColours::CornflowerBlue);
+
+    ColourParser::ToString(txt, NamedColours::MediumVioletRed, ColourParser::REPTYPE_NAMED);
+    AssertTrue("MediumVioletRed in Named correct", txt.Equals("MediumVioletRed", false));
+    ColourParser::FromString(txt, col);
+    AssertEqual("MediumVioletRed parsed back correctly from name", col, NamedColours::MediumVioletRed);
+
+    ColourParser::ToString(txt, NamedColours::SpringGreen, ColourParser::REPTYPE_FLOAT);
+    float r, g, b;
+    int cnt = sscanf(txt.PeekBuffer(), "(%f; %f; %f)", &r, &g, &b);
+    AssertTrue("SpringGreen in Floats correct", 
+         (cnt == 3)
+         && vislib::math::IsEqual(r, 0.0f)
+         && vislib::math::IsEqual(g, 1.0f)
+         && vislib::math::IsEqual(b, 0.49803901f) );
+    ColourParser::FromString(txt, col);
+    AssertEqual("SpringGreen parsed back correctly from floats", col, NamedColours::SpringGreen);
+
 }

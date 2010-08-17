@@ -34,4 +34,6 @@ void TestBitmapCodecSimple(void);
 
 void TestAsciiFile(void);
 
+void TestNamedColours(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */
