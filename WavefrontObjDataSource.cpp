@@ -89,57 +89,57 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
 
         try {
 
-            if ((::strcmp(line[0], "mtllib") == 0) && (line.Count() >= 2)) {
+            if ((::strcmp(line.Word(0), "mtllib") == 0) && (line.Count() >= 2)) {
                 // load material library
-                this->loadMaterialLibrary(vislib::sys::Path::Concatenate(path, A2T(line[1])), matNames);
+                this->loadMaterialLibrary(vislib::sys::Path::Concatenate(path, A2T(line.Word(1))), matNames);
 
-            } else if ((::strcmp(line[0], "usemtl") == 0) && (line.Count() >= 2)) {
+            } else if ((::strcmp(line.Word(0), "usemtl") == 0) && (line.Count() >= 2)) {
                 // use material (new group)
 
                 if (obj == NULL) {
                     objs.Append(new vislib::Array<Tri>());
-                    objsMats.Append(line[1]);
+                    objsMats.Append(line.Word(1));
                     obj = objs.Last();
 
                 } else if (objsMats.Last().IsEmpty()) {
-                    objsMats.Last() = line[1];
+                    objsMats.Last() = line.Word(1);
 
-                } else if (!objsMats.Last().Equals(line[1])) {
+                } else if (!objsMats.Last().Equals(line.Word(1))) {
                     if (obj->Count() > 0) {
                         objs.Append(new vislib::Array<Tri>());
-                        objsMats.Append(line[1]);
+                        objsMats.Append(line.Word(1));
                         obj = objs.Last();
 
                     } else {
-                        objsMats.Last() = line[1];
+                        objsMats.Last() = line.Word(1);
                     }
 
                 }
 
-            } else if ((::strcmp(line[0], "v") == 0) && (line.Count() >= 4)) {
+            } else if ((::strcmp(line.Word(0), "v") == 0) && (line.Count() >= 4)) {
                 // vertex
-                vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1]));
-                vec3[1] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line[2]));
-                vec3[2] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line[3]));
+                vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
+                vec3[1] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2)));
+                vec3[2] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3)));
                 if (vert.Count() == vert.Capacity()) vert.AssertCapacity(vert.Capacity() + capacityGrowth);
                 vert.Add(vec3v3);
 
-            } else if ((::strcmp(line[0], "vn") == 0) && (line.Count() >= 4)) {
+            } else if ((::strcmp(line.Word(0), "vn") == 0) && (line.Count() >= 4)) {
                 // vertex normal
-                vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1]));
-                vec3[1] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line[2]));
-                vec3[2] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line[3]));
+                vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
+                vec3[1] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2)));
+                vec3[2] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3)));
                 if (norm.Count() == norm.Capacity()) norm.AssertCapacity(norm.Capacity() + capacityGrowth);
                 norm.Add(vec3v3);
 
-            } else if ((::strcmp(line[0], "vt") == 0) && (line.Count() >= 2)) {
+            } else if ((::strcmp(line.Word(0), "vt") == 0) && (line.Count() >= 2)) {
                 // vertex texture coordinate
-                vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1]));
-                vec3[1] = (line.Count() >= 3) ? static_cast<float>(vislib::CharTraitsA::ParseDouble(line[2])) : 0.0f;
+				vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
+				vec3[1] = (line.Count() >= 3) ? static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))) : 0.0f;
                 if (texc.Count() == texc.Capacity()) texc.AssertCapacity(texc.Capacity() + capacityGrowth);
                 texc.Add(vec3v2);
 
-            } else if ((::strcmp(line[0], "f") == 0) && (line.Count() >= 4)) {
+			} else if ((::strcmp(line.Word(0), "f") == 0) && (line.Count() >= 4)) {
                 // face
                 if (obj == NULL) {
                     objs.Append(new vislib::Array<Tri>());
@@ -148,21 +148,21 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 }
 
                 Tri t;
-                const char* p1 = ::strchr(line[1], '/');
+                const char* p1 = ::strchr(line.Word(1), '/');
                 int idx;
 
                 if (p1 == NULL) {
                     t.n = t.t = false;
                     t.n1 = t.n2 = t.n3 = 0;
                     t.t1 = t.t2 = t.t3 = 0;
-                    idx = vislib::CharTraitsA::ParseInt(line[1]);
+                    idx = vislib::CharTraitsA::ParseInt(line.Word(1));
                     if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v1 = static_cast<unsigned int>(idx - 1);
-                    idx = vislib::CharTraitsA::ParseInt(line[2]);
+                    idx = vislib::CharTraitsA::ParseInt(line.Word(2));
                     if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v2 = static_cast<unsigned int>(idx - 1);
                     for (unsigned int i = 3; i < line.Count(); i++) {
-                        idx = vislib::CharTraitsA::ParseInt(line[i]);
+                        idx = vislib::CharTraitsA::ParseInt(line.Word(i));
                         if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.v3 = static_cast<unsigned int>(idx - 1);
                         obj->Append(t);
@@ -170,18 +170,18 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                     }
 
                 } else {
-                    SIZE_T len = vislib::CharTraitsA::SafeStringLength(line[1]);
+                    SIZE_T len = vislib::CharTraitsA::SafeStringLength(line.Word(1));
                     const char* p2 = ::strchr(p1 + 1, '/');
                     if (p2 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                     t.t = (p2 > p1 + 1);
-                    t.n = (p2 + 1 < line[1] + len);
+                    t.n = (p2 + 1 < line.Word(1) + len);
                     t.n1 = t.n2 = t.n3 = 0;
                     t.t1 = t.t2 = t.t3 = 0;
                     *const_cast<char *>(p1) = '\0';
                     *const_cast<char *>(p2) = '\0';
                     p1++;
                     p2++;
-                    idx = vislib::CharTraitsA::ParseInt(line[1]);
+                    idx = vislib::CharTraitsA::ParseInt(line.Word(1));
                     if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v1 = static_cast<unsigned int>(idx - 1);
                     if (t.t) {
@@ -195,18 +195,18 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                         t.n1 = static_cast<unsigned int>(idx - 1);
                     }
 
-                    len = vislib::CharTraitsA::SafeStringLength(line[2]);
-                    p1 = ::strchr(line[2], '/');
+                    len = vislib::CharTraitsA::SafeStringLength(line.Word(2));
+                    p1 = ::strchr(line.Word(2), '/');
                     if (p1 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                     p2 = ::strchr(p1 + 1, '/');
                     if (p2 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                     if (t.t != (p2 > p1 + 1)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
-                    if (t.n != (p2 + 1 < line[2] + len)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
+                    if (t.n != (p2 + 1 < line.Word(2) + len)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
                     *const_cast<char *>(p1) = '\0';
                     *const_cast<char *>(p2) = '\0';
                     p1++;
                     p2++;
-                    idx = vislib::CharTraitsA::ParseInt(line[2]);
+                    idx = vislib::CharTraitsA::ParseInt(line.Word(2));
                     if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v2 = static_cast<unsigned int>(idx - 1);
                     if (t.t) {
@@ -220,23 +220,23 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                         t.n2 = static_cast<unsigned int>(idx - 1);
                     }
 
-                    t.v2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(line[2]) - 1);
+                    t.v2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(line.Word(2)) - 1);
                     if (t.t) t.t2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(p1) - 1);
                     if (t.n) t.n2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(p2) - 1);
 
                     for (unsigned int i = 3; i < line.Count(); i++) {
-                        len = vislib::CharTraitsA::SafeStringLength(line[i]);
-                        p1 = ::strchr(line[i], '/');
+                        len = vislib::CharTraitsA::SafeStringLength(line.Word(i));
+                        p1 = ::strchr(line.Word(i), '/');
                         if (p1 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                         p2 = ::strchr(p1 + 1, '/');
                         if (p2 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                         if (t.t != (p2 > p1 + 1)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
-                        if (t.n != (p2 + 1 < line[i] + len)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
+                        if (t.n != (p2 + 1 < line.Word(i) + len)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
                         *const_cast<char *>(p1) = '\0';
                         *const_cast<char *>(p2) = '\0';
                         p1++;
                         p2++;
-                        idx = vislib::CharTraitsA::ParseInt(line[i]);
+                        idx = vislib::CharTraitsA::ParseInt(line.Word(i));
                         if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.v3 = static_cast<unsigned int>(idx - 1);
                         if (t.t) {
@@ -257,7 +257,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
 
                 }
 
-            } else if (::strcmp(line[0], "g") == 0) {
+            } else if (::strcmp(line.Word(0), "g") == 0) {
                 // new group
                 if ((obj == NULL) || (obj->Count() > 0)) {
                     objs.Append(new vislib::Array<Tri>());
@@ -336,10 +336,10 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
 
         try {
 
-            if ((strcmp(line[0], "newmtl") == 0) && (line.Count() >= 2)) {
-                INT_PTR idx = names.IndexOf(line[1]);
+            if ((strcmp(line.Word(0), "newmtl") == 0) && (line.Count() >= 2)) {
+                INT_PTR idx = names.IndexOf(line.Word(1));
                 if (idx == vislib::Array<vislib::StringA>::INVALID_POS) {
-                    names.Append(line[1]);
+                    names.Append(line.Word(1));
                     this->mats.Append(Material());
                     mat = &this->mats.Last();
                 } else {
@@ -349,44 +349,44 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
             } else if (mat == NULL) {
                 // ignoring line when there is no active material
 
-            } else if ((strcmp(line[0], "Ns") == 0) && (line.Count() >= 2)) {
-                mat->SetNs(static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1])));
+            } else if ((strcmp(line.Word(0), "Ns") == 0) && (line.Count() >= 2)) {
+                mat->SetNs(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))));
 
-            } else if ((strcmp(line[0], "Ni") == 0) && (line.Count() >= 2)) {
-                mat->SetNi(static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1])));
+            } else if ((strcmp(line.Word(0), "Ni") == 0) && (line.Count() >= 2)) {
+                mat->SetNi(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))));
 
-            } else if ((strcmp(line[0], "d") == 0) && (line.Count() >= 2)) {
-                mat->SetD(static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1])));
+            } else if ((strcmp(line.Word(0), "d") == 0) && (line.Count() >= 2)) {
+                mat->SetD(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))));
 
-            } else if ((strcmp(line[0], "Ka") == 0) && (line.Count() >= 4)) {
+            } else if ((strcmp(line.Word(0), "Ka") == 0) && (line.Count() >= 4)) {
                 mat->SetKa(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[2])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[3])));
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
-            } else if ((strcmp(line[0], "Kd") == 0) && (line.Count() >= 4)) {
+            } else if ((strcmp(line.Word(0), "Kd") == 0) && (line.Count() >= 4)) {
                 mat->SetKd(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[2])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[3])));
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
-            } else if ((strcmp(line[0], "Ks") == 0) && (line.Count() >= 4)) {
+            } else if ((strcmp(line.Word(0), "Ks") == 0) && (line.Count() >= 4)) {
                 mat->SetKs(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[2])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[3])));
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
-            } else if ((strcmp(line[0], "Ke") == 0) && (line.Count() >= 4)) {
+            } else if ((strcmp(line.Word(0), "Ke") == 0) && (line.Count() >= 4)) {
                 mat->SetKe(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[1])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[2])),
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line[3])));
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
+                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
-            } else if (((strcmp(line[0], "bump") == 0) || (strcmp(line[0], "map_bump") == 0) || (strcmp(line[0], "bump_map") == 0)) && (line.Count() >= 2)) {
-                mat->SetBumpMapFileName(vislib::sys::Path::Concatenate(path, line[1]));
+			} else if (((strcmp(line.Word(0), "bump") == 0) || (strcmp(line.Word(0), "map_bump") == 0) || (strcmp(line.Word(0), "bump_map") == 0)) && (line.Count() >= 2)) {
+                mat->SetBumpMapFileName(vislib::sys::Path::Concatenate(path, line.Word(1)));
 
-            } else if ((strncmp(line[0], "map", 3) == 0) && (line.Count() >= 2)) {
-                mat->SetMapFileName(vislib::sys::Path::Concatenate(path, line[1]));
+            } else if ((strncmp(line.Word(0), "map", 3) == 0) && (line.Count() >= 2)) {
+                mat->SetMapFileName(vislib::sys::Path::Concatenate(path, line.Word(1)));
 
             }
 
