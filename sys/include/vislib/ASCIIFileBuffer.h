@@ -130,24 +130,6 @@ namespace sys {
             }
 
             /**
-             * Answer the idx-th word of the line
-             *
-             * @param idx The zero-based index of the word to return
-             *
-             * @return The requested word
-             *
-             * @throw OutOfRangeException if a non-existing line is requested
-             */
-            inline const char * operator[](SIZE_T idx) const {
-                if (idx >= this->cnt) {
-                    throw vislib::OutOfRangeException(static_cast<int>(idx),
-                        0, static_cast<int>(this->cnt - 1),
-                        __FILE__, __LINE__);
-                }
-                return this->ptr.words[idx];
-            }
-
-            /**
              * Answer the pointer to the string of the line. Do not call when
              * the parsing elements were words and if 'Count' returns a value
              * larger than zero.
