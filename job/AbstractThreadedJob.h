@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-
+#include "api/MegaMolCore.std.h"
 #include "job/AbstractJob.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/Thread.h"
@@ -22,11 +22,17 @@ namespace core {
 namespace job {
 
 
+#ifdef _WIN32
+#pragma warning (disable: 4275)
+#endif /* _WIN32 */
     /**
      * Abstract base class for theaded jobs
      */
-    class AbstractThreadedJob : public AbstractJob,
+    class MEGAMOLCORE_API AbstractThreadedJob : public AbstractJob,
         public vislib::sys::Runnable {
+#ifdef _WIN32
+#pragma warning (default: 4275)
+#endif /* _WIN32 */
     public:
 
         /**
@@ -75,11 +81,17 @@ namespace job {
 
     private:
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** the job thread */
         vislib::SmartPtr<vislib::sys::Thread> thread;
 
         /** indicating that the thread should terminate as soon as possible */
         bool terminationRequest;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
     };
 
