@@ -43,6 +43,8 @@ namespace moldyn {
      *
      *  Body (id ascii - 1 line per sphere):
      *      x       till-NL Position (3xFloat), Radius (1xFloat), Colour (3xInt[0..255])
+     *
+     *  In version 1.1 (101) only position information (X, Y, Z) is written!
      */
     class SIFFDataSource : public Module {
     public:
@@ -126,6 +128,9 @@ namespace moldyn {
         /** The file name */
         param::ParamSlot filenameSlot;
 
+        /** The radius used when loading a version 1.1 file */
+        param::ParamSlot radSlot;
+
         /** The slot for requesting data */
         CalleeSlot getDataSlot;
 
@@ -137,6 +142,9 @@ namespace moldyn {
 
         /** The data hash */
         SIZE_T datahash;
+
+        /* The siff data version */
+        unsigned int verNum;
 
     };
 

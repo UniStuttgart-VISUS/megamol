@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "SIFFDataSource.h"
 #include "param/FilePathParam.h"
+#include "param/FloatParam.h"
 #include "param/StringParam.h"
 #include "MultiParticleDataCall.h"
 #include "vislib/Log.h"
@@ -25,12 +26,17 @@ using namespace megamol::core;
  */
 moldyn::SIFFDataSource::SIFFDataSource(void) : Module(),
         filenameSlot("filename", "The path to the trisoup file to load."),
+        radSlot("radius", "The radius used when loading a version 1.1 file"),
         getDataSlot("getdata", "Slot to request data from this data source."),
-        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data(), datahash(0) {
+        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data(), datahash(0),
+        verNum(100) {
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->filenameSlot.SetUpdateCallback(&SIFFDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filenameSlot);
+
+    this->radSlot << new param::FloatParam(0.1f, 0.0f);
+    this->MakeSlotAvailable(&this->radSlot);
 
     this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData",
         &SIFFDataSource::getDataCallback);
@@ -103,24 +109,31 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
         file.Close();
         return true;
     }
+    unsigned int bpp = 0;
     if (header[4] == 'b') {
         // binary siff
         UINT32 version;
 
         SIFFREAD(&version, 4, __LINE__);
-        if (version != 100) {
+        if (version == 100) {
+            this->verNum = 100;
+        } else if (version == 101) {
+            this->verNum = 101;
+        } else {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-Version-Error");
             file.Close();
             return true;
         }
+        bpp = (this->verNum == 100) ? 19 : 12;
 
         // Header ok, so now we load data
-        // 4*floats (xyzr) + 3*bytes (rgb-colour) = 19 Byte pro Sphere
-        File::FileSize size = file.GetSize() - 8; // remaining bytes
-        if ((size % 19) != 0) {
+        //  version 1.0 body:  4*floats (xyzr) + 3*bytes (rgb-colour) = 19 Bytes pro Sphere
+        //  version 1.1 body:  3*floats (xyz) = 12 Bytes pro Sphere
+        File::FileSize size = file.GetSize() - 9; // remaining bytes
+        if ((size % bpp) != 0) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "SIFF-Size not aligned, ignoring last %d bytes",
-                (size % 19));
-            size -= (size % 19);
+                (size % bpp));
+            size -= (size % bpp);
         }
         this->data.EnforceSize(static_cast<SIZE_T>(size));
         SIFFREAD(this->data.As<void>(), size, __LINE__);
@@ -130,11 +143,16 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
         vislib::StringA verstr = vislib::sys::ReadLineFromFileA(file);
         verstr.TrimSpaces();
         vislib::VersionNumber version(verstr);
-        if (version != vislib::VersionNumber(1, 0)) {
+        if (version == vislib::VersionNumber(1, 0)) {
+            this->verNum = 100;
+        } else if (version == vislib::VersionNumber(1, 1)) {
+            this->verNum = 101;
+        } else {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-Version-Error");
             file.Close();
             return true;
         }
+        bpp = (this->verNum == 100) ? 19 : 12;
 
         SIZE_T cnt;
         const SIZE_T blockGrow = 1000000;
@@ -149,7 +167,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
 
         cnt = 1 + static_cast<SIZE_T>(s1 / s2);
         SIZE_T blocks = 1 + cnt / blockGrow;
-        this->data.AssertSize(blocks * 19 * blockGrow, false);
+        this->data.AssertSize(blocks * bpp * blockGrow, false);
         cnt = 0;
 
         unsigned int t1 = vislib::sys::GetTicksOfDay();
@@ -177,32 +195,49 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
                         buffer[sepos] = 0;
                         line = buffer + sspos;
                     }
+                    bool valid = true;
 
-                    if (
+                    if (this->verNum == 100) {
+                        if (
 #ifdef _WIN32
-                        sscanf_s
+                            sscanf_s
 #else /* _WIN32 */
-                        sscanf
+                            sscanf
 #endif /* _WIN32 */
-                            (line, "%f %f %f %f %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b) == 7) {
+                                (line, "%f %f %f %f %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b) == 7) {
 
-                        if (r < 0) r = 0; else if (r > 255) r = 255;
-                        if (g < 0) g = 0; else if (g > 255) g = 255;
-                        if (b < 0) b = 0; else if (b > 255) b = 255;
+                            if (r < 0) r = 0; else if (r > 255) r = 255;
+                            if (g < 0) g = 0; else if (g > 255) g = 255;
+                            if (b < 0) b = 0; else if (b > 255) b = 255;
+                        } else valid = false;
+                    } else if (this->verNum == 101) {
+                        if (
+#ifdef _WIN32
+                            sscanf_s
+#else /* _WIN32 */
+                            sscanf
+#endif /* _WIN32 */
+                                (line, "%f %f %f\n", &x, &y, &z) == 3) {
+                            // everything fine
+                        } else valid = false;
+                    } else valid = false;
 
-                        blocks = this->data.GetSize() / (19 * blockGrow);
+                    if (valid) {
+                        blocks = this->data.GetSize() / (bpp * blockGrow);
                         if ((1 + cnt / blockGrow) > blocks) {
                             blocks = 1 + cnt / blockGrow;
                         }
-                        this->data.AssertSize(blocks * 19 * blockGrow, true);
+                        this->data.AssertSize(blocks * bpp * blockGrow, true);
 
-                        *this->data.AsAt<float>(cnt * 19 + 0) = x;
-                        *this->data.AsAt<float>(cnt * 19 + 4) = y;
-                        *this->data.AsAt<float>(cnt * 19 + 8) = z;
-                        *this->data.AsAt<float>(cnt * 19 + 12) = rad;
-                        *this->data.AsAt<unsigned char>(cnt * 19 + 16) = static_cast<unsigned char>(r);
-                        *this->data.AsAt<unsigned char>(cnt * 19 + 17) = static_cast<unsigned char>(g);
-                        *this->data.AsAt<unsigned char>(cnt * 19 + 18) = static_cast<unsigned char>(b);
+                        *this->data.AsAt<float>(cnt * bpp + 0) = x;
+                        *this->data.AsAt<float>(cnt * bpp + 4) = y;
+                        *this->data.AsAt<float>(cnt * bpp + 8) = z;
+                        if (this->verNum == 100) {
+                            *this->data.AsAt<float>(cnt * bpp + 12) = rad;
+                            *this->data.AsAt<unsigned char>(cnt * bpp + 16) = static_cast<unsigned char>(r);
+                            *this->data.AsAt<unsigned char>(cnt * bpp + 17) = static_cast<unsigned char>(g);
+                            *this->data.AsAt<unsigned char>(cnt * bpp + 18) = static_cast<unsigned char>(b);
+                        }
                         cnt++;
                     }
 
@@ -228,7 +263,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
         //                      Loaded 0 spheres in      115283 milliseconds
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Loaded %u spheres in %u milliseconds", cnt, t2 - t1);
 
-        this->data.EnforceSize(cnt * 19, true);
+        this->data.EnforceSize(cnt * bpp, true);
 
     } else {
         // unknown siff
@@ -237,16 +272,19 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     // calc bounding box
-    if (this->data.GetSize() >= 19) {
+    if (this->data.GetSize() >= bpp) {
         float *ptr = this->data.As<float>();
+        float rad = 0.0f;
+        if (this->verNum == 100) rad = ptr[3];
         this->bbox.Set(
-            ptr[0] - ptr[3], ptr[1] - ptr[3], ptr[2] - ptr[3],
-            ptr[0] + ptr[3], ptr[1] + ptr[3], ptr[2] + ptr[3]);
+            ptr[0] - rad, ptr[1] - rad, ptr[2] - rad,
+            ptr[0] + rad, ptr[1] + rad, ptr[2] + rad);
 
-        for (unsigned int i = 19; i < this->data.GetSize(); i += 19) {
+        for (unsigned int i = bpp; i < this->data.GetSize(); i += bpp) {
             ptr = this->data.AsAt<float>(i);
-            this->bbox.GrowToPoint(ptr[0] - ptr[3], ptr[1] - ptr[3], ptr[2] - ptr[3]);
-            this->bbox.GrowToPoint(ptr[0] + ptr[3], ptr[1] + ptr[3], ptr[2] + ptr[3]);
+            if (this->verNum == 100) rad = ptr[3];
+            this->bbox.GrowToPoint(ptr[0] - rad, ptr[1] - rad, ptr[2] - rad);
+            this->bbox.GrowToPoint(ptr[0] + rad, ptr[1] + rad, ptr[2] + rad);
         }
 
     } else {
@@ -272,14 +310,30 @@ bool moldyn::SIFFDataSource::getDataCallback(Call& caller) {
 
     c2->SetUnlocker(NULL);
     c2->SetParticleListCount(1);
-    c2->AccessParticles(0).SetCount(this->data.GetSize() / 19);
-    if ((this->data.GetSize() / 19) > 0) {
-        c2->AccessParticles(0).SetColourData(
-            moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
-            this->data.At(16), 19);
-        c2->AccessParticles(0).SetVertexData(
-            moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
-            this->data, 19);
+
+    c2->AccessParticles(0).SetCount(0);
+
+    unsigned int bpp = (this->verNum == 100) ? 19 : 12;
+
+    c2->AccessParticles(0).SetCount(this->data.GetSize() / bpp);
+    if (this->data.GetSize() >= bpp) {
+        if (this->verNum == 100) {
+            c2->AccessParticles(0).SetColourData(
+                moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
+                this->data.At(16), 19);
+            c2->AccessParticles(0).SetVertexData(
+                moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                this->data, 19);
+        } else if (this->verNum == 101) {
+            c2->AccessParticles(0).SetGlobalColour(192, 192, 192);
+            c2->AccessParticles(0).SetColourData(
+                moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+            c2->AccessParticles(0).SetGlobalRadius(this->radSlot.Param<param::FloatParam>()->Value());
+            c2->AccessParticles(0).SetVertexData(
+                moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->data);
+        } else {
+            c2->AccessParticles(0).SetCount(0);
+        }
     }
     c2->SetDataHash(this->datahash);
 
