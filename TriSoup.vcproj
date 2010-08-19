@@ -359,13 +359,6 @@
 			<File
 				RelativePath=".\BlockVolumeMesh.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\CallBinaryVolumeData.cpp"
@@ -464,6 +457,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VoluMetricJob.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\WavefrontObjDataSource.cpp"
 				>
 			</File>
@@ -511,6 +508,10 @@
 			</File>
 			<File
 				RelativePath=".\TriSoupRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VoluMetricJob.h"
 				>
 			</File>
 			<File
