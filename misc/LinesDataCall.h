@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.std.h"
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/assert.h"
@@ -26,13 +27,19 @@ namespace misc {
     /**
      * Call for lines data
      */
-    class LinesDataCall : public AbstractGetData3DCall {
+    class MEGAMOLCORE_API LinesDataCall : public AbstractGetData3DCall {
     public:
 
         /**
-         * Class storing a list of lines
+         * Class storing a list of lines.
+         * All elements are stored in flat lists without any stride!
+         * The graphical primitive is GL_LINES, so the number of elements must
+         * be a multiple of 2, since each line segment must explicitly store
+         * it's start point and end point. In a line strip the inner points
+         * must be multiplied. You can use the index array to reduce the
+         * memory overhead in the colour and vertex array.
          */
-        class Lines {
+        class MEGAMOLCORE_API Lines {
         public:
 
             /**
@@ -282,8 +289,14 @@ namespace misc {
             /** The number of elements */
             unsigned int count;
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
             /** The global colour */
             vislib::graphics::ColourRGBAu8 globCol;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
             /** The index array (1xunsigned int*) */
             const unsigned int *idxArray;

@@ -12,6 +12,27 @@ using namespace megamol::core;
 
 
 /*
+ * misc::LinesDataCall::Lines::Lines
+ */
+misc::LinesDataCall::Lines::Lines(void) : colArray(NULL), colHasAlpha(false),
+        count(0), globCol(192, 192, 192, 255), idxArray(NULL),
+        useFloatCol(false), vertArray(NULL) {
+    // Intentionally empty
+}
+
+
+/*
+ * misc::LinesDataCall::Lines::~Lines
+ */
+misc::LinesDataCall::Lines::~Lines(void) {
+    this->colArray = NULL; // DO NOT DELETE
+    this->count = 0; // Paranoia
+    this->idxArray = NULL; // DO NOT DELETE
+    this->vertArray = NULL; // DO NOT DELETE
+}
+
+
+/*
  * misc::LinesDataCall::LinesDataCall
  */
 misc::LinesDataCall::LinesDataCall(void)

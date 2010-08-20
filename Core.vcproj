@@ -1335,6 +1335,10 @@
 				Name="Header Files"
 				>
 				<File
+					RelativePath=".\misc\BezierControlLines.h"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\BezierDataCall.h"
 					>
 				</File>
@@ -1351,6 +1355,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\misc\LinesRenderer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\SiffCSplineFitter.h"
 					>
 				</File>
@@ -1358,6 +1366,10 @@
 			<Filter
 				Name="Source Files"
 				>
+				<File
+					RelativePath=".\misc\BezierControlLines.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\misc\BezierDataCall.cpp"
 					>
@@ -1372,6 +1384,10 @@
 				</File>
 				<File
 					RelativePath=".\misc\LinesDataCall.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\LinesRenderer.cpp"
 					>
 				</File>
 				<File

@@ -15,8 +15,10 @@
 #include "cluster/ClusterViewMaster.h"
 #include "cluster/PowerwallView.h"
 #include "DataFileSequencer.h"
+#include "misc/BezierControlLines.h"
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
+#include "misc/LinesRenderer.h"
 #include "misc/SiffCSplineFitter.h"
 #include "moldyn/AddParticleColours.h"
 #include "moldyn/DataFileSequence.h"
@@ -69,8 +71,10 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<cluster::ClusterViewMaster>();
         instance->registerAutoDescription<cluster::PowerwallView>();
         instance->registerAutoDescription<DataFileSequencer>();
+        instance->registerAutoDescription<misc::BezierControlLines>();
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
+        instance->registerAutoDescription<misc::LinesRenderer>();
         instance->registerAutoDescription<misc::SiffCSplineFitter>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();
         instance->registerAutoDescription<moldyn::DataFileSequence>();
