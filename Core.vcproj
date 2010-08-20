@@ -1347,6 +1347,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\misc\LinesDataCall.h"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\SiffCSplineFitter.h"
 					>
 				</File>
@@ -1364,6 +1368,10 @@
 				</File>
 				<File
 					RelativePath=".\misc\BezierMeshRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\LinesDataCall.cpp"
 					>
 				</File>
 				<File
