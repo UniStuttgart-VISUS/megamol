@@ -13,6 +13,7 @@
 
 #include "Module.h"
 #include "CalleeSlot.h"
+#include "CallerSlot.h"
 #include "misc/LinesDataCall.h"
 #include "param/ParamSlot.h"
 #include "vislib/RawStorage.h"
@@ -98,17 +99,20 @@ namespace misc {
         /** The call for data */
         CalleeSlot dataSlot;
 
+        /** The call for bezier data */
+        CallerSlot getDataSlot;
+
         /** The vertex data */
-        vislib::RawStorage vertData;
+        vislib::RawStorage vertData[2];
 
         /** The index data */
-        vislib::RawStorage idxData;
+        vislib::RawStorage idxData[2];
 
         /** The data hash */
         SIZE_T hash;
 
         /** The lines data */
-        LinesDataCall::Lines lines;
+        LinesDataCall::Lines lines[2];
 
     };
 
