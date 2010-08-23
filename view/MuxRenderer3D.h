@@ -299,7 +299,6 @@ namespace view {
             *oc = *cr3d;
             if (!(*oc)(1)) continue;
 
-            oc->SetTime(cr3d->Time() * (float)(oc->TimeFramesCount() - 1) / (float)(this->frameCnt - 1));
             // Back translation ocWS -> ocOS
             float sx, sy, sz, tx, ty, tz;
             const vislib::math::Cuboid<float>& ocWS = oc->AccessBoundingBoxes().WorldSpaceBBox();
@@ -312,6 +311,11 @@ namespace view {
             tx = ocWS.Left() * sx - ocOS.Left();
             ty = ocWS.Bottom() * sy - ocOS.Bottom();
             tz = ocWS.Back() * sz - ocOS.Back();
+
+            *oc = *cr3d;
+            oc->SetTime(cr3d->Time()
+                * (float)(oc->TimeFramesCount() - 1)
+                / (float)(vislib::math::Max(1U, this->frameCnt - 1)));
 
             ::glMatrixMode(GL_MODELVIEW);
             ::glPushMatrix();
