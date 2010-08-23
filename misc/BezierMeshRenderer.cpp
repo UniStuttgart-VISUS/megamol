@@ -166,6 +166,7 @@ bool misc::BezierMeshRenderer::Render(Call& call) {
     ::glFrontFace(GL_CCW);
     ::glDisable(GL_BLEND);
     ::glEnable(GL_LIGHTING);
+    ::glEnable(GL_NORMALIZE);
 
     if ((this->objsHash != bdc->DataHash())
             || this->curveSectionsSlot.IsDirty()

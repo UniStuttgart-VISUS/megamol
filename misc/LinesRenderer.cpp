@@ -100,6 +100,7 @@ bool misc::LinesRenderer::Render(Call& call) {
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);
     ::glDisable(GL_LIGHTING);
+    ::glEnable(GL_DEPTH_TEST);
     ::glLineWidth(1.0f);
 
     LinesDataCall *ldc = this->getDataSlot.CallAs<misc::LinesDataCall>();

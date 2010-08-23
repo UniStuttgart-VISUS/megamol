@@ -1079,6 +1079,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\view\MuxRenderer3D.h"
+					>
+				</File>
+				<File
 					RelativePath=".\view\Renderer2DModule.h"
 					>
 				</File>
@@ -1176,6 +1180,10 @@
 				</File>
 				<File
 					RelativePath=".\view\MouseFlags.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\view\MuxRenderer3D.cpp"
 					>
 				</File>
 				<File

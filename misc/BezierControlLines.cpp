@@ -132,15 +132,15 @@ bool misc::BezierControlLines::getDataCallback(Call& call) {
                     vislib::math::ShallowPoint<float, 3> p6(this->vertData[1].AsAt<float>((lcnt * 8 + 6) * 3 * 4));
                     vislib::math::ShallowPoint<float, 3> p7(this->vertData[1].AsAt<float>((lcnt * 8 + 7) * 3 * 4));
 
-                    p0 = curve.ControlPoint(j).Position() + (-vx - vy) * 0.5f * curve.ControlPoint(j).Radius();
-                    p1 = curve.ControlPoint(j).Position() + (vx - vy) * 0.5f * curve.ControlPoint(j).Radius();
-                    p2 = curve.ControlPoint(j).Position() + (vx + vy) * 0.5f * curve.ControlPoint(j).Radius();
-                    p3 = curve.ControlPoint(j).Position() + (-vx + vy) * 0.5f * curve.ControlPoint(j).Radius();
+                    p0 = curve.ControlPoint(j).Position() + (-vx - vy) * curve.ControlPoint(j).Radius();
+                    p1 = curve.ControlPoint(j).Position() + (vx - vy) * curve.ControlPoint(j).Radius();
+                    p2 = curve.ControlPoint(j).Position() + (vx + vy) * curve.ControlPoint(j).Radius();
+                    p3 = curve.ControlPoint(j).Position() + (-vx + vy) * curve.ControlPoint(j).Radius();
 
-                    p4 = curve.ControlPoint(j + 1).Position() + (-vx - vy) * 0.5f * curve.ControlPoint(j + 1).Radius();
-                    p5 = curve.ControlPoint(j + 1).Position() + (vx - vy) * 0.5f * curve.ControlPoint(j + 1).Radius();
-                    p6 = curve.ControlPoint(j + 1).Position() + (vx + vy) * 0.5f * curve.ControlPoint(j + 1).Radius();
-                    p7 = curve.ControlPoint(j + 1).Position() + (-vx + vy) * 0.5f * curve.ControlPoint(j + 1).Radius();
+                    p4 = curve.ControlPoint(j + 1).Position() + (-vx - vy) * curve.ControlPoint(j + 1).Radius();
+                    p5 = curve.ControlPoint(j + 1).Position() + (vx - vy) * curve.ControlPoint(j + 1).Radius();
+                    p6 = curve.ControlPoint(j + 1).Position() + (vx + vy) * curve.ControlPoint(j + 1).Radius();
+                    p7 = curve.ControlPoint(j + 1).Position() + (-vx + vy) * curve.ControlPoint(j + 1).Radius();
 
                     *this->idxData[1].AsAt<unsigned int>(((lcnt * 12 + 0) * 2 + 0) * 4) = (lcnt * 8 + 0);
                     *this->idxData[1].AsAt<unsigned int>(((lcnt * 12 + 0) * 2 + 1) * 4) = (lcnt * 8 + 1);
