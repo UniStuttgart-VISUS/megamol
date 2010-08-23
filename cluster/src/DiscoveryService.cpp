@@ -558,6 +558,34 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
 
 
 /*
+ * vislib::net::cluster::DiscoveryService::ToStringA
+ */
+vislib::StringA vislib::net::cluster::DiscoveryService::ToStringA(
+        const PeerHandle& hPeer) const {
+    VLSTACKTRACE("DiscoveryService::ToStringA", __FILE__, __LINE__);
+    try {
+        return this->GetResponseAddress(hPeer).ToStringA();
+    } catch (...) {
+        return "Invalid Handle";
+    }
+}
+
+
+/*
+ * vislib::net::cluster::DiscoveryService::ToStringW
+ */
+vislib::StringW vislib::net::cluster::DiscoveryService::ToStringW(
+        const PeerHandle& hPeer) const {
+    VLSTACKTRACE("DiscoveryService::ToStringW", __FILE__, __LINE__);
+    try {
+        return this->GetResponseAddress(hPeer).ToStringW();
+    } catch (...) {
+        return L"Invalid Handle";
+    }
+}
+
+
+/*
  * vislib::net::cluster::DiscoveryService::Stop
  */
 bool vislib::net::cluster::DiscoveryService::Stop(const bool noWait) {

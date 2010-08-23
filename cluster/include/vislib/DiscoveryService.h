@@ -844,6 +844,48 @@ namespace cluster {
             const UINT requestIntervalIntensive = DEFAULT_REQUEST_INTERVAL / 2,
             const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
 
+        /**
+         * Answer a string representation of the discovery service, which is 
+         * its cluster name.
+         *
+         * @return A string representation.
+         */
+        inline StringA ToStringA(void) const {
+            return this->GetName();
+        }
+
+        /**
+         * Answer a string representing the peer node.
+         *
+         * This method is thread-safe.
+         *
+         * @param hPeer The handle of the peer node.
+         *
+         * @return A string representing the peer node.
+         */
+        StringA ToStringA(const PeerHandle& hPeer) const;
+
+        /**
+         * Answer a string representation of the discovery service, which is 
+         * its cluster name.
+         *
+         * @return A string representation.
+         */
+        inline StringW ToStringW(void) const {
+            return StringW(this->GetName());
+        }
+
+        /**
+         * Answer a string representing the peer node.
+         *
+         * This method is thread-safe.
+         *
+         * @param hPeer The handle of the peer node.
+         *
+         * @return A string representing the peer node.
+         */
+        StringW ToStringW(const PeerHandle& hPeer) const;
+
         /** 
          * Stop the discovery service.
          *

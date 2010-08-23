@@ -806,6 +806,23 @@ namespace net {
                 return this->type;
             }
 
+            /**
+             * Convenience method for getting one unicast address of the 
+             * adapter. The method tries to find the first address having the
+             * specified family. If no such address is found, the first address
+             * is returned.
+             *
+             * @param preferredFamily The preferred address family returned.
+             *
+             * @return A unicast address of the adapter.
+             *
+             * @throws OutOfRangeException If the adapter has no unicast 
+             *                             addresses assigned.
+             */
+            const IPAgnosticAddress& GetUnicastAddress(
+                const IPAgnosticAddress::AddressFamily preferredFamily) 
+                const;
+
             /** 
              * Answer the list of unicast addresses associated with the 
              * adapter.

@@ -279,6 +279,26 @@ vislib::net::NetworkInformation::Adapter::GetPhysicalAddress(
 
 
 /*
+ * vislib::net::NetworkInformation::Adapter::GetUnicastAddress
+ */
+const vislib::net::IPAgnosticAddress& 
+vislib::net::NetworkInformation::Adapter::GetUnicastAddress(
+        const IPAgnosticAddress::AddressFamily preferredFamily) const {
+    VLSTACKTRACE("Adapter::GetUnicastAddress", __FILE__, __LINE__);
+    Confidence dummy;
+    UnicastAddressList addrs = this->GetUnicastAddresses(&dummy);
+
+    for (SIZE_T i = 0; i < addrs.Count(); i++) {
+        if (addrs[i].GetAddressFamily() == preferredFamily) {
+            return addrs[i].GetAddress();
+        }
+    }
+
+    return addrs[0].GetAddress();
+}
+
+
+/*
  * vislib::net::NetworkInformation::Adapter::operator =
  */
 vislib::net::NetworkInformation::Adapter& 
