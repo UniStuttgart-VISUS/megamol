@@ -12,6 +12,7 @@
 #include "vislib/assert.h"
 
 #include "misc/BezierDataCall.h"
+#include "misc/ExtBezierDataCall.h"
 #include "misc/LinesDataCall.h"
 #include "DataWriterCtrlCall.h"
 #include "moldyn/MultiParticleDataCall.h"
@@ -40,6 +41,7 @@ CallDescriptionManager::Instance() {
         //////////////////////////////////////////////////////////////////////
         instance->registerAutoDescription<cluster::CallRegisterAtController>();
         instance->registerAutoDescription<misc::BezierDataCall>();
+        instance->registerAutoDescription<misc::ExtBezierDataCall>();
         instance->registerAutoDescription<misc::LinesDataCall>();
         instance->registerAutoDescription<moldyn::MultiParticleDataCall>();
         instance->registerAutoDescription<moldyn::ParticleGridDataCall>();

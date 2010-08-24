@@ -1359,6 +1359,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\misc\ExtBezierDataCall.h"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\ExtBezierDataSource.h"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\LinesDataCall.h"
 					>
 				</File>
@@ -1388,6 +1396,14 @@
 				</File>
 				<File
 					RelativePath=".\misc\BezierMeshRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\ExtBezierDataCall.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\ExtBezierDataSource.cpp"
 					>
 				</File>
 				<File

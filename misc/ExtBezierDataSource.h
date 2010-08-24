@@ -1,22 +1,23 @@
 /*
- * BezierDataSource.h
+ * ExtBezierDataSource.h
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_BEZIERDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_BEZIERDATASOURCE_H_INCLUDED
+#ifndef MEGAMOLCORE_EXTBEZIERDATASOURCE_H_INCLUDED
+#define MEGAMOLCORE_EXTBEZIERDATASOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "BezierDataCall.h"
+#include "misc/ExtBezierDataCall.h"
 #include "CalleeSlot.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "vislib/Array.h"
 #include "vislib/BezierCurve.h"
+#include "vislib/Cuboid.h"
 
 
 namespace megamol {
@@ -27,7 +28,7 @@ namespace misc {
     /**
      * Data loader module for 3+1 dim cubic bézier data
      */
-    class BezierDataSource : public Module {
+    class ExtBezierDataSource : public Module {
     public:
 
         /**
@@ -36,7 +37,7 @@ namespace misc {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "BezierDataSource";
+            return "ExtBezierDataSource";
         }
 
         /**
@@ -45,7 +46,7 @@ namespace misc {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Data source module for Bezier data.";
+            return "Data source module for extended bezier data.";
         }
 
         /**
@@ -58,10 +59,10 @@ namespace misc {
         }
 
         /** Ctor. */
-        BezierDataSource(void);
+        ExtBezierDataSource(void);
 
         /** Dtor. */
-        virtual ~BezierDataSource(void);
+        virtual ~ExtBezierDataSource(void);
 
     protected:
 
@@ -102,11 +103,6 @@ namespace misc {
          */
         void assertData(void);
 
-        /**
-         * TODO: Document
-         */
-        void loadBezDat(const vislib::TString& filename);
-
         /** The file name */
         param::ParamSlot filenameSlot;
 
@@ -114,11 +110,11 @@ namespace misc {
         CalleeSlot getDataSlot;
 
         /** The bounding box of positions*/
-        float minX, minY, minZ, maxX, maxY, maxZ;
+        vislib::math::Cuboid<float> bbox;
 
         /** The curves data */
         vislib::Array<vislib::math::BezierCurve<
-            BezierDataCall::BezierPoint, 3> > curves;
+            ExtBezierDataCall::Point, 3> > curves;
 
         /** The hash value of the loaded data */
         SIZE_T datahash;
@@ -129,4 +125,4 @@ namespace misc {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_BEZIERDATASOURCE_H_INCLUDED */
+#endif /* MEGAMOLCORE_EXTBEZIERDATASOURCE_H_INCLUDED */
