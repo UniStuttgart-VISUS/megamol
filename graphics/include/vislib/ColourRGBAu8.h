@@ -87,6 +87,17 @@ namespace graphics {
             return this->comp[1];
         }
 
+            /**
+             * Interpolates between 'this' and 'rhs' linearly based on
+             * '0 <= t <= 1'.
+             *
+             * @param rhs The second point to interpolate to (t=1)
+             * @param t The interpolation value (0..1)
+             *
+             * @return The interpolation result
+             */
+        ColourRGBAu8 Interpolate(const ColourRGBAu8& rhs, float t) const;
+
         /**
          * Answer a pointer to all components
          *

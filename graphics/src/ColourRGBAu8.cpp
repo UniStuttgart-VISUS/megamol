@@ -49,6 +49,24 @@ vislib::graphics::ColourRGBAu8::~ColourRGBAu8(void) {
 
 
 /*
+ * vislib::graphics::ColourRGBAu8::Interpolate
+ */
+vislib::graphics::ColourRGBAu8 vislib::graphics::ColourRGBAu8::Interpolate(
+        const vislib::graphics::ColourRGBAu8& rhs, float t) const {
+    float a = 1.0f - t;
+    return vislib::graphics::ColourRGBAu8(
+        static_cast<unsigned char>(static_cast<float>(this->comp[0]) * a
+            + static_cast<float>(rhs.comp[0]) * t),
+        static_cast<unsigned char>(static_cast<float>(this->comp[1]) * a
+            + static_cast<float>(rhs.comp[1]) * t),
+        static_cast<unsigned char>(static_cast<float>(this->comp[2]) * a
+            + static_cast<float>(rhs.comp[2]) * t),
+        static_cast<unsigned char>(static_cast<float>(this->comp[3]) * a
+            + static_cast<float>(rhs.comp[3]) * t));
+}
+
+
+/*
  * vislib::graphics::ColourRGBAu8::Set
  */
 void vislib::graphics::ColourRGBAu8::Set(unsigned char r, unsigned char g,

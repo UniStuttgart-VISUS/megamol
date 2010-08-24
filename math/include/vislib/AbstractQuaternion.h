@@ -165,6 +165,23 @@ namespace math {
 
         //Quaternion Inverse(void) const;
 
+        /**
+         * Interpolates between 'this' and 'rhs' linearly based on
+         * '0 <= t <= 1'.
+         *
+         * @param rhs The second point to interpolate to (t=1)
+         * @param t The interpolation value (0..1)
+         *
+         * @return The interpolation result
+         */
+        template<class Sp>
+        inline AbstractQuaternion<T, T[4]>
+        Interpolate(const AbstractQuaternion<T, Sp>& rhs, float t) const {
+            AbstractQuaternion<T, T[4]> rv;
+            rv.Slerp(t, *this, rhs);
+            return rv;
+        }
+
         /** 
          * Invert the quaternion.
          */
