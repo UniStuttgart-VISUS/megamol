@@ -103,7 +103,9 @@ namespace misc {
         void assertData(void);
 
         /**
-         * TODO: Document
+         * Load a BezDat file into the memory
+         *
+         * @param filename The path of the file to load
          */
         void loadBezDat(const vislib::TString& filename);
 

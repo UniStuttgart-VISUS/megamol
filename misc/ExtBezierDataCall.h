@@ -105,22 +105,47 @@ namespace misc {
                 // intentionally empty
             }
 
+            /**
+             * Answer the position
+             *
+             * @return The position
+             */
             inline const vislib::math::Point<float, 3>& GetPosition(void) const {
                 return this->pos;
             }
 
+            /**
+             * Answer the orientation quaternion
+             *
+             * @return The orienatation quaternion
+             */
             inline const vislib::math::Quaternion<float>& GetOrientation(void) const {
                 return this->ori;
             }
 
+            /**
+             * Answer the radius in y direction
+             *
+             * @return The radius in y direction
+             */
             inline float GetRadiusY(void) const {
                 return this->radY;
             }
 
+            /**
+             * Answer the radius in z direction
+             *
+             * @return The radius in z direction
+             */
             inline float GetRadiusZ(void) const {
                 return this->radZ;
             }
 
+            /**
+             * Answer the colour
+             *
+             * @return The colour
+             */
             inline const vislib::graphics::ColourRGBAu8& GetColour(void) const {
                 return this->col;
             }
@@ -138,14 +163,28 @@ namespace misc {
                 Point rv;
 
                 rv.pos = this->pos.Interpolate(rhs.pos, t);
-                //rv.ori = this->ori.Interpolate(rhs.ori, t); // TODO: Implement me
+                rv.ori = this->ori.Interpolate(rhs.ori, t);
                 rv.radY = this->radY * (1.0f - t) + rhs.radY * t;
                 rv.radZ = this->radZ * (1.0f - t) + rhs.radZ * t;
-                //rv.col = this->col.Interpolate(rhs.col, t); // TODO: Implement me
+                rv.col = this->col.Interpolate(rhs.col, t);
 
                 return rv;
             }
 
+            /**
+             * Sets all attributes
+             *
+             * @param x The x coordinate of position
+             * @param y The y coordinate of position
+             * @param z The z coordinate of position
+             * @param qx The x coordinate of quaternion
+             * @param qy The y coordinate of quaternion
+             * @param qz The z coordinate of quaternion
+             * @param qw The w coordinate of quaternion
+             * @param ry The radius in y direction
+             * @param rz The radius in z direction
+             * @param c The colour code
+             */
             inline void Set(float x, float y, float z, float qx, float qy,
                     float qz, float qw, float ry, float rz, unsigned char cr,
                     unsigned char cg, unsigned char cb) {
@@ -156,6 +195,15 @@ namespace misc {
                 this->col.Set(cr, cg, cb, 255);
             }
 
+            /**
+             * Sets all attributes
+             *
+             * @param pos The position
+             * @param ori The orientation quaternion
+             * @param ry The radius in y direction
+             * @param rz The radius in z direction
+             * @param c The colour
+             */
             inline void Set(const vislib::math::Point<float, 3> &pos,
                     const vislib::math::Quaternion<float> &ori,
                     float ry, float rz,
@@ -167,22 +215,47 @@ namespace misc {
                 this->col = c;
             }
 
+            /**
+             * Sets the position
+             *
+             * @param pos The position
+             */
             inline void SetPosition(vislib::math::Point<float, 3>& pos) {
                 this->pos = pos;
             }
 
+            /**
+             * Sets the orientation quaternion
+             *
+             * @param ori The orientation quaternion
+             */
             inline void SetOrientation(vislib::math::Quaternion<float>& ori) {
                 this->ori = ori;
             }
 
+            /**
+             * Sets the radius in y direction
+             *
+             * @param ry The radius in y direction
+             */
             inline void SetRadiusY(float ry) {
                 this->radY = ry;
             }
 
+            /**
+             * Sets the radius in z direction
+             *
+             * @param rz The radius in z direction
+             */
             inline void SetRadiusZ(float rz) {
                 this->radZ = rz;
             }
 
+            /**
+             * Sets the colour
+             *
+             * @param col The colour
+             */
             inline void SetColour(const vislib::graphics::ColourRGBAu8& col) {
                 this->col = col;
             }
