@@ -1491,7 +1491,6 @@ namespace net {
             ULONG *PrefixLen;           //< Pointer to input prefix length.
             Array<float> *Wildness;     //< Output array of address wildness.
             bool IsIPv4Preferred;       //< Prefer IPv4 in case of doubt.
-            bool IsEmptyAddress;        //< Add empty input penalty.
         } GuessLocalEndPointCtx;
 
         // TODO: documentation

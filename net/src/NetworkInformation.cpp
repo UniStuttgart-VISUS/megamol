@@ -1076,12 +1076,6 @@ float vislib::net::NetworkInformation::assessAddressAsEndPoint(
                 retval += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
             }
 
-            if (ctx.IsEmptyAddress) {
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Address \"%s\" was "
-                    "obtained from empty input.\n", a.ToStringA().PeekBuffer());
-                retval += NetworkInformation::PENALTY_EMPTY_ADDRESS;
-            }
-
         } else if (ctx.PrefixLen != NULL) {
             VLTRACE(Trace::LEVEL_VL_VERBOSE, "Have no exact address match for "
                 "\"%s\", can check for same prefix length of %u.\n", 
@@ -1261,14 +1255,25 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
             if ((validMask & WILD_GUESS_HAS_NETMASK) != 0) {
                 outEndPoint.SetIPAddress(IPAgnosticAddress::ANY4);
             } else if (prefFam != NULL) {
-                outEndPoint.SetIPAddress(
-                    (*prefFam == IPAgnosticAddress::FAMILY_INET)
-                    ? IPAgnosticAddress::ANY4 : IPAgnosticAddress::ANY6);
+                outEndPoint.SetIPAddress(IPAgnosticAddress::CreateAny(
+                    *prefFam));
             } else {
                 outEndPoint.SetIPAddress(IPAgnosticAddress::ANY6);
             }
             retval = 1.0f;
 
+        } else if ((validMask & WILD_GUESS_FROM_EMPTY_ADDRESS) != 0) {
+            /*
+             * If the address is empty, we assume (for local end points) that 
+             * the user actively wants to specify the ANY address.
+             */
+            outEndPoint.SetIPAddress((prefFam != NULL) 
+                ? IPAgnosticAddress::CreateAny(*prefFam) 
+                : IPAgnosticAddress(IPAgnosticAddress::ANY6));
+            // mueller: IPAgnosticAddress ctor is required for correct 
+            // resolution of method polymorphism! Do not remove!
+            retval = 0.0f;
+             
         } else {
             /* Try a real guess, first directly from the user input. */
             ctx.Address = ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) 
@@ -1280,8 +1285,6 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
             ctx.IsIPv4Preferred = ((validMask & WILD_GUESS_HAS_NETMASK) != 0)
                 || ((prefFam != NULL) 
                 && (*prefFam == IPAgnosticAddress::FAMILY_INET));
-            ctx.IsEmptyAddress = ((validMask & WILD_GUESS_FROM_EMPTY_ADDRESS) 
-                != 0);
 
             NetworkInformation::EnumerateAdapters(
                 NetworkInformation::processAdapterForLocalEndpointGuess,
