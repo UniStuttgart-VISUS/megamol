@@ -102,6 +102,8 @@ namespace misc {
          */
         void assertData(void);
 
+        void loadBezDat(const vislib::TString& filename);
+
         /** The file name */
         param::ParamSlot filenameSlot;
 

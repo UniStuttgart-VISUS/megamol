@@ -9,24 +9,12 @@
 #include "BezierDataSource.h"
 #include "BezierDataCall.h"
 #include "param/FilePathParam.h"
+#include "vislib/ASCIIFileBuffer.h"
 #include "vislib/BezierCurve.h"
-#include "vislib/Point.h"
-/*
-#include <climits>
-#include "MultiParticleDataCall.h"
-#include "param/BoolParam.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
-#include "utility/ColourParser.h"
-#include "vislib/forceinline.h"
+#include "vislib/Exception.h"
 #include "vislib/Log.h"
-#include "vislib/StringTokeniser.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/SystemMessage.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/MemmappedFile.h"
-#include "vislib/Vector.h"
-*/
+#include "vislib/Point.h"
+#include "vislib/VersionNumber.h"
 
 using namespace megamol::core;
 
@@ -129,24 +117,9 @@ void misc::BezierDataSource::assertData(void) {
     this->curves.Clear();
     this->minX = this->minY = this->minZ = 0.0f;
     this->maxX = this->maxY = this->maxZ = 1.0f;
-    this->datahash = 0;
+    this->datahash++;
 
-
-    // TODO: What file format ... wtf
-    // Dummy curve
-    this->curves.Add(vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3>());
-    this->curves[0].ControlPoint(0).Set(0.0f, 1.0f, 0.0f, 0.2f, 255, 0, 0);
-    this->curves[0].ControlPoint(1).Set(1.0f, -2.0f, 1.0f, 0.3f, 255, 0, 0);
-    this->curves[0].ControlPoint(2).Set(2.0f, 2.0f, -1.0f, 0.0125f, 255, 255, 0);
-    this->curves[0].ControlPoint(3).Set(3.0f, 0.0f, 2.0f, 0.2f, 0, 255, 0);
-    this->curves.Add(vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3>());
-    this->curves[1].ControlPoint(0).Set(0.0f, 1.0f, 0.0f, 0.2f, 255, 0, 0);
-    this->curves[1].ControlPoint(1).Set(-1.0f, 4.0f, -1.0f, 0.1f, 255, 0, 0);
-    this->curves[1].ControlPoint(2).Set(-2.0f, 2.0f, -1.0f, 0.4f, 255, 0, 255);
-    this->curves[1].ControlPoint(3).Set(-3.0f, 0.0f, 3.0f, 0.4f, 0, 0, 255);
-
-    this->datahash = 1; // boo
-
+    this->loadBezDat(this->filenameSlot.Param<param::FilePathParam>()->Value());
 
     // calc bounding box (and datahash)
     if (this->curves.Count() > 0) {
@@ -161,11 +134,6 @@ void misc::BezierDataSource::assertData(void) {
                 const misc::BezierDataCall::BezierPoint& pt
                     = this->curves[idx].ControlPoint(
                         static_cast<unsigned int>(cpi));
-
-                //this->datahash ^= *reinterpret_cast<const SIZE_T&>(pt[0]);
-                //this->datahash ^= *reinterpret_cast<const SIZE_T&>(pt[1]);
-                //this->datahash ^= *reinterpret_cast<const SIZE_T&>(pt[2]);
-                //this->datahash ^= *reinterpret_cast<const SIZE_T&>(pt[3]);
 
                 if (this->minX > pt.X() - pt.Radius()) {
                     this->minX = pt.X() - pt.Radius();
@@ -187,6 +155,113 @@ void misc::BezierDataSource::assertData(void) {
                 }
             }
         }
+
+    } else {
+        this->minX = this->minY = this->minZ = -1.0f;
+        this->maxX = this->maxY = this->maxZ = 1.0f;
+
     }
 
+}
+
+
+/*
+ * misc::BezierDataSource::loadBezDat
+ */
+void misc::BezierDataSource::loadBezDat(const vislib::TString& filename) {
+    using vislib::sys::Log;
+
+    vislib::sys::ASCIIFileBuffer bezDat(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
+    bezDat.LoadFile(filename);
+
+    if (bezDat.Count() < 1) {
+        Log::DefaultLog.WriteError("BezDat file seems to be empty");
+        return;
+    }
+
+    if (bezDat[0].Count() < 2) {
+        Log::DefaultLog.WriteError("Header line too short");
+        return;
+    }
+
+    if (!vislib::StringA("BezDatA").Equals(bezDat[0].Word(0))) {
+        Log::DefaultLog.WriteError("BezDat header ID wrong");
+        return;
+    }
+
+    vislib::VersionNumber ver(0, 0, 0, 0);
+    try {
+        ver.Parse(bezDat[0].Word(1));
+    } catch(...) {
+    }
+    if (ver != vislib::VersionNumber(1, 0)) {
+        Log::DefaultLog.WriteError("BezDat version number wrong");
+        return;
+    }
+
+    SIZE_T pcnt = 0;
+    SIZE_T ccnt = 0;
+    for (SIZE_T i = 1; i < bezDat.Count(); i++) {
+        if (bezDat[i].Count() == 0) continue;
+
+        if (vislib::StringA("PT").Equals(bezDat[i].Word(0)) && (bezDat[i].Count() >= 8)) pcnt++;
+        else if (vislib::StringA("BC").Equals(bezDat[i].Word(0)) && (bezDat[i].Count() >= 5)) ccnt++;
+    }
+
+    misc::BezierDataCall::BezierPoint *points = new misc::BezierDataCall::BezierPoint[pcnt];
+    pcnt = 0;
+    for (SIZE_T i = 1; i < bezDat.Count(); i++) {
+        if (bezDat[i].Count() == 0) continue;
+        if (!vislib::StringA("PT").Equals(bezDat[i].Word(0)) || (bezDat[i].Count() < 8)) continue;
+        try {
+            points[pcnt].Set(
+                static_cast<float>(vislib::CharTraitsA::ParseDouble(bezDat[i].Word(1))),
+                static_cast<float>(vislib::CharTraitsA::ParseDouble(bezDat[i].Word(2))),
+                static_cast<float>(vislib::CharTraitsA::ParseDouble(bezDat[i].Word(3))),
+                static_cast<float>(vislib::CharTraitsA::ParseDouble(bezDat[i].Word(4))),
+                static_cast<unsigned char>(vislib::math::Clamp(vislib::CharTraitsA::ParseInt(bezDat[i].Word(5)), 0, 255)),
+                static_cast<unsigned char>(vislib::math::Clamp(vislib::CharTraitsA::ParseInt(bezDat[i].Word(6)), 0, 255)),
+                static_cast<unsigned char>(vislib::math::Clamp(vislib::CharTraitsA::ParseInt(bezDat[i].Word(7)), 0, 255)));
+            pcnt++;
+        } catch(vislib::Exception ex) {
+            Log::DefaultLog.WriteError("Parse Error in Line %d: %s", static_cast<int>(i), ex.GetMsgA());
+            delete[] points;
+            return;
+        } catch(...) {
+            Log::DefaultLog.WriteError("Parse Error in Line %d", static_cast<int>(i));
+            delete[] points;
+            return;
+        }
+    }
+    this->curves.AssertCapacity(ccnt);
+    for (SIZE_T i = 1; i < bezDat.Count(); i++) {
+        if (bezDat[i].Count() == 0) continue;
+        if (!vislib::StringA("BC").Equals(bezDat[i].Word(0)) || (bezDat[i].Count() < 5)) continue;
+        try {
+            int i1 = vislib::CharTraitsA::ParseInt(bezDat[i].Word(1));
+            int i2 = vislib::CharTraitsA::ParseInt(bezDat[i].Word(2));
+            int i3 = vislib::CharTraitsA::ParseInt(bezDat[i].Word(3));
+            int i4 = vislib::CharTraitsA::ParseInt(bezDat[i].Word(4));
+            if ((i1 >= pcnt) || (i2 >= pcnt) || (i3 >= pcnt) || (i4 >= pcnt)) {
+                throw vislib::Exception("Point index out of range", __FILE__, __LINE__);
+            }
+            this->curves.Add(vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3>());
+            this->curves.Last().ControlPoint(0) = points[i1];
+            this->curves.Last().ControlPoint(1) = points[i2];
+            this->curves.Last().ControlPoint(2) = points[i3];
+            this->curves.Last().ControlPoint(3) = points[i4];
+        } catch(vislib::Exception ex) {
+            Log::DefaultLog.WriteError("Parse Error in Line %d: %s", static_cast<int>(i), ex.GetMsgA());
+            this->curves.Clear();
+            delete[] points;
+            return;
+        } catch(...) {
+            Log::DefaultLog.WriteError("Parse Error in Line %d", static_cast<int>(i));
+            this->curves.Clear();
+            delete[] points;
+            return;
+        }
+    }
+
+    delete[] points;
 }

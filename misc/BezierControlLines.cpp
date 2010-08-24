@@ -176,6 +176,10 @@ bool misc::BezierControlLines::getDataCallback(Call& call) {
 
             this->vertData[1].EnforceSize(lcnt * 8 * 3 * 4, true);
             this->idxData[1].EnforceSize(lcnt * 12 * 2 * 4, true);
+            if (this->vertData[0].IsEmpty()) {
+                this->vertData[0].EnforceSize(1);
+                this->idxData[0].EnforceSize(1);
+            }
             if (this->vertData[1].IsEmpty()) {
                 this->vertData[1].EnforceSize(1);
                 this->idxData[1].EnforceSize(1);
