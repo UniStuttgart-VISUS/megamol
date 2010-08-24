@@ -816,10 +816,12 @@ namespace net {
              *
              * @return A unicast address of the adapter.
              *
+             * @throws NoConfidenceException If the adapter has no valid
+             *                               unicast addresses.
              * @throws OutOfRangeException If the adapter has no unicast 
              *                             addresses assigned.
              */
-            const IPAgnosticAddress& GetUnicastAddress(
+            const IPAgnosticAddress GetUnicastAddress(
                 const IPAgnosticAddress::AddressFamily preferredFamily) 
                 const;
 
@@ -1293,6 +1295,18 @@ namespace net {
 
         // TODO: documentation
         static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
+            const char *str, 
+            const IPAgnosticAddress::AddressFamily preferredFamily, 
+            const bool invertWildness = false);
+    
+        // TODO: documentation
+        static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
+            const wchar_t *str, 
+            const IPAgnosticAddress::AddressFamily preferredFamily, 
+            const bool invertWildness = false);
+
+        // TODO: documentation
+        static float GuessLocalEndPoint(IPEndPoint& outEndPoint, 
             const char *str, const bool invertWildness = false);
     
         // TODO: documentation
@@ -1559,6 +1573,23 @@ namespace net {
             const IPAddress& netmask);
 
         /**
+         * Implementation of the GuessLocalEndPoint functionality. This 
+         * method handles all the work.
+         *
+         * @param outEndPoint
+         * @param str
+         * @param prefFam        If the input string does not contain any
+         *                       information to deduce the address family
+         *                       from, use this address family (if not NULL).
+         * @param invertWildness
+         *
+         * @return
+         */
+        static float guessLocalEndPoint(IPEndPoint& outEndPoint, 
+            const wchar_t *str, const IPAgnosticAddress::AddressFamily *prefFam,
+            const bool invertWildness);
+
+        /**
          * Initializes the list of network adapter objects.
          *
          * This method performs an initialisation of the 
@@ -1766,12 +1797,18 @@ namespace net {
          * @param outPrefixLen Receives the prefix length if specified in 'str'.
          * @param outPort      Receives the port if any specified in 'str'.
          * @param str          The string to be checked.
+         * @param prefFam      Initialise the preferred address family with
+         *                     this value. If NULL, use IPv6. The preferred
+         *                     family might change based on the user input. If
+         *                     the user input does not give any hints about the
+         *                     preferred address family, this value is used.
          *
          * @return A bitmask specifying which of the out parameters are valid.
          */
         static UINT32 wildGuessSplitInput(IPAgnosticAddress& outAddress,
             StringW& outDevice, ULONG& outPrefixLen, USHORT& outPort,
-            const wchar_t *str);
+            const wchar_t *str, 
+            const IPAgnosticAddress::AddressFamily *prefFam = NULL);
 
         /**
          * Wildness penalty for an adapter that matches, but is currently down.
