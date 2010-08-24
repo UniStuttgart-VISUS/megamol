@@ -10,6 +10,7 @@
 #include "ExtBezierDataCall.h"
 #include "param/FilePathParam.h"
 #include "vislib/ASCIIFileBuffer.h"
+#include "vislib/assert.h"
 #include "vislib/BezierCurve.h"
 #include "vislib/Exception.h"
 #include "vislib/Log.h"
@@ -25,7 +26,8 @@ using namespace megamol::core;
 misc::ExtBezierDataSource::ExtBezierDataSource(void) : Module(),
         filenameSlot("filename", "The path of the IMD file to read"),
         getDataSlot("getdata", "The slot exposing the loaded data"),
-        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), curves(), datahash(0) {
+        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), ellipCurves(),
+        rectCurves(), datahash(0) {
 
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
@@ -59,7 +61,8 @@ bool misc::ExtBezierDataSource::create(void) {
  * misc::ExtBezierDataSource::release
  */
 void misc::ExtBezierDataSource::release(void) {
-    this->curves.Clear();
+    this->ellipCurves.Clear();
+    this->rectCurves.Clear();
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->datahash = 0;
 }
@@ -74,8 +77,10 @@ bool misc::ExtBezierDataSource::getDataCallback(Call& caller) {
 
     this->assertData();
 
-    bdc->SetData(static_cast<unsigned int>(this->curves.Count()),
-        this->curves.PeekElements());
+    bdc->SetData(static_cast<unsigned int>(this->ellipCurves.Count()),
+        static_cast<unsigned int>(this->rectCurves.Count()),
+        this->ellipCurves.PeekElements(),
+        this->rectCurves.PeekElements());
     bdc->SetDataHash(this->datahash);
     bdc->AccessBoundingBoxes().Clear();
     bdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
@@ -114,43 +119,90 @@ void misc::ExtBezierDataSource::assertData(void) {
     if (!this->filenameSlot.IsDirty()) return;
     this->filenameSlot.ResetDirty();
 
-    this->curves.Clear();
+    this->ellipCurves.Clear();
+    this->rectCurves.Clear();
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->datahash = 0;
 
-    this->curves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
-    this->curves.Last().ControlPoint(0).Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
-    this->curves.Last().ControlPoint(1).Set(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
-    this->curves.Last().ControlPoint(2).Set(1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
-    this->curves.Last().ControlPoint(3).Set(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+    this->ellipCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
+    this->ellipCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->ellipCurves.Last().ControlPoint(1).Set(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->ellipCurves.Last().ControlPoint(2).Set(1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
+    this->ellipCurves.Last().ControlPoint(3).Set(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
 
-    this->curves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
-    this->curves.Last().ControlPoint(0).Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
-    this->curves.Last().ControlPoint(1).Set(-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
-    this->curves.Last().ControlPoint(2).Set(-1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
-    this->curves.Last().ControlPoint(3).Set(0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+    this->ellipCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
+    this->ellipCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->ellipCurves.Last().ControlPoint(1).Set(-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->ellipCurves.Last().ControlPoint(2).Set(-1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
+    this->ellipCurves.Last().ControlPoint(3).Set(0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+
+    this->rectCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
+    this->rectCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->rectCurves.Last().ControlPoint(1).Set(-1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->rectCurves.Last().ControlPoint(2).Set(-1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
+    this->rectCurves.Last().ControlPoint(3).Set(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+
+    this->rectCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
+    this->rectCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->rectCurves.Last().ControlPoint(1).Set(1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->rectCurves.Last().ControlPoint(2).Set(1.0f, -1.0f, 2.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
+    this->rectCurves.Last().ControlPoint(3).Set(0.0f, -1.0f, 2.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
 
     this->datahash = 1;
 
     // calc bounding box (and datahash)
-    if (this->curves.Count() > 0) {
-        float mr = vislib::math::Max(
-            this->curves[0].ControlPoint(0).GetRadiusY(),
-            this->curves[0].ControlPoint(0).GetRadiusZ());
+    if (this->rectCurves.Count() + this->ellipCurves.Count() > 0) {
+        float mr;
         vislib::math::Cuboid<float> obox;
-        this->bbox.Set(
-            this->curves[0].ControlPoint(0).GetPosition().X() - mr,
-            this->curves[0].ControlPoint(0).GetPosition().Y() - mr,
-            this->curves[0].ControlPoint(0).GetPosition().Z() - mr,
-            this->curves[0].ControlPoint(0).GetPosition().X() + mr,
-            this->curves[0].ControlPoint(0).GetPosition().Y() + mr,
-            this->curves[0].ControlPoint(0).GetPosition().Z() + mr);
 
-        for (SIZE_T idx = this->curves.Count(); idx > 0;) {
+        if (this->rectCurves.Count() > 0) {
+            mr = vislib::math::Max(
+                this->rectCurves[0].ControlPoint(0).GetRadiusY(),
+                this->rectCurves[0].ControlPoint(0).GetRadiusZ());
+            this->bbox.Set(
+                this->rectCurves[0].ControlPoint(0).GetPosition().X() - mr,
+                this->rectCurves[0].ControlPoint(0).GetPosition().Y() - mr,
+                this->rectCurves[0].ControlPoint(0).GetPosition().Z() - mr,
+                this->rectCurves[0].ControlPoint(0).GetPosition().X() + mr,
+                this->rectCurves[0].ControlPoint(0).GetPosition().Y() + mr,
+                this->rectCurves[0].ControlPoint(0).GetPosition().Z() + mr);
+        } else {
+            ASSERT(this->ellipCurves.Count());
+            mr = vislib::math::Max(
+                this->ellipCurves[0].ControlPoint(0).GetRadiusY(),
+                this->ellipCurves[0].ControlPoint(0).GetRadiusZ());
+            this->bbox.Set(
+                this->ellipCurves[0].ControlPoint(0).GetPosition().X() - mr,
+                this->ellipCurves[0].ControlPoint(0).GetPosition().Y() - mr,
+                this->ellipCurves[0].ControlPoint(0).GetPosition().Z() - mr,
+                this->ellipCurves[0].ControlPoint(0).GetPosition().X() + mr,
+                this->ellipCurves[0].ControlPoint(0).GetPosition().Y() + mr,
+                this->ellipCurves[0].ControlPoint(0).GetPosition().Z() + mr);
+        }
+
+        for (SIZE_T idx = this->ellipCurves.Count(); idx > 0;) {
             idx--;
             for (SIZE_T cpi = 0; cpi < 4; cpi++) {
                 const misc::ExtBezierDataCall::Point& pt
-                    = this->curves[idx].ControlPoint(
+                    = this->ellipCurves[idx].ControlPoint(
+                        static_cast<unsigned int>(cpi));
+                mr = vislib::math::Max(pt.GetRadiusY(), pt.GetRadiusZ());
+                obox.Set(
+                    pt.GetPosition().X() - mr,
+                    pt.GetPosition().Y() - mr,
+                    pt.GetPosition().Z() - mr,
+                    pt.GetPosition().X() + mr,
+                    pt.GetPosition().Y() + mr,
+                    pt.GetPosition().Z() + mr);
+                this->bbox.Union(obox);
+            }
+        }
+
+        for (SIZE_T idx = this->rectCurves.Count(); idx > 0;) {
+            idx--;
+            for (SIZE_T cpi = 0; cpi < 4; cpi++) {
+                const misc::ExtBezierDataCall::Point& pt
+                    = this->rectCurves[idx].ControlPoint(
                         static_cast<unsigned int>(cpi));
                 mr = vislib::math::Max(pt.GetRadiusY(), pt.GetRadiusZ());
                 obox.Set(

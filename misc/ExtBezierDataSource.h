@@ -114,7 +114,11 @@ namespace misc {
 
         /** The curves data */
         vislib::Array<vislib::math::BezierCurve<
-            ExtBezierDataCall::Point, 3> > curves;
+            ExtBezierDataCall::Point, 3> > ellipCurves;
+
+        /** The curves data */
+        vislib::Array<vislib::math::BezierCurve<
+            ExtBezierDataCall::Point, 3> > rectCurves;
 
         /** The hash value of the loaded data */
         SIZE_T datahash;

@@ -283,7 +283,7 @@ namespace misc {
          * @return A human readable description of the module.
          */
         static const char *Description(void) {
-            return "Call to get bezier data";
+            return "Call to get extended bezier data";
         }
 
         /**
@@ -317,8 +317,17 @@ namespace misc {
          *
          * @return The number of bézier curves
          */
-        VISLIB_FORCEINLINE unsigned int Count(void) const {
-            return this->count;
+        VISLIB_FORCEINLINE unsigned int CountElliptic(void) const {
+            return this->cntEllip;
+        }
+
+        /**
+         * Answer the number of bézier curves.
+         *
+         * @return The number of bézier curves
+         */
+        VISLIB_FORCEINLINE unsigned int CountRectangular(void) const {
+            return this->cntRect;
         }
 
         /**
@@ -328,8 +337,19 @@ namespace misc {
          * @return The bézier curves
          */
         VISLIB_FORCEINLINE const vislib::math::BezierCurve<Point, 3> *
-        Curves(void) const {
-            return this->curves;
+        EllipticCurves(void) const {
+            return this->ellipCurves;
+        }
+
+        /**
+         * Answer the bézier curves. Might be NULL! Do not delete the returned
+         * memory.
+         *
+         * @return The bézier curves
+         */
+        VISLIB_FORCEINLINE const vislib::math::BezierCurve<Point, 3> *
+        RectangularCurves(void) const {
+            return this->rectCurves;
         }
 
         /**
@@ -337,11 +357,18 @@ namespace misc {
          * 'curves' points to. The caller is responsible for keeping the data
          * valid as long as it is used.
          *
-         * @param count The number of bézier curves stored in 'curves'
-         * @param curves Pointer to a flat array of bézier curves.
+         * @param cntEllip The number of bézier curves stored in 'curves'
+         *                 with elliptic profile
+         * @param cntRect The number of bézier curves stored in 'curves'
+         *                with rectangular profile
+         * @param ellipCurves Pointer to a flat array of bézier curves
+         *                    with elliptic profile
+         * @param rectCurves Pointer to a flat array of bézier curves
+         *                   with rectangular profile
          */
-        void SetData(unsigned int count,
-                const vislib::math::BezierCurve<Point, 3> *curves);
+        void SetData(unsigned int cntEllip, unsigned int cntRect,
+                const vislib::math::BezierCurve<Point, 3> *ellipCurves,
+                const vislib::math::BezierCurve<Point, 3> *rectCurves);
 
         /**
          * Assignment operator.
@@ -356,11 +383,17 @@ namespace misc {
 
     private:
 
-        /** Number of curves */
-        unsigned int count;
+        /** Number of curves with elliptic profile */
+        unsigned int cntEllip;
 
-        /** Cubic bézier curves */
-        const vislib::math::BezierCurve<Point, 3> *curves;
+        /** Number of curves with rectangular profile */
+        unsigned int cntRect;
+
+        /** Cubic bézier curves with elliptic profile */
+        const vislib::math::BezierCurve<Point, 3> *ellipCurves;
+
+        /** Cubic bézier curves with rectangular profile */
+        const vislib::math::BezierCurve<Point, 3> *rectCurves;
 
     };
 
