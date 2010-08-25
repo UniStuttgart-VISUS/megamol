@@ -19,6 +19,7 @@
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
 #include "misc/ExtBezierDataSource.h"
+#include "misc/ExtBezierMeshRenderer.h"
 #include "misc/LinesRenderer.h"
 #include "misc/SiffCSplineFitter.h"
 #include "moldyn/AddParticleColours.h"
@@ -77,6 +78,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
         instance->registerAutoDescription<misc::ExtBezierDataSource>();
+        instance->registerAutoDescription<misc::ExtBezierMeshRenderer>();
         instance->registerAutoDescription<misc::LinesRenderer>();
         instance->registerAutoDescription<misc::SiffCSplineFitter>();
         instance->registerAutoDescription<moldyn::AddParticleColours>();

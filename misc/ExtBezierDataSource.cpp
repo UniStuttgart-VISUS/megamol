@@ -31,6 +31,7 @@ misc::ExtBezierDataSource::ExtBezierDataSource(void) : Module(),
 
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
+    this->filenameSlot.ForceSetDirty();
 
     this->getDataSlot.SetCallback("ExtBezierDataCall", "GetData",
         &ExtBezierDataSource::getDataCallback);
@@ -125,28 +126,28 @@ void misc::ExtBezierDataSource::assertData(void) {
     this->datahash = 0;
 
     this->ellipCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
-    this->ellipCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
-    this->ellipCurves.Last().ControlPoint(1).Set(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
-    this->ellipCurves.Last().ControlPoint(2).Set(1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
-    this->ellipCurves.Last().ControlPoint(3).Set(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+    this->ellipCurves.Last()[0].Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->ellipCurves.Last()[1].Set(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->ellipCurves.Last()[2].Set(1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.1f, 0.1f, 0, 255, 255);
+    this->ellipCurves.Last()[3].Set(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.1f, 0.1f, 0, 0, 255);
 
     this->ellipCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
-    this->ellipCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
-    this->ellipCurves.Last().ControlPoint(1).Set(-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
-    this->ellipCurves.Last().ControlPoint(2).Set(-1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
-    this->ellipCurves.Last().ControlPoint(3).Set(0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+    this->ellipCurves.Last()[0].Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->ellipCurves.Last()[1].Set(-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->ellipCurves.Last()[2].Set(-1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.4f, 0.1f, 0, 255, 255);
+    this->ellipCurves.Last()[3].Set(0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.4f, 0.1f, 0, 0, 255);
 
     this->rectCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
-    this->rectCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
-    this->rectCurves.Last().ControlPoint(1).Set(-1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
-    this->rectCurves.Last().ControlPoint(2).Set(-1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
-    this->rectCurves.Last().ControlPoint(3).Set(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+    this->rectCurves.Last()[0].Set(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->rectCurves.Last()[1].Set(-1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->rectCurves.Last()[2].Set(-1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.1f, 0.1f, 0, 255, 255);
+    this->rectCurves.Last()[3].Set(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.1f, 0.1f, 0, 0, 255);
 
     this->rectCurves.Add(vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3>());
-    this->rectCurves.Last().ControlPoint(0).Set(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
-    this->rectCurves.Last().ControlPoint(1).Set(1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
-    this->rectCurves.Last().ControlPoint(2).Set(1.0f, -1.0f, 2.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 255, 255);
-    this->rectCurves.Last().ControlPoint(3).Set(0.0f, -1.0f, 2.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 0, 0, 255);
+    this->rectCurves.Last()[0].Set(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 0, 0);
+    this->rectCurves.Last()[1].Set(1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.2f, 0.1f, 255, 255, 0);
+    this->rectCurves.Last()[2].Set(1.0f, -1.0f, 2.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.4f, 0.1f, 0, 255, 255);
+    this->rectCurves.Last()[3].Set(0.0f, -1.0f, 2.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.4f, 0.1f, 0, 0, 255);
 
     this->datahash = 1;
 
