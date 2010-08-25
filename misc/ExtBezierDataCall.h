@@ -11,6 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "api/MegaMolCore.std.h"
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
@@ -161,7 +164,39 @@ namespace misc {
                 Point rv;
 
                 rv.pos = this->pos.Interpolate(rhs.pos, t);
-                rv.y = this->y * (1.0f - t) + rhs.y * t;
+
+                //rv.y = this->y * (1.0f - t) + rhs.y * t; // could be slerp!
+                if (this->y.IsParallel(rhs.y)) {
+                    rv.y = this->y;
+                    vislib::math::Vector<float, 3> a(rhs.y);
+                    float l1 = rv.y.Normalise();
+                    float l2 = a.Normalise();
+
+                    if (rv.y == a) {
+                        rv.y *= (l1 * (1.0f - t) + l2 * t);
+
+                    } else { // rotate 180°
+                        a.Set(1.0f, 0.0f, 0.0f);
+                        if (rv.y.IsParallel(a)) {
+                            a.Set(0.0f, 1.0f, 0.0);
+                        }
+                        a = rv.y.Cross(a);
+                        a.Normalise();
+                        vislib::math::Quaternion<float> rot(t * static_cast<float>(M_PI), a);
+                        rv.y = rot * rv.y;
+                        rv.y *= (l1 * (1.0f - t) + l2 * t);
+
+                    }
+
+                } else {
+                    float l1 = this->y.Length();
+                    float l2 = rhs.y.Length();
+                    rv.y = this->y * (1.0f - t) + rhs.y * t;
+                    rv.y.Normalise();
+                    rv.y *= (l1 * (1.0f - t) + l2 * t);
+
+                }
+
                 rv.radY = this->radY * (1.0f - t) + rhs.radY * t;
                 rv.radZ = this->radZ * (1.0f - t) + rhs.radZ * t;
                 rv.col = this->col.Interpolate(rhs.col, t);

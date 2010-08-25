@@ -201,42 +201,36 @@ void misc::ExtBezierMeshRenderer::calcBase(const vislib::math::BezierCurve<
         ExtBezierDataCall::Point, 3>& curve, float t,
         vislib::math::Vector<float, 3>& x, vislib::math::Vector<float, 3>& y,
         vislib::math::Vector<float, 3>& z) {
-    //ASSERT(x.IsNormalised());
-    //ASSERT(y.IsNormalised());
-    //ASSERT(z.IsNormalised());
-    //ASSERT(vislib::math::IsEqual(x.Dot(y), 0.0f));
-    //ASSERT(vislib::math::IsEqual(x.Dot(z), 0.0f));
-    //ASSERT(vislib::math::IsEqual(y.Dot(z), 0.0f));
 
-    //vislib::math::Vector<float, 3> ox(x);
-    //curve.CalcTangent(x, t);
-    //if (x.IsNull()) {
-    //    if (ox.IsNull()) {
-    //        x.Set(1.0f, 0.0f, 0.0f);
-    //    } else {
-    //        x = ox;
-    //    }
-    //}
-    //x.Normalise();
+    vislib::math::Vector<float, 3> ox(x);
+    curve.CalcTangent(x, t);
+    if (x.IsNull()) {
+        if (ox.IsNull()) {
+            x.Set(1.0f, 0.0f, 0.0f);
+        } else {
+            x = ox;
+        }
+    }
+    x.Normalise();
 
-    //if (x.IsParallel(y)) {
-    //    y = z.Cross(x);
-    //    y.Normalise();
-    //    z = x.Cross(y);
-    //    z.Normalise(); // should not be required ...
-    //} else {
-    //    z = x.Cross(y);
-    //    z.Normalise();
-    //    y = z.Cross(x);
-    //    y.Normalise(); // should not be required ...
-    //}
+    if (x.IsParallel(y)) { // should never happen, but I already have the code, so ...
+        y = z.Cross(x);
+        y.Normalise();
+        z = x.Cross(y);
+        z.Normalise(); // should not be required ...
+    } else {
+        z = x.Cross(y);
+        z.Normalise();
+        y = z.Cross(x);
+        y.Normalise(); // should not be required ...
+    }
 
-    //ASSERT(x.IsNormalised());
-    //ASSERT(y.IsNormalised());
-    //ASSERT(z.IsNormalised());
-    //ASSERT(vislib::math::IsEqual(x.Dot(y), 0.0f));
-    //ASSERT(vislib::math::IsEqual(x.Dot(z), 0.0f));
-    //ASSERT(vislib::math::IsEqual(y.Dot(z), 0.0f));
+    ASSERT(x.IsNormalised());
+    ASSERT(y.IsNormalised());
+    ASSERT(z.IsNormalised());
+    ASSERT(vislib::math::IsEqual(x.Dot(y), 0.0f));
+    ASSERT(vislib::math::IsEqual(x.Dot(z), 0.0f));
+    ASSERT(vislib::math::IsEqual(y.Dot(z), 0.0f));
 }
 
 
@@ -247,128 +241,130 @@ void misc::ExtBezierMeshRenderer::drawCurves(
         const vislib::math::BezierCurve<misc::ExtBezierDataCall::Point, 3> *curves,
         SIZE_T cnt, const vislib::math::Point<float, 2> *profile, SIZE_T profCnt,
         unsigned int lengthSections, bool profSmooth) {
-    //vislib::math::Point<float, 3> *p1 = new vislib::math::Point<float, 3>[profCnt]; // profile
-    //vislib::math::Point<float, 3> *p2 = new vislib::math::Point<float, 3>[profCnt];
-    //vislib::math::Vector<float, 3> *n1 = new vislib::math::Vector<float, 3>[profCnt]; // normal
-    //vislib::math::Vector<float, 3> *n2 = new vislib::math::Vector<float, 3>[profCnt];
-    //vislib::graphics::ColourRGBAu8 c1, c2; // colours
-    //misc::ExtBezierDataCall::Point p;
-    //vislib::math::Vector<float, 3> x(1.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f), z(0.0f, 0.0f, 1.0f);
-    //ASSERT(lengthSections >= 1);
+    vislib::math::Point<float, 3> *p1 = new vislib::math::Point<float, 3>[profCnt]; // profile
+    vislib::math::Point<float, 3> *p2 = new vislib::math::Point<float, 3>[profCnt];
+    vislib::math::Vector<float, 3> *n1 = new vislib::math::Vector<float, 3>[profCnt]; // normal
+    vislib::math::Vector<float, 3> *n2 = new vislib::math::Vector<float, 3>[profCnt];
+    vislib::graphics::ColourRGBAu8 c1, c2; // colours
+    misc::ExtBezierDataCall::Point p;
+    vislib::math::Vector<float, 3> x(1.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f), z(0.0f, 0.0f, 1.0f);
+    ASSERT(lengthSections >= 1);
 
-    //for (SIZE_T i = 0; i < cnt; i++) {
+    for (SIZE_T i = 0; i < cnt; i++) {
 
-    //    // Start Cap
-    //    curves[i].CalcPoint(p, 0.0f);
-    //    this->calcBase(curves[i], 0.0f, x, y, z);
-    //    c1 = p.GetColour();
+        // Start Cap
+        curves[i].CalcPoint(p, 0.0f);
+        y = p.GetY();
+        this->calcBase(curves[i], 0.0f, x, y, z);
+        c1 = p.GetColour();
 
-    //    ::glColor3ubv(c1.PeekComponentes());
-    //    ::glNormal3f(-x.X(), -x.Y(), -x.Z());
-    //    ::glBegin(GL_TRIANGLE_FAN);
-    //    for (int j = static_cast<int>(profCnt - 1); j >= 0; j--) {
-    //        p1[j] = p.GetPosition()
-    //            + y * (profile[j].X() * p.GetRadiusY())
-    //            + z * (profile[j].Y() * p.GetRadiusZ());
-    //        ::glVertex3fv(p1[j].PeekCoordinates());
-    //    }
-    //    // fake as usual (normal fixed in the yz-plane
-    //    if (profSmooth) {
-    //        for (SIZE_T j = 1; j <= profCnt; j++) {
-    //            n1[j % profCnt] = (p1[(j + 1) % profCnt] - p1[j - 1]).Cross(x);
-    //            n1[j % profCnt].Normalise();
-    //        }
-    //    } else {
-    //        for (SIZE_T j = 0; j < profCnt; j++) {
-    //            n1[j] = (p1[(j + 1) % profCnt] - p1[j]).Cross(x);
-    //            n1[j].Normalise();
-    //        }
-    //    }
-    //    ::glEnd();
+        ::glColor3ubv(c1.PeekComponentes());
+        ::glNormal3f(-x.X(), -x.Y(), -x.Z());
+        ::glBegin(GL_TRIANGLE_FAN);
+        for (int j = static_cast<int>(profCnt - 1); j >= 0; j--) {
+            p1[j] = p.GetPosition()
+                + y * (profile[j].X() * p.GetRadiusY())
+                + z * (profile[j].Y() * p.GetRadiusZ());
+            ::glVertex3fv(p1[j].PeekCoordinates());
+        }
+        // faked as usual (normal fixed in the yz-plane
+        if (profSmooth) {
+            for (SIZE_T j = 1; j <= profCnt; j++) {
+                n1[j % profCnt] = (p1[(j + 1) % profCnt] - p1[j - 1]).Cross(x);
+                n1[j % profCnt].Normalise();
+            }
+        } else {
+            for (SIZE_T j = 0; j < profCnt; j++) {
+                n1[j] = (p1[(j + 1) % profCnt] - p1[j]).Cross(x);
+                n1[j].Normalise();
+            }
+        }
+        ::glEnd();
 
 
-    //    // Curve
-    //    for (SIZE_T k = 1; k < lengthSections; k++) {
-    //        float t = static_cast<float>(k) / static_cast<float>(lengthSections - 1);
+        // Curve
+        for (SIZE_T k = 1; k < lengthSections; k++) {
+            float t = static_cast<float>(k) / static_cast<float>(lengthSections - 1);
 
-    //        curves[i].CalcPoint(p, t);
-    //        this->calcBase(curves[i], t, x, y, z);
-    //        c2 = p.GetColour();
+            curves[i].CalcPoint(p, t);
+            y = p.GetY();
+            this->calcBase(curves[i], t, x, y, z);
+            c2 = p.GetColour();
 
-    //        for (SIZE_T j = 0; j < profCnt; j++) {
-    //            p2[j] = p.GetPosition()
-    //                + y * (profile[j].X() * p.GetRadiusY())
-    //                + z * (profile[j].Y() * p.GetRadiusZ());
-    //        }
-    //        if (profSmooth) {
-    //            for (SIZE_T j = 1; j <= profCnt; j++) {
-    //                n2[j % profCnt] = (p2[(j + 1) % profCnt] - p2[j - 1]).Cross(x);
-    //                n2[j % profCnt].Normalise();
-    //            }
-    //        } else {
-    //            for (SIZE_T j = 0; j < profCnt; j++) {
-    //                n2[j] = (p2[(j + 1) % profCnt] - p2[j]).Cross(x);
-    //                n2[j].Normalise();
-    //            }
-    //        }
+            for (SIZE_T j = 0; j < profCnt; j++) {
+                p2[j] = p.GetPosition()
+                    + y * (profile[j].X() * p.GetRadiusY())
+                    + z * (profile[j].Y() * p.GetRadiusZ());
+            }
+            if (profSmooth) {
+                for (SIZE_T j = 1; j <= profCnt; j++) {
+                    n2[j % profCnt] = (p2[(j + 1) % profCnt] - p2[j - 1]).Cross(x);
+                    n2[j % profCnt].Normalise();
+                }
+            } else {
+                for (SIZE_T j = 0; j < profCnt; j++) {
+                    n2[j] = (p2[(j + 1) % profCnt] - p2[j]).Cross(x);
+                    n2[j].Normalise();
+                }
+            }
 
-    //        if (profSmooth) {
-    //            ::glBegin(GL_QUAD_STRIP);
-    //            for (SIZE_T j = 0; j < profCnt; j++) {
-    //                ::glNormal3fv(n2[j].PeekComponents());
-    //                ::glColor3ubv(c2.PeekComponentes());
-    //                ::glVertex3fv(p2[j].PeekCoordinates());
-    //                ::glNormal3fv(n1[j].PeekComponents());
-    //                ::glColor3ubv(c1.PeekComponentes());
-    //                ::glVertex3fv(p1[j].PeekCoordinates());
-    //            }
-    //            ::glNormal3fv(n2[0].PeekComponents());
-    //            ::glColor3ubv(c2.PeekComponentes());
-    //            ::glVertex3fv(p2[0].PeekCoordinates());
-    //            ::glNormal3fv(n1[0].PeekComponents());
-    //            ::glColor3ubv(c1.PeekComponentes());
-    //            ::glVertex3fv(p1[0].PeekCoordinates());
-    //            ::glEnd();
+            if (profSmooth) {
+                ::glBegin(GL_QUAD_STRIP);
+                for (SIZE_T j = 0; j < profCnt; j++) {
+                    ::glNormal3fv(n2[j].PeekComponents());
+                    ::glColor3ubv(c2.PeekComponentes());
+                    ::glVertex3fv(p2[j].PeekCoordinates());
+                    ::glNormal3fv(n1[j].PeekComponents());
+                    ::glColor3ubv(c1.PeekComponentes());
+                    ::glVertex3fv(p1[j].PeekCoordinates());
+                }
+                ::glNormal3fv(n2[0].PeekComponents());
+                ::glColor3ubv(c2.PeekComponentes());
+                ::glVertex3fv(p2[0].PeekCoordinates());
+                ::glNormal3fv(n1[0].PeekComponents());
+                ::glColor3ubv(c1.PeekComponentes());
+                ::glVertex3fv(p1[0].PeekCoordinates());
+                ::glEnd();
 
-    //        } else {
-    //            ::glBegin(GL_QUADS);
-    //            for (SIZE_T j = 0; j < profCnt; j++) {
-    //                ::glColor3ubv(c2.PeekComponentes());
-    //                ::glNormal3fv(n2[j].PeekComponents());
-    //                ::glVertex3fv(p2[(j + 1) % profCnt].PeekCoordinates());
-    //                ::glVertex3fv(p2[j].PeekCoordinates());
-    //                ::glColor3ubv(c1.PeekComponentes());
-    //                ::glNormal3fv(n1[j].PeekComponents());
-    //                ::glVertex3fv(p1[j].PeekCoordinates());
-    //                ::glVertex3fv(p1[(j + 1) % profCnt].PeekCoordinates());
-    //            }
-    //            ::glEnd();
+            } else {
+                ::glBegin(GL_QUADS);
+                for (SIZE_T j = 0; j < profCnt; j++) {
+                    ::glColor3ubv(c2.PeekComponentes());
+                    ::glNormal3fv(n2[j].PeekComponents());
+                    ::glVertex3fv(p2[(j + 1) % profCnt].PeekCoordinates());
+                    ::glVertex3fv(p2[j].PeekCoordinates());
+                    ::glColor3ubv(c1.PeekComponentes());
+                    ::glNormal3fv(n1[j].PeekComponents());
+                    ::glVertex3fv(p1[j].PeekCoordinates());
+                    ::glVertex3fv(p1[(j + 1) % profCnt].PeekCoordinates());
+                }
+                ::glEnd();
 
-    //        }
+            }
 
-    //        for (SIZE_T j = 0; j < profCnt; j++) {
-    //            p1[j] = p2[j];
-    //            n1[j] = n2[j];
-    //        }
-    //        c1 = c2;
+            for (SIZE_T j = 0; j < profCnt; j++) {
+                p1[j] = p2[j];
+                n1[j] = n2[j];
+            }
+            c1 = c2;
 
-    //    }
+        }
 
-    //    // End Cap
-    //    ::glColor3ubv(c1.PeekComponentes());
-    //    ::glNormal3fv(x.PeekComponents());
-    //    ::glBegin(GL_TRIANGLE_FAN);
-    //    for (SIZE_T j = 0; j < profCnt; j++) {
-    //        ::glVertex3fv(p1[j].PeekCoordinates());
-    //    }
-    //    ::glEnd();
+        // End Cap
+        ::glColor3ubv(c1.PeekComponentes());
+        ::glNormal3fv(x.PeekComponents());
+        ::glBegin(GL_TRIANGLE_FAN);
+        for (SIZE_T j = 0; j < profCnt; j++) {
+            ::glVertex3fv(p1[j].PeekCoordinates());
+        }
+        ::glEnd();
 
-    //}
+    }
 
-    //delete[] n2;
-    //delete[] n1;
-    //delete[] p2;
-    //delete[] p1;
+    delete[] n2;
+    delete[] n1;
+    delete[] p2;
+    delete[] p1;
 }
 
 
