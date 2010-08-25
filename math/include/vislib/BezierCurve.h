@@ -16,6 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/forceinline.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Point.h"
 #include "vislib/Vector.h"
@@ -236,6 +237,15 @@ namespace math {
         }
         // final result
         outVec = bp[1] - bp[0];
+
+        if (outVec.IsNull()) {
+            // failed: try it numerically
+            const float step = 0.001f;
+            this->CalcPoint(bp[0], Max(t - step, 0.0f));
+            this->CalcPoint(bp[1], Min(t + step, 1.0f));
+            outVec = bp[1] - bp[0];
+        }
+
         return outVec;
     }
 
