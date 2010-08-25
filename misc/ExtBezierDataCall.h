@@ -44,7 +44,7 @@ namespace misc {
             /**
              * Ctor.
              */
-            Point(void) : pos(0.0f, 0.0f, 0.0f), ori(0.0f, 0.0f, 0.0f, 1.0f),
+            Point(void) : pos(0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f),
                     radY(0.1f), radZ(0.1f), col(192, 192, 192, 255) {
                 // intentionally empty
             }
@@ -55,19 +55,17 @@ namespace misc {
              * @param x The x coordinate of position
              * @param y The y coordinate of position
              * @param z The z coordinate of position
-             * @param qx The x coordinate of quaternion
-             * @param qy The y coordinate of quaternion
-             * @param qz The z coordinate of quaternion
-             * @param qw The w coordinate of quaternion
+             * @param yx The x coordinate of the y vector
+             * @param yy The y coordinate of the y vector
+             * @param yz The z coordinate of the y vector
              * @param ry The radius in y direction
              * @param rz The radius in z direction
              * @param c The colour code
              */
-            Point(float x, float y, float z, float qx, float qy, float qz,
-                    float qw, float ry, float rz, unsigned char cr,
+            Point(float x, float y, float z, float yx, float yy, float yz,
+                    float ry, float rz, unsigned char cr,
                     unsigned char cg, unsigned char cb) : pos(x, y, z),
-                    ori(qx, qy, qz, qw), radY(ry), radZ(rz),
-                    col(cr, cg, cb, 255) {
+                    y(yx, yy, yz), radY(ry), radZ(rz), col(cr, cg, cb, 255) {
                 // intentionally empty
             }
 
@@ -75,16 +73,16 @@ namespace misc {
              * Ctor.
              *
              * @param pos The position
-             * @param ori The orientation quaternion
+             * @param y The y vector
              * @param ry The radius in y direction
              * @param rz The radius in z direction
              * @param c The colour
              */
             Point(const vislib::math::Point<float, 3> &pos,
-                    const vislib::math::Quaternion<float> &ori,
+                    const vislib::math::Vector<float, 3> &y,
                     float ry, float rz,
                     const vislib::graphics::ColourRGBAu8& c) : pos(pos),
-                    ori(ori), radY(ry), radZ(rz), col(c) {
+                    y(y), radY(ry), radZ(rz), col(c) {
                 // intentionally empty
             }
 
@@ -93,7 +91,7 @@ namespace misc {
              *
              * @param src The object to clone from
              */
-            Point(const Point& src) : pos(src.pos), ori(src.ori),
+            Point(const Point& src) : pos(src.pos), y(src.y),
                     radY(src.radY), radZ(src.radZ), col(src.col) {
                 // intentionally empty
             }
@@ -119,8 +117,8 @@ namespace misc {
              *
              * @return The orienatation quaternion
              */
-            inline const vislib::math::Quaternion<float>& GetOrientation(void) const {
-                return this->ori;
+            inline const vislib::math::Vector<float, 3>& GetY(void) const {
+                return this->y;
             }
 
             /**
@@ -163,7 +161,7 @@ namespace misc {
                 Point rv;
 
                 rv.pos = this->pos.Interpolate(rhs.pos, t);
-                rv.ori = this->ori.Interpolate(rhs.ori, t);
+                rv.y = this->y * (1.0f - t) + rhs.y * t;
                 rv.radY = this->radY * (1.0f - t) + rhs.radY * t;
                 rv.radZ = this->radZ * (1.0f - t) + rhs.radZ * t;
                 rv.col = this->col.Interpolate(rhs.col, t);
@@ -177,19 +175,18 @@ namespace misc {
              * @param x The x coordinate of position
              * @param y The y coordinate of position
              * @param z The z coordinate of position
-             * @param qx The x coordinate of quaternion
-             * @param qy The y coordinate of quaternion
-             * @param qz The z coordinate of quaternion
-             * @param qw The w coordinate of quaternion
+             * @param yx The x coordinate of the y vector
+             * @param yy The y coordinate of the y vector
+             * @param yz The z coordinate of the y vector
              * @param ry The radius in y direction
              * @param rz The radius in z direction
              * @param c The colour code
              */
-            inline void Set(float x, float y, float z, float qx, float qy,
-                    float qz, float qw, float ry, float rz, unsigned char cr,
+            inline void Set(float x, float y, float z, float yx, float yy,
+                    float yz, float ry, float rz, unsigned char cr,
                     unsigned char cg, unsigned char cb) {
                 this->pos.Set(x, y, z);
-                this->ori.Set(qx, qy, qz, qw);
+                this->y.Set(yx, yy, yz);
                 this->radY = ry;
                 this->radZ = rz;
                 this->col.Set(cr, cg, cb, 255);
@@ -199,17 +196,17 @@ namespace misc {
              * Sets all attributes
              *
              * @param pos The position
-             * @param ori The orientation quaternion
+             * @param y The y Vector
              * @param ry The radius in y direction
              * @param rz The radius in z direction
              * @param c The colour
              */
             inline void Set(const vislib::math::Point<float, 3> &pos,
-                    const vislib::math::Quaternion<float> &ori,
+                    const vislib::math::Vector<float, 3> &y,
                     float ry, float rz,
                     const vislib::graphics::ColourRGBAu8& c) {
                 this->pos = pos;
-                this->ori = ori;
+                this->y = y;
                 this->radY = ry;
                 this->radZ = rz;
                 this->col = c;
@@ -225,12 +222,12 @@ namespace misc {
             }
 
             /**
-             * Sets the orientation quaternion
+             * Sets the y vector
              *
-             * @param ori The orientation quaternion
+             * @param ori The y vector
              */
-            inline void SetOrientation(vislib::math::Quaternion<float>& ori) {
-                this->ori = ori;
+            inline void SetY(vislib::math::Vector<float, 3>& y) {
+                this->y = y;
             }
 
             /**
@@ -269,7 +266,7 @@ namespace misc {
              */
             bool operator==(const Point& rhs) const {
                 return (this->pos == rhs.pos)
-                    && (this->ori == rhs.ori)
+                    && (this->y == rhs.y)
                     && (this->radY == rhs.radY)
                     && (this->radZ == rhs.radZ)
                     && (this->col == rhs.col);
@@ -284,7 +281,7 @@ namespace misc {
              */
             bool operator!=(const Point& rhs) const {
                 return (this->pos != rhs.pos)
-                    || (this->ori != rhs.ori)
+                    || (this->y != rhs.y)
                     || (this->radY != rhs.radY)
                     || (this->radZ != rhs.radZ)
                     || (this->col != rhs.col);
@@ -299,7 +296,7 @@ namespace misc {
              */
             Point& operator=(const Point& rhs) {
                 this->pos = rhs.pos;
-                this->ori = rhs.ori;
+                this->y = rhs.y;
                 this->radY = rhs.radY;
                 this->radZ = rhs.radZ;
                 this->col = rhs.col;
@@ -328,7 +325,7 @@ namespace misc {
             vislib::math::Point<float, 3> pos;
 
             /** The orientation */
-            vislib::math::Quaternion<float> ori;
+            vislib::math::Vector<float, 3> y;
 
             /** The radii */
             float radY, radZ;
