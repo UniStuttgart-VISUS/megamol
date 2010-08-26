@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="TriSoup"
 	ProjectGUID="{02B4FAB3-EF5B-47F9-A1A5-9D817D16AEBC}"
 	RootNamespace="TriSoup"
@@ -409,6 +409,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\MarchingCubeTables.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MarchingSquareTables.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -488,6 +496,14 @@
 			</File>
 			<File
 				RelativePath=".\CallTriMeshData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MarchingCubeTables.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MarchingSquareTables.h"
 				>
 			</File>
 			<File

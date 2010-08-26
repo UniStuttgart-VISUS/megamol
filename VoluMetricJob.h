@@ -13,11 +13,14 @@
 
 #include "job/AbstractThreadedJob.h"
 #include "Module.h"
+#include "moldyn/MultiParticleDataCall.h"
+#include "misc/LinesDataCall.h"
 //#include "view/Renderer3DModule.h"
 //#include "Call.h"
 #include "CallerSlot.h"
+#include "CalleeSlot.h"
 #include "param/ParamSlot.h"
-//#include "vislib/Cuboid.h"
+#include "vislib/Cuboid.h"
 //#include "vislib/memutils.h"
 
 
@@ -29,6 +32,52 @@ namespace trisoup {
      */
     class VoluMetricJob : public core::job::AbstractThreadedJob, public core::Module {
     public:
+
+		/**
+		 *
+		 */
+		struct SubJobResult {
+
+			// waer doch echt gut, wenn der schon komplette schalen getrennt rausgeben wuerde oder?
+
+			// schon gleich in nem format, das die trisoup mag.
+
+			// also einfach ueber das ganze volumen iterieren:
+			// oberflaeche gefunden?
+			//   ja: neu?
+			//     ja: grow + tag cells
+			//     nein: ignore
+
+			float *vertices;
+			float *normals;
+			float surface;
+		};
+
+		/**
+		 * Structure that hold all parameters so a single thread can work
+		 * on his subset of the total volume occupied by a particle list
+		 */
+		struct SubJobData {
+			/**
+			 * Volume to work on and rasterize the data of
+			 */
+			vislib::math::Cuboid<float> Bounds;
+
+			/**
+			 * Edge length of a voxel (set in accordance to the radii of the contained particles)
+			 */
+			float CellSize;
+
+			/**
+			 * Datacall that can answer all particles not yet clipped against the subjob bounds
+			 */
+			megamol::core::moldyn::MultiParticleDataCall *Datacall;
+
+			/**
+			 * Here the Job should store its results. It is pre-allocated by the scheduling thread!
+			 */
+			SubJobResult *Result;
+		};
 
         /**
          * Answer the name of this module.
@@ -45,7 +94,8 @@ namespace trisoup {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Measures stuff from something and Guido will write a better help text here!";
+            return "Computes volumetric metrics of a multiparticle dataset, i.e. surface and volume"
+				", assuming a spacefilling spheres geometry";
         }
 
         /**
@@ -88,10 +138,40 @@ namespace trisoup {
 
     private:
 
+		bool getLineDataCallback(core::Call &caller);
+
+		bool getLineExtentCallback(core::Call &caller);
+
+		void appendBox(vislib::RawStorage &data, vislib::math::Cuboid<float> &b, SIZE_T &offset);
+
+		void appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset);
+
         core::CallerSlot getDataSlot;
 
-        core::param::ParamSlot resultFilenameSlot;
+        core::param::ParamSlot metricsFilenameSlot;
 
+		core::CalleeSlot outLineDataSlot;
+
+		float MaxRad;
+
+		/** the data hash, i.e. the front buffer frame available from the slots */
+		SIZE_T hash;
+
+		/** 
+		 * which one of the two instaces of most data is the backbuffer i.e. the
+		 * one that is currently being modified. the other one goes to the slots.
+		 */
+		char backBufferIndex;
+
+		/**
+		 * lines data. debugLines[backBufferIndex][*] is writable, the other one readable.
+		 * debugLines[*][0] contains the bounding boxes, [*][1] the boundaries (in future)
+		 */
+		megamol::core::misc::LinesDataCall::Lines debugLines[2][2];
+
+		vislib::RawStorage bboxVertData[2];
+
+		vislib::RawStorage bboxIdxData[2];
     };
 
 } /* end namespace trisoup */
