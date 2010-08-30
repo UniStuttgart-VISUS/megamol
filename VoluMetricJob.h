@@ -15,6 +15,7 @@
 #include "Module.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "misc/LinesDataCall.h"
+#include "CallTriMeshData.h"
 //#include "view/Renderer3DModule.h"
 //#include "Call.h"
 #include "CallerSlot.h"
@@ -32,52 +33,6 @@ namespace trisoup {
      */
     class VoluMetricJob : public core::job::AbstractThreadedJob, public core::Module {
     public:
-
-		/**
-		 *
-		 */
-		struct SubJobResult {
-
-			// waer doch echt gut, wenn der schon komplette schalen getrennt rausgeben wuerde oder?
-
-			// schon gleich in nem format, das die trisoup mag.
-
-			// also einfach ueber das ganze volumen iterieren:
-			// oberflaeche gefunden?
-			//   ja: neu?
-			//     ja: grow + tag cells
-			//     nein: ignore
-
-			float *vertices;
-			float *normals;
-			float surface;
-		};
-
-		/**
-		 * Structure that hold all parameters so a single thread can work
-		 * on his subset of the total volume occupied by a particle list
-		 */
-		struct SubJobData {
-			/**
-			 * Volume to work on and rasterize the data of
-			 */
-			vislib::math::Cuboid<float> Bounds;
-
-			/**
-			 * Edge length of a voxel (set in accordance to the radii of the contained particles)
-			 */
-			float CellSize;
-
-			/**
-			 * Datacall that can answer all particles not yet clipped against the subjob bounds
-			 */
-			megamol::core::moldyn::MultiParticleDataCall *Datacall;
-
-			/**
-			 * Here the Job should store its results. It is pre-allocated by the scheduling thread!
-			 */
-			SubJobResult *Result;
-		};
 
         /**
          * Answer the name of this module.
@@ -142,6 +97,8 @@ namespace trisoup {
 
 		bool getLineExtentCallback(core::Call &caller);
 
+		bool getTriDataCallback(core::Call &caller);
+
 		void appendBox(vislib::RawStorage &data, vislib::math::Cuboid<float> &b, SIZE_T &offset);
 
 		void appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset);
@@ -151,6 +108,8 @@ namespace trisoup {
         core::param::ParamSlot metricsFilenameSlot;
 
 		core::CalleeSlot outLineDataSlot;
+
+		core::CalleeSlot outTriDataSlot;
 
 		float MaxRad;
 
@@ -163,11 +122,15 @@ namespace trisoup {
 		 */
 		char backBufferIndex;
 
+		char meshBackBufferIndex;
+
 		/**
 		 * lines data. debugLines[backBufferIndex][*] is writable, the other one readable.
 		 * debugLines[*][0] contains the bounding boxes, [*][1] the boundaries (in future)
 		 */
 		megamol::core::misc::LinesDataCall::Lines debugLines[2][2];
+
+		CallTriMeshData::Mesh debugMeshes[2];
 
 		vislib::RawStorage bboxVertData[2];
 

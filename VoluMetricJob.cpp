@@ -10,7 +10,10 @@
 #include "vislib/Log.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/NamedColours.h"
+#include "vislib/threadpool.h"
 #include "MarchingCubeTables.h"
+#include "JobStructures.h"
+#include "Voxelizer.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -24,7 +27,8 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
         metricsFilenameSlot("metricsFilenameSlot", "File that will contain the "
 		"surfaces and volumes of each particle list per frame"),
 		outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
-		MaxRad(0), backBufferIndex(0), hash(0) {
+		outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
+		MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -35,6 +39,10 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
 	this->MakeSlotAvailable(&this->outLineDataSlot);
+
+	this->outTriDataSlot.SetCallback("CallTriMeshData", "GetData", &VoluMetricJob::getTriDataCallback);
+	this->outTriDataSlot.SetCallback("CallTriMeshData", "GetExtent", &VoluMetricJob::getLineExtentCallback);
+	this->MakeSlotAvailable(&this->outTriDataSlot);
 
 	// TODO: Implement
 
@@ -89,12 +97,19 @@ DWORD VoluMetricJob::Run(void *userData) {
     unsigned int frameCnt = datacall->FrameCount();
     Log::DefaultLog.WriteInfo("Data source with %u frame(s)", frameCnt);
 
+	vislib::sys::ThreadPool pool;
+	vislib::Array<Voxelizer*> voxelizerList;
+	vislib::Array<SubJobData*> subJobDataList;
+
+	voxelizerList.SetCapacityIncrement(10);
+	subJobDataList.SetCapacityIncrement(10);
+
     for (unsigned int frameI = 0; frameI < frameCnt; frameI++) {
 
         datacall->SetFrameID(frameI, true);
 		do {
 			if (!(*datacall)(0)) {
-				Log::DefaultLog.WriteError("ARGH! No frame here", frameI);
+				Log::DefaultLog.WriteError("ARGH! No frame here");
 				return -3;
 			}
 		} while (datacall->FrameID() != frameI && (vislib::sys::Thread::Sleep(100), true));
@@ -108,6 +123,19 @@ DWORD VoluMetricJob::Run(void *userData) {
 			if (r > MaxRad) {
 				MaxRad = r;
 			}
+			if (datacall->AccessParticles(partListI).GetVertexDataType() ==
+				core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+				UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
+				unsigned int stride = datacall->AccessParticles(partListI).GetVertexDataStride();
+				unsigned char *vertexData = (unsigned char*)datacall->AccessParticles(partListI).GetVertexData();
+				for (UINT64 l = 0; l < numParticles; l++) {
+					vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(4 * sizeof(float) + stride) * l]);
+					float currRad = (float)vertexData[(4 * sizeof(float) + stride) * l + 3];
+					if (currRad > MaxRad) {
+						MaxRad = currRad;
+					}
+				}
+			}
         }
 		float cellSize = MaxRad * 0.075f;
 		int bboxBytes = 8 * 3 * sizeof(float);
@@ -117,17 +145,34 @@ DWORD VoluMetricJob::Run(void *userData) {
 		bboxVertData[backBufferIndex].AssertSize(vertSize);
 		bboxIdxData[backBufferIndex].AssertSize(idxSize);
 		SIZE_T bboxOffset = 0;
-		//SIZE_T idxRawOffset = 0;
+		unsigned int vertFloatSize = 0;
 		unsigned int idxNumOffset = 0;
 
-        for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
+		// TODO BUG HAZARD FIXME! this is debug! it must start from 0!!!!!
+        for (unsigned int partListI = 2; partListI < partListCnt; partListI++) {
 			core::moldyn::MultiParticleDataCall::Particles &parts = datacall->AccessParticles(partListI);
 			UINT64 numParticles = parts.GetCount();
-			float *vertexData = (float*)parts.GetVertexData();
-			vislib::math::Cuboid<float> b = vislib::math::Cuboid<float>(vislib::math::ShallowPoint<float, 3>(vertexData),
+			unsigned int stride = parts.GetVertexDataStride();
+			switch (parts.GetVertexDataType()) {
+				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+					Log::DefaultLog.WriteError("void vertex data. wut?");
+					return -4;
+				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+					vertFloatSize = 3 * sizeof(float);
+					break;
+				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+					vertFloatSize = 4 * sizeof(float);
+					break;
+				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+					Log::DefaultLog.WriteError("This module does not yet like quantized data");
+					return -5;
+			}
+			unsigned char *vertexData = (unsigned char*)parts.GetVertexData();
+			vislib::math::Cuboid<float> b = vislib::math::Cuboid<float>(vislib::math::ShallowPoint<float, 3>((float*)vertexData),
 				vislib::math::Dimension<float, 3>(MaxRad * 2, MaxRad * 2, MaxRad * 2));
 			for (UINT64 part = 1; part < numParticles; part++) {
-				b.GrowToPoint(vislib::math::ShallowPoint<float, 3>(&vertexData[3 * part]));
+				b.GrowToPoint(vislib::math::ShallowPoint<float, 3>(
+					(float*)&vertexData[(vertFloatSize + stride) * part]));
 			}
 			b.SetLeft(b.GetLeft() - MaxRad);
 			b.SetRight(b.GetRight() + MaxRad);
@@ -146,29 +191,6 @@ DWORD VoluMetricJob::Run(void *userData) {
 			appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
 			appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	0 * 3 * sizeof(float))) = b.GetLeftBottomFront();
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	1 * 3 * sizeof(float))) = b.GetRightBottomFront();
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	2 * 3 * sizeof(float))) = b.GetRightTopFront();
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	3 * 3 * sizeof(float))) = b.GetLeftTopFront();
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	4 * 3 * sizeof(float))) = b.GetLeftBottomBack();
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	5 * 3 * sizeof(float))) = b.GetRightBottomBack();
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	6 * 3 * sizeof(float))) = b.GetRightTopBack();
-			//vislib::math::ShallowPoint<float, 3> (bboxVertData[backBufferIndex].AsAt<float>(bboxBytes * partListI +
-			//	7 * 3 * sizeof(float))) = b.GetLeftTopBack();
-			//for (int i = 0; i < 12; i++) {
-			//	*bboxIdxData[backBufferIndex].AsAt<unsigned int>(bboxIdxes * partListI + (2 * i + 0) * sizeof(unsigned int)) =
-			//		MarchingCubeTables::a2iEdgeConnection[i][0];
-			//	*bboxIdxData[backBufferIndex].AsAt<unsigned int>(bboxIdxes * partListI + (2 * i + 1) * sizeof(unsigned int)) =
-			//		MarchingCubeTables::a2iEdgeConnection[i][1];
-			//}
-
 			int subVolCells = 256;
 			int divX = (int) ceil((float)resX / subVolCells);
 			int divY = (int) ceil((float)resY / subVolCells);
@@ -182,20 +204,35 @@ DWORD VoluMetricJob::Run(void *userData) {
 			for (int x = 0; x < divX; x++) {
 				for (int y = 0; y < divY; y++) {
 					for (int z = 0; z < divZ; z++) {
-						int rest;
 						float left = b.Left() + x * subVolCells * cellSize;
-						rest = resX - x * subVolCells;
-						float right = left + (rest > subVolCells ? subVolCells : rest) * cellSize;
+						int restX = resX - x * subVolCells;
+						restX = (restX > subVolCells) ? subVolCells : restX;
+						float right = left + restX * cellSize;
 						float bottom = b.Bottom() + y * subVolCells * cellSize;
-						rest = resY - y * subVolCells;
-						float top = bottom + (rest > subVolCells ? subVolCells : rest) * cellSize;
+						int restY = resY - y * subVolCells;
+						restY = (restY > subVolCells) ? subVolCells : restY;
+						float top = bottom + restY * cellSize;
 						float back = b.Back() + z * subVolCells * cellSize;
-						rest = resZ - z * subVolCells;
-						float front = back + (rest > subVolCells ? subVolCells : rest) * cellSize;
+						int restZ = resZ - z * subVolCells;
+						restZ = (restZ > subVolCells) ? subVolCells : restZ;
+						float front = back + restZ * cellSize;
 						vislib::math::Cuboid<float> bx = vislib::math::Cuboid<float>(left, bottom, back,
 							right, top, front);
 						appendBox(bboxVertData[backBufferIndex], bx, bboxOffset);
 						appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
+
+						SubJobData *sjd = new SubJobData(parts);
+						sjd->Bounds = bx;
+						sjd->CellSize = cellSize;
+						sjd->resX = restX;
+						sjd->resY = restY;
+						sjd->resZ = restZ;
+						sjd->MaxRad = MaxRad;
+						subJobDataList.Add(sjd);
+						Voxelizer *v = new Voxelizer();
+						voxelizerList.Add(v);
+
+						pool.QueueUserWorkItem(v, sjd);
 					}
 				}
 			}
@@ -207,6 +244,44 @@ DWORD VoluMetricJob::Run(void *userData) {
 		
 		backBufferIndex = 1 - backBufferIndex;
 		this->hash++;
+
+		while(1) {
+			if (pool.Wait(500) && pool.CountUserWorkItems() == 0) {
+						// we are done
+						break;
+			}
+			// copy finished meshes to output
+			float *vert;
+			unsigned int *tri;
+			vislib::Array<unsigned int> todos;
+			todos.SetCapacityIncrement(10);
+			for (int i = 0; i < subJobDataList.Count(); i++) {
+				if (subJobDataList[i]->Result.done) {
+					todos.Add(i);
+				}
+			}
+			unsigned int numVertices = 0;
+			for (int i = 0; i < todos.Count(); i++) {
+				numVertices += subJobDataList[todos[i]]->Result.vertices.Count();
+			}
+			vert = new float[numVertices * 3];
+			tri = new unsigned int[numVertices * 3];
+			SIZE_T vertOffset = 0;
+			SIZE_T triOffset = 0;
+			for (int i = 0; i < todos.Count(); i++) {
+				SubJobData *sjd = subJobDataList[todos[i]];
+				for (unsigned int j = 0; j < sjd->Result.vertices.Count(); j++) {
+					memcpy(&(vert[vertOffset]), &sjd->Result.vertices[j], 3 * sizeof(float));
+					vertOffset += 3;
+					memcpy(&(tri[triOffset]), &sjd->Result.indices[j], 1 * sizeof(unsigned int));
+					triOffset += 1;
+				}
+			}
+			debugMeshes[meshBackBufferIndex].SetVertexData(numVertices, vert, NULL, NULL, NULL, true);
+			debugMeshes[meshBackBufferIndex].SetTriangleData(numVertices, tri, true);
+			meshBackBufferIndex = 1 - meshBackBufferIndex;
+			this->hash++;
+		}
     }
 
     return 0;
@@ -223,6 +298,22 @@ bool VoluMetricJob::getLineDataCallback(core::Call &caller) {
 		// TODO: only passing the bounding boxes for now
 		ldc->SetData(1, this->debugLines[1 - this->backBufferIndex]);
 		ldc->SetDataHash(this->hash);
+	}
+
+	return true;
+}
+
+bool VoluMetricJob::getTriDataCallback(core::Call &caller) {
+	CallTriMeshData *mdc = dynamic_cast<CallTriMeshData*>(&caller);
+	if (mdc == NULL) return false;
+
+	if (this->hash == 0) {
+		mdc->SetObjects(0, NULL);
+		mdc->SetDataHash(0);
+	} else {
+		// TODO: only passing the bounding boxes for now
+		mdc->SetObjects(1, &(this->debugMeshes[1 - this->meshBackBufferIndex]));
+		mdc->SetDataHash(this->hash);
 	}
 
 	return true;

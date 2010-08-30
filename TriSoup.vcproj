@@ -453,6 +453,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\TagVolume.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TriSoup.cpp"
 				>
 			</File>
@@ -466,6 +470,10 @@
 			</File>
 			<File
 				RelativePath=".\VoluMetricJob.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Voxelizer.cpp"
 				>
 			</File>
 			<File
@@ -499,6 +507,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\JobStructures.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MarchingCubeTables.h"
 				>
 			</File>
@@ -508,6 +520,10 @@
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TagVolume.h"
 				>
 			</File>
 			<File
@@ -528,6 +544,10 @@
 			</File>
 			<File
 				RelativePath=".\VoluMetricJob.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Voxelizer.h"
 				>
 			</File>
 			<File
