@@ -239,11 +239,49 @@ namespace math {
         outVec = bp[1] - bp[0];
 
         if (outVec.IsNull()) {
-            // failed: try it numerically
-            const float step = 0.001f;
-            this->CalcPoint(bp[0], Max(t - step, 0.0f));
-            this->CalcPoint(bp[1], Min(t + step, 1.0f));
-            outVec = bp[1] - bp[0];
+            // failed: try it again:
+            outVec.SetNull();
+            for (unsigned int i = 0; i < E; i++) {
+                outVec += (this->cp[i + 1] - this->cp[i]);
+            }
+            if (outVec.IsNull()) {
+                // still could be a loop
+                bool allEqual = true;
+                for (unsigned int i = 1; i < E; i++) {
+                    if (this->cp[0] != this->cp[i]) allEqual = false;
+                }
+                if (allEqual) return outVec; // there is no hope
+            }
+
+            Tp vec;
+            cnt = E;
+            for (unsigned int i = 0; i < cnt; i++) {
+                bp[i] = this->cp[i].Interpolate(this->cp[i + 1], t);
+            }
+
+            while (cnt > 2) {
+                vec.SetNull();
+                for (unsigned int i = 1; i < cnt; i++) {
+                    vec += bp[i] - bp[i - 1];
+                }
+                if (vec.IsNull()) {
+                    // still could be a loop
+                    bool allEqual = true;
+                    for (unsigned int i = 1; i < cnt; i++) {
+                        if (bp[0] != bp[i]) allEqual = false;
+                    }
+                    if (allEqual) return outVec; // there is no hope for any better value
+                } else {
+                    outVec = vec; // this is a better solution
+                }
+
+                cnt--;
+                for (unsigned int i = 0; i < cnt; i++) {
+                    bp[i] = bp[i].Interpolate(bp[i + 1], t);
+                }
+            }
+
+            // bp[1] - bp[0] is now Null, so any previous calced vector is better
         }
 
         return outVec;
