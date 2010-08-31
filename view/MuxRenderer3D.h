@@ -146,13 +146,13 @@ namespace view {
         for (unsigned int i = 0; i < T; i++) {
 
             name.Format("renderer%u", i + 1);
-            desc.Format("Outgoiung renderer #%u", i + 1);
+            desc.Format("Outgoing renderer #%u", i + 1);
             this->rendererSlot[i] = new CallerSlot(name, desc);
             this->rendererSlot[i]->SetCompatibleCall<CallRender3DDescription>();
             this->MakeSlotAvailable(this->rendererSlot[i]);
 
             name += "active";
-            desc.Format("De-/Activates outgoiung renderer #%u", i + 1);
+            desc.Format("De-/Activates outgoing renderer #%u", i + 1);
             this->rendererActiveSlot[i] = new param::ParamSlot(name, desc);
             this->rendererActiveSlot[i]->SetParameter(new param::BoolParam(true));
             this->MakeSlotAvailable(this->rendererActiveSlot[i]);
