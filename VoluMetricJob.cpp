@@ -44,6 +44,8 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 	this->showSurfaceGeometrySlot << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->showSurfaceGeometrySlot);
 
+	//this->radiusMultiplicatorSlot << new core::param::
+
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
 	this->MakeSlotAvailable(&this->outLineDataSlot);
@@ -156,90 +158,97 @@ DWORD VoluMetricJob::Run(void *userData) {
 		unsigned int vertFloatSize = 0;
 		unsigned int idxNumOffset = 0;
 
-		// TODO BUG HAZARD FIXME! this is debug! it must start from 0!!!!!
-        for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
-			core::moldyn::MultiParticleDataCall::Particles &parts = datacall->AccessParticles(partListI);
-			UINT64 numParticles = parts.GetCount();
-			unsigned int stride = parts.GetVertexDataStride();
-			switch (parts.GetVertexDataType()) {
-				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
-					Log::DefaultLog.WriteError("void vertex data. wut?");
-					return -4;
-				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-					vertFloatSize = 3 * sizeof(float);
-					break;
-				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-					vertFloatSize = 4 * sizeof(float);
-					break;
-				case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
-					Log::DefaultLog.WriteError("This module does not yet like quantized data");
-					return -5;
-			}
-			unsigned char *vertexData = (unsigned char*)parts.GetVertexData();
-			vislib::math::Cuboid<float> b = vislib::math::Cuboid<float>(vislib::math::ShallowPoint<float, 3>((float*)vertexData),
-				vislib::math::Dimension<float, 3>(MaxRad * 2, MaxRad * 2, MaxRad * 2));
-			for (UINT64 part = 1; part < numParticles; part++) {
-				b.GrowToPoint(vislib::math::ShallowPoint<float, 3>(
-					(float*)&vertexData[(vertFloatSize + stride) * part]));
-			}
-			b.Grow(MaxRad);
+   //     for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
+			//core::moldyn::MultiParticleDataCall::Particles &parts = datacall->AccessParticles(partListI);
+			//UINT64 numParticles = parts.GetCount();
+			//unsigned int stride = parts.GetVertexDataStride();
+			//switch (parts.GetVertexDataType()) {
+			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+			//		//Log::DefaultLog.WriteError("void vertex data. wut?");
+			//		//return -4;
+			//		continue;
+			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+			//		vertFloatSize = 3 * sizeof(float);
+			//		break;
+			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+			//		vertFloatSize = 4 * sizeof(float);
+			//		break;
+			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+			//		Log::DefaultLog.WriteError("This module does not yet like quantized data");
+			//		return -5;
+			//}
+			//unsigned char *vertexData = (unsigned char*)parts.GetVertexData();
+			//vislib::math::Cuboid<float> b = vislib::math::Cuboid<float>(vislib::math::ShallowPoint<float, 3>((float*)vertexData),
+			//	vislib::math::Dimension<float, 3>(MaxRad * 2, MaxRad * 2, MaxRad * 2));
+			//for (UINT64 part = 1; part < numParticles; part++) {
+			//	b.GrowToPoint(vislib::math::ShallowPoint<float, 3>(
+			//		(float*)&vertexData[(vertFloatSize + stride) * part]));
+			//}
+		vislib::math::Cuboid<float> b;
+		if (datacall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
+			b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
+		} else {
+			b = datacall->AccessBoundingBoxes().ObjectSpaceBBox();
+		}
+		b.Grow(MaxRad);
 
-			int resX = (int) ((float)b.Width() / cellSize) + 2;
-			int resY = (int) ((float)b.Height() / cellSize) + 2;
-			int resZ = (int) ((float)b.Depth() / cellSize) + 2;
-			b.SetWidth(resX * cellSize);
-			b.SetHeight(resY * cellSize);
-			b.SetDepth(resZ * cellSize);
+		int resX = (int) ((float)b.Width() / cellSize) + 2;
+		int resY = (int) ((float)b.Height() / cellSize) + 2;
+		int resZ = (int) ((float)b.Depth() / cellSize) + 2;
+		b.SetWidth(resX * cellSize);
+		b.SetHeight(resY * cellSize);
+		b.SetDepth(resZ * cellSize);
 
-			appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
-			appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
+		appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
+		appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-			int subVolCells = 64;
-			int divX = (int) ceil((float)resX / subVolCells);
-			int divY = (int) ceil((float)resY / subVolCells);
-			int divZ = (int) ceil((float)resZ / subVolCells);
-	
-			vertSize += bboxBytes * divX * divY * divZ;
-			idxSize += bboxIdxes * divX * divY * divZ;
-			bboxVertData[backBufferIndex].AssertSize(vertSize, true);
-			bboxIdxData[backBufferIndex].AssertSize(idxSize, true);
+		int subVolCells = 64;
+		int divX = (int) ceil((float)resX / subVolCells);
+		int divY = (int) ceil((float)resY / subVolCells);
+		int divZ = (int) ceil((float)resZ / subVolCells);
 
-			for (int x = 0; x < divX; x++) {
-				for (int y = 0; y < divY; y++) {
-					for (int z = 0; z < divZ; z++) {
-						float left = b.Left() + x * subVolCells * cellSize;
-						int restX = resX - x * subVolCells;
-						restX = (restX > subVolCells) ? subVolCells + 1: restX;
-						float right = left + restX * cellSize;
-						float bottom = b.Bottom() + y * subVolCells * cellSize;
-						int restY = resY - y * subVolCells;
-						restY = (restY > subVolCells) ? subVolCells + 1: restY;
-						float top = bottom + restY * cellSize;
-						float back = b.Back() + z * subVolCells * cellSize;
-						int restZ = resZ - z * subVolCells;
-						restZ = (restZ > subVolCells) ? subVolCells + 1 : restZ;
-						float front = back + restZ * cellSize;
-						vislib::math::Cuboid<float> bx = vislib::math::Cuboid<float>(left, bottom, back,
-							right, top, front);
-						appendBox(bboxVertData[backBufferIndex], bx, bboxOffset);
-						appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
+		vertSize += bboxBytes * divX * divY * divZ;
+		idxSize += bboxIdxes * divX * divY * divZ;
+		bboxVertData[backBufferIndex].AssertSize(vertSize, true);
+		bboxIdxData[backBufferIndex].AssertSize(idxSize, true);
 
-						SubJobData *sjd = new SubJobData(parts);
-						sjd->Bounds = bx;
-						sjd->CellSize = cellSize;
-						sjd->resX = restX;
-						sjd->resY = restY;
-						sjd->resZ = restZ;
-						sjd->MaxRad = MaxRad;
-						subJobDataList.Add(sjd);
-						Voxelizer *v = new Voxelizer();
-						voxelizerList.Add(v);
+		for (int x = 0; x < divX; x++) {
+			for (int y = 0; y < divY; y++) {
+				for (int z = 0; z < divZ; z++) {
+					float left = b.Left() + x * subVolCells * cellSize;
+					int restX = resX - x * subVolCells;
+					restX = (restX > subVolCells) ? subVolCells + 1: restX;
+					float right = left + restX * cellSize;
+					float bottom = b.Bottom() + y * subVolCells * cellSize;
+					int restY = resY - y * subVolCells;
+					restY = (restY > subVolCells) ? subVolCells + 1: restY;
+					float top = bottom + restY * cellSize;
+					float back = b.Back() + z * subVolCells * cellSize;
+					int restZ = resZ - z * subVolCells;
+					restZ = (restZ > subVolCells) ? subVolCells + 1 : restZ;
+					float front = back + restZ * cellSize;
+					vislib::math::Cuboid<float> bx = vislib::math::Cuboid<float>(left, bottom, back,
+						right, top, front);
+					appendBox(bboxVertData[backBufferIndex], bx, bboxOffset);
+					appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-						pool.QueueUserWorkItem(v, sjd);
-					}
+					SubJobData *sjd = new SubJobData();
+					sjd->datacall = datacall;
+					sjd->Bounds = bx;
+					sjd->CellSize = cellSize;
+					sjd->resX = restX;
+					sjd->resY = restY;
+					sjd->resZ = restZ;
+					sjd->MaxRad = MaxRad;
+					subJobDataList.Add(sjd);
+					Voxelizer *v = new Voxelizer();
+					voxelizerList.Add(v);
+
+					pool.QueueUserWorkItem(v, sjd);
 				}
 			}
 		}
+		//}
 		this->debugLines[backBufferIndex][0].Set(
 				static_cast<unsigned int>(idxNumOffset * 2),
                 this->bboxIdxData[backBufferIndex].As<unsigned int>(), this->bboxVertData[backBufferIndex].As<float>(),

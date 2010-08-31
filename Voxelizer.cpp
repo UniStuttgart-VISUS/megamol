@@ -166,84 +166,111 @@ DWORD Voxelizer::Run(void *userData) {
 		volume[i].distField = FLT_MAX;
 	}
 
-	UINT64 numParticles = sjd->Particles.GetCount();
-	unsigned int stride = sjd->Particles.GetVertexDataStride();
-	core::moldyn::MultiParticleDataCall::Particles::VertexDataType dataType =
-		sjd->Particles.GetVertexDataType();
-	unsigned char *vertexData = (unsigned char*)sjd->Particles.GetVertexData();
-	switch (dataType) {
-		case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
-			Log::DefaultLog.WriteError("void vertex data. wut?");
-			return -1;
-		case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-			vertFloatSize = 3 * sizeof(float);
-			maxRad = sjd->Particles.GetGlobalRadius();
-			break;
-		case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-			vertFloatSize = 4 * sizeof(float);
-			for (UINT64 l = 0; l < numParticles; l++) {
-				currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
-				if (currRad > maxRad) {
-					maxRad = currRad;
+	unsigned int partListCnt = sjd->datacall->GetParticleListCount();
+	for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
+		core::moldyn::MultiParticleDataCall::Particles ps = sjd->datacall->AccessParticles(partListI);
+		UINT64 numParticles = ps.GetCount();
+		unsigned int stride = ps.GetVertexDataStride();
+		core::moldyn::MultiParticleDataCall::Particles::VertexDataType dataType =
+			ps.GetVertexDataType();
+		unsigned char *vertexData = (unsigned char*)ps.GetVertexData();
+		switch (dataType) {
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+				//Log::DefaultLog.WriteError("void vertex data. wut?");
+				//return -1;
+				continue;
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+				vertFloatSize = 3 * sizeof(float);
+				maxRad = ps.GetGlobalRadius();
+				break;
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+				vertFloatSize = 4 * sizeof(float);
+				for (UINT64 l = 0; l < numParticles; l++) {
+					currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
+					if (currRad > maxRad) {
+						maxRad = currRad;
+					}
 				}
-			}
-			break;
-		case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
-			Log::DefaultLog.WriteError("This module does not yet like quantized data");
-			return -2;
+				break;
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+				Log::DefaultLog.WriteError("This module does not yet like quantized data");
+				return -2;
+		}
 	}
 
 	// sample everything into our temporary volume
-	currRad = sjd->Particles.GetGlobalRadius();
 	vislib::math::Cuboid<float> bx(sjd->Bounds);
 	bx.Grow(2 * maxRad);
-	for (UINT64 l = 0; l < numParticles; l++) {
-		vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(vertFloatSize + stride) * l]);
-		if (dataType == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-			currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
+
+	for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
+		core::moldyn::MultiParticleDataCall::Particles ps = sjd->datacall->AccessParticles(partListI);
+		currRad = ps.GetGlobalRadius();
+		UINT64 numParticles = ps.GetCount();
+		unsigned int stride = ps.GetVertexDataStride();
+		core::moldyn::MultiParticleDataCall::Particles::VertexDataType dataType =
+			ps.GetVertexDataType();
+		unsigned char *vertexData = (unsigned char*)ps.GetVertexData();
+		switch (dataType) {
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+				continue;
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+				vertFloatSize = 3 * sizeof(float);
+				break;
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+				vertFloatSize = 4 * sizeof(float);
+				break;
+			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+				Log::DefaultLog.WriteError("This module does not yet like quantized data");
+				return -2;
 		}
-		if (!bx.Contains(sp, vislib::math::Cuboid<float>::FACE_ALL)) {
-			continue;
-		}
-		x = static_cast<unsigned int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize);
-		if (x > 0) x--;
-		if (x < 0) x = 0;
-		y = static_cast<unsigned int>((sp.Y() - currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
-		if (y > 0) y--;
-		if (y < 0) y = 0;
-		z = static_cast<unsigned int>((sp.Z() - currRad - sjd->Bounds.Back()) / sjd->CellSize);
-		if (z > 0) z--;
-		if (z < 0) z = 0;
-		pStart.Set(x, y, z);
+		for (UINT64 l = 0; l < numParticles; l++) {
+			vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(vertFloatSize + stride) * l]);
+			if (dataType == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+				currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
+			}
+			if (!bx.Contains(sp, vislib::math::Cuboid<float>::FACE_ALL)) {
+				continue;
+			}
+			x = static_cast<unsigned int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize);
+			if (x > 0) x--;
+			if (x < 0) x = 0;
+			y = static_cast<unsigned int>((sp.Y() - currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
+			if (y > 0) y--;
+			if (y < 0) y = 0;
+			z = static_cast<unsigned int>((sp.Z() - currRad - sjd->Bounds.Back()) / sjd->CellSize);
+			if (z > 0) z--;
+			if (z < 0) z = 0;
+			pStart.Set(x, y, z);
 
-		x = static_cast<unsigned int>((sp.X() + currRad - sjd->Bounds.Left()) / sjd->CellSize);
-		if (x + 1 < sjd->resX) x++;
-		if (x + 1 >= sjd->resX) x = sjd->resX - 1;
-		y = static_cast<unsigned int>((sp.Y() + currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
-		if (y + 1 < sjd->resY) y++;
-		if (y + 1 >= sjd->resY) y = sjd->resY - 1;
-		z = static_cast<unsigned int>((sp.Z() + currRad - sjd->Bounds.Back()) / sjd->CellSize);
-		if (z + 1 < sjd->resZ) z++;
-		if (z + 1 >= sjd->resZ) z = sjd->resZ - 1;
-		pEnd.Set(x, y, z);
+			x = static_cast<unsigned int>((sp.X() + currRad - sjd->Bounds.Left()) / sjd->CellSize);
+			if (x + 1 < sjd->resX) x++;
+			if (x + 1 >= sjd->resX) x = sjd->resX - 1;
+			y = static_cast<unsigned int>((sp.Y() + currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
+			if (y + 1 < sjd->resY) y++;
+			if (y + 1 >= sjd->resY) y = sjd->resY - 1;
+			z = static_cast<unsigned int>((sp.Z() + currRad - sjd->Bounds.Back()) / sjd->CellSize);
+			if (z + 1 < sjd->resZ) z++;
+			if (z + 1 >= sjd->resZ) z = sjd->resZ - 1;
+			pEnd.Set(x, y, z);
 
-		for (z = pStart.Z(); z <= pEnd.Z(); z++) {
-			for (y = pStart.Y(); y <= pEnd.Y(); y++) {
-				for (x = pStart.X(); x <= pEnd.X(); x++) {
-					// TODO think about this. here the voxel content is determined by a corner
-					p.Set(
-					sjd->Bounds.Left() + x * sjd->CellSize,
-					sjd->Bounds.Bottom() + y * sjd->CellSize,
-					sjd->Bounds.Back() + z * sjd->CellSize);
+			for (z = pStart.Z(); z <= pEnd.Z(); z++) {
+				for (y = pStart.Y(); y <= pEnd.Y(); y++) {
+					for (x = pStart.X(); x <= pEnd.X(); x++) {
+						// TODO think about this. here the voxel content is determined by a corner
+						p.Set(
+						sjd->Bounds.Left() + x * sjd->CellSize,
+						sjd->Bounds.Bottom() + y * sjd->CellSize,
+						sjd->Bounds.Back() + z * sjd->CellSize);
 
-					// and here it is the center!
-					//p.Set(
-					//	sjd->Bounds.Left() + x * sjd->CellSize + sjd->CellSize * 0.5f,
-					//	sjd->Bounds.Bottom() + y * sjd->CellSize + sjd->CellSize * 0.5f,
-					//	sjd->Bounds.Back() + z * sjd->CellSize + sjd->CellSize * 0.5f);
-					currDist = sp.Distance(p) - currRad;
-					SIZE_T i = (z * sjd->resY + y) * sjd->resX + x;
-					volume[i].distField = vislib::math::Min(volume[i].distField, currDist);
+						// and here it is the center!
+						//p.Set(
+						//	sjd->Bounds.Left() + x * sjd->CellSize + sjd->CellSize * 0.5f,
+						//	sjd->Bounds.Bottom() + y * sjd->CellSize + sjd->CellSize * 0.5f,
+						//	sjd->Bounds.Back() + z * sjd->CellSize + sjd->CellSize * 0.5f);
+						currDist = sp.Distance(p) - currRad;
+						SIZE_T i = (z * sjd->resY + y) * sjd->resX + x;
+						volume[i].distField = vislib::math::Min(volume[i].distField, currDist);
+					}
 				}
 			}
 		}
@@ -253,19 +280,7 @@ DWORD Voxelizer::Run(void *userData) {
 	for (x = 0; x < sjd->resX - 1; x++) {
 		for (y = 0; y < sjd->resY - 1; y++) {
 			for (z = 0; z < sjd->resZ - 1; z++) {
-				//if (!markedCells.IsTagged(x, y, z) && isCellNotEmpty(volume, x, y, z)) {
-				//	markedCells.Tag(x, y, z);
-				//	cellFIFO[fifoEnd++].Set(x, y, z);
-				//	if (fifoEnd >= fifoLen) fifoEnd= 0;
-				//	while (fifoCur != fifoEnd) {
-				//		vislib::math::Point<unsigned int, 3> &pos = cellFIFO[fifoCur++];
-				//		if (fifoCur >= fifoLen) fifoCur = 0;
-				//		marchCell(volume, markedCells, pos.X(), pos.Y(), pos.Z());
-				//	}
-				//}
-				//if (isCellNotEmpty(volume, x, y, z)) {
-					marchCell(volume, x, y, z);
-				//}
+				marchCell(volume, x, y, z);
 			}
 		}
 	}

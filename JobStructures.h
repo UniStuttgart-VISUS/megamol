@@ -72,16 +72,18 @@ namespace trisoup {
 		/**
 		 * All particles as taken directly from the respective Datacall
 		 */
-		const core::moldyn::MultiParticleDataCall::Particles &Particles;
+		//const core::moldyn::MultiParticleDataCall::Particles &Particles;
+		
+		core::moldyn::MultiParticleDataCall *datacall;
 
 		/**
 		 * Here the Job should store its results.
 		 */
 		SubJobResult Result;
 
-		SubJobData(const core::moldyn::MultiParticleDataCall::Particles &particles) : Particles(particles) {
+		//SubJobData(const core::moldyn::MultiParticleDataCall::Particles &particles) : Particles(particles) {
 
-		}
+		//}
 	};
 
 
