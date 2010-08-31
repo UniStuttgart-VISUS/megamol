@@ -18,6 +18,7 @@
 #include "param/ParamSlot.h"
 #include "vislib/Array.h"
 #include "vislib/BezierCurve.h"
+#include "vislib/Cuboid.h"
 
 
 namespace megamol {
@@ -103,8 +104,27 @@ namespace misc {
          */
         void assertData(void);
 
+        /**
+         * Adds a spline from input positions to the stored curves
+         *
+         * @param pos The input positions (x, y, z)
+         * @param times The input time steps (t1, t2)
+         * @param cnt The number of input positions
+         * @param rad The base radius value
+         * @param colR The red colour component of the input points
+         * @param colG The green colour component of the input points
+         * @param colB The blue colour component of the input points
+         */
         void addSpline(float *pos, float *times, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB);
 
+        /**
+         * Answer the colour value for a specific time from the time colour map
+         *
+         * @param time The time to return the colour for
+         * @param outR The variable to receive the red colour value
+         * @param outG The variable to recieve the green colour value
+         * @param outB The variable to recieve the blue colour value
+         */
         void timeColour(float time, unsigned char &outR, unsigned char &outG, unsigned char &outB);
 
         /** The slot for requesting data */
@@ -113,10 +133,17 @@ namespace misc {
         /** The slot for fetching siff data */
         CallerSlot inDataSlot;
 
+        /** Parameter slot defining the colour map */
         param::ParamSlot colourMapSlot;
 
+        /** Parameter slot to compensate cyclic boundary conditions */
+        param::ParamSlot deCycleSlot;
+
         /** The bounding box of positions*/
-        float minX, minY, minZ, maxX, maxY, maxZ;
+        vislib::math::Cuboid<float> bbox;
+
+        /** The clipping box of positions */
+        vislib::math::Cuboid<float> cbox;
 
         /** The curves data */
         vislib::Array<vislib::math::BezierCurve<
