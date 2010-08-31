@@ -24,9 +24,9 @@ namespace trisoup {
 
 		float getOffset(float fValue1, float fValue2, float fValueDesired);
 
-		bool isCellNotEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
+		bool CellEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 
-		void marchCell(FatVoxel *theVolume, TagVolume &markedCells, unsigned int x, unsigned int y, unsigned int z);
+		void marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
 		/**
 		 * Thread entry point.
 		 *
@@ -55,9 +55,9 @@ namespace trisoup {
 
 		SubJobData *sjd;
 
-		unsigned int fifoLen, fifoEnd, fifoCur;
+		//unsigned int fifoLen, fifoEnd, fifoCur;
 		
-		vislib::math::Point<unsigned int, 3> *cellFIFO;
+		//vislib::math::Point<unsigned int, 3> *cellFIFO;
 
 		vislib::Array<vislib::math::Point<float, 3> > triangleSoup;
 };

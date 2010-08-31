@@ -7,12 +7,12 @@
 #include "stdafx.h"
 #include "VoluMetricJob.h"
 #include "param/FilePathParam.h"
+#include "param/BoolParam.h"
 #include "vislib/Log.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/NamedColours.h"
 #include "vislib/threadpool.h"
 #include "MarchingCubeTables.h"
-#include "JobStructures.h"
 #include "Voxelizer.h"
 
 using namespace megamol;
@@ -26,6 +26,8 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
         getDataSlot("getData", "Slot that connects to a MultiParticleDataCall to fetch the particles in the scene"),
         metricsFilenameSlot("metricsFilenameSlot", "File that will contain the "
 		"surfaces and volumes of each particle list per frame"),
+		showBoundingBoxesSlot("showBoundingBoxesSlot", "toggle whether the job subdivision grid will be shown"),
+		showSurfaceGeometrySlot("showSurfaceGeometrySlot", "toggle whether the the surface triangles will be shown"),
 		outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
 		outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
 		MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
@@ -35,6 +37,12 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 
     this->metricsFilenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->metricsFilenameSlot);
+
+	this->showBoundingBoxesSlot << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->showBoundingBoxesSlot);
+
+	this->showSurfaceGeometrySlot << new core::param::BoolParam(true);
+	this->MakeSlotAvailable(&this->showSurfaceGeometrySlot);
 
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
@@ -137,7 +145,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 				}
 			}
         }
-		float cellSize = MaxRad * 0.075f;
+		float cellSize = MaxRad * 0.25;//* 0.075f;
 		int bboxBytes = 8 * 3 * sizeof(float);
 		int bboxIdxes = 12 * 2 * sizeof(unsigned int);
 		int vertSize = bboxBytes * partListCnt;
@@ -149,7 +157,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 		unsigned int idxNumOffset = 0;
 
 		// TODO BUG HAZARD FIXME! this is debug! it must start from 0!!!!!
-        for (unsigned int partListI = 2; partListI < partListCnt; partListI++) {
+        for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
 			core::moldyn::MultiParticleDataCall::Particles &parts = datacall->AccessParticles(partListI);
 			UINT64 numParticles = parts.GetCount();
 			unsigned int stride = parts.GetVertexDataStride();
@@ -174,16 +182,11 @@ DWORD VoluMetricJob::Run(void *userData) {
 				b.GrowToPoint(vislib::math::ShallowPoint<float, 3>(
 					(float*)&vertexData[(vertFloatSize + stride) * part]));
 			}
-			b.SetLeft(b.GetLeft() - MaxRad);
-			b.SetRight(b.GetRight() + MaxRad);
-			b.SetTop(b.GetTop() + MaxRad);
-			b.SetBottom(b.GetBottom() - MaxRad);
-			b.SetFront(b.GetFront() + MaxRad);
-			b.SetBack(b.GetBack() - MaxRad);
+			b.Grow(MaxRad);
 
-			int resX = (int) ((float)b.Width() / cellSize + 0.5f);
-			int resY = (int) ((float)b.Height() / cellSize + 0.5f);
-			int resZ = (int) ((float)b.Depth() / cellSize + 0.5f);
+			int resX = (int) ((float)b.Width() / cellSize) + 2;
+			int resY = (int) ((float)b.Height() / cellSize) + 2;
+			int resZ = (int) ((float)b.Depth() / cellSize) + 2;
 			b.SetWidth(resX * cellSize);
 			b.SetHeight(resY * cellSize);
 			b.SetDepth(resZ * cellSize);
@@ -191,7 +194,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 			appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
 			appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-			int subVolCells = 256;
+			int subVolCells = 64;
 			int divX = (int) ceil((float)resX / subVolCells);
 			int divY = (int) ceil((float)resY / subVolCells);
 			int divZ = (int) ceil((float)resZ / subVolCells);
@@ -206,15 +209,15 @@ DWORD VoluMetricJob::Run(void *userData) {
 					for (int z = 0; z < divZ; z++) {
 						float left = b.Left() + x * subVolCells * cellSize;
 						int restX = resX - x * subVolCells;
-						restX = (restX > subVolCells) ? subVolCells : restX;
+						restX = (restX > subVolCells) ? subVolCells + 1: restX;
 						float right = left + restX * cellSize;
 						float bottom = b.Bottom() + y * subVolCells * cellSize;
 						int restY = resY - y * subVolCells;
-						restY = (restY > subVolCells) ? subVolCells : restY;
+						restY = (restY > subVolCells) ? subVolCells + 1: restY;
 						float top = bottom + restY * cellSize;
 						float back = b.Back() + z * subVolCells * cellSize;
 						int restZ = resZ - z * subVolCells;
-						restZ = (restZ > subVolCells) ? subVolCells : restZ;
+						restZ = (restZ > subVolCells) ? subVolCells + 1 : restZ;
 						float front = back + restZ * cellSize;
 						vislib::math::Cuboid<float> bx = vislib::math::Cuboid<float>(left, bottom, back,
 							right, top, front);
@@ -250,38 +253,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 						// we are done
 						break;
 			}
-			// copy finished meshes to output
-			float *vert;
-			unsigned int *tri;
-			vislib::Array<unsigned int> todos;
-			todos.SetCapacityIncrement(10);
-			for (int i = 0; i < subJobDataList.Count(); i++) {
-				if (subJobDataList[i]->Result.done) {
-					todos.Add(i);
-				}
-			}
-			unsigned int numVertices = 0;
-			for (int i = 0; i < todos.Count(); i++) {
-				numVertices += subJobDataList[todos[i]]->Result.vertices.Count();
-			}
-			vert = new float[numVertices * 3];
-			tri = new unsigned int[numVertices * 3];
-			SIZE_T vertOffset = 0;
-			SIZE_T triOffset = 0;
-			for (int i = 0; i < todos.Count(); i++) {
-				SubJobData *sjd = subJobDataList[todos[i]];
-				for (unsigned int j = 0; j < sjd->Result.vertices.Count(); j++) {
-					memcpy(&(vert[vertOffset]), &sjd->Result.vertices[j], 3 * sizeof(float));
-					vertOffset += 3;
-					memcpy(&(tri[triOffset]), &sjd->Result.indices[j], 1 * sizeof(unsigned int));
-					triOffset += 1;
-				}
-			}
-			debugMeshes[meshBackBufferIndex].SetVertexData(numVertices, vert, NULL, NULL, NULL, true);
-			debugMeshes[meshBackBufferIndex].SetTriangleData(numVertices, tri, true);
-			meshBackBufferIndex = 1 - meshBackBufferIndex;
-			this->hash++;
+			copyMeshesToBackbuffer(subJobDataList);
 		}
+		copyMeshesToBackbuffer(subJobDataList);
     }
 
     return 0;
@@ -296,7 +270,11 @@ bool VoluMetricJob::getLineDataCallback(core::Call &caller) {
 		ldc->SetDataHash(0);
 	} else {
 		// TODO: only passing the bounding boxes for now
-		ldc->SetData(1, this->debugLines[1 - this->backBufferIndex]);
+		if (this->showBoundingBoxesSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+			ldc->SetData(1, this->debugLines[1 - this->backBufferIndex]);
+		} else {
+			ldc->SetData(0, NULL);
+		}
 		ldc->SetDataHash(this->hash);
 	}
 
@@ -311,8 +289,11 @@ bool VoluMetricJob::getTriDataCallback(core::Call &caller) {
 		mdc->SetObjects(0, NULL);
 		mdc->SetDataHash(0);
 	} else {
-		// TODO: only passing the bounding boxes for now
-		mdc->SetObjects(1, &(this->debugMeshes[1 - this->meshBackBufferIndex]));
+		if (this->showSurfaceGeometrySlot.Param<megamol::core::param::BoolParam>()->Value()) {
+			mdc->SetObjects(1, &(this->debugMeshes[1 - this->meshBackBufferIndex]));
+		} else {
+			mdc->SetObjects(0, NULL);
+		}
 		mdc->SetDataHash(this->hash);
 	}
 
@@ -320,7 +301,7 @@ bool VoluMetricJob::getTriDataCallback(core::Call &caller) {
 }
 
 bool VoluMetricJob::getLineExtentCallback(core::Call &caller) {
-	core::misc::LinesDataCall *ldc = dynamic_cast<core::misc::LinesDataCall*>(&caller);
+	core::AbstractGetData3DCall *ldc = dynamic_cast<core::AbstractGetData3DCall*>(&caller);
     if (ldc == NULL) return false;
 
 	core::moldyn::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
@@ -368,4 +349,43 @@ void VoluMetricJob::appendBoxIndices(vislib::RawStorage &data, unsigned int &num
 	//return 12 * 2 * sizeof(unsigned int) + offset;
 	//rawOffset += 12 * 2 * sizeof(unsigned int);
 	numOffset += 12;
+}
+
+void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList) {
+	// copy finished meshes to output
+	float *vert, *norm;
+	unsigned int *tri;
+	vislib::Array<unsigned int> todos;
+	todos.SetCapacityIncrement(10);
+	for (int i = 0; i < subJobDataList.Count(); i++) {
+		if (subJobDataList[i]->Result.done) {
+			todos.Add(i);
+		}
+	}
+	unsigned int numVertices = 0;
+	for (int i = 0; i < todos.Count(); i++) {
+		numVertices += subJobDataList[todos[i]]->Result.vertices.Count();
+	}
+	vert = new float[numVertices * 3];
+	norm = new float[numVertices * 3];
+	tri = new unsigned int[numVertices * 3];
+	SIZE_T vertOffset = 0;
+	SIZE_T triOffset = 0;
+	SIZE_T idxOffset = 0;
+	for (int i = 0; i < todos.Count(); i++) {
+		SubJobData *sjd = subJobDataList[todos[i]];
+		for (unsigned int j = 0; j < sjd->Result.vertices.Count(); j++) {
+			memcpy(&(vert[vertOffset]), (sjd->Result.vertices[j].PeekCoordinates()), 3 * sizeof(float));
+			memcpy(&(norm[vertOffset]), (sjd->Result.normals[j].PeekComponents()), 3 * sizeof(float));
+			vertOffset += 3;
+			//memcpy(&(tri[triOffset]), &sjd->Result.indices[j], 1 * sizeof(unsigned int));
+			//triOffset += 1;
+			tri[triOffset++] = sjd->Result.indices[j] + idxOffset;
+		}
+		idxOffset += sjd->Result.vertices.Count();
+	}
+	debugMeshes[meshBackBufferIndex].SetVertexData(numVertices, vert, norm, NULL, NULL, true);
+	debugMeshes[meshBackBufferIndex].SetTriangleData(numVertices / 3, tri, true);
+	meshBackBufferIndex = 1 - meshBackBufferIndex;
+	this->hash++;
 }

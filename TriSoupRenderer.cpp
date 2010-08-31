@@ -244,6 +244,7 @@ bool TriSoupRenderer::Render(Call& call) {
 
         if (obj.GetTriIndexPointer() != NULL) {
             ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointer());
+			//::glDrawElements(GL_TRIANGLES, obj.GetTriCount(), GL_UNSIGNED_INT, obj.GetTriIndexPointer());
         } else {
             ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
         }

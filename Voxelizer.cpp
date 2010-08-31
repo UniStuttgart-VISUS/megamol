@@ -8,14 +8,18 @@
 using namespace megamol;
 using namespace megamol::trisoup;
 
-Voxelizer::Voxelizer(void) : terminate(false), sjd(NULL), cellFIFO(NULL), fifoLen(0), fifoCur(0), fifoEnd(0) {
+Voxelizer::Voxelizer(void) : terminate(false), sjd(NULL) {
 	triangleSoup.SetCapacityIncrement(90); // AKA 10 triangles?
 }
 
 Voxelizer::~Voxelizer(void) {
 }
 
-void Voxelizer::marchCell(FatVoxel *theVolume, TagVolume &markedCells, unsigned int x, unsigned int y, unsigned int z) {
+void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
+	if (CellEmpty(theVolume, x, y, z)) {
+		return;
+	}
+
     unsigned int i;
     float CubeValues[8];
     int flagIndex, edgeFlags, edge, triangle;
@@ -71,20 +75,20 @@ void Voxelizer::marchCell(FatVoxel *theVolume, TagVolume &markedCells, unsigned 
             EdgeVertex[edge].SetZ(p.Z() + (MarchingCubeTables::a2fVertexOffset[MarchingCubeTables::a2iEdgeConnection[edge][0]][2]
             + offset * MarchingCubeTables::a2fEdgeDirection[edge][2]) * sjd->CellSize);
 
-            for (i = 0; i < 2; i++) {
-                int lx = int(x) + MarchingCubeTables::neighbourTable[edge][i][0];
-                int ly = int(y) + MarchingCubeTables::neighbourTable[edge][i][1];
-                int lz = int(z) + MarchingCubeTables::neighbourTable[edge][i][2];
-                if ((lx < 0) || (ly < 0) || (lz < 0)
-                    || (lx >= int(sjd->resX - 1)) || (ly >= int(sjd->resY - 1)) || (lz >= int(sjd->resZ - 1)))
-                    continue;
-                if (!markedCells.IsTagged(lx, ly, lz)) {
-                    markedCells.Tag(lx, ly, lz);
+            //for (i = 0; i < 2; i++) {
+            //    int lx = int(x) + MarchingCubeTables::neighbourTable[edge][i][0];
+            //    int ly = int(y) + MarchingCubeTables::neighbourTable[edge][i][1];
+            //    int lz = int(z) + MarchingCubeTables::neighbourTable[edge][i][2];
+            //    if ((lx < 0) || (ly < 0) || (lz < 0)
+            //        || (lx >= int(sjd->resX - 1)) || (ly >= int(sjd->resY - 1)) || (lz >= int(sjd->resZ - 1)))
+            //        continue;
+            //    if (!markedCells.IsTagged(lx, ly, lz)) {
+            //        markedCells.Tag(lx, ly, lz);
 
-                    cellFIFO[fifoEnd++].Set(lx, ly, lz);
-                    if (fifoEnd >= fifoLen) fifoEnd = 0;
-                }
-            }
+            //        cellFIFO[fifoEnd++].Set(lx, ly, lz);
+            //        if (fifoEnd >= fifoLen) fifoEnd = 0;
+            //    }
+            //}
         }
     }
 
@@ -103,9 +107,11 @@ void Voxelizer::marchCell(FatVoxel *theVolume, TagVolume &markedCells, unsigned 
         normal = a.Cross(b);
 
         sjd->Result.surface += normal.Length() / 2.0f;
+		normal.Normalise();
         for (corner = 0; corner < 3; corner++) {
             vertex = MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + corner];
-			sjd->Result.vertices.Append(vislib::math::Point<float,3>(EdgeVertex[vertex]));
+			sjd->Result.vertices.Append(EdgeVertex[vertex]);
+			sjd->Result.normals.Append(normal);
 			sjd->Result.indices.Append(sjd->Result.vertices.Count() - 1);
         }
     }
@@ -122,7 +128,7 @@ float Voxelizer::getOffset(float fValue1, float fValue2, float fValueDesired) {
         return (float)((fValueDesired - fValue1)/fDelta);
 }
 
-bool Voxelizer::isCellNotEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z) {
+bool Voxelizer::CellEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z) {
     unsigned int i;
     bool neg = false, pos = false;
     float f;
@@ -137,13 +143,13 @@ bool Voxelizer::isCellNotEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsi
         neg = neg | (f < 0.0f);
         pos = pos | (f >= 0.0f);
     }
-    return neg && pos;
+    return !(neg && pos);
 }
 
 DWORD Voxelizer::Run(void *userData) {
 	using vislib::sys::Log;
 
-	unsigned int x, y, z;
+	int x, y, z;
 	unsigned int vertFloatSize = 0;
 	float currRad = 0.f, maxRad = -FLT_MAX;
 	float currDist;
@@ -151,9 +157,9 @@ DWORD Voxelizer::Run(void *userData) {
 	vislib::math::Point<float, 3> p;
 	sjd = static_cast<SubJobData*>(userData);
 
-	TagVolume markedCells(sjd->resX - 1, sjd->resY - 1, sjd->resZ - 1);
-	fifoLen = (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1) + 1;
-	cellFIFO = new vislib::math::Point<unsigned int, 3>[fifoLen];
+	//TagVolume markedCells(sjd->resX - 1, sjd->resY - 1, sjd->resZ - 1);
+	//fifoLen = (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1) + 1;
+	//cellFIFO = new vislib::math::Point<unsigned int, 3>[fifoLen];
 	unsigned int fifoEnd = 0, fifoCur = 0;
 	FatVoxel *volume = new FatVoxel[sjd->resX * sjd->resY * sjd->resZ];
 	for (SIZE_T i = 0; i < sjd->resX * sjd->resY * sjd->resZ; i++) {
@@ -190,7 +196,7 @@ DWORD Voxelizer::Run(void *userData) {
 	// sample everything into our temporary volume
 	currRad = sjd->Particles.GetGlobalRadius();
 	vislib::math::Cuboid<float> bx(sjd->Bounds);
-	bx.Grow(maxRad);
+	bx.Grow(2 * maxRad);
 	for (UINT64 l = 0; l < numParticles; l++) {
 		vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(vertFloatSize + stride) * l]);
 		if (dataType == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
@@ -225,16 +231,16 @@ DWORD Voxelizer::Run(void *userData) {
 			for (y = pStart.Y(); y <= pEnd.Y(); y++) {
 				for (x = pStart.X(); x <= pEnd.X(); x++) {
 					// TODO think about this. here the voxel content is determined by a corner
-					/*p.Set(
+					p.Set(
 					sjd->Bounds.Left() + x * sjd->CellSize,
 					sjd->Bounds.Bottom() + y * sjd->CellSize,
-					sjd->Bounds.Back() + z * sjd->CellSize);*/
+					sjd->Bounds.Back() + z * sjd->CellSize);
 
 					// and here it is the center!
-					p.Set(
-						sjd->Bounds.Left() + x * sjd->CellSize + sjd->CellSize * 0.5f,
-						sjd->Bounds.Bottom() + y * sjd->CellSize + sjd->CellSize * 0.5f,
-						sjd->Bounds.Back() + z * sjd->CellSize + sjd->CellSize * 0.5f);
+					//p.Set(
+					//	sjd->Bounds.Left() + x * sjd->CellSize + sjd->CellSize * 0.5f,
+					//	sjd->Bounds.Bottom() + y * sjd->CellSize + sjd->CellSize * 0.5f,
+					//	sjd->Bounds.Back() + z * sjd->CellSize + sjd->CellSize * 0.5f);
 					currDist = sp.Distance(p) - currRad;
 					SIZE_T i = (z * sjd->resY + y) * sjd->resX + x;
 					volume[i].distField = vislib::math::Min(volume[i].distField, currDist);
@@ -247,16 +253,19 @@ DWORD Voxelizer::Run(void *userData) {
 	for (x = 0; x < sjd->resX - 1; x++) {
 		for (y = 0; y < sjd->resY - 1; y++) {
 			for (z = 0; z < sjd->resZ - 1; z++) {
-				if (!markedCells.IsTagged(x, y, z) && isCellNotEmpty(volume, x, y, z)) {
-					markedCells.Tag(x, y, z);
-					cellFIFO[fifoEnd++].Set(x, y, z);
-					if (fifoEnd >= fifoLen) fifoEnd= 0;
-					while (fifoCur != fifoEnd) {
-						vislib::math::Point<unsigned int, 3> &pos = cellFIFO[fifoCur++];
-						if (fifoCur >= fifoLen) fifoCur = 0;
-						marchCell(volume, markedCells, pos.X(), pos.Y(), pos.Z());
-					}
-				}
+				//if (!markedCells.IsTagged(x, y, z) && isCellNotEmpty(volume, x, y, z)) {
+				//	markedCells.Tag(x, y, z);
+				//	cellFIFO[fifoEnd++].Set(x, y, z);
+				//	if (fifoEnd >= fifoLen) fifoEnd= 0;
+				//	while (fifoCur != fifoEnd) {
+				//		vislib::math::Point<unsigned int, 3> &pos = cellFIFO[fifoCur++];
+				//		if (fifoCur >= fifoLen) fifoCur = 0;
+				//		marchCell(volume, markedCells, pos.X(), pos.Y(), pos.Z());
+				//	}
+				//}
+				//if (isCellNotEmpty(volume, x, y, z)) {
+					marchCell(volume, x, y, z);
+				//}
 			}
 		}
 	}

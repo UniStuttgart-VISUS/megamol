@@ -22,6 +22,7 @@
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
 #include "vislib/Cuboid.h"
+#include "JobStructures.h"
 //#include "vislib/memutils.h"
 
 
@@ -103,9 +104,15 @@ namespace trisoup {
 
 		void appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset);
 
+		void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList);
+
         core::CallerSlot getDataSlot;
 
         core::param::ParamSlot metricsFilenameSlot;
+		
+		core::param::ParamSlot showBoundingBoxesSlot;
+
+		core::param::ParamSlot showSurfaceGeometrySlot;
 
 		core::CalleeSlot outLineDataSlot;
 

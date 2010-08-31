@@ -30,6 +30,7 @@ namespace trisoup {
 		//vislib::RawStorage indexData;
 
 		vislib::Array<vislib::math::Point<float, 3> > vertices;
+		vislib::Array<vislib::math::Vector<float, 3> > normals;
 		vislib::Array<unsigned int> indices;
 
 		//float *normals;
@@ -40,6 +41,7 @@ namespace trisoup {
 
 		SubJobResult(void) : surface(0.0f), volume(0.0f), done(false) {
 			vertices.SetCapacityIncrement(90);
+			normals.SetCapacityIncrement(90);
 			indices.SetCapacityIncrement(30);
 		}
 	};
