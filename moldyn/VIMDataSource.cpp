@@ -163,6 +163,22 @@ bool moldyn::VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         this->pos[i].EnforceSize(posWrtr[i]->End(), true);
         this->quat[i].EnforceSize(quatWrtr[i]->End(), true);
+
+        // de-quantize positions
+        float maxVal = 0.0f;
+        for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
+            if (maxVal < *this->pos[i].AsAt<float>(j)) maxVal = *this->pos[i].AsAt<float>(j);
+        }
+        float deQuant = 1.0f;
+        if (maxVal >= 1000) {
+            deQuant = 9999.0f;
+        } else {
+            deQuant = 999.0f;
+        }
+        for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
+            *this->pos[i].AsAt<float>(j) /= deQuant;
+        }
+
     }
     VLTRACE(VISLIB_TRCELVL_INFO, "Frame %u loaded\n", this->frame);
 
@@ -267,8 +283,6 @@ moldyn::VIMDataSource::Frame::MakeInterpolationFrame(float alpha,
 void moldyn::VIMDataSource::Frame::parseParticleLine(vislib::StringA &line,
         int &outType, float &outX, float &outY, float &outZ, float &outQX,
         float &outQY, float &outQZ, float &outQW) {
-			// TODO dequant = 999. FIXME
-#define VIM_DEQUANT_VALUE 9999.0f
 #define MAPPED_Q1 outQW 
 #define MAPPED_Q2 outQX
 #define MAPPED_Q3 outQY
@@ -284,41 +298,38 @@ void moldyn::VIMDataSource::Frame::parseParticleLine(vislib::StringA &line,
     }
 
     outType = vislib::CharTraitsA::ParseInt(shreds[1]);
-    outX = float(vislib::CharTraitsA::ParseInt(shreds[2])) / VIM_DEQUANT_VALUE;
-    outY = float(vislib::CharTraitsA::ParseInt(shreds[3])) / VIM_DEQUANT_VALUE;
-    outZ = float(vislib::CharTraitsA::ParseInt(shreds[4])) / VIM_DEQUANT_VALUE;
-	if (shreds.Count() == 9) {
-		MAPPED_Q1 = float(vislib::CharTraitsA::ParseInt(shreds[5]))
-			/ VIM_DEQUANT_VALUE;
-		MAPPED_Q2 = float(vislib::CharTraitsA::ParseInt(shreds[6]))
-			/ VIM_DEQUANT_VALUE;
-		MAPPED_Q3 = float(vislib::CharTraitsA::ParseInt(shreds[7]))
-			/ VIM_DEQUANT_VALUE;
-		MAPPED_Q4 = float(vislib::CharTraitsA::ParseInt(shreds[8]))
-			/ VIM_DEQUANT_VALUE;
+    outX = float(vislib::CharTraitsA::ParseInt(shreds[2])); // de-quantization of positions is done later
+    outY = float(vislib::CharTraitsA::ParseInt(shreds[3]));
+    outZ = float(vislib::CharTraitsA::ParseInt(shreds[4]));
+    if (shreds.Count() == 9) {
+        MAPPED_Q1 = float(vislib::CharTraitsA::ParseInt(shreds[5])); // quaternions are automatically de-quantized thru normalization
+        MAPPED_Q2 = float(vislib::CharTraitsA::ParseInt(shreds[6]));
+        MAPPED_Q3 = float(vislib::CharTraitsA::ParseInt(shreds[7]));
+        MAPPED_Q4 = float(vislib::CharTraitsA::ParseInt(shreds[8]));
 
-		// normalize quaternion
-		double ql = sqrt(double(outQX) * double(outQX)
-			+ double(outQY) * double(outQY) 
-			+ double(outQZ) * double(outQZ)
-			+ double(outQW) * double(outQW));
-		if (fabs(ql) < 0.001) {
-			outQX = outQY = outQZ = 0.0f;
-			outQW = 1.0f;
-		} else {
-			outQX = float(double(outQX) / ql); // qi x*sin(a/2)
-			outQY = float(double(outQY) / ql); // qj y*sin(a/2)
-			outQZ = float(double(outQZ) / ql); // qk z*sin(a/2)
-			outQW = float(double(outQW) / ql); // qr   cos(a/2)
-		}
-	} else {
-		outQX = 0.0f;
-		outQY = 0.0f;
-		outQZ = 0.0f;
-		outQW = 1.0f;
-	}
+        // normalize quaternion
+        double ql = sqrt(double(outQX) * double(outQX)
+            + double(outQY) * double(outQY) 
+            + double(outQZ) * double(outQZ)
+            + double(outQW) * double(outQW));
+        if (fabs(ql) < 0.001) {
+            outQX = 0.0f;
+            outQY = 0.0f;
+            outQZ = 0.0f;
+            outQW = 1.0f;
+        } else {
+            outQX = float(double(outQX) / ql); // qi x*sin(a/2)
+            outQY = float(double(outQY) / ql); // qj y*sin(a/2)
+            outQZ = float(double(outQZ) / ql); // qk z*sin(a/2)
+            outQW = float(double(outQW) / ql); // qr   cos(a/2)
+        }
+    } else {
+        outQX = 0.0f;
+        outQY = 0.0f;
+        outQZ = 0.0f;
+        outQW = 1.0f;
+    }
 
-#undef VIM_DEQUANT_VALUE
 #undef MAPPED_Q1
 #undef MAPPED_Q2
 #undef MAPPED_Q3
@@ -818,10 +829,10 @@ bool moldyn::VIMDataSource::getDataCallback(Call& caller) {
             c2->AccessParticles(i).SetCount(f->PartCnt(i));
             c2->AccessParticles(i).SetColourData(
                 moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
-			const float *vd = f->PartPoss(i);
+            const float *vd = f->PartPoss(i);
             c2->AccessParticles(i).SetVertexData(
-				(vd == NULL) ? moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
-				: moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, vd);
+                (vd == NULL) ? moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
+                : moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, vd);
         }
 
     }
