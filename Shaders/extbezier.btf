@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="extbezier">
+  <include file="bezier"/>
+
+  <shader name="pointVert">
+    <snippet type="version">120</snippet>
+    <snippet type="string">
+      <![CDATA[
+uniform vec4 viewAttr;    /* (x, y, 2/w, 2/h) */
+    ]]>
+    </snippet>
+    <snippet type="string">
+      <![CDATA[
+attribute vec4 yax1;
+attribute vec4 pos2;
+attribute vec4 yax2;
+attribute vec4 pos3;
+attribute vec4 yax3;
+attribute vec4 pos4;
+attribute vec4 yax4;
+attribute vec4 cols;
+
+#define POS1 gl_Vertex.xyz
+#define RDY1 gl_Vertex.w
+#define YAX1 yax1.xyz
+#define RDZ1 yax1.w
+#define CLC1 cols.x
+#define POS2 pos2.xyz
+#define RDY2 pos2.w
+#define YAX2 yax2.xyz
+#define RDZ2 yax2.w
+#define CLC2 cols.y
+#define POS3 pos3.xyz
+#define RDY3 pos3.w
+#define YAX3 yax3.xyz
+#define RDZ3 yax3.w
+#define CLC3 cols.z
+#define POS4 pos4.xyz
+#define RDY4 pos4.w
+#define YAX4 yax4.xyz
+#define RDZ4 yax4.w
+#define CLC4 cols.w
+]]>
+    </snippet>
+    <snippet type="string">
+      <![CDATA[
+void main() {
+  vec3 pmin, pmax;
+
+  float RAD1 = max(RDY1, RDZ1);
+  float RAD2 = max(RDY2, RDZ2);
+  float RAD3 = max(RDY3, RDZ3);
+  float RAD4 = max(RDY4, RDZ4);
+
+]]>
+    </snippet>
+    <snippet name="::bezier::pointVert::lumberjack" />
+    <snippet type="string">
+      <![CDATA[
+  gl_Position = vec4(0.5 * (pmin + pmax), 1.0);
+  pmax = pmax - pmin;
+  pmax.xy /= viewAttr.zw;
+  gl_PointSize = max(pmax.x, pmax.y);
+}
+]]>
+    </snippet>
+  </shader>
+
+</btf>

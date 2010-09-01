@@ -1379,6 +1379,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\misc\ExtBezierRaycastRenderer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\LinesDataCall.h"
 					>
 				</File>
@@ -1428,6 +1432,10 @@
 				</File>
 				<File
 					RelativePath=".\misc\ExtBezierMeshRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\ExtBezierRaycastRenderer.cpp"
 					>
 				</File>
 				<File
@@ -2259,6 +2267,10 @@
 			</File>
 			<File
 				RelativePath=".\Shaders\cylinder.glvp"
+				>
+			</File>
+			<File
+				RelativePath=".\Shaders\extbezier.btf"
 				>
 			</File>
 			<File
