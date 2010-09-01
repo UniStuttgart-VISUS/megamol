@@ -116,6 +116,10 @@ namespace trisoup {
 
 		core::param::ParamSlot radiusMultiplierSlot;
 
+		core::param::ParamSlot continueToNextFrameSlot;
+
+		core::param::ParamSlot resetContinueSlot;
+
 		core::CalleeSlot outLineDataSlot;
 
 		core::CalleeSlot outTriDataSlot;

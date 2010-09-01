@@ -16,7 +16,8 @@ namespace trisoup {
 
 		struct FatVoxel {
 			float distField;
-
+			//vislib::SingleLinkedList<vislib::Array<vislib::math::Point<float, 3> > > triangles;
+			//vislib::SingleLinkedList<vislib::Array<vislib::math::Point<float, 3> > > normals;
 		};
 
 		Voxelizer(void);
@@ -59,7 +60,7 @@ namespace trisoup {
 		
 		//vislib::math::Point<unsigned int, 3> *cellFIFO;
 
-		vislib::Array<vislib::math::Point<float, 3> > triangleSoup;
+		//vislib::Array<vislib::math::Point<float, 3> > triangleSoup;
 };
 
 } /* end namespace trisoup */

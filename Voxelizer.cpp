@@ -9,7 +9,7 @@ using namespace megamol;
 using namespace megamol::trisoup;
 
 Voxelizer::Voxelizer(void) : terminate(false), sjd(NULL) {
-	triangleSoup.SetCapacityIncrement(90); // AKA 10 triangles?
+	//triangleSoup.SetCapacityIncrement(90); // AKA 10 triangles?
 }
 
 Voxelizer::~Voxelizer(void) {
@@ -95,10 +95,10 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
     // make triangles
 	vislib::math::Vector<float, 3> normal;
 	vislib::math::Vector<float, 3> a, b;
-	for (triangle = 0; triangle < 5; triangle++) {
-        if (MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle] < 0) {
-            break;
-        }
+	for (triangle = 0; triangle < MarchingCubeTables::a2iTriangleConnectionCount[flagIndex]; triangle++) {
+        //if (MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle] < 0) {
+        //    break;
+        //}
 
         a = EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 0]] 
         - EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 1]];
@@ -177,21 +177,12 @@ DWORD Voxelizer::Run(void *userData) {
 		unsigned char *vertexData = (unsigned char*)ps.GetVertexData();
 		switch (dataType) {
 			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
-				//Log::DefaultLog.WriteError("void vertex data. wut?");
-				//return -1;
 				continue;
 			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
 				vertFloatSize = 3 * sizeof(float);
-				//maxRad = ps.GetGlobalRadius();
 				break;
 			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
 				vertFloatSize = 4 * sizeof(float);
-				//for (UINT64 l = 0; l < numParticles; l++) {
-				//	currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
-				//	if (currRad > maxRad) {
-				//		maxRad = currRad;
-				//	}
-				//}
 				break;
 			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
 				Log::DefaultLog.WriteError("This module does not yet like quantized data");

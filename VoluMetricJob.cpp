@@ -30,6 +30,9 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 		showBoundingBoxesSlot("showBoundingBoxesSlot", "toggle whether the job subdivision grid will be shown"),
 		showSurfaceGeometrySlot("showSurfaceGeometrySlot", "toggle whether the the surface triangles will be shown"),
 		radiusMultiplierSlot("radiusMultiplierSlot", "multiplier for the particle radius"),
+		continueToNextFrameSlot("continueToNextFrameSlot", "continue computation immediately after a frame finishes,"
+		"erasing all debug geometry"),
+		resetContinueSlot("resetContinueSlot", "reset the continueToNextFrameSlot to false automatically"),
 		outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
 		outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
 		MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
@@ -45,6 +48,12 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 
 	this->showSurfaceGeometrySlot << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->showSurfaceGeometrySlot);
+
+	this->continueToNextFrameSlot << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->continueToNextFrameSlot);
+
+	this->resetContinueSlot << new core::param::BoolParam(true);
+	this->MakeSlotAvailable(&this->resetContinueSlot);
 
 	this->radiusMultiplierSlot << new core::param::FloatParam(1.0f, 0.0001f, 10000.f);
 	this->MakeSlotAvailable(&this->radiusMultiplierSlot);
@@ -127,7 +136,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 			}
 		} while (datacall->FrameID() != frameI && (vislib::sys::Thread::Sleep(100), true));
 
-		// TODO: clear submitted stuff, dealloc.
+		// clear submitted stuff, dealloc.
 		while (voxelizerList.Count() > 0) {
 			delete voxelizerList[0];
 			voxelizerList.RemoveAt(0);
@@ -164,7 +173,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 		float RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
 		MaxRad *= RadMult;
 
-		float cellSize = MaxRad * 0.25;//* 0.075f;
+		float cellSize = MaxRad * 0.25f;//* 0.075f;
 		int bboxBytes = 8 * 3 * sizeof(float);
 		int bboxIdxes = 12 * 2 * sizeof(unsigned int);
 		int vertSize = bboxBytes * partListCnt;
@@ -175,32 +184,6 @@ DWORD VoluMetricJob::Run(void *userData) {
 		unsigned int vertFloatSize = 0;
 		unsigned int idxNumOffset = 0;
 
-   //     for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
-			//core::moldyn::MultiParticleDataCall::Particles &parts = datacall->AccessParticles(partListI);
-			//UINT64 numParticles = parts.GetCount();
-			//unsigned int stride = parts.GetVertexDataStride();
-			//switch (parts.GetVertexDataType()) {
-			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
-			//		//Log::DefaultLog.WriteError("void vertex data. wut?");
-			//		//return -4;
-			//		continue;
-			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-			//		vertFloatSize = 3 * sizeof(float);
-			//		break;
-			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-			//		vertFloatSize = 4 * sizeof(float);
-			//		break;
-			//	case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
-			//		Log::DefaultLog.WriteError("This module does not yet like quantized data");
-			//		return -5;
-			//}
-			//unsigned char *vertexData = (unsigned char*)parts.GetVertexData();
-			//vislib::math::Cuboid<float> b = vislib::math::Cuboid<float>(vislib::math::ShallowPoint<float, 3>((float*)vertexData),
-			//	vislib::math::Dimension<float, 3>(MaxRad * 2, MaxRad * 2, MaxRad * 2));
-			//for (UINT64 part = 1; part < numParticles; part++) {
-			//	b.GrowToPoint(vislib::math::ShallowPoint<float, 3>(
-			//		(float*)&vertexData[(vertFloatSize + stride) * part]));
-			//}
 		vislib::math::Cuboid<float> b;
 		if (datacall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
 			b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
@@ -219,10 +202,17 @@ DWORD VoluMetricJob::Run(void *userData) {
 		appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
 		appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-		int subVolCells = 64;
-		int divX = (int) ceil((float)resX / subVolCells);
-		int divY = (int) ceil((float)resY / subVolCells);
-		int divZ = (int) ceil((float)resZ / subVolCells);
+		int divX = 1;
+		int divY = 1;
+		int divZ = 1;
+		int subVolCells = 128;
+
+		while (divX == 1 && divY == 1 && divZ ==1) {
+			subVolCells /= 2;
+			divX = (int) ceil((float)resX / subVolCells);
+			divY = (int) ceil((float)resY / subVolCells);
+			divZ = (int) ceil((float)resZ / subVolCells);
+		}
 
 		vertSize += bboxBytes * divX * divY * divZ;
 		idxSize += bboxIdxes * divX * divY * divZ;
@@ -283,6 +273,13 @@ DWORD VoluMetricJob::Run(void *userData) {
 			copyMeshesToBackbuffer(subJobDataList);
 		}
 		copyMeshesToBackbuffer(subJobDataList);
+
+		while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+			Sleep(500);
+		}
+		if (this->resetContinueSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+			this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->SetValue(false);
+		}
     }
 
     return 0;
@@ -343,8 +340,7 @@ bool VoluMetricJob::getLineExtentCallback(core::Call &caller) {
 			ldc->AccessBoundingBoxes().SetObjectSpaceBBox(datacall->AccessBoundingBoxes().ObjectSpaceBBox());
 			vislib::math::Cuboid<float> b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
 			// TODO: maybe senseless paranoia?
-			b.Set(b.Left() - MaxRad, b.Bottom() - MaxRad, b.Back() - MaxRad, b.Right() + MaxRad,
-				b.Top() + MaxRad, b.Front() + MaxRad);
+			b.Grow(MaxRad);
 			ldc->AccessBoundingBoxes().SetObjectSpaceClipBox(b);
 		}
         ldc->SetFrameCount(1);
@@ -391,14 +387,14 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 	}
 	unsigned int numVertices = 0;
 	for (int i = 0; i < todos.Count(); i++) {
-		numVertices += subJobDataList[todos[i]]->Result.vertices.Count();
+		numVertices += (unsigned int)subJobDataList[todos[i]]->Result.vertices.Count();
 	}
 	vert = new float[numVertices * 3];
 	norm = new float[numVertices * 3];
 	tri = new unsigned int[numVertices * 3];
 	SIZE_T vertOffset = 0;
 	SIZE_T triOffset = 0;
-	SIZE_T idxOffset = 0;
+	unsigned int idxOffset = 0;
 	for (int i = 0; i < todos.Count(); i++) {
 		SubJobData *sjd = subJobDataList[todos[i]];
 		for (unsigned int j = 0; j < sjd->Result.vertices.Count(); j++) {
@@ -409,7 +405,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 			//triOffset += 1;
 			tri[triOffset++] = sjd->Result.indices[j] + idxOffset;
 		}
-		idxOffset += sjd->Result.vertices.Count();
+		idxOffset += (unsigned int)sjd->Result.vertices.Count();
 	}
 	debugMeshes[meshBackBufferIndex].SetVertexData(numVertices, vert, norm, NULL, NULL, true);
 	debugMeshes[meshBackBufferIndex].SetTriangleData(numVertices / 3, tri, true);

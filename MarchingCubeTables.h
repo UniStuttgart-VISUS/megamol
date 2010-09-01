@@ -17,6 +17,7 @@ public:
 	static const float a2fEdgeDirection[12][3];
 	static const unsigned int aiCubeEdgeFlags[256];
 	static const int a2iTriangleConnectionTable[256][16];
+	static const int MarchingCubeTables::a2iTriangleConnectionCount[256];
 	static const int neighbourTable[12][2][3];
 };
 
