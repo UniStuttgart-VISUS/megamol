@@ -151,7 +151,8 @@ DWORD Voxelizer::Run(void *userData) {
 
 	int x, y, z;
 	unsigned int vertFloatSize = 0;
-	float currRad = 0.f, maxRad = -FLT_MAX;
+	float currRad = 0.f;
+	//, maxRad = -FLT_MAX;
 	float currDist;
 	vislib::math::Point<unsigned int, 3> pStart, pEnd;
 	vislib::math::Point<float, 3> p;
@@ -181,16 +182,16 @@ DWORD Voxelizer::Run(void *userData) {
 				continue;
 			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
 				vertFloatSize = 3 * sizeof(float);
-				maxRad = ps.GetGlobalRadius();
+				//maxRad = ps.GetGlobalRadius();
 				break;
 			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
 				vertFloatSize = 4 * sizeof(float);
-				for (UINT64 l = 0; l < numParticles; l++) {
-					currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
-					if (currRad > maxRad) {
-						maxRad = currRad;
-					}
-				}
+				//for (UINT64 l = 0; l < numParticles; l++) {
+				//	currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
+				//	if (currRad > maxRad) {
+				//		maxRad = currRad;
+				//	}
+				//}
 				break;
 			case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
 				Log::DefaultLog.WriteError("This module does not yet like quantized data");
@@ -200,11 +201,11 @@ DWORD Voxelizer::Run(void *userData) {
 
 	// sample everything into our temporary volume
 	vislib::math::Cuboid<float> bx(sjd->Bounds);
-	bx.Grow(2 * maxRad);
+	bx.Grow(2 * sjd->MaxRad * sjd->RadMult);
 
 	for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
 		core::moldyn::MultiParticleDataCall::Particles ps = sjd->datacall->AccessParticles(partListI);
-		currRad = ps.GetGlobalRadius();
+		currRad = ps.GetGlobalRadius() * sjd->RadMult;
 		UINT64 numParticles = ps.GetCount();
 		unsigned int stride = ps.GetVertexDataStride();
 		core::moldyn::MultiParticleDataCall::Particles::VertexDataType dataType =
@@ -227,6 +228,7 @@ DWORD Voxelizer::Run(void *userData) {
 			vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(vertFloatSize + stride) * l]);
 			if (dataType == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
 				currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
+				currRad *= sjd->RadMult;
 			}
 			if (!bx.Contains(sp, vislib::math::Cuboid<float>::FACE_ALL)) {
 				continue;

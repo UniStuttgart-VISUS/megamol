@@ -62,7 +62,12 @@ namespace trisoup {
 
 		unsigned int resZ;
 
+		/**
+		 * Maximum radius in the datasource.
+		 */
 		float MaxRad;
+
+		float RadMult;
 
 		/**
 		 * Edge length of a voxel (set in accordance to the radii of the contained particles)

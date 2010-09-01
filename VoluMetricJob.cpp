@@ -8,6 +8,7 @@
 #include "VoluMetricJob.h"
 #include "param/FilePathParam.h"
 #include "param/BoolParam.h"
+#include "param/FloatParam.h"
 #include "vislib/Log.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/NamedColours.h"
@@ -28,6 +29,7 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 		"surfaces and volumes of each particle list per frame"),
 		showBoundingBoxesSlot("showBoundingBoxesSlot", "toggle whether the job subdivision grid will be shown"),
 		showSurfaceGeometrySlot("showSurfaceGeometrySlot", "toggle whether the the surface triangles will be shown"),
+		radiusMultiplierSlot("radiusMultiplierSlot", "multiplier for the particle radius"),
 		outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
 		outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
 		MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
@@ -44,7 +46,8 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 	this->showSurfaceGeometrySlot << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->showSurfaceGeometrySlot);
 
-	//this->radiusMultiplicatorSlot << new core::param::
+	this->radiusMultiplierSlot << new core::param::FloatParam(1.0f, 0.0001f, 10000.f);
+	this->MakeSlotAvailable(&this->radiusMultiplierSlot);
 
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
@@ -124,6 +127,16 @@ DWORD VoluMetricJob::Run(void *userData) {
 			}
 		} while (datacall->FrameID() != frameI && (vislib::sys::Thread::Sleep(100), true));
 
+		// TODO: clear submitted stuff, dealloc.
+		while (voxelizerList.Count() > 0) {
+			delete voxelizerList[0];
+			voxelizerList.RemoveAt(0);
+		}
+		while (subJobDataList.Count() > 0) {
+			delete subJobDataList[0];
+			subJobDataList.RemoveAt(0);
+		}
+
         unsigned int partListCnt = datacall->GetParticleListCount();
 		MaxRad = -FLT_MAX;
         for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
@@ -147,6 +160,10 @@ DWORD VoluMetricJob::Run(void *userData) {
 				}
 			}
         }
+
+		float RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
+		MaxRad *= RadMult;
+
 		float cellSize = MaxRad * 0.25;//* 0.075f;
 		int bboxBytes = 8 * 3 * sizeof(float);
 		int bboxIdxes = 12 * 2 * sizeof(unsigned int);
@@ -239,7 +256,8 @@ DWORD VoluMetricJob::Run(void *userData) {
 					sjd->resX = restX;
 					sjd->resY = restY;
 					sjd->resZ = restZ;
-					sjd->MaxRad = MaxRad;
+					sjd->RadMult = RadMult;
+					sjd->MaxRad = MaxRad / RadMult;
 					subJobDataList.Add(sjd);
 					Voxelizer *v = new Voxelizer();
 					voxelizerList.Add(v);

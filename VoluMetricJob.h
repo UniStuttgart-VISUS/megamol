@@ -114,7 +114,7 @@ namespace trisoup {
 
 		core::param::ParamSlot showSurfaceGeometrySlot;
 
-		//core::param::ParamSlot radiusMultiplicatorSlot;
+		core::param::ParamSlot radiusMultiplierSlot;
 
 		core::CalleeSlot outLineDataSlot;
 
