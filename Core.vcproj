@@ -1343,6 +1343,10 @@
 				Name="Header Files"
 				>
 				<File
+					RelativePath=".\misc\AbstractBezierRaycastRenderer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\BezierControlLines.h"
 					>
 				</File>
@@ -1356,6 +1360,10 @@
 				</File>
 				<File
 					RelativePath=".\misc\BezierMeshRenderer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\BezierRaycastRenderer.h"
 					>
 				</File>
 				<File
@@ -1387,6 +1395,10 @@
 				Name="Source Files"
 				>
 				<File
+					RelativePath=".\misc\AbstractBezierRaycastRenderer.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\BezierControlLines.cpp"
 					>
 				</File>
@@ -1400,6 +1412,10 @@
 				</File>
 				<File
 					RelativePath=".\misc\BezierMeshRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\BezierRaycastRenderer.cpp"
 					>
 				</File>
 				<File
@@ -2223,6 +2239,10 @@
 			</File>
 			<File
 				RelativePath=".\Shaders\arrow.glvp"
+				>
+			</File>
+			<File
+				RelativePath=".\Shaders\bezier.btf"
 				>
 			</File>
 			<File

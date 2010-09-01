@@ -18,6 +18,7 @@
 #include "misc/BezierControlLines.h"
 #include "misc/BezierDataSource.h"
 #include "misc/BezierMeshRenderer.h"
+#include "misc/BezierRaycastRenderer.h"
 #include "misc/ExtBezierDataSource.h"
 #include "misc/ExtBezierMeshRenderer.h"
 #include "misc/LinesRenderer.h"
@@ -77,6 +78,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<misc::BezierControlLines>();
         instance->registerAutoDescription<misc::BezierDataSource>();
         instance->registerAutoDescription<misc::BezierMeshRenderer>();
+        instance->registerAutoDescription<misc::BezierRaycastRenderer>();
         instance->registerAutoDescription<misc::ExtBezierDataSource>();
         instance->registerAutoDescription<misc::ExtBezierMeshRenderer>();
         instance->registerAutoDescription<misc::LinesRenderer>();
