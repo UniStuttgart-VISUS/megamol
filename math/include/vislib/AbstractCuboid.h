@@ -34,6 +34,27 @@ namespace math {
 
     public:
 
+        /** A bitmask representing all cuboid faces. */
+        static const UINT32 FACE_ALL;
+
+        /** A bitmask representing the back face of the cuboid. */
+        static const UINT32 FACE_BACK;
+
+        /** A bitmask representing the bottom face of the cuboid. */
+        static const UINT32 FACE_BOTTOM;
+
+        /** A bitmask representing the front face of the cuboid. */
+        static const UINT32 FACE_FRONT;
+
+        /** A bitmask representing the left face of the cuboid. */
+        static const UINT32 FACE_LEFT;
+
+        /** A bitmask representing the right face of the cuboid. */
+        static const UINT32 FACE_RIGHT;
+
+        /** A bitmask representing the top face of the cuboid. */
+        static const UINT32 FACE_TOP;
+
         /** Dtor. */
         ~AbstractCuboid(void);
 
@@ -65,6 +86,23 @@ namespace math {
          * @return The center point of the cuboid.
          */
         Point<T, 3> CalcCenter(void) const;
+
+        /**
+         * Answer whether the point 'point' lies within the cuboid.
+         *
+         * @param point         The point to be tested.
+         * @param includeFace An arbitrary combination of the FACE_LEFT, 
+         *                      FACE_BOTTOM, FACE_BACK, FACE_RIGHT, FACE_TOP 
+         *                      and FACE_FRONT bitmasks. If the face bit is set,
+         *                      points lying on the respective face are regarded as in the
+         *                      rectangle, otherwise they are out. Defaults to
+         *                      zero, i. e. no face is included.
+         *
+         * @return True if the point lies within the cuboid, false otherwise.
+         */
+        template<class Sp>
+        bool Contains(const AbstractPoint<T, 3, Sp>& point, 
+            const UINT32 includeFace = 0) const;
 
         /**
          * Answer the depth of the cuboid.
@@ -282,6 +320,38 @@ namespace math {
         }
 
         /**
+         * Grow cuboid symmetrically: move by -x, grow by 2x for each
+         * dimension.
+         *
+         * @param increment   increment for all axes
+         */
+        inline void Grow(const T& increment) {
+            this->bounds[IDX_LEFT] -= increment;
+            this->bounds[IDX_BOTTOM] -= increment;
+            this->bounds[IDX_BACK] -= increment;
+            this->bounds[IDX_RIGHT] += increment;
+            this->bounds[IDX_TOP] += increment;
+            this->bounds[IDX_FRONT] += increment;
+        }
+
+        /**
+         * Grow cuboid symmetrically: move by -x, grow by 2x for each
+         * dimension.
+         *
+         * @param width   increment for the x axis
+         * @param height  increment for the y axis
+         * @param depth   increment for the z axis
+         */
+        inline void Grow(const T& width, const T& height, const T& depth) {
+            this->bounds[IDX_LEFT] -= width;
+            this->bounds[IDX_BOTTOM] -= height;
+            this->bounds[IDX_BACK] -= depth;
+            this->bounds[IDX_RIGHT] += width;
+            this->bounds[IDX_TOP] += height;
+            this->bounds[IDX_FRONT] += depth;
+        }
+
+        /**
          * Answer whether the cuboid has no area.
          *
          * @return true, if the cuboid has no area, false otherwise.
@@ -368,7 +438,7 @@ namespace math {
         }
 
         /**
-         * Set new couboid bounds.
+         * Set new cuboid bounds.
          *
          * @param left   The x-coordinate of the left/bottom/back point.
          * @param bottom The y-coordinate of the left/bottom/back point.
@@ -645,6 +715,65 @@ namespace math {
 
 
     /*
+     * vislib::math::AbstractCuboid<T, S>::FACE_ALL
+     */
+    template<class T, class S>
+    const UINT32 AbstractCuboid<T, S>::FACE_ALL
+        = AbstractCuboid<T, S>::FACE_LEFT
+        | AbstractCuboid<T, S>::FACE_BOTTOM
+        | AbstractCuboid<T, S>::FACE_RIGHT
+        | AbstractCuboid<T, S>::FACE_TOP;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::FACE_BACK
+     */
+    template<class T, class S>
+    const UINT32 AbstractCuboid<T, S>::FACE_BACK 
+        = 1 << AbstractCuboid<T, S>::IDX_BACK;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::FACE_BOTTOM
+     */
+    template<class T, class S>
+    const UINT32 AbstractCuboid<T, S>::FACE_BOTTOM 
+        = 1 << AbstractCuboid<T, S>::IDX_BOTTOM;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::FACE_FRONT
+     */
+    template<class T, class S>
+    const UINT32 AbstractCuboid<T, S>::FACE_FRONT 
+        = 1 << AbstractCuboid<T, S>::IDX_FRONT;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::FACE_LEFT
+     */
+    template<class T, class S>
+    const UINT32 AbstractCuboid<T, S>::FACE_LEFT 
+        = 1 << AbstractCuboid<T, S>::IDX_LEFT;
+
+
+    /*
+     * vislib::math::AbstractCuboid<T, S>::FACE_RIGHT
+     */
+    template<class T, class S>
+    const UINT32 AbstractCuboid<T, S>::FACE_RIGHT 
+        = 1 << AbstractCuboid<T, S>::IDX_RIGHT;
+
+
+    /*
+     * vislib::math::AbstractRectangle<T, S>::FACE_TOP
+     */
+    template<class T, class S>
+    const UINT32 AbstractCuboid<T, S>::FACE_TOP
+        = 1 << AbstractCuboid<T, S>::IDX_TOP;
+
+
+    /*
      * vislib::math::AbstractCuboid<T>::~AbstractCuboid
      */
     template<class T, class S> 
@@ -662,6 +791,60 @@ namespace math {
             this->bounds[IDX_LEFT] + this->Width() / static_cast<T>(2),
             this->bounds[IDX_BOTTOM] + this->Height() / static_cast<T>(2),
             this->bounds[IDX_BACK] + this->Depth() / static_cast<T>(2));
+    }
+
+
+    /*
+     * AbstractCuboid<T, S>::Contains
+     */
+    template<class T, class S> 
+    template<class Sp>
+    bool AbstractCuboid<T, S>::Contains(const AbstractPoint<T, 3, Sp>& point,
+            const UINT32 includeFace) const {
+
+        if ((point.X() < this->bounds[IDX_LEFT])
+                || ((((includeFace & FACE_LEFT) == 0))
+                && (point.X() == this->bounds[IDX_LEFT]))) {
+            /* Point is left of cuboid. */
+            return false;
+        }
+
+        if ((point.Y() < this->bounds[IDX_BOTTOM])
+                || ((((includeFace & FACE_BOTTOM) == 0))
+                && (point.Y() == this->bounds[IDX_BOTTOM]))) {
+            /* Point is below cuboid. */
+            return false;
+        }
+
+        if ((point.Z() < this->bounds[IDX_BACK])
+                || ((((includeFace & FACE_BACK) == 0))
+                && (point.Z() == this->bounds[IDX_BACK]))) {
+            /* Point is behind cuboid. */
+            return false;
+        }
+
+        if ((point.X() > this->bounds[IDX_RIGHT])
+                || ((((includeFace & FACE_RIGHT) == 0))
+                && (point.X() == this->bounds[IDX_RIGHT]))) {
+            /* Point is right of cuboid. */
+            return false;
+        }
+
+        if ((point.Y() > this->bounds[IDX_TOP])
+                || ((((includeFace & FACE_TOP) == 0))
+                && (point.Y() == this->bounds[IDX_TOP]))) {
+            /* Point is above cuboid. */
+            return false;
+        }
+
+        if ((point.Z() > this->bounds[IDX_FRONT])
+                || ((((includeFace & FACE_FRONT) == 0))
+                && (point.Z() == this->bounds[IDX_FRONT]))) {
+            /* Point is in front of cuboid. */
+            return false;
+        }
+
+        return true;
     }
 
 
