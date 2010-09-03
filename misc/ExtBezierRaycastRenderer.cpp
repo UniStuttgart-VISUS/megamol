@@ -52,7 +52,7 @@ bool misc::ExtBezierRaycastRenderer::create(void) {
 
     try {
         frag.Clear();
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("common::ConstColFragment", frag)) {
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("extbezier::frag", frag)) {
             throw vislib::Exception("Unable to compile fragment shader", __FILE__, __LINE__);
         }
         vert.Clear();

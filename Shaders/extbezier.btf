@@ -2,13 +2,31 @@
 <btf type="MegaMolGLSLShader" version="1.0" namespace="extbezier">
   <include file="bezier"/>
 
-  <shader name="pointVert">
-    <snippet type="version">120</snippet>
-    <snippet type="string">
+  <namespace name="common">
+    <snippet type="string" name="uniforms">
       <![CDATA[
 uniform vec4 viewAttr;    /* (x, y, 2/w, 2/h) */
     ]]>
     </snippet>
+    <snippet type="string" name="varyings">
+      <![CDATA[
+varying vec4 uniPos1;
+varying vec4 uniYAx1;
+varying vec4 uniPos2;
+varying vec4 uniYAx2;
+varying vec4 uniPos3;
+varying vec4 uniYAx3;
+varying vec4 uniPos4;
+varying vec4 uniYAx4;
+varying vec4 uniCols;
+    ]]>
+    </snippet>
+  </namespace>
+
+  <shader name="pointVert">
+    <snippet type="version">120</snippet>
+    <snippet name="common::uniforms" />
+    <snippet name="common::varyings" />
     <snippet type="string">
       <![CDATA[
 attribute vec4 yax1;
@@ -66,4 +84,40 @@ void main() {
     </snippet>
   </shader>
 
+  <shader name="frag">
+    <snippet type="version">120</snippet>
+    <snippet name="common::uniforms" />
+    <snippet name="common::varyings" />
+    <snippet type="string">
+      <![CDATA[
+#define POS1 uniPos1.xyz
+#define RDY1 uniPos1.w
+#define YAX1 uniYAx1.xyz
+#define RDZ1 uniYAx1.w
+#define CLC1 uniCols.x
+#define POS2 uniPos2.xyz
+#define RDY2 uniPos2.w
+#define YAX2 uniYAx2.xyz
+#define RDZ2 uniYAx2.w
+#define CLC2 uniCols.y
+#define POS3 uniPos3.xyz
+#define RDY3 uniPos3.w
+#define YAX3 uniYAx3.xyz
+#define RDZ3 uniYAx3.w
+#define CLC3 uniCols.z
+#define POS4 uniPos4.xyz
+#define RDY4 uniPos4.w
+#define YAX4 uniYAx4.xyz
+#define RDZ4 uniYAx4.w
+#define CLC4 uniCols.w
+]]>
+    </snippet>
+    <snippet type="string">
+      <![CDATA[
+void main() {
+  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+]]>
+    </snippet>
+  </shader>
 </btf>
