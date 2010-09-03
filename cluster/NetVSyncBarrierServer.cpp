@@ -139,7 +139,7 @@ void cluster::NetVSyncBarrierServer::OnCommChannelDisconnect(
 void cluster::NetVSyncBarrierServer::OnCommChannelMessage(
         cluster::CommChannelServer& server, cluster::CommChannel& channel,
         const vislib::net::AbstractSimpleMessage& msg) {
-    void *pid = static_cast<void*>(&channel);
+    //void *pid = static_cast<void*>(&channel);
 
     switch(msg.GetHeader().GetMessageID()) {
         case cluster::netmessages::MSG_NETVSYNC_JOIN:

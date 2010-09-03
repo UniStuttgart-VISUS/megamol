@@ -148,7 +148,7 @@ namespace view {
             name.Format("renderer%u", i + 1);
             desc.Format("Outgoing renderer #%u", i + 1);
             this->rendererSlot[i] = new CallerSlot(name, desc);
-            this->rendererSlot[i]->SetCompatibleCall<CallRender3DDescription>();
+            this->rendererSlot[i]->template SetCompatibleCall<CallRender3DDescription>();
             this->MakeSlotAvailable(this->rendererSlot[i]);
 
             name += "active";
@@ -201,8 +201,8 @@ namespace view {
 
         cr3d->SetCapabilities(0);
         for (unsigned int i = 0; i < T; i++) {
-            if (!this->rendererActiveSlot[i]->Param<param::BoolParam>()->Value()) continue;
-            CallRender3D *oc = this->rendererSlot[i]->CallAs<CallRender3D>();
+            if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
+            CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
             if ((oc == NULL) || (!(*oc)(2))) continue;
             cr3d->AddCapability(oc->GetCapabilities());
         }
@@ -222,8 +222,8 @@ namespace view {
         this->bboxs.Clear();
         this->frameCnt = 0;
         for (unsigned int i = 0; i < T; i++) {
-            if (!this->rendererActiveSlot[i]->Param<param::BoolParam>()->Value()) continue;
-            CallRender3D *oc = this->rendererSlot[i]->CallAs<CallRender3D>();
+            if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
+            CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
             if ((oc == NULL) || (!(*oc)(1))) continue;
             if (this->frameCnt == 0) {
                 if (oc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
@@ -293,8 +293,8 @@ namespace view {
         }
 
         for (unsigned int i = 0; i < T; i++) {
-            if (!this->rendererActiveSlot[i]->Param<param::BoolParam>()->Value()) continue;
-            CallRender3D *oc = this->rendererSlot[i]->CallAs<CallRender3D>();
+            if (!this->rendererActiveSlot[i]->template Param<param::BoolParam>()->Value()) continue;
+            CallRender3D *oc = this->rendererSlot[i]->template CallAs<CallRender3D>();
             if (oc == NULL) continue;
             *oc = *cr3d;
             if (!(*oc)(1)) continue;

@@ -34,7 +34,15 @@ namespace param {
          * @param initVal The initial value
          * @param visible If 'true' the parameter is visible in the gui.
          */
-        StringParam(const vislib::TString& initVal);
+        StringParam(const vislib::StringA& initVal);
+
+        /**
+         * Ctor.
+         *
+         * @param initVal The initial value
+         * @param visible If 'true' the parameter is visible in the gui.
+         */
+        StringParam(const vislib::StringW& initVal);
 
         /**
          * Ctor.
@@ -82,7 +90,17 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
-        void SetValue(const vislib::TString& v, bool setDirty = true);
+        void SetValue(const vislib::StringA& v, bool setDirty = true);
+
+        /**
+         * Sets the value of the parameter and optionally sets the dirty flag
+         * of the owning parameter slot.
+         *
+         * @param v the new value for the parameter
+         * @param setDirty If 'true' the dirty flag of the owning parameter
+         *                 slot is set and the update callback might be called.
+         */
+        void SetValue(const vislib::StringW& v, bool setDirty = true);
 
         /**
          * Sets the value of the parameter and optionally sets the dirty flag

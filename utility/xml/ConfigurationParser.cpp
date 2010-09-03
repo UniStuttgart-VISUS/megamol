@@ -367,9 +367,9 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level,
     }
 
     if (MMXML_STRING("log").Equals(name, false)) {
-        megamol::core::utility::Configuration::LogSettings *logSettings = NULL;
-        logSettings 
-            = new struct megamol::core::utility::Configuration::LogSettings;
+        megamol::core::utility::Configuration::LogSettings *logSettings/* = NULL;
+        logSettings */
+            = new struct megamol::core::utility::Configuration::LogSettings();
         logSettings->logFileNameValid = false;
         logSettings->logLevelValid = false;
         logSettings->echoLevelValid = false;

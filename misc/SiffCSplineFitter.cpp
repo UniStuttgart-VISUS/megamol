@@ -250,7 +250,6 @@ void misc::SiffCSplineFitter::addSpline(float *pos, float *times, unsigned int c
 
         for (unsigned int i = 1; i < cnt; i++) {
             ShallowPoint p2(pos + i * 3);
-            float d = p1.Distance(p2);
 
             if ((p1.X() < bminX) && (p2.X() > bmaxX)) { // cb-jump in +X
                 off.SetX(off.X() + this->bbox.Width());

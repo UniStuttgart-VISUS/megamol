@@ -15,7 +15,16 @@ using namespace megamol::core::param;
 /*
  * StringParam::StringParam
  */
-StringParam::StringParam(const vislib::TString& initVal)
+StringParam::StringParam(const vislib::StringA& initVal)
+        : AbstractParam(), val(initVal) {
+    // intentionally empty
+}
+
+
+/*
+ * StringParam::StringParam
+ */
+StringParam::StringParam(const vislib::StringW& initVal)
         : AbstractParam(), val(initVal) {
     // intentionally empty
 }
@@ -76,7 +85,18 @@ bool StringParam::ParseValue(const vislib::TString& v) {
 /*
  * StringParam::SetValue
  */
-void StringParam::SetValue(const vislib::TString& v, bool setDirty) {
+void StringParam::SetValue(const vislib::StringA& v, bool setDirty) {
+    if (this->val != v) {
+        this->val = v;
+        if (setDirty) this->setDirty();
+    }
+}
+
+
+/*
+ * StringParam::SetValue
+ */
+void StringParam::SetValue(const vislib::StringW& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
         if (setDirty) this->setDirty();

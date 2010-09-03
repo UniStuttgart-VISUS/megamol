@@ -55,7 +55,15 @@ namespace param {
          * @param initVal The initial value
          * @param flags The flags for the parameter
          */
-        FilePathParam(const vislib::TString& initVal, UINT32 flags = FLAG_NONE);
+        FilePathParam(const vislib::StringA& initVal, UINT32 flags = FLAG_NONE);
+
+        /**
+         * Ctor.
+         *
+         * @param initVal The initial value
+         * @param flags The flags for the parameter
+         */
+        FilePathParam(const vislib::StringW& initVal, UINT32 flags = FLAG_NONE);
 
         /**
          * Ctor.
@@ -105,7 +113,17 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
-        void SetValue(const vislib::TString& v, bool setDirty = true);
+        void SetValue(const vislib::StringA& v, bool setDirty = true);
+
+        /**
+         * Sets the value of the parameter and optionally sets the dirty flag
+         * of the owning parameter slot.
+         *
+         * @param v the new value for the parameter
+         * @param setDirty If 'true' the dirty flag of the owning parameter
+         *                 slot is set and the update callback might be called.
+         */
+        void SetValue(const vislib::StringW& v, bool setDirty = true);
 
         /**
          * Sets the value of the parameter and optionally sets the dirty flag

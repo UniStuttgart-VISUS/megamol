@@ -242,7 +242,10 @@ void misc::BezierDataSource::loadBezDat(const vislib::TString& filename) {
             int i2 = vislib::CharTraitsA::ParseInt(bezDat[i].Word(2));
             int i3 = vislib::CharTraitsA::ParseInt(bezDat[i].Word(3));
             int i4 = vislib::CharTraitsA::ParseInt(bezDat[i].Word(4));
-            if ((i1 >= pcnt) || (i2 >= pcnt) || (i3 >= pcnt) || (i4 >= pcnt)) {
+            if ((i1 >= static_cast<int>(pcnt))
+                    || (i2 >= static_cast<int>(pcnt))
+                    || (i3 >= static_cast<int>(pcnt))
+                    || (i4 >= static_cast<int>(pcnt))) {
                 throw vislib::Exception("Point index out of range", __FILE__, __LINE__);
             }
             this->curves.Add(vislib::math::BezierCurve<misc::BezierDataCall::BezierPoint, 3>());

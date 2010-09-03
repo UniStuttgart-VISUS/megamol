@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "cluster/ClusterController.h"
+#include <climits>
 #include "cluster/CallRegisterAtController.h"
 #include "cluster/ClusterControllerClient.h"
 #include "CoreInstance.h"
