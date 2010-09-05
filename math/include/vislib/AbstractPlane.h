@@ -78,6 +78,23 @@ namespace math {
         }
 
         /**
+         * Calculates the point of intersection of three plane
+         *
+         * @param plane2 The second plane
+         * @param plane3 The third plane
+         * @param outPoint Point variable to receive the result
+         *
+         * @return True if there is a single intersection point, which has
+         *         been stored in 'outPoint'. If the intersection of the three
+         *         planes is not a single point, false is returned and the
+         *         value of 'outPoint' is undefined
+         */
+        template<class Sp1, class Sp2, class Sp3>
+        bool CalcIntersectionPoint(const AbstractPlane<T, Sp1>& plane2,
+            const AbstractPlane<T, Sp2>& plane3,
+            AbstractPoint<T, 3, Sp3>& outPoint);
+
+        /**
          * Answer whether 'point' is in the plane.
          *
          * @param point The point to be tested.
@@ -363,6 +380,62 @@ namespace math {
      * AbstractPlane<T, S>::~AbstractPlane
      */
     template<class T, class S> AbstractPlane<T, S>::~AbstractPlane(void) {
+    }
+
+
+    /*
+     * AbstractPlane<T, S>::CalcIntersectionPoint
+     */
+    template<class T, class S> 
+    template<class Sp1, class Sp2, class Sp3>
+    bool AbstractPlane<T, S>::CalcIntersectionPoint(
+            const AbstractPlane<T, Sp1>& plane2,
+            const AbstractPlane<T, Sp2>& plane3,
+            AbstractPoint<T, 3, Sp3>& outPoint) {
+        // planes: ax + by + cz + d = 0
+        T a1, b1, c1, d1;
+        this->normalise(a1, b1, c1, d1);
+        T a2, b2, c2, d2;
+        plane2.normalise(a2, b2, c2, d2);
+        T a3, b3, c3, d3;
+        plane3.normalise(a3, b3, c3, d3);
+
+        Vector<T, 3> n1(a1, b1, c1);
+        Vector<T, 3> n2(a2, b2, c2);
+        Vector<T, 3> n3(a3, b3, c3);
+
+        ASSERT(n1.IsNormalised());
+        ASSERT(n2.IsNormalised());
+        ASSERT(n3.IsNormalised());
+
+        T denom = n1.Dot(n2.Cross(n3));
+
+        if (IsEqual(denom, static_cast<T>(0))) return false;
+
+        Vector<T, 3> m1 = n2.Cross(n3);
+        Vector<T, 3> m2 = n3.Cross(n1);
+        Vector<T, 3> m3 = n1.Cross(n2);
+
+        m1 *= -d1;
+        m2 *= -d2;
+        m3 *= -d3;
+        m1 += m2;
+        m1 += m3;
+        m1 /= denom;
+        outPoint.Set(m1.X(), m1.Y(), m1.Z());
+
+        // TODO: This is a numerical nightmare! Replace with some robust implementation!!!
+        // Do not use IsEqual with default EPSILON, since we have numeric issues here
+#if defined(DEBUG) || defined(_DEBUG)
+        d1 = Abs(this->Distance(outPoint));
+        d2 = Abs(plane2.Distance(outPoint));
+        d3 = Abs(plane3.Distance(outPoint));
+        ASSERT(d1 < static_cast<T>(0.002f)); // epsilon is adjusted for MegaMol :-/
+        ASSERT(d2 < static_cast<T>(0.002f));
+        ASSERT(d3 < static_cast<T>(0.002f));
+#endif
+
+        return true;
     }
 
 
