@@ -16,6 +16,16 @@
 #define XMLCALL
 #endif /* XMLCALL */
 
+#ifndef XMLCHAR
+#ifdef _WIN32
+#define MMXML_CHAR wchar_t
+#else /* _WIN32 */
+#define MMXML_CHAR char
+#endif /* _WIN32 */
+
+typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
+#endif /* XMLCHAR */
+
 
 #include "vislib/Array.h"
 #include "vislib/BufferedFile.h"
