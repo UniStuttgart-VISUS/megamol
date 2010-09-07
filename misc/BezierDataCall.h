@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.std.h"
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/BezierCurve.h"
@@ -31,7 +32,7 @@ namespace misc {
      * points of each curve define the position (x, y, z) and radius (r) value
      * for the curve.
      */
-    class BezierDataCall : public AbstractGetData3DCall {
+    class MEGAMOLCORE_API BezierDataCall : public AbstractGetData3DCall {
     public:
 
         /**
