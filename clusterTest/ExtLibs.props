@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <VISlibDir>..\</VISlibDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <_PropertySheetDisplayName>VISlib Import Properties</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(VISlibDir)\base\include;$(VISlibDir)\cluster\include;$(VISlibDir)\clusterGL\include;$(VISlibDir)\clusterD3D\include;$(VISlibDir)\d3d\include;$(VISlibDir)\gl\include;$(VISlibDir)\graphics\include;$(VISlibDir)\math\include;$(VISlibDir)\net\include;$(VISlibDir)\sys\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibcluster$(BitsD).lib;vislibd3d$(BitsD).lib;vislibgl$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibmath$(BitsD).lib;vislibnet$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;Ws2_32.lib;Iphlpapi.lib;shlwapi.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="VISlibDir">
+      <Value>$(VISlibDir)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

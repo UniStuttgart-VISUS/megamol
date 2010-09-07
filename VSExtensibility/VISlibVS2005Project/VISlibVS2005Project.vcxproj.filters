@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Template Files">
+      <UniqueIdentifier>{409b1357-1d53-4cae-b5b7-5526eac62fbf}</UniqueIdentifier>
+      <Extensions>txt</Extensions>
+    </Filter>
+    <Filter Include="HTML Files">
+      <UniqueIdentifier>{69a970af-b809-4ee8-9919-470deabefcb4}</UniqueIdentifier>
+      <Extensions>htm</Extensions>
+    </Filter>
+    <Filter Include="Image Files">
+      <UniqueIdentifier>{9f433b87-99b4-4c72-8b77-bc5cf59fe074}</UniqueIdentifier>
+      <Extensions>bmp</Extensions>
+    </Filter>
+    <Filter Include="Script Files">
+      <UniqueIdentifier>{b7ba9579-ab36-4f15-9863-461f85db2898}</UniqueIdentifier>
+      <Extensions>js</Extensions>
+    </Filter>
+    <Filter Include="Miscellaneous Files">
+      <UniqueIdentifier>{27722000-7f61-4310-92e8-dc6106250587}</UniqueIdentifier>
+      <Extensions>vsz;vsdir;ico;vcproj;csproj;css;inf</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Templates\1033\configure.ps1">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\configure.sh">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\extlibs.vsprops">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\Makefile">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\readme.txt">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="HTML\1033\default.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="HTML\1033\linux.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="Scripts\1033\default.js">
+      <Filter>Script Files</Filter>
+    </None>
+    <None Include="default.vcproj">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="1033\NewStyles.css">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="Templates\1033\Templates.inf">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="VISlibVS2005Project.ico">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="VISlibVS2005Project.vsdir">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="VISlibVS2005Project.vsz">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="1033\Images\DottedHori.gif" />
+    <None Include="1033\Images\DottedVert.gif" />
+    <None Include="1033\Images\spacer.gif" />
+    <None Include="Images\VISlibVS2005Project.gif" />
+    <None Include="Images\VISlibVS2005Project_Background.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Templates\1033\main.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VISlibVS2005Project.rc" />
+  </ItemGroup>
+</Project>

@@ -212,7 +212,9 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
 bool vislib::net::CommServer::Terminate(void) {
     VLSTACKTRACE("CommServer::Terminate", __FILE__, __LINE__);
     try {
-        this->serverEndPoint.DynamicCast<AbstractCommChannel>()->Close();
+        if (!this->serverEndPoint.IsNull()) {
+            this->serverEndPoint.DynamicCast<AbstractCommChannel>()->Close();
+        }
     } catch (Exception e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Exception when shutting down "
             "CommServer: %s. This is usually no problem.", e.GetMsgA());
