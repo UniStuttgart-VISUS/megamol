@@ -671,6 +671,7 @@ bool view::View3D::create(void) {
         vislib::graphics::InputModifiers::MODIFIER_ALT, false);
     this->zoomer1.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+    this->zoomer1.SetZoomBehaviour(vislib::graphics::CameraZoom2DMove::FIX_LOOK_AT);
 
     this->zoomer2.SetCameraParams(this->camParams);
     this->zoomer2.SetTestButton(2 /* mid mouse button */);
