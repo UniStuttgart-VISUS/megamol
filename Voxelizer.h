@@ -7,6 +7,7 @@
 #include "vislib/ThreadPool.h"
 #include "JobStructures.h"
 #include "TagVolume.h"
+#include "vislib/ShallowShallowTriangle.h"
 
 namespace megamol {
 namespace trisoup {
@@ -14,20 +15,21 @@ namespace trisoup {
 	class Voxelizer : public vislib::sys::Runnable {
 	public:
 
-		struct FatVoxel {
-			float distField;
-			//vislib::SingleLinkedList<vislib::Array<vislib::math::Point<float, 3> > > triangles;
-			//vislib::SingleLinkedList<vislib::Array<vislib::math::Point<float, 3> > > normals;
-		};
-
 		Voxelizer(void);
 		~Voxelizer(void);
 
 		float getOffset(float fValue1, float fValue2, float fValueDesired);
 
+		void growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
+							 unsigned char triIndex, 
+							 vislib::Array<float *> &surf);
+
 		bool CellEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 
 		void marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+
+		void collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+
 		/**
 		 * Thread entry point.
 		 *
@@ -58,7 +60,7 @@ namespace trisoup {
 
 		//unsigned int fifoLen, fifoEnd, fifoCur;
 		
-		//vislib::math::Point<unsigned int, 3> *cellFIFO;
+        vislib::SingleLinkedList<vislib::math::Point<unsigned int, 4> > cellFIFO;
 
 		//vislib::Array<vislib::math::Point<float, 3> > triangleSoup;
 };

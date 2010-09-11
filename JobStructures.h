@@ -6,10 +6,18 @@
 
 #include "vislib/RawStorage.h"
 #include "vislib/Cuboid.h"
+#include "vislib/ColourRGBAu8.h"
 #include "moldyn/MultiParticleDataCall.h"
 
 namespace megamol {
 namespace trisoup {
+
+	struct FatVoxel {
+		float distField;
+		float *triangles;
+		unsigned char numTriangles;
+		unsigned char consumedTriangles;
+	};
 
 	/**
 	 *
@@ -31,6 +39,7 @@ namespace trisoup {
 
 		vislib::Array<vislib::math::Point<float, 3> > vertices;
 		vislib::Array<vislib::math::Vector<float, 3> > normals;
+		vislib::Array<vislib::graphics::ColourRGBAu8> colors;
 		vislib::Array<unsigned int> indices;
 
 		//float *normals;
@@ -43,6 +52,7 @@ namespace trisoup {
 			vertices.SetCapacityIncrement(90);
 			normals.SetCapacityIncrement(90);
 			indices.SetCapacityIncrement(30);
+			colors.SetCapacityIncrement(30);
 		}
 	};
 

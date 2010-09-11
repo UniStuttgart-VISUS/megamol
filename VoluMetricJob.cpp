@@ -377,6 +377,7 @@ void VoluMetricJob::appendBoxIndices(vislib::RawStorage &data, unsigned int &num
 void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList) {
 	// copy finished meshes to output
 	float *vert, *norm;
+    unsigned char *col;
 	unsigned int *tri;
 	vislib::Array<unsigned int> todos;
 	todos.SetCapacityIncrement(10);
@@ -391,6 +392,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 	}
 	vert = new float[numVertices * 3];
 	norm = new float[numVertices * 3];
+    col = new unsigned char[numVertices * 3];
 	tri = new unsigned int[numVertices * 3];
 	SIZE_T vertOffset = 0;
 	SIZE_T triOffset = 0;
@@ -400,6 +402,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 		for (unsigned int j = 0; j < sjd->Result.vertices.Count(); j++) {
 			memcpy(&(vert[vertOffset]), (sjd->Result.vertices[j].PeekCoordinates()), 3 * sizeof(float));
 			memcpy(&(norm[vertOffset]), (sjd->Result.normals[j].PeekComponents()), 3 * sizeof(float));
+            memcpy(&(col[vertOffset]), (sjd->Result.colors[j].PeekComponentes()), 3 * sizeof(unsigned char));
 			vertOffset += 3;
 			//memcpy(&(tri[triOffset]), &sjd->Result.indices[j], 1 * sizeof(unsigned int));
 			//triOffset += 1;
@@ -407,7 +410,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 		}
 		idxOffset += (unsigned int)sjd->Result.vertices.Count();
 	}
-	debugMeshes[meshBackBufferIndex].SetVertexData(numVertices, vert, norm, NULL, NULL, true);
+	debugMeshes[meshBackBufferIndex].SetVertexData(numVertices, vert, norm, col, NULL, true);
 	debugMeshes[meshBackBufferIndex].SetTriangleData(numVertices / 3, tri, true);
 	meshBackBufferIndex = 1 - meshBackBufferIndex;
 	this->hash++;
