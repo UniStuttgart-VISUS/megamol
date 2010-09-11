@@ -50,7 +50,7 @@ moldyn::MMPLDDataSource::Frame::~Frame() {
  */
 bool moldyn::MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
     this->frame = idx;
-    this->dat.EnforceSize(size);
+    this->dat.EnforceSize(static_cast<SIZE_T>(size));
     return (file->Read(this->dat, size) == size);
 }
 

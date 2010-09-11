@@ -55,7 +55,7 @@ bool moldyn::MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned
     this->frame = idx;
     ARY_SAFE_DELETE(this->cells);
     ARY_SAFE_DELETE(this->types);
-    this->dat.EnforceSize(size);
+    this->dat.EnforceSize(static_cast<SIZE_T>(size));
     return (file->Read(this->dat, size) == size);
 }
 
@@ -165,12 +165,12 @@ void moldyn::MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
 
                 UINT64& cnt = *this->dat.AsAt<UINT64>(pos);
                 pos += 8;
-                points.SetCount(cnt);
+                points.SetCount(static_cast<SIZE_T>(cnt));
                 points.SetMaxRadius(*this->dat.AsAt<float>(pos));
                 pos += 4;
                 points.SetVertexData(this->dat.At(pos), static_cast<unsigned int>(vs + cs));
                 points.SetColourData(this->dat.At(pos + vs), static_cast<unsigned int>(vs + cs));
-                pos += cnt * (cs + vs);
+                pos += static_cast<SIZE_T>(cnt) * (cs + vs);
             }
         }
     }
