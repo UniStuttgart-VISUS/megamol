@@ -1670,13 +1670,25 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     }
     const mmplgCompatibilityValues *compVal = static_cast<const mmplgCompatibilityValues*>(mmplgCoreCompatibilityValue());
     if ((compVal->size != sizeof(mmplgCompatibilityValues)) 
-            || (compVal->mmcoreRev != MEGAMOL_CORE_COMP_REV)
+            || (compVal->mmcoreRev != MEGAMOL_CORE_COMP_REV)) {
+        plugin->Free();
+        delete plugin;
+        this->log.WriteMsg(loadFailedLevel,
+            "Unable to load Plugin \"%s\": core version mismatch (%d from Core; %d from Plugin)\n",
+            vislib::StringA(filename).PeekBuffer(),
+            static_cast<int>(MEGAMOL_CORE_COMP_REV),
+            static_cast<int>(compVal->mmcoreRev));
+        return;
+    }
+    if ((compVal->size != sizeof(mmplgCompatibilityValues)) 
             || ((compVal->vislibRev != 0) && (compVal->vislibRev != VISLIB_VERSION_REVISION))) {
         plugin->Free();
         delete plugin;
         this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": core version mismatch\n",
-            vislib::StringA(filename).PeekBuffer());
+            "Unable to load Plugin \"%s\": vislib version mismatch (%d from Core; %d from Plugin)\n",
+            vislib::StringA(filename).PeekBuffer(),
+            static_cast<int>(VISLIB_VERSION_REVISION),
+            static_cast<int>(compVal->vislibRev));
         return;
     }
 
