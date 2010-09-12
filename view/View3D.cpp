@@ -485,6 +485,7 @@ void view::View3D::Render(void) {
         if ((ticks < this->fpsOutputTimer) || (ticks >= this->fpsOutputTimer + 1000)) {
             this->fpsOutputTimer = ticks;
             printf("FPS: %f\n", this->fpsCounter.FPS());
+            fflush(stdout); // grr
         }
     }
 
