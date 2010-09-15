@@ -3,7 +3,7 @@
   <PropertyGroup Label="UserMacros">
     <Bits>32</Bits>
     <DebugD />
-    <BitsD>$(Bits)$(SymbolExport)$(DebugD)</BitsD>
+    <BitsD>$(Bits)mt$(SymbolExport)$(DebugD)</BitsD>
     <ArchName>x86</ArchName>
     <RuntimeMT>mt</RuntimeMT>
     <RuntimeLib>MT</RuntimeLib>
