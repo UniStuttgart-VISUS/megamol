@@ -1176,6 +1176,27 @@ void megamol::core::CoreInstance::ParameterValueUpdate(megamol::core::param::Par
 
 
 /*
+ * megamol::core::CoreInstance::Quickstart
+ */
+void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
+    using vislib::sys::Log;
+    // TODO: Implement
+    Log::DefaultLog.WriteError("Quickstarting is not supported yet");
+}
+
+
+/*
+ * megamol::core::CoreInstance::QuickstartRegistry
+ */
+void megamol::core::CoreInstance::QuickstartRegistry(const vislib::TString& frontend,
+        const vislib::TString& feparams, const vislib::TString& filetype, bool unreg, bool overwrite) {
+    using vislib::sys::Log;
+    // TODO: Implement
+    Log::DefaultLog.WriteError("Quickstart registration is not supported yet");
+}
+
+
+/*
  * megamol::core::CoreInstance::addProject
  */
 void megamol::core::CoreInstance::addProject(

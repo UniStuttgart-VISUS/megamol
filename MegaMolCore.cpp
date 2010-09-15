@@ -1093,3 +1093,59 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreezeOrUpdateView(
         view->View()->UpdateFreeze(freeze);
     }
 }
+
+
+/*
+ * mmcQuickstartA
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartA(void *hCore, const char *filename) {
+    VLSTACKTRACE("mmcQuickstartA", __FILE__, __LINE__);
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core == NULL) return;
+    core->Quickstart(A2T(filename));
+}
+
+
+/*
+ * mmcQuickstartW
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartW(void *hCore, const wchar_t *filename) {
+    VLSTACKTRACE("mmcQuickstartW", __FILE__, __LINE__);
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core == NULL) return;
+    core->Quickstart(W2T(filename));
+}
+
+
+/*
+ * mmcQuickstartRegistryA
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryA(void *hCore,
+        const char *frontend, const char *feparams,
+        const char *filetype, bool unreg, bool overwrite) {
+    VLSTACKTRACE("mmcQuickstartRegistryA", __FILE__, __LINE__);
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core == NULL) return;
+    core->QuickstartRegistry(A2T(frontend), A2T(feparams), A2T(filetype), unreg, overwrite);
+}
+
+
+/*
+ * mmcQuickstartRegistryW
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
+        const wchar_t *frontend, const wchar_t *feparams,
+        const wchar_t *filetype, bool unreg, bool overwrite) {
+    VLSTACKTRACE("mmcQuickstartRegistryW", __FILE__, __LINE__);
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core == NULL) return;
+    core->QuickstartRegistry(W2T(frontend), W2T(feparams), W2T(filetype), unreg, overwrite);
+}
