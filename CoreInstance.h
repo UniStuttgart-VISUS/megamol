@@ -381,7 +381,7 @@ namespace core {
          *
          * @param frontend Path to the front end to be called
          * @param feparams The parameter string to be used when calling the frontend.
-         *                 use '*FILENAME*' to specify the position of the data file name.
+         *                 use '$(FILENAME)' to specify the position of the data file name.
          * @param filetype Semicolor separated list of file type extensions to register
          *                 or "*" if all known file type extensions should be used
          * @param unreg If true, the file types will be removed from the quickstart registry instead of added
