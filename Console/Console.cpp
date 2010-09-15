@@ -23,6 +23,7 @@
 #include "Window.h"
 #include "WindowManager.h"
 
+#include "vislib/Array.h"
 #include "vislib/BufferedFile.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Console.h"
@@ -35,6 +36,7 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
+#include "vislib/StringTokeniser.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/ThreadSafeStackTrace.h"
 #include "vislib/Trace.h"
@@ -75,6 +77,12 @@ static bool terminationRequest;
  * application return value to nonzero).
  */
 static bool echoedImportant;
+
+
+/**
+ * The path to the front end executable currently executing
+ */
+static vislib::TString applicationExecutablePath;
 
 
 extern "C" {
@@ -569,6 +577,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     MMC_USING_VERIFY;
     bool loadViewer = parser->IsViewerForced();
     vislib::SingleLinkedList<vislib::TString> projects;
+    vislib::SingleLinkedList<vislib::TString> quickstarts;
     vislib::TMultiSz insts;
     vislib::Map<vislib::TString, vislib::TString> paramValues;
     vislib::TMultiSz winPoss;
@@ -675,8 +684,48 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
 
         winPoss = parser->WindowPositions();
 
-        SAFE_DELETE(parser);
         MMC_VERIFY_THROW(::mmcInitialiseCoreInstance(hCore));
+
+        if (parser->HasQuickstartRegistrations()) {
+            vislib::SingleLinkedList<vislib::TString> regs;
+            parser->GetQuickstartRegistrations(regs);
+            vislib::SingleLinkedList<vislib::TString>::Iterator iter = regs.GetIterator();
+            while (iter.HasNext()) {
+                vislib::Array<vislib::TString> entries(vislib::TStringTokeniser::Split(iter.Next(), _T(";"), true));
+                for (SIZE_T i = 0; i < entries.Count(); i++) {
+                    vislib::TString ext;
+                    bool unreg = false;
+                    bool over = true;
+                    vislib::TString::Size pos = entries[i].Find(_T('|'));
+
+                    if (pos != vislib::TString::INVALID_POS) {
+                        vislib::Array<vislib::TString> opts(vislib::TStringTokeniser::Split(entries[i], _T('|'), true));
+                        ASSERT(opts.Count() > 0);
+                        ext = opts[0];
+                        for (SIZE_T j = 1; j < opts.Count(); j++) {
+                            if (opts[j].Equals(_T("unregister"), false)) {
+                                unreg = true;
+                            } else if (opts[j].Equals(_T("keepothers"), false)) {
+                                over = false;
+                            } else {
+                                Log::DefaultLog.WriteWarn("Quickstart registration option \"%s\" ignored",
+                                    vislib::StringA(opts[j]));
+                            }
+                        }
+                    } else {
+                        ext = entries[i];
+                    }
+
+                    ::mmcQuickstartRegistry(hCore, applicationExecutablePath,
+                        _T("-q $(filename)"), ext, unreg, over);
+
+                }
+            }
+        }
+
+        parser->GetQuickstarts(quickstarts);
+
+        SAFE_DELETE(parser);
 
     } catch(vislib::Exception ex) {
         fprintf(stderr, "Unable to initialise core instance: %s [%s:%i]\n",
@@ -789,6 +838,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     SIZE_T instsCnt = insts.Count() / 2;
     for (SIZE_T i = 0; i < instsCnt; i++) {
         ::mmcRequestInstance(hCore, insts[i * 2], insts[i * 2 + 1]);
+    }
+
+    vislib::SingleLinkedList<vislib::TString>::Iterator qsi = quickstarts.GetIterator();
+    while (qsi.HasNext()) {
+        ::mmcQuickstart(hCore, qsi.Next());
     }
 
     if (::mmcHasPendingJobInstantiationRequests(hCore)) {
@@ -1097,6 +1151,8 @@ int main(int argc, char* argv[]) {
     VLSTACKTRACE("main", __FILE__, __LINE__);
     ::terminationRequest = false;
     ::echoedImportant = false;
+
+    applicationExecutablePath = argv[0];
 
     parameterFile.Clear();
 

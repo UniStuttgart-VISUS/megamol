@@ -64,7 +64,11 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
         ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("Switch"), _T("'True' forces vsync enable, 'False' forces vsync disable"))),
     showGUI(0, _T("gui"), _T("Option to de-/activate the gui layer"), ParserOption::FLAG_UNIQUE,
         ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("gui"), _T("'True' activates the gui, 'False' deactivates the gui"))),
-    quadBuffer(0, _T("quadbuffer"), _T("Enables OpenGL Quad-Buffer support, if the viewer is started"))
+    quadBuffer(0, _T("quadbuffer"), _T("Enables OpenGL Quad-Buffer support, if the viewer is started")),
+    quickstart(_T('q'), _T("quickstart"), _T("Performs a quickstart for the specified data set"), ParserOption::FLAG_NULL,
+        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("file"), _T("Path to the data file to quickstart"))),
+    quickstartRegistry(0, _T("quickstartreg"), _T("Registers data file types for quickstart is supported by the OS"), ParserOption::FLAG_NULL,
+        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("options"), _T("The quickstart registration options")))
 {
 
     this->parser.AddOption(&this->help);
@@ -96,6 +100,9 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     this->parser.AddOption(&this->paramFileInit);
     this->parser.AddOption(&this->paramFileInitOnly);
     this->parser.AddOption(&this->winPos);
+
+    this->parser.AddOption(&this->quickstart);
+    this->parser.AddOption(&this->quickstartRegistry);
 
 }
 
@@ -314,6 +321,49 @@ megamol::console::utility::CmdLineParser::WindowPositions(void) const {
     ASSERT((retval.Count() % 2) == 0);
 
     return retval;
+}
+
+
+/*
+ * megamol::console::utility::CmdLineParser::GetQuickstarts
+ */
+void megamol::console::utility::CmdLineParser::GetQuickstarts(
+        vislib::SingleLinkedList<vislib::TString>& outQuickstarts) const {
+    outQuickstarts.Clear();
+
+    for (unsigned int i = 0; i < this->parser.ArgumentCount(); i++) {
+        ParserArgument *arg = this->parser.GetArgument(i);
+        if (((arg->GetType() != ParserArgument::TYPE_OPTION_LONGNAME)
+            && (arg->GetType() != ParserArgument::TYPE_OPTION_SHORTNAMES)) 
+            || (arg->GetOption() != &this->quickstart)) {
+            continue;
+        }
+        arg = this->parser.NextArgument(arg);
+        i++;
+        outQuickstarts.Add(arg->GetValueString());
+    }
+
+}
+
+
+/*
+ * megamol::console::utility::CmdLineParser::GetQuickstartRegistrations
+ */
+void megamol::console::utility::CmdLineParser::GetQuickstartRegistrations(
+        vislib::SingleLinkedList<vislib::TString>& outQuickstartRegs) const {
+    outQuickstartRegs.Clear();
+
+    for (unsigned int i = 0; i < this->parser.ArgumentCount(); i++) {
+        ParserArgument *arg = this->parser.GetArgument(i);
+        if (((arg->GetType() != ParserArgument::TYPE_OPTION_LONGNAME)
+            && (arg->GetType() != ParserArgument::TYPE_OPTION_SHORTNAMES)) 
+            || (arg->GetOption() != &this->quickstart)) {
+            continue;
+        }
+        arg = this->parser.NextArgument(arg);
+        i++;
+        outQuickstartRegs.Add(arg->GetValueString());
+    }
 }
 
 

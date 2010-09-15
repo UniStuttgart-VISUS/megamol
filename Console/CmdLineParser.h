@@ -346,6 +346,38 @@ namespace utility {
             return this->quadBuffer.GetFirstOccurrence() != NULL;
         }
 
+        /**
+         * Answers if any quickstarts have been specified
+         *
+         * @return True if quickstarts have been specified
+         */
+        inline bool HasQuickstarts(void) const {
+            return this->quickstart.GetFirstOccurrence() != NULL;
+        }
+
+        /**
+         * Gets the list of specified quickstarts
+         *
+         * @param outQuickstarts List of specified quickstarts
+         */
+        void GetQuickstarts(vislib::SingleLinkedList<vislib::TString>& outQuickstarts) const;
+
+        /**
+         * Answers if any quickstart registration commands have been specified
+         *
+         * @return True if quickstart registration commands have been specified
+         */
+        inline bool HasQuickstartRegistrations(void) const {
+            return this->quickstartRegistry.GetFirstOccurrence() != NULL;
+        }
+
+        /**
+         * Gets the list of specified quickstart registration commands
+         *
+         * @param outQuickstartRegs List of specified quickstart registration commands
+         */
+        void GetQuickstartRegistrations(vislib::SingleLinkedList<vislib::TString>& outQuickstartRegs) const;
+
     private:
 
         /** the default value of the flag of the cmd line echo */
@@ -446,6 +478,12 @@ namespace utility {
 
         /** Flag to request quad-buffer support */
         ParserOption quadBuffer;
+
+        /** Perform a data set quickstart */
+        ParserOption quickstart;
+
+        /** Registers data sets for quickstart */
+        ParserOption quickstartRegistry;
 
     };
 
