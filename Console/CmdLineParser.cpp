@@ -357,7 +357,7 @@ void megamol::console::utility::CmdLineParser::GetQuickstartRegistrations(
         ParserArgument *arg = this->parser.GetArgument(i);
         if (((arg->GetType() != ParserArgument::TYPE_OPTION_LONGNAME)
             && (arg->GetType() != ParserArgument::TYPE_OPTION_SHORTNAMES)) 
-            || (arg->GetOption() != &this->quickstart)) {
+            || (arg->GetOption() != &this->quickstartRegistry)) {
             continue;
         }
         arg = this->parser.NextArgument(arg);
