@@ -321,6 +321,8 @@ namespace view {
 
         bool onToggleButton(param::ParamSlot& p);
 
+        bool onAnimSpeedStep(param::ParamSlot& p);
+
         /** The scene camera */
         vislib::graphics::gl::CameraOpenGL cam;
 
@@ -498,6 +500,12 @@ namespace view {
         param::ParamSlot toggleSoftCursorSlot;
 
         param::ParamSlot toggleAnimPlaySlot;
+
+        /** Speeds up the animation */
+        param::ParamSlot animSpeedUpSlot;
+
+        /** Slows down the animation */
+        param::ParamSlot animSpeedDownSlot;
 
     };
 

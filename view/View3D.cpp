@@ -86,10 +86,10 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
         toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box"),
         toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
-        toggleAnimPlaySlot("toggleAnimPlay", "Button to toggle animation") {
-#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+        toggleAnimPlaySlot("toggleAnimPlay", "Button to toggle animation"),
+        animSpeedUpSlot("anim::SpeedUp", "Speeds up the animation"),
+        animSpeedDownSlot("anim::SpeedDown", "Slows down the animation") {
     using vislib::sys::KeyCode;
-#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
     this->camParams = this->cam.Parameters();
     this->camOverrides = new CameraParamOverride(this->camParams);
@@ -120,6 +120,13 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->MakeSlotAvailable(&this->animTimeSlot);
     this->animOffsetSlot << new param::FloatParam(0.0f);
     this->MakeSlotAvailable(&this->animOffsetSlot);
+
+    this->animSpeedUpSlot << new param::ButtonParam('m');
+    this->animSpeedUpSlot.SetUpdateCallback(&View3D::onAnimSpeedStep);
+    this->MakeSlotAvailable(&this->animSpeedUpSlot);
+    this->animSpeedDownSlot << new param::ButtonParam('n');
+    this->animSpeedDownSlot.SetUpdateCallback(&View3D::onAnimSpeedStep);
+    this->MakeSlotAvailable(&this->animSpeedDownSlot);
 
     this->showBBox << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBox);
@@ -1160,6 +1167,37 @@ bool view::View3D::onToggleButton(param::ParamSlot& p) {
 
     if (bp != NULL) {
         bp->SetValue(!bp->Value());
+    }
+    return true;
+}
+
+
+/*
+ * view::View3D::onAnimSpeedStep
+ */
+bool view::View3D::onAnimSpeedStep(param::ParamSlot& p) {
+    float spd = this->animSpeedSlot.Param<param::FloatParam>()->Value();
+    bool spdset = false;
+    if (&p == &this->animSpeedUpSlot) {
+        if (spd >= 1.0f && spd < 100.0f) {
+            spd += 0.25f;
+        } else {
+            spd += 0.01f;
+            if (spd > 0.999999f) spd = 1.0f;
+        }
+        spdset = true;
+
+    } else if (&p == &this->animSpeedDownSlot) {
+        if (spd > 1.0f) {
+            spd -= 0.25f;
+        } else {
+            if (spd > 0.01f) spd -= 0.01f;
+        }
+        spdset = true;
+
+    }
+    if (spdset) {
+        this->animSpeedSlot.Param<param::FloatParam>()->SetValue(spd);
     }
     return true;
 }
