@@ -78,6 +78,16 @@ void vislib::graphics::ObservableCameraParams::ApplyLimits(void) {
 
 
 /*
+ * vislib::graphics::ObservableCameraParams::AutoFocusOffset
+ */
+vislib::graphics::SceneSpaceType
+vislib::graphics::ObservableCameraParams::AutoFocusOffset(void) const {
+    ASSERT(!this->observed.IsNull());
+    return this->observed->AutoFocusOffset();
+}
+
+
+/*
  * vislib::graphics::ObservableCameraParams::BeginBatchInteraction
  */
 void vislib::graphics::ObservableCameraParams::BeginBatchInteraction(void) {
@@ -318,6 +328,18 @@ void vislib::graphics::ObservableCameraParams::SetApertureAngle(
     this->observed->SetApertureAngle(apertureAngle);
     this->resumeFire();
     this->fireChanged(DIRTY_APERTUREANGLE, false);
+}
+
+
+/*
+ * vislib::graphics::ObservableCameraParams::SetAutoFocusOffset
+ */
+void vislib::graphics::ObservableCameraParams::SetAutoFocusOffset(
+        vislib::graphics::SceneSpaceType offset) {
+    this->suspendFire();
+    this->observed->SetAutoFocusOffset(offset);
+    this->resumeFire();
+    this->fireChanged(DIRTY_AUTOFOCUSOFFSET, false);
 }
 
 
@@ -591,6 +613,14 @@ const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_ALL
 const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE
     = 0x00000001;
 
+
+/*
+ * vislib::graphics::ObservableCameraParams::DIRTY_APERTUREANGLE 
+ */
+const UINT32 vislib::graphics::ObservableCameraParams::DIRTY_AUTOFOCUSOFFSET
+    = 0x00004000;
+
+
 /*
  * vislib::graphics::ObservableCameraParams::DIRTY_COORDSYSTEMTYPE
  */
@@ -711,6 +741,7 @@ void vislib::graphics::ObservableCameraParams::fireChanged(
             CameraParameterObserver *observer = it.Next();
 
             IMPLEMENT_FIRE(ApertureAngle, DIRTY_APERTUREANGLE);
+            //IMPLEMENT_FIRE(AutoFocusOffset, DIRTY_AUTOFOCUSOFFSET);
             IMPLEMENT_FIRE(Eye, DIRTY_EYE);
             IMPLEMENT_FIRE(FarClip, DIRTY_FARCLIP);
             IMPLEMENT_FIRE(FocalDistance, DIRTY_FOCALDISTANCE);

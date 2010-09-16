@@ -92,6 +92,13 @@ namespace graphics {
         virtual void ApplyLimits(void) = 0;
 
         /**
+         * Answers the auto focus offset
+         *
+         * @return The auto focus offset
+         */
+        virtual SceneSpaceType AutoFocusOffset(void) const = 0;
+
+        /**
          * Calculates the clipping distances based on a bounding box cuboid
          * specified in world coordinates. (This methods implementation uses
          * 'SetClip', 'Position', and 'Front'.)
@@ -126,6 +133,7 @@ namespace graphics {
          */
         inline void CopyFrom(const CameraParameters *src) {
             this->SetApertureAngle(src->ApertureAngle());
+            this->SetAutoFocusOffset(src->AutoFocusOffset());
             this->SetClip(src->NearClip(), src->FarClip());
             this->SetCoordSystemType(src->CoordSystemType());
             this->SetProjection(src->Projection());
@@ -310,6 +318,13 @@ namespace graphics {
          * @param The aperture angle in radians.
          */
         virtual void SetApertureAngle(math::AngleDeg apertureAngle) = 0;
+
+        /**
+         * Sets the autofocus offset
+         *
+         * @param offset The new autofocus offset
+         */
+        virtual void SetAutoFocusOffset(SceneSpaceType offset) = 0;
 
         /**
          * Sets the clipping distances.

@@ -130,6 +130,8 @@ void vislib::graphics::CameraParameters::Deserialise(
     serialiser.Deserialise(f5, "VirtualViewHeight");
     this->SetVirtualViewSize(f4, f5);
     this->SetTileRect(vislib::math::Rectangle<ImageSpaceType>(f0, f1, f2, f3));
+    serialiser.Deserialise(f0, "AutoFocusOffset"); // last because it's new
+    this->SetApertureAngle(f0);
 }
 
 
@@ -161,6 +163,7 @@ void vislib::graphics::CameraParameters::Serialise(
     serialiser.Serialise((float)this->TileRect().Top(), "TileTop");
     serialiser.Serialise((float)this->VirtualViewSize().Width(), "VirtualViewWidth");
     serialiser.Serialise((float)this->VirtualViewSize().Height(), "VirtualViewHeight");
+    serialiser.Serialise((float)this->AutoFocusOffset(), "AutoFocusOffset"); // last because it's new
 }
 
 
@@ -174,6 +177,7 @@ vislib::graphics::CameraParameters::operator=(
         this->SetCoordSystemType(rhs.CoordSystemType());
         this->SetClip(rhs.NearClip(), rhs.FarClip());
         this->SetApertureAngle(rhs.ApertureAngle());
+        this->SetAutoFocusOffset(rhs.AutoFocusOffset());
         this->SetProjection(rhs.Projection());
         this->SetStereoParameters(rhs.StereoDisparity(), rhs.Eye(), rhs.FocalDistance());
         this->SetView(rhs.Position(), rhs.LookAt(), rhs.Up());

@@ -71,8 +71,15 @@ StereoCamTestApp::StereoCamTestApp(void) : AbstractGlutApp() {
 
 #endif /* TILE_RIGHT_EYE */
 
-    printf("Stereo Projection set to STEREO_PARALLEL\n");
-    this->parameters->SetProjection(vislib::graphics::CameraParameters::STEREO_PARALLEL);
+    printf("Stereo Projection set to STEREO_OFF_AXIS\n");
+    this->parameters->SetProjection(vislib::graphics::CameraParameters::STEREO_OFF_AXIS);
+    float sd = 0.5f;
+    printf("Stereo Disparity set to %f\n", sd);
+    this->parameters->SetStereoDisparity(sd);
+
+    //printf("Activate auto focus\n");
+    //this->parameters->SetFocalDistance(0.0f);
+    //this->parameters->SetAutoFocusOffset(-1.0f);
 
 }
 

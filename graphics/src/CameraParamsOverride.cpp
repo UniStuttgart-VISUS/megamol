@@ -46,6 +46,16 @@ void vislib::graphics::CameraParamsOverride::ApplyLimits(void) {
 
 
 /*
+ * vislib::graphics::CameraParamsOverride::AutoFocusOffset
+ */
+vislib::graphics::SceneSpaceType
+vislib::graphics::CameraParamsOverride::AutoFocusOffset(void) const {
+    ASSERT(!this->base.IsNull());
+    return this->base->AutoFocusOffset();
+}
+
+
+/*
  * vislib::graphics::CameraParamsOverride::CoordSystemType
  */
 vislib::math::CoordSystemType
@@ -311,6 +321,16 @@ void vislib::graphics::CameraParamsOverride::SetApertureAngle(
         vislib::math::AngleDeg apertureAngle) {
     ASSERT(!this->base.IsNull());
     this->base->SetApertureAngle(apertureAngle);
+}
+
+
+/*
+ * vislib::graphics::CameraParamsOverride::SetAutoFocusOffset
+ */
+void vislib::graphics::CameraParamsOverride::SetAutoFocusOffset(
+        vislib::graphics::SceneSpaceType offset) {
+    ASSERT(!this->base.IsNull());
+    this->base->SetAutoFocusOffset(offset);
 }
 
 

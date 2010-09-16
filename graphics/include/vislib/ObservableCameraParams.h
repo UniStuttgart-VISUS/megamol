@@ -85,6 +85,13 @@ namespace graphics {
          * new values will not be set.
          */
         virtual void ApplyLimits(void);
+        
+        /**
+         * Answers the auto focus offset
+         *
+         * @return The auto focus offset
+         */
+        virtual SceneSpaceType AutoFocusOffset(void) const;
 
         /**
          * Begin a batch interaction that accumulates all changes to the camera
@@ -262,6 +269,13 @@ namespace graphics {
          * @param The aperture angle in radians.
          */
         virtual void SetApertureAngle(math::AngleDeg apertureAngle);
+
+        /**
+         * Sets the autofocus offset
+         *
+         * @param offset The new autofocus offset
+         */
+        virtual void SetAutoFocusOffset(SceneSpaceType offset);
 
         /**
          * Sets the clipping distances.
@@ -462,6 +476,9 @@ namespace graphics {
 
         /** The dirty flag for the aperture angle. */
         static const UINT32 DIRTY_APERTUREANGLE;
+        
+        /** The dirty flag for the auto focus offset */
+        static const UINT32 DIRTY_AUTOFOCUSOFFSET;
 
         /** The dirty flag for the coordinate system type */
         static const UINT32 DIRTY_COORDSYSTEMTYPE;

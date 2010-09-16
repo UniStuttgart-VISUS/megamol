@@ -11,32 +11,33 @@
 
 
 /* Default values */
-#define DEFAULT_COORD_SYS_TYPE  math::COORD_SYS_RIGHT_HANDED
-#define DEFAULT_EYE             LEFT_EYE
-#define DEFAULT_FAR_CLIP        10.0f
-#define DEFAULT_FOCAL_DIST      0.0f
-#define DEFAULT_FRONT           math::Vector<float, 3>(0.0f, 0.0f, -1.0f)
-#define DEFAULT_HALF_AP_ANGLE   0.5236f
-#define DEFAULT_HALF_DISPARITY  0.125f
-#define DEFAULT_LOOK_AT         math::Point<float, 3>(0.0f, 0.0f, 0.0f)
-#define DEFAULT_NEAR_CLIP       0.1f
-#define DEFAULT_POSITION        math::Point<float, 3>(0.0f, 0.0f, 1.0f)
-#define DEFAULT_PROJECTION_TYPE MONO_PERSPECTIVE
-#define DEFAULT_RIGHT           math::Vector<float, 3>(1.0f, 0.0f, 0.0f)
-#define DEFAULT_UP              math::Vector<float, 3>(0.0f, 1.0f, 0.0f)
-#define DEFAULT_VIEW_SIZE       math::Dimension<float, 2>(100.0f, 100.0f)
-#define DEFAULT_TILE_RECT       math::Rectangle<float>(math::Point<float, 2>\
-                                (0.0f, 0.0f), DEFAULT_VIEW_SIZE)
+#define DEFAULT_AUTO_FOCUS_OFFSET 0.0f
+#define DEFAULT_COORD_SYS_TYPE    math::COORD_SYS_RIGHT_HANDED
+#define DEFAULT_EYE               LEFT_EYE
+#define DEFAULT_FAR_CLIP          10.0f
+#define DEFAULT_FOCAL_DIST        0.0f
+#define DEFAULT_FRONT             math::Vector<float, 3>(0.0f, 0.0f, -1.0f)
+#define DEFAULT_HALF_AP_ANGLE     0.5236f
+#define DEFAULT_HALF_DISPARITY    0.125f
+#define DEFAULT_LOOK_AT           math::Point<float, 3>(0.0f, 0.0f, 0.0f)
+#define DEFAULT_NEAR_CLIP         0.1f
+#define DEFAULT_POSITION          math::Point<float, 3>(0.0f, 0.0f, 1.0f)
+#define DEFAULT_PROJECTION_TYPE   MONO_PERSPECTIVE
+#define DEFAULT_RIGHT             math::Vector<float, 3>(1.0f, 0.0f, 0.0f)
+#define DEFAULT_UP                math::Vector<float, 3>(0.0f, 1.0f, 0.0f)
+#define DEFAULT_VIEW_SIZE         math::Dimension<float, 2>(100.0f, 100.0f)
+#define DEFAULT_TILE_RECT         math::Rectangle<float>(math::Point<float, 2>\
+                                  (0.0f, 0.0f), DEFAULT_VIEW_SIZE)
 
 
 /*
  * vislib::graphics::CameraParamsStore::CameraParamsStore
  */
 vislib::graphics::CameraParamsStore::CameraParamsStore(void) 
-        : CameraParameters(), coordSysType(DEFAULT_COORD_SYS_TYPE),
-        eye(DEFAULT_EYE), farClip(DEFAULT_FAR_CLIP),
-        focalDistance(DEFAULT_FOCAL_DIST), front(DEFAULT_FRONT), 
-        halfApertureAngle(DEFAULT_HALF_AP_ANGLE), 
+        : CameraParameters(), autoFocusOffset(DEFAULT_AUTO_FOCUS_OFFSET),
+        coordSysType(DEFAULT_COORD_SYS_TYPE), eye(DEFAULT_EYE),
+        farClip(DEFAULT_FAR_CLIP), focalDistance(DEFAULT_FOCAL_DIST),
+        front(DEFAULT_FRONT), halfApertureAngle(DEFAULT_HALF_AP_ANGLE),
         halfStereoDisparity(DEFAULT_HALF_DISPARITY), 
         limits(CameraParameterLimits::DefaultLimits()), 
         lookAt(DEFAULT_LOOK_AT), nearClip(DEFAULT_NEAR_CLIP), 
@@ -92,6 +93,15 @@ void vislib::graphics::CameraParamsStore::ApplyLimits(void) {
     this->SetClip(nc, fc);
     this->SetStereoParameters(sd, e, fd);
     this->SetView(p, la, up);
+}
+
+
+/*
+ * vislib::graphics::CameraParamsStore::AutoFocusOffset
+ */
+vislib::graphics::SceneSpaceType
+vislib::graphics::CameraParamsStore::AutoFocusOffset(void) const {
+    return this->autoFocusOffset;
 }
 
 
@@ -187,7 +197,8 @@ vislib::graphics::CameraParamsStore::FocalDistance(bool autofocus) const {
      /* no epsilon test is needed, since this is an explicity set symbol */
     if (autofocus && (this->focalDistance == 0.0f)) {
         // autofocus
-        return this->LookAt().Distance(this->Position());
+        return this->LookAt().Distance(this->Position())
+            + this->autoFocusOffset;
     }
     return this->focalDistance;
 }
@@ -282,6 +293,7 @@ vislib::graphics::CameraParamsStore::Projection(void) const {
  * vislib::graphics::CameraParamsStore::Reset
  */
 void vislib::graphics::CameraParamsStore::Reset(void) {
+    this->autoFocusOffset = DEFAULT_AUTO_FOCUS_OFFSET;
     this->coordSysType = DEFAULT_COORD_SYS_TYPE;
     this->eye = DEFAULT_EYE;
     this->farClip = DEFAULT_FAR_CLIP;
@@ -338,6 +350,15 @@ void vislib::graphics::CameraParamsStore::SetApertureAngle(
     this->halfApertureAngle = apertureAngle * 0.5f;
     this->syncNumber++;
 
+}
+
+
+/*
+ * vislib::graphics::CameraParamsStore::SetAutoFocusOffset
+ */
+void vislib::graphics::CameraParamsStore::SetAutoFocusOffset(
+        vislib::graphics::SceneSpaceType offset) {
+    this->autoFocusOffset = offset;
 }
 
 
@@ -666,6 +687,7 @@ vislib::graphics::CameraParamsStore::VirtualViewSize(void) const {
 vislib::graphics::CameraParamsStore& 
 vislib::graphics::CameraParamsStore::operator=(
         const vislib::graphics::CameraParamsStore& rhs) {
+    this->autoFocusOffset = rhs.autoFocusOffset;
     this->coordSysType = rhs.coordSysType;
     this->eye = rhs.eye;
     this->farClip = rhs.farClip;
@@ -695,6 +717,7 @@ vislib::graphics::CameraParamsStore::operator=(
 vislib::graphics::CameraParamsStore& 
 vislib::graphics::CameraParamsStore::operator=(
         const vislib::graphics::CameraParameters& rhs) {
+    this->autoFocusOffset = rhs.AutoFocusOffset();
     this->coordSysType = rhs.CoordSystemType();
     this->eye = rhs.Eye();
     this->farClip = rhs.FarClip();
@@ -723,7 +746,8 @@ vislib::graphics::CameraParamsStore::operator=(
  */
 bool vislib::graphics::CameraParamsStore::operator==(
         const vislib::graphics::CameraParamsStore& rhs) const {
-    return ((this->coordSysType == rhs.coordSysType)
+    return ((this->autoFocusOffset == rhs.autoFocusOffset)
+        && (this->coordSysType == rhs.coordSysType)
         && (this->eye == rhs.eye)
         && (this->farClip == rhs.farClip)
         && (this->focalDistance == rhs.focalDistance)

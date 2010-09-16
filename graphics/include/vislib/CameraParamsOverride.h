@@ -68,6 +68,13 @@ namespace graphics {
         virtual void ApplyLimits(void);
 
         /**
+         * Answers the auto focus offset
+         *
+         * @return The auto focus offset
+         */
+        virtual SceneSpaceType AutoFocusOffset(void) const;
+
+        /**
          * Answer the coordinate system type of the camera.
          *
          * @return the coordinate system type of the camera.
@@ -241,6 +248,13 @@ namespace graphics {
          * @param The aperture angle in radians.
          */
         virtual void SetApertureAngle(math::AngleDeg apertureAngle);
+
+        /**
+         * Sets the autofocus offset
+         *
+         * @param offset The new autofocus offset
+         */
+        virtual void SetAutoFocusOffset(SceneSpaceType offset);
 
         /**
          * Sets the clipping distances.
