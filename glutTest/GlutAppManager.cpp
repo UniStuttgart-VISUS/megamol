@@ -102,6 +102,9 @@ void GlutAppManager::InitGlutWindow(void) {
     this->windowMenu = glutCreateMenu(GlutAppManager::OnMenuItemClicked);
 
     glutAddSubMenu("Select Test", this->appMenu);
+#if defined(VISGLUT_EXTENSIONS)
+    ::glutAddMenuSeparator();
+#endif /* VISGLUT_EXTENSIONS */
     glutAddMenuEntry("Restart Test", -2);
     glutAddMenuEntry("Exit", -1);
 

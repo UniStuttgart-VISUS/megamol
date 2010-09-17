@@ -102,4 +102,9 @@
   <ItemGroup>
     <CustomBuildStep Include="Makefile" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="gluttest.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>

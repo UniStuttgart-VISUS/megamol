@@ -154,6 +154,12 @@ int main(int argc, char* argv[]) {
     glutInitWindowPosition(128, 128);                           // TODO: should be configured by AbstractGlutApp
     glutCreateWindow("VISlib Glut Test");                       // TODO: should be configured by AbstractGlutApp
 
+#ifdef _WIN32
+#if defined(VISGLUT_EXTENSIONS)
+    ::glutSetWindowIconI(101);
+#endif /* VISGLUT_EXTENSIONS */
+#endif
+
     printf("VSync is %s\n", vislib::graphics::gl::IsVSyncEnabled() ? "Enabled" : "Disabled");
     //vislib::graphics::gl::DisableVSync();
     //printf("VSync is %s\n", vislib::graphics::gl::IsVSyncEnabled() ? "Enabled" : "Disabled");

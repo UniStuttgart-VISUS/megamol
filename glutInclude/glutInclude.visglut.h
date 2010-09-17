@@ -13,27 +13,25 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "%visglutPath%/include/visglut.h"
+
 #ifdef _WIN32
 #ifdef _MSC_VER
 #ifdef _WIN64
 #if defined _DEBUG || defined DEBUG 
-#pragma comment(lib, "%visglutPath%/freeglut/lib/win64d/freeglut.lib")
+#pragma comment(lib, "%visglutPath%/lib/visglut64d.lib")
 #else /* DEBUG */
-#pragma comment(lib, "%visglutPath%/freeglut/lib/win64/freeglut.lib")
+#pragma comment(lib, "%visglutPath%/lib/visglut64.lib")
 #endif /* DEBUG */
 #else /* _WIN64 */
 #if defined _DEBUG || defined DEBUG 
-#pragma comment(lib, "%visglutPath%/freeglut/lib/win32d/freeglut.lib")
+#pragma comment(lib, "%visglutPath%/lib/visglut32d.lib")
 #else /* DEBUG */
-#pragma comment(lib, "%visglutPath%/freeglut/lib/win32/freeglut.lib")
+#pragma comment(lib, "%visglutPath%/lib/visglut32.lib")
 #endif /* DEBUG */
 #endif /* _WIN64 */
 #pragma comment(linker, "/NODEFAULTLIB:freeglut_static.lib")
 #endif /* _MSC_VER */
 #endif /* _WIN32 */
-
-#define FREEGLUT_STATIC
-
-#include "%visglutPath%/freeglut/include/GL/glut.h"
 
 #endif /* VISLIBTEST_GLUTINCLUDE_VISGLUT_H_INCLUDED */
