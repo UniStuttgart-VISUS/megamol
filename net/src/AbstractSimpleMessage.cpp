@@ -61,18 +61,26 @@ void vislib::net::AbstractSimpleMessage::SetBody(const void *body,
     ASSERT(this->header.PeekData() != NULL);
 
     void *b = NULL;
-    SIZE_T bs = (bodySize == 0) ? this->header.GetBodySize() : bodySize;
+    SIZE_T bs = bodySize;
     
-    if (bodySize != 0) {
-        this->header.SetBodySize(
-            static_cast<vislib::net::SimpleMessageSize>(bodySize));
-        this->AssertBodySize();
-    }
-    b = this->GetBody();
+    if (body != NULL) {
+        if (bs == 0) {
+            /* No body size was passed, assume old size. */
+            bs = this->header.GetBodySize();
+        } 
 
-    ASSERT(b != NULL);
-    ASSERT(body != NULL);
-    ::memcpy(b, body, bs);
+        this->header.SetBodySize(
+            static_cast<vislib::net::SimpleMessageSize>(bs));
+        this->AssertBodySize();
+        b = this->GetBody();
+        ASSERT(b != NULL);
+
+        ::memcpy(b, body, bs);
+
+    } else {
+        /* No body was passed, force size to zero bytes. */
+        this->header.SetBodySize(0);
+    }
 }
 
 

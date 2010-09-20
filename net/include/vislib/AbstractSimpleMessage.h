@@ -168,12 +168,16 @@ namespace vislib {
             *
             * @param body     Pointer to the body data of at least 'bodySize' or
             *                 this->GetHeader().GetBodySize() bytes, depending on
-            *                 the value of 'bodySize'. The caller remains owner of
+            *                 the value of 'bodySize'. If this pointer is NULL, 
+            *                 the message body will be erased regardless of the
+            *                 value of 'bodySize'. The caller remains owner of
             *                 the memory designated by 'body'. The object creates
             *                 a deep copy in this method.
             * @param bodySize The size of the data to be copied to the message 
             *                 body in bytes. If this parameter is 0, the value
-            *                 from the current message header is used.
+            *                 from the current message header is used. If 'body'
+            *                 is NULL, this parameter is ignored and the new 
+            *                 body size is 0.
             *
             * @throws Exception or derived in case of an error.
             */
