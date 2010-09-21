@@ -26,8 +26,9 @@ bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint status;
 
-    if (GL_SUCCEEDED(::glGetObjectParameterivARB(hProg, 
-            GL_OBJECT_DELETE_STATUS_ARB, &status))) {
+    if ((glGetObjectParameterivARB != NULL)
+            && GL_SUCCEEDED(::glGetObjectParameterivARB(hProg, 
+                GL_OBJECT_DELETE_STATUS_ARB, &status))) {
         return (status == 0);
     } else {
         return false;
