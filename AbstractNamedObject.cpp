@@ -106,8 +106,9 @@ void AbstractNamedObject::ClearCleanupMark(void) {
  */
 void AbstractNamedObject::PerformCleanup(void) {
     if (this->cleanupMark) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 850,
-            "Module \"%s\" marked for cleanup\n", this->Name().PeekBuffer());
+        // message removed because of quickstart module peeking
+        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 850,
+        //    "Module \"%s\" marked for cleanup\n", this->Name().PeekBuffer());
     }
 
     // intentionally empty

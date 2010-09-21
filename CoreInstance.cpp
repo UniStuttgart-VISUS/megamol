@@ -1250,9 +1250,102 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
         return;
     }
 
+    static int quickstartCounter = 1;
+    vislib::StringA viewName;
+    vislib::StringA valname;
 
-    // TODO: Implement
-    Log::DefaultLog.WriteError("Quickstarting implementation not complete");
+    viewName.Format("quickstart-%.3d", quickstartCounter);
+    ViewDescription view(viewName);
+
+    view.SetViewModuleID("");
+    view.AddModule(dataSrcClass, "data");
+    valname.Format("data::%s", dataSrcClass->LoaderFilenameSlotName());
+    view.AddParamValue(valname, filename);
+
+    valname.Format("quickstartrenderer-%s", dataSrcClass->ClassName());
+    if (this->config.IsConfigValueSet(valname)) {
+        vislib::StringA rndName(this->config.ConfigValue(valname));
+        Log::DefaultLog.WriteInfo(100, "Renderer \"%s\" configured for quickstart", rndName.PeekBuffer());
+
+        // use this renderer
+        bool found = false;
+        di = ModuleDescriptionManager::Instance()->GetIterator();
+        while (di.HasNext()) {
+            ModuleDescription *md = di.Next();
+            if (!rndName.Equals(md->ClassName())) continue;
+            view.AddModule(md, "renderer");
+            found = true;
+            break;
+        }
+
+        if (!found) {
+            Log::DefaultLog.WriteWarn("Unable to find configured renderer for quickstart. Trying auto-search");
+        } else {
+            Log::DefaultLog.WriteInfo(50, "Starting module instantiation tests");
+
+            if (!this->quickConnectUp(view, "data", "renderer")) {
+                Log::DefaultLog.WriteWarn("Unable to connect data source with configured renderer for quickstart. Trying auto-search");
+                view.ClearModules();
+                view.ClearCalls();
+                view.ClearParamValues();
+                view.SetViewModuleID("");
+                view.AddModule(dataSrcClass, "data");
+                valname.Format("data::%s", dataSrcClass->LoaderFilenameSlotName());
+                view.AddParamValue(valname, filename);
+
+            } else if (!this->quickConnectUp(view, "renderer", NULL)) {
+                Log::DefaultLog.WriteWarn("Unable to connect renderer with view for quickstart. Trying auto-search");
+                view.ClearModules();
+                view.ClearCalls();
+                view.ClearParamValues();
+                view.SetViewModuleID("");
+                view.AddModule(dataSrcClass, "data");
+                valname.Format("data::%s", dataSrcClass->LoaderFilenameSlotName());
+                view.AddParamValue(valname, filename);
+
+            } else {
+                ASSERT(!view.ViewModuleID().IsEmpty());
+
+            }
+        }
+    } else {
+        Log::DefaultLog.WriteInfo(50, "Starting module instantiation tests");
+    }
+
+    if (view.ViewModuleID().IsEmpty()) {
+        if (!this->quickConnectUp(view, "data", NULL)) {
+            Log::DefaultLog.WriteError(_T("Failed to Quickstart \"%s\": Cannot auto-connect data source to view"), filename.PeekBuffer());
+            return;
+        }
+        ASSERT(!view.ViewModuleID().IsEmpty());
+    }
+
+    ViewDescription *newview = new ViewDescription(view.ClassName());
+    Log::DefaultLog.WriteInfo(10, "Quickstart module graph with %u modules and %u calls defined:",
+            view.ModuleCount(), view.CallCount());
+    for (unsigned int i = 0; i < view.ModuleCount(); i++) {
+        Log::DefaultLog.WriteInfo(25, "Module \"%s\" of class \"%s\"\n",
+            view.Module(i).First().PeekBuffer(), view.Module(i).Second()->ClassName());
+        newview->AddModule(view.Module(i).Second(), view.Module(i).First());
+    }
+    for (unsigned int i = 0; i < view.CallCount(); i++) {
+        Log::DefaultLog.WriteInfo(25, "Call from \"%s\" to \"%s\" of class \"%s\"\n",
+            view.Call(i).First().First().PeekBuffer(),
+            view.Call(i).First().Second().PeekBuffer(),
+            view.Call(i).Second()->ClassName());
+        newview->AddCall(view.Call(i).Second(), view.Call(i).First().First(), view.Call(i).First().Second());
+    }
+    for (unsigned int i = 0; i < view.ParamValueCount(); i++) {
+        newview->AddParamValue(view.ParamValue(i).First(), view.ParamValue(i).Second());
+    }
+    newview->SetViewModuleID(view.ViewModuleID());
+    this->builtinViewDescs.Register(newview);
+
+    viewName.Format("q%d", quickstartCounter);
+    this->RequestViewInstantiation(newview, viewName);
+    quickstartCounter++;
+    Log::DefaultLog.WriteInfo("Quickstart view instantiation request posted");
+
 }
 
 
@@ -1848,5 +1941,221 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
         "Plugin \"%s\" loaded: %d Modules, %d Calls registered\n",
         vislib::StringA(filename).PeekBuffer(), modCntVal, callCntVal);
+
+}
+
+
+/*
+ * megamol::core::CoreInstance::quickConnectUp
+ */
+bool megamol::core::CoreInstance::quickConnectUp(megamol::core::ViewDescription& view, const char *from, const char *to) {
+    using vislib::sys::Log;
+
+    vislib::SingleLinkedList<vislib::Array<quickStepInfo> > fifo;
+    vislib::Array<quickStepInfo> connInfo;
+    vislib::StringA toClass;
+    quickStepInfo qsi;
+
+    qsi.call = NULL;
+    qsi.nextSlot = NULL;
+    qsi.prevSlot = NULL;
+    qsi.nextMod = NULL;
+    if (to != NULL) {
+        for (unsigned int i = 0; i < view.ModuleCount(); i++) {
+            if (view.Module(i).First().Equals(to, false)) {
+                qsi.nextMod = view.Module(i).Second();
+                break;
+            }
+        }
+        if (qsi.nextMod == NULL) {
+            Log::DefaultLog.WriteError("Internal search name error #%d\n", __LINE__);
+            return false;
+        }
+        toClass = qsi.nextMod->ClassName();
+        qsi.nextMod = NULL;
+    }
+    for (unsigned int i = 0; i < view.ModuleCount(); i++) {
+        if (view.Module(i).First().Equals(from)) {
+            qsi.nextMod = view.Module(i).Second();
+            break;
+        }
+    }
+    if (qsi.nextMod == NULL) {
+        Log::DefaultLog.WriteError("Internal search name error #%d\n", __LINE__);
+        return false;
+    }
+    fifo.Append(vislib::Array<quickStepInfo>(1, qsi));
+
+    while(!fifo.IsEmpty()) {
+        vislib::Array<quickStepInfo> list(fifo.First());
+        fifo.RemoveFirst();
+        const quickStepInfo& lqsi = list.Last();
+        ASSERT(lqsi.nextMod != NULL);
+
+        //printf("Test connection from %s\n", lqsi.nextMod->ClassName());
+        this->quickConnectUpStepInfo(lqsi.nextMod, connInfo);
+
+        // test for end condition
+        if (to == NULL) {
+            for (SIZE_T i = 0; i < connInfo.Count(); i++) {
+                if (vislib::StringA("View2D").Equals(connInfo[i].nextMod->ClassName(), false)
+                        || vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false)) {
+
+                    vislib::StringA prevModName(from);
+                    for (SIZE_T j = 1; j < list.Count(); j++) {
+                        vislib::StringA modName;
+                        modName.Format("mod%.3d", view.ModuleCount());
+                        view.AddModule(list[j].nextMod, modName);
+                        view.AddCall(list[j].call,
+                            modName + "::" + list[j].nextSlot,
+                            prevModName + "::" + list[j].prevSlot);
+                        prevModName = modName;
+                    }
+
+                    view.AddModule(connInfo[i].nextMod, "view");
+                    view.AddCall(connInfo[i].call,
+                        vislib::StringA("view::") + connInfo[i].nextSlot,
+                        prevModName + "::" + connInfo[i].prevSlot);
+                    view.SetViewModuleID("view");
+                    return true;
+                }
+            }
+
+        } else {
+            for (SIZE_T i = 0; i < connInfo.Count(); i++) {
+                if (vislib::StringA(toClass).Equals(connInfo[i].nextMod->ClassName(), false)) {
+
+                    vislib::StringA prevModName(from);
+                    for (SIZE_T j = 1; j < list.Count(); j++) {
+                        vislib::StringA modName;
+                        modName.Format("mod%.3d", view.ModuleCount());
+                        view.AddModule(list[j].nextMod, modName);
+                        view.AddCall(list[j].call,
+                            modName + "::" + list[j].nextSlot,
+                            prevModName + "::" + list[j].prevSlot);
+                        prevModName = modName;
+                    }
+
+                    view.AddCall(connInfo[i].call,
+                        vislib::StringA(to) + "::" + connInfo[i].nextSlot,
+                        prevModName + "::" + connInfo[i].prevSlot);
+                    return true;
+                }
+            }
+        }
+
+        // continue search
+        for (SIZE_T i = 0; i < connInfo.Count(); i++) {
+            bool add = true; // no cycles!
+            for (SIZE_T j = 0; j < list.Count(); j++) {
+                if (vislib::StringA(list[j].nextMod->ClassName()).Equals(connInfo[i].nextMod->ClassName())) {
+                    add = false;
+                    break;
+                }
+            }
+            if (!add) continue;
+            vislib::Array<quickStepInfo> newlist(list);
+            newlist.Append(connInfo[i]);
+            fifo.Append(newlist);
+        }
+    }
+
+    // Nothing found
+    return false;
+}
+
+
+/*
+ * megamol::core::CoreInstance::quickConnectUpStepInfo
+ */
+void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDescription *from,
+        vislib::Array<megamol::core::CoreInstance::quickStepInfo>& step) {
+    using vislib::sys::Log;
+    ASSERT(from != NULL);
+    step.Clear();
+
+    Module *m = from->CreateModule("quickstarttest", this);
+    if (m == NULL) {
+        Log::DefaultLog.WriteError("Unable to test-instantiate module %s", from->ClassName());
+        return;
+    }
+    vislib::SingleLinkedList<vislib::Pair<CallDescription*, vislib::StringA> > inCalls;
+    vislib::Stack<AbstractNamedObjectContainer *> stack(m);
+    while (!stack.IsEmpty()) {
+        AbstractNamedObjectContainer *anoc = stack.Pop();
+        AbstractNamedObjectContainer::ChildList::Iterator ci = anoc->GetChildIterator();
+        while (ci.HasNext()) {
+            AbstractNamedObject *ano = ci.Next();
+            if (dynamic_cast<AbstractNamedObjectContainer*>(ano) != NULL) {
+                stack.Push(dynamic_cast<AbstractNamedObjectContainer*>(ano));
+            }
+            if (dynamic_cast<CalleeSlot*>(ano) != NULL) {
+                CalleeSlot *callee = dynamic_cast<CalleeSlot*>(ano);
+
+                CallDescriptionManager::DescriptionIterator cdi = CallDescriptionManager::Instance()->GetIterator();
+                while (cdi.HasNext()) {
+                    CallDescription *cd = cdi.Next();
+                    vislib::Pair<CallDescription*, vislib::StringA> cse(cd, callee->Name());
+                    if (inCalls.Contains(cse)) continue;
+                    if (callee->IsCallCompatible(cd)) {
+                        inCalls.Add(cse);
+                    }
+                }
+            }
+        }
+    }
+    m->SetAllCleanupMarks();
+    m->PerformCleanup();
+    delete m;
+    // now 'inCalls' holds all calls which can connect to 'from' (some slot)
+
+    ModuleDescriptionManager::DescriptionIterator mdi = ModuleDescriptionManager::Instance()->GetIterator();
+    while (mdi.HasNext()) {
+        ModuleDescription *md = mdi.Next();
+        if (md == from) continue;
+        m = md->CreateModule("quickstarttest", this);
+        if (m == NULL) continue;
+
+        bool connectable = false;
+        stack.Push(m);
+        while (!stack.IsEmpty() && !connectable) {
+            AbstractNamedObjectContainer *anoc = stack.Pop();
+            ASSERT(anoc != NULL);
+            AbstractNamedObjectContainer::ChildList::Iterator ci = anoc->GetChildIterator();
+            while (ci.HasNext() && !connectable) {
+                AbstractNamedObject *ano = ci.Next();
+                ASSERT(ano != NULL);
+                if (dynamic_cast<AbstractNamedObjectContainer*>(ano) != NULL) {
+                    stack.Push(dynamic_cast<AbstractNamedObjectContainer*>(ano));
+                }
+                if (dynamic_cast<CallerSlot*>(ano) != NULL) {
+                    CallerSlot *caller = dynamic_cast<CallerSlot*>(ano);
+                    ASSERT(caller != NULL);
+
+                    vislib::SingleLinkedList<vislib::Pair<CallDescription*, vislib::StringA> >::Iterator cdi = inCalls.GetIterator();
+                    while (cdi.HasNext() && !connectable) {
+                        const vislib::Pair<CallDescription*, vislib::StringA> &cde = cdi.Next();
+                        CallDescription *cd = cde.First();
+                        ASSERT(cd != NULL);
+                        if (caller->IsCallCompatible(cd)) {
+                            connectable = true;
+                            stack.Clear();
+                            quickStepInfo qsi;
+                            qsi.call = cd;
+                            qsi.nextMod = md;
+                            qsi.nextSlot = caller->Name();
+                            qsi.prevSlot = cde.Second();
+                            step.Add(qsi);
+                        }
+                    }
+                }
+            }
+        }
+        m->SetAllCleanupMarks();
+        m->PerformCleanup();
+        VLTRACE(VISLIB_TRCELVL_INFO, "dtoring %s ... ", md->ClassName());
+        delete m;
+        VLTRACE(VISLIB_TRCELVL_INFO, "done dtoring.\n");
+    }
 
 }

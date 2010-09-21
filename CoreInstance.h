@@ -41,6 +41,8 @@
 #include "param/ParamUpdateListener.h"
 #include "utility/ShaderSourceFactory.h"
 #include "ParamValueSetRequest.h"
+#include "ModuleDescription.h"
+#include "CallDescription.h"
 
 
 namespace megamol {
@@ -545,6 +547,53 @@ namespace core {
         };
 
         /**
+         * Utility struct for quickstart configuration
+         */
+        typedef struct _quickstepinfo_t {
+
+            /** The name of the slot of the previous mod */
+            vislib::StringA prevSlot;
+
+            /** The name of the slot of the next mod */
+            vislib::StringA nextSlot;
+
+            /** module one step upward */
+            ModuleDescription * nextMod;
+
+            /** call connecting 'nextMod' to previous mod */
+            CallDescription * call;
+
+            /**
+             * Assignment operator
+             *
+             *
+             * @return A reference to this
+             */
+            struct _quickstepinfo_t& operator=(const struct _quickstepinfo_t& rhs) {
+                this->prevSlot = rhs.prevSlot;
+                this->nextSlot = rhs.nextSlot;
+                this->nextMod = rhs.nextMod;
+                this->call = rhs.call;
+                return *this;
+            }
+
+            /**
+             * Test for equality
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return True if this and rhs are equal
+             */
+            bool operator==(const struct _quickstepinfo_t& rhs) {
+                return (this->prevSlot == rhs.prevSlot)
+                    && (this->nextSlot == rhs.nextSlot)
+                    && (this->nextMod == rhs.nextMod)
+                    && (this->call == rhs.call);
+            }
+
+        } quickStepInfo;
+
+        /**
          * Adds a project to the instance.
          *
          * @param reader The xml reader to load the project from.
@@ -611,6 +660,26 @@ namespace core {
          * @param filename The plugin to load
          */
         void loadPlugin(const vislib::TString& filename);
+
+        /**
+         * Auto-connects a view module graph from 'from' to 'to' upwards
+         *
+         * @param view The view description object to receive the graph
+         * @param from The name of the module to connect from (upwards)
+         * @param to The optional module to connect to (upwards)
+         *
+         * @return True on success
+         */
+        bool quickConnectUp(ViewDescription& view, const char *from, const char *to);
+
+        /**
+         * Collects information on possible upwards connections for the module
+         * 'from'
+         *
+         * @param from The module to connect from (upwards)
+         * @param step List of possible upward connections
+         */
+        void quickConnectUpStepInfo(ModuleDescription *from, vislib::Array<quickStepInfo>& step);
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)

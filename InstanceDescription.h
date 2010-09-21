@@ -96,6 +96,20 @@ namespace core {
         }
 
         /**
+         * Removes all call instantiation requests
+         */
+        void ClearCalls(void) {
+            this->calls.Clear();
+        }
+
+        /**
+         * Removes all module instantiation requests
+         */
+        void ClearModules(void) {
+            this->modules.Clear();
+        }
+
+        /**
          * Gets a human readable description of the job.
          *
          * @return A human readable description of the job.
