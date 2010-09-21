@@ -15,8 +15,10 @@
 #include "param/FilePathParam.h"
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
+#include "vislib/Array.h"
 #include "vislib/forceinline.h"
 #include "vislib/Log.h"
+#include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/SystemMessage.h"
@@ -733,6 +735,31 @@ namespace imdinternal {
 } /* end namespace megamol */
 
 using namespace megamol::core;
+
+
+/*
+ * moldyn::IMDAtomDataSource::FileFormatAutoDetect
+ */
+float moldyn::IMDAtomDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize) {
+    vislib::StringA line(reinterpret_cast<const char *>(data), static_cast<unsigned int>(dataSize));
+    line.Replace('\t', ' ');
+    vislib::Array<vislib::StringA> lines = vislib::StringTokeniserA::Split(line, "\n", true);
+    for (SIZE_T i = 0; i < lines.Count(); i++) {
+        if (!lines[i].StartsWith("#F ")) continue;
+        vislib::Array<vislib::StringA> tokens = vislib::StringTokeniserA::Split(lines[i], ' ', true);
+        if (tokens.Count() != 8) continue;
+
+        // now I'm almost sure
+        if (tokens[1].Equals("A") || tokens[1].Equals("B") || tokens[1].Equals("b")
+                || tokens[1].Equals("L") || tokens[1].Equals("l")) {
+            // now I'm sure
+            return 1.0f;
+        }
+    }
+
+    // I'm not sure at all
+    return 0.0f;
+}
 
 
 /*

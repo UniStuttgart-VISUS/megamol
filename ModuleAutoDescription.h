@@ -22,7 +22,12 @@ namespace core {
     /**
      * Class of rendering graph module descriptions generated using static
      * member implementations of the module classes.
-     * Template parameter C is the module class to be described.
+     * Template parameter 'C' is the module class to be described.
+     *
+     * 'C' must implement the static methods:
+     *      const char* ClassName();
+     *      const char *Description();
+     *      bool IsAvailable();
      */
     template<class C> class ModuleAutoDescription : public ModuleDescription {
     public:

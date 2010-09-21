@@ -80,6 +80,68 @@ namespace core {
          */
         virtual bool IsDescribing(const Module * module) const = 0;
 
+        /**
+         * Answers whether this modules is a data source loader supporting
+         * file format auto-detection for quickstarting.
+         *
+         * This default implementation returns 'false'.
+         *
+         * @return 'true' if the module is a data source loader supporting
+         *         file format auto-detection.
+         */
+        virtual bool IsLoaderWithAutoDetection(void) const;
+
+        /**
+         * Answer the file format file name extensions usually used by files
+         * for this loader module, or NULL if there are none. The file name
+         * extensions include the periode but no asterix (e. g. '.dat').
+         * Multiple extensions are separated by semicolons.
+         *
+         * This default implementation returns 'NULL'.
+         *
+         * @return The file name extenions for data files for this loader
+         *         module.
+         */
+        virtual const char *LoaderAutoDetectionFilenameExtensions(void) const;
+
+        /**
+         * Performs an file format auto detection check based on the first
+         * 'dataSize' bytes of the file.
+         *
+         * This default implementation returns 0
+         *
+         * @param data Pointer to the first 'dataSize' bytes of the file to
+         *             test
+         * @param dataSize The number of valid bytes stored at 'data'
+         *
+         * @return The confidence if this data file can be loaded with this
+         *         module. A value of '1' tells the caller that the data file
+         *         can be loaded (as long as the file is not corrupted). A
+         *         value of '0' tells that this file cannot be loaded. Any
+         *         value inbetween tells that loading this file might fail or
+         *         might result in undefined behaviour.
+         */
+        virtual float LoaderAutoDetection(const unsigned char* data, SIZE_T dataSize) const;
+
+        /**
+         * Answer the relative name of the parameter slot for the data file
+         * name of the data file to load.
+         *
+         * This default implementation returns 'NULL'.
+         *
+         * @return The name of the file name slot
+         */
+        virtual const char *LoaderFilenameSlotName(void) const;
+
+        /**
+         * Answer the file type name (e. g. "Particle Data")
+         *
+         * This default implementation returns 'NULL'.
+         *
+         * @return The file type name
+         */
+        virtual const char *LoaderFileTypeName(void) const;
+
     protected:
 
         /**

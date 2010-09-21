@@ -1180,8 +1180,79 @@ void megamol::core::CoreInstance::ParameterValueUpdate(megamol::core::param::Par
  */
 void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
     using vislib::sys::Log;
+    Log::DefaultLog.WriteInfo(_T("Quickstarting \"%s\" ..."), filename.PeekBuffer());
+
+    const SIZE_T maxBufferSize = 4 * 1024;
+    unsigned char *buffer = new unsigned char[maxBufferSize];
+
+    vislib::sys::File file;
+    if (!file.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        delete[] buffer;
+        Log::DefaultLog.WriteError(_T("Failed to Quickstart \"%s\": Unable to load peek data"), filename.PeekBuffer());
+        return;
+    }
+    SIZE_T bufferSize = file.Read(buffer, maxBufferSize);
+    file.Close();
+
+    if (bufferSize <= 0) {
+        delete[] buffer;
+        Log::DefaultLog.WriteError(_T("Failed to Quickstart \"%s\": Unable to load peek data"), filename.PeekBuffer());
+        return;
+    }
+
+    // auto-detect data source module
+    ModuleDescription *dataSrcClass = NULL;
+    ModuleDescriptionManager::DescriptionIterator di = ModuleDescriptionManager::Instance()->GetIterator();
+
+    // first try auto-detect with loaders with matching file name extension
+    while (di.HasNext()) {
+        ModuleDescription *md = di.Next();
+        if (!md->IsLoaderWithAutoDetection()) continue;
+        const char *extsStr = md->LoaderAutoDetectionFilenameExtensions();
+        if (extsStr == NULL) continue;
+        vislib::Array<vislib::StringA> exts = vislib::StringTokeniserA::Split(extsStr, ';', true);
+        bool found = false;
+        for (SIZE_T i = 0; i < exts.Count(); i++) {
+            if (filename.EndsWith(A2T(exts[i]))) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) continue;
+
+        float adcv = md->LoaderAutoDetection(buffer, bufferSize);
+        Log::DefaultLog.WriteInfo(100, "Module %s auto-detect confidence %f\n", md->ClassName(), adcv);
+        if (adcv > 0.99) { // enough for me
+            dataSrcClass = md;
+            break;
+        }
+    }
+
+    if (dataSrcClass == NULL) {
+        // brute force auto-detection
+        di = ModuleDescriptionManager::Instance()->GetIterator();
+        while (di.HasNext()) {
+            ModuleDescription *md = di.Next();
+            if (!md->IsLoaderWithAutoDetection()) continue;
+            float adcv = md->LoaderAutoDetection(buffer, bufferSize);
+            Log::DefaultLog.WriteInfo(100, "Module %s auto-detect confidence %f\n", md->ClassName(), adcv);
+            if (adcv > 0.99) { // enough for me
+                dataSrcClass = md;
+                break;
+            }
+        }
+    }
+
+    delete[] buffer;
+
+    if (dataSrcClass == NULL) {
+        Log::DefaultLog.WriteError(_T("Failed to Quickstart \"%s\": No suitable data source class found"), filename.PeekBuffer());
+        return;
+    }
+
+
     // TODO: Implement
-    Log::DefaultLog.WriteError("Quickstarting is not supported yet");
+    Log::DefaultLog.WriteError("Quickstarting implementation not complete");
 }
 
 

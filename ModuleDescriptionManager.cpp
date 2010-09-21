@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "ModuleDescriptionManager.h"
+#include "LoaderADModuleAutoDescription.h"
 #include "ModuleAutoDescription.h"
 #include "ModuleDescription.h"
 #include "vislib/assert.h"
@@ -89,7 +90,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<moldyn::DataFileSequence>();
         instance->registerAutoDescription<moldyn::DataGridder>();
         instance->registerAutoDescription<moldyn::GrimRenderer>();
-        instance->registerAutoDescription<moldyn::IMDAtomDataSource>();
+        instance->registerDescription<LoaderADModuleAutoDescription<moldyn::IMDAtomDataSource> >();
         instance->registerAutoDescription<moldyn::MipDepthSphereRenderer>();
         instance->registerAutoDescription<moldyn::MMPGDDataSource>();
         instance->registerAutoDescription<moldyn::MMPGDWriter>();
