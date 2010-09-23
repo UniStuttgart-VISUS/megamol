@@ -88,7 +88,9 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
         toggleAnimPlaySlot("toggleAnimPlay", "Button to toggle animation"),
         animSpeedUpSlot("anim::SpeedUp", "Speeds up the animation"),
-        animSpeedDownSlot("anim::SpeedDown", "Slows down the animation") {
+        animSpeedDownSlot("anim::SpeedDown", "Slows down the animation"),
+        bboxCol(192, 192, 192, 255),
+        bboxColSlot("bboxCol", "Sets the colour for the bounding box") {
     using vislib::sys::KeyCode;
 
     this->camParams = this->cam.Parameters();
@@ -254,6 +256,13 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
     this->toggleBBoxSlot.SetUpdateCallback(&View3D::onToggleButton);
     this->MakeSlotAvailable(&this->toggleBBoxSlot);
 
+    this->bboxColSlot << new param::StringParam(
+        utility::ColourParser::ToString(
+            static_cast<float>(this->bboxCol.R()) / 255.0f,
+            static_cast<float>(this->bboxCol.G()) / 255.0f,
+            static_cast<float>(this->bboxCol.B()) / 255.0f));
+    this->MakeSlotAvailable(&this->bboxColSlot);
+
 }
 
 
@@ -405,6 +414,22 @@ void view::View3D::Render(void) {
         cr3d->SetLastFrameTime(this->fpsCounter.LastFrameTime());
     }
     this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+
+    if (this->bboxColSlot.IsDirty()) {
+        float r, g, b;
+        this->bboxColSlot.ResetDirty();
+        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), r, g, b);
+        int ir = static_cast<int>(r * 255.0f);
+        if (ir < 0) ir = 0; else if (ir > 255) ir = 255;
+        int ig = static_cast<int>(g * 255.0f);
+        if (ig < 0) ig = 0; else if (ig > 255) ig = 255;
+        int ib = static_cast<int>(b * 255.0f);
+        if (ib < 0) ib = 0; else if (ib > 255) ib = 255;
+        this->bboxCol.Set(static_cast<unsigned char>(ir),
+            static_cast<unsigned char>(ig),
+            static_cast<unsigned char>(ib),
+            255);
+    }
 
     // set light parameters
     if (this->isCamLightSlot.IsDirty()) {
@@ -778,7 +803,7 @@ void view::View3D::renderBBox(void) {
 void view::View3D::renderBBoxBackside(void) {
     ::glDisable(GL_LIGHTING);
     ::glEnable(GL_BLEND);
-    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ::glEnable(GL_DEPTH_TEST);
     ::glEnable(GL_CULL_FACE);
     ::glCullFace(GL_FRONT);
@@ -787,14 +812,14 @@ void view::View3D::renderBBoxBackside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_BACK, GL_LINE);
 
-    ::glColor4ub(255, 255, 255, 50);
+    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 160);
     this->renderBBox();
 
-    ::glPolygonMode(GL_BACK, GL_FILL);
-    ::glDisable(GL_DEPTH_TEST);
+    //::glPolygonMode(GL_BACK, GL_FILL);
+    //::glDisable(GL_DEPTH_TEST);
 
-    ::glColor4ub(255, 255, 255, 12);
-    this->renderBBox();
+    //::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 16);
+    //this->renderBBox();
 
     ::glCullFace(GL_BACK);
 }
@@ -806,7 +831,7 @@ void view::View3D::renderBBoxBackside(void) {
 void view::View3D::renderBBoxFrontside(void) {
     ::glDisable(GL_LIGHTING);
     ::glEnable(GL_BLEND);
-    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ::glEnable(GL_DEPTH_TEST);
     ::glDepthFunc(GL_LEQUAL);
     ::glEnable(GL_CULL_FACE);
@@ -816,7 +841,7 @@ void view::View3D::renderBBoxFrontside(void) {
     ::glDisable(GL_TEXTURE_2D);
     ::glPolygonMode(GL_FRONT, GL_LINE);
 
-    ::glColor4ub(255, 255, 255, 100);
+    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 255);
     this->renderBBox();
 
     ::glDepthFunc(GL_LESS);

@@ -26,6 +26,7 @@
 #include "vislib/CameraRotate2DLookAt.h"
 #include "vislib/CameraZoom2DMove.h"
 #include "vislib/CameraZoom2DAngle.h"
+#include "vislib/ColourRGBAu8.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/FpsCounter.h"
 #include "vislib/graphicstypes.h"
@@ -506,6 +507,12 @@ namespace view {
 
         /** Slows down the animation */
         param::ParamSlot animSpeedDownSlot;
+
+        /** The colour of the bounding box */
+        vislib::graphics::ColourRGBAu8 bboxCol;
+
+        /** Parameter slot for the bounding box colour */
+        param::ParamSlot bboxColSlot;
 
     };
 
