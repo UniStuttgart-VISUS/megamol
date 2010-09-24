@@ -247,7 +247,6 @@
     <ClCompile Include="testprocess.cpp" />
     <ClCompile Include="testquaternion.cpp" />
     <ClCompile Include="testrefcount.cpp" />
-    <ClCompile Include="testregex.cpp" />
     <ClCompile Include="testserialiser.cpp" />
     <ClCompile Include="testsockets.cpp" />
     <ClCompile Include="teststacktrace.cpp" />
@@ -296,7 +295,6 @@
     <ClInclude Include="testprocess.h" />
     <ClInclude Include="testquaternion.h" />
     <ClInclude Include="testrefcount.h" />
-    <ClInclude Include="testregex.h" />
     <ClInclude Include="testserialiser.h" />
     <ClInclude Include="testsockets.h" />
     <ClInclude Include="teststacktrace.h" />

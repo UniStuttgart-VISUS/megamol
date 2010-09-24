@@ -117,9 +117,6 @@
     <ClCompile Include="testrefcount.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="testregex.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="testserialiser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -258,9 +255,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testrefcount.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="testregex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testserialiser.h">

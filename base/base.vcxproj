@@ -532,21 +532,6 @@
     <ClCompile Include="src\RawStorageSerialiser.cpp" />
     <ClCompile Include="src\RawStorageWriter.cpp" />
     <ClCompile Include="src\ReferenceCounted.cpp" />
-    <ClCompile Include="src\RegEx.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\RegExCharTraits.cpp" />
     <ClCompile Include="src\Serialisable.cpp" />
     <ClCompile Include="src\Serialiser.cpp" />
     <ClCompile Include="src\SHA1HashProvider.cpp" />
@@ -634,8 +619,6 @@
     <ClInclude Include="include\vislib\RawStorageSerialiser.h" />
     <ClInclude Include="include\vislib\RawStorageWriter.h" />
     <ClInclude Include="include\vislib\ReferenceCounted.h" />
-    <ClInclude Include="include\vislib\RegEx.h" />
-    <ClInclude Include="include\vislib\RegExCharTraits.h" />
     <ClInclude Include="include\vislib\Serialisable.h" />
     <ClInclude Include="include\vislib\Serialiser.h" />
     <ClInclude Include="include\vislib\SHA1HashProvider.h" />
@@ -662,7 +645,6 @@
     <ClInclude Include="vislibversion.template.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\vislib\RegEx.inl" />
     <None Include="include\vislib\vislibsymbolimportexport.inl" />
     <None Include="makevislibversion.pl" />
     <CustomBuildStep Include="project.mk">

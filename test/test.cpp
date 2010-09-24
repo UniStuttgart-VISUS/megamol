@@ -44,7 +44,6 @@
 #include "testipc.h"
 #include "testVIPCStrTab.h"
 #include "testserialiser.h"
-#include "testregex.h"
 #include "testipv6.h"
 #include "testthreadpool.h"
 #include "testrefcount.h"
@@ -85,7 +84,6 @@ VislibTest tests[] = {
     {_T("List"), ::TestSingleLinkedList, "Tests the single linked list"},
     {_T("ListSort"), ::TestSingleLinkedListSort, "Tests the 'Sort' Method of vislib::SingleLinkedList"},
     {_T("Map"), ::TestMap, "Tests vislib::Map"},
-    {_T("RegEx"), ::TestRegEx, "Tests VISlib regular expressions"},
     {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
     {_T("StackTrace"), ::TestStackTrace, "Tests vislib::StackTrace"},

@@ -126,12 +126,6 @@
     <ClCompile Include="src\ReferenceCounted.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\RegEx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RegExCharTraits.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Serialisable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -311,12 +305,6 @@
     <ClInclude Include="include\vislib\ReferenceCounted.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\RegEx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\RegExCharTraits.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vislib\Serialisable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -391,9 +379,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\vislib\RegEx.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="include\vislib\vislibsymbolimportexport.inl">
       <Filter>Header Files</Filter>
     </None>
