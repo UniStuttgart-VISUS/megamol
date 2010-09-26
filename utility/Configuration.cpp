@@ -27,6 +27,11 @@
 #include "vislib/DirectoryIterator.h"
 #include "vislib/sysfunctions.h"
 
+#ifndef _WIN32
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 
 /*****************************************************************************/
 #if /* region ConfigValueName implementation */ 1
@@ -369,7 +374,20 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
         }
     }
 #else
-    dir.Clear(); // TODO: Implement
+    // This is the best I got for now. Requires '/proc'
+    vislib::StringA pid;
+    pid.Format("/proc/%d/exe", getpid());
+    vislib::StringA path;
+    const SIZE_T bufSize = 0xFFFF;
+    char *buf = path.AllocateBuffer(bufSize);
+    ssize_t size = readlink(pid.PeekBuffer(), buf, bufSize - 1);
+    if (size >= 0) {
+        buf[size] = 0;
+        dir = buf;
+        dir = vislib::sys::Path::GetDirectoryName(dir);
+    } else {
+        dir.Clear();
+    }
 #endif
     if (!dir.IsEmpty()) {
         if (!dir.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
