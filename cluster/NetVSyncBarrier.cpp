@@ -12,7 +12,7 @@
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/SimpleMessage.h"
-#include "vislib/TCPCommChannel.h"
+#include "vislib/TcpCommChannel.h"
 #include "vislib/Trace.h"
 
 using namespace megamol::core;
