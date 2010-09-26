@@ -709,7 +709,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                                 over = false;
                             } else {
                                 Log::DefaultLog.WriteWarn("Quickstart registration option \"%s\" ignored",
-                                    vislib::StringA(opts[j]));
+                                    vislib::StringA(opts[j]).PeekBuffer());
                             }
                         }
                     } else {
