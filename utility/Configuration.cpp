@@ -321,6 +321,7 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
     this->criticalParserError = false;
     this->cfgFileLocations.Clear();
 
+    // Search 1: Environment Variable 'MEGAMOLCONFIG'
 #ifdef _WIN32
 #pragma warning(disable: 4996)  
 #endif /* _WIN32 */
@@ -353,18 +354,45 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
         }
     }
 
+    vislib::StringW dir;
+
+    // Search 2: Binary Module Directory
+#ifdef _WIN32
+    const DWORD nSize = 0xFFFF;
+    if (::GetModuleFileNameW(NULL, dir.AllocateBuffer(nSize), nSize) == ERROR_INSUFFICIENT_BUFFER) {
+        dir.Clear();
+    } else {
+        if (::GetLastError() == ERROR_SUCCESS) {
+            dir = vislib::sys::Path::GetDirectoryName(dir);
+        } else {
+            dir.Clear();
+        }
+    }
+#else
+    dir.Clear(); // TODO: Implement
+#endif
+    if (!dir.IsEmpty()) {
+        if (!dir.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
+            dir += vislib::sys::Path::SEPARATOR_W;
+        }
+        if (this->searchConfigFile(dir)) return;
+    }
+
+    // Search 3: User Home
+    dir = vislib::sys::Path::GetUserHomeDirectoryW();
+    if (!dir.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
+        dir += vislib::sys::Path::SEPARATOR_W;
+    }
+    if (this->searchConfigFile(dir)) return;
+
+    // Search 4: User Home Subdirectory '.megamol'
+    dir += L".megamol";
+    if (this->searchConfigFile(dir)) return;
+
+    // Search 5: Current Directory
     if (this->searchConfigFile(vislib::sys::Path::GetCurrentDirectoryW())) {
         return;
     }
-
-    vislib::StringW home = vislib::sys::Path::GetUserHomeDirectoryW();
-    if (!home.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
-        home += vislib::sys::Path::SEPARATOR_W;
-    }
-    if (this->searchConfigFile(home)) return;
-
-    home += L".megamol";
-    if (this->searchConfigFile(home)) return;
 
     // no configuration file was found
     // log warning
