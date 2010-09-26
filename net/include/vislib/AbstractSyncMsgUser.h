@@ -403,7 +403,7 @@ namespace net {
                 const T& body) {
             VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
                 __LINE__);
-            this->sendMsgViaBuffer(channel, msgId, &body, sizeof(T));
+            this->sendViaMsgBuffer(channel, msgID, &body, sizeof(T));
         }
 
         /**
@@ -430,7 +430,7 @@ namespace net {
                 const T& body) {
             VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
                 __LINE__);
-            this->sendMsgViaBuffer(channel, msgId, &body, sizeof(T));
+            this->sendViaMsgBuffer(channel, msgID, &body, sizeof(T));
         }
 
         /**
