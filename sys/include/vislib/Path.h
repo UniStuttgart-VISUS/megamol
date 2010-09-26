@@ -205,6 +205,24 @@ namespace sys {
         static StringW FindExecutablePath(const StringW& filename);
 
         /**
+         * Answer the path to the currently running application including the
+         * application name itself.
+         *
+         * @return The fully qualified path to the currently running
+         *         application or an empty string in case of an error.
+         */
+        static StringA GetApplicationPathA(void);
+
+        /**
+         * Answer the path to the currently running application including the
+         * application name itself.
+         *
+         * @return The fully qualified path to the currently running
+         *         application or an empty string in case of an error.
+         */
+        static StringW GetApplicationPathW(void);
+
+        /**
          * Answer the current working directory.
          *
          * The returned string is guaranteed to end with a path separator.

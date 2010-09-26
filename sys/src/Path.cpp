@@ -475,6 +475,64 @@ vislib::StringW vislib::sys::Path::FindExecutablePath(
 
 
 /*
+ * vislib::sys::Path::GetApplicationPathA
+ */
+vislib::StringA vislib::sys::Path::GetApplicationPathA(void) {
+    vislib::StringA retval;
+#ifdef _WIN32
+    const DWORD nSize = 0xFFFF;
+    if (::GetModuleFileNameA(NULL, retval.AllocateBuffer(nSize), nSize)
+            == ERROR_INSUFFICIENT_BUFFER) {
+        retval.Clear();
+    } else {
+        if (::GetLastError() != ERROR_SUCCESS) {
+            retval.Clear();
+        }
+    }
+
+#else /* _WIN32 */
+    // This is the best I got for now. Requires '/proc'
+    vislib::StringA pid;
+    pid.Format("/proc/%d/exe", getpid());
+    vislib::StringA path;
+    const SIZE_T bufSize = 0xFFFF;
+    char *buf = path.AllocateBuffer(bufSize);
+    ssize_t size = readlink(pid.PeekBuffer(), buf, bufSize - 1);
+    if (size >= 0) {
+        buf[size] = 0;
+        retval = buf;
+    } else {
+        retval.Clear();
+    }
+
+#endif /* _WIN32 */
+    return retval;
+}
+
+
+/*
+ * vislib::sys::Path::GetApplicationPathW
+ */
+vislib::StringW vislib::sys::Path::GetApplicationPathW(void) {
+#ifdef _WIN32
+    vislib::StringW retval;
+    const DWORD nSize = 0xFFFF;
+    if (::GetModuleFileNameW(NULL, retval.AllocateBuffer(nSize), nSize)
+            == ERROR_INSUFFICIENT_BUFFER) {
+        retval.Clear();
+    } else {
+        if (::GetLastError() != ERROR_SUCCESS) {
+            retval.Clear();
+        }
+    }
+    return retval;
+#else /* _WIN32 */
+    return A2W(GetApplicationPathA());
+#endif /* _WIN32 */
+}
+
+
+/*
  * vislib::sys::Path::GetCurrentDirectoryA
  */
 vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
