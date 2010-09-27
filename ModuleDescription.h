@@ -92,6 +92,13 @@ namespace core {
         virtual bool IsLoaderWithAutoDetection(void) const;
 
         /**
+         * Answer whether or not this module can be used in a quickstart
+         *
+         * @return 'true' if the module can be used in a quickstart
+         */
+        virtual bool IsVisibleForQuickstart(void) const = 0;
+
+        /**
          * Answer the file format file name extensions usually used by files
          * for this loader module, or NULL if there are none. The file name
          * extensions include the periode but no asterix (e. g. '.dat').

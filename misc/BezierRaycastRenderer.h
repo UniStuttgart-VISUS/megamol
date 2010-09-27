@@ -54,6 +54,15 @@ namespace misc {
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
+        /**
+         * Disallow usage in quickstarts
+         *
+         * @return false
+         */
+        static bool SupportQuickstart(void) {
+            return false; // TODO: Change as soon as it works
+        }
+
         /** Ctor. */
         BezierRaycastRenderer(void);
 

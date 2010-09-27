@@ -2113,6 +2113,7 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDe
     while (mdi.HasNext()) {
         ModuleDescription *md = mdi.Next();
         if (md == from) continue;
+        if (!md->IsVisibleForQuickstart()) continue;
         m = md->CreateModule("quickstarttest", this);
         if (m == NULL) continue;
 

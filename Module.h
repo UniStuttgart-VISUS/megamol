@@ -32,6 +32,20 @@ namespace core {
         friend class ::megamol::core::ModuleDescription;
 
         /**
+         * Answer whether or not this module supports being used in a
+         * quickstart. Overwrite if you don't want your module to be used in
+         * quickstarts.
+         *
+         * This default implementation returns 'true'
+         *
+         * @return Whether or not this module supports being used in a
+         *         quickstart.
+         */
+        static bool SupportQuickstart(void) {
+            return true;
+        }
+
+        /**
          * Ctor.
          *
          * Be aware of the fact that most of your initialisation code should

@@ -59,6 +59,15 @@ namespace moldyn {
             return true;
         }
 
+        /**
+         * Disallow usage in quickstarts
+         *
+         * @return false
+         */
+        static bool SupportQuickstart(void) {
+            return false;
+        }
+
         /** Ctor. */
         DataFileSequence(void);
 

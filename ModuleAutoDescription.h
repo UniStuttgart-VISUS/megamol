@@ -83,6 +83,15 @@ namespace core {
             return dynamic_cast<const C*>(module) != NULL;
         }
 
+        /**
+         * Answer whether or not this module can be used in a quickstart
+         *
+         * @return 'true' if the module can be used in a quickstart
+         */
+        virtual bool IsVisibleForQuickstart(void) const {
+            return C::SupportQuickstart();
+        }
+
     protected:
 
         /**

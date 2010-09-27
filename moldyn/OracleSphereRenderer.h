@@ -58,6 +58,15 @@ namespace moldyn {
                 && (glh_extension_supported("GL_ARB_multitexture") == 1);
         }
 
+        /**
+         * Disallow usage in quickstarts
+         *
+         * @return false
+         */
+        static bool SupportQuickstart(void) {
+            return false;
+        }
+
         /** Ctor. */
         OracleSphereRenderer(void);
 

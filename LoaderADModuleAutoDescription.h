@@ -35,6 +35,8 @@ namespace core {
      *      float FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize);
      *      const char *FilenameSlotName();
      *      const char *FileTypeName();
+     *
+     * TODO: This is no longer required when redesigning similiar to "SupportsQuickstart" in MegaMol 0.5
      */
     template<class C> class LoaderADModuleAutoDescription : public ModuleAutoDescription<C> {
     public:
