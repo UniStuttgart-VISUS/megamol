@@ -22,7 +22,16 @@
  * vislib::Trace::GetInstance
  */
 vislib::Trace& vislib::Trace::GetInstance(void) {
-    return vislib::Trace::instance;
+    return *vislib::Trace::instance;
+}
+
+
+/*
+ * vislib::Trace::OverrideInstance
+ */
+void vislib::Trace::OverrideInstance(vislib::Trace *inst) {
+    ASSERT(inst != NULL);
+    vislib::Trace::instance = inst; // no need to delete the old object
 }
 
 
@@ -223,7 +232,7 @@ VISLIB_STATICSYMBOL vislib::Trace __vl_trace_instance;
 /*
  * vislib::Trace::instance
  */
-vislib::Trace& vislib::Trace::instance(__vl_trace_instance);
+vislib::Trace *vislib::Trace::instance(&__vl_trace_instance);
 
 
 /*

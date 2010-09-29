@@ -39,6 +39,17 @@ namespace vislib {
          */
         static Trace& GetInstance(void);
 
+        /**
+         * Overrides the currently used 'main-and-most-of-the-time-only'
+         * instance with 'inst'. The memory ownership of the object 'inst'
+         * points to is not changed and the caller is responsible to keep it
+         * valid as long as it is used, as well as to delete it when it is
+         * no longer used.
+         *
+         * @param inst The new instance object. Must not be NULL
+         */
+        static void OverrideInstance(Trace *inst);
+
         /** 
          * Set this level to display all tracing information. If you use this
          * constant for tracing itself, the messages will only be output, if
@@ -171,8 +182,8 @@ namespace vislib {
         /** The default prefix of the console output. */
         static const char *DEFAULT_PREFIX;
 
-        /** The only instance of this class. */
-        static Trace& instance;
+        /** The 'main' and most of the time 'only' instance of this class. */
+        static Trace *instance;
 
     public: // TODO: Not good! Think of better solution!
 
