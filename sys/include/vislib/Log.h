@@ -1,7 +1,7 @@
 /*
  * Log.h
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2010 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
@@ -14,7 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
+#include "vislib/CharTraits.h"
+#include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include <cstdio>
@@ -29,18 +30,13 @@ namespace sys {
      * This is a utility class for managing a log file.
      */
     class Log {
-
     public:
 
         /** type for time stamps */
         typedef time_t TimeStamp;
 
-        /** type for the file name */
-#ifdef _WIN32
-        typedef vislib::StringW FileNameString;
-#else /* _WIN32 */
-        typedef vislib::StringA FileNameString;
-#endif /* _WIN32 */
+        /** type for the id of the source object */
+        typedef int SourceID;
 
         /** 
          * Set this level to log all messages. If you use this constant for 
@@ -78,167 +74,381 @@ namespace sys {
         static Log& DefaultLog;
 
         /**
-         * Nested abstract base class of echo output targets.
+         * Answer the current time.
+         *
+         * @return A time stamp representing NOW.
          */
-        class EchoTarget {
+        static TimeStamp CurrentTimeStamp(void);
+
+        /**
+         * Answer the current source id
+         *
+         * @return A source id representing THIS
+         */
+        static SourceID CurrentSourceID(void);
+
+        /**
+         * Abstract base class for log targets
+         */
+        class Target {
         public:
 
-            /** ctor */
-            EchoTarget() { }
+            /** Dtor */
+            virtual ~Target(void);
 
-            /** dtor */
-            virtual ~EchoTarget() { }
+            /** Flushes any buffer */
+            virtual void Flush(void);
 
             /**
-             * Writes a string to the echo output target. Implementations may 
-             * assume that message ends with a new line control sequence.
+             * Answer the log level of this target
              *
-             * @param level The message level.
-             * @param message The message ANSI string.
+             * @return The log level of this target
              */
-            virtual void Write(UINT level, const char *message) const = 0;
+            inline UINT Level(void) const {
+                return this->level;
+            }
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg) = 0;
+
+            /**
+             * Sets the log level for this target
+             *
+             * @param level The new log level
+             */
+            inline void SetLevel(UINT level) {
+                this->level = level;
+            }
+
+        protected:
+
+            /**
+             * Ctor
+             *
+             * @param level The log level for this target
+             */
+            Target(UINT level = Log::LEVEL_ERROR);
+
+        private:
+
+            /** The log level for this target */
+            UINT level;
 
         };
 
         /**
-         * Implementation of EchoTarget writing the messages to a posix system
-         * stream.
+         * Target class storing message as long as the file is offline
          */
-        class EchoTargetStream : public EchoTarget {
+        class OfflineTarget : public Target {
         public:
 
-            /** Object echoing to stdout */
-            static const EchoTargetStream StdOut;
-
-            /** Object echoing to stderr */
-            static const EchoTargetStream StdErr;
-
-            /** 
-             * ctor 
+            /**
+             * Ctor
              *
-             * @param stream Specifies the stream used. This target object will
-             *               not close the stream 
+             * @param bufferSize The number of message to be stored in the
+             *                   offline buffer.
+             * @param level The log level used for this target
              */
-            EchoTargetStream(FILE *stream);
+            OfflineTarget(unsigned int bufferSize = 20,
+                UINT level = Log::LEVEL_ERROR);
+
+            /** Dtor */
+            virtual ~OfflineTarget(void);
 
             /**
-             * Writes a string to the echo output target. Implementations may 
-             * assume that message ends with a new line control sequence.
+             * Answer the size of the offline message buffer
              *
-             * @param level The message level.
-             * @param message The message ANSI string.
+             * @return The number of offline message that will be stored in
+             *         the offline buffer
              */
-            virtual void Write(UINT level, const char *message) const;
-
-            /**
-             * Answers the associated stream.
-             *
-             * @return The associated stream.
-             */
-            inline FILE * Stream(void) const {
-                return this->stream;
+            inline unsigned int BufferSize(void) const {
+                return this->bufSize;
             }
 
-            /** dtor */
-            virtual ~EchoTargetStream();
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg);
+
+            /**
+             * Answer the number of omitted messages
+             *
+             * @return The number of omitted messages
+             */
+            inline unsigned int OmittedMessagesCount(void) const {
+                return omittedCnt;
+            }
+
+            /**
+             * Echoes all stored offline messages to 'target' and optionally
+             * deletes the message buffer.
+             *
+             * @param target The target object to receive the messages
+             * @param remove If true the offline message buffer will be freed
+             */
+            void Reecho(Target &target, bool remove = true);
+
+            /**
+             * Sets the size of the buffer for offline messages
+             *
+             * @param bufferSize The number of message to be stored in the
+             *                   offline buffer.
+             */
+            void SetBufferSize(unsigned int bufferSize);
 
         private:
 
-            /** the echo stream */
+            /**
+             * Utility struct for offline messages
+            */
+            typedef struct _offlinemessage_t {
+
+                /** The level of the message */
+                UINT level;
+
+                /** The message time stamp */
+                TimeStamp time;
+
+                /** The message source ID */
+                SourceID sid;
+
+                /** The message text */
+                vislib::StringA msg;
+
+            } OfflineMessage;
+
+            /** The number of offline messages to be stored */
+            unsigned int bufSize;
+
+            /** The number of stored messages */
+            unsigned int msgCnt;
+
+            /** buffer of offline messages */
+            OfflineMessage *msgs;
+
+            /** The number of omitted messages */
+            unsigned int omittedCnt;
+
+        };
+
+        /**
+         * Target class safing message to a ASCII text file
+         */
+        class FileTarget : public Target {
+        public:
+
+            /**
+             * Opens a physical log file
+             *
+             * @param path The path to the physical log file
+             * @param level The log level used for this target
+             */
+            FileTarget(const char *path, UINT level = Log::LEVEL_ERROR);
+
+            /**
+             * Opens a physical log file
+             *
+             * @param path The path to the physical log file
+             * @param level The log level used for this target
+             */
+            FileTarget(const wchar_t *path, UINT level = Log::LEVEL_ERROR);
+
+            /** Dtor */
+            virtual ~FileTarget(void);
+
+            /** Flushes any buffer */
+            virtual void Flush(void);
+
+            /**
+             * Answer the path to the physical log file
+             *
+             * @return The path to the physical log file
+             */
+            inline const vislib::StringW& Filename(void) const {
+                return this->filename;
+            }
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg);
+
+        private:
+
+            /** The log file used by this target */
             FILE *stream;
+
+            /** The file name of the log file used */
+            vislib::StringW filename;
+
+        };
+
+        /**
+         * Target class echoing the log messages into a stream
+         */
+        class StreamTarget : public Target {
+        public:
+
+            /** Stream target to stdout */
+            static const SmartPtr<Target> StdOut;
+
+            /** Stream target to stderr */
+            static const SmartPtr<Target> StdErr;
+
+            /**
+             * Ctor
+             *
+             * @param stream The stream to write the log messages to
+             * @param level The log level used for this target
+             */
+            StreamTarget(FILE *stream, UINT level = Log::LEVEL_ERROR);
+
+            /** Dtor */
+            virtual ~StreamTarget(void);
+
+            /** Flushes any buffer */
+            virtual void Flush(void);
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg);
+
+            /**
+             * Sets the targetted log object
+             *
+             * @param log The new targetted log object
+             */
+            inline void SetTargetLog(FILE *stream) {
+                this->stream = stream;
+            }
+
+            /**
+             * Answer the targetted log object
+             *
+             * @return The targetted log object
+             */
+            inline FILE* TargetStream(void) const {
+                return this->stream;
+            }
+
+        private:
+
+             /** The stream used by this target */
+             FILE *stream;
+
+        };
+
+        /**
+         * Target class echoing the log messages into a stream
+         */
+        class RedirectTarget : public Target {
+        public:
+
+            /**
+             * Ctor
+             *
+             * @param log The log to redirect all messages to
+             * @param level The log level used for this target
+             */
+            RedirectTarget(Log *log, UINT level = Log::LEVEL_ERROR);
+
+            /** Dtor */
+            virtual ~RedirectTarget(void);
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg);
+
+            /**
+             * Sets the targetted log object
+             *
+             * @param log The new targetted log object
+             */
+            inline void SetTargetLog(vislib::sys::Log *log) {
+                this->log = log;
+            }
+
+            /**
+             * Answer the targetted log object
+             *
+             * @return The targetted log object
+             */
+            inline Log* TargetLog(void) const {
+                return this->log;
+            }
+
+        private:
+
+            /** The log to redirect all messages to */
+            Log *log;
+
         };
 
 #ifdef _WIN32
         /**
-         * Implementation of EchoTarget writing the messages using windows API 
-         * OutputDebugString
+         * Target class echoing the log messages into a stream
          */
-        class EchoTargetDebugOutput : public EchoTarget {
+        class DebugOutputTarget : public Target {
         public:
 
-            /** ctor */
-            EchoTargetDebugOutput() : EchoTarget() { }
+            /**
+             * Ctor
+             *
+             * @param level The log level used for this target
+             */
+            DebugOutputTarget(UINT level = Log::LEVEL_ERROR);
 
-            /** dtor */
-            virtual ~EchoTargetDebugOutput() { }
+            /** Dtor */
+            virtual ~DebugOutputTarget(void);
 
             /**
-             * Writes a string to the echo output target. Implementations may 
-             * assume that message ends with a new line control sequence.
+             * Writes a message to the log target
              *
-             * @param level The message level.
-             * @param message The message ANSI string.
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
              */
-            virtual void Write(UINT level, const char *message) const;
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg);
 
+        private:
         };
 #endif /* _WIN32 */
-
-        /**
-         * Implementation of EchoTarget redirecting the messages to another
-         * Log object.
-         *
-         * Not precautions are made to prohibit cycles in the redirection!
-         */
-        class EchoTargetRedirect : public EchoTarget {
-        public:
-
-            /** ctor */
-            EchoTargetRedirect(void);
-
-            /** 
-             * ctor
-             *
-             * @param target The targeted log object to receive the echoed
-             *               messages. This redirection object does not take
-             *               ownership of the memory of the targeted log 
-             *               object. Therefore the caller must ensure that the
-             *               pointer to the targeted log object remains valid
-             *               as long as it is used by this object.
-             */
-            EchoTargetRedirect(Log *target);
-
-            /** dtor */
-            virtual ~EchoTargetRedirect(void);
-
-            /**
-             * Answers the targeted log object.
-             *
-             * @return The targeted log object.
-             */
-            inline Log* GetTarget(void) const {
-                return this->target;
-            }
-
-            /**
-             * Sets the targeted log object.
-             *
-             * The targeted log object to receive the echoed messages. This
-             * redirection object does not take ownership of the memory of the
-             * targeted log object. Therefore the caller must ensure that the
-             * pointer to the targeted log object remains valid as long as it
-             * is used by this object.
-             *
-             * @param target The targeted log object to receive the echoed
-             *               messages.
-             */
-            void SetTarget(Log *target);
-
-            /**
-             * Writes a string to the echo output target. Implementations may 
-             * assume that message ends with a new line control sequence.
-             *
-             * @param level The message level.
-             * @param message The message ANSI string.
-             */
-            virtual void Write(UINT level, const char *message) const;
-
-        public:
-
-            /** The targeted log object */
-            Log *target;
-
-        };
 
         /** 
          * Ctor. Constructs a new log file without a physical file. 
@@ -293,45 +503,18 @@ namespace sys {
         void EchoOfflineMessages(bool remove = false);
 
         /**
-         * Answer the file name of the physical log file. Use this getter to
-         * check if the opening of the physical log file in constructors 
-         * succeseeded.
-         *
-         * @return The name of the current physical log file.
-         */
-        inline const FileNameString& GetLogFileName(void) const {
-            return this->filename;
-        }
-
-        /**
-         * Behaves like GetLogFileName but returns an ANSI string.
+         * Answer the file name of the log file as ANSI string.
          *
          * @return The name of the current physical log file as ANSI string.
          */
-#ifdef _WIN32
-        inline const vislib::StringA GetLogFileNameA(void) const {
-            return W2A(this->filename);
-        }
-#else /* _WIN32 */
-        inline const vislib::StringA& GetLogFileNameA(void) const {
-            return this->filename;
-        }
-#endif /* _WIN32 */
+        vislib::StringA GetLogFileNameA(void) const;
 
         /**
-         * Behaves like GetLogFileName but returns an unicode string.
+         * Answer the file name of the log file as unicode string.
          *
          * @return The name of the current physical log file as unicode string.
          */
-#ifdef _WIN32
-        inline const vislib::StringW& GetLogFileNameW(void) const {
-            return this->filename;
-        }
-#else /* _WIN32 */
-        inline const vislib::StringW GetLogFileNameW(void) const {
-            return A2W(this->filename);
-        }
-#endif /* _WIN32 */
+        vislib::StringW GetLogFileNameW(void) const;
 
         /**
          * Specifies the location of the physical log file. Any physical log
@@ -374,9 +557,7 @@ namespace sys {
          * @return The number of messages that will be stored in memory if no 
          *         physical log file is available.
          */
-        inline unsigned int GetOfflineMessageBufferSize(void) const {
-            return this->msgbufsize;
-        }
+        unsigned int GetOfflineMessageBufferSize(void) const;
 
         /**
          * Sets the number of messages that will be stored in memory if no 
@@ -426,18 +607,14 @@ namespace sys {
          *
          * @return The current log level.
          */
-        inline UINT GetLevel(void) const {
-            return this->level;
-        }
+        UINT GetLevel(void) const;
 
         /**
          * Set a new log level. Messages above this level will be ignored.
          *
          * @param level The new log level.
          */
-        inline void SetLevel(const UINT level) {
-            this->level = level;
-        }
+        void SetLevel(UINT level);
 
         /**
          * Answer the current echo level. Messages above this level will be
@@ -446,9 +623,7 @@ namespace sys {
          *
          * @return The current echo level.
          */
-        inline UINT GetEchoLevel(void) const {
-            return this->echoLevel;
-        }
+        UINT GetEchoLevel(void) const;
 
         /**
          * Set a new echo level. Messages above this level will be ignored, 
@@ -456,30 +631,7 @@ namespace sys {
          *
          * @param level The new echo level.
          */
-        inline void SetEchoLevel(const UINT level) {
-            this->echoLevel = level;
-        }
-        /**
-         * Answer the current echo output target. This log object does not own
-         * this target.
-         *
-         * @return The current echo level.
-         */
-        inline const EchoTarget* GetEchoOutTarget(void) const {
-            return this->echoOut;
-        }
-
-        /**
-         * Set a new echo output target. This Log object does not take 
-         * ownership of the targets memory. Therefore the caller must ensure
-         * that the pointer of the target object is valid as long as it is used
-         * by this Log object. Use 'NULL' pointer to deactivate echo output.
-         *
-         * @param level The new echo output stream.
-         */
-        inline void SetEchoOutTarget(const EchoTarget* stream) {
-            this->echoOut = stream;
-        }
+        void SetEchoLevel(UINT level);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -505,7 +657,7 @@ namespace sys {
          * @param fmt The log message
          * @param lvlOff The log level offset
          */
-        void WriteError(const UINT lvlOff, const char *fmt, ...);
+        void WriteError(int lvlOff, const char *fmt, ...);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -515,7 +667,7 @@ namespace sys {
          * @param fmt The log message
          * @param lvlOff The log level offset
          */
-        void WriteError(const UINT lvlOff, const wchar_t *fmt, ...);
+        void WriteError(int lvlOff, const wchar_t *fmt, ...);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -540,7 +692,7 @@ namespace sys {
          * @param fmt The log message
          * @param lvlOff The log level offset
          */
-        void WriteInfo(const UINT lvlOff, const char *fmt, ...);
+        void WriteInfo(int lvlOff, const char *fmt, ...);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -549,7 +701,43 @@ namespace sys {
          * @param fmt The log message
          * @param lvlOff The log level offset
          */
-        void WriteInfo(const UINT lvlOff, const wchar_t *fmt, ...);
+        void WriteInfo(int lvlOff, const wchar_t *fmt, ...);
+
+        /**
+         * Writes a pre-formatted message with specified log level, time stamp
+         * and source id to the log.
+         *
+         * @param level The level of the message
+         * @param time The time stamp of the message
+         * @param sid The object id of the source of the message
+         * @param msg The message text itself
+         */
+        void WriteMessage(UINT level, TimeStamp time, SourceID sid,
+            const vislib::StringA& msg);
+
+        /**
+         * Writes a pre-formatted message with specified log level, time stamp
+         * and source id to the log.
+         *
+         * @param level The level of the message
+         * @param time The time stamp of the message
+         * @param sid The object id of the source of the message
+         * @param msg The message text itself
+         */
+        void WriteMessageVaA(UINT level, TimeStamp time, SourceID sid,
+            const char *fmt, va_list argptr);
+
+        /**
+         * Writes a pre-formatted message with specified log level, time stamp
+         * and source id to the log.
+         *
+         * @param level The level of the message
+         * @param time The time stamp of the message
+         * @param sid The object id of the source of the message
+         * @param msg The message text itself
+         */
+        void WriteMessageVaW(UINT level, TimeStamp time, SourceID sid,
+            const wchar_t *fmt, va_list argptr);
 
         /**
          * Writes a formatted messages with the specified log level to the log
@@ -560,7 +748,7 @@ namespace sys {
          * @param level The log level of the message.
          * @param fmt The log message.
          */
-        void WriteMsg(const UINT level, const char *fmt, ...);
+        void WriteMsg(UINT level, const char *fmt, ...);
 
         /**
          * Writes a formatted messages with the specified log level to the log
@@ -574,7 +762,7 @@ namespace sys {
          * @param level The log level of the message.
          * @param fmt The log message.
          */
-        void WriteMsg(const UINT level, const wchar_t *fmt, ...);
+        void WriteMsg(UINT level, const wchar_t *fmt, ...);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -600,7 +788,7 @@ namespace sys {
          * @param fmt The log message
          * @param lvlOff The log level offset
          */
-        void WriteWarn(const UINT lvlOff, const char *fmt, ...);
+        void WriteWarn(int lvlOff, const char *fmt, ...);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -610,7 +798,7 @@ namespace sys {
          * @param fmt The log message
          * @param lvlOff The log level offset
          */
-        void WriteWarn(const UINT lvlOff, const wchar_t *fmt, ...);
+        void WriteWarn(int lvlOff, const wchar_t *fmt, ...);
 
         /**
          * Assignment operator
@@ -621,121 +809,41 @@ namespace sys {
          */
         Log& operator=(const Log& rhs);
 
+        /**
+         * Access the main log target
+         *
+         * @return The main log target
+         */
+        inline SmartPtr<SmartPtr<Target> > AccessMainTarget(void) {
+            return this->mainTarget;
+        }
+
+        /**
+         * Access the echo log target
+         *
+         * @return The echo log target
+         */
+        inline SmartPtr<SmartPtr<Target> > AccessEchoTarget(void) {
+            return this->echoTarget;
+        }
+
     private:
 
         /**
-         * Helper class for offline messages
-         */
-        class OfflineMessage {
-        public:
-
-            /** ctor */
-            OfflineMessage(void);
-
-            /** dtor */
-            ~OfflineMessage(void);
-
-            /**
-             * Assignment operator
-             *
-             * @param rhs The right hand side operand.
-             *
-             * @return Reference to this.
-             */
-            OfflineMessage& operator=(const OfflineMessage& rhs);
-
-            /** the log level */
-            UINT level;
-
-            /** the time stamp */
-            TimeStamp time;
-
-            /** the message */
-            vislib::StringA message;
-
-        };
-
-        /**
-         * Answer the current time.
+         * Answer a file name suffix for log files
          *
-         * @return A time stamp representing NOW.
+         * @return A file name suffix for log files
          */
-        static TimeStamp currentTimeStamp(void);
+        StringA getFileNameSuffix(void);
 
-        /**
-         * Returns the file name suffix.
-         *
-         * @return The file name suffix.
-         */
-        vislib::StringA getFileNameSuffix(void);
+        /** The main log target */
+        SmartPtr<SmartPtr<Target> > mainTarget;
 
-        /**
-         * Returns the next free offline message object.
-         *
-         * @return The next free offline message object, or NULL if there is 
-         *         none.
-         */
-        OfflineMessage *nextOfflineMessage(void);
+        /** The log echo target */
+        SmartPtr<SmartPtr<Target> > echoTarget;
 
-        /**
-         * Writes a message to the log file, the echo log or the offline
-         * message buffer.
-         *
-         * @param level The log level of the message
-         * @param msg The log message
-         */
-        void writeMsg(UINT level, const vislib::StringA& msg);
-
-        /**
-         * Writes a message to the log file, the echo log or the offline
-         * message buffer.
-         *
-         * @param level The log level of the message
-         * @param msg The log message
-         */
-        void writeMsg(UINT level, const vislib::StringW& msg);
-
-        /**
-         * Write a message prefix consisting of a time stamp and a log level 
-         * to the physical log file. The physical log file must be valid.
-         *
-         * @param level The log level.
-         * @param tiemstamp The time stamp.
-         */
-        void writeMsgPrefix(UINT level, const TimeStamp& timestamp);
-
-        /** the empty log message string const */
-        static const char *emptyLogMsg;
-
-        /** the omitted log messages string const */
-        static const char *omittedLogMsgs;
-
-        /** the current log level */
-        UINT level;
-
-        /** the filename of the log file */
-        FileNameString filename;
-
-        /** the file output stream of the physical log file */
-        FILE *logfile;
-
-        /** the size of the offline message buffer */
-        unsigned int msgbufsize;
-
-        /** the number of omitted offline messages */
-        unsigned int omittedMsgs;
-
-        /** array of the offline messages */
-        OfflineMessage *offlineMsgs;
-
-        /** flag whether or not to flush the log file after each message. */
+        /** Flag whether or not to flush any targets after each message */
         bool autoflush;
-
-        /** the current echo log level */
-        UINT echoLevel;
-
-        /** the echo output stream */
-        const EchoTarget *echoOut;
 
     };
     

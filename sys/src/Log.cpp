@@ -1,7 +1,7 @@
 /*
  * Log.cpp
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2010 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
@@ -11,6 +11,7 @@
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/mathfunctions.h"
+#include "vislib/memutils.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/SystemInformation.h"
@@ -34,140 +35,355 @@
 /*****************************************************************************/
 
 /*
- * vislib::sys::Log::EchoTargetStream::StdOut
+ * vislib::sys::Log::Target::~Target
  */
-const vislib::sys::Log::EchoTargetStream 
-vislib::sys::Log::EchoTargetStream::StdOut(stdout);
-
-
-/*
- * vislib::sys::Log::EchoTargetStream::StdErr
- */
-const vislib::sys::Log::EchoTargetStream 
-vislib::sys::Log::EchoTargetStream::StdErr(stderr);
-
-
-/*
- * vislib::sys::Log::EchoTargetStream::EchoTargetStream
- */
-vislib::sys::Log::EchoTargetStream::EchoTargetStream(FILE *stream) 
-        : stream(stream) {
+vislib::sys::Log::Target::~Target(void) {
+    // intentionally empty
 }
 
 
 /*
- * vislib::sys::Log::EchoTargetStream::Write
+ * vislib::sys::Log::Target::Target
  */
-void vislib::sys::Log::EchoTargetStream::Write(UINT level, 
-        const char *message) const {
-    fprintf(this->stream, "%.4d|%s", level, message);
+vislib::sys::Log::Target::Target(UINT level) : level(level) {
+    // intentionally empty
 }
 
 
 /*
- * vislib::sys::Log::EchoTargetStream::~EchoTargetStream
+ * vislib::sys::Log::Target::Flush
  */
-vislib::sys::Log::EchoTargetStream::~EchoTargetStream() {
-    // DO NOT CLOSE THE STREAM
+void vislib::sys::Log::Target::Flush(void) {
+    // intentionally empty
 }
-
 
 /*****************************************************************************/
 
+/*
+ * vislib::sys::Log::OfflineTarget::OfflineTarget
+ */
+vislib::sys::Log::OfflineTarget::OfflineTarget(unsigned int bufferSize,
+        UINT level) : Target(level), bufSize(bufferSize), msgCnt(0),
+        msgs(new OfflineMessage[bufferSize]), omittedCnt(0) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::sys::Log::OfflineTarget::~OfflineTarget
+ */
+vislib::sys::Log::OfflineTarget::~OfflineTarget(void) {
+    ARY_SAFE_DELETE(this->msgs);
+    this->bufSize = 0;
+    this->msgCnt = 0;
+}
+
+
+/*
+ * vislib::sys::Log::OfflineTarget::Msg
+ */
+void vislib::sys::Log::OfflineTarget::Msg(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const char *msg) {
+    // Do not check the level. We store ALL messages
+    if (this->msgCnt < this->bufSize) {
+        this->msgs[this->msgCnt].level = level;
+        this->msgs[this->msgCnt].time = time;
+        this->msgs[this->msgCnt].sid = sid;
+        this->msgs[this->msgCnt].msg = msg;
+        this->msgCnt++;
+    } else {
+        this->omittedCnt++;
+    }
+}
+
+
+/*
+ * vislib::sys::Log::OfflineTarget::Reecho
+ */
+void vislib::sys::Log::OfflineTarget::Reecho(vislib::sys::Log::Target &target,
+        bool remove) {
+    for (unsigned int i = 0; i < this->msgCnt; i++) {
+        target.Msg(this->msgs[i].level, this->msgs[i].time, this->msgs[i].sid,
+            this->msgs[i].msg);
+    }
+    if (remove) this->msgCnt = 0;
+    vislib::StringA omg;
+    omg.Format("%u offline log message%s omitted\n", this->omittedCnt,
+        (this->omittedCnt == 1) ? "" : "s");
+    target.Msg(Log::LEVEL_WARN, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), omg);
+    if (remove) this->omittedCnt = 0;
+}
+
+
+/*
+ * vislib::sys::Log::OfflineTarget::SetBufferSize
+ */
+void vislib::sys::Log::OfflineTarget::SetBufferSize(unsigned int bufferSize) {
+    OfflineMessage *om = this->msgs;
+    this->msgs = new OfflineMessage[bufferSize];
+    unsigned int cnt = vislib::math::Min(this->msgCnt, bufferSize);
+    this->omittedCnt += (this->msgCnt - cnt);
+    this->bufSize = bufferSize;
+    for (unsigned int i = 0; i < cnt; i++) {
+        this->msgs[i].level = om[i].level;
+        this->msgs[i].time = om[i].time;
+        this->msgs[i].sid = om[i].sid;
+        this->msgs[i].msg = om[i].msg;
+    }
+    delete[] om;
+}
+
+/*****************************************************************************/
+
+/*
+ * vislib::sys::Log::FileTarget::FileTarget
+ */
+vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
+        : Target(level), stream(NULL) {
+
+    int newFile = -1;
+#ifdef _WIN32
+#if (_MSC_VER >= 1400)
+    if (_sopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT 
+            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
+        newFile = -1;
+    }
+#else /* (_MSC_VER >= 1400) */
+    newFile = _sopen(path, _O_APPEND | _O_CREAT | _O_TEXT 
+        | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+#endif /* (_MSC_VER >= 1400) */
+#else /* _WIN32 */
+    newFile = open(path, O_APPEND | O_CREAT | O_LARGEFILE 
+        | O_WRONLY, S_IRWXU | S_IRWXG);
+#endif /* _WIN32 */
+    this->stream = (newFile == -1) ? NULL : 
+#ifdef _WIN32
+        _fdopen(newFile, "ac");
+#else /* _WIN32 */
+        fdopen(newFile, "a");
+#endif /* _WIN32 */
+
+    if (this->stream != NULL) {
+        this->filename = path;
+    } else {
+        this->filename.Clear();
+    }
+
+}
+
+
+/*
+ * vislib::sys::Log::FileTarget::FileTarget
+ */
+vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level)
+        : Target(level), stream(NULL) {
+
+    int newFile = -1;
+#ifdef _WIN32
+#if (_MSC_VER >= 1400)
+    if (_wsopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT 
+            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
+        newFile = -1;
+    }
+#else /* (_MSC_VER >= 1400) */
+    newFile = _wsopen(path, _O_APPEND | _O_CREAT | _O_TEXT 
+        | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+#endif /* (_MSC_VER >= 1400) */
+#else /* _WIN32 */
+    newFile = open(W2A(path), O_APPEND | O_CREAT | O_LARGEFILE 
+        | O_WRONLY, S_IRWXU | S_IRWXG);
+#endif /* _WIN32 */
+
+    this->stream = (newFile == -1) ? NULL : 
+#ifdef _WIN32
+        _fdopen(newFile, "ac");
+#else /* _WIN32 */
+        fdopen(newFile, "a");
+#endif /* _WIN32 */
+
+    if (this->stream != NULL) {
+        this->filename = path;
+    } else {
+        this->filename.Clear();
+    }
+
+}
+
+
+/*
+ * vislib::sys::Log::FileTarget::~FileTarget
+ */
+vislib::sys::Log::FileTarget::~FileTarget(void) {
+    if (this->stream != NULL) {
+        fflush(this->stream);
+        fclose(this->stream);
+        this->stream = NULL;
+    }
+}
+
+
+/*
+ * vislib::sys::Log::FileTarget::Flush
+ */
+void vislib::sys::Log::FileTarget::Flush(void) {
+    if (this->stream != NULL) {
+        fflush(this->stream);
+    }
+}
+
+
+/*
+ * vislib::sys::Log::FileTarget::Msg
+ */
+void vislib::sys::Log::FileTarget::Msg(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const char *msg) {
+    if ((this->stream == NULL) || (level > this->Level())) return;
+
+    struct tm *timeStamp;
+#ifdef _WIN32
+#if (_MSC_VER >= 1400)
+    struct tm __tS;
+    timeStamp = &__tS;
+    if (localtime_s(timeStamp, &time) != 0) {
+        // timestamp error
+        __tS.tm_hour = __tS.tm_min = __tS.tm_sec = 0;
+    }
+#else /* (_MSC_VER >= 1400) */
+    timeStamp = localtime(&timestamp);
+#endif /* (_MSC_VER >= 1400) */
+#else /* _WIN32 */
+    timeStamp = localtime(&timestamp);
+#endif /* _WIN32 */
+
+    fprintf(this->stream, "%2d:%.2d:%.2d|%8x|%4u|%s", 
+        timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec, 
+        static_cast<unsigned int>(sid), level, msg);
+}
+
+/*****************************************************************************/
+
+/*
+ * vislib::sys::Log::StreamTarget::StdOut
+ */
+const vislib::SmartPtr<vislib::sys::Log::Target>
+vislib::sys::Log::StreamTarget::StdOut
+    = new vislib::sys::Log::StreamTarget(stdout);
+
+
+/*
+ * vislib::sys::Log::StreamTarget::StdErr
+ */
+const vislib::SmartPtr<vislib::sys::Log::Target>
+vislib::sys::Log::StreamTarget::StdErr
+    = new vislib::sys::Log::StreamTarget(stderr);
+
+
+/*
+ * vislib::sys::Log::StreamTarget::StreamTarget
+ */
+vislib::sys::Log::StreamTarget::StreamTarget(FILE *stream, UINT level)
+        : Target(level), stream(stream) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::sys::Log::StreamTarget::~StreamTarget
+ */
+vislib::sys::Log::StreamTarget::~StreamTarget(void) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::sys::Log::StreamTarget::Flush
+ */
+void vislib::sys::Log::StreamTarget::Flush(void) {
+    if (this->stream != NULL) {
+        fflush(this->stream);
+    }
+}
+
+
+/*
+ * vislib::sys::Log::StreamTarget::Msg
+ */
+void vislib::sys::Log::StreamTarget::Msg(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const char *msg) {
+    if ((this->stream == NULL) || (level > this->Level())) return;
+    fprintf(this->stream, "%.4u|%s", level, msg);
+}
+
+/*****************************************************************************/
+
+/*
+ * vislib::sys::Log::RedirectTarget::RedirectTarget
+ */
+vislib::sys::Log::RedirectTarget::RedirectTarget(vislib::sys::Log *log,
+        UINT level) : Target(level), log(log) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::sys::Log::RedirectTarget::~RedirectTarget
+ */
+vislib::sys::Log::RedirectTarget::~RedirectTarget(void) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::sys::Log::RedirectTarget::Msg
+ */
+void vislib::sys::Log::RedirectTarget::Msg(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const char *msg) {
+    // Do not check the level. We redirect ALL messages
+    if (this->log == NULL) return;
+    this->log->WriteMessage(level, time, sid, msg);
+}
+
+/*****************************************************************************/
 #ifdef _WIN32
 
 /*
- * vislib::sys::Log::EchoTargetDebugOutput::Write
+ * vislib::sys::Log::DebugOutputTarget::DebugOutputTarget
  */
-void vislib::sys::Log::EchoTargetDebugOutput::Write(UINT level, 
-        const char *message) const {
+vislib::sys::Log::DebugOutputTarget::DebugOutputTarget(UINT level)
+        : Target(level) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::sys::Log::DebugOutputTarget::~DebugOutputTarget
+ */
+vislib::sys::Log::DebugOutputTarget::~DebugOutputTarget(void) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::sys::Log::DebugOutputTarget::Msg
+ */
+void vislib::sys::Log::DebugOutputTarget::Msg(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const char *msg) {
+    if (level > this->Level()) return;
     char tmp[21];
     tmp[0] = tmp[20] = 0;
     _snprintf_s(tmp, 20, 20, "%.4d|", level);
     ::OutputDebugStringA(tmp);
-    ::OutputDebugStringA(message);
+    ::OutputDebugStringA(msg);
 }
 
 #endif /* _WIN32 */
-
 /*****************************************************************************/
-
-
-/*
- * vislib::sys::Log::EchoTargetRedirect::EchoTargetRedirect
- */
-vislib::sys::Log::EchoTargetRedirect::EchoTargetRedirect(void) : EchoTarget(),
-        target(NULL) {
-}
-
-
-/*
- * vislib::sys::Log::EchoTargetRedirect::EchoTargetRedirect
- */
-vislib::sys::Log::EchoTargetRedirect::EchoTargetRedirect(
-        vislib::sys::Log *target) : EchoTarget(), target(target) {
-}
-
-
-/*
- * vislib::sys::Log::EchoTargetRedirect::~EchoTargetRedirect
- */
-vislib::sys::Log::EchoTargetRedirect::~EchoTargetRedirect(void) {
-    this->target = NULL; // DO NOT DELETE. Because we don't own the memory
-}
-
-
-/*
- * vislib::sys::Log::EchoTargetRedirect::SetTarget
- */
-void vislib::sys::Log::EchoTargetRedirect::SetTarget(
-        vislib::sys::Log *target) {
-    this->target = target;
-}
-
-
-/*
- * vislib::sys::Log::EchoTargetRedirect::Write
- */
-void vislib::sys::Log::EchoTargetRedirect::Write(UINT level, 
-        const char *message) const {
-    if (this->target) {
-        this->target->WriteMsg(level, message);
-    }
-}
-
-/*****************************************************************************/
-
-
-/*
- * vislib::sys::Log::OfflineMessage::OfflineMessage
- */
-vislib::sys::Log::OfflineMessage::OfflineMessage(void) : level(LEVEL_NONE) {
-    // only declared for paranoia purpose
-}
-
-
-/*
- * vislib::sys::Log::OfflineMessage::~OfflineMessage
- */
-vislib::sys::Log::OfflineMessage::~OfflineMessage(void) {
-    // only declared for paranoia purpose
-}
-
-
-/*
- * vislib::sys::Log::OfflineMessage::operator=
- */
-vislib::sys::Log::OfflineMessage& vislib::sys::Log::OfflineMessage::operator=(
-        const OfflineMessage& rhs) {
-    this->level = rhs.level;
-    this->time = rhs.time;
-    this->message = rhs.message;
-    return *this;
-}
-
-/*****************************************************************************/
-
 
 /*
  * vislib::sys::Log::LEVEL_ALL
@@ -212,49 +428,39 @@ vislib::sys::Log& vislib::sys::Log::DefaultLog(__vl_log_defaultlog);
 
 
 /*
- * vislib::sys::Log::emptyLogMsg
+ * vislib::sys::Log::CurrentTimeStamp
  */
-const char *vislib::sys::Log::emptyLogMsg = "Empty log message\n";
-
-/*
- * vislib::sys::Log::emptyLogMsg
- */
-const char *vislib::sys::Log::omittedLogMsgs 
-    = "%d further offline log message omitted\n";
-
-
-/*
- * vislib::sys::Log::Log
- */
-vislib::sys::Log::Log(UINT level, unsigned int msgbufsize) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), 
-        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
-        echoLevel(LEVEL_ERROR), echoOut(NULL) {
-    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
-        reinterpret_cast<unsigned long>(this), __LINE__);
-    this->SetOfflineMessageBufferSize(msgbufsize);
+vislib::sys::Log::TimeStamp vislib::sys::Log::CurrentTimeStamp(void) {
+    return time(NULL);
 }
 
+
 /*
- * vislib::sys::Log::Log
+ * vislib::sys::Log::CurrentSourceID
  */
-vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), 
-        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
-        echoLevel(LEVEL_ERROR), echoOut(NULL) {
-    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
-        reinterpret_cast<unsigned long>(this), __LINE__);
-    this->SetLogFileName(filename, addSuffix);
+vislib::sys::Log::SourceID vislib::sys::Log::CurrentSourceID(void) {
+    return static_cast<SourceID>(vislib::sys::Thread::CurrentID());
 }
 
 
 /*
  * vislib::sys::Log::Log
  */
-vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix) 
-        : level(level), filename(), logfile(NULL), msgbufsize(0), 
-        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
-        echoLevel(LEVEL_ERROR), echoOut(NULL) {
+vislib::sys::Log::Log(UINT level, unsigned int msgbufsize)
+        : mainTarget(new vislib::SmartPtr<Target>(
+            new OfflineTarget(msgbufsize, level))),
+        echoTarget(new vislib::SmartPtr<Target>(
+            new OfflineTarget(msgbufsize, level))), autoflush(true) {
+    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
+        reinterpret_cast<unsigned long>(this), __LINE__);
+    // Intentionally empty
+}
+
+/*
+ * vislib::sys::Log::Log
+ */
+vislib::sys::Log::Log(UINT level, const char *filename, bool addSuffix)
+        : mainTarget(NULL), echoTarget(NULL), autoflush(true) {
     VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
         reinterpret_cast<unsigned long>(this), __LINE__);
     this->SetLogFileName(filename, addSuffix);
@@ -264,10 +470,19 @@ vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix)
 /*
  * vislib::sys::Log::Log
  */
-vislib::sys::Log::Log(const Log& source) 
-        : level(LEVEL_ERROR), filename(), logfile(NULL), msgbufsize(0), 
-        omittedMsgs(0), offlineMsgs(NULL), autoflush(true), 
-        echoLevel(LEVEL_ERROR), echoOut(NULL) {
+vislib::sys::Log::Log(UINT level, const wchar_t *filename, bool addSuffix)
+        : mainTarget(NULL), echoTarget(NULL), autoflush(true) {
+    VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
+        reinterpret_cast<unsigned long>(this), __LINE__);
+    this->SetLogFileName(filename, addSuffix);
+}
+
+
+/*
+ * vislib::sys::Log::Log
+ */
+vislib::sys::Log::Log(const Log& source) : mainTarget(NULL),
+        echoTarget(NULL), autoflush(true) {
     VLTRACE(TRACE_LVL, "Log[%lu]::Log[%d]()\n",
         reinterpret_cast<unsigned long>(this), __LINE__);
     *this = source;
@@ -280,14 +495,7 @@ vislib::sys::Log::Log(const Log& source)
 vislib::sys::Log::~Log(void) {
     VLTRACE(TRACE_LVL, "Log[%lu]::~Log()\n",
         reinterpret_cast<unsigned long>(this));
-    if (this->logfile) {
-        fclose(this->logfile);
-        this->logfile = NULL;
-    }
-    if (this->offlineMsgs) {
-        ARY_SAFE_DELETE(this->offlineMsgs);
-    }
-    // DO NOT fclose(echoOut), because we don't own it!
+    // Intentionally empty
 }
 
 
@@ -295,35 +503,32 @@ vislib::sys::Log::~Log(void) {
  * vislib::sys::Log::EchoOfflineMessages
  */
 void vislib::sys::Log::EchoOfflineMessages(bool remove) {
-    if (this->offlineMsgs == NULL) {
-        return;
+    OfflineTarget *mot = this->mainTarget->DynamicCast<OfflineTarget>();
+    OfflineTarget *eot = this->echoTarget->DynamicCast<OfflineTarget>();
+
+    if ((mot == NULL) && (eot != NULL)) {
+        eot->Reecho(*mot, remove);
+    } else if ((mot != NULL) && (eot == NULL)) {
+        mot->Reecho(*eot, remove);
     }
+}
 
-    if (this->echoOut != NULL) {
-        for (unsigned int i = 0; i < this->msgbufsize; i++) {
-            if ((this->offlineMsgs[i].level > 0) 
-                    && (this->offlineMsgs[i].level <= this->echoLevel)) {
-                this->echoOut->Write(this->offlineMsgs[i].level,
-                    this->offlineMsgs[i].message.PeekBuffer());
-            }
-        }
 
-        if (this->omittedMsgs > 0) {
-            // write a special log message for the summary of the omitted 
-            // messages
-            vislib::StringA str;
-            str.Format(vislib::sys::Log::omittedLogMsgs, this->omittedMsgs);
-            this->echoOut->Write(LEVEL_INFO, str.PeekBuffer());
-        }
-    }
+/*
+ * vislib::sys::Log::GetLogFileNameA
+ */
+vislib::StringA vislib::sys::Log::GetLogFileNameA(void) const {
+    const FileTarget *ft = this->mainTarget->DynamicCast<FileTarget>();
+    return (ft != NULL) ? StringA(ft->Filename()) : StringA::EMPTY;
+}
 
-    if (remove) {
-        for (unsigned int i = 0; i < this->msgbufsize; i++) {
-            this->offlineMsgs[i].level = 0;
-        }
-        this->omittedMsgs = 0;
-    }
 
+/*
+ * vislib::sys::Log::GetLogFileNameW
+ */
+vislib::StringW vislib::sys::Log::GetLogFileNameW(void) const {
+    const FileTarget *ft = this->mainTarget->DynamicCast<FileTarget>();
+    return (ft != NULL) ? ft->Filename() : StringW::EMPTY;
 }
 
 
@@ -331,95 +536,24 @@ void vislib::sys::Log::EchoOfflineMessages(bool remove) {
  * vislib::sys::Log::SetLogFileName
  */
 bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
-    int newFile = -1;
-    vislib::StringA newFileName = filename;
+    SmartPtr<Target> omt = *this->mainTarget;
+    OfflineTarget *ot = omt.DynamicCast<OfflineTarget>();
 
-    if (filename != NULL) {
-        // open the new file
-
-        if (addSuffix) {
-            newFileName += this->getFileNameSuffix();
-        }
-
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-        if (_sopen_s(&newFile, newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
-                | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
-            newFile = -1;
-        }
-#else /* (_MSC_VER >= 1400) */
-        newFile = _sopen(newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
-            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
-#endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
-        newFile = open(newFileName, O_APPEND | O_CREAT | O_LARGEFILE 
-            | O_WRONLY, S_IRWXU | S_IRWXG);
-#endif /* _WIN32 */
-
-        if (newFile == -1) {
-            // unable to open the new log file.
-            // we keep the old one or keep offline mode
-            return false;
-        }
-    }
-
-    // successfully opened the new log file
-    if (this->logfile) {
-        fclose(this->logfile);
-    }
-    this->logfile = (newFile == -1) ? NULL : 
-#ifdef _WIN32
-        _fdopen(newFile, "ac");
-#else /* _WIN32 */
-        fdopen(newFile, "a");
-#endif /* _WIN32 */
-
-    if (this->logfile) {
-        this->filename = 
-#ifdef _WIN32
-            A2W(newFileName);
-#else /* _WIN32 */
-            newFileName;
-#endif /* _WIN32 */
-
-        // flush offline messages if any available
-        // Do not echo offline messages, because they already had been echoed,
-        // if they are of the right level
-        if (this->offlineMsgs) {
-
-            for (unsigned int i = 0; i < this->msgbufsize; i++) {
-                if (this->offlineMsgs[i].level > 0) {
-                    this->writeMsgPrefix(this->offlineMsgs[i].level, 
-                        this->offlineMsgs[i].time);
-                    fprintf(this->logfile, "%s", 
-                        this->offlineMsgs[i].message.PeekBuffer());
-                }
-            }
-        
-            if (this->omittedMsgs > 0) {
-                // write a special log message for the summary of the omitted 
-                // messages
-                this->writeMsgPrefix(LEVEL_INFO, 
-                    vislib::sys::Log::currentTimeStamp());
-                fprintf(this->logfile, vislib::sys::Log::omittedLogMsgs, 
-                    this->omittedMsgs);
-                this->omittedMsgs = 0;
-            }
-
-            if (this->autoflush) {
-                fflush(this->logfile);
-            }
-
-            ARY_SAFE_DELETE(this->offlineMsgs);
+    if (filename == NULL) {
+        if (ot == NULL) {
+            *this->mainTarget = new OfflineTarget(20U, omt->Level());
         }
     } else {
-        this->filename.Clear();
-
-        if (this->offlineMsgs == NULL) {
-            this->offlineMsgs = new OfflineMessage[this->msgbufsize];
-            this->omittedMsgs = 0;
+        vislib::StringA path(filename);
+        if (addSuffix) {
+            path += this->getFileNameSuffix();
+        }
+        *this->mainTarget = new FileTarget(path.PeekBuffer(), omt->Level());
+        if (ot != NULL) {
+            ot->Reecho(**this->mainTarget);
         }
     }
+    // ot will be deleted by SFX of omt
 
     return true;
 }
@@ -429,96 +563,43 @@ bool vislib::sys::Log::SetLogFileName(const char *filename, bool addSuffix) {
  * vislib::sys::Log::SetLogFileName
  */
 bool vislib::sys::Log::SetLogFileName(const wchar_t *filename, bool addSuffix) {
-    int newFile = -1;
-    vislib::StringW newFileName = filename;
+    SmartPtr<Target> omt = *this->mainTarget;
+    OfflineTarget *ot = omt.DynamicCast<OfflineTarget>();
 
-    if (filename != NULL) {
-        // open the new file
-
-        if (addSuffix) {
-            newFileName += A2W(this->getFileNameSuffix());
-        }
-
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-        if (_wsopen_s(&newFile, newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
-                | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
-            newFile = -1;
-        }
-#else /* (_MSC_VER >= 1400) */
-        newFile = _wsopen(newFileName, _O_APPEND | _O_CREAT | _O_TEXT 
-            | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
-#endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
-        newFile = open(W2A(newFileName), O_APPEND | O_CREAT | O_LARGEFILE 
-            | O_WRONLY, S_IRWXU | S_IRWXG);
-#endif /* _WIN32 */
-
-        if (newFile == -1) {
-            // unable to open the new log file.
-            // we keep the old one or keep offline mode
-            return false;
-        }
-    }
-
-    // successfully opened the new log file
-    if (this->logfile) {
-        fclose(this->logfile);
-    }
-    this->logfile = (newFile == -1) ? NULL : 
-#ifdef _WIN32
-        _fdopen(newFile, "ac");
-#else /* _WIN32 */
-        fdopen(newFile, "a");
-#endif /* _WIN32 */
-
-    if (this->logfile) {
-        this->filename = 
-#ifdef _WIN32
-            newFileName;
-#else /* _WIN32 */
-            W2A(newFileName);
-#endif /* _WIN32 */
-
-        // flush offline messages if any available
-        // Do not echo offline messages, because they already had been echoed,
-        // if they are of the right level
-        if (this->offlineMsgs) {
-
-            for (unsigned int i = 0; i < this->msgbufsize; i++) {
-                if (this->offlineMsgs[i].level > 0) {
-                    this->writeMsgPrefix(this->offlineMsgs[i].level, 
-                        this->offlineMsgs[i].time);
-                    fprintf(this->logfile, "%s", 
-                        this->offlineMsgs[i].message.PeekBuffer());
-                }
-            }
-        
-            if (this->omittedMsgs > 0) {
-                // write a special log message for the summary of the omitted 
-                // messages
-                this->writeMsgPrefix(LEVEL_INFO, 
-                    vislib::sys::Log::currentTimeStamp());
-                fprintf(this->logfile, vislib::sys::Log::omittedLogMsgs, 
-                    this->omittedMsgs);
-                this->omittedMsgs = 0;
-            }
-
-            if (this->autoflush) {
-                fflush(this->logfile);
-            }
-
-            ARY_SAFE_DELETE(this->offlineMsgs);
+    if (filename == NULL) {
+        if (ot == NULL) {
+            *this->mainTarget = new OfflineTarget(20U, omt->Level());
         }
     } else {
-        ASSERT(this->offlineMsgs == NULL);
-        this->filename.Clear();
-
-        this->offlineMsgs = new OfflineMessage[this->msgbufsize];
-        this->omittedMsgs = 0;
+        vislib::StringW path(filename);
+        if (addSuffix) {
+            path += this->getFileNameSuffix();
+        }
+        *this->mainTarget = new FileTarget(path.PeekBuffer(), omt->Level());
+        if (ot != NULL) {
+            ot->Reecho(**this->mainTarget);
+        }
     }
+    // ot will be deleted by SFX of omt
 
     return true;
+}
+
+
+/*
+ * vislib::sys::Log::GetOfflineMessageBufferSize
+ */
+unsigned int vislib::sys::Log::GetOfflineMessageBufferSize(void) const {
+    const OfflineTarget *mot = this->mainTarget->DynamicCast<OfflineTarget>();
+    const OfflineTarget *eot = this->echoTarget->DynamicCast<OfflineTarget>();
+
+    if (mot != NULL) {
+        return mot->BufferSize();
+    } else if (eot != NULL) {
+        return eot->BufferSize();
+    }
+
+    return 0;
 }
 
 
@@ -526,39 +607,15 @@ bool vislib::sys::Log::SetLogFileName(const wchar_t *filename, bool addSuffix) {
  * vislib::sys::Log::SetOfflineMessageBufferSize
  */
 void vislib::sys::Log::SetOfflineMessageBufferSize(unsigned int msgbufsize) {
-    if (this->logfile) {
-        // if logfile is valid, we do not use the offline message buffer
-        ASSERT(this->offlineMsgs == NULL);
+    OfflineTarget *mot = this->mainTarget->DynamicCast<OfflineTarget>();
+    OfflineTarget *eot = this->echoTarget->DynamicCast<OfflineTarget>();
 
-    } else {
-        OfflineMessage *nm = new OfflineMessage[msgbufsize];
-        if (this->offlineMsgs) {
-            // keep old messages
-            unsigned int m = vislib::math::Min(this->msgbufsize, msgbufsize);
-            for (unsigned int i = 0; i < m; i++) {
-                nm[i] = this->offlineMsgs[i];
-            }
-
-            // keep record of discarded messages
-            if (m < this->msgbufsize) {
-                for (unsigned int i = m; i < this->msgbufsize; i++) {
-                    if (this->offlineMsgs[i].level > 0) {
-                        this->omittedMsgs++;
-                    }
-                }
-            }
-
-            // free memory of old offline messages
-            delete[] this->offlineMsgs;
-
-        }
-
-        // accept new array
-        this->offlineMsgs = nm;
-
+    if (mot != NULL) {
+        mot->SetBufferSize(msgbufsize);
     }
-
-    this->msgbufsize = msgbufsize;
+    if (eot != NULL) {
+        eot->SetBufferSize(msgbufsize);
+    }
 }
 
 
@@ -566,8 +623,53 @@ void vislib::sys::Log::SetOfflineMessageBufferSize(unsigned int msgbufsize) {
  * vislib::sys::Log::FlushLog
  */
 void vislib::sys::Log::FlushLog(void) {
-    if (this->logfile) {
-        ::fflush(this->logfile);
+    if (!this->mainTarget.IsNull() && !this->mainTarget->IsNull()) {
+        this->mainTarget->operator->()->Flush();
+    }
+    if (!this->echoTarget.IsNull() && !this->echoTarget->IsNull()) {
+        this->echoTarget->operator->()->Flush();
+    }
+}
+
+
+/*
+ * vislib::sys::Log::GetLevel
+ */
+UINT vislib::sys::Log::GetLevel(void) const {
+    if (!this->mainTarget.IsNull() && !this->mainTarget->IsNull()) {
+        return this->mainTarget->operator->()->Level();
+    }
+    return 0;
+}
+
+
+/*
+ * vislib::sys::Log::SetLevel
+ */
+void vislib::sys::Log::SetLevel(UINT level) {
+    if (!this->mainTarget.IsNull() && !this->mainTarget->IsNull()) {
+        this->mainTarget->operator->()->SetLevel(level);
+    }
+}
+
+
+/*
+ * vislib::sys::Log::GetEchoLevel
+ */
+UINT vislib::sys::Log::GetEchoLevel(void) const {
+    if (!this->echoTarget.IsNull() && !this->echoTarget->IsNull()) {
+        return this->echoTarget->operator->()->Level();
+    }
+    return 0;
+}
+
+
+/*
+ * vislib::sys::Log::SetEchoLevel
+ */
+void vislib::sys::Log::SetEchoLevel(UINT level) {
+    if (!this->echoTarget.IsNull() && !this->echoTarget->IsNull()) {
+        this->echoTarget->operator->()->SetLevel(level);
     }
 }
 
@@ -576,13 +678,11 @@ void vislib::sys::Log::FlushLog(void) {
  * vislib::sys::Log::WriteError
  */
 void vislib::sys::Log::WriteError(const char *fmt, ...) {
-    vislib::StringA txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaA(LEVEL_ERROR, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith('\n')) txt += "\n";
-    this->writeMsg(LEVEL_ERROR, txt);
 }
 
 
@@ -590,41 +690,37 @@ void vislib::sys::Log::WriteError(const char *fmt, ...) {
  * vislib::sys::Log::WriteError
  */
 void vislib::sys::Log::WriteError(const wchar_t *fmt, ...) {
-    vislib::StringW txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaW(LEVEL_ERROR, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith(L'\n')) txt += L"\n";
-    this->writeMsg(LEVEL_ERROR, txt);
 }
 
 
 /*
  * vislib::sys::Log::WriteError
  */
-void vislib::sys::Log::WriteError(const UINT lvlOff, const char *fmt, ...) {
-    vislib::StringA txt;
+void vislib::sys::Log::WriteError(int lvlOff, const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaA(
+        static_cast<UINT>(static_cast<int>(LEVEL_ERROR) + lvlOff),
+        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith('\n')) txt += "\n";
-    this->writeMsg(LEVEL_ERROR + lvlOff, txt);
 }
 
 
 /*
  * vislib::sys::Log::WriteError
  */
-void vislib::sys::Log::WriteError(const UINT lvlOff, const wchar_t *fmt, ...) {
-    vislib::StringW txt;
+void vislib::sys::Log::WriteError(int lvlOff, const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaW(
+        static_cast<UINT>(static_cast<int>(LEVEL_ERROR) + lvlOff),
+        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith(L'\n')) txt += L"\n";
-    this->writeMsg(LEVEL_ERROR + lvlOff, txt);
 }
 
 
@@ -632,13 +728,11 @@ void vislib::sys::Log::WriteError(const UINT lvlOff, const wchar_t *fmt, ...) {
  * vislib::sys::Log::WriteInfo
  */
 void vislib::sys::Log::WriteInfo(const char *fmt, ...) {
-    vislib::StringA txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaA(LEVEL_INFO, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith('\n')) txt += "\n";
-    this->writeMsg(LEVEL_INFO, txt);
 }
 
 
@@ -646,41 +740,95 @@ void vislib::sys::Log::WriteInfo(const char *fmt, ...) {
  * vislib::sys::Log::WriteInfo
  */
 void vislib::sys::Log::WriteInfo(const wchar_t *fmt, ...) {
-    vislib::StringW txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaW(LEVEL_INFO, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith(L'\n')) txt += L"\n";
-    this->writeMsg(LEVEL_INFO, txt);
 }
 
 
 /*
  * vislib::sys::Log::WriteInfo
  */
-void vislib::sys::Log::WriteInfo(const UINT lvlOff, const char *fmt, ...) {
-    vislib::StringA txt;
+void vislib::sys::Log::WriteInfo(int lvlOff, const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaA(
+        static_cast<UINT>(static_cast<int>(LEVEL_INFO) + lvlOff),
+        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith('\n')) txt += "\n";
-    this->writeMsg(LEVEL_INFO + lvlOff, txt);
 }
 
 
 /*
  * vislib::sys::Log::WriteInfo
  */
-void vislib::sys::Log::WriteInfo(const UINT lvlOff, const wchar_t *fmt, ...) {
-    vislib::StringW txt;
+void vislib::sys::Log::WriteInfo(int lvlOff, const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaW(
+        static_cast<UINT>(static_cast<int>(LEVEL_INFO) + lvlOff),
+        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith(L'\n')) txt += L"\n";
-    this->writeMsg(LEVEL_INFO + lvlOff, txt);
+}
+
+
+/*
+ * vislib::sys::Log::WriteMessage
+ */
+void vislib::sys::Log::WriteMessage(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const vislib::StringA& msg) {
+    if (!msg.EndsWith('\n')) {
+        this->WriteMessage(level, time, sid, msg + "\n");
+        return;
+    }
+    if (!this->mainTarget.IsNull() && !this->mainTarget->IsNull()) {
+        (*this->mainTarget)->Msg(level, time, sid, msg);
+        if (this->autoflush) {
+            (*this->mainTarget)->Flush();
+        }
+    }
+    if (!this->echoTarget.IsNull() && !this->echoTarget->IsNull()) {
+        (*this->echoTarget)->Msg(level, time, sid, msg);
+        if (this->autoflush) {
+            (*this->echoTarget)->Flush();
+        }
+    }
+}
+
+
+/*
+ * vislib::sys::Log::WriteMessage
+ */
+void vislib::sys::Log::WriteMessageVaA(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const char *fmt, va_list argptr) {
+    vislib::StringA msg;
+    if (fmt != NULL) {
+        msg.FormatVa(fmt, argptr);
+    } else {
+        msg = "Empty log message\n";
+    }
+    this->WriteMessage(level, time, sid, msg);
+}
+
+
+/*
+ * vislib::sys::Log::WriteMessage
+ */
+void vislib::sys::Log::WriteMessageVaW(UINT level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+        const wchar_t *fmt, va_list argptr) {
+    vislib::StringW msg;
+    if (fmt != NULL) {
+        msg.FormatVa(fmt, argptr);
+    } else {
+        msg = L"Empty log message\n";
+    }
+    // UTF8-Encoding may be better, but this is ok for now
+    this->WriteMessage(level, time, sid, W2A(msg));
 }
 
 
@@ -688,13 +836,11 @@ void vislib::sys::Log::WriteInfo(const UINT lvlOff, const wchar_t *fmt, ...) {
  * vislib::sys::Log::WriteMsg
  */
 void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
-    vislib::StringA txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaA(level, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith('\n')) txt += "\n";
-    this->writeMsg(level, txt);
 }
 
 
@@ -702,13 +848,11 @@ void vislib::sys::Log::WriteMsg(const UINT level, const char *fmt, ...) {
  * vislib::sys::Log::WriteMsg
  */
 void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
-    vislib::StringW txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaW(level, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith(L'\n')) txt += L"\n";
-    this->writeMsg(level, txt);
 }
 
 
@@ -716,13 +860,11 @@ void vislib::sys::Log::WriteMsg(const UINT level, const wchar_t *fmt, ...) {
  * vislib::sys::Log::WriteWarn
  */
 void vislib::sys::Log::WriteWarn(const char *fmt, ...) {
-    vislib::StringA txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaA(LEVEL_WARN, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith('\n')) txt += "\n";
-    this->writeMsg(LEVEL_WARN, txt);
 }
 
 
@@ -730,41 +872,37 @@ void vislib::sys::Log::WriteWarn(const char *fmt, ...) {
  * vislib::sys::Log::WriteWarn
  */
 void vislib::sys::Log::WriteWarn(const wchar_t *fmt, ...) {
-    vislib::StringW txt;
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaW(LEVEL_WARN, Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith(L'\n')) txt += L"\n";
-    this->writeMsg(LEVEL_WARN, txt);
 }
 
 
 /*
  * vislib::sys::Log::WriteWarn
  */
-void vislib::sys::Log::WriteWarn(const UINT lvlOff, const char *fmt, ...) {
-    vislib::StringA txt;
+void vislib::sys::Log::WriteWarn(int lvlOff, const char *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaA(
+        static_cast<UINT>(static_cast<int>(LEVEL_WARN) + lvlOff),
+        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith('\n')) txt += "\n";
-    this->writeMsg(LEVEL_WARN + lvlOff, txt);
 }
 
 
 /*
  * vislib::sys::Log::WriteWarn
  */
-void vislib::sys::Log::WriteWarn(const UINT lvlOff, const wchar_t *fmt, ...) {
-    vislib::StringW txt;
+void vislib::sys::Log::WriteWarn(int lvlOff, const wchar_t *fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    txt.FormatVa(fmt, argptr);
+    this->WriteMessageVaW(
+        static_cast<UINT>(static_cast<int>(LEVEL_WARN) + lvlOff),
+        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
-    if (!txt.EndsWith(L'\n')) txt += L"\n";
-    this->writeMsg(LEVEL_WARN + lvlOff, txt);
 }
 
 
@@ -773,27 +911,10 @@ void vislib::sys::Log::WriteWarn(const UINT lvlOff, const wchar_t *fmt, ...) {
  * vislib::sys::Log::operator=
  */
 vislib::sys::Log& vislib::sys::Log::operator=(const Log& rhs) {
-    this->level = rhs.level;
-    this->SetLevel(rhs.level);
-    this->SetLogFileName((rhs.logfile) ? rhs.filename : NULL, false);
-    this->SetOfflineMessageBufferSize(rhs.msgbufsize);
-    this->SetAutoFlush(rhs.autoflush);
-    this->omittedMsgs = rhs.omittedMsgs;
-    if (rhs.logfile == NULL) {
-        for (unsigned int i = 0; i < this->msgbufsize; i++) {
-            this->offlineMsgs[i] = rhs.offlineMsgs[i];
-        }
-    }
-
+    this->mainTarget = rhs.mainTarget;
+    this->echoTarget = rhs.echoTarget;
+    this->autoflush = rhs.autoflush;
     return *this;
-}
-
-
-/*
- * vislib::sys::Log::currentTimeStamp
- */
-vislib::sys::Log::TimeStamp vislib::sys::Log::currentTimeStamp(void) {
-    return time(NULL);
 }
 
 
@@ -803,7 +924,7 @@ vislib::sys::Log::TimeStamp vislib::sys::Log::currentTimeStamp(void) {
 vislib::StringA vislib::sys::Log::getFileNameSuffix(void) {
     vislib::StringA suffix;
 
-    TimeStamp timestamp = vislib::sys::Log::currentTimeStamp();
+    TimeStamp timestamp = vislib::sys::Log::CurrentTimeStamp();
     struct tm *t;
 #ifdef _WIN32
 #if (_MSC_VER >= 1400)
@@ -828,99 +949,4 @@ vislib::StringA vislib::sys::Log::getFileNameSuffix(void) {
         t->tm_hour, t->tm_min);
 
     return suffix;
-}
-
-
-/*
- * vislib::sys::Log::nextOfflineMessage
- */
-vislib::sys::Log::OfflineMessage *vislib::sys::Log::nextOfflineMessage(void) {
-    ASSERT(this->logfile == NULL);
-    for (unsigned int i = 0; i < this->msgbufsize; i++) {
-        if (this->offlineMsgs[i].level == LEVEL_NONE) {
-            return &this->offlineMsgs[i];
-        }
-    }
-    return NULL;
-}
-
-
-/*
- * vislib::sys::Log::writeMsg
- */
-void vislib::sys::Log::writeMsg(UINT level, const vislib::StringA& msg) {
-    // write echo message
-    if ((this->echoOut != NULL) && (level <= this->echoLevel) && (level > 0)) {
-        this->echoOut->Write(level, msg.PeekBuffer());
-    }
-
-    // write log message
-    if ((level <= this->level) && (level > 0)) {
-        if (this->logfile) {
-            // physical log file available
-            this->writeMsgPrefix(level, vislib::sys::Log::currentTimeStamp());
-
-            if (!msg.IsEmpty()) {
-                // write directly to the file
-                fwrite(msg.PeekBuffer(), sizeof(char), msg.Length(), this->logfile);
-            } else {
-                fprintf(this->logfile, vislib::sys::Log::emptyLogMsg);
-            }
-
-            if (this->autoflush) {
-                ::fflush(this->logfile);
-            }
-
-        } else {
-            // no physical log file
-            OfflineMessage *om = this->nextOfflineMessage();
-            if (om == NULL) {
-                this->omittedMsgs++;
-
-            } else {
-                // offline message
-                om->level = level;
-                om->time = vislib::sys::Log::currentTimeStamp();
-                om->message = msg;
-            }
-        }
-    } /* if ((level <= this->level) && (level > 0) && (fmt != NULL)) */
-}
-
-
-/*
- * vislib::sys::Log::writeMsgPrefix
- */
-void vislib::sys::Log::writeMsg(UINT level, const vislib::StringW& msg) {
-    // UTF8-Encoding may be better, but this is ok for now
-    this->writeMsg(level, vislib::StringA(msg));
-}
-
-
-/*
- * vislib::sys::Log::writeMsgPrefix
- */
-void vislib::sys::Log::writeMsgPrefix(UINT level, const TimeStamp& timestamp) {
-    // Maybe this should be configurable
-    ASSERT(this->logfile != NULL);
-
-    struct tm *timeStamp;
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-    struct tm __tS;
-    timeStamp = &__tS;
-    if (localtime_s(timeStamp, &timestamp) != 0) {
-        // timestamp error *** argh ***
-        __tS.tm_hour = __tS.tm_min = __tS.tm_sec = 0;
-    }
-#else /* (_MSC_VER >= 1400) */
-    timeStamp = localtime(&timestamp);
-#endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
-    timeStamp = localtime(&timestamp);
-#endif /* _WIN32 */
-
-    fprintf(this->logfile, "%2d:%.2d:%.2d|%8x|%4d|", 
-        timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec, 
-        vislib::sys::Thread::CurrentID(), level);
 }

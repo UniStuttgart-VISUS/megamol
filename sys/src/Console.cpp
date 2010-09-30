@@ -37,10 +37,11 @@
 
 
 /*
- * vislib::sys::Console::ConsoleLogEchoTarget::Write
+ * vislib::sys::Console::ConsoleLogTarget::Msg
  */
-void vislib::sys::Console::ConsoleLogEchoTarget::Write(UINT level, 
-        const char *message) const {
+void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+                const char *msg) {
     if (vislib::sys::Console::ColorsEnabled()) {
         vislib::sys::Console::ColorType color;
 
@@ -53,20 +54,20 @@ void vislib::sys::Console::ConsoleLogEchoTarget::Write(UINT level,
             vislib::sys::Console::SetForegroundColor(color);
             vislib::sys::Console::Write("%.4d", level);
             vislib::sys::Console::RestoreDefaultColors();
-            vislib::sys::Console::Write("|%s", message);
+            vislib::sys::Console::Write("|%s", msg);
         } else {
-            vislib::sys::Console::Write("%.4d|%s", level, message);
+            vislib::sys::Console::Write("%.4d|%s", level, msg);
         }
     } else {
-        vislib::sys::Console::Write("%.4d|%s", level, message);
+        vislib::sys::Console::Write("%.4d|%s", level, msg);
     }
 }
 
 
 /*
- * vislib::sys::Console::LogEchoOutTarget
+ * vislib::sys::Console::LogEchoTarget
  */
-const vislib::sys::Console::ConsoleLogEchoTarget vislib::sys::Console::LogEchoOutTarget;
+const vislib::sys::Console::ConsoleLogTarget vislib::sys::Console::LogEchoTarget;
 
 
 /*

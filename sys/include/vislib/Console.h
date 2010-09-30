@@ -55,27 +55,37 @@ namespace sys {
          * Log echo output target implementation using special functions of the
          * console, like coloured text.
          */
-        class ConsoleLogEchoTarget : public vislib::sys::Log::EchoTarget {
+        class ConsoleLogTarget : public vislib::sys::Log::Target {
         public:
 
             /** ctor */
-            ConsoleLogEchoTarget() { }
+            ConsoleLogTarget(unsigned int level = vislib::sys::Log::LEVEL_ERROR)
+                    : vislib::sys::Log::Target(level) {
+                // intentionally empty
+            }
 
             /** dtor */
-            virtual ~ConsoleLogEchoTarget() { }
+            virtual ~ConsoleLogTarget() {
+                // intentionally empty
+            }
 
             /**
-             * Writes a string to the echo output target. Implementations may 
-             * assume that message ends with a new line control sequence.
+             * Writes a message to the log target
              *
-             * @param level The message level.
-             * @param message The message ANSI string.
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
              */
-            virtual void Write(UINT level, const char *message) const;
+            virtual void Msg(unsigned int level,
+                vislib::sys::Log::TimeStamp time,
+                vislib::sys::Log::SourceID sid,
+                const char *msg);
+
         };
 
         /** The log echo output target of the console. */
-        static const ConsoleLogEchoTarget LogEchoOutTarget;
+        static const ConsoleLogTarget LogEchoTarget;
 
         /**
          * Runs a console command in a common system command interpreter. On
