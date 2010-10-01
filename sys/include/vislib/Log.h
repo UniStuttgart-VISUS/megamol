@@ -74,18 +74,18 @@ namespace sys {
         static Log& DefaultLog;
 
         /**
-         * Answer the current time.
-         *
-         * @return A time stamp representing NOW.
-         */
-        static TimeStamp CurrentTimeStamp(void);
-
-        /**
          * Answer the current source id
          *
          * @return A source id representing THIS
          */
         static SourceID CurrentSourceID(void);
+
+        /**
+         * Answer the current time.
+         *
+         * @return A time stamp representing NOW.
+         */
+        static TimeStamp CurrentTimeStamp(void);
 
         /**
          * Abstract base class for log targets
@@ -141,6 +141,96 @@ namespace sys {
 
             /** The log level for this target */
             UINT level;
+
+        };
+
+#ifdef _WIN32
+        /**
+         * Target class echoing the log messages into a stream
+         */
+        class DebugOutputTarget : public Target {
+        public:
+
+            /**
+             * Ctor
+             *
+             * @param level The log level used for this target
+             */
+            DebugOutputTarget(UINT level = Log::LEVEL_ERROR);
+
+            /** Dtor */
+            virtual ~DebugOutputTarget(void);
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg);
+
+        private:
+        };
+#endif /* _WIN32 */
+
+        /**
+         * Target class safing message to a ASCII text file
+         */
+        class FileTarget : public Target {
+        public:
+
+            /**
+             * Opens a physical log file
+             *
+             * @param path The path to the physical log file
+             * @param level The log level used for this target
+             */
+            FileTarget(const char *path, UINT level = Log::LEVEL_ERROR);
+
+            /**
+             * Opens a physical log file
+             *
+             * @param path The path to the physical log file
+             * @param level The log level used for this target
+             */
+            FileTarget(const wchar_t *path, UINT level = Log::LEVEL_ERROR);
+
+            /** Dtor */
+            virtual ~FileTarget(void);
+
+            /** Flushes any buffer */
+            virtual void Flush(void);
+
+            /**
+             * Answer the path to the physical log file
+             *
+             * @return The path to the physical log file
+             */
+            inline const vislib::StringW& Filename(void) const {
+                return this->filename;
+            }
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
+                const char *msg);
+
+        private:
+
+            /** The log file used by this target */
+            FILE *stream;
+
+            /** The file name of the log file used */
+            vislib::StringW filename;
 
         };
 
@@ -246,41 +336,21 @@ namespace sys {
         };
 
         /**
-         * Target class safing message to a ASCII text file
+         * Target class echoing the log messages into a stream
          */
-        class FileTarget : public Target {
+        class RedirectTarget : public Target {
         public:
 
             /**
-             * Opens a physical log file
+             * Ctor
              *
-             * @param path The path to the physical log file
+             * @param log The log to redirect all messages to
              * @param level The log level used for this target
              */
-            FileTarget(const char *path, UINT level = Log::LEVEL_ERROR);
-
-            /**
-             * Opens a physical log file
-             *
-             * @param path The path to the physical log file
-             * @param level The log level used for this target
-             */
-            FileTarget(const wchar_t *path, UINT level = Log::LEVEL_ERROR);
+            RedirectTarget(Log *log, UINT level = Log::LEVEL_ERROR);
 
             /** Dtor */
-            virtual ~FileTarget(void);
-
-            /** Flushes any buffer */
-            virtual void Flush(void);
-
-            /**
-             * Answer the path to the physical log file
-             *
-             * @return The path to the physical log file
-             */
-            inline const vislib::StringW& Filename(void) const {
-                return this->filename;
-            }
+            virtual ~RedirectTarget(void);
 
             /**
              * Writes a message to the log target
@@ -293,13 +363,28 @@ namespace sys {
             virtual void Msg(UINT level, TimeStamp time, SourceID sid,
                 const char *msg);
 
+            /**
+             * Sets the targetted log object
+             *
+             * @param log The new targetted log object
+             */
+            inline void SetTargetLog(vislib::sys::Log *log) {
+                this->log = log;
+            }
+
+            /**
+             * Answer the targetted log object
+             *
+             * @return The targetted log object
+             */
+            inline Log* TargetLog(void) const {
+                return this->log;
+            }
+
         private:
 
-            /** The log file used by this target */
-            FILE *stream;
-
-            /** The file name of the log file used */
-            vislib::StringW filename;
+            /** The log to redirect all messages to */
+            Log *log;
 
         };
 
@@ -365,91 +450,6 @@ namespace sys {
 
         };
 
-        /**
-         * Target class echoing the log messages into a stream
-         */
-        class RedirectTarget : public Target {
-        public:
-
-            /**
-             * Ctor
-             *
-             * @param log The log to redirect all messages to
-             * @param level The log level used for this target
-             */
-            RedirectTarget(Log *log, UINT level = Log::LEVEL_ERROR);
-
-            /** Dtor */
-            virtual ~RedirectTarget(void);
-
-            /**
-             * Writes a message to the log target
-             *
-             * @param level The level of the message
-             * @param time The time stamp of the message
-             * @param sid The object id of the source of the message
-             * @param msg The message text itself
-             */
-            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
-                const char *msg);
-
-            /**
-             * Sets the targetted log object
-             *
-             * @param log The new targetted log object
-             */
-            inline void SetTargetLog(vislib::sys::Log *log) {
-                this->log = log;
-            }
-
-            /**
-             * Answer the targetted log object
-             *
-             * @return The targetted log object
-             */
-            inline Log* TargetLog(void) const {
-                return this->log;
-            }
-
-        private:
-
-            /** The log to redirect all messages to */
-            Log *log;
-
-        };
-
-#ifdef _WIN32
-        /**
-         * Target class echoing the log messages into a stream
-         */
-        class DebugOutputTarget : public Target {
-        public:
-
-            /**
-             * Ctor
-             *
-             * @param level The log level used for this target
-             */
-            DebugOutputTarget(UINT level = Log::LEVEL_ERROR);
-
-            /** Dtor */
-            virtual ~DebugOutputTarget(void);
-
-            /**
-             * Writes a message to the log target
-             *
-             * @param level The level of the message
-             * @param time The time stamp of the message
-             * @param sid The object id of the source of the message
-             * @param msg The message text itself
-             */
-            virtual void Msg(UINT level, TimeStamp time, SourceID sid,
-                const char *msg);
-
-        private:
-        };
-#endif /* _WIN32 */
-
         /** 
          * Ctor. Constructs a new log file without a physical file. 
          *
@@ -493,6 +493,47 @@ namespace sys {
         /** Dtor. */
         ~Log(void);
 
+        ///**
+        // * Access the echo log target
+        // *
+        // * @return The echo log target
+        // */
+        //inline SmartPtr<SmartPtr<Target> > AccessEchoTarget(void) {
+        //    return this->echoTarget;
+        //}
+
+        /**
+         * Access the echo log target
+         *
+         * @return The echo log target
+         */
+        inline const SmartPtr<SmartPtr<Target> > AccessEchoTarget(void) const {
+            return this->echoTarget;
+        }
+
+        ///**
+        // * Access the main log target
+        // *
+        // * @return The main log target
+        // */
+        //inline SmartPtr<SmartPtr<Target> > AccessMainTarget(void) {
+        //    return this->mainTarget;
+        //}
+
+        /**
+         * Access the main log target
+         *
+         * @return The main log target
+         */
+        inline const SmartPtr<SmartPtr<Target> > AccessMainTarget(void) const {
+            return this->mainTarget;
+        }
+
+        /** Disable the autoflush flag. */
+        inline void DisableAutoFlush(void) {
+            this->SetAutoFlush(false);
+        }
+
         /**
          * Writes all offline messages to the echo target.
          *
@@ -501,6 +542,31 @@ namespace sys {
          *               remain in the offline buffer.
          */
         void EchoOfflineMessages(bool remove = false);
+
+        /** Enables the autoflush flag. */
+        inline void EnableAutoFlush(void) {
+            this->SetAutoFlush(true);
+        }
+
+        /** Flushes the physical log file. */
+        void FlushLog(void);
+
+        /**
+         * Answer the current echo level. Messages above this level will be
+         * ignored, while the other messages will be echoed to the echo output
+         * stream.
+         *
+         * @return The current echo level.
+         */
+        UINT GetEchoLevel(void) const;
+
+        /**
+         * Answer the current log level. Messages above this level will be
+         * ignored.
+         *
+         * @return The current log level.
+         */
+        UINT GetLevel(void) const;
 
         /**
          * Answer the file name of the log file as ANSI string.
@@ -515,6 +581,57 @@ namespace sys {
          * @return The name of the current physical log file as unicode string.
          */
         vislib::StringW GetLogFileNameW(void) const;
+
+        /**
+         * Answer the number of messages that will be stored in memory if no 
+         * physical log file is available.
+         *
+         * @return The number of messages that will be stored in memory if no 
+         *         physical log file is available.
+         */
+        unsigned int GetOfflineMessageBufferSize(void) const;
+
+        /**
+         * Answer the state of the autoflush flag.
+         *
+         * @return The state of the autoflush flag.
+         */
+        inline bool IsAutoFlushEnabled(void) const {
+            return this->autoflush;
+        }
+
+        /**
+         * Sets or clears the autoflush flag. If the autoflush flag is set
+         * a flush of all data to the physical log file is performed after
+         * each message. Autoflush is enabled by default.
+         *
+         * @param enable New value for the autoflush flag.
+         */
+        inline void SetAutoFlush(bool enable) {
+            this->autoflush = enable;
+        }
+
+        /**
+         * Set a new echo level. Messages above this level will be ignored, 
+         * while the other messages will be echoed to the echo output stream.
+         *
+         * @param level The new echo level.
+         */
+        void SetEchoLevel(UINT level);
+
+        /**
+         * Sets the new echo log target
+         *
+         * @param The new echo log target
+         */
+        void SetEchoTarget(vislib::SmartPtr<Target> target);
+
+        /**
+         * Set a new log level. Messages above this level will be ignored.
+         *
+         * @param level The new log level.
+         */
+        void SetLevel(UINT level);
 
         /**
          * Specifies the location of the physical log file. Any physical log
@@ -551,13 +668,11 @@ namespace sys {
         bool SetLogFileName(const wchar_t *filename, bool addSuffix);
 
         /**
-         * Answer the number of messages that will be stored in memory if no 
-         * physical log file is available.
+         * Sets the new main log target
          *
-         * @return The number of messages that will be stored in memory if no 
-         *         physical log file is available.
+         * @param The new main log target
          */
-        unsigned int GetOfflineMessageBufferSize(void) const;
+        void SetMainTarget(vislib::SmartPtr<Target> target);
 
         /**
          * Sets the number of messages that will be stored in memory if no 
@@ -569,69 +684,15 @@ namespace sys {
         void SetOfflineMessageBufferSize(unsigned int msgbufsize);
 
         /**
-         * Answer the state of the autoflush flag.
+         * Connects the internal memory for log targets of this this log with
+         * the memory of the 'master' log. Changes to the targets themself are
+         * not thread-safe. Log messages as input to the targets may be
+         * thead-safe depending on the employed targets.
          *
-         * @return The state of the autoflush flag.
+         * @param master The master log providing the memory for stroing the
+         *               log targets.
          */
-        inline bool IsAutoFlushEnabled(void) const {
-            return this->autoflush;
-        }
-
-        /**
-         * Sets or clears the autoflush flag. If the autoflush flag is set
-         * a flush of all data to the physical log file is performed after
-         * each message. Autoflush is enabled by default.
-         *
-         * @param enable New value for the autoflush flag.
-         */
-        inline void SetAutoFlush(bool enable) {
-            this->autoflush = enable;
-        }
-
-        /** Enables the autoflush flag. */
-        inline void EnableAutoFlush(void) {
-            this->SetAutoFlush(true);
-        }
-
-        /** Disable the autoflush flag. */
-        inline void DisableAutoFlush(void) {
-            this->SetAutoFlush(false);
-        }
-
-        /** Flushes the physical log file. */
-        void FlushLog(void);
-
-        /**
-         * Answer the current log level. Messages above this level will be
-         * ignored.
-         *
-         * @return The current log level.
-         */
-        UINT GetLevel(void) const;
-
-        /**
-         * Set a new log level. Messages above this level will be ignored.
-         *
-         * @param level The new log level.
-         */
-        void SetLevel(UINT level);
-
-        /**
-         * Answer the current echo level. Messages above this level will be
-         * ignored, while the other messages will be echoed to the echo output
-         * stream.
-         *
-         * @return The current echo level.
-         */
-        UINT GetEchoLevel(void) const;
-
-        /**
-         * Set a new echo level. Messages above this level will be ignored, 
-         * while the other messages will be echoed to the echo output stream.
-         *
-         * @param level The new echo level.
-         */
-        void SetEchoLevel(UINT level);
+        void ShareTargetStorage(const Log& master);
 
         /**
          * Writes a formatted error message to the log. The level will be
@@ -808,24 +869,6 @@ namespace sys {
          * @return Reference to this.
          */
         Log& operator=(const Log& rhs);
-
-        /**
-         * Access the main log target
-         *
-         * @return The main log target
-         */
-        inline SmartPtr<SmartPtr<Target> > AccessMainTarget(void) {
-            return this->mainTarget;
-        }
-
-        /**
-         * Access the echo log target
-         *
-         * @return The echo log target
-         */
-        inline SmartPtr<SmartPtr<Target> > AccessEchoTarget(void) {
-            return this->echoTarget;
-        }
 
     private:
 

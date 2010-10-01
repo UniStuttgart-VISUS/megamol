@@ -285,7 +285,10 @@ int main(int argc, char **argv) {
 
 #if defined(_WIN32) && defined(_DEBUG) // VC Debugger Halt on Stop Crowbar
 #pragma warning(disable: 4996)
-    if (getenv("_ACP_LIB") != NULL) system("pause");
+    if ((getenv("VS_HALT_ON_STOP_CROWBAR") != NULL)
+        || (getenv("_ACP_LIB") != NULL) // MSVC 2008
+        || (getenv("COMPLUS_NoGuiFromShim") != NULL) // MSVC 2010
+        ) system("pause");
 #pragma warning(default: 4996)
 #endif
     return 0;
