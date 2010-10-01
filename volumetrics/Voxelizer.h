@@ -11,6 +11,7 @@
 
 namespace megamol {
 namespace trisoup {
+namespace volumetrics {
 
 	class Voxelizer : public vislib::sys::Runnable {
 	public:
@@ -65,6 +66,7 @@ namespace trisoup {
 		//vislib::Array<vislib::math::Point<float, 3> > triangleSoup;
 };
 
+} /* end namespace volumetrics */
 } /* end namespace trisoup */
 } /* end namespace megamol */
 

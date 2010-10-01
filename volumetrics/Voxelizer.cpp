@@ -7,6 +7,7 @@
 
 using namespace megamol;
 using namespace megamol::trisoup;
+using namespace megamol::trisoup::volumetrics;
 
 Voxelizer::Voxelizer(void) : terminate(false), sjd(NULL) {
     //triangleSoup.SetCapacityIncrement(90); // AKA 10 triangles?
@@ -87,11 +88,11 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
 
             for (unsigned int m = 0; m < surf.Count(); m++) {
                 sjd->Result.vertices.Append(vislib::math::Point<float, 3>(surf[m]));
-                sjd->Result.indices.Append(sjd->Result.vertices.Count() - 1);
+                sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
                 sjd->Result.vertices.Append(vislib::math::Point<float, 3>(surf[m] + 3));
-                sjd->Result.indices.Append(sjd->Result.vertices.Count() - 1);
+                sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
                 sjd->Result.vertices.Append(vislib::math::Point<float, 3>(surf[m] + 6));
-                sjd->Result.indices.Append(sjd->Result.vertices.Count() - 1);
+                sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
                 vislib::math::Vector<float, 3> norm;
                 sst.SetPointer(surf[m]);
                 (sst.Normal(norm));
@@ -216,7 +217,7 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
         tri.SetPointer(theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles + 3 * 3 * triangle);
         for (corner = 0; corner < 3; corner++) {
             vertex = MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + corner];
-            tri[corner] = EdgeVertex[vertex];
+            tri[2 - corner] = EdgeVertex[vertex];
             //sjd->Result.vertices.Append(EdgeVertex[vertex]);
             //sjd->Result.normals.Append(normal);
             //sjd->Result.indices.Append(sjd->Result.vertices.Count() - 1);
@@ -331,31 +332,31 @@ DWORD Voxelizer::Run(void *userData) {
             if (!bx.Contains(sp, vislib::math::Cuboid<float>::FACE_ALL)) {
                 continue;
             }
-            x = static_cast<unsigned int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize);
+            x = static_cast<int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize);
             if (x > 0) x--;
             if (x < 0) x = 0;
-            y = static_cast<unsigned int>((sp.Y() - currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
+            y = static_cast<int>((sp.Y() - currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
             if (y > 0) y--;
             if (y < 0) y = 0;
-            z = static_cast<unsigned int>((sp.Z() - currRad - sjd->Bounds.Back()) / sjd->CellSize);
+            z = static_cast<int>((sp.Z() - currRad - sjd->Bounds.Back()) / sjd->CellSize);
             if (z > 0) z--;
             if (z < 0) z = 0;
             pStart.Set(x, y, z);
 
-            x = static_cast<unsigned int>((sp.X() + currRad - sjd->Bounds.Left()) / sjd->CellSize);
-            if (x + 1 < sjd->resX) x++;
-            if (x + 1 >= sjd->resX) x = sjd->resX - 1;
-            y = static_cast<unsigned int>((sp.Y() + currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
-            if (y + 1 < sjd->resY) y++;
-            if (y + 1 >= sjd->resY) y = sjd->resY - 1;
-            z = static_cast<unsigned int>((sp.Z() + currRad - sjd->Bounds.Back()) / sjd->CellSize);
-            if (z + 1 < sjd->resZ) z++;
-            if (z + 1 >= sjd->resZ) z = sjd->resZ - 1;
+            x = static_cast<int>((sp.X() + currRad - sjd->Bounds.Left()) / sjd->CellSize);
+            if (x + 1 < static_cast<int>(sjd->resX)) x++;
+            if (x + 1 >= static_cast<int>(sjd->resX)) x = sjd->resX - 1;
+            y = static_cast<int>((sp.Y() + currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
+            if (y + 1 < static_cast<int>(sjd->resY)) y++;
+            if (y + 1 >= static_cast<int>(sjd->resY)) y = sjd->resY - 1;
+            z = static_cast<int>((sp.Z() + currRad - sjd->Bounds.Back()) / sjd->CellSize);
+            if (z + 1 < static_cast<int>(sjd->resZ)) z++;
+            if (z + 1 >= static_cast<int>(sjd->resZ)) z = sjd->resZ - 1;
             pEnd.Set(x, y, z);
 
-            for (z = pStart.Z(); z <= pEnd.Z(); z++) {
-                for (y = pStart.Y(); y <= pEnd.Y(); y++) {
-                    for (x = pStart.X(); x <= pEnd.X(); x++) {
+            for (z = pStart.Z(); z <= static_cast<int>(pEnd.Z()); z++) {
+                for (y = pStart.Y(); y <= static_cast<int>(pEnd.Y()); y++) {
+                    for (x = pStart.X(); x <= static_cast<int>(pEnd.X()); x++) {
                         // TODO think about this. here the voxel content is determined by a corner
                         p.Set(
                         sjd->Bounds.Left() + x * sjd->CellSize,
@@ -377,18 +378,18 @@ DWORD Voxelizer::Run(void *userData) {
     }
 
     // march it
-    for (x = 0; x < sjd->resX - 1; x++) {
-        for (y = 0; y < sjd->resY - 1; y++) {
-            for (z = 0; z < sjd->resZ - 1; z++) {
+    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
                 marchCell(volume, x, y, z);
             }
         }
     }
 
     // collect the surfaces
-    for (x = 0; x < sjd->resX - 1; x++) {
-        for (y = 0; y < sjd->resY - 1; y++) {
-            for (z = 0; z < sjd->resZ - 1; z++) {
+    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
                 collectCell(volume, x, y, z);
             }
         }

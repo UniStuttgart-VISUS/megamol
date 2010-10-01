@@ -11,6 +11,7 @@
 
 namespace megamol {
 namespace trisoup {
+namespace volumetrics {
 
 	struct FatVoxel {
 		float distField;
@@ -102,6 +103,7 @@ namespace trisoup {
 	};
 
 
+} /* end namespace volumetrics */
 } /* end namespace trisoup */
 } /* end namespace megamol */
 

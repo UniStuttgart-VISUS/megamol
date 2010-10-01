@@ -19,7 +19,7 @@
 #include "WavefrontObjDataSource.h"
 #include "BlockVolumeMesh.h"
 #include "CallBinaryVolumeData.h"
-#include "VoluMetricJob.h"
+#include "volumetrics/VoluMetricJob.h"
 
 
 /*
@@ -76,7 +76,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
         case 1: return new megamol::core::ModuleAutoDescription<megamol::trisoup::TriSoupDataSource>();
         case 2: return new megamol::core::ModuleAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
         case 3: return new megamol::core::ModuleAutoDescription<megamol::trisoup::BlockVolumeMesh>();
-        case 4: return new megamol::core::ModuleAutoDescription<megamol::trisoup::VoluMetricJob>();
+        case 4: return new megamol::core::ModuleAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
     }
     return NULL;
 }

@@ -3,6 +3,7 @@
 
 using namespace megamol;
 using namespace megamol::trisoup;
+using namespace megamol::trisoup::volumetrics;
 
 MarchingCubeTables::MarchingCubeTables(void) {
 }

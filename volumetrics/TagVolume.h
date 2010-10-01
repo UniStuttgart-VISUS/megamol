@@ -14,6 +14,7 @@
 
 namespace megamol {
 namespace trisoup {
+namespace volumetrics {
 
 	class TagVolume {
 	public:
@@ -32,6 +33,7 @@ namespace trisoup {
 		unsigned char *volume;
 	};
 
+} /* end namespace volumetrics */
 } /* end namespace trisoup */
 } /* end namespace megamol */
 

@@ -28,6 +28,7 @@
 
 namespace megamol {
 namespace trisoup {
+namespace volumetrics {
 
     /**
      * TODO: Document
@@ -150,6 +151,7 @@ namespace trisoup {
 		vislib::RawStorage bboxIdxData[2];
     };
 
+} /* end namespace volumetrics */
 } /* end namespace trisoup */
 } /* end namespace megamol */
 

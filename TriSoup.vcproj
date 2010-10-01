@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="TriSoup"
 	ProjectGUID="{02B4FAB3-EF5B-47F9-A1A5-9D817D16AEBC}"
 	RootNamespace="TriSoup"
@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -124,7 +124,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -204,7 +204,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -286,7 +286,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;TRISOUP_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -409,14 +409,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\MarchingCubeTables.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MarchingSquareTables.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -453,10 +445,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\TagVolume.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\TriSoup.cpp"
 				>
 			</File>
@@ -466,14 +454,6 @@
 			</File>
 			<File
 				RelativePath=".\TriSoupRenderer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\VoluMetricJob.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Voxelizer.cpp"
 				>
 			</File>
 			<File
@@ -507,23 +487,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\JobStructures.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MarchingCubeTables.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MarchingSquareTables.h"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TagVolume.h"
 				>
 			</File>
 			<File
@@ -540,14 +504,6 @@
 			</File>
 			<File
 				RelativePath=".\TriSoupRenderer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\VoluMetricJob.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Voxelizer.h"
 				>
 			</File>
 			<File
@@ -601,6 +557,62 @@
 				RelativePath=".\Makefile"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="volumetrics"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\volumetrics\JobStructures.h"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\MarchingCubeTables.h"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\MarchingSquareTables.h"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\TagVolume.h"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\VoluMetricJob.h"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\Voxelizer.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\volumetrics\MarchingCubeTables.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\MarchingSquareTables.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\TagVolume.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\VoluMetricJob.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\Voxelizer.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

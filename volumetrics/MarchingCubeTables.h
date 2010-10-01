@@ -6,6 +6,7 @@
 
 namespace megamol {
 namespace trisoup {
+namespace volumetrics {
 
 class MarchingCubeTables {
 public:
@@ -21,6 +22,7 @@ public:
 	static const int neighbourTable[12][2][3];
 };
 
+} /* end namespace volumetrics */
 } /* end namespace trisoup */
 } /* end namespace megamol */
 
