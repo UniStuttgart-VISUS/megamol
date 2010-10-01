@@ -235,8 +235,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -253,8 +255,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -274,8 +278,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -290,8 +296,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -309,8 +317,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -327,8 +337,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -348,8 +360,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -366,8 +380,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -387,8 +403,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -403,8 +421,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -422,8 +442,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -438,8 +460,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">
     <PreBuildEvent>
-      <Message>Collecting version information</Message>
-      <Command>perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -646,7 +670,57 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="include\vislib\vislibsymbolimportexport.inl" />
-    <None Include="makevislibversion.pl" />
+    <CustomBuild Include="makevislibversion.pl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl "$(ProjectDir)\makevislibversion.pl" "$(SolutionDir)\." "$(ProjectDir)\vislibversion.template.h" "$(ProjectDir)\include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\include\vislib\vislibversion.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+    </CustomBuild>
     <CustomBuildStep Include="project.mk">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>

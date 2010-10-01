@@ -382,9 +382,11 @@
     <None Include="include\vislib\vislibsymbolimportexport.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="makevislibversion.pl" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="project.mk" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="makevislibversion.pl" />
   </ItemGroup>
 </Project>

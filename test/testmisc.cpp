@@ -858,7 +858,13 @@ void TestNamedColours(void) {
 
     ColourParser::ToString(txt, NamedColours::SpringGreen, ColourParser::REPTYPE_FLOAT);
     float r, g, b;
-    int cnt = sscanf(txt.PeekBuffer(), "(%f; %f; %f)", &r, &g, &b);
+    int cnt = 
+#ifdef _WIN32
+        sscanf_s
+#else /* _WIN32 */
+        sscanf
+#endif /* _WIN32 */
+        (txt.PeekBuffer(), "(%f; %f; %f)", &r, &g, &b);
     AssertTrue("SpringGreen in Floats correct", 
          (cnt == 3)
          && vislib::math::IsEqual(r, 0.0f)
