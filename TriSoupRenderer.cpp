@@ -40,8 +40,9 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
         getDataSlot("getData", "The slot to fetch the tri-mesh data"),
         showVertices("showVertices", "Flag whether to show the verices of the object"),
         lighting("lighting", "Flag whether or not use lighting for the surface"),
-        cullface("cullface", "Flag whether or not use back-face culling for the surface"),
-        surStyle("style", "The rendering style for the surface") {
+        surFrontStyle("frontstyle", "The rendering style for the front surface"),
+        surBackStyle("backstyle", "The rendering style for the back surface"),
+        windRule("windingrule", "The triangle edge winding rule") {
 
     this->getDataSlot.SetCompatibleCall<CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -52,14 +53,27 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
     this->lighting.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->lighting);
 
-    this->cullface.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->cullface);
-
     param::EnumParam *ep = new param::EnumParam(0);
     ep->SetTypePair(0, "Filled");
     ep->SetTypePair(1, "Wireframe");
-    this->surStyle << ep;
-    this->MakeSlotAvailable(&this->surStyle);
+    ep->SetTypePair(2, "Points");
+    ep->SetTypePair(3, "None");
+    this->surFrontStyle << ep;
+    this->MakeSlotAvailable(&this->surFrontStyle);
+
+    ep = new param::EnumParam(3);
+    ep->SetTypePair(0, "Filled");
+    ep->SetTypePair(1, "Wireframe");
+    ep->SetTypePair(2, "Points");
+    ep->SetTypePair(3, "None");
+    this->surBackStyle << ep;
+    this->MakeSlotAvailable(&this->surBackStyle);
+
+    ep = new param::EnumParam(0);
+    ep->SetTypePair(0, "Counter-Clock Wise");
+    ep->SetTypePair(1, "Clock Wise");
+    this->windRule << ep;
+    this->MakeSlotAvailable(&this->windRule);
 }
 
 
@@ -151,19 +165,46 @@ bool TriSoupRenderer::Render(Call& call) {
     ::glDisableClientState(GL_NORMAL_ARRAY);
     ::glDisableClientState(GL_COLOR_ARRAY);
     ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    if (this->cullface.Param<param::BoolParam>()->Value()) {
-        ::glEnable(GL_CULL_FACE);
-    } else {
-        ::glDisable(GL_CULL_FACE);
-    }
     ::glEnable(GL_COLOR_MATERIAL);
     ::glEnable(GL_TEXTURE_2D);
     ::glBindTexture(GL_TEXTURE_2D, 0);
     ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     ::glEnable(GL_NORMALIZE);
 
-    if (this->surStyle.Param<param::EnumParam>()->Value() == 1) {
-        ::glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    GLint cfm;
+    ::glGetIntegerv(GL_CULL_FACE_MODE, &cfm);
+    GLint pm[2];
+    ::glGetIntegerv(GL_POLYGON_MODE, pm);
+    GLint twr;
+    ::glGetIntegerv(GL_FRONT_FACE, &twr);
+
+    if (this->windRule.Param<param::EnumParam>()->Value() == 0) {
+        ::glFrontFace(GL_CCW);
+    } else {
+        ::glFrontFace(GL_CW);
+    }
+
+    int fpm, bpm, cf = 0;
+
+    switch (this->surFrontStyle.Param<param::EnumParam>()->Value()) {
+        default: fpm = GL_FILL; break;
+        case 1: fpm = GL_LINE; break;
+        case 2: fpm = GL_POINT; break;
+        case 3: fpm = GL_FILL; cf = GL_FRONT; break;
+    }
+    switch (this->surBackStyle.Param<param::EnumParam>()->Value()) {
+        default: bpm = GL_FILL; break;
+        case 1: bpm = GL_LINE; break;
+        case 2: bpm = GL_POINT; break;
+        case 3: bpm = GL_FILL; cf = (cf == 0) ? GL_BACK : GL_FRONT_AND_BACK; break;
+    }
+    ::glPolygonMode(GL_FRONT, fpm);
+    ::glPolygonMode(GL_BACK, bpm);
+    if (cf == 0) {
+        ::glDisable(GL_CULL_FACE);
+    } else {
+        ::glEnable(GL_CULL_FACE);
+        ::glCullFace(cf);
     }
 
     ::glColor3f(1.0f, 1.0f, 1.0f);
@@ -244,7 +285,7 @@ bool TriSoupRenderer::Render(Call& call) {
 
         if (obj.GetTriIndexPointer() != NULL) {
             ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointer());
-			//::glDrawElements(GL_TRIANGLES, obj.GetTriCount(), GL_UNSIGNED_INT, obj.GetTriIndexPointer());
+            //::glDrawElements(GL_TRIANGLES, obj.GetTriCount(), GL_UNSIGNED_INT, obj.GetTriIndexPointer());
         } else {
             ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
         }
@@ -280,6 +321,11 @@ bool TriSoupRenderer::Render(Call& call) {
             ::glDrawArrays(GL_POINTS, 0, ctmd->Objects()[i].GetVertexCount());
         }
     }
+
+    ::glCullFace(cfm);
+    ::glFrontFace(twr);
+    ::glPolygonMode(GL_FRONT, pm[0]);
+    ::glPolygonMode(GL_BACK, pm[1]);
 
     ::glEnable(GL_CULL_FACE);
     ::glDisableClientState(GL_VERTEX_ARRAY);

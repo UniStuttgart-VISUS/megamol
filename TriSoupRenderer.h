@@ -118,11 +118,14 @@ namespace trisoup {
         /** Flag whether or not use lighting for the surface */
         core::param::ParamSlot lighting;
 
-        /** Flag whether or not use face culling for the surface */
-        core::param::ParamSlot cullface;
+        /** The rendering style for the front surface */
+        core::param::ParamSlot surFrontStyle;
 
-        /** The rendering style for the surface */
-        core::param::ParamSlot surStyle;
+        /** The rendering style for the back surface */
+        core::param::ParamSlot surBackStyle;
+
+        /** The Triangle winding rule */
+        core::param::ParamSlot windRule;
 
     };
 
