@@ -681,6 +681,30 @@ namespace core {
          */
         void quickConnectUpStepInfo(ModuleDescription *from, vislib::Array<quickStepInfo>& step);
 
+        /**
+         * Registers a single file type for quickstarting
+         *
+         * @param frontend The full path to the frontend to call
+         * @param feparams The frontend command line parameter string
+         * @param fnext The data file name extension
+         * @param fnname The data file type name
+         * @param keepothers If true, other open options will not be overwritten.
+         */
+        void registerQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
+                const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
+
+        /**
+         * Removes the registration for a single file type for quickstarting
+         *
+         * @param frontend The full path to the frontend to call
+         * @param feparams The frontend command line parameter string
+         * @param fnext The data file name extension
+         * @param fnname The data file type name
+         * @param keepothers If true, other open options will not be deleted.
+         */
+        void unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
+                const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
+
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */

@@ -1355,8 +1355,74 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
 void megamol::core::CoreInstance::QuickstartRegistry(const vislib::TString& frontend,
         const vislib::TString& feparams, const vislib::TString& filetype, bool unreg, bool overwrite) {
     using vislib::sys::Log;
-    // TODO: Implement
-    Log::DefaultLog.WriteError("Quickstart registration is not supported yet");
+    vislib::TString filetypename;
+
+    if (filetype.IsEmpty()) {
+        Log::DefaultLog.WriteError("Empty file type is illegal\n");
+        return;
+    }
+    if (filetype.Equals(_T("*"))) {
+        // all file types
+        ModuleDescriptionManager::DescriptionIterator di
+            = ModuleDescriptionManager::Instance()->GetIterator();
+        while (di.HasNext()) {
+            const ModuleDescription *md = di.Next();
+            if (!md->IsVisibleForQuickstart()) continue;
+            const char *fnextsstr = md->LoaderAutoDetectionFilenameExtensions();
+            const char *fnnamestr = md->LoaderFileTypeName();
+            if (fnextsstr == NULL) continue;
+            vislib::Array<vislib::TString> fnexts = vislib::TStringTokeniser::Split(A2T(fnextsstr), _T(";"), true);
+            for (SIZE_T i = 0; i < fnexts.Count(); i++) {
+                filetypename.Format(_T("%s File"), 
+                    ((fnnamestr == NULL)
+                        ? fnexts[i].Substring(1)
+                        : vislib::TString(fnnamestr)).PeekBuffer());
+                if (unreg) {
+                    this->unregisterQuickstart(frontend, feparams, fnexts[i], filetypename, !overwrite);
+                } else {
+                    this->registerQuickstart(frontend, feparams, fnexts[i], filetypename, !overwrite);
+                }
+            }
+        }
+
+        return;
+    }
+
+    vislib::TString fnext(filetype);
+    if (fnext[0] != _T('.')) fnext.Prepend(_T("."));
+    ModuleDescriptionManager::DescriptionIterator di
+        = ModuleDescriptionManager::Instance()->GetIterator();
+    while (di.HasNext()) {
+        const ModuleDescription *md = di.Next();
+        if (!md->IsVisibleForQuickstart()) continue;
+        const char *fnextsstr = md->LoaderAutoDetectionFilenameExtensions();
+        if (fnextsstr == NULL) continue;
+        vislib::Array<vislib::TString> fnexts = vislib::TStringTokeniser::Split(A2T(fnextsstr), _T(";"), true);
+        for (SIZE_T i = 0; i < fnexts.Count(); i++) {
+            if (fnexts[i].Equals(fnext, false)) {
+                const char *fnnamestr = md->LoaderFileTypeName();
+                filetypename.Format(_T("%s File"), 
+                    ((fnnamestr == NULL)
+                        ? fnext.Substring(1)
+                        : vislib::TString(fnnamestr)).PeekBuffer());
+                if (unreg) {
+                    this->unregisterQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
+                } else {
+                    this->registerQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
+                }
+                return;
+            }
+        }
+    }
+
+    Log::DefaultLog.WriteWarn(_T("Quickstart %sregistration for unknown type %s"),
+        ((unreg) ? _T("un") : _T("")), filetype.PeekBuffer());
+    filetypename.Format(_T("%s File"), filetype.PeekBuffer());
+    if (unreg) {
+        this->unregisterQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
+    } else {
+        this->registerQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
+    }
 }
 
 
@@ -2159,4 +2225,42 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDe
         VLTRACE(VISLIB_TRCELVL_INFO, "done dtoring.\n");
     }
 
+}
+
+
+/*
+ * megamol::core::CoreInstance::registerQuickstart
+ */
+void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
+        const vislib::TString& fnext, const vislib::TString& fnname,
+        bool keepothers) {
+    using vislib::sys::Log;
+    ASSERT(!fnext.IsEmpty());
+    ASSERT(fnext[0] == _T('.'));
+#ifdef _WIN32
+    Log::DefaultLog.WriteInfo(_T("Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
+
+    Log::DefaultLog.WriteError(_T("Cannot register quickstart for %s: Not implemented"), fnext.PeekBuffer());
+#else /* _WIN32 */
+    Log::DefaultLog.WriteError(_T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
+#endif /* _WIN32 */
+}
+
+
+/*
+ * megamol::core::CoreInstance::unregisterQuickstart
+ */
+void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
+        const vislib::TString& fnext, const vislib::TString& fnname,
+        bool keepothers) {
+    using vislib::sys::Log;
+    ASSERT(!fnext.IsEmpty());
+    ASSERT(fnext[0] == _T('.'));
+#ifdef _WIN32
+    Log::DefaultLog.WriteInfo(_T("Un-Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
+
+    Log::DefaultLog.WriteError(_T("Cannot unregister quickstart for %s: Not implemented"), fnext.PeekBuffer());
+#else /* _WIN32 */
+    Log::DefaultLog.WriteWarn(_T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
+#endif /* _WIN32 */
 }
