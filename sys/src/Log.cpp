@@ -209,10 +209,10 @@ void vislib::sys::Log::FileTarget::Msg(UINT level,
         __tS.tm_hour = __tS.tm_min = __tS.tm_sec = 0;
     }
 #else /* (_MSC_VER >= 1400) */
-    timeStamp = localtime(&timestamp);
+    timeStamp = localtime(&time);
 #endif /* (_MSC_VER >= 1400) */
 #else /* _WIN32 */
-    timeStamp = localtime(&timestamp);
+    timeStamp = localtime(&time);
 #endif /* _WIN32 */
 
     fprintf(this->stream, "%2d:%.2d:%.2d|%8x|%4u|%s", 
