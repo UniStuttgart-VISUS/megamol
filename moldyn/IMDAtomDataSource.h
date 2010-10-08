@@ -80,7 +80,7 @@ namespace moldyn {
          * @return The file name extensions
          */
         static const char *FilenameExtensions() {
-            return ".imd;.crist;.chkpt";
+            return ".imd;.imdbin;.crist;.chkpt";
         }
 
         /**

@@ -40,14 +40,18 @@
 #include "vislib/functioncast.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/GUID.h"
+#include "vislib/RegistryKey.h"
 #include "vislib/Socket.h"
 #include "vislib/StackTrace.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/SystemInformation.h"
 #include "vislib/Trace.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/vislibversion.h"
+#include "productversion.h"
+#include "versioninfo.h"
 
 
 /*****************************************************************************/
@@ -2228,6 +2232,11 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDe
 }
 
 
+#ifdef _WIN32
+extern HMODULE mmCoreModuleHandle;
+#endif /* _WIN32 */
+
+
 /*
  * megamol::core::CoreInstance::registerQuickstart
  */
@@ -2235,12 +2244,129 @@ void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& fron
         const vislib::TString& fnext, const vislib::TString& fnname,
         bool keepothers) {
     using vislib::sys::Log;
+#ifdef _WIN32
+    using vislib::sys::RegistryKey;
+#endif /* _WIN32 */
     ASSERT(!fnext.IsEmpty());
     ASSERT(fnext[0] == _T('.'));
 #ifdef _WIN32
     Log::DefaultLog.WriteInfo(_T("Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
+    try {
+        DWORD errcode;
+        vislib::TString str;
+        RegistryKey crw(RegistryKey::HKeyClassesRoot(), KEY_ALL_ACCESS);
+        if (!crw.IsValid()) {
+            throw vislib::Exception("Cannot open \"HKEY_CLASSES_ROOT\" for writing", __FILE__, __LINE__);
+        }
 
-    Log::DefaultLog.WriteError(_T("Cannot register quickstart for %s: Not implemented"), fnext.PeekBuffer());
+        RegistryKey extKey;
+        errcode = crw.OpenSubKey(extKey, fnext);
+        if (errcode != ERROR_SUCCESS) {
+            if (errcode == ERROR_FILE_NOT_FOUND) {
+                errcode = crw.CreateSubKey(extKey, fnext);
+            }
+            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
+        }
+
+        vislib::TString typeName;
+        errcode = extKey.GetValue(_T(""), typeName);
+        if (errcode != ERROR_SUCCESS) {
+            typeName.Format(_T("MegaMol.%d.%d%s"), MEGAMOL_PRODUCT_MAJOR_VER, MEGAMOL_PRODUCT_MINOR_VER, fnext.PeekBuffer());
+            errcode = extKey.SetValue(_T(""), typeName);
+            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
+            errcode = extKey.GetValue(_T(""), typeName);
+            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
+        }
+        extKey.Close();
+
+        RegistryKey typeKey;
+        errcode = crw.OpenSubKey(typeKey, typeName);
+        if (errcode != ERROR_SUCCESS) {
+            if (errcode == ERROR_FILE_NOT_FOUND) {
+                errcode = crw.CreateSubKey(typeKey, typeName);
+            }
+            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
+        }
+
+        errcode = typeKey.GetValue(_T(""), str);
+        if (errcode != ERROR_SUCCESS) {
+            typeKey.SetValue(_T(""), fnname);
+        }
+
+        RegistryKey defIcon;
+        errcode = typeKey.OpenSubKey(defIcon, "DefaultIcon");
+        if (errcode != ERROR_SUCCESS) {
+            errcode = typeKey.CreateSubKey(defIcon, "DefaultIcon");
+        }
+        if (errcode == ERROR_SUCCESS) {
+            TCHAR fn[64 * 1024];
+            DWORD size = 64 * 1024;
+            size = ::GetModuleFileName(mmCoreModuleHandle, fn, size);
+            str = vislib::TString(fn, size);
+            str.Append(_T(",3")); // TODO: howto map: 1001 -> 3
+            defIcon.SetValue(_T(""), str);
+        }
+        defIcon.Close();
+
+        RegistryKey shell;
+        errcode = typeKey.OpenSubKey(shell, "shell");
+        if (errcode != ERROR_SUCCESS) {
+            errcode = typeKey.CreateSubKey(shell, "shell");
+            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
+        }
+
+        RegistryKey open;
+        vislib::TString opencmd;
+        opencmd.Format(_T("open.%d.%d.%d.%d"), MEGAMOL_CORE_VERSION);
+        errcode = shell.OpenSubKey(open, opencmd);
+        if (errcode != ERROR_SUCCESS) {
+            errcode = shell.CreateSubKey(open, opencmd);
+            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
+        }
+
+        str = _T("Open with MegaMol™");
+        if (vislib::sys::SystemInformation::SystemWordSize() != vislib::sys::SystemInformation::SelfWordSize()) {
+            if (vislib::sys::SystemInformation::SelfWordSize() == 64) {
+                str.Append(_T(" x64"));
+            } else {
+                str.Append(_T(" x86"));
+            }
+        }
+#if defined(DEBUG) || defined(_DEBUG)
+        str.Append(_T(" [Debug]"));
+#endif /* DEBUG || _DEBUG */
+        open.SetValue(_T(""), str);
+
+        vislib::TString cmdline = feparams;
+        cmdline.Replace(_T("$(FILENAME)"), _T("\"%1\""));
+        cmdline.Prepend(_T("\" "));
+        cmdline.Prepend(frontend);
+        cmdline.Prepend(_T("\""));
+        RegistryKey opencommand;
+        errcode = open.OpenSubKey(opencommand, "command");
+        if (errcode != ERROR_SUCCESS) {
+            errcode = open.CreateSubKey(opencommand, "command");
+            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
+        }
+        opencommand.SetValue(_T(""), cmdline);
+        opencommand.Close();
+        open.Close();
+
+        errcode = shell.GetValue(_T(""), str);
+        if ((errcode == 2) || !keepothers) {
+            shell.SetValue(_T(""), opencmd);
+        }
+
+        shell.Close();
+        typeKey.Close();
+        crw.Close();
+
+    } catch(vislib::Exception ex) {
+        Log::DefaultLog.WriteError(_T("Cannot register quickstart for %s: %s (%s, %d)"), fnext.PeekBuffer(),
+            ex.GetMsg(), vislib::TString(ex.GetFile()).PeekBuffer(), ex.GetLine());
+    } catch(...) {
+        Log::DefaultLog.WriteError(_T("Cannot register quickstart for %s: Unexpected Exception"), fnext.PeekBuffer());
+    }
 #else /* _WIN32 */
     Log::DefaultLog.WriteError(_T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
 #endif /* _WIN32 */
@@ -2254,12 +2380,125 @@ void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& fr
         const vislib::TString& fnext, const vislib::TString& fnname,
         bool keepothers) {
     using vislib::sys::Log;
+#ifdef _WIN32
+    using vislib::sys::RegistryKey;
+#endif /* _WIN32 */
     ASSERT(!fnext.IsEmpty());
     ASSERT(fnext[0] == _T('.'));
 #ifdef _WIN32
     Log::DefaultLog.WriteInfo(_T("Un-Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
+    try {
+        DWORD errcode;
 
-    Log::DefaultLog.WriteError(_T("Cannot unregister quickstart for %s: Not implemented"), fnext.PeekBuffer());
+        RegistryKey crw(RegistryKey::HKeyClassesRoot(), KEY_ALL_ACCESS);
+        if (!crw.IsValid()) {
+            throw vislib::Exception("Cannot open \"HKEY_CLASSES_ROOT\" for writing", __FILE__, __LINE__);
+        }
+
+        RegistryKey extKey;
+        errcode = crw.OpenSubKey(extKey, fnext);
+        if (errcode != ERROR_SUCCESS) {
+            Log::DefaultLog.WriteWarn(_T("File type %s does not seem to be registered"), fnext.PeekBuffer());
+            return;
+        }
+
+        vislib::TString typeName;
+        errcode = extKey.GetValue(_T(""), typeName);
+        if (errcode != ERROR_SUCCESS) {
+            Log::DefaultLog.WriteWarn(_T("File type %s does not seem to be correctly registered (#0x1)"), fnext.PeekBuffer());
+            if (extKey.GetSubKeysA().Count() == 0) {
+                extKey.Close();
+                crw.DeleteSubKey(fnext); // just delete it already, since it's broken anyway
+            }
+            return;
+        }
+
+        RegistryKey typeKey;
+        errcode = crw.OpenSubKey(typeKey, typeName);
+        if (errcode != ERROR_SUCCESS) {
+            Log::DefaultLog.WriteWarn(_T("File type %s does not seem to be correctly registered (#0x2)"), fnext.PeekBuffer());
+            if (extKey.GetSubKeysA().Count() == 0) {
+                extKey.Close();
+                crw.DeleteSubKey(fnext); // just delete it already, since it's broken anyway
+            }
+            return;
+        }
+        bool delTypeKeys = false;
+
+        if (keepothers) {
+            RegistryKey shell;
+            errcode = typeKey.OpenSubKey(shell, "shell");
+            if (errcode == ERROR_SUCCESS) {
+                vislib::Array<vislib::TString> subkeys =
+#if defined(UNICODE) || defined(_UNICODE)
+                    shell.GetSubKeysW();
+#else /* UNICODE || _UNICODE */
+                    shell.GetSubKeysA();
+#endif /* UNICODE || _UNICODE */
+                vislib::TString fecmd(frontend);
+                fecmd.Prepend(_T("\""));
+                fecmd.Append(_T("\" "));
+
+                for (SIZE_T i = 0; i < subkeys.Count(); i++) {
+                    RegistryKey subkey;
+                    errcode = shell.OpenSubKey(subkey, subkeys[i]);
+                    if (errcode != ERROR_SUCCESS) continue;
+                    RegistryKey shellCmd;
+                    errcode = subkey.OpenSubKey(shellCmd, "command");
+                    if (errcode != ERROR_SUCCESS) continue;
+                    vislib::TString cmdLine;
+                    errcode = shellCmd.GetValue(_T(""), cmdLine);
+                    if (errcode != ERROR_SUCCESS) continue;
+
+                    if (!cmdLine.StartsWith(fecmd, false)) continue; // other front-end
+
+                    // this front-end, so delete!
+
+                    shellCmd.Close();
+                    subkey.Close();
+
+                    shell.DeleteSubKey(subkeys[i]);
+                }
+
+                delTypeKeys = (shell.GetSubKeysA().Count() == 0);
+
+                if (!delTypeKeys) {
+                    vislib::TString defCmd;
+                    errcode = shell.GetValue(_T(""), defCmd);
+                    if ((errcode == ERROR_SUCCESS) && !defCmd.IsEmpty()) {
+                        RegistryKey tmpkey;
+                        errcode = shell.OpenSubKey(tmpkey, defCmd);
+                        if (errcode != ERROR_SUCCESS) {
+                            shell.DeleteValue(_T(""));
+                        } else {
+                            tmpkey.Close();
+                        }
+                    }
+                }
+
+            } else {
+                Log::DefaultLog.WriteWarn(_T("File type %s does not seem to be correctly registered (#0x3)"), fnext.PeekBuffer());
+                delTypeKeys = true;
+            }
+        } else {
+            delTypeKeys = true;
+        }
+
+        typeKey.Close();
+        extKey.Close();
+        if (delTypeKeys) {
+            crw.DeleteSubKey(typeName);
+            crw.DeleteSubKey(fnext);
+        }
+
+        crw.Close();
+
+    } catch(vislib::Exception ex) {
+        Log::DefaultLog.WriteError(_T("Cannot unregister quickstart for %s: %s (%s, %d)"), fnext.PeekBuffer(),
+            ex.GetMsg(), vislib::TString(ex.GetFile()).PeekBuffer(), ex.GetLine());
+    } catch(...) {
+        Log::DefaultLog.WriteError(_T("Cannot unregister quickstart for %s: Unexpected Exception"), fnext.PeekBuffer());
+    }
 #else /* _WIN32 */
     Log::DefaultLog.WriteWarn(_T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
 #endif /* _WIN32 */
