@@ -717,7 +717,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                     }
 
                     ::mmcQuickstartRegistry(hCore, applicationExecutablePath,
-                        _T("-q $(filename)"), ext, unreg, over);
+                        _T("-q $(FILENAME)"), ext, unreg, over);
 
                 }
             }
