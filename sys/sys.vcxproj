@@ -446,6 +446,7 @@
     <ClCompile Include="src\PerformanceCounter.cpp" />
     <ClCompile Include="src\PoolAllocator.cpp" />
     <ClCompile Include="src\Process.cpp" />
+    <ClCompile Include="src\RegistryKey.cpp" />
     <ClCompile Include="src\RegistrySerialiser.cpp" />
     <ClCompile Include="src\Runnable.cpp" />
     <ClCompile Include="src\RunnableThread.cpp" />
@@ -493,6 +494,7 @@
     <ClInclude Include="include\vislib\DateTime.h" />
     <ClInclude Include="include\vislib\DateTimeSpan.h" />
     <ClInclude Include="include\vislib\DirectoryIterator.h" />
+    <ClInclude Include="include\vislib\RegistryKey.h" />
     <ClInclude Include="src\DynamicFunctionPointer.h" />
     <ClInclude Include="include\vislib\DynamicLinkLibrary.h" />
     <ClInclude Include="include\vislib\Environment.h" />

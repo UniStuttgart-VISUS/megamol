@@ -153,6 +153,9 @@
     <ClCompile Include="testVIPCStrTab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="testwinreg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -291,6 +294,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testVIPCStrTab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="testwinreg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

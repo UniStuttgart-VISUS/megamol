@@ -259,6 +259,7 @@
     <ClCompile Include="testtrayicon.cpp" />
     <ClCompile Include="testvector.cpp" />
     <ClCompile Include="testVIPCStrTab.cpp" />
+    <ClCompile Include="testwinreg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -307,6 +308,7 @@
     <ClInclude Include="testtrayicon.h" />
     <ClInclude Include="testvector.h" />
     <ClInclude Include="testVIPCStrTab.h" />
+    <ClInclude Include="testwinreg.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="test.rc" />

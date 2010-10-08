@@ -58,6 +58,9 @@
 #include "testmsgdisp.h"
 #include "testpolynom.h"
 #include "testquaternion.h"
+#ifdef _WIN32
+#include "testwinreg.h"
+#endif /* _WIN32 */
 
 
 /* type for test functions */
@@ -141,6 +144,9 @@ VislibTest tests[] = {
     {_T("VIPCStrTabGet"), ::TestVIPCStrTabGet, "Tests the getter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("VIPCStrTabSet"), ::TestVIPCStrTabSet, "Tests the setter functions of vislib::sys::VolatileIPCStringTable"},
     {_T("PerfCounter"), ::TestPerformanceCounter, "Tests the performance counter"},
+#ifdef _WIN32
+    {_T("WinReg"), ::TestWinReg, "Tests the windows RegistryKey class"},
+#endif /* _WIN32 */
     // end guard. Do not remove. Must be last entry.
     {NULL, NULL, NULL}
 };
