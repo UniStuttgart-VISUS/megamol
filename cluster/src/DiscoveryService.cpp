@@ -446,6 +446,27 @@ bool vislib::net::cluster::DiscoveryService::IsRunning(void) const {
 
 
 /*
+ * vislib::net::cluster::DiscoveryService::IsSelf
+ */
+inline bool vislib::net::cluster::DiscoveryService::IsSelf(
+        const INT idx) const {
+    IPEndPoint ep((*this)[idx]);
+    SIZE_T cntConfigs = this->configs.Count();
+    bool retval = false;
+
+    this->peerNodesCritSect.Lock();
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
+        if ((retval = (ep == this->configs[i].GetResponseAddress()))) {
+            break;
+        }
+    }
+    this->peerNodesCritSect.Unlock();
+    
+    return retval;
+}
+
+
+/*
  * vislib::net::cluster::DiscoveryService::RemoveListener
  */
 void vislib::net::cluster::DiscoveryService::RemoveListener(

@@ -689,12 +689,7 @@ namespace cluster {
          *
          * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        //inline bool IsSelf(const INT idx) const {
-        //    this->critSect.Lock();
-        //    bool retval = (this->peerNodes[idx]->ResponseAddress == this->responseAddr);
-        //    this->critSect.Unlock();
-        //    return retval;
-        //}
+        bool IsSelf(const INT idx) const;
 
         /**
          * Answer whether the sockets of the receiver threads may be shared or 
