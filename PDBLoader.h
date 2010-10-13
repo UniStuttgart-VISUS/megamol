@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Module.h"
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "vislib/Array.h"
@@ -20,6 +19,12 @@
 #include "CallProteinData.h"
 #include "MolecularDataCall.h"
 #include "Stride.h"
+#include "view/AnimDataModule.h"
+
+//TODO
+#include <fstream>
+using namespace std;
+
 
 namespace megamol {
 namespace protein {
@@ -28,10 +33,10 @@ namespace protein {
      * Data source for PDB files
      */
 
-    class PDBLoader : public megamol::core::Module
+    class PDBLoader : public megamol::core::view::AnimDataModule
     {
     public:
-        
+
         /** Ctor */
         PDBLoader(void);
 
@@ -65,6 +70,7 @@ namespace protein {
             return true;
         }
 
+
     protected:
 
         /**
@@ -97,19 +103,105 @@ namespace protein {
          */
         virtual void release(void);
 
+        /**
+         * Creates a frame to be used in the frame cache. This method will be
+         * called from within 'initFrameCache'.
+         *
+         * @return The newly created frame object.
+         */
+        virtual Frame* constructFrame(void) const;
+
+        /**
+         * Loads one frame of the data set into the given 'frame' object. This
+         * method may be invoked from another thread. You must take
+         * precausions in case you need synchronised access to shared
+         * ressources.
+         *
+         * @param frame The frame to be loaded.
+         * @param idx The index of the frame to be loaded.
+         */
+        virtual void loadFrame(Frame *frame, unsigned int idx);
+
     private:
 
         /**
          * Storage of frame data
          */
-        class Frame {
+        class Frame : public megamol::core::view::AnimDataModule::Frame {
         public:
 
             /** Ctor */
-            Frame(void);
+            Frame(megamol::core::view::AnimDataModule& owner);
 
             /** Dtor */
             virtual ~Frame(void);
+
+            /**
+             * Reads and decodes one frame of the data set from a given
+             * xtc-file.
+             *
+             * @param file Pointer to the current frame in the xtc-file
+             */
+            void readFrame(fstream *file);
+
+            /**
+            * Calculates the number of bits needed to represent a given
+            * integer value
+            *
+            * @param The integer value
+            *
+            * @return The number of bits
+            */
+            int sizeofint(int size);
+
+            /**
+            * Calculates the number of bits needed to represent a
+            * given number of compressed ints.
+            *
+            * @param num_of_ints The number of ints
+            * @param sizes The range of the ints
+            *
+            * @return The needed number of bits
+            */
+            int sizeofints(int num_of_ints, unsigned int sizes[]);
+
+            /**
+            * Decodes integers from a given byte-array by calculating the
+            * remainder and doing divisions with the maximum range.
+            *
+            * @param buff pointer to the byte buffer
+            * @param offset the bit-offset within the first byte
+            * @param num_of_bits the total number of bits to decode
+            * @param sizes the range of the integers
+            * @param nums array of the decoded integers
+            */
+            void decodeints(char *buff, int offset, int num_of_bits,
+                            unsigned int sizes[], int nums[]);
+
+            /**
+             * Interprets a given bit array as an integer.
+             *
+             * @param buff pointer to the byte buffer
+             * @param offset the bit-offset within the first byte
+             * @param bitsize the total number of bits
+             *
+             * @return the decoded integer
+             */
+            int decodebits(char *buff, int offset, int bitsize);
+
+            /**
+             * Reverse the order of bytes in a given char-array of 4 elements.
+             *
+             * @param num the char-array
+             */
+            void changeByteOrder(char* num);
+
+            /**
+             * Set the frame Index.
+             *
+             * @param idx the index
+             */
+            void setFrameIdx(int idx);
 
             /**
              * Test for equality
@@ -125,12 +217,12 @@ namespace protein {
              *
              * @param atomCnt The atom count
              */
-            inline void SetAtomCount( unsigned int atomCnt) { 
+            inline void SetAtomCount( unsigned int atomCnt) {
                 this->atomCount = atomCnt;
                 this->atomPosition.SetCount( atomCnt*3);
-                this->bfactor.SetCount( atomCnt); 
-                this->charge.SetCount( atomCnt); 
-                this->occupancy.SetCount( atomCnt); 
+                this->bfactor.SetCount( atomCnt);
+                this->charge.SetCount( atomCnt);
+                this->occupancy.SetCount( atomCnt);
             }
 
             /**
@@ -365,14 +457,14 @@ namespace protein {
         vislib::math::Vector<unsigned char, 3> getElementColor( vislib::StringA name);
 
         /**
-         * Parse one atom entry and set the position of the current atom entry 
+         * Parse one atom entry and set the position of the current atom entry
          * to the frame.
          *
          * @param atomEntry The atom entry string.
          * @param atom      The number of the current atom.
          * @param frame     The number of the current frame.
          */
-        void setAtomPositionToFrame( vislib::StringA &atomEntry, 
+        void setAtomPositionToFrame( vislib::StringA &atomEntry,
             unsigned int atom, unsigned int frame);
 
         /**
@@ -402,10 +494,14 @@ namespace protein {
          */
         bool IsAminoAcid( vislib::StringA resName );
 
+
+
         // -------------------- variables --------------------
 
-        /** The file name slot */
-        core::param::ParamSlot filenameSlot;
+        /** The pdb file name slot */
+        core::param::ParamSlot pdbFilenameSlot;
+        /** The xtc file name slot */
+        core::param::ParamSlot xtcFilenameSlot;
         /** The data callee slot */
         core::CalleeSlot dataOutSlot;
 
@@ -415,7 +511,7 @@ namespace protein {
         core::param::ParamSlot strideFlagSlot;
 
         /** The data */
-        vislib::Array<Frame> data;
+        vislib::Array<Frame*> data;
 
         /** The bounding box */
         vislib::math::Cuboid<float> bbox;
@@ -442,7 +538,7 @@ namespace protein {
         vislib::Array<MolecularDataCall::Chain> chain;
 
         /**
-         * Stores the connectivity information (i.e. subsequent pairs of atom 
+         * Stores the connectivity information (i.e. subsequent pairs of atom
          * indices)
          */
         vislib::Array<unsigned int> connectivity;
@@ -462,6 +558,12 @@ namespace protein {
         vislib::Array<unsigned int> chainFirstRes;
         vislib::Array<unsigned int> chainResCount;
         char chainId;
+
+        /** index of the last frame read from an xtc-file */
+        unsigned int lastFrameIdx;
+
+        /** position of the last frame read from an xtc-file */
+        unsigned int nextFramePt;
 
     };
 
