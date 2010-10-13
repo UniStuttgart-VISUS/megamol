@@ -23,21 +23,38 @@
 #include "vislib/ASCIIFileBuffer.h"
 #include <ctime>
 #include <iostream>
+#include <fstream>
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 
+
+#define FIRSTIDX 9
+// note that magicints[FIRSTIDX-1] == 0
+#define LASTIDX (sizeof(magicints) / sizeof(*magicints))
+
+static const int magicints[] =
+{
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 10, 12, 16, 20, 25, 32, 40, 50, 64,
+    80, 101, 128, 161, 203, 256, 322, 406, 512, 645, 812, 1024, 1290,
+    1625, 2048, 2580, 3250, 4096, 5060, 6501, 8192, 10321, 13003,
+    16384, 20642, 26007, 32768, 41285, 52015, 65536,82570, 104031,
+    131072, 165140, 208063, 262144, 330280, 416127, 524287, 660561,
+    832255, 1048576, 1321122, 1664510, 2097152, 2642245, 3329021,
+    4194304, 5284491, 6658042, 8388607, 10568983, 13316085, 16777216
+};
+
 /*
  * PDBLoader::Frame::Frame
  */
-PDBLoader::Frame::Frame(void) : atomCount( 0),
-    maxBFactor(0), minBFactor( 0), 
-    maxCharge( 0), minCharge( 0),
-    maxOccupancy( 0), minOccupancy( 0) {
+PDBLoader::Frame::Frame(view::AnimDataModule& owner)
+        : view::AnimDataModule::Frame(owner), atomCount( 0),
+        maxBFactor(0), minBFactor( 0),
+        maxCharge( 0), minCharge( 0),
+        maxOccupancy( 0), minOccupancy( 0) {
     // Intentionally empty
 }
-
 
 /*
  * PDBLoader::Frame::~Frame
@@ -53,6 +70,403 @@ bool PDBLoader::Frame::operator==(const PDBLoader::Frame& rhs) {
     return true;
 }
 
+/*
+ * interpret a given bit array as an integer
+ */
+int PDBLoader::Frame::decodebits(char *buff, int offset, int bitsize) {
+
+    int num = 0;
+    int mask = (1 << bitsize) -1; // '1'^bitsize
+
+    // change byte order
+    char tmpBuff[] = { buff[3], buff[2], buff[1], buff[0] };
+
+    // interprete char-array as an integer
+    num = *(int*)tmpBuff;
+    // cut off right offset
+    num = num >> (32 - (offset + bitsize));
+
+    // cut off left offset by using only 'bitsize' first bits
+    num = num & mask;
+
+    return num;
+}
+
+/*
+ * decodeints
+ */
+void PDBLoader::Frame::decodeints( char *buff, int offset, int num_of_bits,
+                                   unsigned int sizes[], int nums[]) {
+
+    int bytes[32];
+    int i, j, num_of_bytes, p, num;
+
+    bytes[1] = bytes[2] = bytes[3] = 0;
+    num_of_bytes = 0;
+
+    while (num_of_bits > 8)
+    {
+        // note: bit-offset stays the same
+        bytes[num_of_bytes] = decodebits(buff, offset, 8);
+        buff++;
+        num_of_bytes++;
+        num_of_bits -= 8;
+    }
+    if (num_of_bits > 0)
+    {
+        bytes[num_of_bytes++] = decodebits(buff, offset, num_of_bits);
+    }
+
+    // get num[2] and num[1]
+    for (i = 2; i > 0; i--)
+    {
+
+        num = 0;
+        for (j = num_of_bytes-1; j >=0; j--)
+        {
+            num = (num << 8) | bytes[j];
+            p = num / sizes[i];
+            bytes[j] = p;
+            num = num - p * sizes[i];
+        }
+        nums[i] = num;
+    }
+
+    // get num[0]
+    nums[0] = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+}
+
+/*
+ * sizeofints
+ */
+int PDBLoader::Frame::sizeofints(int num_of_ints, unsigned int sizes[]) {
+
+    int i, num;
+    unsigned int num_of_bytes, num_of_bits;
+    unsigned int bytes[32], bytecnt, tmp;
+
+    num_of_bytes = 1;
+    bytes[0] = 1;
+    num_of_bits = 0;
+
+    for( i = 0; i < num_of_ints; i++)
+    {
+        tmp = 0;
+        for (bytecnt = 0; bytecnt < num_of_bytes; bytecnt++)
+        {
+            tmp = bytes[bytecnt] * sizes[i] + tmp;
+            bytes[bytecnt] = tmp & 0xff;
+            tmp >>= 8;
+        }
+        while (tmp != 0)
+        {
+            bytes[bytecnt++] = tmp & 0xff;
+            tmp >>= 8;
+        }
+        num_of_bytes = bytecnt;
+    }
+
+    num = 1;
+    num_of_bytes--;
+    while(bytes[num_of_bytes] >= (unsigned int)num)
+    {
+        num_of_bits++;
+        num *= 2;
+    }
+
+    return num_of_bits + num_of_bytes * 8;
+
+}
+
+/*
+ * sizeofint
+ */
+int PDBLoader::Frame::sizeofint( int size ) {
+    unsigned int num = 1;
+    int num_of_bits = 0;
+
+    while((unsigned int)size >= num && num_of_bits < 32)
+    {
+        num_of_bits++;
+        num <<= 1;
+    }
+    return num_of_bits;
+}
+
+/*
+ * change byte-order
+ */
+void PDBLoader::Frame::changeByteOrder(char* num) {
+
+    char temp;
+    temp = num[0];
+    num[0] = num[3];
+    num[3] = temp;
+    temp = num[1];
+    num[1] = num[2];
+    num[2] = temp;
+
+}
+
+/*
+ * set the frames index
+ */
+void PDBLoader::Frame::setFrameIdx(int idx) {
+    this->frame = idx;
+}
+
+/*
+ * read frame-data from a given xtc-file
+ */
+void PDBLoader::Frame::readFrame(fstream *file) {
+
+    int *buffer;
+    char *buffPt;
+    int thiscoord[3],prevcoord[3],tempCoord;
+    int run=0;
+    unsigned int i=0;
+    int bit_offset=0;
+
+    unsigned int sizeint[3],sizesmall[3],bitsizeint[3];
+    int flag;
+    int smallnum,smaller,larger,is_smaller;
+    unsigned int bitsize;
+    unsigned int size;
+
+    int minint[3],maxint[3];
+    int smallidx;
+    float precision;
+
+    // skip header data:
+    // + version number     ( 4 Bytes)
+    // + number of atoms    ( 4 Bytes)
+    // + simulation step    ( 4 Bytes)
+    // + simulation time    ( 4 Bytes)
+    // + bounding box       (36 Bytes)
+    // + number of atoms    ( 4 Bytes)
+    file->ignore(56);
+
+    // TODO
+    // no compression is used for three atoms or less
+    /*if(atomCount <= 3) {
+        float posX, posY, posZ;
+        for(int c=0; c<atomCount; c++) {
+            file->read((char*)&posX,4);
+            changeByteOrder((char*)&posX);
+            file->read((char*)&posY,4);
+            changeByteOrder((char*)&posY);
+            file->read((char*)&posZ,4);
+            changeByteOrder((char*)&posZ);
+            this->SetAtomPosition(i, posX, posY, posZ);
+        }
+        return;
+    }*/
+
+    // read the precision of the float coordinates
+    file->read((char*)&precision,4);
+    changeByteOrder((char*)&precision);
+    precision /= 10.0; // TODO
+
+    // read the lower bound of 'big' integer-coordinates
+    file->read((char*)&minint,12);
+    changeByteOrder((char*)&minint[0]);
+    changeByteOrder((char*)&minint[1]);
+    changeByteOrder((char*)&minint[2]);
+
+    // read the upper bound of 'big' integer-coordinates
+    file->read((char*)&maxint,12);
+    changeByteOrder((char*)&maxint[0]);
+    changeByteOrder((char*)&maxint[1]);
+    changeByteOrder((char*)&maxint[2]);
+
+    sizeint[0] = maxint[0]-minint[0]+1;
+    sizeint[1] = maxint[1]-minint[1]+1;
+    sizeint[2] = maxint[2]-minint[2]+1;
+
+    // check if one of the sizes is to big to be multiplied
+    if((sizeint[0] | sizeint[1] | sizeint[2] ) > 0xffffff)
+    {
+        bitsizeint[0] = sizeofint(sizeint[0]);
+        bitsizeint[1] = sizeofint(sizeint[1]);
+        bitsizeint[2] = sizeofint(sizeint[2]);
+        bitsize = 0; // flag the use of large sizes
+    }
+    else
+    {
+        bitsizeint[0] = 0;
+        bitsizeint[1] = 0;
+        bitsizeint[2] = 0;
+        bitsize = sizeofints(3, sizeint);
+    }
+
+    // read number of bits used to encode 'small' integers
+    // note: changes dynamically within one frame
+    file->read( (char*)&smallidx, 4 );
+    changeByteOrder( (char*)&smallidx );
+
+    // calculate maxidx/minidx
+    int minidx, maxidx;
+    if(LASTIDX < (unsigned int)(smallidx+8)) {
+        maxidx = LASTIDX;
+    }
+    else {
+        maxidx = smallidx+8;
+    }
+    minidx = maxidx-8; // often this equal smallidx
+
+    // if the difference to the last coordinate is smaller than smallnum
+    // the difference is stored instead of the real coordinate
+    smallnum = magicints[smallidx]/2;
+
+    // range of the 'small' integers
+    sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
+
+    // calculate smaller/larger
+    if(FIRSTIDX>smallidx-1) {
+        smaller = magicints[FIRSTIDX]/2;
+    }
+    else {
+        smaller = magicints[smallidx-1]/2;
+    }
+    larger = magicints[maxidx];
+
+    // read the size of the compressed data-block
+    file->read((char*)&size,4);
+    changeByteOrder((char*)&size);
+
+    buffer = new int[(int)(atomCount*3*1.2)];
+
+    // get the compressed data-block
+    file->read((char*)&buffer[0], size);
+
+    buffPt = (char*)buffer;
+    bit_offset = 0;
+
+    while(i < atomCount) {
+
+        // if large numbers are used
+        if(bitsize == 0) {
+            thiscoord[0] = decodebits(buffPt, bit_offset, bitsizeint[0]);
+            buffPt += (bit_offset + bitsizeint[0]) / 8;
+            bit_offset = (bit_offset + bitsizeint[0]) % 8;
+
+            thiscoord[1] = decodebits(buffPt, bit_offset, bitsizeint[1]);
+            buffPt += (bit_offset + bitsizeint[1]) / 8;
+            bit_offset = (bit_offset + bitsizeint[1]) % 8;
+
+            thiscoord[2] = decodebits(buffPt, bit_offset, bitsizeint[2]);
+            buffPt += (bit_offset + bitsizeint[2]) / 8;
+            bit_offset = (bit_offset + bitsizeint[2]) % 8;
+        }
+        else {
+            decodeints(buffPt, bit_offset, bitsize, sizeint, thiscoord);
+            buffPt += (bit_offset + bitsize) / 8;
+            bit_offset = (bit_offset + bitsize) % 8;
+        }
+
+        // transform to unsigned ints
+        thiscoord[0] += minint[0];
+        thiscoord[1] += minint[1];
+        thiscoord[2] += minint[2];
+
+        // flag has been set if runlength changed while compression
+        // runlength is encoded in run/3
+        // is_smaller is encoded in run%3 (-1,0,1)
+        flag = decodebits(buffPt, bit_offset, 1);
+        buffPt += (bit_offset + 1) / 8;
+        bit_offset = (bit_offset + 1) % 8;
+
+        is_smaller = 0;
+        if(flag == 1) {
+            run = decodebits(buffPt, bit_offset, 5);
+            buffPt += (bit_offset + 5) / 8;
+            bit_offset = (bit_offset + 5) % 8;
+            is_smaller = run % 3;
+            run -= is_smaller;
+            is_smaller--;
+        }
+
+        // run = the number of coordinates following the current coordinate that
+        // have bin stored as differences to there previous coordinate
+        if(run > 0)
+        {
+            // save the current coordinate
+            prevcoord[0] = thiscoord[0];
+            prevcoord[1] = thiscoord[1];
+            prevcoord[2] = thiscoord[2];
+
+            for(int k = 0; k < run; k+=3)
+            {
+                decodeints(buffPt, bit_offset, smallidx, sizesmall, thiscoord);
+
+                buffPt += (bit_offset + smallidx) / 8;
+                bit_offset = (bit_offset + smallidx) % 8;
+
+                thiscoord[0] += prevcoord[0] - smallnum;
+                thiscoord[1] += prevcoord[1] - smallnum;
+                thiscoord[2] += prevcoord[2] - smallnum;
+
+                if (k == 0) {
+                    // interchange first with second atom for better
+                    // compression of water molecules
+                    tempCoord = thiscoord[0];
+                    thiscoord[0] = prevcoord[0];
+                    prevcoord[0] = tempCoord;
+                    tempCoord = thiscoord[1];
+                    thiscoord[1] = prevcoord[1];
+                    prevcoord[1] = tempCoord;
+                    tempCoord = thiscoord[2];
+                    thiscoord[2] = prevcoord[2];
+                    prevcoord[2] = tempCoord;
+
+                    // calculate float-value of the old coordinate
+                    this->SetAtomPosition(i, (float)prevcoord[0] / precision,
+                                          (float)prevcoord[1] / precision,
+                                          (float)prevcoord[2] / precision);
+                    i++;
+                }
+                else {
+                    prevcoord[0] = thiscoord[0];
+                    prevcoord[1] = thiscoord[1];
+                    prevcoord[2] = thiscoord[2];
+                }
+
+                this->SetAtomPosition(i, (float)thiscoord[0] / precision,
+                                      (float)thiscoord[1] / precision,
+                                      (float)thiscoord[2] / precision);
+                i++;
+            }
+        } else {
+            this->SetAtomPosition(i, (float)thiscoord[0] / precision,
+                                  (float)thiscoord[1] / precision,
+                                  (float)thiscoord[2] / precision);
+            i++;
+        }
+
+        // update smallidx etc
+        smallidx += is_smaller;
+        if(is_smaller < 0) {
+            smallnum = smaller;
+            if (smallidx > FIRSTIDX) {
+                smaller = magicints[smallidx - 1] /2;
+            }
+            else {
+                smaller = 0;
+            }
+        }
+        else if(is_smaller > 0) {
+            smaller = smallnum;
+            smallnum = magicints[smallidx] / 2;
+        }
+        sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
+    }
+
+    delete[] buffer;
+
+    // set file pointer to the beginning of the next frame
+    file->ignore((4 - size % 4) % 4);
+
+}
 
 /*
  * Assign a position to the array of positions.
@@ -97,15 +511,21 @@ bool PDBLoader::Frame::SetAtomOccupancy( unsigned int idx, float val) {
 /*
  * protein::PDBLoader::PDBLoader
  */
-PDBLoader::PDBLoader(void) : Module(),
-        filenameSlot( "filename", "The path to the PDB data file to be loaded"),
+PDBLoader::PDBLoader(void) : AnimDataModule(),
+        pdbFilenameSlot( "pdbFilename", "The path to the PDB data file to be loaded"),
+        xtcFilenameSlot( "xtcFilename", "The path to the XTC data file to be loaded"),
         dataOutSlot( "dataout", "The slot providing the loaded data"),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
-        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0), 
-        stride( 0), secStructAvailable( false) {
-    this->filenameSlot << new param::FilePathParam("");
-    this->MakeSlotAvailable( &this->filenameSlot);
+        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
+        stride( 0), secStructAvailable( false), lastFrameIdx(0),
+        nextFramePt(0) {
+
+    this->pdbFilenameSlot << new param::FilePathParam("");
+    this->MakeSlotAvailable( &this->pdbFilenameSlot);
+
+    this->xtcFilenameSlot << new param::FilePathParam("");
+    this->MakeSlotAvailable( &this->xtcFilenameSlot);
 
     this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetData), &PDBLoader::getData);
     this->dataOutSlot.SetCallback( CallProteinData::ClassName(), CallProteinData::FunctionName(CallProteinData::CallForGetExtent), &PDBLoader::getExtent);
@@ -113,13 +533,13 @@ PDBLoader::PDBLoader(void) : Module(),
     this->dataOutSlot.SetCallback( MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent), &PDBLoader::getExtent);
     this->MakeSlotAvailable( &this->dataOutSlot);
 
-    this->maxFramesSlot << new param::IntParam( 500);
+    this->maxFramesSlot << new param::IntParam(500);
     this->MakeSlotAvailable( &this->maxFramesSlot);
-    
-    this->strideFlagSlot << new param::BoolParam( true);
-    this->MakeSlotAvailable( &this->strideFlagSlot);
-}
 
+    this->strideFlagSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable( &this->strideFlagSlot);
+
+}
 
 /*
  * protein::PDBLoader::~PDBLoader
@@ -128,7 +548,6 @@ PDBLoader::~PDBLoader(void) {
     this->Release ();
 }
 
-
 /*
  * PDBLoader::create
  */
@@ -136,7 +555,6 @@ bool PDBLoader::create(void) {
     // intentionally empty
     return true;
 }
-
 
 /*
  * PDBLoader::getData
@@ -147,40 +565,75 @@ bool PDBLoader::getData( core::Call& call) {
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
 
-    if ( this->filenameSlot.IsDirty() ) {
-        this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+    if ( this->pdbFilenameSlot.IsDirty() ) {
+        this->pdbFilenameSlot.ResetDirty();
+        this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
-
-    if ( dc->FrameID() >= this->data.Count() ) return false;
 
     dc->SetDataHash( this->datahash);
 
     // TODO: assign the data from the loader to the call
 
-    dc->SetAtoms( this->data[dc->FrameID()].AtomCount(), this->atomType.Count(), 
-        (unsigned int*)this->atomTypeIdx.PeekElements(), 
-        (float*)this->data[dc->FrameID()].AtomPositions(), 
+    // if no xtc-filename has been set
+    if(this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value()
+        == "") {
+
+        if(dc->FrameID() > this->data.Count()) return false;
+
+        dc->SetAtoms(this->data[dc->FrameID()]->AtomCount(),
+                     this->atomType.Count(),
+        (unsigned int*)this->atomTypeIdx.PeekElements(),
+        (float*)this->data[dc->FrameID()]->AtomPositions(),
         (MolecularDataCall::AtomType*)this->atomType.PeekElements(),
-        (float*)this->data[dc->FrameID()].AtomBFactor(),
-        (float*)this->data[dc->FrameID()].AtomCharge(),
-        (float*)this->data[dc->FrameID()].AtomOccupancy());
-    dc->SetBFactorRange( this->data[dc->FrameID()].MinBFactor(), 
-        this->data[dc->FrameID()].MaxBFactor());
-    dc->SetChargeRange( this->data[dc->FrameID()].MinCharge(), 
-        this->data[dc->FrameID()].MaxCharge());
-    dc->SetOccupancyRange( this->data[dc->FrameID()].MinOccupancy(), 
-        this->data[dc->FrameID()].MaxOccupancy());
-    dc->SetConnections( this->connectivity.Count() / 2, 
-        (unsigned int*)this->connectivity.PeekElements());
+        (float*)this->data[dc->FrameID()]->AtomBFactor(),
+        (float*)this->data[dc->FrameID()]->AtomCharge(),
+        (float*)this->data[dc->FrameID()]->AtomOccupancy());
+
+        dc->SetBFactorRange( this->data[dc->FrameID()]->MinBFactor(),
+        this->data[dc->FrameID()]->MaxBFactor());
+        dc->SetChargeRange( this->data[dc->FrameID()]->MinCharge(),
+        this->data[dc->FrameID()]->MaxCharge());
+        dc->SetOccupancyRange( this->data[dc->FrameID()]->MinOccupancy(),
+        this->data[dc->FrameID()]->MaxOccupancy());
+    }
+    else {
+
+        Frame *fr = NULL;
+        fr = dynamic_cast<PDBLoader::Frame *>(this->
+               requestLockedFrame(dc->FrameID()));
+
+        if (fr == NULL)
+            return false;
+
+        dc->SetAtoms( this->data[0]->AtomCount(),
+                      this->atomType.Count(),
+                      (unsigned int*)this->atomTypeIdx.PeekElements(),
+                      (float*)fr->AtomPositions(),
+                      (MolecularDataCall::AtomType*)this->atomType.PeekElements(),
+                      (float*)this->data[0]->AtomBFactor(),
+                      (float*)this->data[0]->AtomCharge(),
+                      (float*)this->data[0]->AtomOccupancy());
+
+        fr->Unlock();
+
+        dc->SetBFactorRange( this->data[0]->MinBFactor(),
+                             this->data[0]->MaxBFactor());
+        dc->SetChargeRange( this->data[0]->MinCharge(),
+                            this->data[0]->MaxCharge());
+        dc->SetOccupancyRange( this->data[0]->MinOccupancy(),
+                               this->data[0]->MaxOccupancy());
+    }
+
+    dc->SetConnections( this->connectivity.Count() / 2,
+                        (unsigned int*)this->connectivity.PeekElements());
     dc->SetResidues( this->residue.Count(),
-        (MolecularDataCall::Residue**)this->residue.PeekElements());
+      (MolecularDataCall::Residue**)this->residue.PeekElements());
     dc->SetResidueTypeNames( this->residueTypeName.Count(),
-        (vislib::StringA*)this->residueTypeName.PeekElements());
-    dc->SetMolecules( this->molecule.Count(), 
-        (MolecularDataCall::Molecule*)this->molecule.PeekElements());
+    (vislib::StringA*)this->residueTypeName.PeekElements());
+    dc->SetMolecules( this->molecule.Count(),
+    (MolecularDataCall::Molecule*)this->molecule.PeekElements());
     dc->SetChains( this->chain.Count(),
-        (MolecularDataCall::Chain*)this->chain.PeekElements());
+    (MolecularDataCall::Chain*)this->chain.PeekElements());
 
     if( !this->secStructAvailable && this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
         time_t t = clock(); // DEBUG
@@ -196,7 +649,6 @@ bool PDBLoader::getData( core::Call& call) {
     return true;
 }
 
-
 /*
  * PDBLoader::getExtent
  */
@@ -204,31 +656,116 @@ bool PDBLoader::getExtent( core::Call& call) {
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
 
-    if ( this->filenameSlot.IsDirty() ) {
-        this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+    if ( this->pdbFilenameSlot.IsDirty() ) {
+        this->pdbFilenameSlot.ResetDirty();
+        this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     dc->AccessBoundingBoxes().Clear();
     dc->AccessBoundingBoxes().SetObjectSpaceBBox( this->bbox);
     dc->AccessBoundingBoxes().SetObjectSpaceClipBox( this->bbox);
 
-    dc->SetFrameCount( vislib::math::Max(1U, 
-        static_cast<unsigned int>( this->data.Count())));
+    if(this->xtcFilenameSlot.
+      Param<core::param::FilePathParam>()->Value() == "" ) {
+
+        dc->SetFrameCount( vislib::math::Max(1U,
+                           static_cast<unsigned int>( this->data.Count())));
+    }
+    else {
+        dc->SetFrameCount( vislib::math::Max(1U, static_cast<unsigned int>(
+                             this->maxFramesSlot.
+                                Param<core::param::IntParam>()->Value())));
+    }
 
     dc->SetDataHash( this->datahash);
 
     return true;
 }
 
-
 /*
  * PDBLoader::release
  */
 void PDBLoader::release(void) {
+    for(int i = 0; i < this->data.Count(); i++)
+        delete data[i];
     this->data.Clear();
 }
 
+
+/*
+ * PDBLoader::constructFrame
+ */
+view::AnimDataModule::Frame* PDBLoader::constructFrame(void) const {
+    Frame *f = new Frame(*const_cast<PDBLoader*>(this));
+    f->SetAtomCount( this->data[0]->AtomCount() );
+    return f;
+}
+
+/*
+ * PDBLoader::loadFrame
+ */
+void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
+                           unsigned int idx) {
+
+    PDBLoader::Frame *fr = dynamic_cast<PDBLoader::Frame*>(frame);
+    int atomCnt = this->data[0]->AtomCount();
+
+    // read first frame from the existing data-buffer
+    if( idx == 0 ) {
+        for( unsigned int i = 0; i < atomCnt*3; i+=3 ) {
+            fr->SetAtomPosition(i/3, data[0]->AtomPositions()[i],
+                                data[0]->AtomPositions()[i+1],
+                                data[0]->AtomPositions()[i+2]);
+        }
+    }
+    else {
+
+        // TODO handle eof
+        fstream xtcFile;
+        xtcFile.open(this->xtcFilenameSlot.
+          Param<core::param::FilePathParam>()->Value(), ios::in | ios::binary);
+
+        if((idx == lastFrameIdx+1) && (idx != 1)) {
+            xtcFile.ignore(nextFramePt);
+        }
+        else {
+            int i = 0;
+            int size;
+            char tmpByte;
+
+            // skip idx-1 frames in the xtc-file
+            while(i < idx - 1) {
+
+                // skip header data
+                xtcFile.ignore(88);
+
+                // read size of the compressed block of data
+                xtcFile.read((char*)&size, 4);
+
+                // change byte-order
+                char *num = (char*)&size;
+                tmpByte = num[0];
+                num[0] = num[3];
+                num[3] = tmpByte;
+                tmpByte = num[1];
+                num[1] = num[2];
+                num[2] = tmpByte;
+
+                // skip the compressed block of data
+                xtcFile.ignore(size + (4 - size % 4) % 4);
+
+                i++;
+            }
+        }
+
+        fr->readFrame(&xtcFile);
+        nextFramePt = (int)xtcFile.tellg();
+        xtcFile.close();
+    }
+
+    fr->setFrameIdx(idx);
+    lastFrameIdx = idx;
+}
 
 /*
  * PDBLoader::loadFile
@@ -237,14 +774,17 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
     using vislib::sys::Log;
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+
+    for(int i = 0; i < this->data.Count(); i++)
+        delete data[i];
     this->data.Clear();
     this->datahash++;
 
     time_t t = clock(); // DEBUG
 
     vislib::StringA line;
-    unsigned int idx, cnt, atomCnt, lineCnt, frameCnt, resCnt, chainCnt;
-    
+    unsigned int idx, atomCnt, lineCnt, frameCnt, resCnt, chainCnt;
+
     t = clock(); // DEBUG
 
     vislib::sys::ASCIIFileBuffer file;
@@ -263,7 +803,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             // store all atom entries
             if( line.StartsWith( "ATOM") ) {
                 // ignore alternate locations
-                if( line.Substring( 16, 1 ).Equals( " ", false) || 
+                if( line.Substring( 16, 1 ).Equals( " ", false) ||
                     line.Substring( 16, 1 ).Equals( "A", false) ) {
                     // resize atom entry array, if necessary
                     if( atomEntries.Count() == atomEntriesCapacity ) {
@@ -283,59 +823,20 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
         frameCnt = 0;
         this->data.AssertCapacity( frameCapacity);
         this->data.SetCount( 1);
-        this->data[0].SetAtomCount( atomEntries.Count());
+        this->data[0] = new Frame(*const_cast<PDBLoader*>(this));
+        this->data[0]->SetAtomCount( atomEntries.Count());
         // resize atom type index array
         this->atomTypeIdx.SetCount( atomEntries.Count());
         // set the capacity of the atom type array
         this->atomType.AssertCapacity( atomEntries.Count());
         // set the capacity of the residue array
         this->residue.AssertCapacity( atomEntries.Count());
-        
+
         // parse all atoms of the first frame
         for( atomCnt = 0; atomCnt < atomEntries.Count(); ++atomCnt ) {
             this->parseAtomEntry( atomEntries[atomCnt], atomCnt, frameCnt);
         }
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for parsing first frame: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-
-        // parsed first frame - load all other frames now
-        atomCnt = 0;
-        while( lineCnt < file.Count() ) {
-            // get the current line from the file
-            line = file.Line( lineCnt);
-            // store all atom entries
-            if( line.StartsWith( "ATOM") ) {
-                // found new frame, resize data array
-                if( atomCnt == 0 ) {
-                    frameCnt++;
-                    // check if max frame count is reached
-                    if( frameCnt > this->maxFramesSlot.Param<param::IntParam>()->Value() ) {
-                        break;
-                    }
-                    if( this->data.Count() == frameCapacity ) {
-                        frameCapacity += 10000;
-                        this->data.AssertCapacity( frameCapacity);
-                    }
-                    this->data.SetCount( frameCnt + 1);
-                    this->data[frameCnt].SetAtomCount( atomEntries.Count());
-                }
-                // ignore alternate locations
-                if( line.Substring( 16, 1 ).Equals( " ", false) || 
-                    line.Substring( 16, 1 ).Equals( "A", false) ) {
-                    // add atom position to the current frame
-                    this->setAtomPositionToFrame( line, atomCnt, frameCnt);
-                    atomCnt++;
-                }
-            } else if( line.StartsWith( "END") ) {
-                atomCnt = 0;
-            }
-            // next line
-            lineCnt++;
-        }
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for parsing %i frames: %f", this->data.Count(), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-
-        // all information loaded, delete file
-        file.Clear();
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for clearing the file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
         this->molecule.AssertCapacity( this->residue.Count());
         this->chain.AssertCapacity( this->residue.Count());
@@ -409,17 +910,114 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
         //Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+
+        // if no xtc-filename has been set
+        if( this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value()
+              == "" ) {
+            // parsed first frame - load all other frames now
+            atomCnt = 0;
+            while( lineCnt < file.Count() ) {
+                // get the current line from the file
+                line = file.Line( lineCnt);
+                // store all atom entries
+                if( line.StartsWith( "ATOM") ) {
+                    // found new frame, resize data array
+                    if( atomCnt == 0 ) {
+                        frameCnt++;
+                        // check if max frame count is reached
+                        if( frameCnt > this->maxFramesSlot.Param<param::IntParam>()->Value() ) {
+                            break;
+                        }
+                        if( this->data.Count() == frameCapacity ) {
+                            frameCapacity += 10000;
+                            this->data.AssertCapacity( frameCapacity);
+                        }
+                        this->data.SetCount( frameCnt + 1);
+                        this->data[frameCnt] = new Frame(*const_cast<PDBLoader*>(this));
+                        this->data[frameCnt]->SetAtomCount( atomEntries.Count());
+                    }
+                    // ignore alternate locations
+                    if( line.Substring( 16, 1 ).Equals( " ", false) ||
+                        line.Substring( 16, 1 ).Equals( "A", false) ) {
+                        // add atom position to the current frame
+                        this->setAtomPositionToFrame( line, atomCnt, frameCnt);
+                        atomCnt++;
+                    }
+                } else if( line.StartsWith( "END") ) {
+                    atomCnt = 0;
+                }
+                // next line
+                lineCnt++;
+            }
+
+            Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for parsing %i frames: %f", this->data.Count(), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+
+            // all information loaded, delete file
+            file.Clear();
+            Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for clearing the file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+
+        }
+        else {
+
+            float box[3][3];
+            char tmpByte;
+            fstream xtcFile;
+            char *num;
+
+
+            xtcFile.open(this->xtcFilenameSlot.
+                           Param<core::param::FilePathParam>()->Value(),
+                         ios::in | ios::binary);
+
+            xtcFile.ignore(16); // skip 16 bytes of header data
+
+            // TODO
+            // get the bounding box
+            xtcFile.read((char*)&box, 36); // 3*3*sizeof(float)
+
+            // change byte-order
+            for(int h = 0; h < 3; h++) {
+                for(int j = 0; j < 3; j++ ) {
+                        num = (char*)&box[h][j];
+                        tmpByte = num[0];
+                        num[0] = num[3];
+                        num[3] = tmpByte;
+                        tmpByte = num[1];
+                        num[1] = num[2];
+                        num[2] = tmpByte;
+                }
+            }
+
+            xtcFile.close();
+
+            // TODO factor 10?
+            vislib::math::Cuboid<float> atomBBox(0.0, 0.0, 0.0,
+                                                 box[0][0]*10.0,
+                                                 box[1][1]*10.0,
+                                                 box[2][2]*10.0);
+            this->bbox.Union(atomBBox);
+
+            int maxFrames =
+              this->maxFramesSlot.Param<core::param::IntParam>()->Value();
+            //int maxFrames = 5000;
+
+            this->setFrameCount(maxFrames);
+
+            // start the loading thread
+            initFrameCache(maxFrames-100);
+
+        }
+
     } else {
         //Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", T2A( filename)); // DEBUG
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file."); // DEBUG
     }
-
 }
 
 /*
  * parse one atom entry
  */
-void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom, 
+void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         unsigned int frame) {
     // temp variables
     vislib::StringA tmpStr;
@@ -428,8 +1026,8 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     pos.Set( float( atof( atomEntry.Substring( 30, 8))),
         float( atof( atomEntry.Substring( 38, 8))),
         float( atof( atomEntry.Substring( 46, 8))));
-    this->data[frame].SetAtomPosition( atom, pos.X(), pos.Y(), pos.Z());
-    
+    this->data[frame]->SetAtomPosition( atom, pos.X(), pos.Y(), pos.Z());
+
     // get the name (atom type) of the current ATOM entry
     tmpStr = atomEntry.Substring( 12, 4);
     tmpStr.TrimSpaces();
@@ -438,11 +1036,11 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     // get the color of the element
     vislib::math::Vector<unsigned char, 3> color = getElementColor( tmpStr);
     // set the new atom type
-    MolecularDataCall::AtomType type( tmpStr, radius, color.X(), color.Y(), 
+    MolecularDataCall::AtomType type( tmpStr, radius, color.X(), color.Y(),
         color.Z());
     // search for current atom type in atom type array
     INT_PTR atomTypeIdx = atomType.IndexOf( type);
-    if( atomTypeIdx == 
+    if( atomTypeIdx ==
             vislib::Array<MolecularDataCall::AtomType>::INVALID_POS ) {
         this->atomTypeIdx[atom] = this->atomType.Count();
         this->atomType.Add( type);
@@ -451,12 +1049,12 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     }
 
     // update the bounding box
-    vislib::math::Cuboid<float> atomBBox( 
-        pos.X() - this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.Y() - this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.Z() - this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.X() + this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.Y() + this->atomType[this->atomTypeIdx[atom]].Radius(), 
+    vislib::math::Cuboid<float> atomBBox(
+        pos.X() - this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.Y() - this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.Z() - this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.X() + this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.Y() + this->atomType[this->atomTypeIdx[atom]].Radius(),
         pos.Z() + this->atomType[this->atomTypeIdx[atom]].Radius());
     if( atom == 0 ) {
         this->bbox = atomBBox;
@@ -488,11 +1086,11 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         // create first residue
         this->resSeq = newResSeq;
         if( this->IsAminoAcid( resName) ) {
-            MolecularDataCall::AminoAcid *res = 
+            MolecularDataCall::AminoAcid *res =
                 new MolecularDataCall::AminoAcid( atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx);
             this->residue.Add( (MolecularDataCall::Residue*)res);
         } else {
-            MolecularDataCall::Residue *res = 
+            MolecularDataCall::Residue *res =
                 new MolecularDataCall::Residue( atom, 1, atomBBox, resTypeIdx);
             this->residue.Add( res);
         }
@@ -502,11 +1100,11 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         this->chainResCount.Add( 1);
     } else if( newResSeq == this->resSeq ) {
         // still the same residue - add one atom
-        this->residue.Last()->SetPosition( 
-            this->residue.Last()->FirstAtomIndex(), 
+        this->residue.Last()->SetPosition(
+            this->residue.Last()->FirstAtomIndex(),
             this->residue.Last()->AtomCount() + 1);
         // compute and set the bounding box
-        vislib::math::Cuboid<float> resBBox( 
+        vislib::math::Cuboid<float> resBBox(
             this->residue.Last()->BoundingBox());
         resBBox.Union( atomBBox);
         this->residue.Last()->SetBoundingBox( resBBox);
@@ -514,11 +1112,11 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         // starting new residue
         this->resSeq = newResSeq;
         if( this->IsAminoAcid( resName) ) {
-            MolecularDataCall::AminoAcid *res = 
+            MolecularDataCall::AminoAcid *res =
                 new MolecularDataCall::AminoAcid( atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx);
             this->residue.Add( (MolecularDataCall::Residue*)res);
         } else {
-            MolecularDataCall::Residue *res = 
+            MolecularDataCall::Residue *res =
                 new MolecularDataCall::Residue( atom, 1, atomBBox, resTypeIdx);
             this->residue.Add( res);
         }
@@ -537,42 +1135,42 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     tmpStr.TrimSpaces();
     float tempFactor = float( atof( tmpStr));
     if( atom == 0 ) {
-        this->data[frame].SetBFactorRange( tempFactor, tempFactor);
+        this->data[frame]->SetBFactorRange( tempFactor, tempFactor);
     } else {
-        if( this->data[frame].MinBFactor() > tempFactor )
-            this->data[frame].SetMinBFactor( tempFactor);
-        else if( this->data[frame].MaxBFactor() < tempFactor )
-            this->data[frame].SetMaxBFactor( tempFactor);
+        if( this->data[frame]->MinBFactor() > tempFactor )
+            this->data[frame]->SetMinBFactor( tempFactor);
+        else if( this->data[frame]->MaxBFactor() < tempFactor )
+            this->data[frame]->SetMaxBFactor( tempFactor);
     }
-    this->data[frame].SetAtomBFactor( atom, tempFactor);
-    
+    this->data[frame]->SetAtomBFactor( atom, tempFactor);
+
     // get the occupancy
     tmpStr = atomEntry.Substring( 54, 6);
     tmpStr.TrimSpaces();
     float occupancy = float( atof( tmpStr));
     if( atom == 0 ) {
-        this->data[frame].SetOccupancyRange( occupancy, occupancy);
+        this->data[frame]->SetOccupancyRange( occupancy, occupancy);
     } else {
-        if( this->data[frame].MinOccupancy() > occupancy )
-            this->data[frame].SetMinOccupancy( occupancy);
-        else if( this->data[frame].MaxOccupancy() < occupancy )
-            this->data[frame].SetMaxOccupancy( occupancy);
+        if( this->data[frame]->MinOccupancy() > occupancy )
+            this->data[frame]->SetMinOccupancy( occupancy);
+        else if( this->data[frame]->MaxOccupancy() < occupancy )
+            this->data[frame]->SetMaxOccupancy( occupancy);
     }
-    this->data[frame].SetAtomOccupancy( atom, occupancy);
-    
+    this->data[frame]->SetAtomOccupancy( atom, occupancy);
+
     // get the charge
     tmpStr = atomEntry.Substring( 78, 2);
     tmpStr.TrimSpaces();
     float charge = float( atof( tmpStr));
     if( atom == 0 ) {
-        this->data[frame].SetChargeRange( charge, charge);
+        this->data[frame]->SetChargeRange( charge, charge);
     } else {
-        if( this->data[frame].MinCharge() > charge )
-            this->data[frame].SetMinCharge( charge);
-        else if( this->data[frame].MaxCharge() < charge )
-            this->data[frame].SetMaxCharge( charge);
+        if( this->data[frame]->MinCharge() > charge )
+            this->data[frame]->SetMinCharge( charge);
+        else if( this->data[frame]->MaxCharge() < charge )
+            this->data[frame]->SetMaxCharge( charge);
     }
-    this->data[frame].SetAtomCharge( atom, charge);
+    this->data[frame]->SetAtomCharge( atom, charge);
 
 }
 
@@ -640,7 +1238,7 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
 /*
  * set the position of the current atom entry to the frame
  */
-void PDBLoader::setAtomPositionToFrame( vislib::StringA &atomEntry, unsigned int atom, 
+void PDBLoader::setAtomPositionToFrame( vislib::StringA &atomEntry, unsigned int atom,
         unsigned int frame) {
     // temp variables
     vislib::StringA tmpStr;
@@ -649,15 +1247,15 @@ void PDBLoader::setAtomPositionToFrame( vislib::StringA &atomEntry, unsigned int
     pos.Set( float( atof( atomEntry.Substring( 30, 8))),
         float( atof( atomEntry.Substring( 38, 8))),
         float( atof( atomEntry.Substring( 46, 8))));
-    this->data[frame].SetAtomPosition( atom, pos.X(), pos.Y(), pos.Z());
-    
+    this->data[frame]->SetAtomPosition( atom, pos.X(), pos.Y(), pos.Z());
+
     // update bounding box
-    vislib::math::Cuboid<float> atomBBox( 
-        pos.X() - this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.Y() - this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.Z() - this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.X() + this->atomType[this->atomTypeIdx[atom]].Radius(), 
-        pos.Y() + this->atomType[this->atomTypeIdx[atom]].Radius(), 
+    vislib::math::Cuboid<float> atomBBox(
+        pos.X() - this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.Y() - this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.Z() - this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.X() + this->atomType[this->atomTypeIdx[atom]].Radius(),
+        pos.Y() + this->atomType[this->atomTypeIdx[atom]].Radius(),
         pos.Z() + this->atomType[this->atomTypeIdx[atom]].Radius());
     this->bbox.Union( atomBBox);
 
@@ -666,40 +1264,40 @@ void PDBLoader::setAtomPositionToFrame( vislib::StringA &atomEntry, unsigned int
     tmpStr.TrimSpaces();
     float tempFactor = float( atof( tmpStr));
     if( atom == 0 ) {
-        this->data[frame].SetBFactorRange( tempFactor, tempFactor);
+        this->data[frame]->SetBFactorRange( tempFactor, tempFactor);
     } else {
-        if( this->data[frame].MinBFactor() > tempFactor )
-            this->data[frame].SetMinBFactor( tempFactor);
-        else if( this->data[frame].MaxBFactor() < tempFactor )
-            this->data[frame].SetMaxBFactor( tempFactor);
+        if( this->data[frame]->MinBFactor() > tempFactor )
+            this->data[frame]->SetMinBFactor( tempFactor);
+        else if( this->data[frame]->MaxBFactor() < tempFactor )
+            this->data[frame]->SetMaxBFactor( tempFactor);
     }
-    
+
     // get the occupancy
     tmpStr = atomEntry.Substring( 54, 6);
     tmpStr.TrimSpaces();
     float occupancy = float( atof( tmpStr));
     if( atom == 0 ) {
-        this->data[frame].SetOccupancyRange( occupancy, occupancy);
+        this->data[frame]->SetOccupancyRange( occupancy, occupancy);
     } else {
-        if( this->data[frame].MinOccupancy() > occupancy )
-            this->data[frame].SetMinOccupancy( occupancy);
-        else if( this->data[frame].MaxOccupancy() < occupancy )
-            this->data[frame].SetMaxOccupancy( occupancy);
+        if( this->data[frame]->MinOccupancy() > occupancy )
+            this->data[frame]->SetMinOccupancy( occupancy);
+        else if( this->data[frame]->MaxOccupancy() < occupancy )
+            this->data[frame]->SetMaxOccupancy( occupancy);
     }
-    
+
     // get the charge
     tmpStr = atomEntry.Substring( 78, 2);
     tmpStr.TrimSpaces();
     float charge = float( atof( tmpStr));
     if( atom == 0 ) {
-        this->data[frame].SetChargeRange( charge, charge);
+        this->data[frame]->SetChargeRange( charge, charge);
     } else {
-        if( this->data[frame].MinCharge() > charge )
-            this->data[frame].SetMinCharge( charge);
-        else if( this->data[frame].MaxCharge() < charge )
-            this->data[frame].SetMaxCharge( charge);
+        if( this->data[frame]->MinCharge() > charge )
+            this->data[frame]->SetMinCharge( charge);
+        else if( this->data[frame]->MaxCharge() < charge )
+            this->data[frame]->SetMaxCharge( charge);
     }
-    
+
 }
 
 /*
@@ -726,14 +1324,14 @@ void PDBLoader::MakeResidueConnections( unsigned int resIdx, unsigned int frame)
             atomIdx0 = this->residue[resIdx]->FirstAtomIndex() + cnt0;
             atomIdx1 = this->residue[resIdx]->FirstAtomIndex() + cnt1;
             // get atom positions
-            atomPos0.Set( this->data[frame].AtomPositions()[3*atomIdx0+0],
-                this->data[frame].AtomPositions()[3*atomIdx0+1],
-                this->data[frame].AtomPositions()[3*atomIdx0+2]);
-            atomPos1.Set( this->data[frame].AtomPositions()[3*atomIdx1+0],
-                this->data[frame].AtomPositions()[3*atomIdx1+1],
-                this->data[frame].AtomPositions()[3*atomIdx1+2]);
+            atomPos0.Set( this->data[frame]->AtomPositions()[3*atomIdx0+0],
+                this->data[frame]->AtomPositions()[3*atomIdx0+1],
+                this->data[frame]->AtomPositions()[3*atomIdx0+2]);
+            atomPos1.Set( this->data[frame]->AtomPositions()[3*atomIdx1+0],
+                this->data[frame]->AtomPositions()[3*atomIdx1+1],
+                this->data[frame]->AtomPositions()[3*atomIdx1+2]);
             // check distance
-            if( ( atomPos0 - atomPos1).Length() < 
+            if( ( atomPos0 - atomPos1).Length() <
                 0.58f * ( this->atomType[this->atomTypeIdx[atomIdx0]].Radius() +
                 this->atomType[this->atomTypeIdx[atomIdx1]].Radius() ) ) {
                 // add connection
@@ -772,14 +1370,14 @@ bool PDBLoader::MakeResidueConnections( unsigned int resIdx0, unsigned int resId
             atomIdx0 = this->residue[resIdx0]->FirstAtomIndex() + cnt0;
             atomIdx1 = this->residue[resIdx1]->FirstAtomIndex() + cnt1;
             // get atom positions
-            atomPos0.Set( this->data[frame].AtomPositions()[3*atomIdx0+0],
-                this->data[frame].AtomPositions()[3*atomIdx0+1],
-                this->data[frame].AtomPositions()[3*atomIdx0+2]);
-            atomPos1.Set( this->data[frame].AtomPositions()[3*atomIdx1+0],
-                this->data[frame].AtomPositions()[3*atomIdx1+1],
-                this->data[frame].AtomPositions()[3*atomIdx1+2]);
+            atomPos0.Set( this->data[frame]->AtomPositions()[3*atomIdx0+0],
+                this->data[frame]->AtomPositions()[3*atomIdx0+1],
+                this->data[frame]->AtomPositions()[3*atomIdx0+2]);
+            atomPos1.Set( this->data[frame]->AtomPositions()[3*atomIdx1+0],
+                this->data[frame]->AtomPositions()[3*atomIdx1+1],
+                this->data[frame]->AtomPositions()[3*atomIdx1+2]);
             // check distance
-            if( ( atomPos0 - atomPos1).Length() < 
+            if( ( atomPos0 - atomPos1).Length() <
                 0.58f * ( this->atomType[this->atomTypeIdx[atomIdx0]].Radius() +
                 this->atomType[this->atomTypeIdx[atomIdx1]].Radius() ) ) {
                 // add connection
@@ -815,7 +1413,7 @@ bool PDBLoader::IsAminoAcid( vislib::StringA resName ) {
         resName.Equals( "THR" ) |
         resName.Equals( "TRP" ) |
         resName.Equals( "TYR" ) |
-        resName.Equals( "VAL" ) | 
+        resName.Equals( "VAL" ) |
         resName.Equals( "ASH" ) |
         resName.Equals( "CYX" ) |
         resName.Equals( "CYM" ) |
@@ -828,3 +1426,4 @@ bool PDBLoader::IsAminoAcid( vislib::StringA resName ) {
         return true;
     return false;
 }
+
