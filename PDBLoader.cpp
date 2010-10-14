@@ -575,10 +575,16 @@ bool PDBLoader::getData( core::Call& call) {
     // TODO: assign the data from the loader to the call
 
     // if no xtc-filename has been set
-    if(this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value()
-        == "") {
+    if( this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
 
-        if(dc->FrameID() > this->data.Count()) return false;
+        //if( dc->FrameID() >= this->data.Count() ) return false;
+        if( dc->FrameID() >= this->data.Count() ) {
+            if( this->data.Count() > 0 ) {
+                dc->SetFrameID( this->data.Count() -  1);
+            } else {
+                return false;
+            }
+        }
 
         dc->SetAtoms(this->data[dc->FrameID()]->AtomCount(),
                      this->atomType.Count(),
@@ -595,8 +601,7 @@ bool PDBLoader::getData( core::Call& call) {
         this->data[dc->FrameID()]->MaxCharge());
         dc->SetOccupancyRange( this->data[dc->FrameID()]->MinOccupancy(),
         this->data[dc->FrameID()]->MaxOccupancy());
-    }
-    else {
+    } else {
 
         Frame *fr = NULL;
         fr = dynamic_cast<PDBLoader::Frame *>(this->
@@ -665,8 +670,7 @@ bool PDBLoader::getExtent( core::Call& call) {
     dc->AccessBoundingBoxes().SetObjectSpaceBBox( this->bbox);
     dc->AccessBoundingBoxes().SetObjectSpaceClipBox( this->bbox);
 
-    if(this->xtcFilenameSlot.
-      Param<core::param::FilePathParam>()->Value() == "" ) {
+    if(this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
 
         dc->SetFrameCount( vislib::math::Max(1U,
                            static_cast<unsigned int>( this->data.Count())));
@@ -912,8 +916,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
         // if no xtc-filename has been set
-        if( this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value()
-              == "" ) {
+        if( this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
             // parsed first frame - load all other frames now
             atomCnt = 0;
             while( lineCnt < file.Count() ) {
@@ -956,8 +959,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             file.Clear();
             Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for clearing the file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
-        }
-        else {
+        } else {
 
             float box[3][3];
             char tmpByte;
@@ -1004,7 +1006,8 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             this->setFrameCount(maxFrames);
 
             // start the loading thread
-            initFrameCache(maxFrames-100);
+            //initFrameCache(maxFrames-100); // why maxFrames - 100 ??
+            this->initFrameCache( maxFrames);
 
         }
 
