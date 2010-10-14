@@ -73,4 +73,6 @@ void vislib::net::AbstractSyncMsgUser::sendViaMsgBuffer(
         this->msgBuffer.GetMessageSize(), 
         timeout,
         true);
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Message %u sent via buffer.\n", 
+        this->msgBuffer.GetHeader().GetMessageID());
 }

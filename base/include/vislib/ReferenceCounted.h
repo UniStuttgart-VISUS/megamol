@@ -40,9 +40,7 @@ namespace vislib {
          *
          * @return The new value of the reference counter.
          */
-        inline UINT32 AddRef(void) {
-            return ++this->cntRefs;
-        }
+        UINT32 AddRef(void);
 
         /**
          * Decrement the reference count. If the reference count reaches zero,

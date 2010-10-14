@@ -53,10 +53,15 @@ void vislib::net::SimpleMessageDispatcher::AddListener(
  * vislib::net::SimpleMessageDispatcher::OnThreadStarting
  */
 void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *channel) {
-    VLSTACKTRACE("SimpleMessageDispatcher::Run", __FILE__, __LINE__);
+    VLSTACKTRACE("SimpleMessageDispatcher::OnThreadStarting", __FILE__, 
+        __LINE__);
     ASSERT(channel != NULL);
-    this->channel = dynamic_cast<AbstractInboundCommChannel *>(
-        static_cast<AbstractCommChannel *>(channel));
+    AbstractInboundCommChannel *c = reinterpret_cast<
+        AbstractInboundCommChannel *>(channel);
+    // mueller: Below does not work. Unclear why.
+    //this->channel = dynamic_cast<AbstractInboundCommChannel *>(
+    //    reinterpret_cast<AbstractCommChannel *>(channel));
+    this->channel = c;
 }
 
 
@@ -65,7 +70,7 @@ void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *channel) {
  */
 void vislib::net::SimpleMessageDispatcher::RemoveListener(
         SimpleMessageDispatchListener *listener) {
-    VLSTACKTRACE("SimpleMessageDispatcher::AddListener", __FILE__, __LINE__);
+    VLSTACKTRACE("SimpleMessageDispatcher::RemoveListener", __FILE__, __LINE__);
     ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
@@ -78,7 +83,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
     VLSTACKTRACE("SimpleMessageDispatcher::Run", __FILE__, __LINE__);
     ASSERT(channel != NULL);
     ASSERT(!this->channel.IsNull());
-    // The assertion of 'this->channel' might fail event if 'channel' is 
+    // The assertion of 'this->channel' might fail even if 'channel' is 
     // non-NULL in case that the static type of the parameter passed into
     // the Start() method of the thread was not AbstractCommChannel *. In
     // this case, the dynamic_cast in OnThreadStarting() will fail and the
