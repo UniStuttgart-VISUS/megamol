@@ -18,7 +18,7 @@
  * vislib::sys::SystemMessage::SystemMessage
  */
 vislib::sys::SystemMessage::SystemMessage(const DWORD errorCode)
-		: errorCode(errorCode), msg(NULL) {
+        : errorCode(errorCode), msg(NULL), isMsgUnicode(false) {
 }
 
 
@@ -26,7 +26,7 @@ vislib::sys::SystemMessage::SystemMessage(const DWORD errorCode)
  * vislib::sys::SystemMessage::SystemMessage
  */
 vislib::sys::SystemMessage::SystemMessage(const SystemMessage& rhs) 
-		: errorCode(rhs.errorCode), msg(NULL) {
+		: errorCode(rhs.errorCode), msg(NULL), isMsgUnicode(false) {
 }
 
 
@@ -122,6 +122,8 @@ vislib::sys::SystemMessage::operator const char *(void) const {
             ARY_SAFE_DELETE(buf);
         }
 #endif /* _WIN32 */
+
+        this->isMsgUnicode = false;
     }
 
     return static_cast<const char *>(this->msg);
@@ -186,6 +188,8 @@ vislib::sys::SystemMessage::operator const wchar_t *(void) const {
             ARY_SAFE_DELETE(buf);
         }
 #endif /* _WIN32 */
+
+        this->isMsgUnicode = true;
     }
 
     return static_cast<const wchar_t *>(this->msg);
