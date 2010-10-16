@@ -1,7 +1,7 @@
 /*
  * DirectoryIterator.h
  *
- * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2007 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
  */
 
 #ifndef VISLIB_DIRECTORYITERATOR_H_INCLUDED
@@ -15,19 +15,22 @@
 
 
 #include "vislib/CharTraits.h"
+#include "vislib/DirectoryEntry.h"
 #include "vislib/String.h"
 #include "vislib/Iterator.h"
 #include "vislib/IOException.h"
 #include "vislib/NoSuchElementException.h"
 #include "vislib/SystemException.h"
 #include "vislib/Path.h"
+#include "vislib/UnsupportedOperationException.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <Windows.h>
+#else /* _WIN32 */
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
 #include <iostream>
-
 #include "vislib/File.h"
 #include "vislib/StringConverter.h"
 #endif /* _WIN32 */
@@ -36,78 +39,52 @@
 namespace vislib {
 namespace sys {
 
-	/**
-     * Represents a single entry in a directory as returned by DirectoryIterator.
-     */
-	template<class T> class DirectoryEntry {
-		typedef typename T::Char Char;
-	public:
-		/** Enum for the currently supported types of DirectoryEntry */
-		enum EntryType {
-			DIRECTORY,
-			FILE
-		};
-		/** Name of the entry. This is not the full path! */
-		String<T> Path;
-		/** Type of the entry */
-		EntryType Type;
-	};
- 
-
-    /** Template instantiation for ANSI char DirectoryEntry. */
-    typedef DirectoryEntry<CharTraitsA> DirectoryEntryA;
-
-    /** Template instantiation for wide char DirectoryEntry. */
-    typedef DirectoryEntry<CharTraitsW> DirectoryEntryW;
-
-    /** Template instantiation for TCHAR DirectoryEntrys. */
-    typedef DirectoryEntry<TCharTraits> TDirectoryEntry;
-
 
     /**
      * Instances of this class let the user enumerate all files/subdirectories in
-	 * a certain path. In contrast to the OS-dependent implementations, "." and ".."
-	 * are omitted.
+     * a certain path. In contrast to the OS-dependent implementations, "." and ".."
+     * are omitted.
+     * Template type T is the CharTraits type
      */
-	template<class T> class DirectoryIterator
+    template<class T> class DirectoryIterator
             : public vislib::Iterator<DirectoryEntry<T> > {
-	};/* end class Iterator */
+    public:
 
+        /** Alias for correct char type */
+        typedef typename T::Char Char;
 
-    /**
-     * Instances of this class let the user enumerate all files/subdirectories in
-	 * a certain path. In contrast to the OS-dependent implementations, "." and ".."
-	 * are omitted. For Unicode support, use DirectoryIterator<CharTraitsW>.
-     */
-	template<> class DirectoryIterator<CharTraitsA>
-            : public vislib::Iterator<DirectoryEntry<CharTraitsA> > {
-        typedef CharTraitsA::Char Char;
-		typedef DirectoryEntry<CharTraitsA> Item;
-	public:
+        /** Alias for correct entry type */
+        typedef DirectoryEntry<T> Entry;
 
-		/** Ctor.
-		 *
-		 * @param path the path which this Iterator will enumerate.
-		 *
-		 * @throws SystemException if iterating the directory fails
-		 */
-		DirectoryIterator(const CharTraitsA::Char *path);
+        /**
+         * Ctor
+         *
+         * @param path The path which this Iterator will enumerate
+         * @param isPattern If false 'path' specifies the path to search in;
+         *                  If true 'path' specifies a file globbing pattern
+         * @param showDirs If false no directories will be iterated, only
+         *                 files; If true files and directories will be
+         *                 iterated except for the two directories '.' and
+         *                 '..'
+         */
+        DirectoryIterator(const Char* path, bool isPattern = false,
+            bool showDirs = true);
 
-		/** Dtor. */
-		virtual ~DirectoryIterator(void);
+        /** Dtor */
+        virtual ~DirectoryIterator(void);
 
-		/** Behaves like Iterator<T>::HasNext */
-		virtual bool HasNext(void) const;
+        /** Behaves like Iterator<T>::HasNext */
+        virtual bool HasNext(void) const;
 
-		/** 
-		 * Behaves like Iterator<T>::Next 
-		 *
-		 * @throws NoSuchElementException if there is no next element
-		 */
-		virtual Item& Next();
+        /** 
+         * Behaves like Iterator<T>::Next 
+         *
+         * @throws NoSuchElementException if there is no next element
+         */
+        virtual Entry& Next(void);
 
+    private:
 
-	private:
         /**
          * Forbidden copy-ctor.
          *
@@ -115,9 +92,11 @@ namespace sys {
          *
          * @throws UnsupportedOperationException Unconditionally.
          */
-		inline DirectoryIterator(const DirectoryIterator& rhs) {
-			throw UnsupportedOperationException("vislib::sys::DirectoryIterator::DirectoryIterator", __FILE__, __LINE__);
-		}
+        inline DirectoryIterator(const DirectoryIterator& rhs) {
+            throw UnsupportedOperationException(
+                "vislib::sys::DirectoryIterator::DirectoryIterator",
+                __FILE__, __LINE__);
+        }
 
         /**
          * Forbidden assignment.
@@ -128,126 +107,130 @@ namespace sys {
          *
          * @throws IllegalParamException If &'rhs' != this.
          */
-		inline DirectoryIterator& operator =(const DirectoryIterator& rhs) {
-		    if (this != &rhs) {
-				throw IllegalParamException("rhs", __FILE__, __LINE__);
-			}
-		}
+        inline DirectoryIterator& operator=(const DirectoryIterator& rhs) {
+            if (this != &rhs) {
+                throw IllegalParamException("rhs", __FILE__, __LINE__);
+            }
+        }
 
-		/** pointer to the next element store */
-		Item nextItem;
-		
-		/** pointer to the current element */
-		Item currentItem;
+        /**
+         * Fetches the next item in the iteration
+         */
+        void fetchNextItem(void);
 
-		/** handle for iterating the directory contents */
+        /** The next element */
+        Entry nextItem;
+
+        /** The current element */
+        Entry currentItem;
+
+        /** Flag to omit folders in enumeration */
+        bool omitFolders;
+
 #ifdef _WIN32
-		HANDLE findHandle;
+
+        /** Handle to the file find search */
+        HANDLE findHandle;
+
 #else /* _WIN32 */
-		DIR *dirStream;
+
+        /** The directory stream of the directory to iterate */
+        DIR *dirStream;
+
+        /** The base path */
+        StringA basePath;
+
 #endif /* _WIN32 */
 
-		/** 
-		 * since (on linux) we need to explicitly find out if an entry is a directory,
-		 * we also need to remember where we are iterating.
-		 */
-#ifdef _WIN32
-#else /* _WIN32 */
-		StringA basePath;
-#endif /* _WIN32 */
-
-	}; /* end class DirectoryIterator<CharTraitsA> */
+    };/* end class Iterator */
 
 
-    /**
-     * Instances of this class let the user enumerate all files/subdirectories in
-	 * a certain path. In contrast to the OS-dependent implementations, "." and ".."
-	 * are omitted.
+    /*
+     * DirectoryIterator<T>::DirectoryIterator
      */
-	template<> class DirectoryIterator<CharTraitsW> 
-            : public vislib::Iterator<DirectoryEntry<CharTraitsW> > {
-        typedef CharTraitsW::Char Char;
-		typedef DirectoryEntry<CharTraitsW> Item;
-	public:
-
-		/** Ctor.
-		 *
-		 * @param path the path which this Iterator will enumerate.
-		 *
-		 * @throws SystemException if iterating the directory fails
-		 */
-		DirectoryIterator(const CharTraitsW::Char *path);
-
-		/** Dtor. */
-		virtual ~DirectoryIterator(void);
-
-		/** Behaves like Iterator<T>::HasNext */
-		virtual bool HasNext(void) const;
-
-		/** 
-		 * Behaves like Iterator<T>::Next 
-		 *
-		 * @throws NoSuchElementException if there is no next element
-		 */
-		virtual Item& Next();
+    template<class T> DirectoryIterator<T>::DirectoryIterator(
+            const Char* path, bool isPattern, bool showDirs) : nextItem(),
+            currentItem(), omitFolders(!showDirs) {
+        // We won't find anything for this type!
+        throw UnsupportedOperationException(
+             "DirectoryIterator<T>::DirectoryIterator", __FILE__, __LINE__);
+    }
 
 
-	private:
-        /**
-         * Forbidden copy-ctor.
-         *
-         * @param rhs The object to be cloned.
-         *
-         * @throws UnsupportedOperationException Unconditionally.
-         */
-		inline DirectoryIterator(const DirectoryIterator& rhs) {
-			throw UnsupportedOperationException("vislib::sys::DirectoryIterator::DirectoryIterator", __FILE__, __LINE__);
-		}
+    /*
+     * DirectoryIterator<CharTraitsA>::DirectoryIterator
+     */
+    template<> DirectoryIterator<CharTraitsA>::DirectoryIterator(
+            const Char* path, bool isPattern, bool showDirs);
 
-        /**
-         * Forbidden assignment.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         *
-         * @throws IllegalParamException If &'rhs' != this.
-         */
-		inline DirectoryIterator& operator =(const DirectoryIterator& rhs) {
-		    if (this != &rhs) {
-				throw IllegalParamException("rhs", __FILE__, __LINE__);
-			}
-		}
 
-		/** pointer to the next element store */
-		Item nextItem;
-		
-		/** pointer to the current element */
-		Item currentItem;
+    /*
+     * DirectoryIterator<CharTraitsW>::DirectoryIterator
+     */
+    template<> DirectoryIterator<CharTraitsW>::DirectoryIterator(
+            const Char* path, bool isPattern, bool showDirs);
 
-		/** handle for iterating the directory contents */
+
+    /*
+     * DirectoryIterator<T>::~DirectoryIterator
+     */
+    template<class T> DirectoryIterator<T>::~DirectoryIterator(void) {
 #ifdef _WIN32
-		HANDLE findHandle;
+        if (this->findHandle != INVALID_HANDLE_VALUE) {
+            FindClose(this->findHandle);
+        }
 #else /* _WIN32 */
-		DIR *dirStream;
+        if (this->dirStream != NULL) {
+            closedir(dirStream);
+        }
 #endif /* _WIN32 */
+    }
 
-#ifdef _WIN32
-#else /* _WIN32 */
-		/** 
-		 * since (on linux) we need to explicitly find out if an entry is a directory,
-		 * we also need to remember where we are iterating.
-		 */
-		StringA basePath;
 
-		/**
-		 * unicode on linux is... suboptimal.
-		 */
-		DirectoryIterator<CharTraitsA> *DICA;
-#endif /* _WIN32 */
+    /*
+     * DirectoryIterator<T>::HasNext
+     */
+    template<class T> bool DirectoryIterator<T>::HasNext(void) const {
+        return !this->nextItem.Path.IsEmpty();
+    }
 
-	}; /* end class DirectoryIterator<CharTraitsA> */
- 
+
+    /*
+     * DirectoryIterator<T>::Next
+     */
+    template<class T>
+    typename DirectoryIterator<T>::Entry& DirectoryIterator<T>::Next(void) {
+        this->currentItem = this->nextItem;
+        this->fetchNextItem();
+        if (this->currentItem.Path.IsEmpty()) {
+            throw NoSuchElementException("No next element.", __FILE__, __LINE__);
+        }
+        return this->currentItem;
+
+    }
+
+
+    /*
+     * DirectoryIterator<T>::fetchNextItem
+     */
+    template<class T> void DirectoryIterator<T>::fetchNextItem(void) {
+        // We won't find anything for this type!
+        throw UnsupportedOperationException(
+            "DirectoryIterator<T>::fetchNextItem", __FILE__, __LINE__);
+    }
+
+
+    /*
+     * DirectoryIterator<CharTraitsA>::fetchNextItem
+     */
+    template<> void DirectoryIterator<CharTraitsA>::fetchNextItem(void);
+
+
+    /*
+     * DirectoryIterator<CharTraitsW>::fetchNextItem
+     */
+    template<> void DirectoryIterator<CharTraitsW>::fetchNextItem(void);
+
 
     /** Template instantiation for ANSI char DirectoryIterator. */
     typedef DirectoryIterator<CharTraitsA> DirectoryIteratorA;

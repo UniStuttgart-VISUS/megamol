@@ -420,6 +420,7 @@
     <ClCompile Include="src\CriticalSection.cpp" />
     <ClCompile Include="src\DateTime.cpp" />
     <ClCompile Include="src\DateTimeSpan.cpp" />
+    <ClCompile Include="src\DirectoryEntry.cpp" />
     <ClCompile Include="src\DirectoryIterator.cpp" />
     <ClCompile Include="src\DynamicFunctionPointer.cpp" />
     <ClCompile Include="src\DynamicLinkLibrary.cpp" />
@@ -493,6 +494,7 @@
     <ClInclude Include="include\vislib\CriticalSection.h" />
     <ClInclude Include="include\vislib\DateTime.h" />
     <ClInclude Include="include\vislib\DateTimeSpan.h" />
+    <ClInclude Include="include\vislib\DirectoryEntry.h" />
     <ClInclude Include="include\vislib\DirectoryIterator.h" />
     <ClInclude Include="include\vislib\RegistryKey.h" />
     <ClInclude Include="src\DynamicFunctionPointer.h" />
