@@ -36,7 +36,7 @@ vislib::sys::MemmappedFile::MemmappedFile(void)
  * vislib::sys::MemmappedFile::~MemmappedFile
  */
 vislib::sys::MemmappedFile::~MemmappedFile(void) {
-	// relies on File::~File closing the file
+    this->Close(); // Close file here (vtable issue)
 }
 
 

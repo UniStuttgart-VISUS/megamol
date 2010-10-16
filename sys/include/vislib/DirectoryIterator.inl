@@ -37,7 +37,18 @@ namespace sys {
         if (this->findHandle == INVALID_HANDLE_VALUE) {
             throw SystemException(__FILE__, __LINE__);
         }
-        this->fetchNextItem();
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            this->nextItem.Type = Entry::DIRECTORY;
+            if (this->omitFolders || (strcmp(fd.cFileName, ".") == 0)
+                    || (strcmp(fd.cFileName, "..") == 0)) {
+                this->fetchNextItem();
+            } else {
+                this->nextItem.Path = fd.cFileName;
+            }
+        } else {
+            this->nextItem.Type = Entry::FILE;
+            this->nextItem.Path = fd.cFileName;
+        }
 #else /* _WIN32 */
         if (isPattern || !showDirs) {
             // TODO: Fix me
@@ -75,7 +86,18 @@ namespace sys {
         if (this->findHandle == INVALID_HANDLE_VALUE) {
             throw SystemException(__FILE__, __LINE__);
         }
-        this->fetchNextItem();
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            this->nextItem.Type = Entry::DIRECTORY;
+            if (this->omitFolders || (wcscmp(fd.cFileName, L".") == 0)
+                    || (wcscmp(fd.cFileName, L"..") == 0)) {
+                this->fetchNextItem();
+            } else {
+                this->nextItem.Path = fd.cFileName;
+            }
+        } else {
+            this->nextItem.Type = Entry::FILE;
+            this->nextItem.Path = fd.cFileName;
+        }
 #else /* _WIN32 */
         if (isPattern || !showDirs) {
             // TODO: Fix me
