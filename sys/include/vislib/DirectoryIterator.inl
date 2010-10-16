@@ -8,6 +8,7 @@
 #ifdef _WIN32
 #include <Windows.h>
 #else /* _WIN32 */
+#include "vislib/UnsupportedOperationException.h"
 #endif /* _WIN32 */
 
 namespace vislib {
@@ -40,10 +41,9 @@ namespace sys {
 #else /* _WIN32 */
         if (isPattern || !showDirs) {
             // TODO: Fix me
-            throw UnsupportedOperationExcetion(
+            throw vislib::UnsupportedOperationException(
                 "DirectoryIterator(, true, false)", __FILE__, __LINE__);
         }
-        struct dirent *de;
         if ((this->dirStream = opendir(path)) == NULL) {
             throw SystemException(__FILE__, __LINE__);
         }
@@ -79,10 +79,9 @@ namespace sys {
 #else /* _WIN32 */
         if (isPattern || !showDirs) {
             // TODO: Fix me
-            throw UnsupportedOperationExcetion(
+            throw vislib::UnsupportedOperationException(
                 "DirectoryIterator(, true, false)", __FILE__, __LINE__);
         }
-        struct dirent *de;
         if ((this->dirStream = opendir(StringA(path).PeekBuffer())) == NULL) {
             throw SystemException(__FILE__, __LINE__);
         }
@@ -135,9 +134,9 @@ namespace sys {
                 //}
             } else {
                 if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
-                    this->nextItem.Type = Item::DIRECTORY;
+                    this->nextItem.Type = Entry::DIRECTORY;
                 } else {
-                    this->nextItem.Type = Item::FILE;
+                    this->nextItem.Type = Entry::FILE;
                 }
             }
         } while (de != NULL && ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0)));
@@ -194,9 +193,9 @@ namespace sys {
                 //}
             } else {
                 if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
-                    this->nextItem.Type = Item::DIRECTORY;
+                    this->nextItem.Type = Entry::DIRECTORY;
                 } else {
-                    this->nextItem.Type = Item::FILE;
+                    this->nextItem.Type = Entry::FILE;
                 }
             }
         } while (de != NULL && ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0)));
