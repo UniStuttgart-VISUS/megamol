@@ -8,10 +8,8 @@
 
 #include "vislib/BitmapImage.h"
 #include "vislib/assert.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
-#ifdef _WIN32
-#include <windows.h>
-#endif /* _WIN32 */
 
 
 /*
@@ -335,6 +333,47 @@ void vislib::graphics::BitmapImage::ConvertFrom(const BitmapImage& src,
 
 
 /*
+ * vislib::graphics::BitmapImage::Crop
+ */
+void vislib::graphics::BitmapImage::Crop(unsigned int left, unsigned int top,
+        unsigned int width, unsigned int height) {
+    if (left >= this->width) {
+        left = this->width - 1;
+    }
+    if (width < 1) width = 1;
+    if (left + width > this->width) {
+        width = this->width - left;
+    }
+    if (top >= this->height) {
+        top = this->height -1;
+    }
+    if (height < 1) height = 1;
+    if (top + height > this->height) {
+        height = this->height - top;
+    }
+    unsigned int bpp = this->BytesPerPixel();
+    if (bpp < 1) throw vislib::IllegalStateException(
+        "Image has no colour channels", __FILE__, __LINE__);
+
+    char *newData = new char[bpp * width * height];
+
+    try {
+        this->cropCopy(newData, this->data, this->width, this->height,
+            left, top, width, height, bpp);
+        delete[] this->data;
+        this->data = newData;
+        this->width = width;
+        this->height = height;
+
+    } catch(...) {
+        delete[] newData;
+        throw;
+    }
+
+}
+
+
+/*
  * vislib::graphics::BitmapImage::CreateImage
  */
 void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
@@ -381,6 +420,37 @@ void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
 
 
 /*
+ * vislib::graphics::BitmapImage::ExtractFrom
+ */
+void vislib::graphics::BitmapImage::ExtractFrom(
+        const vislib::graphics::BitmapImage& src, unsigned int left,
+        unsigned int top, unsigned int width, unsigned int height) {
+    if (left >= src.Width()) {
+        left = src.Width() - 1;
+    }
+    if (width < 1) width = 1;
+    if (left + width > src.Width()) {
+        width = src.Width() - left;
+    }
+    if (top >= src.Height()) {
+        top = src.Height() -1;
+    }
+    if (height < 1) height = 1;
+    if (top + height > src.Height()) {
+        height = src.Height() - top;
+    }
+    unsigned int bpp = src.BytesPerPixel();
+    if (bpp < 1) throw vislib::IllegalStateException(
+        "Source image has no colour channels", __FILE__, __LINE__);
+
+    this->CreateImage(width, height, src);
+    this->cropCopy(this->data, src.data, src.Width(), src.Height(),
+        left, top, width, height, bpp);
+
+}
+
+
+/*
  * vislib::graphics::BitmapImage::FlipVertical
  */
 void vislib::graphics::BitmapImage::FlipVertical(void) {
@@ -396,4 +466,30 @@ void vislib::graphics::BitmapImage::FlipVertical(void) {
     }
 
     delete[] tmpbuf;
+}
+
+
+/*
+ * vislib::graphics::BitmapImage::cropCopy
+ */
+void vislib::graphics::BitmapImage::cropCopy(char *to, char *from,
+        unsigned int fromWidth, unsigned int fromHeight, unsigned int cropX,
+        unsigned int cropY, unsigned int cropWidth, unsigned int cropHeight,
+        unsigned int bpp) {
+    ASSERT(cropX < fromWidth);
+    ASSERT(cropY < fromHeight);
+    ASSERT(cropX + cropWidth <= fromWidth);
+    ASSERT(cropY + cropHeight <= fromHeight);
+    ASSERT((cropWidth < fromWidth) || (cropHeight < fromHeight));
+    ASSERT(bpp > 0);
+    ASSERT(to != NULL);
+    ASSERT(from != NULL);
+
+    from += (cropY * fromWidth * bpp); // skip 'cropY' lines
+    for (unsigned int y = 0; y < cropHeight; y++) {
+        ::memcpy(to, from + (cropX * bpp), cropWidth * bpp);
+        from += fromWidth * bpp;
+        to += cropWidth * bpp;
+    }
+
 }

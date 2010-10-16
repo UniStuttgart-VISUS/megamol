@@ -35,7 +35,11 @@ namespace graphics {
             CHANNEL_GREEN,
             CHANNEL_BLUE,
             CHANNEL_GRAY,
-            CHANNEL_ALPHA
+            CHANNEL_ALPHA,
+            CHANNEL_CYAN,
+            CHANNEL_MAGENTA,
+            CHANNEL_YELLOW,
+            CHANNEL_BLACK
         };
 
         /** possible channel types */
@@ -204,6 +208,20 @@ namespace graphics {
         void ConvertFrom(const BitmapImage& src, const BitmapImage& tmpl);
 
         /**
+         * Crops this imag to the specified rectangular region. The crop area
+         * is truncated to the current size of the image if necessary.
+         *
+         * @param left The left position (minimum x) to crop from
+         * @param top The top position (minimum y) to crop from
+         * @param width The width of the crop rectangle and the new width for
+         *              the image after cropping
+         * @param height The height of the crop rectangle and the new height
+         *               for the image after cropping
+         */
+        void Crop(unsigned int left, unsigned int top, unsigned int width,
+            unsigned int height);
+
+        /**
          * Generates a new bitmap. This overwrites all data previously stored
          * in the bitmap.
          *
@@ -241,6 +259,22 @@ namespace graphics {
          */
         void CreateImage(unsigned int width, unsigned int height,
             const BitmapImage& tmpl, const void *data = NULL);
+
+        /**
+         * Extracts a rectangular area from a source image. The extraction
+         * area is truncated to the size of the source image if necessary.
+         * The current image of this object will be replaced.
+         *
+         * @param src The source image
+         * @param left The left position (minimum x) to extract from
+         * @param top The top position (minimum y) to extract from
+         * @param width The width of the extraction rectangle and the new
+         *              width for the image after extraction
+         * @param height The height of the extraction rectangle and the new
+         *               height for the image after extraction
+         */
+        void ExtractFrom(const BitmapImage& src, unsigned int left,
+            unsigned int top, unsigned int width, unsigned int height);
 
         /**
          * Flipps the image vertically
@@ -390,6 +424,24 @@ namespace graphics {
         }
 
     private:
+
+        /**
+         * Performs a crop-copy between two flat image storages of same format
+         *
+         * @param to The image data to copy to
+         * @param from The image data to copy from
+         * @param fromWidth The width in pixel of the from image data
+         * @param fromHeight The height in pixel of the from image data
+         * @param cropX The crop rectangle x position in the from image
+         * @param cropY The crop rectangle y position in the from image
+         * @param cropWidth The crop rectangle width in the from image
+         * @param cropHeight The crop rectangle height in the from image
+         * @param bpp The bytes per pixel
+         */
+        void cropCopy(char *to, char *from, unsigned int fromWidth,
+            unsigned int fromHeight, unsigned int cropX, unsigned int cropY,
+            unsigned int cropWidth, unsigned int cropHeight,
+            unsigned int bpp);
 
         /** The raw image data */
         char *data;
