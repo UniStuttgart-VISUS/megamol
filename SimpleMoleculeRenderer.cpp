@@ -405,6 +405,9 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     delete[] pos1;
     delete[] posInter;
 
+    // unlock the current frame
+    mol->Unlock();
+
     return true;
 }
 

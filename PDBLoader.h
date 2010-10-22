@@ -425,6 +425,44 @@ namespace protein {
         };
 
         /**
+         * Helper class to unlock frame data when 'CallSimpleSphereData' is
+         * used.
+         */
+        class Unlocker : public MolecularDataCall::Unlocker {
+        public:
+
+            /**
+             * Ctor.
+             *
+             * @param frame The frame to unlock
+             */
+            Unlocker(Frame& frame) : MolecularDataCall::Unlocker(),
+                    frame(&frame) {
+                // intentionally empty
+            }
+
+            /** Dtor. */
+            virtual ~Unlocker(void) {
+                this->Unlock();
+                ASSERT(this->frame == NULL);
+            }
+
+            /** Unlocks the data */
+            virtual void Unlock(void) {
+                if (this->frame != NULL) {
+                    this->frame->Unlock();
+                    this->frame = NULL; // DO NOT DELETE!
+                }
+            }
+
+        private:
+
+            /** The frame to unlock */
+            Frame *frame;
+        };
+
+
+        /**
          * Loads a PDB file.
          *
          * @param filename The path to the file to load.
@@ -494,7 +532,12 @@ namespace protein {
          */
         bool IsAminoAcid( vislib::StringA resName );
 
-
+        /**
+         * Read the number of frames from the XTC file
+         *
+         * @return 'true' if the file could be loaded, otherwise 'false'
+         */
+        bool readNumXTCFrames();
 
         // -------------------- variables --------------------
 
@@ -565,6 +608,10 @@ namespace protein {
         /** position of the last frame read from an xtc-file */
         unsigned int nextFramePt;
 
+        /** the number of frames */
+        unsigned int numXTCFrames;
+        /** the byte offset of all frames */
+        vislib::Array<unsigned int> XTCFrameOffset;
     };
 
 

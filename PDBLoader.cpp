@@ -519,7 +519,7 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
         stride( 0), secStructAvailable( false), lastFrameIdx(0),
-        nextFramePt(0) {
+        nextFramePt(0), numXTCFrames( 0), XTCFrameOffset( 0) {
 
     this->pdbFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->pdbFilenameSlot);
@@ -572,7 +572,7 @@ bool PDBLoader::getData( core::Call& call) {
 
     dc->SetDataHash( this->datahash);
 
-    // TODO: assign the data from the loader to the call
+    // TODO: do not check xtcFileParamSlot, but use boolean flag instead (is the xtc available and loaded or not)
 
     // if no xtc-filename has been set
     if( this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
@@ -610,6 +610,8 @@ bool PDBLoader::getData( core::Call& call) {
         if (fr == NULL)
             return false;
 
+        dc->SetUnlocker(new Unlocker(*fr));
+
         dc->SetAtoms( this->data[0]->AtomCount(),
                       this->atomType.Count(),
                       (unsigned int*)this->atomTypeIdx.PeekElements(),
@@ -618,8 +620,6 @@ bool PDBLoader::getData( core::Call& call) {
                       (float*)this->data[0]->AtomBFactor(),
                       (float*)this->data[0]->AtomCharge(),
                       (float*)this->data[0]->AtomOccupancy());
-
-        fr->Unlock();
 
         dc->SetBFactorRange( this->data[0]->MinBFactor(),
                              this->data[0]->MaxBFactor());
@@ -649,8 +649,6 @@ bool PDBLoader::getData( core::Call& call) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Secondary Structure computed via STRIDE in %f seconds.", ( double( clock() - t) / double( CLOCKS_PER_SEC))); // DEBUG
     }
 
-    dc->SetUnlocker( NULL);
-
     return true;
 }
 
@@ -671,14 +669,14 @@ bool PDBLoader::getExtent( core::Call& call) {
     dc->AccessBoundingBoxes().SetObjectSpaceClipBox( this->bbox);
 
     if(this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
-
+        // no XTC file set --> use number of loaded frames
         dc->SetFrameCount( vislib::math::Max(1U,
                            static_cast<unsigned int>( this->data.Count())));
     }
     else {
+        // XTC file set and loaded --> use number of frames
         dc->SetFrameCount( vislib::math::Max(1U, static_cast<unsigned int>(
-                             this->maxFramesSlot.
-                                Param<core::param::IntParam>()->Value())));
+                           this->numXTCFrames)));
     }
 
     dc->SetDataHash( this->datahash);
@@ -690,6 +688,7 @@ bool PDBLoader::getExtent( core::Call& call) {
  * PDBLoader::release
  */
 void PDBLoader::release(void) {
+    // TODO: stop frame-loading thread before clearing data array
     for(int i = 0; i < this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
@@ -710,6 +709,7 @@ view::AnimDataModule::Frame* PDBLoader::constructFrame(void) const {
  */
 void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
                            unsigned int idx) {
+    //time_t t = clock();
 
     PDBLoader::Frame *fr = dynamic_cast<PDBLoader::Frame*>(frame);
     int atomCnt = this->data[0]->AtomCount();
@@ -721,54 +721,18 @@ void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
                                 data[0]->AtomPositions()[i+1],
                                 data[0]->AtomPositions()[i+2]);
         }
-    }
-    else {
-
-        // TODO handle eof
+    } else {
         fstream xtcFile;
         xtcFile.open(this->xtcFilenameSlot.
           Param<core::param::FilePathParam>()->Value(), ios::in | ios::binary);
-
-        if((idx == lastFrameIdx+1) && (idx != 1)) {
-            xtcFile.ignore(nextFramePt);
-        }
-        else {
-            int i = 0;
-            int size;
-            char tmpByte;
-
-            // skip idx-1 frames in the xtc-file
-            while(i < idx - 1) {
-
-                // skip header data
-                xtcFile.ignore(88);
-
-                // read size of the compressed block of data
-                xtcFile.read((char*)&size, 4);
-
-                // change byte-order
-                char *num = (char*)&size;
-                tmpByte = num[0];
-                num[0] = num[3];
-                num[3] = tmpByte;
-                tmpByte = num[1];
-                num[1] = num[2];
-                num[2] = tmpByte;
-
-                // skip the compressed block of data
-                xtcFile.ignore(size + (4 - size % 4) % 4);
-
-                i++;
-            }
-        }
-
+        xtcFile.seekg( this->XTCFrameOffset[idx-1]);
         fr->readFrame(&xtcFile);
-        nextFramePt = (int)xtcFile.tellg();
-        xtcFile.close();
     }
 
-    fr->setFrameIdx(idx);
+    fr->setFrameIdx( idx);
     lastFrameIdx = idx;
+    
+    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Time for loading frame %i: %f", idx, ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 }
 
 /*
@@ -782,6 +746,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
     for(int i = 0; i < this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
+    // TODO: stop frame-loading thread if neccessary
     this->datahash++;
 
     time_t t = clock(); // DEBUG
@@ -960,12 +925,17 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for clearing the file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
         } else {
+            // TODO: check if pdb and xtc files belong together (same number of atoms)
+
+            // try to get the total number of frames
+            // TODO: store availability of frame information
+            // TODO: 
+            this->readNumXTCFrames();
 
             float box[3][3];
             char tmpByte;
             fstream xtcFile;
             char *num;
-
 
             xtcFile.open(this->xtcFilenameSlot.
                            Param<core::param::FilePathParam>()->Value(),
@@ -999,14 +969,13 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                                                  box[2][2]*10.0);
             this->bbox.Union(atomBBox);
 
-            int maxFrames =
-              this->maxFramesSlot.Param<core::param::IntParam>()->Value();
-            //int maxFrames = 5000;
+            int maxFrames = std::min( 
+                (unsigned int)this->maxFramesSlot.Param<core::param::IntParam>()->Value(),
+                this->numXTCFrames);
 
-            this->setFrameCount(maxFrames);
+            this->setFrameCount( this->numXTCFrames);
 
             // start the loading thread
-            //initFrameCache(maxFrames-100); // why maxFrames - 100 ??
             this->initFrameCache( maxFrames);
 
         }
@@ -1430,3 +1399,48 @@ bool PDBLoader::IsAminoAcid( vislib::StringA resName ) {
     return false;
 }
 
+
+/*
+ * Read the number of frames from the XTC file
+ */
+bool PDBLoader::readNumXTCFrames() {
+    // reset values
+    this->numXTCFrames = 0;
+    this->XTCFrameOffset.Clear();
+
+    // try to open xtc file
+    fstream xtcFile;
+    xtcFile.open(this->xtcFilenameSlot.
+      Param<core::param::FilePathParam>()->Value(), ios::in | ios::binary);
+    // check if file could be opened
+    if( !xtcFile ) return false;
+
+    this->XTCFrameOffset.SetCapacityIncrement( 1000);
+    int size;
+    char tmpByte;
+
+    // read until eof
+    while( !xtcFile.eof() ) {
+        // add the offset to the offset array
+        this->XTCFrameOffset.Add( (unsigned int)xtcFile.tellg());
+        // skip header data
+        // TODO: test if seekg is faster than ignore!
+        xtcFile.ignore(88);
+        // read size of the compressed block of data
+        xtcFile.read((char*)&size, 4);
+        // change byte-order
+        char *num = (char*)&size;
+        tmpByte = num[0];
+        num[0] = num[3];
+        num[3] = tmpByte;
+        tmpByte = num[1];
+        num[1] = num[2];
+        num[2] = tmpByte;
+        // skip the compressed block of data
+        xtcFile.ignore(size + (4 - size % 4) % 4);
+        // add this frame to the frame count
+        this->numXTCFrames++;
+    }
+    xtcFile.close();
+    return true;
+}
