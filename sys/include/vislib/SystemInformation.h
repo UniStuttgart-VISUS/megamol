@@ -41,7 +41,7 @@ namespace sys {
         };
 
         /** This dimension defines a monitor size. */
-        typedef vislib::math::Rectangle<DWORD> MonitorRect;
+        typedef vislib::math::Rectangle<long> MonitorRect;
 
         /** Array of MonitorRects. */
         typedef vislib::Array<MonitorRect> MonitorRectArray;
