@@ -18,7 +18,7 @@
  * vislib::sys::SystemMessage::SystemMessage
  */
 vislib::sys::SystemMessage::SystemMessage(const DWORD errorCode)
-        : errorCode(errorCode), msg(NULL), isMsgUnicode(false) {
+        : errorCode(errorCode), isMsgUnicode(false), msg(NULL) {
 }
 
 
@@ -26,7 +26,7 @@ vislib::sys::SystemMessage::SystemMessage(const DWORD errorCode)
  * vislib::sys::SystemMessage::SystemMessage
  */
 vislib::sys::SystemMessage::SystemMessage(const SystemMessage& rhs) 
-		: errorCode(rhs.errorCode), msg(NULL), isMsgUnicode(false) {
+        : errorCode(rhs.errorCode), isMsgUnicode(false), msg(NULL) {
 }
 
 
@@ -48,8 +48,8 @@ vislib::sys::SystemMessage::~SystemMessage(void) {
  * vislib::sys::SystemMessage::operator =
  */
 vislib::sys::SystemMessage& vislib::sys::SystemMessage::operator =(
-		const SystemMessage& rhs) {
-	if (this != &rhs) {
+        const SystemMessage& rhs) {
+    if (this != &rhs) {
 #ifdef _WIN32
         if (this->msg != NULL) {
             ::LocalFree(this->msg);
@@ -83,7 +83,7 @@ vislib::sys::SystemMessage::operator const char *(void) const {
         // TODO: Possible hazard: FormatMessage could fail.
         ::FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER 
             | FORMAT_MESSAGE_FROM_SYSTEM, NULL, this->errorCode,
-		    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             reinterpret_cast<char *>(&this->msg), 0, NULL);
 
 #else /* _WIN32 */
@@ -149,7 +149,7 @@ vislib::sys::SystemMessage::operator const wchar_t *(void) const {
         // TODO: Possible hazard: FormatMessage could fail.
         ::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER 
             | FORMAT_MESSAGE_FROM_SYSTEM, NULL, this->errorCode,
-		    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             reinterpret_cast<wchar_t *>(&this->msg), 0, NULL);
 
 #else /* _WIN32 */

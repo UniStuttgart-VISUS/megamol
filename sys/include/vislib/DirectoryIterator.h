@@ -33,6 +33,7 @@
 #include <iostream>
 #include "vislib/File.h"
 #include "vislib/StringConverter.h"
+#include "vislib/sysfunctions.h"
 #endif /* _WIN32 */
 
 
@@ -139,6 +140,9 @@ namespace sys {
 
         /** The base path */
         StringA basePath;
+
+        /** The file globbing pattern */
+        StringA pattern;
 
 #endif /* _WIN32 */
 
