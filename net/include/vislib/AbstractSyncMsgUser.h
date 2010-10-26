@@ -223,14 +223,17 @@ namespace net {
          * Oid: The message ID the response must have. If another ID is 
          *      received, the operation will fail.
          *
-         * @param channel         The communication channel to use for the 
-         *                        round-trip.
-         * @param requestBody     The request data.
-         * @param timeout         Timeout for send and receive operations. If
-         *                        each operation cannot be fulfiled in the
-         *                        given amount of time, the method fails with
-         *                        an exception.
-         *
+         * @param channel            The communication channel to use for the
+         *                           round-trip.
+         * @param requestBody        The request data.
+         * @param outAdditionalBytes If not NULL, the method writes the number
+         *                           of bytes in the response that is not part
+                                     of 'O' into this variable.
+         * @param timeout            Timeout for send and receive operations. 
+         *                           If each operation cannot be fulfiled in
+         *                           the given amount of time, the method 
+         *                           fails with an exception.
+         * 
          * @return A reference to the response message received after the 
          *         request was sent successfully. This will be valid until the 
          *         next message is sent or received.
@@ -242,6 +245,7 @@ namespace net {
         template<class I, SimpleMessageID Iid, class O, SimpleMessageID Oid>
         const O *requestViaMsgBuffer(SmartRef<AbstractBidiCommChannel> channel,
             const I& requestBody,
+            SIZE_T *outAdditionalBytes = NULL,
             const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
 
         /**
@@ -259,13 +263,16 @@ namespace net {
          * Oid: The message ID the response must have. If another ID is 
          *      received, the operation will fail.
          *
-         * @param channel         The communication channel to use for the 
-         *                        round-trip.
-         * @param requestBody     The request data.
-         * @param timeout         Timeout for send and receive operations. If
-         *                        each operation cannot be fulfiled in the
-         *                        given amount of time, the method fails with
-         *                        an exception.
+         * @param channel            The communication channel to use for the
+         *                           round-trip.
+         * @param requestBody        The request data.
+         * @param outAdditionalBytes If not NULL, the method writes the number
+         *                           of bytes in the response that is not part
+                                     of 'O' into this variable.
+         * @param timeout            Timeout for send and receive operations. 
+         *                           If each operation cannot be fulfiled in
+         *                           the given amount of time, the method 
+         *                           fails with an exception.
          *
          * @return A reference to the response message received after the 
          *         request was sent successfully. This will be valid until the 
@@ -279,12 +286,13 @@ namespace net {
         inline const O *requestViaMsgBuffer(
                 SmartRef<TcpCommChannel> channel,
                 const I& requestBody,
+                SIZE_T *outAdditionalBytes = NULL,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
                 __LINE__);
             return this->requestViaMsgBuffer<I, Iid, O, Oid>(
                 channel.DynamicCast<vislib::net::AbstractBidiCommChannel>(), 
-                requestBody, timeout);
+                requestBody, outAdditionalBytes, timeout);
         }
 
         /**
@@ -468,6 +476,7 @@ namespace net {
     const O *AbstractSyncMsgUser::requestViaMsgBuffer(
             SmartRef<AbstractBidiCommChannel> channel,
             const I& requestBody,
+            SIZE_T *outAdditionalBytes,
             const UINT timeout) {
         VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
             __LINE__);
@@ -481,6 +490,11 @@ namespace net {
         if (responseID != Oid) {
             throw UnexpectedMessageException(responseID, Oid, __FILE__, 
                 __LINE__);
+        }
+
+        /* Get overflow data length if requested. */
+        if (outAdditionalBytes != NULL) {
+            *outAdditionalBytes = response.GetMessageSize() - sizeof(O);
         }
 
         /* Get body. */
