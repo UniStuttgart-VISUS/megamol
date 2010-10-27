@@ -1275,7 +1275,11 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
             retval = 0.0f;
              
         } else {
-            /* Try a real guess, first directly from the user input. */
+            /* 
+             * Try a real guess, first check for ANY address, then parse 
+             * directly from the user input, last try to find an adapter
+             * that might servet the user input.
+             */
             ctx.Address = ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) 
                 ? &address : NULL;
             ctx.PrefixLen = (((validMask & WILD_GUESS_HAS_NETMASK) != 0) 
@@ -1286,25 +1290,37 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
                 || ((prefFam != NULL) 
                 && (*prefFam == IPAgnosticAddress::FAMILY_INET));
 
-            NetworkInformation::EnumerateAdapters(
-                NetworkInformation::processAdapterForLocalEndpointGuess,
-                &ctx);
-            retval = NetworkInformation::consolidateWildness(wildness, 
-                bestAddressIdx);
-            for (SIZE_T i = 0, j = 0; i < NetworkInformation::adapters.Count(); 
-                    i++) {
-                Confidence dummy; // TODO: consider to use in wildness 'calculation'
-                const UnicastAddressList& al 
-                    = NetworkInformation::adapters[i].GetUnicastAddresses(&dummy);
-                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Confidence for unicast address is %d", dummy);
-                if ((j <= bestAddressIdx) 
-                        && (bestAddressIdx < j + al.Count())) {
-                    outEndPoint.SetIPAddress(
-                        al[bestAddressIdx - j].GetAddress());
-                    break;
+            if (ctx.Address != NULL) {
+                if (ctx.Address->IsAny()) {
+                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "User explicity specified "
+                        "ANY address.\n");
+                    outEndPoint.SetIPAddress(*ctx.Address);
+                    retval = 0.0f;
                 }
-                j += al.Count();
-            } /* end for for (SIZE_T i = 0, j = 0; ... */
+            }
+
+            if (retval == 1.0f) {
+                NetworkInformation::EnumerateAdapters(
+                    NetworkInformation::processAdapterForLocalEndpointGuess,
+                    &ctx);
+                retval = NetworkInformation::consolidateWildness(wildness, 
+                    bestAddressIdx);
+                for (SIZE_T i = 0, j = 0; 
+                        i < NetworkInformation::adapters.Count(); i++) {
+                    Confidence dummy; // TODO: consider to use in wildness 'calculation'
+                    const UnicastAddressList& al = NetworkInformation::adapters[
+                        i].GetUnicastAddresses(&dummy);
+                    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Confidence for unicast "
+                        "address is %d", dummy);
+                    if ((j <= bestAddressIdx) 
+                            && (bestAddressIdx < j + al.Count())) {
+                        outEndPoint.SetIPAddress(
+                            al[bestAddressIdx - j].GetAddress());
+                        break;
+                    }
+                    j += al.Count();
+                } /* end for for (SIZE_T i = 0, j = 0; ... */
+            }
                 
             if ((retval == 1.0f) 
                     || ((validMask & WILD_GUESS_HAS_ADDRESS) == 0)) {
