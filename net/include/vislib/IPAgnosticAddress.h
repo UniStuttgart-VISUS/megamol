@@ -263,6 +263,16 @@ namespace net {
         IPAgnosticAddress GetPrefix(const ULONG prefixLength) const;
 
         /**
+         * Answer whether the address is the ANY4 or ANY6 address.
+         *
+         * @return true if the address represents "any" address, false otherwise.
+         */
+        inline bool IsAny(void) const {
+            VLSTACKTRACE("IPAgnosticAddress::IsAny", __FILE__, __LINE__);
+            return ((*this == ANY4) || (*this == ANY6));
+        }
+
+        /**
          * Answer whether the address family version is 4.
          *
          * @return true if the address is v4, false otherwise.

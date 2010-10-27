@@ -494,7 +494,8 @@ namespace net {
 
         /* Get overflow data length if requested. */
         if (outAdditionalBytes != NULL) {
-            *outAdditionalBytes = response.GetMessageSize() - sizeof(O);
+            *outAdditionalBytes = response.GetHeader().GetBodySize() 
+                - sizeof(O);
         }
 
         /* Get body. */
