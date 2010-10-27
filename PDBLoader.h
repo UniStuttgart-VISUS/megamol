@@ -594,7 +594,7 @@ namespace protein {
 
         /** Stride secondary structure computation */
         Stride *stride;
-        /** Flag wether secondary structure is available */
+        /** Flag whether secondary structure is available */
         bool secStructAvailable;
 
         // Temporary variables for molecular chains
@@ -602,16 +602,12 @@ namespace protein {
         vislib::Array<unsigned int> chainResCount;
         char chainId;
 
-        /** index of the last frame read from an xtc-file */
-        unsigned int lastFrameIdx;
-
-        /** position of the last frame read from an xtc-file */
-        unsigned int nextFramePt;
-
         /** the number of frames */
         unsigned int numXTCFrames;
         /** the byte offset of all frames */
         vislib::Array<unsigned int> XTCFrameOffset;
+        /** Flag whether the current xtc-filename is valid */
+        bool xtcFileValid;
     };
 
 
