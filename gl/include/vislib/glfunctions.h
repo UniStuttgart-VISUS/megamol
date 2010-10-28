@@ -13,13 +13,34 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
 #include "vislib/VersionNumber.h"
+#include "vislib/Cuboid.h"
 
 
 namespace vislib {
 namespace graphics {
 namespace gl {
+
+    /**
+     * Draws a cuboid using GL_LINES and immediate mode
+     *
+     * @param box The cuboid to be drawn
+     */
+    void DrawCuboidLines(const vislib::math::Cuboid<int>& box);
+
+    /**
+     * Draws a cuboid using GL_LINES and immediate mode
+     *
+     * @param box The cuboid to be drawn
+     */
+    void DrawCuboidLines(const vislib::math::Cuboid<float>& box);
+
+    /**
+     * Draws a cuboid using GL_LINES and immediate mode
+     *
+     * @param box The cuboid to be drawn
+     */
+    void DrawCuboidLines(const vislib::math::Cuboid<double>& box);
 
     /**
      * Enables or disables VSync. This method can only be used when there is a
