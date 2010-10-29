@@ -116,8 +116,14 @@ namespace view {
 
     private:
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
         /** The clipping plane */
         vislib::math::Plane<float> plane;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
 
         /** The colour of the plane */
         unsigned char col[3];
