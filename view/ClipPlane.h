@@ -107,6 +107,9 @@ namespace view {
         /** Defines a point in the clipping plane */
         param::ParamSlot pointSlot;
 
+        /** The plane-origin distance */
+        param::ParamSlot distSlot;
+
     };
 
 

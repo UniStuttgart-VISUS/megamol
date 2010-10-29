@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "ClipPlane.h"
 #include "param/BoolParam.h"
+#include "param/FloatParam.h"
 #include "param/StringParam.h"
 #include "param/Vector3fParam.h"
 #include "utility/ColourParser.h"
@@ -29,7 +30,8 @@ view::ClipPlane::ClipPlane(void) : Module(),
         enableSlot("enable", "Disables or enables the clipping plane"),
         colourSlot("colour", "Defines the colour of the clipping plane"),
         normalSlot("normal", "Defines the normal of the clipping plane"),
-        pointSlot("point", "Defines a point in the clipping plane") {
+        pointSlot("point", "Defines a point in the clipping plane"),
+        distSlot("dist", "The plane-origin distance") {
 
     this->plane.Set(vislib::math::Point<float, 3>(0.0, 0.0f, 0.0f),
         vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
@@ -56,6 +58,9 @@ view::ClipPlane::ClipPlane(void) : Module(),
     this->pointSlot << new param::Vector3fParam(
         vislib::math::Vector<float, 3>(this->plane.Point()));
     this->MakeSlotAvailable(&this->pointSlot);
+
+    this->distSlot << new param::FloatParam(this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)));
+    this->MakeSlotAvailable(&this->distSlot);
 }
 
 
@@ -109,13 +114,27 @@ bool view::ClipPlane::requestPlane(Call& call) {
         }
     }
 
-    if (this->normalSlot.IsDirty() || this->pointSlot.IsDirty()) {
+    if (!this->normalSlot.IsDirty() && !this->pointSlot.IsDirty() && this->distSlot.IsDirty()) {
+        this->distSlot.ResetDirty();
+        vislib::math::Vector<float, 3> n(this->plane.Normal());
+        vislib::math::Vector<float, 3> p(n);
+        p.Normalise();
+        p *= this->distSlot.Param<param::FloatParam>()->Value();
+        this->plane.Set(vislib::math::Point<float, 3>(p.PeekComponents()), n);
+        this->pointSlot.Param<param::Vector3fParam>()->SetValue(p, false);
+
+    } else if (this->normalSlot.IsDirty() || this->pointSlot.IsDirty()) {
+
         this->normalSlot.ResetDirty();
         this->pointSlot.ResetDirty();
+        this->distSlot.ResetDirty();
+
         this->plane.Set(vislib::math::ShallowPoint<float, 3>(
                 const_cast<float*>(
                 this->pointSlot.Param<param::Vector3fParam>()->Value().PeekComponents())),
             this->normalSlot.Param<param::Vector3fParam>()->Value());
+        this->distSlot.Param<param::FloatParam>()->SetValue(
+            this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)), false);
     }
 
     ccp->SetColour(this->col[0], this->col[1], this->col[2]);
