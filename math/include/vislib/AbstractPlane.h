@@ -92,7 +92,7 @@ namespace math {
         template<class Sp1, class Sp2, class Sp3>
         bool CalcIntersectionPoint(const AbstractPlane<T, Sp1>& plane2,
             const AbstractPlane<T, Sp2>& plane3,
-            AbstractPoint<T, 3, Sp3>& outPoint);
+            AbstractPoint<T, 3, Sp3>& outPoint) const;
 
         /**
          * Answer whether 'point' is in the plane.
@@ -171,7 +171,7 @@ namespace math {
          * @return The halfspace the point lies in.
          */
         template<class Tp, class Sp>
-        HalfSpace Halfspace(const AbstractPoint<Tp, 3, Sp>& point);
+        HalfSpace Halfspace(const AbstractPoint<Tp, 3, Sp>& point) const;
 
         //template<class Tp, class Sp1, class Sp2>
         //IntersectionCount Intersect(const Line3D<Tp, Sp1>& line, AbstractPoint3D<T, Sp2>& outWhere) const;
@@ -391,7 +391,7 @@ namespace math {
     bool AbstractPlane<T, S>::CalcIntersectionPoint(
             const AbstractPlane<T, Sp1>& plane2,
             const AbstractPlane<T, Sp2>& plane3,
-            AbstractPoint<T, 3, Sp3>& outPoint) {
+            AbstractPoint<T, 3, Sp3>& outPoint) const {
         // planes: ax + by + cz + d = 0
         T a1, b1, c1, d1;
         this->normalise(a1, b1, c1, d1);
@@ -460,7 +460,7 @@ namespace math {
     template<class T, class S>
     template<class Tp, class Sp>
     typename AbstractPlane<T, S>::HalfSpace AbstractPlane<T, S>::Halfspace(
-            const AbstractPoint<Tp, 3, Sp>& point) {
+            const AbstractPoint<Tp, 3, Sp>& point) const {
         T dist = this->Distance(point);
 
         if (IsEqual(dist, static_cast<T>(0))) {
