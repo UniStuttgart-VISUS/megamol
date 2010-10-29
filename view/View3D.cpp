@@ -11,6 +11,7 @@
 #include <windows.h>
 #endif /* _WIN32 */
 #include <GL/gl.h>
+#include <GL/glu.h>
 #include "view/CallRenderView.h"
 #include "view/CameraParamOverride.h"
 #include "param/BoolParam.h"
@@ -90,7 +91,8 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         animSpeedUpSlot("anim::SpeedUp", "Speeds up the animation"),
         animSpeedDownSlot("anim::SpeedDown", "Slows down the animation"),
         bboxCol(192, 192, 192, 255),
-        bboxColSlot("bboxCol", "Sets the colour for the bounding box") {
+        bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
+        showViewCubeSlot("viewcube::show", "Shows the view cube helper") {
     using vislib::sys::KeyCode;
 
     this->camParams = this->cam.Parameters();
@@ -262,6 +264,9 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
             static_cast<float>(this->bboxCol.G()) / 255.0f,
             static_cast<float>(this->bboxCol.B()) / 255.0f));
     this->MakeSlotAvailable(&this->bboxColSlot);
+
+    this->showViewCubeSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->showViewCubeSlot);
 
 }
 
@@ -502,6 +507,10 @@ void view::View3D::Render(void) {
     ::glPopMatrix();
     if (this->showBBox.Param<param::BoolParam>()->Value()) {
         this->renderBBoxFrontside();
+    }
+
+    if (this->showViewCubeSlot.Param<param::BoolParam>()->Value()) {
+        this->renderViewCube();
     }
 
     if (this->showSoftCursor()) {
@@ -1225,4 +1234,103 @@ bool view::View3D::onAnimSpeedStep(param::ParamSlot& p) {
         this->animSpeedSlot.Param<param::FloatParam>()->SetValue(spd);
     }
     return true;
+}
+
+
+/*
+ * view::View3D::renderViewCube
+ */
+void view::View3D::renderViewCube(void) {
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    ::glDisable(GL_LIGHTING);
+    ::glDisable(GL_TEXTURE_2D);
+    ::glEnable(GL_LINE_SMOOTH);
+    ::glLineWidth(1.5f);
+    ::glDisable(GL_DEPTH_TEST);
+
+    float pmf[16];
+    float vmf[16];
+    double pm[16];
+    double vm[16];
+    int vp[4];
+    this->cam.ProjectionMatrix(pmf);
+    this->cam.ViewMatrix(vmf);
+    for (unsigned int i = 0; i < 16; i++) {
+        pm[i] = static_cast<double>(pmf[i]);
+        vm[i] = static_cast<double>(vmf[i]);
+    }
+    vp[0] = vp[1] = 0;
+    vp[2] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[0] * 100.0f);
+    vp[3] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[1] * 100.0f);
+    double wx, wy, wz, sx1, sy1, sz1, sx2, sy2, sz2;
+    double size = vislib::math::Min(static_cast<double>(vp[2]), static_cast<double>(vp[3])) * 0.1f;
+    wx = static_cast<double>(vp[2]) - size;
+    wy = static_cast<double>(vp[3]) - size;
+    wz = 0.5;
+    ::gluUnProject(wx, wy, wz, vm, pm, vp, &sx1, &sy1, &sz1);
+    size *= 0.5;
+    wx = static_cast<double>(vp[2]) - size;
+    wy = static_cast<double>(vp[3]) - size;
+    wz = 0.5;
+    ::gluUnProject(wx, wy, wz, vm, pm, vp, &sx2, &sy2, &sz2);
+    sx2 -= sx1;
+    sy2 -= sy1;
+    sz2 -= sz1;
+    size = vislib::math::Sqrt(sx2 * sx2 + sy2 * sy2 + sz2 * sz2);
+    size *= 0.5;
+
+    ::glTranslated(sx1, sy1, sz1);
+    ::glScaled(size, size, size);
+
+    ::glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    ::glEnable(GL_CULL_FACE);
+    ::glCullFace(GL_FRONT);
+
+    ::glBegin(GL_QUADS);
+    ::glColor4ub(255, 0, 0, 32);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1, -1,  1); ::glVertex3i( 1, -1, -1); ::glVertex3i( 1,  1, -1);
+    ::glColor4ub(255, 255, 255, 32);
+    ::glVertex3i(-1,  1,  1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1, -1,  1);
+    ::glColor4ub(0, 255, 0, 32);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1,  1, -1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1,  1,  1);
+    ::glColor4ub(255, 255, 255, 32);
+    ::glVertex3i( 1, -1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i(-1, -1, -1); ::glVertex3i( 1, -1, -1);
+    ::glColor4ub(0, 0, 255, 32);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i(-1,  1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i( 1, -1,  1);
+    ::glColor4ub(255, 255, 255, 32);
+    ::glVertex3i( 1,  1, -1); ::glVertex3i( 1, -1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1,  1, -1);
+    ::glEnd();
+
+    ::glCullFace(GL_BACK);
+    ::glBegin(GL_QUADS);
+    ::glColor4ub(255, 0, 0, 127);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1, -1,  1); ::glVertex3i( 1, -1, -1); ::glVertex3i( 1,  1, -1);
+    ::glColor4ub(255, 255, 255, 127);
+    ::glVertex3i(-1,  1,  1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1, -1,  1);
+    ::glColor4ub(0, 255, 0, 127);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1,  1, -1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1,  1,  1);
+    ::glColor4ub(255, 255, 255, 127);
+    ::glVertex3i( 1, -1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i(-1, -1, -1); ::glVertex3i( 1, -1, -1);
+    ::glColor4ub(0, 0, 255, 127);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i(-1,  1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i( 1, -1,  1);
+    ::glColor4ub(255, 255, 255, 127);
+    ::glVertex3i( 1,  1, -1); ::glVertex3i( 1, -1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1,  1, -1);
+    ::glEnd();
+
+    ::glCullFace(GL_BACK);
+    ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    ::glBegin(GL_LINES);
+    ::glColor4ub(192, 192, 192, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(-1, 0, 0);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, -1, 0);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, 0, -1);
+    ::glColor4ub(255, 0, 0, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(1, 0, 0);
+    ::glColor4ub(0, 255, 0, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, 1, 0);
+    ::glColor4ub(0, 0, 255, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, 0, 1);
+    ::glEnd();
 }

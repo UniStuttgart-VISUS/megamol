@@ -324,6 +324,23 @@ namespace view {
 
         bool onAnimSpeedStep(param::ParamSlot& p);
 
+        /**
+         * Renders the view cube
+         */
+        void renderViewCube(void);
+
+        ///**
+        // * Renders a single egde of the view cube
+        // *
+        // * @param x1
+        // * @param y1
+        // * @param z1
+        // * @param x2
+        // * @param y2
+        // * @param z2
+        // */
+        //inline void renderViewCubeEdge(int x1, int y1, int z1, int x2, int y2, int z2);
+
         /** The scene camera */
         vislib::graphics::gl::CameraOpenGL cam;
 
@@ -513,6 +530,9 @@ namespace view {
 
         /** Parameter slot for the bounding box colour */
         param::ParamSlot bboxColSlot;
+
+        /** Shows the view cube helper */
+        param::ParamSlot showViewCubeSlot;
 
     };
 
