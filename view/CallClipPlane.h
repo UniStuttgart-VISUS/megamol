@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "api/MegaMolCore.std.h"
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/Plane.h"
@@ -25,7 +26,7 @@ namespace view {
      * Call transporting a clipping plane. Only data in the positive
      * halfspace should be visible.
      */
-    class CallClipPlane : public Call {
+    class MEGAMOLCORE_API CallClipPlane : public Call {
     public:
 
         /**
