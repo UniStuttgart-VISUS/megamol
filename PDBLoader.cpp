@@ -1011,7 +1011,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 }
             }
         }
-		
+
 
     } else {
         //Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", T2A( filename)); // DEBUG
@@ -1455,41 +1455,39 @@ bool PDBLoader::readNumXTCFrames() {
     int size;
     char tmpByte;
     char *num;
-	int test;
 
-	xtcFile.seekg(0, ios_base::beg);
+    xtcFile.seekg(0, ios_base::beg);
 
     // read until eof
     while( !xtcFile.eof() ) {
-		test = xtcFile.tellg();
-        
-		// add the offset to the offset array
+
+        // add the offset to the offset array
         this->XTCFrameOffset.Add( (unsigned int)xtcFile.tellg());
-        
-		// skip header data
+
+        // skip header data
         xtcFile.seekg(88, ios_base::cur);
-        
-		// read size of the compressed block of data
+
+        // read size of the compressed block of data
         xtcFile.read((char*)&size, 4);
-		// change byte-order
+        // change byte-order
         num = (char*)&size;
         tmpByte = num[0]; num[0] = num[3]; num[3] = tmpByte;
         tmpByte = num[1]; num[1] = num[2]; num[2] = tmpByte;
-        
-		// skip the compressed block of data except for the last byte and 
-        // ignore the remaining bytes to prevent skipping over the end 
+
+        // skip the compressed block of data except for the last byte and
+        // ignore the remaining bytes to prevent skipping over the end
         // of the file
-		xtcFile.seekg(size-1, ios_base::cur);
-		xtcFile.ignore(((4 - size % 4) % 4)+1);
-        
-		// add this frame to the frame count
+        xtcFile.seekg(size-1, ios_base::cur);
+        xtcFile.ignore(((4 - size % 4) % 4)+1);
+
+        // add this frame to the frame count
         this->numXTCFrames++;
     }
     xtcFile.close();
 
-   // vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
-   // "Time for getting all Byte-Offsets: %f",
-   // ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+    //"Time for getting all Byte-Offsets: %f",
+    //( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
     return true;
 }
