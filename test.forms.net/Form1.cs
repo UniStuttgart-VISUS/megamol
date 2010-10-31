@@ -1,0 +1,52 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using vislib.pinvoke;
+
+namespace test.forms.net {
+    public partial class Form1 : Form {
+
+        vislib.gl.OpenGLBox oglbox = null;
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        public Form1() {
+            InitializeComponent();
+        }
+
+        private void Form1_Shown(object sender, EventArgs e) {
+            try { // hack required for unknown reason
+                this.oglbox = new vislib.gl.OpenGLBox();
+            } catch {
+            }
+            if (this.oglbox == null) {
+                this.oglbox = new vislib.gl.OpenGLBox();
+            }
+
+            this.oglbox.Parent = this;
+            this.oglbox.Dock = DockStyle.Fill;
+            this.oglbox.OpenGLRender += oglbox_OpenGLRender;
+        }
+
+        void oglbox_OpenGLRender(object sender, PaintEventArgs e) {
+            opengl32.glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+            opengl32.glClear(opengl32.COLOR_BUFFER_BIT | opengl32.DEPTH_BUFFER_BIT);
+
+            opengl32.glBegin(opengl32.TRIANGLES);
+            opengl32.glColor3ub(255, 0, 0);
+            opengl32.glVertex3f(-0.5f, -0.4f, 0.0f);
+            opengl32.glColor3ub(0, 255, 0);
+            opengl32.glVertex3f(0.0f, 0.4f, 0.0f);
+            opengl32.glColor3ub(0, 0, 255);
+            opengl32.glVertex3f(0.5f, -0.4f, 0.0f);
+            opengl32.glEnd();
+        }
+
+    }
+}
