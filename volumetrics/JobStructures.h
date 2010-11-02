@@ -16,8 +16,16 @@ namespace volumetrics {
 	struct FatVoxel {
 		float distField;
 		float *triangles;
-		unsigned char numTriangles;
+		//unsigned char numTriangles;
+        unsigned char mcCase;
 		unsigned char consumedTriangles;
+
+        inline bool operator ==(const FatVoxel &rhs) {
+            return this->distField == rhs.distField
+                && this->triangles == rhs.triangles
+                && this->mcCase == rhs.mcCase
+                && this->consumedTriangles == rhs.consumedTriangles;
+        }
 	};
 
 	/**
@@ -42,6 +50,9 @@ namespace volumetrics {
 		vislib::Array<vislib::math::Vector<float, 3> > normals;
 		vislib::Array<vislib::graphics::ColourRGBAu8> colors;
 		vislib::Array<unsigned int> indices;
+
+        vislib::Array<vislib::Array<float *> > surfaces;
+        vislib::Array<vislib::Array<FatVoxel> > borderVoxels;
 
 		//float *normals;
 		float surface;
