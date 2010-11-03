@@ -25,7 +25,7 @@ vislib::math::Point<signed char, 3> neighbors[] = {
 
 void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
                              unsigned char triIndex, 
-                             vislib::Array<float *> &surf, vislib::Array<BorderVoxel> &border) {
+                             vislib::Array<float> &surf, vislib::Array<BorderVoxel> &border) {
 
     FatVoxel *f = &theVolume[(z * sjd->resY + y) * sjd->resX + x];
     int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
@@ -34,20 +34,21 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
 
     vislib::math::ShallowShallowTriangle<float, 3> sst(f->triangles + 3 * 3 * triIndex);
     vislib::math::ShallowShallowTriangle<float, 3> sst2(f->triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<float, 3> sstTemp(f->triangles + 3 * 3 * triIndex);
     vislib::math::ShallowShallowTriangle<float, 3> sstI(f->triangles + 3 * 3 * triIndex);
+    BorderVoxel bv;
 
     // we come here only once per surface and cell. that is why I can do this.
     if ((x == 0) || (x == sjd->resX - 1)
         || (y == 0) || (y == sjd->resY - 1)
         || (z == 0) || (z == sjd->resZ - 1)) {
-        BorderVoxel bv;
         unsigned int numTris = 0;
         for (unsigned char c = 0; c < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; c++) {
             if (MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][c] == currSurfID) {
                 numTris++;
             }
         }
-        bv.triangles = new float[numTris * 3 * 3];
+        bv.triangles.SetCount(numTris * 3 * 3);
         border.Append(bv);
         isBorder = true;
     }
@@ -60,10 +61,13 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
         //if (c == triIndex || sst.HasCommonEdge(sstI)) {
         if (MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][c] == currSurfID) {
             if ((f->consumedTriangles & (1 << c)) == 0) {
-                surf.Add(sstI.GetPointer());
+                //surf.Add(sstI.GetPointer());
+                surf.SetCount(surf.Count() + 9);
+                sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
+                sstTemp = sstI;
                 if (isBorder) {
-                    sst2.SetPointer(border.Last().triangles + 3 * 3 * borderIdx);
-                    sst2 = sstI;
+                    sstTemp.SetPointer(const_cast<float *>(bv.triangles.PeekElements() + 3 * 3 * borderIdx));
+                    sstTemp = sstI;
                     borderIdx++;
                 }
                 f->consumedTriangles |= (1 << c);
@@ -87,7 +91,10 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                                 sst2.SetPointer(n->triangles + 3 * 3 * m);
                                 if (sst2.HasCommonEdge(sstI)) {
                                     n->consumedTriangles |= (1 << m);
-                                    surf.Add(sst2.GetPointer());
+                                    //surf.Add(sst2.GetPointer());
+                                    surf.SetCount(surf.Count() + 9);
+                                    sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
+                                    sstTemp = sst2;
                                     //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                                     //    "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
                                     //    " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
@@ -124,9 +131,9 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
     for (unsigned int l = 0; l < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; l++) {
         if ((f->consumedTriangles & (1 << l)) == 0) {
             // this is a new surface
-            vislib::Array<float *> surf;
+            vislib::Array<float> surf;
             vislib::Array<BorderVoxel> border;
-            surf.SetCapacityIncrement(10);
+            surf.SetCapacityIncrement(90);
             border.SetCapacityIncrement(10);
             cellFIFO.Append(vislib::math::Point<unsigned int, 4>(x, y, z, l));
             //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -431,31 +438,31 @@ DWORD Voxelizer::Run(void *userData) {
     }
 
     // pass on border(unemptied) fatvoxels,
-    // dealloc stuff in others
-    // dealloc volume as a whole etc.
     
-    for (unsigned int l = 0; l < sjd->Result.surfaces.Count(); l++) {
-        vislib::graphics::ColourRGBAu8 c(rand() * 255, rand()*255, rand() * 255, 255);
-        vislib::math::ShallowShallowTriangle<float, 3> sst(sjd->Result.surfaces[l][0]);
-        for (unsigned int m = 0; m < sjd->Result.surfaces[l].Count(); m++) {
-            sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m]));
-            sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
-            sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m] + 3));
-            sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
-            sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m] + 6));
-            sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
-            vislib::math::Vector<float, 3> norm;
-            sst.SetPointer(sjd->Result.surfaces[l][m]);
-            (sst.Normal(norm));
-            sjd->Result.normals.Append(norm);
-            sjd->Result.normals.Append(norm);
-            sjd->Result.normals.Append(norm);
-            sjd->Result.colors.Append(c);
-            sjd->Result.colors.Append(c);
-            sjd->Result.colors.Append(c);
-        }
-    }
+    //for (unsigned int l = 0; l < sjd->Result.surfaces.Count(); l++) {
+    //    vislib::graphics::ColourRGBAu8 c(rand() * 255, rand()*255, rand() * 255, 255);
+    //    vislib::math::ShallowShallowTriangle<float, 3> sst(sjd->Result.surfaces[l][0]);
+    //    for (unsigned int m = 0; m < sjd->Result.surfaces[l].Count(); m++) {
+    //        sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m]));
+    //        sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
+    //        sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m] + 3));
+    //        sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
+    //        sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m] + 6));
+    //        sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
+    //        vislib::math::Vector<float, 3> norm;
+    //        sst.SetPointer(sjd->Result.surfaces[l][m]);
+    //        (sst.Normal(norm));
+    //        sjd->Result.normals.Append(norm);
+    //        sjd->Result.normals.Append(norm);
+    //        sjd->Result.normals.Append(norm);
+    //        sjd->Result.colors.Append(c);
+    //        sjd->Result.colors.Append(c);
+    //        sjd->Result.colors.Append(c);
+    //    }
+    //}
 
+    // dealloc stuff in volume
+    // dealloc volume as a whole etc.
     for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
         for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
             for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {

@@ -23,7 +23,7 @@ namespace volumetrics {
 
 		void growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
 							 unsigned char triIndex, 
-							 vislib::Array<float *> &surf, vislib::Array<BorderVoxel> &border);
+							 vislib::Array<float> &surf, vislib::Array<BorderVoxel> &border);
 
 		bool CellEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 

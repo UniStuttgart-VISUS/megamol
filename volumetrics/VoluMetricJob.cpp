@@ -375,8 +375,22 @@ void VoluMetricJob::appendBoxIndices(vislib::RawStorage &data, unsigned int &num
 	numOffset += 12;
 }
 
+bool VoluMetricJob::doBordersTouch(vislib::Array<BorderVoxel> &border1, vislib::Array<BorderVoxel> &border2) {
+    for (SIZE_T i = 0; i < border1.Count(); i++) {
+        for (SIZE_T j = 0; j < border2.Count(); j++) {
+            if (border1[i].doesTouch(border2[j])) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList) {
 	// copy finished meshes to output
+
+    // TODO nope, generate them into the backbuffer instead.
+
 	float *vert, *norm;
     unsigned char *col;
 	unsigned int *tri;
@@ -387,32 +401,112 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 			todos.Add(i);
 		}
 	}
-	unsigned int numVertices = 0;
-	for (int i = 0; i < todos.Count(); i++) {
-		numVertices += (unsigned int)subJobDataList[todos[i]]->Result.vertices.Count();
-	}
-	vert = new float[numVertices * 3];
-	norm = new float[numVertices * 3];
-    col = new unsigned char[numVertices * 3];
-	tri = new unsigned int[numVertices * 3];
-	SIZE_T vertOffset = 0;
-	SIZE_T triOffset = 0;
-	unsigned int idxOffset = 0;
-	for (int i = 0; i < todos.Count(); i++) {
-		SubJobData *sjd = subJobDataList[todos[i]];
-		for (unsigned int j = 0; j < sjd->Result.vertices.Count(); j++) {
-			memcpy(&(vert[vertOffset]), (sjd->Result.vertices[j].PeekCoordinates()), 3 * sizeof(float));
-			memcpy(&(norm[vertOffset]), (sjd->Result.normals[j].PeekComponents()), 3 * sizeof(float));
-            memcpy(&(col[vertOffset]), (sjd->Result.colors[j].PeekComponentes()), 3 * sizeof(unsigned char));
-			vertOffset += 3;
-			//memcpy(&(tri[triOffset]), &sjd->Result.indices[j], 1 * sizeof(unsigned int));
-			//triOffset += 1;
-			tri[triOffset++] = sjd->Result.indices[j] + idxOffset;
-		}
-		idxOffset += (unsigned int)sjd->Result.vertices.Count();
-	}
-	debugMeshes[meshBackBufferIndex].SetVertexData(numVertices, vert, norm, col, NULL, true);
-	debugMeshes[meshBackBufferIndex].SetTriangleData(numVertices / 3, tri, true);
+
+    if (todos.Count() == 0) {
+        return;
+    }
+
+    vislib::Array<vislib::Array<unsigned int> > globalSurfaceIDs;
+    globalSurfaceIDs.SetCount(todos.Count());
+    unsigned int gsi = 0;
+    for (int i = 0; i < todos.Count(); i++) {
+        SIZE_T sc = subJobDataList[todos[i]]->Result.surfaces.Count();
+        globalSurfaceIDs[i].SetCount(sc);
+        for (int j = 0; j < sc; j++) {
+            globalSurfaceIDs[i][j] = gsi++;
+        }
+    }
+    for (int i = 0; i < todos.Count(); i++) {
+        for (int j = 0; j < subJobDataList[todos[i]]->Result.borderVoxels.Count(); j++) {
+            for (int k = 0; k < todos.Count(); k++) {
+                for (int l = 0; l < subJobDataList[todos[k]]->Result.borderVoxels.Count(); l++) {
+                    if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
+                        if (doBordersTouch(subJobDataList[todos[i]]->Result.borderVoxels[j],
+                            subJobDataList[todos[k]]->Result.borderVoxels[l])) {
+                            globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    vislib::Array<unsigned int> uniqueIDs;
+    vislib::Array<unsigned int> countPerID;
+    for (int i = 0; i < todos.Count(); i++) {
+        for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
+            SIZE_T pos = uniqueIDs.IndexOf(globalSurfaceIDs[i][j]);
+            if (pos == vislib::Array<unsigned int>::INVALID_POS) {
+                uniqueIDs.Add(globalSurfaceIDs[i][j]);
+                countPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
+            } else {
+                countPerID[pos] = countPerID[pos] + (subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
+            }
+        }
+    }
+    unsigned int numTriangles = 0;
+    for (int i = 0; i < uniqueIDs.Count(); i++) {
+        numTriangles += countPerID[i];
+    }
+    vert = new float[numTriangles * 9];
+    norm = new float[numTriangles * 9];
+    col = new unsigned char[numTriangles * 9];
+    //tri = new unsigned int[numTriangles * 3];
+    SIZE_T vertOffset = 0;
+    SIZE_T triOffset = 0;
+    SIZE_T idxOffset = 0;
+
+    //for (int i = 0; i < uniqueIDs.Count(); i++) {
+    //    vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
+    //    vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
+
+    //    for (int j = 0; j < todos.Count(); j++) {
+    //        for (int k = 0; k < subJobDataList[todos[j]]->Result.borderVoxels.Count(); k++) {
+    //            if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
+    //                for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.borderVoxels[k].Count(); l++) {
+    //                    SIZE_T vertCount = subJobDataList[todos[j]]->Result.borderVoxels[k][l].triangles.Count() / 3;
+    //                    memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.borderVoxels[k][l].triangles.PeekElements(),
+    //                        vertCount * 3 * sizeof(float));
+    //                    for (SIZE_T l = 0; l < vertCount; l++) {
+    //                        //tri[vertOffset + l] = vertOffset + l;
+    //                        col[vertOffset + l * 3] = c.R();
+    //                        col[vertOffset + l * 3 + 1] = c.G();
+    //                        col[vertOffset + l * 3 + 2] = c.B();
+    //                    }
+    //                    vertOffset += vertCount * 3;
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+
+    for (int i = 0; i < uniqueIDs.Count(); i++) {
+        vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
+        vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
+
+        for (int j = 0; j < todos.Count(); j++) {
+            for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
+                if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
+                    SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].Count() / 3;
+                    memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].PeekElements(),
+                         vertCount * 3 * sizeof(float));
+                    for (SIZE_T l = 0; l < vertCount; l++) {
+                        //tri[vertOffset + l] = vertOffset + l;
+                        col[vertOffset + l * 3] = c.R();
+                        col[vertOffset + l * 3 + 1] = c.G();
+                        col[vertOffset + l * 3 + 2] = c.B();
+                    }
+                    //for (unsigned int l = 0; l < triCount * 9; l += 9) {
+                    //    sst.SetPointer
+                    //}
+                    vertOffset += vertCount * 3;
+                }
+            }
+        }
+    }
+    debugMeshes[meshBackBufferIndex].SetVertexData(vertOffset / 3, vert, norm, col, NULL, true);
+	//debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, tri, true);
+    debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, NULL, false);
+
 	meshBackBufferIndex = 1 - meshBackBufferIndex;
 	this->hash++;
 }

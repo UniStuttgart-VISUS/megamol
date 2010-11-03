@@ -95,6 +95,8 @@ namespace volumetrics {
 
     private:
 
+        bool doBordersTouch(vislib::Array<BorderVoxel> &border1, vislib::Array<BorderVoxel> &border2);
+
 		bool getLineDataCallback(core::Call &caller);
 
 		bool getLineExtentCallback(core::Call &caller);

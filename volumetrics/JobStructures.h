@@ -8,6 +8,7 @@
 #include "vislib/Cuboid.h"
 #include "vislib/ColourRGBAu8.h"
 #include "moldyn/MultiParticleDataCall.h"
+#include "vislib/ShallowShallowTriangle.h"
 
 namespace megamol {
 namespace trisoup {
@@ -23,10 +24,25 @@ namespace volumetrics {
 
     class BorderVoxel {
     public:
-        float *triangles;
+        vislib::Array<float> triangles;
 
         inline bool operator ==(const BorderVoxel &rhs) {
-            return this->triangles == rhs.triangles;
+            return &this->triangles == &rhs.triangles;
+        }
+
+        inline bool doesTouch(const BorderVoxel &rhs) {
+            vislib::math::ShallowShallowTriangle<float, 3> sst1(const_cast<float *>(this->triangles.PeekElements()));
+            vislib::math::ShallowShallowTriangle<float, 3> sst2(const_cast<float *>(rhs.triangles.PeekElements()));
+            for (int i = 0; i < this->triangles.Count() / 9; i++) {
+                for (int j = 0; j < rhs.triangles.Count() / 9; j++) {
+                    sst1.SetPointer(const_cast<float *>(this->triangles.PeekElements() + i * 9));
+                    sst2.SetPointer(const_cast<float *>(rhs.triangles.PeekElements() + j * 9));
+                    if (sst1.HasCommonEdge(sst2)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     };
 
@@ -48,12 +64,12 @@ namespace volumetrics {
 		//vislib::RawStorage vertexData;
 		//vislib::RawStorage indexData;
 
-		vislib::Array<vislib::math::Point<float, 3> > vertices;
-		vislib::Array<vislib::math::Vector<float, 3> > normals;
-		vislib::Array<vislib::graphics::ColourRGBAu8> colors;
-		vislib::Array<unsigned int> indices;
+		//vislib::Array<vislib::math::Point<float, 3> > vertices;
+		//vislib::Array<vislib::math::Vector<float, 3> > normals;
+		//vislib::Array<vislib::graphics::ColourRGBAu8> colors;
+		//vislib::Array<unsigned int> indices;
 
-        vislib::Array<vislib::Array<float *> > surfaces;
+        vislib::Array<vislib::Array<float> > surfaces;
         vislib::Array<vislib::Array<BorderVoxel> > borderVoxels;
 
 		//float *normals;
@@ -63,10 +79,10 @@ namespace volumetrics {
 		bool done;
 
 		SubJobResult(void) : surface(0.0f), volume(0.0f), done(false) {
-			vertices.SetCapacityIncrement(90);
-			normals.SetCapacityIncrement(90);
-			indices.SetCapacityIncrement(30);
-			colors.SetCapacityIncrement(30);
+			//vertices.SetCapacityIncrement(90);
+			//normals.SetCapacityIncrement(90);
+			//indices.SetCapacityIncrement(30);
+			//colors.SetCapacityIncrement(30);
 		}
 	};
 
