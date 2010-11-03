@@ -19,6 +19,7 @@
 #include <limits>
 #include "vislib/assert.h"
 #include "vislib/mathtypes.h"
+#include "vislib/Pair.h"
 
 
 namespace vislib {
@@ -322,6 +323,40 @@ namespace math {
         if (IsEqual(lhs, rhs)) return 0;
         if (lhs < rhs) return -1;
         return 1;
+    }
+
+
+    /**
+     * Compares two pair objects based on their 'first' members
+     *
+     * @param lhs The left hand side operand
+     * @param rhs The right hand side operand
+     *
+     * @return  0 if lhs and rhs are equal,
+     *         -1 if lhs < rhs,
+     *          1 else.
+     */
+    template<class T1, class T2> int ComparePairsFirst(
+            const typename Pair<T1, T2>& lhs,
+            const typename Pair<T1, T2>& rhs) {
+        return Compare(lhs.First(), rhs.First());
+    }
+
+
+    /**
+     * Compares two pair objects based on their 'second' members
+     *
+     * @param lhs The left hand side operand
+     * @param rhs The right hand side operand
+     *
+     * @return  0 if lhs and rhs are equal,
+     *         -1 if lhs < rhs,
+     *          1 else.
+     */
+    template<class T1, class T2> int ComparePairsSecond(
+            const typename Pair<T1, T2>& lhs,
+            const typename Pair<T1, T2>& rhs) {
+        return Compare(lhs.Second(), rhs.Second());
     }
 
 

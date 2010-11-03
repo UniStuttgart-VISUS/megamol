@@ -451,6 +451,20 @@
     <ClCompile Include="src\Cursor2D.cpp" />
     <ClCompile Include="src\Cursor2DRectLasso.cpp" />
     <ClCompile Include="src\FpsCounter.cpp" />
+    <ClCompile Include="src\graphicsfunctions.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseExport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseImport|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\InputModifiers.cpp" />
     <ClCompile Include="src\MouseInteractionAdapter.cpp" />
     <ClCompile Include="src\NamedColours.cpp" />
@@ -489,6 +503,7 @@
     <ClInclude Include="include\vislib\Cursor2D.h" />
     <ClInclude Include="include\vislib\Cursor2DRectLasso.h" />
     <ClInclude Include="include\vislib\FpsCounter.h" />
+    <ClInclude Include="include\vislib\graphicsfunctions.h" />
     <ClInclude Include="include\vislib\graphicstypes.h" />
     <ClInclude Include="include\vislib\InputModifiers.h" />
     <ClInclude Include="include\vislib\MouseInteractionAdapter.h" />
