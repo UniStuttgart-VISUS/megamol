@@ -25,14 +25,33 @@ vislib::math::Point<signed char, 3> neighbors[] = {
 
 void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
                              unsigned char triIndex, 
-                             vislib::Array<float *> &surf, vislib::Array<FatVoxel> &border) {
+                             vislib::Array<float *> &surf, vislib::Array<BorderVoxel> &border) {
 
     FatVoxel *f = &theVolume[(z * sjd->resY + y) * sjd->resX + x];
+    int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
+    bool isBorder = false;
+    unsigned int borderIdx = 0;
+
     vislib::math::ShallowShallowTriangle<float, 3> sst(f->triangles + 3 * 3 * triIndex);
     vislib::math::ShallowShallowTriangle<float, 3> sst2(f->triangles + 3 * 3 * triIndex);
     vislib::math::ShallowShallowTriangle<float, 3> sstI(f->triangles + 3 * 3 * triIndex);
 
-    int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
+    // we come here only once per surface and cell. that is why I can do this.
+    if ((x == 0) || (x == sjd->resX - 1)
+        || (y == 0) || (y == sjd->resY - 1)
+        || (z == 0) || (z == sjd->resZ - 1)) {
+        BorderVoxel bv;
+        unsigned int numTris = 0;
+        for (unsigned char c = 0; c < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; c++) {
+            if (MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][c] == currSurfID) {
+                numTris++;
+            }
+        }
+        bv.triangles = new float[numTris * 3 * 3];
+        border.Append(bv);
+        isBorder = true;
+    }
+
     for (unsigned char c = 0; c < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; c++) {
         sstI.SetPointer(f->triangles + 3 * 3 * c);
         // if c != triIndex, the question is whether THAT one has a common edge with any other
@@ -42,6 +61,11 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
         if (MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][c] == currSurfID) {
             if ((f->consumedTriangles & (1 << c)) == 0) {
                 surf.Add(sstI.GetPointer());
+                if (isBorder) {
+                    sst2.SetPointer(border.Last().triangles + 3 * 3 * borderIdx);
+                    sst2 = sstI;
+                    borderIdx++;
+                }
                 f->consumedTriangles |= (1 << c);
                 //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 //    "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
@@ -101,7 +125,7 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
         if ((f->consumedTriangles & (1 << l)) == 0) {
             // this is a new surface
             vislib::Array<float *> surf;
-            vislib::Array<FatVoxel> border;
+            vislib::Array<BorderVoxel> border;
             surf.SetCapacityIncrement(10);
             border.SetCapacityIncrement(10);
             cellFIFO.Append(vislib::math::Point<unsigned int, 4>(x, y, z, l));
@@ -207,7 +231,7 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
     vislib::math::Vector<float, 3> a, b;
 
     int triCnt = MarchingCubeTables::a2ucTriangleConnectionCount[flagIndex];
-    theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles = new float[triCnt * 3 * sizeof(float) * 3];
+    theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles = new float[triCnt * 3 * 3];
     //theVolume[(z * sjd->resY + y) * sjd->resX + x].numTriangles = triCnt;
     theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase = flagIndex;
     vislib::math::ShallowShallowTriangle<float, 3> tri(theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles);
@@ -432,6 +456,16 @@ DWORD Voxelizer::Run(void *userData) {
         }
     }
 
+    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+                if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[(z * sjd->resY + y) * sjd->resX + x].mcCase] > 0) {
+                    SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].triangles);
+                }
+            }
+        }
+    }
+    ARY_SAFE_DELETE(volume);
 
     sjd->Result.done = true;
 

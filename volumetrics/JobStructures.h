@@ -19,14 +19,16 @@ namespace volumetrics {
 		//unsigned char numTriangles;
         unsigned char mcCase;
 		unsigned char consumedTriangles;
-
-        inline bool operator ==(const FatVoxel &rhs) {
-            return this->distField == rhs.distField
-                && this->triangles == rhs.triangles
-                && this->mcCase == rhs.mcCase
-                && this->consumedTriangles == rhs.consumedTriangles;
-        }
 	};
+
+    class BorderVoxel {
+    public:
+        float *triangles;
+
+        inline bool operator ==(const BorderVoxel &rhs) {
+            return this->triangles == rhs.triangles;
+        }
+    };
 
 	/**
 	 *
@@ -52,7 +54,7 @@ namespace volumetrics {
 		vislib::Array<unsigned int> indices;
 
         vislib::Array<vislib::Array<float *> > surfaces;
-        vislib::Array<vislib::Array<FatVoxel> > borderVoxels;
+        vislib::Array<vislib::Array<BorderVoxel> > borderVoxels;
 
 		//float *normals;
 		float surface;
