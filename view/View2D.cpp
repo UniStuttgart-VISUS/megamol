@@ -203,7 +203,12 @@ void view::View2D::ResetView(void) {
     if ((cr2d != NULL) && ((*cr2d)(1))) {
         this->viewX = -0.5f * (cr2d->GetBoundingBox().Left() + cr2d->GetBoundingBox().Right());
         this->viewY = -0.5f * (cr2d->GetBoundingBox().Bottom() + cr2d->GetBoundingBox().Top());
-        this->viewZoom = 2.0f / cr2d->GetBoundingBox().Height();
+        if ((this->width / this->height) > static_cast<float>(cr2d->GetBoundingBox().AspectRatio())) {
+            this->viewZoom = 2.0f / cr2d->GetBoundingBox().Height();
+        } else {
+            this->viewZoom = (2.0f * this->width) / (this->height * cr2d->GetBoundingBox().Width());
+        }
+        this->viewZoom *= 0.99f;
 
     } else {
         this->viewX = 0.0f;
