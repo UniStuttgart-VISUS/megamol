@@ -23,7 +23,7 @@ namespace volumetrics {
 
 		void growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
 							 unsigned char triIndex, 
-							 vislib::Array<float> &surf, vislib::Array<BorderVoxel> &border);
+							 vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border);
 
 		bool CellEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 
@@ -55,6 +55,13 @@ namespace volumetrics {
 		}
 
 	private:
+
+        inline bool isBorder(unsigned int x, unsigned int y, unsigned int z) {
+            return (x == 0) || (x == sjd->resX - 2)
+                || (y == 0) || (y == sjd->resY - 2)
+                || (z == 0) || (z == sjd->resZ - 2);
+        }
+
 		bool terminate;
 
 		SubJobData *sjd;

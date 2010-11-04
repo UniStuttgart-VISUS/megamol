@@ -28,6 +28,7 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
         getDataSlot("getData", "Slot that connects to a MultiParticleDataCall to fetch the particles in the scene"),
         metricsFilenameSlot("metricsFilenameSlot", "File that will contain the "
 		"surfaces and volumes of each particle list per frame"),
+        showBorderGeometrySlot("showBorderGeometrySlot", "toggle whether the the surface triangles will be replaced by the border triangles"),
 		showBoundingBoxesSlot("showBoundingBoxesSlot", "toggle whether the job subdivision grid will be shown"),
 		showSurfaceGeometrySlot("showSurfaceGeometrySlot", "toggle whether the the surface triangles will be shown"),
 		radiusMultiplierSlot("radiusMultiplierSlot", "multiplier for the particle radius"),
@@ -43,6 +44,9 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 
     this->metricsFilenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->metricsFilenameSlot);
+
+    this->showBorderGeometrySlot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->showBorderGeometrySlot);
 
 	this->showBoundingBoxesSlot << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->showBoundingBoxesSlot);
@@ -222,7 +226,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 
 		for (int x = 0; x < divX; x++) {
 			for (int y = 0; y < divY; y++) {
+            //for (int y = 0; y < 1; y++) {
 				for (int z = 0; z < divZ; z++) {
+                //for (int z = 0; z < 1; z++) {
 					float left = b.Left() + x * subVolCells * cellSize;
 					int restX = resX - x * subVolCells;
 					restX = (restX > subVolCells) ? subVolCells + 1: restX;
@@ -273,6 +279,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 			}
 			copyMeshesToBackbuffer(subJobDataList);
 		}
+        Log::DefaultLog.WriteInfo("Done marching.");
 		copyMeshesToBackbuffer(subJobDataList);
 
 		while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
@@ -375,10 +382,10 @@ void VoluMetricJob::appendBoxIndices(vislib::RawStorage &data, unsigned int &num
 	numOffset += 12;
 }
 
-bool VoluMetricJob::doBordersTouch(vislib::Array<BorderVoxel> &border1, vislib::Array<BorderVoxel> &border2) {
+bool VoluMetricJob::doBordersTouch(vislib::Array<BorderVoxel *> &border1, vislib::Array<BorderVoxel *> &border2) {
     for (SIZE_T i = 0; i < border1.Count(); i++) {
         for (SIZE_T j = 0; j < border2.Count(); j++) {
-            if (border1[i].doesTouch(border2[j])) {
+            if (border1[i]->doesTouch(border2[j])) {
                 return true;
             }
         }
@@ -418,12 +425,24 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     }
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.borderVoxels.Count(); j++) {
-            for (int k = 0; k < todos.Count(); k++) {
-                for (int l = 0; l < subJobDataList[todos[k]]->Result.borderVoxels.Count(); l++) {
-                    if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
-                        if (doBordersTouch(subJobDataList[todos[i]]->Result.borderVoxels[j],
-                            subJobDataList[todos[k]]->Result.borderVoxels[l])) {
-                            globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
+            for (int k = i; k < todos.Count(); k++) {
+                // are these neighbors or in the same subvolume?
+                vislib::math::Cuboid<float> c = subJobDataList[todos[i]]->Bounds;
+                c.Union(subJobDataList[todos[k]]->Bounds);
+                if ((i == k) || (c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
+                                                + subJobDataList[todos[k]]->Bounds.Volume())) {
+                    for (int l = 0; l < subJobDataList[todos[k]]->Result.borderVoxels.Count(); l++) {
+                        if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
+                            if (doBordersTouch(subJobDataList[todos[i]]->Result.borderVoxels[j],
+                                subJobDataList[todos[k]]->Result.borderVoxels[l])) {
+                                    if (globalSurfaceIDs[k][l] < globalSurfaceIDs[i][j]) {
+                                        globalSurfaceIDs[i][j] = globalSurfaceIDs[k][l];
+                                    } else {
+                                        globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
+                                    }
+                                    // UGLY HAZARD the devil's left ass cheek!
+                                    i = j = k = 0; l = -1;
+                            }
                         }
                     }
                 }
@@ -455,54 +474,67 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     SIZE_T triOffset = 0;
     SIZE_T idxOffset = 0;
 
-    //for (int i = 0; i < uniqueIDs.Count(); i++) {
-    //    vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
-    //    vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
+    if (this->showBorderGeometrySlot.Param<megamol::core::param::BoolParam>()->Value()) {
 
-    //    for (int j = 0; j < todos.Count(); j++) {
-    //        for (int k = 0; k < subJobDataList[todos[j]]->Result.borderVoxels.Count(); k++) {
-    //            if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
-    //                for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.borderVoxels[k].Count(); l++) {
-    //                    SIZE_T vertCount = subJobDataList[todos[j]]->Result.borderVoxels[k][l].triangles.Count() / 3;
-    //                    memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.borderVoxels[k][l].triangles.PeekElements(),
-    //                        vertCount * 3 * sizeof(float));
-    //                    for (SIZE_T l = 0; l < vertCount; l++) {
-    //                        //tri[vertOffset + l] = vertOffset + l;
-    //                        col[vertOffset + l * 3] = c.R();
-    //                        col[vertOffset + l * 3 + 1] = c.G();
-    //                        col[vertOffset + l * 3 + 2] = c.B();
-    //                    }
-    //                    vertOffset += vertCount * 3;
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
+        for (int i = 0; i < uniqueIDs.Count(); i++) {
+            vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
+            vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
 
-    for (int i = 0; i < uniqueIDs.Count(); i++) {
-        vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
-        vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
-
-        for (int j = 0; j < todos.Count(); j++) {
-            for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
-                if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
-                    SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].Count() / 3;
-                    memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].PeekElements(),
-                         vertCount * 3 * sizeof(float));
-                    for (SIZE_T l = 0; l < vertCount; l++) {
-                        //tri[vertOffset + l] = vertOffset + l;
-                        col[vertOffset + l * 3] = c.R();
-                        col[vertOffset + l * 3 + 1] = c.G();
-                        col[vertOffset + l * 3 + 2] = c.B();
+            for (int j = 0; j < todos.Count(); j++) {
+                for (int k = 0; k < subJobDataList[todos[j]]->Result.borderVoxels.Count(); k++) {
+                    if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
+                        for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.borderVoxels[k].Count(); l++) {
+                            SIZE_T vertCount = subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.Count() / 3;
+                            memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements(),
+                                vertCount * 3 * sizeof(float));
+                            for (SIZE_T l = 0; l < vertCount; l++) {
+                                //tri[vertOffset + l] = vertOffset + l;
+                                col[vertOffset + l * 3] = c.R();
+                                col[vertOffset + l * 3 + 1] = c.G();
+                                col[vertOffset + l * 3 + 2] = c.B();
+                            }
+                            vertOffset += vertCount * 3;
+                        }
                     }
-                    //for (unsigned int l = 0; l < triCount * 9; l += 9) {
-                    //    sst.SetPointer
-                    //}
-                    vertOffset += vertCount * 3;
+                }
+            }
+        }
+    } else {
+        for (int i = 0; i < uniqueIDs.Count(); i++) {
+            vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
+            vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
+
+            for (int j = 0; j < todos.Count(); j++) {
+                for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
+                    if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
+                        SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].Count() / 3;
+                        memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].PeekElements(),
+                             vertCount * 3 * sizeof(float));
+                        for (SIZE_T l = 0; l < vertCount; l++) {
+                            //tri[vertOffset + l] = vertOffset + l;
+                            col[vertOffset + l * 3] = c.R();
+                            col[vertOffset + l * 3 + 1] = c.G();
+                            col[vertOffset + l * 3 + 2] = c.B();
+                        }
+                        //for (unsigned int l = 0; l < triCount * 9; l += 9) {
+                        //    sst.SetPointer
+                        //}
+                        vertOffset += vertCount * 3;
+                    }
                 }
             }
         }
     }
+
+    for (SIZE_T i = 0; i < vertOffset / 9; i++) {
+        vislib::math::ShallowShallowTriangle<float, 3> sst(&(vert[i * 9]));
+        vislib::math::Vector<float, 3> n;
+        sst.Normal(n);
+        memcpy(&(norm[i * 9]), n.PeekComponents(), sizeof(float) * 3);
+        memcpy(&(norm[i * 9 + 3]), n.PeekComponents(), sizeof(float) * 3);
+        memcpy(&(norm[i * 9 + 6]), n.PeekComponents(), sizeof(float) * 3);
+    }
+
     debugMeshes[meshBackBufferIndex].SetVertexData(vertOffset / 3, vert, norm, col, NULL, true);
 	//debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, tri, true);
     debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, NULL, false);

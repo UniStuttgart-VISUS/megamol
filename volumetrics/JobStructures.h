@@ -14,37 +14,47 @@ namespace megamol {
 namespace trisoup {
 namespace volumetrics {
 
-	struct FatVoxel {
-		float distField;
-		float *triangles;
-		//unsigned char numTriangles;
-        unsigned char mcCase;
-		unsigned char consumedTriangles;
-	};
-
     class BorderVoxel {
     public:
         vislib::Array<float> triangles;
+        unsigned int x;
+        unsigned int y;
+        unsigned int z;
 
         inline bool operator ==(const BorderVoxel &rhs) {
-            return &this->triangles == &rhs.triangles;
+            return (this->x == rhs.x) && (this->y == rhs.y) && (this->z == rhs.z);
         }
 
         inline bool doesTouch(const BorderVoxel &rhs) {
-            vislib::math::ShallowShallowTriangle<float, 3> sst1(const_cast<float *>(this->triangles.PeekElements()));
-            vislib::math::ShallowShallowTriangle<float, 3> sst2(const_cast<float *>(rhs.triangles.PeekElements()));
-            for (int i = 0; i < this->triangles.Count() / 9; i++) {
-                for (int j = 0; j < rhs.triangles.Count() / 9; j++) {
-                    sst1.SetPointer(const_cast<float *>(this->triangles.PeekElements() + i * 9));
-                    sst2.SetPointer(const_cast<float *>(rhs.triangles.PeekElements() + j * 9));
-                    if (sst1.HasCommonEdge(sst2)) {
-                        return true;
+            if ((this->x == rhs.x) || (this->y == rhs.y) || (this->z == rhs.z)) {
+                vislib::math::ShallowShallowTriangle<float, 3> sst1(const_cast<float *>(this->triangles.PeekElements()));
+                vislib::math::ShallowShallowTriangle<float, 3> sst2(const_cast<float *>(rhs.triangles.PeekElements()));
+                for (int i = 0; i < this->triangles.Count() / 9; i++) {
+                    for (int j = 0; j < rhs.triangles.Count() / 9; j++) {
+                        sst1.SetPointer(const_cast<float *>(this->triangles.PeekElements() + i * 9));
+                        sst2.SetPointer(const_cast<float *>(rhs.triangles.PeekElements() + j * 9));
+                        if (sst1.HasCommonEdge(sst2)) {
+                            return true;
+                        }
                     }
                 }
             }
             return false;
         }
+
+        inline bool doesTouch(const BorderVoxel *rhs) {
+            return this->doesTouch(*rhs);
+        }
     };
+    
+    struct FatVoxel {
+		float distField;
+		float *triangles;
+		//unsigned char numTriangles;
+        unsigned char mcCase;
+		unsigned char consumedTriangles;
+        BorderVoxel *borderVoxel;
+	};
 
 	/**
 	 *
@@ -70,7 +80,7 @@ namespace volumetrics {
 		//vislib::Array<unsigned int> indices;
 
         vislib::Array<vislib::Array<float> > surfaces;
-        vislib::Array<vislib::Array<BorderVoxel> > borderVoxels;
+        vislib::Array<vislib::Array<BorderVoxel *> > borderVoxels;
 
 		//float *normals;
 		float surface;

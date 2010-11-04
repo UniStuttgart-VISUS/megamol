@@ -25,33 +25,29 @@ vislib::math::Point<signed char, 3> neighbors[] = {
 
 void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
                              unsigned char triIndex, 
-                             vislib::Array<float> &surf, vislib::Array<BorderVoxel> &border) {
+                             vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border) {
 
     FatVoxel *f = &theVolume[(z * sjd->resY + y) * sjd->resX + x];
     int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
-    bool isBorder = false;
-    unsigned int borderIdx = 0;
 
     vislib::math::ShallowShallowTriangle<float, 3> sst(f->triangles + 3 * 3 * triIndex);
     vislib::math::ShallowShallowTriangle<float, 3> sst2(f->triangles + 3 * 3 * triIndex);
     vislib::math::ShallowShallowTriangle<float, 3> sstTemp(f->triangles + 3 * 3 * triIndex);
     vislib::math::ShallowShallowTriangle<float, 3> sstI(f->triangles + 3 * 3 * triIndex);
-    BorderVoxel bv;
 
     // we come here only once per surface and cell. that is why I can do this.
-    if ((x == 0) || (x == sjd->resX - 1)
-        || (y == 0) || (y == sjd->resY - 1)
-        || (z == 0) || (z == sjd->resZ - 1)) {
-        unsigned int numTris = 0;
-        for (unsigned char c = 0; c < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; c++) {
-            if (MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][c] == currSurfID) {
-                numTris++;
-            }
-        }
-        bv.triangles.SetCount(numTris * 3 * 3);
-        border.Append(bv);
-        isBorder = true;
-    }
+    //if (isBorder(x, y, z)) {
+    //    unsigned int numTris = 0;
+    //    for (unsigned char c = 0; c < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; c++) {
+    //        if (MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][c] == currSurfID) {
+    //            numTris++;
+    //        }
+    //    }
+    //    bv = new BorderVoxel;
+    //    bv->triangles.SetCount(numTris * 3 * 3);
+    //    border.Append(bv);
+    //    isBorder = true;
+    //}
 
     for (unsigned char c = 0; c < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; c++) {
         sstI.SetPointer(f->triangles + 3 * 3 * c);
@@ -65,10 +61,19 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                 surf.SetCount(surf.Count() + 9);
                 sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
                 sstTemp = sstI;
-                if (isBorder) {
-                    sstTemp.SetPointer(const_cast<float *>(bv.triangles.PeekElements() + 3 * 3 * borderIdx));
+                if (isBorder(x, y, z)) {
+                    if (f->borderVoxel == NULL) {
+                        f->borderVoxel = new BorderVoxel();
+                        f->borderVoxel->x = x;
+                        f->borderVoxel->y = y;
+                        f->borderVoxel->z = z;
+                        f->borderVoxel->triangles.AssertCapacity(5 * 9);
+                        border.Add(f->borderVoxel);
+                    }
+                    f->borderVoxel->triangles.SetCount(f->borderVoxel->triangles.Count() + 9);
+                    sstTemp.SetPointer(const_cast<float *>(f->borderVoxel->triangles.PeekElements()
+                        + f->borderVoxel->triangles.Count() - 9));
                     sstTemp = sstI;
-                    borderIdx++;
                 }
                 f->consumedTriangles |= (1 << c);
                 //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -95,6 +100,22 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                                     surf.SetCount(surf.Count() + 9);
                                     sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
                                     sstTemp = sst2;
+
+                                    if (isBorder(x + neighbors[ni].X(), y + neighbors[ni].Y(), z + neighbors[ni].Z())) {
+                                        if (n->borderVoxel == NULL) {
+                                            n->borderVoxel = new BorderVoxel();
+                                            n->borderVoxel->x = x + neighbors[ni].X();
+                                            n->borderVoxel->y = y + neighbors[ni].Y();
+                                            n->borderVoxel->z = z + neighbors[ni].Z();
+                                            n->borderVoxel->triangles.AssertCapacity(5 * 9);
+                                            border.Add(n->borderVoxel);
+                                        }
+                                        n->borderVoxel->triangles.SetCount(n->borderVoxel->triangles.Count() + 9);
+                                        sstTemp.SetPointer(const_cast<float *>(n->borderVoxel->triangles.PeekElements()
+                                            + n->borderVoxel->triangles.Count() - 9));
+                                        sstTemp = sst2;
+                                    }
+
                                     //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                                     //    "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
                                     //    " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
@@ -132,7 +153,10 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
         if ((f->consumedTriangles & (1 << l)) == 0) {
             // this is a new surface
             vislib::Array<float> surf;
-            vislib::Array<BorderVoxel> border;
+            vislib::Array<BorderVoxel *> border;
+            for (SIZE_T idx = 0; idx < sjd->resX * sjd->resY * sjd->resZ; idx++) {
+                theVolume[idx].borderVoxel = NULL;
+            }
             surf.SetCapacityIncrement(90);
             border.SetCapacityIncrement(10);
             cellFIFO.Append(vislib::math::Point<unsigned int, 4>(x, y, z, l));
@@ -315,6 +339,7 @@ DWORD Voxelizer::Run(void *userData) {
     FatVoxel *volume = new FatVoxel[sjd->resX * sjd->resY * sjd->resZ];
     for (SIZE_T i = 0; i < sjd->resX * sjd->resY * sjd->resZ; i++) {
         volume[i].distField = FLT_MAX;
+        volume[i].borderVoxel = NULL;
     }
 
     unsigned int partListCnt = sjd->datacall->GetParticleListCount();

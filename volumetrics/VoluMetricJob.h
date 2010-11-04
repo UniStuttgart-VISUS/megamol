@@ -95,7 +95,7 @@ namespace volumetrics {
 
     private:
 
-        bool doBordersTouch(vislib::Array<BorderVoxel> &border1, vislib::Array<BorderVoxel> &border2);
+        bool doBordersTouch(vislib::Array<BorderVoxel *> &border1, vislib::Array<BorderVoxel *> &border2);
 
 		bool getLineDataCallback(core::Call &caller);
 
@@ -115,7 +115,9 @@ namespace volumetrics {
 		
 		core::param::ParamSlot showBoundingBoxesSlot;
 
-		core::param::ParamSlot showSurfaceGeometrySlot;
+        core::param::ParamSlot showBorderGeometrySlot;
+
+        core::param::ParamSlot showSurfaceGeometrySlot;
 
 		core::param::ParamSlot radiusMultiplierSlot;
 
