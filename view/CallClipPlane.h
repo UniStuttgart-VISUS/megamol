@@ -15,6 +15,7 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/Plane.h"
+#include "vislib/Vector.h"
 
 
 namespace megamol {
@@ -75,6 +76,31 @@ namespace view {
 
         /** Dtor. */
         virtual ~CallClipPlane(void);
+
+        /**
+         * Calculates the coordinate system of the clipping plane
+         *
+         * @param outX the vector to receive the x axis
+         * @param outY the vector to receive the y axis
+         */
+        inline void CalcPlaneSystem(
+                vislib::math::Vector<float, 3>& outX,
+                vislib::math::Vector<float, 3>& outY) const {
+            vislib::math::Vector<float, 3> z;
+            this->CalcPlaneSystem(outX, outY, z);
+        }
+
+        /**
+         * Calculates the coordinate system of the clipping plane
+         *
+         * @param outX the vector to receive the x axis
+         * @param outY the vector to receive the y axis
+         * @param outZ the vector to receive the z axis (plane normal)
+         */
+        void CalcPlaneSystem(
+            vislib::math::Vector<float, 3>& outX,
+            vislib::math::Vector<float, 3>& outY,
+            vislib::math::Vector<float, 3>& outZ) const;
 
         /**
          * Gets the colour of the clipping plane
