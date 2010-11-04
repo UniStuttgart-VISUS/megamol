@@ -59,7 +59,7 @@ view::ClipPlane::ClipPlane(void) : Module(),
         vislib::math::Vector<float, 3>(this->plane.Point()));
     this->MakeSlotAvailable(&this->pointSlot);
 
-    this->distSlot << new param::FloatParam(this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)));
+    this->distSlot << new param::FloatParam(-this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->distSlot);
 }
 
@@ -134,7 +134,7 @@ bool view::ClipPlane::requestPlane(Call& call) {
                 this->pointSlot.Param<param::Vector3fParam>()->Value().PeekComponents())),
             this->normalSlot.Param<param::Vector3fParam>()->Value());
         this->distSlot.Param<param::FloatParam>()->SetValue(
-            this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)), false);
+            -this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)), false);
     }
 
     ccp->SetColour(this->col[0], this->col[1], this->col[2]);
