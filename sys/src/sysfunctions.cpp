@@ -140,6 +140,21 @@ bool vislib::sys::ReadTextFile(vislib::StringA& outStr, const char *filename) {
 /*
  * vislib::sys::ReadTextFile
  */
+bool vislib::sys::ReadTextFile(vislib::StringA& outStr, const wchar_t *filename) {
+    File file;
+    if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, 
+            File::OPEN_ONLY)) {
+        VLTRACE(Trace::LEVEL_ERROR, "Text file \"%s\" could not be opened.", 
+            filename);
+        return false;
+    }
+    return ReadTextFile(outStr, file);
+}
+
+
+/*
+ * vislib::sys::ReadTextFile
+ */
 bool vislib::sys::ReadTextFile(vislib::StringA& outStr, 
         vislib::sys::File& file) {
     File::FileSize size; // Size of the remainig file in bytes.

@@ -191,6 +191,20 @@ namespace sys {
     bool ReadTextFile(StringA& outStr, const char *filename);
 
     /**
+     * Read the content of the file 'filename' into 'outSrc'. 'outSrc' is 
+     * being erased by this operation.
+     *
+     * @param outStr   The string to receive the content.
+     * @param filename The name of the file being read.
+     *
+     * @return true, if the file could be read, false, if the file was not 
+     *         found or could not be opened.
+     *
+     * @throws IOException If reading from the file failed.
+     */
+    bool ReadTextFile(StringA& outStr, const wchar_t *filename);
+
+    /**
      * Read the content of the file 'file' into 'outSrc'. 'outSrc' is being 
      * erased by this operation. 'file' will be read from the current position,
      * will be read until EoF, and will not be closed after operation.
