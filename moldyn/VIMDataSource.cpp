@@ -147,9 +147,6 @@ bool moldyn::VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
 
             int oldTraceLvl = vislib::Trace::GetInstance().GetLevel();
             vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_NONE);
-            x *= lScale;
-            y *= lScale;
-            z *= lScale;
             (*posWrtr[idx]) << x << y << z;
             (*quatWrtr[idx]) << qx << qy << qz << qw;
             vislib::Trace::GetInstance().SetLevel(oldTraceLvl);
@@ -172,14 +169,14 @@ bool moldyn::VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
         for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
             if (maxVal < *this->pos[i].AsAt<float>(j)) maxVal = *this->pos[i].AsAt<float>(j);
         }
-        float deQuant = 1.0f;
+        float deQuant = lScale;
         if (maxVal >= 1000) {
-            deQuant = 9999.0f;
+            deQuant /= 10000.0f;
         } else {
-            deQuant = 999.0f;
+            deQuant /= 1000.0f;
         }
         for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
-            *this->pos[i].AsAt<float>(j) /= deQuant;
+            *this->pos[i].AsAt<float>(j) *= deQuant;
         }
 
     }
@@ -517,8 +514,7 @@ void moldyn::VIMDataSource::calcBoundingBox(void) {
 
     for (unsigned int i = 0; i < this->FrameCount(); i++) {
         this->file->Seek(this->frameIdx[i]);
-        vislib::StringA line = 
-            vislib::sys::ReadLineFromFileA(*this->file).Substring(1);
+        vislib::StringA line = vislib::sys::ReadLineFromFileA(*this->file).Substring(1);
         line.TrimSpacesBegin();
         try {
             scale = float(vislib::CharTraitsA::ParseDouble(line.PeekBuffer()));
@@ -678,8 +674,7 @@ moldyn::VIMDataSource::parseTypeLine(vislib::StringA &line, int &outType) {
             //    float(vislib::CharTraitsA::ParseDouble(shreds[3])),
             //    float(vislib::CharTraitsA::ParseDouble(shreds[4])),
             //    float(vislib::CharTraitsA::ParseDouble(shreds[5])));
-            sphere->SetRadius(0.5f * 
-                float(vislib::CharTraitsA::ParseDouble(shreds[6])));
+            sphere->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[6])));
             if (shreds.Count() == 8) {
                 int idx = vislib::CharTraitsA::ParseInt(shreds[7]);
                 if (idx < 0) idx = 0;
@@ -708,8 +703,7 @@ moldyn::VIMDataSource::parseTypeLine(vislib::StringA &line, int &outType) {
             //    float(vislib::CharTraitsA::ParseDouble(shreds[6])),
             //    float(vislib::CharTraitsA::ParseDouble(shreds[7])),
             //    float(vislib::CharTraitsA::ParseDouble(shreds[8])));
-            cyl->SetRadius(0.5f * 
-                float(vislib::CharTraitsA::ParseDouble(shreds[9])));
+            cyl->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[9])));
             if (shreds.Count() == 11) {
                 int idx = vislib::CharTraitsA::ParseInt(shreds[10]);
                 if (idx < 0) idx = 0;
@@ -825,17 +819,15 @@ bool moldyn::VIMDataSource::getDataCallback(Call& caller) {
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetParticleListCount(this->typeCnt);
         for (unsigned int i = 0; i < this->typeCnt; i++) {
-            c2->AccessParticles(i).SetGlobalRadius(
-                this->types[i].Radius() / this->boxScaling);
-            c2->AccessParticles(i).SetGlobalColour(
-                this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
+            c2->AccessParticles(i).SetGlobalRadius(this->types[i].Radius()/* / this->boxScaling*/);
+            c2->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
             c2->AccessParticles(i).SetCount(f->PartCnt(i));
-            c2->AccessParticles(i).SetColourData(
-                moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+            c2->AccessParticles(i).SetColourData(moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
             const float *vd = f->PartPoss(i);
-            c2->AccessParticles(i).SetVertexData(
-                (vd == NULL) ? moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
-                : moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, vd);
+            c2->AccessParticles(i).SetVertexData((vd == NULL)
+                ? moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
+                : moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                vd);
         }
 
     }
@@ -853,11 +845,14 @@ bool moldyn::VIMDataSource::getExtentCallback(Call& caller) {
 
     if (c2 != NULL) {
         for (unsigned int i = 0; i < this->typeCnt; i++) {
-            float r = this->types[i].Radius() / this->boxScaling;
+            float r = this->types[i].Radius();// / this->boxScaling;
             if (r > border) border = r;
         }
-        c2->SetExtent(this->FrameCount(), -border, -border, -border,
-            1.0f + border, 1.0f + border, 1.0f + border);
+        c2->SetFrameCount(this->FrameCount());
+        c2->AccessBoundingBoxes().Clear();
+        c2->AccessBoundingBoxes().SetObjectSpaceBBox(0, 0, 0, this->boxScaling, this->boxScaling, this->boxScaling);
+        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(-border, -border, -border,
+            this->boxScaling + border, this->boxScaling + border, this->boxScaling + border);
         return true;
     }
 

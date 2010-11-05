@@ -499,7 +499,7 @@ namespace moldyn {
         /** The frame index table */
         vislib::sys::File::FileSize *frameIdx;
 
-        /** Scaling from the unit box [0, 1] to the data sets bounding box */
+        /** Scaling from the unit box [0, 1] to the data sets bounding box (first frame) */
         float boxScaling;
 
     };
