@@ -73,7 +73,7 @@ void moldyn::VIMDataSource::Frame::Clear(void) {
 bool moldyn::VIMDataSource::Frame::LoadFrame(vislib::sys::File *file, 
         unsigned int idx, moldyn::VIMDataSource::SimpleType *types, float /*scaling*/) {
 
-    //float lScale = 1.0f;
+    float lScale = 1.0f;
 
     // clear frame by resetting the counters
     for (unsigned int i = 0; i < this->typeCnt; i++) {
@@ -98,12 +98,12 @@ bool moldyn::VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
     startLine.Remove(0, 1);
     startLine.TrimSpacesBegin();
 
-    //try {
-    //    lScale = static_cast<float>(vislib::CharTraitsA::ParseDouble(
-    //        startLine.PeekBuffer()));
-    //} catch(...) {
-    //    lScale = 1.0f;
-    //}
+    try {
+        lScale = static_cast<float>(vislib::CharTraitsA::ParseDouble(
+            startLine.PeekBuffer()));
+    } catch(...) {
+        lScale = 1.0f;
+    }
 
     this->frame = idx;
 
@@ -147,6 +147,9 @@ bool moldyn::VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
 
             int oldTraceLvl = vislib::Trace::GetInstance().GetLevel();
             vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_NONE);
+            x *= lScale;
+            y *= lScale;
+            z *= lScale;
             (*posWrtr[idx]) << x << y << z;
             (*quatWrtr[idx]) << qx << qy << qz << qw;
             vislib::Trace::GetInstance().SetLevel(oldTraceLvl);
