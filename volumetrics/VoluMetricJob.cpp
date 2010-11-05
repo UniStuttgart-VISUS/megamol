@@ -153,6 +153,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 
         unsigned int partListCnt = datacall->GetParticleListCount();
 		MaxRad = -FLT_MAX;
+        MinRad = FLT_MAX;
         for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
 			//UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
             //printf("%u particles in list %u\n", numParticles, partListI);
@@ -160,6 +161,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 			if (r > MaxRad) {
 				MaxRad = r;
 			}
+            if (r < MinRad) {
+                MinRad = r;
+            }
 			if (datacall->AccessParticles(partListI).GetVertexDataType() ==
 				core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
 				UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
@@ -178,7 +182,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 		float RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
 		MaxRad *= RadMult;
 
-		float cellSize = MaxRad * 0.25f;//* 0.075f;
+		float cellSize = MinRad * 0.5f;//* 0.075f;
 		int bboxBytes = 8 * 3 * sizeof(float);
 		int bboxIdxes = 12 * 2 * sizeof(unsigned int);
 		int vertSize = bboxBytes * partListCnt;
@@ -441,7 +445,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
                                         globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
                                     }
                                     // UGLY HAZARD the devil's left ass cheek!
-                                    i = j = k = 0; l = -1;
+                                    //i = j = k = 0; l = -1;
                             }
                         }
                     }
@@ -451,20 +455,25 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     }
     vislib::Array<unsigned int> uniqueIDs;
     vislib::Array<unsigned int> countPerID;
+    vislib::Array<float> surfPerID;
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             SIZE_T pos = uniqueIDs.IndexOf(globalSurfaceIDs[i][j]);
             if (pos == vislib::Array<unsigned int>::INVALID_POS) {
                 uniqueIDs.Add(globalSurfaceIDs[i][j]);
                 countPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
+                surfPerID.Add(subJobDataList[todos[i]]->Result.surfaceSurfaces[j]);
             } else {
                 countPerID[pos] = countPerID[pos] + (subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
+                surfPerID[pos] = surfPerID[pos] + subJobDataList[todos[i]]->Result.surfaceSurfaces[j];
             }
         }
     }
     unsigned int numTriangles = 0;
     for (int i = 0; i < uniqueIDs.Count(); i++) {
         numTriangles += countPerID[i];
+        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f", uniqueIDs[i],
+            countPerID[i], surfPerID[i]);
     }
     vert = new float[numTriangles * 9];
     norm = new float[numTriangles * 9];

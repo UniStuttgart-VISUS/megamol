@@ -81,14 +81,16 @@ namespace volumetrics {
 
         vislib::Array<vislib::Array<float> > surfaces;
         vislib::Array<vislib::Array<BorderVoxel *> > borderVoxels;
+        vislib::Array<float> surfaceSurfaces;
+        //vislib::Array<float> volumes;
 
 		//float *normals;
-		float surface;
-		float volume;
+		//float surface;
+		//float volume;
 
 		bool done;
 
-		SubJobResult(void) : surface(0.0f), volume(0.0f), done(false) {
+		SubJobResult(void) : done(false) {
 			//vertices.SetCapacityIncrement(90);
 			//normals.SetCapacityIncrement(90);
 			//indices.SetCapacityIncrement(30);

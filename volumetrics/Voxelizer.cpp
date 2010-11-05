@@ -25,7 +25,8 @@ vislib::math::Point<signed char, 3> neighbors[] = {
 
 void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
                              unsigned char triIndex, 
-                             vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border) {
+                             vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border,
+                             float &surfSurf) {
 
     FatVoxel *f = &theVolume[(z * sjd->resY + y) * sjd->resX + x];
     int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
@@ -61,6 +62,7 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                 surf.SetCount(surf.Count() + 9);
                 sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
                 sstTemp = sstI;
+                surfSurf += sstI.Area<float>();
                 if (isBorder(x, y, z)) {
                     if (f->borderVoxel == NULL) {
                         f->borderVoxel = new BorderVoxel();
@@ -100,7 +102,7 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                                     surf.SetCount(surf.Count() + 9);
                                     sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
                                     sstTemp = sst2;
-
+                                    surfSurf += sst2.Area<float>();
                                     if (isBorder(x + neighbors[ni].X(), y + neighbors[ni].Y(), z + neighbors[ni].Z())) {
                                         if (n->borderVoxel == NULL) {
                                             n->borderVoxel = new BorderVoxel();
@@ -154,6 +156,7 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
             // this is a new surface
             vislib::Array<float> surf;
             vislib::Array<BorderVoxel *> border;
+            float surfSurf = 0.0f;
             for (SIZE_T idx = 0; idx < sjd->resX * sjd->resY * sjd->resZ; idx++) {
                 theVolume[idx].borderVoxel = NULL;
             }
@@ -168,10 +171,11 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
                 //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 //    "[%08u] growing    (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(),
                 //    p.X(), p.Y(), p.Z(), p.W());
-                growSurfaceFromTriangle(theVolume, p.X(), p.Y(), p.Z(), p.W(), surf, border);
+                growSurfaceFromTriangle(theVolume, p.X(), p.Y(), p.Z(), p.W(), surf, border, surfSurf);
             }
             sjd->Result.surfaces.Append(surf);
             sjd->Result.borderVoxels.Append(border);
+            sjd->Result.surfaceSurfaces.Append(surfSurf);
         }
     }
 }
@@ -258,8 +262,8 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
     }
 
     // make triangles
-    vislib::math::Vector<float, 3> normal;
-    vislib::math::Vector<float, 3> a, b;
+    //vislib::math::Vector<float, 3> normal;
+    //vislib::math::Vector<float, 3> a, b;
 
     int triCnt = MarchingCubeTables::a2ucTriangleConnectionCount[flagIndex];
     theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles = new float[triCnt * 3 * 3];
@@ -272,14 +276,14 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
         //    break;
         //}
 
-        a = EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 0]] 
-        - EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 1]];
-        b = EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 0]] 
-        - EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 2]];
-        normal = a.Cross(b);
+        //a = EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 0]] 
+        //- EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 1]];
+        //b = EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 0]] 
+        //- EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 2]];
+        //normal = a.Cross(b);
 
-        sjd->Result.surface += normal.Length() / 2.0f;
-        normal.Normalise();
+        //sjd->Result.surface += normal.Length() / 2.0f;
+        //normal.Normalise();
         tri.SetPointer(theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles + 3 * 3 * triangle);
         for (corner = 0; corner < 3; corner++) {
             vertex = MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + corner];

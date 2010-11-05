@@ -131,6 +131,8 @@ namespace volumetrics {
 
 		float MaxRad;
 
+        float MinRad;
+
 		/** the data hash, i.e. the front buffer frame available from the slots */
 		SIZE_T hash;
 
