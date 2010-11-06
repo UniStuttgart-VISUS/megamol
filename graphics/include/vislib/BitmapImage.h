@@ -367,6 +367,24 @@ namespace graphics {
         }
 
         /**
+         * Answer the image extension object
+         *
+         * @return The image extension object
+         */
+        inline Extension * GetExtension(void) {
+            return this->ext;
+        }
+
+        /**
+         * Answer the image extension object
+         *
+         * @return The image extension object
+         */
+        inline const Extension * GetExtension(void) const {
+            return this->ext;
+        }
+
+        /**
          * Answer the height of the image.
          *
          * @return The height of the image.
