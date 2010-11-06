@@ -8,8 +8,27 @@
 
 #include "vislib/BitmapImage.h"
 #include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
+
+
+/*
+ * vislib::graphics::BitmapImage::Extension::Extension
+ */
+vislib::graphics::BitmapImage::Extension::Extension(
+        vislib::graphics::BitmapImage& owner) : owner(owner) {
+    // intentionally empty
+}
+
+
+/*
+ * vislib::graphics::BitmapImage::Extension::~Extension
+ */
+vislib::graphics::BitmapImage::Extension::~Extension(void) {
+    // intentionally empty
+}
+
 
 
 /*
@@ -91,10 +110,10 @@ vislib::graphics::BitmapImage::BitmapImage(unsigned int width,
  * vislib::graphics::BitmapImage::BitmapImage
  */
 vislib::graphics::BitmapImage::BitmapImage(
-        const vislib::graphics::BitmapImage& src) : data(NULL),
+        const vislib::graphics::BitmapImage& src, bool copyExt) : data(NULL),
         chanType(CHANNELTYPE_BYTE), height(0), labels(NULL), numChans(0),
         width(0) {
-    this->CopyFrom(src);
+    this->CopyFrom(src, copyExt);
 }
 
 
@@ -174,11 +193,16 @@ vislib::graphics::BitmapImage::~BitmapImage(void) {
  * vislib::graphics::BitmapImage::CopyFrom
  */
 void vislib::graphics::BitmapImage::CopyFrom(
-        const vislib::graphics::BitmapImage& src) {
+        const vislib::graphics::BitmapImage& src, bool copyExt) {
     unsigned int len = src.width * src.height * src.BytesPerPixel();
     ARY_SAFE_DELETE(this->data);
     this->data = new char[len];
     memcpy(this->data, src.data, len);
+    if (copyExt && (src.ext != NULL)) {
+        this->SetExtension(src.ext->Clone(*this));
+    } else {
+        this->SetExtension(NULL);
+    }
     this->chanType = src.chanType;
     this->height = src.height;
     ARY_SAFE_DELETE(this->labels);
@@ -466,6 +490,29 @@ void vislib::graphics::BitmapImage::FlipVertical(void) {
     }
 
     delete[] tmpbuf;
+}
+
+
+/*
+ * vislib::graphics::BitmapImage::SetExtension
+ */
+void vislib::graphics::BitmapImage::SetExtension(
+        vislib::graphics::BitmapImage::Extension *ext) {
+    if (ext != NULL) {
+        if (this->ext != ext) {
+            if (&(ext->Owner()) != this) {
+                throw vislib::IllegalParamException("ext owner != image", __FILE__, __LINE__);
+            }
+            if (this->ext != NULL) {
+                delete this->ext;
+            }
+            this->ext = ext;
+        }
+
+    } else if (this->ext != NULL) {
+        delete this->ext;
+        this->ext = NULL;
+    }
 }
 
 

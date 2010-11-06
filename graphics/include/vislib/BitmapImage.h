@@ -49,6 +49,57 @@ namespace graphics {
             CHANNELTYPE_FLOAT //< use 4 bytes per channel and pixel
         };
 
+        /**
+         * Base class for image extensions, like animation or compositing
+         * layers
+         */
+        class Extension {
+        public:
+
+            /**
+             * Ctor
+             *
+             * @return owner The owning image
+             */
+            Extension(BitmapImage& owner);
+
+            /** Dtor */
+            virtual ~Extension(void);
+
+            /**
+             * Clones this extension object when the hosting image is copied
+             *
+             * @param newowner The image to become the owner for the clone
+             *
+             * @return A clone (deep copy) of this object
+             */
+            virtual Extension * Clone(BitmapImage& newowner) = 0;
+
+            /**
+             * Answer the owner of the extension
+             *
+             * @return The owning image of the extension
+             */
+            inline BitmapImage& Owner(void) {
+                return this->owner;
+            }
+
+            /**
+             * Answer the owner of the extension
+             *
+             * @return The owning image of the extension
+             */
+            inline const BitmapImage& Owner(void) const {
+                return this->owner;
+            }
+
+        private:
+
+            /** The hosting image */
+            BitmapImage& owner;
+
+        };
+
         /** A BitmapImage template with Gray byte channels */
         static const BitmapImage TemplateByteGray;
 
@@ -108,8 +159,9 @@ namespace graphics {
          * Copy ctor. Creates a deep copy of the source image.
          *
          * @param src The source image to create the deep copy from.
+         * @param copyExt If true also any image extension will be copied
          */
-        explicit BitmapImage(const BitmapImage& src);
+        explicit BitmapImage(const BitmapImage& src, bool copyExt = false);
 
         /**
          * Ctor. Creates an empty bitmap (width and height are zero) with one
@@ -184,8 +236,9 @@ namespace graphics {
          * Creates a deep copy of the source image.
          *
          * @param src The source image to create the deep copy from.
+         * @param copyExt If true also any image extension will be copied
          */
-        void CopyFrom(const BitmapImage& src);
+        void CopyFrom(const BitmapImage& src, bool copyExt = false);
 
         /**
          * Converts this BitmapImage to match the channel type and channel
@@ -402,6 +455,13 @@ namespace graphics {
         }
 
         /**
+         * Removes the image extension object
+         */
+        inline void RemoveExtension(void) {
+            this->SetExtension(NULL);
+        }
+
+        /**
          * Sets the label of on channel. If the zero-based channel index
          * 'channel' is out of range, nothing will happen.
          *
@@ -413,6 +473,13 @@ namespace graphics {
                 this->labels[channel] = label;
             }
         }
+
+        /**
+         * Sets the image extension object
+         *
+         * @param ext The image extension object
+         */
+        void SetExtension(Extension *ext);
 
         /**
          * Answer the width of the image.
@@ -448,6 +515,9 @@ namespace graphics {
 
         /** The type of the channel data of all channels */
         ChannelType chanType;
+
+        /** The image extension */
+        Extension *ext;
 
         /** The height of the image in pixels */
         unsigned int height;
