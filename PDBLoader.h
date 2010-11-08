@@ -137,6 +137,35 @@ namespace protein {
             virtual ~Frame(void);
 
             /**
+             * Encode a given int to a certain number of bits
+             * TODO
+             */
+            void encodebits(char *outbuff, int bitsize, int bitoffset,
+                            unsigned int num );
+
+            /**
+             * Encode three integers (representing one coordinate).
+             *
+             * @param outbuff      buffer for the encoded integers
+             * @param num_of_bits  the bitsize of the encoded integers
+             * @param sizes        the ranges of value
+             * @param inbuff       integers to be encoded
+             * @param bitoffset    the bitoffset in the first byte
+             */
+            bool encodeints(char *outbuff, int num_of_bits,
+                            unsigned int sizes[], int inbuff[],
+                            unsigned int bitoffset);
+
+            /**
+            * Encode the frame and write it to the given XTC-file.
+            *
+            * @param outfile    The XTC-file.
+            * @param precision  The precision of the encoded float coordinates.
+            */
+            bool writeToXtcFile(ofstream *outfile, float precision,
+                                float *minFloats, float *maxfloats);
+
+            /**
              * Reads and decodes one frame of the data set from a given
              * xtc-file.
              *
@@ -155,15 +184,13 @@ namespace protein {
             int sizeofint(int size);
 
             /**
-            * Calculates the number of bits needed to represent a
-            * given number of compressed ints.
+            * Calculates the number of bits needed to represent 3 ints.
             *
-            * @param num_of_ints The number of ints
             * @param sizes The range of the ints
             *
             * @return The needed number of bits
             */
-            int sizeofints(int num_of_ints, unsigned int sizes[]);
+            unsigned int sizeofints(unsigned int sizes[]);
 
             /**
             * Decodes integers from a given byte-array by calculating the
@@ -538,6 +565,15 @@ namespace protein {
          * @return 'true' if the file could be loaded, otherwise 'false'
          */
         bool readNumXTCFrames();
+
+        /**
+         * Beginning with second frame writes the frames of the current PDB-file
+         * into a new compressed XTC-file.
+         *
+         * @param filename The name of the output file.
+         */
+        void writeToXtcFile(const vislib::TString& filename);
+
 
         // -------------------- variables --------------------
 
