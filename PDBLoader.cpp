@@ -206,8 +206,8 @@ void PDBLoader::Frame::setFrameIdx(int idx) {
  */
  // TODO: handle the usage of large numbers
  // TODO: no compression for three atoms or less
-bool PDBLoader::Frame::writeToXtcFile(ofstream *outfile, float precision,
-                                      float *minFloats, float *maxFloats) {
+bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
+                                  float *minFloats, float *maxFloats) {
 
     unsigned int i;
     int minInt[3], maxInt[3];
@@ -297,51 +297,38 @@ bool PDBLoader::Frame::writeToXtcFile(ofstream *outfile, float precision,
 
     for(i = 0; i < AtomCount(); i++) {
 
-        // TODO round the right way
         thiscoord[0] = (int)(atomPosition[i*3+0]*precision) - minInt[0];
         thiscoord[1] = (int)(atomPosition[i*3+1]*precision) - minInt[1];
         thiscoord[2] = (int)(atomPosition[i*3+2]*precision) - minInt[2];
 
-        //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
-        //      "minInt = { %i, %i , %i }",minInt[0], minInt[1], minInt[2]);
-
-        //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
-        //      "atomPosition = { %f, %f , %f }",atomPosition[i*3+0], atomPosition[i*3+1], atomPosition[i*3+2]);
-
-        //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
-        //      "thiscoord = { %i, %i , %i }",thiscoord[0], thiscoord[1], thiscoord[2]);
-
         encodeints(charPt, bitsize, sizes, thiscoord, bitoffset);
 
         // update charPt
-        charPt += ((bitoffset+bitsize) / 8); // TODO?
+        charPt += ((bitoffset+bitsize) / 8);
         // calc new bitoffset
-        bitoffset = (bitoffset+bitsize) % 8; // TODO?
+        bitoffset = (bitoffset+bitsize) % 8;
 
 
         // flag that runlength didn't change
         encodebits(charPt, 1, bitoffset, 0);
 
         // update charPt
-        charPt += ((bitoffset+1) / 8); // TODO?
+        charPt += ((bitoffset+1) / 8);
         // calc new bitoffset
-        bitoffset = (bitoffset+1) % 8; // TODO?
+        bitoffset = (bitoffset+1) % 8;
     }
 
     // write the size to outfile
-    unsigned int s = ((bitsize+1) * (AtomCount() + 1)) / 8 + 1; // TODO ?
-
-    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Frame:%i, size: %i", this->frame, s);
+    unsigned int s = ((bitsize+1) * (AtomCount() + 1)) / 8 + 1;
 
     changeByteOrder((char*)&s);
     outfile->write((char*)&s, 4);
 
     // write buffer to file
-    changeByteOrder((char*)&s); // TODO: calculate individually
+    changeByteOrder((char*)&s);
     outfile->write((char*)buff, s);
 
-    // TODO fill the end with zeros
-    outfile->seekp((4 - s % 4) % 4, ios_base::cur);
+    outfile->seekp((4 - s % 4) % 4, std::ios_base::cur);
 
     delete[] box;
     delete[] buff;
@@ -398,16 +385,15 @@ bool PDBLoader::Frame::encodeints(char *outbuff, int num_of_bits,
             encodebits(buffPt, 8, bitoffset, bytes[i]); // bitsize = 8 --> offset doesn't change
             buffPt++;
         }
-        encodebits(buffPt, num_of_bits - num_of_bytes * 8, bitoffset, 0); // fill in the rest with zeros
-        // bitoffset is set in other function
+        encodebits(buffPt, num_of_bits - num_of_bytes * 8, bitoffset, 0);
     }
     else {
         for (i = 0; i < num_of_bytes-1; i++) {
-            encodebits(buffPt, 8, bitoffset, bytes[i]); // bitsize = 8 --> offset doesn't change
+            // bitsize = 8 --> offset doesn't change
+            encodebits(buffPt, 8, bitoffset, bytes[i]);
             buffPt++;
         }
         encodebits(buffPt, num_of_bits- (num_of_bytes -1) * 8, bitoffset,  bytes[i]);
-        // bitoffset is set in other function
     }
 
     return true;
@@ -432,7 +418,7 @@ void PDBLoader::Frame::encodebits(char *outbuff, int bitsize, int bitoffset,
 /*
  * read frame-data from a given xtc-file
  */
-void PDBLoader::Frame::readFrame(fstream *file) {
+void PDBLoader::Frame::readFrame(std::fstream *file) {
 
     int *buffer;
     char *buffPt;
@@ -473,8 +459,7 @@ void PDBLoader::Frame::readFrame(fstream *file) {
     // + simulation time    ( 4 Bytes)
     // + bounding box       (36 Bytes)
     // + number of atoms    ( 4 Bytes)
-    //file->ignore(56);
-    file->seekg(56, ios_base::cur);
+    file->seekg(56, std::ios_base::cur);
 
     // TODO
     // no compression is used for three atoms or less
@@ -704,7 +689,7 @@ void PDBLoader::Frame::readFrame(fstream *file) {
     delete[] buffer;
 
     // set file pointer to the beginning of the next frame
-    file->seekg((4 - size % 4) % 4, ios_base::cur);
+    file->seekg((4 - size % 4) % 4, std::ios_base::cur);
 }
 
 /*
@@ -964,9 +949,10 @@ void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
                                 data[0]->AtomPositions()[i+2]);
         }
     } else {
-        fstream xtcFile;
+        std::fstream xtcFile;
         xtcFile.open(this->xtcFilenameSlot.
-          Param<core::param::FilePathParam>()->Value(), ios::in | ios::binary);
+          Param<core::param::FilePathParam>()->Value(),
+          std::ios::in | std::ios::binary);
         xtcFile.seekg( this->XTCFrameOffset[idx-1]);
         fr->readFrame(&xtcFile);
     }
@@ -1126,7 +1112,8 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
 
         // if no xtc-filename has been set
-        if( this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
+        if( this->xtcFilenameSlot.
+          Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
             // parsed first frame - load all other frames now
             atomCnt = 0;
             while( lineCnt < file.Count() ) {
@@ -1181,14 +1168,14 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
             //float box[3][3];
             char tmpByte;
-            fstream xtcFile;
+            std::fstream xtcFile;
             char *num;
             unsigned int nAtoms;
 
             // try to open the xtc-file
             xtcFile.open(this->xtcFilenameSlot.
                            Param<core::param::FilePathParam>()->Value(),
-                         ios::in | ios::binary);
+                           std::ios::in | std::ios::binary);
 
             if( !xtcFile) {
                 Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
@@ -1198,7 +1185,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             else {
 
 
-                xtcFile.seekg(4, ios_base::cur);
+                xtcFile.seekg(4, std::ios_base::cur);
                 // read number of atoms
                 xtcFile.read((char*)&nAtoms, 4);
                 // change byte order
@@ -1665,9 +1652,11 @@ bool PDBLoader::readNumXTCFrames() {
     this->XTCFrameOffset.Clear();
 
     // try to open xtc file
-    fstream xtcFile;
+    std::fstream xtcFile;
     xtcFile.open(this->xtcFilenameSlot.
-      Param<core::param::FilePathParam>()->Value(), ios::in | ios::binary);
+      Param<core::param::FilePathParam>()->Value(),
+      std::ios::in | std::ios::binary);
+
     // check if file could be opened
     if( !xtcFile ) return false;
 
@@ -1683,7 +1672,7 @@ bool PDBLoader::readNumXTCFrames() {
 
     float precision;
 
-    xtcFile.seekg(0, ios_base::beg);
+    xtcFile.seekg(0, std::ios_base::beg);
 
     // read until eof
     while( !xtcFile.eof() ) {
@@ -1692,7 +1681,7 @@ bool PDBLoader::readNumXTCFrames() {
         this->XTCFrameOffset.Add( (unsigned int)xtcFile.tellg());
 
         // skip some header data
-        xtcFile.seekg(56, ios_base::cur);
+        xtcFile.seekg(56, std::ios_base::cur);
 
         // read precision
         xtcFile.read((char*)&precision, 4);
@@ -1721,10 +1710,11 @@ bool PDBLoader::readNumXTCFrames() {
             (float)minint[0] / precision, (float)minint[1] / precision,
             (float)minint[2] / precision, (float)maxint[0] / precision,
             (float)maxint[1] / precision, (float)maxint[2] / precision);
+
         this->bbox.Union(tmpBBox);
 
         // skip some header data
-        xtcFile.seekg(4, ios_base::cur);
+        xtcFile.seekg(4, std::ios_base::cur);
 
         // read size of the compressed block of data
         xtcFile.read((char*)&size, 4);
@@ -1736,8 +1726,8 @@ bool PDBLoader::readNumXTCFrames() {
         // skip the compressed block of data except for the last byte and
         // ignore the remaining bytes to prevent skipping over the end
         // of the file
-        xtcFile.seekg(size-1, ios_base::cur);
-        xtcFile.ignore(((4 - size % 4) % 4)+1);
+        xtcFile.seekg(size-2, std::ios_base::cur);
+        xtcFile.ignore(((4 - size % 4) % 4)+2);
 
         // add this frame to the frame count
         this->numXTCFrames++;
@@ -1757,11 +1747,11 @@ bool PDBLoader::readNumXTCFrames() {
  */
 void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
 
-    ofstream outfile;
+    std::ofstream outfile;
     unsigned int i;
     float precision = 1000.0;
-    float *minFloats = new float[3];
-    float *maxFloats = new float[3];
+    float minFloats[3];
+    float maxFloats[3];
 
     if(data.Count() == 1) {
         vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
@@ -1770,7 +1760,7 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
     }
 
     // try to open the ouput-file
-    outfile.open(filename, ios_base::binary | ios_base::out);
+    outfile.open(filename, std::ios_base::binary | std::ios_base::out);
 
     // if the file could not be opened return
     if(!outfile) {
@@ -1780,7 +1770,6 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
     }
 
     // get the range of value from the existing bounding box
-    // TODO: calculate the range of value for each frame individually?
     minFloats[0] = this->bbox.Left();   // X-coord
     maxFloats[0] = this->bbox.Right();
     minFloats[1] = this->bbox.Bottom(); // Y-coord
@@ -1788,17 +1777,13 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
     minFloats[2] = this->bbox.Back();   // Z-coord
     maxFloats[2] = this->bbox.Front();
 
-    // TODO seekg(0) ?
     // loop through the frames beginning with the second one
     for(i = 1; i < data.Count(); i++) {
-        data[i]->writeToXtcFile(&outfile, precision, minFloats, maxFloats);
+        data[i]->writeFrame(&outfile, precision, minFloats, maxFloats);
     }
 
     // close the output-file
     outfile.close();
-
-    delete[] minFloats;
-    delete[] maxFloats;
 
 }
 
