@@ -337,8 +337,8 @@ namespace math {
      *          1 else.
      */
     template<class T1, class T2> int ComparePairsFirst(
-            const typename Pair<T1, T2>& lhs,
-            const typename Pair<T1, T2>& rhs) {
+            const Pair<T1, T2>& lhs,
+            const Pair<T1, T2>& rhs) {
         return Compare(lhs.First(), rhs.First());
     }
 
@@ -354,8 +354,8 @@ namespace math {
      *          1 else.
      */
     template<class T1, class T2> int ComparePairsSecond(
-            const typename Pair<T1, T2>& lhs,
-            const typename Pair<T1, T2>& rhs) {
+            const Pair<T1, T2>& lhs,
+            const Pair<T1, T2>& rhs) {
         return Compare(lhs.Second(), rhs.Second());
     }
 
