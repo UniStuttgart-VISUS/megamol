@@ -20,10 +20,8 @@
 #include "MolecularDataCall.h"
 #include "Stride.h"
 #include "view/AnimDataModule.h"
-
-//TODO
 #include <fstream>
-using namespace std;
+
 
 
 namespace megamol {
@@ -161,9 +159,11 @@ namespace protein {
             *
             * @param outfile    The XTC-file.
             * @param precision  The precision of the encoded float coordinates.
+            *
+            * @return 'true' if the frame could be written
             */
-            bool writeToXtcFile(ofstream *outfile, float precision,
-                                float *minFloats, float *maxfloats);
+            bool writeFrame(std::ofstream *outfile, float precision,
+                            float *minFloats, float *maxfloats);
 
             /**
              * Reads and decodes one frame of the data set from a given
@@ -171,7 +171,7 @@ namespace protein {
              *
              * @param file Pointer to the current frame in the xtc-file
              */
-            void readFrame(fstream *file);
+            void readFrame(std::fstream *file);
 
             /**
             * Calculates the number of bits needed to represent a given
@@ -567,8 +567,11 @@ namespace protein {
         bool readNumXTCFrames();
 
         /**
-         * Beginning with second frame writes the frames of the current PDB-file
-         * into a new compressed XTC-file.
+         * Writes the frames of the current PDB-file (beginning with second
+         * frame) into a new compressed XTC-file.
+         *
+         * The PDB-file has to be fully loaded before because the data-sets
+         * bounding box is needed.
          *
          * @param filename The name of the output file.
          */
