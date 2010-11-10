@@ -88,7 +88,7 @@ void view::View2D::Render(void) {
 
     CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
 
-    //this->fpsCounter.FrameBegin();
+    AbstractRenderingView::beginFrame();
 
     // clear viewport
     int vpx = 0, vpy = 0;
@@ -123,7 +123,7 @@ void view::View2D::Render(void) {
     if (cr2d == NULL) {
         this->renderTitle(0.0f, 0.0f, this->width, this->height,
             this->width, this->height, false, false);
-        //this->fpsCounter.FrameEnd();
+            AbstractRenderingView::endFrame(true);
         return;
     } else {
         this->removeTitleRenderer();
@@ -187,7 +187,7 @@ void view::View2D::Render(void) {
 
     (*cr2d)(0); // render
 
-    //this->fpsCounter.FrameEnd();
+    AbstractRenderingView::endFrame();
 
 }
 

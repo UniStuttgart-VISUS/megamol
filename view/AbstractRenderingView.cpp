@@ -7,11 +7,14 @@
 
 #include "stdafx.h"
 #include "AbstractRenderingView.h"
+#include "AbstractNamedObject.h"
+#include "vislib/String.h"
 #include <GL/gl.h>
 #include "param/BoolParam.h"
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
 #include "view/special/TitleRenderer.h"
+#include "vislib/sysfunctions.h"
 
 using namespace megamol::core;
 
@@ -84,7 +87,7 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
         overrideBkgndCol(NULL), overrideViewport(NULL),
         bkgndColSlot("backCol", "The views background colour"),
         softCursor(false), softCursorSlot("softCursor", "Bool flag to activate software cursor rendering"),
-        titleRenderer(NULL) {
+        titleRenderer(NULL), fpsCounter(10), fpsOutputTimer(0) {
 
     this->bkgndCol[0] = 0.0f;
     this->bkgndCol[1] = 0.0f;
@@ -107,6 +110,44 @@ view::AbstractRenderingView::~AbstractRenderingView(void) {
     this->removeTitleRenderer();
     this->overrideBkgndCol = NULL; // DO NOT DELETE
     this->overrideViewport = NULL; // DO NOT DELETE
+}
+
+
+/*
+ * view::AbstractRenderingView::beginFrame
+ */
+void view::AbstractRenderingView::beginFrame(void) {
+    this->fpsCounter.FrameBegin();
+}
+
+
+/*
+ * view::AbstractRenderingView::endFrame
+ */
+void view::AbstractRenderingView::endFrame(bool abort) {
+    if (!abort) {
+        unsigned int ticks = vislib::sys::GetTicksOfDay();
+        if ((ticks < this->fpsOutputTimer) || (ticks >= this->fpsOutputTimer + 1000)) {
+            this->fpsOutputTimer = ticks;
+            vislib::StringA name("UNKNOWN");
+            AbstractNamedObject *ano = dynamic_cast<AbstractNamedObject*>(this);
+            if (ano != NULL) {
+                name = ano->FullName();
+            }
+            // okey, does not make any sense when multiple windows are rendering, but better than nothing
+            printf("%s FPS: %f\n", name.PeekBuffer(), this->fpsCounter.FPS());
+            fflush(stdout); // grr
+        }
+    }
+    this->fpsCounter.FrameEnd();
+}
+
+
+/*
+ * view::AbstractRenderingView::lastFrameTime
+ */
+double view::AbstractRenderingView::lastFrameTime(void) const {
+    return this->fpsCounter.LastFrameTime();
 }
 
 

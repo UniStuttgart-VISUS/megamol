@@ -13,6 +13,7 @@
 
 #include "param/ParamSlot.h"
 #include "view/AbstractView.h"
+#include "vislib/FpsCounter.h"
 
 
 namespace megamol {
@@ -76,6 +77,25 @@ namespace view {
         virtual ~AbstractRenderingView(void);
 
     protected:
+
+        /**
+         * Marks the beginning of a frame
+         */
+        void beginFrame(void);
+
+        /**
+         * Marks the end of a frame
+         *
+         * @param abort Flag if the frame is aborted
+         */
+        void endFrame(bool abort = false);
+
+        /**
+         * The number of seconds the last frame needed to be drawn
+         *
+         * @return The last frame rendering time
+         */
+        double lastFrameTime(void) const;
 
         /**
          * Answer the background colour for the view
@@ -181,6 +201,12 @@ namespace view {
 
         /** The title renderer */
         mutable AbstractTitleRenderer* titleRenderer;
+
+        /** The frames per second counter */
+        vislib::graphics::FpsCounter fpsCounter;
+
+        /** A timer managing the fps output */
+        unsigned int fpsOutputTimer;
 
     };
 

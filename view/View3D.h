@@ -28,7 +28,6 @@
 #include "vislib/CameraZoom2DAngle.h"
 #include "vislib/ColourRGBAu8.h"
 #include "vislib/Cursor2D.h"
-#include "vislib/FpsCounter.h"
 #include "vislib/graphicstypes.h"
 #include "vislib/InputModifiers.h"
 #include "vislib/Cuboid.h"
@@ -418,12 +417,6 @@ namespace view {
 
         /** Triggers the reset of the view */
         param::ParamSlot resetViewSlot;
-
-        /** The frames per second counter */
-        vislib::graphics::FpsCounter fpsCounter;
-
-        /** A timer managing the fps output */
-        unsigned int fpsOutputTimer;
 
         /**
          * Flag if this is the first time an image gets created. Used for 

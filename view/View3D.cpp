@@ -60,7 +60,7 @@ view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         storeCameraSettingsSlot("storecam", "Triggers the storage of the camera settings"),
         restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
-        fpsCounter(10), fpsOutputTimer(0), firstImg(false), frozenValues(NULL),
+        firstImg(false), frozenValues(NULL),
         isCamLightSlot("light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system"),
         lightDirSlot("light::direction", "Direction vector of the light"),
         lightColDifSlot("light::diffuseCol", "Diffuse light colour"),
@@ -314,8 +314,7 @@ void view::View3D::Render(void) {
     }
 
     CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
-
-    this->fpsCounter.FrameBegin();
+    AbstractRenderingView::beginFrame();
 
     // clear viewport
     if (this->overrideViewport != NULL) {
@@ -349,7 +348,7 @@ void view::View3D::Render(void) {
             (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC)
                 && (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
             this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE);
-        this->fpsCounter.FrameEnd();
+        this->endFrame(true);
         return; // empty enought
     } else {
         this->removeTitleRenderer();
@@ -416,7 +415,7 @@ void view::View3D::Render(void) {
 
         cr3d->SetTime(this->frozenValues ? this->frozenValues->time : this->timeFrame);
         cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
-        cr3d->SetLastFrameTime(this->fpsCounter.LastFrameTime());
+        cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
     }
     this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
@@ -517,20 +516,7 @@ void view::View3D::Render(void) {
         this->renderSoftCursor();
     }
 
-    if (true) {
-        //::glMatrixMode(GL_PROJECTION);
-        //::glLoadIdentity();
-        //::glMatrixMode(GL_MODELVIEW);
-        //::glLoadIdentity();
-        unsigned int ticks = vislib::sys::GetTicksOfDay();
-        if ((ticks < this->fpsOutputTimer) || (ticks >= this->fpsOutputTimer + 1000)) {
-            this->fpsOutputTimer = ticks;
-            printf("FPS: %f\n", this->fpsCounter.FPS());
-            fflush(stdout); // grr
-        }
-    }
-
-    this->fpsCounter.FrameEnd();
+    AbstractRenderingView::endFrame();
 
 }
 
