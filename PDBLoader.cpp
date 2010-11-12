@@ -480,7 +480,7 @@ void PDBLoader::Frame::readFrame(std::fstream *file) {
     // read the precision of the float coordinates
     file->read((char*)&precision,4);
     changeByteOrder((char*)&precision);
-    //precision /= 10.0; // TODO
+    precision /= 10.0f; // TODO
 
     // read the lower bound of 'big' integer-coordinates
     file->read((char*)&minint,12);
@@ -898,7 +898,8 @@ bool PDBLoader::getExtent( core::Call& call) {
     else {
         // XTC file set and loaded --> use number of frames
         dc->SetFrameCount( vislib::math::Max(1U, static_cast<unsigned int>(
-                           this->numXTCFrames+1)));
+                           //this->numXTCFrames+1)));
+                           this->numXTCFrames)));
     }
 
     dc->SetDataHash( this->datahash);
@@ -955,6 +956,8 @@ void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
           std::ios::in | std::ios::binary);
         xtcFile.seekg( this->XTCFrameOffset[idx-1]);
         fr->readFrame(&xtcFile);
+        // TODO: check if the file gets closed!
+        //xtcFile.close();
     }
 
     //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Time for loading frame %i: %f", idx, ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
@@ -1162,6 +1165,8 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
         }
         else {
+            // TODO: last frame has wrong byte ordering and is to be omitted
+
             // try to get the total number of frames and calculate the
             // bounding box
             this->readNumXTCFrames();
@@ -1209,10 +1214,12 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
                     int maxFrames = std::min(
                         (unsigned int)this->maxFramesSlot.Param<core::param::IntParam>()->Value(),
-                        this->numXTCFrames + 1);
+                        //this->numXTCFrames + 1);
+                        this->numXTCFrames);
 
                     // frames in xtc-file + 1 frame in pdb-file
-                    this->setFrameCount( this->numXTCFrames + 1);
+                    //this->setFrameCount( this->numXTCFrames + 1);
+                    this->setFrameCount( this->numXTCFrames);
 
                     // start the loading thread
                     this->initFrameCache( maxFrames);
@@ -1674,6 +1681,8 @@ bool PDBLoader::readNumXTCFrames() {
 
     xtcFile.seekg(0, std::ios_base::beg);
 
+    vislib::math::Cuboid<float> tmpBBox( this->bbox);
+
     // read until eof
     while( !xtcFile.eof() ) {
 
@@ -1682,13 +1691,13 @@ bool PDBLoader::readNumXTCFrames() {
 
         // skip some header data
         xtcFile.seekg(56, std::ios_base::cur);
-
         // read precision
         xtcFile.read((char*)&precision, 4);
         // change byte-order
         num = (char*)&precision;
         tmpByte = num[0]; num[0] = num[3]; num[3] = tmpByte;
         tmpByte = num[1]; num[1] = num[2]; num[2] = tmpByte;
+        precision /= 10.0f;
 
         // get the lower bound
         xtcFile.read((char*)&minint, 12);
@@ -1706,12 +1715,16 @@ bool PDBLoader::readNumXTCFrames() {
 
         // update the bounding box
         // TODO: atom radius?
-        vislib::math::Cuboid<float> tmpBBox(
-            (float)minint[0] / precision, (float)minint[1] / precision,
-            (float)minint[2] / precision, (float)maxint[0] / precision,
-            (float)maxint[1] / precision, (float)maxint[2] / precision);
-
         this->bbox.Union(tmpBBox);
+
+        vislib::math::Cuboid<float> tmpBBox(
+            (float)minint[0] / precision - 3.0f, 
+            (float)minint[1] / precision - 3.0f,
+            (float)minint[2] / precision - 3.0f, 
+            (float)maxint[0] / precision + 3.0f,
+            (float)maxint[1] / precision + 3.0f, 
+            (float)maxint[2] / precision + 3.0f);
+
 
         // skip some header data
         xtcFile.seekg(4, std::ios_base::cur);
