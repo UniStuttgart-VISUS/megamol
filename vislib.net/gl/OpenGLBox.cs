@@ -35,6 +35,53 @@ namespace vislib.gl {
         }
 
         /// <summary>
+        /// The size of the time buffer
+        /// Must be a multiple of 2 (odd)
+        /// </summary>
+        private const int timeBufferSize = 50;
+
+        /// <summary>
+        /// The time buffer
+        /// </summary>
+        private long[] timeBuffer = new long[timeBufferSize];
+
+        /// <summary>
+        /// The position in the time buffer
+        /// </summary>
+        private int timeBufferPos = 0;
+
+        /// <summary>
+        /// Gets the Frames-per-Second of the rendering control
+        /// </summary>
+        public float FPS {
+            get {
+                if (!this.ContinousRendering) return 0.0f;
+
+                float time = 0.0f;
+                float cnt = 0.0f;
+                for (int i = 2; i < timeBufferSize; i += 2) {
+                    long diff = this.timeBuffer[i] - this.timeBuffer[i - 2];
+                    if (diff > 0.0f) {
+                        time += (float)diff;
+                        cnt += 1.0f;
+                    }
+                }
+                time /= TimeSpan.TicksPerSecond;
+                return (time > 0.0f) ? (cnt / time) : 0.0f;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag whether or not the control should perform
+        /// continous rendering as fast as possible (maybe fixed by V-Sync) or
+        /// if the control should only render on request
+        /// </summary>
+        public bool ContinousRendering {
+            get { return this.refreshTimer.Enabled; }
+            set { this.refreshTimer.Enabled = value; }
+        }
+
+        /// <summary>
         /// Ctor
         /// </summary>
         public OpenGLBox() {
@@ -42,7 +89,7 @@ namespace vislib.gl {
 
             this.hDC = user32.GetDC(this.Handle);
             if (this.hDC == IntPtr.Zero) {
-                throw new Exception("Gerätekontext nicht verfügbar");
+                throw new Exception("Device context not available");
             }
 
             gdi32.PIXELFORMATDESCRIPTOR pixelFormat = new gdi32.PIXELFORMATDESCRIPTOR();
@@ -86,13 +133,13 @@ namespace vislib.gl {
             if (iPixelformat == 0) {
                 user32.ReleaseDC(this.Handle, this.hDC);
                 this.hDC = IntPtr.Zero;
-                throw new Exception("Pixelformat nicht verfügbar");
+                throw new Exception("Pixelformat not available");
             }
 
             if (gdi32.SetPixelFormat(this.hDC, iPixelformat, pixelFormat) == 0) {
                 user32.ReleaseDC(this.Handle, this.hDC);
                 this.hDC = IntPtr.Zero;
-                throw new Exception("Pixelformat konnte nicht gesetzt werden");
+                throw new Exception("Could not set pixelformat");
             }
 
             this.hRC = opengl32.wglCreateContext(this.hDC);
@@ -100,7 +147,7 @@ namespace vislib.gl {
                 user32.ReleaseDC(this.Handle, this.hDC);
                 this.hDC = IntPtr.Zero;
                 //Marshal.ThrowExceptionForHR(Marshal.GetLastWin32Error());
-                throw new Exception("Rendering-Kontext konnte nicht erzeugt werden (Code " + Marshal.GetLastWin32Error().ToString() + ")");
+                throw new Exception("Could not create rendering context (Code " + Marshal.GetLastWin32Error().ToString() + ")");
             }
 
             opengl32.wglMakeCurrent(this.hDC, this.hRC);
@@ -122,13 +169,21 @@ namespace vislib.gl {
         /// <param name="e">A PaintEventArgs that contains the event data.</param>
         protected override void OnPaint(PaintEventArgs e) {
             if (this.hRC != IntPtr.Zero) {
+
+                this.timeBuffer[this.timeBufferPos] = DateTime.Now.Ticks;
+                this.timeBufferPos = (this.timeBufferPos + 1) % timeBufferSize;
+
                 opengl32.wglMakeCurrent(this.hDC, this.hRC);
 
                 if (this.OpenGLRender != null) {
                     this.OpenGLRender(this, e);
                 }
 
+                opengl32.glFlush();
                 gdi32.SwapBuffers(this.hDC);
+
+                this.timeBuffer[this.timeBufferPos] = DateTime.Now.Ticks;
+                this.timeBufferPos = (this.timeBufferPos + 1) % timeBufferSize;
 
             } else {
                 base.OnPaint(e);
@@ -142,6 +197,8 @@ namespace vislib.gl {
         protected override void OnSizeChanged(EventArgs e) {
             base.OnSizeChanged(e);
             if (this.hRC != IntPtr.Zero) {
+
+                opengl32.wglMakeCurrent(this.hDC, this.hRC);
                 opengl32.glViewport(0, 0, this.Width, this.Height);
 
                 float w = (float)this.Width;

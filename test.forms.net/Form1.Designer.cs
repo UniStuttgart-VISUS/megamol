@@ -23,21 +23,66 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.fpsLabelUpdateTimer = new System.Windows.Forms.Timer(this.components);
+            this.fpslabel = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.fpslabel);
+            this.splitContainer1.Size = new System.Drawing.Size(751, 464);
+            this.splitContainer1.SplitterDistance = 523;
+            this.splitContainer1.TabIndex = 0;
+            // 
+            // fpsLabelUpdateTimer
+            // 
+            this.fpsLabelUpdateTimer.Enabled = true;
+            this.fpsLabelUpdateTimer.Interval = 1000;
+            this.fpsLabelUpdateTimer.Tick += new System.EventHandler(this.fpsLabelUpdateTimer_Tick);
+            // 
+            // fpslabel
+            // 
+            this.fpslabel.AutoSize = true;
+            this.fpslabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.fpslabel.Location = new System.Drawing.Point(0, 0);
+            this.fpslabel.Name = "fpslabel";
+            this.fpslabel.Size = new System.Drawing.Size(30, 13);
+            this.fpslabel.TabIndex = 0;
+            this.fpslabel.Text = "FPS:";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(751, 464);
+            this.Controls.Add(this.splitContainer1);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "VISlib.test.forms.net - Form1";
             this.Shown += new System.EventHandler(this.Form1_Shown);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Label fpslabel;
+        private System.Windows.Forms.Timer fpsLabelUpdateTimer;
     }
 }
 
