@@ -77,8 +77,8 @@ namespace vislib.gl {
         /// if the control should only render on request
         /// </summary>
         public bool ContinousRendering {
-            get { return this.refreshTimer.Enabled; }
-            set { this.refreshTimer.Enabled = value; }
+            get;
+            set;
         }
 
         /// <summary>
@@ -93,6 +93,9 @@ namespace vislib.gl {
             }
 
             gdi32.PIXELFORMATDESCRIPTOR pixelFormat = new gdi32.PIXELFORMATDESCRIPTOR();
+
+            Application.Idle += Application_Idle;
+            this.ContinousRendering = true;
 
             pixelFormat.nSize = 40;
             pixelFormat.nVersion = 1;
@@ -164,6 +167,17 @@ namespace vislib.gl {
         }
 
         /// <summary>
+        /// Auto refresh for continous drawing
+        /// </summary>
+        /// <param name="sender">Sender of the event</param>
+        /// <param name="e">Arguments of the event</param>
+        void Application_Idle(object sender, EventArgs e) {
+            if (this.ContinousRendering) {
+                this.Invalidate();
+            }
+        }
+
+        /// <summary>
         /// Raises the Paint event.
         /// </summary>
         /// <param name="e">A PaintEventArgs that contains the event data.</param>
@@ -224,15 +238,6 @@ namespace vislib.gl {
         /// </summary>
         [Description("Called whenever OpenGL drawing can/should occur."), Category("OpenGL")]
         public event PaintEventHandler OpenGLRender;
-
-        /// <summary>
-        /// Auto refresh for continous drawing
-        /// </summary>
-        /// <param name="sender">Sender of the event</param>
-        /// <param name="e">Arguments of the event</param>
-        private void refreshTimer_Tick(object sender, EventArgs e) {
-            this.Invalidate();
-        }
 
         /// <summary>
         /// Dtor

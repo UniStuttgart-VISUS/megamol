@@ -46,6 +46,8 @@ namespace test.forms.net {
             this.oglbox.Parent = this.splitContainer1.Panel1;
             this.oglbox.Dock = DockStyle.Fill;
             this.oglbox.OpenGLRender += oglbox_OpenGLRender;
+
+            this.checkBox1.Checked = this.oglbox.ContinousRendering;
         }
 
         /// <summary>
@@ -78,6 +80,10 @@ namespace test.forms.net {
 
         private void fpsLabelUpdateTimer_Tick(object sender, EventArgs e) {
             this.fpslabel.Text = "FPS: " + this.oglbox.FPS.ToString();
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e) {
+            this.oglbox.ContinousRendering = this.checkBox1.Checked;
         }
 
     }

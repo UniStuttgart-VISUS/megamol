@@ -18,6 +18,8 @@ namespace vislib.pinvoke {
 
         #region structs
 
+        public const UInt32 WM_PAINT = 0x000F;
+
         #endregion
 
         #region functions
@@ -27,6 +29,16 @@ namespace vislib.pinvoke {
 
         [DllImport(LIBNAME)]
         public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport(LIBNAME, CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
+        [return: MarshalAs(UnmanagedType.Bool)]
+        [DllImport(LIBNAME, SetLastError = true)]
+        public static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool InvalidateRect(IntPtr hWnd, IntPtr lpRect, bool bErase);
 
         #endregion
 
