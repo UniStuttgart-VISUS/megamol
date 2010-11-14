@@ -37,7 +37,7 @@ namespace test.forms.net {
 
             try { // hack required for unknown reason
                 this.oglbox = new vislib.gl.OpenGLBox();
-            } catch {
+            } catch(Exception ex) {
             }
             if (this.oglbox == null) {
                 this.oglbox = new vislib.gl.OpenGLBox();
@@ -47,7 +47,8 @@ namespace test.forms.net {
             this.oglbox.Dock = DockStyle.Fill;
             this.oglbox.OpenGLRender += oglbox_OpenGLRender;
 
-            this.checkBox1.Checked = this.oglbox.ContinousRendering;
+            this.checkBox1.Checked = this.oglbox.ContinuousRendering;
+            this.checkBox2.Checked = this.oglbox.VSync;
         }
 
         /// <summary>
@@ -83,7 +84,13 @@ namespace test.forms.net {
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e) {
-            this.oglbox.ContinousRendering = this.checkBox1.Checked;
+            this.oglbox.ContinuousRendering = this.checkBox1.Checked;
+            this.checkBox1.Checked = this.oglbox.ContinuousRendering;
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e) {
+            this.oglbox.VSync = this.checkBox2.Checked;
+            this.checkBox2.Checked = this.oglbox.VSync;
         }
 
     }

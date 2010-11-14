@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="gl\FPSCounter.cs" />
     <Compile Include="gl\OpenGLBox.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -55,6 +56,7 @@
     <Compile Include="pinvoke\opengl32.cs" />
     <Compile Include="pinvoke\openglExt.cs" />
     <Compile Include="pinvoke\user32.cs" />
+    <Compile Include="pinvoke\wgl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

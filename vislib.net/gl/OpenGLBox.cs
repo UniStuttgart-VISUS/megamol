@@ -35,50 +35,52 @@ namespace vislib.gl {
         }
 
         /// <summary>
-        /// The size of the time buffer
-        /// Must be a multiple of 2 (odd)
+        /// The fps counter
         /// </summary>
-        private const int timeBufferSize = 50;
-
-        /// <summary>
-        /// The time buffer
-        /// </summary>
-        private long[] timeBuffer = new long[timeBufferSize];
-
-        /// <summary>
-        /// The position in the time buffer
-        /// </summary>
-        private int timeBufferPos = 0;
+        private FPSCounter fpsCounter = new FPSCounter();
 
         /// <summary>
         /// Gets the Frames-per-Second of the rendering control
         /// </summary>
         public float FPS {
             get {
-                if (!this.ContinousRendering) return 0.0f;
-
-                float time = 0.0f;
-                float cnt = 0.0f;
-                for (int i = 2; i < timeBufferSize; i += 2) {
-                    long diff = this.timeBuffer[i] - this.timeBuffer[i - 2];
-                    if (diff > 0.0f) {
-                        time += (float)diff;
-                        cnt += 1.0f;
-                    }
-                }
-                time /= TimeSpan.TicksPerSecond;
-                return (time > 0.0f) ? (cnt / time) : 0.0f;
+                return this.contRend ? this.fpsCounter.FPS : 0.0f;
             }
         }
 
         /// <summary>
+        /// The flag for continuous rendering
+        /// </summary>
+        private bool contRend = true;
+
+        /// <summary>
         /// Gets or sets the flag whether or not the control should perform
-        /// continous rendering as fast as possible (maybe fixed by V-Sync) or
+        /// continuous rendering as fast as possible (maybe fixed by V-Sync) or
         /// if the control should only render on request
         /// </summary>
-        public bool ContinousRendering {
-            get;
-            set;
+        public bool ContinuousRendering {
+            get { return this.contRend; }
+            set {
+                if (this.contRend != value) {
+                    this.contRend = value;
+                    this.fpsCounter.ClearCounter();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag whether or not the rendering is vertically
+        /// synchronized with the display refresh rate
+        /// </summary>
+        public bool VSync {
+            get {
+                opengl32.wglMakeCurrent(this.hDC, this.hRC);
+                return wgl.VSync;
+            }
+            set {
+                opengl32.wglMakeCurrent(this.hDC, this.hRC);
+                wgl.VSync = value;
+            }
         }
 
         /// <summary>
@@ -93,10 +95,6 @@ namespace vislib.gl {
             }
 
             gdi32.PIXELFORMATDESCRIPTOR pixelFormat = new gdi32.PIXELFORMATDESCRIPTOR();
-
-            Application.Idle += Application_Idle;
-            this.ContinousRendering = true;
-
             pixelFormat.nSize = 40;
             pixelFormat.nVersion = 1;
             pixelFormat.dwFlags = (gdi32.PFD_DRAW_TO_WINDOW | gdi32.PFD_SUPPORT_OPENGL | gdi32.PFD_DOUBLEBUFFER);
@@ -153,6 +151,8 @@ namespace vislib.gl {
                 throw new Exception("Could not create rendering context (Code " + Marshal.GetLastWin32Error().ToString() + ")");
             }
 
+            Application.Idle += Application_Idle;
+
             opengl32.wglMakeCurrent(this.hDC, this.hRC);
 
             this.OnSizeChanged(null);
@@ -172,7 +172,7 @@ namespace vislib.gl {
         /// <param name="sender">Sender of the event</param>
         /// <param name="e">Arguments of the event</param>
         void Application_Idle(object sender, EventArgs e) {
-            if (this.ContinousRendering) {
+            if (this.contRend) {
                 this.Invalidate();
             }
         }
@@ -184,8 +184,7 @@ namespace vislib.gl {
         protected override void OnPaint(PaintEventArgs e) {
             if (this.hRC != IntPtr.Zero) {
 
-                this.timeBuffer[this.timeBufferPos] = DateTime.Now.Ticks;
-                this.timeBufferPos = (this.timeBufferPos + 1) % timeBufferSize;
+                this.fpsCounter.BeginFrame();
 
                 opengl32.wglMakeCurrent(this.hDC, this.hRC);
 
@@ -196,8 +195,7 @@ namespace vislib.gl {
                 opengl32.glFlush();
                 gdi32.SwapBuffers(this.hDC);
 
-                this.timeBuffer[this.timeBufferPos] = DateTime.Now.Ticks;
-                this.timeBufferPos = (this.timeBufferPos + 1) % timeBufferSize;
+                this.fpsCounter.EndFrame();
 
             } else {
                 base.OnPaint(e);
