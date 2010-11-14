@@ -236,6 +236,8 @@ bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
     changeByteOrder((char*)&simtime);
     outfile->write((char*)&simtime, 4);
 
+    precision /= 10.0;
+
     // get the range of values
     minInt[0] = (int)(minFloats[0] * precision + 1);
     minInt[1] = (int)(minFloats[1] * precision + 1);
@@ -266,7 +268,7 @@ bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
     outfile->write((char*)&atomCount, 4);
 
     // write precision to outfile
-    float prec = precision;
+    float prec = precision*10.0f;
     changeByteOrder((char*)&prec);
     outfile->write((char*)&prec, 4);
 
@@ -339,7 +341,6 @@ bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
 /*
  * encode ints
  *
- * note: coords are not divided by 10.0
  */
 bool PDBLoader::Frame::encodeints(char *outbuff, int num_of_bits,
                                   unsigned int sizes[], int inbuff[],
@@ -382,7 +383,8 @@ bool PDBLoader::Frame::encodeints(char *outbuff, int num_of_bits,
     // write the result in the outbuffer
     if (num_of_bits >= num_of_bytes * 8) {
         for (i = 0; i < num_of_bytes; i++) {
-            encodebits(buffPt, 8, bitoffset, bytes[i]); // bitsize = 8 --> offset doesn't change
+            // bitsize = 8 --> offset doesn't change
+            encodebits(buffPt, 8, bitoffset, bytes[i]);
             buffPt++;
         }
         encodebits(buffPt, num_of_bits - num_of_bytes * 8, bitoffset, 0);
@@ -393,7 +395,8 @@ bool PDBLoader::Frame::encodeints(char *outbuff, int num_of_bits,
             encodebits(buffPt, 8, bitoffset, bytes[i]);
             buffPt++;
         }
-        encodebits(buffPt, num_of_bits- (num_of_bytes -1) * 8, bitoffset,  bytes[i]);
+        encodebits(buffPt, num_of_bits- (num_of_bytes -1) * 8, bitoffset,
+                   bytes[i]);
     }
 
     return true;
@@ -461,11 +464,11 @@ void PDBLoader::Frame::readFrame(std::fstream *file) {
     // + number of atoms    ( 4 Bytes)
     file->seekg(56, std::ios_base::cur);
 
-    // TODO
+
     // no compression is used for three atoms or less
-    /*if(atomCount <= 3) {
+    if(atomCount <= 3) {
         float posX, posY, posZ;
-        for(int c=0; c<atomCount; c++) {
+        for(i=0; i<atomCount; i++) {
             file->read((char*)&posX,4);
             changeByteOrder((char*)&posX);
             file->read((char*)&posY,4);
@@ -475,12 +478,12 @@ void PDBLoader::Frame::readFrame(std::fstream *file) {
             this->SetAtomPosition(i, posX, posY, posZ);
         }
         return;
-    }*/
+    }
 
     // read the precision of the float coordinates
     file->read((char*)&precision,4);
     changeByteOrder((char*)&precision);
-    precision /= 10.0f; // TODO
+    precision /= 10.0f;
 
     // read the lower bound of 'big' integer-coordinates
     file->read((char*)&minint,12);
@@ -956,8 +959,7 @@ void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
           std::ios::in | std::ios::binary);
         xtcFile.seekg( this->XTCFrameOffset[idx-1]);
         fr->readFrame(&xtcFile);
-        // TODO: check if the file gets closed!
-        //xtcFile.close();
+        xtcFile.close();
     }
 
     //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Time for loading frame %i: %f", idx, ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
@@ -1202,7 +1204,8 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 // same number of atoms
                 if( nAtoms != atomEntries.Count() ) {
                     Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
-                      "XTC-File and given PDB-file not matching (XTC-file has %i atom entries, PDB-file has %i atom entries).",
+                      "XTC-File and given PDB-file not matching (XTC-file has"
+                      "%i atom entries, PDB-file has %i atom entries).",
                          nAtoms, atomEntries.Count()); // DEBUG
                     xtcFileValid = false;
                     xtcFile.close();
@@ -1713,16 +1716,14 @@ bool PDBLoader::readNumXTCFrames() {
             tmpByte = num[1]; num[1] = num[2]; num[2] = tmpByte;
         }
 
-        // update the bounding box
-        // TODO: atom radius?
+        // update the bounding box by uniting it with the last frames box
         this->bbox.Union(tmpBBox);
-
         vislib::math::Cuboid<float> tmpBBox(
-            (float)minint[0] / precision - 3.0f, 
+            (float)minint[0] / precision - 3.0f,
             (float)minint[1] / precision - 3.0f,
-            (float)minint[2] / precision - 3.0f, 
+            (float)minint[2] / precision - 3.0f,
             (float)maxint[0] / precision + 3.0f,
-            (float)maxint[1] / precision + 3.0f, 
+            (float)maxint[1] / precision + 3.0f,
             (float)maxint[2] / precision + 3.0f);
 
 
@@ -1739,8 +1740,8 @@ bool PDBLoader::readNumXTCFrames() {
         // skip the compressed block of data except for the last byte and
         // ignore the remaining bytes to prevent skipping over the end
         // of the file
-        xtcFile.seekg(size-2, std::ios_base::cur);
-        xtcFile.ignore(((4 - size % 4) % 4)+2);
+        xtcFile.seekg(size-1, std::ios_base::cur);
+        xtcFile.ignore(((4 - size % 4) % 4)+1);
 
         // add this frame to the frame count
         this->numXTCFrames++;
@@ -1768,11 +1769,12 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
 
     if(data.Count() == 1) {
         vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
-          "The PDB-file only contains one frame. No XTC-file has been written.");
+          "The PDB-file only contains one frame. No XTC-file has been"
+          " written.");
         return;
     }
 
-    // try to open the ouput-file
+    // try to open the output-file
     outfile.open(filename, std::ios_base::binary | std::ios_base::out);
 
     // if the file could not be opened return
