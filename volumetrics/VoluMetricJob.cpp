@@ -37,6 +37,7 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 		resetContinueSlot("resetContinueSlot", "reset the continueToNextFrameSlot to false automatically"),
 		outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
 		outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
+        cellSizeRatioSlot("cellSizeRatioSlot", "Fraction of the minimal particle radius that is used as cell size"),
 		MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
@@ -62,6 +63,9 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 
 	this->radiusMultiplierSlot << new core::param::FloatParam(1.0f, 0.0001f, 10000.f);
 	this->MakeSlotAvailable(&this->radiusMultiplierSlot);
+
+    this->cellSizeRatioSlot << new core::param::FloatParam(0.5f, 0.01f, 10.0f);
+    this->MakeSlotAvailable(&this->cellSizeRatioSlot);
 
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
@@ -175,14 +179,17 @@ DWORD VoluMetricJob::Run(void *userData) {
 					if (currRad > MaxRad) {
 						MaxRad = currRad;
 					}
+                    if (currRad < MinRad) {
+                        MinRad = currRad;
+                    }
 				}
 			}
         }
 
 		float RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
 		MaxRad *= RadMult;
-
-		float cellSize = MinRad * 0.5f;//* 0.075f;
+        MinRad *= RadMult;
+        float cellSize = MinRad * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
 		int bboxBytes = 8 * 3 * sizeof(float);
 		int bboxIdxes = 12 * 2 * sizeof(unsigned int);
 		int vertSize = bboxBytes * partListCnt;

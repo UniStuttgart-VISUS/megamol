@@ -111,6 +111,8 @@ namespace volumetrics {
 
         core::CallerSlot getDataSlot;
 
+        core::param::ParamSlot cellSizeRatioSlot;
+
         core::param::ParamSlot metricsFilenameSlot;
 		
 		core::param::ParamSlot showBoundingBoxesSlot;
