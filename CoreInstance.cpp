@@ -172,6 +172,13 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->SetViewModuleID("pwview");
     this->builtinViewDescs.Register(vd);
 
+    // view for fusionex-hack
+    vd = new ViewDescription("simpleclusterview");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterClient"), "::scc");
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterView"), "scview");
+    vd->SetViewModuleID("scview");
+    this->builtinViewDescs.Register(vd);
+
     //////////////////////////////////////////////////////////////////////
     // job descriptions
     //////////////////////////////////////////////////////////////////////

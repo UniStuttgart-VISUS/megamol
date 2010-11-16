@@ -2612,6 +2612,22 @@
 					RelativePath=".\cluster\PowerwallView.h"
 					>
 				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterClient.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterClientViewRegistration.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterDatagram.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterView.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -2666,6 +2682,22 @@
 				</File>
 				<File
 					RelativePath=".\cluster\PowerwallView.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterClient.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterClientViewRegistration.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterDatagram.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterView.cpp"
 					>
 				</File>
 			</Filter>

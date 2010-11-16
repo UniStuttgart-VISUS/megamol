@@ -15,6 +15,8 @@
 #include "cluster/ClusterController.h"
 #include "cluster/ClusterViewMaster.h"
 #include "cluster/PowerwallView.h"
+#include "cluster/SimpleClusterClient.h"
+#include "cluster/SimpleClusterView.h"
 #include "DataFileSequencer.h"
 #include "misc/BezierControlLines.h"
 #include "misc/BezierDataSource.h"
@@ -76,6 +78,8 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<cluster::ClusterController>();
         instance->registerAutoDescription<cluster::ClusterViewMaster>();
         instance->registerAutoDescription<cluster::PowerwallView>();
+        instance->registerAutoDescription<cluster::SimpleClusterClient>();
+        instance->registerAutoDescription<cluster::SimpleClusterView>();
         instance->registerAutoDescription<DataFileSequencer>();
         instance->registerAutoDescription<misc::BezierControlLines>();
         instance->registerAutoDescription<misc::BezierDataSource>();

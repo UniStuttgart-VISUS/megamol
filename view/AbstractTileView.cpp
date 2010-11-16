@@ -238,6 +238,14 @@ void view::AbstractTileView::checkParameters(void) {
 
 
 /*
+ * view::AbstractTileView::setTile
+ */
+bool view::AbstractTileView::setTile(const vislib::TString& val) {
+    return this->tileSlot.Param<param::Vector4fParam>()->ParseValue(val);
+}
+
+
+/*
  * view::AbstractTileView::packMouseCoordinates
  */
 void view::AbstractTileView::packMouseCoordinates(float &x, float &y) {

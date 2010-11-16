@@ -18,6 +18,7 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "moldyn/ParticleGridDataCall.h"
 #include "cluster/CallRegisterAtController.h"
+#include "cluster/SimpleClusterClientViewRegistration.h"
 #include "view/CallClipPlane.h"
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender2D.h"
@@ -40,6 +41,7 @@ CallDescriptionManager::Instance() {
         // Register all rendering graph call descriptions here
         //////////////////////////////////////////////////////////////////////
         instance->registerAutoDescription<cluster::CallRegisterAtController>();
+        instance->registerAutoDescription<cluster::SimpleClusterClientViewRegistration>();
         instance->registerAutoDescription<misc::BezierDataCall>();
         instance->registerAutoDescription<misc::ExtBezierDataCall>();
         instance->registerAutoDescription<misc::LinesDataCall>();

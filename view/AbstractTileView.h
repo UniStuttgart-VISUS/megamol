@@ -114,6 +114,15 @@ namespace view {
             return this->virtWidth;
         }
 
+        /**
+         * Set the tile configuration
+         *
+         * @param val The new tile value
+         *
+         * @return True on success
+         */
+        bool setTile(const vislib::TString& val);
+
     private:
 
         /**
