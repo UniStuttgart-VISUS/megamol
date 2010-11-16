@@ -698,7 +698,8 @@ void PDBLoader::Frame::readFrame(std::fstream *file) {
 /*
  * Assign a position to the array of positions.
  */
-bool PDBLoader::Frame::SetAtomPosition( unsigned int idx, float x, float y, float z) {
+bool PDBLoader::Frame::SetAtomPosition( unsigned int idx, float x, float y,
+                                        float z) {
     if( idx >= this->atomCount ) return false;
     this->atomPosition[idx*3+0] = x;
     this->atomPosition[idx*3+1] = y;
@@ -865,7 +866,8 @@ bool PDBLoader::getData( core::Call& call) {
     dc->SetChains( this->chain.Count(),
     (MolecularDataCall::Chain*)this->chain.PeekElements());
 
-    if( !this->secStructAvailable && this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
+    if( !this->secStructAvailable &&
+      this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
         time_t t = clock(); // DEBUG
         if( this->stride ) delete this->stride;
         this->stride = new Stride( dc);
@@ -901,7 +903,6 @@ bool PDBLoader::getExtent( core::Call& call) {
     else {
         // XTC file set and loaded --> use number of frames
         dc->SetFrameCount( vislib::math::Max(1U, static_cast<unsigned int>(
-                           //this->numXTCFrames+1)));
                            this->numXTCFrames)));
     }
 
@@ -940,29 +941,35 @@ void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
     //time_t t = clock();
 
     PDBLoader::Frame *fr = dynamic_cast<PDBLoader::Frame*>(frame);
-    int atomCnt = this->data[0]->AtomCount();
+    //int atomCnt = this->data[0]->AtomCount();
 
     // set the frames index
     fr->setFrameIdx( idx);
 
     // read first frame from the existing data-buffer
-    if( idx == 0 ) {
+    /*if( idx == 0 ) {
         for( unsigned int i = 0; i < atomCnt*3; i+=3 ) {
             fr->SetAtomPosition(i/3, data[0]->AtomPositions()[i],
                                 data[0]->AtomPositions()[i+1],
                                 data[0]->AtomPositions()[i+2]);
         }
-    } else {
+    } else {*/
         std::fstream xtcFile;
+
         xtcFile.open(this->xtcFilenameSlot.
           Param<core::param::FilePathParam>()->Value(),
           std::ios::in | std::ios::binary);
-        xtcFile.seekg( this->XTCFrameOffset[idx-1]);
-        fr->readFrame(&xtcFile);
-        xtcFile.close();
-    }
 
-    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, "Time for loading frame %i: %f", idx, ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+        xtcFile.seekg( this->XTCFrameOffset[idx]);
+
+        fr->readFrame(&xtcFile);
+
+        xtcFile.close();
+    //}
+
+    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+    //"Time for loading frame %i: %f", idx,
+    //( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 }
 
 /*
@@ -1167,11 +1174,12 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
         }
         else {
-            // TODO: last frame has wrong byte ordering and is to be omitted
-
             // try to get the total number of frames and calculate the
             // bounding box
             this->readNumXTCFrames();
+
+            Log::DefaultLog.WriteMsg( Log::LEVEL_INFO,
+                "Number of XTC-frames: %u", this->numXTCFrames); // DEBUG
 
             //float box[3][3];
             char tmpByte;
@@ -1217,11 +1225,9 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
                     int maxFrames = std::min(
                         (unsigned int)this->maxFramesSlot.Param<core::param::IntParam>()->Value(),
-                        //this->numXTCFrames + 1);
                         this->numXTCFrames);
 
-                    // frames in xtc-file + 1 frame in pdb-file
-                    //this->setFrameCount( this->numXTCFrames + 1);
+                    // frames in xtc-file - 1 (without the last frame)
                     this->setFrameCount( this->numXTCFrames);
 
                     // start the loading thread
@@ -1651,11 +1657,12 @@ bool PDBLoader::IsAminoAcid( vislib::StringA resName ) {
 }
 
 /*
- * Read the number of frames from the XTC file and update the bounding box
+ * Read the number of frames from the XTC file and update the bounding box.
+ * The Last frame contains wrong byte ordering and therefore gets ignored.
  */
 bool PDBLoader::readNumXTCFrames() {
 
-    //time_t t = clock();
+    time_t t = clock();
 
     // reset values
     this->numXTCFrames = 0;
@@ -1718,6 +1725,7 @@ bool PDBLoader::readNumXTCFrames() {
 
         // update the bounding box by uniting it with the last frames box
         this->bbox.Union(tmpBBox);
+        // get the current frames bounding box including the atom radius
         vislib::math::Cuboid<float> tmpBBox(
             (float)minint[0] / precision - 3.0f,
             (float)minint[1] / precision - 3.0f,
@@ -1748,9 +1756,13 @@ bool PDBLoader::readNumXTCFrames() {
     }
     xtcFile.close();
 
-    //vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
-    //"Time for getting all Byte-Offsets: %f",
-    //( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+    // remove the last frame
+    this->XTCFrameOffset.RemoveLast();
+    this->numXTCFrames--;
+
+    vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO,
+    "Time for parsing the XTC-file: %f",
+    ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
     return true;
 }
@@ -1792,8 +1804,8 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
     minFloats[2] = this->bbox.Back();   // Z-coord
     maxFloats[2] = this->bbox.Front();
 
-    // loop through the frames beginning with the second one
-    for(i = 1; i < data.Count(); i++) {
+    // loop through all frames
+    for(i = 0; i < data.Count(); i++) {
         data[i]->writeFrame(&outfile, precision, minFloats, maxFloats);
     }
 
