@@ -16,6 +16,7 @@
 #include "vislib/Log.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
+#include <signal.h>
 //#include "AbstractNamedObject.h"
 //#include <GL/gl.h>
 //#include "vislib/Thread.h"
@@ -40,8 +41,7 @@ cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
         &SimpleClusterClient::onViewRegisters);
     this->MakeSlotAvailable(&this->registerViewSlot);
 
-    this->udpPortSlot << new param::IntParam(
-        GetDatagramPort(), 1 /* 49152 */, 65535);
+    this->udpPortSlot << new param::IntParam(GetDatagramPort(), 1 /* 49152 */, 65535);
     this->udpPortSlot.SetUpdateCallback(&SimpleClusterClient::onUdpPortChanged);
     this->MakeSlotAvailable(&this->udpPortSlot);
 }
@@ -110,8 +110,17 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
         while (that->udpInSocket.IsValid()) {
             that->udpInSocket.Receive(&datagram, sizeof(datagram));
 
-            // TODO: Work with datagram
-            vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver: datagram %u received\n", datagram.msg);
+            switch (datagram.msg) {
+                case MSG_CONNECTTOSERVER:
+                    // TODO: Work with datagram
+                    break;
+                case MSG_SHUTDOWN:
+                    // somehow tell teh application to terminate ... :-/
+                    ::raise(SIGINT); // because I known console frontend will respond correctly
+                    break;
+                default:
+                    vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver: datagram %u received\n", datagram.msg);
+            }
 
         }
     } catch(vislib::net::SocketException sex) {

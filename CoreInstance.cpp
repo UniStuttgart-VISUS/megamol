@@ -172,10 +172,11 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->SetViewModuleID("pwview");
     this->builtinViewDescs.Register(vd);
 
-    // view for fusionex-hack
+    // view for fusionex-hack (client side)
     vd = new ViewDescription("simpleclusterview");
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterClient"), "::scc");
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterView"), "scview");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "scview::register", "::scc::registerView");
     vd->SetViewModuleID("scview");
     this->builtinViewDescs.Register(vd);
 
@@ -196,6 +197,12 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     jd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterViewMaster"), "::cmaster");
     jd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "::cmaster::register", "::cctrl::register");
     jd->SetJobModuleID("::cctrl");
+    this->builtinJobDescs.Register(jd);
+
+    // view for fusionex-hack (server side)
+    jd = new JobDescription("simpleclusterserver");
+    jd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterServer"), "::scs");
+    jd->SetJobModuleID("::scs");
     this->builtinJobDescs.Register(jd);
 
     // // TODO: Replace (is deprecated)

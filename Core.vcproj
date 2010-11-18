@@ -2625,6 +2625,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cluster\SimpleClusterServer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cluster\SimpleClusterView.h"
 					>
 				</File>
@@ -2694,6 +2698,10 @@
 				</File>
 				<File
 					RelativePath=".\cluster\SimpleClusterDatagram.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cluster\SimpleClusterServer.cpp"
 					>
 				</File>
 				<File

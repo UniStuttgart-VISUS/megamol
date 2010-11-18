@@ -28,6 +28,9 @@ namespace cluster {
      */
     unsigned int GetDatagramPort(const utility::Configuration *cfg = NULL);
 
+#define MSG_CONNECTTOSERVER 1
+#define MSG_SHUTDOWN 2
+
 
     /**
      * Struct layout a simple cluster datagram
@@ -38,12 +41,12 @@ namespace cluster {
         unsigned int msg;
 
         /** The payload data */
-        union payload {
+        union _payload_t {
 
             /** raw data */
             char data[256];
 
-        };
+        } payload;
 
     } SimpleClusterDatagram;
 
