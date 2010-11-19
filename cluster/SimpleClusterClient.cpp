@@ -37,7 +37,7 @@ cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
         udpInSocket(), udpReceiver(&SimpleClusterClient::udpReceiverLoop),
         clusterNameSlot("clusterName", "The name of the cluster"),
         udpEchoBAddrSlot("udpechoaddr", "The address to echo broadcast udp messages"),
-        tcpChan(NULL), tcpSan() {
+        tcpChan(NULL), tcpSan(), conServerAddr("") {
     vislib::net::Socket::Startup();
 
     this->clusterNameSlot << new param::StringParam("MM04SC");
@@ -183,12 +183,24 @@ void cluster::SimpleClusterClient::release(void) {
 bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
         const vislib::net::AbstractSimpleMessage& msg) throw() {
 
-    vislib::sys::Log::DefaultLog.WriteInfo("TCP Message %d received\n",
+    vislib::sys::Log::DefaultLog.WriteInfo("Client: TCP Message %d received\n",
         static_cast<int>(msg.GetHeader().GetMessageID()));
 
     // TODO: Implement
 
     return true;
+}
+
+/*
+ * cluster::SimpleClusterClient::OnCommunicationError
+ */
+bool cluster::SimpleClusterClient::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
+            const vislib::Exception& exception) throw() {
+
+    vislib::sys::Log::DefaultLog.WriteInfo("Client: Receiver failed: %s\n",
+        exception.GetMsgA());
+
+    return false;
 }
 
 
@@ -222,46 +234,51 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                     vislib::StringA rcn(datagram.payload.Strings.str1, datagram.payload.Strings.len1);
                     if (rcn.IsEmpty() || rcn.Equals(mcn)) {
                         vislib::StringA srv(datagram.payload.Strings.str2, datagram.payload.Strings.len2);
-                        vislib::sys::Log::DefaultLog.WriteInfo("Trying connect to new server \"%s\"", srv.PeekBuffer());
-                        if (that->tcpChan != NULL) {
-                            that->tcpChan->Close();
-                            that->tcpChan->Release();
-                            that->tcpChan = NULL;
-                        }
-                        if (that->tcpSan.IsRunning()) {
-                            that->tcpSan.Terminate();
-                            that->tcpSan.Join();
-                        }
-
-                        that->tcpChan = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
-                        try {
-                            that->tcpChan->Connect(srv);
-                            that->tcpSan.Start(that->tcpChan); // cast?
-                            vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
-                            vislib::net::SimpleMessage sm;
-                            sm.GetHeader().SetMessageID(MSG_HANDSHAKE_INIT);
-                            that->tcpChan->Send(sm, sm.GetMessageSize());
-
-                        } catch(vislib::Exception ex) {
-                            vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
-                            that->tcpChan->Close();
-                            that->tcpChan->Release();
-                            that->tcpChan = NULL;
+                        if (srv.Equals(that->conServerAddr)) {
+                            vislib::sys::Log::DefaultLog.WriteInfo("Already connected to server \"%s\"", srv.PeekBuffer());
+                        } else {
+                            that->conServerAddr = srv;
+                            vislib::sys::Log::DefaultLog.WriteInfo("Trying connect to new server \"%s\"", srv.PeekBuffer());
+                            if (that->tcpChan != NULL) {
+                                that->tcpChan->Close();
+                                that->tcpChan->Release();
+                                that->tcpChan = NULL;
+                            }
                             if (that->tcpSan.IsRunning()) {
                                 that->tcpSan.Terminate();
                                 that->tcpSan.Join();
                             }
-                        } catch(...) {
-                            vislib::sys::Log::DefaultLog.WriteError("Failed to connect: unexpected exception\n");
-                            that->tcpChan->Close();
-                            that->tcpChan->Release();
-                            that->tcpChan = NULL;
-                            if (that->tcpSan.IsRunning()) {
-                                that->tcpSan.Terminate();
-                                that->tcpSan.Join();
+
+                            that->tcpChan = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
+                            try {
+                                that->tcpChan->Connect(srv);
+                                that->tcpSan.Start(that->tcpChan); // cast?
+                                vislib::sys::Thread::Sleep(500);
+                                vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
+                                //vislib::net::SimpleMessage sm;
+                                //sm.GetHeader().SetMessageID(MSG_HANDSHAKE_INIT);
+                                //that->tcpChan->Send(sm, sm.GetMessageSize());
+
+                            } catch(vislib::Exception ex) {
+                                vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
+                                that->tcpChan->Close();
+                                that->tcpChan->Release();
+                                that->tcpChan = NULL;
+                                if (that->tcpSan.IsRunning()) {
+                                    that->tcpSan.Terminate();
+                                    that->tcpSan.Join();
+                                }
+                            } catch(...) {
+                                vislib::sys::Log::DefaultLog.WriteError("Failed to connect: unexpected exception\n");
+                                that->tcpChan->Close();
+                                that->tcpChan->Release();
+                                that->tcpChan = NULL;
+                                if (that->tcpSan.IsRunning()) {
+                                    that->tcpSan.Terminate();
+                                    that->tcpSan.Join();
+                                }
                             }
                         }
-
                     } else {
                         vislib::sys::Log::DefaultLog.WriteInfo("Server Connect Message for other cluster \"%s\" ignored\n", rcn.PeekBuffer());
                     }

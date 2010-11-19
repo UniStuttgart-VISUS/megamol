@@ -19,6 +19,7 @@
 #include "view/AbstractView.h"
 #include "view/CallRenderView.h"
 #include "vislib/assert.h"
+#include "vislib/AutoLock.h"
 #include "vislib/IPAddress.h"
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
@@ -33,6 +34,85 @@
 
 using namespace megamol::core;
 
+//============================================================================
+
+/*
+ * cluster::SimpleClusterServer::Client::Client
+ */
+cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
+        : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher() {
+    this->dispatcher.AddListener(this);
+    this->dispatcher.Start(channel.operator->());
+}
+
+
+/*
+ * cluster::SimpleClusterServer::Client::~Client
+ */
+cluster::SimpleClusterServer::Client::~Client(void) {
+    if (this->dispatcher.IsRunning()) {
+        this->dispatcher.Terminate();
+        this->dispatcher.Join();
+    }
+}
+
+
+/*
+ * cluster::SimpleClusterServer::Client::Close
+ */
+void cluster::SimpleClusterServer::Client::Close(void) {
+    if (this->dispatcher.IsRunning()) {
+        this->dispatcher.Terminate();
+        this->dispatcher.Join();
+    }
+}
+
+
+/*
+ * cluster::SimpleClusterServer::Client::OnCommunicationError
+ */
+bool cluster::SimpleClusterServer::Client::OnCommunicationError(
+        vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
+    vislib::sys::Log::DefaultLog.WriteError("Server: Communication error: %s", exception.GetMsgA());
+    return false; // everything is lost anyway
+}
+
+
+/*
+ * cluster::SimpleClusterServer::Client::OnDispatcherExited
+ */
+void cluster::SimpleClusterServer::Client::OnDispatcherExited(
+        vislib::net::SimpleMessageDispatcher& src) throw() {
+    vislib::sys::Log::DefaultLog.WriteInfo("Server: Client Connection lost");
+    vislib::sys::AutoLock(this->parent.clientsLock);
+    this->parent.clients.RemoveAll(this); // delete this as sfx
+}
+
+
+/*
+ * cluster::SimpleClusterServer::Client::OnDispatcherStarted
+ */
+void cluster::SimpleClusterServer::Client::OnDispatcherStarted(
+        vislib::net::SimpleMessageDispatcher& src) throw() {
+    vislib::sys::Log::DefaultLog.WriteInfo("Server: Client Connection Accepted; Receiver Thread started.");
+}
+
+
+/*
+ * cluster::SimpleClusterServer::Client::OnMessageReceived
+ */
+bool cluster::SimpleClusterServer::Client::OnMessageReceived(
+        vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
+
+    vislib::sys::Log::DefaultLog.WriteInfo("Server: TCP Message %d received\n",
+        static_cast<int>(msg.GetHeader().GetMessageID()));
+
+    // TODO: Implement
+
+    return true; // continue
+}
+
+//============================================================================
 
 /*
  * cluster::SimpleClusterServer::SimpleClusterServer
@@ -46,11 +126,10 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
         clusterShutdownBtnSlot("shutdownCluster", "shutdown rendering node instances"),
         clusterNameSlot("clusterName", "The name of the cluster"),
         serverRunningSlot("server::Running", "The server running flag"),
-        serverEndPointAddrSlot("server::EndPointAddr", "The server endpoint address slot"), 
-        serverEndPointPortSlot("server::EndPointPort", "The server endpoint port slot"), 
+        serverPortSlot("server::Port", "The server endpoint port slot"), 
         serverReconnectSlot("server::Reconnect", "Send the clients a reconnect message"),
         serverRestartSlot("server::Restart", "Restarts the TCP server"),
-        serverThread() {
+        serverThread(), clientsLock(), clients() {
     vislib::net::Socket::Startup();
     this->udpTarget.SetPort(0); // marks illegal endpoint
 
@@ -80,15 +159,9 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
     this->serverRunningSlot.SetUpdateCallback(&SimpleClusterServer::onServerRunningChanged);
     this->MakeSlotAvailable(&this->serverRunningSlot);
 
-    vislib::TString compName;
-    vislib::sys::SystemInformation::ComputerName(compName);
-    this->serverEndPointAddrSlot << new param::StringParam(compName);
-    this->serverEndPointAddrSlot.SetUpdateCallback(&SimpleClusterServer::onServerEndPointChanged);
-    this->MakeSlotAvailable(&this->serverEndPointAddrSlot);
-
-    this->serverEndPointPortSlot << new param::IntParam(GetStreamPort(), 1 /* 49152 */, 65535);
-    this->serverEndPointPortSlot.SetUpdateCallback(&SimpleClusterServer::onServerEndPointChanged);
-    this->MakeSlotAvailable(&this->serverEndPointPortSlot);
+    this->serverPortSlot << new param::IntParam(GetStreamPort(), 1 /* 49152 */, 65535);
+    this->serverPortSlot.SetUpdateCallback(&SimpleClusterServer::onServerEndPointChanged);
+    this->MakeSlotAvailable(&this->serverPortSlot);
 
     this->serverReconnectSlot << new param::ButtonParam();
     this->serverReconnectSlot.SetUpdateCallback(&SimpleClusterServer::onServerReconnectClicked);
@@ -99,17 +172,6 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
     this->MakeSlotAvailable(&this->serverRestartSlot);
 
     this->serverThread.AddListener(this);
-
-    //this->registerViewSlot.SetCallback(
-    //    SimpleClusterClientViewRegistration::ClassName(),
-    //    SimpleClusterClientViewRegistration::FunctionName(0),
-    //    &SimpleClusterClient::onViewRegisters);
-    //this->MakeSlotAvailable(&this->registerViewSlot);
-
-    //this->udpPortSlot << new param::IntParam(
-    //    GetDatagramPort(), 1 /* 49152 */, 65535);
-    //this->udpPortSlot.SetUpdateCallback(&SimpleClusterClient::onUdpPortChanged);
-    //this->MakeSlotAvailable(&this->udpPortSlot);
 }
 
 
@@ -118,7 +180,7 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
  */
 cluster::SimpleClusterServer::~SimpleClusterServer(void) {
     this->Release();
-    //ASSERT(!this->udpReceiver.IsRunning());
+    ASSERT(this->clients.IsEmpty());
     vislib::net::Socket::Cleanup();
 }
 
@@ -134,16 +196,6 @@ bool cluster::SimpleClusterServer::create(void) {
             this->instance()->Configuration().ConfigValue("scname"), false);
     }
 
-    if (this->instance()->Configuration().IsConfigValueSet("scsrun")) {
-        try {
-            bool run = vislib::TCharTraits::ParseBool(
-            this->instance()->Configuration().ConfigValue("scsrun"));
-            this->serverRunningSlot.Param<param::BoolParam>()->SetValue(run);
-        } catch(...) {
-            vislib::sys::Log::DefaultLog.WriteError("Unable to parse configuration value scsrun");
-        }
-    }
-
     this->udpTargetPortSlot.Param<param::IntParam>()->SetValue(GetDatagramPort(&this->instance()->Configuration()));
     this->udpTargetPortSlot.ResetDirty();
     if (this->instance()->Configuration().IsConfigValueSet("scsudptarget")) {
@@ -153,13 +205,17 @@ bool cluster::SimpleClusterServer::create(void) {
     this->udpTargetSlot.ResetDirty();
     this->onUdpTargetUpdated(this->udpTargetSlot);
 
-    this->serverEndPointPortSlot.Param<param::IntParam>()->SetValue(GetStreamPort(&this->instance()->Configuration()));
-    this->serverEndPointPortSlot.ResetDirty();
-    if (this->instance()->Configuration().IsConfigValueSet("sctcpaddr")) {
-        this->serverEndPointAddrSlot.Param<param::StringParam>()->SetValue(
-            this->instance()->Configuration().ConfigValue("sctcpaddr"), false);
+    this->serverPortSlot.Param<param::IntParam>()->SetValue(GetStreamPort(&this->instance()->Configuration()));
+
+    if (this->instance()->Configuration().IsConfigValueSet("scsrun")) {
+        try {
+            bool run = vislib::TCharTraits::ParseBool(
+            this->instance()->Configuration().ConfigValue("scsrun"));
+            this->serverRunningSlot.Param<param::BoolParam>()->SetValue(run);
+        } catch(...) {
+            vislib::sys::Log::DefaultLog.WriteError("Unable to parse configuration value scsrun");
+        }
     }
-    this->onServerEndPointChanged(this->serverEndPointAddrSlot);
 
     return true;
 }
@@ -206,11 +262,10 @@ bool cluster::SimpleClusterServer::Terminate(void) {
  */
 bool cluster::SimpleClusterServer::OnNewConnection(const vislib::net::CommServer& src,
         vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw() {
-    vislib::sys::Log::DefaultLog.WriteError("Incoming TCP connection rejected");
-
-    // TODO: Implement
-
-    return false;
+    vislib::sys::Log::DefaultLog.WriteInfo("Incoming TCP connection");
+    vislib::sys::AutoLock(this->clientsLock);
+    this->clients.Add(new Client(*this, channel));
+    return true;
 }
 
 
@@ -298,8 +353,8 @@ void cluster::SimpleClusterServer::disconnectView(void) {
         this->viewSlot.DisconnectCalls();
         this->viewConStatus = -1; // disconnected
         vislib::sys::Log::DefaultLog.WriteInfo("SCS: View Disconnected");
+        this->stopServer();
     }
-    this->stopServer();
 }
 
 
@@ -308,15 +363,13 @@ void cluster::SimpleClusterServer::disconnectView(void) {
  */
 void cluster::SimpleClusterServer::newViewConnected(void) {
     ASSERT(this->viewConStatus != 1);
-    // TODO: ASSERT no TCP-Connections
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>() != NULL);
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot() != NULL);
     ASSERT(this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot()->Parent() != NULL);
     vislib::sys::Log::DefaultLog.WriteInfo("SCS: View \"%s\" Connected",
         this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
     this->viewConStatus = 1;
-    this->stopServer();
-    this->onServerRestartClicked(this->serverReconnectSlot);
+    this->onServerReconnectClicked(this->serverReconnectSlot);
 }
 
 
@@ -349,11 +402,20 @@ void cluster::SimpleClusterServer::sendUDPDiagram(cluster::SimpleClusterDatagram
  */
 void cluster::SimpleClusterServer::stopServer(void) {
     if (this->serverThread.IsRunning()) {
+        vislib::sys::Thread::Sleep(2000); // *HAZARD* Terminating a server which has not reached listen state results in undefined behaviour
         this->serverThread.Terminate();
+        this->serverThread.Join();
     }
-
-    // TODO: Implement
-    // Disconnects TCP clients
+    this->clientsLock.Lock();
+    SIZE_T cs = this->clients.Count();
+    Client **c = new Client*[cs];
+    for (SIZE_T i = 0; i < cs; i++) {
+        c[i] = this->clients[i];
+    }
+    this->clientsLock.Unlock();
+    for (SIZE_T i = 0; i < cs; i++) {
+        c[i]->Close();
+    }
 
 }
 
@@ -362,9 +424,13 @@ void cluster::SimpleClusterServer::stopServer(void) {
  * cluster::SimpleClusterServer::onServerRunningChanged
  */
 bool cluster::SimpleClusterServer::onServerRunningChanged(param::ParamSlot& slot) {
-    this->stopServer();
-    if (this->serverRunningSlot.Param<param::BoolParam>()->Value()) {
-        this->onServerRestartClicked(slot);
+    bool tarVal = this->serverRunningSlot.Param<param::BoolParam>()->Value();
+    if (this->serverThread.IsRunning() != tarVal) {
+        if (tarVal) {
+            this->onServerRestartClicked(slot);
+        } else {
+            this->stopServer();
+        }
     }
     return true;
 }
@@ -375,10 +441,7 @@ bool cluster::SimpleClusterServer::onServerRunningChanged(param::ParamSlot& slot
  */
 bool cluster::SimpleClusterServer::onServerEndPointChanged(param::ParamSlot& slot) {
     this->stopServer();
-    vislib::net::IPEndPoint ep;
-    if (this->getServerEndPoint(ep)) {
-        this->onServerRestartClicked(slot);
-    }
+    this->onServerRestartClicked(slot);
     return true;
 }
 
@@ -403,7 +466,10 @@ bool cluster::SimpleClusterServer::onServerReconnectClicked(param::ParamSlot& sl
     datagram.payload.Strings.len1 = static_cast<unsigned char>(cn.Length());
     ::memcpy(datagram.payload.Strings.str1, cn.PeekBuffer(), datagram.payload.Strings.len1);
 
-    vislib::StringA ses(this->serverThread.GetBindAddressA());
+    vislib::StringA ses, compName;//(this->serverThread.GetBindAddressA());
+    vislib::sys::SystemInformation::ComputerName(compName);
+    compName = "129.69.205.29";
+    ses.Format("%s:%d", compName.PeekBuffer(), this->serverPortSlot.Param<param::IntParam>()->Value());
     if (ses.Length() > 127) ses.Truncate(127);
     datagram.payload.Strings.len2 = static_cast<unsigned char>(ses.Length());
     ::memcpy(datagram.payload.Strings.str2, ses.PeekBuffer(), datagram.payload.Strings.len2);
@@ -422,50 +488,26 @@ bool cluster::SimpleClusterServer::onServerRestartClicked(param::ParamSlot& slot
     this->stopServer();
 
     if (!this->serverRunningSlot.Param<param::BoolParam>()->Value()) {
-        Log::DefaultLog.WriteWarn("TCP-Server not started: server disabled");
+        if (&slot == &this->serverRestartSlot) {
+            Log::DefaultLog.WriteWarn("TCP-Server not started: server disabled");
+        }
         return true;
     }
 
     vislib::net::IPEndPoint ep;
-    if (!this->getServerEndPoint(ep)) {
-        Log::DefaultLog.WriteWarn("Unable to start TCP-Server: End Point is not valid");
-        return true;
-    }
+    ep.SetIPAddress(vislib::net::IPAddress::ANY);
+    ep.SetPort(this->serverPortSlot.Param<param::IntParam>()->Value());
 
     this->serverThread.Configure(
-        new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY),
+        new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY
+            | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS),
         ep.ToStringA());
     this->serverThread.Start();
+    vislib::sys::Thread::Sleep(500);
 
     if (this->serverThread.IsRunning()) {
         Log::DefaultLog.WriteInfo("TCP-Server started on %s\n", ep.ToStringA());
         this->onServerReconnectClicked(slot);
     }
-    return true;
-}
-
-
-/*
- * cluster::SimpleClusterServer::getServerEndPoint
- */
-bool cluster::SimpleClusterServer::getServerEndPoint(vislib::net::IPEndPoint& outEP) {
-    int port = this->serverEndPointPortSlot.Param<param::IntParam>()->Value();
-    vislib::StringA addr(this->serverEndPointAddrSlot.Param<param::StringParam>()->Value());
-    vislib::net::IPEndPoint lep;
-
-    float guess = vislib::net::NetworkInformation::GuessLocalEndPoint(lep, addr,
-        vislib::net::IPAgnosticAddress::FAMILY_INET /* TODO: Configurable */
-        );
-    lep.SetPort(port);
-    if (guess > 0.8) {
-        vislib::sys::Log::DefaultLog.WriteError("Guessed local server end point %s from input %s:%d with wildness %f: Too wild!\n",
-            lep.ToStringA().PeekBuffer(), addr.PeekBuffer(), port, guess);
-        return false;
-    }
-    vislib::sys::Log::DefaultLog.WriteMsg(
-        (guess > 0.2) ? vislib::sys::Log::LEVEL_WARN : vislib::sys::Log::LEVEL_INFO,
-        "Guessed local server end point %s from input %s:%d with wildness %f\n",
-        lep.ToStringA().PeekBuffer(), addr.PeekBuffer(), port, guess);
-    outEP = lep;
     return true;
 }

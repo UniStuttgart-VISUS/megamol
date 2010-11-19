@@ -107,8 +107,19 @@ namespace cluster {
          *
          * @return True to continue receiving
          */
-        bool OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
+        virtual bool OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
             const vislib::net::AbstractSimpleMessage& msg) throw();
+
+        /**
+         * Communication failure
+         *
+         * @param src The dispatcher
+         * @param exception The exception
+         *
+         * @return False because everything is lost
+         */
+        virtual bool OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
+            const vislib::Exception& exception) throw();
 
     private:
 
@@ -165,6 +176,9 @@ namespace cluster {
 
         /** The TCP communication */
         vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> tcpSan;
+
+        /** The address of the connected server */
+        vislib::StringA conServerAddr;
 
     };
 

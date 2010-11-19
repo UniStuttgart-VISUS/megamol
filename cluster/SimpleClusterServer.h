@@ -16,15 +16,17 @@
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
 #include "cluster/SimpleClusterCommUtil.h"
-//#include "vislib/Array.h"
 #include "vislib/CommServer.h"
 #include "vislib/CommServerListener.h"
+#include "vislib/CriticalSection.h"
 #include "vislib/IPEndPoint.h"
+#include "vislib/PtrArray.h"
 #include "vislib/RunnableThread.h"
+#include "vislib/SmartRef.h"
 #include "vislib/Socket.h"
-//#include "vislib/Thread.h"
-//#include "vislib/Serialiser.h"
-//#include "vislib/String.h"
+#include "vislib/SimpleMessageDispatcher.h"
+#include "vislib/SimpleMessageDispatchListener.h"
+#include "vislib/String.h"
 
 
 namespace megamol {
@@ -146,19 +148,106 @@ namespace cluster {
 
     private:
 
-        ///**
-        // * Class managing a connected client
-        // */
-        //class Client {
-        //public:
+        /**
+         * Class managing a connected client
+         */
+        class Client : public vislib::net::SimpleMessageDispatchListener {
+        public:
 
-        //    /** Ctor */
-        //    Client(void);
+            /**
+             * Ctor
+             *
+             * @param parent The parent server
+             * @param channel The communication channel
+             */
+            Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel);
 
-        //    /** Dtor */
-        //    virtual ~Client(void);
+            /** Dtor */
+            virtual ~Client(void);
 
-        //};
+            /** Prepare the client to be terminated by closing the connections */
+            void Close(void);
+
+            /**
+             * This method is called once a communication error occurs.
+             *
+             * This method should return very quickly and should not perform
+             * excessive work as it is executed in the discovery thread.
+             *
+             * The return value of the method can be used to stop the message
+             * dispatcher. The default implementation returns true for continuing
+             * after an error.
+             *
+             * Note that the dispatcher will stop if any of the registered listeners
+             * returns false.
+             *
+             * @param src       The SimpleMessageDispatcher which caught the 
+             *                  communication error.
+             * @param exception The exception that was caught (this exception
+             *                  represents the error that occurred).
+             *
+             * @return true in order to make the SimpleMessageDispatcher continue
+             *         receiving messages, false will cause the dispatcher to
+             *         exit.
+             */
+            virtual bool OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
+                const vislib::Exception& exception) throw();
+
+            /**
+             * This method is called immediately after the message dispatcher loop
+             * was left and the dispatching method is being exited.
+             *
+             * This method should return very quickly and should not perform
+             * excessive work as it is executed in the discovery thread.
+             *
+             * @param src The SimpleMessageDispatcher that exited.
+             */
+            virtual void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw();
+
+            /**
+             * This method is called immediately before the message dispatcher loop
+             * is entered, but after the dispatcher was initialised. This method
+             * can be used to release references to the communication channel that
+             * the caller has and does not need any more.
+             *
+             * This method should return very quickly and should not perform
+             * excessive work as it is executed in the discovery thread.
+             *
+             * @param src The SimpleMessageDispatcher that exited.
+             */
+            virtual void OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw();
+
+            /**
+             * This method is called every time a message is received.
+             *
+             * This method should return very quickly and should not perform
+             * excessive work as it is executed in the discovery thread.
+             *
+             * The return value of the method can be used to stop the message
+             * dispatcher, e. g. if an exit message was received. 
+             *
+             * Note that the dispatcher will stop if any of the registered listeners
+             * returns false.
+             *
+             * @param src The SimpleMessageDispatcher that received the message.
+             * @param msg The message that was received.
+             *
+             * @return true in order to make the SimpleMessageDispatcher continue
+             *         receiving messages, false will cause the dispatcher to
+             *         exit.
+             */
+            virtual bool OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
+                const vislib::net::AbstractSimpleMessage& msg) throw();
+
+        private:
+
+            /** The parent object */
+            SimpleClusterServer& parent;
+
+            /** The dispatcher thread */
+            vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> dispatcher;
+
+        };
 
         /**
          * Callback called when the rendering node instances should be shut down
@@ -245,15 +334,6 @@ namespace cluster {
          */
         bool onServerRestartClicked(param::ParamSlot& slot);
 
-        /**
-         * gets the configured server end point
-         *
-         * @param outEP The end point
-         *
-         * @return True on success
-         */
-        bool getServerEndPoint(vislib::net::IPEndPoint& outEP);
-
         /** The parameter slot holding the name of the view module to be use */
         param::ParamSlot viewnameSlot;
 
@@ -284,11 +364,8 @@ namespace cluster {
         /** The server running flag */
         param::ParamSlot serverRunningSlot;
 
-        /** The server endpoint slot */
-        param::ParamSlot serverEndPointAddrSlot;
-
-        /** The server endpoint port slot */
-        param::ParamSlot serverEndPointPortSlot;
+        /** The server port slot */
+        param::ParamSlot serverPortSlot;
 
         /** Button to send the clients a reconnect message */
         param::ParamSlot serverReconnectSlot;
@@ -299,17 +376,14 @@ namespace cluster {
         /** The server thread */
         vislib::sys::RunnableThread<vislib::net::CommServer> serverThread;
 
-        ///** The endpoint to run the server on */
-        //vislib::net::IPEndPoint serverEndPoint;
+        /** The thread lock for the clients list */
+        vislib::sys::CriticalSection clientsLock;
 
-        ///** The server */
-        //vislib::sys::RunnableThread<vislib::net::TcpServer> server;
+        /** The connected clients */
+        vislib::PtrArray<Client> clients;
 
-        ///** The thread lock for the clients list */
-        //vislib::sys::CriticalSection clientsLock;
-
-        ///** The connected clients */
-        //vislib::Array<> clients;
+        /** Client receivers have access */
+        friend class Client;
 
     };
 
