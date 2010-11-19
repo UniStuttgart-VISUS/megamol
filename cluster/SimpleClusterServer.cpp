@@ -42,7 +42,9 @@ using namespace megamol::core;
 cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
         : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher() {
     this->dispatcher.AddListener(this);
-    this->dispatcher.Start(channel.operator->());
+    /* *HAZARD* This has to be exactly this cast! */
+    vislib::net::AbstractInboundCommChannel *cc = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(channel.operator ->());
+    this->dispatcher.Start(cc);
 }
 
 
@@ -52,7 +54,7 @@ cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib
 cluster::SimpleClusterServer::Client::~Client(void) {
     if (this->dispatcher.IsRunning()) {
         this->dispatcher.Terminate();
-        this->dispatcher.Join();
+        //this->dispatcher.Join(); // blocking bullshit!
     }
 }
 
@@ -469,6 +471,7 @@ bool cluster::SimpleClusterServer::onServerReconnectClicked(param::ParamSlot& sl
     vislib::StringA ses, compName;//(this->serverThread.GetBindAddressA());
     vislib::sys::SystemInformation::ComputerName(compName);
     compName = "129.69.205.29";
+    compName = "127.0.0.1";
     ses.Format("%s:%d", compName.PeekBuffer(), this->serverPortSlot.Param<param::IntParam>()->Value());
     if (ses.Length() > 127) ses.Truncate(127);
     datagram.payload.Strings.len2 = static_cast<unsigned char>(ses.Length());

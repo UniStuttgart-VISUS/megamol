@@ -380,7 +380,7 @@ namespace cluster {
         vislib::sys::CriticalSection clientsLock;
 
         /** The connected clients */
-        vislib::PtrArray<Client> clients;
+        vislib::PtrArray<Client> clients; /* *HAZARD* TODO: Fixme -> executing code in deleted objects */
 
         /** Client receivers have access */
         friend class Client;

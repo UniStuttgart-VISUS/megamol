@@ -252,12 +252,15 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                             that->tcpChan = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
                             try {
                                 that->tcpChan->Connect(srv);
-                                that->tcpSan.Start(that->tcpChan); // cast?
+                                vislib::net::AbstractInboundCommChannel *cc
+                                    = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(that->tcpChan);
+                                that->tcpSan.Start(cc);
                                 vislib::sys::Thread::Sleep(500);
                                 vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
-                                //vislib::net::SimpleMessage sm;
-                                //sm.GetHeader().SetMessageID(MSG_HANDSHAKE_INIT);
-                                //that->tcpChan->Send(sm, sm.GetMessageSize());
+
+                                vislib::net::SimpleMessage sm;
+                                sm.GetHeader().SetMessageID(MSG_HANDSHAKE_INIT);
+                                that->tcpChan->Send(sm, sm.GetMessageSize());
 
                             } catch(vislib::Exception ex) {
                                 vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
