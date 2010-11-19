@@ -2621,7 +2621,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\cluster\SimpleClusterDatagram.h"
+					RelativePath=".\cluster\SimpleClusterCommUtil.h"
 					>
 				</File>
 				<File
@@ -2697,7 +2697,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\cluster\SimpleClusterDatagram.cpp"
+					RelativePath=".\cluster\SimpleClusterCommUtil.cpp"
 					>
 				</File>
 				<File

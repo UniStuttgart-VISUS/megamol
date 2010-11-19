@@ -15,7 +15,11 @@
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
 #include "vislib/Array.h"
+#include "vislib/RunnableThread.h"
+#include "vislib/SimpleMessageDispatcher.h"
+#include "vislib/SimpleMessageDispatchListener.h"
 #include "vislib/Socket.h"
+#include "vislib/TcpCommChannel.h"
 #include "vislib/Thread.h"
 //#include "vislib/Serialiser.h"
 //#include "vislib/String.h"
@@ -29,7 +33,7 @@ namespace cluster {
     /**
      * Abstract base class of override rendering views
      */
-    class SimpleClusterClient : public Module {
+    class SimpleClusterClient : public Module, public vislib::net::SimpleMessageDispatchListener {
     public:
 
         /**
@@ -95,6 +99,17 @@ namespace cluster {
          */
         virtual void release(void);
 
+        /**
+         * A message from the TCP-Server was received
+         *
+         * @param src The dispatcher
+         * @param msg The received message
+         *
+         * @return True to continue receiving
+         */
+        bool OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
+            const vislib::net::AbstractSimpleMessage& msg) throw();
+
     private:
 
         /**
@@ -138,6 +153,18 @@ namespace cluster {
 
         /** The udp receiver thread */
         vislib::sys::Thread udpReceiver;
+
+        /** The name of the rendering cluster */
+        param::ParamSlot clusterNameSlot;
+
+        /** The address to echo broadcast udp messages */
+        param::ParamSlot udpEchoBAddrSlot;
+
+        /** the tcp communication channel */
+        vislib::net::TcpCommChannel *tcpChan;
+
+        /** The TCP communication */
+        vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> tcpSan;
 
     };
 

@@ -8,12 +8,14 @@
 #include "stdafx.h"
 #include "cluster/SimpleClusterClient.h"
 #include "cluster/SimpleClusterClientViewRegistration.h"
-#include "cluster/SimpleClusterDatagram.h"
+#include "cluster/SimpleClusterCommUtil.h"
 #include "cluster/SimpleClusterView.h"
 #include "CoreInstance.h"
 #include "param/IntParam.h"
+#include "param/StringParam.h"
 #include "vislib/assert.h"
 #include "vislib/Log.h"
+#include "vislib/NetworkInformation.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
 #include <signal.h>
@@ -32,8 +34,14 @@ cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
         registerViewSlot("registerView", "The slot views may register at"),
         views(),
         udpPortSlot("udpport", "The port used for udp communication"),
-        udpInSocket(), udpReceiver(&SimpleClusterClient::udpReceiverLoop) {
+        udpInSocket(), udpReceiver(&SimpleClusterClient::udpReceiverLoop),
+        clusterNameSlot("clusterName", "The name of the cluster"),
+        udpEchoBAddrSlot("udpechoaddr", "The address to echo broadcast udp messages"),
+        tcpChan(NULL), tcpSan() {
     vislib::net::Socket::Startup();
+
+    this->clusterNameSlot << new param::StringParam("MM04SC");
+    this->MakeSlotAvailable(&this->clusterNameSlot);
 
     this->registerViewSlot.SetCallback(
         SimpleClusterClientViewRegistration::ClassName(),
@@ -44,6 +52,12 @@ cluster::SimpleClusterClient::SimpleClusterClient(void) : Module(),
     this->udpPortSlot << new param::IntParam(GetDatagramPort(), 1 /* 49152 */, 65535);
     this->udpPortSlot.SetUpdateCallback(&SimpleClusterClient::onUdpPortChanged);
     this->MakeSlotAvailable(&this->udpPortSlot);
+
+    this->udpEchoBAddrSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->udpEchoBAddrSlot);
+
+    this->tcpSan.AddListener(this);
+
 }
 
 
@@ -69,10 +83,65 @@ void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterView *view) 
 }
 
 
+/**
+ * Selects adapters capable of UDP broadcast
+ *
+ * @param adapter The adapter to tesh
+ * @param userContext not used
+ *
+ * @return True if the adapter is capable of UDP broadcast
+ */
+bool udpBroadcastAdapters(const vislib::net::NetworkInformation::Adapter& adapter, void *userContext) {
+    vislib::net::NetworkInformation::Confidence conf;
+    vislib::net::NetworkInformation::Adapter::OperStatus opStat = adapter.GetStatus(&conf);
+    if (conf != vislib::net::NetworkInformation::INVALID) {
+        if (opStat != vislib::net::NetworkInformation::Adapter::OPERSTATUS_UP) {
+            return false;
+        }
+    }
+    adapter.GetBroadcastAddress(&conf);
+    return (conf != vislib::net::NetworkInformation::INVALID);
+}
+
+
 /*
  * cluster::SimpleClusterClient::create
  */
 bool cluster::SimpleClusterClient::create(void) {
+
+    if (this->instance()->Configuration().IsConfigValueSet("scname")) {
+        this->clusterNameSlot.Param<param::StringParam>()->SetValue(
+            this->instance()->Configuration().ConfigValue("scname"));
+    }
+
+    if (this->instance()->Configuration().IsConfigValueSet("sccudpechobaddr")) {
+        this->udpEchoBAddrSlot.Param<param::StringParam>()->SetValue(
+            this->instance()->Configuration().ConfigValue("sccudpechobaddr"));
+    } else {
+        vislib::net::NetworkInformation::AdapterList adapters;
+        vislib::net::NetworkInformation::GetAdaptersForPredicate(adapters, &udpBroadcastAdapters);
+        if (adapters.Count() > 0) {
+            vislib::net::NetworkInformation::Confidence bcac;
+            vislib::net::IPAddress bca;
+            bool bcaset = false;
+            for (SIZE_T i = 0; i < adapters.Count(); i++) {
+                bca = adapters[i].GetBroadcastAddress(&bcac);
+                if (bcac == vislib::net::NetworkInformation::VALID) {
+                    this->udpEchoBAddrSlot.Param<param::StringParam>()->SetValue(bca.ToStringA());
+                    bcaset = true;
+                    break;
+                }
+            }
+            if (!bcaset) for (SIZE_T i = 0; i < adapters.Count(); i++) {
+                bca = adapters[i].GetBroadcastAddress(&bcac);
+                if (bcac != vislib::net::NetworkInformation::INVALID) {
+                    this->udpEchoBAddrSlot.Param<param::StringParam>()->SetValue(bca.ToStringA());
+                    break;
+                }
+            }
+        }
+    }
+
     this->udpPortSlot.Param<param::IntParam>()->SetValue(
         GetDatagramPort(&this->instance()->Configuration()));
     this->udpPortSlot.ResetDirty();
@@ -95,7 +164,31 @@ void cluster::SimpleClusterClient::release(void) {
     if (this->udpReceiver.IsRunning()) {
         this->udpReceiver.Join();
     }
+    if (this->tcpChan != NULL) {
+        this->tcpChan->Close();
+        this->tcpChan->Release();
+        this->tcpChan = NULL;
+    }
+    if (this->tcpSan.IsRunning()) {
+        this->tcpSan.Terminate();
+        this->tcpSan.Join();
+    }
 
+}
+
+
+/*
+ * cluster::SimpleClusterClient::OnMessageReceived
+ */
+bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
+        const vislib::net::AbstractSimpleMessage& msg) throw() {
+
+    vislib::sys::Log::DefaultLog.WriteInfo("TCP Message %d received\n",
+        static_cast<int>(msg.GetHeader().GetMessageID()));
+
+    // TODO: Implement
+
+    return true;
 }
 
 
@@ -108,16 +201,82 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
     vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver started\n");
     try {
         while (that->udpInSocket.IsValid()) {
-            that->udpInSocket.Receive(&datagram, sizeof(datagram));
+            //vislib::net::IPEndPoint fromEP;
+            that->udpInSocket.Receive(/*fromEP, */&datagram, sizeof(datagram));
+
+            if (datagram.cntEchoed > 0) {
+                datagram.cntEchoed--;
+                // echo broadcast
+                vislib::StringA baddr(that->udpEchoBAddrSlot.Param<param::StringParam>()->Value());
+                vislib::net::IPAddress addr;
+                if (addr.Lookup(baddr)) {
+                    int bport = that->udpPortSlot.Param<param::IntParam>()->Value();
+                    vislib::net::IPEndPoint ep(addr, bport);
+                    that->udpInSocket.Send(ep, &datagram, sizeof(datagram));
+                }
+            }
 
             switch (datagram.msg) {
-                case MSG_CONNECTTOSERVER:
-                    // TODO: Work with datagram
-                    break;
-                case MSG_SHUTDOWN:
-                    // somehow tell teh application to terminate ... :-/
-                    ::raise(SIGINT); // because I known console frontend will respond correctly
-                    break;
+                case MSG_CONNECTTOSERVER: {
+                    vislib::StringA mcn(that->clusterNameSlot.Param<param::StringParam>()->Value());
+                    vislib::StringA rcn(datagram.payload.Strings.str1, datagram.payload.Strings.len1);
+                    if (rcn.IsEmpty() || rcn.Equals(mcn)) {
+                        vislib::StringA srv(datagram.payload.Strings.str2, datagram.payload.Strings.len2);
+                        vislib::sys::Log::DefaultLog.WriteInfo("Trying connect to new server \"%s\"", srv.PeekBuffer());
+                        if (that->tcpChan != NULL) {
+                            that->tcpChan->Close();
+                            that->tcpChan->Release();
+                            that->tcpChan = NULL;
+                        }
+                        if (that->tcpSan.IsRunning()) {
+                            that->tcpSan.Terminate();
+                            that->tcpSan.Join();
+                        }
+
+                        that->tcpChan = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
+                        try {
+                            that->tcpChan->Connect(srv);
+                            that->tcpSan.Start(that->tcpChan); // cast?
+                            vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
+                            vislib::net::SimpleMessage sm;
+                            sm.GetHeader().SetMessageID(MSG_HANDSHAKE_INIT);
+                            that->tcpChan->Send(sm, sm.GetMessageSize());
+
+                        } catch(vislib::Exception ex) {
+                            vislib::sys::Log::DefaultLog.WriteError("Failed to connect: %s\n", ex.GetMsgA());
+                            that->tcpChan->Close();
+                            that->tcpChan->Release();
+                            that->tcpChan = NULL;
+                            if (that->tcpSan.IsRunning()) {
+                                that->tcpSan.Terminate();
+                                that->tcpSan.Join();
+                            }
+                        } catch(...) {
+                            vislib::sys::Log::DefaultLog.WriteError("Failed to connect: unexpected exception\n");
+                            that->tcpChan->Close();
+                            that->tcpChan->Release();
+                            that->tcpChan = NULL;
+                            if (that->tcpSan.IsRunning()) {
+                                that->tcpSan.Terminate();
+                                that->tcpSan.Join();
+                            }
+                        }
+
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteInfo("Server Connect Message for other cluster \"%s\" ignored\n", rcn.PeekBuffer());
+                    }
+                } break;
+                case MSG_SHUTDOWN: {
+                    vislib::StringA mcn(that->clusterNameSlot.Param<param::StringParam>()->Value());
+                    vislib::StringA rcn(datagram.payload.Strings.str1, datagram.payload.Strings.len1);
+                    if (rcn.IsEmpty() || rcn.Equals(mcn)) {
+                        // somehow tell teh application to terminate ... :-/
+                        vislib::sys::Log::DefaultLog.WriteInfo("Sending interrupt signal to frontend");
+                        ::raise(SIGINT); // because I known console frontend will respond correctly
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteInfo("Shutdown Message for other cluster \"%s\" ignored\n", rcn.PeekBuffer());
+                    }
+                } break;
                 default:
                     vislib::sys::Log::DefaultLog.WriteInfo("UDP Receiver: datagram %u received\n", datagram.msg);
             }
