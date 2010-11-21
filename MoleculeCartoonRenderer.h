@@ -1,7 +1,7 @@
 /*
  * MoleculeCartoonRenderer.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -16,6 +16,7 @@
 #include "param/ParamSlot.h"
 #include "BSpline.h"
 #include "CallerSlot.h"
+#include "Color.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"
@@ -79,19 +80,6 @@ namespace protein {
             CARTOON_GPU    = 3
         };
 
-        /** The names of the coloring modes */
-        enum ColoringMode {
-            ELEMENT     = 0,
-            RESIDUE     = 1,
-            STRUCTURE   = 2,
-            BFACTOR     = 3,
-            CHARGE      = 4,
-            OCCUPANCY   = 5,
-            CHAIN       = 6,
-            MOLECULE    = 7,
-            RAINBOW     = 8,
-            CHAINBOW    = 9     // TODO
-        };
 
         /**********************************************************************
         * 'get'-functions
@@ -117,7 +105,7 @@ namespace protein {
         void SetRenderMode( CartoonRenderMode rm) { currentRenderMode = rm; RecomputeAll(); };
 
         /** Set current coloring mode */
-        void SetColoringMode( ColoringMode cm) { currentColoringMode = cm; RecomputeAll(); };
+        void SetColoringMode( Color::ColoringMode cm) { currentColoringMode = cm; RecomputeAll(); };
 
         /** Set radius for cartoon rendering mode */
         inline void SetRadiusCartoon( float rad ) { radiusCartoon = rad; RecomputeAll(); };
@@ -206,7 +194,7 @@ namespace protein {
          */
         void RenderCartoonCPU( const MolecularDataCall *mol);
 
-         /** 
+         /**
          * Render protein in GPU CARTOON mode using OpenGL primitives.
          *
          * @param prot The data interface.
@@ -218,37 +206,13 @@ namespace protein {
          */
         void RenderStick( const MolecularDataCall *mol, const float *atomPos);
 
-         /** 
+         /**
           * Recompute all values.
           * This function has to be called after every change rendering attributes,
           * e.g. coloring or render mode.
           */
          void RecomputeAll(void);
 
-        /**
-         * Read color table from file.
-         *
-         * @param filename The filename of the color table file.
-         */
-        void ReadColorTableFromFile( vislib::StringA filename);
-
-         /**
-         * Creates a rainbow color table with 'num' entries.
-         *
-         * @param num The number of color entries.
-         */
-        void MakeRainbowColorTable( unsigned int num);
-
-        /**
-         * Make color table for all atoms acoording to the current coloring mode.
-         * The color table is only computed if it is empty or if the recomputation 
-         * is forced by parameter.
-         *
-         * @param mol               The data interface.
-         * @param forceRecompute    Force recomputation of the color table.
-         */
-        void MakeColorTable( const MolecularDataCall *mol, bool forceRecompute = false);
- 
         /**
          * Update all parameter slots.
          *
@@ -262,8 +226,8 @@ namespace protein {
 
         // caller slot
         megamol::core::CallerSlot molDataCallerSlot;
-		// caller slot
-		megamol::core::CallerSlot molRendererCallerSlot;
+        // caller slot
+        megamol::core::CallerSlot molRendererCallerSlot;
 
         // label with id of current loaded frame
         vislib::graphics::AbstractFont *frameLabel;
@@ -306,7 +270,7 @@ namespace protein {
         // current render mode
         CartoonRenderMode currentRenderMode;
         // current coloring mode
-        ColoringMode currentColoringMode;
+        Color::ColoringMode currentColoringMode;
         // smooth coloring of cartoon mode
         bool smoothCartoonColoringMode;
 
@@ -352,13 +316,13 @@ namespace protein {
 
         /** The atom color table for rendering */
         vislib::Array<vislib::math::Vector<float, 3> > atomColorTable;
-        
+
         // the Id of the current frame (for dynamic data)
         unsigned int currentFrameId;
 
         unsigned int atomCount;
 
-	};
+    };
 
 
 } /* end namespace protein */
