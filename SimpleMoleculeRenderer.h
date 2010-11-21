@@ -226,7 +226,7 @@ namespace protein {
         vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
         /** The atom color table for rendering */
-        vislib::Array<float> atomColorTable;
+        vislib::Array<vislib::math::Vector<float, 3> > atomColorTable;
 
         /** The current rendering mode */
         RenderMode currentRenderMode;

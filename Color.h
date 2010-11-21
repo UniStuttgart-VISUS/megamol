@@ -51,14 +51,14 @@ namespace protein {
          * @param rainbowColors       The rainbow color lookup table.
          */
         static void MakeColorTable(const MolecularDataCall *mol,
-            bool forceRecompute,
             vislib::TString minGradColor,
             vislib::TString midGradColor,
             vislib::TString maxGradColor,
             ColoringMode currentColoringMode,
-            vislib::Array<float> &atomColorTable,
+            vislib::Array<vislib::math::Vector<float, 3> > &atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors);
+            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
+            bool forceRecompute=false);
 
          /**
          * Creates a rainbow color table with 'num' entries.

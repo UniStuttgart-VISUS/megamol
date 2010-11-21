@@ -19,14 +19,15 @@ using namespace megamol::protein;
 /*
  * protein::Color::MakeColorTable
  */
-void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
+void Color::MakeColorTable(const MolecularDataCall *mol,
         vislib::TString minGradColor,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         ColoringMode currentColoringMode,
-        vislib::Array<float> &atomColorTable,
+        vislib::Array<vislib::math::Vector<float, 3> > &atomColorTable,
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
-        vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors) {
+        vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
+        bool forceRecompute) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS;
@@ -45,12 +46,13 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
     if( atomColorTable.IsEmpty() ) {
         if( currentColoringMode == ELEMENT ) {
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
-                atomColorTable.Add(float(mol->AtomTypes()[mol->
-                  AtomTypeIndices()[cnt]].Colour()[0])/255.0f);
-                atomColorTable.Add( float(mol->AtomTypes()[mol->
+                color.SetX( float( mol->AtomTypes()[mol->
+                  AtomTypeIndices()[cnt]].Colour()[0]) / 255.0f );
+                color.SetY( float( mol->AtomTypes()[mol->
                   AtomTypeIndices()[cnt]].Colour()[1]) / 255.0f );
-                atomColorTable.Add( float( mol->AtomTypes()[mol->
+                color.SetZ( float( mol->AtomTypes()[mol->
                   AtomTypeIndices()[cnt]].Colour()[2]) / 255.0f );
+                atomColorTable.Add( color);
             }
         } // ... END coloring mode ELEMENT
         else if( currentColoringMode == RESIDUE ) {
@@ -63,12 +65,8 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
                 // get residue type index
                 resTypeIdx = mol->Residues()[cntRes]->Type();
                 for( cntAtom = idx; cntAtom < idx + cnt; ++cntAtom ) {
-                    atomColorTable.Add(colorLookupTable[resTypeIdx%
-                      colorLookupTable.Count()].X());
-                    atomColorTable.Add(colorLookupTable[resTypeIdx%
-                      colorLookupTable.Count()].Y());
-                    atomColorTable.Add(colorLookupTable[resTypeIdx%
-                      colorLookupTable.Count()].Z());
+                    atomColorTable.Add( colorLookupTable[resTypeIdx
+                      %colorLookupTable.Count()]);
                 }
             }
         } // ... END coloring mode RESIDUE
@@ -83,18 +81,14 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
             vislib::math::Vector<float, 3> colRCoil( r, g, b);
             // loop over all atoms and fill the table with the default color
             for( cntAtom = 0; cntAtom < mol->AtomCount(); ++cntAtom ) {
-                atomColorTable.Add( colNone.X());
-                atomColorTable.Add( colNone.Y());
-                atomColorTable.Add( colNone.Z());
+                atomColorTable.Add( colNone);
             }
             // write colors for sec structure elements
             MolecularDataCall::SecStructure::ElementType elemType;
             for( cntSecS = 0; cntSecS < mol->SecondaryStructureCount();
-                 ++cntSecS ) {
-                idx = mol->SecondaryStructures()[cntSecS].
-                        FirstAminoAcidIndex();
-                cnt = idx + mol->SecondaryStructures()[cntSecS].
-                        AminoAcidCount();
+              ++cntSecS ) {
+                idx = mol->SecondaryStructures()[cntSecS].FirstAminoAcidIndex();
+                cnt = idx +mol->SecondaryStructures()[cntSecS].AminoAcidCount();
                 elemType = mol->SecondaryStructures()[cntSecS].Type();
                 for( cntRes = idx; cntRes < cnt; ++cntRes ) {
                     atomIdx = mol->Residues()[cntRes]->FirstAtomIndex();
@@ -102,19 +96,13 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
                     for( cntAtom = atomIdx; cntAtom < atomCnt; ++cntAtom ) {
                         if( elemType ==
                           MolecularDataCall::SecStructure::TYPE_HELIX ) {
-                            atomColorTable[3*cntAtom+0] = colHelix.X();
-                            atomColorTable[3*cntAtom+1] = colHelix.Y();
-                            atomColorTable[3*cntAtom+2] = colHelix.Z();
+                            atomColorTable[cntAtom] = colHelix;
                         } else if( elemType ==
                           MolecularDataCall::SecStructure::TYPE_SHEET ) {
-                            atomColorTable[3*cntAtom+0] = colSheet.X();
-                            atomColorTable[3*cntAtom+1] = colSheet.Y();
-                            atomColorTable[3*cntAtom+2] = colSheet.Z();
+                            atomColorTable[cntAtom] = colSheet;
                         } else if( elemType ==
                           MolecularDataCall::SecStructure::TYPE_COIL ) {
-                            atomColorTable[3*cntAtom+0] = colRCoil.X();
-                            atomColorTable[3*cntAtom+1] = colRCoil.Y();
-                            atomColorTable[3*cntAtom+2] = colRCoil.Z();
+                            atomColorTable[cntAtom] = colRCoil;
                         }
                     }
                 }
@@ -147,9 +135,7 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
 
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
                 if( min == max ) {
-                    atomColorTable.Add( colMid.GetX() );
-                    atomColorTable.Add( colMid.GetY() );
-                    atomColorTable.Add( colMid.GetZ() );
+                    atomColorTable.Add( colMid);
                     continue;
                 }
 
@@ -157,24 +143,18 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
                 // below middle value --> blend between min and mid color
                 if( val < mid ) {
                     col = colMin + ( ( colMid - colMin ) / ( mid - min) )
-                            * ( val - min );
-                    atomColorTable.Add( col.GetX() );
-                    atomColorTable.Add( col.GetY() );
-                    atomColorTable.Add( col.GetZ() );
+                      * ( val - min );
+                    atomColorTable.Add( col);
                 }
                 // above middle value --> blend between max and mid color
                 else if( val > mid ) {
                     col = colMid + ( ( colMax - colMid ) / ( max - mid) )
-                            * ( val - mid );
-                    atomColorTable.Add( col.GetX() );
-                    atomColorTable.Add( col.GetY() );
-                    atomColorTable.Add( col.GetZ() );
+                      * ( val - mid );
+                    atomColorTable.Add( col);
                 }
                 // middle value --> assign mid color
                 else {
-                    atomColorTable.Add( colMid.GetX() );
-                    atomColorTable.Add( colMid.GetY() );
-                    atomColorTable.Add( colMid.GetZ() );
+                    atomColorTable.Add( colMid);
                 }
             }
         } // ... END coloring mode BFACTOR
@@ -205,9 +185,7 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
 
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
                 if( min == max ) {
-                    atomColorTable.Add( colMid.GetX() );
-                    atomColorTable.Add( colMid.GetY() );
-                    atomColorTable.Add( colMid.GetZ() );
+                    atomColorTable.Add( colMid);
                     continue;
                 }
 
@@ -215,24 +193,18 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
                 // below middle value --> blend between min and mid color
                 if( val < mid ) {
                     col = colMin + ( ( colMid - colMin ) / ( mid - min) )
-                            * ( val - min );
-                    atomColorTable.Add( col.GetX() );
-                    atomColorTable.Add( col.GetY() );
-                    atomColorTable.Add( col.GetZ() );
+                      * ( val - min );
+                    atomColorTable.Add( col);
                 }
                 // above middle value --> blend between max and mid color
                 else if( val > mid ) {
                     col = colMid + ( ( colMax - colMid ) / ( max - mid) )
-                            * ( val - mid );
-                    atomColorTable.Add( col.GetX() );
-                    atomColorTable.Add( col.GetY() );
-                    atomColorTable.Add( col.GetZ() );
+                      * ( val - mid );
+                    atomColorTable.Add( col);
                 }
                 // middle value --> assign mid color
                 else {
-                    atomColorTable.Add( colMid.GetX() );
-                    atomColorTable.Add( colMid.GetY() );
-                    atomColorTable.Add( colMid.GetZ() );
+                    atomColorTable.Add( colMid);
                 }
             }
         } // ... END coloring mode CHARGE
@@ -263,9 +235,7 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
 
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
                 if( min == max ) {
-                    atomColorTable.Add( colMid.GetX() );
-                    atomColorTable.Add( colMid.GetY() );
-                    atomColorTable.Add( colMid.GetZ() );
+                    atomColorTable.Add( colMid);
                     continue;
                 }
 
@@ -273,30 +243,23 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
                 // below middle value --> blend between min and mid color
                 if( val < mid ) {
                     col = colMin + ( ( colMid - colMin ) / ( mid - min) )
-                            * ( val - min );
-                    atomColorTable.Add( col.GetX() );
-                    atomColorTable.Add( col.GetY() );
-                    atomColorTable.Add( col.GetZ() );
+                      * ( val - min );
+                    atomColorTable.Add( col);
                 }
                 // above middle value --> blend between max and mid color
                 else if( val > mid ) {
                     col = colMid + ( ( colMax - colMid ) / ( max - mid) )
-                            * ( val - mid );
-                    atomColorTable.Add( col.GetX() );
-                    atomColorTable.Add( col.GetY() );
-                    atomColorTable.Add( col.GetZ() );
+                      * ( val - mid );
+                    atomColorTable.Add( col);
                 }
                 // middle value --> assign mid color
                 else {
-                    atomColorTable.Add( colMid.GetX() );
-                    atomColorTable.Add( colMid.GetY() );
-                    atomColorTable.Add( colMid.GetZ() );
+                    atomColorTable.Add( colMid);
                 }
             }
         } // ... END coloring mode OCCUPANCY
         else if( currentColoringMode == CHAIN ) {
-            // get the last atom of the last res of the last mol of the
-            // first chain
+            // get the last atom of the last res of the last mol of the first chain
             cntChain = 0;
             cntMol = mol->Chains()[cntChain].MoleculeCount() - 1;
             cntRes = mol->Molecules()[cntMol].FirstResidueIndex()
@@ -310,23 +273,20 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
                 // check, if the last atom of the current chain is reached
                 if( cnt > cntAtom ) {
-                    // get the last atom of the last res of the last mol of
-                    // the next chain
+                    // get the last atom of the last res of the last mol of the next chain
                     cntChain++;
                     cntMol = mol->Chains()[cntChain].FirstMoleculeIndex()
                                + mol->Chains()[cntChain].MoleculeCount() - 1;
                     cntRes = mol->Molecules()[cntMol].FirstResidueIndex()
                                + mol->Molecules()[cntMol].ResidueCount() - 1;
                     cntAtom = mol->Residues()[cntRes]->FirstAtomIndex()
-                                + mol->Residues()[cntRes]->AtomCount() - 1;
+                               + mol->Residues()[cntRes]->AtomCount() - 1;
                     // get the next color
                     idx++;
                     color = colorLookupTable[idx%colorLookupTable.Count()];
 
                 }
-                atomColorTable.Add( color.X());
-                atomColorTable.Add( color.Y());
-                atomColorTable.Add( color.Z());
+                atomColorTable.Add( color);
             }
         } // ... END coloring mode CHAIN
         else if( currentColoringMode == MOLECULE ) {
@@ -354,9 +314,7 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
                     color = colorLookupTable[idx%colorLookupTable.Count()];
 
                 }
-                atomColorTable.Add( color.X());
-                atomColorTable.Add( color.Y());
-                atomColorTable.Add( color.Z());
+                atomColorTable.Add( color);
             }
         } // ... END coloring mode MOLECULE
         else if( currentColoringMode == RAINBOW ) {
@@ -364,9 +322,7 @@ void Color::MakeColorTable(const MolecularDataCall *mol, bool forceRecompute,
                 idx = int( ( float( cnt) / float( mol->AtomCount()))
                         * float( rainbowColors.Count()));
                 color = rainbowColors[idx];
-                atomColorTable.Add( color.GetX());
-                atomColorTable.Add( color.GetY());
-                atomColorTable.Add( color.GetZ());
+                atomColorTable.Add( color);
             }
         } // ... END coloring mode RAINBOW
     }
