@@ -381,6 +381,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Color.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dllmain.cpp"
 				>
 				<FileConfiguration
@@ -600,6 +604,10 @@
 			</File>
 			<File
 				RelativePath=".\CoarseGrainDataLoader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Color.h"
 				>
 			</File>
 			<File
