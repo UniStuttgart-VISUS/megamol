@@ -1,7 +1,7 @@
 /*
  * SimpleMoleculeRenderer.h
  *
- * Copyright (C) 2010 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2010 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
@@ -17,6 +17,8 @@
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"
+
+#include "Color.h"
 
 namespace megamol {
 namespace protein {
@@ -38,26 +40,12 @@ namespace protein {
             SAS              = 4
         };
 
-        /** The names of the coloring modes */
-        enum ColoringMode {
-            ELEMENT     = 0,
-            RESIDUE     = 1,
-            STRUCTURE   = 2,
-            BFACTOR     = 3,
-            CHARGE      = 4,
-            OCCUPANCY   = 5,
-            CHAIN       = 6,
-            MOLECULE    = 7,
-            RAINBOW     = 8,
-            CHAINBOW    = 9     // TODO
-        };
-
         /**
          * Answer the name of this module.
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void) 
+        static const char *ClassName(void)
         {
             return "SimpleMoleculeRenderer";
         }
@@ -67,7 +55,7 @@ namespace protein {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void) 
+        static const char *Description(void)
         {
             return "Offers molecule renderings.";
         }
@@ -77,7 +65,7 @@ namespace protein {
          *
          * @return 'true' if the module is available, 'false' otherwise.
          */
-        static bool IsAvailable(void) 
+        static bool IsAvailable(void)
         {
             return true;
         }
@@ -178,44 +166,21 @@ namespace protein {
         void RenderSAS( const MolecularDataCall *mol, const float *atomPos);
 
         /**
-         * Read color table from file.
-         *
-         * @param filename The filename of the color table file.
-         */
-        void ReadColorTableFromFile( vislib::StringA filename);
-
-        /**
          * Update all parameter slots.
          *
          * @param mol   Pointer to the data call.
          */
         void UpdateParameters( const MolecularDataCall *mol);
-        
-        /**
-         * Make color table for all atoms acoording to the current coloring mode.
-         * The color table is only computed if it is empty or if the recomputation 
-         * is forced by parameter.
-         *
-         * @param mol               The data interface.
-         * @param forceRecompute    Force recomputation of the color table.
-         */
-        void MakeColorTable( const MolecularDataCall *mol, bool forceRecompute = false);
- 
-         /**
-         * Creates a rainbow color table with 'num' entries.
-         *
-         * @param num The number of color entries.
-         */
-        void MakeRainbowColorTable( unsigned int num);
-        
+
+
         /**********************************************************************
          * variables
          **********************************************************************/
 
         /** caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
-		// caller slot
-		megamol::core::CallerSlot molRendererCallerSlot;
+        // caller slot
+        megamol::core::CallerSlot molRendererCallerSlot;
 
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -253,7 +218,7 @@ namespace protein {
         GLint attribLocColor2;
 
         /** The current coloring mode */
-        ColoringMode currentColoringMode;
+        Color::ColoringMode currentColoringMode;
 
         /** The color lookup table (for chains, amino acids,...) */
         vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
@@ -262,7 +227,7 @@ namespace protein {
 
         /** The atom color table for rendering */
         vislib::Array<float> atomColorTable;
-        
+
         /** The current rendering mode */
         RenderMode currentRenderMode;
 
