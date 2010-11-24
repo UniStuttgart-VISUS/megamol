@@ -48,6 +48,15 @@ namespace protein {
               &aminoAcidColorTable);
 
         /**
+         * fill amino acid color table
+         *
+         * @param aminoAcidColorTable The amino acid color table.
+         */
+        static void FillAminoAcidColorTable(
+            vislib::Array<vislib::math::Vector<float, 3> >
+              &aminoAcidColorTable);
+
+        /**
          * Make color table for all atoms acoording to the current coloring
          * mode.
          * The color table is only computed if it is empty or if the
@@ -94,6 +103,22 @@ namespace protein {
             std::vector<vislib::math::Vector<float,3> > &rainbowColors,
             bool forceRecompute = false);
 
+        /**
+         * Make color table for all atoms acoording to the current coloring
+         * mode.
+         * The color table is only computed if it is empty or if the
+         * recomputation is forced by parameter
+         */
+        static void MakeColorTable( const CallProteinData *prot,
+            ColoringMode currentColoringMode,
+            vislib::math::Vector<float, 3> minValueColor,
+            vislib::math::Vector<float, 3> meanValueColor,
+            vislib::math::Vector<float, 3> maxValueColor,
+            std::vector<vislib::math::Vector<float, 3> > &atomColor,
+            vislib::Array<vislib::math::Vector<float, 3> > &aminoAcidColorTable,
+            std::vector<vislib::math::Vector<float,3> > &rainbowColors,
+            bool forceRecompute = true);
+
          /**
          * Creates a rainbow color table with 'num' entries.
          *
@@ -123,7 +148,7 @@ namespace protein {
 
     };
 
-} /* end namespace Protein */
-} /* end namespace MegaMol */
+} /* end namespace protein */
+} /* end namespace megaMol */
 
 #endif /* MMPROTEINPLUGIN_COLOR_H_INCLUDED */

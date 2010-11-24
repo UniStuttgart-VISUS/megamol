@@ -13,6 +13,7 @@
 
 #include "CallProteinData.h"
 #include "CallFrame.h"
+#include "Color.h"
 #include "param/ParamSlot.h"
 #include "BSpline.h"
 #include "CallerSlot.h"
@@ -86,17 +87,6 @@ namespace protein {
 			CARTOON_GPU    = 3
 		};
 
-		enum ColoringMode
-		{
-			ELEMENT   = 0,
-			AMINOACID = 1,
-			STRUCTURE = 2,
-			VALUE     = 3,
-			CHAIN_ID  = 4,
-			RAINBOW   = 5,
-			CHARGE    = 6
-		};
-
 
 	   /**********************************************************************
 		* 'get'-functions
@@ -122,7 +112,7 @@ namespace protein {
 		void SetRenderMode( CartoonRenderMode rm) { m_currentRenderMode = rm; RecomputeAll(); };
 
 		/** Set current coloring mode */
-		void SetColoringMode( ColoringMode cm) { m_currentColoringMode = cm; RecomputeAll(); };
+		void SetColoringMode( Color::ColoringMode cm) { m_currentColoringMode = cm; RecomputeAll(); };
 
 		/** Set radius for cartoon rendering mode */
 		inline void SetRadiusCartoon( float rad ) { m_radiusCartoon = rad; RecomputeAll(); };
@@ -225,25 +215,6 @@ namespace protein {
 		  */
 		 void RecomputeAll(void);
 
-		 /** fill amino acid color table */
-		 void FillAminoAcidColorTable(void);
-		 
-		 /**
-		 * Creates a rainbow color table with 'num' entries.
-		 *
-		 * @param num The number of color entries.
-		 */
-		void MakeRainbowColorTable( unsigned int num);
-
-		 /**
-		  * Make color table for all atoms acoording to the current coloring mode.
-		  * The color table is only computed if it is empty or if the recomputation 
-		  * is forced by parameter.
-		  *
-		  * @param prot The data interface.
-		  * @param forceRecompute Force recomputation of the color table.
-		  */
-		 void MakeColorTable( const CallProteinData *prot, bool forceRecompute = false);
 
 		/**********************************************************************
 		 * variables
@@ -289,7 +260,7 @@ namespace protein {
 		// current render mode
 		CartoonRenderMode m_currentRenderMode;
 		// current coloring mode
-		ColoringMode m_currentColoringMode;
+		Color::ColoringMode m_currentColoringMode;
 		// smooth coloring of cartoon mode
 		bool m_smoothCartoonColoringMode;
 

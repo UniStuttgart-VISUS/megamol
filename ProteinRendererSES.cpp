@@ -11,6 +11,7 @@
 #include "ProteinRendererSES.h"
 #include "vislib/assert.h"
 #include "CoreInstance.h"
+#include "Color.h"
 #include "param/EnumParam.h"
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
@@ -52,7 +53,7 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
     drawSESParam( "drawSES", "Draw the SES: "),
     drawSASParam( "drawSAS", "Draw the SAS: "),
 	m_fogstartParam( "fogStart", "Fog Start: ")
-{	
+{
 	this->m_protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
 	this->MakeSlotAvailable ( &this->m_protDataCallerSlot );
 
@@ -108,20 +109,20 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
 	this->m_fogstartParam << fs;
 
 	// ----- choose current coloring mode -----
-	this->currentColoringMode = ELEMENT;
+	this->currentColoringMode = Color::ELEMENT;
 	//this->currentColoringMode = AMINOACID;
 	//this->currentColoringMode = STRUCTURE;
 	//this->currentColoringMode = CHAIN_ID;
 	//this->currentColoringMode = VALUE;
 	param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
-	cm->SetTypePair( ELEMENT, "Element");
-	cm->SetTypePair( AMINOACID, "AminoAcid");
-	cm->SetTypePair( STRUCTURE, "SecondaryStructure");
-	cm->SetTypePair( CHAIN_ID, "ChainID");
-	cm->SetTypePair( VALUE, "Value");
-	cm->SetTypePair( RAINBOW, "Rainbow");
-	cm->SetTypePair( CHARGE, "Charge");
-	cm->SetTypePair( OCCUPANCY, "Occupancy");
+	cm->SetTypePair( Color::ELEMENT, "Element");
+	cm->SetTypePair( Color::AMINOACID, "AminoAcid");
+	cm->SetTypePair( Color::STRUCTURE, "SecondaryStructure");
+	cm->SetTypePair( Color::CHAIN_ID, "ChainID");
+	cm->SetTypePair( Color::VALUE, "Value");
+	cm->SetTypePair( Color::RAINBOW, "Rainbow");
+	cm->SetTypePair( Color::CHARGE, "Charge");
+	cm->SetTypePair( Color::OCCUPANCY, "Occupancy");
 	this->m_coloringmodeParam << cm;
 
 	// ----- set the default color for minimum value -----
@@ -152,10 +153,10 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
     param::BoolParam *saspm = new param::BoolParam( this->drawSAS );
     this->drawSASParam << saspm;
 
-	// fill amino acid color table
-	this->FillAminoAcidColorTable();
-	// fill rainbow color table
-	this->MakeRainbowColorTable( 100);
+    // fill amino acid color table
+    Color::FillAminoAcidColorTable( this->aminoAcidColorTable);
+    // fill rainbow color table
+    Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
 	// set the FBOs and textures for post processing
 	this->colorFBO = 0;
@@ -169,14 +170,14 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
 	// width and height of the screen
 	this->width = 0;
 	this->height = 0;
-	
+
 	// clear singularity texture
 	singularityTexture.clear();
 	// set singTexData to 0
 	this->singTexData = 0;
-	
+
 	this->preComputationDone = false;
-	
+
 	// export parameters
 	this->MakeSlotAvailable( &this->m_rendermodeParam );
 	this->MakeSlotAvailable( &this->m_postprocessingParam );
@@ -191,7 +192,7 @@ ProteinRendererSES::ProteinRendererSES( void ) : Renderer3DModule (),
 	this->MakeSlotAvailable( &this->debugParam );
     this->MakeSlotAvailable( &this->drawSESParam );
     this->MakeSlotAvailable( &this->drawSASParam );
-	
+
 	this->m_renderRMSData = false;
 	this->m_frameLabel = NULL;
 }
@@ -229,7 +230,7 @@ ProteinRendererSES::~ProteinRendererSES(void)
 	this->vfilterShader.Release();
 	this->silhouetteShader.Release();
 	this->transparencyShader.Release();
-	
+
 	delete this->m_frameLabel;
 	this->Release();
 }
@@ -240,7 +241,7 @@ ProteinRendererSES::~ProteinRendererSES(void)
  */
 void protein::ProteinRendererSES::release( void )
 {
-	
+
 }
 
 
@@ -251,17 +252,17 @@ bool ProteinRendererSES::create( void )
 {
 	if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float") )
 		return false;
-	
+
 	if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
 		return false;
-	
+
 	//glEnable( GL_NORMALIZE);
 	glEnable( GL_DEPTH_TEST);
 	glDepthFunc( GL_LEQUAL);
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
-	
+
 	float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
 	glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
 	glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
@@ -269,14 +270,14 @@ bool ProteinRendererSES::create( void )
 
 	using namespace vislib::sys;
 	using namespace vislib::graphics::gl;
-	
+
 	ShaderSource vertSrc;
 	ShaderSource geomSrc;
 	ShaderSource fragSrc;
 
 	CoreInstance *ci = this->GetCoreInstance();
 	if( !ci ) return false;
-	
+
 	////////////////////////////////////////////////////
 	// load the shader source for the sphere renderer //
 	////////////////////////////////////////////////////
@@ -354,23 +355,23 @@ bool ProteinRendererSES::create( void )
 		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA() );
 		return false;
 	}
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// load the shader source for the sphere renderer with clipped interior //
 	//////////////////////////////////////////////////////////////////////////
 	/*
    fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
 	// vertex shader
-	vertSrc.Append( this->shaderSnippetFactory().Create("commondefines", 
+	vertSrc.Append( this->shaderSnippetFactory().Create("commondefines",
 		"protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-	vertSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior", 
+	vertSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior",
             "protein", Utility::ShaderSnippetFactory::GLSL_VERTEX_SHADER));
 	// fragment shader
-	fragSrc.Append( this->shaderSnippetFactory().Create("commondefines", 
+	fragSrc.Append( this->shaderSnippetFactory().Create("commondefines",
 		"protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-	fragSrc.Append( this->shaderSnippetFactory().Create("lightdirectional", 
+	fragSrc.Append( this->shaderSnippetFactory().Create("lightdirectional",
 		"protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-	fragSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior", 
+	fragSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior",
             "protein", Utility::ShaderSnippetFactory::GLSL_FRAGMENT_SHADER));
 	// create the shader
 	this->sphereClipInteriorShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
@@ -379,7 +380,7 @@ bool ProteinRendererSES::create( void )
 	//clear vertex source
 	vertSrc.Clear();
 	*/
-	
+
 	//////////////////////////////////////////////////////
 	// load the shader files for the per pixel lighting //
 	//////////////////////////////////////////////////////
@@ -483,7 +484,7 @@ bool ProteinRendererSES::create( void )
 		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create vertical 1D gaussian filter shader: %s\n", this->ClassName(), e.GetMsgA() );
 		return false;
 	}
-	
+
 	//////////////////////////////////////////////////////
 	// load the shader files for transparency           //
 	//////////////////////////////////////////////////////
@@ -491,10 +492,10 @@ bool ProteinRendererSES::create( void )
 	// version 120
 	fragSrc.Append(vertSrc.Append(new ShaderSource::VersionSnippet(120)));
 	// vertex shader
-	vertSrc.Append( this->shaderSnippetFactory().Create("transparency", 
+	vertSrc.Append( this->shaderSnippetFactory().Create("transparency",
             "protein", Utility::ShaderSnippetFactory::GLSL_VERTEX_SHADER));
 	// fragment shader
-	fragSrc.Append( this->shaderSnippetFactory().Create("transparency", 
+	fragSrc.Append( this->shaderSnippetFactory().Create("transparency",
             "protein", Utility::ShaderSnippetFactory::GLSL_FRAGMENT_SHADER));
 	// create the shader
 	this->transparencyShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
@@ -503,7 +504,7 @@ bool ProteinRendererSES::create( void )
 	//clear vertex source
 	vertSrc.Clear();
 	*/
-	
+
 	//////////////////////////////////////////////////////
 	// load the shader source for the cylinder renderer //
 	//////////////////////////////////////////////////////
@@ -529,7 +530,7 @@ bool ProteinRendererSES::create( void )
 		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA() );
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -592,7 +593,7 @@ bool ProteinRendererSES::Render( Call& call )
 	unsigned int cntRS = 0;
 	bool recomputeColors = false;
 	bool render_debug = false;
-	
+
 	// get pointer to CallProteinData
 	protein::CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
 
@@ -602,51 +603,58 @@ bool ProteinRendererSES::Render( Call& call )
 	// execute the call
 	if ( ! ( *protein )() )
 		return false;
-	
+
 	// get camera information
 	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>( &call )->GetCameraParameters();
 
 	// ==================== check parameters ====================
-	
+
 	if ( this->m_postprocessingParam.IsDirty() )
 	{
 		this->postprocessing = static_cast<PostprocessingMode>(  this->m_postprocessingParam.Param<param::EnumParam>()->Value() );
 		this->m_postprocessingParam.ResetDirty();
 	}
-	
+
 	if( this->m_rendermodeParam.IsDirty() )
 	{
 		this->currentRendermode = static_cast<RenderMode>( this->m_rendermodeParam.Param<param::EnumParam>()->Value() );
 		this->m_rendermodeParam.ResetDirty();
 		this->preComputationDone = false;
 	}
-	
+
 	if( this->m_coloringmodeParam.IsDirty() )
 	{
-		this->currentColoringMode = static_cast<ColoringMode>(  this->m_coloringmodeParam.Param<param::EnumParam>()->Value() );
-		this->MakeColorTable( protein);
+		this->currentColoringMode = static_cast<Color::ColoringMode>(  this->m_coloringmodeParam.Param<param::EnumParam>()->Value() );
+        Color::MakeColorTable( protein,
+            this->currentColoringMode,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor,
+            this->atomColor,
+            this->aminoAcidColorTable,
+            this->rainbowColors );
 		this->preComputationDone = false;
 		this->m_coloringmodeParam.ResetDirty();
 	}
-	
+
 	if( this->m_silhouettecolorParam.IsDirty() )
 	{
 		this->SetSilhouetteColor( this->DecodeColor( this->m_silhouettecolorParam.Param<param::IntParam>()->Value() ) );
 		this->m_silhouettecolorParam.ResetDirty();
 	}
-	
+
 	if( this->m_sigmaParam.IsDirty() )
 	{
 		this->sigma = this->m_sigmaParam.Param<param::FloatParam>()->Value();
 		this->m_sigmaParam.ResetDirty();
 	}
-	
+
 	if( this->m_lambdaParam.IsDirty() )
 	{
 		this->lambda = this->m_lambdaParam.Param<param::FloatParam>()->Value();
 		this->m_lambdaParam.ResetDirty();
 	}
-	
+
 	if( this->m_minvaluecolorParam.IsDirty() )
 	{
 		this->SetMinValueColor( this->DecodeColor( this->m_minvaluecolorParam.Param<param::IntParam>()->Value() ) );
@@ -690,9 +698,9 @@ bool ProteinRendererSES::Render( Call& call )
 	{
 		this->preComputationDone = false;
 	}
-	
+
 	// ==================== Precomputations ====================
-	
+
 	if( this->currentRendermode == GPU_SIMPLIFIED )
 	{
 		//////////////////////////////////////////////////////////////////
@@ -710,11 +718,19 @@ bool ProteinRendererSES::Render( Call& call )
 		// get minimum and maximum values for VALUE coloring mode
 		this->minValue = protein->MinimumTemperatureFactor();
 		this->maxValue = protein->MaximumTemperatureFactor();
-		// compute the color table
-		this->MakeColorTable( protein, true);
+        // compute the color table
+        Color::MakeColorTable( protein,
+            this->currentColoringMode,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor,
+            this->atomColor,
+            this->aminoAcidColorTable,
+            this->rainbowColors,
+            true );
 		// compute the arrays for ray casting
 		this->ComputeRaycastingArraysSimple();
-		
+
 	}
 	else
 	{
@@ -741,23 +757,31 @@ bool ProteinRendererSES::Render( Call& call )
 				this->ComputeRaycastingArrays( cntRS);
 			}
 		}
-		
+
 	}
-	
+
 	if( !this->preComputationDone )
 	{
 		// get minimum and maximum values for VALUE coloring mode
 		this->minValue = protein->MinimumTemperatureFactor();
 		this->maxValue = protein->MaximumTemperatureFactor();
-		// compute the color table
-		this->MakeColorTable( protein, recomputeColors);
+        // compute the color table
+        Color::MakeColorTable( protein,
+            this->currentColoringMode,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor,
+            this->atomColor,
+            this->aminoAcidColorTable,
+            this->rainbowColors,
+            recomputeColors);
 		// compute the data needed for the current render mode
 		if( this->currentRendermode == GPU_RAYCASTING || this->currentRendermode == GPU_RAYCASTING_INTERIOR_CLIPPING )
 			this->ComputeRaycastingArrays();
 		// set the precomputation of the data as done
 		this->preComputationDone = true;
 	}
-	
+
 	if( this->postprocessing != NONE && (
 		static_cast<unsigned int>(m_cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
 		static_cast<unsigned int>(m_cameraInfo->VirtualViewSize().GetHeight()) != this->height ) )
@@ -766,9 +790,9 @@ bool ProteinRendererSES::Render( Call& call )
 		this->height = static_cast<unsigned int>(m_cameraInfo->VirtualViewSize().GetHeight());
 		this->CreateFBO();
 	}
-	
+
 	// ==================== Scale & Translate ====================
-	
+
 	glPushMatrix();
 
 	float scale, xoff, yoff, zoff;
@@ -783,15 +807,15 @@ bool ProteinRendererSES::Render( Call& call )
 
 	glScalef ( scale, scale, scale );
 	glTranslatef ( xoff, yoff, zoff );
-	
+
 	// ==================== Start actual rendering ====================
-	
+
 	glDisable( GL_BLEND);
 	//glEnable( GL_NORMALIZE);
 	glEnable( GL_DEPTH_TEST);
 	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
-	
+
 	if( this->postprocessing == TRANSPARENCY )
 	{
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->blendFBO);
@@ -811,14 +835,14 @@ bool ProteinRendererSES::Render( Call& call )
 	        return true;
         }
 	}
-	
+
 	// start rendering to frame buffer object
 	if( this->postprocessing != NONE )
 	{
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->colorFBO);
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
-	
+
 	// render the SES
 	if( this->currentRendermode == GPU_RAYCASTING ||
 	    this->currentRendermode == GPU_RAYCASTING_INTERIOR_CLIPPING )
@@ -846,9 +870,9 @@ bool ProteinRendererSES::Render( Call& call )
 		else if( this->postprocessing == TRANSPARENCY )
 			this->PostprocessingTransparency( 0.5f);
 	}
-	
+
 	glPopMatrix();
-	
+
 	fpsCounter.FrameEnd();
 	//std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
 
@@ -882,7 +906,7 @@ void ProteinRendererSES::PostprocessingSSAO()
 	// ----- START gaussian filtering + SSAO -----
 	// apply horizontal filter
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->horizontalFilterFBO);
-	
+
 	this->hfilterShader.Enable();
 
 	glUniform1fARB( this->hfilterShader.ParameterLocation( "sigma"), this->sigma);
@@ -964,7 +988,7 @@ void ProteinRendererSES::PostprocessingSilhouette()
 	glUniform1iARB( this->silhouetteShader.ParameterLocation( "tex"), 0);
 	glUniform1iARB( this->silhouetteShader.ParameterLocation( "colorTex"), 1);
 	glUniform1fARB( this->silhouetteShader.ParameterLocation( "difference"), 0.025f);
-	glColor4f( this->silhouetteColor.GetX(), this->silhouetteColor.GetY(), 
+	glColor4f( this->silhouetteColor.GetX(), this->silhouetteColor.GetY(),
 		this->silhouetteColor.GetZ(),  1.0f);
 	glBegin(GL_QUADS);
 	glVertex2f( 0.0f, 0.0f);
@@ -1079,7 +1103,7 @@ void ProteinRendererSES::CreateFBO()
 	glGenTextures( 1, &depthTex1);
 	glGenTextures( 1, &hFilter);
 	glGenTextures( 1, &vFilter);
-	
+
 	// color and depth FBO
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->colorFBO);
 	// init texture0 (color)
@@ -1101,7 +1125,7 @@ void ProteinRendererSES::CreateFBO()
 	glTexParameterf( GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, this->depthTex0, 0);
 	glBindTexture( GL_TEXTURE_2D, 0);
-	
+
 	// color and depth FBO for blending (transparency)
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->blendFBO);
 	// init texture1 (color)
@@ -1134,7 +1158,7 @@ void ProteinRendererSES::CreateFBO()
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, hFilter, 0);
 	glBindTexture( GL_TEXTURE_2D, 0);
-	
+
 	//vertical filter FBO
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->verticalFilterFBO);
 	glBindTexture( GL_TEXTURE_2D, this->vFilter);
@@ -1145,7 +1169,7 @@ void ProteinRendererSES::CreateFBO()
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, vFilter, 0);
 	glBindTexture( GL_TEXTURE_2D, 0);
-	
+
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
@@ -1175,9 +1199,9 @@ void ProteinRendererSES::RenderSESGpuRaycasting(
 	float *clearColor = new float[4];
 	glGetFloatv( GL_COLOR_CLEAR_VALUE, clearColor);
 	vislib::math::Vector<float, 3> fogCol( clearColor[0], clearColor[1], clearColor[2]);
-	
+
 	unsigned int cntRS;
-	
+
 	for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
 	{
 		//////////////////////////////////
@@ -1319,7 +1343,7 @@ void ProteinRendererSES::RenderSESGpuRaycasting(
 		else // GPU_RAYCASTING_INTERIOR_CLIPPING
 			this->sphereClipInteriorShader.Disable();
 	}
-			
+
 	// delete pointers
 	delete[] clearColor;
 }
@@ -1350,9 +1374,9 @@ void ProteinRendererSES::RenderSESGpuRaycastingSimple(
 	float *clearColor = new float[4];
 	glGetFloatv( GL_COLOR_CLEAR_VALUE, clearColor);
 	vislib::math::Vector<float, 3> fogCol( clearColor[0], clearColor[1], clearColor[2]);
-	
+
 	unsigned int cntRS;
-	
+
 	for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
 	{
 		//////////////////////////////////
@@ -1460,7 +1484,7 @@ void ProteinRendererSES::RenderSESGpuRaycastingSimple(
 		this->sphericalTriangleShader.Disable();
 		// unbind texture
 		glBindTexture( GL_TEXTURE_2D, 0);
-	
+
 		/////////////////////////////////////
 		// ray cast the spheres on the GPU //
 		/////////////////////////////////////
@@ -1492,7 +1516,7 @@ void ProteinRendererSES::RenderSESGpuRaycastingSimple(
 		else // GPU_RAYCASTING_INTERIOR_CLIPPING
 			this->sphereClipInteriorShader.Disable();
 	}
-			
+
 	// delete pointers
 	delete[] clearColor;
 }
@@ -1505,7 +1529,7 @@ void ProteinRendererSES::RenderDebugStuff(
 	const CallProteinData *protein)
 {
 	// --> USAGE: UNCOMMENT THE NEEDED PARTS
-	
+
 	// temporary variables
 	unsigned int max1, max2;
 	max1 = max2 = 0;
@@ -1550,7 +1574,7 @@ void ProteinRendererSES::RenderDebugStuff(
 	glDisable( GL_BLEND);
 	glEnable( GL_LIGHTING);
 	*/
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// Render the probe positions
 	//////////////////////////////////////////////////////////////////////////
@@ -1566,7 +1590,7 @@ void ProteinRendererSES::RenderDebugStuff(
 		glColor3f( 1.0f, 0.0f, 0.0f);
 		glBegin( GL_POINTS);
 			glVertex3fv( this->rsFace[i]->GetProbeCenter().PeekComponents());
-		glEnd(); // GL_POINTS			
+		glEnd(); // GL_POINTS
 	}
 	glDisable( GL_POINT_SMOOTH);
 	glDisable( GL_POINT_SIZE);
@@ -1670,7 +1694,7 @@ void ProteinRendererSES::RenderDebugStuff(
 				firstAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex1()->GetPosition();
 				secondAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex2()->GetPosition();
 			}
-	
+
 			// compute the quaternion for the rotation of the cylinder
 			dir = secondAtomPos - firstAtomPos;
 			tmpVec.Set( 1.0f, 0.0f, 0.0f);
@@ -1680,7 +1704,7 @@ void ProteinRendererSES::RenderDebugStuff(
 			quatC.Set( angle, ortho);
 			// compute the absolute position 'position' of the cylinder (center point)
 			position = firstAtomPos + ( dir/2.0f);
-					
+
 			// draw vertex and attributes
 			glVertexAttrib2f( attribLocInParams, 0.12f, (firstAtomPos-secondAtomPos).Length() );
 			glVertexAttrib4fv( attribLocQuatC, quatC.PeekComponents());
@@ -1718,7 +1742,7 @@ void ProteinRendererSES::RenderDebugStuff(
 				v2 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetPosition();
 				v3 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetPosition();
 			}
-				
+
 			glBegin( GL_TRIANGLES );
 				glNormal3fv( n1.PeekComponents());
 				glColor3f( 1.0f, 0.8f, 0.0f);
@@ -1732,7 +1756,7 @@ void ProteinRendererSES::RenderDebugStuff(
 	}
 	this->lightShader.Disable();
 	glDisable( GL_COLOR_MATERIAL);
-		
+
 	/*
 	//////////////////////////////////////////////////////////////////////////
 	// Draw double edges as thick lines
@@ -1858,7 +1882,7 @@ void ProteinRendererSES::RenderDebugStuff(
 
 	/*
 	//////////////////////////////////////////////////////////////////////////
-	// Draw tetrahedra defining the convace spherical triangles 
+	// Draw tetrahedra defining the convace spherical triangles
 	//////////////////////////////////////////////////////////////////////////
 	glDisable( GL_LIGHTING);
 	glLineWidth( 3.0f);
@@ -1888,7 +1912,7 @@ void ProteinRendererSES::RenderDebugStuff(
 
 	/*
 	//////////////////////////////////////////////////////////////////////////
-	// Draw edges 
+	// Draw edges
 	//////////////////////////////////////////////////////////////////////////
 	glPushAttrib( GL_LINE_BIT);
 	glLineWidth( 3.0f);
@@ -1897,11 +1921,11 @@ void ProteinRendererSES::RenderDebugStuff(
 	glBegin( GL_LINES);
 	for( i = 0; i < this->rsEdge.size(); ++i )
 	{
-		if( this->rsEdge[i]->GetFace2() < 0 || 
+		if( this->rsEdge[i]->GetFace2() < 0 ||
 			( *this->rsEdge[i]->GetFace1() == *this->rsEdge[i]->GetFace2() ) )
 		{
 			glColor3f( 1.0f, 0.0f, 1.0f);
-			//std::cout << "Edge: " << i << " (" << 
+			//std::cout << "Edge: " << i << " (" <<
 			//	this->rsEdge[i]->GetFace1() << ")--(" << this->rsEdge[i]->GetFace2() << ") " <<
 			//	this->rsEdge[i].GetRotationAngle() << std::endl;
 		}
@@ -1946,12 +1970,12 @@ void ProteinRendererSES::RenderDebugStuff(
  * (spheres, spherical triangles & tori)
  */
 void ProteinRendererSES::ComputeRaycastingArrays()
-{	
+{
 	//time_t t = clock();
 
 	unsigned int cntRS;
 	unsigned int i;
-	
+
 	// resize lists of vertex, attribute and color arrays
 	this->sphericTriaVertexArray.resize( this->reducedSurface.size());
 	this->sphericTriaVec1.resize( this->reducedSurface.size());
@@ -1969,11 +1993,11 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 	this->torusInCuttingPlaneArray.resize( this->reducedSurface.size());
 	this->sphereVertexArray.resize( this->reducedSurface.size());
 	this->sphereColors.resize( this->reducedSurface.size());
-	
-	
+
+
 	// compute singulatity textures
 	this->CreateSingularityTextures();
-	
+
 	for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
 	{
 		///////////////////////////////////////////////////////////////////////
@@ -1982,7 +2006,7 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 		vislib::math::Vector<float, 3> tmpVec;
 		vislib::math::Vector<float, 3> tmpDualProbe( 1.0f, 1.0f, 1.0f);
 		float dualProbeRad = 0.0f;
-		
+
 		this->sphericTriaVertexArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 4);
 		this->sphericTriaVec1[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 4);
 		this->sphericTriaVec2[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 4);
@@ -1991,7 +2015,7 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 		this->sphericTriaTexCoord2[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
 		this->sphericTriaTexCoord3[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
 		this->sphericTriaColors[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
-	
+
 		// loop over all RS-faces
 		for( i = 0; i < this->reducedSurface[cntRS]->GetRSFaceCount(); ++i )
 		{
@@ -2039,7 +2063,7 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			this->sphericTriaVertexArray[cntRS][i*4+2] = this->reducedSurface[cntRS]->GetRSFace( i)->GetProbeCenter().GetZ();
 			this->sphericTriaVertexArray[cntRS][i*4+3] = this->GetProbeRadius();
 		}
-	
+
 		////////////////////////////////////////////////////////
 		// compute arrays for ray casting the tori on the GPU //
 		////////////////////////////////////////////////////////
@@ -2048,14 +2072,14 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 		zAxis.Set( 0.0f, 0.0f, 1.0f);
 		float distance, d;
 		vislib::math::Vector<float, 3> tmpDir1, tmpDir2, tmpDir3, cutPlaneNorm;
-	
+
 		this->torusVertexArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 3);
 		this->torusInParamArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 3);
 		this->torusQuatCArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 4);
 		this->torusInSphereArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 4);
 		this->torusColors[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 4);
 		this->torusInCuttingPlaneArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 3);
-	
+
 		// loop over all RS-edges
 		for( i = 0; i < this->reducedSurface[cntRS]->GetRSEdgeCount(); ++i )
 		{
@@ -2070,7 +2094,7 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			// compute the tangential point X2 of the spheres
 			P = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter() + rotAxis *
 				this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusRadius();
-	
+
 			X1 = P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition();
 			X1.Normalise();
 			X1 *= this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetRadius();
@@ -2078,16 +2102,16 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			X2.Normalise();
 			X2 *= this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetRadius();
 			d = ( X1 + this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis);
-	
+
 			C = this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() -
 					this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
 			C = ( ( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length() /
-					( ( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() + 
+					( ( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() +
 					( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length())) * C;
 			distance = ( X2 - C).Length();
 			C = ( C + this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()) -
 					this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter();
-			
+
 			// compute normal of the cutting plane
 			tmpDir1 = this->reducedSurface[cntRS]->GetRSEdge( i)->GetFace1()->GetProbeCenter();
 			tmpDir2 = this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - tmpDir1;
@@ -2112,7 +2136,7 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			cutPlaneNorm = cutPlaneNorm.Cross( tmpDir2);
 			cutPlaneNorm = torusAxis.Cross( cutPlaneNorm);
 			cutPlaneNorm.Normalise();
-			
+
 			// attributes
 			this->torusInParamArray[cntRS][i*3+0] = this->probeRadius;
 			this->torusInParamArray[cntRS][i*3+1] = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusRadius();
@@ -2140,10 +2164,10 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 			this->torusVertexArray[cntRS][i*3+1] = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter().GetY();
 			this->torusVertexArray[cntRS][i*3+2] = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter().GetZ();
 		}
-		
+
 		///////////////////////////////////////////////////////////
 		// compute arrays for ray casting the spheres on the GPU //
-		///////////////////////////////////////////////////////////	
+		///////////////////////////////////////////////////////////
 		/*
 		this->sphereVertexArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSVertexCount() * 4);
 		this->sphereColors[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSVertexCount() * 3);
@@ -2154,7 +2178,7 @@ void ProteinRendererSES::ComputeRaycastingArrays()
 		this->sphereColors[cntRS].AssertCapacity(
 				this->reducedSurface[cntRS]->GetRSVertexCount() * 3);
 		this->sphereColors[cntRS].Clear();
-		
+
 		// loop over all RS-vertices (i.e. all protein atoms)
 		for( i = 0; i < this->reducedSurface[cntRS]->GetRSVertexCount(); ++i )
 		{
@@ -2219,9 +2243,9 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		this->preComputationDone = false;
 		return;
 	}
-	
+
 	unsigned int i;
-	
+
 	// compute singulatity textures
 	this->CreateSingularityTexture( idxRS);
 
@@ -2231,7 +2255,7 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 	vislib::math::Vector<float, 3> tmpVec;
 	vislib::math::Vector<float, 3> tmpDualProbe( 1.0f, 1.0f, 1.0f);
 	float dualProbeRad = 0.0f;
-	
+
 	this->sphericTriaVertexArray[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSFaceCount() * 4);
 	this->sphericTriaVec1[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSFaceCount() * 4);
 	this->sphericTriaVec2[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSFaceCount() * 4);
@@ -2331,12 +2355,12 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		C = this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetPosition() -
 				this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
 		C = ( ( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length() /
-				( ( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() + 
+				( ( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() +
 				( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length())) * C;
 		distance = ( X2 - C).Length();
 		C = ( C + this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition()) -
 				this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter();
-	
+
 		// compute normal of the cutting plane
 		tmpDir1 = this->reducedSurface[idxRS]->GetRSEdge( i)->GetFace1()->GetProbeCenter();
 		tmpDir2 = this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - tmpDir1;
@@ -2361,7 +2385,7 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		cutPlaneNorm = cutPlaneNorm.Cross( tmpDir2);
 		cutPlaneNorm = torusAxis.Cross( cutPlaneNorm);
 		cutPlaneNorm.Normalise();
-		
+
 		// attributes
 		this->torusInParamArray[idxRS][i*3+0] = this->probeRadius;
 		this->torusInParamArray[idxRS][i*3+1] = this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusRadius();
@@ -2388,10 +2412,10 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		this->torusVertexArray[idxRS][i*3+1] = this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter().GetY();
 		this->torusVertexArray[idxRS][i*3+2] = this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter().GetZ();
 	}
-	
+
 	///////////////////////////////////////////////////////////
 	// compute arrays for ray casting the spheres on the GPU //
-	///////////////////////////////////////////////////////////	
+	///////////////////////////////////////////////////////////
 	/*
 	this->sphereVertexArray[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSVertexCount() * 4);
 	this->sphereColors[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSVertexCount() * 3);
@@ -2402,7 +2426,7 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 	this->sphereColors[idxRS].AssertCapacity(
 			this->reducedSurface[idxRS]->GetRSVertexCount() * 3);
 	this->sphereColors[idxRS].Clear();
-	
+
 	// loop over all RS-vertices (i.e. all protein atoms)
 	for( i = 0; i < this->reducedSurface[idxRS]->GetRSVertexCount(); ++i )
 	{
@@ -2433,13 +2457,13 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 		this->sphereColors[idxRS][i*3+1] = this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetY();
 		this->sphereColors[idxRS][i*3+2] = this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetZ();
 		// set vertex position
-		this->sphereVertexArray[idxRS][i*4+0] = 
+		this->sphereVertexArray[idxRS][i*4+0] =
 				this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetX();
-		this->sphereVertexArray[idxRS][i*4+1] = 
+		this->sphereVertexArray[idxRS][i*4+1] =
 				this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetY();
-		this->sphereVertexArray[idxRS][i*4+2] = 
+		this->sphereVertexArray[idxRS][i*4+2] =
 				this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetZ();
-		this->sphereVertexArray[idxRS][i*4+3] = 
+		this->sphereVertexArray[idxRS][i*4+3] =
 				this->reducedSurface[idxRS]->GetRSVertex( i)->GetRadius();
 		*/
 	}
@@ -2447,7 +2471,7 @@ void ProteinRendererSES::ComputeRaycastingArrays( unsigned int idxRS)
 
 
 /*
- * Compute all vertex, attribute and color arrays used for ray casting 
+ * Compute all vertex, attribute and color arrays used for ray casting
  * the simplified molecular surface.
  */
 void ProteinRendererSES::ComputeRaycastingArraysSimple()
@@ -2458,7 +2482,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 	unsigned int i;
 	//vislib::math::Vector<float, 3> col( 0.45f, 0.75f, 0.15f);
 	//float codedcol = this->CodeColor( col);
-	
+
 	// resize lists of vertex, attribute and color arrays
 	this->sphericTriaVertexArray.resize( this->simpleRS.size());
 	this->sphericTriaVec1.resize( this->simpleRS.size());
@@ -2476,11 +2500,11 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 	this->torusInCuttingPlaneArray.resize( this->simpleRS.size());
 	this->sphereVertexArray.resize( this->simpleRS.size());
 	this->sphereColors.resize( this->simpleRS.size());
-	
-	
+
+
 	// compute singulatity textures
 	this->CreateSingularityTexturesSimple();
-	
+
 	for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
 	{
 		///////////////////////////////////////////////////////////////////////
@@ -2489,7 +2513,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 		vislib::math::Vector<float, 3> tmpVec;
 		vislib::math::Vector<float, 3> tmpDualProbe( 1.0f, 1.0f, 1.0f);
 		float dualProbeRad = 0.0f;
-		
+
 		this->sphericTriaVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
 		this->sphericTriaVec1[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
 		this->sphericTriaVec2[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
@@ -2498,7 +2522,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 		this->sphericTriaTexCoord2[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
 		this->sphericTriaTexCoord3[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
 		this->sphericTriaColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
-	
+
 		// loop over all RS-faces
 		for( i = 0; i < this->simpleRS[cntRS]->GetRSFaceCount(); ++i )
 		{
@@ -2552,7 +2576,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 			this->sphericTriaVertexArray[cntRS][i*4+2] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetZ();
 			this->sphericTriaVertexArray[cntRS][i*4+3] = this->GetProbeRadius();
 		}
-	
+
 		////////////////////////////////////////////////////////
 		// compute arrays for ray casting the tori on the GPU //
 		////////////////////////////////////////////////////////
@@ -2561,14 +2585,14 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 		zAxis.Set( 0.0f, 0.0f, 1.0f);
 		float distance, d;
 		vislib::math::Vector<float, 3> tmpDir1, tmpDir2, tmpDir3, cutPlaneNorm;
-	
+
 		this->torusVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
 		this->torusInParamArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
 		this->torusQuatCArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
 		this->torusInSphereArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
 		this->torusColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
 		this->torusInCuttingPlaneArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
-	
+
 		// loop over all RS-edges
 		for( i = 0; i < this->simpleRS[cntRS]->GetRSEdgeCount(); ++i )
 		{
@@ -2583,7 +2607,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 			// compute the tangential point X2 of the spheres
 			P = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter() + rotAxis *
 				this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusRadius();
-	
+
 			X1 = P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition();
 			X1.Normalise();
 			X1 *= this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetRadius();
@@ -2591,16 +2615,16 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 			X2.Normalise();
 			X2 *= this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetRadius();
 			d = ( X1 + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis);
-	
+
 			C = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() -
 					this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
 			C = ( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length() /
-					( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() + 
+					( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() +
 					( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length())) * C;
 			distance = ( X2 - C).Length();
 			C = ( C + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()) -
 					this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter();
-			
+
 			// compute normal of the cutting plane
 			tmpDir1 = this->simpleRS[cntRS]->GetRSEdge( i)->GetFace1()->GetProbeCenter();
 			tmpDir2 = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - tmpDir1;
@@ -2625,7 +2649,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 			cutPlaneNorm = cutPlaneNorm.Cross( tmpDir2);
 			cutPlaneNorm = torusAxis.Cross( cutPlaneNorm);
 			cutPlaneNorm.Normalise();
-			
+
 			// attributes
 			this->torusInParamArray[cntRS][i*3+0] = this->probeRadius;
 			this->torusInParamArray[cntRS][i*3+1] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusRadius();
@@ -2657,10 +2681,10 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 			this->torusVertexArray[cntRS][i*3+1] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter().GetY();
 			this->torusVertexArray[cntRS][i*3+2] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter().GetZ();
 		}
-		
+
 		///////////////////////////////////////////////////////////
 		// compute arrays for ray casting the spheres on the GPU //
-		///////////////////////////////////////////////////////////	
+		///////////////////////////////////////////////////////////
 		/*
 		this->sphereVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSVertexCount() * 4);
 		this->sphereColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSVertexCount() * 3);
@@ -2671,7 +2695,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 		this->sphereColors[cntRS].AssertCapacity(
 				this->simpleRS[cntRS]->GetRSVertexCount() * 3);
 		this->sphereColors[cntRS].Clear();
-		
+
 		// loop over all RS-vertices (i.e. all protein atoms)
 		for( i = 0; i < this->simpleRS[cntRS]->GetRSVertexCount(); ++i )
 		{
@@ -2748,7 +2772,7 @@ void ProteinRendererSES::CreateSingularityTextures()
 	time_t t = clock();
 */
 	unsigned int cnt1, cnt2, cntRS;
-	
+
 	// delete old singularity textures
 	for( cnt1 = 0; cnt1 < this->singularityTexture.size(); ++cnt1 )
 	{
@@ -2770,14 +2794,14 @@ void ProteinRendererSES::CreateSingularityTextures()
 	// resize singularity texture dimension arrays
 	this->singTexWidth.resize( this->reducedSurface.size());
 	this->singTexHeight.resize( this->reducedSurface.size());
-	
+
 	// get maximum texture size
 	GLint texSize;
 	glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-		
+
 	// TODO: compute proper maximum number of cutting probes
 	unsigned int numProbes = 16;
-	
+
 	for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
 	{
 		// set width and height of texture
@@ -2870,7 +2894,7 @@ void ProteinRendererSES::CreateSingularityTexturesSimple()
 	time_t t = clock();
 */
 	unsigned int cnt1, cnt2, cntRS;
-	
+
 	// delete old singularity textures
 	for( cnt1 = 0; cnt1 < this->singularityTexture.size(); ++cnt1 )
 	{
@@ -2892,14 +2916,14 @@ void ProteinRendererSES::CreateSingularityTexturesSimple()
 	// resize singularity texture dimension arrays
 	this->singTexWidth.resize( this->simpleRS.size());
 	this->singTexHeight.resize( this->simpleRS.size());
-	
+
 	// get maximum texture size
 	GLint texSize;
 	glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-		
+
 	// TODO: compute proper maximum number of cutting probes
 	unsigned int numProbes = 16;
-	
+
 	for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
 	{
 		// set width and height of texture
@@ -2991,7 +3015,7 @@ void ProteinRendererSES::CreateSingularityTexture( unsigned int idxRS)
 	// do nothing if the index is out of bounds
 	if( idxRS > this->reducedSurface.size() )
 		return;
-	
+
 	// check if all arrays have the appropriate size
 	if( this->singularityTexture.size() != this->reducedSurface.size() ||
 		this->singTexWidth.size() != this->reducedSurface.size() ||
@@ -3001,16 +3025,16 @@ void ProteinRendererSES::CreateSingularityTexture( unsigned int idxRS)
 		CreateSingularityTextures();
 		return;
 	}
-	
+
 	unsigned int cnt1, cnt2;
-	
+
 	// delete old singularity texture
 	glDeleteTextures( 1, &singularityTexture[idxRS]);
-	
+
 	// get maximum texture size
 	GLint texSize;
 	glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-		
+
 	// TODO: compute proper maximum number of cutting probes
 	unsigned int numProbes = 16;
 
@@ -3087,14 +3111,14 @@ void ProteinRendererSES::CreateSingularityTexture( unsigned int idxRS)
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture( GL_TEXTURE_2D, 0);
-	
+
 }
 
 
 /*
  * Render all atoms
  */
-void ProteinRendererSES::RenderAtomsGPU( 
+void ProteinRendererSES::RenderAtomsGPU(
 	const CallProteinData *protein, const float scale)
 {
 	unsigned int cnt, cntRS, max1, max2;
@@ -3171,7 +3195,7 @@ void ProteinRendererSES::RenderAtomsGPU(
 /*
  * Renders the probe at postion 'm'
  */
-void ProteinRendererSES::RenderProbe( 
+void ProteinRendererSES::RenderProbe(
 	const vislib::math::Vector<float, 3> m)
 {
 	GLUquadricObj *sphere = gluNewQuadric();
@@ -3185,7 +3209,7 @@ void ProteinRendererSES::RenderProbe(
 	glColor4f( 1.0f, 1.0f, 1.0f, 0.6f);
 	gluSphere( sphere, probeRadius, 16, 8);
 	glPopMatrix();
-	
+
 	glDisable( GL_BLEND);
 
 }
@@ -3194,7 +3218,7 @@ void ProteinRendererSES::RenderProbe(
 /*
  * Renders the probe at postion 'm'
  */
-void ProteinRendererSES::RenderProbeGPU( 
+void ProteinRendererSES::RenderProbeGPU(
 	const vislib::math::Vector<float, 3> m)
 {
 	// set viewport
@@ -3264,78 +3288,6 @@ void ProteinRendererSES::deinitialise(void)
 
 
 /*
- * Fill amino acid color table
- */
-void ProteinRendererSES::FillAminoAcidColorTable()
-{
-	this->aminoAcidColorTable.Clear();
-	this->aminoAcidColorTable.SetCount( 25);
-	this->aminoAcidColorTable[0].Set( 0.5f, 0.5f, 0.5f);
-	this->aminoAcidColorTable[1].Set( 1.0f, 0.0f, 0.0f);
-	this->aminoAcidColorTable[2].Set( 1.0f, 1.0f, 0.0f);
-	this->aminoAcidColorTable[3].Set( 0.0f, 1.0f, 0.0f);
-	this->aminoAcidColorTable[4].Set( 0.0f, 1.0f, 1.0f);
-	this->aminoAcidColorTable[5].Set( 0.0f, 0.0f, 1.0f);
-	this->aminoAcidColorTable[6].Set( 1.0f, 0.0f, 1.0f);
-	this->aminoAcidColorTable[7].Set( 0.5f, 0.0f, 0.0f);
-	this->aminoAcidColorTable[8].Set( 0.5f, 0.5f, 0.0f);
-	this->aminoAcidColorTable[9].Set( 0.0f, 0.5f, 0.0f);
-	this->aminoAcidColorTable[10].Set( 0.0f, 0.5f, 0.5f);
-	this->aminoAcidColorTable[11].Set( 0.0f, 0.0f, 0.5f);
-	this->aminoAcidColorTable[12].Set( 0.5f, 0.0f, 0.5f);
-	this->aminoAcidColorTable[13].Set( 1.0f, 0.5f, 0.0f);
-	this->aminoAcidColorTable[14].Set( 0.0f, 0.5f, 1.0f);
-	this->aminoAcidColorTable[15].Set( 1.0f, 0.5f, 1.0f);
-	this->aminoAcidColorTable[16].Set( 0.5f, 0.25f, 0.0f);
-	this->aminoAcidColorTable[17].Set( 1.0f, 1.0f, 0.5f);
-	this->aminoAcidColorTable[18].Set( 0.5f, 1.0f, 0.5f);
-	this->aminoAcidColorTable[19].Set( 0.75f, 1.0f, 0.0f);
-	this->aminoAcidColorTable[20].Set( 0.5f, 0.0f, 0.75f);
-	this->aminoAcidColorTable[21].Set( 1.0f, 0.5f, 0.5f);
-	this->aminoAcidColorTable[22].Set( 0.75f, 1.0f, 0.75f);
-	this->aminoAcidColorTable[23].Set( 0.75f, 0.75f, 0.5f);
-	this->aminoAcidColorTable[24].Set( 1.0f, 0.75f, 0.5f);
-}
-
-
-/*
- * protein::ProteinRendererSES::makeRainbowColorTable
- * Creates a rainbow color table with 'num' entries.
- */
-void ProteinRendererSES::MakeRainbowColorTable( unsigned int num)
-{
-	unsigned int n = (num/4);
-	// the color table should have a minimum size of 16
-	if( n < 4 )
-		n = 4;
-	this->rainbowColors.clear();
-	float f = 1.0f/float(n);
-	vislib::math::Vector<float,3> color;
-	color.Set( 1.0f, 0.0f, 0.0f);
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetY( vislib::math::Min( color.GetY() + f, 1.0f));
-		rainbowColors.push_back( color);
-	}
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetX( vislib::math::Max( color.GetX() - f, 0.0f));
-		rainbowColors.push_back( color);
-	}
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetZ( vislib::math::Min( color.GetZ() + f, 1.0f));
-		rainbowColors.push_back( color);
-	}
-	for( unsigned int i = 0; i < n; i++)
-	{
-		color.SetY( vislib::math::Max( color.GetY() - f, 0.0f));
-		rainbowColors.push_back( color);
-	}
-}
-
-
-/*
  * returns the color of the atom 'idx' for the current coloring mode
  */
 vislib::math::Vector<float, 3> ProteinRendererSES::GetProteinAtomColor( unsigned int idx)
@@ -3346,267 +3298,3 @@ vislib::math::Vector<float, 3> ProteinRendererSES::GetProteinAtomColor( unsigned
 		return vislib::math::Vector<float, 3>( 0.5f, 0.5f, 0.5f);
 }
 
-
-/*
- * Make color table for all atoms
- */
-void ProteinRendererSES::MakeColorTable( const CallProteinData *prot, bool forceRecompute)
-{
-	unsigned int i;
-	unsigned int currentChain, currentAminoAcid, currentAtom, currentSecStruct;
-	unsigned int cntCha, cntRes, cntAto;
-	CallProteinData::Chain chain;
-	vislib::math::Vector<float, 3> color;
-	// if recomputation is forced: clear current color table
-	if( forceRecompute )
-		this->atomColor.clear();
-	// only compute color table if necessary
-	if( this->atomColor.empty() )
-	{
-		this->atomColor.reserve( prot->ProteinAtomCount());
-		if( this->currentColoringMode == ELEMENT )
-		{
-			// resize atom color table
-			this->atomColor.resize( prot->ProteinAtomCount());
-			for( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				this->atomColor[i].SetX( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[0]) / 255.0f);
-				this->atomColor[i].SetY( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[1]) / 255.0f);
-				this->atomColor[i].SetZ( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[2]) / 255.0f);
-			}
-		} // ===== END coloring mode ELEMENT =====
-		else if( this->currentColoringMode == AMINOACID )
-		{
-			// loop over all chains
-			for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-			{
-				chain = prot->ProteinChain( currentChain);
-				// loop over all amino acids in the current chain
-				for( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-				{
-					// loop over all connections of the current amino acid
-					for( currentAtom = 0; 
-						 currentAtom < chain.AminoAcid()[currentAminoAcid].AtomCount();
-						 currentAtom++ )
-					{
-						i = chain.AminoAcid()[currentAminoAcid].NameIndex()+1;
-						i = i % (unsigned int)(this->aminoAcidColorTable.Count());
-						this->atomColor.push_back( this->aminoAcidColorTable[i]);
-					}
-				}
-			}
-		} // ===== END coloring mode AMINOACID =====
-		else if( this->currentColoringMode == STRUCTURE )
-		{
-			// loop over all chains
-			for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-			{
-				chain = prot->ProteinChain( currentChain);
-				// loop over all secondary structure elements in this chain
-				for( currentSecStruct = 0; 
-					 currentSecStruct < chain.SecondaryStructureCount();
-					 currentSecStruct++ )
-				{
-					i = chain.SecondaryStructure()[currentSecStruct].AtomCount();
-					// loop over all atoms in this secondary structure element
-					for( currentAtom = 0; currentAtom < i; currentAtom++ )
-					{
-						if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-							protein::CallProteinData::SecStructure::TYPE_HELIX )
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 1.0f, 0.0f, 0.0f));
-						}
-						else if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-							protein::CallProteinData::SecStructure::TYPE_SHEET )
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.0f, 0.0f, 1.0f));
-						}
-						else if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-							protein::CallProteinData::SecStructure::TYPE_TURN )
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 1.0f, 1.0f, 0.0f));
-						}
-						else
-						{
-							this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.9f, 0.9f, 0.9f));
-						}
-					}
-				}
-			}
-			// add missing atom colors
-			if ( prot->ProteinAtomCount() > this->atomColor.size() )
-			{
-				currentAtom = (unsigned int)this->atomColor.size();
-				for ( ; currentAtom < prot->ProteinAtomCount(); ++currentAtom )
-				{
-					this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.3f, 0.9f, 0.3f));
-				}
-			}
-		} // ===== END coloring mode STRUCTURE =====
-		else if( this->currentColoringMode == CHAIN_ID )
-		{
-			// loop over all chains
-			for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-			{
-				chain = prot->ProteinChain( currentChain);
-				// loop over all amino acids in the current chain
-				for( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-				{
-					// loop over all connections of the current amino acid
-					for( currentAtom = 0; 
-						 currentAtom < chain.AminoAcid()[currentAminoAcid].AtomCount();
-						 currentAtom++ )
-					{
-						i = (currentChain + 1) % (unsigned int)(this->aminoAcidColorTable.Count());
-						this->atomColor.push_back( this->aminoAcidColorTable[i]);
-					}
-				}
-			}
-		} // ===== END coloring mode CHAIN_ID =====
-		else if( this->currentColoringMode == VALUE )
-		{
-			vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-			vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-			vislib::math::Vector<float, 3> colMin = this->minValueColor;
-			
-			float min( prot->MinimumTemperatureFactor() );
-			float max( prot->MaximumTemperatureFactor() );
-			float mid( ( max - min)/2.0f + min );
-			float val;
-			
-			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				if( min == max )
-				{
-					this->atomColor.push_back( colMid);
-					continue;
-				}
-				
-				val = prot->ProteinAtomData()[i].TempFactor();
-				// below middle value --> blend between min and mid color
-				if( val < mid )
-				{
-					color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
-					this->atomColor.push_back( color);
-				}
-				// above middle value --> blend between max and mid color
-				else if( val > mid )
-				{
-					color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
-					this->atomColor.push_back( color);
-				}
-				// middle value --> assign mid color
-				else
-				{
-					this->atomColor.push_back( colMid);
-				}
-			}
-		} // ===== END coloring mode VALUE =====
-		else if( this->currentColoringMode == RAINBOW )
-		{
-			for( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
-			{
-				for( cntRes = 0; cntRes < prot->ProteinChain( cntCha).AminoAcidCount(); ++cntRes )
-				{
-					i = int( ( float( cntRes) / float( prot->ProteinChain( cntCha).AminoAcidCount() ) ) * float( rainbowColors.size() ) ) % rainbowColors.size();
-					color = this->rainbowColors[i];
-					for( cntAto = 0;
-					     cntAto < prot->ProteinChain( cntCha).AminoAcid()[cntRes].AtomCount();
-					     ++cntAto )
-					{
-						this->atomColor.push_back( color);
-					}
-				}
-			}
-		} // ===== END coloring mode RAINBOW =====
-		else if ( this->currentColoringMode == CHARGE )
-		{
-			vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-			vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-			vislib::math::Vector<float, 3> colMin = this->minValueColor;
-			
-			float min( prot->MinimumCharge() );
-			float max( prot->MaximumCharge() );
-			float mid( ( max - min)/2.0f + min );
-			float charge;
-			
-			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				if( min == max )
-				{
-					this->atomColor.push_back( colMid);
-					continue;
-				}
-				
-				charge = prot->ProteinAtomData()[i].Charge();
-				// below middle value --> blend between min and mid color
-				if( charge < mid )
-				{
-					color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( charge - min );
-					this->atomColor.push_back( color);
-				}
-				// above middle value --> blend between max and mid color
-				else if( charge > mid )
-				{
-					color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( charge - mid );
-					this->atomColor.push_back( color);
-				}
-				// middle value --> assign mid color
-				else
-				{
-					this->atomColor.push_back( colMid);
-				}
-			}
-		} // ===== END coloring mode CHARGE =====
-		else if ( this->currentColoringMode == OCCUPANCY )
-		{
-			vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-			vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-			vislib::math::Vector<float, 3> colMin = this->minValueColor;		
-
-			float min( prot->MinimumOccupancy() );
-			float max( prot->MaximumOccupancy() );
-			float mid( ( max - min)/2.0f + min );
-			float charge;
-			
-			for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				if( min == max )
-				{
-					this->atomColor.push_back( colMid);
-					continue;
-				}
-				
-				charge = prot->ProteinAtomData()[i].Occupancy();
-				// below middle value --> blend between min and mid color
-				if( charge < mid )
-				{
-					color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( charge - min );
-					this->atomColor.push_back( color);
-				}
-				// above middle value --> blend between max and mid color
-				else if( charge > mid )
-				{
-					color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( charge - mid );
-					this->atomColor.push_back( color);
-				}
-				// middle value --> assign mid color
-				else
-				{
-					this->atomColor.push_back( colMid);
-				}
-			}
-		} // ===== END coloring mode OCCUPANCY =====
-        else // default case (wrong parameter):
-		{
-			// resize atom color table
-			this->atomColor.resize( prot->ProteinAtomCount());
-			for( i = 0; i < prot->ProteinAtomCount(); i++ )
-			{
-				this->atomColor[i].SetX( 1.0f);
-				this->atomColor[i].SetY( 1.0f);
-				this->atomColor[i].SetZ( 1.0f);
-			}
-		} // ===== END uniform color =====
-	}
-}

@@ -14,6 +14,7 @@
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "CallFrame.h"
+#include "Color.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
 #include "vislib/SimpleFont.h"
@@ -38,7 +39,7 @@ namespace protein {
 	class ProteinRendererSES : public megamol::core::view::Renderer3DModule
 	{
 	public:
-				
+
 		/** postprocessing modi */
 		enum PostprocessingMode {
 			NONE = 0,
@@ -54,18 +55,6 @@ namespace protein {
 			//POLYGONAL_GPU = 2,
 			GPU_RAYCASTING_INTERIOR_CLIPPING = 3,
 			GPU_SIMPLIFIED = 4
-		};
-
-		/** coloring modi for the atoms */
-		enum ColoringMode {
-			ELEMENT   = 0,
-			AMINOACID = 1,
-			STRUCTURE = 2,
-			CHAIN_ID  = 3,
-			VALUE     = 4,
-			RAINBOW   = 5,
-			CHARGE    = 6,
-            OCCUPANCY = 7
 		};
 
 		/**
@@ -91,22 +80,22 @@ namespace protein {
 		 *
 		 * @return 'true' if the module is available, 'false' otherwise.
 		 */
-		static bool IsAvailable(void) 
+		static bool IsAvailable(void)
 		{
 			//return true;
 			return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
 		}
-		
+
 		/** ctor */
 		ProteinRendererSES(void);
-		
+
 		/** dtor */
 		virtual ~ProteinRendererSES(void);
 
 	   /**********************************************************************
 		 * 'get'-functions
 		 **********************************************************************/
-		
+
 		/** Get probe radius */
 		const float GetProbeRadius() const { return probeRadius; };
 
@@ -120,46 +109,46 @@ namespace protein {
 		/** set the color of the silhouette */
 		void SetSilhouetteColor( float r, float g, float b) { silhouetteColor.Set( r, g, b);
 			codedSilhouetteColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-		void SetSilhouetteColor( vislib::math::Vector<float, 3> color) { 
+		void SetSilhouetteColor( vislib::math::Vector<float, 3> color) {
 			SetSilhouetteColor( color.GetX(), color.GetY(), color.GetZ()); };
 
 		/** set the color for minimum value (VALUE coloring mode) */
 		void SetMinValueColor( float r, float g, float b) { minValueColor.Set( r, g, b);
 			codedMinValueColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-		void SetMinValueColor( vislib::math::Vector<float, 3> color) { 
+		void SetMinValueColor( vislib::math::Vector<float, 3> color) {
 			SetMinValueColor( color.GetX(), color.GetY(), color.GetZ()); };
 		/** set the color for maximum value (VALUE coloring mode) */
 		void SetMaxValueColor( float r, float g, float b) { maxValueColor.Set( r, g, b);
 			codedMaxValueColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-		void SetMaxValueColor( vislib::math::Vector<float, 3> color) { 
+		void SetMaxValueColor( vislib::math::Vector<float, 3> color) {
 			SetMaxValueColor( color.GetX(), color.GetY(), color.GetZ()); };
 		/** set the color for mean value (VALUE coloring mode) */
 		void SetMeanValueColor( float r, float g, float b) { meanValueColor.Set( r, g, b);
 			codedMeanValueColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-		void SetMeanValueColor( vislib::math::Vector<float, 3> color) { 
+		void SetMeanValueColor( vislib::math::Vector<float, 3> color) {
 			SetMeanValueColor( color.GetX(), color.GetY(), color.GetZ()); };
-		
+
 	protected:
-		
+
 		/**
 		 * Implementation of 'Create'.
 		 *
 		 * @return 'true' on success, 'false' otherwise.
 		 */
 		virtual bool create(void);
-		
+
 		/**
 		 * Implementation of 'release'.
 		 */
 		virtual void release(void);
-		
+
 		/**
 		 * Render atoms as spheres using GLSL Raycasting shaders.
 		 *
 		 * @param protein The protein data interface.
 		 * @param scale The scale factor for the atom radius.
 		 */
-		void RenderAtomsGPU( const CallProteinData *protein, 
+		void RenderAtomsGPU( const CallProteinData *protein,
 			const float scale = 1.0f);
 
 		/**
@@ -171,20 +160,20 @@ namespace protein {
 		void RenderProbeGPU( const vislib::math::Vector<float, 3> m);
 
 		/**
-		 * Compute all vertex, attribute and color arrays used for ray casting 
+		 * Compute all vertex, attribute and color arrays used for ray casting
 		 * all molecular surfaces (spheres, spherical triangles, tori).
 		 */
 		void ComputeRaycastingArrays();
 
 		/**
-		 * Compute all vertex, attribute and color arrays used for ray casting 
+		 * Compute all vertex, attribute and color arrays used for ray casting
 		 * the molecular surface 'ixdRS' (spheres, spherical triangles, tori).
 		 * @param idxRS The index of the reduced surface.
 		 */
 		void ComputeRaycastingArrays( unsigned int idxRS);
 
 		/**
-		 * Compute all vertex, attribute and color arrays used for ray casting 
+		 * Compute all vertex, attribute and color arrays used for ray casting
 		 * the simplified molecular surface.
 		 */
 		void ComputeRaycastingArraysSimple();
@@ -230,7 +219,7 @@ namespace protein {
 		 */
 		void RenderSESGpuRaycastingSimple(
 			const CallProteinData *protein);
-		
+
 		/**
 		 * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
 		 *
@@ -247,24 +236,12 @@ namespace protein {
 		 * Postprocessing: use silhouette shader
 		 */
 		void PostprocessingSilhouette();
-		
+
 		/**
 		 * Postprocessing: transparency (blend two images)
 		 */
 		void PostprocessingTransparency( float transparency);
-		
-		/**
-		 * Fill amino acid color table.
-		 */
-		void FillAminoAcidColorTable();
 
-		/**
-		 * Creates a rainbow color table with 'num' entries.
-		 *
-		 * @param num The number of color entries.
-		 */
-		void MakeRainbowColorTable( unsigned int num);
-		
 		/**
 		 * returns the color of the atom 'idx' for the current coloring mode
 		 *
@@ -274,31 +251,23 @@ namespace protein {
 		vislib::math::Vector<float, 3> GetProteinAtomColor( unsigned int idx);
 
 		/**
-		 * Make color table for all atoms
-		 *
-		 * @param prot The protein data interface.
-		 * @param forceRecompute If 'true', the color Table is recomputed, otherwise only if necessary.
+		 * Create the singularity textureS which stores for every RS-edge (of all
+		 * molecular surfaces) the positions of the probes that cut it.
 		 */
-		void MakeColorTable( const CallProteinData *prot, bool forceRecompute = true);
+		void CreateSingularityTextures();
 
 		/**
 		 * Create the singularity textureS which stores for every RS-edge (of all
 		 * molecular surfaces) the positions of the probes that cut it.
 		 */
-		void CreateSingularityTextures();
-		
-		/**
-		 * Create the singularity textureS which stores for every RS-edge (of all
-		 * molecular surfaces) the positions of the probes that cut it.
-		 */
 		void CreateSingularityTexturesSimple();
-		
+
 		/**
 		 * Create the singularity texture for the reduced surface 'idxRS' which
 		 * stores for every RS-edge the positions of the probes that cut it.
 		 */
 		void CreateSingularityTexture( unsigned int idxRS);
-				
+
     private:
 
         /**
@@ -331,27 +300,27 @@ namespace protein {
 		virtual bool Render( megamol::core::Call& call);
 
 		/**
-		 * Deinitialises this renderer. This is only called if there was a 
+		 * Deinitialises this renderer. This is only called if there was a
 		 * successful call to "initialise" before.
 		 */
 		virtual void deinitialise(void);
-		
+
 		/**********************************************************************
 		 * variables
 		 **********************************************************************/
-		
+
 		// caller slot
 		megamol::core::CallerSlot m_protDataCallerSlot;
-		
+
 		// 'true' if there is rms data to be rendered
 		bool m_renderRMSData;
-		
+
 		// label with id of current loaded frame
 		vislib::graphics::AbstractFont *m_frameLabel;
-		
+
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> m_cameraInfo;
-		
+
 		megamol::core::param::ParamSlot m_postprocessingParam;
 		megamol::core::param::ParamSlot m_rendermodeParam;
 		megamol::core::param::ParamSlot m_coloringmodeParam;
@@ -374,7 +343,7 @@ namespace protein {
 		std::vector<ReducedSurface*> reducedSurface;
 		/** the simplified reduced surface(s) */
 		std::vector<ReducedSurfaceSimplified*> simpleRS;
-		
+
 		// shader for the cylinders (raycasting view)
 		vislib::graphics::gl::GLSLShader cylinderShader;
 		// shader for the spheres (raycasting view)
@@ -413,10 +382,10 @@ namespace protein {
 		/** current render mode */
 		RenderMode currentRendermode;
 		/** current coloring mode */
-		ColoringMode currentColoringMode;
+		Color::ColoringMode currentColoringMode;
 		/** postprocessing mode */
 		PostprocessingMode postprocessing;
-		
+
 		/** vertex and attribute arrays for raycasting the tori */
 		std::vector<vislib::Array<float> > torusVertexArray;
 		std::vector<vislib::Array<float> > torusInParamArray;
@@ -458,7 +427,7 @@ namespace protein {
 		float sigma;
 		// lambda factor for screen space ambient occlusion
 		float lambda;
-		
+
 		// color table for amino acids
 		vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColorTable;
 		// color table for rainbow colors
@@ -470,7 +439,7 @@ namespace protein {
 		std::vector<unsigned int> singTexWidth, singTexHeight;
 		// data of the singularity texture
 		float *singTexData;
-		
+
 		// texture for interior clipping / cutting planes (convex spherical cutouts)
 		std::vector<GLuint> cutPlanesTexture;
 		// sizes of the cutting planes textures
@@ -487,12 +456,12 @@ namespace protein {
 		// colors for min, max and mean value
 		vislib::math::Vector<float, 3> minValueColor, maxValueColor, meanValueColor;
 		int codedMinValueColor, codedMaxValueColor, codedMeanValueColor;
-		
+
 		// start value for fogging
 		float fogStart;
 		// transparency value
 		float transparency;
-		
+
 		// fps counter
 		vislib::graphics::FpsCounter fpsCounter;
 
