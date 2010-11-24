@@ -11,6 +11,7 @@
 
 #include "ProteinMovementRenderer.h"
 #include "CoreInstance.h"
+#include "Color.h"
 #include "param/EnumParam.h"
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
@@ -55,7 +56,7 @@ protein::ProteinMovementRenderer::ProteinMovementRenderer ( void ) : Renderer3DM
 
     // --- set the coloring mode ---
 
-    this->SetColoringMode ( ELEMENT );
+    this->SetColoringMode ( Color::ELEMENT );
     //this->SetColoringMode(AMINOACID);
     //this->SetColoringMode(STRUCTURE);
     //this->SetColoringMode(VALUE);
@@ -63,12 +64,12 @@ protein::ProteinMovementRenderer::ProteinMovementRenderer ( void ) : Renderer3DM
     //this->SetColoringMode(RAINBOW);
 	param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
 
-    cm->SetTypePair ( ELEMENT, "Element" );
-    cm->SetTypePair ( AMINOACID, "AminoAcid" );
-    cm->SetTypePair ( STRUCTURE, "SecondaryStructure" );
-    cm->SetTypePair ( CHAIN_ID, "ChainID" );
-    cm->SetTypePair( RAINBOW, "Rainbow");
-    cm->SetTypePair( MOVEMENT, "MovementDistance");
+    cm->SetTypePair ( Color::ELEMENT, "Element" );
+    cm->SetTypePair ( Color::AMINOACID, "AminoAcid" );
+    cm->SetTypePair ( Color::STRUCTURE, "SecondaryStructure" );
+    cm->SetTypePair ( Color::CHAIN_ID, "ChainID" );
+    cm->SetTypePair( Color::RAINBOW, "Rainbow");
+    cm->SetTypePair( Color::MOVEMENT, "MovementDistance");
 
     this->coloringModeParam << cm;
 
@@ -141,9 +142,9 @@ protein::ProteinMovementRenderer::ProteinMovementRenderer ( void ) : Renderer3DM
     this->prepareBallAndStick = true;
 
     // fill amino acid color table
-    this->FillAminoAcidColorTable();
+    Color::FillAminoAcidColorTable( this->aminoAcidColorTable);
     // fill rainbow color table
-    this->MakeRainbowColorTable( 100);
+    Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
     // set minimum, maximum and middle value colors
 	colMax.Set( 255,   0,   0);
@@ -357,7 +358,7 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
         this->renderingModeParam.ResetDirty();
     }
     if ( this->coloringModeParam.IsDirty() ) {
-        this->SetColoringMode ( static_cast<ColoringMode> ( int ( this->coloringModeParam.Param<param::EnumParam>()->Value() ) ) );
+        this->SetColoringMode ( static_cast<Color::ColoringMode> ( int ( this->coloringModeParam.Param<param::EnumParam>()->Value() ) ) );
         this->coloringModeParam.ResetDirty();
     }
     if ( this->stickRadiusParam.IsDirty() ) {
@@ -394,7 +395,15 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
     }
 
     // make the atom color table if necessary
-    this->MakeColorTable ( protein );
+    Color::MakeColorTable ( protein,
+        this->currentColoringMode,
+        this->colMax,
+        this->colMid,
+        this->colMin,
+        this->col,
+        this->protAtomColorTable,
+        this->aminoAcidColorTable,
+        this->rainbowColors );
 
     glEnable ( GL_DEPTH_TEST );
     glEnable ( GL_LIGHTING );
@@ -1095,6 +1104,7 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
 /*
  * protein::ProteinMovementRenderer::MakeColorTable
  */
+ /*
 void protein::ProteinMovementRenderer::MakeColorTable( const CallProteinMovementData *prot, bool forceRecompute )
 {
     unsigned int i;
@@ -1257,7 +1267,7 @@ void protein::ProteinMovementRenderer::MakeColorTable( const CallProteinMovement
             // ... END coloring mode MOVEMENT
 		}
     }
-}
+}*/
 
 
 /*
@@ -1272,71 +1282,4 @@ void protein::ProteinMovementRenderer::RecomputeAll()
     this->proteinDisplayListLines = 0;
 
     this->protAtomColorTable.Clear();
-}
-
-
-/*
- * protein::ProteinMovementRenderer::FillaminoAcidColorTable
- */
-void protein::ProteinMovementRenderer::FillAminoAcidColorTable()
-{
-    this->aminoAcidColorTable.Clear();
-    this->aminoAcidColorTable.SetCount ( 25 );
-    this->aminoAcidColorTable[0].Set ( 128, 128, 128 );
-    this->aminoAcidColorTable[1].Set ( 255, 0, 0 );
-    this->aminoAcidColorTable[2].Set ( 255, 255, 0 );
-    this->aminoAcidColorTable[3].Set ( 0, 255, 0 );
-    this->aminoAcidColorTable[4].Set ( 0, 255, 255 );
-    this->aminoAcidColorTable[5].Set ( 0, 0, 255 );
-    this->aminoAcidColorTable[6].Set ( 255, 0, 255 );
-    this->aminoAcidColorTable[7].Set ( 128, 0, 0 );
-    this->aminoAcidColorTable[8].Set ( 128, 128, 0 );
-    this->aminoAcidColorTable[9].Set ( 0, 128, 0 );
-    this->aminoAcidColorTable[10].Set ( 0, 128, 128 );
-    this->aminoAcidColorTable[11].Set ( 0, 0, 128 );
-    this->aminoAcidColorTable[12].Set ( 128, 0, 128 );
-    this->aminoAcidColorTable[13].Set ( 255, 128, 0 );
-    this->aminoAcidColorTable[14].Set ( 0, 128, 255 );
-    this->aminoAcidColorTable[15].Set ( 255, 128, 255 );
-    this->aminoAcidColorTable[16].Set ( 128, 64, 0 );
-    this->aminoAcidColorTable[17].Set ( 255, 255, 128 );
-    this->aminoAcidColorTable[18].Set ( 128, 255, 128 );
-    this->aminoAcidColorTable[19].Set ( 192, 255, 0 );
-    this->aminoAcidColorTable[20].Set ( 128, 0, 192 );
-    this->aminoAcidColorTable[21].Set ( 255, 128, 128 );
-    this->aminoAcidColorTable[22].Set ( 192, 255, 192 );
-    this->aminoAcidColorTable[23].Set ( 192, 192, 128 );
-    this->aminoAcidColorTable[24].Set ( 255, 192, 128 );
-}
-
-/*
- * protein::ProteinMovementRenderer::makeRainbowColorTable
- * Creates a rainbow color table with 'num' entries.
- */
-void protein::ProteinMovementRenderer::MakeRainbowColorTable( unsigned int num)
-{
-    unsigned int n = num/4;
-    // the color table should have a minimum size of 16
-    if( n < 4 )
-        n = 4;
-    this->rainbowColors.clear();
-    float f = 1.0f/float(n);
-    vislib::math::Vector<float,3> color;
-    color.Set( 1.0f, 0.0f, 0.0f);
-    for( unsigned int i = 0; i < n; i++) {
-        color.SetY( vislib::math::Min( color.GetY() + f, 1.0f));
-        rainbowColors.push_back( color);
-    }
-    for( unsigned int i = 0; i < n; i++) {
-        color.SetX( vislib::math::Max( color.GetX() - f, 0.0f));
-        rainbowColors.push_back( color);
-    }
-    for( unsigned int i = 0; i < n; i++) {
-        color.SetZ( vislib::math::Min( color.GetZ() + f, 1.0f));
-        rainbowColors.push_back( color);
-    }
-    for( unsigned int i = 0; i < n; i++) {
-        color.SetY( vislib::math::Max( color.GetY() - f, 0.0f));
-        rainbowColors.push_back( color);
-    }
 }
