@@ -12,6 +12,7 @@
 #include "ProteinRendererBDP.h"
 
 #include "CoreInstance.h"
+#include "Color.h"
 #include "param/EnumParam.h"
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
@@ -60,7 +61,7 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     flipNormalsParam( "flipNormal", "Flip backside normals: "),
     alphaGradientParam( "alphaGradient", "Alpha gradient: "),
     interiorProtAlphaParam( "interiorProtAlpha", "Alpha for interior protein: ")
-{    
+{
     this->protDataCallerSlot.SetCompatibleCall<CallProteinDataDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
 
@@ -125,19 +126,19 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     this->fogstartParam << fs;
 
     // ----- choose current coloring mode -----
-    this->currentColoringMode = ELEMENT;
+    this->currentColoringMode = Color::ELEMENT;
     //this->currentColoringMode = AMINOACID;
     //this->currentColoringMode = STRUCTURE;
     //this->currentColoringMode = CHAIN_ID;
     //this->currentColoringMode = VALUE;
     param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
-    cm->SetTypePair( ELEMENT, "Element");
-    cm->SetTypePair( AMINOACID, "AminoAcid");
-    cm->SetTypePair( STRUCTURE, "SecondaryStructure");
-    cm->SetTypePair( CHAIN_ID, "ChainID");
-    cm->SetTypePair( VALUE, "Value");
-    cm->SetTypePair( RAINBOW, "Rainbow");
-    cm->SetTypePair( CHARGE, "Charge");
+    cm->SetTypePair( Color::ELEMENT, "Element");
+    cm->SetTypePair( Color::AMINOACID, "AminoAcid");
+    cm->SetTypePair( Color::STRUCTURE, "SecondaryStructure");
+    cm->SetTypePair( Color::CHAIN_ID, "ChainID");
+    cm->SetTypePair( Color::VALUE, "Value");
+    cm->SetTypePair( Color::RAINBOW, "Rainbow");
+    cm->SetTypePair( Color::CHARGE, "Charge");
     this->coloringmodeParam << cm;
 
     // ----- set the default color for minimum value -----
@@ -193,10 +194,10 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     param::FloatParam *ipap = new param::FloatParam( this->interiorProtAlpha, 0.0f, 1.0f );
     this->interiorProtAlphaParam << ipap;
 
-    // fill amino acid color table
-    this->FillAminoAcidColorTable();
-    // fill rainbow color table
-    this->MakeRainbowColorTable( 100);
+	// fill amino acid color table
+	Color::FillAminoAcidColorTable(this->aminoAcidColorTable);
+	// fill rainbow color table
+	Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
     // set the FBOs and textures for post processing
     this->colorFBO = 0;
@@ -220,7 +221,7 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
     // width and height of the screen
     this->width = 0;
     this->height = 0;
-    
+
     // clear singularity texture
     this->singularityTexture.clear();
     // set singTexData to 0
@@ -228,11 +229,11 @@ ProteinRendererBDP::ProteinRendererBDP( void ) : Renderer3DModule (),
 
     // clear cutting planes texture
     this->cutPlanesTexture.clear();
-    // clear cutPlanesTexData 
+    // clear cutPlanesTexData
     this->cutPlanesTexData.clear();
-    
+
     this->preComputationDone = false;
-    
+
     // export parameters
     this->MakeSlotAvailable( &this->rendermodeParam );
     this->MakeSlotAvailable( &this->postprocessingParam );
@@ -315,7 +316,7 @@ ProteinRendererBDP::~ProteinRendererBDP(void)
     this->renderDepthPeelingShader.Release();
     this->histogramEqualShader.Release();
     this->renderDepthBufferShader.Release();
-    
+
     // delete display list
     glDeleteLists(this->fsQuadList, 1);
 
@@ -361,24 +362,24 @@ bool ProteinRendererBDP::create( void )
     // check maximum active texture units useable in fragment program
     GLint maxTexUnits;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &maxTexUnits);
-    if(maxTexUnits < 16) { 
+    if(maxTexUnits < 16) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Maximum used texture units (=16) is greater than GL_MAX_TEXTURE_UNITS (=%i).\n", _BDP_NUM_BUFFERS, maxTexUnits );
         return false;
     }
-   
+
     // init color buffer indices
     for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
         this->colorBufferIndex[i] = GL_COLOR_ATTACHMENT0_EXT + i;
     }
 
-    // create fullscreen quad display list 
+    // create fullscreen quad display list
     this->CreateFullscreenQuadDisplayList();
 
     // material settings
     float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
     glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
-    
+
     // create shaders
     ShaderSource vertSrc;
     ShaderSource geomSrc;
@@ -386,7 +387,7 @@ bool ProteinRendererBDP::create( void )
 
     CoreInstance *ci = this->GetCoreInstance();
     if( !ci ) return false;
-    
+
     ///////////////////////////////////////////////////////////////////
     // load the shader source for rendering the depth peeling result //
     //////////////////////////////////////////////////////////////////
@@ -569,7 +570,7 @@ bool ProteinRendererBDP::create( void )
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA() );
         return false;
     }
-    
+
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
@@ -673,7 +674,7 @@ bool ProteinRendererBDP::create( void )
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create vertical 1D gaussian filter shader: %s\n", this->ClassName(), e.GetMsgA() );
         return false;
     }
-    
+
     //////////////////////////////////////////////////////
     // load the shader source for the cylinder renderer //
     //////////////////////////////////////////////////////
@@ -766,7 +767,7 @@ bool ProteinRendererBDP::Render( Call& call ) {
     unsigned int cntRS = 0;
     bool recomputeColors = false;
     bool render_debug = false;
-    
+
     // get pointer to CallProteinData
     protein::CallProteinData *protein = this->protDataCallerSlot.CallAs<protein::CallProteinData>();
 
@@ -776,12 +777,12 @@ bool ProteinRendererBDP::Render( Call& call ) {
     // execute the call
     if ( ! ( *protein )() )
         return false;
-    
+
     // get camera information
     this->cameraInfo = dynamic_cast<view::CallRender3D*>(&call)->GetCameraParameters();
 
     // ==================== check parameters ====================
-    
+
     if ( this->depthPeelingParam.IsDirty() )
     {
         this->depthPeelingMode = static_cast<DepthPeelingMode>(this->depthPeelingParam.Param<param::EnumParam>()->Value() );
@@ -793,40 +794,47 @@ bool ProteinRendererBDP::Render( Call& call ) {
         this->postprocessing = static_cast<PostprocessingMode>(this->postprocessingParam.Param<param::EnumParam>()->Value() );
         this->postprocessingParam.ResetDirty();
     }
-    
+
     if( this->rendermodeParam.IsDirty() )
     {
         this->currentRendermode = static_cast<RenderMode>(this->rendermodeParam.Param<param::EnumParam>()->Value() );
         this->rendermodeParam.ResetDirty();
         this->preComputationDone = false;
     }
-    
+
     if( this->coloringmodeParam.IsDirty() )
     {
-        this->currentColoringMode = static_cast<ColoringMode>(this->coloringmodeParam.Param<param::EnumParam>()->Value() );
-        this->MakeColorTable( protein);
+        this->currentColoringMode = static_cast<Color::ColoringMode>(this->coloringmodeParam.Param<param::EnumParam>()->Value() );
+        Color::MakeColorTable( protein,
+            this->currentColoringMode,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor,
+            this->atomColor,
+            this->aminoAcidColorTable,
+            this->rainbowColors);
         this->preComputationDone = false;
         this->coloringmodeParam.ResetDirty();
     }
-    
+
     if( this->silhouettecolorParam.IsDirty() )
     {
         this->SetSilhouetteColor( this->DecodeColor( this->silhouettecolorParam.Param<param::IntParam>()->Value() ) );
         this->silhouettecolorParam.ResetDirty();
     }
-    
+
     if( this->sigmaParam.IsDirty() )
     {
         this->sigma = this->sigmaParam.Param<param::FloatParam>()->Value();
         this->sigmaParam.ResetDirty();
     }
-    
+
     if( this->lambdaParam.IsDirty() )
     {
         this->lambda = this->lambdaParam.Param<param::FloatParam>()->Value();
         this->lambdaParam.ResetDirty();
     }
-    
+
     if( this->minvaluecolorParam.IsDirty() )
     {
         this->SetMinValueColor( this->DecodeColor( this->minvaluecolorParam.Param<param::IntParam>()->Value() ) );
@@ -895,9 +903,9 @@ bool ProteinRendererBDP::Render( Call& call ) {
     {
         this->preComputationDone = false;
     }
-    
+
     // ==================== Precomputations ====================
-    
+
     if( this->currentRendermode == GPU_SIMPLIFIED )
     {
         //////////////////////////////////////////////////////////////////
@@ -916,10 +924,18 @@ bool ProteinRendererBDP::Render( Call& call ) {
         this->minValue = protein->MinimumTemperatureFactor();
         this->maxValue = protein->MaximumTemperatureFactor();
         // compute the color table
-        this->MakeColorTable( protein, true);
+        Color::MakeColorTable( protein,
+            this->currentColoringMode,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor,
+            this->atomColor,
+            this->aminoAcidColorTable,
+            this->rainbowColors,
+            true );
         // compute the arrays for ray casting
         this->ComputeRaycastingArraysSimple();
-       
+
     }
     else
     {
@@ -950,14 +966,22 @@ bool ProteinRendererBDP::Render( Call& call ) {
             }
         }
     }
-    
+
     if( !this->preComputationDone )
     {
         // get minimum and maximum values for VALUE coloring mode
         this->minValue = protein->MinimumTemperatureFactor();
         this->maxValue = protein->MaximumTemperatureFactor();
         // compute the color table
-        this->MakeColorTable( protein, recomputeColors);
+        Color::MakeColorTable( protein,
+            this->currentColoringMode,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor,
+            this->atomColor,
+            this->aminoAcidColorTable,
+            this->rainbowColors,
+            recomputeColors);
 
         // compute the data needed for the current render mode
         if( this->currentRendermode == GPU_RAYCASTING ) {
@@ -1106,12 +1130,12 @@ bool ProteinRendererBDP::Render( Call& call ) {
 	}
 
 	glPopMatrix();
-    
+
     // ========= render BDP result =========
 
     if(this->depthPeelingMode != NO_BDP) {
 
-        // reset geometry pass 
+        // reset geometry pass
 		if((this->depthPeelingMode == ADAPTIVE_COLOR_BDP) || (this->depthPeelingMode == ADAPTIVE_DEPTH_BDP)) {
 			this->geometryPass = 1;
 		}
@@ -1157,7 +1181,7 @@ void ProteinRendererBDP::PostprocessingSSAO() {
     glBindTexture( GL_TEXTURE_2D, this->depthTex0);
 
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->horizontalFilterFBO);
-    
+
     this->hfilterShader.Enable();
 
     glUniform1iARB( this->hfilterShader.ParameterLocation( "tex"), 0);
@@ -1183,7 +1207,7 @@ void ProteinRendererBDP::PostprocessingSSAO() {
     glUniform1iARB( this->vfilterShader.ParameterLocation( "colorTex"), 1);
     glUniform1fARB( this->vfilterShader.ParameterLocation( "sigma"), this->sigma);
     glUniform1fARB( this->vfilterShader.ParameterLocation( "lambda"), this->lambda);
-    
+
     glColor4f( 1.0f,  1.0f,  1.0f,  1.0f);
     glCallList(this->fsQuadList);
 
@@ -1210,7 +1234,7 @@ void ProteinRendererBDP::PostprocessingSilhouette() {
     glUniform1iARB( this->silhouetteShader.ParameterLocation( "colorTex"), 1);
     glUniform1fARB( this->silhouetteShader.ParameterLocation( "difference"), 0.025f);
 
-    glColor4f( this->silhouetteColor.GetX(), this->silhouetteColor.GetY(), 
+    glColor4f( this->silhouetteColor.GetX(), this->silhouetteColor.GetY(),
         this->silhouetteColor.GetZ(),  1.0f);
 
     glCallList(this->fsQuadList);
@@ -1261,7 +1285,7 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
     for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
         glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[i]);
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL); 
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1286,7 +1310,7 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
         for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
             glBindTexture( GL_TEXTURE_2D, this->histogramTex[i]);
-            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32I_EXT, this->width, this->height, 0, GL_RGBA_INTEGER_EXT, GL_INT, NULL); 
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32I_EXT, this->width, this->height, 0, GL_RGBA_INTEGER_EXT, GL_INT, NULL);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1309,7 +1333,7 @@ void ProteinRendererBDP::CreateDepthPeelingFBO() {
 
         for(unsigned int i = 0; i < _BDP_NUM_BUFFERS; ++i) {
             glBindTexture( GL_TEXTURE_2D, this->equalizedHistTex[i]);
-            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL); 
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1386,7 +1410,7 @@ void ProteinRendererBDP::CreatePostProcessFBO()
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, hFilter, 0);
     glBindTexture( GL_TEXTURE_2D, 0);
-    
+
     //vertical filter FBO
     glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->verticalFilterFBO);
     glBindTexture( GL_TEXTURE_2D, this->vFilter);
@@ -1434,7 +1458,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         // bind min max depth buffer
         glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
-        
+
         // bind equalized histogram in second geometry pass
         if(this->geometryPass == 2) {
             for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
@@ -1445,15 +1469,15 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
     }
 
     unsigned int cntRS;
-    
+
     for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
     {
-        
+
         if( this->drawSES ) {
             //////////////////////////////////
             // ray cast the tori on the GPU //
             //////////////////////////////////
-            
+
             // enable torus shader
             this->torusShader.Enable();
 
@@ -1517,11 +1541,11 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
 
             // enable torus shader
             this->torusShader.Disable();
-            
+
             /////////////////////////////////////////////////
             // ray cast the spherical triangles on the GPU //
             /////////////////////////////////////////////////
-            
+
             // bind texture
             glActiveTexture(GL_TEXTURE0);
             glBindTexture( GL_TEXTURE_2D, this->singularityTexture[cntRS]);
@@ -1607,13 +1631,13 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
             // unbind texture
 			glActiveTexture(GL_TEXTURE0);
             glBindTexture( GL_TEXTURE_2D, 0);
-            
+
         }
-        
+
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
-        
+
         // bind texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
@@ -1680,7 +1704,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         // unbind texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture( GL_TEXTURE_2D, 0);
-		
+
         // >>>>>>>>>> DEBUG
         // drawing surfVectors as yellow lines
         /*if(this->depthPeelingMode == NO_BDP) {
@@ -1694,8 +1718,8 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
                 glColor3f(1.0f, 1.0f, 0.0f);
                 glBegin(GL_LINES);
                     glVertex3f( this->sphereVertexArray[cntRS][4*i], this->sphereVertexArray[cntRS][4*i+1], this->sphereVertexArray[cntRS][4*i+2]);
-                    glVertex3f( this->sphereVertexArray[cntRS][4*i] + this->sphereSurfVector[cntRS][4*i]*1.5f, 
-                                this->sphereVertexArray[cntRS][4*i+1] + this->sphereSurfVector[cntRS][4*i+1]*1.5f, 
+                    glVertex3f( this->sphereVertexArray[cntRS][4*i] + this->sphereSurfVector[cntRS][4*i]*1.5f,
+                                this->sphereVertexArray[cntRS][4*i+1] + this->sphereSurfVector[cntRS][4*i+1]*1.5f,
                                 this->sphereVertexArray[cntRS][4*i+2] + this->sphereSurfVector[cntRS][4*i+2]*1.5f);
                 glEnd(); //GL_LINES
             }
@@ -1718,7 +1742,7 @@ void ProteinRendererBDP::RenderSESGpuRaycasting(
         glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, 0);
     }
-            
+
     CHECK_FOR_OGL_ERROR();
 
     // delete pointers
@@ -1758,7 +1782,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         // bind min max depth buffer
         glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, this->depthBuffer);
-        
+
         // bind equalized histogram
         if(this->geometryPass == 2) {
             for(i = 0; i < _BDP_NUM_BUFFERS; ++i) {
@@ -1767,15 +1791,15 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
             }
         }
     }
-    
+
     unsigned int cntRS;
-    
+
     for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
     {
         //////////////////////////////////
         // ray cast the tori on the GPU //
         //////////////////////////////////
-        
+
         // enable torus shader
         this->torusShader.Enable();
 
@@ -1839,11 +1863,11 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
 
         // enable torus shader
         this->torusShader.Disable();
-        
+
         /////////////////////////////////////////////////
         // ray cast the spherical triangles on the GPU //
         /////////////////////////////////////////////////
-        
+
         // bind texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture( GL_TEXTURE_2D, this->singularityTexture[cntRS]);
@@ -1928,11 +1952,11 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
 
         // unbind texture
         glBindTexture( GL_TEXTURE_2D, 0);
-    
+
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
-        
+
         // bind texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
@@ -2013,8 +2037,8 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
                 glColor3f(1.0f, 1.0f, 0.0f);
                 glBegin(GL_LINES);
                     glVertex3f( this->sphereVertexArray[cntRS][4*i], this->sphereVertexArray[cntRS][4*i+1], this->sphereVertexArray[cntRS][4*i+2]);
-                    glVertex3f( this->sphereVertexArray[cntRS][4*i] + this->sphereSurfVector[cntRS][4*i]*1.5f, 
-                                this->sphereVertexArray[cntRS][4*i+1] + this->sphereSurfVector[cntRS][4*i+1]*1.5f, 
+                    glVertex3f( this->sphereVertexArray[cntRS][4*i] + this->sphereSurfVector[cntRS][4*i]*1.5f,
+                                this->sphereVertexArray[cntRS][4*i+1] + this->sphereSurfVector[cntRS][4*i+1]*1.5f,
                                 this->sphereVertexArray[cntRS][4*i+2] + this->sphereSurfVector[cntRS][4*i+2]*1.5f);
                 glEnd(); //GL_LINES
             }
@@ -2023,7 +2047,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         }*/
         // <<<<<<<<<< end DEBUG
     }
-            
+
     if(this->depthPeelingMode != NO_BDP) {
         // unbind equalized histogram
         if(this->geometryPass == 2) {
@@ -2037,7 +2061,7 @@ void ProteinRendererBDP::RenderSESGpuRaycastingSimple(
         glActiveTexture(GL_TEXTURE1);
         glBindTexture( GL_TEXTURE_2D, 0);
     }
-            
+
     CHECK_FOR_OGL_ERROR();
 
     // delete pointers
@@ -2064,7 +2088,7 @@ void ProteinRendererBDP::RenderDepthPeeling(void) {
         glActiveTexture(textureIndex);
         glBindTexture( GL_TEXTURE_2D, this->depthPeelingTex[i]);
     }
-    
+
     // bind color and depth texture to consider interior protein for BDP
     if((this->depthPeelingMode == COLOR_BDP) && (this->interiorProtAlpha > 0.0)) {
 		textureIndex++;
@@ -2316,7 +2340,7 @@ void ProteinRendererBDP::CreateFullscreenQuadDisplayList(void) {
 
         glBegin(GL_QUADS);
         {
-            glVertex2f(0.0f, 0.0f); 
+            glVertex2f(0.0f, 0.0f);
             glVertex2f(1.0f, 0.0f);
             glVertex2f(1.0f, 1.0f);
             glVertex2f(0.0f, 1.0f);
@@ -2341,7 +2365,7 @@ void ProteinRendererBDP::RenderDebugStuff(
     const CallProteinData *protein)
 {
     // --> USAGE: UNCOMMENT THE NEEDED PARTS
-    
+
     // temporary variables
     unsigned int max1, max2;
     max1 = max2 = 0;
@@ -2386,7 +2410,7 @@ void ProteinRendererBDP::RenderDebugStuff(
     glDisable( GL_BLEND);
     glEnable( GL_LIGHTING);
     */
-    
+
     //////////////////////////////////////////////////////////////////////////
     // Render the probe positions
     //////////////////////////////////////////////////////////////////////////
@@ -2402,7 +2426,7 @@ void ProteinRendererBDP::RenderDebugStuff(
         glColor3f( 1.0f, 0.0f, 0.0f);
         glBegin( GL_POINTS);
             glVertex3fv( this->rsFace[i]->GetProbeCenter().PeekComponents());
-        glEnd(); // GL_POINTS            
+        glEnd(); // GL_POINTS
     }
     glDisable( GL_POINT_SMOOTH);
     glDisable( GL_POINT_SIZE);
@@ -2506,7 +2530,7 @@ void ProteinRendererBDP::RenderDebugStuff(
                 firstAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex1()->GetPosition();
                 secondAtomPos = this->reducedSurface[cntRS]->GetRSEdge( j)->GetVertex2()->GetPosition();
             }
-    
+
             // compute the quaternion for the rotation of the cylinder
             dir = secondAtomPos - firstAtomPos;
             tmpVec.Set( 1.0f, 0.0f, 0.0f);
@@ -2516,7 +2540,7 @@ void ProteinRendererBDP::RenderDebugStuff(
             quatC.Set( angle, ortho);
             // compute the absolute position 'position' of the cylinder (center point)
             position = firstAtomPos + ( dir/2.0f);
-                    
+
             // draw vertex and attributes
             glVertexAttrib2f( attribLocInParams, 0.12f, (firstAtomPos-secondAtomPos).Length() );
             glVertexAttrib4fv( attribLocQuatC, quatC.PeekComponents());
@@ -2554,7 +2578,7 @@ void ProteinRendererBDP::RenderDebugStuff(
                 v2 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetPosition();
                 v3 = this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetPosition();
             }
-                
+
             glBegin( GL_TRIANGLES );
                 glNormal3fv( n1.PeekComponents());
                 glColor3f( 1.0f, 0.8f, 0.0f);
@@ -2568,7 +2592,7 @@ void ProteinRendererBDP::RenderDebugStuff(
     }
     this->lightShader.Disable();
     glDisable( GL_COLOR_MATERIAL);
-        
+
     /*
     //////////////////////////////////////////////////////////////////////////
     // Draw double edges as thick lines
@@ -2694,7 +2718,7 @@ void ProteinRendererBDP::RenderDebugStuff(
 
     /*
     //////////////////////////////////////////////////////////////////////////
-    // Draw tetrahedra defining the convace spherical triangles 
+    // Draw tetrahedra defining the convace spherical triangles
     //////////////////////////////////////////////////////////////////////////
     glDisable( GL_LIGHTING);
     glLineWidth( 3.0f);
@@ -2724,7 +2748,7 @@ void ProteinRendererBDP::RenderDebugStuff(
 
     /*
     //////////////////////////////////////////////////////////////////////////
-    // Draw edges 
+    // Draw edges
     //////////////////////////////////////////////////////////////////////////
     glPushAttrib( GL_LINE_BIT);
     glLineWidth( 3.0f);
@@ -2733,11 +2757,11 @@ void ProteinRendererBDP::RenderDebugStuff(
     glBegin( GL_LINES);
     for( i = 0; i < this->rsEdge.size(); ++i )
     {
-        if( this->rsEdge[i]->GetFace2() < 0 || 
+        if( this->rsEdge[i]->GetFace2() < 0 ||
             ( *this->rsEdge[i]->GetFace1() == *this->rsEdge[i]->GetFace2() ) )
         {
             glColor3f( 1.0f, 0.0f, 1.0f);
-            //std::cout << "Edge: " << i << " (" << 
+            //std::cout << "Edge: " << i << " (" <<
             //    this->rsEdge[i]->GetFace1() << ")--(" << this->rsEdge[i]->GetFace2() << ") " <<
             //    this->rsEdge[i].GetRotationAngle() << std::endl;
         }
@@ -2782,12 +2806,12 @@ void ProteinRendererBDP::RenderDebugStuff(
  * (spheres, spherical triangles & tori)
  */
 void ProteinRendererBDP::ComputeRaycastingArrays()
-{    
+{
     time_t t = clock();
 
     unsigned int cntRS;
     unsigned int i;
-    
+
     // resize lists of vertex, attribute and color arrays
     this->sphericTriaVertexArray.resize( this->reducedSurface.size());
     this->sphericTriaVec1.resize( this->reducedSurface.size());
@@ -2807,10 +2831,10 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
     this->sphereColors.resize( this->reducedSurface.size());
     this->sphereTexCoord.resize( this->reducedSurface.size());
     this->sphereSurfVector.resize( this->reducedSurface.size());
-    
+
     // compute singulatity textures
     this->CreateSingularityTextures();
-   
+
     // compute cutting planes textures
     this->CreateCutPlanesTextures();
 
@@ -2822,7 +2846,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
         vislib::math::Vector<float, 3> tmpVec;
         vislib::math::Vector<float, 3> tmpDualProbe( 1.0f, 1.0f, 1.0f);
         float dualProbeRad = 0.0f;
-        
+
         this->sphericTriaVertexArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 4);
         this->sphericTriaVec1[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 4);
         this->sphericTriaVec2[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 4);
@@ -2831,7 +2855,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
         this->sphericTriaTexCoord2[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
         this->sphericTriaTexCoord3[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
         this->sphericTriaColors[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSFaceCount() * 3);
-    
+
         // loop over all RS-faces
         for( i = 0; i < this->reducedSurface[cntRS]->GetRSFaceCount(); ++i )
         {
@@ -2879,7 +2903,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             this->sphericTriaVertexArray[cntRS][i*4+2] = this->reducedSurface[cntRS]->GetRSFace( i)->GetProbeCenter().GetZ();
             this->sphericTriaVertexArray[cntRS][i*4+3] = this->GetProbeRadius();
         }
-    
+
         ////////////////////////////////////////////////////////
         // compute arrays for ray casting the tori on the GPU //
         ////////////////////////////////////////////////////////
@@ -2888,14 +2912,14 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
         zAxis.Set( 0.0f, 0.0f, 1.0f);
         float distance, d;
         vislib::math::Vector<float, 3> tmpDir1, tmpDir2, tmpDir3, cutPlaneNorm;
-    
+
         this->torusVertexArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 3);
         this->torusInParamArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 3);
         this->torusQuatCArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 4);
         this->torusInSphereArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 4);
         this->torusColors[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 4);
         this->torusInCuttingPlaneArray[cntRS].SetCount( this->reducedSurface[cntRS]->GetRSEdgeCount() * 3);
-    
+
         // loop over all RS-edges
         for( i = 0; i < this->reducedSurface[cntRS]->GetRSEdgeCount(); ++i )
         {
@@ -2910,7 +2934,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             // compute the tangential point X2 of the spheres
             P = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter() + rotAxis *
                 this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusRadius();
-    
+
             X1 = P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition();
             X1.Normalise();
             X1 *= this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetRadius();
@@ -2918,16 +2942,16 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             X2.Normalise();
             X2 *= this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetRadius();
             d = ( X1 + this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis);
-    
+
             C = this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() -
                     this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
             C = ( ( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length() /
-                    ( ( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() + 
+                    ( ( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() +
                     ( P - this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length())) * C;
             distance = ( X2 - C).Length();
             C = ( C + this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()) -
                     this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter();
-            
+
             // compute normal of the cutting plane
             tmpDir1 = this->reducedSurface[cntRS]->GetRSEdge( i)->GetFace1()->GetProbeCenter();
             tmpDir2 = this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - tmpDir1;
@@ -2952,7 +2976,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             cutPlaneNorm = cutPlaneNorm.Cross( tmpDir2);
             cutPlaneNorm = torusAxis.Cross( cutPlaneNorm);
             cutPlaneNorm.Normalise();
-            
+
             // attributes
             this->torusInParamArray[cntRS][i*3+0] = this->probeRadius;
             this->torusInParamArray[cntRS][i*3+1] = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusRadius();
@@ -2980,10 +3004,10 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             this->torusVertexArray[cntRS][i*3+1] = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter().GetY();
             this->torusVertexArray[cntRS][i*3+2] = this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter().GetZ();
         }
-        
+
         ///////////////////////////////////////////////////////////
         // compute arrays for ray casting the spheres on the GPU //
-        ///////////////////////////////////////////////////////////    
+        ///////////////////////////////////////////////////////////
 
         this->sphereVertexArray[cntRS].AssertCapacity(
                 this->reducedSurface[cntRS]->GetRSVertexCount() * 4);
@@ -3037,7 +3061,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                 (float)this->reducedSurface[cntRS]->GetRSVertex( i)->GetTexCoordX());
             this->sphereTexCoord[cntRS].Append(
                 (float)this->reducedSurface[cntRS]->GetRSVertex( i)->GetTexCoordY());
-            
+
             // calculate and set surface vector and max distance for additonal sphere interior cliping
             vertexPos = this->reducedSurface[cntRS]->GetRSVertex(i)->GetPosition();
             atomRadius = this->reducedSurface[cntRS]->GetRSVertex(i)->GetRadius();
@@ -3073,11 +3097,11 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                     edgeVector += tempVec;
 				}
             }
-                
+
             // if max angle of visible surface part is more than PI use edgeVector else surfVector
             if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
 				surfVector = edgeVector * (-1.0f);
-			} 
+			}
 			/*else {
 				surfVector = edgeVector;
 			}*/
@@ -3136,7 +3160,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         this->torusInCuttingPlaneArray.size() != this->reducedSurface.size() ||
         this->sphereVertexArray.size() != this->reducedSurface.size() ||
         this->sphereColors.size() != this->reducedSurface.size() ||
-        this->sphereTexCoord.size() != this->reducedSurface.size() || 
+        this->sphereTexCoord.size() != this->reducedSurface.size() ||
         this->sphereSurfVector.size() != this->reducedSurface.size())
     {
         // recompute everything if one of the arrays has the wrong size
@@ -3144,9 +3168,9 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         this->preComputationDone = false;
         return;
     }
-    
+
     unsigned int i;
-    
+
     // compute singulatity textures
     this->CreateSingularityTexture( idxRS);
 
@@ -3159,7 +3183,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
     vislib::math::Vector<float, 3> tmpVec;
     vislib::math::Vector<float, 3> tmpDualProbe( 1.0f, 1.0f, 1.0f);
     float dualProbeRad = 0.0f;
-    
+
     this->sphericTriaVertexArray[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSFaceCount() * 4);
     this->sphericTriaVec1[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSFaceCount() * 4);
     this->sphericTriaVec2[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSFaceCount() * 4);
@@ -3259,12 +3283,12 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         C = this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetPosition() -
                 this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
         C = ( ( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length() /
-                ( ( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() + 
+                ( ( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() +
                 ( P - this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length())) * C;
         distance = ( X2 - C).Length();
         C = ( C + this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition()) -
                 this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter();
-    
+
         // compute normal of the cutting plane
         tmpDir1 = this->reducedSurface[idxRS]->GetRSEdge( i)->GetFace1()->GetProbeCenter();
         tmpDir2 = this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - tmpDir1;
@@ -3289,7 +3313,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         cutPlaneNorm = cutPlaneNorm.Cross( tmpDir2);
         cutPlaneNorm = torusAxis.Cross( cutPlaneNorm);
         cutPlaneNorm.Normalise();
-        
+
         // attributes
         this->torusInParamArray[idxRS][i*3+0] = this->probeRadius;
         this->torusInParamArray[idxRS][i*3+1] = this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusRadius();
@@ -3316,10 +3340,10 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         this->torusVertexArray[idxRS][i*3+1] = this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter().GetY();
         this->torusVertexArray[idxRS][i*3+2] = this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter().GetZ();
     }
-    
+
     ///////////////////////////////////////////////////////////
     // compute arrays for ray casting the spheres on the GPU //
-    ///////////////////////////////////////////////////////////   
+    ///////////////////////////////////////////////////////////
     this->sphereVertexArray[idxRS].AssertCapacity(
             this->reducedSurface[idxRS]->GetRSVertexCount() * 4);
     this->sphereVertexArray[idxRS].Clear();
@@ -3405,7 +3429,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         // if max angle of visible surface part is more than PI use edgeVector else surfVector
         if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
             surfVector = edgeVector * (-1.0f);
-        } 
+        }
 		/*else {
 				surfVector = edgeVector;
 		}*/
@@ -3434,7 +3458,7 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
 
 
 /*
- * Compute all vertex, attribute and color arrays used for ray casting 
+ * Compute all vertex, attribute and color arrays used for ray casting
  * the simplified molecular surface.
  */
 void ProteinRendererBDP::ComputeRaycastingArraysSimple()
@@ -3445,7 +3469,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
     unsigned int i;
     //vislib::math::Vector<float, 3> col( 0.45f, 0.75f, 0.15f);
     //float codedcol = this->CodeColor( col);
-    
+
     // resize lists of vertex, attribute and color arrays
     this->sphericTriaVertexArray.resize( this->simpleRS.size());
     this->sphericTriaVec1.resize( this->simpleRS.size());
@@ -3464,11 +3488,11 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
     this->sphereVertexArray.resize( this->simpleRS.size());
     this->sphereColors.resize( this->simpleRS.size());
     this->sphereTexCoord.resize( this->simpleRS.size());
-    this->sphereSurfVector.resize( this->simpleRS.size());    
-    
+    this->sphereSurfVector.resize( this->simpleRS.size());
+
     // compute singulatity textures
     this->CreateSingularityTexturesSimple();
-    
+
     // compute cutting planes textures
     this->CreateCutPlanesTexturesSimple();
 
@@ -3480,7 +3504,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
         vislib::math::Vector<float, 3> tmpVec;
         vislib::math::Vector<float, 3> tmpDualProbe( 1.0f, 1.0f, 1.0f);
         float dualProbeRad = 0.0f;
-        
+
         this->sphericTriaVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
         this->sphericTriaVec1[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
         this->sphericTriaVec2[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 4);
@@ -3489,7 +3513,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
         this->sphericTriaTexCoord2[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
         this->sphericTriaTexCoord3[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
         this->sphericTriaColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSFaceCount() * 3);
-    
+
         // loop over all RS-faces
         for( i = 0; i < this->simpleRS[cntRS]->GetRSFaceCount(); ++i )
         {
@@ -3543,7 +3567,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             this->sphericTriaVertexArray[cntRS][i*4+2] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetZ();
             this->sphericTriaVertexArray[cntRS][i*4+3] = this->GetProbeRadius();
         }
-    
+
         ////////////////////////////////////////////////////////
         // compute arrays for ray casting the tori on the GPU //
         ////////////////////////////////////////////////////////
@@ -3552,14 +3576,14 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
         zAxis.Set( 0.0f, 0.0f, 1.0f);
         float distance, d;
         vislib::math::Vector<float, 3> tmpDir1, tmpDir2, tmpDir3, cutPlaneNorm;
-    
+
         this->torusVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
         this->torusInParamArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
         this->torusQuatCArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
         this->torusInSphereArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
         this->torusColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 4);
         this->torusInCuttingPlaneArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSEdgeCount() * 3);
-    
+
         // loop over all RS-edges
         for( i = 0; i < this->simpleRS[cntRS]->GetRSEdgeCount(); ++i )
         {
@@ -3574,7 +3598,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             // compute the tangential point X2 of the spheres
             P = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter() + rotAxis *
                 this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusRadius();
-    
+
             X1 = P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition();
             X1.Normalise();
             X1 *= this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetRadius();
@@ -3582,16 +3606,16 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             X2.Normalise();
             X2 *= this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetRadius();
             d = ( X1 + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis);
-    
+
             C = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition() -
                     this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition();
             C = ( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length() /
-                    ( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() + 
+                    ( ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetPosition()).Length() +
                     ( P - this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()).Length())) * C;
             distance = ( X2 - C).Length();
             C = ( C + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition()) -
                     this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter();
-            
+
             // compute normal of the cutting plane
             tmpDir1 = this->simpleRS[cntRS]->GetRSEdge( i)->GetFace1()->GetProbeCenter();
             tmpDir2 = this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - tmpDir1;
@@ -3616,7 +3640,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             cutPlaneNorm = cutPlaneNorm.Cross( tmpDir2);
             cutPlaneNorm = torusAxis.Cross( cutPlaneNorm);
             cutPlaneNorm.Normalise();
-            
+
             // attributes
             this->torusInParamArray[cntRS][i*3+0] = this->probeRadius;
             this->torusInParamArray[cntRS][i*3+1] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusRadius();
@@ -3648,10 +3672,10 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             this->torusVertexArray[cntRS][i*3+1] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter().GetY();
             this->torusVertexArray[cntRS][i*3+2] = this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter().GetZ();
         }
-        
+
         ///////////////////////////////////////////////////////////
         // compute arrays for ray casting the spheres on the GPU //
-        ///////////////////////////////////////////////////////////    
+        ///////////////////////////////////////////////////////////
         /*
         this->sphereVertexArray[cntRS].SetCount( this->simpleRS[cntRS]->GetRSVertexCount() * 4);
         this->sphereColors[cntRS].SetCount( this->simpleRS[cntRS]->GetRSVertexCount() * 3);
@@ -3709,7 +3733,7 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
                 (float)this->simpleRS[cntRS]->GetRSVertex( i)->GetTexCoordX());
             this->sphereTexCoord[cntRS].Append(
                 (float)this->simpleRS[cntRS]->GetRSVertex( i)->GetTexCoordY());
-            
+
             // calculate and set surface vector and max distance for additonal sphere interior cliping
             vertexPos = this->simpleRS[cntRS]->GetRSVertex(i)->GetPosition();
             atomRadius = this->simpleRS[cntRS]->GetRSVertex(i)->GetRadius();
@@ -3745,11 +3769,11 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
                     edgeVector += tempVec;
 				}
             }
-                
+
             // if max angle of visible surface part is more than PI use edgeVector else surfVector
             if(edgeVector.Dot(edgeVector) > surfVector.Dot(surfVector)) {
 				surfVector = edgeVector * (-1.0f);
-			} 
+			}
 			/*else {
 				surfVector = edgeVector;
 			}*/
@@ -3827,7 +3851,7 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
     time_t t = clock();
 */
     unsigned int cnt1, cnt2, cntRS;
-    
+
     // delete old cutting planes textures
     for( cnt1 = 0; cnt1 < this->cutPlanesTexture.size(); ++cnt1 )
     {
@@ -3850,7 +3874,7 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
     this->cutPlanesTexWidth.resize( this->reducedSurface.size());
     this->cutPlanesTexHeight.resize( this->reducedSurface.size());
     this->cutPlanesTexData.resize( this->reducedSurface.size());
-    
+
     // get maximum texture size
     GLint texSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
@@ -3872,7 +3896,7 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
         if( (unsigned int)texSize < this->reducedSurface[cntRS]->GetRSVertexCount() )
         {
             this->cutPlanesTexHeight[cntRS] = texSize;
-            this->cutPlanesTexWidth[cntRS] = maxNumEdges * (int)ceil( 
+            this->cutPlanesTexWidth[cntRS] = maxNumEdges * (int)ceil(
 				double(this->reducedSurface[cntRS]->GetRSVertexCount()) / (double)texSize);
         }
         else
@@ -3928,7 +3952,7 @@ void ProteinRendererBDP::CreateCutPlanesTextures()
 
         // texture generation
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[cntRS], this->cutPlanesTexHeight[cntRS], 0, GL_RGB, GL_FLOAT, 
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[cntRS], this->cutPlanesTexHeight[cntRS], 0, GL_RGB, GL_FLOAT,
                 this->cutPlanesTexData[cntRS].PeekElements());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -3953,7 +3977,7 @@ void ProteinRendererBDP::CreateCutPlanesTexturesSimple()
     time_t t = clock();
 */
     unsigned int cnt1, cnt2, cntRS;
-    
+
     // delete old cutting planes textures
     for( cnt1 = 0; cnt1 < this->cutPlanesTexture.size(); ++cnt1 )
     {
@@ -3976,7 +4000,7 @@ void ProteinRendererBDP::CreateCutPlanesTexturesSimple()
     this->cutPlanesTexWidth.resize( this->simpleRS.size());
     this->cutPlanesTexHeight.resize( this->simpleRS.size());
     this->cutPlanesTexData.resize( this->simpleRS.size());
-    
+
     // get maximum texture size
     GLint texSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
@@ -4053,7 +4077,7 @@ void ProteinRendererBDP::CreateCutPlanesTexturesSimple()
 
         // texture generation
         glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[cntRS]);
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[cntRS], this->cutPlanesTexHeight[cntRS], 0, GL_RGB, GL_FLOAT, 
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[cntRS], this->cutPlanesTexHeight[cntRS], 0, GL_RGB, GL_FLOAT,
                 this->cutPlanesTexData[cntRS].PeekElements());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -4079,7 +4103,7 @@ void ProteinRendererBDP::CreateCutPlanesTexture( unsigned int idxRS)
     // do nothing if the index is out of bounds
     if( idxRS > this->reducedSurface.size() )
         return;
-    
+
     // check if all arrays have the appropriate size
     if( this->cutPlanesTexture.size() != this->reducedSurface.size() ||
         this->cutPlanesTexWidth.size() != this->reducedSurface.size() ||
@@ -4090,12 +4114,12 @@ void ProteinRendererBDP::CreateCutPlanesTexture( unsigned int idxRS)
         CreateCutPlanesTextures();
         return;
     }
-    
+
     unsigned int cnt1, cnt2;
-    
+
     // delete old cutting planes texture
     glDeleteTextures( 1, &this->cutPlanesTexture[idxRS]);
-    
+
     // get maximum texture size
     GLint texSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
@@ -4119,7 +4143,7 @@ void ProteinRendererBDP::CreateCutPlanesTexture( unsigned int idxRS)
     if( !this->cutPlanesTexData[idxRS].IsEmpty() )
         this->cutPlanesTexData[idxRS].Clear(true);
     this->cutPlanesTexData[idxRS].AssertCapacity(this->cutPlanesTexWidth[idxRS]*this->cutPlanesTexHeight[idxRS]*3);
-    
+
     unsigned int coordX = 0;
     unsigned int coordY = 0;
     unsigned int edgeCount;
@@ -4167,7 +4191,7 @@ void ProteinRendererBDP::CreateCutPlanesTexture( unsigned int idxRS)
 
     // texture generation
     glBindTexture( GL_TEXTURE_2D, this->cutPlanesTexture[idxRS]);
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[idxRS], this->cutPlanesTexHeight[idxRS], 0, GL_RGB, GL_FLOAT, 
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB32F, this->cutPlanesTexWidth[idxRS], this->cutPlanesTexHeight[idxRS], 0, GL_RGB, GL_FLOAT,
             this->cutPlanesTexData[idxRS].PeekElements());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -4187,7 +4211,7 @@ void ProteinRendererBDP::CreateSingularityTextures()
     time_t t = clock();
 */
     unsigned int cnt1, cnt2, cntRS;
-    
+
     // delete old singularity textures
     for( cnt1 = 0; cnt1 < this->singularityTexture.size(); ++cnt1 )
     {
@@ -4209,14 +4233,14 @@ void ProteinRendererBDP::CreateSingularityTextures()
     // resize singularity texture dimension arrays
     this->singTexWidth.resize( this->reducedSurface.size());
     this->singTexHeight.resize( this->reducedSurface.size());
-    
+
     // get maximum texture size
     GLint texSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-        
+
     // TODO: compute proper maximum number of cutting probes
     unsigned int numProbes = 16;
-    
+
     for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS )
     {
         // set width and height of texture
@@ -4309,7 +4333,7 @@ void ProteinRendererBDP::CreateSingularityTexturesSimple()
     time_t t = clock();
 */
     unsigned int cnt1, cnt2, cntRS;
-    
+
     // delete old singularity textures
     for( cnt1 = 0; cnt1 < this->singularityTexture.size(); ++cnt1 )
     {
@@ -4331,14 +4355,14 @@ void ProteinRendererBDP::CreateSingularityTexturesSimple()
     // resize singularity texture dimension arrays
     this->singTexWidth.resize( this->simpleRS.size());
     this->singTexHeight.resize( this->simpleRS.size());
-    
+
     // get maximum texture size
     GLint texSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-        
+
     // TODO: compute proper maximum number of cutting probes
     unsigned int numProbes = 16;
-    
+
     for( cntRS = 0; cntRS < this->simpleRS.size(); ++cntRS )
     {
         // set width and height of texture
@@ -4430,7 +4454,7 @@ void ProteinRendererBDP::CreateSingularityTexture( unsigned int idxRS)
     // do nothing if the index is out of bounds
     if( idxRS > this->reducedSurface.size() )
         return;
-    
+
     // check if all arrays have the appropriate size
     if( this->singularityTexture.size() != this->reducedSurface.size() ||
         this->singTexWidth.size() != this->reducedSurface.size() ||
@@ -4440,16 +4464,16 @@ void ProteinRendererBDP::CreateSingularityTexture( unsigned int idxRS)
         CreateSingularityTextures();
         return;
     }
-    
+
     unsigned int cnt1, cnt2;
-    
+
     // delete old singularity texture
     glDeleteTextures( 1, &singularityTexture[idxRS]);
-    
+
     // get maximum texture size
     GLint texSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &texSize);
-        
+
     // TODO: compute proper maximum number of cutting probes
     unsigned int numProbes = 16;
 
@@ -4526,7 +4550,7 @@ void ProteinRendererBDP::CreateSingularityTexture( unsigned int idxRS)
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture( GL_TEXTURE_2D, 0);
-    
+
 }
 
 
@@ -4609,7 +4633,7 @@ void ProteinRendererBDP::RenderAtomsGPU( const CallProteinData *protein, const f
 /*
  * Renders the probe at postion 'm'
  */
-void ProteinRendererBDP::RenderProbe( 
+void ProteinRendererBDP::RenderProbe(
     const vislib::math::Vector<float, 3> m)
 {
     GLUquadricObj *sphere = gluNewQuadric();
@@ -4623,7 +4647,7 @@ void ProteinRendererBDP::RenderProbe(
     glColor4f( 1.0f, 1.0f, 1.0f, 0.6f);
     gluSphere( sphere, probeRadius, 16, 8);
     glPopMatrix();
-    
+
     glDisable( GL_BLEND);
 
 }
@@ -4632,7 +4656,7 @@ void ProteinRendererBDP::RenderProbe(
 /*
  * Renders the probe at postion 'm'
  */
-void ProteinRendererBDP::RenderProbeGPU( 
+void ProteinRendererBDP::RenderProbeGPU(
     const vislib::math::Vector<float, 3> m)
 {
     // set viewport
@@ -4667,78 +4691,6 @@ void ProteinRendererBDP::RenderProbeGPU(
 
 
 /*
- * Fill amino acid color table
- */
-void ProteinRendererBDP::FillAminoAcidColorTable()
-{
-    this->aminoAcidColorTable.Clear();
-    this->aminoAcidColorTable.SetCount( 25);
-    this->aminoAcidColorTable[0].Set( 0.5f, 0.5f, 0.5f);
-    this->aminoAcidColorTable[1].Set( 1.0f, 0.0f, 0.0f);
-    this->aminoAcidColorTable[2].Set( 1.0f, 1.0f, 0.0f);
-    this->aminoAcidColorTable[3].Set( 0.0f, 1.0f, 0.0f);
-    this->aminoAcidColorTable[4].Set( 0.0f, 1.0f, 1.0f);
-    this->aminoAcidColorTable[5].Set( 0.0f, 0.0f, 1.0f);
-    this->aminoAcidColorTable[6].Set( 1.0f, 0.0f, 1.0f);
-    this->aminoAcidColorTable[7].Set( 0.5f, 0.0f, 0.0f);
-    this->aminoAcidColorTable[8].Set( 0.5f, 0.5f, 0.0f);
-    this->aminoAcidColorTable[9].Set( 0.0f, 0.5f, 0.0f);
-    this->aminoAcidColorTable[10].Set( 0.0f, 0.5f, 0.5f);
-    this->aminoAcidColorTable[11].Set( 0.0f, 0.0f, 0.5f);
-    this->aminoAcidColorTable[12].Set( 0.5f, 0.0f, 0.5f);
-    this->aminoAcidColorTable[13].Set( 1.0f, 0.5f, 0.0f);
-    this->aminoAcidColorTable[14].Set( 0.0f, 0.5f, 1.0f);
-    this->aminoAcidColorTable[15].Set( 1.0f, 0.5f, 1.0f);
-    this->aminoAcidColorTable[16].Set( 0.5f, 0.25f, 0.0f);
-    this->aminoAcidColorTable[17].Set( 1.0f, 1.0f, 0.5f);
-    this->aminoAcidColorTable[18].Set( 0.5f, 1.0f, 0.5f);
-    this->aminoAcidColorTable[19].Set( 0.75f, 1.0f, 0.0f);
-    this->aminoAcidColorTable[20].Set( 0.5f, 0.0f, 0.75f);
-    this->aminoAcidColorTable[21].Set( 1.0f, 0.5f, 0.5f);
-    this->aminoAcidColorTable[22].Set( 0.75f, 1.0f, 0.75f);
-    this->aminoAcidColorTable[23].Set( 0.75f, 0.75f, 0.5f);
-    this->aminoAcidColorTable[24].Set( 1.0f, 0.75f, 0.5f);
-}
-
-
-/*
- * protein::ProteinRendererBDP::makeRainbowColorTable
- * Creates a rainbow color table with 'num' entries.
- */
-void ProteinRendererBDP::MakeRainbowColorTable( unsigned int num)
-{
-    unsigned int n = (num/4);
-    // the color table should have a minimum size of 16
-    if( n < 4 )
-        n = 4;
-    this->rainbowColors.clear();
-    float f = 1.0f/float(n);
-    vislib::math::Vector<float,3> color;
-    color.Set( 1.0f, 0.0f, 0.0f);
-    for( unsigned int i = 0; i < n; i++)
-    {
-        color.SetY( vislib::math::Min( color.GetY() + f, 1.0f));
-        rainbowColors.push_back( color);
-    }
-    for( unsigned int i = 0; i < n; i++)
-    {
-        color.SetX( vislib::math::Max( color.GetX() - f, 0.0f));
-        rainbowColors.push_back( color);
-    }
-    for( unsigned int i = 0; i < n; i++)
-    {
-        color.SetZ( vislib::math::Min( color.GetZ() + f, 1.0f));
-        rainbowColors.push_back( color);
-    }
-    for( unsigned int i = 0; i < n; i++)
-    {
-        color.SetY( vislib::math::Max( color.GetY() - f, 0.0f));
-        rainbowColors.push_back( color);
-    }
-}
-
-
-/*
  * returns the color of the atom 'idx' for the current coloring mode
  */
 vislib::math::Vector<float, 3> ProteinRendererBDP::GetProteinAtomColor( unsigned int idx)
@@ -4749,229 +4701,4 @@ vislib::math::Vector<float, 3> ProteinRendererBDP::GetProteinAtomColor( unsigned
         return vislib::math::Vector<float, 3>( 0.5f, 0.5f, 0.5f);
 }
 
-
-/*
- * Make color table for all atoms
- */
-void ProteinRendererBDP::MakeColorTable( const CallProteinData *prot, bool forceRecompute)
-{
-    unsigned int i;
-    unsigned int currentChain, currentAminoAcid, currentAtom, currentSecStruct;
-    unsigned int cntCha, cntRes, cntAto;
-    CallProteinData::Chain chain;
-    vislib::math::Vector<float, 3> color;
-    // if recomputation is forced: clear current color table
-    if( forceRecompute )
-        this->atomColor.clear();
-    // only compute color table if necessary
-    if( this->atomColor.empty() )
-    {
-        this->atomColor.reserve( prot->ProteinAtomCount());
-        if( this->currentColoringMode == ELEMENT )
-        {
-            // resize atom color table
-            this->atomColor.resize( prot->ProteinAtomCount());
-            for( i = 0; i < prot->ProteinAtomCount(); i++ )
-            {
-                this->atomColor[i].SetX( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[0]) / 255.0f);
-                this->atomColor[i].SetY( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[1]) / 255.0f);
-                this->atomColor[i].SetZ( float(prot->AtomTypes()[prot->ProteinAtomData()[i].TypeIndex()].Colour()[2]) / 255.0f);
-            }
-        } // ===== END coloring mode ELEMENT =====
-        else if( this->currentColoringMode == AMINOACID )
-        {
-            // loop over all chains
-            for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-            {
-                chain = prot->ProteinChain( currentChain);
-                // loop over all amino acids in the current chain
-                for( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-                {
-                    // loop over all connections of the current amino acid
-                    for( currentAtom = 0; 
-                         currentAtom < chain.AminoAcid()[currentAminoAcid].AtomCount();
-                         currentAtom++ )
-                    {
-                        i = chain.AminoAcid()[currentAminoAcid].NameIndex()+1;
-                        i = i % (unsigned int)(this->aminoAcidColorTable.Count());
-                        this->atomColor.push_back( this->aminoAcidColorTable[i]);
-                    }
-                }
-            }
-        } // ===== END coloring mode AMINOACID =====
-        else if( this->currentColoringMode == STRUCTURE )
-        {
-            // loop over all chains
-            for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-            {
-                chain = prot->ProteinChain( currentChain);
-                // loop over all secondary structure elements in this chain
-                for( currentSecStruct = 0; 
-                     currentSecStruct < chain.SecondaryStructureCount();
-                     currentSecStruct++ )
-                {
-                    i = chain.SecondaryStructure()[currentSecStruct].AtomCount();
-                    // loop over all atoms in this secondary structure element
-                    for( currentAtom = 0; currentAtom < i; currentAtom++ )
-                    {
-                        if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-                            CallProteinData::SecStructure::TYPE_HELIX )
-                        {
-                            this->atomColor.push_back( vislib::math::Vector<float, 3>( 1.0f, 0.0f, 0.0f));
-                        }
-                        else if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-                            CallProteinData::SecStructure::TYPE_SHEET )
-                        {
-                            this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.0f, 0.0f, 1.0f));
-                        }
-                        else if( chain.SecondaryStructure()[currentSecStruct].Type() ==
-                            CallProteinData::SecStructure::TYPE_TURN )
-                        {
-                            this->atomColor.push_back( vislib::math::Vector<float, 3>( 1.0f, 1.0f, 0.0f));
-                        }
-                        else
-                        {
-                            this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.9f, 0.9f, 0.9f));
-                        }
-                    }
-                }
-            }
-            // add missing atom colors
-            if ( prot->ProteinAtomCount() > this->atomColor.size() )
-            {
-                currentAtom = (unsigned int)this->atomColor.size();
-                for ( ; currentAtom < prot->ProteinAtomCount(); ++currentAtom )
-                {
-                    this->atomColor.push_back( vislib::math::Vector<float, 3>( 0.3f, 0.9f, 0.3f));
-                }
-            }
-        } // ===== END coloring mode STRUCTURE =====
-        else if( this->currentColoringMode == CHAIN_ID )
-        {
-            // loop over all chains
-            for( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ )
-            {
-                chain = prot->ProteinChain( currentChain);
-                // loop over all amino acids in the current chain
-                for( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ )
-                {
-                    // loop over all connections of the current amino acid
-                    for( currentAtom = 0; 
-                         currentAtom < chain.AminoAcid()[currentAminoAcid].AtomCount();
-                         currentAtom++ )
-                    {
-                        i = (currentChain + 1) % (unsigned int)(this->aminoAcidColorTable.Count());
-                        this->atomColor.push_back( this->aminoAcidColorTable[i]);
-                    }
-                }
-            }
-        } // ===== END coloring mode CHAIN_ID =====
-        else if( this->currentColoringMode == VALUE )
-        {
-            vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-            vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-            vislib::math::Vector<float, 3> colMin = this->minValueColor;
-            
-            float min( prot->MinimumTemperatureFactor() );
-            float max( prot->MaximumTemperatureFactor() );
-            float mid( ( max - min)/2.0f + min );
-            float val;
-            
-            for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-            {
-                if( min == max )
-                {
-                    this->atomColor.push_back( colMid);
-                    continue;
-                }
-                
-                val = prot->ProteinAtomData()[i].TempFactor();
-                // below middle value --> blend between min and mid color
-                if( val < mid )
-                {
-                    color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( val - min );
-                    this->atomColor.push_back( color);
-                }
-                // above middle value --> blend between max and mid color
-                else if( val > mid )
-                {
-                    color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( val - mid );
-                    this->atomColor.push_back( color);
-                }
-                // middle value --> assign mid color
-                else
-                {
-                    this->atomColor.push_back( colMid);
-                }
-            }
-        } // ===== END coloring mode VALUE =====
-        else if( this->currentColoringMode == RAINBOW )
-        {
-            for( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
-            {
-                for( cntRes = 0; cntRes < prot->ProteinChain( cntCha).AminoAcidCount(); ++cntRes )
-                {
-                    i = int( ( float( cntRes) / float( prot->ProteinChain( cntCha).AminoAcidCount() ) ) * float( rainbowColors.size() ) ) % rainbowColors.size();
-                    color = this->rainbowColors[i];
-                    for( cntAto = 0;
-                         cntAto < prot->ProteinChain( cntCha).AminoAcid()[cntRes].AtomCount();
-                         ++cntAto )
-                    {
-                        this->atomColor.push_back( color);
-                    }
-                }
-            }
-        } // ===== END coloring mode RAINBOW =====
-        else if ( this->currentColoringMode == CHARGE )
-        {
-            vislib::math::Vector<float, 3> colMax = this->maxValueColor;
-            vislib::math::Vector<float, 3> colMid = this->meanValueColor;
-            vislib::math::Vector<float, 3> colMin = this->minValueColor;
-            
-            float min( prot->MinimumCharge() );
-            float max( prot->MaximumCharge() );
-            float mid( ( max - min)/2.0f + min );
-            float charge;
-            
-            for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-            {
-                if( min == max )
-                {
-                    this->atomColor.push_back( colMid);
-                    continue;
-                }
-                
-                charge = prot->ProteinAtomData()[i].Charge();
-                // below middle value --> blend between min and mid color
-                if( charge < mid )
-                {
-                    color = colMin + ( ( colMid - colMin ) / ( mid - min) ) * ( charge - min );
-                    this->atomColor.push_back( color);
-                }
-                // above middle value --> blend between max and mid color
-                else if( charge > mid )
-                {
-                    color = colMid + ( ( colMax - colMid ) / ( max - mid) ) * ( charge - mid );
-                    this->atomColor.push_back( color);
-                }
-                // middle value --> assign mid color
-                else
-                {
-                    this->atomColor.push_back( colMid);
-                }
-            }
-        } // ===== END coloring mode CHARGE =====
-        else // default case (wrong parameter):
-        {
-            // resize atom color table
-            this->atomColor.resize( prot->ProteinAtomCount());
-            for( i = 0; i < prot->ProteinAtomCount(); i++ )
-            {
-                this->atomColor[i].SetX( 1.0f);
-                this->atomColor[i].SetY( 1.0f);
-                this->atomColor[i].SetZ( 1.0f);
-            }
-        } // ===== END uniform color =====
-    }
-}
 
