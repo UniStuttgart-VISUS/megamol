@@ -14,6 +14,7 @@
 #include "slicing.h"
 #include "CallProteinData.h"
 #include "CallVolumeData.h"
+#include "Color.h"
 #include "MolecularDataCall.h"
 #include "CallFrame.h"
 #include "param/ParamSlot.h"
@@ -68,16 +69,6 @@ namespace protein {
 
 		/** Dtor. */
 		virtual ~ProteinVolumeRenderer(void);
-		
-		enum ColoringMode {
-			ELEMENT   = 0,
-			AMINOACID = 1,
-			STRUCTURE = 2,
-			VALUE     = 3,
-			CHAIN_ID  = 4,
-			RAINBOW   = 5,
-			CHARGE    = 6
-		};
 
 	   /**********************************************************************
 		 * 'get'-functions
@@ -91,7 +82,7 @@ namespace protein {
 	    **********************************************************************/
 
 		/** Set current coloring mode */
-        inline void SetColoringMode( ColoringMode cm) { currentColoringMode = cm; };
+        inline void SetColoringMode( Color::ColoringMode cm) { currentColoringMode = cm; };
 
 	protected:
 		
@@ -177,26 +168,6 @@ namespace protein {
 		*/
 		bool ProcessFrameRequest( megamol::core::Call& call);
 
-		/** fill amino acid color table */
-		void FillAminoAcidColorTable(void);
-		
-		/**
-		 * Creates a rainbow color table with 'num' entries.
-		*
-		 * @param num The number of color entries.
-		*/
-		void MakeRainbowColorTable( unsigned int num);
-		
-		/**
-		 * Make color table for all atoms acoording to the current coloring mode.
-		 * The color table is only computed if it is empty or if the recomputation 
-		 * is forced by parameter.
-		*
-		* @param prot The data interface.
-		 * @param forceRecompute Force recomputation of the color table.
-		*/
-		void MakeColorTable( const CallProteinData *prot, bool forceRecompute = false);
-		
 		/**
          * Create a volume containing all protein atoms.
 		*
@@ -320,7 +291,7 @@ namespace protein {
         vislib::graphics::gl::GLSLShader volRayLengthShader;
 		
 		// current coloring mode
-		ColoringMode currentColoringMode;
+		Color::ColoringMode currentColoringMode;
 		
 		// attribute locations for GLSL-Shader
 		GLint attribLocInParams;

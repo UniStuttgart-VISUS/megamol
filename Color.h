@@ -13,6 +13,7 @@
 
 #include "MolecularDataCall.h"
 #include "CallProteinData.h"
+#include "CallProteinMovementData.h"
 
 namespace megamol {
 namespace protein {
@@ -35,11 +36,12 @@ namespace protein {
             CHAINBOW    = 9,
             AMINOACID   = 10,
             VALUE       = 11,
-            CHAIN_ID    = 12
+            CHAIN_ID    = 12,
+            MOVEMENT    = 13
         };
 
         /**
-         * fill amino acid color table
+         * Fill amino acid color table.
          *
          * @param aminoAcidColorTable The amino acid color table.
          */
@@ -48,7 +50,7 @@ namespace protein {
               &aminoAcidColorTable);
 
         /**
-         * fill amino acid color table
+         * Fill amino acid color table.
          *
          * @param aminoAcidColorTable The amino acid color table.
          */
@@ -108,6 +110,15 @@ namespace protein {
          * mode.
          * The color table is only computed if it is empty or if the
          * recomputation is forced by parameter
+         *
+         * @param prot                The data interface.
+         * @param minValueColor       Color for min value.
+         * @param meanValueColor      Color for mean value.
+         * @param maxValueColor       Color for max value.
+         * @param atomColor           The atom color table.
+         * @param aminoAcidColorTable The amino acid color table.
+         * @param rainbowColors       The rainbow color lookup table.
+         * @param forceRecompute      Force recomputation of the color table.
          */
         static void MakeColorTable( const CallProteinData *prot,
             ColoringMode currentColoringMode,
@@ -119,6 +130,35 @@ namespace protein {
             std::vector<vislib::math::Vector<float,3> > &rainbowColors,
             bool forceRecompute = true);
 
+        /**
+         * Make color table for all atoms acoording to the current coloring
+         * mode.
+         * The color table is only computed if it is empty or if the
+         * recomputation is forced by parameter.
+         *
+         * @param prot                The data interface.
+         * @param currentColoringMode The current coloring mode.
+         * @param colMax              colMax
+         * @param colMid              colMid
+         * @param colMin              colMin
+         * @param col                 col
+         * @param protAtomColorTable  The atom color table.
+         * @param aminoAcidColorTable The amino acid color table.
+         * @param rainbowColors       The rainbow color lookup table.
+         * @param forceRecompute      Force recomputation of the color table.
+         */
+        static void MakeColorTable( const CallProteinMovementData *prot, 
+            ColoringMode currentColoringMode,
+            vislib::math::Vector<int, 3> colMax,
+            vislib::math::Vector<int, 3> colMid,
+            vislib::math::Vector<int, 3> colMin,
+            vislib::math::Vector<int, 3> col,
+            vislib::Array<unsigned char> &protAtomColorTable,
+            vislib::Array<vislib::math::Vector<unsigned char, 3> > 
+              &aminoAcidColorTable,
+            std::vector<vislib::math::Vector<float,3> > &rainbowColors,
+            bool forceRecompute = false);
+    
          /**
          * Creates a rainbow color table with 'num' entries.
          *

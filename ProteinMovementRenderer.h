@@ -13,6 +13,7 @@
 
 #include "CallProteinMovementData.h"
 #include "CallFrame.h"
+#include "Color.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
@@ -73,7 +74,7 @@ namespace protein {
             BALL_AND_STICK    = 2
         };
 
-        enum ColoringMode
+        /*enum ColoringMode
         {
             ELEMENT   = 0,
             AMINOACID = 1,
@@ -81,7 +82,7 @@ namespace protein {
             CHAIN_ID  = 3,
             RAINBOW   = 4,
             MOVEMENT  = 5
-        };
+        };*/
 
         enum ArrowColoringMode
         {
@@ -108,7 +109,7 @@ namespace protein {
         inline void SetRenderMode( RenderMode rm) { currentRenderMode = rm; RecomputeAll(); };
 
         /** Set current coloring mode */
-        inline void SetColoringMode( ColoringMode cm) { currentColoringMode = cm; RecomputeAll(); };
+        inline void SetColoringMode( Color::ColoringMode cm) { currentColoringMode = cm; RecomputeAll(); };
 
         /** Set radius for stick rendering mode */
         inline void SetRadiusStick( const float rad ) { radiusStick = rad; RecomputeAll(); };
@@ -203,14 +204,14 @@ namespace protein {
         void RecomputeAll(void);
     
         /** fill amino acid color table */
-        void FillAminoAcidColorTable(void);
+        //void FillAminoAcidColorTable(void);
         
         /**
          * Creates a rainbow color table with 'num' entries.
          *
          * @param num The number of color entries.
          */
-        void MakeRainbowColorTable( unsigned int num);
+        //void MakeRainbowColorTable( unsigned int num);
         
         /**
          * Make color table for all atoms acoording to the current coloring mode.
@@ -220,7 +221,7 @@ namespace protein {
          * @param prot The data interface.
          * @param forceRecompute Force recomputation of the color table.
          */
-        void MakeColorTable( const CallProteinMovementData *prot, bool forceRecompute = false);
+        //void MakeColorTable( const CallProteinMovementData *prot, bool forceRecompute = false);
 
         /**********************************************************************
          * variables
@@ -253,7 +254,7 @@ namespace protein {
         // current render mode
         RenderMode currentRenderMode;
         // current coloring mode
-        ColoringMode currentColoringMode;
+        Color::ColoringMode currentColoringMode;
         
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;
