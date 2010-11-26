@@ -239,6 +239,26 @@ vislib::sys::RegistrySerialiser::~RegistrySerialiser(void) {
 
 
 /*
+ * vislib::sys::RegistrySerialiser::ClearKey
+ */
+void vislib::sys::RegistrySerialiser::ClearKey(const bool includeValues) {
+    RegistryKey key(this->keyStack.Top());
+    
+    Array<StringW> keys = key.GetSubKeysW();
+    for (SIZE_T i = 0; i < keys.Count(); i++) {
+        key.DeleteSubKey(keys[i]);
+    }
+
+    if (includeValues) {
+        Array<StringW> values = key.GetValueNamesW();
+        for (SIZE_T i = 0; i < values.Count(); i++) {
+            key.DeleteValue(values[i]);
+        }
+    }
+}
+
+
+/*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
 void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue, 

@@ -78,6 +78,15 @@ namespace sys {
         /** Dtor. */
         ~RegistrySerialiser(void);
 
+        /**
+         * Removes all subkeys of the key that is currently on top of the
+         * key stack.
+         * 
+         * @param includeValues If true, the values of the key currently on
+         *                      top of the key stack will also be deleted.
+         */
+        void ClearKey(const bool includeValues = false);
+
         virtual void Deserialise(bool& outValue, 
             const char *name = NULL);
 
