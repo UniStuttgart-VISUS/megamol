@@ -12,13 +12,14 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MolecularDataCall.h"
+#include "Color.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"
 
-#include "Color.h"
+
 
 namespace megamol {
 namespace protein {
@@ -226,7 +227,7 @@ namespace protein {
         vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
         /** The atom color table for rendering */
-        vislib::Array<vislib::math::Vector<float, 3> > atomColorTable;
+        vislib::Array<float> atomColorTable;
 
         /** The current rendering mode */
         RenderMode currentRenderMode;

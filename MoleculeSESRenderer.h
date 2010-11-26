@@ -165,7 +165,8 @@ namespace protein {
          * @param col Vector containing the color as float [0.0]..[1.0] .
          * @return The coded color value.
          */
-        float CodeColor( const vislib::math::Vector<float, 3> &col) const;
+        //float CodeColor( const vislib::math::Vector<float, 3> &col) const;
+        float CodeColor( const float *col) const;
 
         /**
          * Decode a coded color to the original RGB-color.
@@ -350,7 +351,7 @@ namespace protein {
         // radius of the probe atom
         float probeRadius;
 
-        vislib::Array<vislib::math::Vector<float, 3> > atomColorTable;
+        vislib::Array<float> atomColorTable;
         unsigned int currentArray;
 
         /** 'true' if the data for the current render mode is computed, 'false' otherwise */

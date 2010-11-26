@@ -315,7 +315,7 @@ namespace protein {
         vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
         /** The atom color table for rendering */
-        vislib::Array<vislib::math::Vector<float, 3> > atomColorTable;
+        vislib::Array<float> atomColorTable;
 
         // the Id of the current frame (for dynamic data)
         unsigned int currentFrameId;
