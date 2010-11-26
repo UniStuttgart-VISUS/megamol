@@ -79,7 +79,7 @@ namespace protein {
             vislib::TString midGradColor,
             vislib::TString maxGradColor,
             ColoringMode currentColoringMode,
-            vislib::Array<vislib::math::Vector<float, 3> > &atomColorTable,
+            vislib::Array<float> &atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
             vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
             bool forceRecompute = false);

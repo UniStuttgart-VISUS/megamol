@@ -11,6 +11,7 @@
 
 #include "SimpleMoleculeRenderer.h"
 #include "CoreInstance.h"
+#include "Color.h"
 #include "utility/ShaderSourceFactory.h"
 #include "utility/ColourParser.h"
 #include "param/StringParam.h"
@@ -30,7 +31,7 @@
 #include <glh/glh_genext.h>
 #include <omp.h>
 
-#include "Color.h"
+
 
 using namespace megamol;
 using namespace megamol::core;
@@ -342,7 +343,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     this->UpdateParameters( mol);
 
     // recompute color table, if necessary
-    if( this->atomColorTable.Count() < mol->AtomCount() ) {
+    if( this->atomColorTable.Count()/3 < mol->AtomCount() ) {
 
         Color::MakeColorTable(mol,
           this->minGradColorParam.Param<param::StringParam>()->Value(),
@@ -366,9 +367,9 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
             aidx = mol->Residues()[ri]->FirstAtomIndex();
             acnt = aidx + mol->Residues()[ri]->AtomCount();
             for( unsigned int ai = aidx; ai < acnt; ++ai ) {
-                this->atomColorTable[ai][0] = r;
-                this->atomColorTable[ai][1] = g;
-                this->atomColorTable[ai][2] = b;
+                this->atomColorTable[3*ai+0] = r;
+                this->atomColorTable[3*ai+1] = g;
+                this->atomColorTable[3*ai+2] = b;
             }
         }
     }
@@ -430,7 +431,7 @@ void SimpleMoleculeRenderer::RenderLines( const MolecularDataCall *mol, const fl
     glEnableClientState(GL_COLOR_ARRAY);
     // set vertex and color pointers and draw them
     glVertexPointer( 3, GL_FLOAT, 0, atomPos);
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements()); 
     glDrawArrays( GL_POINTS, 0, mol->AtomCount());
     // disable sphere shader
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -444,16 +445,10 @@ void SimpleMoleculeRenderer::RenderLines( const MolecularDataCall *mol, const fl
         atomIdx0 = mol->Connection()[2*cnt+0];
         atomIdx1 = mol->Connection()[2*cnt+1];
         // set colors and vertices of first atom
-        //glColor3fv( &this->atomColorTable[atomIdx0*3]);
-        glColor3f( this->atomColorTable[atomIdx0][0],
-                   this->atomColorTable[atomIdx0][1],
-                   this->atomColorTable[atomIdx0][2]);
+        glColor3fv( &this->atomColorTable[atomIdx0*3]);
         glVertex3f( atomPos[atomIdx0*3+0], atomPos[atomIdx0*3+1], atomPos[atomIdx0*3+2]);
         // set colors and vertices of second atom
-        //glColor3fv( &this->atomColorTable[atomIdx1*3]);
-        glColor3f( this->atomColorTable[atomIdx1][0],
-                   this->atomColorTable[atomIdx1][1],
-                   this->atomColorTable[atomIdx1][2]);
+        glColor3fv( &this->atomColorTable[atomIdx1*3]);
         glVertex3f( atomPos[atomIdx1*3+0], atomPos[atomIdx1*3+1], atomPos[atomIdx1*3+2]);
     }
     glEnd(); // GL_LINES
@@ -520,13 +515,13 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
         this->quatCylinders[4*cnt+2] = quatC.GetZ();
         this->quatCylinders[4*cnt+3] = quatC.GetW();
 
-        this->color1Cylinders[3*cnt+0] = this->atomColorTable[idx0][0];
-        this->color1Cylinders[3*cnt+1] = this->atomColorTable[idx0][1];
-        this->color1Cylinders[3*cnt+2] = this->atomColorTable[idx0][2];
+        this->color1Cylinders[3*cnt+0] = this->atomColorTable[3*idx0+0];
+        this->color1Cylinders[3*cnt+1] = this->atomColorTable[3*idx0+1];
+        this->color1Cylinders[3*cnt+2] = this->atomColorTable[3*idx0+2];
 
-        this->color2Cylinders[3*cnt+0] = this->atomColorTable[idx1][0];
-        this->color2Cylinders[3*cnt+1] = this->atomColorTable[idx1][1];
-        this->color2Cylinders[3*cnt+2] = this->atomColorTable[idx1][2];
+        this->color2Cylinders[3*cnt+0] = this->atomColorTable[3*idx1+0];
+        this->color2Cylinders[3*cnt+1] = this->atomColorTable[3*idx1+1];
+        this->color2Cylinders[3*cnt+2] = this->atomColorTable[3*idx1+2];
 
         this->vertCylinders[4*cnt+0] = position.X();
         this->vertCylinders[4*cnt+1] = position.Y();
@@ -558,7 +553,7 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements()); 
     glDrawArrays( GL_POINTS, 0, mol->AtomCount());
     // disable sphere shader
     this->sphereShader.Disable();
@@ -660,13 +655,13 @@ void SimpleMoleculeRenderer::RenderBallAndStick( const MolecularDataCall *mol, c
         this->quatCylinders[4*cnt+2] = quatC.GetZ();
         this->quatCylinders[4*cnt+3] = quatC.GetW();
 
-        this->color1Cylinders[3*cnt+0] = this->atomColorTable[idx0][0];
-        this->color1Cylinders[3*cnt+1] = this->atomColorTable[idx0][1];
-        this->color1Cylinders[3*cnt+2] = this->atomColorTable[idx0][2];
+        this->color1Cylinders[3*cnt+0] = this->atomColorTable[3*idx0+0];
+        this->color1Cylinders[3*cnt+1] = this->atomColorTable[3*idx0+1];
+        this->color1Cylinders[3*cnt+2] = this->atomColorTable[3*idx0+2];
 
-        this->color2Cylinders[3*cnt+0] = this->atomColorTable[idx1][0];
-        this->color2Cylinders[3*cnt+1] = this->atomColorTable[idx1][1];
-        this->color2Cylinders[3*cnt+2] = this->atomColorTable[idx1][2];
+        this->color2Cylinders[3*cnt+0] = this->atomColorTable[3*idx1+0];
+        this->color2Cylinders[3*cnt+1] = this->atomColorTable[3*idx1+1];
+        this->color2Cylinders[3*cnt+2] = this->atomColorTable[3*idx1+2];
 
         this->vertCylinders[4*cnt+0] = position.X();
         this->vertCylinders[4*cnt+1] = position.Y();
@@ -698,7 +693,7 @@ void SimpleMoleculeRenderer::RenderBallAndStick( const MolecularDataCall *mol, c
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements()); 
     glDrawArrays( GL_POINTS, 0, mol->AtomCount());
     // disable sphere shader
     this->sphereShader.Disable();
@@ -783,7 +778,7 @@ void SimpleMoleculeRenderer::RenderSpacefilling( const MolecularDataCall *mol, c
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements()); 
     glDrawArrays( GL_POINTS, 0, mol->AtomCount());
     // disable sphere shader
     this->sphereShader.Disable();
