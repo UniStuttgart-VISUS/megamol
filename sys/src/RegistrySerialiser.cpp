@@ -186,19 +186,7 @@ namespace sys {
  */
 vislib::sys::RegistrySerialiser::RegistrySerialiser(const char *subKey, 
         HKEY hKey) : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
-    DWORD createDisp = 0;
-    LONG result = ::RegCreateKeyExA(hKey, subKey, 0, NULL, 
-        REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->hBaseKey, 
-        &createDisp);
-
-    if (result != ERROR_SUCCESS) {
-        // Note: This is safe because not resources that must be deleted in the
-        // dtor have been allocated.
-        throw SystemException(result, __FILE__, __LINE__);
-    }
-
-    this->keyStack.Push(this->hBaseKey);
-    ASSERT(this->keyStack.Top() == this->hBaseKey);
+    this->initialise(subKey, hKey);
 }
 
 
@@ -207,19 +195,27 @@ vislib::sys::RegistrySerialiser::RegistrySerialiser(const char *subKey,
  */
 vislib::sys::RegistrySerialiser::RegistrySerialiser(const wchar_t *subKey, 
         HKEY hKey) : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
-    DWORD createDisp = 0;
-    LONG result = ::RegCreateKeyExW(hKey, subKey, 0, NULL, 
-        REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->hBaseKey, 
-        &createDisp);
+    this->initialise(subKey, hKey);
+}
 
-    if (result != ERROR_SUCCESS) {
-        // Note: This is safe because not resources that must be deleted in the
-        // dtor have been allocated.
-        throw SystemException(result, __FILE__, __LINE__);
-    }
 
-    this->keyStack.Push(this->hBaseKey);
-    ASSERT(this->keyStack.Top() == this->hBaseKey);
+/*
+ * vislib::sys::RegistrySerialiser::RegistrySerialiser
+ */
+vislib::sys::RegistrySerialiser::RegistrySerialiser(
+        const vislib::StringA& subKey, HKEY hKey) 
+        : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
+    this->initialise(subKey, hKey);
+}
+
+
+/*
+ * vislib::sys::RegistrySerialiser::RegistrySerialiser
+ */
+vislib::sys::RegistrySerialiser::RegistrySerialiser(
+        const vislib::StringW& subKey, HKEY hKey) 
+        : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
+    this->initialise(subKey, hKey);
 }
 
 
@@ -894,6 +890,56 @@ void vislib::sys::RegistrySerialiser::closeAllRegistry(void) {
     }
 
     this->hBaseKey = NULL;  // Must have been bottom element in stakc.
+}
+
+
+/*
+ * vislib::sys::RegistrySerialiser::initialise
+ */
+void vislib::sys::RegistrySerialiser::initialise(const char *subKey, 
+        HKEY hKey) {
+    // Assert initialisations that ctor must make in initialisation list:
+    ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
+    ASSERT(this->hBaseKey == NULL);
+
+    DWORD createDisp = 0;
+    LONG result = ::RegCreateKeyExA(hKey, subKey, 0, NULL, 
+        REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->hBaseKey, 
+        &createDisp);
+
+    if (result != ERROR_SUCCESS) {
+        // Note: This is safe because not resources that must be deleted in the
+        // dtor have been allocated.
+        throw SystemException(result, __FILE__, __LINE__);
+    }
+
+    this->keyStack.Push(this->hBaseKey);
+    ASSERT(this->keyStack.Top() == this->hBaseKey);
+}
+
+
+/* 
+ * vislib::sys::RegistrySerialiser::initialise
+ */
+void vislib::sys::RegistrySerialiser::initialise(const wchar_t *subKey, 
+        HKEY hKey) {
+    // Assert initialisations that ctor must make in initialisation list:
+    ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
+    ASSERT(this->hBaseKey == NULL);
+
+    DWORD createDisp = 0;
+    LONG result = ::RegCreateKeyExW(hKey, subKey, 0, NULL, 
+        REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->hBaseKey, 
+        &createDisp);
+
+    if (result != ERROR_SUCCESS) {
+        // Note: This is safe because not resources that must be deleted in the
+        // dtor have been allocated.
+        throw SystemException(result, __FILE__, __LINE__);
+    }
+
+    this->keyStack.Push(this->hBaseKey);
+    ASSERT(this->keyStack.Top() == this->hBaseKey);
 }
 
 #endif /* _WIN32 */

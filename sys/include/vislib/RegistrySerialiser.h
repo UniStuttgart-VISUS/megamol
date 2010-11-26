@@ -19,6 +19,7 @@
 #include <windows.h>
 
 #include "vislib/assert.h"
+#include "vislib/RegistryKey.h"
 #include "vislib/Serialiser.h"
 #include "vislib/Stack.h"
 #include "vislib/String.h"
@@ -30,7 +31,7 @@ namespace sys {
 
 
     /**
-     * TODO: comment class
+     * Serialises the given object into the Windows registry.
      *
      * TODO: Think about a more general serialisation concept.
      */
@@ -47,6 +48,18 @@ namespace sys {
          * TODO: documentation
          */
         RegistrySerialiser(const wchar_t *subKey, 
+            HKEY hKey = HKEY_CURRENT_USER);
+
+        /**
+         * TODO: documentation
+         */
+        RegistrySerialiser(const vislib::StringA& subKey, 
+            HKEY hKey = HKEY_CURRENT_USER);
+
+        /**
+         * TODO: documentation
+         */
+        RegistrySerialiser(const vislib::StringW& subKey, 
             HKEY hKey = HKEY_CURRENT_USER);
 
         /**
@@ -160,9 +173,37 @@ namespace sys {
          */
         void PopKey(const bool isSilent = false);
 
+        /**
+         * Add a new registry with the specified name to the stack.
+         *
+         * @param name The name of the new key.
+         */
         void PushKey(const char *name);
 
+        /**
+         * Add a new registry with the specified name to the stack.
+         *
+         * @param name The name of the new key.
+         */
         void PushKey(const wchar_t *name);
+
+        /**
+         * Add a new registry with the specified name to the stack.
+         *
+         * @param name The name of the new key.
+         */
+        inline void PushKey(const StringA& name) {
+            this->PushKey(name.PeekBuffer());
+        }
+
+        /**
+         * Add a new registry with the specified name to the stack.
+         *
+         * @param name The name of the new key.
+         */
+        inline void PushKey(const StringW& name) {
+            this->PushKey(name.PeekBuffer());
+        }
 
         virtual void Serialise(const bool value, 
             const char *name = NULL);
@@ -350,6 +391,26 @@ namespace sys {
         inline void deserialiseUnsignedAsDword(T& outValue, const C *name) {
             this->deserialiseAsDword<T, UINT32, C>(outValue, name);
         }
+
+        /**
+         * Initialises the class. This should be called from the ctors.
+         *
+         * @param subKey Name of the subkey to write to.
+         * @param hKey   Key to create the subkey at.
+         *
+         * @throws SystemException In case of an error.
+         */
+        void initialise(const char *subKey, HKEY hKey);
+
+        /**
+         * Initialises the class. This should be called from the ctors.
+         *
+         * @param subKey Name of the subkey to write to.
+         * @param hKey   Key to create the subkey at.
+         *
+         * @throws SystemException In case of an error.
+         */
+        void initialise(const wchar_t *subKey, HKEY hKey);
 
         /**
          * This is a simplified version of serialiseAsDword0 which assumes that
