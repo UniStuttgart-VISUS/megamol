@@ -397,13 +397,13 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
     // make the atom color table if necessary
     Color::MakeColorTable ( protein,
         this->currentColoringMode,
+        this->protAtomColorTable,
+        this->aminoAcidColorTable,
+        this->rainbowColors,
         this->colMax,
         this->colMid,
         this->colMin,
-        this->col,
-        this->protAtomColorTable,
-        this->aminoAcidColorTable,
-        this->rainbowColors );
+        this->col);
 
     glEnable ( GL_DEPTH_TEST );
     glEnable ( GL_LIGHTING );
@@ -496,7 +496,7 @@ bool protein::ProteinMovementRenderer::Render ( megamol::core::Call& call )
         if( this->arrowColorMode == UNIFORM_COLOR ) {
             glColor3f( 0.0f, 1.0f, 1.0f);
         } else if( this->arrowColorMode == PROTEIN_COLOR ) {
-            glColor3ubv( this->GetProteinAtomColor( cnt));
+            glColor3fv( this->GetProteinAtomColor( cnt));
         } else {
 			float maxVal( protein->GetMaxMovementDistance() );
 			float mid( maxVal/2.0f );
@@ -562,7 +562,7 @@ void protein::ProteinMovementRenderer::RenderLines ( const CallProteinMovementDa
             // draw atoms as points
             glBegin ( GL_POINTS );
             for ( i = 0; i < prot->ProteinAtomCount(); i++ ) {
-                glColor3ubv ( this->GetProteinAtomColor ( i ) );
+                glColor3fv ( this->GetProteinAtomColor ( i ) );
                 glVertex3f ( protAtomPos[i*3+0], protAtomPos[i*3+1], protAtomPos[i*3+2] );
             }
             glEnd(); // GL_POINTS
@@ -583,9 +583,9 @@ void protein::ProteinMovementRenderer::RenderLines ( const CallProteinMovementDa
                     first += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
                     second = chain.AminoAcid() [currentAminoAcid].Connectivity() [currentConnection].Second();
                     second += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-                    glColor3ubv( this->GetProteinAtomColor( first ) );
+                    glColor3fv( this->GetProteinAtomColor( first ) );
                     glVertex3fv( &protAtomPos[first*3]);
-                    glColor3ubv( this->GetProteinAtomColor( second ) );
+                    glColor3fv( this->GetProteinAtomColor( second ) );
                     glVertex3fv( &protAtomPos[second*3]);
                 }
                 // try to make the connection between this amino acid and its predecessor
@@ -597,9 +597,9 @@ void protein::ProteinMovementRenderer::RenderLines ( const CallProteinMovementDa
                     first += chain.AminoAcid() [currentAminoAcid-1].FirstAtomIndex();
                     second = chain.AminoAcid() [currentAminoAcid].NIndex();
                     second += chain.AminoAcid() [currentAminoAcid].FirstAtomIndex();
-                    glColor3ubv( this->GetProteinAtomColor ( first ) );
+                    glColor3fv( this->GetProteinAtomColor ( first ) );
                     glVertex3fv( &protAtomPos[first*3]);
-                    glColor3ubv( this->GetProteinAtomColor ( second ) );
+                    glColor3fv( this->GetProteinAtomColor ( second ) );
                     glVertex3fv( &protAtomPos[second*3+0]);
                 }
             }
@@ -631,8 +631,8 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
         unsigned int i1;
         unsigned int first, second;
         unsigned int currentChain, currentAminoAcid, currentConnection;
-        const unsigned char *color1;
-        const unsigned char *color2;
+        const float *color1;
+        const float *color2;
 
         // -----------------------------
         // -- computation for spheres --
@@ -718,13 +718,13 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
                     this->quatCylinderStickRay.Add ( quatC.GetZ() );
                     this->quatCylinderStickRay.Add ( quatC.GetW() );
 
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[0] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[1] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[2] ) ) /255.0f );
+                    this->color1CylinderStickRay.Add ( color1[0] );
+                    this->color1CylinderStickRay.Add ( color1[1] );
+                    this->color1CylinderStickRay.Add (  color1[2] );
 
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[0] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[1] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[2] ) ) /255.0f );
+                    this->color2CylinderStickRay.Add ( color2[0] );
+                    this->color2CylinderStickRay.Add ( color2[1] );
+                    this->color2CylinderStickRay.Add ( color2[2] );
 
                     this->vertCylinderStickRay.Add ( position.GetX() );
                     this->vertCylinderStickRay.Add ( position.GetY() );
@@ -774,13 +774,13 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
                     this->quatCylinderStickRay.Add ( quatC.GetZ() );
                     this->quatCylinderStickRay.Add ( quatC.GetW() );
 
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[0] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[1] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[2] ) ) /255.0f );
+                    this->color1CylinderStickRay.Add ( color1[0]);
+                    this->color1CylinderStickRay.Add ( color1[1]);
+                    this->color1CylinderStickRay.Add ( color1[2]);
 
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[0] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[1] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[2] ) ) /255.0f );
+                    this->color2CylinderStickRay.Add ( color2[0] );
+                    this->color2CylinderStickRay.Add ( color2[1] );
+                    this->color2CylinderStickRay.Add ( color2[2] );
 
                     this->vertCylinderStickRay.Add ( position.GetX() );
                     this->vertCylinderStickRay.Add ( position.GetY() );
@@ -820,7 +820,7 @@ void protein::ProteinMovementRenderer::RenderStickRaycasting (
     glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
     // set vertex and color pointers and draw them
     glVertexPointer ( 4, GL_FLOAT, 0, this->vertSphereStickRay.PeekElements() );
-    glColorPointer ( 3, GL_UNSIGNED_BYTE, 0, this->colorSphereStickRay.PeekElements() );
+    glColorPointer ( 3, GL_FLOAT, 0, this->colorSphereStickRay.PeekElements() );
     glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertSphereStickRay.Count() /4 ) );
     // disable sphere shader
     this->sphereShader.Disable();
@@ -872,8 +872,8 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
         unsigned int i1;
         unsigned int first, second;
         unsigned int currentChain, currentAminoAcid, currentConnection;
-        const unsigned char *color1;
-        const unsigned char *color2;
+        const float *color1;
+        const float *color2;
 
         // -----------------------------
         // -- computation for spheres --
@@ -959,13 +959,13 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
                     this->quatCylinderStickRay.Add ( quatC.GetZ() );
                     this->quatCylinderStickRay.Add ( quatC.GetW() );
 
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[0] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[1] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[2] ) ) /255.0f );
+                    this->color1CylinderStickRay.Add ( color1[0]);
+                    this->color1CylinderStickRay.Add ( color1[1]);
+                    this->color1CylinderStickRay.Add ( color1[2]);
 
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[0] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[1] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[2] ) ) /255.0f );
+                    this->color2CylinderStickRay.Add ( color2[0]);
+                    this->color2CylinderStickRay.Add ( color2[1]);
+                    this->color2CylinderStickRay.Add ( color2[2]);
 
                     this->vertCylinderStickRay.Add ( position.GetX() );
                     this->vertCylinderStickRay.Add ( position.GetY() );
@@ -1014,13 +1014,13 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
                     this->quatCylinderStickRay.Add ( quatC.GetZ() );
                     this->quatCylinderStickRay.Add ( quatC.GetW() );
 
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[0] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[1] ) ) /255.0f );
-                    this->color1CylinderStickRay.Add ( float ( int ( color1[2] ) ) /255.0f );
+                    this->color1CylinderStickRay.Add (color1[0]);
+                    this->color1CylinderStickRay.Add (color1[1]);
+                    this->color1CylinderStickRay.Add (color1[2]);
 
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[0] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[1] ) ) /255.0f );
-                    this->color2CylinderStickRay.Add ( float ( int ( color2[2] ) ) /255.0f );
+                    this->color2CylinderStickRay.Add (color2[0]);
+                    this->color2CylinderStickRay.Add (color2[1]);
+                    this->color2CylinderStickRay.Add (color2[2]);
 
                     this->vertCylinderStickRay.Add ( position.GetX() );
                     this->vertCylinderStickRay.Add ( position.GetY() );
@@ -1059,7 +1059,7 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
     glUniform3fvARB ( this->sphereShader.ParameterLocation ( "camUp" ), 1, cameraInfo->Up().PeekComponents() );
     // set vertex and color pointers and draw them
     glVertexPointer ( 4, GL_FLOAT, 0, this->vertSphereStickRay.PeekElements() );
-    glColorPointer ( 3, GL_UNSIGNED_BYTE, 0, this->colorSphereStickRay.PeekElements() );
+    glColorPointer ( 3, GL_FLOAT, 0, this->colorSphereStickRay.PeekElements() );
     glDrawArrays ( GL_POINTS, 0, ( unsigned int ) ( this->vertSphereStickRay.Count() /4 ) );
     // disable sphere shader
     glDisableClientState ( GL_COLOR_ARRAY );
@@ -1099,175 +1099,6 @@ void protein::ProteinMovementRenderer::RenderBallAndStick (
     this->cylinderShader.Disable();
 
 }
-
-
-/*
- * protein::ProteinMovementRenderer::MakeColorTable
- */
- /*
-void protein::ProteinMovementRenderer::MakeColorTable( const CallProteinMovementData *prot, bool forceRecompute )
-{
-    unsigned int i;
-    unsigned int currentChain, currentAminoAcid, currentAtom, currentSecStruct;
-    unsigned int cntCha, cntRes, cntAto;
-    protein::CallProteinMovementData::Chain chain;
-    vislib::math::Vector<float, 3> color;
-    // if recomputation is forced: clear current color table
-    if ( forceRecompute ) {
-        this->protAtomColorTable.Clear();
-    }
-    // reserve memory for all atoms
-    this->protAtomColorTable.AssertCapacity( prot->ProteinAtomCount()*3 );
-    // only compute color table if necessary
-    if ( this->protAtomColorTable.IsEmpty() ) {
-        if ( this->currentColoringMode == ELEMENT ) {
-            for ( i = 0; i < prot->ProteinAtomCount(); i++ )
-            {
-                this->protAtomColorTable.Add ( prot->AtomTypes() [prot->ProteinAtomData() [i].TypeIndex() ].Colour() [0] );
-                this->protAtomColorTable.Add ( prot->AtomTypes() [prot->ProteinAtomData() [i].TypeIndex() ].Colour() [1] );
-                this->protAtomColorTable.Add ( prot->AtomTypes() [prot->ProteinAtomData() [i].TypeIndex() ].Colour() [2] );
-            }
-            // ... END coloring mode ELEMENT
-        } else if ( this->currentColoringMode == AMINOACID ) {
-            // loop over all chains
-            for ( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ ) {
-                chain = prot->ProteinChain ( currentChain );
-                // loop over all amino acids in the current chain
-                for ( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ ) {
-                    // loop over all connections of the current amino acid
-                    for ( currentAtom = 0;
-                            currentAtom < chain.AminoAcid() [currentAminoAcid].AtomCount();
-                            currentAtom++ ) {
-                        i = chain.AminoAcid() [currentAminoAcid].NameIndex() +1;
-                        i = i % ( unsigned int ) ( this->aminoAcidColorTable.Count() );
-                        this->protAtomColorTable.Add (
-                            this->aminoAcidColorTable[i].GetX() );
-                        this->protAtomColorTable.Add (
-                            this->aminoAcidColorTable[i].GetY() );
-                        this->protAtomColorTable.Add (
-                            this->aminoAcidColorTable[i].GetZ() );
-                    }
-                }
-            }
-            // ... END coloring mode AMINOACID
-        } else if ( this->currentColoringMode == STRUCTURE ) {
-            // loop over all chains
-            for ( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ ) {
-                chain = prot->ProteinChain ( currentChain );
-                // loop over all secondary structure elements in this chain
-                for ( currentSecStruct = 0;
-                        currentSecStruct < chain.SecondaryStructureCount();
-                        currentSecStruct++ ) {
-                    i = chain.SecondaryStructure() [currentSecStruct].AtomCount();
-                    // loop over all atoms in this secondary structure element
-                    for ( currentAtom = 0; currentAtom < i; currentAtom++ ) {
-                        if ( chain.SecondaryStructure() [currentSecStruct].Type() ==
-                                protein::CallProteinMovementData::SecStructure::TYPE_HELIX ) {
-                            this->protAtomColorTable.Add ( 255 );
-                            this->protAtomColorTable.Add ( 0 );
-                            this->protAtomColorTable.Add ( 0 );
-                        } else if ( chain.SecondaryStructure() [currentSecStruct].Type() ==
-                                  protein::CallProteinMovementData::SecStructure::TYPE_SHEET ) {
-                            this->protAtomColorTable.Add ( 0 );
-                            this->protAtomColorTable.Add ( 0 );
-                            this->protAtomColorTable.Add ( 255 );
-                        } else if ( chain.SecondaryStructure() [currentSecStruct].Type() ==
-                                  protein::CallProteinMovementData::SecStructure::TYPE_TURN ) {
-                            this->protAtomColorTable.Add ( 255 );
-                            this->protAtomColorTable.Add ( 255 );
-                            this->protAtomColorTable.Add ( 0 );
-                        } else {
-                            this->protAtomColorTable.Add ( 230 );
-                            this->protAtomColorTable.Add ( 230 );
-                            this->protAtomColorTable.Add ( 230 );
-                        }
-                    }
-                }
-            }
-            // add missing atom colors
-            if ( prot->ProteinAtomCount() > ( this->protAtomColorTable.Count() / 3 ) ) {
-                currentAtom = this->protAtomColorTable.Count() / 3;
-                for ( ; currentAtom < prot->ProteinAtomCount(); ++currentAtom ) {
-                    this->protAtomColorTable.Add ( 200 );
-                    this->protAtomColorTable.Add ( 200 );
-                    this->protAtomColorTable.Add ( 200 );
-                }
-            }
-            // ... END coloring mode STRUCTURE
-        } else if ( this->currentColoringMode == CHAIN_ID ) {
-            // loop over all chains
-            for ( currentChain = 0; currentChain < prot->ProteinChainCount(); currentChain++ ) {
-                chain = prot->ProteinChain ( currentChain );
-                // loop over all amino acids in the current chain
-                for ( currentAminoAcid = 0; currentAminoAcid < chain.AminoAcidCount(); currentAminoAcid++ ) {
-                    // loop over all connections of the current amino acid
-                    for ( currentAtom = 0;
-                            currentAtom < chain.AminoAcid() [currentAminoAcid].AtomCount();
-                            currentAtom++ ) {
-                        i = ( currentChain + 1 ) % ( unsigned int ) ( this->aminoAcidColorTable.Count() );
-                        this->protAtomColorTable.Add( this->aminoAcidColorTable[i].GetX() );
-                        this->protAtomColorTable.Add( this->aminoAcidColorTable[i].GetY() );
-                        this->protAtomColorTable.Add( this->aminoAcidColorTable[i].GetZ() );
-                    }
-                }
-            }
-            // ... END coloring mode CHAIN_ID
-        } else if ( this->currentColoringMode == RAINBOW ) {
-            for( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha ) {
-                for( cntRes = 0; cntRes < prot->ProteinChain( cntCha).AminoAcidCount(); ++cntRes ) {
-                    i = int( ( float( cntRes) / float( prot->ProteinChain( cntCha).AminoAcidCount() ) ) * float( rainbowColors.size() ) );
-                    color = this->rainbowColors[i];
-                    for( cntAto = 0;
-                         cntAto < prot->ProteinChain( cntCha).AminoAcid()[cntRes].AtomCount();
-                         ++cntAto ) {
-                        this->protAtomColorTable.Add( int(color.GetX() * 255.0f) );
-                        this->protAtomColorTable.Add( int(color.GetY() * 255.0f) );
-                        this->protAtomColorTable.Add( int(color.GetZ() * 255.0f) );
-                    }
-                }
-            }
-            // ... END coloring mode RAINBOW
-        } else if ( this->currentColoringMode == MOVEMENT ) {
-			float minVal( 0.0f );
-			float maxVal( prot->GetMaxMovementDistance() );
-			float mid( maxVal/2.0f );
-			float val;
-			
-            unsigned int protac = prot->ProteinAtomCount();
-            for ( cntAto = 0; cntAto < protac; ++cntAto ) {
-                if( fabs( minVal - maxVal) < vislib::math::FLOAT_EPSILON ) {
-					this->protAtomColorTable.Add( colMid.GetX() );
-					this->protAtomColorTable.Add( colMid.GetY() );
-					this->protAtomColorTable.Add( colMid.GetZ() );
-                } else {
-                    val = sqrt( pow( prot->ProteinAtomPositions()[cntAto*3+0] - prot->ProteinAtomMovementPositions()[cntAto*3+0], 2.0f) +
-                         pow( prot->ProteinAtomPositions()[cntAto*3+1] - prot->ProteinAtomMovementPositions()[cntAto*3+1], 2.0f) +
-                         pow( prot->ProteinAtomPositions()[cntAto*3+2] - prot->ProteinAtomMovementPositions()[cntAto*3+2], 2.0f) );
-
-				    if( val < mid ) {
-                        // below middle value --> blend between minVal and mid color
-					    col = colMin + ( ( colMid - colMin ) * ( val / mid) );
-					    this->protAtomColorTable.Add( col.GetX() );
-					    this->protAtomColorTable.Add( col.GetY() );
-					    this->protAtomColorTable.Add( col.GetZ() );
-				    } else if( val > mid ) {
-				        // above middle value --> blend between maxVal and mid color
-				        col = colMid + ( ( colMax - colMid ) * ( ( val - mid ) / ( maxVal - mid) ) );
-					    this->protAtomColorTable.Add( col.GetX() );
-					    this->protAtomColorTable.Add( col.GetY() );
-					    this->protAtomColorTable.Add( col.GetZ() );
-				    } else {
-				        // middle value --> assign mid color
-					    this->protAtomColorTable.Add( colMid.GetX() );
-					    this->protAtomColorTable.Add( colMid.GetY() );
-					    this->protAtomColorTable.Add( colMid.GetZ() );
-				    }
-                }
-			}
-            // ... END coloring mode MOVEMENT
-		}
-    }
-}*/
 
 
 /*

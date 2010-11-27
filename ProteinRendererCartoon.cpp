@@ -852,7 +852,7 @@ bool protein::ProteinRendererCartoon::ProcessFrameRequest(Call& call)
 }
 
 
-/**
+/*
  * protein::ProteinRendererCartoon::DrawLabel
  */
 void protein::ProteinRendererCartoon::DrawLabel(unsigned int frameID)

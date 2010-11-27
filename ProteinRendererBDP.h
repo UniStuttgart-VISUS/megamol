@@ -206,7 +206,8 @@ namespace protein {
          * @param col Vector containing the color as float [0.0]..[1.0] .
          * @return The coded color value.
          */
-        float CodeColor( const vislib::math::Vector<float, 3> &col) const;
+        //float CodeColor( const vislib::math::Vector<float, 3> &col) const;
+        float CodeColor( const float *col) const;
 
         /**
          * Decode a coded color to the original RGB-color.
@@ -457,7 +458,7 @@ namespace protein {
         // radius of the probe atom
         float probeRadius;
 
-        std::vector<vislib::math::Vector<float, 3> > atomColor;
+        vislib::Array<float> atomColor;
         unsigned int currentArray;
 
         /** 'true' if the data for the current render mode is computed, 'false' otherwise */
@@ -530,7 +531,7 @@ namespace protein {
         // color table for amino acids
         vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColorTable;
         // color table for rainbow colors
-        std::vector<vislib::math::Vector<float,3> > rainbowColors;
+        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
         // texture for singularity handling (concave triangles)
         std::vector<GLuint> singularityTexture;
