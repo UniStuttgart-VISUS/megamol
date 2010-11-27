@@ -591,7 +591,7 @@ void protein::ProteinRenderer::RenderLines( const CallProteinData *prot)
             glBegin( GL_POINTS);
             for( i = 0; i < prot->ProteinAtomCount(); i++ )
             {
-                glColor3ubv( this->GetProteinAtomColor( i));
+                glColor3fv( this->GetProteinAtomColor( i));
                 glVertex3f( protAtomPos[i*3+0], protAtomPos[i*3+1], protAtomPos[i*3+2]);
             }
             glEnd(); // GL_POINTS
@@ -618,9 +618,9 @@ void protein::ProteinRenderer::RenderLines( const CallProteinData *prot)
                     firstPos = vislib::math::Vector<float, 3>( &protAtomPos[first*3]);
                     secondPos = vislib::math::Vector<float, 3>( &protAtomPos[second*3]);
                     if( ( firstPos - secondPos).Length() < 3.5f ) {
-                    glColor3ubv( this->GetProteinAtomColor( first));
+                    glColor3fv( this->GetProteinAtomColor( first));
                         glVertex3fv( firstPos.PeekComponents());
-                    glColor3ubv( this->GetProteinAtomColor( second));
+                    glColor3fv( this->GetProteinAtomColor( second));
                         glVertex3fv( secondPos.PeekComponents());
                     }
                 }
@@ -635,9 +635,9 @@ void protein::ProteinRenderer::RenderLines( const CallProteinData *prot)
                     firstPos = vislib::math::Vector<float, 3>( &protAtomPos[first*3]);
                     secondPos = vislib::math::Vector<float, 3>( &protAtomPos[second*3]);
                     if( ( firstPos - secondPos).Length() < 3.5f ) {
-                    glColor3ubv( this->GetProteinAtomColor( first));
+                    glColor3fv( this->GetProteinAtomColor( first));
                         glVertex3fv( firstPos.PeekComponents());
-                    glColor3ubv( this->GetProteinAtomColor( second));
+                    glColor3fv( this->GetProteinAtomColor( second));
                         glVertex3fv( secondPos.PeekComponents());
                     }
                 }
@@ -673,8 +673,8 @@ void protein::ProteinRenderer::RenderStickRaycasting(
         unsigned int i1;
         unsigned int first, second;
         unsigned int currentChain, currentAminoAcid, currentConnection;
-        const unsigned char *color1;
-        const unsigned char *color2;
+        const float *color1;
+        const float *color2;
 
         // -----------------------------
         // -- computation for spheres --
@@ -706,7 +706,7 @@ void protein::ProteinRenderer::RenderStickRaycasting(
         vislib::math::Quaternion<float> quatC;
         quatC.Set( 0, 0, 0, 1);
         vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
-        vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
+        vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
         float angle;
         // vertex array for cylinders
         this->m_vertCylinderStickRay.Clear();
@@ -764,13 +764,13 @@ void protein::ProteinRenderer::RenderStickRaycasting(
                     this->m_quatCylinderStickRay.Add( quatC.GetZ());
                     this->m_quatCylinderStickRay.Add( quatC.GetW());
 
-                    this->m_color1CylinderStickRay.Add( float(int(color1[0]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[1]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[2]))/255.0f);
+                    this->m_color1CylinderStickRay.Add( color1[0]);
+                    this->m_color1CylinderStickRay.Add( color1[1]);
+                    this->m_color1CylinderStickRay.Add( color1[2]);
 
-                    this->m_color2CylinderStickRay.Add( float(int(color2[0]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[1]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[2]))/255.0f);
+                    this->m_color2CylinderStickRay.Add( color2[0]);
+                    this->m_color2CylinderStickRay.Add( color2[1]);
+                    this->m_color2CylinderStickRay.Add( color2[2]);
 
                     this->m_vertCylinderStickRay.Add( position.GetX());
                     this->m_vertCylinderStickRay.Add( position.GetY());
@@ -818,13 +818,13 @@ void protein::ProteinRenderer::RenderStickRaycasting(
                     this->m_quatCylinderStickRay.Add( quatC.GetZ());
                     this->m_quatCylinderStickRay.Add( quatC.GetW());
 
-                    this->m_color1CylinderStickRay.Add( float(int(color1[0]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[1]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[2]))/255.0f);
+                    this->m_color1CylinderStickRay.Add( color1[0]);
+                    this->m_color1CylinderStickRay.Add( color1[1]);
+                    this->m_color1CylinderStickRay.Add( color1[2]);
 
-                    this->m_color2CylinderStickRay.Add( float(int(color2[0]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[1]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[2]))/255.0f);
+                    this->m_color2CylinderStickRay.Add( color2[0]);
+                    this->m_color2CylinderStickRay.Add( color2[1]);
+                    this->m_color2CylinderStickRay.Add( color2[2]);
 
                     this->m_vertCylinderStickRay.Add( position.GetX());
                     this->m_vertCylinderStickRay.Add( position.GetY());
@@ -863,7 +863,7 @@ void protein::ProteinRenderer::RenderStickRaycasting(
     glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
-    glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->m_colorSphereStickRay.PeekElements());
     glDrawArrays( GL_POINTS, 0, (unsigned int)(this->m_vertSphereStickRay.Count()/4));
     // disable sphere shader
     this->m_sphereShader.Disable();
@@ -916,8 +916,8 @@ void protein::ProteinRenderer::RenderBallAndStick(
         unsigned int i1;
         unsigned int first, second;
         unsigned int currentChain, currentAminoAcid, currentConnection;
-        const unsigned char *color1;
-        const unsigned char *color2;
+        const float *color1;
+        const float *color2;
 
         // -----------------------------
         // -- computation for spheres --
@@ -1009,13 +1009,13 @@ void protein::ProteinRenderer::RenderBallAndStick(
                     this->m_quatCylinderStickRay.Add( quatC.GetZ());
                     this->m_quatCylinderStickRay.Add( quatC.GetW());
 
-                    this->m_color1CylinderStickRay.Add( float(int(color1[0]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[1]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[2]))/255.0f);
+                    this->m_color1CylinderStickRay.Add( color1[0]);
+                    this->m_color1CylinderStickRay.Add( color1[1]);
+                    this->m_color1CylinderStickRay.Add( color1[2]);
 
-                    this->m_color2CylinderStickRay.Add( float(int(color2[0]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[1]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[2]))/255.0f);
+                    this->m_color2CylinderStickRay.Add( color2[0]);
+                    this->m_color2CylinderStickRay.Add( color2[1]);
+                    this->m_color2CylinderStickRay.Add( color2[2]);
 
                     this->m_vertCylinderStickRay.Add( position.GetX());
                     this->m_vertCylinderStickRay.Add( position.GetY());
@@ -1063,13 +1063,13 @@ void protein::ProteinRenderer::RenderBallAndStick(
                     this->m_quatCylinderStickRay.Add( quatC.GetZ());
                     this->m_quatCylinderStickRay.Add( quatC.GetW());
 
-                    this->m_color1CylinderStickRay.Add( float(int(color1[0]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[1]))/255.0f);
-                    this->m_color1CylinderStickRay.Add( float(int(color1[2]))/255.0f);
+                    this->m_color1CylinderStickRay.Add( color1[0]);
+                    this->m_color1CylinderStickRay.Add( color1[1]);
+                    this->m_color1CylinderStickRay.Add( color1[2]);
 
-                    this->m_color2CylinderStickRay.Add( float(int(color2[0]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[1]))/255.0f);
-                    this->m_color2CylinderStickRay.Add( float(int(color2[2]))/255.0f);
+                    this->m_color2CylinderStickRay.Add( color2[0]);
+                    this->m_color2CylinderStickRay.Add( color2[1]);
+                    this->m_color2CylinderStickRay.Add( color2[2]);
 
                     this->m_vertCylinderStickRay.Add( position.GetX());
                     this->m_vertCylinderStickRay.Add( position.GetY());
@@ -1107,7 +1107,8 @@ void protein::ProteinRenderer::RenderBallAndStick(
     glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
-    glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
+    //glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->m_colorSphereStickRay.PeekElements());
     glDrawArrays( GL_POINTS, 0, (unsigned int)(this->m_vertSphereStickRay.Count()/4));
     // disable sphere shader
     glDisableClientState(GL_COLOR_ARRAY);
@@ -1158,7 +1159,7 @@ void protein::ProteinRenderer::RenderSpacefilling(
     if( this->m_prepareSpacefilling )
     {
         unsigned int i1;
-        const unsigned char *color1;
+        const float *color1;
 
         // -----------------------------
         // -- computation for spheres --
@@ -1212,7 +1213,8 @@ void protein::ProteinRenderer::RenderSpacefilling(
     glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
-    glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
+    //glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->m_colorSphereStickRay.PeekElements());
     glDrawArrays( GL_POINTS, 0, (unsigned int)(this->m_vertSphereStickRay.Count()/4));
     // disable sphere shader
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -1230,7 +1232,7 @@ void protein::ProteinRenderer::RenderSolventAccessibleSurface(
     if( this->m_prepareSAS )
     {
         unsigned int i1;
-        const unsigned char *color1;
+        const float *color1;
 
         // -----------------------------
         // -- computation for spheres --
@@ -1284,7 +1286,7 @@ void protein::ProteinRenderer::RenderSolventAccessibleSurface(
     glUniform3fvARB(this->m_sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, this->m_vertSphereStickRay.PeekElements());
-    glColorPointer( 3, GL_UNSIGNED_BYTE, 0, this->m_colorSphereStickRay.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->m_colorSphereStickRay.PeekElements());
     glDrawArrays( GL_POINTS, 0, (unsigned int)(this->m_vertSphereStickRay.Count()/4));
     // disable sphere shader
     glDisableClientState(GL_VERTEX_ARRAY);

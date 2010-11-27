@@ -511,11 +511,11 @@ bool protein::ProteinVolumeRenderer::Render( Call& call )
     this->ParameterRefresh();
 	// make the atom color table if necessary
 	Color::MakeColorTable( protein, 
-	                      this->currentColoringMode,
-						  this->protAtomColorTable,
-                          this->aminoAcidColorTable,
-                          this->rainbowColors,
-	                      true);
+      this->currentColoringMode,
+      this->protAtomColorTable,
+      this->aminoAcidColorTable,
+      this->rainbowColors,
+      true);
 
     unsigned int cpCnt;
     for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
@@ -536,7 +536,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call )
         return this->RenderMolecularData( cr3d, mol);
     }
 
-		return false;
+    return false;
 }
 
 
@@ -952,7 +952,7 @@ void protein::ProteinVolumeRenderer::UpdateVolumeTexture( const CallProteinData 
 		// draw all atoms as points, using w for radius
 		glBegin( GL_POINTS);
 		for( unsigned int cnt = 0; cnt < protein->ProteinAtomCount(); ++cnt ) {
-            glColor3ubv( this->GetProteinAtomColor( cnt));
+            glColor3fv( this->GetProteinAtomColor( cnt));
 			glVertex4f( ( protein->ProteinAtomPositions()[cnt*3+0] + this->translation.GetX()) * this->scale,
 				( protein->ProteinAtomPositions()[cnt*3+1] + this->translation.GetY()) * this->scale, 
 				( protein->ProteinAtomPositions()[cnt*3+2] + this->translation.GetZ()) * this->scale, 

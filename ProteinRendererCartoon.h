@@ -102,7 +102,7 @@ namespace protein {
 		inline unsigned int GetNumberOfTubeSegments(void) const { return m_numberOfTubeSeg; };
 
 		/** Get the color of a certain atom of the protein. */
-        const unsigned char * GetProteinAtomColor( unsigned int idx) { return &this->m_protAtomColorTable[idx*3]; };
+        const float* GetProteinAtomColor( unsigned int idx) { return &this->m_protAtomColorTable[idx*3]; };
 
 	   /**********************************************************************
 		* 'set'-functions
@@ -300,11 +300,12 @@ namespace protein {
 		float m_radiusCartoon;
 
 		// color table for amino acids
-		vislib::Array<vislib::math::Vector<unsigned char, 3> > m_aminoAcidColorTable;
+		vislib::Array<vislib::math::Vector<float, 3> > m_aminoAcidColorTable;
 		// color palette vector: stores the color for chains
-		std::vector<vislib::math::Vector<float,3> > rainbowColors;
+		vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 		// color table for protein atoms
-		vislib::Array<unsigned char> m_protAtomColorTable;
+		//vislib::Array<unsigned char> m_protAtomColorTable;
+        vislib::Array<float> m_protAtomColorTable;
 		
 		// the Id of the current frame (for dynamic data)
 		unsigned int m_currentFrameId;
