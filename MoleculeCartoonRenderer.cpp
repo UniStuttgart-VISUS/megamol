@@ -707,11 +707,11 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
     this->UpdateParameters( mol);
     // recompute colors
     Color::MakeColorTable(mol,
+        this->currentColoringMode,
+        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         this->minGradColorParam.Param<param::StringParam>()->Value(),
         this->midGradColorParam.Param<param::StringParam>()->Value(),
-        this->maxGradColorParam.Param<param::StringParam>()->Value(),
-        this->currentColoringMode,
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors);
+        this->maxGradColorParam.Param<param::StringParam>()->Value());
 
     // render...
     glEnable(GL_DEPTH_TEST);
@@ -772,22 +772,22 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
     // coloring mode for other molecules
     this->currentColoringMode = static_cast<Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value()));
         Color::MakeColorTable(mol,
+        this->currentColoringMode,
+        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         this->minGradColorParam.Param<param::StringParam>()->Value(),
         this->midGradColorParam.Param<param::StringParam>()->Value(),
         this->maxGradColorParam.Param<param::StringParam>()->Value(),
-        this->currentColoringMode,
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         true);
     // render rest as stick
     this->RenderStick( mol, posInter);
     // reset coloring mode
     this->currentColoringMode = static_cast<Color::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value()));
     Color::MakeColorTable(mol,
+        this->currentColoringMode,
+        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         this->minGradColorParam.Param<param::StringParam>()->Value(),
         this->midGradColorParam.Param<param::StringParam>()->Value(),
         this->maxGradColorParam.Param<param::StringParam>()->Value(),
-        this->currentColoringMode,
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         true);
 
     glDisable(GL_DEPTH_TEST);
@@ -825,11 +825,11 @@ void MoleculeCartoonRenderer::UpdateParameters( const MolecularDataCall *mol) {
         this->SetColoringMode(static_cast<Color::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value())));
         this->coloringModeParam.ResetDirty();
         Color::MakeColorTable(mol,
+            this->currentColoringMode,
+            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
             this->minGradColorParam.Param<param::StringParam>()->Value(),
             this->midGradColorParam.Param<param::StringParam>()->Value(),
             this->maxGradColorParam.Param<param::StringParam>()->Value(),
-            this->currentColoringMode,
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
             true);
     }
     if (this->smoothCartoonColoringParam.IsDirty()) {

@@ -346,11 +346,11 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     if( this->atomColorTable.Count()/3 < mol->AtomCount() ) {
 
         Color::MakeColorTable(mol,
+          this->currentColoringMode,
+          this->atomColorTable, this->colorLookupTable, this->rainbowColors,
           this->minGradColorParam.Param<param::StringParam>()->Value(),
           this->midGradColorParam.Param<param::StringParam>()->Value(),
           this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          this->currentColoringMode,
-          this->atomColorTable, this->colorLookupTable, this->rainbowColors,
           true);
 
     }
@@ -849,14 +849,16 @@ void SimpleMoleculeRenderer::UpdateParameters( const MolecularDataCall *mol) {
     }
     // coloring mode param
     if( this->coloringModeParam.IsDirty() ) {
+        
         this->currentColoringMode = static_cast<Color::ColoringMode>( int(
             this->coloringModeParam.Param<param::EnumParam>()->Value() ) );
-        Color::MakeColorTable(mol,
+        
+        Color::MakeColorTable( mol,
+          currentColoringMode,
+          this->atomColorTable, this->colorLookupTable, this->rainbowColors,
           this->minGradColorParam.Param<param::StringParam>()->Value(),
           this->midGradColorParam.Param<param::StringParam>()->Value(),
           this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          currentColoringMode,
-          this->atomColorTable, this->colorLookupTable, this->rainbowColors,
           true);
     }
     // rendering mode param
