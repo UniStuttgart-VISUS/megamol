@@ -807,12 +807,13 @@ bool ProteinRendererBDP::Render( Call& call ) {
         this->currentColoringMode = static_cast<Color::ColoringMode>(this->coloringmodeParam.Param<param::EnumParam>()->Value() );
         Color::MakeColorTable( protein,
             this->currentColoringMode,
-            this->minValueColor,
-            this->meanValueColor,
-            this->maxValueColor,
             this->atomColor,
             this->aminoAcidColorTable,
-            this->rainbowColors);
+            this->rainbowColors,
+            true, // force recomputation
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor);
         this->preComputationDone = false;
         this->coloringmodeParam.ResetDirty();
     }
@@ -926,13 +927,13 @@ bool ProteinRendererBDP::Render( Call& call ) {
         // compute the color table
         Color::MakeColorTable( protein,
             this->currentColoringMode,
-            this->minValueColor,
-            this->meanValueColor,
-            this->maxValueColor,
             this->atomColor,
             this->aminoAcidColorTable,
             this->rainbowColors,
-            true );
+            true,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor);
         // compute the arrays for ray casting
         this->ComputeRaycastingArraysSimple();
 
@@ -975,13 +976,13 @@ bool ProteinRendererBDP::Render( Call& call ) {
         // compute the color table
         Color::MakeColorTable( protein,
             this->currentColoringMode,
-            this->minValueColor,
-            this->meanValueColor,
-            this->maxValueColor,
             this->atomColor,
             this->aminoAcidColorTable,
             this->rainbowColors,
-            recomputeColors);
+            recomputeColors,
+            this->minValueColor,
+            this->meanValueColor,
+            this->maxValueColor);
 
         // compute the data needed for the current render mode
         if( this->currentRendermode == GPU_RAYCASTING ) {
@@ -2894,9 +2895,9 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             this->sphericTriaTexCoord3[cntRS][i*3+1] = (float)this->reducedSurface[cntRS]->GetRSFace( i)->GetEdge3()->GetTexCoordX();
             this->sphericTriaTexCoord3[cntRS][i*3+2] = (float)this->reducedSurface[cntRS]->GetRSFace( i)->GetEdge3()->GetTexCoordY();
             // colors
-            this->sphericTriaColors[cntRS][i*3+0] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()]);
-            this->sphericTriaColors[cntRS][i*3+1] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()]);
-            this->sphericTriaColors[cntRS][i*3+2] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()]);
+            this->sphericTriaColors[cntRS][i*3+0] = CodeColor( &this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()*3]);
+            this->sphericTriaColors[cntRS][i*3+1] = CodeColor( &this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()*3]);
+            this->sphericTriaColors[cntRS][i*3+2] = CodeColor( &this->atomColor[this->reducedSurface[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()*3]);
             // sphere center
             this->sphericTriaVertexArray[cntRS][i*4+0] = this->reducedSurface[cntRS]->GetRSFace( i)->GetProbeCenter().GetX();
             this->sphericTriaVertexArray[cntRS][i*4+1] = this->reducedSurface[cntRS]->GetRSFace( i)->GetProbeCenter().GetY();
@@ -2990,8 +2991,8 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
             this->torusInSphereArray[cntRS][i*4+2] = C.GetZ();
             this->torusInSphereArray[cntRS][i*4+3] = distance;
             // colors
-            this->torusColors[cntRS][i*4+0] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetIndex()]);
-            this->torusColors[cntRS][i*4+1] = CodeColor( this->atomColor[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetIndex()]);
+            this->torusColors[cntRS][i*4+0] = CodeColor( &this->atomColor[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex1()->GetIndex()*3]);
+            this->torusColors[cntRS][i*4+1] = CodeColor( &this->atomColor[this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetIndex()*3]);
             this->torusColors[cntRS][i*4+2] = d;
             //this->torusColors[cntRS][i*4+3] = ( X2 - X1).Length();
             this->torusColors[cntRS][i*4+3] = ( X2 + this->reducedSurface[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - this->reducedSurface[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis) - d;
@@ -3037,9 +3038,9 @@ void ProteinRendererBDP::ComputeRaycastingArrays()
                 continue;
 
             // set vertex color
-            this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetX());
-            this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetY());
-            this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()].GetZ());
+            this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()*3+0]);
+            this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()*3+1]);
+            this->sphereColors[cntRS].Append( this->atomColor[this->reducedSurface[cntRS]->GetRSVertex( i)->GetIndex()*3+2]);
             // set vertex position
             this->sphereVertexArray[cntRS].Append(
                     this->reducedSurface[cntRS]->GetRSVertex( i)->GetPosition().GetX());
@@ -3231,9 +3232,9 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         this->sphericTriaTexCoord3[idxRS][i*3+1] = (float)this->reducedSurface[idxRS]->GetRSFace( i)->GetEdge3()->GetTexCoordX();
         this->sphericTriaTexCoord3[idxRS][i*3+2] = (float)this->reducedSurface[idxRS]->GetRSFace( i)->GetEdge3()->GetTexCoordY();
         // colors
-        this->sphericTriaColors[idxRS][i*3+0] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex1()->GetIndex()]);
-        this->sphericTriaColors[idxRS][i*3+1] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex2()->GetIndex()]);
-        this->sphericTriaColors[idxRS][i*3+2] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex3()->GetIndex()]);
+        this->sphericTriaColors[idxRS][i*3+0] = CodeColor( &this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex1()->GetIndex()*3]);
+        this->sphericTriaColors[idxRS][i*3+1] = CodeColor( &this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex2()->GetIndex()*3]);
+        this->sphericTriaColors[idxRS][i*3+2] = CodeColor( &this->atomColor[this->reducedSurface[idxRS]->GetRSFace( i)->GetVertex3()->GetIndex()*3]);
         // sphere center
         this->sphericTriaVertexArray[idxRS][i*4+0] = this->reducedSurface[idxRS]->GetRSFace( i)->GetProbeCenter().GetX();
         this->sphericTriaVertexArray[idxRS][i*4+1] = this->reducedSurface[idxRS]->GetRSFace( i)->GetProbeCenter().GetY();
@@ -3327,8 +3328,8 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         this->torusInSphereArray[idxRS][i*4+2] = C.GetZ();
         this->torusInSphereArray[idxRS][i*4+3] = distance;
         // colors
-        this->torusColors[idxRS][i*4+0] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetIndex()]);
-        this->torusColors[idxRS][i*4+1] = CodeColor( this->atomColor[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetIndex()]);
+        this->torusColors[idxRS][i*4+0] = CodeColor( &this->atomColor[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex1()->GetIndex()*3]);
+        this->torusColors[idxRS][i*4+1] = CodeColor( &this->atomColor[this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetIndex()*3]);
         this->torusColors[idxRS][i*4+2] = d;
         this->torusColors[idxRS][i*4+3] = ( X2 + this->reducedSurface[idxRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - this->reducedSurface[idxRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis) - d;
         // cutting plane
@@ -3370,9 +3371,9 @@ void ProteinRendererBDP::ComputeRaycastingArrays( unsigned int idxRS)
         if( this->reducedSurface[idxRS]->GetRSVertex( i)->IsBuried() )
             continue;
         // set vertex color
-        this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetX());
-        this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetY());
-        this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()].GetZ());
+        this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()*3+0]);
+        this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()*3+1]);
+        this->sphereColors[idxRS].Append( this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()*3+2]);
         // set vertex position
         this->sphereVertexArray[idxRS].Append(
                 this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetX());
@@ -3558,9 +3559,9 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             //this->sphericTriaColors[cntRS][i*3+0] = codedcol;
             //this->sphericTriaColors[cntRS][i*3+1] = codedcol;
             //this->sphericTriaColors[cntRS][i*3+2] = codedcol;
-            this->sphericTriaColors[cntRS][i*3+0] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()));
-            this->sphericTriaColors[cntRS][i*3+1] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()));
-            this->sphericTriaColors[cntRS][i*3+2] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()));
+            this->sphericTriaColors[cntRS][i*3+0] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()).PeekComponents());
+            this->sphericTriaColors[cntRS][i*3+1] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()).PeekComponents());
+            this->sphericTriaColors[cntRS][i*3+2] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()).PeekComponents());
             // sphere center
             this->sphericTriaVertexArray[cntRS][i*4+0] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetX();
             this->sphericTriaVertexArray[cntRS][i*4+1] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetY();
@@ -3658,8 +3659,8 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
             //this->torusColors[cntRS][i*4+1] = 250120000.0f;
             //this->torusColors[cntRS][i*4+0] = codedcol;
             //this->torusColors[cntRS][i*4+1] = codedcol;
-            this->torusColors[cntRS][i*4+0] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetIndex()));
-            this->torusColors[cntRS][i*4+1] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetIndex()));
+            this->torusColors[cntRS][i*4+0] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex1()->GetIndex()).PeekComponents());
+            this->torusColors[cntRS][i*4+1] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetIndex()).PeekComponents());
             this->torusColors[cntRS][i*4+2] = d;
             //this->torusColors[cntRS][i*4+3] = ( X2 - X1).Length();
             this->torusColors[cntRS][i*4+3] = ( X2 + this->simpleRS[cntRS]->GetRSEdge( i)->GetVertex2()->GetPosition() - this->simpleRS[cntRS]->GetRSEdge( i)->GetTorusCenter()).Dot( torusAxis) - d;
@@ -3807,13 +3808,20 @@ void ProteinRendererBDP::ComputeRaycastingArraysSimple()
 /*
  * code a rgb-color into one float
  */
-float ProteinRendererBDP::CodeColor( const vislib::math::Vector<float, 3> &col) const
+ float ProteinRendererBDP::CodeColor( const float *col) const {
+    return float(
+          (int)( col[0] * 255.0f)*1000000   // red
+        + (int)( col[1] * 255.0f)*1000      // green
+        + (int)( col[2] * 255.0f) );        // blue
+}
+ /*
+float ProteinRendererBDP::CodeColor( const float *col) const
 {
     return float(
-          (int)( col.GetX() * 255.0f)*1000000    // red
-        + (int)( col.GetY() * 255.0f)*1000        // green
-        + (int)( col.GetZ() * 255.0f) );            // blue
-}
+          (int)( col[0] * 255.0f)*1000000    // red
+        + (int)( col[1] * 255.0f)*1000        // green
+        + (int)( col[2] * 255.0f) );            // blue
+}*/
 
 
 /*
@@ -4695,8 +4703,11 @@ void ProteinRendererBDP::RenderProbeGPU(
  */
 vislib::math::Vector<float, 3> ProteinRendererBDP::GetProteinAtomColor( unsigned int idx)
 {
-    if( idx < this->atomColor.size() )
-        return this->atomColor[idx];
+    if( idx < this->atomColor.Count() )
+        //return this->atomColor[idx];
+        return vislib::math::Vector<float, 3>( this->atomColor[idx*3+0],
+                                               this->atomColor[idx*3+1],
+                                               this->atomColor[idx*3+0]);
     else
         return vislib::math::Vector<float, 3>( 0.5f, 0.5f, 0.5f);
 }

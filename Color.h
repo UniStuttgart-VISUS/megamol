@@ -102,7 +102,10 @@ namespace protein {
             vislib::Array<float> &atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3> > &aminoAcidColorTable,
             vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
-            bool forceRecompute = false);
+            bool forceRecompute = false,
+            vislib::math::Vector<float, 3> minValueColor = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f),
+            vislib::math::Vector<float, 3> meanValueColor = vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f),
+            vislib::math::Vector<float, 3> maxValueColor = vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
 
         /**
          * Make color table for all atoms acoording to the current coloring
@@ -118,16 +121,16 @@ namespace protein {
          * @param aminoAcidColorTable The amino acid color table.
          * @param rainbowColors       The rainbow color lookup table.
          * @param forceRecompute      Force recomputation of the color table.
-         */
+         *//*
         static void MakeColorTable( const CallProteinData *prot,
             ColoringMode currentColoringMode,
             vislib::math::Vector<float, 3> minValueColor,
             vislib::math::Vector<float, 3> meanValueColor,
             vislib::math::Vector<float, 3> maxValueColor,
-            std::vector<vislib::math::Vector<float, 3> > &atomColor,
+            vislib::Array<float> &atomColor,
             vislib::Array<vislib::math::Vector<float, 3> > &aminoAcidColorTable,
-            std::vector<vislib::math::Vector<float,3> > &rainbowColors,
-            bool forceRecompute = true);
+            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
+            bool forceRecompute = true);*/
 
         /**
          * Make color table for all atoms acoording to the current coloring
@@ -148,14 +151,13 @@ namespace protein {
          */
         static void MakeColorTable( const CallProteinMovementData *prot, 
             ColoringMode currentColoringMode,
+            vislib::Array<float> &protAtomColorTable,
+            vislib::Array<vislib::math::Vector<float, 3> > &aminoAcidColorTable,
+            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
             vislib::math::Vector<int, 3> colMax,
             vislib::math::Vector<int, 3> colMid,
             vislib::math::Vector<int, 3> colMin,
             vislib::math::Vector<int, 3> col,
-            vislib::Array<unsigned char> &protAtomColorTable,
-            vislib::Array<vislib::math::Vector<unsigned char, 3> > 
-              &aminoAcidColorTable,
-            std::vector<vislib::math::Vector<float,3> > &rainbowColors,
             bool forceRecompute = false);
     
          /**

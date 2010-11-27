@@ -74,16 +74,6 @@ namespace protein {
             BALL_AND_STICK    = 2
         };
 
-        /*enum ColoringMode
-        {
-            ELEMENT   = 0,
-            AMINOACID = 1,
-            STRUCTURE = 2,
-            CHAIN_ID  = 3,
-            RAINBOW   = 4,
-            MOVEMENT  = 5
-        };*/
-
         enum ArrowColoringMode
         {
             PROTEIN_COLOR   = 0,
@@ -99,7 +89,7 @@ namespace protein {
         inline float GetRadiusStick(void) const { return this->radiusStick; };
 
         /** Get the color of a certain atom of the protein. */
-        const unsigned char * GetProteinAtomColor( unsigned int idx) { return &this->protAtomColorTable[idx*3]; };
+        const float * GetProteinAtomColor( unsigned int idx) { return &this->protAtomColorTable[idx*3]; };
 
        /**********************************************************************
          * 'set'-functions
@@ -202,26 +192,6 @@ namespace protein {
         * e.g. coloring or render mode.
         */
         void RecomputeAll(void);
-    
-        /** fill amino acid color table */
-        //void FillAminoAcidColorTable(void);
-        
-        /**
-         * Creates a rainbow color table with 'num' entries.
-         *
-         * @param num The number of color entries.
-         */
-        //void MakeRainbowColorTable( unsigned int num);
-        
-        /**
-         * Make color table for all atoms acoording to the current coloring mode.
-         * The color table is only computed if it is empty or if the recomputation 
-         * is forced by parameter.
-         *
-         * @param prot The data interface.
-         * @param forceRecompute Force recomputation of the color table.
-         */
-        //void MakeColorTable( const CallProteinMovementData *prot, bool forceRecompute = false);
 
         /**********************************************************************
          * variables
@@ -278,7 +248,7 @@ namespace protein {
         // attribute array for inParameters of the cylinders (radius and length) [STICK_RAYCASTING]
         vislib::Array<float> inParaCylStickRaycasting;
         // color array for spheres [STICK_RAYCASTING]
-        vislib::Array<unsigned char> colorSphereStickRay;
+        vislib::Array<float> colorSphereStickRay;
         // first color array for cylinder [STICK_RAYCASTING]
         vislib::Array<float> color1CylinderStickRay;
         // second color array for cylinder [STICK_RAYCASTING]
@@ -306,11 +276,11 @@ namespace protein {
         ArrowColoringMode arrowColorMode;
         
         // color table for amino acids
-        vislib::Array<vislib::math::Vector<unsigned char, 3> > aminoAcidColorTable;
+        vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColorTable;
         // color palette vector: stores the color for chains
-        std::vector<vislib::math::Vector<float,3> > rainbowColors;
+        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
         // color table for protein atoms
-        vislib::Array<unsigned char> protAtomColorTable;
+        vislib::Array<float> protAtomColorTable;
         
 		vislib::math::Vector<int, 3> colMax;
 		vislib::math::Vector<int, 3> colMid;
