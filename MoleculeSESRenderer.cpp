@@ -700,12 +700,13 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     if( !this->preComputationDone ) {
         // compute the color table
         Color::MakeColorTable(mol,
+          this->currentColoringMode,
+          this->atomColorTable, this->colorLookupTable,
+          this->rainbowColors, 
           this->minGradColorParam.Param<param::StringParam>()->Value(),
           this->midGradColorParam.Param<param::StringParam>()->Value(),
           this->maxGradColorParam.Param<param::StringParam>()->Value(),
-          this->currentColoringMode,
-          this->atomColorTable, this->colorLookupTable,
-          this->rainbowColors, true);
+          true);
         // compute the data needed for the current render mode
         if( this->currentRendermode == GPU_RAYCASTING )
             this->ComputeRaycastingArrays();
@@ -827,13 +828,15 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol) {
     }
     if( this->coloringmodeParam.IsDirty() ) {
         this->currentColoringMode = static_cast<Color::ColoringMode>(  this->coloringmodeParam.Param<param::EnumParam>()->Value() );
-        Color::MakeColorTable(mol,
-          this->minGradColorParam.Param<param::StringParam>()->Value(),
-          this->midGradColorParam.Param<param::StringParam>()->Value(),
-          this->maxGradColorParam.Param<param::StringParam>()->Value(),
+        
+        Color::MakeColorTable( mol,
           this->currentColoringMode,
           this->atomColorTable, this->colorLookupTable,
-          this->rainbowColors);
+          this->rainbowColors,
+          this->minGradColorParam.Param<param::StringParam>()->Value(),
+          this->midGradColorParam.Param<param::StringParam>()->Value(),
+          this->maxGradColorParam.Param<param::StringParam>()->Value());
+          
         this->preComputationDone = false;
         this->coloringmodeParam.ResetDirty();
     }
