@@ -2571,7 +2571,7 @@ void ProteinRendererSES::ComputeRaycastingArraysSimple()
 			this->sphericTriaColors[cntRS][i*3+0] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex1()->GetIndex()).PeekComponents());
 			this->sphericTriaColors[cntRS][i*3+1] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex2()->GetIndex()).PeekComponents());
 			this->sphericTriaColors[cntRS][i*3+2] = CodeColor( this->GetProteinAtomColor( this->simpleRS[cntRS]->GetRSFace( i)->GetVertex3()->GetIndex()).PeekComponents());
-			// sphere center
+            // sphere center
 			this->sphericTriaVertexArray[cntRS][i*4+0] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetX();
 			this->sphericTriaVertexArray[cntRS][i*4+1] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetY();
 			this->sphericTriaVertexArray[cntRS][i*4+2] = this->simpleRS[cntRS]->GetRSFace( i)->GetProbeCenter().GetZ();
@@ -3298,13 +3298,12 @@ void ProteinRendererSES::deinitialise(void)
 /*
  * returns the color of the atom 'idx' for the current coloring mode
  */
-vislib::math::Vector<float, 3> ProteinRendererSES::GetProteinAtomColor( unsigned int idx)
-{
-	if( idx < this->atomColor.Count() )
+vislib::math::Vector<float, 3> ProteinRendererSES::GetProteinAtomColor( unsigned int idx) {
+	if( idx < this->atomColor.Count()/3 )
 		//return this->atomColor[idx];
         return vislib::math::Vector<float, 3>( this->atomColor[idx*3+0],
                                                this->atomColor[idx*3+1],
-                                               this->atomColor[idx*3+0]);
+                                               this->atomColor[idx*3+2]);
 	else
 		return vislib::math::Vector<float, 3>( 0.5f, 0.5f, 0.5f);
 }
