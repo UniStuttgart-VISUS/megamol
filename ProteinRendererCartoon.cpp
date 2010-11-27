@@ -71,13 +71,13 @@ protein::ProteinRendererCartoon::ProteinRendererCartoon (void) : Renderer3DModul
 	//this->SetColoringMode(RAINBOW);
 	param::EnumParam *cm = new param::EnumParam(int(this->m_currentColoringMode));
 
-	cm->SetTypePair(Color::ELEMENT, "Element");
-	cm->SetTypePair(Color::AMINOACID, "AminoAcid");
-	cm->SetTypePair(Color::STRUCTURE, "SecondaryStructure");
-	cm->SetTypePair(Color::VALUE, "Value");
-	cm->SetTypePair(Color::CHAIN_ID, "ChainID");
-	cm->SetTypePair(Color::RAINBOW, "Rainbow");
-	cm->SetTypePair ( Color::CHARGE, "Charge" );
+	cm->SetTypePair( Color::ELEMENT, "Element");
+	cm->SetTypePair( Color::AMINOACID, "AminoAcid");
+	cm->SetTypePair( Color::STRUCTURE, "SecondaryStructure");
+	cm->SetTypePair( Color::VALUE, "Value");
+	cm->SetTypePair( Color::CHAIN_ID, "ChainID");
+	cm->SetTypePair( Color::RAINBOW, "Rainbow");
+	cm->SetTypePair( Color::CHARGE, "Charge");
 
 	this->m_coloringModeParam << cm;
 
@@ -132,7 +132,7 @@ protein::ProteinRendererCartoon::ProteinRendererCartoon (void) : Renderer3DModul
 	this->m_numberOfTubeSeg = 6;
 
 	// fill amino acid color table
-	Color::FillAminoAcidColorTable(this->m_aminoAcidColorTable);
+	Color::FillAminoAcidColorTable( this->m_aminoAcidColorTable);
 	// fill rainbow color table
 	Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
@@ -693,11 +693,11 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
 	Color::ColoringMode tmpCm = this->m_currentColoringMode;
 	this->m_currentColoringMode = Color::ELEMENT;
 	Color::MakeColorTable( protein,
-						   this->m_currentColoringMode,
-						   this->m_protAtomColorTable,
-						   this->m_aminoAcidColorTable,
-						   this->rainbowColors,
-						   true);
+       this->m_currentColoringMode,
+       this->m_protAtomColorTable,
+       this->m_aminoAcidColorTable,
+       this->rainbowColors,
+       true);
 
 	unsigned int first, second, last;
 	unsigned int cntChain;
@@ -733,7 +733,7 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
 			first = protein->ProteinChain( cntChain).AminoAcid()[0].FirstAtomIndex();
 			//glColor3f( 0.0, 1.0, 1.0);
 			for( unsigned int atomCnt = first; atomCnt < last; ++atomCnt ) {
-				glColor3ubv( this->GetProteinAtomColor( atomCnt) );
+				glColor3fv( this->GetProteinAtomColor( atomCnt) );
 				glVertex4f( protein->ProteinAtomPositions()[atomCnt*3+0],
 					protein->ProteinAtomPositions()[atomCnt*3+1],
 					protein->ProteinAtomPositions()[atomCnt*3+2],
@@ -751,8 +751,8 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
 	vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
 	vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
 	float angle;
-	const unsigned char *color1;
-	const unsigned char *color2;
+	const float *color1;
+	const float *color2;
 	// enable cylinder shader
 	this->cylinderShader.Enable();
 	// set shader variables
@@ -795,10 +795,8 @@ bool protein::ProteinRendererCartoon::Render(Call& call)
 
 				glVertexAttrib2f( attribLocInParams, stickRadius, fabs ( ( firstAtomPos-secondAtomPos ).Length() ) );
 				glVertexAttrib4fv( attribLocQuatC, quatC.PeekComponents() );
-				glVertexAttrib3f( attribLocColor1,
-					float( int( color1[0]))/255.0f, float( int( color1[1]))/255.0f, float( int( color1[2]))/255.0f );
-				glVertexAttrib3f( attribLocColor2,
-					float( int( color2[0]))/255.0f, float( int( color2[1]))/255.0f, float( int( color2[2]))/255.0f );
+				glVertexAttrib3f( attribLocColor1, color1[0], color1[1], color1[2]);
+				glVertexAttrib3f( attribLocColor2, color2[0], color2[1], color2[2]);
 				glVertex3fv( position.PeekComponents());
 			}
 		}
@@ -919,7 +917,7 @@ void protein::ProteinRendererCartoon::RenderCartoonHybrid(
 		// temporary vectors
 		vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld;
 		// temporary color
-		const unsigned char *color;
+		const float *color;
 		// temporary color vector
 		vislib::math::Vector<float, 3> colorVec;
 
@@ -973,9 +971,9 @@ void protein::ProteinRendererCartoon::RenderCartoonHybrid(
 
 					// add the color of the C-alpha atom to the color vector
 					color = this->GetProteinAtomColor( idx);
-					colorVec.SetX( float((int)color[0])/255.0f);
-					colorVec.SetY( float((int)color[1])/255.0f);
-					colorVec.SetZ( float((int)color[2])/255.0f);
+					colorVec.SetX( color[0]);
+					colorVec.SetY( color[1]);
+					colorVec.SetZ( color[2]);
 					cartoonColor[cntChain].push_back( colorVec);
 
 					// get the index of the C atom
@@ -1331,7 +1329,7 @@ void protein::ProteinRendererCartoon::RenderCartoonCPU(
 		// temporary vectors
 		vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld;
 		// temporary color
-		const unsigned char *color;
+		const float *color;
 		// temporary color vector
 		vislib::math::Vector<float, 3> colorVec;
 
@@ -1385,9 +1383,9 @@ void protein::ProteinRendererCartoon::RenderCartoonCPU(
 
 					// add the color of the C-alpha atom to the color vector
 					color = this->GetProteinAtomColor( idx);
-					colorVec.SetX( float((int)color[0])/255.0f);
-					colorVec.SetY( float((int)color[1])/255.0f);
-					colorVec.SetZ( float((int)color[2])/255.0f);
+					colorVec.SetX( color[0]);
+					colorVec.SetY( color[1]);
+					colorVec.SetZ( color[2]);
 					cartoonColor[cntChain].push_back( colorVec);
 
 					// get the index of the C atom
@@ -2143,7 +2141,7 @@ void protein::ProteinRendererCartoon::RenderCartoonGPU (
 			n1 *= flip;
 			idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
 				   prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].CAlphaIndex();
-			glSecondaryColor3ubv ( GetProteinAtomColor ( idx1 ) );
+			glSecondaryColor3fv ( GetProteinAtomColor ( idx1 ) );
 			glColor3fv ( n1.PeekComponents() );
 			glVertex3fv ( v1.PeekComponents() );
 

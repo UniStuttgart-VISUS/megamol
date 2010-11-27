@@ -75,7 +75,7 @@ namespace protein {
 	    **********************************************************************/
 
 		/** Get the color of a certain atom of the protein. */
-		const unsigned char * GetProteinAtomColor( unsigned int idx) { return &this->protAtomColorTable[idx*3]; };
+		const float* GetProteinAtomColor( unsigned int idx) { return &this->protAtomColorTable[idx*3]; };
 
 	   /**********************************************************************
 		 * 'set'-functions
@@ -300,11 +300,11 @@ namespace protein {
 		GLint attribLocColor2;
 		
 		// color table for amino acids
-		vislib::Array<vislib::math::Vector<unsigned char, 3> > aminoAcidColorTable;
+		vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColorTable;
 		// color palette vector: stores the color for chains
-		std::vector<vislib::math::Vector<float,3> > rainbowColors;
+		vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 		// color table for protein atoms
-		vislib::Array<unsigned char> protAtomColorTable;
+        vislib::Array<float> protAtomColorTable;
 		
 		// the Id of the current frame (for dynamic data)
 		unsigned int currentFrameId;

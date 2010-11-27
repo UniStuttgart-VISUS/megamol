@@ -99,10 +99,9 @@ namespace protein {
          */
         static void MakeColorTable( const CallProteinData *prot,
             ColoringMode currentColoringMode,
-            vislib::Array<unsigned char> &protAtomColorTable,
-            vislib::Array<vislib::math::Vector<unsigned char, 3> >
-              &aminoAcidColorTable,
-            std::vector<vislib::math::Vector<float,3> > &rainbowColors,
+            vislib::Array<float> &atomColorTable,
+            vislib::Array<vislib::math::Vector<float, 3> > &aminoAcidColorTable,
+            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
             bool forceRecompute = false);
 
         /**
