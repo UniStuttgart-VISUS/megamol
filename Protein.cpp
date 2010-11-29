@@ -22,6 +22,7 @@
 #include "SphereRenderer.h"
 #include "MoleculeSESRenderer.h"
 #include "MoleculeCartoonRenderer.h"
+#include "MoleculeSequenceRenderer.h"
 
 #include "ProteinData.h"
 #include "PDBLoader.h"
@@ -90,7 +91,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-	int moduleCount = 18;
+	int moduleCount = 19;
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
     moduleCount++;
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
@@ -124,14 +125,15 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case 15: return new megamol::core::ModuleAutoDescription<megamol::protein::SphereRenderer>();
         case 16: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeSESRenderer>();
         case 17: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCartoonRenderer>();
+        case 18: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeSequenceRenderer>();
 #if (defined(WITH_NETCDF) && (WITH_NETCDF))
-        case 18: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
+        case 19: return new megamol::core::ModuleAutoDescription<megamol::protein::NetCDFData>();
 		#define NETCDF_OFFSET 1
 #else
 		#define NETCDF_OFFSET 0
 #endif /* (defined(WITH_NETCDF) && (WITH_NETCDF)) */
 #if (defined(WITH_OPENCL) && (WITH_OPENCL))
-		case 18 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
+		case 19 + NETCDF_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBOpenCL>();
 		#define OPENCL_OFFSET 1
 #else
 		#define OPENCL_OFFSET 0
