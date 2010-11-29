@@ -45,7 +45,7 @@ protected:
     virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 	
 private: /* methods */
-	void paintButton(float x, float y, float w, float h, float r, float g, float b, char* text);
+	void paintButton(float x, float y, float w, float h, float r, float g, float b, const char* text);
 private: /* fields */
 	megamol::core::CallerSlot* dataCall;
 	GlWidgetLibrary widgetLibrary;

@@ -78,6 +78,9 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
 
 	unsigned int firstMolecule;
 	unsigned int firstResidue;
+
+    vislib::StringA tmpStr;
+
 	for(unsigned int chain = 0; chain < chainCount; ++chain)
 	{
 		moleculeCount = chains[chain].MoleculeCount();
@@ -92,34 +95,38 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
 			for(unsigned int residue = firstResidue; residue < firstResidue + residueCount; ++residue)
 			{
 				//TODO: filter AminoAcids
-				
 				this->paintButton(
 						residuePosition, 0, 
 						buttonWidth, buttonHeight, 
 						0.4f, 0.4f, 0.6f,
-						"residue"
+						//"residue"
+                        data->ResidueTypeNames()[residues[residue]->Type()].PeekBuffer()
 				);
 				residuePosition += buttonWidth + buttonSpacing;
 			}
 
 			residuesWidth = residueCount * (buttonWidth + buttonSpacing);		
 			
+            tmpStr.Format( " Molecule %i", molecule);
 			this->paintButton(
 					moleculePosition, 15,
 					residuesWidth, 10, 
 					1.0f, 0.8f, 0.0f,
-					"molecule"
+					//"Molecule"
+                    tmpStr.PeekBuffer()
 			);
 			moleculePosition += residuesWidth + buttonSpacing;
 		}
 		
 		moleculeWidth = moleculeCount * (residuesWidth + buttonSpacing);
 
+        tmpStr.Format( " Chain %i", chain);
 		this->paintButton(
 				chainPosition, 30,
 				moleculeWidth, 10, 
 				1.0f, 0.0f, 0.0f,
-				"chain"
+				//"chain"
+                tmpStr
 		);
 		chainPosition += moleculeWidth + buttonSpacing;
 	}
@@ -129,7 +136,7 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
 	return true;
 }
 
-void MoleculeSequenceRenderer::paintButton(float x, float y, float w, float h, float r, float g, float b, char* text)
+void MoleculeSequenceRenderer::paintButton(float x, float y, float w, float h, float r, float g, float b, const char* text)
 {
 	using namespace vislib::graphics::gl;
 	glBegin(GL_POLYGON);
@@ -140,10 +147,13 @@ void MoleculeSequenceRenderer::paintButton(float x, float y, float w, float h, f
 	glVertex2f(x+w,	y+h);
 	glVertex2f(x,	y+h);
 
-	glColor3f(1.0f, 1.0f, 1.0f);
-	SimpleFont f;
-	f.DrawString(x, y, 6, false, text);
 	glEnd();
+    
+	SimpleFont f;
+    if( f.Initialise() ) {
+	    glColor3f( 1.0f, 1.0f, 1.0f); 
+	    f.DrawString( x, y+h, int( h), true, text);
+    }
 }
 
 #if 1
