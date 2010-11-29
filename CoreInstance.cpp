@@ -26,6 +26,7 @@
 #include "CallDescriptionManager.h"
 #include "cluster/ClusterController.h"
 #include "cluster/ClusterViewMaster.h"
+#include "cluster/SimpleClusterServer.h"
 #include "Module.h"
 #include "ModuleDescription.h"
 #include "ModuleDescriptionManager.h"
@@ -178,6 +179,10 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterView"), "scview");
     vd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "scview::register", "::scc::registerView");
     vd->SetViewModuleID("scview");
+
+    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "::logo");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRenderView"), "scview::renderView", "::logo::render");
+
     this->builtinViewDescs.Register(vd);
 
     //////////////////////////////////////////////////////////////////////
@@ -1076,7 +1081,8 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
             pos += modName.Length() + 1;
 
             if (modClass.Equals(cluster::ClusterViewMaster::ClassName())
-                    || modClass.Equals(cluster::ClusterController::ClassName())) {
+                    || modClass.Equals(cluster::ClusterController::ClassName())
+                    || modClass.Equals(cluster::SimpleClusterServer::ClassName())) {
                 // these are infra structure modules and not to be synced
                 continue;
             }

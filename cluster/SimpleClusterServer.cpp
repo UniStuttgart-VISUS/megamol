@@ -16,6 +16,7 @@
 #include "param/ButtonParam.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
+#include "RootModuleNamespace.h"
 #include "view/AbstractView.h"
 #include "view/CallRenderView.h"
 #include "vislib/assert.h"
@@ -23,9 +24,11 @@
 #include "vislib/IPAddress.h"
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/RawStorage.h"
 #include "vislib/Socket.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/TcpCommChannel.h"
+#include "vislib/Trace.h"
 //#include "vislib/SocketException.h"
 //#include "AbstractNamedObject.h"
 //#include <GL/gl.h>
@@ -40,7 +43,7 @@ using namespace megamol::core;
  * cluster::SimpleClusterServer::Client::Client
  */
 cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib::SmartRef<vislib::net::AbstractCommChannel> channel)
-        : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher() {
+        : vislib::net::SimpleMessageDispatchListener(), parent(parent), dispatcher(), terminationImminent(false) {
     this->dispatcher.AddListener(this);
     /* *HAZARD* This has to be exactly this cast! */
     vislib::net::AbstractInboundCommChannel *cc = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(channel.operator ->());
@@ -53,6 +56,7 @@ cluster::SimpleClusterServer::Client::Client(SimpleClusterServer& parent, vislib
  */
 cluster::SimpleClusterServer::Client::~Client(void) {
     if (this->dispatcher.IsRunning()) {
+        this->terminationImminent = true;
         this->dispatcher.Terminate();
         //this->dispatcher.Join(); // blocking bullshit!
     }
@@ -64,6 +68,7 @@ cluster::SimpleClusterServer::Client::~Client(void) {
  */
 void cluster::SimpleClusterServer::Client::Close(void) {
     if (this->dispatcher.IsRunning()) {
+        this->terminationImminent = true;
         this->dispatcher.Terminate();
         this->dispatcher.Join();
     }
@@ -75,7 +80,9 @@ void cluster::SimpleClusterServer::Client::Close(void) {
  */
 bool cluster::SimpleClusterServer::Client::OnCommunicationError(
         vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
-    vislib::sys::Log::DefaultLog.WriteError("Server: Communication error: %s", exception.GetMsgA());
+    if (!this->terminationImminent) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Server: Communication error: %s", exception.GetMsgA());
+    }
     return false; // everything is lost anyway
 }
 
@@ -85,9 +92,11 @@ bool cluster::SimpleClusterServer::Client::OnCommunicationError(
  */
 void cluster::SimpleClusterServer::Client::OnDispatcherExited(
         vislib::net::SimpleMessageDispatcher& src) throw() {
-    vislib::sys::Log::DefaultLog.WriteInfo("Server: Client Connection lost");
-    vislib::sys::AutoLock(this->parent.clientsLock);
-    this->parent.clients.RemoveAll(this); // delete this as sfx
+    vislib::sys::Log::DefaultLog.WriteInfo("Server: Client Connection %s", this->terminationImminent ? "closed" : "lost");
+    // parent.clients will be updated as sfx as soon as the receiver thread terminates
+    //vislib::sys::AutoLock(this->parent.clientsLock);
+    //this->parent.clients.RemoveAll(this); // delete this as sfx was problematic
+    // TODO: Implement
 }
 
 
@@ -105,13 +114,68 @@ void cluster::SimpleClusterServer::Client::OnDispatcherStarted(
  */
 bool cluster::SimpleClusterServer::Client::OnMessageReceived(
         vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
+    using vislib::sys::Log;
+    vislib::net::SimpleMessage answer;
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Server: TCP Message %d received\n",
-        static_cast<int>(msg.GetHeader().GetMessageID()));
-
+    switch (msg.GetHeader().GetMessageID()) {
+        case MSG_HANDSHAKE_INIT:
+            this->name = vislib::StringA(msg.GetBodyAs<char>(), static_cast<int>(msg.GetHeader().GetBodySize()));
+            Log::DefaultLog.WriteInfo("Server: Handshake with render node \"%s\" initialized\n", this->name.PeekBuffer());
+            answer.GetHeader().SetMessageID(MSG_HANDSHAKE_BACK);
+            this->send(answer);
+            break;
+        case MSG_HANDSHAKE_FORTH:
+            answer.GetHeader().SetMessageID(MSG_HANDSHAKE_DONE);
+            this->send(answer);
+            Log::DefaultLog.WriteInfo("Server: Handshake with render node \"%s\" complete\n", this->name.PeekBuffer());
+            break;
+        case MSG_TIMESYNC: {
+            answer = msg;
+            TimeSyncData *tsd = answer.GetBodyAs<TimeSyncData>();
+            if (tsd->cnt < TIMESYNCDATACOUNT) {
+                tsd->time[tsd->cnt++] = this->parent.GetCoreInstance()->GetInstanceTime();
+            }
+            this->send(answer);
+        } break;
+        case MSG_MODULGRAPH: {
+            vislib::RawStorage mem;
+            RootModuleNamespace *rmns = dynamic_cast<RootModuleNamespace*>(this->parent.RootModule());
+            rmns->LockModuleGraph(false);
+            rmns->SerializeGraph(mem);
+            rmns->UnlockModuleGraph();
+            answer.GetHeader().SetMessageID(MSG_MODULGRAPH);
+            answer.SetBody(mem, mem.GetSize());
+            this->send(answer);
+        } break;
+        case MSG_VIEWCONNECT: {
+            vislib::StringA toname = this->parent.viewSlot.CallAs<Call>()->PeekCalleeSlot()->FullName();
+            answer.GetHeader().SetMessageID(MSG_VIEWCONNECT);
+            answer.SetBody(toname.PeekBuffer(), toname.Length());
+            this->send(answer);
+        }
+        default:
+            Log::DefaultLog.WriteInfo("Server: TCP Message %d received\n", static_cast<int>(msg.GetHeader().GetMessageID()));
+            break;
+    }
     // TODO: Implement
 
     return true; // continue
+}
+
+
+/*
+ * cluster::SimpleClusterServer::Client::send
+ */
+void cluster::SimpleClusterServer::Client::send(const vislib::net::AbstractSimpleMessage& msg) {
+    using vislib::sys::Log;
+    try {
+        this->dispatcher.GetChannel().DynamicCast<vislib::net::AbstractOutboundCommChannel>()->
+            Send(msg, msg.GetMessageSize(), vislib::net::AbstractOutboundCommChannel::TIMEOUT_INFINITE, true);
+    } catch(vislib::Exception ex) {
+        Log::DefaultLog.WriteError("Failed to send simple TCP message: %s\n", ex.GetMsgA());
+    } catch(...) {
+        Log::DefaultLog.WriteError("Failed to send simple TCP message: unexpected exception\n");
+    }
 }
 
 //============================================================================
@@ -128,9 +192,12 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
         clusterShutdownBtnSlot("shutdownCluster", "shutdown rendering node instances"),
         clusterNameSlot("clusterName", "The name of the cluster"),
         serverRunningSlot("server::Running", "The server running flag"),
+        serverStartSlot("server::Start", "Start the server"),
+        serverStopSlot("server::Stop", "Stop the server"),
         serverPortSlot("server::Port", "The server endpoint port slot"), 
         serverReconnectSlot("server::Reconnect", "Send the clients a reconnect message"),
         serverRestartSlot("server::Restart", "Restarts the TCP server"),
+        serverNameSlot("server::Name", "The name for this server"),
         serverThread(), clientsLock(), clients() {
     vislib::net::Socket::Startup();
     this->udpTarget.SetPort(0); // marks illegal endpoint
@@ -173,6 +240,17 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
     this->serverRestartSlot.SetUpdateCallback(&SimpleClusterServer::onServerRestartClicked);
     this->MakeSlotAvailable(&this->serverRestartSlot);
 
+    this->serverStartSlot << new param::ButtonParam();
+    this->serverStartSlot.SetUpdateCallback(&SimpleClusterServer::onServerStartStopClicked);
+    this->MakeSlotAvailable(&this->serverStartSlot);
+
+    this->serverStopSlot << new param::ButtonParam();
+    this->serverStopSlot.SetUpdateCallback(&SimpleClusterServer::onServerStartStopClicked);
+    this->MakeSlotAvailable(&this->serverStopSlot);
+
+    this->serverNameSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->serverNameSlot);
+
     this->serverThread.AddListener(this);
 }
 
@@ -196,6 +274,11 @@ bool cluster::SimpleClusterServer::create(void) {
     if (this->instance()->Configuration().IsConfigValueSet("scname")) {
         this->clusterNameSlot.Param<param::StringParam>()->SetValue(
             this->instance()->Configuration().ConfigValue("scname"), false);
+    }
+
+    if (this->instance()->Configuration().IsConfigValueSet("scservername")) {
+        this->serverNameSlot.Param<param::StringParam>()->SetValue(
+            this->instance()->Configuration().ConfigValue("scservername"), false);
     }
 
     this->udpTargetPortSlot.Param<param::IntParam>()->SetValue(GetDatagramPort(&this->instance()->Configuration()));
@@ -301,7 +384,7 @@ bool cluster::SimpleClusterServer::onUdpTargetUpdated(param::ParamSlot& slot) {
 
         vislib::net::IPAddress addr;
         if (addr.Lookup(host)) {
-            this->udpTarget.SetIPAddress(addr);
+            this->udpTarget.SetIPAddress(addr); // TODO: makes no sense must be best available broadcast address
             this->udpTarget.SetPort(port);
             vislib::sys::Log::DefaultLog.WriteInfo("UDPTarget set to %s\n",
                 this->udpTarget.ToStringA().PeekBuffer());
@@ -389,6 +472,9 @@ void cluster::SimpleClusterServer::sendUDPDiagram(cluster::SimpleClusterDatagram
         }
         if (this->udpTarget.GetPort() != 0) {
             this->udpSocket.Send(this->udpTarget, &datagram, sizeof(cluster::SimpleClusterDatagram));
+            VLTRACE(VISLIB_TRCELVL_INFO, "Server >>> UDP Datagram sent to %s\n", this->udpTarget.ToStringA().PeekBuffer());
+        } else {
+            vislib::sys::Log::DefaultLog.WriteWarn("Not udp target set to send the message");
         }
 
     } catch(vislib::Exception ex) {
@@ -408,16 +494,20 @@ void cluster::SimpleClusterServer::stopServer(void) {
         this->serverThread.Terminate();
         this->serverThread.Join();
     }
+
     this->clientsLock.Lock();
-    SIZE_T cs = this->clients.Count();
-    Client **c = new Client*[cs];
-    for (SIZE_T i = 0; i < cs; i++) {
-        c[i] = this->clients[i];
+    while (this->clients.Count() > 0) {
+        while (!this->clients.IsEmpty() && !this->clients[0]->IsRunning()) {
+            this->clients.RemoveFirst();
+        }
+        for (SIZE_T i = 0; i < this->clients.Count(); i++) {
+            if (this->clients[i]->IsRunning()) {
+                this->clients[i]->Close();
+            }
+        }
+        vislib::sys::Thread::Sleep(100);
     }
     this->clientsLock.Unlock();
-    for (SIZE_T i = 0; i < cs; i++) {
-        c[i]->Close();
-    }
 
 }
 
@@ -469,9 +559,12 @@ bool cluster::SimpleClusterServer::onServerReconnectClicked(param::ParamSlot& sl
     ::memcpy(datagram.payload.Strings.str1, cn.PeekBuffer(), datagram.payload.Strings.len1);
 
     vislib::StringA ses, compName;//(this->serverThread.GetBindAddressA());
-    vislib::sys::SystemInformation::ComputerName(compName);
-    compName = "129.69.205.29";
-    compName = "127.0.0.1";
+    compName = this->serverNameSlot.Param<param::StringParam>()->Value();
+    if (compName.IsEmpty()) {
+        vislib::sys::SystemInformation::ComputerName(compName);
+    }
+    //compName = "129.69.205.29";
+    //compName = "127.0.0.1";
     ses.Format("%s:%d", compName.PeekBuffer(), this->serverPortSlot.Param<param::IntParam>()->Value());
     if (ses.Length() > 127) ses.Truncate(127);
     datagram.payload.Strings.len2 = static_cast<unsigned char>(ses.Length());
@@ -512,5 +605,15 @@ bool cluster::SimpleClusterServer::onServerRestartClicked(param::ParamSlot& slot
         Log::DefaultLog.WriteInfo("TCP-Server started on %s\n", ep.ToStringA());
         this->onServerReconnectClicked(slot);
     }
+    return true;
+}
+
+
+/*
+ * cluster::SimpleClusterServer::onServerStartStopClicked
+ */
+bool cluster::SimpleClusterServer::onServerStartStopClicked(param::ParamSlot& slot) {
+    this->serverRunningSlot.Param<param::BoolParam>()->SetValue(&slot == &this->serverStartSlot);
+    //this->onServerRunningChanged(slot);
     return true;
 }

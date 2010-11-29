@@ -18,6 +18,8 @@
 #include "vislib/NetworkInformation.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
+#include "vislib/SystemInformation.h"
+#include "vislib/Trace.h"
 #include <signal.h>
 //#include "AbstractNamedObject.h"
 //#include <GL/gl.h>
@@ -79,6 +81,20 @@ void cluster::SimpleClusterClient::Unregister(cluster::SimpleClusterView *view) 
     if (this->views.Contains(view)) {
         this->views.RemoveAll(view);
         view->Unregister(this);
+    }
+}
+
+
+/*
+ * cluster::SimpleClusterClient::ContinueSetup
+ */
+void cluster::SimpleClusterClient::ContinueSetup(int i) {
+    switch(i) {
+        case 0: {
+            vislib::net::SimpleMessage msg;
+            msg.GetHeader().SetMessageID(MSG_VIEWCONNECT);
+            this->send(msg);
+        }
     }
 }
 
@@ -182,9 +198,66 @@ void cluster::SimpleClusterClient::release(void) {
  */
 bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
         const vislib::net::AbstractSimpleMessage& msg) throw() {
+    using vislib::sys::Log;
+    vislib::net::SimpleMessage answer;
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Client: TCP Message %d received\n",
-        static_cast<int>(msg.GetHeader().GetMessageID()));
+    switch (msg.GetHeader().GetMessageID()) {
+        case MSG_HANDSHAKE_BACK:
+            answer.GetHeader().SetMessageID(MSG_HANDSHAKE_FORTH);
+            this->send(answer);
+            break;
+        case MSG_HANDSHAKE_DONE:
+            Log::DefaultLog.WriteInfo("Handshake with server complete\n");
+            answer.GetHeader().SetMessageID(MSG_TIMESYNC);
+            answer.GetHeader().SetBodySize(sizeof(TimeSyncData));
+            answer.AssertBodySize();
+            answer.GetBodyAs<TimeSyncData>()->cnt = 0;
+            this->send(answer);
+            break;
+        case MSG_TIMESYNC:
+            if (msg.GetBodyAs<TimeSyncData>()->cnt == TIMESYNCDATACOUNT) {
+                const TimeSyncData *tsd = msg.GetBodyAs<TimeSyncData>();
+                Log::DefaultLog.WriteInfo("Timesync complete\n");
+                double lat = 0;
+                for (unsigned int i = 1; i < TIMESYNCDATACOUNT; i++) {
+                    lat += (tsd->time[i] - tsd->time[i - 1]) * 0.5;
+                }
+                lat /= static_cast<double>(TIMESYNCDATACOUNT - 1);
+                double lcit = this->GetCoreInstance()->GetInstanceTime();
+                double rcit = tsd->time[TIMESYNCDATACOUNT - 1] + lat;
+                this->GetCoreInstance()->OffsetInstanceTime(rcit - lcit);
+                double bclcit = this->GetCoreInstance()->GetInstanceTime();
+                Log::DefaultLog.WriteInfo("Instancetime offsetted from %f to %f based on remote time %f\n", lcit, bclcit, rcit);
+
+                Log::DefaultLog.WriteInfo("Cleaning up module graph\n");
+                for (SIZE_T i = 0; i < this->views.Count(); i++) {
+                    this->views[i]->DisconnectViewCall();
+                }
+                this->GetCoreInstance()->CleanupModuleGraph();
+
+                answer.GetHeader().SetMessageID(MSG_MODULGRAPH);
+                this->send(answer);
+            } else {
+                this->send(msg);
+            }
+            break;
+        case MSG_MODULGRAPH:
+            // MUST BE STORED FOR CREATING SYNCHRONOUSLY
+            if (!this->views.IsEmpty()) {
+                this->views[0]->SetSetupMessage(msg);
+            }
+            break;
+        case MSG_VIEWCONNECT: {
+            vislib::StringA toName(msg.GetBodyAs<char>(), msg.GetHeader().GetBodySize());
+            Log::DefaultLog.WriteInfo("Client: View::CalleeSlot %s to connect\n", toName.PeekBuffer());
+            for (SIZE_T i = 0; i < this->views.Count(); i++) {
+                this->views[i]->ConnectView(toName);
+            }
+        } break;
+        default:
+            Log::DefaultLog.WriteInfo("Client: TCP Message %d received\n", static_cast<int>(msg.GetHeader().GetMessageID()));
+            break;
+    }
 
     // TODO: Implement
 
@@ -196,11 +269,16 @@ bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageD
  */
 bool cluster::SimpleClusterClient::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
             const vislib::Exception& exception) throw() {
-
-    vislib::sys::Log::DefaultLog.WriteInfo("Client: Receiver failed: %s\n",
-        exception.GetMsgA());
-
+    vislib::sys::Log::DefaultLog.WriteWarn("Client: Receiver failed: %s\n", exception.GetMsgA());
     return false;
+}
+
+
+/*
+ * cluster::SimpleClusterClient::OnDispatcherExited
+ */
+void cluster::SimpleClusterClient::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
+    this->conServerAddr.Clear();
 }
 
 
@@ -227,6 +305,8 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                     that->udpInSocket.Send(ep, &datagram, sizeof(datagram));
                 }
             }
+
+            VLTRACE(VISLIB_TRCELVL_INFO, "Client <<< UDP Datagram received\n");
 
             switch (datagram.msg) {
                 case MSG_CONNECTTOSERVER: {
@@ -258,8 +338,11 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                                 vislib::sys::Thread::Sleep(500);
                                 vislib::sys::Log::DefaultLog.WriteInfo("TCP Connection started to \"%s\"", srv.PeekBuffer());
 
+                                vislib::StringA compName;
+                                vislib::sys::SystemInformation::ComputerName(compName);
                                 vislib::net::SimpleMessage sm;
                                 sm.GetHeader().SetMessageID(MSG_HANDSHAKE_INIT);
+                                sm.SetBody(compName.PeekBuffer(), compName.Length() + 1);
                                 that->tcpChan->Send(sm, sm.GetMessageSize());
 
                             } catch(vislib::Exception ex) {
@@ -356,4 +439,19 @@ bool cluster::SimpleClusterClient::onUdpPortChanged(param::ParamSlot& slot) {
         Log::DefaultLog.WriteError("Failed to start UDP: unexpected exception\n");
     }
     return true;
+}
+
+
+/*
+ * cluster::SimpleClusterClient::send
+ */
+void cluster::SimpleClusterClient::send(const vislib::net::AbstractSimpleMessage& msg) {
+    using vislib::sys::Log;
+    try {
+        this->tcpChan->Send(msg, msg.GetMessageSize());
+    } catch(vislib::Exception ex) {
+        Log::DefaultLog.WriteError("Failed to send simple TCP message: %s\n", ex.GetMsgA());
+    } catch(...) {
+        Log::DefaultLog.WriteError("Failed to send simple TCP message: unexpected exception\n");
+    }
 }

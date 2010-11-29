@@ -85,6 +85,13 @@ namespace cluster {
          */
         void Unregister(class SimpleClusterView *view);
 
+        /**
+         * Continue setup
+         *
+         * @param i The setup continuation index
+         */
+        void ContinueSetup(int i = 0);
+
     protected:
 
         /**
@@ -121,6 +128,17 @@ namespace cluster {
         virtual bool OnCommunicationError(vislib::net::SimpleMessageDispatcher& src,
             const vislib::Exception& exception) throw();
 
+        /**
+         * This method is called immediately after the message dispatcher loop
+         * was left and the dispatching method is being exited.
+         *
+         * This method should return very quickly and should not perform
+         * excessive work as it is executed in the discovery thread.
+         *
+         * @param src The SimpleMessageDispatcher that exited.
+         */
+        virtual void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw();
+
     private:
 
         /**
@@ -149,6 +167,13 @@ namespace cluster {
          * @return True
          */
         bool onUdpPortChanged(param::ParamSlot& slot);
+
+        /**
+         * Sends a simple message
+         *
+         * @param msg The simple message
+         */
+        void send(const vislib::net::AbstractSimpleMessage& msg);
 
         /** The slot views may register at */
         CalleeSlot registerViewSlot;

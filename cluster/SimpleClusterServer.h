@@ -239,13 +239,35 @@ namespace cluster {
             virtual bool OnMessageReceived(vislib::net::SimpleMessageDispatcher& src,
                 const vislib::net::AbstractSimpleMessage& msg) throw();
 
+            /**
+             * Answer whether or not this client is running
+             *
+             * @return True if this client is running
+             */
+            inline bool IsRunning(void) const {
+                return this->dispatcher.IsRunning();
+            }
+
         private:
+
+            /**
+             * Sends a simple message
+             *
+             * @param msg The simple message
+             */
+            void send(const vislib::net::AbstractSimpleMessage& msg);
 
             /** The parent object */
             SimpleClusterServer& parent;
 
             /** The dispatcher thread */
             vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> dispatcher;
+
+            /** Flag marking an imminent termination */
+            bool terminationImminent;
+
+            /** The name of the computer connected */
+            vislib::StringA name;
 
         };
 
@@ -334,6 +356,14 @@ namespace cluster {
          */
         bool onServerRestartClicked(param::ParamSlot& slot);
 
+        /**
+         * Callback triggered when the parameter value changes
+         *
+         * @param slot The calling slot
+         *
+         * @return True
+         */
+        bool onServerStartStopClicked(param::ParamSlot& slot);
         /** The parameter slot holding the name of the view module to be use */
         param::ParamSlot viewnameSlot;
 
@@ -364,6 +394,12 @@ namespace cluster {
         /** The server running flag */
         param::ParamSlot serverRunningSlot;
 
+        /** The server running flag */
+        param::ParamSlot serverStartSlot;
+
+        /** The server running flag */
+        param::ParamSlot serverStopSlot;
+
         /** The server port slot */
         param::ParamSlot serverPortSlot;
 
@@ -372,6 +408,9 @@ namespace cluster {
 
         /** Button to restart the TCP server */
         param::ParamSlot serverRestartSlot;
+
+        /** The name of this server */
+        param::ParamSlot serverNameSlot;
 
         /** The server thread */
         vislib::sys::RunnableThread<vislib::net::CommServer> serverThread;

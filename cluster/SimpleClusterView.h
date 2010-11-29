@@ -13,6 +13,7 @@
 
 #include "view/AbstractTileView.h"
 #include "CallerSlot.h"
+#include "vislib/AbstractSimpleMessage.h"
 #include "vislib/Serialiser.h"
 #include "vislib/String.h"
 
@@ -82,6 +83,25 @@ namespace cluster {
          */
         void Unregister(class SimpleClusterClient *client);
 
+        /**
+         * Disconnect the view call
+         */
+        void DisconnectViewCall(void);
+
+        /**
+         * Set the module graph setup message
+         *
+         * @return msg The message
+         */
+        void SetSetupMessage(const vislib::net::AbstractSimpleMessage& msg);
+
+        /**
+         * Connects this view to another view
+         *
+         * @param toName The slot to connect to
+         */
+        void ConnectView(const vislib::StringA toName);
+
     protected:
 
         /**
@@ -138,6 +158,9 @@ namespace cluster {
 
         /** The client end */
         class SimpleClusterClient *client;
+
+        /** The initialization message */
+        vislib::net::AbstractSimpleMessage *initMsg;
 
     };
 

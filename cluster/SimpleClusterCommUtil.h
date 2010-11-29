@@ -42,7 +42,19 @@ namespace cluster {
 #define MSG_SHUTDOWN 2
 
 #define MSG_HANDSHAKE_INIT 1
+#define MSG_HANDSHAKE_BACK 2
+#define MSG_HANDSHAKE_FORTH 3
+#define MSG_HANDSHAKE_DONE 4
 
+#define MSG_TIMESYNC 5
+#define TIMESYNCDATACOUNT 10
+    typedef struct _timesyncdata_t {
+        unsigned short cnt;
+        double time[TIMESYNCDATACOUNT];
+    } TimeSyncData;
+
+#define MSG_MODULGRAPH 6
+#define MSG_VIEWCONNECT 7
 
     /**
      * Struct layout a simple cluster datagram

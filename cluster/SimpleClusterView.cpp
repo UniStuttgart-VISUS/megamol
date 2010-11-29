@@ -24,7 +24,7 @@ using namespace megamol::core;
  */
 cluster::SimpleClusterView::SimpleClusterView(void) : view::AbstractTileView(),
         firstFrame(false), frozen(false), frozenTime(0.0), frozenCam(NULL),
-        registerSlot("register", "The slot registering this view"), client(NULL) {
+        registerSlot("register", "The slot registering this view"), client(NULL), initMsg(NULL) {
 
     this->registerSlot.SetCompatibleCall<SimpleClusterClientViewRegistrationDescription>();
     this->MakeSlotAvailable(&this->registerSlot);
@@ -53,6 +53,12 @@ void cluster::SimpleClusterView::Render(void) {
             if (this->loadConfiguration(ano->Name())) break;
             ano = ano->Parent();
         }
+    }
+
+    if (this->initMsg != NULL) {
+        this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
+        SAFE_DELETE(this->initMsg);
+        this->client->ContinueSetup();
     }
 
     if (this->client == NULL) {
@@ -124,6 +130,34 @@ void cluster::SimpleClusterView::Unregister(cluster::SimpleClusterClient *client
 
 
 /*
+ * cluster::SimpleClusterView::DisconnectViewCall
+ */
+void cluster::SimpleClusterView::DisconnectViewCall(void) {
+    this->disconnectOutgoingRenderCall();
+}
+
+
+/*
+ * cluster::SimpleClusterView::SetSetupMessage
+ */
+void cluster::SimpleClusterView::SetSetupMessage(const vislib::net::AbstractSimpleMessage& msg) {
+    if (this->initMsg != NULL) {
+        SAFE_DELETE(this->initMsg);
+    }
+    this->initMsg = new vislib::net::SimpleMessage(msg);
+}
+
+
+/*
+ * cluster::SimpleClusterView::ConnectView
+ */
+void cluster::SimpleClusterView::ConnectView(const vislib::StringA toName) {
+    this->GetCoreInstance()->InstantiateCall(this->FullName() + "::renderView", toName,
+        CallDescriptionManager::Instance()->Find("CallRenderView"));
+}
+
+
+/*
  * cluster::SimpleClusterView::create
  */
 bool cluster::SimpleClusterView::create(void) {
@@ -140,6 +174,9 @@ void cluster::SimpleClusterView::release(void) {
     if (this->client != NULL) {
         this->client->Unregister(this);
         this->client = NULL;
+    }
+    if (this->initMsg != NULL) {
+        SAFE_DELETE(this->initMsg);
     }
 }
 
