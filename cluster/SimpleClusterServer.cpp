@@ -25,10 +25,13 @@
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/RawStorage.h"
+#include "vislib/RawStorageSerialiser.h"
+#include "vislib/ShallowSimpleMessage.h"
 #include "vislib/Socket.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/TcpCommChannel.h"
 #include "vislib/Trace.h"
+#include "vislib/UTF8Encoder.h"
 //#include "vislib/SocketException.h"
 //#include "AbstractNamedObject.h"
 //#include <GL/gl.h>
@@ -152,7 +155,37 @@ bool cluster::SimpleClusterServer::Client::OnMessageReceived(
             answer.GetHeader().SetMessageID(MSG_VIEWCONNECT);
             answer.SetBody(toname.PeekBuffer(), toname.Length());
             this->send(answer);
-        }
+            this->parent.camUpdateThreadForce = true;
+
+/*          ** does not really work
+            const view::AbstractView *av = NULL;
+            Call *call = NULL;
+            vislib::RawStorage mem;
+            mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
+            vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
+            vislib::net::ShallowSimpleMessage smsg(mem);
+
+            call = this->parent.viewSlot.CallAs<Call>();
+            if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
+                av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+            }
+            if (av != NULL) {
+
+                serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData));
+                av->SerialiseCamera(serialiser);
+
+                smsg.SetStorage(mem, mem.GetSize());
+                smsg.GetHeader().SetMessageID(MSG_CAMERAUPDATE);
+                smsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(
+                    mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData)));
+
+                this->send(smsg);
+            }
+*/
+        } break;
+        case MSG_CAMERAUPDATE:
+            this->parent.camUpdateThreadForce = true;
+            break;
         default:
             Log::DefaultLog.WriteInfo("Server: TCP Message %d received\n", static_cast<int>(msg.GetHeader().GetMessageID()));
             break;
@@ -198,7 +231,8 @@ cluster::SimpleClusterServer::SimpleClusterServer(void) : Module(),
         serverReconnectSlot("server::Reconnect", "Send the clients a reconnect message"),
         serverRestartSlot("server::Restart", "Restarts the TCP server"),
         serverNameSlot("server::Name", "The name for this server"),
-        serverThread(), clientsLock(), clients() {
+        serverThread(), clientsLock(), clients(),
+        camUpdateThread(&SimpleClusterServer::cameraUpdateThread), camUpdateThreadForce(false) {
     vislib::net::Socket::Startup();
     this->udpTarget.SetPort(0); // marks illegal endpoint
 
@@ -302,6 +336,8 @@ bool cluster::SimpleClusterServer::create(void) {
         }
     }
 
+    this->GetCoreInstance()->RegisterParamUpdateListener(this);
+
     return true;
 }
 
@@ -310,7 +346,11 @@ bool cluster::SimpleClusterServer::create(void) {
  * cluster::SimpleClusterServer::release
  */
 void cluster::SimpleClusterServer::release(void) {
+    this->GetCoreInstance()->UnregisterParamUpdateListener(this);
     this->disconnectView();
+    if (this->camUpdateThread.IsRunning()) {
+        this->camUpdateThread.Join();
+    }
     this->stopServer(); // also disconnects clients
     this->udpSocket.Close();
 }
@@ -351,6 +391,25 @@ bool cluster::SimpleClusterServer::OnNewConnection(const vislib::net::CommServer
     vislib::sys::AutoLock(this->clientsLock);
     this->clients.Add(new Client(*this, channel));
     return true;
+}
+
+
+/*
+ * cluster::SimpleClusterServer::ParamUpdated
+ */
+void cluster::SimpleClusterServer::ParamUpdated(param::ParamSlot& slot) {
+    vislib::net::SimpleMessage msg;
+    msg.GetHeader().SetMessageID(MSG_PARAMUPDATE);
+    vislib::StringA name = slot.FullName();
+    vislib::StringA value;
+    vislib::UTF8Encoder::Encode(value, slot.Param<param::AbstractParam>()->ValueString());
+    name.Append("=");
+    name.Append(value);
+    msg.SetBody(name, name.Length());
+    for (SIZE_T i = 0; i < this->clients.Count(); i++) {
+        if (!this->clients[i]->IsRunning()) continue;
+        this->clients[i]->Send(msg);
+    }
 }
 
 
@@ -436,9 +495,13 @@ bool cluster::SimpleClusterServer::onViewNameUpdated(param::ParamSlot& slot) {
 void cluster::SimpleClusterServer::disconnectView(void) {
     if (this->viewConStatus == 1) {
         this->viewSlot.DisconnectCalls();
+        this->viewSlot.ConnectCall(NULL);
         this->viewConStatus = -1; // disconnected
         vislib::sys::Log::DefaultLog.WriteInfo("SCS: View Disconnected");
         this->stopServer();
+        if (this->camUpdateThread.IsRunning()) {
+            this->camUpdateThread.Join();
+        }
     }
 }
 
@@ -455,6 +518,7 @@ void cluster::SimpleClusterServer::newViewConnected(void) {
         this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
     this->viewConStatus = 1;
     this->onServerReconnectClicked(this->serverReconnectSlot);
+    this->camUpdateThread.Start(this);
 }
 
 
@@ -616,4 +680,58 @@ bool cluster::SimpleClusterServer::onServerStartStopClicked(param::ParamSlot& sl
     this->serverRunningSlot.Param<param::BoolParam>()->SetValue(&slot == &this->serverStartSlot);
     //this->onServerRunningChanged(slot);
     return true;
+}
+
+
+/*
+ * cluster::SimpleClusterServer::cameraUpdateThread
+ */
+DWORD cluster::SimpleClusterServer::cameraUpdateThread(void *userData) {
+    const view::AbstractView *av = NULL;
+    SimpleClusterServer *This = static_cast<SimpleClusterServer *>(userData);
+    unsigned int syncnumber = static_cast<unsigned int>(-1);
+    Call *call = NULL;
+    unsigned int csn = 0;
+    vislib::RawStorage mem;
+    mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
+    vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
+    vislib::net::ShallowSimpleMessage msg(mem);
+
+    while (true) {
+        This->LockModuleGraph(false);
+        av = NULL;
+        call = This->viewSlot.CallAs<Call>();
+        if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
+            av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+        }
+        This->UnlockModuleGraph();
+        if (av == NULL) break;
+
+        csn = av->GetCameraSyncNumber();
+        if ((csn != syncnumber) || This->camUpdateThreadForce) {
+            syncnumber = csn;
+            This->camUpdateThreadForce = false;
+            serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData));
+            av->SerialiseCamera(serialiser);
+
+            msg.SetStorage(mem, mem.GetSize());
+            msg.GetHeader().SetMessageID(MSG_CAMERAUPDATE);
+            msg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(
+                mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData)));
+
+            // Better use another server
+            This->clientsLock.Lock();
+            for (SIZE_T i = 0; i < This->clients.Count(); i++) {
+                if (This->clients[i]->IsRunning()) {
+                    This->clients[i]->Send(msg);
+                }
+            }
+            This->clientsLock.Unlock();
+
+        }
+
+        vislib::sys::Thread::Sleep(1000 / 60); // ~60 fps
+    }
+
+    return 0;
 }

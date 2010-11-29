@@ -16,10 +16,13 @@
 #include "vislib/assert.h"
 #include "vislib/Log.h"
 #include "vislib/NetworkInformation.h"
+#include "vislib/RawStorage.h"
+#include "vislib/RawStorageSerialiser.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
 #include "vislib/SystemInformation.h"
 #include "vislib/Trace.h"
+#include "vislib/UTF8Encoder.h"
 #include <signal.h>
 //#include "AbstractNamedObject.h"
 //#include <GL/gl.h>
@@ -94,7 +97,12 @@ void cluster::SimpleClusterClient::ContinueSetup(int i) {
             vislib::net::SimpleMessage msg;
             msg.GetHeader().SetMessageID(MSG_VIEWCONNECT);
             this->send(msg);
-        }
+        } break;
+        case 2: {
+            vislib::net::SimpleMessage msg;
+            msg.GetHeader().SetMessageID(MSG_CAMERAUPDATE);
+            this->send(msg);
+        } break;
     }
 }
 
@@ -250,17 +258,57 @@ bool cluster::SimpleClusterClient::OnMessageReceived(vislib::net::SimpleMessageD
         case MSG_VIEWCONNECT: {
             vislib::StringA toName(msg.GetBodyAs<char>(), msg.GetHeader().GetBodySize());
             Log::DefaultLog.WriteInfo("Client: View::CalleeSlot %s to connect\n", toName.PeekBuffer());
-            for (SIZE_T i = 0; i < this->views.Count(); i++) {
-                this->views[i]->ConnectView(toName);
+            if (!this->views.IsEmpty()) {
+                for (SIZE_T i = 0; i < this->views.Count(); i++) {
+                    this->views[i]->ConnectView(toName);
+                }
+                this->views[0]->SetCamIniMessage();
+            }
+            //answer.GetHeader().SetMessageID(MSG_CAMERAUPDATE);
+            //this->send(answer);
+        } break;
+        case MSG_PARAMUPDATE: {
+            vislib::StringA name(msg.GetBodyAs<char>(), msg.GetHeader().GetBodySize());
+            vislib::StringA::Size pos = name.Find('=');
+            vislib::TString value;
+            vislib::UTF8Encoder::Decode(value, name.Substring(pos + 1));
+            name.Truncate(pos);
+            //Log::DefaultLog.WriteInfo("Setting Parameter %s to %s\n", name.PeekBuffer(), vislib::StringA(value).PeekBuffer());
+            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(name, true));
+            if (ps == NULL) {
+                Log::DefaultLog.WriteWarn("Unable to set parameter %s; not found\n", name.PeekBuffer());
+            } else {
+                bool b = ps->Param<param::AbstractParam>()->ParseValue(value);
+                if (b) {
+//#define LOGPARAMETERUPDATEWITHVALUE
+                    Log::DefaultLog.WriteInfo("Parameter %s updated"
+#ifdef LOGPARAMETERUPDATEWITHVALUE
+                        " to %s"
+#endif
+                        "\n", name.PeekBuffer()
+#ifdef LOGPARAMETERUPDATEWITHVALUE
+                        , vislib::StringA(value).PeekBuffer()
+#endif
+                        );
+                } else {
+                    Log::DefaultLog.WriteWarn("Unable to set parameter %s; parse error\n", name.PeekBuffer());
+                }
             }
         } break;
+        case MSG_CAMERAUPDATE:
+            if (!this->views.IsEmpty()) {
+                vislib::RawStorageSerialiser ser(msg.GetBodyAs<BYTE>(), msg.GetHeader().GetBodySize());
+                ser.SetOffset(0);
+                view::AbstractView *v = this->views[0]->GetConnectedView();
+                if (v != NULL) {
+                    v->DeserialiseCamera(ser);
+                }
+            }
+            break;
         default:
             Log::DefaultLog.WriteInfo("Client: TCP Message %d received\n", static_cast<int>(msg.GetHeader().GetMessageID()));
             break;
     }
-
-    // TODO: Implement
-
     return true;
 }
 

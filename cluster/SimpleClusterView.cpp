@@ -9,6 +9,7 @@
 #include "cluster/SimpleClusterView.h"
 #include "cluster/SimpleClusterClientViewRegistration.h"
 #include "cluster/SimpleClusterClient.h"
+#include "cluster/SimpleClusterCommUtil.h"
 #include "AbstractNamedObject.h"
 #include "CoreInstance.h"
 #include <GL/gl.h>
@@ -56,9 +57,13 @@ void cluster::SimpleClusterView::Render(void) {
     }
 
     if (this->initMsg != NULL) {
-        this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
+        if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH) {
+            this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
+            this->client->ContinueSetup();
+        } else if (this->initMsg->GetHeader().GetMessageID() == MSG_CAMERAUPDATE) {
+            this->client->ContinueSetup(2);
+        }
         SAFE_DELETE(this->initMsg);
-        this->client->ContinueSetup();
     }
 
     if (this->client == NULL) {
@@ -145,6 +150,19 @@ void cluster::SimpleClusterView::SetSetupMessage(const vislib::net::AbstractSimp
         SAFE_DELETE(this->initMsg);
     }
     this->initMsg = new vislib::net::SimpleMessage(msg);
+}
+
+
+/*
+ * cluster::SimpleClusterView::SetCamIniMessage
+ */
+void cluster::SimpleClusterView::SetCamIniMessage(void) {
+    if (this->initMsg != NULL) {
+        SAFE_DELETE(this->initMsg);
+    }
+    vislib::net::SimpleMessage *m = new vislib::net::SimpleMessage();
+    m->GetHeader().SetMessageID(MSG_CAMERAUPDATE);
+    this->initMsg = m;
 }
 
 

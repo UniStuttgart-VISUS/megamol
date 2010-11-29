@@ -15,6 +15,7 @@
 #include "Module.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
+#include "param/ParamUpdateListener.h"
 #include "cluster/SimpleClusterCommUtil.h"
 #include "vislib/CommServer.h"
 #include "vislib/CommServerListener.h"
@@ -38,7 +39,7 @@ namespace cluster {
      * Abstract base class of override rendering views
      */
     class SimpleClusterServer : public Module, public job::AbstractJob,
-        public vislib::net::CommServerListener {
+        public vislib::net::CommServerListener, public param::ParamUpdateListener {
     public:
 
         /**
@@ -146,6 +147,13 @@ namespace cluster {
         virtual bool OnNewConnection(const vislib::net::CommServer& src,
             vislib::SmartRef<vislib::net::AbstractCommChannel> channel) throw();
 
+        /**
+         * Callback called when a parameter is updated
+         *
+         * @param slot The parameter updated
+         */
+        virtual void ParamUpdated(param::ParamSlot& slot);
+
     private:
 
         /**
@@ -246,6 +254,15 @@ namespace cluster {
              */
             inline bool IsRunning(void) const {
                 return this->dispatcher.IsRunning();
+            }
+
+            /**
+             * Sends a simple message
+             *
+             * @param msg The simple message
+             */
+            inline void Send(const vislib::net::AbstractSimpleMessage& msg) {
+                this->send(msg);
             }
 
         private:
@@ -364,6 +381,16 @@ namespace cluster {
          * @return True
          */
         bool onServerStartStopClicked(param::ParamSlot& slot);
+
+        /**
+         * The thread function for camera updates
+         *
+         * @param userData
+         *
+         * @return 0
+         */
+        static DWORD cameraUpdateThread(void *userData);
+
         /** The parameter slot holding the name of the view module to be use */
         param::ParamSlot viewnameSlot;
 
@@ -420,6 +447,12 @@ namespace cluster {
 
         /** The connected clients */
         vislib::PtrArray<Client> clients; /* *HAZARD* TODO: Fixme -> executing code in deleted objects */
+
+        /** The thread to update the camera settings */
+        vislib::sys::Thread camUpdateThread;
+
+        /** Use the force luke */
+        bool camUpdateThreadForce;
 
         /** Client receivers have access */
         friend class Client;

@@ -96,11 +96,25 @@ namespace cluster {
         void SetSetupMessage(const vislib::net::AbstractSimpleMessage& msg);
 
         /**
+         * Sets a initialization message for the camera parameters
+         */
+        void SetCamIniMessage(void);
+
+        /**
          * Connects this view to another view
          *
          * @param toName The slot to connect to
          */
         void ConnectView(const vislib::StringA toName);
+
+        /**
+         * Answer the connected view
+         *
+         * @return The connected view or NULL if no view is connected
+         */
+        inline view::AbstractView *GetConnectedView(void) const {
+            return this->getConnectedView();
+        }
 
     protected:
 

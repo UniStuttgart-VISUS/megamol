@@ -55,6 +55,8 @@ namespace cluster {
 
 #define MSG_MODULGRAPH 6
 #define MSG_VIEWCONNECT 7
+#define MSG_PARAMUPDATE 8
+#define MSG_CAMERAUPDATE 9
 
     /**
      * Struct layout a simple cluster datagram
