@@ -425,11 +425,23 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\GlButton.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GlWidgetLibrary.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MolecularDataCall.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\MoleculeCartoonRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeSequenceRenderer.cpp"
 				>
 			</File>
 			<File
@@ -611,11 +623,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GlButton.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GlWidget.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GlWidgetLibrary.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MolecularDataCall.h"
 				>
 			</File>
 			<File
 				RelativePath=".\MoleculeCartoonRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeSequenceRenderer.h"
 				>
 			</File>
 			<File
