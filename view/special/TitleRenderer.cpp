@@ -9,6 +9,7 @@
 #define _USE_MATH_DEFINES
 #include "TitleRenderer.h"
 #include <cmath>
+//#include <ctime>
 #include "MegaMolLogo.h"
 #include "CoreInstance.h"
 #include "vislib/assert.h"
@@ -17,6 +18,9 @@
 #include "vislib/OpenGLVISLogo.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/Vector.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif /* _WIN32 */
 
 using namespace megamol::core;
 
@@ -420,8 +424,22 @@ void view::special::TitleRenderer::Render(
 
     ::glTranslatef(((this->titleWidth * titleScale) + titleGap) * 0.5f, 0.0f, 0.0f);
 
+    double angle;
+    //angle = 15.0 * core->GetInstanceTime(); // not synchronized at all
+//#ifdef _WIN32
+//    //SYSTEMTIME now; // not sufficiently synchronized :-(
+//    //GetSystemTime(&now);
+//    //angle = static_cast<double>(now.wSecond);
+//    //angle += static_cast<double>(now.wMinute) * 60.0;
+//    //angle += static_cast<double>(now.wHour) * 60.0 * 60.0;
+//    //angle += static_cast<double>(now.wMilliseconds) * 0.001;
+//    //angle *= 30.0; // 20 deg per second
+//#else /* _WIN32 */
+    angle = 0.0;
+//#endif /* _WIN32 */
+
     ::glPushMatrix();
-    ::glRotated(15.0 * core->GetInstanceTime(), 0.0, -1.0, 0.0);
+    ::glRotated(angle, 0.0, -1.0, 0.0);
     ::glRotatef(45.0f, 0.0f, 0.0f, -1.0f);
 
     ::glEnable(GL_CULL_FACE);
