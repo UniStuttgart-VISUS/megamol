@@ -390,6 +390,9 @@ void view::View3D::Render(void) {
 
         if (this->timeFrameForced) {
             this->timeFrameForced = false;
+            
+            // for now truncate frame time (?)
+            
         } else {
             unsigned int frameCnt = cr3d->TimeFramesCount();
             if (this->animPlaySlot.Param<param::BoolParam>()->Value()) {

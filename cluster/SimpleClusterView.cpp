@@ -80,6 +80,7 @@ void cluster::SimpleClusterView::Render(void) {
     view::CallRenderView *crv = this->getCallRenderView();
     this->checkParameters();
 
+    /* *HAZARD* problem here !!! */
     if (!this->frozen) {
         this->frozenTime = this->instance()->GetInstanceTime();
     }
@@ -105,7 +106,8 @@ void cluster::SimpleClusterView::Render(void) {
                 const_cast<AbstractNamedObject*>(crv->PeekCalleeSlot()->Parent()));
         if (view != NULL){
             if (this->frozenCam != NULL) view->DeserialiseCamera(*this->frozenCam);
-            view->SetFrameTime(static_cast<float>(this->frozenTime));
+            /* this forces to use this time */
+            //view->SetFrameTime(static_cast<float>(this->frozenTime));
         }
 
         if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
