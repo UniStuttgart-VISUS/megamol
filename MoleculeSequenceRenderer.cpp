@@ -63,9 +63,6 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
 	unsigned int residueCount;// = data->ResidueCount();
 	MolecularDataCall::Residue **residues = data->Residues();
 
-	chains[0].FirstMoleculeIndex();
-	molecules[0].ResidueCount();
-
 	const float buttonWidth = 20;
 	const float buttonHeight = 10;
 	const float buttonSpacing = 2;
@@ -97,12 +94,12 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
 				//TODO: filter AminoAcids
 				this->paintButton(
 						residuePosition, 0, 
-						buttonWidth, buttonHeight, 
+						buttonWidth - buttonSpacing, buttonHeight, 
 						0.4f, 0.4f, 0.6f,
 						//"residue"
                         data->ResidueTypeNames()[residues[residue]->Type()].PeekBuffer()
 				);
-				residuePosition += buttonWidth + buttonSpacing;
+				residuePosition += buttonWidth;
 			}
 
 			residuesWidth = residueCount * (buttonWidth + buttonSpacing);		
@@ -110,12 +107,12 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
             tmpStr.Format( " Molecule %i", molecule);
 			this->paintButton(
 					moleculePosition, 15,
-					residuesWidth, 10, 
+					residuesWidth - buttonSpacing, buttonHeight, 
 					1.0f, 0.8f, 0.0f,
 					//"Molecule"
                     tmpStr.PeekBuffer()
 			);
-			moleculePosition += residuesWidth + buttonSpacing;
+			moleculePosition += residuesWidth;
 		}
 		
 		moleculeWidth = moleculeCount * (residuesWidth + buttonSpacing);
@@ -123,12 +120,12 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
         tmpStr.Format( " Chain %i", chain);
 		this->paintButton(
 				chainPosition, 30,
-				moleculeWidth, 10, 
+				moleculeWidth, buttonHeight, 
 				1.0f, 0.0f, 0.0f,
 				//"chain"
                 tmpStr
 		);
-		chainPosition += moleculeWidth + buttonSpacing;
+		chainPosition += moleculeWidth;
 	}
 
 	
