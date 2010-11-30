@@ -1455,6 +1455,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\misc\ImageViewer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\misc\LinesDataCall.h"
 					>
 				</File>
@@ -1508,6 +1512,10 @@
 				</File>
 				<File
 					RelativePath=".\misc\ExtBezierRaycastRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\misc\ImageViewer.cpp"
 					>
 				</File>
 				<File

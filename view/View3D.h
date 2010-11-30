@@ -26,6 +26,7 @@
 #include "vislib/CameraRotate2DLookAt.h"
 #include "vislib/CameraZoom2DMove.h"
 #include "vislib/CameraZoom2DAngle.h"
+#include "vislib/CameraMove2D.h"
 #include "vislib/ColourRGBAu8.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/graphicstypes.h"
@@ -366,6 +367,9 @@ namespace view {
 
         /** camera angle zoom */
         vislib::graphics::CameraZoom2DAngle zoomer2;
+
+        /** camera mover */
+        vislib::graphics::CameraMove2D mover;
 
         /** camera look-at distance changer */
         vislib::graphics::CameraLookAtDist lookAtDist;

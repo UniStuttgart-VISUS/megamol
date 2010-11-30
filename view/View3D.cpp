@@ -46,7 +46,7 @@ using namespace megamol::core;
  */
 view::View3D::View3D(void) : view::AbstractView3D(), cam(), camParams(),
         camOverrides(), cursor2d(), modkeys(), rotator1(),
-        rotator2(), zoomer1(), zoomer2(), lookAtDist(),
+        rotator2(), zoomer1(), zoomer2(), mover(), lookAtDist(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         lightDir(0.5f, -1.0f, -1.0f), isCamLight(true), bboxs(),
         animPlaySlot("anim::play", "Bool parameter to play/stop the animation"),
@@ -683,17 +683,21 @@ bool view::View3D::create(void) {
     this->rotator1.SetTestButton(0 /* left mouse button */);
     this->rotator1.SetAltModifier(
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
-    this->rotator1.SetModifierTestCount(1);
+    this->rotator1.SetModifierTestCount(2);
     this->rotator1.SetModifierTest(0,
         vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+    this->rotator1.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
     this->rotator2.SetCameraParams(this->camParams);
     this->rotator2.SetTestButton(0 /* left mouse button */);
     this->rotator2.SetAltModifier(
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
-    this->rotator2.SetModifierTestCount(1);
+    this->rotator2.SetModifierTestCount(2);
     this->rotator2.SetModifierTest(0,
         vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+    this->rotator2.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
 
     this->zoomer1.SetCameraParams(this->camParams);
     this->zoomer1.SetTestButton(2 /* mid mouse button */);
@@ -712,6 +716,12 @@ bool view::View3D::create(void) {
     this->zoomer2.SetModifierTest(1,
         vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
 
+    this->mover.SetCameraParams(this->camParams);
+    this->mover.SetTestButton(0 /* left mouse button */);
+    this->mover.SetModifierTestCount(1);
+    this->mover.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, true);
+
     this->lookAtDist.SetCameraParams(this->camParams);
     this->lookAtDist.SetTestButton(2 /* mid mouse button */);
     this->lookAtDist.SetModifierTestCount(1);
@@ -723,6 +733,7 @@ bool view::View3D::create(void) {
     this->cursor2d.RegisterCursorEvent(&this->rotator2);
     this->cursor2d.RegisterCursorEvent(&this->zoomer1);
     this->cursor2d.RegisterCursorEvent(&this->zoomer2);
+    this->cursor2d.RegisterCursorEvent(&this->mover);
     this->cursor2d.RegisterCursorEvent(&this->lookAtDist);
     this->cursor2d.SetInputModifiers(&this->modkeys);
 
@@ -743,6 +754,7 @@ void view::View3D::release(void) {
     this->cursor2d.UnregisterCursorEvent(&this->rotator2);
     this->cursor2d.UnregisterCursorEvent(&this->zoomer1);
     this->cursor2d.UnregisterCursorEvent(&this->zoomer2);
+    this->cursor2d.UnregisterCursorEvent(&this->mover);
     SAFE_DELETE(this->frozenValues);
 }
 
