@@ -213,8 +213,8 @@ bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
     int minInt[3], maxInt[3];
     unsigned sizes[3];
     int thiscoord[3];
-    int *buff = new int[(unsigned int)(AtomCount()*3*1.2)]; // TODO: why int?
     unsigned int bitsize;
+    unsigned int byteSize;
 
     // write date to outfile
     int date = 1995;
@@ -282,21 +282,24 @@ bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
     outfile->write((char*)&minVal, 12);
     outfile->write((char*)&maxVal, 12);
 
-
     // write smallidx to outfile
     int smallidx = 0;
     outfile->write((char*)&smallidx, 4);
 
-    // loop through all coordinate-triplets,transform coords to
-    // unsigned ints and encode
     unsigned int bitoffset = 0;
 
-    char *charbuff = (char*)buff;
+    byteSize = ((bitsize+1) * (AtomCount() + 1)) / 8 + 1;
+    
+    // byteSize = actual size of the datablock
+    // leave the rest filled with zeros
+    char *charbuff = new char[byteSize + (4 -  byteSize % 4) % 4]; 
     char *charPt = charbuff;
 
     // important for bit-operations to work properly
-    memset(charbuff, 0x00, AtomCount()*3*1.2*4);
+    memset(charbuff, 0x00,  byteSize + ((4 -  byteSize % 4) % 4));
 
+    // loop through all coordinate-triplets,transform coords to
+    // unsigned ints and encode
     for(i = 0; i < AtomCount(); i++) {
 
         thiscoord[0] = (int)(atomPosition[i*3+0]*precision) - minInt[0];
@@ -321,19 +324,15 @@ bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
     }
 
     // write the size to outfile
-    unsigned int s = ((bitsize+1) * (AtomCount() + 1)) / 8 + 1;
-
+    unsigned int s =  byteSize;
     changeByteOrder((char*)&s);
     outfile->write((char*)&s, 4);
 
     // write buffer to file
-    changeByteOrder((char*)&s);
-    outfile->write((char*)buff, s);
-
-    outfile->seekp((4 - s % 4) % 4, std::ios_base::cur);
+    outfile->write(charbuff,  byteSize+((4 - byteSize % 4) % 4));
 
     delete[] box;
-    delete[] buff;
+    delete[] charbuff;
 
     return true;
 }
@@ -1726,14 +1725,15 @@ bool PDBLoader::readNumXTCFrames() {
         // update the bounding box by uniting it with the last frames box
         this->bbox.Union(tmpBBox);
         // get the current frames bounding box including the atom radius
-        vislib::math::Cuboid<float> tmpBBox(
-            (float)minint[0] / precision - 3.0f,
-            (float)minint[1] / precision - 3.0f,
-            (float)minint[2] / precision - 3.0f,
-            (float)maxint[0] / precision + 3.0f,
-            (float)maxint[1] / precision + 3.0f,
-            (float)maxint[2] / precision + 3.0f);
-
+        // note: atom radius is divided by 10
+        tmpBBox = vislib::math::Cuboid<float>(
+            (float)minint[0] / precision - 0.3f,
+            (float)minint[1] / precision - 0.3f,
+            (float)minint[2] / precision - 0.3f,
+            
+            (float)maxint[0] / precision + 0.3f,
+            (float)maxint[1] / precision + 0.3f,
+            (float)maxint[2] / precision + 0.3f);
 
         // skip some header data
         xtcFile.seekg(4, std::ios_base::cur);
