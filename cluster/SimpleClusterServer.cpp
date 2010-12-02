@@ -328,8 +328,8 @@ bool cluster::SimpleClusterServer::create(void) {
 
     if (this->instance()->Configuration().IsConfigValueSet("scsrun")) {
         try {
-            bool run = vislib::TCharTraits::ParseBool(
-            this->instance()->Configuration().ConfigValue("scsrun"));
+            bool run = vislib::CharTraitsW::ParseBool(
+                this->instance()->Configuration().ConfigValue("scsrun"));
             this->serverRunningSlot.Param<param::BoolParam>()->SetValue(run);
         } catch(...) {
             vislib::sys::Log::DefaultLog.WriteError("Unable to parse configuration value scsrun");
@@ -666,7 +666,7 @@ bool cluster::SimpleClusterServer::onServerRestartClicked(param::ParamSlot& slot
     vislib::sys::Thread::Sleep(500);
 
     if (this->serverThread.IsRunning()) {
-        Log::DefaultLog.WriteInfo("TCP-Server started on %s\n", ep.ToStringA());
+        Log::DefaultLog.WriteInfo("TCP-Server started on %s\n", ep.ToStringA().PeekBuffer());
         this->onServerReconnectClicked(slot);
     }
     return true;
