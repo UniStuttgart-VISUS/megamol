@@ -766,6 +766,9 @@ void megamol::viewer::Window::PresentationModeRefresh(void) {
  * megamol::viewer::Window::SetVSync
  */
 void megamol::viewer::Window::SetVSync(bool active) {
+    // this is a really bad idea, because it seems to
+    // cause the NVidia driver to do stupid things in kernel mode
+    //::glutSetWindow(this->glutID);
     vislib::graphics::gl::EnableVSync(active);
 }
 
