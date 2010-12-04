@@ -15,17 +15,19 @@
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         const IPEndPoint& endPoint) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
-    return new IPCommEndPoint(endPoint);
+    return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(endPoint), false);
 }
 
 
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         const IPAgnosticAddress& ipAddress, const unsigned short port) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     return IPCommEndPoint::Create(IPEndPoint(ipAddress, port));
@@ -35,7 +37,8 @@ vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         const IPAddress& ipAddress, const unsigned short port) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     return IPCommEndPoint::Create(IPEndPoint(ipAddress, port));
@@ -45,7 +48,8 @@ vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         const IPAddress6& ipAddress, const unsigned short port) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     return IPCommEndPoint::Create(IPEndPoint(ipAddress, port));
@@ -55,7 +59,8 @@ vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         const ProtocolVersion protocolVersion, const unsigned short port) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     switch (protocolVersion) {
@@ -77,7 +82,8 @@ vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
             const ProtocolVersion protocolVersion,
             const char *hostNameOrAddress,
             const unsigned short port) {
@@ -103,7 +109,8 @@ vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         IPAgnosticAddress::AddressFamily addressFamily,
         const char *str) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
@@ -120,17 +127,13 @@ vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         const char *str) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
-    IPCommEndPoint *retval = IPCommEndPoint::Create(IPV4, 
+    SmartRef<AbstractCommEndPoint> retval = IPCommEndPoint::Create(IPV4, 
         static_cast<unsigned short>(0));
-    try {
-        retval->Parse(str);
-    } catch (...) {
-        retval->Release();
-        throw;
-    }
+    retval->Parse(str);
     return retval;
 }
 
@@ -138,17 +141,13 @@ vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
 /*
  * vislib::net::IPCommEndPoint::Create
  */
-vislib::net::IPCommEndPoint *vislib::net::IPCommEndPoint::Create(
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::IPCommEndPoint::Create(
         const wchar_t *str) {
     VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
-    IPCommEndPoint *retval = IPCommEndPoint::Create(IPV4, 
+    SmartRef<AbstractCommEndPoint> retval = IPCommEndPoint::Create(IPV4, 
         static_cast<unsigned short>(0));
-    try {
-        retval->Parse(str);
-    } catch (...) {
-        retval->Release();
-        throw;
-    }
+    retval->Parse(str);
     return retval;
 }
 

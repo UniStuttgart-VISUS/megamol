@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
+#include "vislib/Socket.h"                          // Must be first!
 #include "vislib/SimpleMessageDispatchListener.h"
 
-#include "vislib/AbstractInboundCommChannel.h"
 #include "vislib/AbstractSimpleMessage.h"
 #include "vislib/Exception.h"
 #include "vislib/SimpleMessageDispatcher.h"

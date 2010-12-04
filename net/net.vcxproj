@@ -408,13 +408,9 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\AbstractBidiCommChannel.cpp" />
-    <ClCompile Include="src\AbstractClientEndPoint.cpp" />
     <ClCompile Include="src\AbstractCommChannel.cpp" />
     <ClCompile Include="src\AbstractCommEndPoint.cpp" />
-    <ClCompile Include="src\AbstractInboundCommChannel.cpp" />
-    <ClCompile Include="src\AbstractOutboundCommChannel.cpp" />
-    <ClCompile Include="src\AbstractServerEndPoint.cpp" />
+    <ClCompile Include="src\AbstractCommServerChannel.cpp" />
     <ClCompile Include="src\AbstractSimpleMessage.cpp" />
     <ClCompile Include="src\AbstractSimpleMessageHeader.cpp" />
     <ClCompile Include="src\AbstractSyncMsgUser.cpp" />
@@ -462,13 +458,9 @@
     <ClCompile Include="src\UnexpectedMessageException.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\vislib\AbstractBidiCommChannel.h" />
-    <ClInclude Include="include\vislib\AbstractClientEndPoint.h" />
     <ClInclude Include="include\vislib\AbstractCommChannel.h" />
     <ClInclude Include="include\vislib\AbstractCommEndPoint.h" />
-    <ClInclude Include="include\vislib\AbstractInboundCommChannel.h" />
-    <ClInclude Include="include\vislib\AbstractOutboundCommChannel.h" />
-    <ClInclude Include="include\vislib\AbstractServerEndPoint.h" />
+    <ClInclude Include="include\vislib\AbstractCommServerChannel.h" />
     <ClInclude Include="include\vislib\AbstractSimpleMessage.h" />
     <ClInclude Include="include\vislib\AbstractSimpleMessageHeader.h" />
     <ClInclude Include="include\vislib\AbstractSyncMsgUser.h" />

@@ -14,7 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
+#include "vislib/TcpCommChannel.h"      // Must be first!
+#include "vislib/AbstractCommChannel.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Runnable.h"
 #include "vislib/SimpleMessage.h"
@@ -27,7 +28,6 @@ namespace vislib {
 namespace net {
 
     /* Forward declarations. */
-    class AbstractInboundCommChannel;
     class SimpleMessageDispatchListener;
 
 
@@ -39,6 +39,26 @@ namespace net {
     class SimpleMessageDispatcher : public vislib::sys::Runnable {
 
     public:
+
+        /**
+         * This structure contains the  configuration of the message dispatcher 
+         * and is passed to the Run() method of the dispatcher. The dispatcher 
+         * will copy the data of the configuration to local storage. Therefore 
+         * the caller can release its reference to the resources in the 
+         * configuration once the Start() method of the dispatcher thread 
+         * returns. The dispatcher will not release any references except for 
+         * those it added by itself.
+         */
+        typedef struct Configuration_t {
+            inline Configuration_t(void) {}
+            inline Configuration_t(SmartRef<AbstractCommChannel> channel) 
+                : Channel(channel) {}
+            inline Configuration_t(SmartRef<TcpCommChannel> channel)
+                : Channel(channel.DynamicCast<AbstractCommChannel>()) {}
+
+            /** Channel to be used by the dispatcher. */
+            SmartRef<AbstractCommChannel> Channel;
+        } Configuration;
 
         /** Ctor. */
         SimpleMessageDispatcher(void);
@@ -64,35 +84,35 @@ namespace net {
          * Get the communication channel the dispatcher is receiving data from.
          * Callers should never receive from this channel on their own!
          *
+         * This method is not thread-safe!
+         *
          * @return The channel used for receiving data. DO NOT RECEIVE DATA ON
-         *         THIS CHANNEL!
+         *         THIS CHANNEL OR MANIPULATE THE SETTINGS OF THE CHANNEL!
          */
-        inline SmartRef<AbstractInboundCommChannel>& GetChannel(void) {
-            return this->channel;
+        inline SmartRef<AbstractCommChannel> GetChannel(void) {
+            return this->configuration.Channel;
         }
+
+        /** 
+         * Answer the configuration of the dispatcher. Callers should never
+         * manipulate the configuration while the dispatcher is running.
+         *
+         * This method is not thread-safe!
+         *
+         * @return The configuration of the dispatcher.
+         */
+        inline const Configuration& GetConfiguration(void) const {
+            return this->configuration;
+        } 
 
         /**
          * Startup callback of the thread. The Thread class will call that 
          * before Run().
          *
-         * Note: The static type of 'channel', which is passed to the Start() 
-         * method of Thread must be AbstractCommChannel. The channel itself must
-         * have a dynamic type of AbstractInboundCommChannel, but the 
-         * inheritance graph of the comm channel requires the static type of the
-         * pointer being AbstractCommChannel and nothing else! Otherwise, the
-         * thread will crash (in the debug version, we assert against this 
-         * error).
-         *
-         * Note: Never use a SmartRef for 'channel'! Dereference the SmartRef
-         * using operator-> and cast the result to AbstractCommChannel * if
-         * necessary.
-         *
-         * @param channel A pointer to an AbstractCommChannel, which is
-         *                used to receive data. The channel must have been 
-         *                opened before. The object will add to the reference
-         *                count of the channel.
+         * @param config A pointer to the Configuration, which specifies the
+         *               settings of the dispatcher.
          */
-        virtual void OnThreadStarting(void *channel);
+        virtual void OnThreadStarting(void *config);
 
         /**
          * Removes, if registered, 'listener' from the list of objects informed
@@ -110,27 +130,13 @@ namespace net {
         /**
          * Perform the work of a thread.
          *
-         * Note: The static type of 'channel', which is passed to the Start() 
-         * method of Thread must be AbstractCommChannel. The channel itself must
-         * have a dynamic type of AbstractInboundCommChannel, but the 
-         * inheritance graph of the comm channel requires the static type of the
-         * pointer being AbstractCommChannel and nothing else! Otherwise, the
-         * thread will crash (in the debug version, we assert against this 
-         * error).
-         *
-         * Note: Never use a SmartRef for 'channel'! Dereference the SmartRef
-         * using operator-> and cast the result to AbstractCommChannel * if
-         * necessary.
-         *
-         * @param channel A pointer to an AbstractCommChannel, which is
-         *                used to receive data. The channel must have been 
-         *                opened before. The object will add to the reference
-         *                count of the channel.
+         * @param config A pointer to the Configuration, which specifies the
+         *               settings of the dispatcher.
          *
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        virtual DWORD Run(void *channel);
+        virtual DWORD Run(void *config);
 
         /**
          * Abort the work of the dispatcher by forcefully closing the underlying
@@ -182,8 +188,8 @@ namespace net {
          */
         bool fireMessageReceived(const AbstractSimpleMessage& msg);
 
-        /** The communication channel that is used to receive messages. */
-        SmartRef<AbstractInboundCommChannel> channel;
+        /** The configuration of the dispatcher. */
+        Configuration configuration;
 
         /** The list of listeners. */
         ListenerList listeners;

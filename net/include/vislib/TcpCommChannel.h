@@ -15,10 +15,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/Socket.h"          // Must be first.
-#include "vislib/AbstractBidiCommChannel.h"
-#include "vislib/AbstractClientEndPoint.h"
-#include "vislib/AbstractServerEndPoint.h"
+#include "vislib/Socket.h"                      // Must be first!
+#include "vislib/AbstractCommServerChannel.h"
 
 
 namespace vislib {
@@ -27,19 +25,20 @@ namespace net {
 
     /**
      * This class implements a communication channel based on TCP/IP sockets.
-     * The TCP/IP version supports AbstractClientEndPoint and
-     * AbstractServerEndPoint as well as AbstractBidiCommChannel.
-     *
-     * Q: Why does TcpCommChannel not support vislib::net::SocketAddress?
-     * A: TcpCommChannel is designed to support IPv6 from the beginning. 
-     *    SocketAddress is only for backward compatibility and should not be used
-     *    for new programs.
+     * The TCP/IP version supports client as well as server end point behaviour.
      */
-    class TcpCommChannel : public AbstractBidiCommChannel,
-            public AbstractClientEndPoint, 
-            public AbstractServerEndPoint {
+    class TcpCommChannel : public AbstractCommServerChannel {
 
     public:
+
+        /**
+         * Create a new channel.
+         *
+         * @param flags The flags for the channel.
+         */
+        static inline SmartRef<TcpCommChannel> Create(const UINT64 flags = 0) {
+            return SmartRef<TcpCommChannel>(new TcpCommChannel(flags), false);
+        }
 
          /**
           * This behaviour flag disables the Nagle algorithm for send 
@@ -57,20 +56,6 @@ namespace net {
         static const UINT64 FLAG_REUSE_ADDRESS;
 
         /**
-         * Ctor.
-         *
-         * @param flags The flags for the channel.
-         */
-        TcpCommChannel(const UINT64 flags = 0);
-
-        /**
-         * Create a communication channel from an existing socket.
-         *
-         * @param socket The socket to be used.
-         */
-        explicit TcpCommChannel(Socket& socket, const UINT64 flags = 0);
-
-        /**
          * Permit incoming connection attempt on the communication channel.
          *
          * @return The client connection.
@@ -80,38 +65,16 @@ namespace net {
         virtual SmartRef<AbstractCommChannel> Accept(void);
 
         /**
-         * Increment the reference count.
+         * Binds the server to a specified end point address.
          *
-         * @return The new value of the reference counter.
+         * @param endPoint The end point address to bind to.
+         *
+         * @throws IllegalParamException If the specified end point is no 
+         *                               IP end point.
+         * @throws SocketException If the socket could not be bound to the
+         *                         specified end point address.
          */
-        //UINT32 AddRef(void);
-
-        /**
-         * Binds the server to a specified address.
-         *
-         * @param address The address to bind to.
-         *
-         * @throws SocketException In case the operation fails.
-         */
-        virtual void Bind(const char *address);
-
-        /**
-         * Binds the server to a specified address.
-         *
-         * @param address The address to bind to.
-         *
-         * @throws SocketException In case the operation fails.
-         */
-        virtual void Bind(const wchar_t *address);
-
-        /**
-         * Binds the server to a specified address.
-         *
-         * @param address The address to bind to.
-         *
-         * @throws SocketException In case the operation fails.
-         */
-        virtual void Bind(const IPEndPoint address);
+        virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
 
         /**
          * Terminate the open connection if any and reset the communication
@@ -122,39 +85,14 @@ namespace net {
         virtual void Close(void);
 
         /**
-         * Connects the end point to the peer node at the specified address.
+         * Connects the channel to the peer node at the specified end 
+         * point address.
          *
-         * The method tries to use IPv6 if possible.
+         * @param endPoint The remote end point to connect to.
          *
-         * @param address The address to connect to.
-         *
-         * @throws SocketException In case the operation fails.
-         * @throws IllegalParamException In case the address could not be 
-         *                               parsed.
+         * @throws Exception Or derived in case the operation fails.
          */
-        virtual void Connect(const char *address);
-
-        /**
-         * Connects the end point to the peer node at the specified address.
-         *
-         * The method tries to use IPv6 if possible.
-         *
-         * @param address The address to connect to.
-         *
-         * @throws SocketException In case the operation fails.
-         * @throws IllegalParamException In case the address could not be 
-         *                               parsed.
-         */
-        virtual void Connect(const wchar_t *address);
-
-        /**
-         * Connects the end point to the peer node at the specified address.
-         *
-         * @param address The end point to connect to.
-         *
-         * @throws SocketException In case the operation fails.
-         */
-        virtual void Connect(const IPEndPoint& address);
+        virtual void Connect(SmartRef<AbstractCommEndPoint> endPoint);
 
         /**
          * Get the underlying socket.
@@ -201,8 +139,9 @@ namespace net {
          * @param outData      The buffer to receive the data. The caller must
          *                     allocate this memory and remains owner.
          * @param cntBytes     The number of bytes to receive.
-         * @param timeout      A timeout in milliseconds. A value less than 1 
-         *                     specifies an infinite timeout. If the operation 
+         * @param timeout      A timeout in milliseconds. 
+         *                     Use AbstractCommChannel::TIMEOUT_INFINITE to 
+         *                     specify an infinite timeout. If the operation 
          *                     timeouts, an exception will be thrown.
          * @param forceReceive If the data block cannot be received as a single 
          *                     packet, repeat the operation until all of 
@@ -215,16 +154,8 @@ namespace net {
          * @throws SocketException In case the operation fails.
          */
         virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
-            const INT timeout = TIMEOUT_INFINITE, 
+            const UINT timeout = TIMEOUT_INFINITE, 
             const bool forceReceive = true);
-
-        /**
-         * Decrement the reference count. If the reference count reaches zero,
-         * the object is released using the allocator A.
-         *
-         * @return The new value of the reference counter.
-         */
-        //UINT32 Release(void);
 
         /**
          * Send 'cntBytes' from the location designated by 'data' over the
@@ -234,8 +165,9 @@ namespace net {
          *                  memory.
          * @param cntBytes  The number of bytes to be sent. 'data' must contain
          *                  at least this number of bytes.
-         * @param timeout   A timeout in milliseconds. A value less than 1 
-         *                  specifies an infinite timeout. If the operation 
+         * @param timeout   A timeout in milliseconds. 
+         *                  Use AbstractCommChannel::TIMEOUT_INFINITE to 
+         *                  specify an infinite timeout. If the operation 
          *                  timeouts, an exception will be thrown.
          * @param forceSend If the data block cannot be sent as a single packet,
          *                  repeat the operation until all of 'cntBytes' is sent
@@ -246,15 +178,27 @@ namespace net {
          * @throws SocketException In case the operation fails.
          */
         virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
-            const INT timeout = TIMEOUT_INFINITE, 
+            const UINT timeout = TIMEOUT_INFINITE, 
             const bool forceSend = true);
 
-    protected:
-
-        /** Dtor. */
-        virtual ~TcpCommChannel(void);
-
     private:
+
+        /** Superclass typedef. */
+        typedef AbstractCommServerChannel Super;
+
+        /**
+         * Ctor.
+         *
+         * @param flags The flags for the channel.
+         */
+        explicit TcpCommChannel(const UINT64 flags);
+
+        /**
+         * Create a communication channel from an existing socket.
+         *
+         * @param socket The socket to be used.
+         */
+        explicit TcpCommChannel(Socket& socket, const UINT64 flags);
 
         /**
          * Disallow copies as we want to handle that via reference counting.
@@ -264,6 +208,9 @@ namespace net {
          * @throws UnsupportedOperationException Unconditionally.
          */
         TcpCommChannel(const TcpCommChannel& rhs);
+
+        /** Dtor. */
+        virtual ~TcpCommChannel(void);
 
         /** Behaviour flags for the channel. */
         UINT64 flags;

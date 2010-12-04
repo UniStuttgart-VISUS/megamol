@@ -15,22 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\AbstractBidiCommChannel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AbstractClientEndPoint.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\AbstractCommChannel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AbstractInboundCommChannel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AbstractOutboundCommChannel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AbstractServerEndPoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\AbstractSimpleMessage.cpp">
@@ -132,24 +117,12 @@
     <ClCompile Include="src\IPCommEndPoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\AbstractCommServerChannel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\vislib\AbstractBidiCommChannel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\AbstractClientEndPoint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vislib\AbstractCommChannel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\AbstractInboundCommChannel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\AbstractOutboundCommChannel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\AbstractServerEndPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\AbstractSimpleMessage.h">
@@ -249,6 +222,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\IPCommEndPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\AbstractCommServerChannel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

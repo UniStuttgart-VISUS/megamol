@@ -15,13 +15,14 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractServerEndPoint.h"
+#include "vislib/AbstractCommServerChannel.h"
 #include "vislib/CommServerListener.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Runnable.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/StackTrace.h"
 #include "vislib/StringConverter.h"
+#include "vislib/TcpCommChannel.h"
 
 
 namespace vislib {
@@ -34,6 +35,31 @@ namespace net {
     class CommServer : public vislib::sys::Runnable {
 
     public:
+
+        /**
+         * This structure contains the server configuration and is passed
+         * to the Run() method of the server. The server will copy the data
+         * of the configuration to local storage. Therefore the caller can 
+         * release its reference to the resources in the configuration once
+         * the Start() method of the server thread returns. The server will 
+         * not release any references except for those it added by itself.
+         */
+        typedef struct Configuration_t {
+            inline Configuration_t(void) {}
+            inline Configuration_t(SmartRef<AbstractCommServerChannel> channel,
+                SmartRef<AbstractCommEndPoint> endPoint) 
+                : Channel(channel), EndPoint(endPoint) {}
+            inline Configuration_t(SmartRef<TcpCommChannel> channel,
+                SmartRef<AbstractCommEndPoint> endPoint)
+                : Channel(channel.DynamicCast<AbstractCommServerChannel>()), 
+                EndPoint(endPoint) {}
+
+            /** Channel to be used by the server. */
+            SmartRef<AbstractCommServerChannel> Channel;
+
+            /** The end point to bind the server to. */
+            SmartRef<AbstractCommEndPoint> EndPoint;
+        } Configuration;
 
         /** Ctor. */
         CommServer(void);
@@ -55,219 +81,26 @@ namespace net {
          */
         void AddListener(CommServerListener *listener);
 
-
         /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
+         * Answer the configuration of the server. Callers should never 
+         * manipulate the configuration returned here.
          *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
+         * This method is not thread-safe!
          *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
+         * @return The server configuration.
          */
-        inline void Configure(AbstractServerEndPoint *serverEndPoint,
-                const char *bindAddress) {
-            VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-            this->Configure(serverEndPoint, A2W(bindAddress));
+        inline const Configuration& GetConfiguration(void) const {
+            return this->configuration;
         }
 
         /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
+         * Startup callback of the thread. The Thread class will call that 
+         * before Run().
          *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
-         *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
+         * @param config A pointer to the Configuration, which specifies the
+         *               settings of the server.
          */
-        inline void Configure(SmartRef<AbstractServerEndPoint>& serverEndPoint,
-                const char *bindAddress) {
-            VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-            this->Configure(serverEndPoint, A2W(bindAddress));
-        }
-
-        /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
-         *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
-         *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
-         */
-        void Configure(AbstractServerEndPoint *serverEndPoint, 
-            const wchar_t *bindAddress);
-
-        /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
-         *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
-         *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
-         */
-        void Configure(SmartRef<AbstractServerEndPoint>& serverEndPoint,
-            const wchar_t *bindAddress);
-
-
-        /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
-         *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
-         *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
-         */
-        inline void Configure(AbstractServerEndPoint *serverEndPoint,
-                const StringW& bindAddress) {
-            VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-            this->Configure(serverEndPoint, bindAddress.PeekBuffer());
-        }
-
-        /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
-         *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
-         *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
-         */
-        inline void Configure(SmartRef<AbstractServerEndPoint>& serverEndPoint,
-                const StringA& bindAddress) {
-            VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-            this->Configure(serverEndPoint, bindAddress.PeekBuffer());
-        }
-
-        /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
-         *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
-         *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
-         */
-        inline void Configure(AbstractServerEndPoint *serverEndPoint,
-                const StringA& bindAddress) {
-            VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-            this->Configure(serverEndPoint, bindAddress.PeekBuffer());
-        }
-
-        /**
-         * Configure the server using the specified end point object and the
-         * specified address. 
-         *
-         * Once the server is started, it will bind the given end point to
-         * the given address. The end point passed to the method therefore 
-         * should be unused. The format of the address string must be compatible
-         * to the format of the addresses used by the given end point.
-         *
-         * Please note, that the Configure method does not yet bind the end 
-         * point, this will be done in the server thread.
-         *
-         * @param serverEndPoint The end point to be used for the server. The
-         *                       CommServer object will increase the reference
-         *                       count of this object and release it on its
-         *                       own destruction.
-         * @param bindAddress    A string representation of the address to bind
-         *                       the server to.
-         */
-        inline void Configure(SmartRef<AbstractServerEndPoint>& serverEndPoint,
-                const StringW& bindAddress) {
-            VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-            this->Configure(serverEndPoint, bindAddress.PeekBuffer());
-        }
-
-        /**
-         * Answer the address the server will bind to or is bound to.
-         *
-         * @return The bind address of the server.
-         */
-        inline StringA GetBindAddressA(void) const {
-            return StringA(this->bindAddress);
-        }
-
-        /**
-         * Answer the address the server will bind to or is bound to.
-         *
-         * @return The bind address of the server.
-         */
-        inline const StringW& GetBindAddressW(void) const {
-            return this->bindAddress;
-        }
+        virtual void OnThreadStarting(void *config);
 
         /**
          * Removes, if registered, 'listener' from the list of objects informed
@@ -285,12 +118,13 @@ namespace net {
         /**
          * Perform the work of a thread.
          *
-         * @param reserved Unused pointer. Should be NULL.
+         * @param config A pointer to the Configuration, which specifies the
+         *               settings of the server.
          *
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        virtual DWORD Run(void *reserved);
+        virtual DWORD Run(void *config);
 
         /**
          * Abort the work of the server by forcefully closing the underlying
@@ -305,8 +139,6 @@ namespace net {
         /** A thread-safe list for the message listeners. */
         typedef SingleLinkedList<CommServerListener *, 
             sys::CriticalSection> ListenerList;
-
-        void createNewTcpServerEndPoint(void);
 
         /**
          * Inform all registered listener about a connection that was 
@@ -345,14 +177,11 @@ namespace net {
          */
         void fireServerStarted(void);
 
+        /** The configuration of the server. */
+        Configuration configuration;
+
         /** The list of listeners. */
         ListenerList listeners;
-
-        /** The address to bind the server to. */
-        StringW bindAddress;
-
-        /** The end point the server is using for waiting for clients. */
-        SmartRef<AbstractServerEndPoint> serverEndPoint;
 
     };
     

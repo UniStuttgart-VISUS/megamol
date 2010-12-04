@@ -15,8 +15,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/IPAddress.h"
-#include "vislib/AbstractBidiCommChannel.h"
+#include "vislib/IPAddress.h"           // Must be first!
+#include "vislib/AbstractCommChannel.h"
 #include "vislib/SimpleMessage.h"
 #include "vislib/SmartRef.h"
 #include "vislib/StackTrace.h"
@@ -87,7 +87,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         inline const SimpleMessage& requestViaMsgBuffer(
-                SmartRef<AbstractBidiCommChannel> channel,
+                SmartRef<AbstractCommChannel> channel,
                 const SimpleMessageID requestMsgID, 
                 const void *requestBody, 
                 const unsigned int requestBodySize,
@@ -132,7 +132,7 @@ namespace net {
             VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__,
                 __LINE__);
             return this->requestViaMsgBuffer(
-                channel.DynamicCast<vislib::net::AbstractBidiCommChannel>(), 
+                channel.DynamicCast<vislib::net::AbstractCommChannel>(), 
                 requestMsgID, requestBody, requestBodySize, timeout);
         }
 
@@ -162,7 +162,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         template<class T> inline const SimpleMessage& requestViaMsgBuffer(
-                SmartRef<AbstractBidiCommChannel> channel,
+                SmartRef<AbstractCommChannel> channel,
                 const SimpleMessageID requestMsgID, 
                 const T& requestBody,
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
@@ -243,7 +243,7 @@ namespace net {
          *                                    not have the message ID 'Oid'.
          */
         template<class I, SimpleMessageID Iid, class O, SimpleMessageID Oid>
-        const O *requestViaMsgBuffer(SmartRef<AbstractBidiCommChannel> channel,
+        const O *requestViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
             const I& requestBody,
             SIZE_T *outAdditionalBytes = NULL,
             const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
@@ -310,7 +310,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
         const SimpleMessage& receiveViaMsgBuffer(
-            SmartRef<AbstractBidiCommChannel> channel,
+            SmartRef<AbstractCommChannel> channel,
             const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE);
 
         /**
@@ -333,7 +333,7 @@ namespace net {
             VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__,
                 __LINE__);
             return this->receiveViaMsgBuffer(
-                channel.DynamicCast<AbstractBidiCommChannel>(), timeout);
+                channel.DynamicCast<AbstractCommChannel>(), timeout);
         }
 
         /**
@@ -351,7 +351,7 @@ namespace net {
          *
          * @throws Exception Or derived in case of a communication error.
          */
-        void sendViaMsgBuffer(SmartRef<AbstractBidiCommChannel> channel,
+        void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
             const SimpleMessageID msgID, 
             const void *body, 
             const unsigned int bodySize,
@@ -380,7 +380,7 @@ namespace net {
             VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
                 __LINE__);
             this->sendViaMsgBuffer(
-                channel.DynamicCast<AbstractBidiCommChannel>(),
+                channel.DynamicCast<AbstractCommChannel>(),
                 msgID, 
                 body, 
                 bodySize,
@@ -406,7 +406,7 @@ namespace net {
          * @throws Exception Or derived in case of a communication error.
          */
 	    template<class T> 
-        inline void sendViaMsgBuffer(SmartRef<AbstractBidiCommChannel> channel,
+        inline void sendViaMsgBuffer(SmartRef<AbstractCommChannel> channel,
                 const SimpleMessageID msgID, 
                 const T& body) {
             VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, 
@@ -474,7 +474,7 @@ namespace net {
      */
     template<class I, SimpleMessageID Iid, class O, SimpleMessageID Oid> 
     const O *AbstractSyncMsgUser::requestViaMsgBuffer(
-            SmartRef<AbstractBidiCommChannel> channel,
+            SmartRef<AbstractCommChannel> channel,
             const I& requestBody,
             SIZE_T *outAdditionalBytes,
             const UINT timeout) {

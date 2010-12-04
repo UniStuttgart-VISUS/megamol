@@ -15,8 +15,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
 #include "vislib/ReferenceCounted.h"
+#include "vislib/SmartRef.h"
 #include "vislib/String.h"
 
 
@@ -43,10 +43,7 @@ namespace net {
      * supporting different types of comm channels and address types with the
      * same interface. Therefore, the use of pointers is mandatory. Using
      * reference counting in conjunction with SmartRefs allows for a reasonably
-     * safe management of the object life time. The use of SmartRefs is not
-     * mandatory as it might not be possible to use objects instead of pointers
-     * in any case. Additionally, the pointer could be extracted from a SmartRef
-     * anyways.
+     * safe management of the object life time.
      */
     class AbstractCommEndPoint : public ReferenceCounted {
 

@@ -25,7 +25,7 @@ class Worker : public vislib::sys::Runnable {
 public:
     virtual DWORD Run(void *userData);
 
-    vislib::StringW Address;
+    vislib::SmartRef<vislib::net::AbstractCommEndPoint> EndPoint;
 };
 
 DWORD Worker::Run(void *userData) {
@@ -35,13 +35,13 @@ DWORD Worker::Run(void *userData) {
 
     bool isServer = (userData != 0);
     int data;
-    vislib::SmartRef<TcpCommChannel> comm(new TcpCommChannel(), false);
+    vislib::SmartRef<TcpCommChannel> comm = TcpCommChannel::Create();
     vislib::SmartRef<TcpCommChannel> client;
 
     try {
         if (isServer) {
-            std::cout << "Server binding to " << W2A(this->Address.PeekBuffer()) << " ..." << std::endl;
-            comm->Bind(this->Address);
+            std::cout << "Server binding to " << this->EndPoint->ToStringA().PeekBuffer() << " ..." << std::endl;
+            comm->Bind(this->EndPoint);
             comm->Listen();
             std::cout << "Server (" << &(*comm) << ") ready and waiting now ..." << std::endl;
             ::evtServerBound.Set(); // This is actually not totally safe, but enough for a test.
@@ -53,8 +53,8 @@ DWORD Worker::Run(void *userData) {
             ::AssertEqual("Received 12", data, 12);
 
         } else {
-            std::cout << "Client connecting to " << W2A(this->Address.PeekBuffer()) << " ..." << std::endl;
-            comm->Connect(this->Address);
+            std::cout << "Client connecting to " << this->EndPoint->ToStringA().PeekBuffer()  << " ..." << std::endl;
+            comm->Connect(this->EndPoint);
             std::cout << "Client (" << &(*comm) << ") connected to " << comm->GetSocket().GetPeerEndPoint().ToStringA().PeekBuffer() << "." << std::endl;
 
             data = 12;
@@ -73,19 +73,16 @@ DWORD Worker::Run(void *userData) {
 void TestIpCommEndPoint(void) {
     using namespace vislib;
     using namespace vislib::net;
-    AbstractCommEndPoint *a;
+    SmartRef<AbstractCommEndPoint> a;
 
     a = IPCommEndPoint::Create("localhost:2222");
     std::cout << "localhost:2222" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
-    a->Release();
 
     a = IPCommEndPoint::Create("127.0.0.1:2222");
     std::cout << "127.0.0.1:2222" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
-    a->Release();
 
     a = IPCommEndPoint::Create(IPCommEndPoint::IPV4, "www.microsoft.com", 80);
     std::cout << "IPV4, www.microsoft.com, 80" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
-    a->Release();
 }
 
 
@@ -98,10 +95,10 @@ void TestComm(void) {
     ::TestIpCommEndPoint();
 
     vislib::sys::RunnableThread<Worker> server;
-    server.Address = L"0.0.0.0:12345";
+    server.EndPoint = IPCommEndPoint::Create(IPCommEndPoint::IPV4, 12345);
 
     vislib::sys::RunnableThread<Worker> client;
-    client.Address = L"127.0.0.1:12345";
+    client.EndPoint = IPCommEndPoint::Create(IPCommEndPoint::IPV4, "127.0.0.1:12345");
 
     ::evtServerBound.Reset();
     server.Start((void *) true);

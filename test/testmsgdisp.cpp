@@ -9,6 +9,7 @@
 #include "testmsgdisp.h"
 
 #include "testhelper.h"
+#include "vislib/IPCommEndPoint.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/Semaphore.h"
 #include "vislib/SimpleMessageDispatcher.h"
@@ -31,29 +32,30 @@ bool Listener::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src, cons
 
 
 void TestMsgDisp(void) {
+    using namespace vislib::net;
     const vislib::StringA TEST_ADDRESS("127.0.0.1:12345");
 
     vislib::net::Socket::Startup();
 
-    vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> dispatcher;
-    vislib::net::SimpleMessage msg;
+    vislib::sys::RunnableThread<SimpleMessageDispatcher> dispatcher;
+    SimpleMessage msg;
     Listener listener;
-    vislib::SmartRef<vislib::net::TcpCommChannel> recvChannel(new vislib::net::TcpCommChannel(), false);
-    vislib::SmartRef<vislib::net::TcpCommChannel> sendChannel(NULL);
-    vislib::SmartRef<vislib::net::TcpCommChannel> serverChannel(new vislib::net::TcpCommChannel(), false);
+    vislib::SmartRef<TcpCommChannel> recvChannel = TcpCommChannel::Create();
+    vislib::SmartRef<TcpCommChannel> sendChannel(NULL);
+    vislib::SmartRef<TcpCommChannel> serverChannel = TcpCommChannel::Create();
 
     dispatcher.AddListener(&listener);
 
     /* Establish the connection. */
-    serverChannel->Bind(TEST_ADDRESS);
+    serverChannel->Bind(IPCommEndPoint::Create(TEST_ADDRESS).DynamicCast<AbstractCommEndPoint>());
     serverChannel->Listen();
-    recvChannel->Connect(TEST_ADDRESS);
+    recvChannel->Connect(IPCommEndPoint::Create(TEST_ADDRESS).DynamicCast<AbstractCommEndPoint>());
     sendChannel = serverChannel->Accept().DynamicCast<vislib::net::TcpCommChannel>();
     serverChannel->Close();
 
     /* Start the dispatcher thread. */
-    vislib::net::AbstractCommChannel *cc = dynamic_cast<vislib::net::AbstractCommChannel *>(recvChannel.operator ->());
-    dispatcher.Start(cc);
+    SimpleMessageDispatcher::Configuration config(recvChannel);
+    dispatcher.Start(&config);
 
     msg.GetHeader().SetBodySize(0);
     msg.GetHeader().SetMessageID(27);

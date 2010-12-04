@@ -5,10 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/Socket.h"
 #include "vislib/SimpleMessageDispatcher.h"
 
-#include "vislib/AbstractInboundCommChannel.h"
+#include "vislib/AbstractCommChannel.h"
 #include "vislib/SimpleMessageDispatchListener.h"
 #include "vislib/SocketException.h"
 #include "vislib/Trace.h"
@@ -17,8 +16,7 @@
 /*
  * vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher
  */
-vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void) 
-        : channel(NULL) {
+vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void) {
     VLSTACKTRACE("SimpleMessageDispatcher::SimpleMessageDispatcher", 
         __FILE__, __LINE__);
 }
@@ -52,16 +50,14 @@ void vislib::net::SimpleMessageDispatcher::AddListener(
 /*
  * vislib::net::SimpleMessageDispatcher::OnThreadStarting
  */
-void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *channel) {
+void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *config) {
     VLSTACKTRACE("SimpleMessageDispatcher::OnThreadStarting", __FILE__, 
         __LINE__);
-    ASSERT(channel != NULL);
-    AbstractInboundCommChannel *c = reinterpret_cast<
-        AbstractInboundCommChannel *>(channel);
-    // mueller: Below does not work. Unclear why.
-    //this->channel = dynamic_cast<AbstractInboundCommChannel *>(
-    //    reinterpret_cast<AbstractCommChannel *>(channel));
-    this->channel = c;
+    ASSERT(config != NULL);
+    Configuration *c = static_cast<Configuration *>(config);
+
+    ASSERT(!c->Channel.IsNull());
+    this->configuration.Channel = c->Channel;
 }
 
 
@@ -79,15 +75,9 @@ void vislib::net::SimpleMessageDispatcher::RemoveListener(
 /*
  * vislib::net::SimpleMessageDispatcher::Run
  */
-DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
+DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
     VLSTACKTRACE("SimpleMessageDispatcher::Run", __FILE__, __LINE__);
-    ASSERT(channel != NULL);
-    ASSERT(!this->channel.IsNull());
-    // The assertion of 'this->channel' might fail even if 'channel' is 
-    // non-NULL in case that the static type of the parameter passed into
-    // the Start() method of the thread was not AbstractCommChannel *. In
-    // this case, the dynamic_cast in OnThreadStarting() will fail and the
-    // smart reference becomes NULL.
+    ASSERT(!this->configuration.Channel.IsNull());
 
     bool doReceive = true;
     
@@ -108,7 +98,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
         while (doReceive) {
             VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for "
                 "message header ...\n");
-            this->channel->Receive(static_cast<void *>(this->msg), 
+            this->configuration.Channel->Receive(static_cast<void *>(this->msg),
                 this->msg.GetHeader().GetHeaderSize(), 
                 AbstractCommChannel::TIMEOUT_INFINITE, 
                 true);
@@ -121,7 +111,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
             if (this->msg.GetHeader().GetBodySize() > 0) {
                 VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Waiting for "
                     "message body ...\n");
-                this->channel->Receive(this->msg.GetBody(), 
+                this->configuration.Channel->Receive(this->msg.GetBody(), 
                     this->msg.GetHeader().GetBodySize(),
                     AbstractCommChannel::TIMEOUT_INFINITE, 
                     true);
@@ -139,7 +129,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
         doReceive = this->fireCommunicationError(e);
     }
 
-    this->channel.Release();
+    this->configuration.Channel->Close();
 
     try {
         Socket::Cleanup();
@@ -162,9 +152,9 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *channel) {
 bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
     VLSTACKTRACE("SimpleMessageDispatcher::Terminate", __FILE__, __LINE__);
 
-    if (!this->channel.IsNull()) {
+    if (!this->configuration.Channel.IsNull()) {
         try {
-            this->channel->Close();
+            this->configuration.Channel->Close();
         } catch (Exception e) {
             VLTRACE(VISLIB_TRCELVL_WARN, "An error occurred while trying to "
                 "terminate a SimpleMessageDispatcher: %s\n", e.GetMsgA());

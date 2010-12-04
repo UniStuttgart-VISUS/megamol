@@ -48,26 +48,18 @@ void vislib::net::CommServer::AddListener(CommServerListener *listener) {
 
 
 /*
- * vislib::net::CommServer::Configure
+ * vislib::net::CommServer::OnThreadStarting
  */
-void vislib::net::CommServer::Configure(
-        AbstractServerEndPoint *serverEndPoint, 
-        const wchar_t *bindAddress) {
-    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-    this->bindAddress = bindAddress;
-    this->serverEndPoint = serverEndPoint;
-}
+void vislib::net::CommServer::OnThreadStarting(void *config) {
+    VLSTACKTRACE("CommServer::OnThreadStarting", __FILE__, __LINE__);
+    ASSERT(config != NULL);
+    Configuration *c = static_cast<Configuration *>(config);
 
+    ASSERT(!c->Channel.IsNull());
+    this->configuration.Channel = c->Channel;
 
-/*
- * vislib::net::CommServer::Configure
- */
-void vislib::net::CommServer::Configure(
-        SmartRef<AbstractServerEndPoint>& serverEndPoint,
-        const wchar_t *bindAddress) {
-    VLSTACKTRACE("CommServer::Configure", __FILE__, __LINE__);
-    this->bindAddress = bindAddress;
-    this->serverEndPoint = serverEndPoint;
+    ASSERT(!c->EndPoint.IsNull());
+    this->configuration.EndPoint = c->EndPoint;
 }
 
 
@@ -84,20 +76,10 @@ void vislib::net::CommServer::RemoveListener(CommServerListener *listener) {
 /*
  * vislib::net::CommServer::Run
  */
-DWORD vislib::net::CommServer::Run(void *reserved) {
+DWORD vislib::net::CommServer::Run(void *config) {
     VLSTACKTRACE("CommServer::Run", __FILE__, __LINE__);
     DWORD retval = 0;
     bool doServe = true;
-
-    /* Sanity checks. */
-    if (this->serverEndPoint.IsNull()) {
-        throw IllegalStateException("CommServer must be configured before "
-            "being started.", __FILE__, __LINE__);
-    }
-    if (this->bindAddress.IsEmpty()) {
-        throw IllegalStateException("CommServer must be configured before "
-            "being started.", __FILE__, __LINE__);
-    }
 
     /* Prepare the socket subsystem. */
     try {
@@ -114,9 +96,9 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
 
     /* Bind the end point. */
     try {
-        this->serverEndPoint->Bind(this->bindAddress);
+        this->configuration.Channel->Bind(this->configuration.EndPoint);
         VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer bound to %ls.\n",
-            this->bindAddress.PeekBuffer());
+            this->configuration.EndPoint->ToStringA().PeekBuffer());
     } catch (sys::SystemException se) {
         VLTRACE(VISLIB_TRCELVL_ERROR, "Binding server end point to specified "
             "address failed: %s\n", se.GetMsgA());
@@ -131,7 +113,7 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
 
     /* Put the connection in listening state. */
     try {
-        this->serverEndPoint->Listen(SOMAXCONN);
+        this->configuration.Channel->Listen(SOMAXCONN);
         VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer is now in listen "
             "state.\n");
     } catch (sys::SystemException se) {
@@ -155,7 +137,7 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
         try {
             while (doServe) {
                 SmartRef<AbstractCommChannel> channel 
-                    = this->serverEndPoint->Accept();
+                    = this->configuration.Channel->Accept();
                 VLTRACE(Trace::LEVEL_VL_INFO, "CommServer accepted new "
                     "connection.\n");
 
@@ -212,37 +194,14 @@ DWORD vislib::net::CommServer::Run(void *reserved) {
 bool vislib::net::CommServer::Terminate(void) {
     VLSTACKTRACE("CommServer::Terminate", __FILE__, __LINE__);
     try {
-        if (!this->serverEndPoint.IsNull()) {
-            this->serverEndPoint.DynamicCast<AbstractCommChannel>()->Close();
+        if (!this->configuration.Channel.IsNull()) {
+            this->configuration.Channel->Close();
         }
     } catch (Exception e) {
         VLTRACE(Trace::LEVEL_VL_WARN, "Exception when shutting down "
             "CommServer: %s. This is usually no problem.", e.GetMsgA());
     }
     return true;
-}
-
-
-/*
- * vislib::net::CommServer::createNewTcpServerEndPoint
- */
-void vislib::net::CommServer::createNewTcpServerEndPoint(void) {
-    VLSTACKTRACE("CommServer::createNewTcpServerEndPoint", __FILE__, __LINE__);
-    if (this->serverEndPoint.IsNull()) {
-        this->serverEndPoint = SmartRef<AbstractServerEndPoint>(
-            new TcpCommChannel(), false);
-
-        //if (this->IsSharingAddress()) {
-        //    // TODO: Problems with admin rights
-        //    this->socket.SetExclusiveAddrUse(false);
-        //}
-        //if (this->IsReuseAddress()) {
-        //    this->socket.SetReuseAddr(true);
-        //}
-    } else {
-        throw IllegalStateException("The server cannot be configured while it "
-            "is running.", __FILE__, __LINE__);
-    }
 }
 
 
