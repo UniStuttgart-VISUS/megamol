@@ -1315,8 +1315,20 @@ namespace net {
 
         // TODO: documentation
         static float GuessRemoteEndPoint(IPEndPoint& outEndPoint, 
+            const char *str, 
+            const IPAgnosticAddress::AddressFamily preferredFamily,
+            const bool invertWildness = false);
+
+        // TODO: documentation
+        static float GuessRemoteEndPoint(IPEndPoint& outEndPoint, 
             const char *str, const bool invertWildness = false);
-    
+
+        // TODO: documentation
+        static float GuessRemoteEndPoint(IPEndPoint& outEndPoint, 
+            const wchar_t *str, 
+            const IPAgnosticAddress::AddressFamily preferredFamily, 
+            const bool invertWildness = false);
+
         // TODO: documentation
         static float GuessRemoteEndPoint(IPEndPoint& outEndPoint, 
             const wchar_t *str, const bool invertWildness = false);
@@ -1585,6 +1597,23 @@ namespace net {
          * @return
          */
         static float guessLocalEndPoint(IPEndPoint& outEndPoint, 
+            const wchar_t *str, const IPAgnosticAddress::AddressFamily *prefFam,
+            const bool invertWildness);
+
+        /**
+         * Implementation of the GuessRemoteEndPoint functionality. This 
+         * method handles all the work.
+         *
+         * @param outEndPoint
+         * @param str
+         * @param prefFam        If the input string does not contain any
+         *                       information to deduce the address family
+         *                       from, use this address family (if not NULL).
+         * @param invertWildness
+         *
+         * @return
+         */
+        static float guessRemoteEndPoint(IPEndPoint& outEndPoint, 
             const wchar_t *str, const IPAgnosticAddress::AddressFamily *prefFam,
             const bool invertWildness);
 

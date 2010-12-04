@@ -745,15 +745,44 @@ float vislib::net::NetworkInformation::GuessLocalEndPoint(
 
 
 /*
+ * vislib::net::NetworkInformation::GuessRemoteEndPoint
+ */
+float vislib::net::NetworkInformation::GuessRemoteEndPoint(
+        IPEndPoint& outEndPoint, 
+        const char *str, 
+        const IPAgnosticAddress::AddressFamily preferredFamily,
+        const bool invertWildness) {
+    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+    return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
+        A2W(str), &preferredFamily, invertWildness);
+}
+
+
+/*
  * NetworkInformation::GuessRemoteEndPoint
  */
 float vislib::net::NetworkInformation::GuessRemoteEndPoint(
         IPEndPoint& outEndPoint, const char *str, const bool invertWildness) {
     VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
-    return NetworkInformation::GuessRemoteEndPoint(outEndPoint, A2W(str),
-        invertWildness);
+    return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
+        A2W(str), NULL, invertWildness);
 }
-    
+
+
+
+/*
+ * vislib::net::NetworkInformation::GuessRemoteEndPoint
+ */
+float vislib::net::NetworkInformation::GuessRemoteEndPoint(
+        IPEndPoint& outEndPoint, 
+        const wchar_t *str, 
+        const IPAgnosticAddress::AddressFamily preferredFamily,
+        const bool invertWildness) {
+    VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
+    return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
+        str, &preferredFamily, invertWildness);
+}
+
 
 /*
  * NetworkInformation::GuessRemoteEndPoint
@@ -761,105 +790,8 @@ float vislib::net::NetworkInformation::GuessRemoteEndPoint(
 float vislib::net::NetworkInformation::GuessRemoteEndPoint(
         IPEndPoint& outEndPoint, const wchar_t *str, const bool invertWildness) {
     VLSTACKTRACE("NetworkInformation::GuessRemoteEndPoint", __FILE__, __LINE__);
-
-    Array<float> wildness(0);       // The wildness of multiple candidates.
-    float retval = 1.0f;            // The wildness of the guess.
-    IPHostEntryW hostEntry;         // DNS host entry.
-    SIZE_T bestAddressIdx = 0;      // Index of best address after consolidate.
-    UINT32 validMask = 0;           // Valid fields from the input.
-    IPAgnosticAddress address;      // The adapter address from the input.
-    StringW device;                 // The device name from the input.
-    ULONG prefixLen;                // The prefix length from the input.
-    USHORT port;                    // The port from the input.
-
-#if (defined(DEBUG) || defined(_DEBUG))
-    if (invertWildness) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
-            "of GuessRemoteEndPoint(). Please be advised that this is not "
-            "recommended and severely degrades the Chefm‰ﬂigkeit of your "
-            "application. It is recommended not to invert the wildness.\n");
-    }
-#endif /* (defined(DEBUG) || defined(_DEBUG)) */
-    VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessRemoteEndPoint() trying to guess "
-        " what endpoint \"%s\" might be ...\n", W2A(str));
-
-    /* Parse the input. */
-    validMask = NetworkInformation::wildGuessSplitInput(address, device, 
-        prefixLen, port, str);
-
-    /* Set ephemeral port if no port was specified. */
-    if ((validMask & WILD_GUESS_HAS_PORT) == 0) {
-        port = 0;
-    }
-
-    /* Do the wild guess. */
-    try {
-        DNS::GetHostEntry(hostEntry, address);
-        const Array<IPAgnosticAddress>& al = hostEntry.GetAddresses();
-
-        if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) {
-            for (SIZE_T i = 0; i < al.Count(); i++) {
-                retval = 1.0f;
-
-                if (al[i] == address) {
-                    retval = 0.0f;
-                }
-
-                if ((validMask & (WILD_GUESS_HAS_NETMASK 
-                        | WILD_GUESS_HAS_PREFIX_LEN)) != 0) {
-                    try {
-                        if (al[i].GetPrefix(prefixLen) 
-                                != address.GetPrefix(prefixLen)) {
-                            retval 
-                                += NetworkInformation::PENALTY_WRONG_PREFIX;
-                        }
-                    } catch (...) {
-                        retval += NetworkInformation::PENALTY_WRONG_PREFIX;
-                    }
-                }
-
-                if (al[i].GetAddressFamily() != address.GetAddressFamily()) {
-                    retval += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
-                }
-
-                if ((validMask & WILD_GUESS_FROM_EMPTY_ADDRESS) != 0) {
-                    retval += NetworkInformation::PENALTY_EMPTY_ADDRESS;
-                }
-
-                wildness.Add(retval);
-            }
-
-        } else {
-            /*
-             * If we do not have a remote address to lookup, deliberately 
-             * generate an exception to enter the catch block.
-             */
-            throw 1;
-        } /* if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) */
-
-        retval = NetworkInformation::consolidateWildness(wildness, 
-            bestAddressIdx);
-        outEndPoint.SetIPAddress(al[bestAddressIdx]);
-        outEndPoint.SetPort(port);
-
-    } catch (...) {
-        /*  
-         * Lookup failed, assume remote endpoint on local machine and
-         * add a penalty for the
-         */
-        retval = NetworkInformation::GuessLocalEndPoint(outEndPoint, str, 
-            invertWildness) * 2.0f;
-        if (retval < 0.5f) {
-            retval = 0.5f;
-        } else if (retval > 1.0f) {
-            retval = 1.0f;
-        }
-
-    }
-
-    ASSERT(retval >= 0.0f);
-    ASSERT(retval <= 1.0f);
-    return (invertWildness ? (1.0f - retval) : retval);
+    return NetworkInformation::guessRemoteEndPoint(outEndPoint, 
+        str, NULL, invertWildness);
 }
 
 
@@ -1383,6 +1315,115 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
     return (invertWildness ? (1.0f - retval) : retval);
 }
 
+
+/*
+ * NetworkInformation::guessRemoteEndPoint
+ */
+float vislib::net::NetworkInformation::guessRemoteEndPoint(
+        IPEndPoint& outEndPoint, const wchar_t *str, 
+        const IPAgnosticAddress::AddressFamily *prefFam, 
+        const bool invertWildness) {
+    VLSTACKTRACE("NetworkInformation::guessRemoteEndPoint", __FILE__, __LINE__);
+
+    Array<float> wildness(0);       // The wildness of multiple candidates.
+    float retval = 1.0f;            // The wildness of the guess.
+    IPHostEntryW hostEntry;         // DNS host entry.
+    SIZE_T bestAddressIdx = 0;      // Index of best address after consolidate.
+    UINT32 validMask = 0;           // Valid fields from the input.
+    IPAgnosticAddress address;      // The adapter address from the input.
+    StringW device;                 // The device name from the input.
+    ULONG prefixLen;                // The prefix length from the input.
+    USHORT port;                    // The port from the input.
+
+#if (defined(DEBUG) || defined(_DEBUG))
+    if (invertWildness) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
+            "of GuessRemoteEndPoint(). Please be advised that this is not "
+            "recommended and severely degrades the Chefm‰ﬂigkeit of your "
+            "application. It is recommended not to invert the wildness.\n");
+    }
+#endif /* (defined(DEBUG) || defined(_DEBUG)) */
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "GuessRemoteEndPoint() trying to guess "
+        " what endpoint \"%s\" might be ...\n", W2A(str));
+
+    /* Parse the input. */
+    validMask = NetworkInformation::wildGuessSplitInput(address, device, 
+        prefixLen, port, str, prefFam);
+
+    /* Set ephemeral port if no port was specified. */
+    if ((validMask & WILD_GUESS_HAS_PORT) == 0) {
+        port = 0;
+    }
+
+    /* Do the wild guess. */
+    try {
+        DNS::GetHostEntry(hostEntry, address);
+        const Array<IPAgnosticAddress>& al = hostEntry.GetAddresses();
+
+        if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) {
+            for (SIZE_T i = 0; i < al.Count(); i++) {
+                retval = 1.0f;
+
+                if (al[i] == address) {
+                    retval = 0.0f;
+                }
+
+                if ((validMask & (WILD_GUESS_HAS_NETMASK 
+                        | WILD_GUESS_HAS_PREFIX_LEN)) != 0) {
+                    try {
+                        if (al[i].GetPrefix(prefixLen) 
+                                != address.GetPrefix(prefixLen)) {
+                            retval 
+                                += NetworkInformation::PENALTY_WRONG_PREFIX;
+                        }
+                    } catch (...) {
+                        retval += NetworkInformation::PENALTY_WRONG_PREFIX;
+                    }
+                }
+
+                if (al[i].GetAddressFamily() != address.GetAddressFamily()) {
+                    retval += NetworkInformation::PENALTY_WRONG_ADDRESSFAMILY;
+                }
+
+                if ((validMask & WILD_GUESS_FROM_EMPTY_ADDRESS) != 0) {
+                    retval += NetworkInformation::PENALTY_EMPTY_ADDRESS;
+                }
+
+                wildness.Add(retval);
+            }
+
+        } else {
+            /*
+             * If we do not have a remote address to lookup, deliberately 
+             * generate an exception to enter the catch block.
+             */
+            throw 1;
+        } /* if ((validMask & WILD_GUESS_HAS_ADDRESS) != 0) */
+
+        retval = NetworkInformation::consolidateWildness(wildness, 
+            bestAddressIdx);
+        outEndPoint.SetIPAddress(al[bestAddressIdx]);
+        outEndPoint.SetPort(port);
+
+    } catch (...) {
+        /*  
+         * Lookup failed, assume remote endpoint on local machine and
+         * add a penalty for the
+         */
+        retval = NetworkInformation::GuessLocalEndPoint(outEndPoint, str, 
+            invertWildness) * 2.0f;
+        if (retval < 0.5f) {
+            retval = 0.5f;
+        } else if (retval > 1.0f) {
+            retval = 1.0f;
+        }
+
+    }
+
+    ASSERT(retval >= 0.0f);
+    ASSERT(retval <= 1.0f);
+    return (invertWildness ? (1.0f - retval) : retval);
+}
 
 
 /*

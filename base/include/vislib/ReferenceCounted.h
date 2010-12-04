@@ -44,7 +44,7 @@ namespace vislib {
 
         /**
          * Decrement the reference count. If the reference count reaches zero,
-         * the object is released using the allocator A.
+         * the object is released using the C++ delete operator.
          *
          * @return The new value of the reference counter.
          */

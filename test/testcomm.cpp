@@ -15,6 +15,7 @@
 #include "vislib/String.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/StringConverter.h"
+#include "vislib/IPCommEndPointAddress.h"
 
 
 static vislib::sys::Event evtServerBound(true);
@@ -69,6 +70,23 @@ DWORD Worker::Run(void *userData) {
 }
 
 
+void TestIpCommEndPointAddress(void) {
+    using namespace vislib;
+    using namespace vislib::net;
+    AbstractCommEndPointAddress *a;
+
+    a = IPCommEndPointAddress::Create("localhost:2222");
+    std::cout << "localhost:2222" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
+    a->Release();
+
+    a = IPCommEndPointAddress::Create("127.0.0.1:2222");
+    std::cout << "127.0.0.1:2222" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
+    a->Release();
+
+    a = IPCommEndPointAddress::Create(IPCommEndPointAddress::IPV4, "www.microsoft.com", 80);
+    std::cout << "IPV4, www.microsoft.com, 80" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
+    a->Release();
+}
 
 
 void TestComm(void) {
@@ -76,6 +94,8 @@ void TestComm(void) {
     using namespace vislib::net;
 
     Socket::Startup();
+
+    ::TestIpCommEndPointAddress();
 
     vislib::sys::RunnableThread<Worker> server;
     server.Address = L"0.0.0.0:12345";
