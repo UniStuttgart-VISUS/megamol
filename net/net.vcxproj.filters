@@ -126,10 +126,10 @@
     <ClCompile Include="src\UnexpectedMessageException.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\AbstractCommEndPointAddress.cpp">
+    <ClCompile Include="src\AbstractCommEndPoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\IPCommEndPointAddress.cpp">
+    <ClCompile Include="src\IPCommEndPoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -245,10 +245,10 @@
     <ClInclude Include="include\vislib\UnexpectedMessageException.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\AbstractCommEndPointAddress.h">
+    <ClInclude Include="include\vislib\AbstractCommEndPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\IPCommEndPointAddress.h">
+    <ClInclude Include="include\vislib\IPCommEndPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

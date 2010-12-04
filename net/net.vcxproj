@@ -411,7 +411,7 @@
     <ClCompile Include="src\AbstractBidiCommChannel.cpp" />
     <ClCompile Include="src\AbstractClientEndPoint.cpp" />
     <ClCompile Include="src\AbstractCommChannel.cpp" />
-    <ClCompile Include="src\AbstractCommEndPointAddress.cpp" />
+    <ClCompile Include="src\AbstractCommEndPoint.cpp" />
     <ClCompile Include="src\AbstractInboundCommChannel.cpp" />
     <ClCompile Include="src\AbstractOutboundCommChannel.cpp" />
     <ClCompile Include="src\AbstractServerEndPoint.cpp" />
@@ -429,7 +429,7 @@
     <ClCompile Include="src\IPAddress.cpp" />
     <ClCompile Include="src\IPAddress6.cpp" />
     <ClCompile Include="src\IPAgnosticAddress.cpp" />
-    <ClCompile Include="src\IPCommEndPointAddress.cpp" />
+    <ClCompile Include="src\IPCommEndPoint.cpp" />
     <ClCompile Include="src\IPEndPoint.cpp" />
     <ClCompile Include="src\IPHostEntry.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugExport|Win32'">true</ExcludedFromBuild>
@@ -465,7 +465,7 @@
     <ClInclude Include="include\vislib\AbstractBidiCommChannel.h" />
     <ClInclude Include="include\vislib\AbstractClientEndPoint.h" />
     <ClInclude Include="include\vislib\AbstractCommChannel.h" />
-    <ClInclude Include="include\vislib\AbstractCommEndPointAddress.h" />
+    <ClInclude Include="include\vislib\AbstractCommEndPoint.h" />
     <ClInclude Include="include\vislib\AbstractInboundCommChannel.h" />
     <ClInclude Include="include\vislib\AbstractOutboundCommChannel.h" />
     <ClInclude Include="include\vislib\AbstractServerEndPoint.h" />
@@ -483,7 +483,7 @@
     <ClInclude Include="include\vislib\IPAddress.h" />
     <ClInclude Include="include\vislib\IPAddress6.h" />
     <ClInclude Include="include\vislib\IPAgnosticAddress.h" />
-    <ClInclude Include="include\vislib\IPCommEndPointAddress.h" />
+    <ClInclude Include="include\vislib\IPCommEndPoint.h" />
     <ClInclude Include="include\vislib\IPEndPoint.h" />
     <ClInclude Include="include\vislib\IPHostEntry.h" />
     <ClInclude Include="include\vislib\NetworkInformation.h" />

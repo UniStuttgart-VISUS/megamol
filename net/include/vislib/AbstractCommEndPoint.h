@@ -1,13 +1,13 @@
 /*
- * AbstractCommEndPointAddress.h
+ * AbstractCommEndPoint.h
  *
  * Copyright (C) 2010 by Christoph Müller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTCOMMENDPOINTADDRESS_H_INCLUDED
-#define VISLIB_ABSTRACTCOMMENDPOINTADDRESS_H_INCLUDED
+#ifndef VISLIB_ABSTRACTCOMMENDPOINT_H_INCLUDED
+#define VISLIB_ABSTRACTCOMMENDPOINT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -30,7 +30,7 @@ namespace net {
      * abstraction of sockets and IB verbs, which is designed to be 
      * interchangeable.
      * 
-     * Note for implementors: The AbstractCommEndPointAddress is designed to 
+     * Note for implementors: The AbstractCommEndPoint is designed to 
      * work with a reference counting mechanism like Direct 3D. It therefore
      * inherits from ReferenceCounted and has a protected ctor and dtor. 
      * Subclasses should provide static Create() methods which do the necessary
@@ -39,7 +39,7 @@ namespace net {
      * assumes creation with C++ new and releases the object be calling
      * delete once the last reference was released.
      *
-     * Rationale: AbstractCommEndPointAddress must support polymorphism for
+     * Rationale: AbstractCommEndPoint must support polymorphism for
      * supporting different types of comm channels and address types with the
      * same interface. Therefore, the use of pointers is mandatory. Using
      * reference counting in conjunction with SmartRefs allows for a reasonably
@@ -48,7 +48,7 @@ namespace net {
      * in any case. Additionally, the pointer could be extracted from a SmartRef
      * anyways.
      */
-    class AbstractCommEndPointAddress : public ReferenceCounted {
+    class AbstractCommEndPoint : public ReferenceCounted {
 
     public:
 
@@ -106,17 +106,17 @@ namespace net {
         typedef ReferenceCounted Super;
 
         /** Ctor. */
-        AbstractCommEndPointAddress(void);
+        AbstractCommEndPoint(void);
 
         /**
          * Clone 'rhs'.
          *
          * @param rhs The object to be cloned.
          */
-        AbstractCommEndPointAddress(const AbstractCommEndPointAddress& rhs);
+        AbstractCommEndPoint(const AbstractCommEndPoint& rhs);
 
         /** Dtor. */
-        virtual ~AbstractCommEndPointAddress(void);
+        virtual ~AbstractCommEndPoint(void);
 
     };
     
@@ -126,5 +126,5 @@ namespace net {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTCOMMENDPOINTADDRESS_H_INCLUDED */
+#endif /* VISLIB_ABSTRACTCOMMENDPOINT_H_INCLUDED */
 
