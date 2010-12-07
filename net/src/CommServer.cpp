@@ -97,7 +97,7 @@ DWORD vislib::net::CommServer::Run(void *config) {
     /* Bind the end point. */
     try {
         this->configuration.Channel->Bind(this->configuration.EndPoint);
-        VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer bound to %ls.\n",
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "CommServer bound to %s.\n",
             this->configuration.EndPoint->ToStringA().PeekBuffer());
     } catch (sys::SystemException se) {
         VLTRACE(VISLIB_TRCELVL_ERROR, "Binding server end point to specified "
