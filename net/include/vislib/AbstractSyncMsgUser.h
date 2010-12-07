@@ -290,8 +290,7 @@ namespace net {
                 const UINT timeout = AbstractCommChannel::TIMEOUT_INFINITE) {
             VLSTACKTRACE("AbstractSyncMsgUser::requestViaMsgBuffer", __FILE__, 
                 __LINE__);
-            return this->requestViaMsgBuffer<I, Iid, O, Oid>(
-                channel.DynamicCast<vislib::net::AbstractBidiCommChannel>(), 
+            return this->requestViaMsgBuffer<I, Iid, O, Oid>(channel, 
                 requestBody, outAdditionalBytes, timeout);
         }
 
