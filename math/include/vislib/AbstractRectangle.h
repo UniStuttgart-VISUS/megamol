@@ -239,6 +239,27 @@ namespace math {
         }
 
         /**
+         * Increases the size of the rectangle to include the given point. 
+         * Implicitly calls 'EnforcePositiveSize'.
+         *
+         * @param p The point to be included.
+         */
+        template<class Tp, class Sp>
+        inline void GrowToPoint(const AbstractPoint<Tp, 2, Sp>& p) {
+            this->GrowToPoint(p.X(), p.Y());
+        }
+
+        /**
+         * Increases the size of the rectangle to include the given point.
+         * Implicitly calls 'EnforcePositiveSize'.
+         *
+         * @param x The x coordinate of the point to be included.
+         * @param y The y coordinate of the point to be included.
+         */
+        template<class Tp>
+        void GrowToPoint(const Tp& x, const Tp& y);
+
+        /**
          * Set this rectangle to the intersection of itself and 'rect'.
          *
          * @param rect The rectangle to build the intersection with.
@@ -624,6 +645,27 @@ namespace math {
 
         if (this->bounds[IDX_LEFT] > this->bounds[IDX_RIGHT]) {
             Swap(this->bounds[IDX_LEFT], this->bounds[IDX_RIGHT]);
+        }
+    }
+
+
+    /*
+     * vislib::math::AbstractRectangle<T>::GrowToPoint
+     */
+    template<class T, class S> template<class Tp>
+    void AbstractRectangle<T, S>::GrowToPoint(const Tp& x, const Tp& y) {
+        this->EnforcePositiveSize();
+        if (this->bounds[IDX_LEFT] > x) {
+            this->bounds[IDX_LEFT] = x;
+        }
+        if (this->bounds[IDX_BOTTOM] > y) {
+            this->bounds[IDX_BOTTOM] = y;
+        }
+        if (this->bounds[IDX_RIGHT] < x) {
+            this->bounds[IDX_RIGHT] = x;
+        }
+        if (this->bounds[IDX_TOP] < y) {
+            this->bounds[IDX_TOP] = y;
         }
     }
 
