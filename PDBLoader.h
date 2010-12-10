@@ -558,6 +558,10 @@ namespace protein {
          * @return 'true' if resName specifies an amino acid, 'false' otherwise.
          */
         bool IsAminoAcid( vislib::StringA resName );
+        /**
+         * Reset all data containers.
+         */
+        void resetAllData();
 
         /**
          * Read the number of frames from the XTC file

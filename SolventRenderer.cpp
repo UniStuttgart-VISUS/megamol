@@ -255,7 +255,8 @@ bool protein::SolventRenderer::Render(Call& call)
 
     vislib::StringA elementName;
     bool drawAtom;
-    unsigned int atomCnt, filterCnt;
+    unsigned int atomCnt;
+	int filterCnt;
     // resize atom position and color arrays
     if( !this->atomPos || this->atomPosSize != protein->SolventAtomCount() ) {
         delete[] this->atomPos;
@@ -293,6 +294,7 @@ bool protein::SolventRenderer::Render(Call& call)
         // --- filter by distance to protein atom ---
         bool withinDistance = false;
         if( this->distance > vislib::math::FLOAT_EPSILON ) {
+#pragma omp parallel for
             for( filterCnt = 0; filterCnt < protein->ProteinAtomCount(); ++filterCnt ) {
                 if( sqrt( pow( protein->SolventAtomPositions()[3*atomCnt+0] - protein->ProteinAtomPositions()[3*filterCnt+0], 2) + 
                     pow( protein->SolventAtomPositions()[3*atomCnt+1] - protein->ProteinAtomPositions()[3*filterCnt+1], 2) + 

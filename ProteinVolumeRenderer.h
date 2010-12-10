@@ -24,7 +24,7 @@
 #include "vislib/GLSLShader.h"
 #include "vislib/SimpleFont.h"
 #include "vislib/FramebufferObject.h"
-#include <vector>
+#include <list>
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
@@ -75,7 +75,25 @@ namespace protein {
 	    **********************************************************************/
 
 		/** Get the color of a certain atom of the protein. */
-		const float* GetProteinAtomColor( unsigned int idx) { return &this->protAtomColorTable[idx*3]; };
+        const float* GetAtomColor( unsigned int idx) { return &this->atomColorTable[idx*3]; };
+
+        /**
+         * Call callback to get the volume data
+         *
+         * @param c The calling call
+         *
+         * @return True on success
+         */
+        bool getVolumeData( core::Call& call);
+
+        /**
+         * Call callback to get the segmentation data
+         *
+         * @param c The calling call
+         *
+         * @return True on success
+         */
+        bool getSegmentationData( core::Call& call);
 
 	   /**********************************************************************
 		 * 'set'-functions
@@ -149,9 +167,24 @@ namespace protein {
 		bool RenderMolecularData( megamol::core::view::CallRender3D *call, MolecularDataCall *mol);
 		
 		/**
+         * Render the current mouse position on the clipping plane as a small sphere.
+         *
+         * @param call The render call
+         * @param rad The sphere radius
+         */
+        void RenderMousePosition( megamol::core::view::CallRender3D *call, float rad);
+
+        /**
+         * Render the segmented voxels as spheres.
+         *
+         * @param call The render call
+         */
+        void RenderSegmentedVoxels( megamol::core::view::CallRender3D *call);
+
+        /**
          * Refresh all parameters.
 		*/
-        void ParameterRefresh();
+        void ParameterRefresh( megamol::core::view::CallRender3D *call);
 		
 		/**
 		* Draw label for current loaded RMS frame.
@@ -238,16 +271,53 @@ namespace protein {
          */
         void drawClippedPolygon( vislib::math::Cuboid<float> boundingbox);
 
+        /**
+         * Start the segmentation of the volume
+         *
+         * @param time The current time
+         */
+        void startVolumeSegmentation( float time);
+
+        /**
+         * Update the segmentation of the volume
+         *
+         * @param time The current time
+         */
+        void updateVolumeSegmentation( float time);
+
+        /**
+         * Update the segmentation of the volume
+         *
+         * @param time The current time
+         */
+        void updateVolumeSegmentation2( float time);
+
+        /**
+         * Update the segmentation of the volume
+         *
+         * @param time The current time
+         */
+        void updateVolumeSegmentationRmsd( float time);
+
+        /**
+         * Write the current volume as a raw file.
+         */
+        void writeVolumeRAW();
+
 		/**********************************************************************
 		 * variables
 		 **********************************************************************/
 		
-		// caller slot
+		/** caller slot */
 		megamol::core::CallerSlot protDataCallerSlot;
-		// callee slot
+		/** callee slot */
 		megamol::core::CalleeSlot callFrameCalleeSlot;
-		// caller slot
+		/** caller slot */
 		megamol::core::CallerSlot protRendererCallerSlot;
+        /** The volume data callee slot */
+        megamol::core::CalleeSlot dataOutSlot;
+        /** The segmentation data callee slot */
+        megamol::core::CalleeSlot diagramDataOutSlot;
 		
 		// 'true' if there is rms data to be rendered
 		bool renderRMSData;
@@ -273,7 +343,24 @@ namespace protein {
         megamol::core::param::ParamSlot volClipPlane0NormParam;
         megamol::core::param::ParamSlot volClipPlane0DistParam;
         megamol::core::param::ParamSlot volClipPlaneOpacityParam;
+        /** parameter slot for positional interpolation */
+        megamol::core::param::ParamSlot interpolParam;
 
+        /** parameter slot for color table filename */
+        megamol::core::param::ParamSlot colorTableFileParam;
+        /** parameter slot for min color of gradient color mode */
+        megamol::core::param::ParamSlot minGradColorParam;
+        /** parameter slot for mid color of gradient color mode */
+        megamol::core::param::ParamSlot midGradColorParam;
+        /** parameter slot for max color of gradient color mode */
+        megamol::core::param::ParamSlot maxGradColorParam;
+
+        /** parameter slot maximum inital segmentation size */
+        megamol::core::param::ParamSlot initialSegmentationSizeParam;
+        /** parameter slot segmentation stopping */
+        megamol::core::param::ParamSlot stopSegmentationParam;
+        /** parameter slot segmentation difference */
+        megamol::core::param::ParamSlot segmentationDeltaParam;
 
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereShader;
@@ -301,10 +388,12 @@ namespace protein {
 		
 		// color table for amino acids
 		vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColorTable;
-		// color palette vector: stores the color for chains
-		vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
-		// color table for protein atoms
-        vislib::Array<float> protAtomColorTable;
+        /** The color lookup table (for chains, amino acids,...) */
+        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
+        /** The color lookup table which stores the rainbow colors */
+        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
+		/** color table for protein atoms */
+		vislib::Array<float> atomColorTable;
 		
 		// the Id of the current frame (for dynamic data)
 		unsigned int currentFrameId;
@@ -357,6 +446,28 @@ namespace protein {
 		// the opacity of the clipping plane
 		float volClipPlaneOpacity;
 
+        // interpolated atom positions
+        float *posInter;
+
+        // the mouse pos
+        vislib::math::Vector<float, 3> mousePos;
+
+        // the clicked mouse pos
+        vislib::math::Vector<float, 3> clickedPos;
+        // start volume segmentation
+        bool startVolSeg;
+        // segmentation time
+        float segmentationTime;
+        // flood filled voxels
+        std::list<vislib::math::Vector<int, 3> > segmentedVoxels;
+        unsigned int oldVoxelCount;
+        bool stopSegmentation;
+
+        bool fixedNumberOfVoxels;
+
+        bool drawMarker;
+
+        bool forceUpdateVolumeTexture;
 	};
 
 

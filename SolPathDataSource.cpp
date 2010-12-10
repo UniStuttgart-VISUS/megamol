@@ -9,7 +9,7 @@
 #include "SolPathDataSource.h"
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "param/FilePathParam.h"
 #include "vislib/Log.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/ShallowPoint.h"
@@ -41,7 +41,7 @@ SolPathDataSource::SolPathDataSource(void) : core::Module(),
     this->getdataslot.SetCallback(SolPathDataCall::ClassName(), "GetExtent", &SolPathDataSource::getExtent);
     this->MakeSlotAvailable(&this->getdataslot);
 
-    this->filenameslot << new param::StringParam("");
+    this->filenameslot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameslot);
 
     this->smoothSlot << new param::BoolParam(true);
@@ -159,11 +159,11 @@ void SolPathDataSource::loadData(void) {
 
     this->clear();
 
-    if (file.Open(this->filenameslot.Param<param::StringParam>()->Value(),
+    if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value(),
             File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY) == false) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to open data file %s", vislib::StringA(
-            this->filenameslot.Param<param::StringParam>()->Value()).PeekBuffer());
+            this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
         return;
     }
 
@@ -171,7 +171,7 @@ void SolPathDataSource::loadData(void) {
     if (file.Read(headerID.AllocateBuffer(7), 7) != 7) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to read data file %s", vislib::StringA(
-            this->filenameslot.Param<param::StringParam>()->Value()).PeekBuffer());
+            this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
         return;
     }
 
@@ -183,13 +183,13 @@ void SolPathDataSource::loadData(void) {
         if (file.Read(&version, 4) != 4) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to read data file %s", vislib::StringA(
-                this->filenameslot.Param<param::StringParam>()->Value()).PeekBuffer());
+                this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
             return;
         }
         if (version > 1) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Data file %s uses unsupported version %u", vislib::StringA(
-                this->filenameslot.Param<param::StringParam>()->Value()).PeekBuffer(),
+                this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer(),
                 version);
             return;
         }
@@ -225,7 +225,7 @@ void SolPathDataSource::loadData(void) {
     if (blockInfo == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "File %s does not contain a path line data block", vislib::StringA(
-            this->filenameslot.Param<param::StringParam>()->Value()).PeekBuffer());
+            this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
         return;
     }
     file.Seek(blockInfo->start, File::BEGIN);

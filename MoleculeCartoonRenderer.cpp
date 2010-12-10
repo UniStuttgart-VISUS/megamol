@@ -720,6 +720,7 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glPushMatrix();
 
@@ -964,10 +965,9 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
                     controlPoints.push_back( vecCA);
         
                     // add the color of the C-alpha atom to the color vector
-                    color = this->GetProteinAtomColor( idx);
-                    colorVec.SetX( color[0]);
-                    colorVec.SetY( color[1]);
-                    colorVec.SetZ( color[2]);
+					colorVec.SetX( this->atomColorTable[3*idx]);
+					colorVec.SetY( this->atomColorTable[3*idx+1]);
+					colorVec.SetZ( this->atomColorTable[3*idx+2]);
                     cartoonColor[cntChain].push_back( colorVec);
         
                     // get the index of the C atom
@@ -2226,16 +2226,6 @@ void MoleculeCartoonRenderer::RecomputeAll()
 }
 
 
-/* Get the color of a certain atom of the protein. */
-const float* MoleculeCartoonRenderer::GetProteinAtomColor( unsigned int idx) {
-    if( idx < this->atomColorTable.Count()/3 ) {
-        //return this->atomColorTable[idx].PeekComponents();
-        return &this->atomColorTable[idx*3];
-    } else {
-        return 0;
-    }
-}
-
 /*
  * Render the molecular data in stick mode.
  */
@@ -2245,7 +2235,7 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     /** vertex array for spheres */
     vislib::Array<float> vertSpheres;
     /** color array for spheres */
-    vislib::Array<float> colorSpheres;
+    //vislib::Array<float> colorSpheres;
     /** vertex array for cylinders */
     vislib::Array<float> vertCylinders;
     /** attribute array for quaterinons of the cylinders */
@@ -2261,7 +2251,7 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     unsigned int totalCylinderCnt = 0;
 
     vertSpheres.SetCount( mol->AtomCount() * 4 );
-    colorSpheres.SetCount( mol->AtomCount() * 3 );
+    //colorSpheres.SetCount( mol->AtomCount() * 3 );
     vertCylinders.SetCount( mol->ConnectionCount() * 4);
     quatCylinders.SetCount( mol->ConnectionCount() * 4);
     inParaCylinders.SetCount( mol->ConnectionCount() * 2);
@@ -2285,9 +2275,11 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
                 vertSpheres[4*totalAtomCnt+2] = atomPos[3*atomCnt+2];
                 vertSpheres[4*totalAtomCnt+3] =
                     this->stickRadiusParam.Param<param::FloatParam>()->Value();
-                colorSpheres[3*totalAtomCnt+0] = this->atomColorTable[3*atomCnt+0];
-                colorSpheres[3*totalAtomCnt+1] = this->atomColorTable[3*atomCnt+1];
-                colorSpheres[3*totalAtomCnt+2] = this->atomColorTable[3*atomCnt+2];
+                /*
+                colorSpheres[3*totalAtomCnt+0] = this->atomColorTable[atomCnt].X();
+                colorSpheres[3*totalAtomCnt+1] = this->atomColorTable[atomCnt].Y();
+                colorSpheres[3*totalAtomCnt+2] = this->atomColorTable[atomCnt].Z();
+                */
                 totalAtomCnt++;
             }
         }
@@ -2335,11 +2327,11 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
             quatCylinders[4*totalCylinderCnt+2] = quatC.GetZ();
             quatCylinders[4*totalCylinderCnt+3] = quatC.GetW();
 
-            color1Cylinders[3*totalCylinderCnt+0] = this->atomColorTable[3*idx0+0];
+            color1Cylinders[3*totalCylinderCnt+0] = this->atomColorTable[3*idx0];
             color1Cylinders[3*totalCylinderCnt+1] = this->atomColorTable[3*idx0+1];
             color1Cylinders[3*totalCylinderCnt+2] = this->atomColorTable[3*idx0+2];
 
-            color2Cylinders[3*totalCylinderCnt+0] = this->atomColorTable[3*idx1+0];
+            color2Cylinders[3*totalCylinderCnt+0] = this->atomColorTable[3*idx1];
             color2Cylinders[3*totalCylinderCnt+1] = this->atomColorTable[3*idx1+1];
             color2Cylinders[3*totalCylinderCnt+2] = this->atomColorTable[3*idx1+2];
 
@@ -2376,7 +2368,7 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, vertSpheres.PeekElements());
-    glColorPointer( 3, GL_FLOAT, 0, colorSpheres.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
     glDrawArrays( GL_POINTS, 0, totalAtomCnt);
     // disable sphere shader
     this->sphereShader.Disable();

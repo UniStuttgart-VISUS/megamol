@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "ProteinMovementData.h"
-#include "param/StringParam.h"
+#include "param/FilePathParam.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/Log.h"
 #include "vislib/IllegalParamException.h"
@@ -35,10 +35,10 @@ protein::ProteinMovementData::ProteinMovementData ( void ) : Module (),
     this->protDataCalleeSlot.SetCallback ( cpdd.ClassName(), "GetData", &ProteinMovementData::ProtDataCallback );
     this->MakeSlotAvailable ( &this->protDataCalleeSlot );
 
-    this->mainFilename.SetParameter ( new param::StringParam ( "" ) );
+    this->mainFilename.SetParameter ( new param::FilePathParam ( "" ) );
     this->MakeSlotAvailable ( &this->mainFilename );
     
-    this->diffFilename.SetParameter ( new param::StringParam ( "" ) );
+    this->diffFilename.SetParameter ( new param::FilePathParam ( "" ) );
     this->MakeSlotAvailable ( &this->diffFilename );
     
     // secondary structure
@@ -154,7 +154,7 @@ bool protein::ProteinMovementData::tryLoadFile ( void )
     ///////////////////////////////////////////////////////////////////////////
     MemmappedFile file;
     // get filename
-    const vislib::TString& fn = this->mainFilename.Param<param::StringParam>()->Value();
+    const vislib::TString& fn = this->mainFilename.Param<param::FilePathParam>()->Value();
 
     if ( fn.IsEmpty() ) {
         // no file to load
@@ -327,7 +327,7 @@ bool protein::ProteinMovementData::tryLoadFile ( void )
     ///////////////////////////////////////////////////////////////////////////
     MemmappedFile movementFile;
     // get filename
-    const vislib::TString& fn2 = this->diffFilename.Param<param::StringParam>()->Value();
+    const vislib::TString& fn2 = this->diffFilename.Param<param::FilePathParam>()->Value();
 
     if ( fn2.IsEmpty() ) {
         // no file to load

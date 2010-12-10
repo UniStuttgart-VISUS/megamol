@@ -224,7 +224,7 @@ namespace protein {
 		 */
 		ReducedSurface( const CallProteinData *prot,
 							 float probeRad = 1.4f);
-		
+
 		/**
 		 * ctor
 		 * Computes the Reduced Surface for a specified amino acid chain of the 

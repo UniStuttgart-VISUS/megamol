@@ -180,8 +180,6 @@ namespace protein {
 
         /** caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
-        // caller slot
-        megamol::core::CallerSlot molRendererCallerSlot;
 
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -206,6 +204,8 @@ namespace protein {
         megamol::core::param::ParamSlot molIdxListParam;
         /** parameter slot for special color */
         megamol::core::param::ParamSlot specialColorParam;
+        /** parameter slot for positional interpolation */
+        megamol::core::param::ParamSlot interpolParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;

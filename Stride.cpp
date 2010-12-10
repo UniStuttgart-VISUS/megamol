@@ -753,7 +753,7 @@ int Stride::ReadPDBFile( CHAIN **Chain, int *Cn, COMMAND *Cmd ) {
 	*Cn= 0;
 	strcpy( PdbIdent,"~~~~" );
 
-	if ( ! ( pdb = fopen ( Cmd->InputFile,"r" ) ) )
+	if ( ! ( pdb = fopen ( Cmd->InputFile, "r") ) )
 		return ( FAILURE );
 	
 	First_ATOM = STRIDE_YES;

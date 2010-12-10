@@ -17,6 +17,7 @@
 #include "param/StringParam.h"
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
+#include "param/BoolParam.h"
 #include "vislib/assert.h"
 #include "vislib/String.h"
 #include "vislib/Quaternion.h"
@@ -43,7 +44,6 @@ using namespace megamol::protein;
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
-    molRendererCallerSlot( "renderMolecule", "Connects the molecule rendering with another renderer" ),
     colorTableFileParam( "colorTableFilename", "The filename of the color table."),
     coloringModeParam( "coloringMode", "The coloring mode."),
     renderModeParam( "renderMode", "The rendering mode."),
@@ -53,13 +53,11 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
     midGradColorParam( "midGradColor", "The color for the middle value for gradient coloring" ),
     maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
     molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"),
-    specialColorParam( "specialColor", "The color for the specified molecules" )
+    specialColorParam( "specialColor", "The color for the specified molecules" ),
+    interpolParam( "posInterpolation", "Enable positional interpolation between frames" )
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
-
-    this->molRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
-    this->MakeSlotAvailable( &this->molRendererCallerSlot);
 
     // fill color table with default values and set the filename param
     vislib::StringA filename( "colors.txt");
@@ -119,13 +117,17 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModule (),
     this->MakeSlotAvailable( &this->maxGradColorParam);
 
     // molecular indices list param
-    this->molIdxList.Add( "0");
-    this->molIdxListParam.SetParameter(new param::StringParam( "0"));
+    this->molIdxList.Clear();
+    this->molIdxListParam.SetParameter(new param::StringParam( ""));
     this->MakeSlotAvailable( &this->molIdxListParam);
 
     // the color for the maximum value (gradient coloring
     this->specialColorParam.SetParameter(new param::StringParam( "#228B22"));
     this->MakeSlotAvailable( &this->specialColorParam);
+
+    // en-/disable positional interpolation
+    this->interpolParam.SetParameter(new param::BoolParam( true));
+    this->MakeSlotAvailable( &this->interpolParam);
 
     // make the rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
@@ -248,12 +250,6 @@ bool SimpleMoleculeRenderer::GetExtents(Call& call) {
     cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
     cr3d->SetTimeFramesCount( mol->FrameCount());
 
-    // get the pointer to CallRender3D (molecule renderer)
-    view::CallRender3D *molcr3d = this->molRendererCallerSlot.CallAs<view::CallRender3D>();
-    if( molcr3d ) {
-        (*molcr3d)(MolecularDataCall::CallForGetExtent); // GetExtents
-    }
-
     return true;
 }
 
@@ -290,7 +286,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     float *pos0 = new float[mol->AtomCount() * 3];
     memcpy( pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
     // set next frame ID and get positions of the second frame
-    if( ( static_cast<int>( callTime) + 1) < mol->FrameCount() )
+    if( ( ( static_cast<int>( callTime) + 1) < int( mol->FrameCount()) ) &&
+        this->interpolParam.Param<param::BoolParam>()->Value() ) 
         mol->SetFrameID(static_cast<int>( callTime) + 1);
     else
         mol->SetFrameID(static_cast<int>( callTime));
@@ -326,18 +323,15 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
         }
     }
 
-    // =============== Molecule Rendering ===============
-    // get the pointer to CallRender3D
-    view::CallRender3D *molcr3d = this->molRendererCallerSlot.CallAs<view::CallRender3D>();
-    if( molcr3d ) {
-        // setup and call molecule renderer
         glPushMatrix();
-        //glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
-        //glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
-        *molcr3d = *cr3d;
-        (*molcr3d)();
-        glPopMatrix();
+    // compute scale factor and scale world
+    float scale;
+    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
     }
+    glScalef( scale, scale, scale);
 
     // ---------- update parameters ----------
     this->UpdateParameters( mol);
@@ -377,17 +371,6 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
 
     // TODO: ---------- render ----------
 
-    glPushMatrix();
-
-    // compute scale factor and scale world
-    float scale;
-    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef( scale, scale, scale);
-
     glDisable( GL_BLEND);
     glEnable( GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -426,6 +409,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
  * render the atom using lines and points
  */
 void SimpleMoleculeRenderer::RenderLines( const MolecularDataCall *mol, const float *atomPos) {
+    glDisable( GL_LIGHTING);
+    glLineWidth( 2.0f);
     // ----- draw atoms as points -----
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -452,6 +437,7 @@ void SimpleMoleculeRenderer::RenderLines( const MolecularDataCall *mol, const fl
         glVertex3f( atomPos[atomIdx1*3+0], atomPos[atomIdx1*3+1], atomPos[atomIdx1*3+2]);
     }
     glEnd(); // GL_LINES
+    glEnable( GL_LIGHTING);
 }
 
 /*

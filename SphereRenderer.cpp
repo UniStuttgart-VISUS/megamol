@@ -209,7 +209,7 @@ bool protein::SphereRenderer::Render(Call& call)
     float *pos0 = new float[sphere->SphereCount() * 4];
     memcpy( pos0, sphere->Spheres(), sphere->SphereCount() * 4 * sizeof( float));
 
-    if( ( static_cast<int>( callTime) + 1) < sphere->FrameCount() ) 
+    if( ( static_cast<int>( callTime) + 1) < int(sphere->FrameCount()) ) 
         sphere->SetFrameID(static_cast<int>( callTime) + 1);
     else
         sphere->SetFrameID( 0);
