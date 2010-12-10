@@ -40,7 +40,6 @@ protein::CCP4VolumeData::CCP4VolumeData(void) : Module (),
 
     this->filename.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filename);
-	
 }
 
 
@@ -192,5 +191,51 @@ bool protein::CCP4VolumeData::tryLoadFile(void) {
  *protein::CCP4VolumeData::ClearData
  */
 void protein::CCP4VolumeData::ClearData() {
-
+    // set header values to default
+    this->header.volDim[0] = this->header.volDim[1] = this->header.volDim[2] = 1;
+    // data type
+    this->header.mode = 2;
+    // Number of first col/row/sec in map
+    this->header.start[0] = this->header.start[1] = this->header.start[2] = 0;
+    // number of intervals along all three axes
+    this->header.intervals[0] = this->header.intervals[1] = this->header.intervals[2] = 1;
+    // cell dimensions in Angstrom
+    this->header.cellDim[0] = this->header.cellDim[1] = this->header.cellDim[2] = 1.0f;
+    // cell angles in degrees
+    this->header.cellAngles[0] = this->header.cellAngles[1] = this->header.cellAngles[2] = 90.0f;
+    // Corresponding axis for cols/rows/secs (1 = x, 2 = y, 3 = z)
+    this->header.correspondigAxis[0] = 1;
+    this->header.correspondigAxis[1] = 2;
+    this->header.correspondigAxis[2] = 3;
+    // The density
+    this->header.minDensity = this->header.maxDensity = this->header.meanDensity = 1.0f;
+    /*
+    // Space group number
+    int ispg;
+    // Number of bytes used for storing symmetry operators
+    int nsymbyte;
+    // Flag for skew transformation, =0 none, =1 fill
+    int skewTransformFlag;
+    // Skew matrix S (in order S11, S12, S13, S21 etc)
+    float skewMatrix[9];
+    // Skew translation t
+    float skewTranslation[3];
+    // reserved for future use
+    float future[11];
+    // If this contains "ADP ", the next three values contain a float 
+    // offset to add to the first positions of the map.
+    char ADP[4];
+    // Float offset for first position of map (i.e. origin offset)
+    float offset[3];
+    // Must contain "MAP "
+    char MAP[4];
+    // Machine stamp indicating the machine type which wrote the file
+    int machine;
+    // RMS deviation of map from mean density
+    float rmsDeviation;
+    // number of labels being used
+    int numLabel;
+    // 10 x 80 character text labels
+    char label[10*80];
+    */
 }

@@ -27,7 +27,6 @@
 #include <set>
 #include <algorithm>
 #include <list>
-#include "vislib/FpsCounter.h"
 
 namespace megamol {
 namespace protein {
@@ -463,8 +462,6 @@ namespace protein {
 		// transparency value
 		float transparency;
 
-		// fps counter
-		vislib::graphics::FpsCounter fpsCounter;
 
 	};
 

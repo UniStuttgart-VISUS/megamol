@@ -1530,6 +1530,8 @@ void MoleculeSESRenderer::RenderDebugStuff(
     this->cylinderShader.Disable();
 
     glEnable( GL_COLOR_MATERIAL);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_TRIANGLES );
+    glDisable( GL_CULL_FACE );
     this->lightShader.Enable();
     unsigned int i;
     for( unsigned int cntRS = 0; cntRS < max1; ++cntRS)

@@ -873,6 +873,8 @@ bool PDBLoader::getData( core::Call& call) {
         this->stride->WriteToInterface( dc);
         this->secStructAvailable = true;
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Secondary Structure computed via STRIDE in %f seconds.", ( double( clock() - t) / double( CLOCKS_PER_SEC))); // DEBUG
+    } else if( this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
+        this->stride->WriteToInterface( dc);
     }
 
     return true;
@@ -890,9 +892,13 @@ bool PDBLoader::getExtent( core::Call& call) {
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
+    // grow bounding box by 3.0 Angstrom (for volume rendering / SAS)
+    vislib::math::Cuboid<float> bBoxPlus3( this->bbox);
+    bBoxPlus3.Grow( 3.0f);
+
     dc->AccessBoundingBoxes().Clear();
-    dc->AccessBoundingBoxes().SetObjectSpaceBBox( this->bbox);
-    dc->AccessBoundingBoxes().SetObjectSpaceClipBox( this->bbox);
+    dc->AccessBoundingBoxes().SetObjectSpaceBBox( bBoxPlus3);
+    dc->AccessBoundingBoxes().SetObjectSpaceClipBox( bBoxPlus3);
 
     if( !xtcFileValid ) {
         // no XTC file set or loaded --> use number of loaded frames
@@ -977,10 +983,13 @@ void PDBLoader::loadFrame( view::AnimDataModule::Frame *frame,
 void PDBLoader::loadFile( const vislib::TString& filename) {
     using vislib::sys::Log;
 
+    this->resetAllData();
+
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
     for(int i = 0; i < this->data.Count(); i++)
         delete data[i];
+    this->data.Clear();
 
     // stop frame-loading thread if neccessary
     if( xtcFileValid )
@@ -1237,8 +1246,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
 
     } else {
-        //Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", T2A( filename)); // DEBUG
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file."); // DEBUG
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A( filename)); // DEBUG
     }
 }
 
@@ -1654,6 +1662,30 @@ bool PDBLoader::IsAminoAcid( vislib::StringA resName ) {
         return true;
     return false;
 }
+
+/*
+ * reset all data containers.
+ */
+void PDBLoader::resetAllData() {
+    unsigned int cnt;
+    //this->data.Clear();
+    this->atomTypeIdx.Clear();
+    this->atomType.Clear();
+    for( cnt = 0; cnt < this->residue.Count(); ++cnt ) {
+        delete this->residue[cnt];
+    }
+    this->residue.Clear();
+    this->residueTypeName.Clear();
+    this->molecule.Clear();
+    this->chain.Clear();
+    this->connectivity.Clear();
+    delete stride;
+    this->stride = 0;
+    secStructAvailable = false;
+    this->chainFirstRes.Clear();
+    this->chainResCount.Clear();
+}
+
 
 /*
  * Read the number of frames from the XTC file and update the bounding box.

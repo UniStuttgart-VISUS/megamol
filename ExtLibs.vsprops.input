@@ -6,13 +6,13 @@
   >
   <Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="%withNETCDF%!$(NETCDFPath)\include, !! %withOPENCL%!$(OPENCLPath)\OpenCL\common\inc, !!"
-		PreprocessorDefinitions="%withNETCDF%!WITH_NETCDF, !! %withOPENCL%!WITH_OPENCL, !!"
+		AdditionalIncludeDirectories="%withNETCDF%!$(NETCDFPath)\include;!!%withOPENCL%!$(OPENCLPath)\OpenCL\common\inc;!!%withCUDA%!$(CUDA_INC_PATH);$(CUDAPath)/C/common/inc;!!"
+		PreprocessorDefinitions="%withNETCDF%!WITH_NETCDF, !!%withOPENCL%!WITH_OPENCL, !!%withCUDA%!WITH_CUDA, !!"
 	/>
   <Tool
 		Name="VCLinkerTool"
-		AdditionalLibraryDirectories="%withNETCDF%!$(NETCDFPath)\lib$(BitsD), !! %withOPENCL%!$(OPENCLPath)\OpenCL\common\lib\x64!!"
-		AdditionalDependencies="%withNETCDF%!netcdf$(Bits).lib!! %withOPENCL%!OpenCL.lib!!"
+		AdditionalLibraryDirectories="%withNETCDF%!$(NETCDFPath)\lib$(BitsD);!!%withOPENCL%!$(OPENCLPath)\OpenCL\common\lib\x64;!!%withCUDA%!$(CUDA_LIB_PATH);$(CUDAPath)/C/common/lib;!!"
+		AdditionalDependencies="%withNETCDF%!netcdf$(Bits).lib !!%withOPENCL%!OpenCL.lib !!%withCUDA%!cudart.lib cutil$(Bits)D.lib cudpp$(Bits)d.lib !!"
 	/>
   <UserMacro
   Name="OutputBin"
@@ -37,6 +37,11 @@
   <UserMacro
 		Name="OPENCLPath"
 		Value="%openclPath%"
+		PerformEnvironmentSet="true"
+	/>
+  <UserMacro
+		Name="CUDAPath"
+		Value="%cudaPath%"
 		PerformEnvironmentSet="true"
 	/>
 </VisualStudioPropertySheet>

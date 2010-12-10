@@ -25,6 +25,16 @@
 #define FLACH
 #endif
 
+//#define SET_COLOR
+//#define COLOR1 vec3( 249.0/255.0, 187.0/255.0, 103.0/255.0)
+#define COLOR1 vec3( 183.0/255.0, 204.0/255.0, 220.0/255.0)
+
+//#define COLOR_SES
+#define COLOR_BLUE vec3( 145.0/255.0, 191.0/255.0, 219.0/255.0)
+#define COLOR_GREEN vec3( 161.0/255.0, 215.0/255.0, 106.0/255.0)
+#define COLOR_YELLOW vec3( 255.0/255.0, 255.0/255.0, 191.0/255.0)
+#define COLOR_RED vec3( 228.0/255.0, 37.0/255.0, 34.0/255.0)
+
 -->
     </snippet>
 
@@ -289,10 +299,9 @@ void main(void) {
     // phong lighting with directional light
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     
-
     // calculate depth
 #ifdef DEPTH
-    vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
+    vec4 Ding = vec4( sphereintersection + objPos.xyz, 1.0);
     float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
     float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
@@ -301,6 +310,7 @@ void main(void) {
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
     gl_FragColor.rgb = (radicand < 0.0) ? gl_Color.rgb : gl_FragColor.rgb;
 #endif // CLIP
+
 #endif // DEPTH
 
     
@@ -5520,6 +5530,13 @@ void main(void) {
     //color = vec3( 0.17, 0.5, 0.8);
     //color = vec3( 0.19, 0.52, 0.82);
     
+#ifdef COLOR_SES
+    color = COLOR_BLUE;
+#endif
+#ifdef SET_COLOR
+    color = COLOR1;
+#endif
+
     // phong lighting with directional light
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
 
@@ -5844,6 +5861,7 @@ void main(void) {
     float second = lambdas.x;
     intersection = a + ray * second;
     // handle singularity
+    bool sing = false;
     if( r > R )
     {
         //float radius2 = r2 - 2.0 * ( r2 -r*R) + r2 - 2.0 * r * R + R2;
@@ -5901,7 +5919,14 @@ void main(void) {
     //color = vec3( 0.98, 0.82, 0.0 ); // for VIS
     //color = vec3( 0.02, 0.75, 0.02);
     //color = vec3( 0.19, 0.52, 0.82);
-    
+
+#ifdef COLOR_SES
+    color = COLOR_GREEN;
+#endif    
+#ifdef SET_COLOR
+    color = COLOR1;
+#endif
+
     // phong lighting with directional light
     gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
     
@@ -6114,6 +6139,8 @@ void main(void) {
       <snippet name="::common::lighting::simple"/>
       <snippet type="string">
         <!--
+#extension GL_EXT_gpu_shader4 : enable
+
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
@@ -6202,12 +6229,13 @@ void main(void) {
     */
     int i;
     vec3 probePos;
-    int numProbes = min( int(texCoord1.x), 16);
+    int numProbes = min( int(texCoord1.x), 32);
     if( numProbes > 0 )
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            //probePos = texture2D( tex, ( texCoord1.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            probePos = texelFetch2D( tex, ivec2( texCoord1.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
@@ -6216,7 +6244,8 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            //probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            probePos = texelFetch2D( tex, ivec2( texCoord2.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
@@ -6225,7 +6254,8 @@ void main(void) {
     {
         for( i = 0; i < numProbes; i++ )
         {
-            probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            //probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
+            probePos = texelFetch2D( tex, ivec2( texCoord3.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
@@ -6268,7 +6298,14 @@ void main(void) {
     //color = vec3( texCoord2.xy, 0.0);
     //color = vec3( 0.8, 0.0, 0.2);
     //color = vec3( 0.19, 0.52, 0.82);
-    
+
+#ifdef COLOR_SES
+    color = COLOR_YELLOW;
+#endif    
+#ifdef SET_COLOR
+    color = COLOR1;
+#endif
+
     // phong lighting with directional light
     gl_FragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     

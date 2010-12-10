@@ -542,7 +542,9 @@ bool ProteinRendererSES::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER | view::CallRender3D::CAP_LIGHTING);
+    cr3d->SetCapabilities(view::CallRender3D::CAP_RENDER 
+        | view::CallRender3D::CAP_LIGHTING
+        | view::CallRender3D::CAP_ANIMATION );
 
     return true;
 }
@@ -588,14 +590,21 @@ bool ProteinRendererSES::GetExtents(Call& call) {
  */
 bool ProteinRendererSES::Render( Call& call )
 {
-	fpsCounter.FrameBegin();
 	// temporary variables
 	unsigned int cntRS = 0;
 	bool recomputeColors = false;
 	bool render_debug = false;
 
+    // cast the call to Render3D
+    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+    if (cr3d == NULL) return false;
+
 	// get pointer to CallProteinData
 	protein::CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+
+	// get camera information
+	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>( &call )->GetCameraParameters();
+
 
 	// if something went wrong --> return
 	if( !protein) return false;
@@ -603,9 +612,6 @@ bool ProteinRendererSES::Render( Call& call )
 	// execute the call
 	if ( ! ( *protein )() )
 		return false;
-
-	// get camera information
-	this->m_cameraInfo = dynamic_cast<view::CallRender3D*>( &call )->GetCameraParameters();
 
 	// ==================== check parameters ====================
 
@@ -831,8 +837,6 @@ bool ProteinRendererSES::Render( Call& call )
 			this->RenderDebugStuff( protein);
             // DEMO
 	        glPopMatrix();
-	        fpsCounter.FrameEnd();
-	        //std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
 	        return true;
         }
 	}
@@ -873,9 +877,6 @@ bool ProteinRendererSES::Render( Call& call )
 	}
 
 	glPopMatrix();
-
-	fpsCounter.FrameEnd();
-	//std::cout << "average fps: " << fpsCounter.FPS() << std::endl;
 
 	return true;
 }

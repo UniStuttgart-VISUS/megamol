@@ -317,6 +317,9 @@ bool protein::ProteinRenderer::Render(Call& call)
     view::CallRender3D *solventrencr3d = this->solventRendererCallerSlot.CallAs<view::CallRender3D>();
     // get pointer to CallProteinData
     CallProteinData *protein = this->m_protDataCallerSlot.CallAs<protein::CallProteinData>();
+    
+	// get camera information
+    this->cameraInfo = cr3d->GetCameraParameters();
 
     // get camera information
     this->cameraInfo = cr3d->GetCameraParameters();

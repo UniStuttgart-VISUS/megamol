@@ -16,7 +16,7 @@ TargetName := Protein
 InputRootDir := $(InputDir)
 InputDirs := .
 IncludeDir := $(IncludeDir) $(mmcorepath)
-VISlibs := gl graphics sys math base
+VISlibs := net gl graphics sys math base
 
 
 # Additional compiler flags

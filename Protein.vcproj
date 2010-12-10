@@ -17,6 +17,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath=".\Cuda.Rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -32,6 +35,11 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc"
+				Debug="true"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -66,7 +74,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -112,6 +120,11 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="CUDA Build Rule"
+				Include="C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc"
+				Debug="true"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -129,6 +142,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				OpenMP="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
@@ -145,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -192,6 +206,10 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="CUDA Build Rule"
+				Include="C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -224,7 +242,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
 				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
@@ -273,6 +291,10 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="CUDA Build Rule"
+				Include="C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -290,6 +312,94 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
+				OpenMP="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib vislibnet$(BitsD).lib MegaMolCore$(BitsD).lib"
+				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="EmuDebug|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets=".\vislibVSProps\TargetDebug32.vsprops;.\ExtLibs.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc"
+				Debug="true"
+				Emulation="true"
+				Optimization="0"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(VISlibPath)\net\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
@@ -312,8 +422,93 @@
 				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="if not exist &quot;$(OutputBin)&quot; mkdir &quot;$(OutputBin)&quot;&#x0D;&#x0A;xcopy &quot;$(TargetPath)&quot; &quot;$(OutputBin)&quot; /Y /F /V /G /K&#x0D;&#x0A;if exist &quot;$(ProjectDir)\PostBuild.bat&quot; cmd /Q /C &quot;$(ProjectDir)\PostBuild.bat&quot;&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="EmuDebug|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets=".\vislibVSProps\TargetDebug64.vsprops;.\ExtLibs.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="C:\Program Files\NVIDIAGPUComputingSDK\C\common\inc"
+				Debug="true"
+				Emulation="true"
+				Optimization="0"
+				Runtime="1"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)&quot;;&quot;$(VISlibPath)\base\include&quot;;&quot;$(VISlibPath)\math\include&quot;;&quot;$(VISlibPath)\sys\include&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;;&quot;$(VISlibPath)\net\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PROTEIN_EXPORTS"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="opengl32.lib glu32.lib vislibbase$(BitsD).lib vislibmath$(BitsD).lib vislibsys$(BitsD).lib vislibgraphics$(BitsD).lib vislibgl$(BitsD).lib MegaMolCore$(BitsD).lib"
+				OutputFile="$(OutDir)\Protein$(BitsD).win$(Bits).mmplg"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(MegaMolCorePath)\lib&quot;;&quot;$(VISlibPath)\lib&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="2"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -373,6 +568,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CartoonDataSource.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CCP4VolumeData.cpp"
 				>
 			</File>
@@ -382,6 +581,14 @@
 			</File>
 			<File
 				RelativePath=".\Color.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Diagram2DCall.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Diagram2DRenderer.cpp"
 				>
 			</File>
 			<File
@@ -423,6 +630,28 @@
 						CompileAsManaged="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						CompileAsManaged="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						CompileAsManaged="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\FrodockLoader.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\GlButton.cpp"
@@ -438,6 +667,10 @@
 			</File>
 			<File
 				RelativePath=".\MoleculeCartoonRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeCudaSESRenderer.cpp"
 				>
 			</File>
 			<File
@@ -485,11 +718,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinRendererCBCUDA.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ProteinRendererCBOpenCL.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ProteinRendererSES.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ProteinRendererSESGPU.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ProteinRendererSESGPUCuda.cpp"
 				>
 			</File>
 			<File
@@ -575,9 +820,33 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Stride.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeSliceCall.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeSliceRenderer.cpp"
 				>
 			</File>
 		</Filter>
@@ -611,6 +880,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CartoonDataSource.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CCP4VolumeData.h"
 				>
 			</File>
@@ -620,6 +893,18 @@
 			</File>
 			<File
 				RelativePath=".\Color.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Diagram2DCall.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Diagram2DRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FrodockLoader.h"
 				>
 			</File>
 			<File
@@ -640,6 +925,10 @@
 			</File>
 			<File
 				RelativePath=".\MoleculeCartoonRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeCudaSESRenderer.h"
 				>
 			</File>
 			<File
@@ -687,11 +976,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProteinRendererCBCUDA.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ProteinRendererCBOpenCL.h"
 				>
 			</File>
 			<File
 				RelativePath=".\ProteinRendererSES.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProteinRendererSESGPU.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProteinRendererSESGPUCuda.h"
 				>
 			</File>
 			<File
@@ -754,6 +1055,14 @@
 				RelativePath=".\targetver.h"
 				>
 			</File>
+			<File
+				RelativePath=".\VolumeSliceCall.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeSliceRenderer.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -800,6 +1109,74 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Shaders\reducedsurface.btf"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Shaders\solpath.btf"
@@ -836,6 +1213,22 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Shaders\volume.btf"
@@ -866,6 +1259,22 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -917,7 +1326,264 @@
 				RelativePath=".\Shaders\contourbuildupKernel.cl"
 				>
 				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="CUDA Files"
+			>
+			<File
+				RelativePath=".\particles_kernel.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\particles_kernel.cuh"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\particleSystem.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						Include="D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						Include="D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc"
+						AddedDependencies="particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						Include="D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						Include="D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc"
+						AddedDependencies="particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						Include="D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						Include="D:\Programme\NVIDIA Corporation\NVIDIA GPU Computing SDK\C\common\inc"
+						Debug="true"
+						Optimization="0"
+						AddedDependencies="particleSystem.cuh; particles_kernel.cu; particles_kernel.cuh;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\particleSystem.cuh"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmuDebug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
