@@ -35,9 +35,13 @@ namespace sys {
 
         this->findHandle = FindFirstFileA(p, &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
-            throw SystemException(__FILE__, __LINE__);
-        }
-        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            DWORD le = ::GetLastError();
+            if (le == ERROR_FILE_NOT_FOUND) {
+                this->nextItem.Path.Clear();
+            } else {
+                throw SystemException(le, __FILE__, __LINE__);
+            }
+        } else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             this->nextItem.Type = Entry::DIRECTORY;
             if (this->omitFolders || (strcmp(fd.cFileName, ".") == 0)
                     || (strcmp(fd.cFileName, "..") == 0)) {
@@ -88,9 +92,13 @@ namespace sys {
 
         this->findHandle = FindFirstFileW(p, &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
-            throw SystemException(__FILE__, __LINE__);
-        }
-        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            DWORD le = ::GetLastError();
+            if (le == ERROR_FILE_NOT_FOUND) {
+                this->nextItem.Path.Clear();
+            } else {
+                throw SystemException(le, __FILE__, __LINE__);
+            }
+        } else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             this->nextItem.Type = Entry::DIRECTORY;
             if (this->omitFolders || (wcscmp(fd.cFileName, L".") == 0)
                     || (wcscmp(fd.cFileName, L"..") == 0)) {
@@ -130,7 +138,9 @@ namespace sys {
         DWORD le;
         bool found = false;
         do {
-            if (FindNextFileA(this->findHandle, &fd) == 0) {
+            if (this->findHandle == INVALID_HANDLE_VALUE) {
+                this->nextItem.Path.Clear();
+            } else if (FindNextFileA(this->findHandle, &fd) == 0) {
                 if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
                     this->nextItem.Path.Clear();
                     found = true;
@@ -191,7 +201,9 @@ namespace sys {
         DWORD le;
         bool found = false;
         do {
-            if (FindNextFileW(this->findHandle, &fd) == 0) {
+            if (this->findHandle == INVALID_HANDLE_VALUE) {
+                this->nextItem.Path.Clear();
+            } else if (FindNextFileW(this->findHandle, &fd) == 0) {
                 if ((le = GetLastError()) == ERROR_NO_MORE_FILES) {
                     this->nextItem.Path.Clear();
                     found = true;

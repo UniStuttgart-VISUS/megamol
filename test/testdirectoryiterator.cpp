@@ -318,4 +318,7 @@ void TestDirectoryIterator(void) {
     // This now uses vislib::sys::Path, which is odd, since Path uses the DirectoryIterator (without globbing features)
     ::TestDirectoryGlobbing("level0");
 
+    sys::DirectoryIteratorA failDi("C:\\does.not.*.exist.hurbelkurbel", true, false);
+    AssertFalse("Inexisting file not found", failDi.HasNext());
+
 }
