@@ -77,7 +77,8 @@ namespace vislib {
          * @param addRef Determines whether the new instance will increment the
          *               reference count (default) or not.
          *
-         * @return A smart reference pointer with type 'Tp'.
+         * @return A smart reference pointer with type 'Tp'. If the dynamic_cast
+         *         fails, this might be NULL even if the object is not NULL.
          */
         template<class Tp> SmartRef<Tp> DynamicCast(const bool addRef = true);
 
@@ -90,10 +91,37 @@ namespace vislib {
          *               idea setting this to false - you do it on your own
          *               "because I know"-risk.
          *
-         * @return A smart reference pointer with type 'Tp'.
+         * @return A smart reference pointer with type 'Tp'. If the dynamic_cast
+         *         fails, this might be NULL even if the object is not NULL.
          */
         template<class Tp>
         const SmartRef<Tp> DynamicCast(const bool addRef = true) const;
+
+        /**
+         * Get the pointer designated by the reference and dynamic cast it 
+         * to 'Tp'. The reference count of the object is not changed by this
+         * operation. Callers must not manipulate the object returned, 
+         * especially they must never delete it!
+         *
+         * @return A pointer of type 'Tp' to the object. If the dynamic_cast
+         *         fails, this might be NULL even if the object is not NULL.
+         */
+        template<class Tp> inline Tp *DynamicPeek(void) {
+            return dynamic_cast<Tp *>(this->obj);
+        }
+
+        /**
+         * Get the pointer designated by the reference and dynamic cast it 
+         * to 'Tp'. The reference count of the object is not changed by this
+         * operation. Callers must not manipulate the object returned, 
+         * especially they must never delete it!
+         *
+         * @return A pointer of type 'Tp' to the object. If the dynamic_cast
+         *         fails, this might be NULL even if the object is not NULL.
+         */
+        template<class Tp> inline const Tp *DynamicPeek(void) const {
+            return dynamic_cast<const Tp *>(this->obj);
+        }
 
         /**
          * Answer, whether the smart reference is a NULL pointer.
