@@ -15,6 +15,7 @@
 #include "vislib/SystemException.h"
 
 
+
 /*
  * vislib::sys::DateTime::IsLeapYear
  */

@@ -42,123 +42,233 @@ static void DateValueTest(const INT year, const INT month, const INT day,
 }
 
 
-/*
- * ::TestDateTime
- */
-void TestDateTime(void)  {
+static void TestSpan(void) {
+    using vislib::sys::DateTimeSpan;
+    DateTimeSpan ts1, ts2;
+
+    ::AssertEqual("Value of MILLISECONDS_PER_SECOND.", DateTimeSpan::MILLISECONDS_PER_SECOND, (INT64) 1000);
+    ::AssertEqual("Value of MILLISECONDS_PER_MINUTE.", DateTimeSpan::MILLISECONDS_PER_MINUTE, (INT64) 60 * 1000);
+    ::AssertEqual("Value of MILLISECONDS_PER_HOUR.", DateTimeSpan::MILLISECONDS_PER_HOUR, (INT64) 60 * 60 * 1000);
+    ::AssertEqual("Value of MILLISECONDS_PER_DAY.", DateTimeSpan::MILLISECONDS_PER_DAY, (INT64) 24 * 60 * 60 * 1000);
+    ::AssertEqual("Empty time span is 0 millis.", (INT64) DateTimeSpan::EMPTY, (INT64) 0);
+    ::AssertEqual("Value of ONE_MILLISECOND.", (INT64) DateTimeSpan::ONE_MILLISECOND, (INT64) 1);
+    ::AssertEqual("Value of ONE_SECOND.", (INT64) DateTimeSpan::ONE_SECOND, (INT64) 1000);
+    ::AssertEqual("Value of ONE_MINUTE.", (INT64) DateTimeSpan::ONE_MINUTE, (INT64) 60 * 1000);
+    ::AssertEqual("Value of ONE_HOUR.", (INT64) DateTimeSpan::ONE_HOUR, (INT64) 60 * 60 * 1000);
+    ::AssertEqual("Value of ONE_DAY.", (INT64) DateTimeSpan::ONE_DAY, (INT64) 24 * 60 * 60 * 1000);
+
+    ::AssertEqual("Initialisation with default ctor.", (INT64) DateTimeSpan(), (INT64) 0);
+    ::AssertEqual("Initialisation with millis.", (INT64) DateTimeSpan(10), (INT64) 10);
+    ::AssertEqual("Initialisation with all members except millis.", (INT64) DateTimeSpan(1, 1, 1, 1), 
+        1 * DateTimeSpan::MILLISECONDS_PER_DAY 
+        + 1 * DateTimeSpan::MILLISECONDS_PER_HOUR 
+        + 1 * DateTimeSpan::MILLISECONDS_PER_MINUTE
+        + 1 * DateTimeSpan::MILLISECONDS_PER_SECOND);
+    ::AssertEqual("Initialisation with all members.", (INT64) DateTimeSpan(1, 1, 1, 1, 1),
+        1 * DateTimeSpan::MILLISECONDS_PER_DAY 
+        + 1 * DateTimeSpan::MILLISECONDS_PER_HOUR 
+        + 1 * DateTimeSpan::MILLISECONDS_PER_MINUTE
+        + 1 * DateTimeSpan::MILLISECONDS_PER_SECOND 
+        + 1);
+
+    ts1 = DateTimeSpan(1, 1, 1, 1, 1);
+    ::AssertFalse("Test for equality returns false.", ts1 == ts2);
+    ::AssertTrue("Test for inequality returns true.", ts1 != ts2);
+    ::AssertEqual("GetDays().", ts1.GetDays(), (INT64) 1);
+    ::AssertEqual("GetHours().", ts1.GetHours(), (INT64) 1);
+    ::AssertEqual("GetMinutes().", ts1.GetMinutes(), (INT64) 1);
+    ::AssertEqual("GetSeconds().", ts1.GetSeconds(), (INT64) 1);
+    ::AssertEqual("GetMilliseconds().", ts1.GetMilliseconds(), (INT64) 1);
+
+    ts2 = ts1;
+    ::AssertEqual("Assignment succeeds.", (INT64) ts1, (INT64) ts2);
+    
+    ::AssertTrue("Test for equality returns true.", ts1 == ts2);
+    ::AssertFalse("Test for inequality returns false.", ts1 != ts2);
+
+    ts1 = ts2 + DateTimeSpan::ONE_MILLISECOND;
+    ::AssertEqual("Addition.", (INT64) ts1, (INT64) ts2 + 1);
+
+    ts1 = ts2 - DateTimeSpan::ONE_MILLISECOND;
+    ::AssertEqual("Subtraction.", (INT64) ts1, (INT64) ts2 - 1);
+
+    ts1 = ts2;
+    ts1 += DateTimeSpan::ONE_MILLISECOND;
+    ::AssertEqual("Addition assigment.", (INT64) ts1, (INT64) ts2 + 1);
+    ::AssertTrue("operator >.", ts1 > ts2);
+    ::AssertTrue("operator >=.", ts1 >= ts2);
+    ::AssertFalse("operator <.", ts1 < ts2);
+    ::AssertFalse("operator <=.", ts1 <= ts2);
+
+    ts1 = ts2;
+    ts1 -= DateTimeSpan::ONE_MILLISECOND;
+    ::AssertEqual("Subtraction assigment.", (INT64) ts1, (INT64) ts2 - 1);
+    ::AssertFalse("operator >.", ts1 > ts2);
+    ::AssertFalse("operator >=.", ts1 >= ts2);
+    ::AssertTrue("operator <.", ts1 < ts2);
+    ::AssertTrue("operator <=.", ts1 <= ts2);
+
+    ts1 = ts2;
+    ::AssertFalse("operator > with equal value.", ts1 > ts2);
+    ::AssertTrue("operator >= with equal value.", ts1 >= ts2);
+    ::AssertFalse("operator < with equal value.", ts1 < ts2);
+    ::AssertTrue("operator <= with equal value.", ts1 <= ts2);
+
+    ::AssertEqual("Negation.", (INT64) -ts1, -((INT64) ts1));
+
+    ts2.Set(10, 0, 0, 0, 0);
+    ::AssertEqual("GetDays() == 10.", ts2.GetDays(), (INT64) 10);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT64) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT64) 0);
+    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (INT64) 0);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT64) 0);
+
+    ts2.Set(-10, 0, 0, 0, 0);
+    ::AssertEqual("GetDays() == -10.", ts2.GetDays(), (INT64) -10);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT64) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT64) 0);
+    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (INT64) 0);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT64) 0);
+
+    ts2.Set(-10, 1, 0, 0, 0);
+    ::AssertEqual("GetDays() == -9.", ts2.GetDays(), (INT64) -9);
+    ::AssertEqual("GetHours() == -23.", ts2.GetHours(), (INT64) -23);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT64) 0);
+    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (INT64) 0);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT64) 0);
+
+    ts2.Set(0, 0, 0, -1, 0);
+    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (INT64) 0);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT64) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT64) 0);
+    ::AssertEqual("GetSeconds() == -1.", ts2.GetSeconds(), (INT64) -1);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT64) 0);
+
+    ts2.Set(0, 0, 0, 0, 1001);
+    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (INT64) 0);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT64) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT64) 0);
+    ::AssertEqual("GetSeconds() == 1.", ts2.GetSeconds(), (INT64) 1);
+    ::AssertEqual("GetMilliseconds() == 1.", ts2.GetMilliseconds(), (INT64) 1);
+
+    ts2.Set(0, 0, 0, 0, -1001);
+    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (INT64) 0);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT64) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT64) 0);
+    ::AssertEqual("GetSeconds() == -1.", ts2.GetSeconds(), (INT64) -1);
+    ::AssertEqual("GetMilliseconds() == -1.", ts2.GetMilliseconds(), (INT64) -1);
+}
+
+static void TestTime(void) {
     vislib::sys::DateTime dateTime;
-    //INT year, month, day, hour, minute, second;
+    //::DateValueTest(1, 1, 1, 0, 0, 0, INT64(0));
+    //::DateValueTest(1, 1, 1, 0, 0, 1, INT64(1000));
+    //::DateValueTest(1, 1, 1, 0, 1, 0, INT64(60) * 1000);
+    //::DateValueTest(1, 1, 1, 1, 0, 0, INT64(60) * 60 * 1000);
+    //::DateValueTest(1, 1, 2, 0, 0, 0, INT64(24) * 60 * 60 * 1000);
+    //::DateValueTest(1, 2, 1, 0, 0, 0, INT64(31) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(1, 2, 2, 0, 0, 0, INT64(31 + 1) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(1, 12, 31, 0, 0, 0, INT64(364) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(1, 12, 31, 23, 59, 59, INT64(365) * 24 * 60 * 60 * 1000 - 1000);
+    //::DateValueTest(2, 1, 1, 0, 0, 0, INT64(365) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(3, 1, 1, 0, 0, 0, INT64(2) * 365 * 24 * 60 * 60 * 1000);
+    //::DateValueTest(4, 1, 1, 0, 0, 0, INT64(3) * 365 * 24 * 60 * 60 * 1000);
+    //::DateValueTest(4, 2, 28, 0, 0, 0, (INT64(3 * 365) + 31 + 27) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(4, 2, 29, 0, 0, 0, (INT64(3 * 365) + 31 + 28) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(4, 3, 1, 0, 0, 0, (INT64(3 * 365) + 31 + 29) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(-1, 12, 31, 23, 59, 59, INT64(-1000));
+    //::DateValueTest(-1, 12, 31, 0, 0, 0, INT64(-1) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(-1, 1, 1, 0, 0, 0, INT64(-1) * 365 * 24 * 60 * 60 * 1000);
+    //::DateValueTest(-1, 1, 1, 0, 0, 1, INT64(-1) * 365 * 24 * 60 * 60 * 1000 + 1000);
+    //::DateValueTest(-1, 1, 1, 0, 1, 0, INT64(-1) * 365 * 24 * 60 * 60 * 1000 + 60 * 1000);
+    //::DateValueTest(-1, 1, 1, 1, 0, 0, INT64(-1) * 365 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000);
+    //::DateValueTest(2, -1, 1, 0, 0, 0, INT64(365 - 31) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(2, 1, -1, 0, 0, 0, INT64(365 - 1) * 24 * 60 * 60 * 1000);
+    //::DateValueTest(2, -12, 1, 0, 0, 0, INT64(0));
+    //::DateValueTest(1, -1, 1, 0, 0, 0, INT64(-1) * 31 * 24 * 60 * 60 * 1000);
+    //::DateValueTest(-1, 13, 1, 0, 0, 0, INT64(0));
+    //::DateValueTest(1, 13, 1, 0, 0, 0, INT64(365) * 24 * 60 * 60 * 1000);
+    //::DateConversionTest(1, 1, 1, 0, 0, 0);
+    //::DateConversionTest(1, 1, 1, 0, 0, 1);
+    //::DateConversionTest(1, 1, 1, 0, 1, 1);
+    //::DateConversionTest(1, 1, 1, 1, 1, 1);
+    //::DateConversionTest(3, 1, 1, 0, 0, 0);
+    //::DateConversionTest(4, 1, 1, 0, 0, 0);
+    //::DateConversionTest(5, 1, 1, 0, 0, 0);
+    //::DateConversionTest(99, 1, 1, 0, 0, 0);
+    //::DateConversionTest(100, 1, 1, 0, 0, 0);
+    //::DateConversionTest(101, 1, 1, 0, 0, 0);
+    //::DateConversionTest(399, 1, 1, 0, 0, 0);
+    //::DateConversionTest(400, 1, 1, 0, 0, 0);
+    //::DateConversionTest(401, 1, 1, 0, 0, 0);
+    //::DateConversionTest(1700, 1, 1, 0, 0, 0);
+    //::DateConversionTest(1700, 1, 1, 12, 34, 56);
+    //::DateConversionTest(1704, 1, 1, 0, 0, 0);
+    //::DateConversionTest(1704, 2, 29, 0, 0, 0);
+    //::DateConversionTest(1704, 3, 1, 0, 0, 0);
+    //::DateConversionTest(1704, 3, 2, 0, 0, 0);
+    //::DateConversionTest(1705, 1, 1, 0, 0, 0);
+    //::DateConversionTest(1705, 2, 28, 0, 0, 0);
+    //::DateConversionTest(1705, 3, 1, 0, 0, 0);
+    //::DateConversionTest(1705, 3, 2, 0, 0, 0);
+    //::DateConversionTest(1708, 1, 1, 0, 0, 0);
+    //::DateConversionTest(1708, 3, 1, 0, 0, 0);
+    //::DateConversionTest(1709, 1, 1, 0, 0, 0);
+    //::DateConversionTest(1709, 3, 1, 0, 0, 0);
+    //::DateConversionTest(1900, 1, 1, 5, 32, 35);
+    //::DateConversionTest(1900, 2, 1, 5, 32, 35);
+    //::DateConversionTest(1900, 3, 1, 5, 32, 35);
+    //::DateConversionTest(1904, 3, 1, 5, 32, 35);
+    //::DateConversionTest(1999, 3, 5, 1, 4, 55);
+    //::DateConversionTest(2000, 1, 4, 12, 54, 22);
+    //::DateConversionTest(2000, 2, 29, 12, 0, 0);
+    //::DateConversionTest(2000, 3, 1, 5, 22, 33);
+    //::DateConversionTest(2000, 12, 31, 5, 22, 33);
+    //::DateConversionTest(2000, 12, 3, 0, 32, 35);
+    //::DateConversionTest(2004, 1, 1, 5, 32, 35);
+    //::DateConversionTest(2004, 2, 1, 5, 32, 35);
+    //::DateConversionTest(2004, 3, 1, 5, 32, 35);
 
-    ::EnableAssertSuccessOutput(false);
-
-    ::DateValueTest(1, 1, 1, 0, 0, 0, INT64(0));
-    ::DateValueTest(1, 1, 1, 0, 0, 1, INT64(1000));
-    ::DateValueTest(1, 1, 1, 0, 1, 0, INT64(60) * 1000);
-    ::DateValueTest(1, 1, 1, 1, 0, 0, INT64(60) * 60 * 1000);
-    ::DateValueTest(1, 1, 2, 0, 0, 0, INT64(24) * 60 * 60 * 1000);
-    ::DateValueTest(1, 2, 1, 0, 0, 0, INT64(31) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 2, 2, 0, 0, 0, INT64(31 + 1) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 12, 31, 0, 0, 0, INT64(364) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 12, 31, 23, 59, 59, INT64(365) * 24 * 60 * 60 * 1000 - 1000);
-    ::DateValueTest(2, 1, 1, 0, 0, 0, INT64(365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(3, 1, 1, 0, 0, 0, INT64(2) * 365 * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 1, 1, 0, 0, 0, INT64(3) * 365 * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 2, 28, 0, 0, 0, (INT64(3 * 365) + 31 + 27) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 2, 29, 0, 0, 0, (INT64(3 * 365) + 31 + 28) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 3, 1, 0, 0, 0, (INT64(3 * 365) + 31 + 29) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(-1, 12, 31, 23, 59, 59, INT64(-1000));
-    ::DateValueTest(-1, 12, 31, 0, 0, 0, INT64(-1) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(-1, 1, 1, 0, 0, 0, INT64(-1) * 365 * 24 * 60 * 60 * 1000);
-    ::DateValueTest(-1, 1, 1, 0, 0, 1, INT64(-1) * 365 * 24 * 60 * 60 * 1000 + 1000);
-    ::DateValueTest(-1, 1, 1, 0, 1, 0, INT64(-1) * 365 * 24 * 60 * 60 * 1000 + 60 * 1000);
-    ::DateValueTest(-1, 1, 1, 1, 0, 0, INT64(-1) * 365 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000);
-    ::DateValueTest(2, -1, 1, 0, 0, 0, INT64(365 - 31) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(2, 1, -1, 0, 0, 0, INT64(365 - 1) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(2, -12, 1, 0, 0, 0, INT64(0));
-    ::DateValueTest(1, -1, 1, 0, 0, 0, INT64(-1) * 31 * 24 * 60 * 60 * 1000);
-    ::DateValueTest(-1, 13, 1, 0, 0, 0, INT64(0));
-    ::DateValueTest(1, 13, 1, 0, 0, 0, INT64(365) * 24 * 60 * 60 * 1000);
-    ::DateConversionTest(1, 1, 1, 0, 0, 0);
-    ::DateConversionTest(1, 1, 1, 0, 0, 1);
-    ::DateConversionTest(1, 1, 1, 0, 1, 1);
-    ::DateConversionTest(1, 1, 1, 1, 1, 1);
-    ::DateConversionTest(3, 1, 1, 0, 0, 0);
-    ::DateConversionTest(4, 1, 1, 0, 0, 0);
-    ::DateConversionTest(5, 1, 1, 0, 0, 0);
-    ::DateConversionTest(99, 1, 1, 0, 0, 0);
-    ::DateConversionTest(100, 1, 1, 0, 0, 0);
-    ::DateConversionTest(101, 1, 1, 0, 0, 0);
-    ::DateConversionTest(399, 1, 1, 0, 0, 0);
-    ::DateConversionTest(400, 1, 1, 0, 0, 0);
-    ::DateConversionTest(401, 1, 1, 0, 0, 0);
-    ::DateConversionTest(1700, 1, 1, 0, 0, 0);
-    ::DateConversionTest(1700, 1, 1, 12, 34, 56);
-    ::DateConversionTest(1704, 1, 1, 0, 0, 0);
-    ::DateConversionTest(1704, 2, 29, 0, 0, 0);
-    ::DateConversionTest(1704, 3, 1, 0, 0, 0);
-    ::DateConversionTest(1704, 3, 2, 0, 0, 0);
-    ::DateConversionTest(1705, 1, 1, 0, 0, 0);
-    ::DateConversionTest(1705, 2, 28, 0, 0, 0);
-    ::DateConversionTest(1705, 3, 1, 0, 0, 0);
-    ::DateConversionTest(1705, 3, 2, 0, 0, 0);
-    ::DateConversionTest(1708, 1, 1, 0, 0, 0);
-    ::DateConversionTest(1708, 3, 1, 0, 0, 0);
-    ::DateConversionTest(1709, 1, 1, 0, 0, 0);
-    ::DateConversionTest(1709, 3, 1, 0, 0, 0);
-    ::DateConversionTest(1900, 1, 1, 5, 32, 35);
-    ::DateConversionTest(1900, 2, 1, 5, 32, 35);
-    ::DateConversionTest(1900, 3, 1, 5, 32, 35);
-    ::DateConversionTest(1904, 3, 1, 5, 32, 35);
-    ::DateConversionTest(1999, 3, 5, 1, 4, 55);
-    ::DateConversionTest(2000, 1, 4, 12, 54, 22);
-    ::DateConversionTest(2000, 2, 29, 12, 0, 0);
-    ::DateConversionTest(2000, 3, 1, 5, 22, 33);
-    ::DateConversionTest(2000, 12, 31, 5, 22, 33);
-    ::DateConversionTest(2000, 12, 3, 0, 32, 35);
-    ::DateConversionTest(2004, 1, 1, 5, 32, 35);
-    ::DateConversionTest(2004, 2, 1, 5, 32, 35);
-    ::DateConversionTest(2004, 3, 1, 5, 32, 35);
-
-    ::DateConversionTest(-1, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-1, 2, 1, 0, 0, 0);
-    ::DateConversionTest(-1, 3, 1, 0, 0, 0);
-    ::DateConversionTest(-1, 1, 1, 0, 0, 1);
-    ::DateConversionTest(-3, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-4, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-4, 1, 1, 0, 0, 1);
-    ::DateConversionTest(-4, 2, 29, 0, 0, 0);
-    ::DateConversionTest(-4, 3, 1, 0, 0, 0);
-    ::DateConversionTest(-5, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-99, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-100, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-101, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-399, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-400, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-401, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-404, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-405 , 1, 1, 0, 0, 0);
-    ::DateConversionTest(-799, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-800, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-800, 2, 28, 0, 0, 0);
-    ::DateConversionTest(-800, 2, 29, 0, 0, 0);
-    ::DateConversionTest(-800, 3, 1, 0, 0, 0);
-    ::DateConversionTest(-801, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-1700, 1, 1, 0, 0, 0);
-    ::DateConversionTest(-1700, 1, 1, 12, 34, 56);
-    ::DateConversionTest(-1704, 1, 1, 5, 32, 35);
-    ::DateConversionTest(-1704, 2, 1, 5, 1, 00);
-    ::DateConversionTest(-1704, 3, 1, 5, 00, 35);
-    ::DateConversionTest(-1704, 12, 31, 0, 0, 1);
-    ::DateConversionTest(-2004, 1, 1, 5, 32, 35);
-    ::DateConversionTest(-2004, 2, 1, 5, 1, 00);
-    ::DateConversionTest(-2004, 3, 1, 5, 00, 35);
-    ::DateConversionTest(-2004, 12, 31, 0, 0, 1);
-    ::DateConversionTest(-2005, 1, 1, 5, 32, 35);
-    ::DateConversionTest(-2005, 2, 1, 5, 1, 00);
-    ::DateConversionTest(-2005, 3, 1, 5, 00, 35);
-    ::DateConversionTest(-2005, 12, 31, 0, 0, 0);
-    ::DateConversionTest(-2005, 12, 31, 0, 0, 1);
-    ::DateConversionTest(-1, 12, 31, 23, 59, 59);
+    //::DateConversionTest(-1, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-1, 2, 1, 0, 0, 0);
+    //::DateConversionTest(-1, 3, 1, 0, 0, 0);
+    //::DateConversionTest(-1, 1, 1, 0, 0, 1);
+    //::DateConversionTest(-3, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-4, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-4, 1, 1, 0, 0, 1);
+    //::DateConversionTest(-4, 2, 29, 0, 0, 0);
+    //::DateConversionTest(-4, 3, 1, 0, 0, 0);
+    //::DateConversionTest(-5, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-99, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-100, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-101, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-399, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-400, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-401, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-404, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-405 , 1, 1, 0, 0, 0);
+    //::DateConversionTest(-799, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-800, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-800, 2, 28, 0, 0, 0);
+    //::DateConversionTest(-800, 2, 29, 0, 0, 0);
+    //::DateConversionTest(-800, 3, 1, 0, 0, 0);
+    //::DateConversionTest(-801, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-1700, 1, 1, 0, 0, 0);
+    //::DateConversionTest(-1700, 1, 1, 12, 34, 56);
+    //::DateConversionTest(-1704, 1, 1, 5, 32, 35);
+    //::DateConversionTest(-1704, 2, 1, 5, 1, 00);
+    //::DateConversionTest(-1704, 3, 1, 5, 00, 35);
+    //::DateConversionTest(-1704, 12, 31, 0, 0, 1);
+    //::DateConversionTest(-2004, 1, 1, 5, 32, 35);
+    //::DateConversionTest(-2004, 2, 1, 5, 1, 00);
+    //::DateConversionTest(-2004, 3, 1, 5, 00, 35);
+    //::DateConversionTest(-2004, 12, 31, 0, 0, 1);
+    //::DateConversionTest(-2005, 1, 1, 5, 32, 35);
+    //::DateConversionTest(-2005, 2, 1, 5, 1, 00);
+    //::DateConversionTest(-2005, 3, 1, 5, 00, 35);
+    //::DateConversionTest(-2005, 12, 31, 0, 0, 0);
+    //::DateConversionTest(-2005, 12, 31, 0, 0, 1);
+    //::DateConversionTest(-1, 12, 31, 23, 59, 59);
 
 
     //time_t unixTimeStamp = ::time(NULL);
@@ -285,4 +395,14 @@ void TestDateTime(void)  {
     //::AssertEqual("Hour remains 0", hour, 0);
     //::AssertEqual("Minute remains 0", minute, 0);
     //::AssertEqual("Second remains 0", second, 0);
+}
+
+
+/*
+ * ::TestDateTime
+ */
+void TestDateTime(void)  {
+    ::EnableAssertSuccessOutput(false);
+    ::TestSpan();
+    ::TestTime();
 }
