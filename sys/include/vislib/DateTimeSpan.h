@@ -16,6 +16,7 @@
 
 
 #include "vislib/StackTrace.h"
+#include "vislib/String.h"
 #include "vislib/types.h"
 
 
@@ -234,6 +235,20 @@ namespace sys {
          */
         void Set(const INT days, const INT hours, const INT minutes,
             const INT seconds, const INT milliseconds = 0L);
+
+        /**
+         * Answer a string representation of the time span.
+         *
+         * @return A string representation.
+         */
+        StringA ToStringA(void) const;
+
+        /**
+         * Answer a string representation of the time span.
+         *
+         * @return A string representation.
+         */
+        StringW ToStringW(void) const;
 
         /**
          * Test for equality.

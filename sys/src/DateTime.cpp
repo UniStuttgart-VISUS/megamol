@@ -13,6 +13,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/error.h"
+#include "vislib/mathfunctions.h"
 #include "vislib/SystemException.h"
 
 
@@ -121,147 +122,125 @@ vislib::sys::DateTime::~DateTime(void) {
 void vislib::sys::DateTime::GetDate(INT& outYear, 
                                     INT& outMonth, 
                                     INT& outDay) const {
-    ASSERT(this->value >= 0); // TODO: Implementation does not yet work for BC
+    //ASSERT(this->value >= 0); // TODO: Implementation does not yet work for BC
     INT64 days = this->value / ONE_DAY;     // Full days.
-    INT64 bcExtraOffset = (this->value % ONE_DAY == 0) ? 1 : 0;
-    INT64 cnt400Years = 0;                  // # of 400 year blocks.
-    INT64 cnt100Years = 0;                  // # of 100 year blocks.
-    INT64 cnt4Years = 0;                    // # of 4 year blocks.
+    INT64 cnt400Years = 0;                  // # of full 400 year blocks.
+    INT64 cnt100Years = 0;                  // # of full 100 year blocks.
+    INT64 cnt4Years = 0;                    // # of full 4 year blocks.
     INT64 cntYears = 0;                     // # of remaining years.
     bool containsLeapYear = true;           // Contains 4 year block leap year?
-
-    //if (days >= 0) {
-    //    /*
-    //     * The subsequent iterative divisions and modulo operations require a 
-    //     * year 0 to work. However, the Gregorian calendar does not have such
-    //     * a year and therefore a value of 0 represents 01.01.0001 in this 
-    //     * class. Therefore, we add the non-existing year 0 for the following 
-    //     * steps here. Note, that we have to add 366 days because the 
-    //     * non-existing year 0 would be a leap year according to the rules of
-    //     * the Gregorian calendar.
-    //     */
-    //    days += 366;
-
-    //} else {
-    //    days = -days + 365;
-    //}
+    INT64 divisor = 0;                      // Divisor for n-year blocks.
 
     /* 
      * Determine 400 year blocks lying behind and make 'days' relative to
      * active 400 year block.
+     * A 400 year block has 400 full years. Every 4th year is a leap 
+     * year except for 3, which are divisable by 100 but not by 400.
      */
-    cnt400Years = days / (400 * ONE_YEAR + (400 / 4) - 3);
-    days %= (400 * ONE_YEAR + (400 / 4) - 3);
+    divisor = (400 * ONE_YEAR) + (400 / 4) - 3;
+    cnt400Years = days / divisor;
+    days %= divisor;
 
-    /* Determine 100 year blocks within 400 year block lying behind. */
+    /*
+     * Determine 100 year blocks within 400 year block lying behind the 
+     * active 100 year block. There can be at most 3 inactive 100 year blocks,
+     * because one of four must always be the active one. If the result
+     * is 0, the first 100 year block is the active one. This is the one which
+     * contains the year divisable by 100 and 400. This year is the exception
+     * that is a leap year although divisable by 100.
+     * A 100 year block has 100 full years. Every 4th year is a leap year
+     * except for the one that is divisable by 100. Whether this one is also
+     * divisable by 400 can be determined via the value of 'cnt100Years': If
+     * this value indicates the first block, it is a leap year.
+     */
+    // mueller: I do not understand that any more. Tests succeed with normal
+    // impl. until now. Check this in future!
     // Subtract 1 because first century of 4 has 366 days.
-    cnt100Years = (days - 1) / (100 * ONE_YEAR + (100 / 4) - 1);
-    ASSERT(cnt100Years >= -3);
-    ASSERT(cnt100Years <= 3);
+    //cnt100Years = (days - 1+1) / (100 * ONE_YEAR + (100 / 4) - 1);
+    divisor = (100 * ONE_YEAR) + (100 / 4) - 1;
+    cnt100Years = days / divisor;
+    days %= divisor;
+    ASSERT(cnt100Years > -4);
+    ASSERT(cnt100Years < 4);
 
-    if (cnt100Years == 0) {
-        /*
-         * First century within 400 year block, which has one day more than
-         * the following centuries.
-         */
+    //days -= cnt100Years;
 
-        /* 
-         * Determine 4 year blocks lying behind and make 'days' relative to the
-         * active 4 year block.
-         */
-        cnt4Years = days / (4 * ONE_YEAR + 1);
-        days %= (4 * ONE_YEAR + 1);
+    /*
+     * Like for 400 and 100 year blocks, determine 4 year blocks in the active
+     * 100 year block which lie behind the current date.
+     * A 4 year block has the days of four full years plus one leap day.
+     */
+    divisor = (4 * ONE_YEAR) + (4 / 4);
+    cnt4Years = days / divisor;
+    days %= divisor;
+    ASSERT(cnt4Years > -(100 / 4));
+    ASSERT(cnt4Years < (100 / 4));
 
-    } else {
-        /*
-         * "Normal" century, must make 'days' relative to century first and 
-         * handle special case of a year that is divisible by 4 and 100 is
-         * not a leap year.
-         */
-        
-        days = (days - 1) % (100 * ONE_YEAR + (100 / 4) - 1); 
-
-        /* Determine 4 year block within century lying behind. */
-        // Add 1, because one 4 year block is non-leap.
-        cnt4Years = (days + 1) / (4 * ONE_YEAR + 1);
-        ASSERT(cnt4Years >= -24);
-        ASSERT(cnt4Years <= 24);
-
-        if (cnt4Years == 0) {
-            /* 
-             * We are in first 4 year block of a non-leap century, so this block
-             * is the exception (divisible by 100, but not by 400) having no
-             * leap year.
-             */
-            containsLeapYear = false;
-
-        } else {
-            /* Other 4 year block, make 'days' relative. */
-            days = (days + 1) % (4 * ONE_YEAR + 1);
-        }
-    } /* end if (cnt100Years == 0) */
-    
-    /* Compute years in 4 year block lying behind. */
-    if (containsLeapYear) {
-        /* Special case: We have one leap year in the 4 year block. */
-
-        cntYears = (days - 1) / ONE_YEAR;   // One year has 366 days.
-        
-        if (cntYears != 0) {
-            days = (days - 1) % ONE_YEAR;   // Make relative to year.
-        }
-
-    } else {
-        /*
-         * No leap year, compute full years and remaining days using the "normal"
-         * ONE_YEAR length.
-         */
-
-        cntYears = days / ONE_YEAR;
-        days %= ONE_YEAR;
-    } /* if (hasLeap) */
-    ASSERT(cntYears >= -3);
-    ASSERT(cntYears <= 3);
+    /*
+     * Divide a last time to determine the active year in the 4 year block.
+     */
+    divisor = ONE_YEAR;// + ((days <= ONE_YEAR) ? 1 : 0);
+    if ((cnt400Years == 0) || ((cnt4Years == 0) && (cnt100Years != 0))) {
+        divisor++;
+    }
+    cntYears = days / divisor;
+    days %= divisor;
+    ASSERT(cntYears > -4);
+    ASSERT(cntYears < 4);
 
     /* At this point, we can compute the year. */
     outYear = static_cast<INT>(400 * cnt400Years + 100 * cnt100Years
          + 4 * cnt4Years + cntYears);
-    if (this->value < 0) {
-        //outYear = -outYear;
-        //days = 365 - days - 1;
-//        ASSERT(days >= 0);
-    }
+//    if (this->value < 0) {
+//        //outYear = -outYear;
+//        //days = 365 - days - 1;
+////        ASSERT(days >= 0);
+//    }
     //if (days < 0) {
     //    days = 365 + IsLeapYear(outYear - 1) + days + 1;
     //    //days = -days;
     //}
 
+    if (days < 0) {
+        days = ONE_YEAR + days;
+    }
 
-     /* Compute month and day. */
-    if ((cntYears == 0) && containsLeapYear && (days == 59)) {
-        /* On 29.02. */ 
-        outMonth = 2;
-        outDay = 29;
-
-    } else {
-        /* 
-         * Manipulate 'days' to look like a non-leap year for month lookup
-         * in the DAYS_AFTER_MONTH array.
-         */
-
-        if ((cntYears == 0) && containsLeapYear && (days >= 59)) {
-            /* After 29.02. */
-            days--;
-        }
-
+    if (DateTime::IsLeapYear(outYear) && (days + 1 < DAYS_AFTER_MONTH[2])) {
         days++;
+    }
 
-        // Month must be greater than or equal to ('days' / 32).
-        for (outMonth = static_cast<INT>((days >> 5) + 1); 
+    /* Compute month. */
+    // Month must be greater than or than ('days' / 32).
+    for (outMonth = static_cast<INT>((days >> 5) + 1);
             days > DAYS_AFTER_MONTH[outMonth]; outMonth++);
 
-        outDay = static_cast<INT>(days - DAYS_AFTER_MONTH[outMonth - 1]);
-    }
+    /* Compute day in month. */
+    outDay = static_cast<INT>(days - DAYS_AFTER_MONTH[outMonth - 1]);
+
+    //if ((cntYears == 0) && containsLeapYear && (days == 59)) {
+    //    /* On 29.02. */ 
+    //    outMonth = 2;
+    //    outDay = 29;
+
+    //} else {
+    //    /* 
+    //     * Manipulate 'days' to look like a non-leap year for month lookup
+    //     * in the DAYS_AFTER_MONTH array.
+    //     */
+
+    //    if ((cntYears == 0) && containsLeapYear && (days >= 59)) {
+    //        /* After 29.02. */
+    //        days--;
+    //    }
+
+    //    days++;
+
+    //    // Month must be greater than or equal to ('days' / 32).
+    //    for (outMonth = static_cast<INT>((days >> 5) + 1); 
+    //        days > DAYS_AFTER_MONTH[outMonth]; outMonth++);
+
+    //    outDay = static_cast<INT>(days - DAYS_AFTER_MONTH[outMonth - 1]);
+    //}
 
     /* Handle years B. C. */
     //if (this->value < 0) {
@@ -279,7 +258,7 @@ void vislib::sys::DateTime::GetTime(INT& outHours,
                                     INT& outMilliseconds) const {
     INT64 time = this->value % ONE_DAY;
     if (time < 0) {
-        time += ONE_DAY;
+        time *= -1;
     }
 
     outMilliseconds = static_cast<INT>(time % ONE_SECOND);
@@ -328,11 +307,13 @@ void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
         + ((y >= 0) ? 1 : 0)                // Add leap day for year 0.
         + (y / 4) - (y / 100) + (y / 400)   // Add leap day for leap years.
         + DAYS_AFTER_MONTH[m - 1] 
-        + ((d > 0) ? (d - 1) : d);
+        + ((d > 0) ? (d - 1) : d);          // Days now zero-based. Also fix 
+                                            // day 0 to be day 1 of month.
 
     /* 
-     * If we are before march in a leap year, we added too much leap days in the
-     * computation before.
+     * If we are before March in a leap year, we added too much leap days in the
+     * computation before. The leap day in a leap year has an effect starting
+     * Februrary, 29th. However, the (y / 4) ... computation is unaware of that.
      */
     if ((m <= 2) && DateTime::IsLeapYear(static_cast<INT>(y))) {
         this->value--;
@@ -342,7 +323,8 @@ void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
     this->value *= ONE_DAY;
 
     /* Add the time now. */
-    this->value += hours * ONE_HOUR 
+    this->value += ((this->value < 0) ? -1 : 1)   // Heavyside
+        * hours * ONE_HOUR 
         + minutes * ONE_MINUTE 
         + seconds * ONE_SECOND
         + milliseconds;

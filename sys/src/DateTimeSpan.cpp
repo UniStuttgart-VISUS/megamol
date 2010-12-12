@@ -151,6 +151,32 @@ void vislib::sys::DateTimeSpan::Set(const INT days, const INT hours,
 
 
 /*
+ * vislib::sys::DateTimeSpan::ToStringA
+ */
+vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
+    VLSTACKTRACE("DateTimeSpan::ToStringA", __FILE__, __LINE__);
+    StringA retval;
+    retval.Format("%lld:%02lld:%02lld:%02lld.%04lld", this->GetDays(), 
+        math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
+        math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
+    return retval;
+}
+
+
+/*
+ * vislib::sys::DateTimeSpan::ToStringW
+ */
+vislib::StringW vislib::sys::DateTimeSpan::ToStringW(void) const {
+    VLSTACKTRACE("DateTimeSpan::ToStringW", __FILE__, __LINE__);
+    StringW retval;
+    retval.Format(L"%lld:%02lld:%02lld:%02lld.%04lld", this->GetDays(), 
+        math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
+        math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
+    return retval;
+}
+
+
+/*
  * vislib::sys::DateTimeSpan::operator -=
  */
 vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator -=(
