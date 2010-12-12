@@ -15,7 +15,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "vislib/forceinline.h"
 #include "vislib/types.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 namespace vislib {
@@ -24,6 +26,12 @@ namespace graphics {
 
     /**
      * Class storing bitmap image data. The data is organized in channels.
+     *
+     * TODO: CMYK colour channels are currently handled inverted, as JPEG
+     * saves it's values that way. This should be fixed here and in the
+     * JPEG loader code.
+     *
+     * TODO: Add support for HSV channels
      */
     class BitmapImage {
     public:
@@ -394,6 +402,43 @@ namespace graphics {
         }
 
         /**
+         * Answer whether or not an alpha channel is present
+         *
+         * @return true if an alpha channel is present
+         */
+        inline bool HasAlpha(void) const {
+            return this->HasChannel(CHANNEL_ALPHA);
+        }
+
+        /**
+         * Answer whether or not a channel is labeled with the specified label
+         *
+         * @return true if at least on channel is labeled with the specified
+         *         label
+         */
+        bool HasChannel(ChannelLabel label) const;
+
+        /**
+         * Answer whether or not a gray channel is present
+         *
+         * @return true if a gray channel is present
+         */
+        inline bool HasGray(void) const {
+            return this->HasChannel(CHANNEL_GRAY);
+        }
+
+        /**
+         * Answer whether or not all three RGB channels are present
+         *
+         * @return true if all three RGB channels are present
+         */
+        inline bool HasRGB(void) const {
+            return this->HasChannel(CHANNEL_RED);
+            return this->HasChannel(CHANNEL_GREEN);
+            return this->HasChannel(CHANNEL_BLUE);
+        }
+
+        /**
          * Labels three channels with the labels "CHANNEL_RED",
          * "CHANNEL_GREEN", and "CHANNEL_BLUE".
          *
@@ -511,6 +556,299 @@ namespace graphics {
     private:
 
         /**
+         * Utility class helping with image conversions
+         * @param ST the source buffer type
+         */
+        template<class ST>
+        class Conversion {
+        public:
+
+            /**
+             * Copies a single channel of a single pixel
+             *
+             * @param dst The destination
+             * @param src The source
+             */
+            template<class T>
+            static VISLIB_FORCEINLINE void CopyBit(T& dst, const T& src) {
+                dst = src;
+            }
+
+            /**
+             * Copies a single channel of a single pixel
+             *
+             * @param dst The destination
+             * @param src The source
+             */
+            static VISLIB_FORCEINLINE void CopyBit(unsigned char& dst,
+                    const unsigned short& src) {
+                dst = static_cast<unsigned char>(src / 256);
+            }
+
+            /**
+             * Copies a single channel of a single pixel
+             *
+             * @param dst The destination
+             * @param src The source
+             */
+            static VISLIB_FORCEINLINE void CopyBit(unsigned char& dst,
+                    const float& src) {
+                dst = static_cast<unsigned char>(((src < 0.0f) ? 0
+                    : ((src > 1.0f) ? 1.0f : src)) * 255.0f);
+            }
+
+            /**
+             * Copies a single channel of a single pixel
+             *
+             * @param dst The destination
+             * @param src The source
+             */
+            static VISLIB_FORCEINLINE void CopyBit(unsigned short& dst,
+                    const unsigned char& src) {
+                dst = (static_cast<unsigned short>(src) << 8)
+                    + static_cast<unsigned short>(src);
+            }
+
+            /**
+             * Copies a single channel of a single pixel
+             *
+             * @param dst The destination
+             * @param src The source
+             */
+            static VISLIB_FORCEINLINE void CopyBit(unsigned short& dst,
+                    const float& src) {
+                dst = static_cast<unsigned char>(((src < 0.0f) ? 0
+                    : ((src > 1.0f) ? 1.0f : src)) * 65535.0f);
+            }
+
+            /**
+             * Copies a single channel of a single pixel
+             *
+             * @param dst The destination
+             * @param src The source
+             */
+            static VISLIB_FORCEINLINE void CopyBit(float& dst,
+                    const unsigned char& src) {
+                dst = static_cast<float>(src) / 255.0f;
+            }
+
+            /**
+             * Copies a single channel of a single pixel
+             *
+             * @param dst The destination
+             * @param src The source
+             */
+            static VISLIB_FORCEINLINE void CopyBit(float& dst,
+                    const unsigned short& src) {
+                dst = static_cast<float>(src) / 65535.0f;
+            }
+
+            /**
+             * Function callback definition for channel source data
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            typedef float (*ChannelSourceFunc)(Conversion* conv, int param);
+
+            /** The possible source channels */
+            enum SourceChannel {
+                SC_UNDEFINED = 0,
+                SC_RED,
+                SC_GREEN,
+                SC_BLUE,
+                SC_GRAY,
+                SC_ALPHA,
+                SC_CMYK_CYAN,
+                SC_CMYK_MAGENTA,
+                SC_CMYK_YELLOW,
+                SC_CMYK_BLACK,
+                SC_CMY_CYAN,
+                SC_CMY_MAGENTA,
+                SC_CMY_YELLOW,
+                SC_LASTCHANNEL
+            };
+
+            /**
+             * Ctor
+             *
+             * @param source The first pixel in the source buffer
+             * @param chanCnt The number of channels in the source buffer
+             */
+            Conversion(ST* source, unsigned int chanCnt);
+
+            /** Dtor */
+            ~Conversion(void);
+
+            /**
+             * Add a source channel definition to the input data
+             *
+             * @param chan The number of the source channel
+             * @param label The label of the source channel
+             */
+            void AddSourceChannel(unsigned int chan, ChannelLabel label);
+
+            /**
+             * Completes the initialization after adding all source channels
+             */
+            void FinalizeInitialization(void);
+
+            /**
+             * Calculates the destination<->source channel mapping
+             *
+             * @param map The channel map to be calculated
+             * @param chan The destination channel requests
+             * @param cnt The number of destination channels
+             */
+            void ChannelMapping(SourceChannel *map, ChannelLabel *chan,
+                unsigned int cnt);
+
+            /**
+             * Gets the value for the specified source channel of the current
+             * pixel
+             *
+             * @param chan The requested source channel
+             *
+             * @return The requested value
+             */
+            VISLIB_FORCEINLINE float GetValue(SourceChannel chan) {
+                return this->func[chan](this, this->param[chan]);
+            }
+
+            /**
+             * Advances the source pointer one pixel
+             *
+             * @return A reference to this
+             */
+            Conversion& operator++(void) {
+                this->source += this->sourceChanCnt;
+                return *this;
+            }
+
+        private:
+
+            /**
+             * Channel source function for constant value one
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float constOne(Conversion *conv, int param);
+
+            /**
+             * Channel source function for constant value zero
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float constZero(Conversion *conv, int param);
+
+            /**
+             * Channel source function directly copying from the source buffer
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float directSource(Conversion *conv, int param);
+
+            /**
+             * Channel source function calculating gray from RGB
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float grayFromRGB(Conversion *conv, int param);
+
+            /**
+             * Channel source function calculating RGB from CMY
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float rgbFromCMY(Conversion *conv, int param);
+
+            /**
+             * Channel source function calculating CMY from RGB
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float cmyFromRGB(Conversion *conv, int param);
+
+            /**
+             * Channel source function calculating CMY from CMYK
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float cmyFromCMYK(Conversion *conv, int param);
+
+            /**
+             * Channel source function calculating CMYK from CMY
+             *
+             * @param conv The calling conversion object
+             * @param param The channel parameter
+             *
+             * @return The value of the current pixel for this channel
+             */
+            static float cmykFromCMY(Conversion *conv, int param);
+
+            /**
+             * Forbidden copy ctor
+             *
+             * @param src The source object
+             */
+            Conversion(const Conversion& src) {
+                throw vislib::UnsupportedOperationException(
+                    "Conversion::CopyCtor", __FILE__, __LINE__);
+            }
+
+            /**
+             * Forbidden assignment operator
+             *
+             * @rhs The right hand side operand
+             *
+             * @return A reference to this
+             */
+            Conversion& operator=(const Conversion& rhs) {
+                if (this != &rhs) {
+                    throw vislib::UnsupportedOperationException(
+                        "Conversion::operator=", __FILE__, __LINE__);
+                }
+                return *this;
+            }
+
+            /** The current source position */
+            ST* source;
+
+            /** The number of source channels */
+            unsigned int sourceChanCnt;
+
+            /** The channel source functions */
+            ChannelSourceFunc func[static_cast<int>(SC_LASTCHANNEL)];
+
+            /** The channel source parameters */
+            int param[static_cast<int>(SC_LASTCHANNEL)];
+
+        };
+
+        /**
          * Performs a crop-copy between two flat image storages of same format
          *
          * @param to The image data to copy to
@@ -527,6 +865,39 @@ namespace graphics {
             unsigned int fromHeight, unsigned int cropX, unsigned int cropY,
             unsigned int cropWidth, unsigned int cropHeight,
             unsigned int bpp);
+
+        /**
+         * Copies all pixels from one BitmapImage buffer into another one
+         *
+         * @param w The width of both of the buffers
+         * @param h The height of both of the buffers
+         * @param dst The destination buffer in correct type
+         * @param src The source buffer in correct type
+         * @param srcChanCnt The number of channels in the source buffer
+         * @param chanMap The channel map from destination to source
+         * @param chanCnt The number of channels in the channel map and in the
+         *                destination buffer
+         */
+        template<class DT, class ST>
+        void copyBits(unsigned int w, unsigned int h, DT *dst, ST *src,
+            unsigned int srcChanCnt, int *chanMap, unsigned int chanCnt);
+
+        /**
+         * Performs a full image conversion from one BitmapImage buffer into another one
+         *
+         * @param w The width of both of the buffers
+         * @param h The height of both of the buffers
+         * @param dst The destination buffer in correct type
+         * @param dstChan The destination channels labels
+         * @param dstChanCnt The number of destination channels
+         * @param src The source buffer in correct type
+         * @param srcChan The source channels labels
+         * @param srcChanCnt The number of source channels
+         */
+        template<class DT, class ST>
+        void fullConvert(unsigned int w, unsigned int h,
+            DT* dst, ChannelLabel *dstChan, unsigned int dstChanCnt,
+            ST* src, ChannelLabel *srcChan, unsigned int srcChanCnt);
 
         /** The raw image data */
         char *data;

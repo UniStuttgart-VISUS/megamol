@@ -874,3 +874,53 @@ void TestNamedColours(void) {
     AssertEqual("SpringGreen parsed back correctly from floats", col, NamedColours::SpringGreen);
 
 }
+
+
+/*
+ * TestBitmapImage
+ */
+void TestBitmapImage(void) {
+    using vislib::graphics::BitmapImage;
+    BitmapImage bi(256, 256, 3, BitmapImage::CHANNELTYPE_FLOAT);
+    bi.SetChannelLabel(0, BitmapImage::CHANNEL_BLUE);
+    bi.SetChannelLabel(1, BitmapImage::CHANNEL_RED);
+    bi.SetChannelLabel(2, BitmapImage::CHANNEL_GREEN);
+
+    for (unsigned int x = 0; x < 256; x++) {
+        for (unsigned int y = 0; y < 256; y++) {
+            float *px = bi.PeekDataAs<float>() + (x + y * 256) * 3;
+            px[0] = 0.0f;
+            px[1] = static_cast<float>(x) / 255.0f;
+            px[2] = static_cast<float>(y) / 255.0f;
+        }
+    }
+
+    bi.Convert(BitmapImage::TemplateByteRGB);
+
+    bool imgCorrect = true;
+    for (unsigned int x = 0; x < 256; x++) {
+        for (unsigned int y = 0; y < 256; y++) {
+            unsigned char *px = bi.PeekDataAs<unsigned char>() + (x + y * 256) * 3;
+            if ((px[0] != x) || (px[1] != y) || (px[2] != 0)) {
+                imgCorrect = false;
+            }
+        }
+    }
+
+    AssertTrue("Image correct after first conversion", imgCorrect);
+
+    bi.Convert(BitmapImage::TemplateByteGray);
+
+    imgCorrect = true;
+    for (unsigned int x = 0; x < 256; x++) {
+        for (unsigned int y = 0; y < 256; y++) {
+            unsigned char *px = bi.PeekDataAs<unsigned char>() + (x + y * 256) * 1;
+            if (px[0] != vislib::math::Max(x, y)) {
+                imgCorrect = false;
+            }
+        }
+    }
+
+    AssertTrue("Image correct after second conversion", imgCorrect);
+
+}

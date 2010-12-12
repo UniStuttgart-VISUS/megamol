@@ -36,4 +36,6 @@ void TestAsciiFile(void);
 
 void TestNamedColours(void);
 
+void TestBitmapImage(void);
+
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

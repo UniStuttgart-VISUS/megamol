@@ -96,6 +96,7 @@ VislibTest tests[] = {
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},
+    {_T("BitmapImage"), ::TestBitmapImage, "Tests BitmapImage"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},
