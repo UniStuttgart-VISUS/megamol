@@ -37,8 +37,8 @@ static void DateValueTest(const INT year, const INT month, const INT day,
         << hour << ":" << minute << ":" << second << "." << millis 
         << ", expected value is " << expectedValue << " ..." << std::endl;
     vislib::sys::DateTime date(year, month, day, hour, minute, second, millis);
-    std::cout << "Internal representation is " << date.GetValue() << "." << std::endl;
-    AssertEqual("Internal date representation", date.GetValue(), expectedValue);
+    std::cout << "Internal representation is " << date.GetTotalTicks() << "." << std::endl;
+    AssertEqual("Internal date representation", date.GetTotalTicks(), expectedValue);
 }
 
 
@@ -170,98 +170,99 @@ static void TestSpan(void) {
 
 
 static void TestTime(void) {
+#define MTT(millis) (static_cast<INT64>(millis) * DateTimeSpan::TICKS_PER_MILLISECOND)
     using vislib::sys::DateTime;
     using vislib::sys::DateTimeSpan;
     DateTime dateTime;
     INT year, month, day, hour, minute, second, millis;
     time_t unixTimeStamp;
 
-    ::AssertEqual("DateTime::EMPTY internal data.", DateTime::EMPTY.GetValue(), INT64(0));
+    ::AssertEqual("DateTime::EMPTY internal data.", DateTime::EMPTY.GetTotalTicks(), INT64(0));
 
     // 1.1.1 AD with auto fix
-    ::DateValueTest(0, 0, 0, 0, 0, 0, 0, INT64(0));
-    ::DateValueTest(0, 0, 0, 0, 0, 0, 1, INT64(1));
-    ::DateValueTest(0, 1, 1, 0, 0, 0, 0, INT64(0));
-    ::DateValueTest(0, 1, 1, 0, 0, 0, 1, INT64(1));
-    ::DateValueTest(0, 1, 1, 0, 0, 0, 999, INT64(999));
-    ::DateValueTest(0, 1, 1, 0, 0, 0, 1000, INT64(1000));
-    ::DateValueTest(0, 1, 1, 0, 0, 0, 1001, INT64(1001));
-    ::DateValueTest(0, 1, 1, 0, 0, 1, 0, INT64(1000));
-    ::DateValueTest(0, 1, 1, 0, 1, 0, 0, INT64(60) * 1000);
-    ::DateValueTest(0, 1, 1, 1, 0, 0, 0, INT64(60) * 60 * 1000);
-    ::DateValueTest(0, 1, 2, 0, 0, 0, 0, INT64(24) * 60 * 60 * 1000);
+    ::DateValueTest(0, 0, 0, 0, 0, 0, 0, MTT(0));
+    ::DateValueTest(0, 0, 0, 0, 0, 0, 1, MTT(1));
+    ::DateValueTest(0, 1, 1, 0, 0, 0, 0, MTT(0));
+    ::DateValueTest(0, 1, 1, 0, 0, 0, 1, MTT(1));
+    ::DateValueTest(0, 1, 1, 0, 0, 0, 999, MTT(999));
+    ::DateValueTest(0, 1, 1, 0, 0, 0, 1000, MTT(1000));
+    ::DateValueTest(0, 1, 1, 0, 0, 0, 1001, MTT(1001));
+    ::DateValueTest(0, 1, 1, 0, 0, 1, 0, MTT(1000));
+    ::DateValueTest(0, 1, 1, 0, 1, 0, 0, MTT(60) * 1000);
+    ::DateValueTest(0, 1, 1, 1, 0, 0, 0, MTT(60) * 60 * 1000);
+    ::DateValueTest(0, 1, 2, 0, 0, 0, 0, MTT(24) * 60 * 60 * 1000);
 
     // 1.1.1 AD with correct input.
-    ::DateValueTest(1, 1, 1, 0, 0, 0, 0, INT64(0));
-    ::DateValueTest(1, 1, 1, 0, 0, 0, 1, INT64(1));
-    ::DateValueTest(1, 1, 1, 0, 0, 0, 999, INT64(999));
-    ::DateValueTest(1, 1, 1, 0, 0, 0, 1000, INT64(1000));
-    ::DateValueTest(1, 1, 1, 0, 0, 0, 1001, INT64(1001));
-    ::DateValueTest(1, 1, 1, 0, 0, 1, 0, INT64(1000));
-    ::DateValueTest(1, 1, 1, 0, 1, 0, 0, INT64(60) * 1000);
-    ::DateValueTest(1, 1, 1, 1, 0, 0, 0, INT64(60) * 60 * 1000);
-    ::DateValueTest(1, 1, 2, 0, 0, 0, 0, INT64(24) * 60 * 60 * 1000);
+    ::DateValueTest(1, 1, 1, 0, 0, 0, 0, MTT(0));
+    ::DateValueTest(1, 1, 1, 0, 0, 0, 1, MTT(1));
+    ::DateValueTest(1, 1, 1, 0, 0, 0, 999, MTT(999));
+    ::DateValueTest(1, 1, 1, 0, 0, 0, 1000, MTT(1000));
+    ::DateValueTest(1, 1, 1, 0, 0, 0, 1001, MTT(1001));
+    ::DateValueTest(1, 1, 1, 0, 0, 1, 0, MTT(1000));
+    ::DateValueTest(1, 1, 1, 0, 1, 0, 0, MTT(60) * 1000);
+    ::DateValueTest(1, 1, 1, 1, 0, 0, 0, MTT(60) * 60 * 1000);
+    ::DateValueTest(1, 1, 2, 0, 0, 0, 0, MTT(24) * 60 * 60 * 1000);
 
     // 31.12.1 BC
-    ::DateValueTest(-1, 12, 31, 23, 59, 59, 1000, INT64(0));
-    ::DateValueTest(-1, 12, 31, 23, 59, 59, 999, INT64(-1));
-    ::DateValueTest(-1, 12, 31, 23, 59, 59, 0, INT64(-1000));
-    ::DateValueTest(-1, 12, 31, 23, 59, 0, 0, INT64(-60) * 1000);
-    ::DateValueTest(-1, 12, 31, 23, 0, 0, 0, INT64(-60) * 60 * 1000);
-    ::DateValueTest(-1, 12, 31, 0, 0, 0, 0, INT64(-24) * 60 * 60 * 1000);
+    ::DateValueTest(-1, 12, 31, 23, 59, 59, 1000, MTT(0));
+    ::DateValueTest(-1, 12, 31, 23, 59, 59, 999, MTT(-1));
+    ::DateValueTest(-1, 12, 31, 23, 59, 59, 0, MTT(-1000));
+    ::DateValueTest(-1, 12, 31, 23, 59, 0, 0, MTT(-60) * 1000);
+    ::DateValueTest(-1, 12, 31, 23, 0, 0, 0, MTT(-60) * 60 * 1000);
+    ::DateValueTest(-1, 12, 31, 0, 0, 0, 0, MTT(-24) * 60 * 60 * 1000);
 
     // Time on 31.1.1 AD
-    ::DateValueTest(1, 1, 31, 0, 0, 0, 0, INT64(30) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 1, 31, 0, 0, 0, 1, INT64(30) * 24 * 60 * 60 * 1000 + 1);
-    ::DateValueTest(1, 1, 31, 0, 0, 1, 0, INT64(30) * 24 * 60 * 60 * 1000 + 1000);
-    ::DateValueTest(1, 1, 31, 0, 1, 0, 0, INT64(30) * 24 * 60 * 60 * 1000 + 60 * 1000);
-    ::DateValueTest(1, 1, 31, 1, 0, 0, 0, INT64(30) * 24 * 60 * 60 * 1000 + 60 * 60 * 1000);
-    ::DateValueTest(1, 1, 31, 24, 0, 0, 0, INT64(30) * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 1, 31, 0, 0, 0, 0, MTT(30) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 1, 31, 0, 0, 0, 1, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 1));
+    ::DateValueTest(1, 1, 31, 0, 0, 1, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 1000));
+    ::DateValueTest(1, 1, 31, 0, 1, 0, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 60 * 1000));
+    ::DateValueTest(1, 1, 31, 1, 0, 0, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 60 * 60 * 1000));
+    ::DateValueTest(1, 1, 31, 24, 0, 0, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000));
     
     // Non-leap day 1 AD
-    ::DateValueTest(1, 2, 1, 0, 0, 0, 0, INT64(31) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 2, 28, 0, 0, 0, 0, INT64(58) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 2, 29, 0, 0, 0, 0, INT64(59) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 3, 1, 0, 0, 0, 0, INT64(59) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 3, 2, 0, 0, 0, 0, INT64(60) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 2, 1, 0, 0, 0, 0, MTT(31) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 2, 28, 0, 0, 0, 0, MTT(58) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 2, 29, 0, 0, 0, 0, MTT(59) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 3, 1, 0, 0, 0, 0, MTT(59) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 3, 2, 0, 0, 0, 0, MTT(60) * 24 * 60 * 60 * 1000);
 
     // leap day 4 AD
-    ::DateValueTest(4, 2, 1, 0, 0, 0, 0, INT64(31 + 3 * 365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 2, 28, 0, 0, 0, 0, INT64(58 + 3 * 365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 2, 29, 0, 0, 0, 0, INT64(59 + 3 * 365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 3, 1, 0, 0, 0, 0, INT64(60 + 3 * 365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 3, 2, 0, 0, 0, 0, INT64(61 + 3 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(4, 2, 1, 0, 0, 0, 0, MTT(31 + 3 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(4, 2, 28, 0, 0, 0, 0, MTT(58 + 3 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(4, 2, 29, 0, 0, 0, 0, MTT(59 + 3 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(4, 3, 1, 0, 0, 0, 0, MTT(60 + 3 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(4, 3, 2, 0, 0, 0, 0, MTT(61 + 3 * 365) * 24 * 60 * 60 * 1000);
 
     // 1.1.1 AD - 1.1.5 AD
-    ::DateValueTest(1, 1, 1, 0, 0, 0, 0, INT64(0) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(2, 1, 1, 0, 0, 0, 0, INT64(1 * 365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(3, 1, 1, 0, 0, 0, 0, INT64(2 * 365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(4, 1, 1, 0, 0, 0, 0, INT64(3 * 365) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(5, 1, 1, 0, 0, 0, 0, INT64(3 * 365 + 366) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(1, 1, 1, 0, 0, 0, 0, MTT(0) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(2, 1, 1, 0, 0, 0, 0, MTT(1 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(3, 1, 1, 0, 0, 0, 0, MTT(2 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(4, 1, 1, 0, 0, 0, 0, MTT(3 * 365) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(5, 1, 1, 0, 0, 0, 0, MTT(3 * 365 + 366) * 24 * 60 * 60 * 1000);
 
     // 100 AD is no leap year
-    ::DateValueTest(100, 1, 1, 0, 0, 0, 0, INT64(99 * 365 + 24) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(100, 1, 31, 0, 0, 0, 0, INT64(99 * 365 + 24 + 30) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(100, 2, 28, 0, 0, 0, 0, INT64(99 * 365 + 24 + 58) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(100, 2, 29, 0, 0, 0, 0, INT64(99 * 365 + 24 + 59) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(100, 3, 1, 0, 0, 0, 0, INT64(99 * 365 + 24 + 59) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(100, 3, 2, 0, 0, 0, 0, INT64(99 * 365 + 24 + 60) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(100, 1, 1, 0, 0, 0, 0, MTT(99 * 365 + 24) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(100, 1, 31, 0, 0, 0, 0, MTT(99 * 365 + 24 + 30) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(100, 2, 28, 0, 0, 0, 0, MTT(99 * 365 + 24 + 58) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(100, 2, 29, 0, 0, 0, 0, MTT(99 * 365 + 24 + 59) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(100, 3, 1, 0, 0, 0, 0, MTT(99 * 365 + 24 + 59) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(100, 3, 2, 0, 0, 0, 0, MTT(99 * 365 + 24 + 60) * 24 * 60 * 60 * 1000);
 
     // 200 AD is no leap year (100 AD was not either)
-    ::DateValueTest(200, 1, 1, 0, 0, 0, 0, INT64(199 * 365 + 49 - 1) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(200, 1, 31, 0, 0, 0, 0, INT64(199 * 365 + 49 - 1 + 30) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(200, 2, 28, 0, 0, 0, 0, INT64(199 * 365 + 49 - 1 + 58) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(200, 2, 29, 0, 0, 0, 0, INT64(199 * 365 + 49 - 1 + 59) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(200, 3, 1, 0, 0, 0, 0, INT64(199 * 365 + 49 - 1 + 59) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(200, 3, 2, 0, 0, 0, 0, INT64(199 * 365 + 49 - 1 + 60) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(200, 1, 1, 0, 0, 0, 0, MTT(199 * 365 + 49 - 1) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(200, 1, 31, 0, 0, 0, 0, MTT(199 * 365 + 49 - 1 + 30) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(200, 2, 28, 0, 0, 0, 0, MTT(199 * 365 + 49 - 1 + 58) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(200, 2, 29, 0, 0, 0, 0, MTT(199 * 365 + 49 - 1 + 59) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(200, 3, 1, 0, 0, 0, 0, MTT(199 * 365 + 49 - 1 + 59) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(200, 3, 2, 0, 0, 0, 0, MTT(199 * 365 + 49 - 1 + 60) * 24 * 60 * 60 * 1000);
 
     // 400 AD is leap year (100, 200, 300 AD were not)
-    ::DateValueTest(400, 1, 1, 0, 0, 0, 0, INT64(399 * 365 + 99 - 3) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(400, 1, 31, 0, 0, 0, 0, INT64(399 * 365 + 99 - 3 + 30) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(400, 2, 28, 0, 0, 0, 0, INT64(399 * 365 + 99 - 3 + 58) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(400, 2, 29, 0, 0, 0, 0, INT64(399 * 365 + 99 - 3 + 59) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(400, 3, 1, 0, 0, 0, 0, INT64(399 * 365 + 99 - 3 + 60) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(400, 3, 2, 0, 0, 0, 0, INT64(399 * 365 + 99 - 3 + 61) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(400, 1, 1, 0, 0, 0, 0, MTT(399 * 365 + 99 - 3) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(400, 1, 31, 0, 0, 0, 0, MTT(399 * 365 + 99 - 3 + 30) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(400, 2, 28, 0, 0, 0, 0, MTT(399 * 365 + 99 - 3 + 58) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(400, 2, 29, 0, 0, 0, 0, MTT(399 * 365 + 99 - 3 + 59) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(400, 3, 1, 0, 0, 0, 0, MTT(399 * 365 + 99 - 3 + 60) * 24 * 60 * 60 * 1000);
+    ::DateValueTest(400, 3, 2, 0, 0, 0, 0, MTT(399 * 365 + 99 - 3 + 61) * 24 * 60 * 60 * 1000);
 
     ::DateConversionTest(1, 1, 1, 0, 0, 0);
     ::DateConversionTest(1, 1, 2, 0, 0, 0);
@@ -523,5 +524,5 @@ static void TestTime(void) {
 void TestDateTime(void)  {
     ::EnableAssertSuccessOutput(false);
     ::TestSpan();
-    //::TestTime();
+    ::TestTime();
 }

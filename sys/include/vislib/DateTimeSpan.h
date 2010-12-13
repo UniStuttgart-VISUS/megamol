@@ -34,6 +34,97 @@ namespace sys {
 
     public:
 
+        /**
+         * Convert an amount of days to 100 ns ticks.
+         *
+         * @param days The days to convert.
+         *
+         * @return The days in 100 ns ticks.
+         *
+         * @throws TODO: range check!
+         */
+        static INT64 DaysToTicks(const INT64 days);
+
+        /** 
+         * Create a positive or negative DateTimeSpan of one day.
+         *
+         * @param isPositive Determines whether the time span is positive
+         *                   or not. This parameter defaults to true.
+         *
+         * @return A time span of one day.
+         */
+        static inline DateTimeSpan OneDay(const bool isPositive) {
+            return DateTimeSpan(isPositive ? TICKS_PER_DAY : -TICKS_PER_DAY);
+        }
+
+        /** 
+         * Create a positive or negative DateTimeSpan of one hour.
+         *
+         * @param isPositive Determines whether the time span is positive
+         *                   or not. This parameter defaults to true.
+         *
+         * @return A time span of one hour.
+         */
+        static inline DateTimeSpan OneHour(const bool isPositive) {
+            return DateTimeSpan(isPositive ? TICKS_PER_HOUR : -TICKS_PER_HOUR);
+        }
+
+        /** 
+         * Create a positive or negative DateTimeSpan of one millisecond.
+         *
+         * @param isPositive Determines whether the time span is positive
+         *                   or not. This parameter defaults to true.
+         *
+         * @return A time span of one millisecond.
+         */
+        static inline DateTimeSpan OneMillisecond(const bool isPositive) {
+            return DateTimeSpan(isPositive ? TICKS_PER_MILLISECOND
+                : -TICKS_PER_MILLISECOND);
+        }
+
+        /** 
+         * Create a positive or negative DateTimeSpan of one minute.
+         *
+         * @param isPositive Determines whether the time span is positive
+         *                   or not. This parameter defaults to true.
+         *
+         * @return A time span of one minute.
+         */
+        static inline DateTimeSpan OneMinute(const bool isPositive) {
+            return DateTimeSpan(isPositive ? TICKS_PER_MINUTE
+                : -TICKS_PER_MINUTE);
+        }
+
+        /** 
+         * Create a positive or negative DateTimeSpan of one second.
+         *
+         * @param isPositive Determines whether the time span is positive
+         *                   or not. This parameter defaults to true.
+         *
+         * @return A time span of one second.
+         */
+        static inline DateTimeSpan OneSecond(const bool isPositive) {
+            return DateTimeSpan(isPositive ? TICKS_PER_SECOND
+                : -TICKS_PER_SECOND);
+        }
+
+        /**
+         * Convert a time span to 100 ns ticks.
+         *
+         * @param hours        The full hours.
+         * @param minutes      The full minutes.
+         * @param seconds      The full seconds.
+         * @param milliseconds The full milliseconds. This defaults to 0.
+         * @param ticks        The remaining ticks. This defaults to 0.
+         *
+         * @return The time span in 100 ns ticks.
+         *
+         * @throws TODO: range check!
+         */
+        static INT64 TimeToTicks(const INT hours, const INT minutes, 
+            const INT seconds, const INT milliseconds = 0,
+            const INT ticks = 0);
+
         /** A constant empty time span. */
         static const DateTimeSpan EMPTY;
 
@@ -54,21 +145,6 @@ namespace sys {
 
         /** The largest possible negative time span. */
         static const DateTimeSpan MINIMUM;
-
-        /** A constant time span of one day (positive). */
-        static const DateTimeSpan ONE_DAY;
-
-        /** A constant time span of one hour (positive). */
-        static const DateTimeSpan ONE_HOUR;
-
-        /** A constant time span of one millisecond (positive). */
-        static const DateTimeSpan ONE_MILLISECOND;
-
-        /** A constant time span of one minute (positive). */
-        static const DateTimeSpan ONE_MINUTE;
-
-        /** A constant time span of one second (positive). */
-        static const DateTimeSpan ONE_SECOND;
 
         /** One day in milliseconds. */
         static const INT64 TICKS_PER_DAY;
@@ -106,7 +182,8 @@ namespace sys {
          * @param ticks        The 100 ns part of the time span. This defaults
          *                     to zero.
          *
-         * @throws IllegalParamException TODO
+         * @throws IllegalParamException If the parameters would cause a numeric
+         *                               overflow.
          */
         DateTimeSpan(const INT days, const INT hours, const INT minutes,
             const INT seconds, const INT milliseconds = 0, const INT ticks = 0);
@@ -212,7 +289,8 @@ namespace sys {
          * @param ticks        The 100 ns part of the time span. This defaults
          *                     to zero.
          *
-         * @throws IllegalParamException TODO
+         * @throws IllegalParamException If the parameters would cause a numeric
+         *                               overflow.
          */
         void Set(const INT days, const INT hours, const INT minutes,
             const INT seconds, const INT milliseconds = 0, const INT ticks = 0);

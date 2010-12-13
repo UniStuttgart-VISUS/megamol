@@ -14,6 +14,33 @@
 #include "vislib/IllegalStateException.h"
 
 
+
+/*
+ * vislib::sys::DateTimeSpan::DaysToTicks
+ */
+INT64 vislib::sys::DateTimeSpan::DaysToTicks(const INT64 days) {
+    VLSTACKTRACE("DateTimeSpan::DaysToTicks", __FILE__, __LINE__);
+    // TODO range check!
+    return days * TICKS_PER_DAY;
+}
+
+
+/*
+ * vislib::sys::DateTimeSpan::TimeToTicks
+ */
+INT64 vislib::sys::DateTimeSpan::TimeToTicks(const INT hours, 
+        const INT minutes, const INT seconds, const INT milliseconds, 
+        const INT ticks) {
+    VLSTACKTRACE("DateTimeSpan::TimeToTicks", __FILE__, __LINE__);
+    // TODO range check
+    return hours * TICKS_PER_HOUR
+        + minutes * TICKS_PER_MINUTE
+        + seconds * TICKS_PER_SECOND
+        + milliseconds * TICKS_PER_MILLISECOND
+        + ticks;
+}
+
+
 /*
  * vislib::sys::DateTimeSpan::EMPTY
  */
@@ -74,41 +101,6 @@ const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::MINIMUM(
 #ifdef _MSC_VER
 #pragma pop_macro("min")
 #endif /* _MSC_VER */
-
-
-/*
- * vislib::sys::DateTimeSpan::ONE_DAY
- */
-const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_DAY(
-    static_cast<INT64>(24) * 60 * 60 * 1000 * 10000);
-
-
-/*
- * vislib::sys::DateTimeSpan::ONE_HOUR
- */
-const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_HOUR(
-    static_cast<INT64>(60) * 60 * 1000 * 10000);
-
-
-/*
- * vislib::sys::DateTimeSpan::ONE_MILLISECOND
- */
-const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_MILLISECOND(
-    static_cast<INT64>(10000));
-
-
-/*
- * vislib::sys::DateTimeSpan::ONE_MINUTE
- */
-const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_MINUTE(
-    static_cast<INT64>(60) * 1000 * 10000);
-
-
-/*
- * vislib::sys::DateTimeSpan::ONE_SECOND
- */
-const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_SECOND(
-    static_cast<INT64>(1000) * 10000);
 
 
 /*
@@ -177,13 +169,10 @@ void vislib::sys::DateTimeSpan::Set(const INT days, const INT hours,
         const INT minutes, const INT seconds, const INT milliseconds,
         const INT ticks) {
     VLSTACKTRACE("DateTimeSpan::Set", __FILE__, __LINE__);
-    // TODO: This must be checked for overflows, too.
-    this->ticks = days * TICKS_PER_DAY
-        + hours * TICKS_PER_HOUR
-        + minutes * TICKS_PER_MINUTE
-        + seconds * TICKS_PER_SECOND
-        + milliseconds * TICKS_PER_MILLISECOND
-        + ticks;
+    this->ticks = 0;
+    this->add(DateTimeSpan::DaysToTicks(days));
+    this->add(DateTimeSpan::TimeToTicks(hours, minutes, seconds, 
+        milliseconds, ticks));
 }
 
 

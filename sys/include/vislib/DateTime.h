@@ -31,11 +31,11 @@ namespace sys {
      *
      * The class basically implements a proleptic Gregorian calendar, i. e. the 
      * rules of the Gregorian calendar are extended indefinitely into the past,
-     * even beyond 24.02.1582. The implementation differs from a Gregorian 
-     * calendar wrt. the year 0: the Gregorian calendar does not have a year
-     * 0, i. e. the order of years would be -1 BC followed by 1 AD. However, 
-     * DateTime handles 0 AD as a fully valid year, which is also a leap year.
-     * Note that most computer time formats allow a year zero.
+     * even beyond 24.02.1582. 
+     *
+     * Dates are stored as ticks with a resolution of 100 ns (this is compatible
+     * with .NET) since 01.01.01 00:00:00. The date range ends at approx. 
+     * 29247 A.D.
      *
      * A DateTime is always assumed to be local time. Input methods, ctors and
      * conversion operators that accept or return point in time in other time
@@ -64,7 +64,7 @@ namespace sys {
          *
          * The implementation follows the rule that leap years must be
          * divisable by 4, but not by 100 except for if they are divisable
-         * by 400, too. Following this rule, year 0 is a leap year, too.
+         * by 400, too.
          *
          * @param year The year to test.
          *
@@ -80,6 +80,28 @@ namespace sys {
         static DateTime Now(void);
 
         /**
+         * Convert a time span to 100 ns ticks.
+         *
+         * @param hours        The full hours.
+         * @param minutes      The full minutes.
+         * @param seconds      The full seconds.
+         * @param milliseconds The full milliseconds. This defaults to 0.
+         * @param ticks        The remaining ticks. This defaults to 0.
+         *
+         * @return The time span in 100 ns ticks.
+         *
+         * @throws IllegalParamException If the conversion fails due to numeric
+         *                               overflows.
+         */
+        inline static INT64 TimeToTicks(const INT hours, const INT minutes, 
+                const INT seconds, const INT milliseconds = 0,
+                const INT ticks = 0) {
+            VLSTACKTRACE("DateTime::TimeToTicks", __FILE__, __LINE__);
+            return DateTimeSpan::TimeToTicks(hours, minutes, seconds,
+                milliseconds, ticks);
+        }
+
+        /**
          * Get the current local day with the time set zero.
          *
          * @return The current date.
@@ -87,7 +109,7 @@ namespace sys {
         static DateTime Today(void);
 
         /**
-         * A constant empty time (at zero point 01.01.0000).
+         * A constant empty time (at zero point 01.01.0001).
          */
         static DateTime EMPTY;
 
@@ -103,7 +125,7 @@ namespace sys {
          * conversion will be performed.
          *
          * @param year         The year, positive for years A. D., negative 
-         *                     for B. C.
+         *                     for B. C. A value of 0 will be corrected to 1.
          * @param month        The month within [1, 12]. Invalid months are 
          *                     corrected anging the year.
          * @param day          The day. Invalid dates are corrected by changing 
@@ -143,9 +165,13 @@ namespace sys {
          *
          * The input is assumed to be UTC and will converted to local time.
          *
+         * This ctor is explicit, because time_t is an integral type (typedef
+         * or define). This would allow implicit integer to time conversions,
+         * which we consider dangerous.
+         *
          * @param time The time that should be used for initialisation.
          */
-        inline DateTime(const time_t time) {
+        explicit inline DateTime(const time_t time) {
             VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
             this->Set(time);
         }
@@ -175,7 +201,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          */
-        inline DateTime(const DateTime& rhs) : value(rhs.value) {
+        inline DateTime(const DateTime& rhs) : ticks(rhs.ticks) {
             VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
         }
 
@@ -308,13 +334,13 @@ namespace sys {
         }
 
         /**
-         * Convert the time date and time to milliseconds since 01.01.0000.
+         * Get the 100 ns ticks since 01.01.0001.
          *
-         * @return The total milliseconds that represent the time.
+         * @return The total ticks that represent the time.
          */
-        inline INT64 GetValue(void) const {
-            VLSTACKTRACE("DateTime::GetValue", __FILE__, __LINE__);
-            return this->value;
+        inline INT64 GetTotalTicks(void) const {
+            VLSTACKTRACE("DateTime::GetTotalTicks", __FILE__, __LINE__);
+            return this->ticks;
         }
 
         /**
@@ -324,7 +350,7 @@ namespace sys {
          * conversion will be performed.
          *
          * @param year         The year, positive for years A. D., negative 
-         *                     for B. C.
+         *                     for B. C. A value of 0 will be corrected to 1.
          * @param month        The month within [1, 12]. Invalid months are 
          *                     corrected anging the year.
          * @param day          The day. Invalid dates are corrected by changing 
@@ -337,12 +363,15 @@ namespace sys {
          *                     corrected.
          * @param milliseconds The milliseconds within [0, 1000[. Invalid values
          *                     are corrected. This parameter defaults to 0.
+         * @param ticks        The 100 ns ticks within [0, 
+         *                     TICKS_PER_MILLISECOND[. This parameter defaults 
+         *                     to 0.
          *
          * @throws TODO should implement overflow check.
          */
         void Set(const INT year, const INT month, const INT day, 
             const INT hours, const INT minutes, const INT seconds, 
-            const INT milliseconds = 0);
+            const INT milliseconds = 0, const INT ticks = 0);
 
         /**
          * Set the date and time from the specified struct tm. 'tm' is assumed 
@@ -427,9 +456,12 @@ namespace sys {
          *                     corrected.
          * @param milliseconds The milliseconds within [0, 1000[. Invalid values
          *                     are corrected. This parameter defaults to 0.
+         * @param ticks        The 100 ns ticks within [0, 
+         *                     TICKS_PER_MILLISECOND[. This parameter defaults 
+         *                     to 0.
          */
         void SetTime(const INT hour, const INT minute, const INT second,
-            const INT milliseconds = 0);          
+            const INT milliseconds = 0, const INT ticks = 0);
 
         ///**
         // * Subtract the specified number of days from the current date.
@@ -485,7 +517,7 @@ namespace sys {
          */
         inline bool operator ==(const DateTime& rhs) const {
             VLSTACKTRACE("DateTime::operator ==", __FILE__, __LINE__);
-            return (this->value == rhs.value);
+            return (this->ticks == rhs.ticks);
         }
 
         /**
@@ -498,7 +530,7 @@ namespace sys {
          */
         inline bool operator !=(const DateTime& rhs) const {
             VLSTACKTRACE("DateTime::operator !=", __FILE__, __LINE__);
-            return (this->value != rhs.value);
+            return (this->ticks != rhs.ticks);
         }
 
         /**
@@ -510,7 +542,7 @@ namespace sys {
          */
         inline bool operator <(const DateTime& rhs) const {
             VLSTACKTRACE("DateTime::operator <", __FILE__, __LINE__);
-            return (this->value < rhs.value);
+            return (this->ticks < rhs.ticks);
         }
 
         /**
@@ -523,7 +555,7 @@ namespace sys {
          */
         inline bool operator <=(const DateTime& rhs) const {
             VLSTACKTRACE("DateTime::operator <=", __FILE__, __LINE__);
-            return (this->value <= rhs.value);
+            return (this->ticks <= rhs.ticks);
         }
 
         /**
@@ -535,7 +567,7 @@ namespace sys {
          */
         inline bool operator >(const DateTime& rhs) const {
             VLSTACKTRACE("DateTime::operator >", __FILE__, __LINE__);
-            return (this->value > rhs.value);
+            return (this->ticks > rhs.ticks);
         }
 
         /**
@@ -548,7 +580,7 @@ namespace sys {
          */
         inline bool operator >=(const DateTime& rhs) const {
             VLSTACKTRACE("DateTime::operator >=", __FILE__, __LINE__);
-            return (this->value >= rhs.value);
+            return (this->ticks >= rhs.ticks);
         }
 
         /**
@@ -666,6 +698,14 @@ namespace sys {
 
     private:
 
+        /** Possible parts that our private getter can extract. */
+        enum DatePart {
+            DATE_PART_YEAR = 1,
+            DATE_PART_DAY_OF_YEAR,
+            DATE_PART_MONTH,
+            DATE_PART_DAY
+        };
+
         /**
          * This array holds the days after the end of a month with January
          * being at index 1. Element 0 holds a zero, element 13 holds the 
@@ -673,36 +713,46 @@ namespace sys {
          */
         static const INT64 DAYS_AFTER_MONTH[13];
 
-        /** One day in milliseconds. */
-        static const INT64 ONE_DAY;
-
-        /** One hour in milliseconds. */
-        static const INT64 ONE_HOUR;
-
-        /** One minute in milliseconds. */
-        static const INT64 ONE_MINUTE;
-        
-        /** One second in milliseconds. */
-        static const INT64 ONE_SECOND;
+        /**
+         * The same as DAYS_AFTER_MONTH, but for leap years. 
+         */
+        static const INT64 DAYS_AFTER_MONTH_LY[13];
 
         /** The days in a normal, i. e. non-leap, year. */
-        static const INT64 ONE_YEAR;
+        static const INT64 DAYS_PER_YEAR;
+
+        /** The days in a four year period, including leap years. */
+        static const INT64 DAYS_PER_4YEARS;
+
+        /** The days in a 100 year period, including leap years. */
+        static const INT64 DAYS_PER_100YEARS;
+
+        /** The days in a 400 year period, including leap years. */
+        static const INT64 DAYS_PER_400YEARS;
 
         /**
          * Create a new instance with the given initial value.
          *
          * This ctor is required for creating the EMPTY constant.
          *
-         * @param value The milliseconds since 01.01.0000.
-         * @param dowel Additional parameter for getting a different signature
-         *              than for time_t. This can have any value.
+         * @param ticks The ticks since 01.01.0001.
+         * @param dowel Ignore this. Any data is acceptable
          */
-        explicit inline DateTime(const INT64 value, int dowel) : value(value) {
+        inline DateTime(const INT64 value, const INT dowel) : ticks(ticks) {
             VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
         }
 
-        /** The date value in milliseconds since 01.01.0000. */
-        INT64 value;
+        /**
+         * Get a specific part of this date.
+         *
+         * @param datePart The part to be retrieved.
+         *
+         * @return The value of the specified part.
+         */
+        INT64 get(const DatePart datePart) const;
+
+        /** The date value in 100 ns ticks since 01.01.0001. */
+        INT64 ticks;
     };
     
 } /* end namespace sys */
