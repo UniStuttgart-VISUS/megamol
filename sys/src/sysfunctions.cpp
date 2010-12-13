@@ -26,6 +26,95 @@
 #include "vislib/StringConverter.h"
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
+
+
+#ifdef _WIN32
+/**
+ * Common implementation of the vislib::sys::LoadResource functions.
+ *
+ * @param out     A RawStorage that will receive the resource data. 
+ * @param hModule The module handle passed to vislib::sys::LoadResource.
+ * @param hRes    The handle of the resource to be retrieved. That must not
+ *                be NULL.
+ *
+ * @returns 'out'.
+ *
+ * @throws SystemException If the resource lookup or loading the resource
+ *                         failed.
+ */
+static vislib::RawStorage& loadResource(vislib::RawStorage& out, 
+        HMODULE hModule, HRSRC hRes) {
+    ASSERT(hRes != NULL);
+    HGLOBAL hGlobal = NULL;
+    void *data = NULL;
+    DWORD size = 0;
+
+    if ((hGlobal = ::LoadResource(hModule, hRes)) == NULL) {
+        // From MSDN: The return type of LoadResource is HGLOBAL for backward 
+        // compatibility, not because the function returns a handle to a 
+        // global memory block. Do not pass this handle to the GlobalLock 
+        // or GlobalFree function.
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
+
+    if ((size = ::SizeofResource(hModule, hRes)) == 0) {
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
+    }
+
+    data = ::LockResource(hGlobal);
+    ASSERT(data != NULL);
+    out.EnforceSize(0);
+    out.Append(data, size);
+    UnlockResource(hGlobal);
+    return out;
+}
+#endif /* _WIN32 */
+
+
+/*
+ * vislib::sys::LoadResource
+ */
+#ifdef _WIN32
+vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
+        const char *resourceID, const char *resourceType) {
+    HRSRC hRes = NULL;
+    
+    if ((hRes = ::FindResourceA(hModule, resourceID, resourceType)) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+    
+    return ::loadResource(out, hModule, hRes);
+}
+#else /* _WIN32 */
+vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
+        const char *resourceID, const char *resourceType) {
+    throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
+}
+#endif /* _WIN32 */
+
+
+
+/*
+ * vislib::sys::LoadResource
+ */
+#ifdef _WIN32
+vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
+        const wchar_t *resourceID, const wchar_t *resourceType) {
+    HRSRC hRes = NULL;
+    
+    if ((hRes = ::FindResourceW(hModule, resourceID, resourceType)) == NULL) {
+        throw SystemException(__FILE__, __LINE__);
+    }
+    
+    return ::loadResource(out, hModule, hRes);
+}
+#else /* _WIN32 */
+vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
+        const char *resourceID, const char *resourceType) {
+    throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
+}
+#endif /* _WIN32 */      
 
 
 /*

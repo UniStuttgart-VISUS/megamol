@@ -80,45 +80,80 @@ const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::MINIMUM(
  * vislib::sys::DateTimeSpan::ONE_DAY
  */
 const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_DAY(
-    vislib::sys::DateTimeSpan::MILLISECONDS_PER_DAY);
+    static_cast<INT64>(24) * 60 * 60 * 1000 * 10000);
 
 
 /*
  * vislib::sys::DateTimeSpan::ONE_HOUR
  */
 const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_HOUR(
-    vislib::sys::DateTimeSpan::MILLISECONDS_PER_HOUR);
+    static_cast<INT64>(60) * 60 * 1000 * 10000);
 
 
 /*
  * vislib::sys::DateTimeSpan::ONE_MILLISECOND
  */
-const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_MILLISECOND(1L);
+const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_MILLISECOND(
+    static_cast<INT64>(10000));
 
 
 /*
  * vislib::sys::DateTimeSpan::ONE_MINUTE
  */
 const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_MINUTE(
-    vislib::sys::DateTimeSpan::MILLISECONDS_PER_MINUTE);
+    static_cast<INT64>(60) * 1000 * 10000);
 
 
 /*
  * vislib::sys::DateTimeSpan::ONE_SECOND
  */
 const vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::ONE_SECOND(
-    vislib::sys::DateTimeSpan::MILLISECONDS_PER_SECOND);
+    static_cast<INT64>(1000) * 10000);
+
+
+/*
+ * vislib::sys::DateTimeSpan::TICKS_PER_DAY
+ */
+const INT64 vislib::sys::DateTimeSpan::TICKS_PER_DAY 
+    = static_cast<INT64>(24) * 60 * 60 * 1000 * 10000;
+
+
+/*
+ * vislib::sys::DateTimeSpan::TICKS_PER_HOUR
+ */
+const INT64 vislib::sys::DateTimeSpan::TICKS_PER_HOUR 
+    = static_cast<INT64>(60) * 60 * 1000 * 10000;
+
+
+/*
+ * vislib::sys::DateTimeSpan::TICKS_PER_MILLISECOND
+ */
+const INT64 vislib::sys::DateTimeSpan::TICKS_PER_MILLISECOND 
+    = static_cast<INT64>(10000);
+
+/*
+ * vislib::sys::DateTimeSpan::MILLISECONDS_PER_MINUTE
+ */
+const INT64 vislib::sys::DateTimeSpan::TICKS_PER_MINUTE 
+    = static_cast<INT64>(60) * 1000 * 10000;
+  
+
+/*
+ * vislib::sys::DateTimeSpan::MILLISECONDS_PER_SECOND
+ */
+const INT64 vislib::sys::DateTimeSpan::TICKS_PER_SECOND 
+    = static_cast<INT64>(1000) * 10000;
 
 
 /*
  * vislib::sys::DateTimeSpan::DateTimeSpan
  */
 vislib::sys::DateTimeSpan::DateTimeSpan(const INT days, const INT hours, 
-        const INT minutes, const INT seconds, const INT milliseconds) 
-        : value(0L) {
+        const INT minutes, const INT seconds, const INT milliseconds,
+        const INT ticks) : ticks(0) {
     VLSTACKTRACE("DateTimeSpan::~DateTimeSpan", __FILE__, __LINE__);
     try {
-        this->Set(days, hours, minutes, seconds, milliseconds);
+        this->Set(days, hours, minutes, seconds, milliseconds, ticks);
     } catch (...) {
         this->~DateTimeSpan();
         throw;
@@ -139,14 +174,16 @@ vislib::sys::DateTimeSpan::~DateTimeSpan(void) {
  * vislib::sys::DateTimeSpan::Set
  */
 void vislib::sys::DateTimeSpan::Set(const INT days, const INT hours, 
-        const INT minutes, const INT seconds, const INT milliseconds) {
+        const INT minutes, const INT seconds, const INT milliseconds,
+        const INT ticks) {
     VLSTACKTRACE("DateTimeSpan::Set", __FILE__, __LINE__);
     // TODO: This must be checked for overflows, too.
-    this->value = MILLISECONDS_PER_DAY * days 
-        + MILLISECONDS_PER_HOUR * hours 
-        + MILLISECONDS_PER_MINUTE * minutes 
-        + MILLISECONDS_PER_SECOND * seconds
-        + milliseconds;
+    this->ticks = days * TICKS_PER_DAY
+        + hours * TICKS_PER_HOUR
+        + minutes * TICKS_PER_MINUTE
+        + seconds * TICKS_PER_SECOND
+        + milliseconds * TICKS_PER_MILLISECOND
+        + ticks;
 }
 
 
@@ -156,7 +193,7 @@ void vislib::sys::DateTimeSpan::Set(const INT days, const INT hours,
 vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
     VLSTACKTRACE("DateTimeSpan::ToStringA", __FILE__, __LINE__);
     StringA retval;
-    retval.Format("%lld:%02lld:%02lld:%02lld.%04lld", this->GetDays(), 
+    retval.Format("%d:%02d:%02d:%02d.%04d", this->GetDays(), 
         math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
         math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
     return retval;
@@ -169,7 +206,7 @@ vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
 vislib::StringW vislib::sys::DateTimeSpan::ToStringW(void) const {
     VLSTACKTRACE("DateTimeSpan::ToStringW", __FILE__, __LINE__);
     StringW retval;
-    retval.Format(L"%lld:%02lld:%02lld:%02lld.%04lld", this->GetDays(), 
+    retval.Format(L"%d:%02d:%02d:%02d.%04d", this->GetDays(), 
         math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
         math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
     return retval;
@@ -183,7 +220,7 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator -=(
         const DateTimeSpan& rhs) {
     VLSTACKTRACE("DateTimeSpan::operator -=", __FILE__, __LINE__);
     try {
-        this->add((-rhs).value);
+        this->add((-rhs).ticks);
         return *this;
     } catch (IllegalStateException) {
         // Repackage error into IllegalStateException, because any other
@@ -199,12 +236,13 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator -=(
  */
 vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::operator -(void) const {
     VLSTACKTRACE("DateTimeSpan::operator -", __FILE__, __LINE__);
-    if (this->value == DateTimeSpan::MINIMUM) {
+    if (this->ticks == DateTimeSpan::MINIMUM) {
+        // Minimum would overflow, because 0 belongs to positive range.
         throw IllegalStateException("DateTimeSpan::MINIMUM", __FILE__, 
             __LINE__);
     }
     
-    DateTimeSpan retval(-this->value);
+    DateTimeSpan retval(-this->ticks);
     return retval;
 }
 
@@ -216,7 +254,7 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator =(
         const DateTimeSpan& rhs) throw() {
     VLSTACKTRACE("DateTimeSpan::operator =", __FILE__, __LINE__);
     if (this != &rhs) {
-        this->value = rhs.value;
+        this->ticks = rhs.ticks;
     }
     return *this;
 }
@@ -231,20 +269,20 @@ void vislib::sys::DateTimeSpan::add(const INT64 millis) {
     INT64 min = static_cast<INT64>(DateTimeSpan::MINIMUM);
     
     /* Sanity checks. */
-    if (math::Signum(this->value) == math::Signum(millis)) {
-        if (this->value > 0) {
+    if (math::Signum(this->ticks) == math::Signum(millis)) {
+        if (this->ticks > 0) {
             /* Both values are positive. Result might exceed 'max'. */
-            if (this->value > max - millis) {
+            if (this->ticks > max - millis) {
                 throw IllegalParamException("rhs", __FILE__, __LINE__);
             }
         } else {
             /* Both values are negative. Result might exceed 'min'. */
-            if (this->value < min - millis) {
+            if (this->ticks < min - millis) {
                 throw IllegalParamException("rhs", __FILE__, __LINE__);
             }
         }
     }
     /* Operation is safe at this point. */
 
-    this->value += millis;
+    this->ticks += millis;
 }

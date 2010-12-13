@@ -27,7 +27,8 @@ namespace sys {
 
     /**
      * This class represents a time span. The DateTimeSpan class has a 
-     * resolution of one millisecond.
+     * resolution of 100 nanoseconds (which we call a tick here). This 
+     * resolution is the same that .NET uses for its DateTime.
      */
     class DateTimeSpan {
 
@@ -69,14 +70,29 @@ namespace sys {
         /** A constant time span of one second (positive). */
         static const DateTimeSpan ONE_SECOND;
 
+        /** One day in milliseconds. */
+        static const INT64 TICKS_PER_DAY;
+
+        /** One hour in milliseconds. */
+        static const INT64 TICKS_PER_HOUR;
+
+        /** Ticks per millisecond. */
+        static const INT64 TICKS_PER_MILLISECOND;
+
+        /** One minute in milliseconds. */
+        static const INT64 TICKS_PER_MINUTE;
+        
+        /** One second in milliseconds. */
+        static const INT64 TICKS_PER_SECOND;
+
         /**
-         * Create a time span of the given amount of milliseconds
+         * Create a time span of the given amount of ticks.
          *
-         * @param value The total milliseconds of the timespan. This defaults to
-         *              zero.
+         * @param ticks The total number of ticks of the timespan. This 
+         *              parameter defaults to zero.
          */
-        explicit inline DateTimeSpan(const INT64 value = 0L) throw()
-            : value(value) {}
+        explicit inline DateTimeSpan(const INT64 ticks = 0L) throw()
+            : ticks(ticks) {}
 
         /**
          * Create a new time span using the specified length.
@@ -87,11 +103,13 @@ namespace sys {
          * @param seconds      The second part of the time span.
          * @param milliseconds The millisecond part of the time span. This 
          *                     defaults to zero.
+         * @param ticks        The 100 ns part of the time span. This defaults
+         *                     to zero.
          *
          * @throws IllegalParamException TODO
          */
         DateTimeSpan(const INT days, const INT hours, const INT minutes,
-                const INT seconds, const INT milliseconds = 0L);
+            const INT seconds, const INT milliseconds = 0, const INT ticks = 0);
 
         /**
          * Copy ctor.
@@ -99,7 +117,9 @@ namespace sys {
          * @param rhs The object to be cloned.
          */
         inline DateTimeSpan(const DateTimeSpan& rhs) throw() 
-            : value(rhs.value) {}
+                : ticks(rhs.ticks) {
+            VLSTACKTRACE("DateTimeSpan::DateTimeSpan", __FILE__, __LINE__);
+        }
 
         /** Dtor. */
         ~DateTimeSpan(void);
@@ -109,116 +129,75 @@ namespace sys {
          *
          * @return The days part of the time span.
          */
-        inline INT64 GetDays(void) const {
-            return this->value / MILLISECONDS_PER_DAY;
+        inline INT GetDays(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetDays", __FILE__, __LINE__);
+            return static_cast<INT>(this->ticks / TICKS_PER_DAY);
         }
 
         /**
-         * Answer the number of hours in the current day.
+         * Answer the number of hours in the current day. 
+         * This value lies within [0, 24[.
          *
          * @return The hours part of the time span.
          */
-        inline INT64 GetHours(void) const {
-            return this->value % MILLISECONDS_PER_DAY / MILLISECONDS_PER_HOUR;
+        inline INT GetHours(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetHours", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_HOUR) % 24);
         }
 
         /**
          * Answer the number of milliseconds in the current second.
+         * This value lies within [0, 1000[.
          *
          * @return The milliseconds part of the time span.
          */
-        inline INT64 GetMilliseconds(void) const {
-            return this->value % MILLISECONDS_PER_SECOND;
+        inline INT GetMilliseconds(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetMilliseconds", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_MILLISECOND) 
+                % 1000);
         }
 
         /**
          * Answer the number of minutes in the current hour.
+         * This values lies within [0, 60[.
          *
          * @return The minutes part of the time span.
          */
-        inline INT64 GetMinutes(void) const {
-            return this->value % MILLISECONDS_PER_DAY % MILLISECONDS_PER_HOUR 
-                / MILLISECONDS_PER_MINUTE;
+        inline INT GetMinutes(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetMinutes", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_MINUTE) % 60);
         }
 
         /**
          * Answer the number of seconds in the current minute.
+         * This value lies within [0, 60[.
          *
          * @return The seconds part of the time span.
          */
-        inline INT64 GetSeconds(void) const {
-            return this->value % MILLISECONDS_PER_DAY % MILLISECONDS_PER_HOUR 
-                % MILLISECONDS_PER_MINUTE / MILLISECONDS_PER_SECOND;
+        inline INT GetSeconds(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetSeconds", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_SECOND) % 60);
         }
 
         /**
-         * Answer a value that represents the time span in terms of
-         * days.
+         * Answer the number of remaining ticks.
+         * This value lies within [0, TICKS_PER_MILLISECOND[.
          *
-         * Please be advised that the value returned might be truncated due
-         * to the resolution of the return type.
-         *
-         * @returns The complete and fractional days that represent the
-         *          time span.
+         * @return The ticks part of the time span.
          */
-        inline double GetTotalDays(void) const {
-            return static_cast<double>(this->value) 
-                / static_cast<double>(MILLISECONDS_PER_DAY);
+        inline INT GetTicks(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetTicks", __FILE__, __LINE__);
+            return static_cast<INT>(this->ticks % TICKS_PER_MILLISECOND);
         }
 
         /**
-         * Answer a value that represents the time span in terms of
-         * hours.
+         * Answer the total number of ticks representing the time span.
          *
-         * Please be advised that the value returned might be truncated due
-         * to the resolution of the return type.
-         *
-         * @returns The complete and fractional hours that represent the
-         *          time span.
+         * @return The total number of ticks.
          */
-        inline double GetTotalHours(void) const {
-            return static_cast<double>(this->value) 
-                / static_cast<double>(MILLISECONDS_PER_HOUR);
-        }
-
-        /**
-         * Answer a value that represents the time span in terms of
-         * milliseconds.
-         *
-         * @returns The complete milliseconds that represent the time span.
-         */
-        inline INT64 GetTotalMilliseconds(void) const {
-            return this->value;
-        }
-
-        /**
-         * Answer a value that represents the time span in terms of
-         * minutes.
-         *
-         * Please be advised that the value returned might be truncated due
-         * to the resolution of the return type.
-         *
-         * @returns The complete and fractional minutes that represent the
-         *          time span.
-         */
-        inline double GetTotalMinutes(void) const {
-            return static_cast<double>(this->value) 
-                / static_cast<double>(MILLISECONDS_PER_MINUTE);
-        }
-
-        /**
-         * Answer a value that represents the time span in terms of
-         * seconds.
-         *
-         * Please be advised that the value returned might be truncated due
-         * to the resolution of the return type.
-         *
-         * @returns The complete and fractional seconds that represent the
-         *          time span.
-         */
-        inline double GetTotalSeconds(void) const {
-            return static_cast<double>(this->value) 
-                / static_cast<double>(MILLISECONDS_PER_SECOND);
+        inline INT64 GetTotalTicks(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetTotalTicks", __FILE__, __LINE__);
+            return this->ticks;
         }
 
         /**
@@ -230,11 +209,13 @@ namespace sys {
          * @param seconds      The second part of the time span.
          * @param milliseconds The millisecond part of the time span. This 
          *                     defaults to zero.
+         * @param ticks        The 100 ns part of the time span. This defaults
+         *                     to zero.
          *
          * @throws IllegalParamException TODO
          */
         void Set(const INT days, const INT hours, const INT minutes,
-            const INT seconds, const INT milliseconds = 0L);
+            const INT seconds, const INT milliseconds = 0, const INT ticks = 0);
 
         /**
          * Answer a string representation of the time span.
@@ -259,7 +240,7 @@ namespace sys {
          */
         inline bool operator ==(const DateTimeSpan& rhs) const throw() {
             VLSTACKTRACE("DateTimeSpan::operator ==", __FILE__, __LINE__);
-            return (this->value == rhs.value);
+            return (this->ticks == rhs.ticks);
         }
 	
         /**
@@ -271,7 +252,7 @@ namespace sys {
          */
         inline bool operator !=(const DateTimeSpan& rhs) const throw() {
             VLSTACKTRACE("DateTimeSpan::operator !=", __FILE__, __LINE__);
-            return (this->value != rhs.value);
+            return (this->ticks != rhs.ticks);
         }
 
         /** 
@@ -284,7 +265,7 @@ namespace sys {
          */
         inline bool operator <(const DateTimeSpan& rhs) const throw() {
             VLSTACKTRACE("DateTimeSpan::operator <", __FILE__, __LINE__);
-            return (this->value < rhs.value);
+            return (this->ticks < rhs.ticks);
         }
 
         /** 
@@ -297,7 +278,7 @@ namespace sys {
          */
 	    inline bool operator >(const DateTimeSpan& rhs) const throw() {
             VLSTACKTRACE("DateTimeSpan::operator <", __FILE__, __LINE__);
-            return (this->value > rhs.value);
+            return (this->ticks > rhs.ticks);
         }
 	    
         /** 
@@ -310,7 +291,7 @@ namespace sys {
          */
         inline bool operator <=(const DateTimeSpan& rhs) const throw() {
             VLSTACKTRACE("DateTimeSpan::operator <=", __FILE__, __LINE__);
-            return (this->value <= rhs.value);
+            return (this->ticks <= rhs.ticks);
         }
 
         /** 
@@ -323,7 +304,7 @@ namespace sys {
          */
 	    inline bool operator >=(const DateTimeSpan& rhs) const throw() {
             VLSTACKTRACE("DateTimeSpan::operator >=", __FILE__, __LINE__);
-            return (this->value >= rhs.value);
+            return (this->ticks >= rhs.ticks);
         }
 
         /**
@@ -373,7 +354,7 @@ namespace sys {
          */
         inline DateTimeSpan& operator +=(const DateTimeSpan& rhs) {
             VLSTACKTRACE("DateTimeSpan::operator +=", __FILE__, __LINE__);
-            this->add(rhs.value);
+            this->add(rhs.ticks);
             return *this;
         }
 	
@@ -411,32 +392,33 @@ namespace sys {
 	    DateTimeSpan& operator =(const DateTimeSpan& rhs) throw();
 
         /**
-         * Convert the time span into an integer that represents the time span
-         * in milliseconds.
+         * Answer the total number of ticks representing the time span.
          *
-         * @return The total milliseconds that represent the time span.
+         * @return The total number of ticks.
          */
         inline operator INT64(void) const throw() {
             VLSTACKTRACE("DateTimeSpan::operator INT64", __FILE__, __LINE__);
-            return this->value;
+            return this->ticks;
         }
 
     private:
 
         /**
-         * Add the specified amount of milliseconds to the value of this time 
+         * Add the specified amount of ticks to the value of this time 
          * span. The result will be assigned to the value of this time span.
          *
          * This method checks the range of the result of the addition before
          * perfoming the actual computation. 
          *
-         * @throws IllegalParamException If 'millis' has a value that would 
+         * @param ticks The ticks to be added.
+         *
+         * @throws IllegalParamException If 'ticks' has a value that would 
          *                               cause an overflow of the result.
          */
-        void add(const INT64 millis);
+        void add(const INT64 ticks);
 
-        /** The value in milliseconds. */
-        INT64 value;
+        /** The value in 100 ns ticks. */
+        INT64 ticks;
 
     };
     

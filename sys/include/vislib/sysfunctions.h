@@ -25,6 +25,7 @@
 
 #include "vislib/CharTraits.h"
 #include "vislib/File.h"
+#include "vislib/RawStorage.h"
 #include "vislib/String.h"
 #include "vislib/SystemException.h"
 #include "vislib/types.h"
@@ -133,6 +134,64 @@ namespace sys {
         // pattern matches only if pattern and filename are consumed at same speed.
         return (fnp == fnl) && (pp == pl);
     }
+
+
+    /**
+     * Load a resource from the specified module.
+     *
+     * @param out          A RawStorage that will receive the resource data. 
+     * @param hModule      A handle to the module whose executable file contains 
+     *                     the resource. If hModule is NULL, the resource is 
+     *                     loaded from the module that was used to create the 
+     *                     current process.
+     * @param resourceID   The name of the resource. Alternately, rather than 
+     *                     a pointer, this parameter can be MAKEINTRESOURCE(ID),
+     *                     where ID is the integer identifier of the resource.
+     * @param resourceType The resource type. 
+     *
+     * @return A RawStorage containing the raw resource data. This is the same
+     *         object passed in as out.
+     *
+     * @throws SystemException If the resource lookup or loading the resource
+     *                         failed.
+     * @throws UnsupportedOperationException On Linux.
+     */
+    RawStorage& LoadResource(RawStorage& out,
+#ifdef _WIN32
+        HMODULE hModule, 
+#else /* _WIN32 */
+        void *hModule,
+#endif /* _WIN32 */        
+        const char *resourceID, const char *resourceType);
+
+    /**
+     * Load a resource from the specified module.
+     *
+     * @param out          A RawStorage that will receive the resource data. 
+     * @param hModule      A handle to the module whose executable file contains 
+     *                     the resource. If hModule is NULL, the resource is 
+     *                     loaded from the module that was used to create the 
+     *                     current process.
+     * @param resourceID   The name of the resource. Alternately, rather than 
+     *                     a pointer, this parameter can be MAKEINTRESOURCE(ID),
+     *                     where ID is the integer identifier of the resource.
+     * @param resourceType The resource type. 
+     *
+     * @return A RawStorage containing the raw resource data. This is the same
+     *         object passed in as out.
+     *
+     * @throws SystemException If the resource lookup or loading the resource
+     *                         failed.
+     * @throws UnsupportedOperationException On Linux.
+     */
+    RawStorage& LoadResource(RawStorage& out,
+#ifdef _WIN32
+        HMODULE hModule, 
+#else /* _WIN32 */
+        void *hModule,
+#endif /* _WIN32 */           
+        const wchar_t *resourceID, const wchar_t *resourceType);
+
 
     /**
      * Reads ansi characters from the file until the end of file, a line break 
