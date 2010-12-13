@@ -28,6 +28,8 @@
 #include "vislib/RawStorage.h"
 #include "vislib/NamedColours.h"
 #include "vislib/ColourParser.h"
+#include "vislib/ColourRGBAu8.h"
+
 
 // #define USE_UNICODE_COLUMNFORMATTER
 
@@ -922,5 +924,40 @@ void TestBitmapImage(void) {
     }
 
     AssertTrue("Image correct after second conversion", imgCorrect);
+
+    BitmapImage bi2(1, 1, 4, BitmapImage::CHANNELTYPE_FLOAT);
+    bi2.SetChannelLabel(0, BitmapImage::CHANNEL_CYAN);
+    bi2.SetChannelLabel(1, BitmapImage::CHANNEL_MAGENTA);
+    bi2.SetChannelLabel(2, BitmapImage::CHANNEL_YELLOW);
+    bi2.SetChannelLabel(3, BitmapImage::CHANNEL_BLACK);
+    bi2.PeekDataAs<float>()[0] = 0.0f;
+    bi2.PeekDataAs<float>()[1] = 0.0f;
+    bi2.PeekDataAs<float>()[2] = 0.0f;
+    bi2.PeekDataAs<float>()[3] = 0.0f;
+
+    bi.ConvertFrom(bi2, BitmapImage::TemplateByteRGB);
+
+    vislib::graphics::ColourRGBAu8 col(
+        bi.PeekDataAs<unsigned char>()[0],
+        bi.PeekDataAs<unsigned char>()[1],
+        bi.PeekDataAs<unsigned char>()[2], 255);
+
+    AssertEqual("CMYKConversion is correct", col, vislib::graphics::NamedColours::White);
+
+    bi2.PeekDataAs<float>()[0] = 1.0f;
+    bi.ConvertFrom(bi2, BitmapImage::TemplateByteRGB);
+    col.Set(
+        bi.PeekDataAs<unsigned char>()[0],
+        bi.PeekDataAs<unsigned char>()[1],
+        bi.PeekDataAs<unsigned char>()[2], 255);
+    AssertEqual("CMYKConversion is correct", col, vislib::graphics::NamedColours::Cyan);
+
+    bi2.PeekDataAs<float>()[3] = 1.0f;
+    bi.ConvertFrom(bi2, BitmapImage::TemplateByteRGB);
+    col.Set(
+        bi.PeekDataAs<unsigned char>()[0],
+        bi.PeekDataAs<unsigned char>()[1],
+        bi.PeekDataAs<unsigned char>()[2], 255);
+    AssertEqual("CMYKConversion is correct", col, vislib::graphics::NamedColours::Black);
 
 }

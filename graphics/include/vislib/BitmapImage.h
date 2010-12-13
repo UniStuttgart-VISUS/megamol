@@ -27,10 +27,6 @@ namespace graphics {
     /**
      * Class storing bitmap image data. The data is organized in channels.
      *
-     * TODO: CMYK colour channels are currently handled inverted, as JPEG
-     * saves it's values that way. This should be fixed here and in the
-     * JPEG loader code.
-     *
      * TODO: Add support for HSV channels
      */
     class BitmapImage {
@@ -437,6 +433,18 @@ namespace graphics {
             return this->HasChannel(CHANNEL_GREEN);
             return this->HasChannel(CHANNEL_BLUE);
         }
+
+        /**
+         * Inverts the values of all colour channels
+         */
+        void Invert(void);
+
+        /**
+         * Inverts the values of all colour channels
+         *
+         * @param channel The colour channel to be inverted
+         */
+        void Invert(unsigned int channel);
 
         /**
          * Labels three channels with the labels "CHANNEL_RED",
@@ -898,6 +906,15 @@ namespace graphics {
         void fullConvert(unsigned int w, unsigned int h,
             DT* dst, ChannelLabel *dstChan, unsigned int dstChanCnt,
             ST* src, ChannelLabel *srcChan, unsigned int srcChanCnt);
+
+        /**
+         * Inverts colour channels
+         *
+         * @param maxval The maximum value
+         * @param chan The number of the channel to invert or UINT_MAX if all
+         *             colour channels should be inverted
+         */
+        template<class T> void invert(T maxval, unsigned int chan);
 
         /** The raw image data */
         char *data;

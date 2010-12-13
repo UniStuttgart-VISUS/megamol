@@ -12,6 +12,7 @@
 #include "vislib/IllegalStateException.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/memutils.h"
+#include <climits>
 
 /****************************************************************************/
 
@@ -274,12 +275,10 @@ float vislib::graphics::BitmapImage::Conversion<ST>::rgbFromCMY(
     float cmY = conv->func[SC_CMY_YELLOW](conv, conv->param[SC_CMY_YELLOW]);
 
     // http://www.easyrgb.com/index.php?X=MATH&H=13#text13
-    // they are wrong, at least when converting CMYK Jpegs
-    // so this is the best I can do for now: (converting over HSL would be better, but it is too much for now)
 
-    float Rgb = Cmy;
-    float rGb = cMy;
-    float rgB = cmY;
+    float Rgb = 1.0f - Cmy;
+    float rGb = 1.0f - cMy;
+    float rgB = 1.0f - cmY;
 
     switch (param) {
         case 0: return Rgb;
@@ -302,12 +301,10 @@ float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromRGB(
     float rgB = conv->func[SC_BLUE](conv, conv->param[SC_BLUE]);
 
     // http://www.easyrgb.com/index.php?X=MATH&H=13#text13
-    // they are wrong, at least when converting CMYK Jpegs
-    // so this is the best I can do for now: (converting over HSL would be better, but it is too much for now)
 
-    float Cmy = Rgb;
-    float cMy = rGb;
-    float cmY = rgB;
+    float Cmy = 1.0f - Rgb;
+    float cMy = 1.0f - rGb;
+    float cmY = 1.0f - rgB;
 
     switch (param) {
         case 0: return Cmy;
@@ -331,12 +328,10 @@ float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromCMYK(
     float cmyK = conv->func[SC_CMYK_BLACK](conv, conv->param[SC_CMYK_BLACK]);
 
     // http://www.easyrgb.com/index.php?X=MATH&H=13#text13
-    // they are wrong, at least when converting CMYK Jpegs
-    // therefore, I am doing this:
 
-    float Cmy = Cmyk * cmyK;
-    float cMy = cMyk * cmyK;
-    float cmY = cmYk * cmyK;
+    float Cmy = Cmyk * (1.0f - cmyK) + cmyK;
+    float cMy = cMyk * (1.0f - cmyK) + cmyK;
+    float cmY = cmYk * (1.0f - cmyK) + cmyK;
 
     switch (param) {
         case 0: return Cmy;
@@ -359,13 +354,16 @@ float vislib::graphics::BitmapImage::Conversion<ST>::cmykFromCMY(
     float cmY = conv->func[SC_CMY_YELLOW](conv, conv->param[SC_CMY_YELLOW]);
 
     // http://www.easyrgb.com/index.php?X=MATH&H=13#text13
-    // they are wrong, at least when converting CMYK Jpegs
-    // therefore, I am doing this:
 
-    float cmyK = vislib::math::Max(vislib::math::Max(Cmy, cMy), cmY);
-    float Cmyk = Cmy / cmyK;
-    float cMyk = cMy / cmyK;
-    float cmYk = cmY / cmyK;
+    float cmyK = vislib::math::Min(vislib::math::Min(Cmy, cMy), cmY);
+    float Cmyk = 0.0f;
+    float cMyk = 0.0f;
+    float cmYk = 0.0f;
+    if (!vislib::math::IsEqual(cmyK, 1.0f)) {
+        Cmyk = (Cmy - cmyK) / (1.0f - cmyK);
+        cMyk = (cMy - cmyK) / (1.0f - cmyK);
+        cmYk = (cmY - cmyK) / (1.0f - cmyK);
+    }
 
     switch (param) {
         case 0: return Cmyk;
@@ -973,6 +971,45 @@ bool vislib::graphics::BitmapImage::HasChannel(ChannelLabel label) const {
 
 
 /*
+ * vislib::graphics::BitmapImage::Invert
+ */
+void vislib::graphics::BitmapImage::Invert(void) {
+    switch (this->chanType) {
+        case CHANNELTYPE_BYTE:
+            this->invert<unsigned char>(255u, UINT_MAX);
+            break;
+        case CHANNELTYPE_WORD:
+            this->invert<unsigned short>(65535u, UINT_MAX);
+            break;
+        case CHANNELTYPE_FLOAT:
+            this->invert<float>(1.0f, UINT_MAX);
+            break;
+    }
+}
+
+
+/*
+ * vislib::graphics::BitmapImage::Invert
+ */
+void vislib::graphics::BitmapImage::Invert(unsigned int channel) {
+    if (channel >= this->numChans) {
+        channel = UINT_MAX;
+    }
+    switch (this->chanType) {
+        case CHANNELTYPE_BYTE:
+            this->invert<unsigned char>(255u, channel);
+            break;
+        case CHANNELTYPE_WORD:
+            this->invert<unsigned short>(65535u, channel);
+            break;
+        case CHANNELTYPE_FLOAT:
+            this->invert<float>(1.0f, channel);
+            break;
+    }
+}
+
+
+/*
  * vislib::graphics::BitmapImage::SetExtension
  */
 void vislib::graphics::BitmapImage::SetExtension(
@@ -1068,4 +1105,25 @@ void vislib::graphics::BitmapImage::fullConvert(unsigned int w, unsigned int h,
 
     delete[] dstSrcChan;
 
+}
+
+
+/*
+ * vislib::graphics::BitmapImage::invert
+ */
+template<class T> void vislib::graphics::BitmapImage::invert(T maxval, unsigned int chan) {
+    T *buf = reinterpret_cast<T*>(this->data);
+
+    for (unsigned int y = 0; y < this->height; y++) {
+        for (unsigned int x = 0; x < this->width; x++) {
+            if (chan == UINT_MAX) {
+                for (unsigned int c = 0; c < this->numChans; c++) {
+                    buf[c] = maxval - buf[c];
+                }
+            } else {
+                buf[chan] = maxval - buf[chan];
+            }
+            buf += this->numChans;
+        }
+    }
 }
