@@ -249,7 +249,7 @@ namespace sys {
          *
          * @return true, if the file is open, false otherwise.
          */
-        bool IsOpen(void) const;
+        virtual bool IsOpen(void) const;
 
         /**
          * Opens a file.
@@ -441,7 +441,7 @@ namespace sys {
          */
         File& operator =(const File& rhs);
 
-	protected:
+    protected:
 
         /** The file handle. */
 #ifdef _WIN32

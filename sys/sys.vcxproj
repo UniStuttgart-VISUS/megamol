@@ -439,6 +439,7 @@
     <ClCompile Include="src\Lockable.cpp" />
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\MemmappedFile.cpp" />
+    <ClCompile Include="src\MemoryFile.cpp" />
     <ClCompile Include="src\MessageBox.cpp" />
     <ClCompile Include="src\Mutex.cpp" />
     <ClCompile Include="src\NamedPipe.cpp" />
@@ -496,6 +497,7 @@
     <ClInclude Include="include\vislib\DateTimeSpan.h" />
     <ClInclude Include="include\vislib\DirectoryEntry.h" />
     <ClInclude Include="include\vislib\DirectoryIterator.h" />
+    <ClInclude Include="include\vislib\MemoryFile.h" />
     <ClInclude Include="include\vislib\RegistryKey.h" />
     <ClInclude Include="src\DynamicFunctionPointer.h" />
     <ClInclude Include="include\vislib\DynamicLinkLibrary.h" />
