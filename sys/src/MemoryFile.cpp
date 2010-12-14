@@ -137,8 +137,8 @@ File::FileSize MemoryFile::Read(void *outBuf, const File::FileSize bufSize) {
     }
     if (s > 0) {
         ::memcpy(outBuf, (this->storage != NULL)
-            ? this->storage->At(this->pos)
-            : (this->buffer + this->pos), s);
+            ? this->storage->At(static_cast<SIZE_T>(this->pos))
+            : (this->buffer + this->pos), static_cast<SIZE_T>(s));
         this->pos += s;
     }
     return s;
@@ -212,20 +212,22 @@ File::FileSize MemoryFile::Write(const void *buf,
             }
             s = this->bufferLen - this->pos;
         }
-        ::memcpy(this->buffer + this->pos, buf, s);
+        ::memcpy(this->buffer + this->pos, buf, static_cast<SIZE_T>(s));
         this->pos += s;
 
     } else if (this->storage != NULL) {
         s = bufSize;
         if (this->storage->GetSize() < this->pos + s) {
             // growing by size could be nice here, but ATM I don't care
-            this->storage->AssertSize(this->pos + s, true);
+            this->storage->AssertSize(static_cast<SIZE_T>(this->pos + s),
+                true);
             if (this->pos > this->storage->GetSize()) {
                 this->pos = this->storage->GetSize();
             }
             s = this->storage->GetSize() - this->pos;
         }
-        ::memcpy(this->storage->At(this->pos), buf, s);
+        ::memcpy(this->storage->At(static_cast<SIZE_T>(this->pos)), buf,
+            static_cast<SIZE_T>(s));
         this->pos += s;
 
     } else {
