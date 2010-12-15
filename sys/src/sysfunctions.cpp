@@ -111,7 +111,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
 }
 #else /* _WIN32 */
 vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
-        const char *resourceID, const char *resourceType) {
+        const wchar_t *resourceID, const wchar_t *resourceType) {
     throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
 }
 #endif /* _WIN32 */      

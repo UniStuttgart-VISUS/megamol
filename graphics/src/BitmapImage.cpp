@@ -1089,8 +1089,8 @@ void vislib::graphics::BitmapImage::fullConvert(unsigned int w, unsigned int h,
         conv.AddSourceChannel(i, srcChan[i]);
     }
     conv.FinalizeInitialization();
-    Conversion<ST>::SourceChannel *dstSrcChan
-        = new Conversion<ST>::SourceChannel[dstChanCnt];
+    typename Conversion<ST>::SourceChannel *dstSrcChan
+        = new typename Conversion<ST>::SourceChannel[dstChanCnt];
     conv.ChannelMapping(dstSrcChan, dstChan, dstChanCnt);
 
     for (unsigned int y = 0; y < h; y++) {
