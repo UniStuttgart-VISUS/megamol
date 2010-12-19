@@ -154,22 +154,6 @@ bool vislib::graphics::BmpBitmapCodec::CanAutoDetect(void) const {
 
 
 /*
- * vislib::graphics::BmpBitmapCodec::CanLoadFromMemory
- */
-bool vislib::graphics::BmpBitmapCodec::CanLoadFromMemory(void) const {
-    return true;
-}
-
-
-/*
- * vislib::graphics::BmpBitmapCodec::CanSaveToMemory
- */
-bool vislib::graphics::BmpBitmapCodec::CanSaveToMemory(void) const {
-    return true;
-}
-
-
-/*
  * vislib::graphics::BmpBitmapCodec::FileNameExtsA
  */
 const char* vislib::graphics::BmpBitmapCodec::FileNameExtsA(void) const {
@@ -186,9 +170,25 @@ const wchar_t* vislib::graphics::BmpBitmapCodec::FileNameExtsW(void) const {
 
 
 /*
- * vislib::graphics::BmpBitmapCodec::Load
+ * vislib::graphics::BmpBitmapCodec::NameA
  */
-bool vislib::graphics::BmpBitmapCodec::Load(const void *mem, SIZE_T size) {
+const char * vislib::graphics::BmpBitmapCodec::NameA(void) const {
+    return "Windows Bitmap";
+}
+
+
+/*
+ * vislib::graphics::PpmBitmapCodec::NameW
+ */
+const wchar_t * vislib::graphics::BmpBitmapCodec::NameW(void) const {
+    return L"Windows Bitmap";
+}
+
+
+/*
+ * vislib::graphics::BmpBitmapCodec::loadFromMemory
+ */
+bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
     VLTRACE(Trace::LEVEL_VL_INFO, "Loading BMP ...\n");
     const BYTE *memBytes = static_cast<const BYTE *>(mem);
 
@@ -316,25 +316,17 @@ bool vislib::graphics::BmpBitmapCodec::Load(const void *mem, SIZE_T size) {
 
 
 /*
- * vislib::graphics::BmpBitmapCodec::NameA
+ * vislib::graphics::BmpBitmapCodec::loadFromMemoryImplemented
  */
-const char * vislib::graphics::BmpBitmapCodec::NameA(void) const {
-    return "Windows Bitmap";
+bool vislib::graphics::BmpBitmapCodec::loadFromMemoryImplemented(void) const {
+    return true;
 }
 
 
 /*
- * vislib::graphics::PpmBitmapCodec::NameW
+ * vislib::graphics::BmpBitmapCodec::saveToMemory
  */
-const wchar_t * vislib::graphics::BmpBitmapCodec::NameW(void) const {
-    return L"Windows Bitmap";
-}
-
-
-/*
- * vislib::graphics::BmpBitmapCodec::Save
- */
-bool vislib::graphics::BmpBitmapCodec::Save(vislib::RawStorage& outmem) const {
+bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) const {
     BitmapImage bmiStore;
     const BitmapImage *img = &this->image();
 
@@ -433,6 +425,14 @@ bool vislib::graphics::BmpBitmapCodec::Save(vislib::RawStorage& outmem) const {
         bmpDat += slcut;
     }
 
+    return true;
+}
+
+
+/*
+ * vislib::graphics::BmpBitmapCodec::saveToMemoryImplemented
+ */
+bool vislib::graphics::BmpBitmapCodec::saveToMemoryImplemented(void) const {
     return true;
 }
 

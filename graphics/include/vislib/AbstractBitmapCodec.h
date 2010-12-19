@@ -1,8 +1,8 @@
 /*
  * AbstractBitmapCodec.h
  *
- * Copyright (C) 2009 by Sebastian Grottel.
- * (Copyright (C) 2009 by Visualisierungsinstitut Universitaet Stuttgart.)
+ * Copyright (C) 2009 - 2010 by Sebastian Grottel.
+ * (Copyright (C) 2009 - 2010 by VISUS (Universität Stuttgart))
  * Alle Rechte vorbehalten.
  */
 
@@ -29,9 +29,16 @@ namespace graphics {
     /**
      * Abstract base class for all bitmap codecs implementations
      *
+     * When implementing a codec for loading, you should at least implement
+     * 'loadFromStream' and 'loadFromStreamImplemented'.
+     * All other 'loadFrom*' Methods can be implemented for better performace.
+     *
+     * When implementing a codec for saving, you should at least implement
+     * 'saveToStream' and 'saveToStreamImplemented'.
+     * All other 'saveTo*' Methods can be implemented for better performance.
+     *
      * Add your new codec (derived class) to the list of built-in default
      * codecs in 'BitmapCodecCollection::BuildDefaultCollection'
-     *
      */
     class AbstractBitmapCodec {
     public:
@@ -71,31 +78,11 @@ namespace graphics {
          * @return 'true' if this codec can load images.
          */
         inline bool CanLoad(void) const {
-            return this->CanLoadFromFile()
-                || this->CanLoadFromMemory()
-                || this->CanLoadFromStream();
+            return this->loadFromFileAImplemented()
+                || this->loadFromFileWImplemented()
+                || this->loadFromMemoryImplemented()
+                || this->loadFromStreamImplemented();
         }
-
-        /**
-         * Answers whether this codec can load images from files.
-         *
-         * @return 'true' if this codec can load images from files.
-         */
-        virtual bool CanLoadFromFile(void) const;
-
-        /**
-         * Answers whether this codec can load images from memory buffers.
-         *
-         * @return 'true' if this codec can load images from memory buffers.
-         */
-        virtual bool CanLoadFromMemory(void) const;
-
-        /**
-         * Answers whether this codec can load images from file streams.
-         *
-         * @return 'true' if this codec can load images from file streams.
-         */
-        virtual bool CanLoadFromStream(void) const;
 
         /**
          * Answers whether this codec can save images.
@@ -103,31 +90,11 @@ namespace graphics {
          * @return 'true' if this codec can save images.
          */
         inline bool CanSave(void) const {
-            return this->CanSaveToFile()
-                || this->CanSaveToMemory()
-                || this->CanSaveToStream();
+            return this->saveToFileAImplemented()
+                || this->saveToFileWImplemented()
+                || this->saveToMemoryImplemented()
+                || this->saveToStreamImplemented();
         }
-
-        /**
-         * Answers whether this codec can save images to files.
-         *
-         * @return 'true' if this codec can save images to files.
-         */
-        virtual bool CanSaveToFile(void) const;
-
-        /**
-         * Answers whether this codec can save images to memory buffers.
-         *
-         * @return 'true' if this codec can save images to memory buffers.
-         */
-        virtual bool CanSaveToMemory(void) const;
-
-        /**
-         * Answers whether this codec can save images to file streams.
-         *
-         * @return 'true' if this codec can save images to file streams.
-         */
-        virtual bool CanSaveToStream(void) const;
 
         /**
          * Answer the file name extensions usually used for image files of
@@ -184,7 +151,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        virtual bool Load(const vislib::StringA& filename);
+        bool Load(const char* filename);
 
         /**
          * Loads an image from a file.
@@ -196,7 +163,35 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        virtual bool Load(const vislib::StringW& filename);
+        inline bool Load(const vislib::StringA& filename) {
+            return this->Load(filename.PeekBuffer());
+        }
+
+        /**
+         * Loads an image from a file.
+         *
+         * You must set 'Image' to a valid BitmapImage object before calling
+         * this method.
+         *
+         * @param filename The path to the image file to load.
+         *
+         * @return 'true' if the file was successfully loaded.
+         */
+        bool Load(const wchar_t* filename);
+
+        /**
+         * Loads an image from a file.
+         *
+         * You must set 'Image' to a valid BitmapImage object before calling
+         * this method.
+         *
+         * @param filename The path to the image file to load.
+         *
+         * @return 'true' if the file was successfully loaded.
+         */
+        inline bool Load(const vislib::StringW& filename) {
+            return this->Load(filename.PeekBuffer());
+        }
 
         /**
          * Loads an image from a file stream.
@@ -210,7 +205,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        virtual bool Load(vislib::sys::File& file);
+        bool Load(vislib::sys::File& file);
 
         /**
          * Loads an image from a memory buffer.
@@ -223,7 +218,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        virtual bool Load(const void *mem, SIZE_T size);
+        bool Load(const void *mem, SIZE_T size);
 
         /**
          * Loads an image from a memory buffer.
@@ -235,7 +230,9 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        virtual bool Load(const vislib::RawStorage& mem);
+        inline bool Load(const vislib::RawStorage& mem) {
+            return this->Load(mem, mem.GetSize());
+        }
 
         /**
          * Answer the human-readable name of the codec.
@@ -265,8 +262,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        virtual bool Save(const vislib::StringA& filename,
-            bool overwrite = true) const;
+        bool Save(const char* filename, bool overwrite = true) const;
 
         /**
          * Saves the image to a file.
@@ -282,8 +278,45 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        virtual bool Save(const vislib::StringW& filename,
-            bool overwrite = true) const;
+        inline bool Save(const vislib::StringA& filename,
+                bool overwrite = true) const {
+            return this->Save(filename.PeekBuffer(), overwrite);
+        }
+
+        /**
+         * Saves the image to a file.
+         *
+         * You must set 'Image' to a valid BitmapImage object before calling
+         * this method.
+         *
+         * @param filename The path to the image file to be written.
+         * @param overwrite Flag whether or not existing files should be
+         *                  overwritten. If 'true' existing files will be
+         *                  overwritten, if 'false' the method will fail if
+         *                  the file already exists.
+         *
+         * @return 'true' if the file was successfully saved.
+         */
+        bool Save(const wchar_t* filename, bool overwrite = true) const;
+
+        /**
+         * Saves the image to a file.
+         *
+         * You must set 'Image' to a valid BitmapImage object before calling
+         * this method.
+         *
+         * @param filename The path to the image file to be written.
+         * @param overwrite Flag whether or not existing files should be
+         *                  overwritten. If 'true' existing files will be
+         *                  overwritten, if 'false' the method will fail if
+         *                  the file already exists.
+         *
+         * @return 'true' if the file was successfully saved.
+         */
+        inline bool Save(const vislib::StringW& filename,
+                bool overwrite = true) const {
+            return this->Save(filename.PeekBuffer(), overwrite);
+        }
 
         /**
          * Saves the image to a file stream. The method will not close the
@@ -299,7 +332,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        virtual bool Save(vislib::sys::File& file) const;
+        bool Save(vislib::sys::File& file) const;
 
         /**
          * Saves the image to a memory block.
@@ -312,7 +345,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        virtual bool Save(vislib::RawStorage& outmem) const;
+        bool Save(vislib::RawStorage& outmem) const;
 
     protected:
 
@@ -333,6 +366,159 @@ namespace graphics {
          * @throw IllegalStateException if no image is set
          */
         const BitmapImage& image(void) const;
+
+        /**
+         * Loads the image from a file
+         *
+         * @param filename The path to the image file to load
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool loadFromFileA(const char *filename);
+
+        /**
+         * Answer whether or not 'loadFromFileA' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'loadFromFileA' in a derived class.
+         *
+         * @return true if 'loadFromFileA' has been implemented
+         */
+        virtual bool loadFromFileAImplemented(void) const;
+
+        /**
+         * Loads the image from a file
+         *
+         * @param filename The path to the image file to load
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool loadFromFileW(const wchar_t *filename);
+
+        /**
+         * Answer whether or not 'loadFromFileW' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'loadFromFileW' in a derived class.
+         *
+         * @return true if 'loadFromFileW' has been implemented
+         */
+        virtual bool loadFromFileWImplemented(void) const;
+
+        /**
+         * Loads the image from a block of memory
+         *
+         * @param mem The block of memory
+         * @param size The size of the block of memory
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool loadFromMemory(const void *mem, SIZE_T size);
+
+        /**
+         * Answer whether or not 'loadFromMemory' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'loadFromMemory' in a derived class.
+         *
+         * @return true if 'loadFromMemory' has been implemented
+         */
+        virtual bool loadFromMemoryImplemented(void) const;
+
+        /**
+         * Loads the image from a file stream
+         *
+         * @param stream The file stream
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool loadFromStream(vislib::sys::File& stream);
+
+        /**
+         * Answer whether or not 'loadFromStream' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'loadFromStream' in a derived class.
+         *
+         * @return true if 'loadFromStream' has been implemented
+         */
+        virtual bool loadFromStreamImplemented(void) const;
+
+        /**
+         * Saves the image to a file
+         *
+         * @param filename The path to the file
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool saveToFileA(const char *filename) const;
+
+        /**
+         * Answer whether or not 'saveToFileA' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'saveToFileA' in a derived class.
+         *
+         * @return true if 'saveToFileA' has been implemented
+         */
+        virtual bool saveToFileAImplemented(void) const;
+
+        /**
+         * Saves the image to a file
+         *
+         * @param filename The path to the file
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool saveToFileW(const wchar_t *filename) const;
+
+        /**
+         * Answer whether or not 'saveToFileW' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'saveToFileW' in a derived class.
+         *
+         * @return true if 'saveToFileW' has been implemented
+         */
+        virtual bool saveToFileWImplemented(void) const;
+
+        /**
+         * Saves the image to a block of memory
+         *
+         * @param mem The raw block of memory to receive the encoded image
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool saveToMemory(vislib::RawStorage &mem) const;
+
+        /**
+         * Answer whether or not 'saveToMemory' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'saveToMemory' in a derived class.
+         *
+         * @return true if 'saveToMemory' has been implemented
+         */
+        virtual bool saveToMemoryImplemented(void) const;
+
+        /**
+         * Saves the image to a file stream
+         *
+         * @param stream The file stream
+         *
+         * @return true on success, false on failure
+         */
+        virtual bool saveToStream(vislib::sys::File& stream) const;
+
+        /**
+         * Answer whether or not 'saveToStream' has been implement.
+         *
+         * The default implementation returns 'false'. Overwrite to return
+         * 'true' when you implement 'saveToStream' in a derived class.
+         *
+         * @return true if 'saveToStream' has been implemented
+         */
+        virtual bool saveToStreamImplemented(void) const;
 
     private:
 

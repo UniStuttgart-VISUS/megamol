@@ -35,6 +35,9 @@ namespace graphics {
     class BitmapCodecCollection {
     public:
 
+        /** Array of codecs */
+        typedef Array<SmartPtr<AbstractBitmapCodec> > CodecArray;
+
         /**
          * Builds a new collection with the built-in codecs
          *
@@ -284,8 +287,41 @@ namespace graphics {
 
     private:
 
+        /**
+         * Selects the codecs matching the file name extensions
+         *
+         * @param filename The file name
+         * @param outCodecs The codec array receiving the matching codecs
+         */
+        void selectCodecsByFilename(const vislib::StringA& filename,
+            CodecArray& outCodecs) const;
+
+        /**
+         * Selects the codecs matching the file name extensions
+         *
+         * @param filename The file name
+         * @param outCodecs The codec array receiving the matching codecs
+         */
+        void selectCodecsByFilename(const vislib::StringW& filename,
+            CodecArray& outCodecs) const;
+
+        /**
+         * Performs codec auto detection
+         *
+         * @param mem The preview data
+         * @param size The preview data size
+         * @param codecs The codecs to test
+         * @param outMatchingCodecs The codecs out of 'codecs' which
+         *                          successfully autodetected (return value 1)
+         * @param outUnsureCodecs The codecs out of 'codecs' which may be able
+         *                        to load the image (return value -1)
+         */
+        void autodetecCodec(const void *mem, SIZE_T size,
+            const CodecArray& codecs, CodecArray& outMatchingCodecs,
+            CodecArray& outUnsureCodecs) const;
+
         /** The codecs in this collection */
-        Array<SmartPtr<AbstractBitmapCodec> > codecs;
+        CodecArray codecs;
 
     };
     

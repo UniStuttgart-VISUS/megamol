@@ -607,8 +607,8 @@ void TestBitmapCodecSimple(void) {
 
     codec.SetSaveOption(true);
     AssertTrue("Working with binary PPM", codec.GetSaveOption());
-    AssertTrue("Codec can store to memory", codec.CanSaveToMemory());
-    AssertTrue("Codec can load from memory", codec.CanLoadFromMemory());
+    AssertTrue("Codec can store to memory", codec.CanSave());
+    AssertTrue("Codec can load from memory", codec.CanLoad());
     AssertTrue("Bitmap data stored in image", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
 
     AssertTrue("Image stored in memory", codec.Save(mem));
@@ -626,8 +626,8 @@ void TestBitmapCodecSimple(void) {
 
     codec.SetSaveOption(false);
     AssertFalse("Working with ASCII PPM", codec.GetSaveOption());
-    AssertTrue("Codec can store to memory", codec.CanSaveToMemory());
-    AssertTrue("Codec can load from memory", codec.CanLoadFromMemory());
+    AssertTrue("Codec can store to memory", codec.CanSave());
+    AssertTrue("Codec can load from memory", codec.CanLoad());
     AssertTrue("Bitmap data stored in image", memcmp(img.PeekData(), bmpdata1, 4 * 4 * 3) == 0);
 
     AssertTrue("Image stored in memory", codec.Save(mem));

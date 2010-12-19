@@ -54,22 +54,6 @@ bool vislib::graphics::PpmBitmapCodec::CanAutoDetect(void) const {
 
 
 /*
- * vislib::graphics::PpmBitmapCodec::CanLoadFromMemory
- */
-bool vislib::graphics::PpmBitmapCodec::CanLoadFromMemory(void) const {
-    return true;
-}
-
-
-/*
- * vislib::graphics::PpmBitmapCodec::CanSaveToMemory
- */
-bool vislib::graphics::PpmBitmapCodec::CanSaveToMemory(void) const {
-    return true;
-}
-
-
-/*
  * vislib::graphics::PpmBitmapCodec::FileNameExtsA
  */
 const char* vislib::graphics::PpmBitmapCodec::FileNameExtsA(void) const {
@@ -86,9 +70,25 @@ const wchar_t* vislib::graphics::PpmBitmapCodec::FileNameExtsW(void) const {
 
 
 /*
- * vislib::graphics::PpmBitmapCodec::Load
+ * vislib::graphics::PpmBitmapCodec::NameA
  */
-bool vislib::graphics::PpmBitmapCodec::Load(const void *mem, SIZE_T size) {
+const char * vislib::graphics::PpmBitmapCodec::NameA(void) const {
+    return "Portable Pixmap";
+}
+
+
+/*
+ * vislib::graphics::PpmBitmapCodec::NameW
+ */
+const wchar_t * vislib::graphics::PpmBitmapCodec::NameW(void) const {
+    return L"Portable Pixmap";
+}
+
+
+/*
+ * vislib::graphics::PpmBitmapCodec::loadFromMemory
+ */
+bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
     BitmapImage& img = this->image();
     const char *cd = static_cast<const char*>(mem);
     SIZE_T p1, p2;
@@ -209,25 +209,17 @@ bool vislib::graphics::PpmBitmapCodec::Load(const void *mem, SIZE_T size) {
 
 
 /*
- * vislib::graphics::PpmBitmapCodec::NameA
+ * vislib::graphics::PpmBitmapCodec::loadFromMemoryImplemented
  */
-const char * vislib::graphics::PpmBitmapCodec::NameA(void) const {
-    return "Portable Pixmap";
+bool vislib::graphics::PpmBitmapCodec::loadFromMemoryImplemented(void) const {
+    return true;
 }
 
 
 /*
- * vislib::graphics::PpmBitmapCodec::NameW
+ * vislib::graphics::PpmBitmapCodec::saveToMemory
  */
-const wchar_t * vislib::graphics::PpmBitmapCodec::NameW(void) const {
-    return L"Portable Pixmap";
-}
-
-
-/*
- * vislib::graphics::PpmBitmapCodec::Save
- */
-bool vislib::graphics::PpmBitmapCodec::Save(vislib::RawStorage& outmem) const {
+bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) const {
     const BitmapImage& img = this->image();
     bool bin = this->saveBinary;
     unsigned int cc = img.GetChannelCount();
@@ -363,5 +355,13 @@ bool vislib::graphics::PpmBitmapCodec::Save(vislib::RawStorage& outmem) const {
         memcpy(outmem.At(headLen), data.PeekBuffer(), bodyLen);
     }
 
+    return true;
+}
+
+
+/*
+ * vislib::graphics::PpmBitmapCodec::saveToMemoryImplemented
+ */
+bool vislib::graphics::PpmBitmapCodec::saveToMemoryImplemented(void) const {
     return true;
 }

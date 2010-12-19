@@ -65,20 +65,6 @@ namespace graphics {
         virtual bool CanAutoDetect(void) const;
 
         /**
-         * Answers whether this codec can load images from memory buffers.
-         *
-         * @return 'true' if this codec can load images from memory buffers.
-         */
-        virtual bool CanLoadFromMemory(void) const;
-
-        /**
-         * Answers whether this codec can save images to memory buffers.
-         *
-         * @return 'true' if this codec can save images to memory buffers.
-         */
-        virtual bool CanSaveToMemory(void) const;
-
-        /**
          * Answer the file name extensions usually used for image files of
          * the type of this codec. Each file name extension includes the
          * leading period. Multiple file name extensions are separated by
@@ -110,22 +96,6 @@ namespace graphics {
         }
 
         /**
-         * Loads an image from a memory buffer.
-         *
-         * You must set 'Image' to a valid BitmapImage object before calling
-         * this method.
-         *
-         * @param mem Pointer to the memory buffer holding the image data.
-         * @param size The size of the memory buffer in bytes.
-         *
-         * @return 'true' if the file was successfully loaded.
-         */
-        virtual bool Load(const void *mem, SIZE_T size);
-
-        /* keeping overloaded 'Load' methods */
-        using AbstractBitmapCodec::Load;
-
-        /**
          * Answer the human-readable name of the codec.
          *
          * @return The human-readable name of the codec.
@@ -140,6 +110,38 @@ namespace graphics {
         virtual const wchar_t * NameW(void) const;
 
         /**
+         * Sets the save option.
+         *
+         * @param asBinary If set to 'true' will first try to store the image
+         *                 as binary, before falling back to ASCII output.
+         */
+        inline void SetSaveOption(bool asBinary) {
+            this->saveBinary = asBinary;
+        }
+
+    protected:
+
+        /**
+         * Loads an image from a memory buffer.
+         *
+         * You must set 'Image' to a valid BitmapImage object before calling
+         * this method.
+         *
+         * @param mem Pointer to the memory buffer holding the image data.
+         * @param size The size of the memory buffer in bytes.
+         *
+         * @return 'true' if the file was successfully loaded.
+         */
+        virtual bool loadFromMemory(const void *mem, SIZE_T size);
+
+        /**
+         * Answer whether or not 'loadFromMemory' has been implement.
+         *
+         * @return true
+         */
+        virtual bool loadFromMemoryImplemented(void) const;
+
+        /**
          * Saves the image to a memory block.
          *
          * You must set 'Image' to a valid BitmapImage object before calling
@@ -150,20 +152,14 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        virtual bool Save(vislib::RawStorage& outmem) const;
-
-        /* keeping overloaded 'Save' methods */
-        using AbstractBitmapCodec::Save;
+        virtual bool saveToMemory(vislib::RawStorage& outmem) const;
 
         /**
-         * Sets the save option.
+         * Answer whether or not 'saveToMemory' has been implement.
          *
-         * @param asBinary If set to 'true' will first try to store the image
-         *                 as binary, before falling back to ASCII output.
+         * @return true
          */
-        inline void SetSaveOption(bool asBinary) {
-            this->saveBinary = asBinary;
-        }
+        virtual bool saveToMemoryImplemented(void) const;
 
     private:
 
