@@ -99,6 +99,44 @@ namespace sys {
         static File* CreateTempFile(void);
 
         /**
+         * Creates a file name for a temporary file
+         *
+         * @param outFn the string to receive the file name created
+         *
+         * @return outFn
+         */
+        static vislib::StringA& CreateTempFileName(vislib::StringA& outFn);
+
+        /**
+         * Creates a file name for a temporary file
+         *
+         * @param outFn the string to receive the file name created
+         *
+         * @return outFn
+         */
+        static vislib::StringW& CreateTempFileName(vislib::StringW& outFn);
+
+        /**
+         * Creates a file name for a temporary file
+         *
+         * @return the file name created
+         */
+        static inline vislib::StringA CreateTempFileNameA(void) {
+            vislib::StringA s;
+            return CreateTempFileName(s);
+        }
+
+        /**
+         * Creates a file name for a temporary file
+         *
+         * @return the file name created
+         */
+        static inline vislib::StringW CreateTempFileNameW(void) {
+            vislib::StringW s;
+            return CreateTempFileName(s);
+        }
+
+        /**
          * Delete the file with the specified name.
          *
          * @param filename The name of the file to be deleted.

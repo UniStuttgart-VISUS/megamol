@@ -80,18 +80,12 @@ namespace sys {
  */
 vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
 #ifdef _WIN32
-    const DWORD BUFFER_SIZE = 4096;
-    DWORD bufSize=BUFFER_SIZE;
-    char tempName[MAX_PATH];
-    char tempPath[BUFFER_SIZE];
-
-    GetTempPathA(bufSize, tempPath);
-    GetTempFileNameA(tempPath, "VIS", 0, tempName);
-
+    vislib::StringA tempName;
     File *retval = new File();
-    if ((retval->handle = ::CreateFileA(tempName, GENERIC_READ | GENERIC_WRITE,
-            0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY | 
-            FILE_FLAG_DELETE_ON_CLOSE, NULL)) == INVALID_HANDLE_VALUE) {
+    if ((retval->handle = ::CreateFileA(CreateTempFileName(tempName),
+            GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+            FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL))
+            == INVALID_HANDLE_VALUE) {
         SAFE_DELETE(retval);
         throw SystemException(__FILE__, __LINE__);
     }
@@ -108,6 +102,58 @@ vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
 #endif /* _WIN32 */
 
     return retval;
+}
+
+
+/*
+ * vislib::sys::File::CreateTempFileName
+ */
+vislib::StringA& vislib::sys::File::CreateTempFileName(vislib::StringA& outFn) {
+#ifdef _WIN32
+    const DWORD BUFFER_SIZE = 4096;
+    DWORD bufSize=BUFFER_SIZE;
+    char tempName[MAX_PATH];
+    char tempPath[BUFFER_SIZE];
+
+    GetTempPathA(bufSize, tempPath);
+    GetTempFileNameA(tempPath, "VIS", 0, tempName);
+
+    outFn = tempName;
+
+#else /* _WIN32 */
+    char buffer[L_tmpnam];
+    ::tmpnam(buffer);
+    outFn = buffer;
+
+#endif /* _WIN32 */
+
+    return outFn;
+}
+
+
+/*
+ * vislib::sys::File::CreateTempFileName
+ */
+vislib::StringW& vislib::sys::File::CreateTempFileName(vislib::StringW& outFn) {
+#ifdef _WIN32
+    const DWORD BUFFER_SIZE = 4096;
+    DWORD bufSize=BUFFER_SIZE;
+    wchar_t tempName[MAX_PATH];
+    wchar_t tempPath[BUFFER_SIZE];
+
+    GetTempPathW(bufSize, tempPath);
+    GetTempFileNameW(tempPath, L"VIS", 0, tempName);
+
+    outFn = tempName;
+
+#else /* _WIN32 */
+    vislib::StringA outFnA;
+    CreateTempFileName(outFnA);
+    outFn = outFnA;
+
+#endif /* _WIN32 */
+
+    return outFn;
 }
 
 
