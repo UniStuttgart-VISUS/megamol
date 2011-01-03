@@ -14,6 +14,7 @@
 #include "MolecularDataCall.h"
 #include "CallProteinData.h"
 #include "CallProteinMovementData.h"
+#include <string>
 
 namespace megamol {
 namespace protein {
@@ -24,11 +25,9 @@ namespace protein {
 
         /** The names of the coloring modes */
         enum ColoringMode {
-
             ELEMENT     = 0,
             STRUCTURE   = 1,
             RAINBOW     = 2,
-            
             BFACTOR     = 3,
             CHARGE      = 4,
             OCCUPANCY   = 5,
@@ -39,9 +38,7 @@ namespace protein {
             AMINOACID   = 10,
             VALUE       = 11,
             CHAIN_ID    = 12,
-
             MOVEMENT    = 13
-
         };
 
         /**
@@ -52,6 +49,59 @@ namespace protein {
         static void FillAminoAcidColorTable(
             vislib::Array<vislib::math::Vector<float, 3> >
               &aminoAcidColorTable);
+        
+        /**
+         * Get the coloring mode at a certain index of a given data call.
+         * 
+         * @param mol The data call.
+         * @param idx The index.
+         * 
+         * @return The coloring mode.
+         */
+        static Color::ColoringMode GetModeByIndex(const MolecularDataCall *mol, 
+            unsigned int idx);
+
+        /**
+         * Get the coloring mode at a certain index of a given data call.
+         * 
+         * @param mol The data call.
+         * @param idx The index.
+         * 
+         * @return The coloring mode.
+         */
+        static Color::ColoringMode GetModeByIndex(const CallProteinData *prot, 
+            unsigned int idx);
+        
+        /**
+         * Get the corresponding name of a given coloring mode.
+         * 
+         * @param col The coloring mode.
+         * 
+         * @return The name.
+         */
+        static std::string GetName(Color::ColoringMode col);
+        
+        /**
+         * Get the number of coloring modes used by a given data call.
+         * 
+         * @param mol The data call.
+         * 
+         * @return The number of coloring modes.
+         */
+        static unsigned int GetNumOfColoringModes(const MolecularDataCall *mol) {
+            return 9;
+        }
+        
+        /**
+         * Get the number of coloring modes used by a given data call.
+         * 
+         * @param prot The data call.
+         * 
+         * @return The number of coloring modes.
+         */
+        static unsigned int GetNumOfColoringModes(const CallProteinData *prot) {
+            return 7;
+        }
 
         /**
          * Make color table for all atoms acoording to the current coloring
