@@ -12,6 +12,7 @@
 #include "utility/ColourParser.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "CoreInstance.h"
+#include <string>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -51,6 +52,71 @@ void Color::FillAminoAcidColorTable(
     aminoAcidColorTable[22].Set( 0.75f, 1.0f, 0.75f);
     aminoAcidColorTable[23].Set( 0.75f, 0.75f, 0.5f);
     aminoAcidColorTable[24].Set( 1.0f, 0.75f, 0.5f);
+}
+
+
+/*
+ * Color::GetModeByIndex
+ */
+Color::ColoringMode Color::GetModeByIndex(const MolecularDataCall *mol, 
+    unsigned int idx) {
+    
+    switch(idx) {
+        case 0 : return ELEMENT;
+        case 1 : return RESIDUE;
+        case 2 : return STRUCTURE;
+        case 3 : return BFACTOR;
+        case 4 : return CHARGE;
+        case 5 : return OCCUPANCY;
+        case 6 : return CHAIN;
+        case 7 : return MOLECULE;
+        case 8 : return RAINBOW;
+        default : return ELEMENT;
+    }
+}
+
+
+/*
+ * Color::GetModeByIndex
+ */
+Color::ColoringMode Color::GetModeByIndex(const CallProteinData *prot, 
+    unsigned int idx) {
+    
+    switch(idx) {
+        case 0 : return ELEMENT;
+        case 1 : return AMINOACID;
+        case 2 : return STRUCTURE;
+        case 3 : return VALUE;
+        case 4 : return CHAIN_ID;
+        case 5 : return RAINBOW;
+        case 6 : return CHARGE;
+        default : return ELEMENT;
+    }
+}
+
+
+/*
+ * Color::GetName
+ */
+std::string Color::GetName(Color::ColoringMode col) {
+    
+    switch(col) {
+        case ELEMENT   : return "Element";
+        case STRUCTURE : return "Structure";
+        case RAINBOW   : return "Rainbow";
+        case BFACTOR   : return "BFactor";
+        case CHARGE    : return "Charge";
+        case OCCUPANCY : return "Occupancy";
+        case CHAIN     : return "Chain";
+        case MOLECULE  : return "Molecule";
+        case RESIDUE   : return "Residue";
+        case CHAINBOW  : return "Chainbow";
+        case AMINOACID : return "Aminoacid";
+        case VALUE     : return "Value";
+        case CHAIN_ID  : return "ChainID";
+        case MOVEMENT  : return "Movement";
+        default : return "";
+    }
 }
 
 
