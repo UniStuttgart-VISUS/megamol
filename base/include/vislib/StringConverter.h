@@ -29,21 +29,41 @@
  */
 
 // Note: Explicits casts are required for Linux.
+#ifndef A2W
 #define A2W(str) static_cast<const WCHAR *>(vislib::StringConverter<\
     vislib::CharTraitsA, vislib::CharTraitsW>(str))
+#endif /* !A2W */
+#ifndef W2A
 #define W2A(str) static_cast<const CHAR *>(vislib::StringConverter<\
     vislib::CharTraitsW, vislib::CharTraitsA>(str))
+#endif /* !W2A */
 
 #if defined(UNICODE) || defined(_UNICODE)
+#ifndef A2T
 #define A2T(str) A2W(str)
+#endif /* !A2T */
+#ifndef T2A
 #define T2A(str) W2A(str)
+#endif /* !T2A */
+#ifndef W2T
 #define W2T(str) (str)
+#endif /* !W2T */
+#ifndef T2W
 #define T2W(str) (str)
-#else
+#endif /* !T2W */
+#else /* defined(UNICODE) || defined(_UNICODE) */
+#ifndef A2T
 #define A2T(str) (str)
+#endif /* !A2T */
+#ifndef T2A
 #define T2A(str) (str)
+#endif /* !T2A */
+#ifndef W2T
 #define W2T(str) W2A(str)
+#endif /* !W2T */
+#ifndef T2W
 #define T2W(str) A2W(str)
+#endif /* !T2W */
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 
 
