@@ -53,6 +53,7 @@ namespace volumetrics {
 		//unsigned char numTriangles;
         unsigned char mcCase;
 		unsigned char consumedTriangles;
+        //unsigned char numCorners;
         BorderVoxel *borderVoxel;
 	};
 
@@ -82,7 +83,7 @@ namespace volumetrics {
         vislib::Array<vislib::Array<float> > surfaces;
         vislib::Array<vislib::Array<BorderVoxel *> > borderVoxels;
         vislib::Array<float> surfaceSurfaces;
-        //vislib::Array<float> volumes;
+        vislib::Array<float> volumes;
 
 		//float *normals;
 		//float surface;
