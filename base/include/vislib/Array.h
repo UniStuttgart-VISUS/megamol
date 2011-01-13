@@ -43,8 +43,8 @@ namespace vislib {
      * A dynamically growing array of type T.
      *
      * The array grows dynamically by the defined increment, if elements are
-	 * appended that do not fit into the current capacity. It is never
-	 * shrinked except on user request.
+     * appended that do not fit into the current capacity. It is never
+     * shrinked except on user request.
      *
      * The array used typeless memory that can be reallocated.
      *
@@ -80,32 +80,32 @@ namespace vislib {
         /** The default initial capacity */
         static const SIZE_T DEFAULT_CAPACITY;
 
-		/** The default initial capacity increment */
-		static const SIZE_T DEFAULT_CAPACITY_INCREMENT;
+        /** The default initial capacity increment */
+        static const SIZE_T DEFAULT_CAPACITY_INCREMENT;
 
-		/** This constant signals an invalid index position. */
+        /** This constant signals an invalid index position. */
         static const INT_PTR INVALID_POS;
 
         /** 
          * Create an array with the specified initial capacity.
          *
          * @param capacity  The initial capacity of the array.
-		 * @param increment The initial capacity increment of the array.
+         * @param increment The initial capacity increment of the array.
          */
         Array(const SIZE_T capacity = DEFAULT_CAPACITY, const SIZE_T increment
-			= DEFAULT_CAPACITY_INCREMENT);
+            = DEFAULT_CAPACITY_INCREMENT);
 
         /**
          * Create a new array with the specified initial count and capacity
-		 * and use 'element' as default value for all these elements.
+         * and use 'element' as default value for all these elements.
          *
          * @param count     The initial capacity of the array and number of
          *                  elements.
          * @param element   The default value to set.
-		 * @param increment The initial capacity increment of the array.
+         * @param increment The initial capacity increment of the array.
          */
-		Array(const SIZE_T count, const T& element, const SIZE_T increment
-			= DEFAULT_CAPACITY_INCREMENT);
+        Array(const SIZE_T count, const T& element, const SIZE_T increment
+            = DEFAULT_CAPACITY_INCREMENT);
 
         /**
          * Clone 'rhs'.
@@ -180,7 +180,7 @@ namespace vislib {
          *
          * @return The capacity increment
          */
-		inline SIZE_T CapacityIncrement(void) const;
+        inline SIZE_T CapacityIncrement(void) const;
 
         /**
          * Answer whether 'element' is in the array.
@@ -383,12 +383,12 @@ namespace vislib {
          */
         void Resize(const SIZE_T capacity);
 
-		/**
-		 * Set the capacity increment for the array.
-		 *
-		 * @param capacityIncrement the new increment
-		 */
-		void SetCapacityIncrement(const SIZE_T capacityIncrement);
+        /**
+         * Set the capacity increment for the array.
+         *
+         * @param capacityIncrement the new increment
+         */
+        void SetCapacityIncrement(const SIZE_T capacityIncrement);
 
         /**
          * Make the array assume that it has 'count' valid elements. If 'count'
@@ -566,8 +566,8 @@ namespace vislib {
         /** The number of actually allocated elements in 'elements' */
         SIZE_T capacity;
 
-		/** The capacity increment */
-		SIZE_T capacityIncrement;
+        /** The capacity increment */
+        SIZE_T capacityIncrement;
 
         /** The number of used elements in 'elements' */
         SIZE_T count;
@@ -604,10 +604,10 @@ namespace vislib {
      */
     template<class T, class L, class C>
     Array<T, L, C>::Array(const SIZE_T capacity,
-			const SIZE_T capacityIncrement)	: OrderedCollection<T, L>(),
-			capacity(0), capacityIncrement(capacityIncrement), count(0),
-			elements(NULL) {
-		ASSERT(capacityIncrement > 0);
+            const SIZE_T capacityIncrement)	: OrderedCollection<T, L>(),
+            capacity(0), capacityIncrement(capacityIncrement), count(0),
+            elements(NULL) {
+        ASSERT(capacityIncrement > 0);
         this->AssertCapacity(capacity);
     }
 
@@ -617,10 +617,10 @@ namespace vislib {
      */
     template<class T, class L, class C>
     Array<T, L, C>::Array(const SIZE_T count, const T& element,
-			const SIZE_T capacityIncrement) : OrderedCollection<T, L>(),
-			capacity(0), capacityIncrement(capacityIncrement), count(count),
+            const SIZE_T capacityIncrement) : OrderedCollection<T, L>(),
+            capacity(0), capacityIncrement(capacityIncrement), count(count),
             elements(NULL) {
-		ASSERT(capacityIncrement > 0);
+        ASSERT(capacityIncrement > 0);
         this->Lock();
         this->AssertCapacity(count);
         for (SIZE_T i = 0; i < this->count; i++) {
@@ -635,7 +635,7 @@ namespace vislib {
      */
     template<class T, class L, class C> Array<T, L, C>::Array(const Array& rhs)
             : OrderedCollection<T, L>(), capacity(0), capacityIncrement(1),
-			count(0), elements(NULL) {
+            count(0), elements(NULL) {
         *this = rhs;
     }
 
@@ -655,7 +655,7 @@ namespace vislib {
     template<class T, class L, class C>
     void Array<T, L, C>::Append(const T& element) {
         this->Lock();
-        this->AssertCapacity(this->count + this->capacityIncrement);
+        this->AssertCapacity(this->count + 1);
         this->elements[this->count] = element;
         this->count++;
         this->Unlock();
@@ -669,7 +669,11 @@ namespace vislib {
     void Array<T, L, C>::AssertCapacity(const SIZE_T capacity) {
         this->Lock();
         if (this->capacity < capacity) {
-            this->Resize(capacity);
+            if (capacity - this->capacity < this->capacityIncrement) {
+                this->Resize(this->capacity + this->capacityIncrement);
+            } else {
+                this->Resize(capacity);
+            }
         }
         this->Unlock();
     }
@@ -850,7 +854,7 @@ namespace vislib {
         this->Lock();
 
         if (static_cast<SIZE_T>(idx) <= this->count) {
-            this->AssertCapacity(this->count + this->capacityIncrement);
+            this->AssertCapacity(this->count + 1);
 
             for (SIZE_T i = this->count; i > idx; i--) {
                 this->elements[i] = this->elements[i - 1];
@@ -911,7 +915,7 @@ namespace vislib {
         // memcpy when reallocating.
 
         this->Lock();
-        this->AssertCapacity(this->count + this->capacityIncrement);
+        this->AssertCapacity(this->count + 1);
 
         for (SIZE_T i = this->count; i > 0; i--) {
             this->elements[i] = this->elements[i - 1];
@@ -1007,8 +1011,8 @@ namespace vislib {
     template<class T, class L, class C>
     void Array<T, L, C>::Resize(const SIZE_T capacity) {
         void *newPtr = NULL;
-		this->Lock();
-		SIZE_T oldCapacity = this->capacity;
+        this->Lock();
+        SIZE_T oldCapacity = this->capacity;
 
         /*
          * Erase elements, if new capacity is smaller than old one. Ensure that 
@@ -1193,7 +1197,7 @@ namespace vislib {
             this->Lock();
             this->Resize(rhs.capacity);
             this->count = rhs.count;
-			this->capacityIncrement = rhs.capacityIncrement;
+            this->capacityIncrement = rhs.capacityIncrement;
 
             for (SIZE_T i = 0; i < rhs.count; i++) {
                 this->elements[i] = rhs.elements[i];
