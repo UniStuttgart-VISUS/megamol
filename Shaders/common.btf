@@ -35,7 +35,7 @@ vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightP
     // TODO: rewrite!
     vec3 lightDir = normalize(lightPos);
 
-    vec4 lightparams = vec4(0.2, 0.8, 0.9, 10.0);
+    vec4 lightparams = vec4(0.2, 0.8, 0.4, 10.0);
 #define LIGHT_AMBIENT lightparams.x
 #define LIGHT_DIFFUSE lightparams.y
 #define LIGHT_SPECULAR lightparams.z
