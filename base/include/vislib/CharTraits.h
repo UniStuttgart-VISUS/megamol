@@ -376,6 +376,18 @@ namespace vislib {
         }
 
         /**
+         * Answer whether the character 'c' is an alphabetic letter.
+         *
+         * @param c A character.
+         *
+         * @return true if 'c' is an alphabetic letter, false otherwise.
+         */
+        inline static bool IsAlpha(const Char c) {
+            // Explicit compare prevents C4800.
+            return (::isalpha(static_cast<const unsigned char>(c)) != 0);
+        }
+
+        /**
          * Answer whether the character 'c' is a digit.
          *
          * @param c A character.
@@ -727,6 +739,17 @@ namespace vislib {
         inline static bool Convert(wchar_t& dst, const Char src) {
             dst = src;
             return true;
+        }
+
+        /**
+         * Answer whether the character 'c' is an alphabetic letter.
+         *
+         * @param c A character.
+         *
+         * @return true if 'c' is an alphabetic letter, false otherwise.
+         */
+        inline static bool IsAlpha(const Char c) {
+            return (::iswalpha(c) != 0);
         }
 
         /**
