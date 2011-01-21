@@ -51,7 +51,7 @@ namespace volumetrics {
 		float distField;
 		float *triangles;
 		unsigned char numTriangles;
-        /** legacy. just for marching CUBES */
+        /** for marching CUBES, just that. for marching tets, the < 0 corners */
         unsigned char mcCase;
 		unsigned short consumedTriangles;
         BorderVoxel *borderVoxel;

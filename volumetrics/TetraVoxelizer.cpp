@@ -70,19 +70,21 @@ bool TetraVoxelizer::CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned
 }
 
 bool TetraVoxelizer::CellFull(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z) {
-    unsigned int i;
-    bool neg = true;
-    float f;
+    //unsigned int i;
+    //bool neg = true;
+    //float f;
 
-    for (i = 0; i < 8; i++) {
-        f = theVolume[
-            ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
-                + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
-                + x + MarchingCubeTables::a2fVertexOffset[i][0]
-        ].distField;
-        neg = neg && (f < 0.0f);
-    }
-    return neg;
+    //for (i = 0; i < 8; i++) {
+    //    f = theVolume[
+    //        ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
+    //            + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
+    //            + x + MarchingCubeTables::a2fVertexOffset[i][0]
+    //    ].distField;
+    //    neg = neg && (f < 0.0f);
+    //}
+    //ASSERT (neg == (theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255));
+    //return neg;
+    return theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255;
 }
 
 void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
@@ -168,6 +170,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
     bool foundNew;
 
     // find all in-cell triangles connected with the seed triangle
+    // TODO this is slow and very expensive
     do {
         foundNew = false;
         for (unsigned char c = 0; c < f.numTriangles; c++) {
@@ -293,17 +296,10 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 }
 
 void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
-    if (CellHasNoGeometry(theVolume, x, y, z)) {
-        //theVolume[(z * sjd->resY + y) * sjd->resX + x].numTriangles = 0;
-        //theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase = 0;
-        theVolume[(z * sjd->resY + y) * sjd->resX + x].numTriangles = 0;
-        theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles = NULL;
-        return;
-    }
 
     FatVoxel &currVoxel = theVolume[(z * sjd->resY + y) * sjd->resX + x];
-
     currVoxel.consumedTriangles = 0;
+    currVoxel.numTriangles = 0;
 
     unsigned int i;
     float CubeValues[8];
@@ -312,6 +308,7 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
     float offset;
     vislib::math::Point<float, 3> EdgeVertex[12];
 
+    currVoxel.mcCase = 0;
     //Make a local copy of the values at the cube's corners
     for (i = 0; i < 8; i++) {
         CubeValues[i] = theVolume[
@@ -319,6 +316,15 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
                 + x + MarchingCubeTables::a2fVertexOffset[i][0]
         ].distField;
+        if (CubeValues[i] < 0.0f) {
+            currVoxel.mcCase |= 1 << i;
+        }
+    }
+    CellFull(theVolume, x, y, z);
+    if (CellHasNoGeometry(theVolume, x, y, z)) {
+        currVoxel.consumedTriangles = 0;
+        currVoxel.triangles = NULL;
+        return;
     }
 
     // reference corner of this cell
@@ -326,7 +332,6 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
         sjd->Bounds.Bottom() + y * sjd->CellSize,
         sjd->Bounds.Back() + z * sjd->CellSize);
 
-    currVoxel.numTriangles = 0;
     // how many triangles will we get?
     for (unsigned char tetIdx = 0; tetIdx < 6; tetIdx++) {
         unsigned char triIdx = 0;
