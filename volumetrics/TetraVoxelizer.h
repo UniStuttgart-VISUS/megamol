@@ -1,5 +1,5 @@
-#ifndef MEGAMOLCORE_VOXELIZER_H_INCLUDED
-#define MEGAMOLCORE_VOXELIZER_H_INCLUDED
+#ifndef MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED
+#define MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -13,24 +13,26 @@ namespace megamol {
 namespace trisoup {
 namespace volumetrics {
 
-	class Voxelizer : public vislib::sys::Runnable {
+	class TetraVoxelizer : public vislib::sys::Runnable {
 	public:
 
-		Voxelizer(void);
-		~Voxelizer(void);
+		TetraVoxelizer(void);
+		~TetraVoxelizer(void);
 
-		float getOffset(float fValue1, float fValue2, float fValueDesired);
+		float GetOffset(float fValue1, float fValue2, float fValueDesired);
 
 		void growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
 							 unsigned char triIndex, 
 							 vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border,
                              float &surfSurf);
 
-		bool CellEmpty(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
+		bool CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 
-		void marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+        bool CellFull(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 
-		void collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+		void MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+
+		void CollectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
 
 		/**
 		 * Thread entry point.
@@ -50,7 +52,7 @@ namespace volumetrics {
 		 */
 		virtual bool Terminate(void);
 
-		inline bool operator ==(const Voxelizer& rhs) const {
+		inline bool operator ==(const TetraVoxelizer& rhs) const {
 			// TODO I cannot think of anything better right now
 			return this->sjd == rhs.sjd;
 		}
@@ -67,15 +69,11 @@ namespace volumetrics {
 
 		SubJobData *sjd;
 
-		//unsigned int fifoLen, fifoEnd, fifoCur;
-		
         vislib::SingleLinkedList<vislib::math::Point<unsigned int, 4> > cellFIFO;
-
-		//vislib::Array<vislib::math::Point<float, 3> > triangleSoup;
 };
 
 } /* end namespace volumetrics */
 } /* end namespace trisoup */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_VOXELIZER_H_INCLUDED */
+#endif /* MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED */

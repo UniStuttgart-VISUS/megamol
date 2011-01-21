@@ -4,9 +4,6 @@
 #include "vislib/Log.h"
 #include "vislib/ShallowPoint.h"
 #include "MarchingCubeTables.h"
-#include "vislib/pcautils.h"
-#include "vislib/matrix.h"
-#include "vislib/ShallowVector.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -29,7 +26,7 @@ vislib::math::Point<signed char, 3> neighbors[] = {
 void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
                              unsigned char triIndex, 
                              vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border,
-                             double &surfSurf, double &surfVol) {
+                             float &surfSurf) {
 
     FatVoxel *f = &theVolume[(z * sjd->resY + y) * sjd->resX + x];
     int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
@@ -65,7 +62,7 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                 surf.SetCount(surf.Count() + 9);
                 sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
                 sstTemp = sstI;
-                surfSurf += sstI.Area<double>();
+                surfSurf += sstI.Area<float>();
                 if (isBorder(x, y, z)) {
                     if (f->borderVoxel == NULL) {
                         f->borderVoxel = new BorderVoxel();
@@ -105,7 +102,7 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                                     surf.SetCount(surf.Count() + 9);
                                     sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
                                     sstTemp = sst2;
-                                    surfSurf += sst2.Area<double>();
+                                    surfSurf += sst2.Area<float>();
                                     if (isBorder(x + neighbors[ni].X(), y + neighbors[ni].Y(), z + neighbors[ni].Z())) {
                                         if (n->borderVoxel == NULL) {
                                             n->borderVoxel = new BorderVoxel();
@@ -142,81 +139,6 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
             }
         }
     }
-
-    // HAZARD: do we enter a voxel only once per surfID?
-
-    //surfVol += f->numCorners * sjd->CellSize * sjd->CellSize * sjd->CellSize / 8.0;
-
-    //f->mcCase
-    vislib::Array<vislib::math::Vector<double, 3> > vertices;
-    double evals[3];
-    vislib::math::Vector<double, 3> evecs[3];
-    // cube 'origin'
-    vislib::math::Vector<float, 3> v(sjd->Bounds.Left() + x * sjd->CellSize,
-        sjd->Bounds.Bottom() + y * sjd->CellSize,
-        sjd->Bounds.Back() + z * sjd->CellSize);
-    for (unsigned char c = 0; c < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; c++) {
-        if (MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][c] == currSurfID) {
-            sstI.SetPointer(f->triangles + 3 * 3 * c);
-            vislib::math::ShallowVector<float, 3> sv1(sstI.PeekCoordinates()[0].PeekCoordinates());
-            vislib::math::ShallowVector<float, 3> sv2(sstI.PeekCoordinates()[1].PeekCoordinates());
-            vislib::math::ShallowVector<float, 3> sv3(sstI.PeekCoordinates()[2].PeekCoordinates());
-            // voxel-local coords
-            sv1 -= v;
-            sv2 -= v;
-            sv3 -= v;
-            if (! vertices.Contains(sv1)) {
-                vertices.Add(sv1);
-            }
-            if (! vertices.Contains(sv2)) {
-                vertices.Add(sv2);
-            }
-            if (! vertices.Contains(sv3)) {
-                vertices.Add(sv3);
-            }
-        }
-    }
-    if (vertices.Count() < 3) {
-        // HAZARD: this is yuck.
-        return;
-    }
-    vislib::math::Matrix<double, 3, vislib::math::COLUMN_MAJOR> cvm;
-    vislib::math::CalcCovarianceMatrix(cvm, vertices);
-    cvm.FindEigenvalues(evals, evecs, 3);
-    vislib::math::SortEigenvectors(&*evecs, evals, 3);
-    if (vislib::math::Abs(evecs[2].X()) > vislib::math::Abs(evecs[2].Y())
-            && vislib::math::Abs(evecs[2].X()) > vislib::math::Abs(evecs[2].Z())) {
-        double minX = FLT_MAX;
-        double maxX = -FLT_MAX;
-        for (SIZE_T i = 0; i < vertices.Count(); i++) {
-            if (vertices[i].X() < minX) minX = vertices[i].X();
-            if (vertices[i].X() > maxX) maxX = vertices[i].X();
-        }
-        ASSERT(((maxX - minX) / 2 + minX) >= 0);
-        // TODO: decide: left or right? this is left
-        surfVol += sjd->CellSize * sjd->CellSize * ((maxX - minX) / 2 + minX);
-    } else if (vislib::math::Abs(evecs[2].Y()) > vislib::math::Abs(evecs[2].X())
-            && vislib::math::Abs(evecs[2].Y()) > vislib::math::Abs(evecs[2].Z())) {
-        double minY = FLT_MAX;
-        double maxY = -FLT_MAX;
-        for (SIZE_T i = 0; i < vertices.Count(); i++) {
-            if (vertices[i].Y() < minY) minY = vertices[i].Y();
-            if (vertices[i].Y() > maxY) maxY = vertices[i].Y();
-        }
-        ASSERT(((maxY - minY) / 2 + minY) >= 0);
-        // TODO: decide: top or bottom? this is bottom
-        surfVol += sjd->CellSize * sjd->CellSize * ((maxY - minY) / 2 + minY);
-    } else {
-        double minZ = FLT_MAX;
-        double maxZ = -FLT_MAX;
-        for (SIZE_T i = 0; i < vertices.Count(); i++) {
-            if (vertices[i].Z() < minZ) minZ = vertices[i].Z();
-            if (vertices[i].Z() > maxZ) maxZ = vertices[i].Z();
-        }
-        ASSERT(((maxZ - minZ) / 2 + minZ) >= 0);
-        // TODO: decide: front or back? this is back
-        surfVol += sjd->CellSize * sjd->CellSize * ((maxZ - minZ) / 2 + minZ);
-    }
 }
 
 void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
@@ -234,8 +156,7 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
             // this is a new surface
             vislib::Array<float> surf;
             vislib::Array<BorderVoxel *> border;
-            double surfSurf = 0.0f;
-            double surfVol = 0.0;
+            float surfSurf = 0.0f;
             for (SIZE_T idx = 0; idx < sjd->resX * sjd->resY * sjd->resZ; idx++) {
                 theVolume[idx].borderVoxel = NULL;
             }
@@ -250,12 +171,11 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
                 //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 //    "[%08u] growing    (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(),
                 //    p.X(), p.Y(), p.Z(), p.W());
-                growSurfaceFromTriangle(theVolume, p.X(), p.Y(), p.Z(), p.W(), surf, border, surfSurf, surfVol);
+                growSurfaceFromTriangle(theVolume, p.X(), p.Y(), p.Z(), p.W(), surf, border, surfSurf);
             }
             sjd->Result.surfaces.Append(surf);
             sjd->Result.borderVoxels.Append(border);
-            sjd->Result.surfaceSurfaces.Append(static_cast<float>(surfSurf));
-            sjd->Result.volumes.Append(static_cast<float>(surfVol));
+            sjd->Result.surfaceSurfaces.Append(surfSurf);
         }
     }
 }
@@ -285,22 +205,11 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
         ].distField;
     }
 
-    //theVolume[
-    //    ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
-    //        + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
-    //        + x + MarchingCubeTables::a2fVertexOffset[i][0]
-    //    ].numCorners = 0;
-
     //Find which vertices are inside of the surface and which are outside
     flagIndex = 0;
     for (i = 0; i < 8; i++) {
         if (CubeValues[i] < 0.0f) {
             flagIndex |= 1 << i;
-            //theVolume[
-            //    ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
-            //        + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
-            //        + x + MarchingCubeTables::a2fVertexOffset[i][0]
-            //    ].numCorners++;
         }
     }
 
@@ -353,6 +262,9 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
     }
 
     // make triangles
+    //vislib::math::Vector<float, 3> normal;
+    //vislib::math::Vector<float, 3> a, b;
+
     int triCnt = MarchingCubeTables::a2ucTriangleConnectionCount[flagIndex];
     theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles = new float[triCnt * 3 * 3];
     //theVolume[(z * sjd->resY + y) * sjd->resX + x].numTriangles = triCnt;
@@ -360,10 +272,25 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
     vislib::math::ShallowShallowTriangle<float, 3> tri(theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles);
 
     for (triangle = 0; triangle < triCnt; triangle++) {
+        //if (MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle] < 0) {
+        //    break;
+        //}
+
+        //a = EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 0]] 
+        //- EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 1]];
+        //b = EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 0]] 
+        //- EdgeVertex[MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + 2]];
+        //normal = a.Cross(b);
+
+        //sjd->Result.surface += normal.Length() / 2.0f;
+        //normal.Normalise();
         tri.SetPointer(theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles + 3 * 3 * triangle);
         for (corner = 0; corner < 3; corner++) {
             vertex = MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle + corner];
             tri[2 - corner] = EdgeVertex[vertex];
+            //sjd->Result.vertices.Append(EdgeVertex[vertex]);
+            //sjd->Result.normals.Append(normal);
+            //sjd->Result.indices.Append(sjd->Result.vertices.Count() - 1);
         }
     }
 }
@@ -374,8 +301,7 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
 float Voxelizer::getOffset(float fValue1, float fValue2, float fValueDesired) {
         double fDelta = fValue2 - fValue1;
         if(fDelta == 0.0) {
-            ASSERT(false);
-            return 0.5;
+                return 0.5;
         }
         return (float)((fValueDesired - fValue1)/fDelta);
 }

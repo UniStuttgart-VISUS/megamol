@@ -50,10 +50,10 @@ namespace volumetrics {
     struct FatVoxel {
 		float distField;
 		float *triangles;
-		//unsigned char numTriangles;
+		unsigned char numTriangles;
+        /** legacy. just for marching CUBES */
         unsigned char mcCase;
-		unsigned char consumedTriangles;
-        //unsigned char numCorners;
+		unsigned short consumedTriangles;
         BorderVoxel *borderVoxel;
 	};
 
@@ -83,7 +83,7 @@ namespace volumetrics {
         vislib::Array<vislib::Array<float> > surfaces;
         vislib::Array<vislib::Array<BorderVoxel *> > borderVoxels;
         vislib::Array<float> surfaceSurfaces;
-        vislib::Array<float> volumes;
+        //vislib::Array<float> volumes;
 
 		//float *normals;
 		//float surface;
