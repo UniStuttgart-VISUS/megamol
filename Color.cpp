@@ -187,7 +187,7 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
             vislib::math::Vector<float, 3> colHelix( r, g, b);
             utility::ColourParser::FromString( "#0000ff", r, g, b);
             vislib::math::Vector<float, 3> colSheet( r, g, b);
-            utility::ColourParser::FromString( "#ffffff", r, g, b);
+            utility::ColourParser::FromString( "#888888", r, g, b);
             vislib::math::Vector<float, 3> colRCoil( r, g, b);
             // loop over all atoms and fill the table with the default color
             for( cntAtom = 0; cntAtom < mol->AtomCount(); ++cntAtom ) {
