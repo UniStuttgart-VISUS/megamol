@@ -116,21 +116,24 @@ protein::ProteinVolumeRenderer::ProteinVolumeRenderer ( void ) : Renderer3DModul
 
     // --- set the coloring mode ---
     this->SetColoringMode ( Color::ELEMENT );
-    //this->SetColoringMode(AMINOACID);
-    //this->SetColoringMode(STRUCTURE);
-    //this->SetColoringMode(VALUE);
-    //this->SetColoringMode(CHAIN_ID);
-    //this->SetColoringMode(RAINBOW);
     param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
-
-    cm->SetTypePair ( Color::ELEMENT, "Element" );
-    cm->SetTypePair ( Color::AMINOACID, "AminoAcid" );
-    cm->SetTypePair ( Color::STRUCTURE, "SecondaryStructure" );
-    cm->SetTypePair(Color::VALUE, "Value");
-    cm->SetTypePair ( Color::CHAIN_ID, "ChainID" );
-    cm->SetTypePair(Color::RAINBOW, "Rainbow");
-    cm->SetTypePair ( Color::CHARGE, "Charge" );
-
+    MolecularDataCall *mol = new MolecularDataCall();
+    unsigned int cCnt;
+    Color::ColoringMode cMode;
+    for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol); ++cCnt) {
+        cMode = Color::GetModeByIndex( mol, cCnt);
+        cm->SetTypePair( cMode, Color::GetName( cMode).c_str());
+    }
+    delete mol;
+    /*
+    cm->SetTypePair( Color::ELEMENT, "Element" );
+    cm->SetTypePair( Color::AMINOACID, "AminoAcid" );
+    cm->SetTypePair( Color::STRUCTURE, "SecondaryStructure" );
+    cm->SetTypePair( Color::VALUE, "Value");
+    cm->SetTypePair( Color::CHAIN_ID, "ChainID" );
+    cm->SetTypePair( Color::RAINBOW, "Rainbow");
+    cm->SetTypePair( Color::CHARGE, "Charge" );
+    */
     this->coloringModeParam << cm;
     this->MakeSlotAvailable( &this->coloringModeParam );
 
@@ -465,12 +468,12 @@ bool protein::ProteinVolumeRenderer::GetExtents( Call& call) {
 
     // try to get the bounding box from the active data call
     if( protein ) {
-    // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
-        if( !this->renderRMSData ) return false;
-    } else {
-        if( !(*protein)() ) return false;
-    }
+        // decide to use already loaded frame request from CallFrame or 'normal' rendering
+        if( this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
+            if( !this->renderRMSData ) return false;
+        } else {
+            if( !(*protein)() ) return false;
+        }
         // get bounding box
         boundingBox = protein->BoundingBox();
     } else if( volume ) {
