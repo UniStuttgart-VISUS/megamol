@@ -27,6 +27,7 @@
 #include "vislib/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/UTF8Encoder.h"
 
 
 #ifdef _WIN32
@@ -211,33 +212,104 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
 }
 
 
-/*
- * vislib::sys::ReadTextFile
+/**
+ * Interprets BOM data if possible
+ *
+ * @param bom The BOM bytes
+ * @param bomSize The number of bytes 'bom' points to. When successfully
+ *                detected a valid BOM the correct length of the BOM in bytes
+ *                is set.
+ *
+ * @return The recognized BOM or 'TEXTFF_UNSPECIFIC'
  */
-bool vislib::sys::ReadTextFile(vislib::StringA& outStr, const char *filename) {
-    File file;
-    if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, 
-            File::OPEN_ONLY)) {
-        VLTRACE(Trace::LEVEL_ERROR, "Text file \"%s\" could not be opened.", 
-            filename);
-        return false;
+vislib::sys::TextFileFormat interpretBOM(unsigned char *bom,
+        unsigned int& bomSize) {
+    if ((bomSize >= 3) && (bom[0] == 0xEF) && (bom[1] == 0xBB)
+            && (bom[2] == 0xBF)) {
+        bomSize = 3;
+        return vislib::sys::TEXTFF_UTF8;
     }
-    return ReadTextFile(outStr, file);
+    if ((bomSize >= 4) && (bom[0] == 0x00) && (bom[1] == 0x00)
+            && (bom[2] == 0xFE) && (bom[3] == 0xFF)) {
+        bomSize = 4;
+        return vislib::sys::TEXTFF_UTF32_BE;
+    }
+    if ((bomSize >= 4) && (bom[0] == 0xFF) && (bom[1] == 0xFE)
+            && (bom[2] == 0x00) && (bom[3] == 0x00)) {
+        bomSize = 4;
+        return vislib::sys::TEXTFF_UTF32;
+    }
+    if ((bomSize >= 2) && (bom[0] == 0xFE) && (bom[1] == 0xFF)) {
+        bomSize = 2;
+        return vislib::sys::TEXTFF_UTF16_BE;
+    }
+    if ((bomSize >= 2) && (bom[0] == 0xFF) && (bom[1] == 0xFE)) {
+        bomSize = 2;
+        return vislib::sys::TEXTFF_UTF16;
+    }
+    if ((bomSize >= 4) && (bom[0] == 0x2B) && (bom[1] == 0x2F)
+            && (bom[2] == 0x76) && ((bom[3] == 0x38) || (bom[3] == 0x39)
+                || (bom[3] == 0x2B) || (bom[3] == 0x2F))) {
+        bomSize = 0; // because forth byte is only partially BOM the decoder
+                     // has to know the data and must retest for BOM
+        return vislib::sys::TEXTFF_UTF7;
+    }
+    if ((bomSize >= 3) && (bom[0] == 0xF7) && (bom[1] == 0x64)
+            && (bom[2] == 0x4C)) {
+        bomSize = 3;
+        return vislib::sys::TEXTFF_UTF1;
+    }
+    if ((bomSize >= 4) && (bom[0] == 0xDD) && (bom[1] == 0x73)
+            && (bom[2] == 0x66) && (bom[3] == 0x73)) {
+        bomSize = 4;
+        return vislib::sys::TEXTFF_UTF_EBCDIC;
+    }
+    if ((bomSize >= 3) && (bom[0] == 0x0E) && (bom[1] == 0xFE)
+            && (bom[2] == 0xFF)) {
+        bomSize = 3;
+        return vislib::sys::TEXTFF_SCSU;
+    }
+    if ((bomSize >= 3) && (bom[0] == 0xFB) && (bom[1] == 0xEE)
+            && (bom[2] == 0x28)) {
+        if ((bomSize == 4) && (bom[3] != 0xFF)) {
+            bomSize = 3;
+        }
+        return vislib::sys::TEXTFF_BOCU1;
+    }
+    if ((bomSize >= 4) && (bom[0] == 0x84) && (bom[1] == 0x31)
+            && (bom[2] == 0x95) && (bom[3] == 0x33)) {
+        bomSize = 4;
+        return vislib::sys::TEXTFF_GB18030;
+    }
+
+    return vislib::sys::TEXTFF_UNSPECIFIC;
 }
 
 
-/*
- * vislib::sys::ReadTextFile
+/**
+ * Checks the specified file format against the file stream
  */
-bool vislib::sys::ReadTextFile(vislib::StringA& outStr, const wchar_t *filename) {
-    File file;
-    if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, 
-            File::OPEN_ONLY)) {
-        VLTRACE(Trace::LEVEL_ERROR, "Text file \"%s\" could not be opened.", 
-            filename);
-        return false;
+void checkFileFormat(vislib::sys::File& file,
+        vislib::sys::TextFileFormat& format,
+        vislib::sys::TextFileFormat fallback) {
+    vislib::sys::File::FileSize start = file.Tell();
+
+    if (start == 0) {
+        unsigned char bom[4];
+        unsigned int bomSize = static_cast<unsigned int>(file.Read(bom, 4));
+        vislib::sys::TextFileFormat bomFF = interpretBOM(bom, bomSize);
+        if (bomFF != vislib::sys::TEXTFF_UNSPECIFIC) { // BOM detected
+            if (format == vislib::sys::TEXTFF_UNSPECIFIC) {
+                format = bomFF;
+            }
+        } else {
+            bomSize = 0;
+        }
+        file.Seek(start + bomSize);
     }
-    return ReadTextFile(outStr, file);
+    if (format == vislib::sys::TEXTFF_UNSPECIFIC) {
+        format = fallback;
+    }
 }
 
 
@@ -245,19 +317,153 @@ bool vislib::sys::ReadTextFile(vislib::StringA& outStr, const wchar_t *filename)
  * vislib::sys::ReadTextFile
  */
 bool vislib::sys::ReadTextFile(vislib::StringA& outStr, 
-        vislib::sys::File& file) {
-    File::FileSize size; // Size of the remainig file in bytes.
-    char *src = NULL;    // Array to hold source.
+        vislib::sys::File& file, vislib::sys::TextFileFormat format) {
+    checkFileFormat(file, format, TEXTFF_ASCII);
+    ASSERT(format != TEXTFF_UNSPECIFIC);
+    File::FileSize len = file.GetSize() - file.Tell();
 
-    size = file.GetSize() - file.Tell();
-    ASSERT(size < INT_MAX);
-    src = outStr.AllocateBuffer(static_cast<vislib::StringA::Size>(size));
+    switch (format) {
+    case TEXTFF_ASCII: {
+        char *src = outStr.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        len = file.Read(src, len);
+        src[len] = 0;
+        return true;
+    } break;
+    case TEXTFF_UNICODE:
+CASE_TEXTFF_UNICODE: {
+        vislib::StringW tmp;
+        wchar_t *src = tmp.AllocateBuffer(static_cast<unsigned int>(
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
+        len = file.Read(src, len - len % sizeof(wchar_t));
+        src[len / sizeof(wchar_t)] = 0;
+        outStr = tmp;
+        return true;
+    } break;
+    case TEXTFF_UTF8: {
+        vislib::StringA bytes;
+        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        len = file.Read(src, len);
+        src[len] = 0;
+        UTF8Encoder::Decode(outStr, bytes);
+        return true;
+    } break;
+    case TEXTFF_UTF16:
+#ifdef _WIN32
+        goto CASE_TEXTFF_UNICODE;
+#else /* _WIN32 */
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+#endif /* _WIN32 */
+        break;
+    case TEXTFF_UTF16_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF7:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF_EBCDIC:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_SCSU:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_BOCU1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_GB18030:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    default:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        break;
+    }
 
-    /* Read source and ensure binary zero at end. */
-    file.Read(src, size); 
-    src[size] = 0;
+    return false;
+}
 
-    return true;
+
+/*
+ * vislib::sys::ReadTextFile
+ */
+bool vislib::sys::ReadTextFile(vislib::StringW& outStr, 
+        vislib::sys::File& file, vislib::sys::TextFileFormat format) {
+    checkFileFormat(file, format, TEXTFF_UNICODE);
+    ASSERT(format != TEXTFF_UNSPECIFIC);
+    File::FileSize len = file.GetSize() - file.Tell();
+
+    switch (format) {
+    case TEXTFF_ASCII: {
+        vislib::StringA tmp;
+        char *src = tmp.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        len = file.Read(src, len);
+        src[len] = 0;
+        outStr = tmp;
+        return true;
+    } break;
+    case TEXTFF_UNICODE:
+CASE_TEXTFF_UNICODE: {
+        wchar_t *src = outStr.AllocateBuffer(static_cast<unsigned int>(
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
+        len = file.Read(src, len - len % sizeof(wchar_t));
+        src[len / sizeof(wchar_t)] = 0;
+        return true;
+    } break;
+    case TEXTFF_UTF8: {
+        vislib::StringA bytes;
+        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        len = file.Read(src, len);
+        src[len] = 0;
+        UTF8Encoder::Decode(outStr, bytes);
+        return true;
+    } break;
+    case TEXTFF_UTF16:
+#ifdef _WIN32
+        goto CASE_TEXTFF_UNICODE;
+#else /* _WIN32 */
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+#endif /* _WIN32 */
+        break;
+    case TEXTFF_UTF16_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF7:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF_EBCDIC:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_SCSU:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_BOCU1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_GB18030:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    default:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        break;
+    }
+
+    return false;
 }
 
 
@@ -410,3 +616,160 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
     return retval;
 }
 #endif /* !_WIN32 */
+
+
+/*
+ * vislib::sys::WriteTextFile
+ */
+bool vislib::sys::WriteTextFile(vislib::sys::File& file,
+        const vislib::StringA& text, vislib::sys::TextFileFormat format,
+        TextFileFormatBOM bom) {
+    switch (format) {
+    case TEXTFF_UNSPECIFIC:
+        goto CASE_TEXTFF_ASCII;
+        break;
+    case TEXTFF_ASCII:
+CASE_TEXTFF_ASCII: {
+        // no BOM possible
+        StringA::Size len = text.Length();
+        return (file.Write(text.PeekBuffer(), len) == len);
+    } break;
+    case TEXTFF_UNICODE:
+CASE_TEXTFF_UNICODE:
+        // write BOM as sfx
+        return WriteTextFile(file, vislib::StringW(text), format, bom);
+        break;
+    case TEXTFF_UTF8: {
+        vislib::StringA bytes;
+        UTF8Encoder::Encode(bytes, text);
+        if (bom != TEXTFF_BOM_NO) {
+            unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
+            file.Write(BOM, 3);
+        }
+        StringA::Size len = bytes.Length();
+        return (file.Write(bytes, len) == len);
+    } break;
+    case TEXTFF_UTF16:
+#ifdef _WIN32
+        goto CASE_TEXTFF_UNICODE;
+#else /* _WIN32 */
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+#endif /* _WIN32 */
+        break;
+    case TEXTFF_UTF16_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF7:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF_EBCDIC:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_SCSU:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_BOCU1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_GB18030:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    default:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        break;
+    }
+    //SIZE_T len = text.Length();
+    //return (file.Write(text.PeekBuffer(), len) == len);
+
+    return false;
+}
+
+
+/*
+ * vislib::sys::WriteTextFile
+ */
+bool vislib::sys::WriteTextFile(vislib::sys::File& file,
+        const vislib::StringW& text, vislib::sys::TextFileFormat format,
+        TextFileFormatBOM bom) {
+    switch (format) {
+    case TEXTFF_UNSPECIFIC:
+        goto CASE_TEXTFF_UTF8; // because it is platform independent unicode
+        break;
+    case TEXTFF_ASCII:
+        // no BOM possible
+        return WriteTextFile(file, vislib::StringA(text), format, bom);
+        break;
+    case TEXTFF_UNICODE:
+CASE_TEXTFF_UNICODE: {
+#ifdef _WIN32
+        if (bom != TEXTFF_BOM_NO) {
+            unsigned char BOM[] = { 0xFF, 0xFE };
+            file.Write(BOM, 2);
+        }
+#endif /* _WIN32 */
+        StringW::Size len = text.Length() * sizeof(wchar_t);
+        return (file.Write(text.PeekBuffer(), len) == len);
+    } break;
+    case TEXTFF_UTF8:
+CASE_TEXTFF_UTF8: {
+        vislib::StringA bytes;
+        UTF8Encoder::Encode(bytes, text);
+        if (bom != TEXTFF_BOM_NO) {
+            unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
+            file.Write(BOM, 3);
+        }
+        StringA::Size len = bytes.Length();
+        return (file.Write(bytes, len) == len);
+    } break;
+    case TEXTFF_UTF16:
+#ifdef _WIN32
+        goto CASE_TEXTFF_UNICODE;
+#else /* _WIN32 */
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+#endif /* _WIN32 */
+        break;
+    case TEXTFF_UTF16_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF32_BE:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF7:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_UTF_EBCDIC:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_SCSU:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_BOCU1:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    case TEXTFF_GB18030:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
+        break;
+    default:
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
+        break;
+    }
+    //vislib::StringA tmp(text);
+    //SIZE_T len = tmp.Length();
+    //return (file.Write(tmp.PeekBuffer(), len) == len);
+    return false;
+}

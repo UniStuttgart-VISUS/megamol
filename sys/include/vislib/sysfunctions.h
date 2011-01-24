@@ -1,7 +1,7 @@
 /*
  * sysfunctions.h
  *
- * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2006-2011 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_SYSFUNCTIONS_H_INCLUDED
@@ -33,6 +33,35 @@
 
 namespace vislib {
 namespace sys {
+
+    /**
+     * Possible text file formats
+     */
+    enum TextFileFormat {
+        TEXTFF_UNSPECIFIC,
+        TEXTFF_ASCII,       // locale dependent
+        TEXTFF_UNICODE,     // OS dependent
+        TEXTFF_UTF8,
+        TEXTFF_UTF16,
+        TEXTFF_UTF16_BE,
+        TEXTFF_UTF32,
+        TEXTFF_UTF32_BE,
+        TEXTFF_UTF7,
+        TEXTFF_UTF1,
+        TEXTFF_UTF_EBCDIC,
+        TEXTFF_SCSU,
+        TEXTFF_BOCU1,
+        TEXTFF_GB18030
+    };
+
+    /**
+     * Possible options for writing BOM
+     */
+    enum TextFileFormatBOM {
+        TEXTFF_BOM_UNSPECIFIC,  // write BOM when writing suitable format
+        TEXTFF_BOM_YES,         // always write BOM when possible
+        TEXTFF_BOM_NO           // never write BOM
+    };
 
     /**
      * powered by miniport.h:
@@ -239,44 +268,83 @@ namespace sys {
      * Read the content of the file 'filename' into 'outSrc'. 'outSrc' is 
      * being erased by this operation.
      *
-     * @param outStr   The string to receive the content.
-     * @param filename The name of the file being read.
+     * @param outStr   The string to receive the content
+     * @param filename The name of the file being read
+     * @param format   The format of the text to read
      *
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
      * @throws IOException If reading from the file failed.
      */
-    bool ReadTextFile(StringA& outStr, const char *filename);
+    template<class tp1, class tp2>
+    bool ReadTextFile(String<tp1>& outStr, const tp2 *filename,
+            TextFileFormat format = TEXTFF_UNSPECIFIC) {
+        File file;
+        bool retval = false;
+        if (file.Open(filename, File::READ_ONLY, File::SHARE_READ,
+                File::OPEN_ONLY)) {
+            retval = ReadTextFile(outStr, file, format);
+            file.Close();
+        } else {
+            // works because the last error still contains the correct value
+            throw SystemException(__FILE__, __LINE__);
+        }
+        return retval;
+    }
 
     /**
      * Read the content of the file 'filename' into 'outSrc'. 'outSrc' is 
      * being erased by this operation.
      *
-     * @param outStr   The string to receive the content.
-     * @param filename The name of the file being read.
+     * @param outStr   The string to receive the content
+     * @param filename The name of the file being read
+     * @param format   The format of the text to read
      *
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
      * @throws IOException If reading from the file failed.
      */
-    bool ReadTextFile(StringA& outStr, const wchar_t *filename);
+    template<class tp1, class tp2>
+    bool ReadTextFile(String<tp1>& outStr, const String<tp2>& filename,
+            TextFileFormat format = TEXTFF_UNSPECIFIC) {
+        return ReadTextFile(outStr, filename.PeekBuffer(), format);
+    }
 
     /**
      * Read the content of the file 'file' into 'outSrc'. 'outSrc' is being 
      * erased by this operation. 'file' will be read from the current position,
      * will be read until EoF, and will not be closed after operation.
      *
-     * @param outStr The string to receive the content.
-     * @param file   The file object being read.
+     * @param outStr The string to receive the content
+     * @param file   The file object being read
+     * @param format The format of the text to read
      *
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
      * @throws IOException If reading from the file failed.
      */
-    bool ReadTextFile(StringA& outStr, File& file);
+    bool ReadTextFile(StringA& outStr, File& file,
+        TextFileFormat format = TEXTFF_UNSPECIFIC);
+
+    /**
+     * Read the content of the file 'file' into 'outSrc'. 'outSrc' is being 
+     * erased by this operation. 'file' will be read from the current position,
+     * will be read until EoF, and will not be closed after operation.
+     *
+     * @param outStr The string to receive the content
+     * @param file   The file object being read
+     * @param format The format of the text to read
+     *
+     * @return true, if the file could be read, false, if the file was not 
+     *         found or could not be opened.
+     *
+     * @throws IOException If reading from the file failed.
+     */
+    bool ReadTextFile(StringW& outStr, File& file,
+        TextFileFormat format = TEXTFF_UNSPECIFIC);
 
     /**
      * Answer the number of milliseconds since midnight of the current day.
@@ -433,19 +501,41 @@ namespace sys {
      * @param filename The path to the file to be written.
      * @param text The text to be written.
      * @param force Flag whether or not to overwrite an existing file.
+     * @param format The text file format to produce
      *
      * @return true if the data was written successfully, false otherwise.
      *
      * @throws SystemException in case of an error.
      */
     template<class tp1, class tp2>
-    bool WriteTextFile(const String<tp1>& filename, const String<tp2>& text, 
-            bool force = false) {
+    bool WriteTextFile(const String<tp1>& filename, const String<tp2>& text,
+            bool force = false, TextFileFormat format = TEXTFF_UNSPECIFIC,
+            TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC) {
+        return WriteTextFile(filename.PeekBuffer(), text, force, format, bom);
+    }
+
+    /**
+     * Writes a text to a file. If the file exists and force is 'true' the
+     * existing file is overwritten.
+     *
+     * @param filename The path to the file to be written.
+     * @param text The text to be written.
+     * @param force Flag whether or not to overwrite an existing file.
+     * @param format The text file format to produce
+     *
+     * @return true if the data was written successfully, false otherwise.
+     *
+     * @throws SystemException in case of an error.
+     */
+    template<class tp1, class tp2>
+    bool WriteTextFile(const tp1 *filename, const String<tp2>& text,
+            bool force = false, TextFileFormat format = TEXTFF_UNSPECIFIC,
+            TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC) {
         bool retval = false;
         File file;
         if (file.Open(filename, File::WRITE_ONLY, File::SHARE_EXCLUSIVE,
                 force ? File::CREATE_OVERWRITE : File::CREATE_ONLY)) {
-            retval = WriteTextFile(file, text);
+            retval = WriteTextFile(file, text, format, bom);
             file.Close();
         } else {
             // works because the last error still contains the correct value
@@ -457,18 +547,32 @@ namespace sys {
     /**
      * Writes a text to a file.
      *
-     * @param filename The file to be written.
-     * @param text The text to be written.
+     * @param file The file stream to be written to
+     * @param text The text to be written
+     * @param format The text file format to produce
      *
      * @return true if the data was written successfully, false otherwise.
      *
      * @throws SystemException in case of an error.
      */
-    template<class tp>
-    bool WriteTextFile(File& file, const String<tp>& text) {
-        SIZE_T len = text.Length() * sizeof(typename tp::Char);
-        return (file.Write(text.PeekBuffer(), len) == len);
-    }
+    bool WriteTextFile(File& file, const StringA& text,
+        TextFileFormat format = TEXTFF_ASCII,
+        TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
+
+    /**
+     * Writes a text to a file.
+     *
+     * @param file The file stream to be written to
+     * @param text The text to be written
+     * @param format The text file format to produce
+     *
+     * @return true if the data was written successfully, false otherwise.
+     *
+     * @throws SystemException in case of an error.
+     */
+    bool WriteTextFile(File& file, const StringW& text,
+        TextFileFormat format = TEXTFF_UNICODE,
+        TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
 
 } /* end namespace sys */
 } /* end namespace vislib */
