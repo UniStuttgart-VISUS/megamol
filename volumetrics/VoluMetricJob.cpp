@@ -463,6 +463,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     vislib::Array<unsigned int> uniqueIDs;
     vislib::Array<unsigned int> countPerID;
     vislib::Array<float> surfPerID;
+    vislib::Array<float> volPerID;
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             SIZE_T pos = uniqueIDs.IndexOf(globalSurfaceIDs[i][j]);
@@ -470,17 +471,19 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
                 uniqueIDs.Add(globalSurfaceIDs[i][j]);
                 countPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
                 surfPerID.Add(subJobDataList[todos[i]]->Result.surfaceSurfaces[j]);
+                volPerID.Add(subJobDataList[todos[i]]->Result.volumes[j]);
             } else {
                 countPerID[pos] = countPerID[pos] + (subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
                 surfPerID[pos] = surfPerID[pos] + subJobDataList[todos[i]]->Result.surfaceSurfaces[j];
+                volPerID[pos] = volPerID[pos] + subJobDataList[todos[i]]->Result.volumes[j];
             }
         }
     }
     unsigned int numTriangles = 0;
     for (int i = 0; i < uniqueIDs.Count(); i++) {
         numTriangles += countPerID[i];
-        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f", uniqueIDs[i],
-            countPerID[i], surfPerID[i]);
+        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f", uniqueIDs[i],
+            countPerID[i], surfPerID[i], volPerID[i]);
     }
     vert = new float[numTriangles * 9];
     norm = new float[numTriangles * 9];

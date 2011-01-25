@@ -50,6 +50,7 @@ namespace volumetrics {
     struct FatVoxel {
 		float distField;
 		float *triangles;
+        float *volumes;
 		unsigned char numTriangles;
         /** for marching CUBES, just that. for marching tets, the < 0 corners */
         unsigned char mcCase;
@@ -83,7 +84,7 @@ namespace volumetrics {
         vislib::Array<vislib::Array<float> > surfaces;
         vislib::Array<vislib::Array<BorderVoxel *> > borderVoxels;
         vislib::Array<float> surfaceSurfaces;
-        //vislib::Array<float> volumes;
+        vislib::Array<float> volumes;
 
 		//float *normals;
 		//float surface;
