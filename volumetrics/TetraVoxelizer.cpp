@@ -173,6 +173,7 @@ float TetraVoxelizer::GetOffset(float fValue1, float fValue2, float fValueDesire
 
 float TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
     float volume = 0;
+    SIZE_T cells = 0;
     vislib::math::Point<int, 3> p;
     vislib::Array<vislib::math::Point<int, 3> > queue;
     queue.SetCapacityIncrement(32);
@@ -182,19 +183,26 @@ float TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned i
         queue.RemoveLast();
         FatVoxel &f = theVolume[(p.Z() * sjd->resY + p.Y()) * sjd->resX + p.X()];
         if (f.mcCase == 255 && f.consumedTriangles == 0) {
+            cells++;
             f.consumedTriangles = 1;
             volume += sjd->CellSize * sjd->CellSize * sjd->CellSize;
             for (unsigned int ni = 0; ni < 6; ni++) {
-                if ((((moreNeighbors[ni].X() < 0) && (x > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (x < sjd->resX - 2))) &&
-                    (((moreNeighbors[ni].Y() < 0) && (y > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (y < sjd->resY - 2))) &&
-                    (((moreNeighbors[ni].Z() < 0) && (z > 0)) || (moreNeighbors[ni].Z() == 0) || ((moreNeighbors[ni].Z() > 0) && (z < sjd->resZ - 2)))) {
-
-                        queue.Add(vislib::math::Point<int, 3>(x + moreNeighbors[ni].X(),
-                            y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z()));
+                if ((((moreNeighbors[ni].X() < 0) && (p.X() > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (p.X() < sjd->resX - 2))) &&
+                    (((moreNeighbors[ni].Y() < 0) && (p.Y() > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (p.Y() < sjd->resY - 2))) &&
+                    (((moreNeighbors[ni].Z() < 0) && (p.Z() > 0)) || (moreNeighbors[ni].Z() == 0) || ((moreNeighbors[ni].Z() > 0) && (p.Z() < sjd->resZ - 2)))) {
+                        queue.Add(vislib::math::Point<int, 3>(p.X() + moreNeighbors[ni].X(),
+                            p.Y() + moreNeighbors[ni].Y(), p.Z() + moreNeighbors[ni].Z()));
                 }
             }
         }
     }
+#ifdef ULTRADEBUG
+    if (cells > 0) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "[%08u] grew volume from (%04u, %04u, %04u) yielding %u cells and a volume of %f",
+            vislib::sys::Thread::CurrentID(), x, y, z, cells, volume);
+    }
+#endif /* ULTRADEBUG */
     return volume;
 }
 
