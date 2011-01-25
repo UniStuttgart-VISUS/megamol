@@ -299,9 +299,8 @@ void checkFileFormat(vislib::sys::File& file,
         unsigned int bomSize = static_cast<unsigned int>(file.Read(bom, 4));
         vislib::sys::TextFileFormat bomFF = interpretBOM(bom, bomSize);
         if (bomFF != vislib::sys::TEXTFF_UNSPECIFIC) { // BOM detected
-            if (format == vislib::sys::TEXTFF_UNSPECIFIC) {
-                format = bomFF;
-            }
+            format = bomFF; // BOM always better than manual format
+                            // here we know that 'forceFormat' was false
         } else {
             bomSize = 0;
         }
@@ -317,8 +316,12 @@ void checkFileFormat(vislib::sys::File& file,
  * vislib::sys::ReadTextFile
  */
 bool vislib::sys::ReadTextFile(vislib::StringA& outStr, 
-        vislib::sys::File& file, vislib::sys::TextFileFormat format) {
-    checkFileFormat(file, format, TEXTFF_ASCII);
+        vislib::sys::File& file, vislib::sys::TextFileFormat format,
+        bool forceFormat) {
+    if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
+        checkFileFormat(file, format,
+            (format == TEXTFF_UNSPECIFIC) ? TEXTFF_ASCII : format);
+    }
     ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
 
@@ -394,8 +397,12 @@ CASE_TEXTFF_UNICODE: {
  * vislib::sys::ReadTextFile
  */
 bool vislib::sys::ReadTextFile(vislib::StringW& outStr, 
-        vislib::sys::File& file, vislib::sys::TextFileFormat format) {
-    checkFileFormat(file, format, TEXTFF_UNICODE);
+        vislib::sys::File& file, vislib::sys::TextFileFormat format,
+        bool forceFormat) {
+    if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
+        checkFileFormat(file, format,
+            (format == TEXTFF_UNSPECIFIC) ? TEXTFF_UNICODE : format);
+    }
     ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
 

@@ -268,9 +268,10 @@ namespace sys {
      * Read the content of the file 'filename' into 'outSrc'. 'outSrc' is 
      * being erased by this operation.
      *
-     * @param outStr   The string to receive the content
-     * @param filename The name of the file being read
-     * @param format   The format of the text to read
+     * @param outStr      The string to receive the content
+     * @param filename    The name of the file being read
+     * @param format      The format of the text to read
+     * @param forceFormat If true 'format' is used even if a BOM is found
      *
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
@@ -279,12 +280,13 @@ namespace sys {
      */
     template<class tp1, class tp2>
     bool ReadTextFile(String<tp1>& outStr, const tp2 *filename,
-            TextFileFormat format = TEXTFF_UNSPECIFIC) {
+            TextFileFormat format = TEXTFF_UNSPECIFIC,
+            bool forceFormat = false) {
         File file;
         bool retval = false;
         if (file.Open(filename, File::READ_ONLY, File::SHARE_READ,
                 File::OPEN_ONLY)) {
-            retval = ReadTextFile(outStr, file, format);
+            retval = ReadTextFile(outStr, file, format, forceFormat);
             file.Close();
         } else {
             // works because the last error still contains the correct value
@@ -300,6 +302,7 @@ namespace sys {
      * @param outStr   The string to receive the content
      * @param filename The name of the file being read
      * @param format   The format of the text to read
+     * @param forceFormat If true 'format' is used even if a BOM is found
      *
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
@@ -308,8 +311,10 @@ namespace sys {
      */
     template<class tp1, class tp2>
     bool ReadTextFile(String<tp1>& outStr, const String<tp2>& filename,
-            TextFileFormat format = TEXTFF_UNSPECIFIC) {
-        return ReadTextFile(outStr, filename.PeekBuffer(), format);
+            TextFileFormat format = TEXTFF_UNSPECIFIC,
+            bool forceFormat = false) {
+        return ReadTextFile(outStr, filename.PeekBuffer(), format,
+            forceFormat);
     }
 
     /**
@@ -320,6 +325,7 @@ namespace sys {
      * @param outStr The string to receive the content
      * @param file   The file object being read
      * @param format The format of the text to read
+     * @param forceFormat If true 'format' is used even if a BOM is found
      *
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
@@ -327,7 +333,7 @@ namespace sys {
      * @throws IOException If reading from the file failed.
      */
     bool ReadTextFile(StringA& outStr, File& file,
-        TextFileFormat format = TEXTFF_UNSPECIFIC);
+        TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
 
     /**
      * Read the content of the file 'file' into 'outSrc'. 'outSrc' is being 
@@ -337,6 +343,7 @@ namespace sys {
      * @param outStr The string to receive the content
      * @param file   The file object being read
      * @param format The format of the text to read
+     * @param forceFormat If true 'format' is used even if a BOM is found
      *
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
@@ -344,7 +351,7 @@ namespace sys {
      * @throws IOException If reading from the file failed.
      */
     bool ReadTextFile(StringW& outStr, File& file,
-        TextFileFormat format = TEXTFF_UNSPECIFIC);
+        TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
 
     /**
      * Answer the number of milliseconds since midnight of the current day.
