@@ -854,6 +854,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\ElectrostaticsRenderer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\FrodockLoader.cpp"
 				>
 			</File>
@@ -887,6 +891,10 @@
 			</File>
 			<File
 				RelativePath=".\NetCDFData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParticleDataCall.cpp"
 				>
 			</File>
 			<File
@@ -1085,6 +1093,10 @@
 				RelativePath=".\VolumeSliceRenderer.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\XYZLoader.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1140,6 +1152,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ElectrostaticsRenderer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\FrodockLoader.h"
 				>
 			</File>
@@ -1177,6 +1193,10 @@
 			</File>
 			<File
 				RelativePath=".\NetCDFData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParticleDataCall.h"
 				>
 			</File>
 			<File
@@ -1297,6 +1317,10 @@
 			</File>
 			<File
 				RelativePath=".\VolumeSliceRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\XYZLoader.h"
 				>
 			</File>
 		</Filter>
