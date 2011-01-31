@@ -227,9 +227,9 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
         }
 #endif
 
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", static_cast<const char*>(T2A( filename)), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
     } else {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A( filename)); // DEBUG
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", static_cast<const char*>(T2A( filename))); // DEBUG
     }
 }
 
