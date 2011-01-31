@@ -22,9 +22,13 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/ASCIIFileBuffer.h"
+#include "vislib/Quaternion.h"
 #include <ctime>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
+
+#define USE_RANDOM_ROT_TRANS
 
 using namespace megamol;
 using namespace megamol::core;
@@ -127,6 +131,15 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
 
     this->datahash++;
 
+#ifdef USE_RANDOM_ROT_TRANS
+    srand( time( NULL));
+    vislib::math::Vector<float, 3> rotAxis( rand(), rand(), rand());
+    rotAxis.Normalise();
+    vislib::math::Vector<float, 3> trans( rand(), rand(), rand());
+    trans.Normalise();
+    float angle = float( rand()) / float( RAND_MAX);
+#endif
+
     vislib::StringA line, name;
     unsigned int cnt, idx, pCnt;
 
@@ -194,6 +207,25 @@ void XYZLoader::loadFile( const vislib::TString& filename) {
         }
         float edge = this->bbox.LongestEdge() * 5.0f;
         this->bbox.Grow( edge, edge, edge);
+
+#ifdef USE_RANDOM_ROT_TRANS
+        vislib::math::Vector<float, 3> center( 0, 0, 0);
+        for( unsigned int i = 0; i < this->particleCount; i++ ) {
+            center += vislib::math::Vector<float, 3>( this->particles[i*4+0], this->particles[i*4+1], this->particles[i*4+2]);
+        }
+        center /= float( this->particleCount);
+        vislib::math::Quaternion<float> quart( angle, rotAxis);
+        for( unsigned int i = 0; i < this->particleCount; i++ ) {
+            vislib::math::Vector<float, 3> part( this->particles[i*4+0], this->particles[i*4+1], this->particles[i*4+2]);
+            part -= center;
+            part = quart * part;
+            part += center;
+            part += trans;
+            this->particles[i*4+0] = part.X();
+            this->particles[i*4+1] = part.Y();
+            this->particles[i*4+2] = part.Z();
+        }
+#endif
 
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
     } else {
