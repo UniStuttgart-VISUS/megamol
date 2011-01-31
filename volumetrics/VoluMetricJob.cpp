@@ -261,6 +261,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 					sjd->datacall = datacall;
 					sjd->Bounds = bx;
 					sjd->CellSize = cellSize;
+                    sjd->CellSizeEX = (double)MinRad * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
 					sjd->resX = restX;
 					sjd->resY = restY;
 					sjd->resZ = restZ;
@@ -290,8 +291,8 @@ DWORD VoluMetricJob::Run(void *userData) {
 			}
 			copyMeshesToBackbuffer(subJobDataList);
 		}
-        Log::DefaultLog.WriteInfo("Done marching.");
 		copyMeshesToBackbuffer(subJobDataList);
+        Log::DefaultLog.WriteInfo("Done marching.");
 
 		while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
 			Sleep(500);
@@ -411,7 +412,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 
 	float *vert, *norm;
     unsigned char *col;
-	unsigned int *tri;
+	//unsigned int *tri;
 	vislib::Array<unsigned int> todos;
 	todos.SetCapacityIncrement(10);
 	for (int i = 0; i < subJobDataList.Count(); i++) {
@@ -462,8 +463,8 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     }
     vislib::Array<unsigned int> uniqueIDs;
     vislib::Array<unsigned int> countPerID;
-    vislib::Array<float> surfPerID;
-    vislib::Array<float> volPerID;
+    vislib::Array<double> surfPerID;
+    vislib::Array<double> volPerID;
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             SIZE_T pos = uniqueIDs.IndexOf(globalSurfaceIDs[i][j]);
@@ -497,20 +498,27 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
 
         for (int i = 0; i < uniqueIDs.Count(); i++) {
             vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
-            vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
+            //vislib::math::ShallowShallowTriangle<double, 3> sst(vert);
 
             for (int j = 0; j < todos.Count(); j++) {
                 for (int k = 0; k < subJobDataList[todos[j]]->Result.borderVoxels.Count(); k++) {
                     if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
                         for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.borderVoxels[k].Count(); l++) {
                             SIZE_T vertCount = subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.Count() / 3;
-                            memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements(),
-                                vertCount * 3 * sizeof(float));
-                            for (SIZE_T l = 0; l < vertCount; l++) {
+                            //memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements(),
+                            //    vertCount * 3 * sizeof(double));
+                            for (SIZE_T m = 0; m < vertCount; m++) {
                                 //tri[vertOffset + l] = vertOffset + l;
-                                col[vertOffset + l * 3] = c.R();
-                                col[vertOffset + l * 3 + 1] = c.G();
-                                col[vertOffset + l * 3 + 2] = c.B();
+                                vert[vertOffset + m * 3] = static_cast<float>(
+                                    *(subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements() + m * 3));
+                                vert[vertOffset + m * 3 + 1] = static_cast<float>(
+                                    *(subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements() + m * 3 + 1));
+                                vert[vertOffset + m * 3 + 2] = static_cast<float>(
+                                    *(subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements() + m * 3 + 2));
+
+                                col[vertOffset + m * 3] = c.R();
+                                col[vertOffset + m * 3 + 1] = c.G();
+                                col[vertOffset + m * 3 + 2] = c.B();
                             }
                             vertOffset += vertCount * 3;
                         }
@@ -521,16 +529,23 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     } else {
         for (int i = 0; i < uniqueIDs.Count(); i++) {
             vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
-            vislib::math::ShallowShallowTriangle<float, 3> sst(vert);
+            //vislib::math::ShallowShallowTriangle<double, 3> sst(vert);
 
             for (int j = 0; j < todos.Count(); j++) {
                 for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
                     if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
                         SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].Count() / 3;
-                        memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].PeekElements(),
-                             vertCount * 3 * sizeof(float));
+                        //memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].PeekElements(),
+                        //     vertCount * 3 * sizeof(double));
                         for (SIZE_T l = 0; l < vertCount; l++) {
                             //tri[vertOffset + l] = vertOffset + l;
+                            vert[vertOffset + l * 3] = static_cast<float>(
+                                *(subJobDataList[todos[j]]->Result.surfaces[k].PeekElements() + l * 3));
+                            vert[vertOffset + l * 3 + 1] = static_cast<float>(
+                                *(subJobDataList[todos[j]]->Result.surfaces[k].PeekElements() + l * 3 + 1));
+                            vert[vertOffset + l * 3 + 2] = static_cast<float>(
+                                *(subJobDataList[todos[j]]->Result.surfaces[k].PeekElements() + l * 3 + 2));
+
                             col[vertOffset + l * 3] = c.R();
                             col[vertOffset + l * 3 + 1] = c.G();
                             col[vertOffset + l * 3 + 2] = c.B();

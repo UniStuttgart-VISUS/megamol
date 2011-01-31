@@ -25,16 +25,16 @@ vislib::math::Point<signed char, 3> neighbors[] = {
 
 void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
                              unsigned char triIndex, 
-                             vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border,
-                             float &surfSurf) {
+                             vislib::Array<double> &surf, vislib::Array<BorderVoxel *> &border,
+                             double &surfSurf) {
 
     FatVoxel *f = &theVolume[(z * sjd->resY + y) * sjd->resX + x];
     int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
 
-    vislib::math::ShallowShallowTriangle<float, 3> sst(f->triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<float, 3> sst2(f->triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<float, 3> sstTemp(f->triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<float, 3> sstI(f->triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sst(f->triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sst2(f->triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sstTemp(f->triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sstI(f->triangles + 3 * 3 * triIndex);
 
     // we come here only once per surface and cell. that is why I can do this.
     //if (isBorder(x, y, z)) {
@@ -60,9 +60,9 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
             if ((f->consumedTriangles & (1 << c)) == 0) {
                 //surf.Add(sstI.GetPointer());
                 surf.SetCount(surf.Count() + 9);
-                sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
+                sstTemp.SetPointer(const_cast<double *>(surf.PeekElements() + surf.Count() - 9));
                 sstTemp = sstI;
-                surfSurf += sstI.Area<float>();
+                surfSurf += sstI.Area<double>();
                 if (isBorder(x, y, z)) {
                     if (f->borderVoxel == NULL) {
                         f->borderVoxel = new BorderVoxel();
@@ -73,7 +73,7 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                         border.Add(f->borderVoxel);
                     }
                     f->borderVoxel->triangles.SetCount(f->borderVoxel->triangles.Count() + 9);
-                    sstTemp.SetPointer(const_cast<float *>(f->borderVoxel->triangles.PeekElements()
+                    sstTemp.SetPointer(const_cast<double *>(f->borderVoxel->triangles.PeekElements()
                         + f->borderVoxel->triangles.Count() - 9));
                     sstTemp = sstI;
                 }
@@ -100,9 +100,9 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                                     n->consumedTriangles |= (1 << m);
                                     //surf.Add(sst2.GetPointer());
                                     surf.SetCount(surf.Count() + 9);
-                                    sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
+                                    sstTemp.SetPointer(const_cast<double *>(surf.PeekElements() + surf.Count() - 9));
                                     sstTemp = sst2;
-                                    surfSurf += sst2.Area<float>();
+                                    surfSurf += sst2.Area<double>();
                                     if (isBorder(x + neighbors[ni].X(), y + neighbors[ni].Y(), z + neighbors[ni].Z())) {
                                         if (n->borderVoxel == NULL) {
                                             n->borderVoxel = new BorderVoxel();
@@ -113,7 +113,7 @@ void Voxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, uns
                                             border.Add(n->borderVoxel);
                                         }
                                         n->borderVoxel->triangles.SetCount(n->borderVoxel->triangles.Count() + 9);
-                                        sstTemp.SetPointer(const_cast<float *>(n->borderVoxel->triangles.PeekElements()
+                                        sstTemp.SetPointer(const_cast<double *>(n->borderVoxel->triangles.PeekElements()
                                             + n->borderVoxel->triangles.Count() - 9));
                                         sstTemp = sst2;
                                     }
@@ -147,16 +147,16 @@ void Voxelizer::collectCell(FatVoxel *theVolume, unsigned int x, unsigned int y,
     }
 
     FatVoxel *f = &theVolume[(z * sjd->resY + y) * sjd->resX + x];
-    vislib::math::ShallowShallowTriangle<float, 3> sst(f->triangles);
+    vislib::math::ShallowShallowTriangle<double, 3> sst(f->triangles);
     //vislib::math::ShallowShallowTriangle<float, 3> sst2(f->triangles);
     //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
     //    "[%08u] collecting (%04u, %04u, %04u)\n", vislib::sys::Thread::CurrentID(), x, y, z);
     for (unsigned int l = 0; l < MarchingCubeTables::a2ucTriangleConnectionCount[f->mcCase]; l++) {
         if ((f->consumedTriangles & (1 << l)) == 0) {
             // this is a new surface
-            vislib::Array<float> surf;
+            vislib::Array<double> surf;
             vislib::Array<BorderVoxel *> border;
-            float surfSurf = 0.0f;
+            double surfSurf = 0.0f;
             for (SIZE_T idx = 0; idx < sjd->resX * sjd->resY * sjd->resZ; idx++) {
                 theVolume[idx].borderVoxel = NULL;
             }
@@ -266,10 +266,10 @@ void Voxelizer::marchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, u
     //vislib::math::Vector<float, 3> a, b;
 
     int triCnt = MarchingCubeTables::a2ucTriangleConnectionCount[flagIndex];
-    theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles = new float[triCnt * 3 * 3];
+    theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles = new double[triCnt * 3 * 3];
     //theVolume[(z * sjd->resY + y) * sjd->resX + x].numTriangles = triCnt;
     theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase = flagIndex;
-    vislib::math::ShallowShallowTriangle<float, 3> tri(theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles);
+    vislib::math::ShallowShallowTriangle<double, 3> tri(theVolume[(z * sjd->resY + y) * sjd->resX + x].triangles);
 
     for (triangle = 0; triangle < triCnt; triangle++) {
         //if (MarchingCubeTables::a2iTriangleConnectionTable[flagIndex][3*triangle] < 0) {

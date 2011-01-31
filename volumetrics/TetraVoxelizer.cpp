@@ -74,6 +74,15 @@ void debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3> &tri) {
         tri.PeekCoordinates()[2][0], tri.PeekCoordinates()[2][1], tri.PeekCoordinates()[2][2]);
 }
 
+void debugPrintTriangle(vislib::math::ShallowShallowTriangle<double, 3> &tri) {
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        "[%08u] (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf)",
+        vislib::sys::Thread::CurrentID(),
+        tri.PeekCoordinates()[0][0], tri.PeekCoordinates()[0][1], tri.PeekCoordinates()[0][2],
+        tri.PeekCoordinates()[1][0], tri.PeekCoordinates()[1][1], tri.PeekCoordinates()[1][2],
+        tri.PeekCoordinates()[2][0], tri.PeekCoordinates()[2][1], tri.PeekCoordinates()[2][2]);
+}
+
 TetraVoxelizer::TetraVoxelizer(void) : terminate(false), sjd(NULL) {
     //triangleSoup.SetCapacityIncrement(90); // AKA 10 triangles?
 }
@@ -124,7 +133,9 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
 
     FatVoxel &f = theVolume[(z * sjd->resY + y) * sjd->resX + x];
 
-    vislib::math::ShallowShallowTriangle<float, 3> sst(f.triangles);
+    if (f.numTriangles > 0) {
+        vislib::math::ShallowShallowTriangle<double, 3> sst(f.triangles);
+    }
     //vislib::math::ShallowShallowTriangle<float, 3> sst2(f.triangles);
 #ifdef ULTRADEBUG
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -133,10 +144,10 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
     for (unsigned int l = 0; l < f.numTriangles; l++) {
         if ((f.consumedTriangles & (1 << l)) == 0) {
             // this is a new surface
-            vislib::Array<float> surf;
+            vislib::Array<double> surf;
             vislib::Array<BorderVoxel *> border;
-            float surfSurf = 0.0f;
-            float volume = 0.0f;
+            double surfSurf = 0.0f;
+            double volume = 0.0;
             for (SIZE_T idx = 0; idx < sjd->resX * sjd->resY * sjd->resZ; idx++) {
                 theVolume[idx].borderVoxel = NULL;
             }
@@ -168,11 +179,11 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
 float TetraVoxelizer::GetOffset(float fValue1, float fValue2, float fValueDesired) {
     double fDelta = fValue2 - fValue1;
     //ASSERT(fDelta > 0.0f);
-    return (float)((fValueDesired - fValue1)/fDelta);
+    return (float)(((double)fValueDesired - (double)fValue1)/fDelta);
 }
 
-float TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
-    float volume = 0;
+double TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
+    double volume = 0;
     SIZE_T cells = 0;
     vislib::math::Point<int, 3> p;
     vislib::Array<vislib::math::Point<int, 3> > queue;
@@ -185,7 +196,14 @@ float TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned i
         if (f.mcCase == 255 && f.consumedTriangles == 0) {
             cells++;
             f.consumedTriangles = 1;
-            volume += sjd->CellSize * sjd->CellSize * sjd->CellSize;
+#ifdef ULTRADEBUG
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "[%08u] grew to (%04u, %04u, %04u)",
+                vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z());
+#endif /* ULTRADEBUG */
+
+            //volume += (double)sjd->CellSize * (double)sjd->CellSize * (double)sjd->CellSize;
+            volume += sjd->CellSizeEX * sjd->CellSizeEX * sjd->CellSizeEX;
             for (unsigned int ni = 0; ni < 6; ni++) {
                 if ((((moreNeighbors[ni].X() < 0) && (p.X() > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (p.X() < sjd->resX - 2))) &&
                     (((moreNeighbors[ni].Y() < 0) && (p.Y() > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (p.Y() < sjd->resY - 2))) &&
@@ -208,8 +226,8 @@ float TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned i
 
 void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
                              unsigned char triIndex, 
-                             vislib::Array<float> &surf, vislib::Array<BorderVoxel *> &border,
-                             float &surfSurf, float &volume) {
+                             vislib::Array<double> &surf, vislib::Array<BorderVoxel *> &border,
+                             double &surfSurf, double &volume) {
 
     FatVoxel &f = theVolume[(z * sjd->resY + y) * sjd->resX + x];
     //int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
@@ -232,10 +250,10 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
         }
     }
 
-    vislib::math::ShallowShallowTriangle<float, 3> sst(f.triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<float, 3> sst2(f.triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<float, 3> sstTemp(f.triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<float, 3> sstI(f.triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sst(f.triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sst2(f.triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sstTemp(f.triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<double, 3> sstI(f.triangles + 3 * 3 * triIndex);
 
     // we come here only once per surface and cell. that is why I can do this.
     //if (isBorder(x, y, z)) {
@@ -267,7 +285,8 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                 for (unsigned char d = 0; d < f.numTriangles; d++) {
                     if (inCellSurf & (1 << d)) {
                         sst2.SetPointer(f.triangles + 3 * 3 * d);
-                        if (sstI.HasCommonEdge(sst2)) {
+                        //if (sstI.HasCommonEdge(sst2)) {
+                        if (Dowel::HaveCommonEdge(sstI, sst2)) {
                             inCellSurf |= (1 << c);
                             foundNew = true;
                         }
@@ -286,9 +305,9 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
             if ((f.consumedTriangles & (1 << c)) == 0) {
                 //surf.Add(sstI.GetPointer());
                 surf.SetCount(surf.Count() + 9);
-                sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
+                sstTemp.SetPointer(const_cast<double *>(surf.PeekElements() + surf.Count() - 9));
                 sstTemp = sstI;
-                surfSurf += sstI.Area<float>();
+                surfSurf += sstI.Area<double>();
                 volume += f.volumes[c];
                 // TODO volume!
                 if (isBorder(x, y, z)) {
@@ -301,7 +320,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                         border.Add(f.borderVoxel);
                     }
                     f.borderVoxel->triangles.SetCount(f.borderVoxel->triangles.Count() + 9);
-                    sstTemp.SetPointer(const_cast<float *>(f.borderVoxel->triangles.PeekElements()
+                    sstTemp.SetPointer(const_cast<double *>(f.borderVoxel->triangles.PeekElements()
                         + f.borderVoxel->triangles.Count() - 9));
                     sstTemp = sstI;
                 }
@@ -330,7 +349,8 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                 debugPrintTriangle(sst2);
                                 debugPrintTriangle(sstI);
 #endif /* ULTRADEBUG */
-                                if (sst2.HasCommonEdge(sstI)) {
+                                //if (sst2.HasCommonEdge(sstI)) {
+                                if (Dowel::HaveCommonEdge(sst2, sstI)) {
                                     n.consumedTriangles |= (1 << m);
 #ifdef ULTRADEBUG
                                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -342,9 +362,9 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 #endif /* ULTRADEBUG */
                                     //surf.Add(sst2.GetPointer());
                                     surf.SetCount(surf.Count() + 9);
-                                    sstTemp.SetPointer(const_cast<float *>(surf.PeekElements() + surf.Count() - 9));
+                                    sstTemp.SetPointer(const_cast<double *>(surf.PeekElements() + surf.Count() - 9));
                                     sstTemp = sst2;
-                                    surfSurf += sst2.Area<float>();
+                                    surfSurf += sst2.Area<double>();
                                     volume += n.volumes[m];
                                     // TODO volume!
                                     if (isBorder(x + moreNeighbors[ni].X(), y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z())) {
@@ -357,7 +377,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                             border.Add(n.borderVoxel);
                                         }
                                         n.borderVoxel->triangles.SetCount(n.borderVoxel->triangles.Count() + 9);
-                                        sstTemp.SetPointer(const_cast<float *>(n.borderVoxel->triangles.PeekElements()
+                                        sstTemp.SetPointer(const_cast<double *>(n.borderVoxel->triangles.PeekElements()
                                             + n.borderVoxel->triangles.Count() - 9));
                                         sstTemp = sst2;
                                     }
@@ -410,11 +430,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
             currVoxel.mcCase |= 1 << i;
         }
     }
-    CellFull(theVolume, x, y, z);
-    if (CellHasNoGeometry(theVolume, x, y, z)) {
+    //CellFull(theVolume, x, y, z);
+    if (CellHasNoGeometry(theVolume, x, y, z)) {// || !((x==6) && (y==7) && (z==6))) {
         currVoxel.consumedTriangles = 0;
         currVoxel.triangles = NULL;
         currVoxel.volumes = NULL;
+        currVoxel.numTriangles = 0;
         return;
     }
 
@@ -470,12 +491,13 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
         }
     }
 
-    currVoxel.triangles = new float[currVoxel.numTriangles * 3 * 3];
-    currVoxel.volumes = new float[currVoxel.numTriangles];
-    vislib::math::ShallowShallowTriangle<float, 3> tri(currVoxel.triangles);
-    vislib::math::ShallowShallowTriangle<float, 3> tri2(currVoxel.triangles);
-    vislib::math::Point<float, 3> temp;
-    float *vol;
+    currVoxel.triangles = new double[currVoxel.numTriangles * 3 * 3];
+    currVoxel.volumes = new double[currVoxel.numTriangles];
+    vislib::math::ShallowShallowTriangle<double, 3> tri(currVoxel.triangles);
+    vislib::math::ShallowShallowTriangle<double, 3> tri2(currVoxel.triangles);
+    vislib::math::Point<double, 3> temp;
+    double *vol = NULL;
+    double *vol2 = NULL;
     int triOffset = 0;
 
     // now we repeat this for all six sub-tetrahedra
@@ -490,22 +512,24 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
         if (CubeValues[tets[tetIdx][3]] < 0.0f)
             triIdx |= 8;
 
-        vislib::math::Point<float, 3> p0(
-            p.X() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][0]][0] * sjd->CellSize,
-            p.Y() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][0]][1] * sjd->CellSize,
-            p.Z() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][0]][2] * sjd->CellSize);
-        vislib::math::Point<float, 3> p1(
-            p.X() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][1]][0] * sjd->CellSize,
-            p.Y() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][1]][1] * sjd->CellSize,
-            p.Z() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][1]][2] * sjd->CellSize);
-        vislib::math::Point<float, 3> p2(
-            p.X() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][2]][0] * sjd->CellSize,
-            p.Y() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][2]][1] * sjd->CellSize,
-            p.Z() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][2]][2] * sjd->CellSize);
-        vislib::math::Point<float, 3> p3(
-            p.X() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][3]][0] * sjd->CellSize,
-            p.Y() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][3]][1] * sjd->CellSize,
-            p.Z() + (float)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][3]][2] * sjd->CellSize);
+        vislib::math::Point<double, 3> p0(
+            p.X() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][0]][0] * sjd->CellSize,
+            p.Y() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][0]][1] * sjd->CellSize,
+            p.Z() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][0]][2] * sjd->CellSize);
+        vislib::math::Point<double, 3> p1(
+            p.X() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][1]][0] * sjd->CellSize,
+            p.Y() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][1]][1] * sjd->CellSize,
+            p.Z() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][1]][2] * sjd->CellSize);
+        vislib::math::Point<double, 3> p2(
+            p.X() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][2]][0] * sjd->CellSize,
+            p.Y() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][2]][1] * sjd->CellSize,
+            p.Z() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][2]][2] * sjd->CellSize);
+        vislib::math::Point<double, 3> p3(
+            p.X() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][3]][0] * sjd->CellSize,
+            p.Y() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][3]][1] * sjd->CellSize,
+            p.Z() + (double)MarchingCubeTables::a2fVertexOffset[tets[tetIdx][3]][2] * sjd->CellSize);
+
+        double fullVol = vislib::math::Abs((p1 - p0).Dot((p2 - p0).Cross(p3 - p0))) / 6.0;
 
         tri.SetPointer(currVoxel.triangles + 3 * 3 * triOffset);
         vol = currVoxel.volumes + triOffset;
@@ -517,11 +541,15 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
             case 0x01:
                 //if (CubeValues[tets[tetIdx][0]] > 0.0f) {
                 //} else {
+                
                     tri[0] = p0.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][1]], 0.0f));
                     tri[2] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][2]], 0.0f));
                     tri[1] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][3]], 0.0f));
 
-                    *vol = vislib::math::Abs((tri[0] - p0).Dot((tri[2] - p0).Cross(tri[1] - p0))) / 6.0f;
+                    *vol = vislib::math::Abs((tri[0] - p0).Dot((tri[2] - p0).Cross(tri[1] - p0))) / 6.0;
+                    if (CubeValues[tets[tetIdx][0]] > 0.0) {
+                        *vol = fullVol - *vol;
+                    }
                 //}
                 //tri[0] = p;
                 //tri[1] = p;
@@ -542,7 +570,10 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     tri[1] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][3]], 0.0f));
                     tri[2] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][2]], 0.0f));
 
-                    *vol = vislib::math::Abs((tri[0] - p1).Dot((tri[1] - p1).Cross(tri[2] - p1))) / 6.0f;
+                    *vol = vislib::math::Abs((tri[0] - p1).Dot((tri[1] - p1).Cross(tri[2] - p1))) / 6.0;
+                    if (CubeValues[tets[tetIdx][1]] > 0.0) {
+                        *vol = fullVol - *vol;
+                    }
                 //}
                 //tri[0] = p;
                 //tri[1] = p;
@@ -567,9 +598,9 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     tri[2] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][3]], 0.0f));
 
                     // tet3
-                    *vol = vislib::math::Abs((p0 - p1).Dot((tri[2] - p1).Cross(tri[1] - p1))) / 6.0f;
+                    *vol = vislib::math::Abs((p0 - p1).Dot((tri[2] - p1).Cross(tri[1] - p1))) / 6.0;
                     // tet2
-                    *vol += vislib::math::Abs((tri[0] - p0).Dot((tri[2] - p0).Cross(tri[1] - p0))) / 6.0f;
+                    *vol += vislib::math::Abs((tri[0] - p0).Dot((tri[2] - p0).Cross(tri[1] - p0))) / 6.0;
                 //}
                 //tri[0] = p;
                 //tri[1] = p;
@@ -579,18 +610,24 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //tri[0].p[2] = VertexInterp(iso,g.p[v1],g.p[v3],g.val[v1],g.val[v3]);
                 triOffset++;
                 tri2.SetPointer(currVoxel.triangles + 3 * 3 * triOffset);
-                vol = currVoxel.volumes + triOffset;
+                vol2 = currVoxel.volumes + triOffset;
                 tri2[0] = tri[2];
                 tri2[1] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][2]], 0.0f));
                 tri2[2] = tri[1];
                 // tet1
-                *vol = vislib::math::Abs((tri2[1] - p1).Dot((tri[1] - p1).Cross(tri[2] - p1))) / 6.0f;
+                *vol2 = vislib::math::Abs((tri2[1] - p1).Dot((tri[1] - p1).Cross(tri[2] - p1))) / 6.0;
                 //tri2[0] = p;
                 //tri2[1] = p;
                 //tri2[2] = p;
                 //tri[1].p[0] = tri[0].p[2];
                 //tri[1].p[1] = VertexInterp(iso,g.p[v1],g.p[v2],g.val[v1],g.val[v2]);
                 //tri[1].p[2] = tri[0].p[1];
+
+                if (CubeValues[tets[tetIdx][0]] > 0.0) {
+                    *vol = fullVol - (*vol + *vol2);
+                    *vol2 = 0.0;
+                }
+
                 triOffset++;
                 break;
             case 0x0B:
@@ -604,7 +641,10 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     tri[1] = p2.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][1]], 0.0f));
                     tri[2] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][3]], 0.0f));
 
-                    *vol = vislib::math::Abs((tri[0] - p2).Dot((tri[1] - p2).Cross(tri[2] - p2))) / 6.0f;
+                    *vol = vislib::math::Abs((tri[0] - p2).Dot((tri[1] - p2).Cross(tri[2] - p2))) / 6.0;
+                    if (CubeValues[tets[tetIdx][2]] > 0.0) {
+                        *vol = fullVol - *vol;
+                    }
                 //}
                 //tri[0] = p;
                 //tri[1] = p;
@@ -625,7 +665,7 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 tri[2] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][3]], 0.0f));
 
                 // tet2
-                *vol = vislib::math::Abs((tri[2] - p0).Dot((tri[1] - p0).Cross(tri[0] - p0))) / 6.0f;
+                *vol = vislib::math::Abs((tri[2] - p0).Dot((tri[1] - p0).Cross(tri[0] - p0))) / 6.0;
                 //tri[0] = p;
                 //tri[1] = p;
                 //tri[2] = p;
@@ -634,21 +674,27 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //tri[0].p[2] = VertexInterp(iso,g.p[v0],g.p[v3],g.val[v0],g.val[v3]);
                 triOffset++;
                 tri2.SetPointer(currVoxel.triangles + 3 * 3 * triOffset);
-                vol = currVoxel.volumes + triOffset;
+                vol2 = currVoxel.volumes + triOffset;
                 tri2[0] = tri[0];
                 tri2[1] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][2]], 0.0f));
                 tri2[2] = tri[1];
 
                 // tet1
-                *vol = vislib::math::Abs((tri2[1] - p2).Dot((tri[0] - p2).Cross(tri[1] - p2))) / 6.0f;
+                *vol2 = vislib::math::Abs((tri2[1] - p2).Dot((tri[0] - p2).Cross(tri[1] - p2))) / 6.0;
                 // tet3
-                *vol += vislib::math::Abs((p0 - p2).Dot((tri[1] - p2).Cross(tri[0] - p2))) / 6.0f;
+                *vol2 += vislib::math::Abs((p0 - p2).Dot((tri[1] - p2).Cross(tri[0] - p2))) / 6.0;
                 //tri2[0] = p;
                 //tri2[1] = p;
                 //tri2[2] = p;
                 //tri[1].p[0] = tri[0].p[0];
                 //tri[1].p[1] = VertexInterp(iso,g.p[v1],g.p[v2],g.val[v1],g.val[v2]);
                 //tri[1].p[2] = tri[0].p[1];
+
+                if (CubeValues[tets[tetIdx][0]] > 0.0) {
+                    *vol = fullVol - (*vol + *vol2);
+                    *vol2 = 0.0;
+                }
+
                 triOffset++;
                 break;
             case 0x09:
@@ -677,12 +723,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     tri2[2] = tri[2];
 
                     // tet1
-                    *vol = vislib::math::Abs((tri[0] - p1).Dot((tri2[1] - p1).Cross(tri[1] - p1))) / 6.0f;
-                    vol = currVoxel.volumes + triOffset;
+                    *vol = vislib::math::Abs((tri[0] - p1).Dot((tri2[1] - p1).Cross(tri[1] - p1))) / 6.0;
+                    vol2 = currVoxel.volumes + triOffset;
                     // tet2
-                    *vol = vislib::math::Abs((tri[2] - p2).Dot((tri[1] - p2).Cross(tri2[1] - p2))) / 6.0f;
+                    *vol2 = vislib::math::Abs((tri[2] - p2).Dot((tri[1] - p2).Cross(tri2[1] - p2))) / 6.0;
                     // tet3
-                    *vol += vislib::math::Abs((p2 - p1).Dot((tri[1] - p1).Cross(tri2[1] - p1))) / 6.0f;
+                    *vol2 += vislib::math::Abs((p2 - p1).Dot((tri[1] - p1).Cross(tri2[1] - p1))) / 6.0;
                     //tri2[0] = p;
                     //tri2[1] = p;
                     //tri2[2] = p;
@@ -690,6 +736,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     //tri[1].p[1] = VertexInterp(iso,g.p[v0],g.p[v2],g.val[v0],g.val[v2]);
                     //tri[1].p[2] = tri[0].p[2];
                 //}
+
+                if (CubeValues[tets[tetIdx][1]] > 0.0) {
+                    *vol = fullVol - (*vol + *vol2);
+                    *vol2 = 0.0;
+                }
+
                 triOffset++;
                 break;
             case 0x07:
@@ -703,7 +755,10 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     tri[1] = p3.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][3]], CubeValues[tets[tetIdx][2]], 0.0f));
                     tri[2] = p3.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][3]], CubeValues[tets[tetIdx][1]], 0.0f));
 
-                    *vol = vislib::math::Abs((tri[0] - p3).Dot((tri[1] - p3).Cross(tri[2] - p3))) / 6.0f;
+                    *vol = vislib::math::Abs((tri[0] - p3).Dot((tri[1] - p3).Cross(tri[2] - p3))) / 6.0;
+                    if (CubeValues[tets[tetIdx][3]] > 0.0) {
+                        *vol = fullVol - *vol;
+                    }
                 //}
                 //tri[0] = p;
                 //tri[1] = p;
@@ -713,6 +768,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //tri[0].p[2] = VertexInterp(iso,g.p[v3],g.p[v1],g.val[v3],g.val[v1]);
                 triOffset++;
                 break;
+        }
+        if (triIdx != 0 && triIdx != 0x0F) {
+            if (CubeValues[tets[tetIdx][0]] <= 0 && CubeValues[tets[tetIdx][1]] <= 0
+                && CubeValues[tets[tetIdx][2]] <= 0 && CubeValues[tets[tetIdx][3]] <= 0) {
+                *vol = (sjd->CellSizeEX * sjd->CellSizeEX * sjd->CellSizeEX) / 6.0;
+            }
         }
     }
 }
@@ -831,12 +892,44 @@ DWORD TetraVoxelizer::Run(void *userData) {
                         //	sjd->Bounds.Back() + z * sjd->CellSize + sjd->CellSize * 0.5f);
                         currDist = sp.Distance(p) - currRad;
                         SIZE_T i = (z * sjd->resY + y) * sjd->resX + x;
-                        volume[i].distField = vislib::math::Min(volume[i].distField, currDist);
+                        //if (x > 5 && x < 8 && z > 4 && z < 8 && y > 6 && y < 9) {
+                            volume[i].distField = vislib::math::Min(volume[i].distField, currDist);
+                        //} else {
+                        //    volume[i].distField = 10000000;
+                        //}
                     }
                 }
             }
         }
     }
+
+
+    //unsigned int rx = sjd->resX;
+    //unsigned int ry = sjd->resY;
+    //unsigned int rz = sjd->resZ;
+    //sjd->resX = sjd->resY = sjd->resZ = 2;
+
+    //FatVoxel *tv = new FatVoxel[2 * 2 * 2];
+    //tv[(0 * sjd->resY + 0) * sjd->resX + 0].distField = 0.0;
+    //tv[(0 * sjd->resY + 0) * sjd->resX + 1].distField = -0.70710678118654752440084436210485;
+    //tv[(0 * sjd->resY + 1) * sjd->resX + 1].distField = -0.70710678118654752440084436210485;
+    //tv[(0 * sjd->resY + 1) * sjd->resX + 0].distField = 0.0;
+    //tv[(1 * sjd->resY + 0) * sjd->resX + 0].distField = 0.70710678118654752440084436210485;
+    //tv[(1 * sjd->resY + 0) * sjd->resX + 1].distField = 0.0;
+    //tv[(1 * sjd->resY + 1) * sjd->resX + 1].distField = 0.0;
+    //tv[(1 * sjd->resY + 1) * sjd->resX + 0].distField = 0.70710678118654752440084436210485;
+
+    //MarchCell(tv, 0, 0, 0);
+
+    //double mv = 0.0;
+    //FatVoxel &currVoxel = tv[(0 * sjd->resY + 0) * sjd->resX + 0];
+    //for (unsigned int x = 0; x < currVoxel.numTriangles; x++) {
+    //    mv += currVoxel.volumes[x];
+    //}
+
+    //sjd->resX = rx;
+    //sjd->resY = ry;
+    //sjd->resZ = rz;
 
     // march it
     for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
