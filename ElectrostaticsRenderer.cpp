@@ -298,6 +298,7 @@ bool ElectrostaticsRenderer::Render(Call& call)
 void ElectrostaticsRenderer::ComputeElectrostaticField( ParticleDataCall *particles, float stepWidth) {
 
     using namespace std;
+    using vislib::sys::Log;
 
     vislib::math::Vector<float, 3> orig = particles->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack();
     float w = particles->AccessBoundingBoxes().ObjectSpaceClipBox().Width();
@@ -328,6 +329,9 @@ void ElectrostaticsRenderer::ComputeElectrostaticField( ParticleDataCall *partic
 
     const float factor = float( 1.0 / ( 4.0 * vislib::math::PI_DOUBLE * 8.85418781762 * pow( 10.0, -12.0)));
 
+    //time_t t = clock(); // DEBUG
+
+    /*
     unsigned int cntX, cntY, cntZ, cntP;
     for( cntX = 0; cntX < rx; cntX++ ) {
         for( cntY = 0; cntY < ry; cntY++ ) {
@@ -349,6 +353,27 @@ void ElectrostaticsRenderer::ComputeElectrostaticField( ParticleDataCall *partic
             } //cntZ
         } // cntY
     } // cntX
+    */
+    int cnt, cntX, cntY, cntZ, cntP;
+#pragma omp parallel for private( cntX, cntY, cntZ, cntP, gridPos, pos)
+    for( cnt = 0; cnt < this->fieldSize; cnt++ ) {
+        cntZ = cnt / ( rx * ry);
+        cntY = ( cnt % ( rx * ry)) / rx;
+        cntX = cnt % rx;
+        gridPos.Set( float( cntX) + 0.5f, float( cntY) + 0.5f, float( cntZ) + 0.5f);
+        pos = orig + offset * gridPos;
+        for( cntP = 0; cntP < particles->ParticleCount(); cntP++ ) {
+            vislib::math::Vector<float, 3> pPos( 
+                particles->Particles()[cntP*4+0],
+                particles->Particles()[cntP*4+1],
+                particles->Particles()[cntP*4+2]);
+            this->field[cnt] += particles->Charges()[cntP*3] * ( ( pos - pPos) / powf( ( pos - pPos).Length(), 3.0f));
+        }
+        //this->field[cntX + cntY * rx + cntZ * rx * ry] *= factor;
+        this->field[cnt].Normalise();
+    }
+
+    //Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for computing the vector field: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
     // store the field
     if( storeField ) {
