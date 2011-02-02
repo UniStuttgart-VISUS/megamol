@@ -581,6 +581,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\volumetrics\TetraVoxelizer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\volumetrics\VoluMetricJob.h"
 					>
 				</File>
@@ -602,6 +606,10 @@
 				</File>
 				<File
 					RelativePath=".\volumetrics\TagVolume.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\volumetrics\TetraVoxelizer.cpp"
 					>
 				</File>
 				<File
