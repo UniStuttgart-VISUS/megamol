@@ -265,13 +265,18 @@ DWORD VoluMetricJob::Run(void *userData) {
 					sjd->resX = restX;
 					sjd->resY = restY;
 					sjd->resZ = restZ;
+                    sjd->offsetX = x * subVolCells;
+                    sjd->offsetY = y * subVolCells;
+                    sjd->offsetZ = z * subVolCells;
 					sjd->RadMult = RadMult;
 					sjd->MaxRad = MaxRad / RadMult;
 					subJobDataList.Add(sjd);
 					TetraVoxelizer *v = new TetraVoxelizer();
 					voxelizerList.Add(v);
 
-					pool.QueueUserWorkItem(v, sjd);
+                    //if (z == 0 && y == 0) {
+					    pool.QueueUserWorkItem(v, sjd);
+                    //}
 				}
 			}
 		}
@@ -284,14 +289,18 @@ DWORD VoluMetricJob::Run(void *userData) {
 		backBufferIndex = 1 - backBufferIndex;
 		this->hash++;
 
+        SIZE_T lastCount = pool.CountUserWorkItems();
 		while(1) {
 			if (pool.Wait(500) && pool.CountUserWorkItems() == 0) {
 						// we are done
 						break;
 			}
-			copyMeshesToBackbuffer(subJobDataList);
+            if (lastCount != pool.CountUserWorkItems()) {
+			    copyMeshesToBackbuffer(subJobDataList);
+                lastCount = pool.CountUserWorkItems();
+            }
 		}
-		copyMeshesToBackbuffer(subJobDataList);
+		copyMeshesToBackbuffer(subJobDataList, true);
         Log::DefaultLog.WriteInfo("Done marching.");
 
 		while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
@@ -405,7 +414,8 @@ bool VoluMetricJob::doBordersTouch(vislib::Array<BorderVoxel *> &border1, vislib
     return false;
 }
 
-void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList) {
+void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
+                                           bool outputStatistics) {
 	// copy finished meshes to output
 
     // TODO nope, generate them into the backbuffer instead.
@@ -435,6 +445,9 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
             globalSurfaceIDs[i][j] = gsi++;
         }
     }
+
+    // TODO: collect totally full subvolumes!
+restart:
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.borderVoxels.Count(); j++) {
             for (int k = i; k < todos.Count(); k++) {
@@ -454,6 +467,9 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
                                     }
                                     // UGLY HAZARD the devil's left ass cheek!
                                     //i = j = k = 0; l = -1;
+
+                                    // restart
+                                    goto restart;
                             }
                         }
                     }
@@ -483,8 +499,10 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     unsigned int numTriangles = 0;
     for (int i = 0; i < uniqueIDs.Count(); i++) {
         numTriangles += countPerID[i];
-        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f", uniqueIDs[i],
-            countPerID[i], surfPerID[i], volPerID[i]);
+        if (outputStatistics) {
+            vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f", uniqueIDs[i],
+                countPerID[i], surfPerID[i], volPerID[i]);
+        }
     }
     vert = new float[numTriangles * 9];
     norm = new float[numTriangles * 9];

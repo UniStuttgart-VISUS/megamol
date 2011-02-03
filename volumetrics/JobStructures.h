@@ -52,7 +52,11 @@ namespace volumetrics {
         }
 
         inline bool doesTouch(const BorderVoxel &rhs) {
-            if ((this->x == rhs.x) || (this->y == rhs.y) || (this->z == rhs.z)) {
+            // this one can only work for marching cubes since there are only edges on cube faces! (I think)
+            //if ((this->x == rhs.x) || (this->y == rhs.y) || (this->z == rhs.z)) {
+
+            if (vislib::math::Point<float, 3>(this->x, this->y, this->z).Distance(
+                        vislib::math::Point<float, 3>(rhs.x, rhs.y, rhs.z)) < 2) {
                 vislib::math::ShallowShallowTriangle<double, 3> sst1(const_cast<double *>(this->triangles.PeekElements()));
                 vislib::math::ShallowShallowTriangle<double, 3> sst2(const_cast<double *>(rhs.triangles.PeekElements()));
                 for (int i = 0; i < this->triangles.Count() / 9; i++) {
@@ -137,11 +141,18 @@ namespace volumetrics {
 		 */
 		vislib::math::Cuboid<float> Bounds;
 
-		unsigned int resX;
+		int resX;
 
-		unsigned int resY;
+		int resY;
 
-		unsigned int resZ;
+		int resZ;
+
+        /** global voxel position offset */
+        int offsetX;
+
+        int offsetY;
+
+        int offsetZ;
 
 		/**
 		 * Maximum radius in the datasource.

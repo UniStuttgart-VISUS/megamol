@@ -313,9 +313,9 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                 if (isBorder(x, y, z)) {
                     if (f.borderVoxel == NULL) {
                         f.borderVoxel = new BorderVoxel();
-                        f.borderVoxel->x = x;
-                        f.borderVoxel->y = y;
-                        f.borderVoxel->z = z;
+                        f.borderVoxel->x = x + sjd->offsetX;
+                        f.borderVoxel->y = y + sjd->offsetY;
+                        f.borderVoxel->z = z + sjd->offsetZ;
                         f.borderVoxel->triangles.AssertCapacity(f.numTriangles * 9);
                         border.Add(f.borderVoxel);
                     }
@@ -370,9 +370,9 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                     if (isBorder(x + moreNeighbors[ni].X(), y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z())) {
                                         if (n.borderVoxel == NULL) {
                                             n.borderVoxel = new BorderVoxel();
-                                            n.borderVoxel->x = x + moreNeighbors[ni].X();
-                                            n.borderVoxel->y = y + moreNeighbors[ni].Y();
-                                            n.borderVoxel->z = z + moreNeighbors[ni].Z();
+                                            n.borderVoxel->x = x + moreNeighbors[ni].X() + sjd->offsetX;
+                                            n.borderVoxel->y = y + moreNeighbors[ni].Y() + sjd->offsetY;
+                                            n.borderVoxel->z = z + moreNeighbors[ni].Z() + sjd->offsetZ;
                                             n.borderVoxel->triangles.AssertCapacity(n.numTriangles * 9);
                                             border.Add(n.borderVoxel);
                                         }
@@ -413,9 +413,6 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
 
     unsigned int i;
     float CubeValues[8];
-    int flagIndex, edgeFlags, edge, triangle;
-    int corner, vertex;
-    float offset;
     vislib::math::Point<float, 3> EdgeVertex[12];
 
     currVoxel.mcCase = 0;
@@ -789,6 +786,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
     vislib::math::Point<unsigned int, 3> pStart, pEnd;
     vislib::math::Point<float, 3> p;
     sjd = static_cast<SubJobData*>(userData);
+    SIZE_T numNeg = 0, numZero = 0, numPos = 0;
 
     unsigned int fifoEnd = 0, fifoCur = 0;
     FatVoxel *volume = new FatVoxel[sjd->resX * sjd->resY * sjd->resZ];
@@ -897,6 +895,15 @@ DWORD TetraVoxelizer::Run(void *userData) {
                         //} else {
                         //    volume[i].distField = 10000000;
                         //}
+                            if (volume[i].distField < 0.0) {
+                                numNeg++;
+                            } else {
+                                if (volume[i].distField > 0.0) {
+                                    numPos++;
+                                } else {
+                                    numZero++;
+                                }
+                            }
                     }
                 }
             }
@@ -931,61 +938,48 @@ DWORD TetraVoxelizer::Run(void *userData) {
     //sjd->resY = ry;
     //sjd->resZ = rz;
 
-    // march it
-    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
-        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
-            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
-                MarchCell(volume, x, y, z);
-            }
-        }
-    }
-
-    // collect the surfaces
-    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
-        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
-            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
-                CollectCell(volume, x, y, z);
-            }
-        }
-    }
-
-    // pass on border(unemptied) fatvoxels,
-    
-    //for (unsigned int l = 0; l < sjd->Result.surfaces.Count(); l++) {
-    //    vislib::graphics::ColourRGBAu8 c(rand() * 255, rand()*255, rand() * 255, 255);
-    //    vislib::math::ShallowShallowTriangle<float, 3> sst(sjd->Result.surfaces[l][0]);
-    //    for (unsigned int m = 0; m < sjd->Result.surfaces[l].Count(); m++) {
-    //        sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m]));
-    //        sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
-    //        sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m] + 3));
-    //        sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
-    //        sjd->Result.vertices.Append(vislib::math::Point<float, 3>(sjd->Result.surfaces[l][m] + 6));
-    //        sjd->Result.indices.Append(static_cast<unsigned int>(sjd->Result.vertices.Count() - 1));
-    //        vislib::math::Vector<float, 3> norm;
-    //        sst.SetPointer(sjd->Result.surfaces[l][m]);
-    //        (sst.Normal(norm));
-    //        sjd->Result.normals.Append(norm);
-    //        sjd->Result.normals.Append(norm);
-    //        sjd->Result.normals.Append(norm);
-    //        sjd->Result.colors.Append(c);
-    //        sjd->Result.colors.Append(c);
-    //        sjd->Result.colors.Append(c);
-    //    }
-    //}
-
-    // dealloc stuff in volume
-    // dealloc volume as a whole etc.
-    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
-        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
-            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
-                if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[(z * sjd->resY + y) * sjd->resX + x].mcCase] > 0) {
-                    SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].triangles);
-                    SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].volumes);
+    // TODO: does this really define an empty sub-volume?
+    if (numNeg == (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1)) {
+            vislib::Array<double> surf;
+            vislib::Array<BorderVoxel *> border;
+            sjd->Result.surfaces.Append(surf);
+            sjd->Result.borderVoxels.Append(border);
+            sjd->Result.surfaceSurfaces.Append(0.0);
+            sjd->Result.volumes.Append(sjd->resX * sjd->resY * sjd->resZ
+                * sjd->CellSizeEX * sjd->CellSizeEX * sjd->CellSizeEX);
+    } else {
+        // march it
+        for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+            for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+                for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+                    MarchCell(volume, x, y, z);
                 }
             }
         }
+
+        // collect the surfaces
+        for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+            for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+                for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+                    CollectCell(volume, x, y, z);
+                }
+            }
+        }
+
+        // dealloc stuff in volume
+        // dealloc volume as a whole etc.
+        for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+            for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+                for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+                    if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[(z * sjd->resY + y) * sjd->resX + x].mcCase] > 0) {
+                        SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].triangles);
+                        SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].volumes);
+                    }
+                }
+            }
+        }
+        ARY_SAFE_DELETE(volume);
     }
-    ARY_SAFE_DELETE(volume);
 
     sjd->Result.done = true;
 

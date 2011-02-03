@@ -107,7 +107,8 @@ namespace volumetrics {
 
 		void appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset);
 
-		void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList);
+		void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
+            bool outputStatistics = false);
 
         core::CallerSlot getDataSlot;
 
