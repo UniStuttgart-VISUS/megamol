@@ -309,7 +309,6 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                 sstTemp = sstI;
                 surfSurf += sstI.Area<double>();
                 volume += f.volumes[c];
-                // TODO volume!
                 if (isBorder(x, y, z)) {
                     if (f.borderVoxel == NULL) {
                         f.borderVoxel = new BorderVoxel();
@@ -366,7 +365,6 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                     sstTemp = sst2;
                                     surfSurf += sst2.Area<double>();
                                     volume += n.volumes[m];
-                                    // TODO volume!
                                     if (isBorder(x + moreNeighbors[ni].X(), y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z())) {
                                         if (n.borderVoxel == NULL) {
                                             n.borderVoxel = new BorderVoxel();

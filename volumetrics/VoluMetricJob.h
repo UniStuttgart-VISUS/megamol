@@ -114,6 +114,8 @@ namespace volumetrics {
 
         core::param::ParamSlot cellSizeRatioSlot;
 
+		core::param::ParamSlot continueToNextFrameSlot;
+
         core::param::ParamSlot metricsFilenameSlot;
 		
 		core::param::ParamSlot showBoundingBoxesSlot;
@@ -122,9 +124,9 @@ namespace volumetrics {
 
         core::param::ParamSlot showSurfaceGeometrySlot;
 
-		core::param::ParamSlot radiusMultiplierSlot;
+        core::param::ParamSlot subVolumeResolutionSlot;
 
-		core::param::ParamSlot continueToNextFrameSlot;
+		core::param::ParamSlot radiusMultiplierSlot;
 
 		core::param::ParamSlot resetContinueSlot;
 

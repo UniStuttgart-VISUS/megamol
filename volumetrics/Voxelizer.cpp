@@ -428,7 +428,10 @@ DWORD Voxelizer::Run(void *userData) {
             for (z = pStart.Z(); z <= static_cast<int>(pEnd.Z()); z++) {
                 for (y = pStart.Y(); y <= static_cast<int>(pEnd.Y()); y++) {
                     for (x = pStart.X(); x <= static_cast<int>(pEnd.X()); x++) {
-                        // TODO think about this. here the voxel content is determined by a corner
+                        // TODO think about this. here the voxel content is determined by the
+                        // lower-left-back corner.
+                        // but since we always march the next neighbors together with a cell,
+                        // this is probably the only right choice.
                         p.Set(
                         sjd->Bounds.Left() + x * sjd->CellSize,
                         sjd->Bounds.Bottom() + y * sjd->CellSize,

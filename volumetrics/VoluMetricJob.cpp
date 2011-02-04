@@ -9,6 +9,7 @@
 #include "param/FilePathParam.h"
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
+#include "param/IntParam.h"
 #include "vislib/Log.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/NamedColours.h"
@@ -38,6 +39,7 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 		outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
 		outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
         cellSizeRatioSlot("cellSizeRatioSlot", "Fraction of the minimal particle radius that is used as cell size"),
+        subVolumeResolutionSlot("subVolumeResolutionSlot", "maximum edge length of a subvolume processed as a separate job"),
 		MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
@@ -66,6 +68,9 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 
     this->cellSizeRatioSlot << new core::param::FloatParam(0.5f, 0.01f, 10.0f);
     this->MakeSlotAvailable(&this->cellSizeRatioSlot);
+
+    this->subVolumeResolutionSlot << new core::param::IntParam(128, 16, 2048);
+    this->MakeSlotAvailable(&this->subVolumeResolutionSlot);
 
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
 	this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
@@ -206,7 +211,8 @@ DWORD VoluMetricJob::Run(void *userData) {
 		} else {
 			b = datacall->AccessBoundingBoxes().ObjectSpaceBBox();
 		}
-		b.Grow(MaxRad);
+        // HAZARD that was bullshit, was it?
+		//b.Grow(MaxRad);
 
 		int resX = (int) ((float)b.Width() / cellSize) + 2;
 		int resY = (int) ((float)b.Height() / cellSize) + 2;
@@ -221,7 +227,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 		int divX = 1;
 		int divY = 1;
 		int divZ = 1;
-		int subVolCells = 128;
+        int subVolCells = this->subVolumeResolutionSlot.Param<megamol::core::param::IntParam>()->Value();
 
 		while (divX == 1 && divY == 1 && divZ ==1) {
 			subVolCells /= 2;
@@ -369,7 +375,7 @@ bool VoluMetricJob::getLineExtentCallback(core::Call &caller) {
 			ldc->AccessBoundingBoxes().SetObjectSpaceBBox(datacall->AccessBoundingBoxes().ObjectSpaceBBox());
 			vislib::math::Cuboid<float> b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
 			// TODO: maybe senseless paranoia?
-			b.Grow(MaxRad);
+			//b.Grow(MaxRad);
 			ldc->AccessBoundingBoxes().SetObjectSpaceClipBox(b);
 		}
         ldc->SetFrameCount(1);
@@ -417,8 +423,6 @@ bool VoluMetricJob::doBordersTouch(vislib::Array<BorderVoxel *> &border1, vislib
 void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
                                            bool outputStatistics) {
 	// copy finished meshes to output
-
-    // TODO nope, generate them into the backbuffer instead.
 
 	float *vert, *norm;
     unsigned char *col;
