@@ -870,6 +870,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GromacsLoader.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MolecularDataCall.cpp"
 				>
 			</File>
@@ -1169,6 +1173,10 @@
 			</File>
 			<File
 				RelativePath=".\GlWidgetLibrary.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GromacsLoader.h"
 				>
 			</File>
 			<File
