@@ -778,6 +778,15 @@ namespace net {
         virtual StringW ToStringW(void) const;
 
         /**
+         * Check for equality.
+         *
+         * @param rhs The right hand side operand.
+         *
+         * @return true if this object and 'rhs' are equal, false otherwise.
+         */
+        virtual bool operator ==(const AbstractCommEndPoint& rhs) const;
+
+        /**
          * Access the underlying IPEndPoint.
          *
          * @return Reference to the underlying IPEndPoint.

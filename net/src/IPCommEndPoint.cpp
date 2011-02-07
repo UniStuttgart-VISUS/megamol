@@ -232,6 +232,22 @@ vislib::StringW vislib::net::IPCommEndPoint::ToStringW(void) const {
 
 
 /*
+ * vislib::net::IPCommEndPoint:operator ==
+ */
+bool vislib::net::IPCommEndPoint::operator ==(
+        const AbstractCommEndPoint& rhs) const {
+    try {
+        const IPCommEndPoint& ep = dynamic_cast<const IPCommEndPoint&>(rhs);
+        return (this->endPoint == static_cast<IPEndPoint>(ep));
+    } catch (...) {
+        // If the conversion fails, 'rhs' is not an IPCommEndPoint and
+        // therefore cannot be equal.
+        return false;
+    }
+}
+
+
+/*
  * vislib::net::IPCommEndPoint::convertAddressFamily
  */
 vislib::net::IPCommEndPoint::ProtocolVersion 

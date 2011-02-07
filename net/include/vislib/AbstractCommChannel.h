@@ -77,6 +77,34 @@ namespace net {
         virtual void Connect(SmartRef<AbstractCommEndPoint> endPoint) = 0;
 
         /**
+         * Answer the address the channel is using locally.
+         *
+         * The object returned needs not necessarily to be identical with the
+         * address and end point has been bound or connected. Subclasses must,
+         * however, guarantee that the returned end point is equal wrt. to the
+         * == operator of the end point object.
+         *
+         * @return The address of the local end point.
+         *
+         * @throws Exception Or derived in case the operation fails.
+         */
+        virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const = 0;
+
+        /**
+         * Answer the address the remote peer of this channel is using.
+         *
+         * The object returned needs not necessarily to be identical with the
+         * address and end point has been bound or connected. Subclasses must,
+         * however, guarantee that the returned end point is equal wrt. to the
+         * == operator of the end point object.
+         *
+         * @return The address of the remote end point.
+         *
+         * @throws Exception Or derived in case the operation fails.
+         */
+        virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const = 0;
+
+        /**
          * Receives 'cntBytes' over the communication channel and saves them to 
          * the memory designated by 'outData'. 'outData' must be large enough to 
          * receive at least 'cntBytes'.

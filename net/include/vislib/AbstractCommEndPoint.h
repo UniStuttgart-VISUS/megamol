@@ -97,6 +97,53 @@ namespace net {
          */
         virtual StringW ToStringW(void) const = 0;
 
+        /**
+         * Test for equality.
+         *
+         * Subclasses should perform a member-wise comparison to determine
+         * whether the objects are equal.
+         *
+         * @param rhs The right-hand side operand.
+         *
+         * @return true if this object and 'rhs' are equal, false otherwise.
+         */
+        virtual bool operator ==(const AbstractCommEndPoint& rhs) const = 0;
+
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right-hand side operand. If NULL, the result is
+         *            always false.
+         *
+         * @return true if this object and *rhs are equal, false otherwise.
+         */
+        inline bool operator ==(const AbstractCommEndPoint *rhs) const {
+            return (rhs != NULL) ? (*this == *rhs) : false;
+        }
+
+        /**
+         * Test for inequality.
+         *
+         * @param rhs The right-hand side operand.
+         *
+         * @return true if this object and 'rhs' are not equal, false otherwise.
+         */
+        inline bool operator !=(const AbstractCommEndPoint& rhs) const {
+            return !(*this == rhs);
+        }
+
+        /**
+         * Test for equality.
+         *
+         * @param rhs The right-hand side operand. If NULL, the result is
+         *            always true.
+         *
+         * @return true if this object and *rhs are equal, false otherwise.
+         */
+        inline bool operator !=(const AbstractCommEndPoint *rhs) const {
+            return !(*this == rhs);
+        }
+
     protected:
 
         /** Superclass typedef. */

@@ -118,6 +118,26 @@ void vislib::net::TcpCommChannel::Connect(
 
 
 /*
+ * vislib::net::TcpCommChannel::GetLocalEndPoint
+ */
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
+vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
+    VLSTACKTRACE("TcpCommChannel::GetLocalEndPoint", __FILE__, __LINE__);
+    return IPCommEndPoint::Create(this->socket.GetLocalEndPoint());
+}
+
+
+/*
+ * vislib::net::TcpCommChannel::GetRemoteEndPoint
+ */
+vislib::SmartRef<vislib::net::AbstractCommEndPoint>
+vislib::net::TcpCommChannel::GetRemoteEndPoint(void) const {
+    VLSTACKTRACE("TcpCommChannel::GetRemoteEndPoint", __FILE__, __LINE__);
+    return IPCommEndPoint::Create(this->socket.GetPeerEndPoint());
+}
+
+
+/*
  * vislib::net::TcpCommChannel::Listen
  */
 void vislib::net::TcpCommChannel::Listen(const int backlog) {
