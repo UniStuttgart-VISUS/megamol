@@ -367,6 +367,16 @@ namespace trisoup {
         class Mesh {
         public:
 
+            /** Possible data types */
+            enum DataType {
+                DT_NONE,
+                DT_BYTE, // UINT8
+                DT_UINT16,
+                DT_UINT32,
+                DT_FLOAT,
+                DT_DOUBLE
+            };
+
             /** Ctor */
             Mesh(void);
 
@@ -383,12 +393,51 @@ namespace trisoup {
             }
 
             /**
+             * Answer the data type for triangle vertex index data
+             *
+             * @return The data type for triangle vertex index data
+             */
+            inline DataType GetTriDataType(void) const {
+                return this->triDT;
+            }
+
+            /**
+             * Answer if triangle vertex indices data has been set to non-null
+             *
+             * @return True if triangle vertex indices data is present
+             */
+            inline bool HasTriIndexPointer(void) const {
+                return this->tri.dataByte != NULL;
+            }
+
+            /**
              * Gets Triangle vertex indices (3 times tc) or NULL
              *
              * @return Triangle vertex indices (3 times tc) or NULL
              */
-            inline const unsigned int * GetTriIndexPointer(void) const {
-                return this->tri;
+            inline const unsigned char * GetTriIndexPointerByte(void) const {
+                ASSERT(this->triDT == DT_BYTE);
+                return this->tri.dataByte;
+            }
+
+            /**
+             * Gets Triangle vertex indices (3 times tc) or NULL
+             *
+             * @return Triangle vertex indices (3 times tc) or NULL
+             */
+            inline const unsigned short * GetTriIndexPointerUInt16(void) const {
+                ASSERT(this->triDT == DT_UINT16);
+                return this->tri.dataUInt16;
+            }
+
+            /**
+             * Gets Triangle vertex indices (3 times tc) or NULL
+             *
+             * @return Triangle vertex indices (3 times tc) or NULL
+             */
+            inline const unsigned int * GetTriIndexPointerUInt32(void) const {
+                ASSERT(this->triDT == DT_UINT32);
+                return this->tri.dataUInt32;
             }
 
             /**
@@ -401,12 +450,50 @@ namespace trisoup {
             }
 
             /**
+             * Answer the data type for vertices
+             *
+             * @return The data type for vertices
+             */
+            inline DataType GetVertexDataType(void) const {
+                return this->vrtDT;
+            }
+
+            /**
              * Gets Vertices (3 times vc)
              *
              * @return Vertices (3 times vc)
              */
-            inline const float * GetVertexPointer(void) const {
-                return this->vrt;
+            inline const double * GetVertexPointerDouble(void) const {
+                ASSERT(this->vrtDT == DT_DOUBLE);
+                return this->vrt.dataDouble;
+            }
+
+            /**
+             * Gets Vertices (3 times vc)
+             *
+             * @return Vertices (3 times vc)
+             */
+            inline const float * GetVertexPointerFloat(void) const {
+                ASSERT(this->vrtDT == DT_FLOAT);
+                return this->vrt.dataFloat;
+            }
+
+            /**
+             * Answer the data type for normals
+             *
+             * @return The data type for normals
+             */
+            inline DataType GetNormalDataType(void) const {
+                return this->nrmDT;
+            }
+
+            /**
+             * Answer if normal data has been set to non-null
+             *
+             * @return True if normal data is present
+             */
+            inline bool HasNormalPointer(void) const {
+                return this->nrm.dataDouble != NULL;
             }
 
             /**
@@ -414,8 +501,37 @@ namespace trisoup {
              *
              * @return Normals (3 times vc)
              */
-            inline const float * GetNormalPointer(void) const {
-                return this->nrm;
+            inline const double * GetNormalPointerDouble(void) const {
+                ASSERT(this->nrmDT == DT_DOUBLE);
+                return this->nrm.dataDouble;
+            }
+
+            /**
+             * Gets Normals (3 times vc)
+             *
+             * @return Normals (3 times vc)
+             */
+            inline const float * GetNormalPointerFloat(void) const {
+                ASSERT(this->nrmDT == DT_FLOAT);
+                return this->nrm.dataFloat;
+            }
+
+            /**
+             * Answer if colours data has been set to non-null
+             *
+             * @return True if colours data is present
+             */
+            inline bool HasColourPointer(void) const {
+                return this->col.dataDouble != NULL;
+            }
+
+            /**
+             * Answer the data type for colours
+             *
+             * @return The data type for colours
+             */
+            inline DataType GetColourDataType(void) const {
+                return this->colDT;
             }
 
             /**
@@ -423,8 +539,47 @@ namespace trisoup {
              *
              * @return Colors (3 times vc)
              */
-            inline const unsigned char * GetColourPointer(void) const {
-                return this->col;
+            inline const unsigned char * GetColourPointerByte(void) const {
+                ASSERT(this->colDT == DT_BYTE);
+                return this->col.dataByte;
+            }
+
+            /**
+             * Gets Colors (3 times vc)
+             *
+             * @return Colors (3 times vc)
+             */
+            inline const double * GetColourPointerDouble(void) const {
+                ASSERT(this->colDT == DT_DOUBLE);
+                return this->col.dataDouble;
+            }
+
+            /**
+             * Gets Colors (3 times vc)
+             *
+             * @return Colors (3 times vc)
+             */
+            inline const float * GetColourPointerFloat(void) const {
+                ASSERT(this->colDT == DT_FLOAT);
+                return this->col.dataFloat;
+            }
+
+            /**
+             * Answer if texture coordinates data has been set to non-null
+             *
+             * @return True if texture coordinates data is present
+             */
+            inline bool HasTextureCoordinatePointer(void) const {
+                return this->tex.dataDouble != NULL;
+            }
+
+            /**
+             * Answer the data type for texture coordinates
+             *
+             * @return The data type for texture coordinates
+             */
+            inline DataType GetTextureCoordinateDataType(void) const {
+                return this->texDT;
             }
 
             /**
@@ -432,8 +587,19 @@ namespace trisoup {
              *
              * @return Texture coordinates (2 times vc)
              */
-            inline const float * GetTextureCoordinatePointer(void) const {
-                return this->tex;
+            inline const double * GetTextureCoordinatePointerDouble(void) const {
+                ASSERT(this->texDT == DT_DOUBLE);
+                return this->tex.dataDouble;
+            }
+
+            /**
+             * Gets Texture coordinates (2 times vc)
+             *
+             * @return Texture coordinates (2 times vc)
+             */
+            inline const float * GetTextureCoordinatePointerFloat(void) const {
+                ASSERT(this->texDT == DT_FLOAT);
+                return this->tex.dataFloat;
             }
 
             /**
@@ -450,7 +616,7 @@ namespace trisoup {
              *
              * @param cnt The number of triangles
              * @param indices Pointer to 3 times cnt unsigned ints holding the
-             *                indices of the vertices used by the triangles
+             *                indices of the vertices used by the triangles; Must not be NULL
              * @param takeOwnership If true the object will take ownership of
              *                      all the memory of the pointers provided
              *                      and will free the memory on its
@@ -458,13 +624,22 @@ namespace trisoup {
              *                      ensure the memory stays valid as long as
              *                      it is used.
              */
-            void SetTriangleData(unsigned int cnt, unsigned int *indices, bool takeOwnership);
+            template<class Tp>
+            inline void SetTriangleData(unsigned int cnt, Tp indices, bool takeOwnership) {
+                this->clearTriData();
+                this->triCnt = cnt;
+                if (cnt > 0) {
+                    ASSERT(indices != NULL);
+                    this->setTriData(indices);
+                    this->triMemOwned = takeOwnership;
+                }
+            }
 
             /**
              * Sets the vertex data
              *
              * @param cnt The number of vertices
-             * @param vertices Pointer to 3 times cnt floats holding the vertices
+             * @param vertices Pointer to 3 times cnt floats holding the vertices; Must not be NULL
              * @param normals Pointer to 3 times cnt floats holding the normal vectors
              * @param colours Pointer to 3 times cnt unsigned bytes holding the colours
              * @param textureCoordinates Pointer to 2 times cnt float holding the texture coordinates
@@ -475,7 +650,21 @@ namespace trisoup {
              *                      ensure the memory stays valid as long as
              *                      it is used.
              */
-            void SetVertexData(unsigned int cnt, float *vertices, float *normals, unsigned char *colours, float *textureCoordinates, bool takeOwnership);
+            template<class Tp1, class Tp2, class Tp3, class Tp4>
+            inline void SetVertexData(unsigned int cnt,
+                    Tp1 vertices, Tp2 normals, Tp3 colours, Tp4 textureCoordinates,
+                    bool takeOwnership) {
+                this->clearVrtData();
+                this->vrtCnt = cnt;
+                if (cnt > 0) {
+                    ASSERT(vertices != NULL);
+                    this->setVrtData(vertices);
+                    this->setNrmData(normals);
+                    this->setColData(colours);
+                    this->setTexData(textureCoordinates);
+                    this->vrtMemOwned = takeOwnership;
+                }
+            }
 
             /**
              * Sets the material
@@ -503,31 +692,259 @@ namespace trisoup {
             /** Forbidden copy ctor */
             Mesh(const Mesh& src);
 
+            /**
+             * Clears all triangle index data
+             */
+            void clearTriData(void);
+
+            /**
+             * Clears all vertex data
+             */
+            void clearVrtData(void);
+
+            /**
+             * Sets the triangle data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setTriData(unsigned char *v) {
+                this->triDT = DT_BYTE;
+                this->tri.dataByte = v;
+            }
+
+            /**
+             * Sets the triangle data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setTriData(unsigned short *v) {
+                this->triDT = DT_UINT16;
+                this->tri.dataUInt16 = v;
+            }
+
+            /**
+             * Sets the triangle data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setTriData(unsigned int *v) {
+                this->triDT = DT_UINT32;
+                this->tri.dataUInt32 = v;
+            }
+
+            /**
+             * Sets the triangle data pointer
+             *
+             * @param v The new pointer value
+             */
+            template<class Tp>
+            inline void setTriData(Tp v) {
+                ASSERT(v == NULL);
+                this->triDT = DT_NONE;
+                this->tri.dataUInt32 = NULL;
+            }
+
+            /**
+             * Sets the vertex data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setVrtData(float *v) {
+                this->vrtDT = DT_FLOAT;
+                this->vrt.dataFloat = v;
+            }
+
+            /**
+             * Sets the vertex data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setVrtData(double *v) {
+                this->vrtDT = DT_DOUBLE;
+                this->vrt.dataDouble = v;
+            }
+
+            /**
+             * Sets the vertex data pointer
+             *
+             * @param v The new pointer value
+             */
+            template<class Tp>
+            inline void setVrtData(Tp v) {
+                ASSERT(v == NULL);
+                this->vrtDT = DT_NONE;
+                this->vrt.dataDouble = NULL;
+            }
+
+            /**
+             * Sets the normal data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setNrmData(float *v) {
+                this->nrmDT = (v == NULL) ? DT_NONE : DT_FLOAT;
+                this->nrm.dataFloat = v;
+            }
+
+            /**
+             * Sets the normal data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setNrmData(double *v) {
+                this->nrmDT = (v == NULL) ? DT_NONE : DT_DOUBLE;
+                this->nrm.dataDouble = v;
+            }
+
+            /**
+             * Sets the normal data pointer
+             *
+             * @param v The new pointer value
+             */
+            template<class Tp>
+            inline void setNrmData(Tp v) {
+                ASSERT(v == NULL);
+                this->nrmDT = DT_NONE;
+                this->nrm.dataDouble = NULL;
+            }
+
+            /**
+             * Sets the colour data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setColData(unsigned char *v) {
+                this->colDT = (v == NULL) ? DT_NONE : DT_BYTE;
+                this->col.dataByte = v;
+            }
+
+            /**
+             * Sets the colour data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setColData(float *v) {
+                this->colDT = (v == NULL) ? DT_NONE : DT_FLOAT;
+                this->col.dataFloat = v;
+            }
+
+            /**
+             * Sets the colour data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setColData(double *v) {
+                this->colDT = (v == NULL) ? DT_NONE : DT_DOUBLE;
+                this->col.dataDouble = v;
+            }
+
+            /**
+             * Sets the colour data pointer
+             *
+             * @param v The new pointer value
+             */
+            template<class Tp>
+            inline void setColData(Tp v) {
+                ASSERT(v == NULL);
+                this->colDT = DT_NONE;
+                this->col.dataDouble = NULL;
+            }
+
+            /**
+             * Sets the texture coordinate data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setTexData(float *v) {
+                this->texDT = (v == NULL) ? DT_NONE : DT_FLOAT;
+                this->tex.dataFloat = v;
+            }
+
+            /**
+             * Sets the texture coordinate data pointer
+             *
+             * @param v The new pointer value
+             */
+            inline void setTexData(double *v) {
+                this->texDT = (v == NULL) ? DT_NONE : DT_DOUBLE;
+                this->tex.dataDouble = v;
+            }
+
+            /**
+             * Sets the texture coordinate data pointer
+             *
+             * @param v The new pointer value
+             */
+            template<class Tp>
+            inline void setTexData(Tp v) {
+                ASSERT(v == NULL);
+                this->texDT = DT_NONE;
+                this->tex.dataDouble = NULL;
+            }
+
             /** Triangle count (ignored if t is NULL) */
             unsigned int triCnt;
 
-            /** Triangle vertex indices (3 times tc) or NULL */
-            unsigned int * tri;
+            /** Data type for triangle index data */
+            DataType triDT;
 
-            /** Flag indicating the if the triangle data memory is owned by this object and will be freed on its destruction */
+            /** Triangle vertex indices (3 times tc) or NULL */
+            union _tri_t {
+                unsigned char * dataByte;
+                unsigned short * dataUInt16;
+                unsigned int * dataUInt32;
+            } tri;
+
+            /**
+             * Flag indicating the if the triangle index data memory is owned
+             * by this object and will be freed on its destruction
+             */
             bool triMemOwned;
 
             /** Vertex count */
             unsigned int vrtCnt;
 
+            /** The vertex data type */
+            DataType vrtDT;
+
             /** Vertices (3 times vc) */
-            float * vrt;
+            union _vrt_t {
+                float * dataFloat;
+                double * dataDouble;
+            } vrt;
+
+            /** The normal data type */
+            DataType nrmDT;
 
             /** Normals (3 times vc) */
-            float * nrm;
+            union _nrm_t {
+                float * dataFloat;
+                double * dataDouble;
+            } nrm;
+
+            /** The colour data type */
+            DataType colDT;
 
             /** Colors (3 times vc) */
-            unsigned char * col;
+            union _col_t {
+                unsigned char * dataByte;
+                float * dataFloat;
+                double * dataDouble;
+            } col;
+
+            /** The texture coordinates data type */
+            DataType texDT;
 
             /** Texture coordinates (2 times vc) */
-            float * tex;
+            union _tex_t {
+                float * dataFloat;
+                double * dataDouble;
+            } tex;
 
-            /** Flag indicating the if the triangle data memory is owned by this object and will be freed on its destruction */
+            /**
+             * Flag indicating the if the vertex data memory is owned by this
+             * object and will be freed on its destruction
+             */
             bool vrtMemOwned;
 
             /** The material */

@@ -211,33 +211,71 @@ bool TriSoupRenderer::Render(Call& call) {
     for (unsigned int i = 0; i < ctmd->Count(); i++) {
         const CallTriMeshData::Mesh& obj = ctmd->Objects()[i];
 
-        ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointer());
-        if (obj.GetNormalPointer() != NULL) {
+        switch (obj.GetVertexDataType()) {
+            case CallTriMeshData::Mesh::DT_FLOAT:
+                ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
+                break;
+            case CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
+                break;
+            default: continue;
+        }
+
+        if (obj.HasNormalPointer() != NULL) {
             if (!normals) {
                 ::glEnableClientState(GL_NORMAL_ARRAY);
                 normals = true;
             }
-            ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointer());
+            switch (obj.GetNormalDataType()) {
+                case CallTriMeshData::Mesh::DT_FLOAT:
+                    ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointerFloat());
+                    break;
+                case CallTriMeshData::Mesh::DT_DOUBLE:
+                    ::glNormalPointer(GL_DOUBLE, 0, obj.GetNormalPointerDouble());
+                    break;
+                default: continue;
+            }
         } else if (normals) {
             ::glDisableClientState(GL_NORMAL_ARRAY);
             normals = false;
         }
-        if (obj.GetColourPointer() != NULL) {
+
+        if (obj.HasColourPointer() != NULL) {
             if (!colors) {
                 ::glEnableClientState(GL_COLOR_ARRAY);
                 colors = true;
             }
-            ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointer());
+            switch (obj.GetColourDataType()) {
+                case CallTriMeshData::Mesh::DT_BYTE:
+                    ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
+                    break;
+                case CallTriMeshData::Mesh::DT_FLOAT:
+                    ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
+                    break;
+                case CallTriMeshData::Mesh::DT_DOUBLE:
+                    ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
+                    break;
+                default: continue;
+            }
         } else if (colors) {
             ::glDisableClientState(GL_COLOR_ARRAY);
             colors = false;
         }
-        if (obj.GetTextureCoordinatePointer() != NULL) {
+
+        if (obj.HasTextureCoordinatePointer() != NULL) {
             if (!textures) {
                 ::glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 textures = true;
             }
-            ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointer());
+            switch (obj.GetTextureCoordinateDataType()) {
+                case CallTriMeshData::Mesh::DT_FLOAT:
+                    ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointerFloat());
+                    break;
+                case CallTriMeshData::Mesh::DT_DOUBLE:
+                    ::glTexCoordPointer(2, GL_DOUBLE, 0, obj.GetTextureCoordinatePointerDouble());
+                    break;
+                default: continue;
+            }
         } else if (textures) {
             ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
             textures = false;
@@ -283,13 +321,24 @@ bool TriSoupRenderer::Render(Call& call) {
 
         }
 
-        if (obj.GetTriIndexPointer() != NULL) {
-            ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointer());
-            //::glDrawElements(GL_TRIANGLES, obj.GetTriCount(), GL_UNSIGNED_INT, obj.GetTriIndexPointer());
+        if (obj.HasTriIndexPointer() != NULL) {
+            switch (obj.GetTriDataType()) {
+                case CallTriMeshData::Mesh::DT_BYTE:
+                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
+                    break;
+                case CallTriMeshData::Mesh::DT_UINT16:
+                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
+                    break;
+                case CallTriMeshData::Mesh::DT_UINT32:
+                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
+                    break;
+                default: continue;
+            }
         } else {
             ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
         }
     }
+
     if (normals) ::glDisableClientState(GL_NORMAL_ARRAY);
     if (colors) ::glDisableClientState(GL_COLOR_ARRAY);
     if (textures) ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -317,9 +366,20 @@ bool TriSoupRenderer::Render(Call& call) {
 
         ::glColor3f(1.0f, 0.0f, 0.0f);
         for (unsigned int i = 0; i < ctmd->Count(); i++) {
-            ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointer());
+            switch (ctmd->Objects()[i].GetVertexDataType()) {
+                case CallTriMeshData::Mesh::DT_FLOAT:
+                    ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointerFloat());
+                    break;
+                case CallTriMeshData::Mesh::DT_DOUBLE:
+                    ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[i].GetVertexPointerDouble());
+                    break;
+                default: continue;
+            }
             ::glDrawArrays(GL_POINTS, 0, ctmd->Objects()[i].GetVertexCount());
         }
+
+        ::glEnable(GL_POINT_SIZE);
+        ::glPointSize(1.0f);
     }
 
     ::glCullFace(cfm);

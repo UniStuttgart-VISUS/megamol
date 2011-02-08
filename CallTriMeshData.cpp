@@ -17,6 +17,8 @@
 
 using namespace megamol::trisoup;
 
+/****************************************************************************/
+
 
 /*
  * CallTriMeshData::Material::Material
@@ -173,13 +175,20 @@ CallTriMeshData::Material::Material(const CallTriMeshData::Material& src) {
     throw vislib::UnsupportedOperationException("CallTriMeshData::Material Copy-Ctor", __FILE__, __LINE__);
 }
 
+/****************************************************************************/
+
 
 /*
  * CallTriMeshData::Mesh::Mesh
  */
-CallTriMeshData::Mesh::Mesh(void) : triCnt(0), tri(NULL), triMemOwned(false),
-        vrtCnt(0), vrt(NULL), nrm(NULL), col(NULL), tex(NULL), vrtMemOwned(false), mat(NULL) {
-    // intentionally empty
+CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */triMemOwned(false),
+        vrtCnt(0), vrtDT(DT_NONE), /*vrt(NULL), */nrmDT(DT_NONE), /*nrm(NULL), */
+        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vrtMemOwned(false), mat(NULL) {
+    this->tri.dataByte = NULL;
+    this->vrt.dataFloat = NULL;
+    this->nrm.dataFloat = NULL;
+    this->col.dataByte = NULL;
+    this->tex.dataFloat = NULL;
 }
 
 
@@ -187,55 +196,10 @@ CallTriMeshData::Mesh::Mesh(void) : triCnt(0), tri(NULL), triMemOwned(false),
  * CallTriMeshData::Mesh::~Mesh
  */
 CallTriMeshData::Mesh::~Mesh(void) {
-    this->triCnt = 0;
-    if (this->triMemOwned) {
-        SAFE_DELETE(this->tri);
-    }
-    this->tri = NULL;
-    this->vrtCnt = 0;
-    if (this->vrtMemOwned) {
-        SAFE_DELETE(this->vrt);
-        SAFE_DELETE(this->nrm);
-        SAFE_DELETE(this->col);
-        SAFE_DELETE(this->tex);
-    }
-    this->vrt = NULL;
-    this->nrm = NULL;
-    this->col = NULL;
-    this->tex = NULL;
+    this->clearTriData();
+    this->clearVrtData();
     this->mat = NULL; // DO NOT DELETE
-}
 
-
-/*
- * CallTriMeshData::Mesh::SetTriangleData
- */
-void CallTriMeshData::Mesh::SetTriangleData(unsigned int cnt, unsigned int *indices, bool takeOwnership) {
-    if (this->triMemOwned) {
-        SAFE_DELETE(this->tri);
-    }
-    this->triCnt = cnt;
-    this->tri = indices;
-    this->triMemOwned = takeOwnership;
-}
-
-
-/*
- * CallTriMeshData::Mesh::SetVertexData
- */
-void CallTriMeshData::Mesh::SetVertexData(unsigned int cnt, float *vertices, float *normals, unsigned char *colours, float *textureCoordinates, bool takeOwnership) {
-    if (this->vrtMemOwned) {
-        SAFE_DELETE(this->vrt);
-        SAFE_DELETE(this->nrm);
-        SAFE_DELETE(this->col);
-        SAFE_DELETE(this->tex);
-    }
-    this->vrtCnt = cnt;
-    this->vrt = vertices;
-    this->nrm = normals;
-    this->col = colours;
-    this->tex = textureCoordinates;
-    this->vrtMemOwned = takeOwnership;
 }
 
 
@@ -243,14 +207,19 @@ void CallTriMeshData::Mesh::SetVertexData(unsigned int cnt, float *vertices, flo
  * CallTriMeshData::Mesh::operator==
  */
 bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
-    return (this->col == rhs.col)
+    return (this->col.dataByte == rhs.col.dataByte)
+        && (this->colDT == rhs.colDT)
         && (this->mat == rhs.mat)
-        && (this->nrm == rhs.nrm)
-        && (this->tex == rhs.tex)
-        && (this->tri == rhs.tri)
+        && (this->nrm.dataFloat == rhs.nrm.dataFloat)
+        && (this->nrmDT == rhs.nrmDT)
+        && (this->tex.dataFloat == rhs.tex.dataFloat)
+        && (this->texDT == rhs.texDT)
+        && (this->tri.dataByte == rhs.tri.dataByte)
+        && (this->triDT == rhs.triDT)
         && (this->triCnt == rhs.triCnt)
         && (this->triMemOwned == rhs.triMemOwned)
-        && (this->vrt == rhs.vrt)
+        && (this->vrt.dataFloat == rhs.vrt.dataFloat)
+        && (this->vrtDT == rhs.vrtDT)
         && (this->vrtCnt == rhs.vrtCnt)
         && (this->vrtMemOwned == rhs.vrtMemOwned);
 }
@@ -262,6 +231,75 @@ bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
 CallTriMeshData::Mesh::Mesh(const CallTriMeshData::Mesh& src) {
     throw vislib::UnsupportedOperationException("CallTriMeshData::Mesh Copy-Ctor", __FILE__, __LINE__);
 }
+
+
+/*
+ * CallTriMeshData::Mesh::clearTriData
+ */
+void CallTriMeshData::Mesh::clearTriData(void) {
+    this->triCnt = 0;
+    if (this->triMemOwned) {
+        if (this->tri.dataByte != NULL) {
+            switch (this->triDT) {
+                case DT_BYTE: delete[] this->tri.dataByte; break;
+                case DT_UINT16: delete[] this->tri.dataUInt16; break;
+                case DT_UINT32: delete[] this->tri.dataUInt32; break;
+                default: ASSERT(false);
+            }
+        }
+    }
+    this->triDT = DT_NONE;
+    this->tri.dataByte = NULL;
+}
+
+
+/*
+ * CallTriMeshData::Mesh::clearVrtData
+ */
+void CallTriMeshData::Mesh::clearVrtData(void) {
+    this->vrtCnt = 0;
+    if (this->vrtMemOwned) {
+        if (this->vrt.dataFloat != NULL) {
+            switch (this->vrtDT) {
+                case DT_FLOAT: delete[] this->vrt.dataFloat; break;
+                case DT_DOUBLE: delete[] this->vrt.dataDouble; break;
+                default: ASSERT(false);
+            }
+        }
+        if (this->nrm.dataFloat != NULL) {
+            switch (this->nrmDT) {
+                case DT_FLOAT: delete[] this->nrm.dataFloat; break;
+                case DT_DOUBLE: delete[] this->nrm.dataDouble; break;
+                default: ASSERT(false);
+            }
+        }
+        if (this->col.dataByte != NULL) {
+            switch (this->colDT) {
+                case DT_BYTE: delete[] this->col.dataByte; break;
+                case DT_FLOAT: delete[] this->col.dataFloat; break;
+                case DT_DOUBLE: delete[] this->col.dataDouble; break;
+                default: ASSERT(false);
+            }
+        }
+        if (this->tex.dataFloat != NULL) {
+            switch (this->texDT) {
+                case DT_FLOAT: delete[] this->tex.dataFloat; break;
+                case DT_DOUBLE: delete[] this->tex.dataDouble; break;
+                default: ASSERT(false);
+            }
+        }
+    }
+    this->vrtDT = DT_NONE;
+    this->vrt.dataFloat = NULL;
+    this->nrmDT = DT_NONE;
+    this->nrm.dataFloat = NULL;
+    this->colDT = DT_NONE;
+    this->col.dataByte = NULL;
+    this->texDT = DT_NONE;
+    this->tex.dataFloat = NULL;
+}
+
+/****************************************************************************/
 
 
 /*
