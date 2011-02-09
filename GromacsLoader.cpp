@@ -24,6 +24,7 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
+#include "gmx_system_xdr.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -1005,15 +1006,89 @@ void GromacsLoader::loadFile( const vislib::TString& filename) {
     SIZE_T frameCapacity = 10000;
     atomEntries.AssertCapacity( atomEntriesCapacity);
 
+    int ssize( 0);
+    char *strg = 0;
+    bool bDouble;
+    int fver, fgen;
+
+    FILE *bf = 0;
+    XDR *xdr = new XDR();
+
+    bf = fopen( T2A(this->topFilenameSlot.Param<param::FilePathParam>()->Value()), "rb");
+    xdrstdio_create( xdr, bf, xdr_op::XDR_DECODE);
+
+    if( bf ) {
+        xdr_int( xdr, &ssize);
+        strg = new char[ssize];
+        xdr_string( xdr, &strg, ssize);
+        std::cout << ssize << " - " << strg << " - " << std::endl;
+
+        int precision = 0;
+        xdr_int( xdr, &precision);
+
+        printf( "DEBUG: do_tpxheader: precision = %i\n", precision);
+        bDouble = (precision == sizeof(double));
+        if( (precision != sizeof(float)) && !bDouble) 
+            Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
+                "Unknown precision in file: real is %d bytes instead of %d or %d",  precision, sizeof(float), sizeof(double));
+
+        // Check versions!
+        xdr_int( xdr, &fver);
+
+        if( fver >= 26 )
+            xdr_int( xdr, &fgen);
+        else
+            fgen=0;
+
+/*
+if(file_version!=NULL)
+*file_version = fver;
+if(file_generation!=NULL)
+*file_generation = fgen;
+
+if ((fver <= tpx_incompatible_version) ||
+  ((fver > tpx_version) && !TopOnlyOK) ||
+  (fgen > tpx_generation))
+gmx_fatal(FARGS,"reading tpx file (%s) version %d with version %d program",
+	gmx_fio_getname(fio),fver,tpx_version);
+
+do_section(fio,eitemHEADER,bRead);
+gmx_fio_do_int(fio,tpx->natoms);
+if (fver >= 28)
+gmx_fio_do_int(fio,tpx->ngtc);
+else
+tpx->ngtc = 0;
+if (fver < 62) {
+gmx_fio_do_int(fio,idum);
+gmx_fio_do_real(fio,rdum);
+}
+gmx_fio_do_real(fio,tpx->lambda);
+gmx_fio_do_int(fio,tpx->bIr);
+gmx_fio_do_int(fio,tpx->bTop);
+gmx_fio_do_int(fio,tpx->bX);
+gmx_fio_do_int(fio,tpx->bV);
+gmx_fio_do_int(fio,tpx->bF);
+gmx_fio_do_int(fio,tpx->bBox);
+
+if((fgen > tpx_generation)) {
+// This can only happen if TopOnlyOK=TRUE
+tpx->bIr=FALSE;
+}
+*/
+
+        if( strg )
+            delete strg;
+        fclose( bf);
+    }
+    xdr_destroy( xdr);
+
     std::fstream topFile( 
         this->topFilenameSlot.Param<param::FilePathParam>()->Value(),
         std::ios::in | std::ios::binary);
     // try to load the topology file
     if( topFile.is_open() ) {
         // file successfully opened, read topology
-        char test;
-        topFile.read( reinterpret_cast<char *>(&test), sizeof(char));
-        std::cout << test << std::endl;
+
         /*
         // set the atom count for the first frame
         frameCnt = 0;
