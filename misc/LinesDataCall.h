@@ -42,6 +42,27 @@ namespace misc {
         class MEGAMOLCORE_API Lines {
         public:
 
+            /** The possible colour data types */
+            enum ColourDataType {
+                CDT_NONE,
+                CDT_BYTE_RGB,
+                CDT_BYTE_RGBA,
+                CDT_FLOAT_RGB,
+                CDT_FLOAT_RGBA,
+                CDT_DOUBLE_RGB,
+                CDT_DOUBLE_RGBA
+            };
+
+            /** Possible data types */
+            enum DataType {
+                DT_NONE,
+                DT_BYTE, // UINT8
+                DT_UINT16,
+                DT_UINT32,
+                DT_FLOAT,
+                DT_DOUBLE
+            };
+
             /**
              * Ctor
              */
@@ -65,13 +86,45 @@ namespace misc {
             }
 
             /**
+             * The colour data type
+             *
+             * @return The colour data type
+             */
+            inline ColourDataType ColourArrayType(void) const {
+                return this->colDT;
+            }
+
+            /**
              * Answer the colour array. This can be NULL if the global colour
              * data should be used
              *
              * @return The colour array
              */
-            inline const void *ColourArray(void) const {
-                return this->colArray;
+            inline const unsigned char *ColourArrayByte(void) const {
+                ASSERT((this->colDT == CDT_BYTE_RGB) || (this->colDT == CDT_BYTE_RGBA));
+                return this->col.dataByte;
+            }
+
+            /**
+             * Answer the colour array. This can be NULL if the global colour
+             * data should be used
+             *
+             * @return The colour array
+             */
+            inline const float *ColourArrayFloat(void) const {
+                ASSERT((this->colDT == CDT_FLOAT_RGB) || (this->colDT == CDT_FLOAT_RGBA));
+                return this->col.dataFloat;
+            }
+
+            /**
+             * Answer the colour array. This can be NULL if the global colour
+             * data should be used
+             *
+             * @return The colour array
+             */
+            inline const double *ColourArrayDouble(void) const {
+                ASSERT((this->colDT == CDT_DOUBLE_RGB) || (this->colDT == CDT_DOUBLE_RGBA));
+                return this->col.dataDouble;
             }
 
             /**
@@ -84,13 +137,12 @@ namespace misc {
             }
 
             /**
-             * Answer whether or not the colour data contains an alpha channel
+             * The data type of the index array
              *
-             * @return True if the colour data is RGBA, False if the colour
-             *         data is RGB
+             * @return The data type of the index array
              */
-            inline bool HasColourAlpha(void) const {
-                return this->colHasAlpha;
+            inline DataType IndexArrayDataType(void) const {
+                return this->idxDT;
             }
 
             /**
@@ -98,18 +150,29 @@ namespace misc {
              *
              * @return The index array
              */
-            inline const unsigned int *IndexArray(void) const {
-                return this->idxArray;
+            inline const unsigned char *IndexArrayByte(void) const {
+                ASSERT((this->idx.dataByte == NULL) || (this->idxDT == DT_BYTE));
+                return this->idx.dataByte;
             }
 
             /**
-             * Answer whether or not the colour data is stored as floats.
+             * Answer the index array. This can be NULL.
              *
-             * @return True if the colour data is stored as 'float*', false if
-             *         the colour data is stored as 'unsigned char*'.
+             * @return The index array
              */
-            inline bool IsFloatColour(void) const {
-                return this->useFloatCol;
+            inline const unsigned short *IndexArrayUInt16(void) const {
+                ASSERT((this->idx.dataByte == NULL) || (this->idxDT == DT_UINT16));
+                return this->idx.dataUInt16;
+            }
+
+            /**
+             * Answer the index array. This can be NULL.
+             *
+             * @return The index array
+             */
+            inline const unsigned int *IndexArrayUInt32(void) const {
+                ASSERT((this->idx.dataByte == NULL) || (this->idxDT == DT_UINT32));
+                return this->idx.dataUInt32;
             }
 
             /**
@@ -123,13 +186,15 @@ namespace misc {
              * @param vert The vertex array (XYZ-Float)
              * @param col The global colour to be used for all lines
              */
-            inline void Set(unsigned int cnt, const float *vert,
-                    vislib::graphics::ColourRGBAu8 col) {
+            template<class Tp>
+            inline void Set(unsigned int cnt, Tp vert, vislib::graphics::ColourRGBAu8 col) {
                 ASSERT(vert != NULL);
                 this->count = cnt;
-                this->vertArray = vert;
-                this->colArray = NULL;
-                this->idxArray = NULL;
+                this->setVrtData(vert);
+                this->colDT = CDT_NONE;
+                this->col.dataByte = NULL;
+                this->idxDT = DT_NONE;
+                this->idx.dataByte = NULL;
                 this->globCol = col;
             }
 
@@ -145,14 +210,15 @@ namespace misc {
              * @param vert The vertex array (XYZ-Float)
              * @param col The global colour to be used for all lines
              */
-            inline void Set(unsigned int cnt, const unsigned int *idx,
-                    const float *vert, vislib::graphics::ColourRGBAu8 col) {
+            template<class Tp1, class Tp2>
+            inline void Set(unsigned int cnt, Tp1 idx, Tp2 vert, vislib::graphics::ColourRGBAu8 col) {
                 ASSERT(idx != NULL);
                 ASSERT(vert != NULL);
                 this->count = cnt;
-                this->vertArray = vert;
-                this->colArray = NULL;
-                this->idxArray = idx;
+                this->setVrtData(vert);
+                this->setIdxData(idx);
+                this->colDT = CDT_NONE;
+                this->col.dataByte = NULL;
                 this->globCol = col;
             }
 
@@ -170,16 +236,15 @@ namespace misc {
              * @param withAlpha Flag if the colour array contains RGBA(true)
              *                  or RGB(false) values
              */
-            inline void Set(unsigned int cnt, const float *vert,
-                    const float *col, bool withAlpha) {
+            template<class Tp1, class Tp2>
+            inline void Set(unsigned int cnt, Tp1 vert, Tp2 col, bool withAlpha) {
                 ASSERT(vert != NULL);
                 ASSERT(col != NULL);
                 this->count = cnt;
-                this->vertArray = vert;
-                this->colArray = static_cast<const void*>(col);
-                this->useFloatCol = true;
-                this->colHasAlpha = withAlpha;
-                this->idxArray = NULL;
+                this->setVrtData(vert);
+                this->setColData(col, withAlpha);
+                this->idxDT = DT_NONE;
+                this->idx.dataUInt32 = NULL;
                 this->globCol.Set(0, 0, 0, 255);
             }
 
@@ -198,75 +263,25 @@ namespace misc {
              * @param withAlpha Flag if the colour array contains RGBA(true)
              *                  or RGB(false) values
              */
-            inline void Set(unsigned int cnt, const unsigned int *idx,
-                    const float *vert, const float *col, bool withAlpha) {
+            template<class Tp1, class Tp2, class Tp3>
+            inline void Set(unsigned int cnt, Tp1 idx, Tp2 vert, Tp3 col, bool withAlpha) {
                 ASSERT(idx != NULL);
                 ASSERT(vert != NULL);
                 ASSERT(col != NULL);
                 this->count = cnt;
-                this->vertArray = vert;
-                this->colArray = static_cast<const void *>(col);
-                this->useFloatCol = true;
-                this->colHasAlpha = withAlpha;
-                this->idxArray = idx;
+                this->setVrtData(vert);
+                this->setColData(col, withAlpha);
+                this->setIdxData(idx);
                 this->globCol.Set(0, 0, 0, 255);
             }
 
             /**
-             * Sets the data for this object. Ownership to all memory all
-             * pointers point to will not be take by this object. The owner
-             * must ensure that these pointers remain valid as long as they
-             * are used. None of the pointers may be NULL; Use the proper
-             * version of this method instead.
+             * Answer the data type of the vertex array
              *
-             * @param cnt The number of elements
-             * @param vert The vertex array (XYZ-Float)
-             * @param col The colour array (use same number of entries as the
-             *            vertex array)
-             * @param withAlpha Flag if the colour array contains RGBA(true)
-             *                  or RGB(false) values
+             * @return The data type of the vertex array
              */
-            inline void Set(unsigned int cnt, const float *vert,
-                    const unsigned char *col, bool withAlpha) {
-                ASSERT(vert != NULL);
-                ASSERT(col != NULL);
-                this->count = cnt;
-                this->vertArray = vert;
-                this->colArray = static_cast<const void *>(col);
-                this->useFloatCol = false;
-                this->colHasAlpha = withAlpha;
-                this->idxArray = NULL;
-                this->globCol.Set(0, 0, 0, 255);
-            }
-
-            /**
-             * Sets the data for this object. Ownership to all memory all
-             * pointers point to will not be take by this object. The owner
-             * must ensure that these pointers remain valid as long as they
-             * are used. None of the pointers may be NULL; Use the proper
-             * version of this method instead.
-             *
-             * @param cnt The number of elements
-             * @param idx The index array (UInt32)
-             * @param vert The vertex array (XYZ-Float)
-             * @param col The colour array (use same number of entries as the
-             *            vertex array)
-             * @param withAlpha Flag if the colour array contains RGBA(true)
-             *                  or RGB(false) values
-             */
-            inline void Set(unsigned int cnt, const unsigned int *idx,
-                    const float *vert, const unsigned char *col,
-                    bool withAlpha) {
-                ASSERT(idx != NULL);
-                ASSERT(vert != NULL);
-                ASSERT(col != NULL);
-                this->count = cnt;
-                this->vertArray = vert;
-                this->colArray = static_cast<const void*>(col);
-                this->useFloatCol = false;
-                this->colHasAlpha = withAlpha;
-                this->idxArray = idx;
-                this->globCol.Set(0, 0, 0, 255);
+            inline DataType VertexArrayDataType(void) const {
+                return this->vrtDT;
             }
 
             /**
@@ -274,17 +289,235 @@ namespace misc {
              *
              * @return The vertex array
              */
-            inline const float *VertexArray(void) const {
-                return this->vertArray;
+            inline const float *VertexArrayFloat(void) const {
+                ASSERT(this->vrtDT == DT_FLOAT);
+                return this->vrt.dataFloat;
+            }
+
+            /**
+             * Answer the vertex array (XYZ-Double)
+             *
+             * @return The vertex array
+             */
+            inline const double *VertexArrayDouble(void) const {
+                ASSERT(this->vrtDT == DT_DOUBLE);
+                return this->vrt.dataDouble;
             }
 
         private:
 
-            /** The colour array */
-            const void *colArray;
+            /**
+             * Sets the colour data
+             *
+             * @param the data pointer
+             * @param withAlpha Flag if data contains alpha information
+             */
+            inline void setColData(unsigned char *data, bool withAlpha) {
+                this->colDT = withAlpha ? CDT_BYTE_RGBA : CDT_BYTE_RGB;
+                this->col.dataByte = data;
+            }
 
-            /** Flag if the colour data contains an alpha channel */
-            bool colHasAlpha;
+            /**
+             * Sets the colour data
+             *
+             * @param the data pointer
+             * @param withAlpha Flag if data contains alpha information
+             */
+            inline void setColData(const unsigned char *data, bool withAlpha) {
+                this->colDT = withAlpha ? CDT_BYTE_RGBA : CDT_BYTE_RGB;
+                this->col.dataByte = data;
+            }
+
+            /**
+             * Sets the colour data
+             *
+             * @param the data pointer
+             * @param withAlpha Flag if data contains alpha information
+             */
+            inline void setColData(float *data, bool withAlpha) {
+                this->colDT = withAlpha ? CDT_FLOAT_RGBA : CDT_FLOAT_RGB;
+                this->col.dataFloat = data;
+            }
+
+            /**
+             * Sets the colour data
+             *
+             * @param the data pointer
+             * @param withAlpha Flag if data contains alpha information
+             */
+            inline void setColData(const float *data, bool withAlpha) {
+                this->colDT = withAlpha ? CDT_FLOAT_RGBA : CDT_FLOAT_RGB;
+                this->col.dataFloat = data;
+            }
+
+            /**
+             * Sets the colour data
+             *
+             * @param the data pointer
+             * @param withAlpha Flag if data contains alpha information
+             */
+            inline void setColData(double *data, bool withAlpha) {
+                this->colDT = withAlpha ? CDT_DOUBLE_RGBA : CDT_DOUBLE_RGB;
+                this->col.dataDouble = data;
+            }
+
+            /**
+             * Sets the colour data
+             *
+             * @param the data pointer
+             * @param withAlpha Flag if data contains alpha information
+             */
+            inline void setColData(const double *data, bool withAlpha) {
+                this->colDT = withAlpha ? CDT_DOUBLE_RGBA : CDT_DOUBLE_RGB;
+                this->col.dataDouble = data;
+            }
+
+            /**
+             * Sets the colour data
+             *
+             * @param the data pointer
+             * @param withAlpha Flag if data contains alpha information
+             */
+            template<class Tp>
+            inline void setColData(Tp data, bool withAlpha) {
+                ASSERT(data == NULL);
+                this->colDT = CDT_NONE;
+                this->col.dataByte = NULL;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setIdxData(unsigned char *data) {
+                this->idxDT = DT_BYTE;
+                this->idx.dataByte = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setIdxData(const unsigned char *data) {
+                this->idxDT = DT_BYTE;
+                this->idx.dataByte = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setIdxData(unsigned short *data) {
+                this->idxDT = DT_UINT16;
+                this->idx.dataUInt16 = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setIdxData(const unsigned short *data) {
+                this->idxDT = DT_UINT16;
+                this->idx.dataUInt16 = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setIdxData(unsigned int *data) {
+                this->idxDT = DT_UINT32;
+                this->idx.dataUInt32 = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setIdxData(const unsigned int *data) {
+                this->idxDT = DT_UINT32;
+                this->idx.dataUInt32 = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            template<class Tp>
+            inline void setIdxData(const Tp data) {
+                ASSERT(data == NULL);
+                this->idxDT = DT_NONE;
+                this->idx.dataUInt32 = NULL;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setVrtData(float *data) {
+                this->vrtDT = DT_FLOAT;
+                this->vrt.dataFloat = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setVrtData(const float *data) {
+                this->vrtDT = DT_FLOAT;
+                this->vrt.dataFloat = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setVrtData(double *data) {
+                this->vrtDT = DT_DOUBLE;
+                this->vrt.dataDouble = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            inline void setVrtData(const double *data) {
+                this->vrtDT = DT_DOUBLE;
+                this->vrt.dataDouble = data;
+            }
+
+            /**
+             * Sets the index data
+             *
+             * @param the data pointer
+             */
+            template<class Tp>
+            inline void setVrtData(Tp data) {
+                ASSERT(data == NULL);
+                this->vrtDT = DT_NONE;
+                this->vrt.dataDouble = NULL;
+            }
+
+            /** The colour data type */
+            ColourDataType colDT;
+
+            /** The colour array */
+            union _col_t {
+                const unsigned char *dataByte;
+                const float *dataFloat;
+                const double *dataDouble;
+            } col;
 
             /** The number of elements */
             unsigned int count;
@@ -298,14 +531,24 @@ namespace misc {
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
-            /** The index array (1xunsigned int*) */
-            const unsigned int *idxArray;
+            /** The index array data type */
+            DataType idxDT;
 
-            /** Flag if the colour data is stored as float array */
-            bool useFloatCol;
+            /** The index array (1xunsigned int*) */
+            union _idx_t {
+                const unsigned char *dataByte;
+                const unsigned short *dataUInt16;
+                const unsigned int *dataUInt32;
+            } idx;
+
+            /** The vertex array data type */
+            DataType vrtDT;
 
             /** The vertex array (XYZ-Float*) */
-            const float *vertArray;
+            union _vrt_t {
+                const float *dataFloat;
+                const double *dataDouble;
+            } vrt;
 
         };
 

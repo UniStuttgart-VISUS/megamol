@@ -10,14 +10,17 @@
 
 using namespace megamol::core;
 
+/****************************************************************************/
+
 
 /*
  * misc::LinesDataCall::Lines::Lines
  */
-misc::LinesDataCall::Lines::Lines(void) : colArray(NULL), colHasAlpha(false),
-        count(0), globCol(192, 192, 192, 255), idxArray(NULL),
-        useFloatCol(false), vertArray(NULL) {
-    // Intentionally empty
+misc::LinesDataCall::Lines::Lines(void) : colDT(CDT_NONE), count(0),
+        globCol(192, 192, 192, 255), idxDT(DT_NONE), vrtDT(DT_NONE) {
+    this->col.dataByte = NULL;
+    this->idx.dataByte = NULL;
+    this->vrt.dataFloat = NULL;
 }
 
 
@@ -25,11 +28,13 @@ misc::LinesDataCall::Lines::Lines(void) : colArray(NULL), colHasAlpha(false),
  * misc::LinesDataCall::Lines::~Lines
  */
 misc::LinesDataCall::Lines::~Lines(void) {
-    this->colArray = NULL; // DO NOT DELETE
     this->count = 0; // Paranoia
-    this->idxArray = NULL; // DO NOT DELETE
-    this->vertArray = NULL; // DO NOT DELETE
+    this->col.dataByte = NULL; // DO NOT DELETE
+    this->idx.dataByte = NULL; // DO NOT DELETE
+    this->vrt.dataFloat = NULL; // DO NOT DELETE
 }
+
+/****************************************************************************/
 
 
 /*

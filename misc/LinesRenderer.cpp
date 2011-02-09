@@ -112,7 +112,7 @@ bool misc::LinesRenderer::Render(Call& call) {
     for (unsigned int i = 0; i < ldc->Count(); i++) {
         const LinesDataCall::Lines& l = ldc->GetLines()[i];
 
-        if (l.ColourArray() == NULL) {
+        if (l.ColourArrayType() == LinesDataCall::Lines::CDT_NONE) {
             if (useColourArray) {
                 useColourArray = false;
                 ::glDisableClientState(GL_COLOR_ARRAY);
@@ -123,18 +123,54 @@ bool misc::LinesRenderer::Render(Call& call) {
                 useColourArray = true;
                 ::glEnableClientState(GL_COLOR_ARRAY);
             }
-            ::glColorPointer(l.HasColourAlpha() ? 4 : 3,
-                l.IsFloatColour() ? GL_FLOAT : GL_UNSIGNED_BYTE, 0, 
-                l.ColourArray());
+            switch (l.ColourArrayType()) {
+                case LinesDataCall::Lines::CDT_BYTE_RGB:
+                    ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, l.ColourArrayByte());
+                    break;
+                case LinesDataCall::Lines::CDT_BYTE_RGBA:
+                    ::glColorPointer(4, GL_UNSIGNED_BYTE, 0, l.ColourArrayByte());
+                    break;
+                case LinesDataCall::Lines::CDT_FLOAT_RGB:
+                    ::glColorPointer(3, GL_FLOAT, 0, l.ColourArrayFloat());
+                    break;
+                case LinesDataCall::Lines::CDT_FLOAT_RGBA:
+                    ::glColorPointer(4, GL_FLOAT, 0, l.ColourArrayFloat());
+                    break;
+                case LinesDataCall::Lines::CDT_DOUBLE_RGB:
+                    ::glColorPointer(3, GL_DOUBLE, 0, l.ColourArrayDouble());
+                    break;
+                case LinesDataCall::Lines::CDT_DOUBLE_RGBA:
+                    ::glColorPointer(4, GL_DOUBLE, 0, l.ColourArrayDouble());
+                    break;
+                default: continue;
+            }
         }
 
-        ::glVertexPointer(3, GL_FLOAT, 0, l.VertexArray());
+        switch (l.VertexArrayDataType()) {
+            case LinesDataCall::Lines::DT_FLOAT:
+                ::glVertexPointer(3, GL_FLOAT, 0, l.VertexArrayFloat());
+                break;
+            case LinesDataCall::Lines::DT_DOUBLE:
+                ::glVertexPointer(3, GL_DOUBLE, 0, l.VertexArrayDouble());
+                break;
+            default: continue;
+        }
 
-        if (l.IndexArray() == NULL) {
+        if (l.IndexArrayDataType() == LinesDataCall::Lines::DT_NONE) {
             ::glDrawArrays(GL_LINES, 0, l.Count());
         } else {
-            ::glDrawElements(GL_LINES, l.Count(),
-                GL_UNSIGNED_INT, l.IndexArray());
+            switch (l.IndexArrayDataType()) {
+                case LinesDataCall::Lines::DT_BYTE:
+                    ::glDrawElements(GL_LINES, l.Count(), GL_UNSIGNED_BYTE, l.IndexArrayByte());
+                    break;
+                case LinesDataCall::Lines::DT_UINT16:
+                    ::glDrawElements(GL_LINES, l.Count(), GL_UNSIGNED_SHORT, l.IndexArrayUInt16());
+                    break;
+                case LinesDataCall::Lines::DT_UINT32:
+                    ::glDrawElements(GL_LINES, l.Count(), GL_UNSIGNED_INT, l.IndexArrayUInt32());
+                    break;
+                default: continue;
+            }
         }
     }
 
