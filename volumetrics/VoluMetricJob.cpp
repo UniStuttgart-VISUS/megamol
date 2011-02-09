@@ -205,9 +205,11 @@ DWORD VoluMetricJob::Run(void *userData) {
 		unsigned int vertFloatSize = 0;
 		unsigned int idxNumOffset = 0;
 
+        // TODO: optimize clipbox / use another bounding box?
 		vislib::math::Cuboid<VoxelizerFloat> b;
 		if (datacall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
-			b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
+			//b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
+            b = datacall->AccessBoundingBoxes().ObjectSpaceBBox();
 		} else {
 			b = datacall->AccessBoundingBoxes().ObjectSpaceBBox();
 		}

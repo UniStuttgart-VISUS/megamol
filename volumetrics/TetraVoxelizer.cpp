@@ -180,7 +180,6 @@ VoxelizerFloat TetraVoxelizer::GetOffset(VoxelizerFloat fValue1, VoxelizerFloat 
 }
 
 VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
-    VoxelizerFloat volume = 0;
     SIZE_T cells = 0;
     vislib::math::Point<int, 3> p;
     vislib::Array<vislib::math::Point<int, 3> > queue;
@@ -199,7 +198,6 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, u
                 vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z());
 #endif /* ULTRADEBUG */
 
-            volume += sjd->CellSize * sjd->CellSize * sjd->CellSize;
             for (unsigned int ni = 0; ni < 6; ni++) {
                 if ((((moreNeighbors[ni].X() < 0) && (p.X() > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (p.X() < sjd->resX - 2))) &&
                     (((moreNeighbors[ni].Y() < 0) && (p.Y() > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (p.Y() < sjd->resY - 2))) &&
@@ -217,9 +215,7 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, u
             vislib::sys::Thread::CurrentID(), x, y, z, cells, volume);
     }
 #endif /* ULTRADEBUG */
-    // TODO why not use that instead of the piecewise accumulation above?
-    ASSERT(volume == cells * sjd->CellSize * sjd->CellSize * sjd->CellSize);
-    return volume;
+    return cells * sjd->CellSize * sjd->CellSize * sjd->CellSize;
 }
 
 void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
@@ -816,6 +812,9 @@ DWORD TetraVoxelizer::Run(void *userData) {
 
     // sample everything into our temporary volume
     vislib::math::Cuboid<float> bx(sjd->Bounds);
+    vislib::math::Point<VoxelizerFloat, 3> Centroid = bx.CalcCenter();
+    VoxelizerFloat distOffset = vislib::math::Sqrt(bx.Width() * bx.Width() + bx.Height() * bx.Height()
+        + bx.Depth() * bx.Depth()) / static_cast<VoxelizerFloat>(2.0);
     // TODO: what did this do anyway
     //VoxelizerFloat g = sjd->MaxRad * sjd->RadMult - sjd->MaxRad;
     //if (g > static_cast<VoxelizerFloat>(0)) {
@@ -849,8 +848,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
                 currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
                 currRad *= sjd->RadMult;
             }
-            // BUG: vertices outside the volume can still hang into this one, see above(!)
-            if (!bx.Contains(sp, vislib::math::Cuboid<float>::FACE_ALL)) {
+            if (Centroid.Distance(sp) > currRad + distOffset) {
                 continue;
             }
             x = static_cast<int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize);
@@ -940,7 +938,9 @@ DWORD TetraVoxelizer::Run(void *userData) {
     //sjd->resZ = rz;
 
     // TODO: does this really define an empty sub-volume?
-    if (numNeg == (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1)) {
+    //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    //    "[%08u] numNeg: %u\n", vislib::sys::Thread::CurrentID(), numNeg);
+    if (numNeg == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
         Surface s;
         s.surface = 0.0;
         s.volume = sjd->resX * sjd->resY * sjd->resZ
