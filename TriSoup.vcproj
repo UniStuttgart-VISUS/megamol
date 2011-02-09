@@ -588,10 +588,6 @@
 					RelativePath=".\volumetrics\VoluMetricJob.h"
 					>
 				</File>
-				<File
-					RelativePath=".\volumetrics\Voxelizer.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -614,10 +610,6 @@
 				</File>
 				<File
 					RelativePath=".\volumetrics\VoluMetricJob.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\volumetrics\Voxelizer.cpp"
 					>
 				</File>
 			</Filter>

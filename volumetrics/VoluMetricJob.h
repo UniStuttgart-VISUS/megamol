@@ -16,14 +16,11 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "misc/LinesDataCall.h"
 #include "CallTriMeshData.h"
-//#include "view/Renderer3DModule.h"
-//#include "Call.h"
 #include "CallerSlot.h"
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
 #include "vislib/Cuboid.h"
 #include "JobStructures.h"
-//#include "vislib/memutils.h"
 
 
 namespace megamol {
@@ -31,7 +28,9 @@ namespace trisoup {
 namespace volumetrics {
 
     /**
-     * TODO: Document
+     * Megamol job that computes metrics about the volume occupied by a number
+     * of (spherical) glyphs. Several threaded jobs are generated for a number of
+     * subvolumes to speed up computation and make your machine feel the pain.
      */
     class VoluMetricJob : public core::job::AbstractThreadedJob, public core::Module {
     public:
@@ -64,8 +63,10 @@ namespace volumetrics {
             return true;
         }
 
+        /** Ctor. */
         VoluMetricJob(void);
 
+        /** Dtor. */
         virtual ~VoluMetricJob(void);
 
     protected:
@@ -95,18 +96,75 @@ namespace volumetrics {
 
     private:
 
+        /**
+         * Answer whether two BorderVoxel arrays touch at least in one place.
+         *
+         * @param border1 the first BorderVoxel array
+         * @param border2 the second BorderVoxel array
+         *
+         * @return whether they touch
+         */
         bool doBordersTouch(vislib::Array<BorderVoxel *> &border1, vislib::Array<BorderVoxel *> &border2);
 
+        /**
+         * Provide some line geometry for rendering. Currently outputs the bounding
+         * boxes of the subvolumes that are computed in parallel.
+         *
+         * @param caller the call where the data is inserted
+         *
+         * @return true if successful
+         */
 		bool getLineDataCallback(core::Call &caller);
 
+        /**
+         * Provide the bounding box of the line geometry.
+         *
+         * @param caller the call where the data is inserted
+         *
+         * @return true if successful
+         */
 		bool getLineExtentCallback(core::Call &caller);
 
+        /**
+         * Provide the collected surfaces as mesh/triangle soup with randomized colors
+         * based on surface identity.
+         *
+         * @param caller the call where the data is inserted
+         *
+         * @return true if successful
+         */
 		bool getTriDataCallback(core::Call &caller);
 
-		void appendBox(vislib::RawStorage &data, vislib::math::Cuboid<float> &b, SIZE_T &offset);
+        /**
+         * Convenience method for generating the corner vertices of a cuboid and
+         * appending them to data. offset is increased accordingly by 8 * 3 * sizeof(VoxelizerFloat).
+         *
+         * @see appendBoxIndices
+         *
+         * @param data the RawStorage where the vertices should be appended
+         * @param offset Where appending starts. Is increased by 8 * 3 * sizeof(VoxelizerFloat).
+         */
+		void appendBox(vislib::RawStorage &data, vislib::math::Cuboid<VoxelizerFloat> &b, SIZE_T &offset);
 
-		void appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset);
+        /**
+         * Convenience method for generating the 12 indices for a wireframe of the 
+         * corner vertices of a cuboid and appending them to data. offset is increased
+         * accordingly by 12.
+         *
+         * @see appendBox
+         *
+         * @param data the RawStorage where the indices should be appended
+         * @param offset Where appending starts. Is increased by 12.
+         */
+        void appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset);
 
+        /**
+         * Connects the partial geometries of completed jobs and copies the result
+         * to the current backbuffer and performs a buffer swap. Increases hash to indicate this.
+         * 
+         * @param subJobDataList the submitted jobs
+         * @param outputStatistics whether to log information about the found surfaces to the default log
+         */
 		void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
             bool outputStatistics = false);
 
@@ -134,9 +192,9 @@ namespace volumetrics {
 
 		core::CalleeSlot outTriDataSlot;
 
-		float MaxRad;
+		VoxelizerFloat MaxRad;
 
-        float MinRad;
+        VoxelizerFloat MinRad;
 
 		/** the data hash, i.e. the front buffer frame available from the slots */
 		SIZE_T hash;

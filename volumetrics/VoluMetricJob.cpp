@@ -166,7 +166,7 @@ DWORD VoluMetricJob::Run(void *userData) {
         for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
 			//UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
             //printf("%u particles in list %u\n", numParticles, partListI);
-			float r = datacall->AccessParticles(partListI).GetGlobalRadius();
+			VoxelizerFloat r = datacall->AccessParticles(partListI).GetGlobalRadius();
 			if (r > MaxRad) {
 				MaxRad = r;
 			}
@@ -191,11 +191,11 @@ DWORD VoluMetricJob::Run(void *userData) {
 			}
         }
 
-		float RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
+		VoxelizerFloat RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
 		MaxRad *= RadMult;
         MinRad *= RadMult;
-        float cellSize = MinRad * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
-		int bboxBytes = 8 * 3 * sizeof(float);
+        VoxelizerFloat cellSize = MinRad * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
+		int bboxBytes = 8 * 3 * sizeof(VoxelizerFloat);
 		int bboxIdxes = 12 * 2 * sizeof(unsigned int);
 		int vertSize = bboxBytes * partListCnt;
 		int idxSize = bboxIdxes * partListCnt;
@@ -205,7 +205,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 		unsigned int vertFloatSize = 0;
 		unsigned int idxNumOffset = 0;
 
-		vislib::math::Cuboid<float> b;
+		vislib::math::Cuboid<VoxelizerFloat> b;
 		if (datacall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
 			b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
 		} else {
@@ -214,9 +214,9 @@ DWORD VoluMetricJob::Run(void *userData) {
         // HAZARD that was bullshit, was it?
 		//b.Grow(MaxRad);
 
-		int resX = (int) ((float)b.Width() / cellSize) + 2;
-		int resY = (int) ((float)b.Height() / cellSize) + 2;
-		int resZ = (int) ((float)b.Depth() / cellSize) + 2;
+		int resX = (int) ((VoxelizerFloat)b.Width() / cellSize) + 2;
+		int resY = (int) ((VoxelizerFloat)b.Height() / cellSize) + 2;
+		int resZ = (int) ((VoxelizerFloat)b.Depth() / cellSize) + 2;
 		b.SetWidth(resX * cellSize);
 		b.SetHeight(resY * cellSize);
 		b.SetDepth(resZ * cellSize);
@@ -231,9 +231,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 
 		while (divX == 1 && divY == 1 && divZ ==1) {
 			subVolCells /= 2;
-			divX = (int) ceil((float)resX / subVolCells);
-			divY = (int) ceil((float)resY / subVolCells);
-			divZ = (int) ceil((float)resZ / subVolCells);
+			divX = (int) ceil((VoxelizerFloat)resX / subVolCells);
+			divY = (int) ceil((VoxelizerFloat)resY / subVolCells);
+			divZ = (int) ceil((VoxelizerFloat)resZ / subVolCells);
 		}
 
 		vertSize += bboxBytes * divX * divY * divZ;
@@ -246,19 +246,19 @@ DWORD VoluMetricJob::Run(void *userData) {
             //for (int y = 0; y < 1; y++) {
 				for (int z = 0; z < divZ; z++) {
                 //for (int z = 0; z < 1; z++) {
-					float left = b.Left() + x * subVolCells * cellSize;
+					VoxelizerFloat left = b.Left() + x * subVolCells * cellSize;
 					int restX = resX - x * subVolCells;
 					restX = (restX > subVolCells) ? subVolCells + 1: restX;
-					float right = left + restX * cellSize;
-					float bottom = b.Bottom() + y * subVolCells * cellSize;
+					VoxelizerFloat right = left + restX * cellSize;
+					VoxelizerFloat bottom = b.Bottom() + y * subVolCells * cellSize;
 					int restY = resY - y * subVolCells;
 					restY = (restY > subVolCells) ? subVolCells + 1: restY;
-					float top = bottom + restY * cellSize;
-					float back = b.Back() + z * subVolCells * cellSize;
+					VoxelizerFloat top = bottom + restY * cellSize;
+					VoxelizerFloat back = b.Back() + z * subVolCells * cellSize;
 					int restZ = resZ - z * subVolCells;
 					restZ = (restZ > subVolCells) ? subVolCells + 1 : restZ;
-					float front = back + restZ * cellSize;
-					vislib::math::Cuboid<float> bx = vislib::math::Cuboid<float>(left, bottom, back,
+					VoxelizerFloat front = back + restZ * cellSize;
+					vislib::math::Cuboid<VoxelizerFloat> bx = vislib::math::Cuboid<VoxelizerFloat>(left, bottom, back,
 						right, top, front);
 					appendBox(bboxVertData[backBufferIndex], bx, bboxOffset);
 					appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
@@ -266,8 +266,8 @@ DWORD VoluMetricJob::Run(void *userData) {
 					SubJobData *sjd = new SubJobData();
 					sjd->datacall = datacall;
 					sjd->Bounds = bx;
-					sjd->CellSize = cellSize;
-                    sjd->CellSizeEX = (double)MinRad * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
+                    sjd->CellSize = (VoxelizerFloat)MinRad 
+                        * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
 					sjd->resX = restX;
 					sjd->resY = restY;
 					sjd->resZ = restZ;
@@ -289,7 +289,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 		//}
 		this->debugLines[backBufferIndex][0].Set(
 				static_cast<unsigned int>(idxNumOffset * 2),
-                this->bboxIdxData[backBufferIndex].As<unsigned int>(), this->bboxVertData[backBufferIndex].As<float>(),
+                this->bboxIdxData[backBufferIndex].As<unsigned int>(), this->bboxVertData[backBufferIndex].As<VoxelizerFloat>(),
 				vislib::graphics::NamedColours::BlanchedAlmond);
 		
 		backBufferIndex = 1 - backBufferIndex;
@@ -384,17 +384,25 @@ bool VoluMetricJob::getLineExtentCallback(core::Call &caller) {
 	return true;
 }
 
-void VoluMetricJob::appendBox(vislib::RawStorage &data, vislib::math::Cuboid<float> &b, SIZE_T &offset) {
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset + 0 * 3 * sizeof(float))) = b.GetLeftBottomFront();
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset + 1 * 3 * sizeof(float))) = b.GetRightBottomFront();
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset +	2 * 3 * sizeof(float))) = b.GetRightTopFront();
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset +	3 * 3 * sizeof(float))) = b.GetLeftTopFront();
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset +	4 * 3 * sizeof(float))) = b.GetLeftBottomBack();
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset +	5 * 3 * sizeof(float))) = b.GetRightBottomBack();
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset +	6 * 3 * sizeof(float))) = b.GetRightTopBack();
-	vislib::math::ShallowPoint<float, 3> (data.AsAt<float>(offset +	7 * 3 * sizeof(float))) = b.GetLeftTopBack();
+void VoluMetricJob::appendBox(vislib::RawStorage &data, vislib::math::Cuboid<VoxelizerFloat> &b, SIZE_T &offset) {
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        + 0 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftBottomFront();
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        + 1 * 3 * sizeof(VoxelizerFloat))) = b.GetRightBottomFront();
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        +	2 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopFront();
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        +	3 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopFront();
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        +	4 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftBottomBack();
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        +	5 * 3 * sizeof(VoxelizerFloat))) = b.GetRightBottomBack();
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        +	6 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopBack();
+	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+        +	7 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopBack();
 	//return 8 * 3 * sizeof(float) + offset;
-	offset += 8 * 3 * sizeof(float);
+	offset += 8 * 3 * sizeof(VoxelizerFloat);
 }
 
 void VoluMetricJob::appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset) {
@@ -424,7 +432,7 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
                                            bool outputStatistics) {
 	// copy finished meshes to output
 
-	float *vert, *norm;
+	VoxelizerFloat *vert, *norm;
     unsigned char *col;
 	//unsigned int *tri;
 	vislib::Array<unsigned int> todos;
@@ -453,17 +461,17 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     // TODO: collect totally full subvolumes!
 restart:
     for (int i = 0; i < todos.Count(); i++) {
-        for (int j = 0; j < subJobDataList[todos[i]]->Result.borderVoxels.Count(); j++) {
+        for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             for (int k = i; k < todos.Count(); k++) {
                 // are these neighbors or in the same subvolume?
-                vislib::math::Cuboid<float> c = subJobDataList[todos[i]]->Bounds;
+                vislib::math::Cuboid<VoxelizerFloat> c = subJobDataList[todos[i]]->Bounds;
                 c.Union(subJobDataList[todos[k]]->Bounds);
                 if ((i == k) || (c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
                                                 + subJobDataList[todos[k]]->Bounds.Volume())) {
-                    for (int l = 0; l < subJobDataList[todos[k]]->Result.borderVoxels.Count(); l++) {
+                    for (int l = 0; l < subJobDataList[todos[k]]->Result.surfaces.Count(); l++) {
                         if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
-                            if (doBordersTouch(subJobDataList[todos[i]]->Result.borderVoxels[j],
-                                subJobDataList[todos[k]]->Result.borderVoxels[l])) {
+                            if (doBordersTouch(subJobDataList[todos[i]]->Result.surfaces[j].border,
+                                subJobDataList[todos[k]]->Result.surfaces[l].border)) {
                                     if (globalSurfaceIDs[k][l] < globalSurfaceIDs[i][j]) {
                                         globalSurfaceIDs[i][j] = globalSurfaceIDs[k][l];
                                     } else {
@@ -483,20 +491,20 @@ restart:
     }
     vislib::Array<unsigned int> uniqueIDs;
     vislib::Array<unsigned int> countPerID;
-    vislib::Array<double> surfPerID;
-    vislib::Array<double> volPerID;
+    vislib::Array<VoxelizerFloat> surfPerID;
+    vislib::Array<VoxelizerFloat> volPerID;
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             SIZE_T pos = uniqueIDs.IndexOf(globalSurfaceIDs[i][j]);
             if (pos == vislib::Array<unsigned int>::INVALID_POS) {
                 uniqueIDs.Add(globalSurfaceIDs[i][j]);
-                countPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
-                surfPerID.Add(subJobDataList[todos[i]]->Result.surfaceSurfaces[j]);
-                volPerID.Add(subJobDataList[todos[i]]->Result.volumes[j]);
+                countPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].mesh.Count() / 9);
+                surfPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].surface);
+                volPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].volume);
             } else {
-                countPerID[pos] = countPerID[pos] + (subJobDataList[todos[i]]->Result.surfaces[j].Count() / 9);
-                surfPerID[pos] = surfPerID[pos] + subJobDataList[todos[i]]->Result.surfaceSurfaces[j];
-                volPerID[pos] = volPerID[pos] + subJobDataList[todos[i]]->Result.volumes[j];
+                countPerID[pos] = countPerID[pos] + (subJobDataList[todos[i]]->Result.surfaces[j].mesh.Count() / 9);
+                surfPerID[pos] = surfPerID[pos] + subJobDataList[todos[i]]->Result.surfaces[j].surface;
+                volPerID[pos] = volPerID[pos] + subJobDataList[todos[i]]->Result.surfaces[j].volume;
             }
         }
     }
@@ -508,8 +516,8 @@ restart:
                 countPerID[i], surfPerID[i], volPerID[i]);
         }
     }
-    vert = new float[numTriangles * 9];
-    norm = new float[numTriangles * 9];
+    vert = new VoxelizerFloat[numTriangles * 9];
+    norm = new VoxelizerFloat[numTriangles * 9];
     col = new unsigned char[numTriangles * 9];
     //tri = new unsigned int[numTriangles * 3];
     SIZE_T vertOffset = 0;
@@ -523,20 +531,21 @@ restart:
             //vislib::math::ShallowShallowTriangle<double, 3> sst(vert);
 
             for (int j = 0; j < todos.Count(); j++) {
-                for (int k = 0; k < subJobDataList[todos[j]]->Result.borderVoxels.Count(); k++) {
+                for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
                     if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
-                        for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.borderVoxels[k].Count(); l++) {
-                            SIZE_T vertCount = subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.Count() / 3;
+                        for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.surfaces[k].border.Count(); l++) {
+                            SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.Count() / 3;
+                            // TODO hurz
                             //memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements(),
                             //    vertCount * 3 * sizeof(double));
                             for (SIZE_T m = 0; m < vertCount; m++) {
                                 //tri[vertOffset + l] = vertOffset + l;
                                 vert[vertOffset + m * 3] = static_cast<float>(
-                                    *(subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements() + m * 3));
+                                    *(subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.PeekElements() + m * 3));
                                 vert[vertOffset + m * 3 + 1] = static_cast<float>(
-                                    *(subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements() + m * 3 + 1));
+                                    *(subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.PeekElements() + m * 3 + 1));
                                 vert[vertOffset + m * 3 + 2] = static_cast<float>(
-                                    *(subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements() + m * 3 + 2));
+                                    *(subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.PeekElements() + m * 3 + 2));
 
                                 col[vertOffset + m * 3] = c.R();
                                 col[vertOffset + m * 3 + 1] = c.G();
@@ -556,17 +565,18 @@ restart:
             for (int j = 0; j < todos.Count(); j++) {
                 for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
                     if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
-                        SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].Count() / 3;
+                        SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].mesh.Count() / 3;
+                        // TODO hurz
                         //memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].PeekElements(),
                         //     vertCount * 3 * sizeof(double));
                         for (SIZE_T l = 0; l < vertCount; l++) {
                             //tri[vertOffset + l] = vertOffset + l;
                             vert[vertOffset + l * 3] = static_cast<float>(
-                                *(subJobDataList[todos[j]]->Result.surfaces[k].PeekElements() + l * 3));
+                                *(subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements() + l * 3));
                             vert[vertOffset + l * 3 + 1] = static_cast<float>(
-                                *(subJobDataList[todos[j]]->Result.surfaces[k].PeekElements() + l * 3 + 1));
+                                *(subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements() + l * 3 + 1));
                             vert[vertOffset + l * 3 + 2] = static_cast<float>(
-                                *(subJobDataList[todos[j]]->Result.surfaces[k].PeekElements() + l * 3 + 2));
+                                *(subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements() + l * 3 + 2));
 
                             col[vertOffset + l * 3] = c.R();
                             col[vertOffset + l * 3 + 1] = c.G();
@@ -583,17 +593,17 @@ restart:
     }
 
     for (SIZE_T i = 0; i < vertOffset / 9; i++) {
-        vislib::math::ShallowShallowTriangle<float, 3> sst(&(vert[i * 9]));
-        vislib::math::Vector<float, 3> n;
+        vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sst(&(vert[i * 9]));
+        vislib::math::Vector<VoxelizerFloat, 3> n;
         sst.Normal(n);
-        memcpy(&(norm[i * 9]), n.PeekComponents(), sizeof(float) * 3);
-        memcpy(&(norm[i * 9 + 3]), n.PeekComponents(), sizeof(float) * 3);
-        memcpy(&(norm[i * 9 + 6]), n.PeekComponents(), sizeof(float) * 3);
+        memcpy(&(norm[i * 9]), n.PeekComponents(), sizeof(VoxelizerFloat) * 3);
+        memcpy(&(norm[i * 9 + 3]), n.PeekComponents(), sizeof(VoxelizerFloat) * 3);
+        memcpy(&(norm[i * 9 + 6]), n.PeekComponents(), sizeof(VoxelizerFloat) * 3);
     }
 
     debugMeshes[meshBackBufferIndex].SetVertexData(vertOffset / 3, vert, norm, col, NULL, true);
 	//debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, tri, true);
-    debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, NULL, false);
+    debugMeshes[meshBackBufferIndex].SetTriangleData(0, NULL, false);
 
 	meshBackBufferIndex = 1 - meshBackBufferIndex;
 	this->hash++;

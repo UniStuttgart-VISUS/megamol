@@ -19,14 +19,12 @@ namespace volumetrics {
 		TetraVoxelizer(void);
 		~TetraVoxelizer(void);
 
-		float GetOffset(float fValue1, float fValue2, float fValueDesired);
+		VoxelizerFloat GetOffset(VoxelizerFloat fValue1, VoxelizerFloat fValue2, VoxelizerFloat fValueDesired);
 
 		void growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
-							 unsigned char triIndex, 
-							 vislib::Array<double> &surf, vislib::Array<BorderVoxel *> &border,
-                             double &surfSurf, double &volume);
+							 unsigned char triIndex, Surface &surf);
 
-        double growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+        VoxelizerFloat growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
 
 		bool CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 
