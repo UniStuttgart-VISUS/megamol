@@ -24,7 +24,11 @@ namespace volumetrics {
 		void growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
 							 unsigned char triIndex, Surface &surf);
 
-        VoxelizerFloat growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+        /**
+         * also does compute fullFaces
+         */
+        VoxelizerFloat growVolume(FatVoxel *theVolume, unsigned char &fullFaces,
+            unsigned int x, unsigned int y, unsigned int z);
 
 		bool CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 
@@ -33,6 +37,9 @@ namespace volumetrics {
 		void MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
 
 		void CollectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+
+        static vislib::math::Point<signed char, 3> cornerNeighbors[8][7];
+        static vislib::math::Point<signed char, 3> moreNeighbors[6];
 
 		/**
 		 * Thread entry point.
@@ -58,6 +65,9 @@ namespace volumetrics {
 		}
 
 	private:
+
+        void debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3> &tri);
+        void debugPrintTriangle(vislib::math::ShallowShallowTriangle<double, 3> &tri);
 
         inline bool isBorder(unsigned int x, unsigned int y, unsigned int z) {
             return (x == 0) || (x == sjd->resX - 2)

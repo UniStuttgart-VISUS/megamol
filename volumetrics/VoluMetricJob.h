@@ -168,6 +168,11 @@ namespace volumetrics {
 		void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
             bool outputStatistics = false);
 
+        bool isSurfaceJoinableWithSubvolume(SubJobData *surfJob, int surfIdx, SubJobData *volume);
+
+        void joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+            int i, int j, int k, int l);
+
         core::CallerSlot getDataSlot;
 
         core::param::ParamSlot cellSizeRatioSlot;

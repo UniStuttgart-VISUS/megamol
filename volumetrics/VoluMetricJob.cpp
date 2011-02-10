@@ -205,7 +205,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 		unsigned int vertFloatSize = 0;
 		unsigned int idxNumOffset = 0;
 
-        // TODO: optimize clipbox / use another bounding box?
+        // TODO HAZARD BUG: optimize clipbox / use another bounding box?
 		vislib::math::Cuboid<VoxelizerFloat> b;
 		if (datacall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
 			//b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
@@ -430,6 +430,30 @@ bool VoluMetricJob::doBordersTouch(vislib::Array<BorderVoxel *> &border1, vislib
     return false;
 }
 
+VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+                                 int i, int j, int k, int l) {
+    if (globalSurfaceIDs[k][l] < globalSurfaceIDs[i][j]) {
+        globalSurfaceIDs[i][j] = globalSurfaceIDs[k][l];
+    } else {
+        globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
+    }
+}
+
+VISLIB_FORCEINLINE bool VoluMetricJob::isSurfaceJoinableWithSubvolume(SubJobData *surfJob, int surfIdx, SubJobData *volume) {
+    for (int i = 0; i < 6; i++) {
+        if (surfJob->Result.surfaces[surfIdx].fullFaces & (1 << i)) {
+            // are they located accordingly to each other?
+            int x = surfJob->offsetX + TetraVoxelizer::moreNeighbors[i].X() * (surfJob->resX - 1);
+            int y = surfJob->offsetY + TetraVoxelizer::moreNeighbors[i].Y() * (surfJob->resY - 1);
+            int z = surfJob->offsetZ + TetraVoxelizer::moreNeighbors[i].Z() * (surfJob->resZ - 1);
+            if (volume->offsetX == x && volume->offsetY == y && volume->offsetZ == z) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
                                            bool outputStatistics) {
 	// copy finished meshes to output
@@ -465,25 +489,40 @@ restart:
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             for (int k = i; k < todos.Count(); k++) {
-                // are these neighbors or in the same subvolume?
                 vislib::math::Cuboid<VoxelizerFloat> c = subJobDataList[todos[i]]->Bounds;
                 c.Union(subJobDataList[todos[k]]->Bounds);
+                // are these neighbors or in the same subvolume?
                 if ((i == k) || (c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
                                                 + subJobDataList[todos[k]]->Bounds.Volume())) {
                     for (int l = 0; l < subJobDataList[todos[k]]->Result.surfaces.Count(); l++) {
                         if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
-                            if (doBordersTouch(subJobDataList[todos[i]]->Result.surfaces[j].border,
-                                subJobDataList[todos[k]]->Result.surfaces[l].border)) {
-                                    if (globalSurfaceIDs[k][l] < globalSurfaceIDs[i][j]) {
-                                        globalSurfaceIDs[i][j] = globalSurfaceIDs[k][l];
-                                    } else {
-                                        globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
-                                    }
-                                    // UGLY HAZARD the devil's left ass cheek!
-                                    //i = j = k = 0; l = -1;
-
+                            if (subJobDataList[todos[i]]->Result.surfaces[j].surface == 0.0
+                                    && subJobDataList[todos[k]]->Result.surfaces[l].surface == 0.0) {
+                                // both are full, can be joined trivially
+                                joinSurfaces(globalSurfaceIDs, i, j, k, l);
+                                // restart
+                                goto restart;
+                            } else if (subJobDataList[todos[i]]->Result.surfaces[j].surface == 0.0) {
+                                if (isSurfaceJoinableWithSubvolume(subJobDataList[todos[k]], l, 
+                                        subJobDataList[todos[i]])) {
+                                    joinSurfaces(globalSurfaceIDs, i, j, k, l);
                                     // restart
                                     goto restart;
+                                }
+                            } else if (subJobDataList[todos[k]]->Result.surfaces[l].surface == 0.0) {
+                                if (isSurfaceJoinableWithSubvolume(subJobDataList[todos[i]], j, 
+                                        subJobDataList[todos[k]])) {
+                                    joinSurfaces(globalSurfaceIDs, i, j, k, l);
+                                    // restart
+                                    goto restart;
+                                }
+                            } else {
+                                if (doBordersTouch(subJobDataList[todos[i]]->Result.surfaces[j].border,
+                                        subJobDataList[todos[k]]->Result.surfaces[l].border)) {
+                                    joinSurfaces(globalSurfaceIDs, i, j, k, l);
+                                    // restart
+                                    goto restart;
+                                }
                             }
                         }
                     }
@@ -492,7 +531,7 @@ restart:
         }
     }
     vislib::Array<unsigned int> uniqueIDs;
-    vislib::Array<unsigned int> countPerID;
+    vislib::Array<SIZE_T> countPerID;
     vislib::Array<VoxelizerFloat> surfPerID;
     vislib::Array<VoxelizerFloat> volPerID;
     for (int i = 0; i < todos.Count(); i++) {
@@ -510,7 +549,7 @@ restart:
             }
         }
     }
-    unsigned int numTriangles = 0;
+    SIZE_T numTriangles = 0;
     for (int i = 0; i < uniqueIDs.Count(); i++) {
         numTriangles += countPerID[i];
         if (outputStatistics) {

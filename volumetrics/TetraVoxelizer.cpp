@@ -16,7 +16,7 @@ unsigned char tets[6][4] = {{0, 2, 3, 7}, {0, 2, 6, 7},
 
 //#define ULTRADEBUG
 
-vislib::math::Point<signed char, 3> cornerNeighbors[8][7] = {
+vislib::math::Point<signed char, 3> TetraVoxelizer::cornerNeighbors[8][7] = {
     {vislib::math::Point<signed char, 3>(-1, 0, 0), vislib::math::Point<signed char, 3>(-1, 0, -1),
      vislib::math::Point<signed char, 3>(-1, -1, 0), vislib::math::Point<signed char, 3>(-1, -1, -1),
      vislib::math::Point<signed char, 3>(0, 0, -1), vislib::math::Point<signed char, 3>(0, -1, -1),
@@ -59,13 +59,13 @@ vislib::math::Point<signed char, 3> cornerNeighbors[8][7] = {
      vislib::math::Point<signed char, 3>(0, 1, 0)}
 };
 
-vislib::math::Point<signed char, 3> moreNeighbors[]  = {
+vislib::math::Point<signed char, 3> TetraVoxelizer::moreNeighbors[6]  = {
     vislib::math::Point<signed char, 3>(-1, 0, 0), vislib::math::Point<signed char, 3>(1, 0, 0),
     vislib::math::Point<signed char, 3>(0, -1, 0), vislib::math::Point<signed char, 3>(0, 1, 0),
     vislib::math::Point<signed char, 3>(0, 0, -1), vislib::math::Point<signed char, 3>(0, 0, 1),
 };
 
-void debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3> &tri) {
+void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3> &tri) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
         "[%08u] (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)",
         vislib::sys::Thread::CurrentID(),
@@ -74,7 +74,7 @@ void debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3> &tri) {
         tri.PeekCoordinates()[2][0], tri.PeekCoordinates()[2][1], tri.PeekCoordinates()[2][2]);
 }
 
-void debugPrintTriangle(vislib::math::ShallowShallowTriangle<double, 3> &tri) {
+void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<double, 3> &tri) {
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
         "[%08u] (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf)",
         vislib::sys::Thread::CurrentID(),
@@ -179,7 +179,8 @@ VoxelizerFloat TetraVoxelizer::GetOffset(VoxelizerFloat fValue1, VoxelizerFloat 
     return (fValueDesired - fValue1)/fDelta;
 }
 
-VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
+VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fullFaces,
+                                          unsigned int x, unsigned int y, unsigned int z) {
     SIZE_T cells = 0;
     vislib::math::Point<int, 3> p;
     vislib::Array<vislib::math::Point<int, 3> > queue;
@@ -192,6 +193,25 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned int x, u
         if (f.mcCase == 255 && f.consumedTriangles == 0) {
             cells++;
             f.consumedTriangles = 1;
+            if (p.X() == 0) {
+                fullFaces |= 1;
+            }
+            if (p.Y() == 0) {
+                fullFaces |= 4;
+            }
+            if (p.Z() == 0) {
+                fullFaces |= 16;
+            }
+            if (p.X() == sjd->resX - 2) {
+                fullFaces |= 2;
+            }
+            if (p.Y() == sjd->resY - 2) {
+                fullFaces |= 8;
+            }
+            if (p.Z() == sjd->resZ - 2) {
+                fullFaces |= 32;
+            }
+
 #ifdef ULTRADEBUG
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 "[%08u] grew to (%04u, %04u, %04u)",
@@ -235,7 +255,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                     (((cornerNeighbors[a][b].Z() < 0) && (z > 0))
                         || (cornerNeighbors[a][b].Z() == 0) || ((cornerNeighbors[a][b].Z() > 0) && (z < sjd->resZ - 2)))) {
                             surf.volume +=
-                                growVolume(theVolume, x + cornerNeighbors[a][b].X(),
+                                growVolume(theVolume, surf.fullFaces, x + cornerNeighbors[a][b].X(),
                                 y + cornerNeighbors[a][b].Y(), z + cornerNeighbors[a][b].Z());
                 }
             }
