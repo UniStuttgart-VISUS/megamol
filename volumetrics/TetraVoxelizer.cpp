@@ -232,7 +232,7 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
     if (cells > 0) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
             "[%08u] grew volume from (%04u, %04u, %04u) yielding %u cells and a volume of %f",
-            vislib::sys::Thread::CurrentID(), x, y, z, cells, volume);
+            vislib::sys::Thread::CurrentID(), x, y, z, cells, cells * sjd->CellSize * sjd->CellSize * sjd->CellSize);
     }
 #endif /* ULTRADEBUG */
     return cells * sjd->CellSize * sjd->CellSize * sjd->CellSize;
@@ -963,7 +963,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
     if (numNeg == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
         Surface s;
         s.surface = 0.0;
-        s.volume = sjd->resX * sjd->resY * sjd->resZ
+        s.volume = (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1)
                 * sjd->CellSize * sjd->CellSize * sjd->CellSize;
         sjd->Result.surfaces.Append(s);
     } else {

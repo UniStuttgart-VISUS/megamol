@@ -35,11 +35,11 @@ namespace volumetrics {
         template <class Tp>
         VISLIB_FORCEINLINE static bool IsEqual(const vislib::math::AbstractPoint<double, 3, Tp> &a,
             const vislib::math::AbstractPoint<double, 3, Tp> &b) {
-                return a == b;
+                //return a == b;
                 // TODO ZOMG OMGWTF BUG FIXME
-                //return (vislib::math::IsEqual(a.GetX(), b.GetX(), 0.00001))
-                //    && (vislib::math::IsEqual(a.GetY(), b.GetY(), 0.00001))
-                //    && (vislib::math::IsEqual(a.GetZ(), b.GetZ(), 0.00001));
+                return (vislib::math::IsEqual(a.GetX(), b.GetX(), 0.00001))
+                    && (vislib::math::IsEqual(a.GetY(), b.GetY(), 0.00001))
+                    && (vislib::math::IsEqual(a.GetZ(), b.GetZ(), 0.00001));
         }
 
         /**
@@ -134,7 +134,6 @@ namespace volumetrics {
             // this one can only work for marching cubes since there are only edges on cube faces! (I think)
             //if ((this->x == rhs.x) || (this->y == rhs.y) || (this->z == rhs.z)) {
 
-            // TODO this is slow. do something inline-ey
             //if (vislib::math::Point<float, 3>(this->x, this->y, this->z).Distance(
             //            vislib::math::Point<float, 3>(rhs.x, rhs.y, rhs.z)) < 2) {
             if (((this->x - rhs.x) * (this->x - rhs.x) + (this->y - rhs.y) * (this->y - rhs.y)
