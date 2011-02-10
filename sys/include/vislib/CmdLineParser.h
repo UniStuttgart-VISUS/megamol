@@ -2525,8 +2525,9 @@ namespace sys {
 
             // allocating memory
             outCmdLine.argCount = outCmdLine.storeCount;
-            outCmdLine.memoryAnchor = new Char*[outCmdLine.storeCount];
-            outCmdLine.arguments = new Char*[outCmdLine.storeCount];
+            outCmdLine.memoryAnchor[0] = new Char*[outCmdLine.storeCount];
+            outCmdLine.memoryAnchor[1] = new Char*[outCmdLine.storeCount];
+            outCmdLine.arguments = outCmdLine.memoryAnchor[1];
 
             // copying selected arguments
             outCmdLine.storeCount = 0;
@@ -2535,7 +2536,7 @@ namespace sys {
                     Char *end = this->arglist[i].arg;
                     while ((*end != 0) && (*(end + 1) != 0)) end++;
 
-                    outCmdLine.arguments[outCmdLine.storeCount] = outCmdLine.memoryAnchor[outCmdLine.storeCount] = 
+                    outCmdLine.arguments[outCmdLine.storeCount] = outCmdLine.memoryAnchor[0][outCmdLine.storeCount] = 
                         outCmdLine.createArgument(this->arglist[i].arg, end);
 
                     outCmdLine.storeCount++;
