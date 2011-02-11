@@ -1349,6 +1349,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\simple.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SimpleMoleculeRenderer.h"
 				>
 			</File>
@@ -1378,6 +1382,10 @@
 			</File>
 			<File
 				RelativePath=".\SphereRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\state.h"
 				>
 			</File>
 			<File

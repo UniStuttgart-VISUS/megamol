@@ -21,7 +21,8 @@
 #include "Stride.h"
 #include "view/AnimDataModule.h"
 #include <fstream>
-
+#include "gmx_system_xdr.h"
+#include "state.h"
 
 
 namespace megamol {
@@ -70,6 +71,19 @@ namespace protein {
 
 
     protected:
+
+        class TpxHeader {
+        public:
+            int	bIr;        /* Non zero if input_rec is present */
+            int	bBox;       /* Non zero if a box is present */
+            int	bTop;       /* Non zero if a topology is present */
+            int	bX;         /* Non zero if coordinates are present */
+            int	bV;         /* Non zero if velocities are present */
+            int	bF;         /* Non zero if forces are present */
+            int	natoms;     /* The total number of atoms */
+            int ngtc;       /* The number of temperature coupling groups */
+            float lambda;   /* Current value of lambda */
+        } ;
 
         /**
          * Implementation of 'Create'.
@@ -497,6 +511,32 @@ namespace protein {
         void loadFile( const vislib::TString& filename);
 
         /**
+         * Get a real number from a xdr file.
+         * The number is returned as a floating point value.
+         *
+         * @param xdr The pointer to the XDR data.
+         * @param bDouble Read with double or single precision.
+         */
+        float getXdrReal( XDR *xdr, bool bDouble);
+
+        /**
+         * Read the TPX header of a XDR file.
+         *
+         * @param xdr The pointer to the xdr data.
+         * @param tpx The reference to the tpx header storage.
+         * @return 'true' if successfully read header, otherwise 'false'.
+         */
+        bool readTpxHeader( XDR *xdr, TpxHeader &tpx);
+
+        /**
+         * Read the state from a XDR file.
+         *
+         * @param xdr The pointer to the xdr data.
+         * @param state The reference to the state data storage.
+         */
+        bool readState( XDR *xdr, t_state &state);
+
+        /**
          * Parse one atom entry.
          *
          * @param atomEntry The atom entry string.
@@ -581,7 +621,6 @@ namespace protein {
          */
         void writeToXtcFile(const vislib::TString& filename);
 
-
         // -------------------- variables --------------------
 
         /** The topology file name slot */
@@ -649,6 +688,26 @@ namespace protein {
         vislib::Array<unsigned int> XTCFrameOffset;
         /** Flag whether the current xtc-filename is valid */
         bool xtcFileValid;
+
+        /* The tpx header */
+        TpxHeader tpx;
+        /* The state */
+        t_state state;
+        /* The most recent backwards incompatible TPR version. */
+        const int tpx_incompatible_version;
+        /* This number should be increased whenever the file format changes! */
+        const int tpx_version;
+        /* This number should only be increased when you edit the TOPOLOGY section
+         * of the tpx format. This way we can maintain forward compatibility too
+         * for all analysis tools and/or external programs that only need to
+         * know the atom/residue names, charges, and bond connectivity.
+         *  
+         * It first appeared in tpx version 26, when I also moved the inputrecord
+         * to the end of the tpx file, so we can just skip it if we only
+         * want the topology.
+         */
+        const int tpx_generation;
+
     };
 
 
