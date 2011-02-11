@@ -576,18 +576,9 @@ restart:
                     if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
                         for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.surfaces[k].border.Count(); l++) {
                             SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.Count() / 3;
-                            // TODO hurz
-                            //memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.borderVoxels[k][l]->triangles.PeekElements(),
-                            //    vertCount * 3 * sizeof(double));
+                            memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.PeekElements(),
+                                vertCount * 3 * sizeof(VoxelizerFloat));
                             for (SIZE_T m = 0; m < vertCount; m++) {
-                                //tri[vertOffset + l] = vertOffset + l;
-                                vert[vertOffset + m * 3] = static_cast<float>(
-                                    *(subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.PeekElements() + m * 3));
-                                vert[vertOffset + m * 3 + 1] = static_cast<float>(
-                                    *(subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.PeekElements() + m * 3 + 1));
-                                vert[vertOffset + m * 3 + 2] = static_cast<float>(
-                                    *(subJobDataList[todos[j]]->Result.surfaces[k].border[l]->triangles.PeekElements() + m * 3 + 2));
-
                                 col[vertOffset + m * 3] = c.R();
                                 col[vertOffset + m * 3 + 1] = c.G();
                                 col[vertOffset + m * 3 + 2] = c.B();
@@ -607,18 +598,9 @@ restart:
                 for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
                     if (globalSurfaceIDs[j][k] == uniqueIDs[i]) {
                         SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].mesh.Count() / 3;
-                        // TODO hurz
-                        //memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].PeekElements(),
-                        //     vertCount * 3 * sizeof(double));
+                        memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements(),
+                             vertCount * 3 * sizeof(VoxelizerFloat));
                         for (SIZE_T l = 0; l < vertCount; l++) {
-                            //tri[vertOffset + l] = vertOffset + l;
-                            vert[vertOffset + l * 3] = static_cast<float>(
-                                *(subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements() + l * 3));
-                            vert[vertOffset + l * 3 + 1] = static_cast<float>(
-                                *(subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements() + l * 3 + 1));
-                            vert[vertOffset + l * 3 + 2] = static_cast<float>(
-                                *(subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements() + l * 3 + 2));
-
                             col[vertOffset + l * 3] = c.R();
                             col[vertOffset + l * 3 + 1] = c.G();
                             col[vertOffset + l * 3 + 2] = c.B();
