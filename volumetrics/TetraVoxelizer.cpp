@@ -175,8 +175,10 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
 
 VoxelizerFloat TetraVoxelizer::GetOffset(VoxelizerFloat fValue1, VoxelizerFloat fValue2, VoxelizerFloat fValueDesired) {
     VoxelizerFloat fDelta = fValue2 - fValue1;
-    //ASSERT(fDelta > 0.0f);
-    return (fValueDesired - fValue1)/fDelta;
+    ASSERT(fDelta != static_cast<VoxelizerFloat>(0));
+    VoxelizerFloat res = (fValueDesired - fValue1) / fDelta;
+    ASSERT(res <= static_cast<VoxelizerFloat>(1) && res >= static_cast<VoxelizerFloat>(0));
+    return res;
 }
 
 VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fullFaces,
@@ -537,9 +539,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //if (CubeValues[tets[tetIdx][0]] > 0.0f) {
                 //} else {
                 
-                    tri[0] = p0.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][1]], 0.0f));
-                    tri[2] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][2]], 0.0f));
-                    tri[1] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][3]], 0.0f));
+                    tri[0] = p0.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][0]],
+                        CubeValues[tets[tetIdx][1]], static_cast<VoxelizerFloat>(0)));
+                    tri[2] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]],
+                        CubeValues[tets[tetIdx][2]], static_cast<VoxelizerFloat>(0)));
+                    tri[1] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]],
+                        CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
 
                     *vol = vislib::math::Abs((tri[0] - p0).Dot((tri[2] - p0).Cross(tri[1] - p0)))
                         / static_cast<VoxelizerFloat>(6.0);
@@ -562,9 +567,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //    tri[2] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][3]], 0.0f));
                 //    tri[1] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][2]], 0.0f));
                 //} else {
-                    tri[0] = p1.Interpolate(p0, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][0]], 0.0f));
-                    tri[1] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][3]], 0.0f));
-                    tri[2] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][2]], 0.0f));
+                    tri[0] = p1.Interpolate(p0, GetOffset(CubeValues[tets[tetIdx][1]], 
+                        CubeValues[tets[tetIdx][0]], static_cast<VoxelizerFloat>(0)));
+                    tri[1] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]],
+                        CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
+                    tri[2] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]],
+                        CubeValues[tets[tetIdx][2]], static_cast<VoxelizerFloat>(0)));
 
                     *vol = vislib::math::Abs((tri[0] - p1).Dot((tri[1] - p1).Cross(tri[2] - p1)))
                         / static_cast<VoxelizerFloat>(6.0);
@@ -590,9 +598,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //    tri[1] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][2]], 0.0f));
                 //    tri[2] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][3]], 0.0f));
                 //} else {
-                    tri[0] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][3]], 0.0f));
-                    tri[1] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][2]], 0.0f));
-                    tri[2] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][3]], 0.0f));
+                    tri[0] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]],
+                        CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
+                    tri[1] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]],
+                        CubeValues[tets[tetIdx][2]], static_cast<VoxelizerFloat>(0)));
+                    tri[2] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]],
+                        CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
 
                     // tet3
                     *vol = vislib::math::Abs((p0 - p1).Dot((tri[2] - p1).Cross(tri[1] - p1)))
@@ -611,7 +622,8 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 tri2.SetPointer(currVoxel.triangles + 3 * 3 * triOffset);
                 vol2 = currVoxel.volumes + triOffset;
                 tri2[0] = tri[2];
-                tri2[1] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][2]], 0.0f));
+                tri2[1] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]],
+                    CubeValues[tets[tetIdx][2]], static_cast<VoxelizerFloat>(0)));
                 tri2[2] = tri[1];
                 // tet1
                 *vol2 = vislib::math::Abs((tri2[1] - p1).Dot((tri[1] - p1).Cross(tri[2] - p1)))
@@ -637,9 +649,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //    tri[2] = p2.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][1]], 0.0f));
                 //    tri[1] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][3]], 0.0f));
                 //} else {
-                    tri[0] = p2.Interpolate(p0, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][0]], 0.0f));
-                    tri[1] = p2.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][1]], 0.0f));
-                    tri[2] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][3]], 0.0f));
+                    tri[0] = p2.Interpolate(p0, GetOffset(CubeValues[tets[tetIdx][2]],
+                        CubeValues[tets[tetIdx][0]], static_cast<VoxelizerFloat>(0)));
+                    tri[1] = p2.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][2]],
+                        CubeValues[tets[tetIdx][1]], static_cast<VoxelizerFloat>(0)));
+                    tri[2] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]],
+                        CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
 
                     *vol = vislib::math::Abs((tri[0] - p2).Dot((tri[1] - p2).Cross(tri[2] - p2)))
                         / static_cast<VoxelizerFloat>(6.0);
@@ -661,9 +676,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 // tetrahedron 1: around p2: p1->p2, p0->p1, p2->p3
                 // tetrahedron 2: around p0: p0->p3, p2->p3, p0->p1
                 // tetrahedron 3: around p2: p0, p2->p3, p0->p1
-                tri[0] = p0.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][1]], 0.0f));
-                tri[1] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][3]], 0.0f));
-                tri[2] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][3]], 0.0f));
+                tri[0] = p0.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][0]],
+                    CubeValues[tets[tetIdx][1]], static_cast<VoxelizerFloat>(0)));
+                tri[1] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]],
+                    CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
+                tri[2] = p0.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][0]],
+                    CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
 
                 // tet2
                 *vol = vislib::math::Abs((tri[2] - p0).Dot((tri[1] - p0).Cross(tri[0] - p0)))
@@ -678,7 +696,8 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 tri2.SetPointer(currVoxel.triangles + 3 * 3 * triOffset);
                 vol2 = currVoxel.volumes + triOffset;
                 tri2[0] = tri[0];
-                tri2[1] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][2]], 0.0f));
+                tri2[1] = p1.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][1]],
+                    CubeValues[tets[tetIdx][2]], static_cast<VoxelizerFloat>(0)));
                 tri2[2] = tri[1];
 
                 // tet1
@@ -710,9 +729,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     // tetrahedron 1: around p1: p1->p0, p0->p2, p1->p3
                     // tetrahedron 2: around p2: p2->p3, p1->p3, p0->p2
                     // tetrahedron 3: around p1: p2, p1->p3, p0->p2
-                    tri[0] = p0.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][1]], 0.0f));
-                    tri[1] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]], CubeValues[tets[tetIdx][3]], 0.0f));
-                    tri[2] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]], CubeValues[tets[tetIdx][3]], 0.0f));
+                    tri[0] = p0.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][0]],
+                        CubeValues[tets[tetIdx][1]], static_cast<VoxelizerFloat>(0)));
+                    tri[1] = p1.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][1]],
+                        CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
+                    tri[2] = p2.Interpolate(p3, GetOffset(CubeValues[tets[tetIdx][2]],
+                        CubeValues[tets[tetIdx][3]], static_cast<VoxelizerFloat>(0)));
 
                     //tri[0] = p;
                     //tri[1] = p;
@@ -723,7 +745,8 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                     triOffset++;
                     tri2.SetPointer(currVoxel.triangles + 3 * 3 * triOffset);
                     tri2[0] = tri[0];
-                    tri2[1] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]], CubeValues[tets[tetIdx][2]], 0.0f));
+                    tri2[1] = p0.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][0]],
+                        CubeValues[tets[tetIdx][2]], static_cast<VoxelizerFloat>(0)));
                     tri2[2] = tri[2];
 
                     // tet1
@@ -758,9 +781,12 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
                 //    tri[2] = p3.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][3]], CubeValues[tets[tetIdx][2]], 0.0f));
                 //    tri[1] = p3.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][3]], CubeValues[tets[tetIdx][1]], 0.0f));
                 //} else {
-                    tri[0] = p3.Interpolate(p0, GetOffset(CubeValues[tets[tetIdx][3]], CubeValues[tets[tetIdx][0]], 0.0f));
-                    tri[1] = p3.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][3]], CubeValues[tets[tetIdx][2]], 0.0f));
-                    tri[2] = p3.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][3]], CubeValues[tets[tetIdx][1]], 0.0f));
+                    tri[0] = p3.Interpolate(p0, GetOffset(CubeValues[tets[tetIdx][3]],
+                        CubeValues[tets[tetIdx][0]], static_cast<VoxelizerFloat>(0)));
+                    tri[1] = p3.Interpolate(p2, GetOffset(CubeValues[tets[tetIdx][3]],
+                        CubeValues[tets[tetIdx][2]], static_cast<VoxelizerFloat>(0)));
+                    tri[2] = p3.Interpolate(p1, GetOffset(CubeValues[tets[tetIdx][3]],
+                        CubeValues[tets[tetIdx][1]], static_cast<VoxelizerFloat>(0)));
 
                     *vol = vislib::math::Abs((tri[0] - p3).Dot((tri[1] - p3).Cross(tri[2] - p3)))
                         / static_cast<VoxelizerFloat>(6.0);
@@ -871,26 +897,20 @@ DWORD TetraVoxelizer::Run(void *userData) {
             if (Centroid.Distance(sp) > currRad + distOffset) {
                 continue;
             }
-            x = static_cast<int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize);
-            if (x > 0) x--;
+            x = static_cast<int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize) - 1;
             if (x < 0) x = 0;
-            y = static_cast<int>((sp.Y() - currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
-            if (y > 0) y--;
+            y = static_cast<int>((sp.Y() - currRad - sjd->Bounds.Bottom()) / sjd->CellSize) - 1;
             if (y < 0) y = 0;
-            z = static_cast<int>((sp.Z() - currRad - sjd->Bounds.Back()) / sjd->CellSize);
-            if (z > 0) z--;
+            z = static_cast<int>((sp.Z() - currRad - sjd->Bounds.Back()) / sjd->CellSize) - 1;
             if (z < 0) z = 0;
             pStart.Set(x, y, z);
 
-            x = static_cast<int>((sp.X() + currRad - sjd->Bounds.Left()) / sjd->CellSize);
-            if (x + 1 < static_cast<int>(sjd->resX)) x++;
-            if (x + 1 >= static_cast<int>(sjd->resX)) x = sjd->resX - 1;
-            y = static_cast<int>((sp.Y() + currRad - sjd->Bounds.Bottom()) / sjd->CellSize);
-            if (y + 1 < static_cast<int>(sjd->resY)) y++;
-            if (y + 1 >= static_cast<int>(sjd->resY)) y = sjd->resY - 1;
-            z = static_cast<int>((sp.Z() + currRad - sjd->Bounds.Back()) / sjd->CellSize);
-            if (z + 1 < static_cast<int>(sjd->resZ)) z++;
-            if (z + 1 >= static_cast<int>(sjd->resZ)) z = sjd->resZ - 1;
+            x = static_cast<int>((sp.X() + currRad - sjd->Bounds.Left()) / sjd->CellSize) + 2;
+            if (x >= static_cast<int>(sjd->resX)) x = sjd->resX - 1;
+            y = static_cast<int>((sp.Y() + currRad - sjd->Bounds.Bottom()) / sjd->CellSize) + 2;
+            if (y >= static_cast<int>(sjd->resY)) y = sjd->resY - 1;
+            z = static_cast<int>((sp.Z() + currRad - sjd->Bounds.Back()) / sjd->CellSize) + 2;
+            if (z >= static_cast<int>(sjd->resZ)) z = sjd->resZ - 1;
             pEnd.Set(x, y, z);
 
             for (z = pStart.Z(); z <= static_cast<int>(pEnd.Z()); z++) {
@@ -907,7 +927,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
                         //	sjd->Bounds.Left() + x * sjd->CellSize + sjd->CellSize * 0.5f,
                         //	sjd->Bounds.Bottom() + y * sjd->CellSize + sjd->CellSize * 0.5f,
                         //	sjd->Bounds.Back() + z * sjd->CellSize + sjd->CellSize * 0.5f);
-                        currDist = sp.Distance(p) - currRad;
+                        currDist = sp.Distance<VoxelizerFloat>(p) - currRad;
                         SIZE_T i = (z * sjd->resY + y) * sjd->resX + x;
                         //if (x > 5 && x < 8 && z > 4 && z < 8 && y > 6 && y < 9) {
                             volume[i].distField = vislib::math::Min(volume[i].distField, currDist);
@@ -929,6 +949,9 @@ DWORD TetraVoxelizer::Run(void *userData) {
         }
     }
 
+
+    // this is a trivial test case.
+    // ----------------------------
 
     //unsigned int rx = sjd->resX;
     //unsigned int ry = sjd->resY;
@@ -957,9 +980,10 @@ DWORD TetraVoxelizer::Run(void *userData) {
     //sjd->resY = ry;
     //sjd->resZ = rz;
 
-    // TODO: does this really define an empty sub-volume?
-    //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-    //    "[%08u] numNeg: %u\n", vislib::sys::Thread::CurrentID(), numNeg);
+    // end test case.
+    // --------------
+
+    // does this really define an empty sub-volume?
     if (numNeg == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
         Surface s;
         s.surface = 0.0;

@@ -10,6 +10,7 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "vislib/ShallowShallowTriangle.h"
 #include "vislib/forceinline.h"
+#include "vislib/mathtypes.h"
 
 namespace megamol {
 namespace trisoup {
@@ -35,11 +36,12 @@ namespace volumetrics {
         template <class Tp>
         VISLIB_FORCEINLINE static bool IsEqual(const vislib::math::AbstractPoint<double, 3, Tp> &a,
             const vislib::math::AbstractPoint<double, 3, Tp> &b) {
-                //return a == b;
-                // TODO ZOMG OMGWTF BUG FIXME
-                return (vislib::math::IsEqual(a.GetX(), b.GetX(), 0.00001))
-                    && (vislib::math::IsEqual(a.GetY(), b.GetY(), 0.00001))
-                    && (vislib::math::IsEqual(a.GetZ(), b.GetZ(), 0.00001));
+                return (vislib::math::IsEqual(a.GetX(), b.GetX(), 
+                        static_cast<double>(vislib::math::FLOAT_EPSILON)))
+                    && (vislib::math::IsEqual(a.GetY(), b.GetY(), 
+                        static_cast<double>(vislib::math::FLOAT_EPSILON)))
+                    && (vislib::math::IsEqual(a.GetZ(), b.GetZ(), 
+                        static_cast<double>(vislib::math::FLOAT_EPSILON)));
         }
 
         /**

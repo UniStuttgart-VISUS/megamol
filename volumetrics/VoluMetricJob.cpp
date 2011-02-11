@@ -80,8 +80,6 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 	this->outTriDataSlot.SetCallback("CallTriMeshData", "GetExtent", &VoluMetricJob::getLineExtentCallback);
 	this->MakeSlotAvailable(&this->outTriDataSlot);
 
-	// TODO: Implement
-
 }
 
 
@@ -98,7 +96,7 @@ VoluMetricJob::~VoluMetricJob(void) {
  */
 bool VoluMetricJob::create(void) {
 
-    // TODO: Implement
+    // Intentionally empty
 
     return true;
 }
@@ -484,7 +482,6 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
         }
     }
 
-    // TODO: collect totally full subvolumes!
 restart:
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {

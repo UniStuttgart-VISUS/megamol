@@ -59,8 +59,15 @@ namespace volumetrics {
 		 */
 		virtual bool Terminate(void);
 
+        /**
+         * Test for equality. Actually this checks for equality of the
+         * associated SubJobData.
+         *
+         * @param rhs the right hand set operand
+         *
+         * @return whether this->sjd and rhs.sjd are equal
+         */
 		inline bool operator ==(const TetraVoxelizer& rhs) const {
-			// TODO I cannot think of anything better right now
 			return this->sjd == rhs.sjd;
 		}
 
