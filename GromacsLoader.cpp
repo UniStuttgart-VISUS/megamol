@@ -24,7 +24,6 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-#include "gmx_system_xdr.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -746,7 +745,8 @@ GromacsLoader::GromacsLoader(void) : AnimDataModule(),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
-        XTCFrameOffset( 0), xtcFileValid(false) {
+        XTCFrameOffset( 0), xtcFileValid(false),
+        tpx_incompatible_version( 9), tpx_version( 73), tpx_generation( 23) {
 
     this->topFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->topFilenameSlot);
@@ -993,200 +993,39 @@ void GromacsLoader::loadFile( const vislib::TString& filename) {
     this->data.Clear();
     this->datahash++;
 
-    time_t t = clock(); // DEBUG
 
     vislib::StringA line;
     unsigned int idx, atomCnt, lineCnt, frameCnt, resCnt, chainCnt;
 
-    t = clock(); // DEBUG
+    time_t t = clock(); // DEBUG
 
-    vislib::sys::ASCIIFileBuffer file;
-    vislib::Array<vislib::StringA> atomEntries;
-    SIZE_T atomEntriesCapacity = 10000;
-    SIZE_T frameCapacity = 10000;
-    atomEntries.AssertCapacity( atomEntriesCapacity);
-
-    int ssize( 0);
-    char *strg = 0;
-    bool bDouble;
-    int fver, fgen;
-
-    FILE *bf = 0;
-    XDR *xdr = new XDR();
-
-    bf = fopen( T2A(this->topFilenameSlot.Param<param::FilePathParam>()->Value()), "rb");
-    xdrstdio_create( xdr, bf, xdr_op::XDR_DECODE);
-
+    // try to open the specified TPR file
+    FILE *bf = fopen( T2A(filename), "rb");
+    // if the file was successfully opened...
     if( bf ) {
-        xdr_int( xdr, &ssize);
-        strg = new char[ssize];
-        xdr_string( xdr, &strg, ssize);
-        std::cout << ssize << " - " << strg << " - " << std::endl;
+        // create a new XDR data object
+        XDR *xdr = new XDR();
+        xdrstdio_create( xdr, bf, xdr_op::XDR_DECODE);
 
-        int precision = 0;
-        xdr_int( xdr, &precision);
+        // read TPX header from the XDR file
+        if( !this->readTpxHeader( xdr, this->tpx) ) {
+            Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+                "Could not load header of file %s.", 
+                static_cast<const char*>(T2A( filename)));
+            return;
+        }
 
-        printf( "DEBUG: do_tpxheader: precision = %i\n", precision);
-        bDouble = (precision == sizeof(double));
-        if( (precision != sizeof(float)) && !bDouble) 
-            Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
-                "Unknown precision in file: real is %d bytes instead of %d or %d",  precision, sizeof(float), sizeof(double));
+        // read the state from the XDR file
+        this->readState( xdr, this->state);
 
-        // Check versions!
-        xdr_int( xdr, &fver);
-
-        if( fver >= 26 )
-            xdr_int( xdr, &fgen);
-        else
-            fgen=0;
-
-/*
-if(file_version!=NULL)
-*file_version = fver;
-if(file_generation!=NULL)
-*file_generation = fgen;
-
-if ((fver <= tpx_incompatible_version) ||
-  ((fver > tpx_version) && !TopOnlyOK) ||
-  (fgen > tpx_generation))
-gmx_fatal(FARGS,"reading tpx file (%s) version %d with version %d program",
-	gmx_fio_getname(fio),fver,tpx_version);
-
-do_section(fio,eitemHEADER,bRead);
-gmx_fio_do_int(fio,tpx->natoms);
-if (fver >= 28)
-gmx_fio_do_int(fio,tpx->ngtc);
-else
-tpx->ngtc = 0;
-if (fver < 62) {
-gmx_fio_do_int(fio,idum);
-gmx_fio_do_real(fio,rdum);
-}
-gmx_fio_do_real(fio,tpx->lambda);
-gmx_fio_do_int(fio,tpx->bIr);
-gmx_fio_do_int(fio,tpx->bTop);
-gmx_fio_do_int(fio,tpx->bX);
-gmx_fio_do_int(fio,tpx->bV);
-gmx_fio_do_int(fio,tpx->bF);
-gmx_fio_do_int(fio,tpx->bBox);
-
-if((fgen > tpx_generation)) {
-// This can only happen if TopOnlyOK=TRUE
-tpx->bIr=FALSE;
-}
-*/
-
-        if( strg )
-            delete strg;
+        // close the file
         fclose( bf);
-    }
-    xdr_destroy( xdr);
+        // destroy the XDR data object
+        xdr_destroy( xdr);
 
-    std::fstream topFile( 
-        this->topFilenameSlot.Param<param::FilePathParam>()->Value(),
-        std::ios::in | std::ios::binary);
-    // try to load the topology file
-    if( topFile.is_open() ) {
-        // file successfully opened, read topology
-
-        /*
-        // set the atom count for the first frame
-        frameCnt = 0;
-        this->data.AssertCapacity( frameCapacity);
-        this->data.SetCount( 1);
-        this->data[0] = new Frame(*const_cast<GromacsLoader*>(this));
-        this->data[0]->SetAtomCount( atomEntries.Count());
-        this->data[0]->setFrameIdx(0);
-        // resize atom type index array
-        this->atomTypeIdx.SetCount( atomEntries.Count());
-        // set the capacity of the atom type array
-        this->atomType.AssertCapacity( atomEntries.Count());
-        // set the capacity of the residue array
-        this->residue.AssertCapacity( atomEntries.Count());
-
-        // parse all atoms of the first frame
-        for( atomCnt = 0; atomCnt < atomEntries.Count(); ++atomCnt ) {
-            this->parseAtomEntry( atomEntries[atomCnt], atomCnt, frameCnt);
-        }
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for parsing first frame: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-        */
-
-        /*
-        this->molecule.AssertCapacity( this->residue.Count());
-        this->chain.AssertCapacity( this->residue.Count());
-
-        unsigned int first, cnt;
-        unsigned int firstConIdx;
-        // loop over all chains
-        for( chainCnt = 0; chainCnt < this->chainFirstRes.Count(); ++chainCnt ) {
-            // add new molecule
-            if( chainCnt == 0 ) {
-                this->molecule.Add( MolecularDataCall::Molecule(  0, 1));
-                firstConIdx = 0;
-            } else {
-                this->molecule.Add( MolecularDataCall::Molecule(
-                    this->molecule.Last().FirstResidueIndex()
-                    + this->molecule.Last().ResidueCount(), 1));
-                firstConIdx = this->connectivity.Count();
-            }
-            // add new chain
-            this->chain.Add( MolecularDataCall::Chain( this->molecule.Count()-1, 1));
-            // get the residue range of the current chain
-            first = this->chainFirstRes[chainCnt];
-            cnt = first + this->chainResCount[chainCnt];
-            // loop over all residues in the current chain
-            for( resCnt = first; resCnt < cnt; ++resCnt ) {
-                // search for connections inside the current residue
-                this->MakeResidueConnections( resCnt, 0);
-                // search for connections between consecutive residues
-                if( ( resCnt + 1) < cnt ) {
-                    if( this->MakeResidueConnections( resCnt, resCnt+1, 0) ) {
-                        this->molecule.Last().SetPosition(
-                            this->molecule.Last().FirstResidueIndex(),
-                            this->molecule.Last().ResidueCount() + 1);
-                    } else {
-                        this->molecule.Last().SetConnectionRange( firstConIdx, ( this->connectivity.Count() - firstConIdx) / 2);
-                        firstConIdx = this->connectivity.Count();
-                        this->molecule.Add( MolecularDataCall::Molecule( resCnt+1, 1));
-                        this->chain.Last().SetPosition(
-                            this->chain.Last().FirstMoleculeIndex(),
-                            this->chain.Last().MoleculeCount() + 1 );
-                    }
-                }
-            }
-            this->molecule.Last().SetConnectionRange( firstConIdx, ( this->connectivity.Count() - firstConIdx) / 2);
-        }
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for finding all bonds: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-        */
-
-        /*
-        // search for CA, C, O and N in amino acids
-        MolecularDataCall::AminoAcid *aminoacid;
-        for( resCnt = 0; resCnt < this->residue.Count(); ++resCnt ) {
-            // check if the current residue is an amino acid
-            if( this->residue[resCnt]->Identifier() == MolecularDataCall::Residue::AMINOACID ) {
-                aminoacid = (MolecularDataCall::AminoAcid*)this->residue[resCnt];
-                idx = aminoacid->FirstAtomIndex();
-                cnt = idx + aminoacid->AtomCount();
-                // loop over all atom of the current amino acid
-                for( atomCnt = idx; atomCnt < cnt; ++atomCnt ) {
-                    if( this->atomType[this->atomTypeIdx[atomCnt]].Name().Equals( "CA") ) {
-                        aminoacid->SetCAlphaIndex( atomCnt);
-                    } else if( this->atomType[this->atomTypeIdx[atomCnt]].Name().Equals( "N") ) {
-                        aminoacid->SetNIndex( atomCnt);
-                    } else if( this->atomType[this->atomTypeIdx[atomCnt]].Name().Equals( "C") ) {
-                        aminoacid->SetCCarbIndex( atomCnt);
-                    } else if( this->atomType[this->atomTypeIdx[atomCnt]].Name().Equals( "O") ) {
-                        aminoacid->SetOIndex( atomCnt);
-                    }
-                }
-            }
-        }
-        */
-
-        //Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading topology file: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-
+        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", 
+            static_cast<const char*>(T2A( filename)), 
+            ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
         // xtc-filename has been set
         if( !this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
@@ -1212,9 +1051,7 @@ tpx->bIr=FALSE;
                 Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
                   "Could not load XTC-file."); // DEBUG
                 xtcFileValid = false;
-            }
-            else {
-
+            } else {
 
                 xtcFile.seekg(4, std::ios_base::cur);
                 // read number of atoms
@@ -1226,11 +1063,11 @@ tpx->bIr=FALSE;
 
                 // check whether the pdb-file and the xtc-file contain the
                 // same number of atoms
-                if( nAtoms != atomEntries.Count() ) {
+                if( nAtoms != this->tpx.natoms ) {
                     Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
                       "XTC-File and given PDB-file not matching (XTC-file has"
                       "%i atom entries, PDB-file has %i atom entries).",
-                         nAtoms, atomEntries.Count()); // DEBUG
+                         nAtoms, this->tpx.natoms); // DEBUG
                     xtcFileValid = false;
                     xtcFile.close();
                 }
@@ -1250,12 +1087,110 @@ tpx->bIr=FALSE;
             }
         }
 
-        // close topology file
-        topFile.close();
-
     } else {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A( filename)); // DEBUG
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+            "Could not open file %s", 
+            static_cast<const char*>(T2A( filename)));
     }
+}
+
+/*
+ * Get a real number from a xdr file
+ */
+float GromacsLoader::getXdrReal( XDR *xdr, bool bDouble) {
+    double d;
+    float f;
+    if( bDouble ) {
+        xdr_double( xdr, &d);
+        f = float( d);
+    } else {
+        xdr_float( xdr, &f);
+    }
+    return f;
+}
+
+/*
+ * Read the tpx header of a XDR file
+ */
+bool GromacsLoader::readTpxHeader( XDR *xdr, TpxHeader &tpx) {
+    using vislib::sys::Log;
+    // temporary variables
+    int ssize( 0);
+    char *strg = 0;
+    bool bDouble;
+    int fver, fgen, idum;
+    float rdum;
+
+    xdr_int( xdr, &ssize);
+    strg = new char[ssize];
+    xdr_string( xdr, &strg, ssize);
+    if( strncmp( strg, "VERSION", 7) ) {
+      Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+          "Can not read file header, this file is from a Gromacs version which is older than 2.0");
+    }
+    if( strg ) delete strg;
+
+    int precision = 0;
+    xdr_int( xdr, &precision);
+
+    bDouble = (precision == sizeof(double));
+    if( (precision != sizeof(float)) && !bDouble) { 
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
+            "Unknown precision: real is %d bytes instead of %d or %d", 
+            precision, sizeof(float), sizeof(double));
+        return false;
+    }
+
+    // Check versions!
+    xdr_int( xdr, &fver);
+
+    if( fver >= 26 )
+        xdr_int( xdr, &fgen);
+    else
+        fgen=0;
+
+    if ((fver <= tpx_incompatible_version) || (fgen > tpx_generation)) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+            "Reading TPR file version %d with version %d program", 
+            fver, tpx_version);
+        return false;
+    }
+    
+    //do_section(fio,eitemHEADER,bRead);
+
+    xdr_int( xdr, &tpx.natoms);
+    if( fver >= 28 ) {
+        xdr_int( xdr, &tpx.ngtc);
+    } else {
+        tpx.ngtc = 0;
+    }
+    if( fver < 62 ) {
+        xdr_int( xdr, &idum);
+        rdum = this->getXdrReal( xdr, bDouble);
+    }
+    
+    tpx.lambda = this->getXdrReal( xdr, bDouble);
+    xdr_int( xdr, &tpx.bIr);
+    xdr_int( xdr, &tpx.bTop);
+    xdr_int( xdr, &tpx.bX);
+    xdr_int( xdr, &tpx.bV);
+    xdr_int( xdr, &tpx.bF);
+    xdr_int( xdr, &tpx.bBox);
+
+    if( fgen > tpx_generation ) {
+        // This can only happen if TopOnlyOK=TRUE
+        tpx.bIr = FALSE;
+    }
+    
+    return true;
+}
+
+/*
+ * Read the state from a XDR file
+ */
+bool GromacsLoader::readState( XDR *xdr, t_state &state) {
+
+    return true;
 }
 
 /*
