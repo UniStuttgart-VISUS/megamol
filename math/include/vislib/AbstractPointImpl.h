@@ -70,8 +70,8 @@ namespace math {
          *
          * @return The interpolated position.
          */
-        template<class Tp, class Sp>
-        C<T, D, T[D]> Interpolate(const C<Tp, D, Sp>& rhs, float t) const;
+        template<class Tp, class Sp, class Tp2>
+        C<T, D, T[D]> Interpolate(const C<Tp, D, Sp>& rhs, Tp2 t) const;
 
         /**
          * Answer whether the point is the coordinate system origin (0, ..., 0).
@@ -347,15 +347,15 @@ namespace math {
      */
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C> 
-    template<class Tp, class Sp>
+    template<class Tp, class Sp, class Tp2>
     C<T, D, T[D]> AbstractPointImpl<T, D, S, C>::Interpolate(
-            const C<Tp, D, Sp>& rhs, float t) const {
+            const C<Tp, D, Sp>& rhs, Tp2 t) const {
         C<T, D, T[D]> retval;
-        float at = 1.0f - t;
+        Tp2 at = static_cast<Tp2>(1) - t;
 
         for (unsigned int d = 0; d < D; d++) {
             retval.coordinates[d] = this->coordinates[d] * at
-                + static_cast<T>(rhs[d]) * t;
+                + static_cast<Tp2>(rhs[d]) * t;
         }
 
         return retval;
@@ -389,7 +389,7 @@ namespace math {
         T retval = static_cast<T>(0);
 
         for (unsigned int i = 0; i < D; i++) {
-            retval += Sqr(toPoint.coordinates[i] - this->coordinates[i]);
+            retval += static_cast<T>(Sqr(toPoint.coordinates[i] - this->coordinates[i]));
         }
 
         return retval;

@@ -310,7 +310,7 @@ namespace math {
 
 
     /**
-     * Compares to object using the 'IsEqual' funtion and the '<' operator
+     * Compares two objects using the 'IsEqual' funtion and the '<' operator
      *
      * @param lhs The left hand side operand
      * @param rhs The right hand side operand

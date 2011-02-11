@@ -174,9 +174,9 @@ namespace math {
          *
          * @return The interpolation result
          */
-        template<class Sp>
+        template<class Sp, class Tp>
         inline AbstractQuaternion<T, T[4]>
-        Interpolate(const AbstractQuaternion<T, Sp>& rhs, float t) const {
+        Interpolate(const AbstractQuaternion<T, Sp>& rhs, Tp t) const {
             AbstractQuaternion<T, T[4]> rv;
             rv.Slerp(t, *this, rhs);
             return rv;

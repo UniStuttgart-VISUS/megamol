@@ -22,7 +22,7 @@ namespace vislib {
 namespace math {
 
     /**
-     * TODO: Documnentation
+     * TODO: Documentation
      */
     template<class T, unsigned int D> 
     class ShallowPoint : public AbstractPoint<T, D, T *> {
@@ -56,6 +56,18 @@ namespace math {
         ~ShallowPoint(void);
 
         /**
+         * Replace the coordinate pointer with a new memory location.
+         * The original memory is left untouched.
+         * 
+         * @param coordinates The new Point memory. This must not be a NULL
+         *                    pointer.
+         */
+        inline void SetPointer(T *coordinates) {
+            ASSERT(coordinates != NULL);
+            this->coordinates = coordinates;
+        }
+
+        /**
          * Assignment.
          *
          * This operation does <b>not</b> create aliases. 
@@ -70,7 +82,7 @@ namespace math {
         }
 
         /**
-         * Assigment for arbitrary Points. A valid static_cast between T and Tp
+         * Assignment for arbitrary Points. A valid static_cast between T and Tp
          * is a precondition for instantiating this template.
          *
          * This operation does <b>not</b> create aliases. 
