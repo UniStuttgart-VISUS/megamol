@@ -6,8 +6,37 @@
  */
 
 #include "vislib/RegistryKey.h"
+
+#define _WINXP32_LEGACY_SUPPORT
+
 #ifdef _WIN32
 #include "vislib/MissingImplementationException.h"
+#ifdef _WINXP32_LEGACY_SUPPORT
+#include "DynamicFunctionPointer.h"
+#endif /* _WINXP32_LEGACY_SUPPORT */
+
+
+#ifdef _WINXP32_LEGACY_SUPPORT
+namespace vislib {
+namespace sys {
+
+/*
+ * Dynamic function pointer for RegDeleteKeyExA
+ */
+static DynamicFunctionPointer<LSTATUS (APIENTRY *)(HKEY hKey, LPCSTR lpSubKey,
+        REGSAM samDesired, DWORD Reserved )>
+        dynRegDeleteKeyExA("Advapi32.dll", "RegDeleteKeyExA");
+
+/*
+ * Dynamic function pointer for RegDeleteKeyExA
+ */
+static DynamicFunctionPointer<LSTATUS (APIENTRY *)(HKEY hKey, LPCWSTR lpSubKey,
+        REGSAM samDesired, DWORD Reserved )>
+        dynRegDeleteKeyExW("Advapi32.dll", "RegDeleteKeyExW");
+
+} /* end namespace sys */
+} /* end namespace vislib */
+#endif /* _WINXP32_LEGACY_SUPPORT */
 
 
 /*
@@ -177,8 +206,17 @@ DWORD vislib::sys::RegistryKey::DeleteSubKey(
     }
     sc.Close();
 
+#ifdef _WINXP32_LEGACY_SUPPORT
+    if (dynRegDeleteKeyExA.IsValid()) {
+        errcode = dynRegDeleteKeyExA(this->key, name,
+            this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
+    } else {
+        errcode = ::RegDeleteKeyA(this->key, name);
+    }
+#else /* _WINXP32_LEGACY_SUPPORT */
     errcode = ::RegDeleteKeyExA(this->key, name,
         this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
+#endif /* _WINXP32_LEGACY_SUPPORT */
     return errcode;
 }
 
@@ -200,8 +238,17 @@ DWORD vislib::sys::RegistryKey::DeleteSubKey(
     }
     sc.Close();
 
+#ifdef _WINXP32_LEGACY_SUPPORT
+    if (dynRegDeleteKeyExW.IsValid()) {
+        errcode = dynRegDeleteKeyExW(this->key, name,
+            this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
+    } else {
+        errcode = ::RegDeleteKeyW(this->key, name);
+    }
+#else /* _WINXP32_LEGACY_SUPPORT */
     errcode = ::RegDeleteKeyExW(this->key, name,
         this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
+#endif /* _WINXP32_LEGACY_SUPPORT */
     return errcode;
 }
 
