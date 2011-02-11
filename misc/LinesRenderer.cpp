@@ -117,7 +117,7 @@ bool misc::LinesRenderer::Render(Call& call) {
                 useColourArray = false;
                 ::glDisableClientState(GL_COLOR_ARRAY);
             }
-            ::glColor3ubv(l.GlobalColour().PeekComponentes());
+            ::glColor3ubv(l.GlobalColour().PeekComponents());
         } else {
             if (!useColourArray) {
                 useColourArray = true;

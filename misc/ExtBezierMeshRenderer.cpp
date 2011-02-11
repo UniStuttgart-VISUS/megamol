@@ -258,7 +258,7 @@ void misc::ExtBezierMeshRenderer::drawCurves(
         this->calcBase(curves[i], 0.0f, x, y, z);
         c1 = p.GetColour();
 
-        ::glColor3ubv(c1.PeekComponentes());
+        ::glColor3ubv(c1.PeekComponents());
         ::glNormal3f(-x.X(), -x.Y(), -x.Z());
         ::glBegin(GL_TRIANGLE_FAN);
         for (int j = static_cast<int>(profCnt - 1); j >= 0; j--) {
@@ -312,28 +312,28 @@ void misc::ExtBezierMeshRenderer::drawCurves(
                 ::glBegin(GL_QUAD_STRIP);
                 for (SIZE_T j = 0; j < profCnt; j++) {
                     ::glNormal3fv(n2[j].PeekComponents());
-                    ::glColor3ubv(c2.PeekComponentes());
+                    ::glColor3ubv(c2.PeekComponents());
                     ::glVertex3fv(p2[j].PeekCoordinates());
                     ::glNormal3fv(n1[j].PeekComponents());
-                    ::glColor3ubv(c1.PeekComponentes());
+                    ::glColor3ubv(c1.PeekComponents());
                     ::glVertex3fv(p1[j].PeekCoordinates());
                 }
                 ::glNormal3fv(n2[0].PeekComponents());
-                ::glColor3ubv(c2.PeekComponentes());
+                ::glColor3ubv(c2.PeekComponents());
                 ::glVertex3fv(p2[0].PeekCoordinates());
                 ::glNormal3fv(n1[0].PeekComponents());
-                ::glColor3ubv(c1.PeekComponentes());
+                ::glColor3ubv(c1.PeekComponents());
                 ::glVertex3fv(p1[0].PeekCoordinates());
                 ::glEnd();
 
             } else {
                 ::glBegin(GL_QUADS);
                 for (SIZE_T j = 0; j < profCnt; j++) {
-                    ::glColor3ubv(c2.PeekComponentes());
+                    ::glColor3ubv(c2.PeekComponents());
                     ::glNormal3fv(n2[j].PeekComponents());
                     ::glVertex3fv(p2[(j + 1) % profCnt].PeekCoordinates());
                     ::glVertex3fv(p2[j].PeekCoordinates());
-                    ::glColor3ubv(c1.PeekComponentes());
+                    ::glColor3ubv(c1.PeekComponents());
                     ::glNormal3fv(n1[j].PeekComponents());
                     ::glVertex3fv(p1[j].PeekCoordinates());
                     ::glVertex3fv(p1[(j + 1) % profCnt].PeekCoordinates());
@@ -351,7 +351,7 @@ void misc::ExtBezierMeshRenderer::drawCurves(
         }
 
         // End Cap
-        ::glColor3ubv(c1.PeekComponentes());
+        ::glColor3ubv(c1.PeekComponents());
         ::glNormal3fv(x.PeekComponents());
         ::glBegin(GL_TRIANGLE_FAN);
         for (SIZE_T j = 0; j < profCnt; j++) {
