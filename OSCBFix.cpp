@@ -66,6 +66,8 @@ bool OSCBFix::getData(core::Call& c) {
     MultiParticleDataCall *inCall = this->dataInSlot.CallAs<MultiParticleDataCall>();
     if (inCall == NULL) return false;
 
+    *inCall = *outCall;
+
     if (!(*inCall)(0)) return false;
 
     *outCall = *inCall;
@@ -94,6 +96,8 @@ bool OSCBFix::getExtent(core::Call& c) {
 
     MultiParticleDataCall *inCall = this->dataInSlot.CallAs<MultiParticleDataCall>();
     if (inCall == NULL) return false;
+
+    *inCall = *outCall;
 
     if (!(*inCall)(1)) return false;
 
