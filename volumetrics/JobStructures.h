@@ -256,17 +256,7 @@ namespace volumetrics {
 	 * Struct containing the results of a marching (whatever) on an instance of SubJubData.
 	 */
 	struct SubJobResult {
-        ///** (outer) array of triangles per surface, (inner) array of coordinates per triangle */
-        //vislib::Array<vislib::Array<VoxelizerFloat> > surfaces;
-
-        ///** (outer) array of BorderVoxels corresponding to each of the surfaces */
-        //vislib::Array<vislib::Array<BorderVoxel *> > borderVoxels;
-
-        ///** computed surface area per surface */
-        //vislib::Array<VoxelizerFloat> surfaceSurfaces;
-
-        ///** computed volume corresponding to each of the surfaces */
-        //vislib::Array<VoxelizerFloat> volumes;
+        /** Array of the surfaces resulting from the Voxelization */
         vislib::Array<Surface> surfaces;
 
         /** whether this job has completed runnning */
@@ -278,7 +268,7 @@ namespace volumetrics {
 	};
 
 	/**
-	 * Structure that hold all parameters so a single thread can work
+	 * Structure that holds all parameters so a single thread can work
 	 * on his subset of the total volume occupied by a particle list
 	 */
 	struct SubJobData {
@@ -320,6 +310,9 @@ namespace volumetrics {
 
 		/** here the Job should store its results */
 		SubJobResult Result;
+
+        /** whether to persist the geometry computation takes place on (in result.mesh) */
+        bool storeMesh;
 	};
 
 

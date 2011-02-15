@@ -16,6 +16,7 @@
 #include "vislib/threadpool.h"
 #include "MarchingCubeTables.h"
 #include "TetraVoxelizer.h"
+#include "vislib/sysfunctions.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -57,10 +58,10 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
 	this->showSurfaceGeometrySlot << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->showSurfaceGeometrySlot);
 
-	this->continueToNextFrameSlot << new core::param::BoolParam(false);
+	this->continueToNextFrameSlot << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->continueToNextFrameSlot);
 
-	this->resetContinueSlot << new core::param::BoolParam(true);
+	this->resetContinueSlot << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->resetContinueSlot);
 
 	this->radiusMultiplierSlot << new core::param::FloatParam(1.0f, 0.0001f, 10000.f);
@@ -130,6 +131,15 @@ DWORD VoluMetricJob::Run(void *userData) {
 
     unsigned int frameCnt = datacall->FrameCount();
     Log::DefaultLog.WriteInfo("Data source with %u frame(s)", frameCnt);
+
+    if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+        if (!this->statisticsFile.Open(metricsFilenameSlot.Param<core::param::FilePathParam>()->Value(),
+            vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
+            vislib::sys::File::CREATE_OVERWRITE)) {
+            Log::DefaultLog.WriteError("Could not open statistics file for writing");
+            return -3;
+        }
+    }
 
 	vislib::sys::ThreadPool pool;
 	vislib::Array<TetraVoxelizer*> voxelizerList;
@@ -241,6 +251,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 		bboxVertData[backBufferIndex].AssertSize(vertSize, true);
 		bboxIdxData[backBufferIndex].AssertSize(idxSize, true);
 
+        bool storeMesh = 
+            (this->outTriDataSlot.GetStatus() == megamol::core::AbstractSlot::STATUS_CONNECTED);
+
 		for (int x = 0; x < divX; x++) {
 			for (int y = 0; y < divY; y++) {
             //for (int y = 0; y < 1; y++) {
@@ -276,6 +289,7 @@ DWORD VoluMetricJob::Run(void *userData) {
                     sjd->offsetZ = z * subVolCells;
 					sjd->RadMult = RadMult;
 					sjd->MaxRad = MaxRad / RadMult;
+                    sjd->storeMesh = storeMesh;
 					subJobDataList.Add(sjd);
 					TetraVoxelizer *v = new TetraVoxelizer();
 					voxelizerList.Add(v);
@@ -295,6 +309,12 @@ DWORD VoluMetricJob::Run(void *userData) {
 		backBufferIndex = 1 - backBufferIndex;
 		this->hash++;
 
+        vislib::Array<vislib::Array<unsigned int> > globalSurfaceIDs;
+        vislib::Array<unsigned int> uniqueIDs;
+        vislib::Array<SIZE_T> countPerID;
+        vislib::Array<VoxelizerFloat> surfPerID;
+        vislib::Array<VoxelizerFloat> volPerID;
+
         SIZE_T lastCount = pool.CountUserWorkItems();
 		while(1) {
 			if (pool.Wait(500) && pool.CountUserWorkItems() == 0) {
@@ -302,11 +322,16 @@ DWORD VoluMetricJob::Run(void *userData) {
 						break;
 			}
             if (lastCount != pool.CountUserWorkItems()) {
-			    copyMeshesToBackbuffer(subJobDataList);
+                generateStatistics(subJobDataList, globalSurfaceIDs, uniqueIDs,
+                    countPerID, surfPerID, volPerID);
+			    copyMeshesToBackbuffer(subJobDataList, globalSurfaceIDs, uniqueIDs);
                 lastCount = pool.CountUserWorkItems();
             }
 		}
-		copyMeshesToBackbuffer(subJobDataList, true);
+        generateStatistics(subJobDataList, globalSurfaceIDs, uniqueIDs,
+            countPerID, surfPerID, volPerID);
+        outputStatistics(frameI, uniqueIDs, countPerID, surfPerID, volPerID);
+        copyMeshesToBackbuffer(subJobDataList, globalSurfaceIDs, uniqueIDs);
         Log::DefaultLog.WriteInfo("Done marching.");
 
 		while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
@@ -317,6 +342,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 		}
     }
 
+    if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+        statisticsFile.Close();
+    }
     return 0;
 }
 
@@ -452,17 +480,23 @@ VISLIB_FORCEINLINE bool VoluMetricJob::isSurfaceJoinableWithSubvolume(SubJobData
     return false;
 }
 
-void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
-                                           bool outputStatistics) {
-	// copy finished meshes to output
+void VoluMetricJob::generateStatistics(vislib::Array<SubJobData*> &subJobDataList,
+                                       vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+                                       vislib::Array<unsigned int> &uniqueIDs,
+                                       vislib::Array<SIZE_T> &countPerID,
+                                       vislib::Array<VoxelizerFloat> &surfPerID,
+                                       vislib::Array<VoxelizerFloat> &volPerID) {
 
-	VoxelizerFloat *vert, *norm;
-    unsigned char *col;
-	//unsigned int *tri;
+    globalSurfaceIDs.Clear();
+    uniqueIDs.Clear();
+    countPerID.Clear();
+    surfPerID.Clear();
+    volPerID.Clear();
+
 	vislib::Array<unsigned int> todos;
 	todos.SetCapacityIncrement(10);
 	for (int i = 0; i < subJobDataList.Count(); i++) {
-		if (subJobDataList[i]->Result.done) {
+        if (subJobDataList[i]->Result.done) {
 			todos.Add(i);
 		}
 	}
@@ -471,7 +505,6 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
         return;
     }
 
-    vislib::Array<vislib::Array<unsigned int> > globalSurfaceIDs;
     globalSurfaceIDs.SetCount(todos.Count());
     unsigned int gsi = 0;
     for (int i = 0; i < todos.Count(); i++) {
@@ -527,10 +560,7 @@ restart:
             }
         }
     }
-    vislib::Array<unsigned int> uniqueIDs;
-    vislib::Array<SIZE_T> countPerID;
-    vislib::Array<VoxelizerFloat> surfPerID;
-    vislib::Array<VoxelizerFloat> volPerID;
+
     for (int i = 0; i < todos.Count(); i++) {
         for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             SIZE_T pos = uniqueIDs.IndexOf(globalSurfaceIDs[i][j]);
@@ -546,14 +576,48 @@ restart:
             }
         }
     }
-    SIZE_T numTriangles = 0;
+}
+
+void VoluMetricJob::outputStatistics(unsigned int frameNumber,
+                                     vislib::Array<unsigned int> &uniqueIDs,
+                                     vislib::Array<SIZE_T> &countPerID,
+                                     vislib::Array<VoxelizerFloat> &surfPerID,
+                                     vislib::Array<VoxelizerFloat> &volPerID) {
+    //SIZE_T numTriangles = 0;
     for (int i = 0; i < uniqueIDs.Count(); i++) {
-        numTriangles += countPerID[i];
-        if (outputStatistics) {
-            vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f", uniqueIDs[i],
-                countPerID[i], surfPerID[i], volPerID[i]);
+        //numTriangles += countPerID[i];
+        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f", uniqueIDs[i],
+            countPerID[i], surfPerID[i], volPerID[i]);
+        if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+            vislib::sys::WriteFormattedLineToFile(this->statisticsFile, "%u\t%u\t%u\t%f\t%f\n",
+                frameNumber, uniqueIDs[i], countPerID[i], surfPerID[i], volPerID[i]);
         }
     }
+}
+
+
+void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
+                                           vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+                                           vislib::Array<unsigned int> &uniqueIDs) {
+	// copy finished meshes to output
+    SIZE_T numTriangles = 0;
+	vislib::Array<SIZE_T> todos;
+	todos.SetCapacityIncrement(10);
+	for (SIZE_T i = 0; i < subJobDataList.Count(); i++) {
+        if (subJobDataList[i]->storeMesh && subJobDataList[i]->Result.done) {
+			todos.Add(i);
+            for (SIZE_T j = 0; j < subJobDataList[i]->Result.surfaces.Count(); j++) {
+                numTriangles += subJobDataList[i]->Result.surfaces[j].mesh.Count() / 9;
+            }
+		}
+	}
+    if (todos.Count() == 0) {
+        return;
+    }
+
+	VoxelizerFloat *vert, *norm;
+    unsigned char *col;
+
     vert = new VoxelizerFloat[numTriangles * 9];
     norm = new VoxelizerFloat[numTriangles * 9];
     col = new unsigned char[numTriangles * 9];

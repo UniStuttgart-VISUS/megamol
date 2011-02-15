@@ -21,7 +21,7 @@
 #include "param/ParamSlot.h"
 #include "vislib/Cuboid.h"
 #include "JobStructures.h"
-
+#include "vislib/File.h"
 
 namespace megamol {
 namespace trisoup {
@@ -87,7 +87,8 @@ namespace volumetrics {
          * Perform the work of a thread.
          *
          * @param userData A pointer to user data that are passed to the thread,
-         *                 if it started.
+         *                 if it started. If the outTriDataSlot is connected, geometry is
+         *                 stored inside the results (for debug displaying).
          *
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
@@ -163,10 +164,23 @@ namespace volumetrics {
          * to the current backbuffer and performs a buffer swap. Increases hash to indicate this.
          * 
          * @param subJobDataList the submitted jobs
-         * @param outputStatistics whether to log information about the found surfaces to the default log
          */
-		void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
-            bool outputStatistics = false);
+        void copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
+            vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+            vislib::Array<unsigned int> &uniqueIDs);
+
+        void generateStatistics(vislib::Array<SubJobData*> &subJobDataList,
+            vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+            vislib::Array<unsigned int> &uniqueIDs,
+            vislib::Array<SIZE_T> &countPerID,
+            vislib::Array<VoxelizerFloat> &surfPerID,
+            vislib::Array<VoxelizerFloat> &volPerID);
+
+        void outputStatistics(unsigned int frameNumber,
+            vislib::Array<unsigned int> &uniqueIDs,
+            vislib::Array<SIZE_T> &countPerID,
+            vislib::Array<VoxelizerFloat> &surfPerID,
+            vislib::Array<VoxelizerFloat> &volPerID);
 
         bool isSurfaceJoinableWithSubvolume(SubJobData *surfJob, int surfIdx, SubJobData *volume);
 
@@ -211,6 +225,8 @@ namespace volumetrics {
 		char backBufferIndex;
 
 		char meshBackBufferIndex;
+
+        vislib::sys::File statisticsFile;
 
 		/**
 		 * lines data. debugLines[backBufferIndex][*] is writable, the other one readable.

@@ -304,9 +304,11 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
             //    "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
             if ((f.consumedTriangles & (1 << c)) == 0) {
                 //surf.Add(sstI.GetPointer());
-                surf.mesh.SetCount(surf.mesh.Count() + 9);
-                sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() + surf.mesh.Count() - 9));
-                sstTemp = sstI;
+                if (sjd->storeMesh) {
+                    surf.mesh.SetCount(surf.mesh.Count() + 9);
+                    sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() + surf.mesh.Count() - 9));
+                    sstTemp = sstI;
+                }
                 surf.surface += sstI.Area<VoxelizerFloat>();
                 surf.volume += f.volumes[c];
                 if (isBorder(x, y, z)) {
@@ -360,10 +362,12 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                         y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z(), m, n.numTriangles);
 #endif /* ULTRADEBUG */
                                     //surf.Add(sst2.GetPointer());
-                                    surf.mesh.SetCount(surf.mesh.Count() + 9);
-                                    sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() 
-                                        + surf.mesh.Count() - 9));
-                                    sstTemp = sst2;
+                                    if (sjd->storeMesh) {
+                                        surf.mesh.SetCount(surf.mesh.Count() + 9);
+                                        sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() 
+                                            + surf.mesh.Count() - 9));
+                                        sstTemp = sst2;
+                                    }
                                     surf.surface += sst2.Area<VoxelizerFloat>();
                                     surf.volume += n.volumes[m];
                                     if (isBorder(x + moreNeighbors[ni].X(), y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z())) {
