@@ -409,6 +409,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\OSCBFix.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -484,6 +488,10 @@
 			</File>
 			<File
 				RelativePath=".\CallTriMeshData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OSCBFix.h"
 				>
 			</File>
 			<File
