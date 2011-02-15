@@ -804,6 +804,50 @@ void view::View3D::renderBBox(void) {
     ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
 
     ::glEnd();
+
+//#define _SHOW_CLIPBOX
+#ifdef _SHOW_CLIPBOX
+    {
+        ::glColor4ub(255, 0, 0, 128);
+        const vislib::math::Cuboid<float>& boundingBox
+            = this->bboxs.WorldSpaceClipBox();
+        ::glBegin(GL_QUADS);
+
+        ::glEdgeFlag(true);
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+
+        ::glEnd();
+    }
+#endif /* _SHOW_CLIPBOX */
 }
 
 

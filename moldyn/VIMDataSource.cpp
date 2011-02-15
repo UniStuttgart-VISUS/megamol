@@ -816,6 +816,9 @@ bool moldyn::VIMDataSource::getDataCallback(Call& caller) {
     if (c2 != NULL) {
         f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
         if (f == NULL) return false;
+        c2->SetDataHash(reinterpret_cast<const SIZE_T>(
+            (this->typeCnt > 0) ? static_cast<const void*>(f->PartPoss(0)) : NULL)
+            );
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetParticleListCount(this->typeCnt);
         for (unsigned int i = 0; i < this->typeCnt; i++) {
@@ -848,6 +851,14 @@ bool moldyn::VIMDataSource::getExtentCallback(Call& caller) {
             float r = this->types[i].Radius();// / this->boxScaling;
             if (r > border) border = r;
         }
+
+        Frame *f = NULL;
+        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
+        c2->SetDataHash(reinterpret_cast<const SIZE_T>(
+            (this->typeCnt > 0) ? static_cast<const void*>(f->PartPoss(0)) : NULL)
+            );
+        f->Unlock();
+
         c2->SetFrameCount(this->FrameCount());
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(0, 0, 0, this->boxScaling, this->boxScaling, this->boxScaling);
