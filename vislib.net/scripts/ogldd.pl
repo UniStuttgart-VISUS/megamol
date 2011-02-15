@@ -8,7 +8,7 @@ undef $/;
 my $handle;
 my $fileName;
 #$fileName = "C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.0A\\Include\\gl\\GLU.h";
-$fileName = "T:\\home\\reina\\src\\ogldd\\MegaMol05API.h";
+$fileName = "T:\\home\\reina\\src\\vislib2010\\vislib.net\\scripts\\MegaMol05API.h";
 open($handle, "<", $fileName)
     or croak("cannot open GL.h");
 my $glh = <$handle>;
