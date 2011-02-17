@@ -11,6 +11,7 @@
 #include "param/FilePathParam.h"
 #include "param/IntParam.h"
 #include "param/BoolParam.h"
+#include "param/StringParam.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/Log.h"
 #include "vislib/mathfunctions.h"
@@ -744,6 +745,7 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         dataOutSlot( "dataout", "The slot providing the loaded data"),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
+		residuesToChain( "residuesToChain", "slot to specify a ;-list of residues to be merged into separate chains"),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
         XTCFrameOffset( 0), xtcFileValid(false) {
@@ -766,6 +768,8 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
     this->strideFlagSlot << new param::BoolParam(true);
     this->MakeSlotAvailable( &this->strideFlagSlot);
 
+	this->residuesToChain << new param::StringParam("");
+    this->MakeSlotAvailable( &this->residuesToChain);
 }
 
 /*
@@ -1305,7 +1309,8 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     tmpStr.TrimSpaces();
     vislib::StringA resName = tmpStr;
     unsigned int resTypeIdx;
-    // search for current residue type name in the array
+
+	// search for current residue type name in the array
     INT_PTR resTypeNameIdx = this->residueTypeName.IndexOf( resName);
     if( resTypeNameIdx ==  vislib::Array<vislib::StringA>::INVALID_POS ) {
         resTypeIdx = this->residueTypeName.Count();
@@ -1313,6 +1318,15 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     } else {
         resTypeIdx = resTypeNameIdx;
     }
+
+	// thomasbm (TEST): check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
+	const vislib::TString& residuesToChain = this->residuesToChain.Param<core::param::StringParam>()->Value();
+	if ( /*resName.Equals(this->residuesToChain.Param<core::param::StringParam>()->Value())*/
+		residuesToChain.Contains(resName)
+		/*&& tmpChainId == ' '*/) {
+		tmpChainId = 'Z';
+	}
+
     // get the sequence number of the residue
     tmpStr = atomEntry.Substring( 22, 4);
     tmpStr.TrimSpaces();
