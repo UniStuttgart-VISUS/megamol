@@ -494,7 +494,12 @@ void SimpleMoleculeRenderer::RenderStick( const MolecularDataCall *mol, const fl
         position = firstAtomPos + (dir/2.0f);
 
         this->inParaCylinders[2*cnt] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
-        this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
+		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
+
+		// thomasbm: hotfix for jumping molecules near bounding box
+		if(this->inParaCylinders[2*cnt+1] > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+			this->inParaCylinders[2*cnt+1] = 0;
+		}
 
         this->quatCylinders[4*cnt+0] = quatC.GetX();
         this->quatCylinders[4*cnt+1] = quatC.GetY();
@@ -635,6 +640,12 @@ void SimpleMoleculeRenderer::RenderBallAndStick( const MolecularDataCall *mol, c
 
         this->inParaCylinders[2*cnt] = this->stickRadiusParam.Param<param::FloatParam>()->Value() / 3.0f;
         this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
+		
+		// thomasbm: hotfix for jumping molecules near bounding box
+		if(this->inParaCylinders[2*cnt+1] > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+			this->inParaCylinders[2*cnt+1] = 0;
+		}
+
 
         this->quatCylinders[4*cnt+0] = quatC.GetX();
         this->quatCylinders[4*cnt+1] = quatC.GetY();

@@ -595,6 +595,8 @@ namespace protein {
         core::param::ParamSlot maxFramesSlot;
         /** The STRIDE usage flag slot */
         core::param::ParamSlot strideFlagSlot;
+        /** slot to specify a ;-list of residues to be merged into separate chains ... */
+        core::param::ParamSlot residuesToChain;
 
         /** The data */
         vislib::Array<Frame*> data;
