@@ -345,7 +345,8 @@ void moldyn::VIMDataSource::Frame::parseParticleLine(vislib::StringA &line,
 moldyn::VIMDataSource::VIMDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the trisoup file to load."),
         getData("getdata", "Slot to request data from this data source."),
-        file(NULL), typeCnt(0), types(NULL), frameIdx(NULL), boxScaling(1.0f) {
+        file(NULL), typeCnt(0), types(NULL), frameIdx(NULL), boxScaling(1.0f),
+        datahash(0) {
 
     this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&VIMDataSource::filenameChanged);
@@ -536,6 +537,7 @@ void moldyn::VIMDataSource::calcBoundingBox(void) {
  */
 bool moldyn::VIMDataSource::filenameChanged(param::ParamSlot& slot) {
     this->resetFrameCache();
+    this->datahash++;
 
     if (this->file == NULL) {
         this->file = new vislib::sys::MemmappedFile();
@@ -810,15 +812,12 @@ bool moldyn::VIMDataSource::readHeader(const vislib::TString& filename) {
  */
 bool moldyn::VIMDataSource::getDataCallback(Call& caller) {
     MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
-    if (c2 == NULL) return false;
 
     Frame *f = NULL;
     if (c2 != NULL) {
         f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
         if (f == NULL) return false;
-        c2->SetDataHash(reinterpret_cast<const SIZE_T>(
-            (this->typeCnt > 0) ? static_cast<const void*>(f->PartPoss(0)) : NULL)
-            );
+        c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetParticleListCount(this->typeCnt);
         for (unsigned int i = 0; i < this->typeCnt; i++) {
@@ -832,10 +831,10 @@ bool moldyn::VIMDataSource::getDataCallback(Call& caller) {
                 : moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 vd);
         }
-
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 
@@ -852,13 +851,7 @@ bool moldyn::VIMDataSource::getExtentCallback(Call& caller) {
             if (r > border) border = r;
         }
 
-        Frame *f = NULL;
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-        c2->SetDataHash(reinterpret_cast<const SIZE_T>(
-            (this->typeCnt > 0) ? static_cast<const void*>(f->PartPoss(0)) : NULL)
-            );
-        f->Unlock();
-
+        c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetFrameCount(this->FrameCount());
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(0, 0, 0, this->boxScaling, this->boxScaling, this->boxScaling);

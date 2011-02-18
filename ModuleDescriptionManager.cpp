@@ -43,6 +43,7 @@
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleSphereRenderer.h"
 #include "moldyn/VIMDataSource.h"
+#include "moldyn/VisIttDataSource.h"
 //#include "special/ColStereoDisplay.h"
 #include "view/ClipPlane.h"
 #include "view/LinearTransferFunction.h"
@@ -108,6 +109,7 @@ ModuleDescriptionManager::Instance() {
         instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
         instance->registerAutoDescription<moldyn::OracleSphereRenderer>();
         instance->registerAutoDescription<moldyn::VIMDataSource>();
+        instance->registerAutoDescription<moldyn::VisIttDataSource>();
         //instance->registerAutoDescription<special::ColStereoDisplay>();
         instance->registerAutoDescription<view::ClipPlane>();
         instance->registerAutoDescription<view::LinearTransferFunction>();

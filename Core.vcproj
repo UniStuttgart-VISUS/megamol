@@ -1774,6 +1774,10 @@
 					RelativePath=".\moldyn\VIMDataSource.h"
 					>
 				</File>
+				<File
+					RelativePath=".\moldyn\VisIttDataSource.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -1840,6 +1844,10 @@
 				</File>
 				<File
 					RelativePath=".\moldyn\VIMDataSource.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\moldyn\VisIttDataSource.cpp"
 					>
 				</File>
 			</Filter>

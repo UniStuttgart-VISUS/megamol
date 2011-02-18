@@ -502,6 +502,9 @@ namespace moldyn {
         /** Scaling from the unit box [0, 1] to the data sets bounding box (first frame) */
         float boxScaling;
 
+        /** The data file hash */
+        SIZE_T datahash;
+
     };
 
 } /* end namespace moldyn */
