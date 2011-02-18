@@ -148,17 +148,7 @@ namespace protein {
 		* @return The return value of the function.
 		*/
 		virtual bool Render( megamol::core::Call& call);
-		
-		/**
-         * Volume rendering using protein data.
-		*/
-      //  bool RenderProteinData( megamol::core::view::CallRender3D *call, CallProteinData *protein);
-		
-		/**
-         * Volume rendering using volume data.
-		*/
-      //  bool RenderVolumeData( megamol::core::view::CallRender3D *call, CallVolumeData *volume);
-		
+
 		/**
          * Volume rendering using molecular data.
 		*/
@@ -190,22 +180,7 @@ namespace protein {
 		* @param call Ths calling CallFrame.
 		*/
 		void DrawLabel(unsigned int frameID);
-		
-		/**
-		* The CallFrame callback.
-		*
-		* @param call The calling call.
-		* @return The return value of the function.
-		*/
-	//	bool ProcessFrameRequest( megamol::core::Call& call);
 
-		/**
-         * Create a volume containing all protein atoms.
-		*
-		* @param prot The data interface.
-		*/
-     //   void UpdateVolumeTexture( const CallProteinData *protein);
-	
 		/** 
          * Create a volume containing all molecule atoms.
 		 *
@@ -226,27 +201,6 @@ namespace protein {
 		 * @param boundingbox The bounding box.
 		 */
         void RayParamTextures( vislib::math::Cuboid<float> boundingbox);
-
-        /**
-         * Create a volume containing the voxel map.
-		 *
-		 * @param volume The data interface.
-         */
-        //void UpdateVolumeTexture( const CallVolumeData *volume);
-
-        /**
-         * Draw the volume.
-		 *
-		 * @param volume The data interface.
-         */
-        //void RenderVolume( const CallVolumeData *volume);
-
-        /**
-         * Write the parameters of the ray to the textures.
-		 *
-		 * @param volume The data interface.
-         */
-        //void RayParamTextures( const CallVolumeData *volume);
 
         /**
          * Draw the bounding box of the protein.
@@ -360,6 +314,10 @@ namespace protein {
         /** parameter slot segmentation difference */
         megamol::core::param::ParamSlot segmentationDeltaParam;
 
+	    /** ;-list of residue names which compose the solvent */
+        megamol::core::param::ParamSlot solventResidues;
+		vislib::Array<int> solventResidueTypeIds;
+
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereShader;
 		// shader for the cylinders (raycasting view)
@@ -446,6 +404,18 @@ namespace protein {
 
         // interpolated atom positions
         float *posInter;
+		
+		// temporary atom array as member - do not use new-operator inside render()-routines!
+		enum TEMPORARY_ATOM_ARRAYS {
+			POS_0, POS_1, POS_INTER, UPDATE_VOLUME,
+			TEMPORARY_ATOM_ARRAYS_CNT
+		};
+		float *temporaryAtomArray[TEMPORARY_ATOM_ARRAYS_CNT];
+		inline float *getTemporaryAtomArray(int atomCount, TEMPORARY_ATOM_ARRAYS arr ) {
+			if (!temporaryAtomArray[arr])
+				temporaryAtomArray[arr] = new float[atomCount];
+			return temporaryAtomArray[arr];
+		}
 
         // the mouse pos
         vislib::math::Vector<float, 3> mousePos;
