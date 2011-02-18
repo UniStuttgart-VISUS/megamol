@@ -7,12 +7,7 @@
 #include "stdafx.h"
 #include "OSCBFix.h"
 #include "moldyn/MultiParticleDataCall.h"
-//#include "param/FilePathParam.h"
-//#include "vislib/ASCIIFileBuffer.h"
-//#include "vislib/CharTraits.h"
-//#include "vislib/Log.h"
-//#include "vislib/mathfunctions.h"
-//#include "vislib/Vector.h"
+#include <climits>
 
 
 using namespace megamol;
@@ -25,7 +20,7 @@ using namespace megamol::quartz;
 OSCBFix::OSCBFix(void) : core::Module(),
         dataOutSlot("dataOut", "The slot providing the fixed data"),
         dataInSlot("dataIn", "The slot fetching the original data"),
-        datahash(0), oscb() {
+        datahash(0), frameNum(UINT_MAX), oscb() {
 
     this->dataInSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
@@ -75,7 +70,8 @@ bool OSCBFix::getData(core::Call& c) {
     inCall->SetUnlocker(NULL, false);
 
     if (outCall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
-        if ((outCall->DataHash() == 0) || (outCall->DataHash() != this->datahash)) {
+        if ((outCall->DataHash() == 0) || (outCall->DataHash() != this->datahash) || (outCall->FrameID() != this->frameNum)) {
+            this->frameNum = outCall->FrameID();
             this->datahash = outCall->DataHash();
             this->calcOSCB(*inCall);
         }
@@ -106,8 +102,9 @@ bool OSCBFix::getExtent(core::Call& c) {
     inCall->SetUnlocker(NULL, false);
 
     if (outCall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
-        if ((outCall->DataHash() == 0) || (outCall->DataHash() != this->datahash)) {
+        if ((outCall->DataHash() == 0) || (outCall->DataHash() != this->datahash) || (outCall->FrameID() != this->frameNum)) {
             if ((*inCall)(0)) { // we need data!
+                this->frameNum = outCall->FrameID();
                 this->datahash = outCall->DataHash();
                 this->calcOSCB(*inCall);
                 inCall->Unlock();

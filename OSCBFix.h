@@ -114,6 +114,9 @@ namespace quartz {
         /** The data hash */
         SIZE_T datahash;
 
+        /** The frame number */
+        unsigned int frameNum;
+
         /** The new and improved object space clipping box */
         vislib::math::Cuboid<float> oscb;
 
