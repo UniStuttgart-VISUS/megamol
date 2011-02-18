@@ -686,8 +686,6 @@ void GromacsLoader::Frame::readFrame(std::fstream *file) {
         sizesmall[0] = sizesmall[1] = sizesmall[2] = magicints[smallidx] ;
     }
 
-
-
     delete[] buffer;
 
     // set file pointer to the beginning of the next frame
@@ -1016,7 +1014,7 @@ void GromacsLoader::loadFile( const vislib::TString& filename) {
         }
 
         // read the state from the XDR file
-        this->readState( xdr, this->state);
+        this->readState( xdr, this->state, tpx.natoms, tpx.ngtc);
 
         // close the file
         fclose( bf);
@@ -1097,10 +1095,10 @@ void GromacsLoader::loadFile( const vislib::TString& filename) {
 /*
  * Get a real number from a xdr file
  */
-float GromacsLoader::getXdrReal( XDR *xdr, bool bDouble) {
+float GromacsLoader::getXdrReal( XDR *xdr) {
     double d;
     float f;
-    if( bDouble ) {
+    if( xdr->bDouble ) {
         xdr_double( xdr, &d);
         f = float( d);
     } else {
@@ -1117,7 +1115,6 @@ bool GromacsLoader::readTpxHeader( XDR *xdr, TpxHeader &tpx) {
     // temporary variables
     int ssize( 0);
     char *strg = 0;
-    bool bDouble;
     int fver, fgen, idum;
     float rdum;
 
@@ -1128,13 +1125,13 @@ bool GromacsLoader::readTpxHeader( XDR *xdr, TpxHeader &tpx) {
       Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
           "Can not read file header, this file is from a Gromacs version which is older than 2.0");
     }
-    if( strg ) delete strg;
+    if( strg ) delete[] strg;
 
     int precision = 0;
     xdr_int( xdr, &precision);
 
-    bDouble = (precision == sizeof(double));
-    if( (precision != sizeof(float)) && !bDouble) { 
+    xdr->bDouble = (precision == sizeof(double));
+    if( (precision != sizeof(float)) && !xdr->bDouble) { 
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
             "Unknown precision: real is %d bytes instead of %d or %d", 
             precision, sizeof(float), sizeof(double));
@@ -1148,6 +1145,9 @@ bool GromacsLoader::readTpxHeader( XDR *xdr, TpxHeader &tpx) {
         xdr_int( xdr, &fgen);
     else
         fgen=0;
+
+    this->fileVersion = fver;
+    this->fileGeneration = fgen;
 
     if ((fver <= tpx_incompatible_version) || (fgen > tpx_generation)) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
@@ -1166,10 +1166,10 @@ bool GromacsLoader::readTpxHeader( XDR *xdr, TpxHeader &tpx) {
     }
     if( fver < 62 ) {
         xdr_int( xdr, &idum);
-        rdum = this->getXdrReal( xdr, bDouble);
+        rdum = this->getXdrReal( xdr);
     }
     
-    tpx.lambda = this->getXdrReal( xdr, bDouble);
+    tpx.lambda = this->getXdrReal( xdr);
     xdr_int( xdr, &tpx.bIr);
     xdr_int( xdr, &tpx.bTop);
     xdr_int( xdr, &tpx.bX);
@@ -1188,10 +1188,359 @@ bool GromacsLoader::readTpxHeader( XDR *xdr, TpxHeader &tpx) {
 /*
  * Read the state from a XDR file
  */
-bool GromacsLoader::readState( XDR *xdr, t_state &state) {
+bool GromacsLoader::readState( XDR *xdr, t_state &state, int natoms, int ngtc) {
+    using vislib::sys::Log;
+    int i;
+    gmx_bool bDum = TRUE;
+
+    // ---------- init state ----------
+    state.natoms = natoms;
+    state.nrng   = 0;
+    state.flags  = 0;
+    state.lambda = 0;
+    state.veta   = 0;
+    clear_mat( state.box);
+    clear_mat( state.box_rel);
+    clear_mat( state.boxv);
+    clear_mat( state.pres_prev);
+    clear_mat( state.svir_prev);
+    clear_mat( state.fvir_prev);
+    init_gtc_state( state, ngtc, 0, 0);
+    state.nalloc = state.natoms;
+    if (state.nalloc > 0) {
+        state.x = new rvec[state.nalloc];
+        state.v = new rvec[state.nalloc];
+    } else {
+        state.x = NULL;
+        state.v = NULL;
+    }
+    state.sd_X = NULL;
+    state.cg_p = NULL;
+
+    init_ekinstate( &state.ekinstate);
+
+    init_energyhistory( &state.enerhist);
+
+    state.ddp_count = 0;
+    state.ddp_count_cg_gl = 0;
+    state.cg_gl = NULL;
+    state.cg_gl_nalloc = 0;
+
+    // ---------- read state ----------
+    do_xdr( xdr, &state.box, DIM, eioNRVEC);
+    if( this->fileVersion >= 51) {
+        do_xdr( xdr, &state.box_rel, DIM, eioNRVEC);
+    } else {
+        // We initialize box_rel after reading the inputrec
+        clear_mat( state.box_rel);
+    }
+    if( this->fileVersion >= 28 ) {
+        do_xdr( xdr, &state.boxv, DIM, eioNRVEC);
+        if( this->fileVersion < 56 ) {
+            matrix mdum;
+            do_xdr( xdr, &mdum, DIM, eioNRVEC);
+        }
+    }
+
+    if( state.ngtc > 0 && this->fileVersion >= 28) {
+        real *dumv;
+        dumv = new real[state.ngtc];
+        if( this->fileVersion < 69) {
+            bDum = do_xdr( xdr, dumv, state.ngtc, eioREAL);
+        }
+        /* These used to be the Berendsen tcoupl_lambda's */
+        bDum = do_xdr( xdr, dumv, state.ngtc, eioREAL);
+        delete[] dumv;
+    }
+
+    // Prior to tpx version 26, the inputrec was here.
+    // I moved it to enable partial forward-compatibility
+    // for analysis/viewer programs.
+    if( this->fileVersion < 26 ) {
+        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, 
+            "Can not load file versions lower than 26.");
+        /*
+        do_test(fio,tpx.bIr,ir);
+        do_section(fio,eitemIR,bRead);
+        if (tpx.bIr) {
+            if (ir) {
+                do_inputrec(fio, ir,bRead,file_version,
+                mtop ? &mtop->ffparams.fudgeQQ : NULL);
+                if (bRead && debug) {
+                    pr_inputrec(debug,0,"inputrec",ir,FALSE);
+                }
+            } else {
+                do_inputrec(fio, &dum_ir,bRead,file_version,
+                    mtop ? &mtop->ffparams.fudgeQQ :NULL);
+                if (bRead && debug) {
+                    pr_inputrec(debug,0,"inputrec",&dum_ir,FALSE);
+                }
+                done_inputrec(&dum_ir);
+            }
+        }
+        */
+
+    }
+
+    if( tpx.bTop ) {
+        if( mtop ) {
+            do_mtop(fio,mtop,bRead, file_version);
+        } else {
+            do_mtop(fio,&dum_top,bRead,file_version);
+            done_mtop(&dum_top,TRUE);
+        }
+    }
+    if( tpx.bX ) {
+        if( bRead ) {
+            state->flags |= (1<<estX);
+        }
+        gmx_fio_ndo_rvec(fio,state->x,state->natoms);
+    }
 
     return true;
 }
+
+/*
+ * initialize gtc_state
+ */
+void GromacsLoader::init_gtc_state(t_state &state, int ngtc, int nnhpres, int nhchainlength) {
+    int i,j;
+
+    state.ngtc = ngtc;
+    state.nnhpres = nnhpres;
+    state.nhchainlength = nhchainlength;
+    if (state.ngtc > 0) {
+        state.nosehoover_xi = new double[state.nhchainlength*state.ngtc]; 
+        state.nosehoover_vxi = new double[state.nhchainlength*state.ngtc];
+        state.therm_integral = new double[state.ngtc];
+        for(i=0; i<state.ngtc; i++) {
+            for (j=0;j<state.nhchainlength;j++) {
+                state.nosehoover_xi[i*state.nhchainlength + j]  = 0.0;
+                state.nosehoover_vxi[i*state.nhchainlength + j]  = 0.0;
+            }
+        }
+        for(i=0; i<state.ngtc; i++) {
+            state.therm_integral[i]  = 0.0;
+        }
+    } else {
+        state.nosehoover_xi  = NULL;
+        state.nosehoover_vxi = NULL;
+        state.therm_integral = NULL;
+    }
+
+    if (state.nnhpres > 0)
+    {
+        state.nhpres_xi = new double[state.nhchainlength*nnhpres];
+        state.nhpres_vxi = new double[state.nhchainlength*nnhpres];
+        for(i=0; i<nnhpres; i++) {
+            for (j=0;j<state.nhchainlength;j++) {
+                state.nhpres_xi[i*nhchainlength + j]  = 0.0;
+                state.nhpres_vxi[i*nhchainlength + j]  = 0.0;
+            }
+        }
+    } else {
+        state.nhpres_xi  = NULL;
+        state.nhpres_vxi = NULL;
+    }
+}
+
+/*
+ * initialize ekinstate
+ */
+void GromacsLoader::init_ekinstate(ekinstate_t *eks) {
+  eks->ekin_n         = 0;
+  eks->ekinh          = NULL;
+  eks->ekinf          = NULL;
+  eks->ekinh_old      = NULL;
+  eks->ekinscalef_nhc = NULL;
+  eks->ekinscaleh_nhc = NULL;
+  eks->vscale_nhc     = NULL;
+  eks->dekindl        = 0;
+  eks->mvcos          = 0;
+}
+
+/*
+ * initialize energyhistory
+ */
+void GromacsLoader::init_energyhistory(energyhistory_t *enerhist) {
+    enerhist->nener = 0;
+
+    enerhist->ener_ave     = NULL;
+    enerhist->ener_sum     = NULL;
+    enerhist->ener_sum_sim = NULL;
+    enerhist->dht          = NULL;
+
+    enerhist->nsteps     = 0;
+    enerhist->nsum       = 0;
+    enerhist->nsteps_sim = 0;
+    enerhist->nsum_sim   = 0;
+
+    enerhist->dht = NULL;
+}
+
+/*
+ * do_xdr
+ */
+bool GromacsLoader::do_xdr( XDR *xdr, void *item, int nitem, int eio) {
+    unsigned char ucdum, *ucptr;
+    bool_t res = 0;
+    float fvec[DIM];
+    double dvec[DIM];
+    int j, m, *iptr, idum;
+    gmx_large_int_t sdum;
+    real *ptr;
+    unsigned short us;
+    double d = 0;
+    float f = 0;
+
+    switch (eio)
+    {
+    case eioREAL:
+        if (xdr->bDouble)
+        {
+            if (item )
+                d = *((real *) item);
+            res = xdr_double( xdr, &d);
+            if (item)
+                *((real *) item) = d;
+        }
+        else
+        {
+            if (item )
+                f = *((real *) item);
+            res = xdr_float(xdr, &f);
+            if (item)
+                *((real *) item) = f;
+        }
+        break;
+    case eioFLOAT:
+        if (item )
+            f = *((float *) item);
+        res = xdr_float(xdr, &f);
+        if (item)
+            *((float *) item) = f;
+        break;
+    case eioDOUBLE:
+        if (item )
+            d = *((double *) item);
+        res = xdr_double(xdr, &d);
+        if (item)
+            *((double *) item) = d;
+        break;
+    case eioINT:
+        if (item )
+            idum = *(int *) item;
+        res = xdr_int(xdr, &idum);
+        if (item)
+            *(int *) item = idum;
+        break;
+    /*
+    case eioGMX_LARGE_INT:
+        // do_xdr will not generate a warning when a 64bit gmx_large_int_t
+        // value that is out of 32bit range is read into a 32bit gmx_large_int_t.
+        if (item )
+            sdum = *(gmx_large_int_t *) item;
+        res = xdr_gmx_large_int(xdr, &sdum, NULL);
+        if (item)
+            *(gmx_large_int_t *) item = sdum;
+        break;
+    */
+    case eioUCHAR:
+        if (item )
+            ucdum = *(unsigned char *) item;
+        res = xdr_u_char(xdr, &ucdum);
+        if (item)
+            *(unsigned char *) item = ucdum;
+        break;
+    case eioNUCHAR:
+        ucptr = (unsigned char *) item;
+        res = 1;
+        for (j = 0; (j < nitem) && res; j++)
+        {
+            res = xdr_u_char(xdr, &(ucptr[j]));
+        }
+        break;
+    case eioUSHORT:
+        if (item )
+            us = *(unsigned short *) item;
+        res = xdr_u_short(xdr, (unsigned short *) &us);
+        if (item)
+            *(unsigned short *) item = us;
+        break;
+    case eioRVEC:
+        if (xdr->bDouble)
+        {
+            if (item )
+                for (m = 0; (m < DIM); m++)
+                    dvec[m] = ((real *) item)[m];
+            res = xdr_vector(xdr, (char *) dvec, DIM,
+                             (unsigned int) sizeof(double),
+                             (xdrproc_t) xdr_double);
+            if (item)
+                for (m = 0; (m < DIM); m++)
+                    ((real *) item)[m] = dvec[m];
+        }
+        else
+        {
+            if (item )
+                for (m = 0; (m < DIM); m++)
+                    fvec[m] = ((real *) item)[m];
+            res = xdr_vector(xdr, (char *) fvec, DIM,
+                             (unsigned int) sizeof(float),
+                             (xdrproc_t) xdr_float);
+            if (item)
+                for (m = 0; (m < DIM); m++)
+                    ((real *) item)[m] = fvec[m];
+        }
+        break;
+    case eioNRVEC:
+        ptr = NULL;
+        res = 1;
+        for (j = 0; (j < nitem) && res; j++)
+        {
+            if (item)
+                ptr = ((rvec *) item)[j];
+            res = do_xdr( xdr, ptr, 1, eioRVEC);
+        }
+        break;
+    case eioIVEC:
+        iptr = (int *) item;
+        res = 1;
+        for (m = 0; (m < DIM) && res; m++)
+        {
+            if (item )
+                idum = iptr[m];
+            res = xdr_int(xdr, &idum);
+            if (item)
+                iptr[m] = idum;
+        }
+        break;
+    case eioSTRING:
+    {
+        char *cptr = 0;
+        int slen;
+
+        slen = 0;
+            
+        if (xdr_int(xdr, &slen) <= 0)
+            printf( "wrong string length %d for string",slen);
+        if (!item )
+            cptr = new char[slen];
+        else
+            cptr=(char *)item;
+        if (cptr)
+            res = xdr_string(xdr,&cptr,slen);
+        else
+            res = 1;
+        if (!item )
+            delete[] cptr;
+        break;
+    }
+    }
+
+    return (res != 0);
+}
+
 
 /*
  * Get the radius of the element

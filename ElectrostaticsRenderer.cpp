@@ -42,6 +42,7 @@ ElectrostaticsRenderer::ElectrostaticsRenderer(void) : Renderer3DModule (),
         fieldSize( 0), field( 0) {
     // the caller slot
     this->dataCallerSlot.SetCompatibleCall<ParticleDataCallDescription>();
+    this->dataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->dataCallerSlot);
     
     // the cell length parameter
@@ -132,18 +133,29 @@ bool ElectrostaticsRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
-    ParticleDataCall *dc = this->dataCallerSlot.CallAs<ParticleDataCall>();
-    if( dc == NULL ) return false;
-    if (!(*dc)(ParticleDataCall::CallForGetExtent)) return false;
-
+    ParticleDataCall *pdc = this->dataCallerSlot.CallAs<ParticleDataCall>();
+    MolecularDataCall *mdc = this->dataCallerSlot.CallAs<MolecularDataCall>();
     float scale;
-    if( !vislib::math::IsEqual( dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
-        scale = 2.0f / dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    if( pdc != NULL ) {
+        if (!(*pdc)(ParticleDataCall::CallForGetExtent)) return false;
+        if( !vislib::math::IsEqual( pdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+            scale = 2.0f / pdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        } else {
+            scale = 1.0f;
+        }
+        cr3d->AccessBoundingBoxes() = pdc->AccessBoundingBoxes();
+    } else if( mdc != NULL ) {
+        if (!(*mdc)(MolecularDataCall::CallForGetExtent)) return false;
+        if( !vislib::math::IsEqual( mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+            scale = 2.0f / mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        } else {
+            scale = 1.0f;
+        }
+        cr3d->AccessBoundingBoxes() = pdc->AccessBoundingBoxes();
     } else {
-        scale = 1.0f;
+        return false;
     }
 
-    cr3d->AccessBoundingBoxes() = dc->AccessBoundingBoxes();
     cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
     //TODO
     cr3d->SetTimeFramesCount( 1U);

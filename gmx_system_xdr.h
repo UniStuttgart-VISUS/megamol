@@ -173,9 +173,10 @@ struct XDR
       }
      *x_ops;
     char *x_public;		/* users' data */
-    char *x_private;		/* pointer to private data */
+    char *x_private;	/* pointer to private data */
     char *x_base;		/* private used for position info */
     int x_handy;		/* extra private word */
+    int bDouble;       /* Double precision flag */
   };
 
 /*

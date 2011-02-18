@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "ParticleDataCall.h"
+#include "MolecularDataCall.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
@@ -25,8 +26,7 @@ namespace protein {
      * Electrostatics Renderer class
      */
 
-	class ElectrostaticsRenderer : public megamol::core::view::Renderer3DModule
-	{
+	class ElectrostaticsRenderer : public megamol::core::view::Renderer3DModule {
 	public:
         /**
          * Answer the name of this module.
