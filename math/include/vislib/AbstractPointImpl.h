@@ -354,8 +354,9 @@ namespace math {
         Tp2 at = static_cast<Tp2>(1) - t;
 
         for (unsigned int d = 0; d < D; d++) {
-            retval.coordinates[d] = this->coordinates[d] * at
-                + static_cast<Tp2>(rhs[d]) * t;
+            retval.coordinates[d] = static_cast<Tp>(
+                static_cast<Tp2>(this->coordinates[d]) * at
+                + static_cast<Tp2>(rhs[d]) * t);
         }
 
         return retval;
