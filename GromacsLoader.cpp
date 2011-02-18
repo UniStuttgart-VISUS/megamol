@@ -1282,6 +1282,7 @@ bool GromacsLoader::readState( XDR *xdr, t_state &state, int natoms, int ngtc) {
 
     }
 
+	/*
     if( tpx.bTop ) {
         if( mtop ) {
             do_mtop(fio,mtop,bRead, file_version);
@@ -1296,6 +1297,7 @@ bool GromacsLoader::readState( XDR *xdr, t_state &state, int natoms, int ngtc) {
         }
         gmx_fio_ndo_rvec(fio,state->x,state->natoms);
     }
+	*/
 
     return true;
 }

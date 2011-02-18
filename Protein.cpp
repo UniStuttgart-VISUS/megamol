@@ -31,6 +31,7 @@
 #include "MoleculeCudaSESRenderer.h"
 #include "ElectrostaticsRenderer.h"
 #include "GromacsLoader.h"
+#include "MoleculeCBCudaRenderer.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -118,7 +119,7 @@ PROTEIN_API int mmplgModuleCount(void) {
     moduleCount++;
 #endif /* (defined(WITH_OPENCL) && (WITH_OPENCL)) */
 #if (defined(WITH_CUDA) && (WITH_CUDA))
-    moduleCount+=3;
+    moduleCount+=4;
 #endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */
     return moduleCount;
 }
@@ -172,7 +173,8 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
 		case 27 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererCBCUDA>();
         case 28 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::ProteinRendererSESGPUCuda>();
         case 29 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCudaSESRenderer>();
-		#define CUDA_OFFSET 3
+		case 30 + NETCDF_OFFSET + OPENCL_OFFSET: return new megamol::core::ModuleAutoDescription<megamol::protein::MoleculeCBCudaRenderer>();
+		#define CUDA_OFFSET 4
 #else
 		#define CUDA_OFFSET 0
 #endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

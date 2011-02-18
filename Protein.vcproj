@@ -955,6 +955,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MoleculeCBCudaRenderer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MoleculeCudaSESRenderer.cpp"
 				>
 			</File>
@@ -1266,6 +1270,10 @@
 			</File>
 			<File
 				RelativePath=".\MoleculeCartoonRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MoleculeCBCudaRenderer.h"
 				>
 			</File>
 			<File
