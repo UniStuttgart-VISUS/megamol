@@ -122,6 +122,15 @@ namespace view {
         AnimDataModule(void);
 
         /**
+         * Answer the size of the cache
+         *
+         * @return The size of the cache
+         */
+        inline unsigned int CacheSize(void) const {
+            return this->cacheSize;
+        }
+
+        /**
          * Creates a frame to be used in the frame cache. This method will be
          * called from within 'initFrameCache'.
          *

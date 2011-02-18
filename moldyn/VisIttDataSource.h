@@ -15,9 +15,12 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "moldyn/MultiParticleDataCall.h"
+#include "vislib/Array.h"
+#include "vislib/Cuboid.h"
 #include "vislib/File.h"
-//#include "vislib/RawStorage.h"
-//#include "vislib/types.h"
+#include "vislib/mathfunctions.h"
+#include "vislib/Pair.h"
+#include "vislib/RawStorage.h"
 
 
 namespace megamol {
@@ -101,173 +104,6 @@ namespace moldyn {
 
     private:
 
-        ///** Nested class of simple vim types */
-        //class SimpleType {
-        //public:
-
-        //    /** Ctor */
-        //    SimpleType() : id(0), rad(0.0f) {
-        //        // intentionally empty
-        //    }
-
-        //    /** Dtor */
-        //    ~SimpleType() {
-        //        // intentionally empty
-        //    }
-
-        //    /**
-        //     * Gets the blue colour component of the type
-        //     *
-        //     * @return The blue colour component of the type
-        //     */
-        //    inline unsigned char Blue(void) const {
-        //        return this->col[2];
-        //    }
-
-        //    /**
-        //     * Gets the RGB colour of the type
-        //     *
-        //     * @return The RGB colour of the type
-        //     */
-        //    inline const unsigned char * Colour(void) const {
-        //        return this->col;
-        //    }
-
-        //    /**
-        //     * Gets the green colour component of the type
-        //     *
-        //     * @return The green colour component of the type
-        //     */
-        //    inline unsigned char Green(void) const {
-        //        return this->col[1];
-        //    }
-
-        //    /**
-        //     * Gets the id of the type
-        //     *
-        //     * @return The id of the type
-        //     */
-        //    inline unsigned int ID(void) const {
-        //        return this->id;
-        //    }
-
-        //    /**
-        //     * Gets the radius of the type
-        //     *
-        //     * @return The radius of the type
-        //     */
-        //    inline float Radius(void) const {
-        //        return this->rad;
-        //    }
-
-        //    /**
-        //     * Gets the red colour component of the type.
-        //     *
-        //     * @return The red colour component of the type.
-        //     */
-        //    inline unsigned char Red(void) const {
-        //        return this->col[0];
-        //    }
-
-        //    /**
-        //     * Sets the colour for the type.
-        //     *
-        //     * @param col The new RGB colour for the type.
-        //     */
-        //    inline void SetColour(const unsigned char *col) {
-        //        if (col == NULL) {
-        //            this->col[0] = this->col[1] = this->col[2] = 0;
-        //        } else {
-        //            this->col[0] = col[0];
-        //            this->col[1] = col[1];
-        //            this->col[2] = col[2];
-        //        }
-        //    }
-
-        //    /**
-        //     * Sets the colour for the type.
-        //     *
-        //     * @param col The new RGB colour for the type.
-        //     */
-        //    inline void SetColour(UINT32 col) {
-        //        unsigned char *c = reinterpret_cast<unsigned char*>(&col);
-        //        this->col[0] = c[0]; // TODO: Unsure with order!
-        //        this->col[1] = c[1];
-        //        this->col[2] = c[2];
-        //    }
-
-        //    /**
-        //     * Sets the colour for the type.
-        //     *
-        //     * @param r The new red colour component
-        //     * @param g The new green colour component
-        //     * @param b The new blue colour component
-        //     */
-        //    inline void SetColour(unsigned char r, unsigned char g,
-        //            unsigned char b) {
-        //        this->col[0] = r;
-        //        this->col[1] = g;
-        //        this->col[2] = b;
-        //    }
-
-        //    /**
-        //     * Sets the id for the type
-        //     *
-        //     * @param id The new if for the type.
-        //     */
-        //    inline void SetID(unsigned int id) {
-        //        this->id = id;
-        //    }
-
-        //    /**
-        //     * Sets the radius for the type.
-        //     *
-        //     * @param rad The new radius for the type.
-        //     */
-        //    inline void SetRadius(float rad) {
-        //        this->rad = rad;
-        //    }
-
-        //    /**
-        //     * Assignment operator.
-        //     *
-        //     * @param rhs The right hand side operand.
-        //     *
-        //     * @return Reference to this.
-        //     */
-        //    SimpleType& operator=(const SimpleType& rhs) {
-        //        this->col[0] = rhs.col[0];
-        //        this->col[1] = rhs.col[1];
-        //        this->col[2] = rhs.col[2];
-        //        this->id = rhs.id;
-        //        this->rad = rhs.rad;
-        //        return *this;
-        //    }
-
-        //    /**
-        //     * Test for equality
-        //     *
-        //     * @param rhs The right hand side operand.
-        //     *
-        //     * @return 'true' if 'this' equals 'rhs', 'false' otherwise.
-        //     */
-        //    bool operator==(const SimpleType& rhs) {
-        //        return this->id == rhs.id; // id is currently enought to compare
-        //    }
-
-        //private:
-
-        //    /** The colour of the type */
-        //    unsigned char col[3];
-
-        //    /** The id of the type */
-        //    unsigned int id;
-
-        //    /** The radius of spheres of this type */
-        //    float rad;
-
-        //};
-
         /** Nested class of frame data */
         class Frame : public view::AnimDataModule::Frame {
         public:
@@ -282,110 +118,58 @@ namespace moldyn {
             /** Dtor. */
             virtual ~Frame(void);
 
-            ///**
-            // * Clears the internal data buffers
-            // */
-            //void Clear(void);
+            /**
+             * Access t othe particle data
+             *
+             * @return The particle data
+             */
+            inline vislib::RawStorage& Data(void) {
+                return this->dat;
+            }
 
-            ///**
-            // * Loads a frame from 'file' to this object.
-            // *
-            // * @param file The data file.
-            // * @param idx The index number of the frame.
-            // * @param types The types array of the data.
-            // * @param scaling The global scaling of the bounding box.
-            // *
-            // * @return 'true' on success, 'false' on failure.
-            // */
-            //bool LoadFrame(vislib::sys::File *file, unsigned int idx, 
-            //    SimpleType *types, float scaling);
+            /**
+             * Access t othe particle data
+             *
+             * @return The particle data
+             */
+            inline const vislib::RawStorage& Data(void) const {
+                return this->dat;
+            }
 
-            ///**
-            // * Sets the number of types of the data set.
-            // *
-            // * @param cnt The number of types of the data set.
-            // */
-            //void SetTypeCount(unsigned int cnt);
+            /**
+             * Answer the size of the used memory in bytes
+             *
+             * @return The size of the used memory
+             */
+            inline SIZE_T Size(void) const {
+                return vislib::math::Min<SIZE_T>(this->size, this->dat.GetSize());
+            }
 
-            ///**
-            // * Gets the number of particles for the requested type.
-            // *
-            // * @param type The requested type index.
-            // *
-            // * @return The number of particles.
-            // */
-            //inline unsigned int PartCnt(unsigned int type) const {
-            //    ASSERT(type < this->typeCnt);
-            //    return this->partCnt[type];
-            //}
+            /**
+             * Sets the size of the used memory
+             *
+             * @param s The size of the used memory
+             */
+            inline void SetSize(SIZE_T s) {
+                this->size = s;
+            }
 
-            ///**
-            // * Gets the array of particle positions for the requested type.
-            // *
-            // * @param type The requested type index.
-            // *
-            // * @return The array of particle positions.
-            // */
-            //const float *PartPoss(unsigned int type) const;
-
-            ///**
-            // * Answers the size of the loaded data in bytes.
-            // *
-            // * @return The size of the loaded data in bytes.
-            // */
-            //SIZE_T SizeOf(void) const;
-
-            ///**
-            // * Replaces the data of this object with the interpolated data
-            // * based on the two frames 'a', 'b', and the interpolation 
-            // * parameter 'alpha' [0, 1].
-            // *
-            // * @param alpha The interpolation parameter.
-            // * @param a The first interpolation value, used if 'alpha' is zero.
-            // * @param b The second interpolation value, used if 'alpha' is one.
-            // *
-            // * @return The frame to be used after the interpolation.
-            // */
-            //const Frame * MakeInterpolationFrame(float alpha, const Frame &a, 
-            //    const Frame &b);
+            /**
+             * Sets the frame number
+             *
+             * @param fn The frame number
+             */
+            inline void SetFrameNumber(unsigned int fn) {
+                this->frame = fn;
+            }
 
         private:
 
-            ///**
-            // * Parses a particle line of the vim file.
-            // *
-            // * @param line The line to parse.
-            // * @param outType Receives the type of the parse particle.
-            // * @param outX Receives the x component of the position of the 
-            // *             parsed particle.
-            // * @param outY Receives the y component of the position of the 
-            // *             parsed particle.
-            // * @param outZ Receives the z component of the position of the 
-            // *             parsed particle.
-            // * @param outQX Receives the x component of the orientation 
-            // *              quaternion of the parsed particle.
-            // * @param outQY Receives the y component of the orientation 
-            // *              quaternion of the parsed particle.
-            // * @param outQZ Receives the z component of the orientation 
-            // *              quaternion of the parsed particle.
-            // * @param outQW Receives the w component of the orientation 
-            // *              quaternion of the parsed particle.
-            // */
-            //void parseParticleLine(vislib::StringA &line, int &outType, 
-            //    float &outX, float &outY, float &outZ, 
-            //    float &outQX, float &outQY, float &outQZ, float &outQW);
+            /** The size of the memory really used */
+            SIZE_T size;
 
-            ///** type count */
-            //unsigned int typeCnt;
-
-            ///** particle counts per type */
-            //unsigned int *partCnt;
-
-            ///** position data per type */
-            //vislib::RawStorage *pos;
-
-            ///** quaternion data per type */
-            //vislib::RawStorage *quat;
+            /** The xyz particle positions */
+            vislib::RawStorage dat;
 
         };
 
@@ -427,8 +211,8 @@ namespace moldyn {
 
         };
 
-        ///** Builds up the frame index table. */
-        //void buildFrameTable(void);
+        /** Builds up the frame index table. */
+        void buildFrameTable(void);
 
         ///** Calculates the bounding box from all frames. */
         //void calcBoundingBox(void);
@@ -442,25 +226,23 @@ namespace moldyn {
          */
         bool filenameChanged(param::ParamSlot& slot);
 
-        ///**
-        // * Parses a type description line of the vim file.
-        // *
-        // * @param line The line to parse
-        // * @param outType Receives the type of the parsed element.
-        // *
-        // * @return The SimpleType object representing this type line
-        // *         or 'NULL' in case of an error.
-        // */
-        //SimpleType* parseTypeLine(vislib::StringA &line, int &outType);
+        /**
+         * The filter settings changed, so we need to reload all data
+         *
+         * @param slot The slot
+         *
+         * @return 'true'
+         */
+        bool filterChanged(param::ParamSlot& slot);
 
-        ///**
-        // * Reads the file header containing the particle descriptions.
-        // *
-        // * @param filename The file that is currently loading
-        // *
-        // * @return 'true' on success, 'false' on failure.
-        // */
-        //bool readHeader(const vislib::TString& filename);
+        /**
+         * Parses the file header containing the particle descriptions
+         *
+         * @param header The file header line
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        bool parseHeader(const vislib::StringA& header);
 
         /**
          * Gets the data from the source.
@@ -483,6 +265,18 @@ namespace moldyn {
         /** The file name */
         param::ParamSlot filename;
 
+        /** The radius for the particles */
+        param::ParamSlot radius;
+
+        /** The filter to be applied */
+        param::ParamSlot filter;
+
+        /** The filter column to be applied */
+        param::ParamSlot filterColumn;
+
+        /** The filter value to be applied */
+        param::ParamSlot filterValue;
+
         /** The slot for requesting data */
         CalleeSlot getData;
 
@@ -492,17 +286,20 @@ namespace moldyn {
         /** The file data hash number */
         SIZE_T dataHash;
 
-        ///** The number of types */
-        //unsigned int typeCnt;
+        /** The frame seek table */
+        vislib::Array<vislib::sys::File::FileSize> frameTable;
 
-        ///** The types */
-        //SimpleType *types;
+        /** All column widths and labels */
+        vislib::Array<vislib::Pair<vislib::StringA, unsigned int> > header;
 
-        ///** The frame index table */
-        //vislib::sys::File::FileSize *frameIdx;
+        /** The sorted index of the usable columns */
+        vislib::Array<unsigned int> headerIdx;
 
-        ///** Scaling from the unit box [0, 1] to the data sets bounding box (first frame) */
-        //float boxScaling;
+        /** The column index used for filtering */
+        unsigned int filterIndex;
+
+        /** The bounding box */
+        vislib::math::Cuboid<float> bbox;
 
     };
 

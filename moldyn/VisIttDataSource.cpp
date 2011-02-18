@@ -8,21 +8,16 @@
 #include "stdafx.h"
 #include "VisIttDataSource.h"
 #include "vislib/MemmappedFile.h"
+#include "param/EnumParam.h"
 #include "param/FilePathParam.h"
-//#include "param/StringParam.h"
+#include "param/FloatParam.h"
+#include "param/StringParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
 #include "vislib/Log.h"
-//#include "vislib/Path.h"
-//#include "vislib/PtrArray.h"
-//#include "vislib/RawStorageWriter.h"
-//#include "vislib/ShallowPoint.h"
-//#include "vislib/ShallowQuaternion.h"
 #include "vislib/String.h"
-//#include "vislib/StringTokeniser.h"
-//#include "vislib/sysfunctions.h"
-//#include "vislib/SystemInformation.h"
-//#include "vislib/Trace.h"
+#include "vislib/sysfunctions.h"
+#include "vislib/SystemInformation.h"
 
 using namespace megamol::core;
 
@@ -41,8 +36,8 @@ using namespace megamol::core;
  * moldyn::VisIttDataSource::Frame::Frame
  */
 moldyn::VisIttDataSource::Frame::Frame(view::AnimDataModule& owner)
-        : view::AnimDataModule::Frame(owner)/*, file(NULL)/*, typeCnt(0), partCnt(NULL),
-        pos(NULL), quat(NULL)*/ {
+        : view::AnimDataModule::Frame(owner), dat(), size(0) {
+    // intentionally empty
 }
 
 
@@ -50,292 +45,8 @@ moldyn::VisIttDataSource::Frame::Frame(view::AnimDataModule& owner)
  * moldyn::VisIttDataSource::Frame::~Frame
  */
 moldyn::VisIttDataSource::Frame::~Frame() {
-    //this->typeCnt = 0;
-    //ARY_SAFE_DELETE(this->partCnt);
-    //ARY_SAFE_DELETE(this->pos);
-    //ARY_SAFE_DELETE(this->quat);
+    // intentionally empty
 }
-
-
-///*
-// * moldyn::VisIttDataSource::Frame::Clear
-// */
-//void moldyn::VisIttDataSource::Frame::Clear(void) {
-//    for (unsigned int i = 0; i < this->typeCnt; i++) {
-//        this->pos[i].EnforceSize(0);
-//        this->quat[i].EnforceSize(0);
-//    }
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::Frame::LoadFrame
-// */
-//bool moldyn::VisIttDataSource::Frame::LoadFrame(vislib::sys::File *file, 
-//        unsigned int idx, moldyn::VisIttDataSource::SimpleType *types, float /*scaling*/) {
-//
-//    float lScale = 1.0f;
-//
-//    // clear frame by resetting the counters
-//    for (unsigned int i = 0; i < this->typeCnt; i++) {
-//        this->partCnt[i] = 0;
-//    }
-//
-//    // read frame
-//    vislib::StringA startLine = vislib::sys::ReadLineFromFileA(*file);
-//
-//    if (startLine[0] != '#') {
-//        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-//            "Invalid Start Line Parsed");
-//        return false;
-//    }
-//
-//    if (startLine[1] == '#') {
-//        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-//            "Unexpected End of Data");
-//        return false;
-//    }
-//
-//    startLine.Remove(0, 1);
-//    startLine.TrimSpacesBegin();
-//
-//    try {
-//        lScale = static_cast<float>(vislib::CharTraitsA::ParseDouble(
-//            startLine.PeekBuffer()));
-//    } catch(...) {
-//        lScale = 1.0f;
-//    }
-//
-//    this->frame = idx;
-//
-//    vislib::PtrArray<vislib::RawStorageWriter> posWrtr(this->typeCnt);
-//    vislib::PtrArray<vislib::RawStorageWriter> quatWrtr(this->typeCnt);
-//    posWrtr.SetCount(this->typeCnt);
-//    quatWrtr.SetCount(this->typeCnt);
-//    for (unsigned int i = 0; i < this->typeCnt; i++) {
-//        posWrtr[i] = new vislib::RawStorageWriter(this->pos[i]);
-//        quatWrtr[i] = new vislib::RawStorageWriter(this->quat[i]);
-//    }
-//
-//    // TODO: Implement a faster code (here it matters!);
-//    // however, it is VIM and thus not very important.
-//    while (!file->IsEOF()) {
-//        vislib::StringA line = vislib::sys::ReadLineFromFileA(*file);
-//        line.TrimSpaces();
-//
-//        if (line.IsEmpty()) {
-//            continue;
-//        } else if (line[0] == '!') {
-//            // a type line!
-//            int type;
-//            float x, y, z, qx, qy, qz, qw;
-//            try {
-//                this->parseParticleLine(line, type, x, y, z, qx, qy, qz, qw);
-//            } catch(...) {
-//                vislib::sys::Log::DefaultLog.WriteMsg(50,
-//                    "Unable to parse particle line");
-//                continue;
-//            }
-//            unsigned int idx = 0;
-//            for (unsigned int i = 0; i < this->typeCnt; i++) {
-//                if (types[i].ID() == static_cast<unsigned int>(type)) {
-//                    idx = i;
-//                    break;
-//                }
-//            }
-//            unsigned int h = this->partCnt[idx] + 1;
-//            if (h % 50) { h += 50 - h % 50; }
-//
-//            int oldTraceLvl = vislib::Trace::GetInstance().GetLevel();
-//            vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_NONE);
-//            (*posWrtr[idx]) << x << y << z;
-//            (*quatWrtr[idx]) << qx << qy << qz << qw;
-//            vislib::Trace::GetInstance().SetLevel(oldTraceLvl);
-//
-//            this->partCnt[idx]++;
-//
-//        } else if (line[0] == '#') {
-//            // frame done
-//            break;
-//        }
-//
-//    }
-//
-//    for (unsigned int i = 0; i < this->typeCnt; i++) {
-//        this->pos[i].EnforceSize(posWrtr[i]->End(), true);
-//        this->quat[i].EnforceSize(quatWrtr[i]->End(), true);
-//
-//        // de-quantize positions
-//        float maxVal = 0.0f;
-//        for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
-//            if (maxVal < *this->pos[i].AsAt<float>(j)) maxVal = *this->pos[i].AsAt<float>(j);
-//        }
-//        float deQuant = lScale;
-//        if (maxVal >= 1000) {
-//            deQuant /= 10000.0f;
-//        } else {
-//            deQuant /= 1000.0f;
-//        }
-//        for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
-//            *this->pos[i].AsAt<float>(j) *= deQuant;
-//        }
-//
-//    }
-//    VLTRACE(VISLIB_TRCELVL_INFO, "Frame %u loaded\n", this->frame);
-//
-//    return true;
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::Frame::SetTypeCount
-// */
-//void moldyn::VisIttDataSource::Frame::SetTypeCount(unsigned int cnt) {
-//    this->typeCnt = cnt;
-//    delete[] this->partCnt;
-//    delete[] this->pos;
-//    delete[] this->quat;
-//    this->partCnt = new unsigned int[cnt];
-//    this->pos = new vislib::RawStorage[cnt];
-//    this->quat = new vislib::RawStorage[cnt];
-//    for (unsigned int i = 0; i < cnt; i++) {
-//        this->partCnt[i] = 0;
-//    }
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::Frame::PartPoss
-// */
-//const float *moldyn::VisIttDataSource::Frame::PartPoss(unsigned int type) const {
-//    ASSERT(type < this->typeCnt);
-//    return this->pos[type].As<float>();
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::Frame::SizeOf
-// */
-//SIZE_T moldyn::VisIttDataSource::Frame::SizeOf(void) const {
-//    SIZE_T size = 0;
-//    for (unsigned int i = 0; i < this->typeCnt; i++) {
-//        size += this->pos[i].GetSize();
-//        size += this->quat[i].GetSize();
-//    }
-//    return size;
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::Frame::MakeInterpolationFrame
-// */
-//const moldyn::VisIttDataSource::Frame *
-//moldyn::VisIttDataSource::Frame::MakeInterpolationFrame(float alpha,
-//        const moldyn::VisIttDataSource::Frame &a,
-//        const moldyn::VisIttDataSource::Frame &b) {
-//    ASSERT(a.typeCnt == b.typeCnt);
-//
-//    if (alpha < 0.0000001f) return &a;
-//    if (alpha > 0.9999999f) return &b;
-//    float beta = 1.0f - alpha;
-//
-//    for (unsigned int t = 0; t < a.typeCnt; t++) {
-//        if (a.partCnt[t] != b.partCnt[t]) return &a;
-//        this->partCnt[t] = a.partCnt[t];
-//        this->pos[t].AssertSize(this->partCnt[t] * 3 * sizeof(float));
-//        this->quat[t].AssertSize(this->partCnt[t] * 4 * sizeof(float));
-//    }
-//
-//    for (unsigned int t = 0; t < a.typeCnt; t++) {
-//        for (unsigned int i = 0; i < this->partCnt[t]; i++) {
-//            vislib::math::ShallowPoint<float, 3>
-//                av(a.pos[t].As<float>() + i * 3);
-//            vislib::math::ShallowPoint<float, 3>
-//                bv(b.pos[t].As<float>() + i * 3);
-//            vislib::math::ShallowPoint<float, 3>
-//                tv(this->pos[t].As<float>() + i * 3);
-//
-//            if (av.SquareDistance(bv) > 0.01) {
-//                tv = (alpha < 0.5f) ? av : bv;
-//            } else {
-//                tv.Set(av.X() * beta + bv.X() * alpha, 
-//                    av.Y() * beta + bv.Y() * alpha, 
-//                    av.Z() * beta + bv.Z() * alpha);
-//            }
-//        }
-//        for (unsigned int i = 0; i < this->partCnt[t]; i++) {
-//            vislib::math::ShallowQuaternion<float>(
-//                this->quat[t].As<float>() + i * 4).Slerp(alpha, 
-//                vislib::math::ShallowQuaternion<float>(
-//                    a.quat[t].As<float>() + i * 4), 
-//                vislib::math::ShallowQuaternion<float>(
-//                    b.quat[t].As<float>() + i * 4));
-//
-//        }
-//    }
-//
-//    return this;
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::Frame::parseParticleLine
-// */
-//void moldyn::VisIttDataSource::Frame::parseParticleLine(vislib::StringA &line,
-//        int &outType, float &outX, float &outY, float &outZ, float &outQX,
-//        float &outQY, float &outQZ, float &outQW) {
-//#define MAPPED_Q1 outQW 
-//#define MAPPED_Q2 outQX
-//#define MAPPED_Q3 outQY
-//#define MAPPED_Q4 outQZ
-//
-//    vislib::Array<vislib::StringA> shreds
-//        = vislib::StringTokeniserA::Split(line, ' ', true);
-//    if ((shreds.Count() != 9) && (shreds.Count() != 5)) {
-//        throw 0; // invalid line separations
-//    }
-//    if (!shreds[0].Equals("!")) {
-//        throw 0; // invalid line marker
-//    }
-//
-//    outType = vislib::CharTraitsA::ParseInt(shreds[1]);
-//    outX = float(vislib::CharTraitsA::ParseInt(shreds[2])); // de-quantization of positions is done later
-//    outY = float(vislib::CharTraitsA::ParseInt(shreds[3]));
-//    outZ = float(vislib::CharTraitsA::ParseInt(shreds[4]));
-//    if (shreds.Count() == 9) {
-//        MAPPED_Q1 = float(vislib::CharTraitsA::ParseInt(shreds[5])); // quaternions are automatically de-quantized thru normalization
-//        MAPPED_Q2 = float(vislib::CharTraitsA::ParseInt(shreds[6]));
-//        MAPPED_Q3 = float(vislib::CharTraitsA::ParseInt(shreds[7]));
-//        MAPPED_Q4 = float(vislib::CharTraitsA::ParseInt(shreds[8]));
-//
-//        // normalize quaternion
-//        double ql = sqrt(double(outQX) * double(outQX)
-//            + double(outQY) * double(outQY) 
-//            + double(outQZ) * double(outQZ)
-//            + double(outQW) * double(outQW));
-//        if (fabs(ql) < 0.001) {
-//            outQX = 0.0f;
-//            outQY = 0.0f;
-//            outQZ = 0.0f;
-//            outQW = 1.0f;
-//        } else {
-//            outQX = float(double(outQX) / ql); // qi x*sin(a/2)
-//            outQY = float(double(outQY) / ql); // qj y*sin(a/2)
-//            outQZ = float(double(outQZ) / ql); // qk z*sin(a/2)
-//            outQW = float(double(outQW) / ql); // qr   cos(a/2)
-//        }
-//    } else {
-//        outQX = 0.0f;
-//        outQY = 0.0f;
-//        outQZ = 0.0f;
-//        outQW = 1.0f;
-//    }
-//
-//#undef MAPPED_Q1
-//#undef MAPPED_Q2
-//#undef MAPPED_Q3
-//#undef MAPPED_Q4
-//}
 
 /*****************************************************************************/
 
@@ -345,12 +56,40 @@ moldyn::VisIttDataSource::Frame::~Frame() {
  */
 moldyn::VisIttDataSource::VisIttDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the trisoup file to load."),
+        radius("radius", "The radius to be assumed for the particles"),
+        filter("filter::type", "The filter to be applied"),
+        filterColumn("filter::column", "The filter column to be applied"),
+        filterValue("filter::value", "The filter value to be applied"),
         getData("getdata", "Slot to request data from this data source."),
-        file(NULL), dataHash(0)/*typeCnt(0), types(NULL), frameIdx(NULL), boxScaling(1.0f)*/ {
+        file(NULL), dataHash(0), frameTable(), header(), headerIdx(),
+        filterIndex(UINT_MAX) {
 
     this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&VisIttDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
+
+    this->radius << new param::FloatParam(0.5f, 0.00001f);
+    this->MakeSlotAvailable(&this->radius);
+
+    param::EnumParam *filterTypes = new param::EnumParam(0);
+    filterTypes->SetTypePair(0, "none");
+    filterTypes->SetTypePair(1, "=");
+    filterTypes->SetTypePair(6, "!=");
+    filterTypes->SetTypePair(2, "<");
+    filterTypes->SetTypePair(3, ">");
+    filterTypes->SetTypePair(4, "<=");
+    filterTypes->SetTypePair(5, ">=");
+    this->filter.SetParameter(filterTypes);
+    this->filter.SetUpdateCallback(&VisIttDataSource::filterChanged);
+    this->MakeSlotAvailable(&this->filter);
+
+    this->filterColumn << new param::StringParam("");
+    this->filterColumn.SetUpdateCallback(&VisIttDataSource::filterChanged);
+    this->MakeSlotAvailable(&this->filterColumn);
+
+    this->filterValue << new param::FloatParam(0.0f);
+    this->filterValue.SetUpdateCallback(&VisIttDataSource::filterChanged);
+    this->MakeSlotAvailable(&this->filterValue);
 
     this->getData.SetCallback("MultiParticleDataCall", "GetData",
         &VisIttDataSource::getDataCallback);
@@ -377,7 +116,6 @@ moldyn::VisIttDataSource::~VisIttDataSource(void) {
 view::AnimDataModule::Frame*
 moldyn::VisIttDataSource::constructFrame(void) const {
     Frame *f = new Frame(*const_cast<moldyn::VisIttDataSource*>(this));
-    //f->SetTypeCount(this->typeCnt);
     return f;
 }
 
@@ -393,18 +131,96 @@ bool moldyn::VisIttDataSource::create(void) {
 /*
  * moldyn::VisIttDataSource::loadFrame
  */
-void moldyn::VisIttDataSource::loadFrame(view::AnimDataModule::Frame *frame,
-        unsigned int idx) {
+void moldyn::VisIttDataSource::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) {
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == NULL) return;
-    //if (this->file == NULL) {
-    //    f->Clear();
-    //    return;
-    //}
+    if (this->file == NULL) {
+        f->SetSize(0);
+        return;
+    }
     ASSERT(idx < this->FrameCount());
+    ASSERT(this->headerIdx.Count() >= 3);
 
-    //this->file->Seek(this->frameIdx[idx]);
-    //f->LoadFrame(this->file, idx, this->types, this->boxScaling);
+    SIZE_T len = ((idx + 1 < this->frameTable.Count()) ? this->frameTable[idx + 1] : this->file->GetSize()) - this->frameTable[idx];
+    this->file->Seek(this->frameTable[idx]);
+    char *buf = new char[len + 2];
+    len = this->file->Read(buf, len);
+    buf[len] = '\n';
+    buf[len + 1] = 0;
+    int filterType = this->filter.Param<param::EnumParam>()->Value();
+    float filterVal = this->filterValue.Param<param::FloatParam>()->Value();
+    for (SIZE_T i = 0; i <= len; i++) {
+        char *line = buf + i;
+        if (line[0] == '#') break; // end of frame
+        while ((i <= len) && (buf[i] != '\n')) i++;
+        if (i > len) break;
+        buf[i] = '0';
+
+        if ((filterType > 0) && (this->filterIndex < this->header.Count())) {
+            unsigned int start = 0;
+            for (unsigned int j = 0; j < this->filterIndex; j++) {
+                start += this->header[j].Second();
+            }
+            unsigned int end = start + this->header[this->filterIndex].Second();
+            char endChar = line[end];
+            line[end] = 0;
+            bool doFilter = false;
+            try {
+                float v = static_cast<float>(vislib::CharTraitsA::ParseDouble(line + start));
+                switch (filterType) {
+                    case 1: // =
+                        doFilter = vislib::math::IsEqual(v, filterVal);
+                        break;
+                    case 6: // !=
+                        doFilter = !vislib::math::IsEqual(v, filterVal);
+                        break;
+                    case 2: // <
+                        doFilter = (v < filterVal);
+                        break;
+                    case 3: // >
+                        doFilter = (v > filterVal);
+                        break;
+                    case 4: // <=
+                        doFilter = (v <= filterVal);
+                        break;
+                    case 5: // >=
+                        doFilter = (v >= filterVal);
+                        break;
+                    default: // do not filter
+                        break;
+                }
+            } catch(...) {
+            }
+            line[end] = endChar;
+            if (doFilter) continue;
+        }
+
+        const SIZE_T PAGESIZE = 1024 * sizeof(float) * 3;
+        f->Data().AssertSize(((f->Size() + 3 * sizeof(float)) / PAGESIZE + 1) * PAGESIZE);
+        float *pos = f->Data().AsAt<float>(f->Size());
+        for (unsigned int j = 0; j < 3; j++) {
+            unsigned int hidx = this->headerIdx[j];
+            unsigned int start = 0;
+            for (unsigned int k = 0; k < hidx; k++) {
+                start += this->header[k].Second();
+            }
+            unsigned int end = start + this->header[hidx].Second();
+            char endChar = line[end];
+            line[end] = 0;
+            try {
+                pos[j] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line + start));
+            } catch(...) {
+                pos[j] = 0.0f;
+            }
+            line[end] = endChar;
+        }
+        f->SetSize(f->Size() + 3 * sizeof(float));
+
+    }
+    delete[] buf;
+    f->SetFrameNumber(idx);
+
+    vislib::sys::Log::DefaultLog.WriteInfo(100, "Frame %u loaded", idx);
 }
 
 
@@ -419,117 +235,77 @@ void moldyn::VisIttDataSource::release(void) {
         f->Close();
         delete f;
     }
-    //this->typeCnt = 0;
-    //ARY_SAFE_DELETE(this->types);
-    //ARY_SAFE_DELETE(this->frameIdx);
+    this->frameTable.Clear();
+    this->header.Clear();
+    this->headerIdx.Clear();
 }
 
 
-///*
-// * moldyn::VisIttDataSource::buildFrameTable
-// */
-//void moldyn::VisIttDataSource::buildFrameTable(void) {
-//    ASSERT(this->file != NULL);
-//
-//    vislib::SingleLinkedList<vislib::sys::File::FileSize> framePoss;
-//    const unsigned int bufSize = 1024 * 1024;
-//    char *buf = new char[bufSize];
-//    unsigned int size = 1;
-//    char lCh1 = 0, lCh2 = 0;
-//    vislib::sys::File::FileSize pos = 0;
-//    unsigned int i;
-//
-//    unsigned int frameCnt = 0;
-//    ARY_SAFE_DELETE(this->frameIdx);
-//
-//    while (!this->file->IsEOF()) {
-//        size = static_cast<unsigned int>(this->file->Read(buf, bufSize));
-//        if (size == 0) {
-//            break;
-//        }
-//
-//        if (lCh1 == '#') {
-//            if (buf[0] == '#') {
-//                break; // end of data
-//            }
-//            if ((lCh2 == 0x0D) || (lCh2 == 0x0A)) {
-//                framePoss.Add(pos - 1);
-//                frameCnt++;
-//            }
-//        }
-//
-//        for (i = 0; i < size - 1; i++) {
-//            if (buf[i] == '#') {
-//                if (buf[i + 1] == '#') {
-//                    break; // end of data
-//                }
-//                if (((i == 0) && ((lCh1 == 0x0D) || (lCh1 == 0x0A)))
-//                        || ((i > 0) && ((buf[i - 1] == 0x0D) || (buf[i - 1] == 0x0A)))) {
-//                    framePoss.Add(pos + i);
-//                    frameCnt++;
-//                }
-//            }
-//        }
-//        if ((i < size - 1) && (buf[i] == '#') && (buf[i + 1] == '#')) {
-//            break; // end of data
-//        }
-//
-//        if (size > 1) {
-//            lCh2 = buf[size - 2];
-//            lCh1 = buf[size - 1];
-//        } else if (size == 1) {
-//            lCh2 = lCh1;
-//            lCh1 = buf[0];
-//        }
-//
-//        pos += size;
-//    }
-//
-//    this->file->SeekToBegin(); // seek back to the beginning of the file for the real loading
-//    this->file->Read(buf, 1);  // paranoia for fixing IsEOF under Linux
-//    this->file->SeekToBegin();
-//
-//    delete[] buf;
-//
-//    this->frameIdx = new vislib::sys::File::FileSize[frameCnt];
-//    frameCnt = 0;
-//    vislib::SingleLinkedList<vislib::sys::File::FileSize>::Iterator
-//        iter = framePoss.GetIterator();
-//    while (iter.HasNext()) {
-//        this->frameIdx[frameCnt++] = iter.Next();
-//    }
-//    if (frameCnt > 0) {
-//        this->setFrameCount(frameCnt);
-//    }
-//
-//    this->file->SeekToBegin();
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::calcBoundingBox
-// */
-//void moldyn::VisIttDataSource::calcBoundingBox(void) {
-//    float scale;
-//    this->boxScaling = 0.0f;
-//
-//    for (unsigned int i = 0; i < this->FrameCount(); i++) {
-//        this->file->Seek(this->frameIdx[i]);
-//        vislib::StringA line = vislib::sys::ReadLineFromFileA(*this->file).Substring(1);
-//        line.TrimSpacesBegin();
-//        try {
-//            scale = float(vislib::CharTraitsA::ParseDouble(line.PeekBuffer()));
-//            if (scale > this->boxScaling) {
-//                this->boxScaling = scale;
-//            }
-//        } catch(...) {
-//        }
-//    }
-//
-//    if (vislib::math::IsEqual(this->boxScaling, 0.0f)) {
-//        this->boxScaling = 1.0f;
-//    }
-//}
+/*
+ * moldyn::VisIttDataSource::buildFrameTable
+ */
+void moldyn::VisIttDataSource::buildFrameTable(void) {
+    ASSERT(this->file != NULL);
+
+    const unsigned int bufSize = 1024 * 1024;
+    char *buf = new char[bufSize];
+    unsigned int size = 1;
+    char lCh1 = 0, lCh2 = 0;
+    vislib::sys::File::FileSize pos = 0;
+    unsigned int i;
+
+    while (!this->file->IsEOF()) {
+        size = static_cast<unsigned int>(this->file->Read(buf, bufSize));
+        if (size == 0) {
+            break;
+        }
+
+        if (lCh1 == '#') {
+            if (buf[0] == '#') {
+                break; // end of data
+            }
+            if ((lCh2 == 0x0D) || (lCh2 == 0x0A)) {
+                this->frameTable.Add(pos - 1);
+            }
+        }
+
+        for (i = 0; i < size - 1; i++) {
+            if (buf[i] == '#') {
+                if (buf[i + 1] == '#') {
+                    break; // end of data
+                }
+                if (((i == 0) && ((lCh1 == 0x0D) || (lCh1 == 0x0A)))
+                        || ((i > 0) && ((buf[i - 1] == 0x0D) || (buf[i - 1] == 0x0A)))) {
+                    this->frameTable.Add(pos + i);
+                }
+            }
+        }
+        if ((i < size - 1) && (buf[i] == '#') && (buf[i + 1] == '#')) {
+            break; // end of data
+        }
+
+        if (size > 1) {
+            lCh2 = buf[size - 2];
+            lCh1 = buf[size - 1];
+        } else if (size == 1) {
+            lCh2 = lCh1;
+            lCh1 = buf[0];
+        }
+
+        pos += size;
+    }
+
+    this->file->SeekToBegin(); // seek back to the beginning of the file for the real loading
+    this->file->Read(buf, 1);  // paranoia for fixing IsEOF under Linux
+    this->file->SeekToBegin();
+
+    delete[] buf;
+
+    for (SIZE_T i = 1; i < this->frameTable.Count(); i++) {
+        this->frameTable[i] += this->frameTable[0] + 2; // header offset
+    }
+
+}
 
 
 /*
@@ -558,252 +334,169 @@ bool moldyn::VisIttDataSource::filenameChanged(param::ParamSlot& slot) {
         return true;
     }
 
-    //this->buildFrameTable();
-    //if (!this->readHeader(this->filename.Param<param::FilePathParam>()->Value())) {
-    //    this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-    //        "Unable to read VIM-Header from file \"%s\". Wrong format?", vislib::StringA(
-    //        this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
+    this->frameTable.Clear();
+    this->header.Clear();
+    this->headerIdx.Clear();
 
-    //    this->file->Close();
-    //    SAFE_DELETE(this->file);
-    //    this->setFrameCount(1);
-    //    this->initFrameCache(1);
+    // read header line
+    this->file->SeekToBegin();
+    vislib::StringA header = vislib::sys::ReadLineFromFileA(*this->file);
+    if (!this->parseHeader(header)) {
+        this->GetCoreInstance()->Log().WriteError("Unable to parse VisItt-file header line");
 
-    //    return true;
-    //}
-    //this->calcBoundingBox();
+        this->file->Close();
+        SAFE_DELETE(this->file);
+        this->setFrameCount(1);
+        this->initFrameCache(1);
 
-    //Frame tmpFrame(*this);
+        return true;
+    }
+
+    this->frameTable.Add(this->file->Tell());
+    this->buildFrameTable();
+    this->setFrameCount(static_cast<unsigned int>(this->frameTable.Count()));
+    Frame tmpFrame(*this);
+    this->loadFrame(&tmpFrame, 0);
+
+    // calculating the bounding box from frame 0
+    this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0);
+    if (tmpFrame.Size() > sizeof(float) * 3) {
+        float *pos = tmpFrame.Data().As<float>();
+        this->bbox.Set(pos[0], pos[1], pos[2], pos[0], pos[1], pos[2]);
+        unsigned int cnt = static_cast<unsigned int>(tmpFrame.Size() / (sizeof(float) * 3));
+        for (unsigned int i = 1; i < cnt; i++) {
+            pos += 3;
+            this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+        }
+    }
+
     //tmpFrame.SetTypeCount(this->typeCnt);
+    // use frame zero to estimate the frame size in memory to calculate the
+    // frame cache size
+    SIZE_T frameSize = tmpFrame.Data().GetSize();
+    tmpFrame.Data().EnforceSize(0);
+    tmpFrame.SetSize(0);
+    frameSize = static_cast<SIZE_T>(float(frameSize) * CACHE_FRAME_FACTOR);
+    UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
+    unsigned int cacheSize = static_cast<unsigned int>(mem / frameSize);
 
-    //// use frame zero to estimate the frame size in memory to calculate the
-    //// frame cache size
-    //this->loadFrame(&tmpFrame, 0);
-    //SIZE_T frameSize = tmpFrame.SizeOf();
-    //tmpFrame.Clear();
-    //frameSize = static_cast<SIZE_T>(float(frameSize) * CACHE_FRAME_FACTOR);
-    //UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
-    //unsigned int cacheSize = static_cast<unsigned int>(mem / frameSize);
+    if (cacheSize > CACHE_SIZE_MAX) {
+        cacheSize = CACHE_SIZE_MAX;
+    }
+    if (cacheSize < CACHE_SIZE_MIN) {
+        vislib::StringA msg;
+        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
+            CACHE_SIZE_MIN, cacheSize);
+        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        cacheSize = CACHE_SIZE_MIN;
+    } else {
+        vislib::StringA msg;
+        msg.Format("Frame cache size set to %i.\n", cacheSize);
+        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+    }
 
-    //if (cacheSize > CACHE_SIZE_MAX) {
-    //    cacheSize = CACHE_SIZE_MAX;
-    //}
-    //if (cacheSize < CACHE_SIZE_MIN) {
-    //    vislib::StringA msg;
-    //    msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
-    //        CACHE_SIZE_MIN, cacheSize);
-    //    this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
-    //    cacheSize = CACHE_SIZE_MIN;
-    //} else {
-    //    vislib::StringA msg;
-    //    msg.Format("Frame cache size set to %i.\n", cacheSize);
-    //    this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
-    //}
+    if (this->frameTable.Count() > 0) {
+        // refine bounding box using more frames
+        this->loadFrame(&tmpFrame, static_cast<unsigned int>(this->frameTable.Count() - 1));
+        float *pos = tmpFrame.Data().As<float>();
+        unsigned int cnt = static_cast<unsigned int>(tmpFrame.Size() / (sizeof(float) * 3));
+        for (unsigned int i = 0; i < cnt; i++, pos += 3) {
+            this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+        }
+        this->loadFrame(&tmpFrame, static_cast<unsigned int>(this->frameTable.Count() / 2));
+        pos = tmpFrame.Data().As<float>();
+        cnt = static_cast<unsigned int>(tmpFrame.Size() / (sizeof(float) * 3));
+        for (unsigned int i = 0; i < cnt; i++, pos += 3) {
+            this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+        }
+    }
 
-    //this->initFrameCache(cacheSize);
+    this->initFrameCache(cacheSize);
 
     return true; // to reset the dirty flag of the param slot
 }
 
 
-///*
-// * moldyn::VisIttDataSource::parseTypeLine
-// */
-//moldyn::VisIttDataSource::SimpleType* 
-//moldyn::VisIttDataSource::parseTypeLine(vislib::StringA &line, int &outType) {
-//    enum ElementType {
-//        TYPE_UNKNOWN,
-//        TYPE_SPHERE,
-//        TYPE_CYLINDER
-//    };
-//    const UINT32 ittColourTable[] = {
-//        0xFFB2B2B2, //  0 weisz
-//        0xFF191919, //  1 schwarz
-//        0xFF0000FF, //  2 rot
-//        0xFF0080FF, //  3 orange
-//        0xFF00FFFF, //  4 gelb
-//        0xFF00FFB2, //  5 zitron
-//        0xFF00FF00, //  6 gruen
-//        0xFF80FF00, //  7 tuerkis
-//        0xFFFFFF00, //  8 cyan
-//        0xFFFF8000, //  9 wasser
-//        0xFFFF0000, // 10 blau
-//        0xFFFF0080, // 11 lila
-//        0xFFFF00FF, // 12 magenta
-//        0xFF8000FF, // 13 kirsch
-//        0xFFC0C0C0, // 14 gray
-//        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-//        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-//        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-//        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-//        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-//        0xFFFFC080, // 42 MegaMol™-blue
-//        0xFF404040 // default gray
-//    };
-//
-//    vislib::Array<vislib::StringA> shreds = vislib::StringTokeniserA::Split(line, ' ', true);
-//    ElementType type = TYPE_UNKNOWN;
-//    SimpleType *retval = NULL;
-//
-//    if (shreds.Count() < 3) {
-//        throw 0; // far too few elements
-//    }
-//    if (!shreds[0].Equals("~")) {
-//        throw 0; // wrong line marker
-//    }
-//
-//    outType = vislib::CharTraitsA::ParseInt(shreds[1]);
-//
-//    if (shreds[2].Equals("LJ", false)) {
-//        type = TYPE_SPHERE;
-//    } else if (shreds[2].Equals("Sphere", false)) {
-//        type = TYPE_SPHERE;
-//    } else if (shreds[2].Equals("Cylinder", false)) {
-//        type = TYPE_CYLINDER;
-//    }
-//
-//    switch (type) {
-//        case TYPE_UNKNOWN:
-//            throw 0; // unknown element type.
-//        case TYPE_SPHERE: {
-//            if ((shreds.Count() != 8) && (shreds.Count() != 10)) {
-//                throw 0; // wrong substring count
-//            }
-//            SimpleType *sphere = new SimpleType();
-//            sphere->SetID(outType);
-//            //sphere->SetPosition(
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[3])),
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[4])),
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[5])));
-//            sphere->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[6])));
-//            if (shreds.Count() == 8) {
-//                int idx = vislib::CharTraitsA::ParseInt(shreds[7]);
-//                if (idx < 0) idx = 0;
-//                int colours = sizeof(ittColourTable) / sizeof(UINT32);
-//                if (idx >= colours) idx = colours - 1;
-//                sphere->SetColour(ittColourTable[idx]);
-//            } else {
-//                sphere->SetColour(
-//                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[7])),
-//                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[8])),
-//                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[9])));
-//            }
-//            retval = sphere;
-//        } break;
-//        case TYPE_CYLINDER: {
-//            if ((shreds.Count() != 11) && (shreds.Count() != 13)) {
-//                throw 0; // wrong substring count
-//            }
-//            SimpleType *cyl = new SimpleType();
-//            cyl->SetID(outType);
-//            //cyl->SetPosition(
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[3])),
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[4])),
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[5])));
-//            //cyl->SetSecondPosition(
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[6])),
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[7])),
-//            //    float(vislib::CharTraitsA::ParseDouble(shreds[8])));
-//            cyl->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[9])));
-//            if (shreds.Count() == 11) {
-//                int idx = vislib::CharTraitsA::ParseInt(shreds[10]);
-//                if (idx < 0) idx = 0;
-//                int colours = sizeof(ittColourTable) / sizeof(UINT32);
-//                if (idx >= colours) idx = colours - 1;
-//                cyl->SetColour(ittColourTable[idx]);
-//            } else {
-//                cyl->SetColour(
-//                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[10])),
-//                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[11])),
-//                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[12])));
-//            }
-//            retval = cyl;
-//        } break;
-//    }
-//
-//    return retval;
-//}
-//
-//
-///*
-// * moldyn::VisIttDataSource::readHeader
-// */
-//bool moldyn::VisIttDataSource::readHeader(const vislib::TString& filename) {
-//
-//    ASSERT(this->file->Tell() == 0);
-//
-//    vislib::Array<SimpleType> types;
-//
-//    // read the header
-//    while (!this->file->IsEOF()) {
-//        vislib::StringA line = vislib::sys::ReadLineFromFileA(*this->file);
-//        line.TrimSpaces();
-//
-//        if (line.IsEmpty()) {
-//            continue;
-//
-//        } else if (line[0] == '~') {
-//            SimpleType *element = NULL;
-//            try {// a type line!
-//                int type;
-//                element = this->parseTypeLine(line, type);
-//                if (element == NULL) {
-//                    throw 0;
-//                }
-//
-//                for (unsigned int i = 0; i < types.Count(); i++) {
-//                    if (types[i].ID() == static_cast<unsigned int>(type)) {
-//                        if (types[i].Radius() < element->Radius()) {
-//                            types[i].SetRadius(element->Radius());
-//                        }
-//                        element = NULL;
-//                        break;
-//                    }
-//                }
-//                if (element != NULL) {
-//                    //type = types.Count;
-//                    types.Append(*element);
-//                    types.Last() = *element;
-//                }
-//                element = NULL;
-//            } catch(...) {
-//                this->GetCoreInstance()->Log().WriteMsg(50, "Error parsing type line.");
-//            }
-//            SAFE_DELETE(element);
-//        } else if (line[0] == '>') {
-//            // very extream file redirection
-//            vislib::StringW vnfn(vislib::StringA(line.PeekBuffer() + 1));
-//            vnfn.TrimSpaces();
-//            vislib::StringW base = vislib::sys::Path::Resolve(vislib::StringW(filename));
-//            base.Truncate(base.FindLast(vislib::sys::Path::SEPARATOR_W) + 1);
-//            vnfn = vislib::sys::Path::Resolve(vnfn, base);
-//
-//            this->file->Close();
-//            if (!this->file->Open(vnfn, vislib::sys::File::READ_ONLY, 
-//                    vislib::sys::File::SHARE_READ, 
-//                    vislib::sys::File::OPEN_ONLY)) {
-//
-//                SAFE_DELETE(this->file);
-//                return false;
-//            }
-//
-//            this->buildFrameTable();
-//            break;
-//
-//        } else if (line[0] == '#') {
-//            // beginning of the body!
-//            break;
-//        }
-//    }
-//
-//    this->typeCnt = static_cast<unsigned int>(types.Count());
-//    this->types = new SimpleType[this->typeCnt];
-//    for(unsigned int i = 0; i < this->typeCnt; i++) {
-//        this->types[i] = types[i];
-//    }
-//
-//    return true;
-//}
+/*
+ * moldyn::VisIttDataSource::filterChanged
+ */
+bool moldyn::VisIttDataSource::filterChanged(param::ParamSlot& slot) {
+    // Power Dovel: On!
+    unsigned int cs = this->CacheSize();
+    unsigned int fc = this->FrameCount();
+    this->resetFrameCache();
+    this->setFrameCount(fc);
+
+    this->filterIndex = UINT_MAX;
+    vislib::StringA filtCol(this->filterColumn.Param<param::StringParam>()->Value());
+    filtCol.TrimSpaces();
+    for (SIZE_T i = 0; i < this->header.Count(); i++) {
+        vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
+        if (hi.First().Equals(filtCol)) {
+            this->filterIndex = static_cast<unsigned int>(i);
+            break;
+        }
+    }
+    if (this->filterIndex == UINT_MAX) {
+        try {
+            int idx = vislib::CharTraitsA::ParseInt(filtCol);
+            if ((idx >= 0) && (idx < this->header.Count())) {
+                this->filterIndex = idx;
+            }
+        } catch(...) {
+        }
+    }
+
+    this->initFrameCache(cs);
+    return true;
+}
+
+
+/*
+ * moldyn::VisIttDataSource::parseHeader
+ */
+bool moldyn::VisIttDataSource::parseHeader(const vislib::StringA& header) {
+    ASSERT(this->header.Count() == 0);
+    ASSERT(this->headerIdx.Count() == 0);
+    unsigned int len = header.Length();
+    if (len == 0) return false;
+    for (unsigned int p = 0; p < len;) {
+        unsigned int start = p;
+        while ((p < len) && vislib::CharTraitsA::IsSpace(header[p])) p++;
+        while ((p < len) && !vislib::CharTraitsA::IsSpace(header[p])) p++;
+        if ((p - start) > 0) {
+            vislib::StringA label = header.Substring(start, p - start);
+            label.TrimSpaces();
+            if (label.Length() > 0) {
+                this->header.Add(vislib::Pair<vislib::StringA, unsigned int>(label, (p - start)));
+            }
+        }
+    }
+    if (this->header.Count() == 0) return false;
+
+    for (SIZE_T i = 0; i < this->header.Count(); i++) {
+        if (this->header[i].First().Equals("x", false)) {
+            this->headerIdx.Add(static_cast<unsigned int>(i));
+        }
+    }
+    for (SIZE_T i = 0; i < this->header.Count(); i++) {
+        if (this->header[i].First().Equals("y", false)) {
+            this->headerIdx.Add(static_cast<unsigned int>(i));
+        }
+    }
+    for (SIZE_T i = 0; i < this->header.Count(); i++) {
+        if (this->header[i].First().Equals("z", false)) {
+            this->headerIdx.Add(static_cast<unsigned int>(i));
+        }
+    }
+    if (this->headerIdx.Count() == 0) return false;
+
+    while (this->headerIdx.Count() < 3) { // stupid, but makes things easier for now
+        this->headerIdx.Add(this->headerIdx[0]);
+    }
+
+    return true;
+}
 
 
 /*
@@ -816,24 +509,17 @@ bool moldyn::VisIttDataSource::getDataCallback(Call& caller) {
     if (c2 != NULL) {
         f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
         if (f == NULL) return false;
-        //c2->SetDataHash(reinterpret_cast<const SIZE_T>(
-        //    (this->typeCnt > 0) ? static_cast<const void*>(f->PartPoss(0)) : NULL)
-        //    );
+
         c2->SetDataHash((this->file == NULL) ? 0 : this->dataHash);
         c2->SetUnlocker(new Unlocker(*f));
-        //c2->SetParticleListCount(this->typeCnt);
-        //for (unsigned int i = 0; i < this->typeCnt; i++) {
-        //    c2->AccessParticles(i).SetGlobalRadius(this->types[i].Radius()/* / this->boxScaling*/);
-        //    c2->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
-        //    c2->AccessParticles(i).SetCount(f->PartCnt(i));
-        //    c2->AccessParticles(i).SetColourData(moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
-        //    const float *vd = f->PartPoss(i);
-        //    c2->AccessParticles(i).SetVertexData((vd == NULL)
-        //        ? moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
-        //        : moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-        //        vd);
-        //}
-        //return true;
+        c2->SetFrameID(f->FrameNumber());
+        c2->SetParticleListCount(1);
+        c2->AccessParticles(0).SetGlobalRadius(this->radius.Param<param::FloatParam>()->Value());
+        c2->AccessParticles(0).SetGlobalColour(192, 192, 192);
+        c2->AccessParticles(0).SetCount(f->Size() / (sizeof(float) * 3));
+        c2->AccessParticles(0).SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, f->Data());
+
+        return true;
     }
 
     return false;
@@ -845,28 +531,19 @@ bool moldyn::VisIttDataSource::getDataCallback(Call& caller) {
  */
 bool moldyn::VisIttDataSource::getExtentCallback(Call& caller) {
     MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
-    float border = 0.0f;
 
     if (c2 != NULL) {
-        //for (unsigned int i = 0; i < this->typeCnt; i++) {
-        //    float r = this->types[i].Radius();// / this->boxScaling;
-        //    if (r > border) border = r;
-        //}
-
-        //Frame *f = NULL;
-        //f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-        //c2->SetDataHash(reinterpret_cast<const SIZE_T>(
-        //    (this->typeCnt > 0) ? static_cast<const void*>(f->PartPoss(0)) : NULL)
-        //    );
-        //f->Unlock();
+        float border = this->radius.Param<param::FloatParam>()->Value();
 
         c2->SetDataHash((this->file == NULL) ? 0 : this->dataHash);
-        //c2->SetFrameCount(this->FrameCount());
-        //c2->AccessBoundingBoxes().Clear();
-        //c2->AccessBoundingBoxes().SetObjectSpaceBBox(0, 0, 0, this->boxScaling, this->boxScaling, this->boxScaling);
-        //c2->AccessBoundingBoxes().SetObjectSpaceClipBox(-border, -border, -border,
-        //    this->boxScaling + border, this->boxScaling + border, this->boxScaling + border);
-        //return true;
+        c2->SetFrameCount(static_cast<unsigned int>(this->frameTable.Count()));
+        c2->AccessBoundingBoxes().Clear();
+        c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
+        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(
+            this->bbox.Left() - border, this->bbox.Bottom() - border, this->bbox.Back() - border, 
+            this->bbox.Right() + border, this->bbox.Top() + border, this->bbox.Front() + border);
+
+        return true;
     }
 
     return false;

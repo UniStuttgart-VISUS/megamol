@@ -207,17 +207,20 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         index = req = This->lastRequested;
         for (j = 0; j < This->cacheSize; j++) {
             for (i = 0; i < This->cacheSize; i++) {
+                if (This->frameCache == NULL) break;
                 if (((This->frameCache[i]->state == Frame::STATE_AVAILABLE)
                         || (This->frameCache[i]->state == Frame::STATE_INUSE)) 
                         && (This->frameCache[i]->frame == index)) {
                     break;
                 }
             }
+            if (This->frameCache == NULL) break;
             if (i >= This->cacheSize) {
                 break;
             }
             index = (index + 1) % This->frameCnt;
         }
+        if (This->frameCache == NULL) break;
         if (j >= This->cacheSize) {
             if (j >= This->frameCnt) {
                 ASSERT(This->frameCnt == This->cacheSize);
