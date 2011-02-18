@@ -524,7 +524,8 @@ void computeArcs( float4* arcs,                 // output: arcs
 	float4 atom = FETCH( atomPos, atomIdx);
     // read neighbor position from sorted arrays
     //float4 ak = FETCH( atomPos, FETCH( neighbors, origAtomIdx * params.maxNumNeighbors + neighborIdx));
-    //float4 aj;
+	float3 ai = make_float3( atom);
+    float3 aj;
 
     float3 rm;
     float4 rj4;
@@ -545,6 +546,7 @@ void computeArcs( float4* arcs,                 // output: arcs
     for( uint cnt = 0; cnt < numNeighbors; ++cnt ) {
         if( cnt == neighborIdx ) continue;
         
+		aj = make_float3( FETCH( atomPos, FETCH( neighbors, origAtomIdx * params.maxNumNeighbors + cnt)));
         // compute the auxiliary vector rm (plane intersection)
         rj4 = FETCH( smallCircles, origAtomIdx * params.maxNumNeighbors + cnt);
         rj = make_float3( rj4);
@@ -559,9 +561,14 @@ void computeArcs( float4* arcs,                 // output: arcs
         if( dot( rm, rm) > Ri2 ) continue;
 
         // compute the start- and endpoint of the newly found arc
-        cross_rj_rk = cross( rj, rk);
+		if( dot( rj, aj - ai) < 0.0 )
+			cross_rj_rk = cross( rj, rk);
+		else 
+			cross_rj_rk = cross( rk, rj);
         tmpFloat3 = cross_rj_rk * sqrt( ( Ri2 - dot( rm, rm)) / dot( cross_rj_rk, cross_rj_rk));
+		// x1
         p1 = rm + tmpFloat3;
+		// x2
         p2 = rm - tmpFloat3;
 
         if( dot( cross( p1 - rk, p2 - rk), rk) < 0.0 ) {
