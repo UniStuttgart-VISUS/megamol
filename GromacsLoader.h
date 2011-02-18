@@ -36,6 +36,11 @@ namespace protein {
     {
     public:
 
+        /* Enumerated for data types in files */
+        enum { eioREAL, eioFLOAT, eioDOUBLE, eioINT, eioGMX_LARGE_INT,
+               eioUCHAR, eioNUCHAR, eioUSHORT,
+               eioRVEC, eioNRVEC, eioIVEC, eioSTRING, eioNR };
+
         /** Ctor */
         GromacsLoader(void);
 
@@ -69,7 +74,6 @@ namespace protein {
             return true;
         }
 
-
     protected:
 
         class TpxHeader {
@@ -84,6 +88,13 @@ namespace protein {
             int ngtc;       /* The number of temperature coupling groups */
             float lambda;   /* Current value of lambda */
         } ;
+
+        static inline void clear_mat(matrix a) {
+            const real nul=0.0;
+            a[XX][XX]=a[XX][YY]=a[XX][ZZ]=nul;
+            a[YY][XX]=a[YY][YY]=a[YY][ZZ]=nul;
+            a[ZZ][XX]=a[ZZ][YY]=a[ZZ][ZZ]=nul;
+        }
 
         /**
          * Implementation of 'Create'.
@@ -169,13 +180,13 @@ namespace protein {
                             unsigned int bitoffset);
 
             /**
-            * Encode the frame and write it to the given XTC-file.
-            *
-            * @param outfile    The XTC-file.
-            * @param precision  The precision of the encoded float coordinates.
-            *
-            * @return 'true' if the frame could be written
-            */
+             * Encode the frame and write it to the given XTC-file.
+             *
+             * @param outfile    The XTC-file.
+             * @param precision  The precision of the encoded float coordinates.
+             *
+             * @return 'true' if the frame could be written
+             */
             bool writeFrame(std::ofstream *outfile, float precision,
                             float *minFloats, float *maxfloats);
 
@@ -515,9 +526,8 @@ namespace protein {
          * The number is returned as a floating point value.
          *
          * @param xdr The pointer to the XDR data.
-         * @param bDouble Read with double or single precision.
          */
-        float getXdrReal( XDR *xdr, bool bDouble);
+        float getXdrReal( XDR *xdr);
 
         /**
          * Read the TPX header of a XDR file.
@@ -534,7 +544,29 @@ namespace protein {
          * @param xdr The pointer to the xdr data.
          * @param state The reference to the state data storage.
          */
-        bool readState( XDR *xdr, t_state &state);
+        bool readState( XDR *xdr, t_state &state, int natoms, int ngtc);
+
+        /**
+         * initialize gtc_state (from GROMACS typedefs.c)
+         * TODO Documentation
+         */
+        void init_gtc_state(t_state &state, int ngtc, int nnhpres, int nhchainlength);
+
+        /**
+         * initialize ekinstate (from GROMACS typedefs.c)
+         */
+        static void init_ekinstate(ekinstate_t *eks);
+
+        /**
+         * initialize energyhistory (from GROMACS typedefs.c)
+         */
+        void init_energyhistory(energyhistory_t *enerhist);
+
+        /**
+         * Read values from XDR file
+         * TODO Documentation
+         */
+        static bool do_xdr( XDR *xdr, void *item, int nitem, int eio);
 
         /**
          * Parse one atom entry.
@@ -707,6 +739,11 @@ namespace protein {
          * want the topology.
          */
         const int tpx_generation;
+
+        // file version
+        int fileVersion;
+        // file generation
+        int fileGeneration;
 
     };
 
