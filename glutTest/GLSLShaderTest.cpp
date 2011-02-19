@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
+#define _USE_MATH_DEFINES
 #include "GLSLShaderTest.h"
 
 #include "vislibGlutInclude.h"
@@ -13,11 +14,6 @@
 #include "vislib/graphicstypes.h"
 #include "vislib/Rectangle.h"
 #include "vislib/sysfunctions.h"
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include "vislogo.h"
-#include <cstdlib>
 
 
 /*
@@ -68,8 +64,7 @@ int GLSLShaderTest::GLInit(void) {
         return -12;
     }
 
-    VisLogoDoStuff();
-    VisLogoTwistLogo();
+    this->logo.Create();
     glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_LIGHTING);
@@ -120,6 +115,7 @@ int GLSLShaderTest::GLInit(void) {
  */
 void GLSLShaderTest::GLDeinit(void) {
     this->schade.Release();
+    this->logo.Release();
 }
 
 
@@ -213,36 +209,7 @@ void GLSLShaderTest::Render(void) {
 //    this->schade.SetParameter("v", value[0], value[1]);
     this->schade.SetParameterArray2("v", 1, value);
 
-    unsigned int vCount = VisLogoCountVertices();
-	unsigned int p;
-
-    glBegin(GL_QUAD_STRIP);
-
-    for (unsigned int i = 0; i < 20; i++) {
-		for (unsigned int j = 0; j < vCount / 20; j++) {
-			p = (i + j * 20) % vCount;
-			glColor3dv(VisLogoVertexColor(p)->f);
-			glNormal3dv(VisLogoVertexNormal(p)->f);
-			glVertex3dv(VisLogoVertex(p)->f);
-
-            p = ((i + 1) % 20 + j * 20) % vCount;
-			glColor3dv(VisLogoVertexColor(p)->f);
-			glNormal3dv(VisLogoVertexNormal(p)->f);
-			glVertex3dv(VisLogoVertex(p)->f);
-		}
-	}
-
-    p = 0; // closing strip
-	glColor3dv(VisLogoVertexColor(p)->f);
-	glNormal3dv(VisLogoVertexNormal(p)->f);
-	glVertex3dv(VisLogoVertex(p)->f);
-
-    p = 1;
-	glColor3dv(VisLogoVertexColor(p)->f);
-	glNormal3dv(VisLogoVertexNormal(p)->f);
-	glVertex3dv(VisLogoVertex(p)->f);
-
-    glEnd();
+    this->logo.Draw();
 
     this->schade.Disable();
 

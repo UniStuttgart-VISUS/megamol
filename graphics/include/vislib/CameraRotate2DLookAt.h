@@ -52,7 +52,7 @@ namespace graphics {
             = SmartPtr<CameraParameters>());
 
         /** Dtor. */
-        ~CameraRotate2DLookAt(void);
+        virtual ~CameraRotate2DLookAt(void);
 
         /**
          * Callback methode called by a Cursor2D this event is registered to 

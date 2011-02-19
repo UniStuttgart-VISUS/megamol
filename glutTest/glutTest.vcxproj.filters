@@ -54,7 +54,7 @@
     <ClCompile Include="StereoCamTestApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vislogo.cpp">
+    <ClCompile Include="CamEulerRotatorTestApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,7 +95,7 @@
     <ClInclude Include="StereoCamTestApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vislogo.h">
+    <ClInclude Include="CamEulerRotatorTestApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

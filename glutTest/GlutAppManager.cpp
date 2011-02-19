@@ -93,9 +93,11 @@ void GlutAppManager::InitGlutWindow(void) {
     }
 
     this->appMenu = glutCreateMenu(GlutAppManager::OnMenuItemClicked);
+    vislib::StringA name;
     for (int i = 0; i < int(this->factories.Count()); i++) {
         if (this->factories[i] != NULL) {
-            glutAddMenuEntry(this->factories[i]->GetName(), i);
+            name.Format("%d: %s", (i + 1), this->factories[i]->GetName());
+            glutAddMenuEntry(name.PeekBuffer(), i + 1);
         }
     }
 
@@ -136,12 +138,12 @@ void GlutAppManager::OnMenuItemClicked(int menuID) {
                 printf("Test could not be restarted.\n");
             }
         }
-    } else if ((menuID >= 0) && (menuID < int(GlutAppManager::GetInstance()->factories.Count()))) {
+    } else if ((menuID > 0) && (menuID <= int(GlutAppManager::GetInstance()->factories.Count()))) {
         GlutAppManager *This = GlutAppManager::GetInstance();
         // select an test application factory
-        printf("Selecting Test: %s\n", This->factories[menuID]->GetName());
+        printf("Selecting Test: %s\n", This->factories[menuID - 1]->GetName());
         if (This->app) {
-            if (This->factories[menuID]->HasCreated(This->app)) {
+            if (This->factories[menuID - 1]->HasCreated(This->app)) {
                 printf("  Test already selected.\n");
             } else {
                 This->app->GLDeinit();
@@ -150,7 +152,7 @@ void GlutAppManager::OnMenuItemClicked(int menuID) {
             }
         }
         if (!This->app) {
-            This->app = This->factories[menuID]->CreateApplication();
+            This->app = This->factories[menuID - 1]->CreateApplication();
             if (This->app) {
                 if (This->app->GLInit() == 0) {
                     // TODO: initializes the glut stuff

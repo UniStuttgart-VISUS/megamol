@@ -22,6 +22,7 @@
 #include "vislib/InputModifiers.h"
 #include "vislib/types.h"
 #include "CamParamObserver.h"
+#include "vislib/OpenGLVISLogo.h"
 
 
 
@@ -53,6 +54,7 @@ private:
     vislib::graphics::CameraRotate2DLookAt rotator2;
     vislib::graphics::CameraMove2D mover;
     CamParamObserver testObserver;
+    vislib::graphics::gl::OpenGLVISLogo logo;
 
     void SetupRotator1(void);
     void SetupRotator2(void);

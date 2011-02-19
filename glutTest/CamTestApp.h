@@ -14,6 +14,7 @@
 #include "AbstractGlutApp.h"
 #include "vislib/types.h"
 #include "vislib/CameraOpenGL.h"
+#include "vislib/OpenGLVISLogo.h"
 
 
 /*
@@ -54,8 +55,6 @@ private:
 
     };
 
-    void RenderLogo(void);
-
     unsigned int lensCount;
     Lens *lenses;
     float angle;
@@ -65,6 +64,7 @@ private:
     bool nativeFull;
 
     vislib::graphics::gl::CameraOpenGL camera;
+    vislib::graphics::gl::OpenGLVISLogo logo;
 };
 
 #endif /* VISLIBTEST_CAMTESTAPP_H_INCLUDED */

@@ -15,8 +15,6 @@
 #include <GL/glu.h>
 #include <cstdio>
 
-#include "vislogo.h"
-
 
 // red-green-glasses
 #define COLOR_MASK_LEFT_RED     GL_TRUE
@@ -87,8 +85,7 @@ StereoCamTestApp::~StereoCamTestApp(void) {
 }
 
 int StereoCamTestApp::GLInit(void) {
-    VisLogoDoStuff();
-    VisLogoTwistLogo();
+    this->logo.Create();
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
@@ -113,6 +110,7 @@ void StereoCamTestApp::GLDeinit(void) {
     glDisable(GL_LIGHTING);
     glDisable(GL_LIGHT0);
     glDisable(GL_COLOR_MATERIAL);
+    this->logo.Release();
 }
 
 void StereoCamTestApp::OnResize(unsigned int w, unsigned int h) {
@@ -276,25 +274,8 @@ void StereoCamTestApp::RenderTestBox(void) {
     glPushMatrix();
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(this->angle, 0.0f, -1.0f, 0.0f);
-    unsigned int vCount = VisLogoCountVertices();
-    unsigned int p;
-    glBegin(GL_QUAD_STRIP);
-    for (unsigned int i = 0; i < 20; i++) {
-        for (unsigned int j = 0; j < vCount / 20; j++) {
-            p = (i + j * 20) % vCount;
-            glNormal3dv(VisLogoVertexNormal(p)->f);
-            glVertex3dv(VisLogoVertex(p)->f);
-            p = ((i + 1) % 20 + j * 20) % vCount;
-            glNormal3dv(VisLogoVertexNormal(p)->f);
-            glVertex3dv(VisLogoVertex(p)->f);
-        }
-    }
-    p = 0; // closing strip
-    glNormal3dv(VisLogoVertexNormal(p)->f);
-    glVertex3dv(VisLogoVertex(p)->f);
-    p = 1;
-    glNormal3dv(VisLogoVertexNormal(p)->f);
-    glVertex3dv(VisLogoVertex(p)->f);
-    glEnd();    
+
+    this->logo.Draw();
+
     glPopMatrix();
 }

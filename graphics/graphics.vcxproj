@@ -443,6 +443,7 @@
     <ClCompile Include="src\CameraParamsTileRectOverride.cpp" />
     <ClCompile Include="src\CameraParamsVirtualViewOverride.cpp" />
     <ClCompile Include="src\CameraRotate2D.cpp" />
+    <ClCompile Include="src\CameraRotate2DEulerLookAt.cpp" />
     <ClCompile Include="src\CameraRotate2DLookAt.cpp" />
     <ClCompile Include="src\CameraZoom2DAngle.cpp" />
     <ClCompile Include="src\CameraZoom2DMove.cpp" />
@@ -495,6 +496,7 @@
     <ClInclude Include="include\vislib\CameraParamsTileRectOverride.h" />
     <ClInclude Include="include\vislib\CameraParamsVirtualViewOverride.h" />
     <ClInclude Include="include\vislib\CameraRotate2D.h" />
+    <ClInclude Include="include\vislib\CameraRotate2DEulerLookAt.h" />
     <ClInclude Include="include\vislib\CameraRotate2DLookAt.h" />
     <ClInclude Include="include\vislib\CameraZoom2DAngle.h" />
     <ClInclude Include="include\vislib\CameraZoom2DMove.h" />

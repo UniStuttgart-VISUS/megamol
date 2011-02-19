@@ -16,6 +16,7 @@
 #include "vislib/CameraParameters.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
+#include "vislib/OpenGLVISLogo.h"
 
 
 #define TILE_RIGHT_EYE 3
@@ -46,6 +47,7 @@ private:
 #else /* TILE_RIGHT_EYE */
     vislib::graphics::gl::CameraOpenGL cameraRight;
 #endif /* TILE_RIGHT_EYE */
+    vislib::graphics::gl::OpenGLVISLogo logo;
 };
 
 #endif /* VISLIBTEST_STEREOCAMTESTAPP_H_INCLUDED */

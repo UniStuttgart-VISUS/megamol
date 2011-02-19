@@ -126,6 +126,9 @@
     <ClCompile Include="src\graphicsfunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\CameraRotate2DEulerLookAt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AbstractBitmapCodec.h">
@@ -240,6 +243,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\graphicsfunctions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\CameraRotate2DEulerLookAt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,10 +1,10 @@
 /*
- * CamRotatorTestApp.cpp
+ * CamEulerRotatorTestApp.cpp
  *
  * Copyright (C) 2006-2007 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
-#include "CamRotatorTestApp.h"
+#include "CamEulerRotatorTestApp.h"
 
 #include "vislibGlutInclude.h"
 #include <GL/gl.h>
@@ -15,13 +15,11 @@
 #include "vislib/ObservableCameraParams.h"
 #include "vislib/Rectangle.h"
 
-//#define REGISTER_TEST_OBSERVER
-
 
 /*
- * CamRotatorTestApp::CamRotatorTestApp
+ * CamEulerRotatorTestApp::CamEulerRotatorTestApp
  */
-CamRotatorTestApp::CamRotatorTestApp(void) : AbstractGlutApp(),
+CamEulerRotatorTestApp::CamEulerRotatorTestApp(void) : AbstractGlutApp(),
         camera(new vislib::graphics::ObservableCameraParams()) {
     using namespace vislib::graphics;
 
@@ -47,46 +45,44 @@ CamRotatorTestApp::CamRotatorTestApp(void) : AbstractGlutApp(),
     this->cursor.SetInputModifiers(&this->modkeys);
     this->cursor.SetCameraParams(this->camera.Parameters());
     
-    this->rotator1.SetCameraParams(this->camera.Parameters());
-    this->rotator1.SetTestButton(0); // left button
-    this->rotator1.SetModifierTestCount(0);
-    this->rotator1.SetAltModifier(
+    this->rotator.SetCameraParams(this->camera.Parameters());
+    this->rotator.SetTestButton(0); // left button
+    this->rotator.SetModifierTestCount(0);
+    this->rotator.SetAltModifier(
         vislib::graphics::InputModifiers::MODIFIER_SHIFT);
-
-    this->rotator2.SetCameraParams(this->camera.Parameters());
-    this->rotator2.SetTestButton(0); // left button
-    this->rotator2.SetModifierTestCount(0);
-    this->rotator2.SetAltModifier(
-        vislib::graphics::InputModifiers::MODIFIER_SHIFT);
+    this->cursor.RegisterCursorEvent(&this->rotator);
 
     this->mover.SetCameraParams(this->camera.Parameters());
     this->mover.SetTestButton(2); // middle button
     this->mover.SetModifierTestCount(0);
     this->cursor.RegisterCursorEvent(&this->mover);
 
-    this->SetupRotator2();
+    this->camera.Parameters()->SetView(
+        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
+
 }
 
 
 /*
- * CamRotatorTestApp::~CamRotatorTestApp
+ * CamEulerRotatorTestApp::~CamEulerRotatorTestApp
  */
-CamRotatorTestApp::~CamRotatorTestApp(void) {
+CamEulerRotatorTestApp::~CamEulerRotatorTestApp(void) {
 }
 
 
 /*
- * CamRotatorTestApp::GLInit
+ * CamEulerRotatorTestApp::GLInit
  */
-int CamRotatorTestApp::GLInit(void) {
-    this->logo.Create();
+int CamEulerRotatorTestApp::GLInit(void) {
     glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
 
     glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glLoadIdentity();
     this->camera.glMultViewMatrix();
 
     float lp[4] = {-2.0f, -2.0f, 2.0f, 0.0f};
@@ -100,14 +96,31 @@ int CamRotatorTestApp::GLInit(void) {
 
     glEnable(GL_COLOR_MATERIAL);
 
+    this->logo.Create();
+
+    this->rotator.ResetOrientation();
+    this->camera.Parameters()->SetView(
+        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
+        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
+        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
+
+    printf("\n");
+    printf("Keys used by CamEulerRotatorTestApp:\n");
+    printf("========================================\n");
+    printf("\tSHIFT\tCamera Rolls\n");
+    printf("\tHome\tReset Euler Rotation to Base Orientation\n");
+    printf("\tEnter\tSet Base Orientation to current orientation\n");
+    printf("\tr\tDe-/Activates update of Base Orientation on roll\n");
+    printf("\n");
+
     return 0;
 }
 
 
 /*
- * CamRotatorTestApp::GLDeinit
+ * CamEulerRotatorTestApp::GLDeinit
  */
-void CamRotatorTestApp::GLDeinit(void) {
+void CamEulerRotatorTestApp::GLDeinit(void) {
     glDisable(GL_LIGHT0);
     glDisable(GL_LIGHTING);
     this->logo.Release();
@@ -115,9 +128,9 @@ void CamRotatorTestApp::GLDeinit(void) {
 
 
 /*
- * CamRotatorTestApp::OnResize
+ * CamEulerRotatorTestApp::OnResize
  */
-void CamRotatorTestApp::OnResize(unsigned int w, unsigned int h) {
+void CamEulerRotatorTestApp::OnResize(unsigned int w, unsigned int h) {
     AbstractGlutApp::OnResize(w, h);
     this->camera.Parameters()->SetVirtualViewSize(
         static_cast<vislib::graphics::ImageSpaceType>(w),
@@ -126,13 +139,23 @@ void CamRotatorTestApp::OnResize(unsigned int w, unsigned int h) {
 
 
 /*
- * CamRotatorTestApp::OnKeyPress
+ * CamEulerRotatorTestApp::OnKeyPress
  */
-bool CamRotatorTestApp::OnKeyPress(unsigned char key, int x, int y) {
+bool CamEulerRotatorTestApp::OnKeyPress(unsigned char key, int x, int y) {
     bool retval = true;
     switch(key) {
-        case '1': this->SetupRotator1(); break;
-        case '2': this->SetupRotator2(); break;
+        case 'r':
+            this->rotator.SetBaseOrientationOnRoll(!this->rotator.GetSetBaseOrientationOnRoll());
+            if (this->rotator.GetSetBaseOrientationOnRoll()) {
+                printf("Base Orientation will be updated when camera rolls\n");
+            } else {
+                printf("Base Orientation will remain unchanged when camera rolls\n");
+            }
+            break;
+        case 13:
+            this->rotator.UpdateBaseOrientation();
+            printf("Base Orientation updated\n");
+            break;
         default: retval = false; break;
     }
     this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
@@ -142,9 +165,9 @@ bool CamRotatorTestApp::OnKeyPress(unsigned char key, int x, int y) {
 
 
 /*
- * CamRotatorTestApp::OnMouseEvent
+ * CamEulerRotatorTestApp::OnMouseEvent
  */
-void CamRotatorTestApp::OnMouseEvent(int button, int state, int x, int y) {
+void CamEulerRotatorTestApp::OnMouseEvent(int button, int state, int x, int y) {
     unsigned int btn = 0;
     int modifiers = glutGetModifiers();
 
@@ -164,19 +187,27 @@ void CamRotatorTestApp::OnMouseEvent(int button, int state, int x, int y) {
 
 
 /*
- * CamRotatorTestApp::OnMouseMove
+ * CamEulerRotatorTestApp::OnMouseMove
  */
-void CamRotatorTestApp::OnMouseMove(int x, int y) {
+void CamEulerRotatorTestApp::OnMouseMove(int x, int y) {
     this->cursor.SetPosition(static_cast<vislib::graphics::ImageSpaceType>(x), 
         static_cast<vislib::graphics::ImageSpaceType>(y), true);
 }
 
 
 /*
- * CamRotatorTestApp::OnSpecialKey
+ * CamEulerRotatorTestApp::OnSpecialKey
  */
-void CamRotatorTestApp::OnSpecialKey(int key, int x, int y) {
+void CamEulerRotatorTestApp::OnSpecialKey(int key, int x, int y) {
     int modifiers = glutGetModifiers();
+
+    switch (key) {
+        case GLUT_KEY_HOME:
+            this->rotator.ResetOrientation();
+            printf("Orientation resetted to Base Orientation\n");
+            break;
+        default: break;
+    }
 
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, (modifiers & GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_SHIFT);
     this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, (modifiers & GLUT_ACTIVE_CTRL) == GLUT_ACTIVE_CTRL);
@@ -187,34 +218,34 @@ void CamRotatorTestApp::OnSpecialKey(int key, int x, int y) {
 
 
 /*
- * CamRotatorTestApp::Render
+ * CamEulerRotatorTestApp::Render
  */
-void CamRotatorTestApp::Render(void) {
+void CamEulerRotatorTestApp::Render(void) {
 
     glViewport(0, 0, this->GetWidth(), this->GetHeight());
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
     this->camera.glMultProjectionMatrix();
 
     glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glLoadIdentity();
     this->camera.glMultViewMatrix();
 
     this->RenderLogo();
 
-	glFlush();
+    glFlush();
 
-	glutSwapBuffers();
+    glutSwapBuffers();
     glutPostRedisplay();
 }
 
 
 /*
- * CamRotatorTestApp::RenderLogo
+ * CamEulerRotatorTestApp::RenderLogo
  */
-void CamRotatorTestApp::RenderLogo(void) {
+void CamEulerRotatorTestApp::RenderLogo(void) {
     this->logo.Draw();
 
     // Draw Axis Markers:
@@ -247,32 +278,4 @@ void CamRotatorTestApp::RenderLogo(void) {
     glEnd();
 
     glEnable(GL_LIGHTING);
-}
-
-
-/*
- * CamRotatorTestApp::SetupRotator1
- */
-void CamRotatorTestApp::SetupRotator1(void) {
-    this->camera.Parameters()->SetView(
-        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
-        vislib::math::Point<double, 3>(0.0, 1.0, 0.0),
-        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
-
-    this->cursor.UnregisterCursorEvent(&this->rotator2);
-    this->cursor.RegisterCursorEvent(&this->rotator1);
-}
-
-
-/*
- * CamRotatorTestApp::SetupRotator2
- */
-void CamRotatorTestApp::SetupRotator2(void) {
-    this->camera.Parameters()->SetView(
-        vislib::math::Point<double, 3>(0.0, -2.5, 0.0),
-        vislib::math::Point<double, 3>(0.0, 0.0, 0.0),
-        vislib::math::Vector<double, 3>(0.0, 0.0, 1.0));
-
-    this->cursor.UnregisterCursorEvent(&this->rotator1);
-    this->cursor.RegisterCursorEvent(&this->rotator2);
 }

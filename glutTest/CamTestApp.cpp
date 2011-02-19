@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
+#define _USE_MATH_DEFINES
 #include "CamTestApp.h"
 
 #include "vislibGlutInclude.h"
@@ -14,12 +15,7 @@
 #include "vislib/graphicstypes.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/Rectangle.h"
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include "vislogo.h"
-#include <cstdlib>
-
+#include <cmath>
 
 /*
  * CamTestApp::Lens::Lens
@@ -188,8 +184,7 @@ CamTestApp::~CamTestApp(void) {
  * CamTestApp::GLInit
  */
 int CamTestApp::GLInit(void) {
-    VisLogoDoStuff();
-    VisLogoTwistLogo();
+    this->logo.Create();
     glEnable(GL_DEPTH_TEST);
     this->lastTime = vislib::sys::PerformanceCounter::Query();
     return 0;
@@ -200,6 +195,7 @@ int CamTestApp::GLInit(void) {
  * CamTestApp::GLDeinit
  */
 void CamTestApp::GLDeinit(void) {
+    this->logo.Release();
 }
 
 
@@ -299,7 +295,7 @@ void CamTestApp::Render(void) {
     }
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    this->RenderLogo();
+    this->logo.Draw();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -307,7 +303,7 @@ void CamTestApp::Render(void) {
     for (unsigned int i = 0; i < this->lensCount; i++) {
         this->lenses[i].Update(sec/*, this->camera*/);
         this->lenses[i].BeginDraw(this->GetWidth(), this->GetHeight(), this->ortho);
-        this->RenderLogo();
+        this->logo.Draw();
         this->lenses[i].EndDraw();
     }
 
@@ -315,39 +311,4 @@ void CamTestApp::Render(void) {
 
     glutSwapBuffers();
     glutPostRedisplay();
-}
-
-
-/*
- * CamTestApp::RenderLogo
- */
-void CamTestApp::RenderLogo(void) {
-    glPushMatrix();
-    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-    glRotatef(this->angle, 0.0f, -1.0f, 0.0f);
-    unsigned int vCount = VisLogoCountVertices();
-    unsigned int p;
-    glBegin(GL_QUAD_STRIP);
-    for (unsigned int i = 0; i < 20; i++) {
-        for (unsigned int j = 0; j < vCount / 20; j++) {
-            p = (i + j * 20) % vCount;
-            glColor3dv(VisLogoVertexColor(p)->f);
-            glNormal3dv(VisLogoVertexNormal(p)->f);
-            glVertex3dv(VisLogoVertex(p)->f);
-            p = ((i + 1) % 20 + j * 20) % vCount;
-            glColor3dv(VisLogoVertexColor(p)->f);
-            glNormal3dv(VisLogoVertexNormal(p)->f);
-            glVertex3dv(VisLogoVertex(p)->f);
-        }
-    }
-    p = 0; // closing strip
-    glColor3dv(VisLogoVertexColor(p)->f);
-    glNormal3dv(VisLogoVertexNormal(p)->f);
-    glVertex3dv(VisLogoVertex(p)->f);
-    p = 1;
-    glColor3dv(VisLogoVertexColor(p)->f);
-    glNormal3dv(VisLogoVertexNormal(p)->f);
-    glVertex3dv(VisLogoVertex(p)->f);
-    glEnd();    
-    glPopMatrix();
 }

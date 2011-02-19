@@ -10,7 +10,6 @@
 #include <iostream>
 
 #include "vislib/glverify.h"
-#include "vislogo.h"
 
 
 /*
@@ -35,8 +34,7 @@ int FBOTestApp::GLInit(void) {
     
     int retval = 0;
 
-    ::VisLogoDoStuff();
-    ::VisLogoTwistLogo();
+    this->logo.Create();
 
     ::glEnable(GL_DEPTH_TEST);
     ::glDisable(GL_LIGHTING);
@@ -81,6 +79,7 @@ int FBOTestApp::GLInit(void) {
  */
 void FBOTestApp::GLDeinit(void) {
     ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    this->logo.Release();
 }
 
 
@@ -89,8 +88,6 @@ void FBOTestApp::GLDeinit(void) {
  */
 void FBOTestApp::Render(void) {
     USES_GL_VERIFY;
-    unsigned int cntVertices = ::VisLogoCountVertices();
-    unsigned int vIdx;
    
     try {
         GL_VERIFY_EXPR(this->fbo.Enable(0));
@@ -107,34 +104,8 @@ void FBOTestApp::Render(void) {
         ::glMatrixMode(GL_MODELVIEW);
         ::glLoadIdentity();
 
-        ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        ::glBegin(GL_QUAD_STRIP);
-        for (unsigned int i = 0; i < 20; i++) {
-            for (unsigned int j = 0; j < cntVertices / 20; j++) {
-                vIdx = (i + j * 20) % cntVertices;
-                ::glColor3dv(VisLogoVertexColor(vIdx)->f);
-                ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
-                ::glVertex3dv(VisLogoVertex(vIdx)->f);
+        this->logo.Draw();
 
-                vIdx = ((i + 1) % 20 + j * 20) % cntVertices;
-                ::glColor3dv(VisLogoVertexColor(vIdx)->f);
-                ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
-                ::glVertex3dv(VisLogoVertex(vIdx)->f);
-            }
-        }
-
-        // Close strip.
-        vIdx = 0;
-        ::glColor3dv(VisLogoVertexColor(vIdx)->f);
-        ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
-        ::glVertex3dv(VisLogoVertex(vIdx)->f);
-
-        vIdx = 1;
-        ::glColor3dv(VisLogoVertexColor(vIdx)->f);
-        ::glNormal3dv(VisLogoVertexNormal(vIdx)->f);
-        ::glVertex3dv(VisLogoVertex(vIdx)->f);
-
-        ::glEnd();
         ::glFlush();
         GL_VERIFY_EXPR(this->fbo.Disable());
 

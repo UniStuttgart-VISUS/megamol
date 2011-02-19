@@ -227,6 +227,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AbstractGlutApp.cpp" />
+    <ClCompile Include="CamEulerRotatorTestApp.cpp" />
     <ClCompile Include="CamGlMatrixTest.cpp" />
     <ClCompile Include="CamParamObserver.cpp" />
     <ClCompile Include="CamRotatorTestApp.cpp" />
@@ -239,10 +240,10 @@
     <ClCompile Include="glutTest.cpp" />
     <ClCompile Include="SimpleFontTest.cpp" />
     <ClCompile Include="StereoCamTestApp.cpp" />
-    <ClCompile Include="vislogo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractGlutApp.h" />
+    <ClInclude Include="CamEulerRotatorTestApp.h" />
     <ClInclude Include="CamGlMatrixTest.h" />
     <ClInclude Include="CamParamObserver.h" />
     <ClInclude Include="CamRotatorTestApp.h" />
@@ -254,7 +255,6 @@
     <ClInclude Include="GlutAppManager.h" />
     <ClInclude Include="SimpleFontTest.h" />
     <ClInclude Include="StereoCamTestApp.h" />
-    <ClInclude Include="vislogo.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Makefile">

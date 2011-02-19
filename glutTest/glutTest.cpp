@@ -41,6 +41,7 @@
 #include "GLSLGeomShaderTest.h"
 #include "CamGlMatrixTest.h"
 #include "SimpleFontTest.h"
+#include "CamEulerRotatorTestApp.h"
 
 #include "vislib/FpsCounter.h"
 #include "vislib/Thread.h"
@@ -144,6 +145,7 @@ int main(int argc, char* argv[]) {
     GlutAppManager::InstallFactory<GLSLGeomShaderTest>("GLSLGeometryShader Test");
     GlutAppManager::InstallFactory<CamGlMatrixTest>("Manual Matrix Generation Test");
     GlutAppManager::InstallFactory<SimpleFontTest>("SimpleFont Test");
+    GlutAppManager::InstallFactory<CamEulerRotatorTestApp>("Camera Euler Rotation Test");
 
     // run test application
     glutInit(&argc, argv);

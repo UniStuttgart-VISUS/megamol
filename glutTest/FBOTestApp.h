@@ -13,6 +13,7 @@
 
 #include "AbstractGlutApp.h"
 #include "vislib/FramebufferObject.h"
+#include "vislib/OpenGLVISLogo.h"
 
 
 /*
@@ -28,8 +29,9 @@ public:
     virtual void Render(void);
 
 private:
-    
+
     vislib::graphics::gl::FramebufferObject fbo;
+    vislib::graphics::gl::OpenGLVISLogo logo;
 };
 
 #endif /* VISLIBTEST_FBOTESTAPP_H_INCLUDED */
