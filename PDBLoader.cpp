@@ -934,6 +934,8 @@ void PDBLoader::release(void) {
     for(int i = 0; i < this->residue.Count(); i++)
         delete residue[i];
     this->residue.Clear();
+
+	delete stride;
 }
 
 

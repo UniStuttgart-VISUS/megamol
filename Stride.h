@@ -372,6 +372,9 @@ protected:
 	void ExtractAsn( CHAIN **Chain, int Cn, char *Asn );
 	int Boundaries( char *Asn, int L, char SecondStr, int ( *Bound ) [2] );
 	void InitChain( CHAIN **Chain );
+	void FreeChain(CHAIN *Chain);
+	void FreeResidue(RESIDUE *r);
+	void FreeHBond(HBOND *h);
 	int SplitString( char *Buffer, char **Fields, int MaxField );
 	void Project4_123( float *Coord1, float *Coord2, float *Coord3,
 						 float *Coord4, float *Coord_Proj4_123 );
