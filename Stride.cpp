@@ -664,7 +664,7 @@ bool Stride::WriteToInterface( megamol::protein::CallProteinMovementData *pdi) {
 		return false;
 	}
 	return true;
-	}
+}
 
 bool Stride::WriteToInterface( MolecularDataCall *mol) {
 	if( mol ) {
@@ -701,7 +701,7 @@ bool Stride::WriteToInterface( MolecularDataCall *mol) {
 						sec.back().SetType( MolecularDataCall::SecStructure::TYPE_HELIX);
 					else if( type == 'E' )
 						sec.back().SetType( MolecularDataCall::SecStructure::TYPE_SHEET);
-	else
+					else
 						sec.back().SetType( MolecularDataCall::SecStructure::TYPE_COIL);
 					// start new sec struct elem
 					firstRes = i + mol->Molecules()[Cn].FirstResidueIndex();
@@ -1081,7 +1081,6 @@ int Stride::PlaceHydrogens( CHAIN *Chain ) {
 int Stride::FindHydrogenBonds( CHAIN **Chain, int NChain, HBOND **HBond, COMMAND *Cmd ) {
 	DONOR **Dnr;
 	ACCEPTOR **Acc;
-	BOOLEAN *BondedDonor, *BondedAcceptor;
 	int NDnr=0, NAcc=0;
 	int dc, ac, ccd, cca, cc, hc=0, i;
 
@@ -1094,8 +1093,10 @@ int Stride::FindHydrogenBonds( CHAIN **Chain, int NChain, HBOND **HBond, COMMAND
 		FindAcc ( Chain[cc],Acc,&NAcc,Cmd );
 	}
 
+	BOOLEAN *BondedDonor, *BondedAcceptor;
 	BondedDonor    = ( BOOLEAN * ) ckalloc ( NDnr*sizeof ( BOOLEAN ) );
 	BondedAcceptor = ( BOOLEAN * ) ckalloc ( NAcc*sizeof ( BOOLEAN ) );
+
 	for ( i=0; i<NDnr; i++ )
 		BondedDonor[i] = STRIDE_NO;
 	for ( i=0; i<NAcc; i++ )
@@ -1299,10 +1300,13 @@ int Stride::FindHydrogenBonds( CHAIN **Chain, int NChain, HBOND **HBond, COMMAND
 		if ( !BondedAcceptor[i] )
 			free ( Acc[i] );
 
-	if ( NDnr )
+//	if ( NDnr )
 		free ( BondedDonor );
-	if ( NAcc )
+//	if ( NAcc )
 		free ( BondedAcceptor );
+
+	free(Dnr);
+	free(Acc);
 
 	return ( hc );
 }
@@ -2346,7 +2350,9 @@ int Stride::FindDnr( CHAIN *Chain, DONOR **Dnr, int *NDnr, COMMAND *Cmd )
 int Stride::DefineDnr( CHAIN *Chain, DONOR **Dnr, int *dc, int Res, enum HYBRID Hybrid,
 							  enum GROUP Group, float HB_Radius, int N )
 {
-	Dnr[*dc] = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
+	//Dnr[*dc] = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
+	DONOR tempVar;
+	Dnr[*dc] = &tempVar;// hack ...
 
 	Dnr[*dc]->Chain = Chain;
 	Dnr[*dc]->D_Res = Res;
@@ -2455,9 +2461,15 @@ int Stride::DefineDnr( CHAIN *Chain, DONOR **Dnr, int *dc, int Res, enum HYBRID 
 	if ( Dnr[*dc]->H == ERR || Dnr[*dc]->D_At   == ERR || Dnr[*dc]->DD_At  == ERR ||
 	        ( Dnr[*dc]->DDI_At == ERR && ( Hybrid == Nsp2 || Hybrid == Osp2 ) ) )
 	{
-		free ( Dnr[*dc] ); return ( FAILURE );
+		//free ( Dnr[*dc] );
+		return ( FAILURE );
 	}
-	else ( *dc ) ++;
+	else {
+		DONOR *p = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
+		memcpy(p, Dnr[*dc], sizeof(DONOR));
+		Dnr[*dc] = p;
+		( *dc ) ++;
+	}
 	return ( SUCCESS );
 }
 
