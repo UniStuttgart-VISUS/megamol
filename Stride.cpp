@@ -86,14 +86,56 @@ Stride::~Stride(void)
 	// free variables
 	int i;
 	for( i = 0; i < ProteinChainCnt; ++i )
-	{
-		free ( ProteinChain[i] );
-	}
+		FreeChain( ProteinChain[i] );
+	free(ProteinChain);
+
 	for( i = 0; i < HydroBondCnt; ++i )
-	{
-		free ( HydroBond[i] );
-	}
-	free ( StrideCmd );
+		FreeHBond(HydroBond[i]);
+	free( HydroBond );
+
+	free( StrideCmd );
+}
+
+void Stride::FreeChain(CHAIN *Chain) {
+	free( Chain->File );
+
+	for(int i =0; i < Chain->NRes; i++)
+		FreeResidue( Chain->Rsd[i] );
+	free(Chain->Rsd);
+
+	for(int i =0; i < Chain->NHelix; i++)
+		free( Chain->Helix[i] );
+	free( Chain->Helix );
+
+	for(int i =0; i < Chain->NSheet; i++)
+		free( Chain->Sheet[i] );
+	free( Chain->Sheet );
+
+	for(int i =0; i < Chain->NTurn; i++)
+		free( Chain->Turn[i] );
+	free( Chain->Turn );
+
+	for(int i =0; i < Chain->NAssignedTurn; i++)
+		free( Chain->AssignedTurn[i] );
+	free( Chain->AssignedTurn );
+
+	for(int i =0; i < Chain->NBond; i++)
+		free( Chain->SSbond[i] );
+	free( Chain->SSbond );
+
+	free( Chain ); 
+}
+
+void Stride::FreeResidue(RESIDUE *r) {
+	free( r->Prop );
+	free( r->Inv );
+	free(r);
+}
+
+void Stride::FreeHBond(HBOND *h) {
+	free( h->Dnr ); // TODO: free FreeChain(Dnr->Chain)?
+	free( h->Acc ); // TODO: free FreeChain(Dnr->Chain)?
+	free( h );
 }
 
 void Stride::GetChains( megamol::protein::CallProteinData *pdi)
