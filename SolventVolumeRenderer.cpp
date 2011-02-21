@@ -215,6 +215,32 @@ void protein::SolventVolumeRenderer::release ( void ) {
 }
 
 
+bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
+    using namespace vislib::sys;
+    using namespace vislib::graphics::gl;
+	ShaderSource vertSrc;
+	ShaderSource fragSrc;
+
+	if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( vert, vertSrc ) ) {
+        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for shader '%s'", this->ClassName(), vert );
+        return false;
+    }
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( frag, fragSrc ) ) {
+        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for shader '%s'", this->ClassName(), frag );
+        return false;
+    }
+    try {
+        if ( !shader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
+            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
+        }
+    } catch ( vislib::Exception e ) {
+        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
+
+	return true;
+}
+
 /*
  * protein::SolventVolumeRenderer::create
  */
@@ -241,166 +267,40 @@ bool protein::SolventVolumeRenderer::create ( void ) {
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->sphereShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->sphereShader, "protein::std::sphereVertex", "protein::std::sphereFragment" ) )
+		return false;
 
     // Load clipped sphere shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereClipPlaneVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereClipPlaneFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->clippedSphereShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create clipped sphere shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->clippedSphereShader, "protein::std::sphereClipPlaneVertex", "protein::std::sphereClipPlaneFragment" ) )
+		return false;
 
     // Load cylinder shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::cylinderVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::cylinderFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for cylinder shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->cylinderShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->cylinderShader, "protein::std::cylinderVertex", "protein::std::cylinderFragment" ) )
+		return false;
 
     // Load volume texture generation shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::updateVolumeVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for volume texture update shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::updateVolumeFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->updateVolumeShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create volume texture update shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->updateVolumeShader, "volume::std::updateVolumeVertex", "volume::std::updateVolumeFragment" ) )
+		return false;
 
     // Load ray start shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::rayStartVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::rayStartFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->volRayStartShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create ray start shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->volRayStartShader, "volume::std::rayStartVertex", "volume::std::rayStartFragment" ) )
+		return false;
 
     // Load ray start eye shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::rayStartEyeVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start eye shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::rayStartEyeFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start eye shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->volRayStartEyeShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create ray start eye shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->volRayStartEyeShader, "volume::std::rayStartEyeVertex", "volume::std::rayStartEyeFragment" ) )
+		return false;
 
     // Load ray length shader (uses same vertex shader as ray start shader)
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::rayStartVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray length shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::rayLengthFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray length shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->volRayLengthShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create ray length shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->volRayLengthShader, "volume::std::rayStartVertex", "volume::std::rayLengthFragment" ) )
+		return false;
 
     // Load volume rendering shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::volumeVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for volume rendering shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::volumeFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for volume rendering shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->volumeShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create volume rendering shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->volumeShader, "volume::std::volumeVertex", "volume::std::volumeFragment" ) )
+		return false;
 
     // Load dual isosurface rendering shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::volumeDualIsoVertex", vertSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for dual isosurface rendering shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "volume::std::volumeDualIsoFragment", fragSrc ) ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for two isosurface rendering shader", this->ClassName() );
-        return false;
-    }
-    try {
-        if ( !this->dualIsosurfaceShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) ) {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    } catch ( vislib::Exception e ) {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create dual isosurface rendering shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	if( !loadShader( this->dualIsosurfaceShader, "volume::std::volumeDualIsoVertex", "volume::std::volumeDualIsoFragment" ) )
+		return false;
 
     return true;
 }
@@ -1090,7 +990,6 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 	}
 
     glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms);
     glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
     for( z = 0; z < this->volumeSize; ++z ) {
@@ -1101,10 +1000,12 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
         // draw all atoms as points, using w for radius
         glDrawArrays( GL_POINTS, 0, atomCntMol);
     }
-    glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
 
     this->updateVolumeShader.Disable();
+
+	glEnableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
 
     // restore viewport
     glViewport( viewport[0], viewport[1], viewport[2], viewport[3]);

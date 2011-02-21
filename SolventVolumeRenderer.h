@@ -99,7 +99,12 @@ namespace protein {
 		 * @return 'true' on success, 'false' otherwise.
 		 */
 		virtual bool create(void);
-		
+
+		/**
+		 * @return whether shader loading/creation was sucessful
+		 */
+		bool loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag);
+
 		/**
 		 * Implementation of 'release'.
 		 */
