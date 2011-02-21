@@ -926,9 +926,14 @@ bool PDBLoader::getExtent( core::Call& call) {
 void PDBLoader::release(void) {
     // stop frame-loading thread before clearing data array
     resetFrameCache();
-    for(int i = 0; i < this->data.Count(); i++)
+
+	for(int i = 0; i < this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
+
+    for(int i = 0; i < this->residue.Count(); i++)
+        delete residue[i];
+    this->residue.Clear();
 }
 
 

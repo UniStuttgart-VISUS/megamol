@@ -84,15 +84,6 @@ namespace protein {
          */
         bool getVolumeData( core::Call& call);
 
-        /**
-         * Call callback to get the segmentation data
-         *
-         * @param c The calling call
-         *
-         * @return True on success
-         */
-        bool getSegmentationData( core::Call& call);
-
 	   /**********************************************************************
 		 * 'set'-functions
 	    **********************************************************************/
@@ -163,13 +154,6 @@ namespace protein {
         void RenderMousePosition( megamol::core::view::CallRender3D *call, float rad);
 
         /**
-         * Render the segmented voxels as spheres.
-         *
-         * @param call The render call
-         */
-        void RenderSegmentedVoxels( megamol::core::view::CallRender3D *call);
-
-        /**
          * Refresh all parameters.
 		*/
         void ParameterRefresh( megamol::core::view::CallRender3D *call);
@@ -224,34 +208,6 @@ namespace protein {
         void drawClippedPolygon( vislib::math::Cuboid<float> boundingbox);
 
         /**
-         * Start the segmentation of the volume
-         *
-         * @param time The current time
-         */
-        void startVolumeSegmentation( float time);
-
-        /**
-         * Update the segmentation of the volume
-         *
-         * @param time The current time
-         */
-        void updateVolumeSegmentation( float time);
-
-        /**
-         * Update the segmentation of the volume
-         *
-         * @param time The current time
-         */
-        void updateVolumeSegmentation2( float time);
-
-        /**
-         * Update the segmentation of the volume
-         *
-         * @param time The current time
-         */
-        void updateVolumeSegmentationRmsd( float time);
-
-        /**
          * Write the current volume as a raw file.
          */
         void writeVolumeRAW();
@@ -268,8 +224,6 @@ namespace protein {
 		megamol::core::CallerSlot protRendererCallerSlot;
         /** The volume data callee slot */
         megamol::core::CalleeSlot dataOutSlot;
-        /** The segmentation data callee slot */
-        megamol::core::CalleeSlot diagramDataOutSlot;
 		
 		// 'true' if there is rms data to be rendered
 		bool renderRMSData;
@@ -306,13 +260,6 @@ namespace protein {
         megamol::core::param::ParamSlot midGradColorParam;
         /** parameter slot for max color of gradient color mode */
         megamol::core::param::ParamSlot maxGradColorParam;
-
-        /** parameter slot maximum inital segmentation size */
-        megamol::core::param::ParamSlot initialSegmentationSizeParam;
-        /** parameter slot segmentation stopping */
-        megamol::core::param::ParamSlot stopSegmentationParam;
-        /** parameter slot segmentation difference */
-        megamol::core::param::ParamSlot segmentationDeltaParam;
 
 	    /** ;-list of residue names which compose the solvent */
         megamol::core::param::ParamSlot solventResidues;
@@ -416,24 +363,6 @@ namespace protein {
 				temporaryAtomArray[arr] = new float[atomCount];
 			return temporaryAtomArray[arr];
 		}
-
-        // the mouse pos
-        vislib::math::Vector<float, 3> mousePos;
-
-        // the clicked mouse pos
-        vislib::math::Vector<float, 3> clickedPos;
-        // start volume segmentation
-        bool startVolSeg;
-        // segmentation time
-        float segmentationTime;
-        // flood filled voxels
-        std::list<vislib::math::Vector<int, 3> > segmentedVoxels;
-        unsigned int oldVoxelCount;
-        bool stopSegmentation;
-
-        bool fixedNumberOfVoxels;
-
-        bool drawMarker;
 
         bool forceUpdateVolumeTexture;
 	};

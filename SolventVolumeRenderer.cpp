@@ -10,7 +10,6 @@
 #include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
-#define STOP_SEGMENTATION
 
 #include "SolventVolumeRenderer.h"
 #include "VolumeSliceCall.h"
@@ -58,7 +57,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
         callFrameCalleeSlot ( "callFrame", "Connects the volume rendering with frame call from RMS renderer" ),
         protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
-        diagramDataOutSlot ( "segmentationout", "Connects the volume rendering with a 2D diagram renderer" ),
         coloringModeParam ( "coloringMode", "Coloring Mode" ),
         volIsoValue1Param( "volIsoValue1", "First isovalue for isosurface rendering"),
         volIsoValue2Param( "volIsoValue2", "Second isovalue for isosurface rendering"),
@@ -74,9 +72,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
         minGradColorParam( "minGradColor", "The color for the minimum value for gradient coloring" ),
         midGradColorParam( "midGradColor", "The color for the middle value for gradient coloring" ),
         maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
-        initialSegmentationSizeParam( "initSegSize", "The maximum initial segmentation size"),
-        stopSegmentationParam( "stopSegmentation", "Stop segmentation and replay when segmentation threshold is reached"), 
-        segmentationDeltaParam( "segmentationDelta", "The maximum allowed difference of the segmented voxels between"),
 		solventResidues("solventResidues", ";-list of residue names which compose the solvent"),
         currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
         volFilterRadius( 1.75f), volDensityScale( 1.0f),
@@ -84,9 +79,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
         volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
         renderIsometric( true), meanDensityValue( 0.0f), isoValue1( 0.5f), isoValue2(-0.5f),
         volIsoOpacity( 0.4f), volClipPlaneFlag( false), volClipPlaneOpacity( 0.4f),
-        mousePos( 0, 0, 0), clickedPos( 0, 0, 0), startVolSeg( false), segmentationTime( 0.0f),
-        oldVoxelCount( 0), stopSegmentation( true), fixedNumberOfVoxels( false),
-        drawMarker( true), forceUpdateVolumeTexture( true)
+        forceUpdateVolumeTexture( true)
 {
     // set caller slot for different data calls
     this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -100,20 +93,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     // set renderer caller slot
     this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
     this->MakeSlotAvailable( &this->protRendererCallerSlot);
-
-    // set data out callee slot
-    protein::VolumeSliceCallDescription vscd;
-    this->dataOutSlot.SetCallback( vscd.ClassName(), 
-        VolumeSliceCall::FunctionName( VolumeSliceCall::CallForGetData), 
-        &SolventVolumeRenderer::getVolumeData);
-    this->MakeSlotAvailable( &this->dataOutSlot);
-
-    // set data out callee slot
-    protein::Diagram2DCallDescription d2dcd;
-    this->diagramDataOutSlot.SetCallback( d2dcd.ClassName(), 
-        Diagram2DCall::FunctionName( Diagram2DCall::CallForGetData), 
-        &SolventVolumeRenderer::getSegmentationData);
-    this->MakeSlotAvailable( &this->diagramDataOutSlot);
 
     // --- set the coloring mode ---
     this->SetColoringMode ( Color::ELEMENT );
@@ -188,18 +167,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     this->maxGradColorParam.SetParameter(new param::StringParam( "#ae3b32"));
     this->MakeSlotAvailable( &this->maxGradColorParam);
 
-    // the stop segmentation parameter
-    this->initialSegmentationSizeParam.SetParameter(new param::IntParam( 2000, 0, int(this->volumeSize*this->volumeSize*this->volumeSize)));
-    this->MakeSlotAvailable( &this->initialSegmentationSizeParam);
-
-    // the stop segmentation parameter
-    this->stopSegmentationParam.SetParameter(new param::BoolParam( true));
-    this->MakeSlotAvailable( &this->stopSegmentationParam);
-
-    // the segmentation delta parameter
-    this->segmentationDeltaParam.SetParameter(new param::FloatParam( 2.0f, 0.0f, 10.0f));
-    this->MakeSlotAvailable( &this->segmentationDeltaParam);
-
 	// ;-list of residue names which compose the solvent
 	this->solventResidues.SetParameter(new param::StringParam(""));
 	this->MakeSlotAvailable( &this->solventResidues);
@@ -222,9 +189,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
     this->renderRMSData = false;
     this->frameLabel = NULL;
-
-    // empty segmented voxel list
-    this->segmentedVoxels.clear();
 
 	for(int i = 0; i < TEMPORARY_ATOM_ARRAYS_CNT; i++)
 		temporaryAtomArray[i] = 0;
@@ -553,52 +517,6 @@ bool SolventVolumeRenderer::getVolumeData( core::Call& call) {
     // set the isovalue
     c->setIsovalue( this->isoValue1);
 
-    // get the mouse pos
-    this->mousePos = c->getMousePos();
-    // get the clicked mouse pos
-    if( this->clickedPos != c->getClickPos() ) {
-        this->clickedPos = c->getClickPos();
-        this->startVolSeg = true;
-    }
-
-    return true;
-}
-
-/*
- * SolventVolumeRenderer::getSegmentationData
- */
-bool SolventVolumeRenderer::getSegmentationData( core::Call& call) {
-    Diagram2DCall *c = dynamic_cast<Diagram2DCall*>( &call);
-    if( c == NULL ) return false;
-
-    // get the data call
-    MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
-
-    // set the range
-    vislib::math::Vector<float, 2> range;
-	if( mol )
-#ifdef PLOT_PERCENTAGE
-        range.Set( mol->FrameCount(), 1.0f);
-#else
-        range.Set( mol->FrameCount(), this->volumeSize * this->volumeSize);
-#endif
-    else
-        return false;
-    c->SetRange( range.X(), range.Y());
-
-    // set the data point
-#ifdef PLOT_PERCENTAGE
-    float z = fabsf( float( this->oldVoxelCount) - float( this->segmentedVoxels.size()));
-    float n = float( std::max( 1U, this->oldVoxelCount));
-    c->SetValue( this->segmentationTime, z / n > 1.0f ? 1.0f : z / n );
-#else
-    c->SetValue( this->segmentationTime, float( this->segmentedVoxels.size()));
-#endif
-
-    // set the marker flag
-    c->SetMarkerFlag( this->drawMarker);
-    this->drawMarker = false;
-
     return true;
 }
 
@@ -641,12 +559,6 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
     this->proteinFBO.Enable();
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    // render the current mouse position
-    this->RenderMousePosition( cr3d, 0.3);
-
-    // draw segmented voxels
-    this->RenderSegmentedVoxels( cr3d);
-
     if( protrencr3d ) {
         // setup and call protein renderer
         glPushMatrix();
@@ -667,38 +579,6 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
     
     // get the call time
     float callTime = cr3d->Time();
-
-    // DEBUG
-#ifdef STOP_SEGMENTATION
-    if( !this->stopSegmentation ) {
-        float z = fabsf( float( this->oldVoxelCount) - float( this->segmentedVoxels.size()));
-        float n = float( std::max( 1U, this->oldVoxelCount));
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
-            "Total # of voxels: %5.i, old # of voxels: %5.i, difference: %6.2f", 
-            this->segmentedVoxels.size(), this->oldVoxelCount, 
-            ( z / n) * 100.0f );
-        if( ( z / n) > ( this->segmentationDeltaParam.Param<param::FloatParam>()->Value() - 1.0f) ) {
-
-            vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "Difference greater than 100 per cent!");
-            // get and set play param
-            vislib::StringA paramSlotName( cr3d->PeekCallerSlot()->Parent()->FullName());
-            paramSlotName += "::anim::play";
-            param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
-            if( paramSlot && this->stopSegmentationParam.Param<param::BoolParam>()->Value() ) {
-                paramSlot->Param<param::BoolParam>()->SetValue( false);
-            }
-            // stop the segmentation
-            this->stopSegmentation = true;
-            // set fixed number of voxels flag
-            if( int( this->oldVoxelCount) < int( this->segmentedVoxels.size()) )
-                this->fixedNumberOfVoxels = true;
-            // set the flag to draw a marker
-            this->drawMarker = true;
-        }
-        // store number of voxels
-        this->oldVoxelCount = this->segmentedVoxels.size();
-    }
-#endif
 
     // make the atom color table if necessary
 	if( mol ) {
@@ -779,27 +659,6 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
     // try to start volume rendering using protein data
     if( mol ) {
         retval = this->RenderMolecularData( cr3d, mol);
-    }
-
-    
-    // TEST ...
-    vislib::StringA paramSlotName( cr3d->PeekCallerSlot()->Parent()->FullName());
-    paramSlotName += "::anim::play";
-    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
-    if( paramSlot ) {
-        this->stopSegmentation = !paramSlot->Param<param::BoolParam>()->Value();
-    }
-    // ... TEST
-    if( this->startVolSeg ) {
-        this->startVolumeSegmentation( callTime);
-        this->startVolSeg = false;
-        this->stopSegmentation = false;
-        this->oldVoxelCount = this->segmentedVoxels.size();
-        this->fixedNumberOfVoxels = false;
-    } else if( !this->stopSegmentation ) {
-        //this->updateVolumeSegmentation( callTime);
-        //this->updateVolumeSegmentation2( callTime);
-        this->updateVolumeSegmentationRmsd( callTime);
     }
 
     // unlock the current frame
@@ -889,171 +748,6 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
     return true;
 }
 
-
-/*
- * Render the current mouse position on the clipping plane as a sphere
- */
-void SolventVolumeRenderer::RenderMousePosition( view::CallRender3D *call, float rad) {
-    // do not draw if mouse position is in origin
-    if( vislib::math::IsEqual( this->mousePos.Length(), 0.0f) ) return;
-
-    glPushMatrix();
-    // translate scene for volume ray casting
-    if( !vislib::math::IsEqual( call->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
-        this->scale = 2.0f / call->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        this->scale = 1.0f;
-    }
-    vislib::math::Vector<float, 3> trans( 
-        call->AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension() );
-    trans *= -this->scale*0.5f;
-    glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ() );
-
-    // get viewpoint parameters for raycasting
-    float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    glDisable( GL_BLEND);
-    glEnable( GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    // enable sphere shader
-    this->sphereShader.Enable();
-    // set shader variables
-    glUniform4fv( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv( this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fv( this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fv( this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-
-    // draw mouse position
-    glBegin( GL_POINTS);
-    glColor3f( 1, 1, 1);
-    glVertex4f( 
-        this->mousePos.X() * call->AccessBoundingBoxes().WorldSpaceBBox().Width(), 
-        this->mousePos.Y() * call->AccessBoundingBoxes().WorldSpaceBBox().Height(), 
-        this->mousePos.Z() * call->AccessBoundingBoxes().WorldSpaceBBox().Depth(),
-        rad * scale );
-    glEnd(); // GL_POINTS
-    
-    // disable sphere shader
-    this->sphereShader.Disable();
-
-    glPopMatrix();
-}
-
-/*
- * Render the segmented voxels as spheres
- */
-void SolventVolumeRenderer::RenderSegmentedVoxels( view::CallRender3D *call) {
-    // do nothing if the voxel list is empty
-    if( this->segmentedVoxels.empty() ) return;
-
-    glPushMatrix();
-    // translate scene for volume ray casting
-    if( !vislib::math::IsEqual( call->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
-        this->scale = 2.0f / call->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        this->scale = 1.0f;
-    }
-    vislib::math::Vector<float, 3> trans( 
-        call->AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension() );
-    trans *= -this->scale*0.5f;
-    glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ() );
-
-    // get viewpoint parameters for raycasting
-    float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    glDisable( GL_BLEND);
-    glEnable( GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    // enable sphere shader
-    this->sphereShader.Enable();
-    // set shader variables
-    glUniform4fv( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv( this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fv( this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fv( this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-
-    // draw mouse position
-    glBegin( GL_POINTS);
-    //glColor3f( 1, 1, 0);
-    if( this->fixedNumberOfVoxels )
-        glColor3f( 0.0f/255.0f, 240.0f/255.0f, 213.0f/255.0f);
-    else
-        glColor3f( 243.0f/255.0f, 215.0f/255.0f, 73.0f/255.0f);
-    std::list<vislib::math::Vector<int, 3> >::iterator iter;
-    int a, b, c;
-    iter = this->segmentedVoxels.begin();
-    unsigned int cnt = 0;
-    vislib::math::Vector<int, 3> pos( 0, 0, 0);
-    while( iter != this->segmentedVoxels.end() ) {
-        a = iter->X();
-        b = iter->Y();
-        c = iter->Z();
-        glVertex4f( 
-            ( float( a) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Width(), 
-            ( float( b) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Height(), 
-            ( float( c) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Depth(),
-            call->AccessBoundingBoxes().WorldSpaceBBox().LongestEdge() / float( this->volumeSize));
-        pos += *iter;
-        cnt++;
-        iter++;
-    }
-    
-#if 0
-    pos /= cnt;
-    glColor3f( 0, 1, 1);
-    glVertex4f( 
-            ( float( pos.X()) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Width(), 
-            ( float( pos.Y()) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Height(), 
-            ( float( pos.Z()) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Depth(),
-            call->AccessBoundingBoxes().WorldSpaceBBox().LongestEdge() / float( this->volumeSize));
-
-    iter = this->segmentedVoxels.begin();
-    vislib::math::Vector<int, 3> pos2( *iter);
-    iter++;
-    while( iter != this->segmentedVoxels.end() ) {
-        if( ( pos - *iter).Length() < ( pos - pos2).Length() ) {
-            pos2 = *iter;
-        }
-        iter++;
-    }
-    
-    glColor3f( 1, 0, 1);
-    glVertex4f( 
-            ( float( pos2.X()) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Width(), 
-            ( float( pos2.Y()) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Height(), 
-            ( float( pos2.Z()) / float( this->volumeSize)) * call->AccessBoundingBoxes().WorldSpaceBBox().Depth(),
-            ( call->AccessBoundingBoxes().WorldSpaceBBox().LongestEdge() / float( this->volumeSize)) * 1.5f);
-#endif
-    glEnd(); // GL_POINTS
-    // disable sphere shader
-    this->sphereShader.Disable();
-
-    glPopMatrix();
-}
 
 
 /*
@@ -1370,7 +1064,7 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 		}
 		if (i < this->solventResidueTypeIds.Count()) {
 			/* solvent (creates volume coloring ...) */
-			#pragma omp parallel for
+		/*	#pragma omp parallel for
 			for(int atomIdx = residue->FirstAtomIndex(); atomIdx < LastAtomIndx; atomIdx++) {
 				atomCntSol--;
 				float *atomPos = &updatVolumeTextureAtoms[atomCntSol*4];
@@ -1379,7 +1073,7 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
 				atomPos[3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() * this->scale;
-			}
+			}*/
 		} else {
 			/* not solvent (creates volume) */
 			#pragma omp parallel for
@@ -1396,9 +1090,9 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 	}
 
     glEnableClientState(GL_VERTEX_ARRAY);
-    //glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms);
-    //glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
     for( z = 0; z < this->volumeSize; ++z ) {
 		// TODO: spacial grid to speedup FBO rendering here?
         // attach texture slice to FBO
@@ -1408,7 +1102,7 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
         glDrawArrays( GL_POINTS, 0, atomCntMol);
     }
     glDisableClientState(GL_VERTEX_ARRAY);
-    //glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
 
     this->updateVolumeShader.Disable();
 
@@ -1723,7 +1417,7 @@ void protein::SolventVolumeRenderer::RayParamTextures( vislib::math::Cuboid<floa
     
     // DEBUG check texture values
     /*
-    float *texdata = new float[this->width*this->height];
+    float *texdata = new float[this->width*this->height]; doch kein new-operator im render routine ...
     float max = 0.0f;
     memset( texdata, 0, sizeof(float)*(this->width*this->height));
     glBindTexture( GL_TEXTURE_2D, this->volRayLengthTex);
@@ -1993,369 +1687,6 @@ void SolventVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boun
 }
 
 /*
- * Start the segmentation of the volume
- */
-void SolventVolumeRenderer::startVolumeSegmentation( float time) {
-    time_t t = clock(); // DEBUG
-#if 0
-    // write the volume as a raw file
-    this->writeVolumeRAW();
-    std::cout << "Volume written to RAW file in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
-    t = clock();
-#endif
-
-    this->segmentedVoxels.clear();
-    unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
-    unsigned int z = this->volumeSize * this->volumeSize;
-    unsigned int y = this->volumeSize;
-
-    float *volume = new float[numVoxel];
-    float *mask = new float[numVoxel];
-    memset( mask, 0, numVoxel);
-
-    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-    glGetTexImage( GL_TEXTURE_3D, 0, GL_ALPHA, GL_FLOAT, volume);
-    glBindTexture( GL_TEXTURE_3D, 0);
-
-    std::list<vislib::math::Vector<int, 3> > volPosList; 
-    volPosList.push_back( this->clickedPos * float(this->volumeSize));
-
-    vislib::math::Vector<int, 3> volPos; 
-    int idx;
-    int cnt = 0;
-
-    while( !volPosList.empty() ) {
-        // get and pop first element of the list
-        volPos = volPosList.front();
-        volPosList.pop_front();
-        // process element
-        idx = volPos.Z() * z + volPos.Y() * y + volPos.X();
-        if( mask[idx] < 0.5f && volume[idx] < this->isoValue1 ) {
-            mask[idx] = 1.0f;
-            this->segmentedVoxels.push_back( volPos);
-            cnt++;
-            if( cnt > initialSegmentationSizeParam.Param<param::IntParam>()->Value() )
-                break;
-            if( volPos.X() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
-            if( volPos.X() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
-            if( volPos.Y() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
-            if( volPos.Z() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
-        }
-    }
-
-    // store time
-    this->segmentationTime = time;
-
-    std::cout << "Flood fill for " << cnt << " voxels executed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
-
-    delete[] volume;
-    delete[] mask;
-}
-
-/*
- * Update the segmentation of the volume
- */
-void SolventVolumeRenderer::updateVolumeSegmentation( float time) {
-    time_t t = clock(); // DEBUG
-    // do nothing if no previous segmentation exists
-    if( this->segmentedVoxels.empty() ) return;
-    int segmentSize = this->segmentedVoxels.size();
-
-    unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
-    unsigned int z = this->volumeSize * this->volumeSize;
-    unsigned int y = this->volumeSize;
-
-    vislib::math::Vector<int, 3> volPos; 
-    int idx;
-    int cnt = 0;
-
-    std::list<vislib::math::Vector<int, 3> > volPosList; 
-
-    float *volume = new float[numVoxel];
-    float *mask = new float[numVoxel];
-    memset( mask, 0, numVoxel);
-
-    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-    glGetTexImage( GL_TEXTURE_3D, 0, GL_ALPHA, GL_FLOAT, volume);
-    glBindTexture( GL_TEXTURE_3D, 0);
-
-    // write all current voxels to voxel map, if they are still within the cavity
-    for( cnt = 0; cnt < segmentSize; ++cnt ) {
-        // get and pop first element of the list
-        volPos = this->segmentedVoxels.front();
-        this->segmentedVoxels.pop_front();
-        // process element
-        idx = volPos.Z() * z + volPos.Y() * y + volPos.X();
-        if( volume[idx] < this->isoValue1 ) {
-            volPosList.push_back( volPos);
-        }
-    }
-
-    cnt = 0;
-    while( !volPosList.empty() ) {
-        // get and pop first element of the list
-        volPos = volPosList.front();
-        volPosList.pop_front();
-        // process element
-        idx = volPos.Z() * z + volPos.Y() * y + volPos.X();
-        if( mask[idx] < 0.5f && volume[idx] < this->isoValue1 ) {
-            mask[idx] = 1.0f;
-            this->segmentedVoxels.push_back( volPos);
-            cnt++;
-            if( cnt > 1000 ) 
-                break;
-            if( volPos.X() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
-            if( volPos.X() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
-            if( volPos.Y() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
-            if( volPos.Z() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
-        }
-    }
-
-    // store time
-    this->segmentationTime = time;
-
-    //std::cout << "Flood fill for " << cnt << " voxels executed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
-    double elapsedTime = ( double( clock() - t) / double( CLOCKS_PER_SEC) );
-
-    delete[] volume;
-    delete[] mask;
-}
-
-/*
- * Update the segmentation of the volume
- */
-void SolventVolumeRenderer::updateVolumeSegmentation2( float time) {
-    time_t t = clock(); // DEBUG
-    // do nothing if no previous segmentation exists
-    if( this->segmentedVoxels.empty() ) return;
-    int segmentSize = this->segmentedVoxels.size();
-
-    unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
-    unsigned int z = this->volumeSize * this->volumeSize;
-    unsigned int y = this->volumeSize;
-
-    vislib::math::Vector<int, 3> volPos; 
-    int idx;
-    int cnt = 0;
-
-    std::list<vislib::math::Vector<int, 3> > volPosList; 
-
-    float *volume = new float[numVoxel];
-    float *mask = new float[numVoxel];
-    memset( mask, 0, numVoxel);
-
-    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-    glGetTexImage( GL_TEXTURE_3D, 0, GL_ALPHA, GL_FLOAT, volume);
-    glBindTexture( GL_TEXTURE_3D, 0);
-
-    // start ...
-    std::list<vislib::math::Vector<int, 3> >::iterator iter;
-    int a, b, c;
-    iter = this->segmentedVoxels.begin();
-    cnt = 0;
-    vislib::math::Vector<int, 3> pos( 0, 0, 0);
-    while( iter != this->segmentedVoxels.end() ) {
-        pos += *iter;
-        cnt++;
-        iter++;
-    }
-    pos /= cnt;
-    pos += this->clickedPos * this->volumeSize;
-    pos /= 2;
-
-    // write all current voxels to voxel map, if they are still within the cavity
-    for( cnt = 0; cnt < segmentSize; ++cnt ) {
-        // get and pop first element of the list
-        volPos = this->segmentedVoxels.front();
-        this->segmentedVoxels.pop_front();
-        // process element
-        idx = volPos.Z() * z + volPos.Y() * y + volPos.X();
-        if( volume[idx] < this->isoValue1 ) {
-            volPosList.push_back( volPos);
-        }
-    }
-
-    iter = volPosList.begin();
-    vislib::math::Vector<int, 3> pos2( *iter);
-    iter++;
-    while( iter != volPosList.end() ) {
-        if( ( pos - *iter).Length() < ( pos - pos2).Length() ) {
-            pos2 = *iter;
-        }
-        iter++;
-    }
-    // ... end
-
-    volPosList.clear();
-    volPosList.push_back( pos2);
-
-    cnt = 0;
-    while( !volPosList.empty() ) {
-        // get and pop first element of the list
-        volPos = volPosList.front();
-        volPosList.pop_front();
-        // process element
-        idx = volPos.Z() * z + volPos.Y() * y + volPos.X();
-        if( mask[idx] < 0.5f && volume[idx] < this->isoValue1 ) {
-            mask[idx] = 1.0f;
-            this->segmentedVoxels.push_back( volPos);
-            cnt++;
-#ifdef STOP_SEGMENTATION
-            if( cnt > int( this->segmentationDeltaParam.Param<param::FloatParam>()->Value() * float( this->oldVoxelCount)) ) 
-                break;
-#endif
-            if( volPos.X() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
-            if( volPos.X() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
-            if( volPos.Y() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
-            if( volPos.Z() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
-        }
-    }
-
-    // store time
-    this->segmentationTime = time;
-
-    //std::cout << "Flood fill for " << cnt << " voxels executed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
-    double elapsedTime = ( double( clock() - t) / double( CLOCKS_PER_SEC) );
-
-    delete[] volume;
-    delete[] mask;
-}
-/*
- * Update the segmentation of the volume
- */
-void SolventVolumeRenderer::updateVolumeSegmentationRmsd( float time) {
-    time_t t = clock(); // DEBUG
-    // do nothing if no previous segmentation exists
-    if( this->segmentedVoxels.empty() ) return;
-    int segmentSize = this->segmentedVoxels.size();
-
-    unsigned int numVoxel = this->volumeSize * this->volumeSize * this->volumeSize;
-    unsigned int z = this->volumeSize * this->volumeSize;
-    unsigned int y = this->volumeSize;
-
-    vislib::math::Vector<int, 3> volPos; 
-    int idx;
-    int cnt = 0;
-
-    std::list<vislib::math::Vector<int, 3> > volPosList; 
-
-    float *volume = new float[numVoxel];
-    float *mask = new float[numVoxel];
-    memset( mask, 0, numVoxel);
-
-    glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-    glGetTexImage( GL_TEXTURE_3D, 0, GL_ALPHA, GL_FLOAT, volume);
-    glBindTexture( GL_TEXTURE_3D, 0);
-
-    // start ...
-    std::list<vislib::math::Vector<int, 3> >::iterator iter;
-    int a, b, c;
-    vislib::math::Vector<int, 3> pos( this->clickedPos * this->volumeSize);
-    vislib::math::Vector<int, 3> pos2( pos);
-
-    // write all current voxels to voxel map, if they are still within the cavity
-    for( cnt = 0; cnt < segmentSize; ++cnt ) {
-        // get and pop first element of the list
-        volPos = this->segmentedVoxels.front();
-        this->segmentedVoxels.pop_front();
-        // process element
-        idx = volPos.Z() * z + volPos.Y() * y + volPos.X();
-        if( volume[idx] < this->isoValue1 ) {
-            volPosList.push_back( volPos);
-        }
-    }
-
-    float l1, l2;
-    if( !volPosList.empty() ) {
-        iter = volPosList.begin();
-        pos2 = *iter;
-        iter++;
-        while( iter != volPosList.end() ) {
-            l1 = ( pos - *iter).Length();
-            l2 = ( pos - pos2).Length();
-            if( l1 < l2 ) {
-                pos2 = *iter;
-            }
-            iter++;
-        }
-    } else {
-        std::cout << "empty" << std::endl;
-    }
-    // ... end
-
-    volPosList.clear();
-    volPosList.push_back( pos2);
-
-    cnt = 0;
-    while( !volPosList.empty() ) {
-        // get and pop first element of the list
-        volPos = volPosList.front();
-        volPosList.pop_front();
-        // process element
-        idx = volPos.Z() * z + volPos.Y() * y + volPos.X();
-        if( mask[idx] < 0.5f && volume[idx] < this->isoValue1 ) {
-            mask[idx] = 1.0f;
-            this->segmentedVoxels.push_back( volPos);
-            cnt++;
-#ifdef STOP_SEGMENTATION
-            if( cnt > int( this->segmentationDeltaParam.Param<param::FloatParam>()->Value() * float( this->oldVoxelCount)) && !this->fixedNumberOfVoxels ) 
-                break;
-            if( cnt == this->oldVoxelCount && this->fixedNumberOfVoxels )
-                break;
-#endif
-            if( volPos.X() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()+1, volPos.Y(), volPos.Z()));
-            if( volPos.X() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X()-1, volPos.Y(), volPos.Z()));
-            if( volPos.Y() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()+1, volPos.Z()));
-            if( volPos.Y() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y()-1, volPos.Z()));
-            if( volPos.Z() < (this->volumeSize-1) )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()+1));
-            if( volPos.Z() > 0 )
-                volPosList.push_back( vislib::math::Vector<int, 3>( volPos.X(), volPos.Y(), volPos.Z()-1));
-        }
-    }
-    // check size of segmented region
-    if( cnt < this->oldVoxelCount )
-        this->fixedNumberOfVoxels = false;
-
-    // store time
-    this->segmentationTime = time;
-
-    std::cout << "Flood fill for " << cnt << " voxels executed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
-    double elapsedTime = ( double( clock() - t) / double( CLOCKS_PER_SEC) );
-
-    delete[] volume;
-    delete[] mask;
-}
-
-/*
  * write the current volume as a raw file
  */
 void SolventVolumeRenderer::writeVolumeRAW() {
@@ -2387,5 +1718,3 @@ void SolventVolumeRenderer::writeVolumeRAW() {
     delete[] volume;
     delete[] ucVol;
 }
-
-    
