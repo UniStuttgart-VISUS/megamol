@@ -1003,7 +1003,7 @@ void GromacsLoader::loadFile( const vislib::TString& filename) {
     if( bf ) {
         // create a new XDR data object
         XDR *xdr = new XDR();
-        xdrstdio_create( xdr, bf, xdr_op::XDR_DECODE);
+        xdrstdio_create( xdr, bf, /*xdr_op::*/XDR_DECODE);
 
         // read TPX header from the XDR file
         if( !this->readTpxHeader( xdr, this->tpx) ) {
