@@ -180,6 +180,9 @@ namespace moldyn {
         /** The name of the data source file name parameter slot */
         param::ParamSlot fileNameSlotNameSlot;
 
+        /** Flag controlling the bounding box */
+        param::ParamSlot useClipBoxAsBBox;
+
         /** The slot for publishing data to the writer */
         CalleeSlot outDataSlot;
 

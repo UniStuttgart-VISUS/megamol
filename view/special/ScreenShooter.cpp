@@ -14,6 +14,7 @@
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
 #include "param/EnumParam.h"
+#include "param/FloatParam.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
 #include "param/FilePathParam.h"
@@ -28,6 +29,7 @@
 #include "vislib/MemmappedFile.h"
 #include "vislib/Thread.h"
 #include "vislib/Trace.h"
+#include <climits>
 
 
 namespace megamol {
@@ -202,7 +204,11 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
         backgroundSlot("background", "The background to be used"),
         triggerButtonSlot("trigger", "The trigger button"),
         closeAfterShotSlot("closeAfter", "If set the application will close after an image had been created"),
-        running(false) {
+        animFromSlot("anim::from", "The first time"),
+        animToSlot("anim::to", "The last time"),
+        animStepSlot("anim::step", "The time step"),
+        makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
+        running(false), animLastFrameTime(0) {
 
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -236,6 +242,19 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
 
     this->closeAfterShotSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->closeAfterShotSlot);
+
+    this->animFromSlot << new param::IntParam(0, 0);
+    this->MakeSlotAvailable(&this->animFromSlot);
+
+    this->animToSlot << new param::IntParam(0, 0);
+    this->MakeSlotAvailable(&this->animToSlot);
+
+    this->animStepSlot << new param::IntParam(1, 1);
+    this->MakeSlotAvailable(&this->animStepSlot);
+
+    this->makeAnimSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->makeAnimSlot);
+
 }
 
 
@@ -306,6 +325,29 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     data.tileWidth = static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<param::IntParam>()->Value()));
     data.tileHeight = static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<param::IntParam>()->Value()));
     vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
+    if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
+        param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
+        if (time != NULL) {
+            unsigned int frameTime = static_cast<unsigned int>(time->Param<param::FloatParam>()->Value());
+            if (frameTime == this->animLastFrameTime) {
+                this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
+                Log::DefaultLog.WriteInfo("Animation screen shooting aborted: time code did not change");
+            } else {
+                this->animLastFrameTime = frameTime;
+                vislib::TString ext;
+                ext = filename;
+                ext.ToLowerCase();
+                if (ext.EndsWith(_T(".png"))) {
+                    filename.Truncate(filename.Length() - 4);
+                }
+                ext.Format(_T(".%.5u.png"), this->animLastFrameTime);
+                filename += ext;
+            }
+        } else {
+            this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
+            Log::DefaultLog.WriteInfo("Animation screen shooting aborted: unable to fetch time code");
+        }
+    }
     int bkgndMode = this->backgroundSlot.Param<param::EnumParam>()->Value();
     bool closeAfter = this->closeAfterShotSlot.Param<param::BoolParam>()->Value();
     data.bpp = (bkgndMode == 1) ? 4 : 3;
@@ -748,6 +790,28 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     delete[] buffer;
     fbo.Release();
 
+    vislib::sys::Log::DefaultLog.WriteInfo("Screen shot stored");
+
+    if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
+        if (this->animLastFrameTime >= static_cast<unsigned int>(this->animToSlot.Param<param::IntParam>()->Value())) {
+            Log::DefaultLog.WriteInfo("Animation screen shots complete");
+        } else {
+            param::ParamSlot* time = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
+            if (time != NULL) {
+                unsigned int nextTime = this->animLastFrameTime
+                    + this->animStepSlot.Param<param::IntParam>()->Value();
+                time->Param<param::FloatParam>()->SetValue(static_cast<float>(nextTime));
+                closeAfter = false;
+
+                view->RegisterHook(this); // ready for the next frame
+
+            } else {
+                this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
+                Log::DefaultLog.WriteInfo("Animation screen shooting aborted: unable to fetch time code");
+            }
+        }
+    }
+
     if (closeAfter) {
         this->running = false;
         this->GetCoreInstance()->Shutdown();
@@ -774,6 +838,16 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     ViewInstance *vi = dynamic_cast<ViewInstance *>(ano);
     if (vi != NULL) {
         if (vi->View() != NULL) {
+            if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
+                param::ParamSlot *timeSlot = dynamic_cast<param::ParamSlot*>(vi->View()->FindNamedObject("anim::time"));
+                if (timeSlot != NULL) {
+                    timeSlot->Param<param::FloatParam>()->SetValue(static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
+                    this->animLastFrameTime = UINT_MAX;
+                } else {
+                    Log::DefaultLog.WriteError("Unable to make animation screen shots");
+                    this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
+                }
+            }
             vi->View()->RegisterHook(this);
         } else {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,

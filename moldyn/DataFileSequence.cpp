@@ -10,6 +10,7 @@
 #include "AbstractGetData3DCall.h"
 #include "CallDescriptionManager.h"
 #include "CallDescription.h"
+#include "param/BoolParam.h"
 #include "param/FilePathParam.h"
 #include "param/StringParam.h"
 #include "param/IntParam.h"
@@ -33,6 +34,7 @@ moldyn::DataFileSequence::DataFileSequence(void) : Module(),
         fileNumberMaxSlot("fileNumberMax", "Slot for the maximum file number"),
         fileNumberStepSlot("fileNumberStep", "Slot for the file number increase step"),
         fileNameSlotNameSlot("fileNameSlotName", "The name of the data source file name parameter slot"),
+        useClipBoxAsBBox("useClipBoxAsBBox", "If true will use the all-data clip box as bounding box"),
         outDataSlot("outData", "The slot for publishing data to the writer"),
         inDataSlot("inData", "The slot for requesting data from the source"),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
@@ -55,6 +57,9 @@ moldyn::DataFileSequence::DataFileSequence(void) : Module(),
     this->fileNameSlotNameSlot << new param::StringParam("");
     this->fileNameSlotNameSlot.SetUpdateCallback(&DataFileSequence::onFileNameSlotNameChanged);
     this->MakeSlotAvailable(&this->fileNameSlotNameSlot);
+
+    this->useClipBoxAsBBox << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useClipBoxAsBBox);
 
     CallDescriptionManager::DescriptionIterator iter(CallDescriptionManager::Instance()->GetIterator());
     const CallDescription *cd = NULL;
@@ -197,7 +202,11 @@ bool moldyn::DataFileSequence::getExtentCallback(Call& caller) {
             return false; // unable to get data
         }
 
-        pgdc->AccessBoundingBoxes().SetObjectSpaceBBox(ggdc->AccessBoundingBoxes().ObjectSpaceBBox());
+        if (this->useClipBoxAsBBox.Param<param::BoolParam>()->Value()) {
+            pgdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->clipbox);
+        } else {
+            pgdc->AccessBoundingBoxes().SetObjectSpaceBBox(ggdc->AccessBoundingBoxes().ObjectSpaceBBox());
+        }
         pgdc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
         pgdc->SetFrameID(pgdc->FrameID());
         pgdc->SetFrameCount(this->frameCnt);

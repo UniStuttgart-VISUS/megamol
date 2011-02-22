@@ -155,6 +155,12 @@ namespace special {
         /** Bool whether or not to close the application after the screen shot was taken */
         param::ParamSlot closeAfterShotSlot;
 
+        param::ParamSlot animFromSlot;
+        param::ParamSlot animToSlot;
+        param::ParamSlot animStepSlot;
+        param::ParamSlot makeAnimSlot;
+        unsigned int animLastFrameTime;
+
         /** A simple running flag */
         bool running;
 
