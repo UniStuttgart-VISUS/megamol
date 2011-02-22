@@ -11,6 +11,9 @@
 #include "vislib/ShallowShallowTriangle.h"
 #include "vislib/forceinline.h"
 #include "vislib/mathtypes.h"
+#include "vislib/PtrArray.h"
+#include "vislib/Array.h"
+#include "vislib/SmartPtr.h"
 
 namespace megamol {
 namespace trisoup {
@@ -18,6 +21,11 @@ namespace volumetrics {
 
     /** typdef steering the arithmetic precision of the voxelizer. */
     typedef float VoxelizerFloat;
+
+    class BorderVoxel;
+
+    typedef BorderVoxel* BorderVoxelElement;
+    typedef vislib::PtrArray<BorderVoxel> BorderVoxelArray;
 
     /**
      * Utility class for less precise (larger-epsilon) comparison between doubles.
@@ -100,6 +108,15 @@ namespace volumetrics {
      */
     class BorderVoxel {
     public:
+
+        inline BorderVoxel(void) {
+            // intentionally empy
+        }
+
+        inline ~BorderVoxel(void) {
+            this->triangles.Clear();
+        }
+
         /** Array of triangles in this voxel */
         vislib::Array<VoxelizerFloat> triangles;
 
@@ -113,7 +130,7 @@ namespace volumetrics {
         unsigned int z;
 
         /** 
-         * Test for equality.
+         * Test for equality, i.e. whether they live at the same coordinate and nothing else(!).
          *
          * @param rhs The right side operand.
          *
@@ -166,7 +183,7 @@ namespace volumetrics {
          *
          * @return true, if *this and *rhs contain geometry that can be stitched.
          */
-        inline bool doesTouch(const BorderVoxel *rhs) {
+        inline bool doesTouch(const BorderVoxelElement &rhs) {
             return this->doesTouch(*rhs);
         }
     };
@@ -213,25 +230,36 @@ namespace volumetrics {
          * the FatVoxel since it is linked for fast access/deduplication, but needs to
          * survive the volume itself.
          */
-        BorderVoxel *borderVoxel;
+        BorderVoxelElement borderVoxel;
 	};
 
     /**
      * represents a contiguous surface inside a subvolume and associated
      * metrics.
      */
-    struct Surface {
+    class Surface {
+    public:
+
+        Surface(void) : border(new BorderVoxelArray()) {
+        }
+
+        ~Surface(void) {
+            this->border = NULL;
+        }
+
         /** array of coordinates forming triangles making up the surface */
         vislib::Array<VoxelizerFloat> mesh;
 
         /** array of Bordervoxels */
-        vislib::Array<BorderVoxel *> border;
+        vislib::SmartPtr<BorderVoxelArray> border;
 
         /** surface area */
         VoxelizerFloat surface;
 
         /** volume encompassed by this surface */
         VoxelizerFloat volume;
+
+        unsigned int globalID;
 
         /**
          * bit field indicating on which subvolume faces the attachment of a
@@ -292,6 +320,10 @@ namespace volumetrics {
 
         /** global voxel position offset (for absolute voxel positions) */
         int offsetZ;
+
+        int gridX;
+        int gridY;
+        int gridZ;
 
 		/** Maximum radius in the datasource. */
         VoxelizerFloat MaxRad;

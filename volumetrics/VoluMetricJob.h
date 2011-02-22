@@ -105,7 +105,7 @@ namespace volumetrics {
          *
          * @return whether they touch
          */
-        bool doBordersTouch(vislib::Array<BorderVoxel *> &border1, vislib::Array<BorderVoxel *> &border2);
+        bool doBordersTouch(BorderVoxelArray &border1, BorderVoxelArray &border2);
 
         /**
          * Provide some line geometry for rendering. Currently outputs the bounding
@@ -166,11 +166,11 @@ namespace volumetrics {
          * @param subJobDataList the submitted jobs
          */
         void copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
-            vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+            //vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
             vislib::Array<unsigned int> &uniqueIDs);
 
         void generateStatistics(vislib::Array<SubJobData*> &subJobDataList,
-            vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+            //vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
             vislib::Array<unsigned int> &uniqueIDs,
             vislib::Array<SIZE_T> &countPerID,
             vislib::Array<VoxelizerFloat> &surfPerID,
@@ -186,6 +186,8 @@ namespace volumetrics {
 
         void joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
             int i, int j, int k, int l);
+
+        void joinSurfaces(vislib::Array<SubJobData*> &subJobDataList, int i, int j, int k, int l);
 
         core::CallerSlot getDataSlot;
 
@@ -225,6 +227,8 @@ namespace volumetrics {
 		char backBufferIndex;
 
 		char meshBackBufferIndex;
+
+        unsigned int maxGlobalID;
 
         vislib::sys::File statisticsFile;
 

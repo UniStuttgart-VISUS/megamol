@@ -145,11 +145,12 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
         if ((f.consumedTriangles & (1 << l)) == 0) {
             // this is a new surface
             Surface surf;
-            surf.border.SetCapacityIncrement(10);
+            surf.border->SetCapacityIncrement(10);
             surf.mesh.SetCapacityIncrement(90);
             surf.surface = static_cast<VoxelizerFloat>(0.0);
             surf.volume = static_cast<VoxelizerFloat>(0.0);
             surf.fullFaces = 0;
+            surf.globalID = UINT_MAX;
             for (SIZE_T idx = 0; idx < sjd->resX * sjd->resY * sjd->resZ; idx++) {
                 theVolume[idx].borderVoxel = NULL;
             }
@@ -318,7 +319,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                         f.borderVoxel->y = y + sjd->offsetY;
                         f.borderVoxel->z = z + sjd->offsetZ;
                         f.borderVoxel->triangles.AssertCapacity(f.numTriangles * 9);
-                        surf.border.Add(f.borderVoxel);
+                        surf.border->Add(f.borderVoxel);
                     }
                     f.borderVoxel->triangles.SetCount(f.borderVoxel->triangles.Count() + 9);
                     sstTemp.SetPointer(const_cast<VoxelizerFloat *>(f.borderVoxel->triangles.PeekElements()
@@ -377,7 +378,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                             n.borderVoxel->y = y + moreNeighbors[ni].Y() + sjd->offsetY;
                                             n.borderVoxel->z = z + moreNeighbors[ni].Z() + sjd->offsetZ;
                                             n.borderVoxel->triangles.AssertCapacity(n.numTriangles * 9);
-                                            surf.border.Add(n.borderVoxel);
+                                            surf.border->Add(n.borderVoxel);
                                         }
                                         n.borderVoxel->triangles.SetCount(n.borderVoxel->triangles.Count() + 9);
                                         sstTemp.SetPointer(const_cast<VoxelizerFloat *>(n.borderVoxel->triangles.PeekElements()
@@ -1021,6 +1022,8 @@ DWORD TetraVoxelizer::Run(void *userData) {
                     if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[(z * sjd->resY + y) * sjd->resX + x].mcCase] > 0) {
                         SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].triangles);
                         SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].volumes);
+                        // do NOT delete!
+                        volume[(z * sjd->resY + y) * sjd->resX + x].borderVoxel = NULL;
                     }
                 }
             }
