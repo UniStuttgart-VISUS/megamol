@@ -30,6 +30,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 
+#define SOLVENT_CHAIN_IDENTIFIER 127
 
 /*
  * PDBLoader::Frame::Frame
@@ -1075,6 +1076,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
         unsigned int firstConIdx;
         // loop over all chains
+        this->chain.AssertCapacity( this->chainFirstRes.Count());
         for( chainCnt = 0; chainCnt < this->chainFirstRes.Count(); ++chainCnt ) {
             // add new molecule
             if( chainCnt == 0 ) {
@@ -1087,7 +1089,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 firstConIdx = this->connectivity.Count();
             }
             // add new chain
-            this->chain.Add( MolecularDataCall::Chain( this->molecule.Count()-1, 1));
+            this->chain.Add( MolecularDataCall::Chain( this->molecule.Count()-1, 1, this->chainType[chainCnt]));
             // get the residue range of the current chain
             first = this->chainFirstRes[chainCnt];
             cnt = first + this->chainResCount[chainCnt];
@@ -1311,6 +1313,7 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
 
     // get chain id
     char tmpChainId = atomEntry.Substring( 21, 1)[0];
+    MolecularDataCall::Chain::ChainType tmpChainType = MolecularDataCall::Chain::UNSPECIFIC;
     // get the name of the residue
     tmpStr = atomEntry.Substring( 17, 4);
     tmpStr.TrimSpaces();
@@ -1326,12 +1329,11 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         resTypeIdx = resTypeNameIdx;
     }
 
-	// thomasbm (TEST): check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
+	// check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
 	const vislib::TString& residuesToChain = this->residuesToChain.Param<core::param::StringParam>()->Value();
-	if ( /*resName.Equals(this->residuesToChain.Param<core::param::StringParam>()->Value())*/
-		residuesToChain.Contains(resName)
-		/*&& tmpChainId == ' '*/) {
-		tmpChainId = 'Z';
+	if ( residuesToChain.Contains(resName) ) {
+        tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
+        chainType = MolecularDataCall::Chain::SOLVENT;
 	}
 
     // get the sequence number of the residue
@@ -1384,6 +1386,7 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
             this->chainId = tmpChainId;
             this->chainFirstRes.Add( this->residue.Count()-1);
             this->chainResCount.Add( 1);
+            this->chainType.Add( tmpChainType);
         }
     }
 

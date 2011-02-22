@@ -637,6 +637,12 @@ namespace protein {
          */
         class Chain {
         public:
+            /** Residue types */
+            enum ChainType {
+                UNSPECIFIC  = 0,
+                SOLVENT     = 1
+            };
+
             /** ctor */
             Chain();
             
@@ -652,11 +658,30 @@ namespace protein {
              *
              * @param firstMolIdx The index of the first molecule of this chain.
              * @param molCnt The size of the chain in number of molecules.
+             * @param chainType The type of the chain.
              */
-            Chain( unsigned int firstMolIdx, unsigned int molCnt);
+            Chain( unsigned int firstMolIdx, unsigned int molCnt, ChainType chainType = UNSPECIFIC);
 
             /** dtor */
             ~Chain();
+
+            /**
+             * Sets the type of the chain.
+             *
+             * @param t The type of the chain.
+             */
+            void SetType( ChainType t) {
+                this->type = t;
+            }
+
+            /**
+             * Returns the number of molecules.
+             *
+             * @return The number of molecules.
+             */
+            inline ChainType Type(void) const {
+                return this->type;
+            }
 
             /**
              * Sets the position of the chain by specifying the first 
@@ -720,6 +745,8 @@ namespace protein {
             }
 
         private:
+            /** the chain type */
+            ChainType type;
             /** the index of the first molecule in the chain */
             unsigned int firstMoleculeIndex;
             /** the number of molecules in the chain */

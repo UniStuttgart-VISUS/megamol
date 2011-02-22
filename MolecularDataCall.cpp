@@ -413,7 +413,7 @@ bool protein::MolecularDataCall::Molecule::operator==(
  * protein::MolecularDataCall::Chain::Chain
  */
 protein::MolecularDataCall::Chain::Chain(void) : firstMoleculeIndex(0), 
-    moleculeCount(0) {
+    moleculeCount(0), type( UNSPECIFIC) {
     // intentionally empty
 }
 
@@ -424,7 +424,8 @@ protein::MolecularDataCall::Chain::Chain(void) : firstMoleculeIndex(0),
 protein::MolecularDataCall::Chain::Chain(
     const protein::MolecularDataCall::Chain& src) : 
     firstMoleculeIndex( src.firstMoleculeIndex), 
-    moleculeCount( src.moleculeCount) {
+    moleculeCount( src.moleculeCount),
+    type( src.type) {
     // intentionally empty
 }
 
@@ -433,8 +434,8 @@ protein::MolecularDataCall::Chain::Chain(
  * protein::MolecularDataCall::Chain::Chain
  */
 protein::MolecularDataCall::Chain::Chain( unsigned int firstMolIdx,
-    unsigned int molCnt) : firstMoleculeIndex( firstMolIdx),
-    moleculeCount( molCnt) {
+    unsigned int molCnt, ChainType chainType) : firstMoleculeIndex( firstMolIdx),
+    moleculeCount( molCnt), type( chainType) {
     // intentionally empty
 }
 
@@ -455,6 +456,7 @@ protein::MolecularDataCall::Chain::operator=(
         const protein::MolecularDataCall::Chain& rhs) {
     this->firstMoleculeIndex = rhs.firstMoleculeIndex;
     this->moleculeCount = rhs.moleculeCount;
+    this->type = rhs.type;
     return *this;
 }
 
@@ -465,7 +467,8 @@ protein::MolecularDataCall::Chain::operator=(
 bool protein::MolecularDataCall::Chain::operator==(
     const protein::MolecularDataCall::Chain& rhs) const {
     return ((this->firstMoleculeIndex == rhs.firstMoleculeIndex)
-    && (this->moleculeCount == rhs.moleculeCount));
+    && (this->moleculeCount == rhs.moleculeCount)
+    && (this->type == rhs.type));
 }
 
 // ======================================================================
