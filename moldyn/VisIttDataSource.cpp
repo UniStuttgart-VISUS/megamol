@@ -5,6 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
+#include <climits>
 #include "stdafx.h"
 #include "VisIttDataSource.h"
 #include "vislib/MemmappedFile.h"
