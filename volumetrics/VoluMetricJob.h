@@ -230,6 +230,10 @@ namespace volumetrics {
 
         unsigned int maxGlobalID;
 
+        int divX;
+        int divY;
+        int divZ;
+
         vislib::sys::File statisticsFile;
 
 		/**

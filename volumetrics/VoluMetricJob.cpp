@@ -17,6 +17,7 @@
 #include "MarchingCubeTables.h"
 #include "TetraVoxelizer.h"
 #include "vislib/sysfunctions.h"
+#include "vislib/ConsoleProgressBar.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -232,9 +233,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 		appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
 		appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-		int divX = 1;
-		int divY = 1;
-		int divZ = 1;
+		divX = 1;
+		divY = 1;
+		divZ = 1;
         int subVolCells = this->subVolumeResolutionSlot.Param<megamol::core::param::IntParam>()->Value();
 
 		while (divX == 1 && divY == 1 && divZ ==1) {
@@ -251,6 +252,9 @@ DWORD VoluMetricJob::Run(void *userData) {
 
         bool storeMesh = 
             (this->outTriDataSlot.GetStatus() == megamol::core::AbstractSlot::STATUS_CONNECTED);
+
+        vislib::sys::ConsoleProgressBar pb;
+        pb.Start("Computing Frame", divX * divY * divZ);
 
 		for (int x = 0; x < divX; x++) {
 			for (int y = 0; y < divY; y++) {
@@ -323,6 +327,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 						break;
 			}
             if (lastCount != pool.CountUserWorkItems()) {
+                pb.Set(divX * divY * divZ - pool.CountUserWorkItems());
                 generateStatistics(subJobDataList, uniqueIDs,
                     countPerID, surfPerID, volPerID);
                 if (storeMesh) {
@@ -337,6 +342,7 @@ DWORD VoluMetricJob::Run(void *userData) {
         if (storeMesh) {
             copyMeshesToBackbuffer(subJobDataList, uniqueIDs);
         }
+        pb.Stop();
         Log::DefaultLog.WriteInfo("Done marching.");
 
 		while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
@@ -593,12 +599,17 @@ restart:
                     int x = subJobDataList[todos[i]]->gridX + TetraVoxelizer::moreNeighbors[k].X();
                     int y = subJobDataList[todos[i]]->gridY + TetraVoxelizer::moreNeighbors[k].Y();
                     int z = subJobDataList[todos[i]]->gridZ + TetraVoxelizer::moreNeighbors[k].Z();
-                    for (int l = 0; l < todos.Count(); l++) {
-                        if (subJobDataList[todos[l]]->gridX == x
-                                && subJobDataList[todos[l]]->gridY == y
-                                && subJobDataList[todos[l]]->gridZ == z
-                                && subJobDataList[todos[l]]->Result.done) {
-                            numProcessed++;                            
+                    if (x == -1 || y == -1 || z == -1 || x >= divX || y >= divY || z >= divZ) {
+                        numProcessed++;
+                    } else {
+                        for (int l = 0; l < todos.Count(); l++) {
+                            if (subJobDataList[todos[l]]->gridX == x
+                                    && subJobDataList[todos[l]]->gridY == y
+                                    && subJobDataList[todos[l]]->gridZ == z
+                                    && subJobDataList[todos[l]]->Result.done) {
+                                numProcessed++;
+                                break;
+                            }
                         }
                     }
                 }

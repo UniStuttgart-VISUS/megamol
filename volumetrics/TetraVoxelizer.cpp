@@ -836,6 +836,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
     for (SIZE_T i = 0; i < sjd->resX * sjd->resY * sjd->resZ; i++) {
         volume[i].distField = FLT_MAX;
         volume[i].borderVoxel = NULL;
+        volume[i].mcCase = 0;
     }
 
     unsigned int partListCnt = sjd->datacall->GetParticleListCount();
@@ -990,10 +991,17 @@ DWORD TetraVoxelizer::Run(void *userData) {
 
     // does this really define an empty sub-volume?
     if (numNeg == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
+        // totally full
         Surface s;
         s.surface = 0.0;
         s.volume = (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1)
                 * sjd->CellSize * sjd->CellSize * sjd->CellSize;
+        sjd->Result.surfaces.Append(s);
+    } else if (numPos == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
+        // totally empty
+        Surface s;
+        s.surface = 0.0;
+        s.volume = 0.0;
         sjd->Result.surfaces.Append(s);
     } else {
         // march it
@@ -1014,22 +1022,23 @@ DWORD TetraVoxelizer::Run(void *userData) {
             }
         }
 
-        // dealloc stuff in volume
-        // dealloc volume as a whole etc.
-        for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
-            for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
-                for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
-                    if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[(z * sjd->resY + y) * sjd->resX + x].mcCase] > 0) {
-                        SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].triangles);
-                        SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].volumes);
-                        // do NOT delete!
-                        volume[(z * sjd->resY + y) * sjd->resX + x].borderVoxel = NULL;
-                    }
+    }
+    // dealloc stuff in volume
+    // dealloc volume as a whole etc.
+    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+                if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[(z * sjd->resY + y) * sjd->resX + x].mcCase] > 0) {
+                    ARY_SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].triangles);
+                    ARY_SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].volumes);
+                    // do NOT delete!
+                    volume[(z * sjd->resY + y) * sjd->resX + x].borderVoxel = NULL;
                 }
             }
         }
-        ARY_SAFE_DELETE(volume);
     }
+    ARY_SAFE_DELETE(volume);
+
 
     sjd->Result.done = true;
 
