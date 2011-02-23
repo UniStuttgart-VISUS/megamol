@@ -2353,123 +2353,121 @@ int Stride::DefineDnr( CHAIN *Chain, DONOR **Dnr, int *dc, int Res, enum HYBRID 
 							  enum GROUP Group, float HB_Radius, int N )
 {
 	//Dnr[*dc] = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
-	DONOR tempVar;
-	Dnr[*dc] = &tempVar;// hack ...
+	DONOR tempDonor;
 
-	Dnr[*dc]->Chain = Chain;
-	Dnr[*dc]->D_Res = Res;
+	tempDonor.Chain = Chain;
+	tempDonor.D_Res = Res;
 	if ( Group != Peptide )
-		Dnr[*dc]->DD_Res = Res;
+		tempDonor.DD_Res = Res;
 	else
-		Dnr[*dc]->DD_Res = Res-1;
-	Dnr[*dc]->DDI_Res = Res;
-	Dnr[*dc]->Hybrid = Hybrid;
-	Dnr[*dc]->Group = Group;
-	Dnr[*dc]->HB_Radius = HB_Radius;
+		tempDonor.DD_Res = Res-1;
+	tempDonor.DDI_Res = Res;
+	tempDonor.Hybrid = Hybrid;
+	tempDonor.Group = Group;
+	tempDonor.HB_Radius = HB_Radius;
 
 	if ( Group == Peptide )
 	{
 		if ( Res != 0 )
 		{
-			FindAtom ( Chain,Res,"N",&Dnr[*dc]->D_At );
-			FindAtom ( Chain,Res-1,"C",&Dnr[*dc]->DD_At );
+			FindAtom ( Chain,Res,"N",&tempDonor.D_At );
+			FindAtom ( Chain,Res-1,"C",&tempDonor.DD_At );
 		}
 		else
 		{
-			Dnr[*dc]->D_At  = ERR;
-			Dnr[*dc]->DD_At = ERR;
+			tempDonor.D_At  = ERR;
+			tempDonor.DD_At = ERR;
 		}
-		FindAtom ( Chain,Res,"CA",&Dnr[*dc]->DDI_At );
-		FindAtom ( Chain,Res,"H",&Dnr[*dc]->H );
+		FindAtom ( Chain,Res,"CA",&tempDonor.DDI_At );
+		FindAtom ( Chain,Res,"H",&tempDonor.H );
 	}
 	else if ( Group == Trp )
 	{
-		FindAtom ( Chain,Res,"NE1",&Dnr[*dc]->D_At );
-		FindAtom ( Chain,Res,"CE2",&Dnr[*dc]->DD_At );
-		FindAtom ( Chain,Res,"CD1",&Dnr[*dc]->DDI_At );
+		FindAtom ( Chain,Res,"NE1",&tempDonor.D_At );
+		FindAtom ( Chain,Res,"CE2",&tempDonor.DD_At );
+		FindAtom ( Chain,Res,"CD1",&tempDonor.DDI_At );
 	}
 	else if ( Group == Asn )
 	{
-		FindAtom ( Chain,Res,"ND1",&Dnr[*dc]->D_At );
-		FindAtom ( Chain,Res,"CG",&Dnr[*dc]->DD_At );
-		FindAtom ( Chain,Res,"CB",&Dnr[*dc]->DDI_At );
+		FindAtom ( Chain,Res,"ND1",&tempDonor.D_At );
+		FindAtom ( Chain,Res,"CG",&tempDonor.DD_At );
+		FindAtom ( Chain,Res,"CB",&tempDonor.DDI_At );
 	}
 	else if ( Group == Gln )
 	{
-		FindAtom ( Chain,Res,"NE2",&Dnr[*dc]->D_At );
-		FindAtom ( Chain,Res,"CD",&Dnr[*dc]->DD_At );
-		FindAtom ( Chain,Res,"CG",&Dnr[*dc]->DDI_At );
+		FindAtom ( Chain,Res,"NE2",&tempDonor.D_At );
+		FindAtom ( Chain,Res,"CD",&tempDonor.DD_At );
+		FindAtom ( Chain,Res,"CG",&tempDonor.DDI_At );
 	}
 	else if ( Group == Arg )
 	{
 		if ( N == 1 )
 		{
-			FindAtom ( Chain,Res,"NE",&Dnr[*dc]->D_At );
-			FindAtom ( Chain,Res,"CZ",&Dnr[*dc]->DD_At );
-			FindAtom ( Chain,Res,"CD",&Dnr[*dc]->DDI_At );
+			FindAtom ( Chain,Res,"NE",&tempDonor.D_At );
+			FindAtom ( Chain,Res,"CZ",&tempDonor.DD_At );
+			FindAtom ( Chain,Res,"CD",&tempDonor.DDI_At );
 		}
 		else
 			if ( N == 2 )
 			{
-				FindAtom ( Chain,Res,"NH1",&Dnr[*dc]->D_At );
-				FindAtom ( Chain,Res,"CZ",&Dnr[*dc]->DD_At );
-				FindAtom ( Chain,Res,"NE",&Dnr[*dc]->DDI_At );
+				FindAtom ( Chain,Res,"NH1",&tempDonor.D_At );
+				FindAtom ( Chain,Res,"CZ",&tempDonor.DD_At );
+				FindAtom ( Chain,Res,"NE",&tempDonor.DDI_At );
 			}
 			else
 				if ( N == 3 )
 				{
-					FindAtom ( Chain,Res,"NH2",&Dnr[*dc]->D_At );
-					FindAtom ( Chain,Res,"CZ",&Dnr[*dc]->DD_At );
-					FindAtom ( Chain,Res,"NE",&Dnr[*dc]->DDI_At );
+					FindAtom ( Chain,Res,"NH2",&tempDonor.D_At );
+					FindAtom ( Chain,Res,"CZ",&tempDonor.DD_At );
+					FindAtom ( Chain,Res,"NE",&tempDonor.DDI_At );
 				}
 	}
 	else if ( Group == His )
 	{
 		if ( N == 1 )
 		{
-			FindAtom ( Chain,Res,"ND1",&Dnr[*dc]->D_At );
-			FindAtom ( Chain,Res,"CG",&Dnr[*dc]->DD_At );
-			FindAtom ( Chain,Res,"CE1",&Dnr[*dc]->DDI_At );
+			FindAtom ( Chain,Res,"ND1",&tempDonor.D_At );
+			FindAtom ( Chain,Res,"CG",&tempDonor.DD_At );
+			FindAtom ( Chain,Res,"CE1",&tempDonor.DDI_At );
 		}
 		else if ( N == 2 )
 		{
-			FindAtom ( Chain,Res,"NE2",&Dnr[*dc]->D_At );
-			FindAtom ( Chain,Res,"CE1",&Dnr[*dc]->DD_At );
-			FindAtom ( Chain,Res,"CD2",&Dnr[*dc]->DDI_At );
+			FindAtom ( Chain,Res,"NE2",&tempDonor.D_At );
+			FindAtom ( Chain,Res,"CE1",&tempDonor.DD_At );
+			FindAtom ( Chain,Res,"CD2",&tempDonor.DDI_At );
 		}
 	}
 	else if ( Group == Tyr )
 	{
-		FindAtom ( Chain,Res,"OH",&Dnr[*dc]->D_At );
-		FindAtom ( Chain,Res,"CZ",&Dnr[*dc]->DD_At );
-		FindAtom ( Chain,Res,"CE1",&Dnr[*dc]->DDI_At );
+		FindAtom ( Chain,Res,"OH",&tempDonor.D_At );
+		FindAtom ( Chain,Res,"CZ",&tempDonor.DD_At );
+		FindAtom ( Chain,Res,"CE1",&tempDonor.DDI_At );
 	}
 	else if ( Group == Lys )
 	{
-		FindAtom ( Chain,Res,"NZ",&Dnr[*dc]->D_At );
-		FindAtom ( Chain,Res,"CE",&Dnr[*dc]->DD_At );
+		FindAtom ( Chain,Res,"NZ",&tempDonor.D_At );
+		FindAtom ( Chain,Res,"CE",&tempDonor.DD_At );
 	}
 	else if ( Group == Ser )
 	{
-		FindAtom ( Chain,Res,"OG",&Dnr[*dc]->D_At );
-		FindAtom ( Chain,Res,"CB",&Dnr[*dc]->DD_At );
+		FindAtom ( Chain,Res,"OG",&tempDonor.D_At );
+		FindAtom ( Chain,Res,"CB",&tempDonor.DD_At );
 	}
 	else if ( Group == Thr )
 	{
-		FindAtom ( Chain,Res,"OG1",&Dnr[*dc]->D_At );
-		FindAtom ( Chain,Res,"CB",&Dnr[*dc]->DD_At );
+		FindAtom ( Chain,Res,"OG1",&tempDonor.D_At );
+		FindAtom ( Chain,Res,"CB",&tempDonor.DD_At );
 	}
 
-	if ( Dnr[*dc]->H == ERR || Dnr[*dc]->D_At   == ERR || Dnr[*dc]->DD_At  == ERR ||
-	        ( Dnr[*dc]->DDI_At == ERR && ( Hybrid == Nsp2 || Hybrid == Osp2 ) ) )
+	if ( tempDonor.H == ERR || tempDonor.D_At   == ERR || tempDonor.DD_At  == ERR ||
+	        ( tempDonor.DDI_At == ERR && ( Hybrid == Nsp2 || Hybrid == Osp2 ) ) )
 	{
 		//free ( Dnr[*dc] );
 		return ( FAILURE );
 	}
 	else {
-		DONOR *p = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
-		memcpy(p, Dnr[*dc], sizeof(DONOR));
-		Dnr[*dc] = p;
+		DONOR *Dnr[*dc] = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
+		memcpy(Dnr[*dc], tempDonor, sizeof(DONOR));
 		( *dc ) ++;
 	}
 	return ( SUCCESS );
@@ -2522,120 +2520,126 @@ int Stride::FindAcc( CHAIN *Chain, ACCEPTOR **Acc, int *NAcc, COMMAND *Cmd )
 int Stride::DefineAcceptor( CHAIN *Chain, ACCEPTOR **Acc, int *ac, int Res, enum HYBRID Hybrid,
                      enum GROUP Group, float HB_Radius, int N )
 {
-	Acc[*ac] = ( ACCEPTOR * ) ckalloc ( sizeof ( ACCEPTOR ) );
+//	Acc[*ac] = ( ACCEPTOR * ) ckalloc ( sizeof ( ACCEPTOR ) );
+	ACCEPTOR tempAcc;
 
-	Acc[*ac]->Chain = Chain;
-	Acc[*ac]->A_Res    = Res;
-	Acc[*ac]->AA_Res   = Res;
-	Acc[*ac]->AA2_Res   = Res;
-	Acc[*ac]->Hybrid    = Hybrid;
-	Acc[*ac]->Group     = Group;
-	Acc[*ac]->HB_Radius = HB_Radius;
+	tempAcc.Chain = Chain;
+	tempAcc.A_Res    = Res;
+	tempAcc.AA_Res   = Res;
+	tempAcc.AA2_Res   = Res;
+	tempAcc.Hybrid    = Hybrid;
+	tempAcc.Group     = Group;
+	tempAcc.HB_Radius = HB_Radius;
 
 	if ( Group == Peptide )
 	{
 		if ( Res != Chain->NRes-1 )
 		{
-			FindAtom ( Chain,Res,"O",&Acc[*ac]->A_At );
-			FindAtom ( Chain,Res,"C",&Acc[*ac]->AA_At );
+			FindAtom ( Chain,Res,"O",&tempAcc.A_At );
+			FindAtom ( Chain,Res,"C",&tempAcc.AA_At );
 		}
 		else
 		{
-			Acc[*ac]->A_At = ERR;
-			Acc[*ac]->AA_At = ERR;
+			tempAcc.A_At = ERR;
+			tempAcc.AA_At = ERR;
 		}
-		FindAtom ( Chain,Res,"CA",&Acc[*ac]->AA2_At );
+		FindAtom ( Chain,Res,"CA",&tempAcc.AA2_At );
 	}
 	else if ( Group == His )
 	{
 		if ( N == 1 )
 		{
-			FindAtom ( Chain,Res,"ND1",&Acc[*ac]->A_At );
-			FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA_At );
-			FindAtom ( Chain,Res,"CE1",&Acc[*ac]->AA2_At );
+			FindAtom ( Chain,Res,"ND1",&tempAcc.A_At );
+			FindAtom ( Chain,Res,"CG",&tempAcc.AA_At );
+			FindAtom ( Chain,Res,"CE1",&tempAcc.AA2_At );
 		}
 		else if ( N == 2 )
 		{
-			FindAtom ( Chain,Res,"NE2",&Acc[*ac]->A_At );
-			FindAtom ( Chain,Res,"CE1",&Acc[*ac]->AA_At );
-			FindAtom ( Chain,Res,"CD2",&Acc[*ac]->AA2_At );
+			FindAtom ( Chain,Res,"NE2",&tempAcc.A_At );
+			FindAtom ( Chain,Res,"CE1",&tempAcc.AA_At );
+			FindAtom ( Chain,Res,"CD2",&tempAcc.AA2_At );
 		}
 	}
 	else if ( Group == Asn )
 	{
-		FindAtom ( Chain,Res,"OD1",&Acc[*ac]->A_At );
-		FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA_At );
-		FindAtom ( Chain,Res,"CB",&Acc[*ac]->AA2_At );
+		FindAtom ( Chain,Res,"OD1",&tempAcc.A_At );
+		FindAtom ( Chain,Res,"CG",&tempAcc.AA_At );
+		FindAtom ( Chain,Res,"CB",&tempAcc.AA2_At );
 	}
 	else if ( Group == Gln )
 	{
-		FindAtom ( Chain,Res,"OE1",&Acc[*ac]->A_At );
-		FindAtom ( Chain,Res,"CD",&Acc[*ac]->AA_At );
-		FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA2_At );
+		FindAtom ( Chain,Res,"OE1",&tempAcc.A_At );
+		FindAtom ( Chain,Res,"CD",&tempAcc.AA_At );
+		FindAtom ( Chain,Res,"CG",&tempAcc.AA2_At );
 	}
 	else if ( Group == Asp )
 	{
 		if ( N == 1 )
 		{
-			FindAtom ( Chain,Res,"OD1",&Acc[*ac]->A_At );
-			FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA_At );
-			FindAtom ( Chain,Res,"CB",&Acc[*ac]->AA2_At );
+			FindAtom ( Chain,Res,"OD1",&tempAcc.A_At );
+			FindAtom ( Chain,Res,"CG",&tempAcc.AA_At );
+			FindAtom ( Chain,Res,"CB",&tempAcc.AA2_At );
 		}
 		else if ( N == 2 )
 		{
-			FindAtom ( Chain,Res,"ND2",&Acc[*ac]->A_At );
-			FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA_At );
-			FindAtom ( Chain,Res,"CB",&Acc[*ac]->AA2_At );
+			FindAtom ( Chain,Res,"ND2",&tempAcc.A_At );
+			FindAtom ( Chain,Res,"CG",&tempAcc.AA_At );
+			FindAtom ( Chain,Res,"CB",&tempAcc.AA2_At );
 		}
 	}
 	else if ( Group == Glu )
 	{
 		if ( N == 1 )
 		{
-			FindAtom ( Chain,Res,"OE1",&Acc[*ac]->A_At );
-			FindAtom ( Chain,Res,"CD",&Acc[*ac]->AA_At );
-			FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA2_At );
+			FindAtom ( Chain,Res,"OE1",&tempAcc.A_At );
+			FindAtom ( Chain,Res,"CD",&tempAcc.AA_At );
+			FindAtom ( Chain,Res,"CG",&tempAcc.AA2_At );
 		}
 		else if ( N == 2 )
 		{
-			FindAtom ( Chain,Res,"NE2",&Acc[*ac]->A_At );
-			FindAtom ( Chain,Res,"CD",&Acc[*ac]->AA_At );
-			FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA2_At );
+			FindAtom ( Chain,Res,"NE2",&tempAcc.A_At );
+			FindAtom ( Chain,Res,"CD",&tempAcc.AA_At );
+			FindAtom ( Chain,Res,"CG",&tempAcc.AA2_At );
 		}
 	}
 	else if ( Group == Tyr )
 	{
-		FindAtom ( Chain,Res,"OH",&Acc[*ac]->A_At );
-		FindAtom ( Chain,Res,"CZ",&Acc[*ac]->AA_At );
-		FindAtom ( Chain,Res,"CE1",&Acc[*ac]->AA2_At );
+		FindAtom ( Chain,Res,"OH",&tempAcc.A_At );
+		FindAtom ( Chain,Res,"CZ",&tempAcc.AA_At );
+		FindAtom ( Chain,Res,"CE1",&tempAcc.AA2_At );
 	}
 	else if ( Group == Ser )
 	{
-		FindAtom ( Chain,Res,"OG",&Acc[*ac]->A_At );
-		FindAtom ( Chain,Res,"CB",&Acc[*ac]->AA_At );
+		FindAtom ( Chain,Res,"OG",&tempAcc.A_At );
+		FindAtom ( Chain,Res,"CB",&tempAcc.AA_At );
 	}
 	else if ( Group == Thr )
 	{
-		FindAtom ( Chain,Res,"OG1",&Acc[*ac]->A_At );
-		FindAtom ( Chain,Res,"CB",&Acc[*ac]->AA_At );
+		FindAtom ( Chain,Res,"OG1",&tempAcc.A_At );
+		FindAtom ( Chain,Res,"CB",&tempAcc.AA_At );
 	}
 	else if ( Group == Met )
 	{
-		FindAtom ( Chain,Res,"SD",&Acc[*ac]->A_At );
-		FindAtom ( Chain,Res,"CG",&Acc[*ac]->AA_At );
+		FindAtom ( Chain,Res,"SD",&tempAcc.A_At );
+		FindAtom ( Chain,Res,"CG",&tempAcc.AA_At );
 	}
 	else if ( Group == Cys )
 	{
-		FindAtom ( Chain,Res,"SG",&Acc[*ac]->A_At );
-		FindAtom ( Chain,Res,"CB",&Acc[*ac]->AA_At );
+		FindAtom ( Chain,Res,"SG",&tempAcc.A_At );
+		FindAtom ( Chain,Res,"CB",&tempAcc.AA_At );
 	}
 
-	if ( Acc[*ac]->A_At   == ERR || Acc[*ac]->AA_At  == ERR ||
-	        ( Acc[*ac]->AA2_At == ERR && ( Hybrid == Nsp2 || Hybrid == Osp2 ) ) )
+	if ( tempAcc.A_At   == ERR || tempAcc.AA_At  == ERR ||
+	        ( tempAcc.AA2_At == ERR && ( Hybrid == Nsp2 || Hybrid == Osp2 ) ) )
 	{
-		free ( Acc[*ac] ); return ( FAILURE );
+		//free ( Acc[*ac] );
+		return ( FAILURE );
 	}
-	else ( *ac ) ++;
+	else {
+		Acc[*ac] = ( ACCEPTOR * ) ckalloc ( sizeof ( ACCEPTOR ) );
+		memcpy( Acc[*ac], &tempAcc, sizeof(ACCEPTOR) );
+		( *ac ) ++;
+	}
 	return ( SUCCESS );
 }
 
