@@ -171,6 +171,20 @@ namespace protein {
                 return !(*this == rhs);
             }
 
+            /**
+             * Sets the filter value of the residue.
+             *
+             * @param val The filter value.
+             */
+            inline void SetFilter( int val) { this->filter = val; };
+
+            /**
+             * Get the filter value of the residue.
+             *
+             * @return The filter value.
+             */
+            int Filter(void) const { return this->filter; };
+
         protected:
 
             /** The size of this residue in atoms */
@@ -184,6 +198,9 @@ namespace protein {
 
             /** The index of the type of the residue */
             unsigned int type;
+
+            /** The filter value */
+            int filter;
 
         };
 
@@ -492,6 +509,20 @@ namespace protein {
                 return !(*this == rhs);
             }
 
+            /**
+             * Sets the filter value of the residue.
+             *
+             * @param val The filter value.
+             */
+            inline void SetFilter( int val) { this->filter = val; };
+
+            /**
+             * Get the filter value of the residue.
+             *
+             * @return The filter value.
+             */
+            int Filter(void) const { return this->filter; };
+
         private:
             /** the index of the first residue in the molecule */
             unsigned int firstResidueIndex;
@@ -507,6 +538,9 @@ namespace protein {
             unsigned int firstConIdx;
             /** The connection count */
             unsigned int conCount;
+
+            /** The filter value */
+            int filter;
         };
 
         /**
@@ -744,6 +778,20 @@ namespace protein {
                 return !(*this == rhs);
             }
 
+            /**
+             * Sets the filter value of the residue.
+             *
+             * @param val The filter value.
+             */
+            inline void SetFilter( int val) { this->filter = val; };
+
+            /**
+             * Get the filter value of the residue.
+             *
+             * @return The filter value.
+             */
+            int Filter(void) const { return this->filter; };
+
         private:
             /** the chain type */
             ChainType type;
@@ -751,6 +799,9 @@ namespace protein {
             unsigned int firstMoleculeIndex;
             /** the number of molecules in the chain */
             unsigned int moleculeCount;
+
+            /** The filter value */
+            int filter;
         };
 
         /**

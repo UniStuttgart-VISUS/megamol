@@ -797,8 +797,9 @@ bool PDBLoader::getData( core::Call& call) {
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
 
-    if ( this->pdbFilenameSlot.IsDirty() ) {
+    if ( this->pdbFilenameSlot.IsDirty() || this->residuesToChain.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
+        this->residuesToChain.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
@@ -1331,10 +1332,15 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
 
 	// check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
 	const vislib::TString& residuesToChain = this->residuesToChain.Param<core::param::StringParam>()->Value();
-	if ( residuesToChain.Contains(resName) ) {
-        tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
-        chainType = MolecularDataCall::Chain::SOLVENT;
-	}
+    // get all the solvent residue names to filter out
+    vislib::Array<vislib::TString> resFilters = vislib::StringTokeniser<vislib::TCharTraits>::Split( residuesToChain, ';', true);
+    // check if the name of the residue is matched by one of the filters
+    for( unsigned int filterCnt = 0; filterCnt < resFilters.Count(); ++filterCnt ) {
+        if ( resName.StartsWithInsensitive( resFilters[filterCnt]) ) {
+            tmpChainId = SOLVENT_CHAIN_IDENTIFIER;
+            tmpChainType = MolecularDataCall::Chain::SOLVENT;
+	    }
+    }
 
     // get the sequence number of the residue
     tmpStr = atomEntry.Substring( 22, 4);
@@ -1357,6 +1363,7 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         this->chainId = tmpChainId;
         this->chainFirstRes.Add( 0);
         this->chainResCount.Add( 1);
+        this->chainType.Add( tmpChainType);
     } else if( newResSeq == this->resSeq ) {
         // still the same residue - add one atom
         this->residue.Last()->SetPosition(
@@ -1708,6 +1715,7 @@ void PDBLoader::resetAllData() {
     secStructAvailable = false;
     this->chainFirstRes.Clear();
     this->chainResCount.Clear();
+    this->chainType.Clear();
 }
 
 
