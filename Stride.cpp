@@ -2466,8 +2466,8 @@ int Stride::DefineDnr( CHAIN *Chain, DONOR **Dnr, int *dc, int Res, enum HYBRID 
 		return ( FAILURE );
 	}
 	else {
-		DONOR *Dnr[*dc] = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
-		memcpy(Dnr[*dc], tempDonor, sizeof(DONOR));
+		Dnr[*dc] = ( DONOR * ) ckalloc ( sizeof ( DONOR ) );
+		memcpy(Dnr[*dc], &tempDonor, sizeof(DONOR));
 		( *dc ) ++;
 	}
 	return ( SUCCESS );
