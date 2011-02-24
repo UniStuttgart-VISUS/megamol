@@ -893,8 +893,9 @@ bool PDBLoader::getExtent( core::Call& call) {
     MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call);
     if ( dc == NULL ) return false;
 
-    if ( this->pdbFilenameSlot.IsDirty() ) {
+    if ( this->pdbFilenameSlot.IsDirty() || this->residuesToChain.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
+		this->residuesToChain.ResetDirty();
         this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
