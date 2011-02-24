@@ -279,7 +279,9 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 		return false;
 
     // Load volume texture generation shader
-	if( !loadShader( this->updateVolumeShader, "volume::std::updateVolumeVertex", "volume::std::updateVolumeFragment" ) )
+	if( !loadShader( this->updateVolumeShaderMoleculeVolume, "volume::std::updateVolumeVertex", "volume::std::updateSolventVolumeFragmentDensity" ) )
+		return false;
+	if( !loadShader( this->updateVolumeShaderSolventColor, "volume::std::updateVolumeVertex", "volume::std::updateSolventVolumeFragmentColor" ) )
 		return false;
 
     // Load ray start shader
@@ -922,24 +924,11 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
     this->volScaleInv[1] = 1.0f / this->volScale[1];
     this->volScaleInv[2] = 1.0f / this->volScale[2];
     
-    this->updateVolumeShader.Enable();
-    vislib::math::Vector<float, 3> orig( mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().PeekCoordinates());
-    orig = ( orig + this->translation) * this->scale;
-    vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
-
-    // set shader params
-    glUniform1f( this->updateVolumeShader.ParameterLocation( "filterRadius"), this->volFilterRadius);
-    glUniform1f( this->updateVolumeShader.ParameterLocation( "densityScale"), this->volDensityScale);
-    glUniform3fv( this->updateVolumeShader.ParameterLocation( "scaleVol"), 1, this->volScale);
-    glUniform3fv( this->updateVolumeShader.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
-    glUniform3f( this->updateVolumeShader.ParameterLocation( "invVolRes"), 
-        1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
-    glUniform3fv( this->updateVolumeShader.ParameterLocation( "translate"), 1, orig.PeekComponents() );
-    glUniform1f( this->updateVolumeShader.ParameterLocation( "volSize"), float( this->volumeSize));
-    CHECK_FOR_OGL_ERROR();
 
 
 	float *updatVolumeTextureAtoms = getTemporaryAtomArray(mol->AtomCount()*4, UPDATE_VOLUME);
+	float *updatVolumeTextureColors = getTemporaryAtomArray(mol->AtomCount()*3, UPDATE_COLUME_CLR);
+	const float *atomColorTablePtr = this->atomColorTable.PeekElements();
 
 /*    int atomCnt;
 #pragma omp parallel for
@@ -952,10 +941,12 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
 	MolecularDataCall::Residue **residues = mol->Residues();
 	/* sortierung nach atomen die das lösungsmittel bilden und der rest ... atomIdxSol  läuft rückwärts .. */
-	int atomCntMol = 0, atomCntSol = mol->AtomCount();
-xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
+	int atomCntMol = 0, atomCntSol = 0;
+
+	for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 		MolecularDataCall::Residue *residue = residues[residueIdx];
-		int LastAtomIndx = residue->FirstAtomIndex() + residue->AtomCount();
+		int firstAtomIndex = residue->FirstAtomIndex();
+		int lastAtomIndx = residue->FirstAtomIndex() + residue->AtomCount();
 
 		int i;
 		for( i = 0 ; i < this->solventResidueTypeIds.Count(); i++ ) {
@@ -964,20 +955,25 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 		}
 		if (i < this->solventResidueTypeIds.Count()) {
 			/* solvent (creates volume coloring ...) */
-		/*	#pragma omp parallel for
-			for(int atomIdx = residue->FirstAtomIndex(); atomIdx < LastAtomIndx; atomIdx++) {
-				atomCntSol--;
-				float *atomPos = &updatVolumeTextureAtoms[atomCntSol*4];
+		//	#pragma omp parallel for
+			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
+				atomCntSol++;
+				float *atomPos = &updatVolumeTextureAtoms[(mol->AtomCount()-atomCntSol)*4];
+				float *solventAtomColor = &updatVolumeTextureColors[(mol->AtomCount()-atomCntSol)*3];
 				float *interPos = &this->posInter[atomIdx*3];
+				const float *clr = &atomColorTablePtr[atomIdx*3];
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
 				atomPos[3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() * this->scale;
-			}*/
+				solventAtomColor[0] = clr[0];
+				solventAtomColor[1] = clr[1];
+				solventAtomColor[2] = clr[2];
+			}
 		} else {
 			/* not solvent (creates volume) */
-			#pragma omp parallel for
-			for(int atomIdx = residue->FirstAtomIndex(); atomIdx < LastAtomIndx; atomIdx++) {
+		//	#pragma omp parallel for
+			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
 				float *atomPos = &updatVolumeTextureAtoms[atomCntMol*4];
 				float *interPos = &this->posInter[atomIdx*3];
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
@@ -989,23 +985,64 @@ xyz: for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
 		}
 	}
 
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms);
-    glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
-    for( z = 0; z < this->volumeSize; ++z ) {
-		// TODO: spacial grid to speedup FBO rendering here?
-        // attach texture slice to FBO
-        glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
-        glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
-        // draw all atoms as points, using w for radius
-        glDrawArrays( GL_POINTS, 0, atomCntMol);
-    }
-    glDisableClientState(GL_COLOR_ARRAY);
+	vislib::math::Vector<float, 3> orig( mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().PeekCoordinates());
+	orig = ( orig + this->translation) * this->scale;
+	vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
 
-    this->updateVolumeShader.Disable();
+    this->updateVolumeShaderMoleculeVolume.Enable();
+		// set shader params
+		glUniform1f( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "filterRadius"), this->volFilterRadius);
+		glUniform1f( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "densityScale"), this->volDensityScale);
+		glUniform3fv( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "scaleVol"), 1, this->volScale);
+		glUniform3fv( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
+		glUniform3f( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "invVolRes"), 
+			1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
+		glUniform3fv( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "translate"), 1, orig.PeekComponents() );
+		glUniform1f( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "volSize"), float( this->volumeSize));
+		CHECK_FOR_OGL_ERROR();
 
-	glEnableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms);
+		for( z = 0; z < this->volumeSize; ++z ) {
+			// TODO: spacial grid to speedup FBO rendering here?
+			// attach texture slice to FBO
+			glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
+			glUniform1f( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
+			// draw all atoms as points, using w for radius
+			glDrawArrays( GL_POINTS, 0, atomCntMol);
+		}
+	    glDisableClientState(GL_VERTEX_ARRAY);
+    this->updateVolumeShaderMoleculeVolume.Disable();
+
+	this->updateVolumeShaderSolventColor.Enable();
+		// set shader params
+		glUniform1f( this->updateVolumeShaderSolventColor.ParameterLocation( "filterRadius"), this->volFilterRadius /*1.7*/);
+		glUniform1f( this->updateVolumeShaderSolventColor.ParameterLocation( "densityScale"), this->volDensityScale /*1.0*/);
+		glUniform3fv( this->updateVolumeShaderSolventColor.ParameterLocation( "scaleVol"), 1, this->volScale);
+		glUniform3fv( this->updateVolumeShaderSolventColor.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
+		glUniform3f( this->updateVolumeShaderSolventColor.ParameterLocation( "invVolRes"), 
+			1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
+		glUniform3fv( this->updateVolumeShaderSolventColor.ParameterLocation( "translate"), 1, orig.PeekComponents() );
+		glUniform1f( this->updateVolumeShaderSolventColor.ParameterLocation( "volSize"), float( this->volumeSize));
+		CHECK_FOR_OGL_ERROR();
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms+(mol->AtomCount()-atomCntSol)*4 );
+		//glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms );
+		glColorPointer( 3, GL_FLOAT, 0, updatVolumeTextureColors+(mol->AtomCount()-atomCntSol)*3 );
+		for( z = 0; z < this->volumeSize; ++z ) {
+			// TODO: spacial grid to speedup FBO rendering here?
+			// attach texture slice to FBO
+			glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
+			glUniform1f( this->updateVolumeShaderSolventColor.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
+			// draw all atoms as points, using w for radius
+			glDrawArrays( GL_POINTS, 0, atomCntSol);
+			//glDrawArrays( GL_POINTS, 0, atomCntMol);
+		}
+		glDisableClientState(GL_COLOR_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	this->updateVolumeShaderSolventColor.Disable();
 
     // restore viewport
     glViewport( viewport[0], viewport[1], viewport[2], viewport[3]);

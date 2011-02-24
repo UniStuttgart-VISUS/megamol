@@ -277,7 +277,8 @@ namespace protein {
 		// shader for the clipped spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader clippedSphereShader;
         // shader for volume texture generation
-        vislib::graphics::gl::GLSLShader updateVolumeShader;
+        vislib::graphics::gl::GLSLShader updateVolumeShaderMoleculeVolume;
+        vislib::graphics::gl::GLSLShader updateVolumeShaderSolventColor;
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;
         vislib::graphics::gl::GLSLShader dualIsosurfaceShader;
@@ -359,7 +360,7 @@ namespace protein {
 		
 		// temporary atom array as member - do not use new-operator inside render()-routines!
 		enum TEMPORARY_ATOM_ARRAYS {
-			POS_0, POS_1, POS_INTER, UPDATE_VOLUME,
+			POS_0, POS_1, POS_INTER, UPDATE_VOLUME, UPDATE_COLUME_CLR,
 			TEMPORARY_ATOM_ARRAYS_CNT
 		};
 		float *temporaryAtomArray[TEMPORARY_ATOM_ARRAYS_CNT];
