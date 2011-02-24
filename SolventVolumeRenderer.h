@@ -183,7 +183,13 @@ namespace protein {
 		 * @param boundingbox The bounding box.
 		 */
         void RenderVolume( vislib::math::Cuboid<float> boundingbox);
-		
+
+		/*
+		 * Render the molecular data in stick mode.
+		 * Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
+		 */
+		void RenderStickSolvent( const MolecularDataCall *mol, const float *atomPos);
+
 		/**
          * Write the parameters of the ray to the textures.
 		 *
@@ -226,7 +232,7 @@ namespace protein {
 		/** callee slot */
 		megamol::core::CalleeSlot callFrameCalleeSlot;
 		/** caller slot */
-		megamol::core::CallerSlot protRendererCallerSlot;
+	//	megamol::core::CallerSlot protRendererCallerSlot;
         /** The volume data callee slot */
         megamol::core::CalleeSlot dataOutSlot;
 		
@@ -256,6 +262,8 @@ namespace protein {
         megamol::core::param::ParamSlot volClipPlaneOpacityParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
+        /** parameter slot for stick radius */
+        megamol::core::param::ParamSlot stickRadiusParam;
 
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
@@ -369,6 +377,8 @@ namespace protein {
 				temporaryAtomArray[arr] = new float[atomCount];
 			return temporaryAtomArray[arr];
 		}
+		// TODO: this is the nicer way ...
+		vislib::Array<float> vertSpheres, vertCylinders, quatCylinders, inParaCylinders, color1Cylinders, color2Cylinders;
 
         bool forceUpdateVolumeTexture;
 	};
