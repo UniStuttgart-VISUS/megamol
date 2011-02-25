@@ -1040,6 +1040,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
     ARY_SAFE_DELETE(volume);
 
 
+    vislib::sys::Log::DefaultLog.WriteInfo("job done: (%u,%u,%u)", sjd->gridX, sjd->gridY, sjd->gridZ);
     sjd->Result.done = true;
 
     return 0;

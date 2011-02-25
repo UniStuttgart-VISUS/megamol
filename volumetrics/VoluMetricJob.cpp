@@ -256,6 +256,7 @@ DWORD VoluMetricJob::Run(void *userData) {
         vislib::sys::ConsoleProgressBar pb;
         pb.Start("Computing Frame", divX * divY * divZ);
 
+        vislib::sys::Log::DefaultLog.WriteInfo("Grid: %ux%ux%u", divX, divY, divZ);
 		for (int x = 0; x < divX; x++) {
 			for (int y = 0; y < divY; y++) {
             //for (int y = 0; y < 1; y++) {
@@ -467,22 +468,52 @@ bool VoluMetricJob::doBordersTouch(BorderVoxelArray &border1, BorderVoxelArray &
     return false;
 }
 
-VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
-                                 int i, int j, int k, int l) {
-    if (globalSurfaceIDs[k][l] < globalSurfaceIDs[i][j]) {
-        globalSurfaceIDs[i][j] = globalSurfaceIDs[k][l];
-    } else {
-        globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
-    }
-}
+//VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
+//                                 int i, int j, int k, int l) {
+//    vislib::sys::Log::DefaultLog.WriteInfo("joined global IDs %u and %u", globalSurfaceIDs[i][j], globalSurfaceIDs[k][l]);
+//    if (globalSurfaceIDs[k][l] < globalSurfaceIDs[i][j]) {
+//        globalSurfaceIDs[i][j] = globalSurfaceIDs[k][l];
+//    } else {
+//        globalSurfaceIDs[k][l] = globalSurfaceIDs[i][j];
+//    }
+//}
 
 VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<SubJobData*> &subJobDataList,
                                                     int i, int j, int k, int l) {
+    vislib::sys::Log::DefaultLog.WriteInfo("joining global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
+        subJobDataList[i]->gridX, subJobDataList[i]->gridY, subJobDataList[i]->gridZ,
+        i, j, subJobDataList[i]->Result.surfaces[j].globalID,
+        subJobDataList[k]->gridX, subJobDataList[k]->gridY, subJobDataList[k]->gridZ,
+        k, l, subJobDataList[k]->Result.surfaces[l].globalID);
+
+    unsigned int src, dst;
+
     if (subJobDataList[k]->Result.surfaces[l].globalID < subJobDataList[i]->Result.surfaces[j].globalID) {
-        subJobDataList[i]->Result.surfaces[j].globalID = subJobDataList[k]->Result.surfaces[l].globalID;
+        //subJobDataList[i]->Result.surfaces[j].globalID = subJobDataList[k]->Result.surfaces[l].globalID;
+        src = subJobDataList[k]->Result.surfaces[l].globalID;
+        dst = subJobDataList[i]->Result.surfaces[j].globalID;
     } else {
-        subJobDataList[k]->Result.surfaces[l].globalID = subJobDataList[i]->Result.surfaces[j].globalID;
+        //subJobDataList[k]->Result.surfaces[l].globalID = subJobDataList[i]->Result.surfaces[j].globalID;
+        src = subJobDataList[i]->Result.surfaces[j].globalID;
+        dst = subJobDataList[k]->Result.surfaces[l].globalID;
     }
+
+    for (int x = 0; x < subJobDataList.Count(); x++) {
+        if (subJobDataList[x]->Result.done) {
+            for (int y = 0; y < subJobDataList[x]->Result.surfaces.Count(); y++) {
+                if (subJobDataList[x]->Result.surfaces[y].globalID == dst) {
+                    subJobDataList[x]->Result.surfaces[y].globalID = src;
+                }
+            }
+        }
+    }
+
+
+    vislib::sys::Log::DefaultLog.WriteInfo("joined global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
+        subJobDataList[i]->gridX, subJobDataList[i]->gridY, subJobDataList[i]->gridZ,
+        i, j, subJobDataList[i]->Result.surfaces[j].globalID,
+        subJobDataList[k]->gridX, subJobDataList[k]->gridY, subJobDataList[k]->gridZ,
+        k, l, subJobDataList[k]->Result.surfaces[l].globalID);
 }
 
 VISLIB_FORCEINLINE bool VoluMetricJob::isSurfaceJoinableWithSubvolume(SubJobData *surfJob, int surfIdx, SubJobData *volume) {
@@ -545,7 +576,8 @@ restart:
                 vislib::math::Cuboid<VoxelizerFloat> c = subJobDataList[todos[i]]->Bounds;
                 c.Union(subJobDataList[todos[k]]->Bounds);
                 // are these neighbors or in the same subvolume?
-                if ((i == k) || (c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
+                //if ((i == k) || (c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
+                if ((todos[i] != todos[k]) &&(c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
                                                 + subJobDataList[todos[k]]->Bounds.Volume())) {
                     for (int l = 0; l < subJobDataList[todos[k]]->Result.surfaces.Count(); l++) {
                         //if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
@@ -580,6 +612,15 @@ restart:
                                         // restart
                                         goto restart;
                                     }
+                                } else {
+                                    //ASSERT(false);
+                                    vislib::sys::Log::DefaultLog.WriteInfo("tried to compare (%u,%u,%u)[%u,%u][%u]%s with (%u,%u,%u)[%u,%u][%u]%s",
+                                        subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
+                                        todos[i], j, subJobDataList[todos[i]]->Result.surfaces[j].globalID,
+                                        (subJobDataList[todos[i]]->Result.surfaces[j].border == NULL ? " (NULL)" : ""),
+                                        subJobDataList[todos[k]]->gridX, subJobDataList[todos[k]]->gridY, subJobDataList[todos[k]]->gridZ,
+                                        todos[k], l, subJobDataList[todos[k]]->Result.surfaces[l].globalID,
+                                        (subJobDataList[todos[k]]->Result.surfaces[l].border == NULL ? " (NULL)" : ""));
                                 }
                             }
                         }
@@ -595,6 +636,7 @@ restart:
                 && subJobDataList[todos[i]]->Result.surfaces[j].border->Count() > 0) {
                 // TODO: destroy border geometry in cells ALL of whose neighbors are already processed.
                 int numProcessed = 0;
+
                 for (int k = 0; k < 6; k++) {
                     int x = subJobDataList[todos[i]]->gridX + TetraVoxelizer::moreNeighbors[k].X();
                     int y = subJobDataList[todos[i]]->gridY + TetraVoxelizer::moreNeighbors[k].Y();
@@ -605,8 +647,8 @@ restart:
                         for (int l = 0; l < todos.Count(); l++) {
                             if (subJobDataList[todos[l]]->gridX == x
                                     && subJobDataList[todos[l]]->gridY == y
-                                    && subJobDataList[todos[l]]->gridZ == z
-                                    && subJobDataList[todos[l]]->Result.done) {
+                                    && subJobDataList[todos[l]]->gridZ == z) {
+                                ASSERT(subJobDataList[todos[l]]->Result.done);
                                 numProcessed++;
                                 break;
                             }
@@ -614,13 +656,36 @@ restart:
                     }
                 }
                 if (numProcessed == 6) {
-                    // TODO: does this delete border?
-                    //for (int k = 0; k < subJobDataList[todos[i]]->Result.surfaces[j].border.Count(); k++) {
-                    //    //subJobDataList[todos[i]]->Result.surfaces[j].border[k]->triangles.Clear();
-                    //    SAFE_DELETE(subJobDataList[todos[i]]->Result.surfaces[j].border[k]);
-                    //}
                     subJobDataList[todos[i]]->Result.surfaces[j].border = NULL;//->Clear();
+                    vislib::sys::Log::DefaultLog.WriteInfo("deleted border of (%u,%u,%u)[%u,%u][%u]",
+                        subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
+                        todos[i], j, subJobDataList[todos[i]]->Result.surfaces[j].globalID);
                 }
+                //for (int x = subJobDataList[todos[i]]->gridX - 1; x <= subJobDataList[todos[i]]->gridX + 1; x++) {
+                //    for (int y = subJobDataList[todos[i]]->gridY - 1; y <= subJobDataList[todos[i]]->gridY + 1; y++) {
+                //        for (int z = subJobDataList[todos[i]]->gridZ - 1; z <= subJobDataList[todos[i]]->gridZ + 1; z++) {
+                //            if (x == -1 || y == -1 || z == -1 || x >= divX || y >= divY || z >= divZ) {
+                //                numProcessed++;
+                //            } else {
+                //                for (int l = 0; l < todos.Count(); l++) {
+                //                    if (subJobDataList[todos[l]]->gridX == x
+                //                            && subJobDataList[todos[l]]->gridY == y
+                //                            && subJobDataList[todos[l]]->gridZ == z) {
+                //                        ASSERT(subJobDataList[todos[l]]->Result.done);
+                //                        numProcessed++;
+                //                        break;
+                //                    }
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
+                //if (numProcessed == 26) {
+                //    vislib::sys::Log::DefaultLog.WriteInfo("deleted border of (%u,%u,%u)[%u,%u][%u]",
+                //        subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
+                //        i, j, subJobDataList[todos[i]]->Result.surfaces[j].globalID);
+                //    subJobDataList[todos[i]]->Result.surfaces[j].border = NULL;
+                //}
             }
         }
     }
