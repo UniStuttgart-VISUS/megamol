@@ -279,7 +279,7 @@ namespace protein {
 		vislib::Array<int> solventResidueTypeIds;
 
 		// shader for the spheres (raycasting view)
-		vislib::graphics::gl::GLSLShader sphereShader;
+		vislib::graphics::gl::GLSLShader sphereSolventShader;
 		// shader for the cylinders (raycasting view)
 		vislib::graphics::gl::GLSLShader cylinderShader;
 		// shader for the clipped spheres (raycasting view)
