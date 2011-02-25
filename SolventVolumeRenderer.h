@@ -188,7 +188,7 @@ namespace protein {
 		 * Render the molecular data in stick mode.
 		 * Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
 		 */
-		void RenderStickSolvent( const MolecularDataCall *mol, const float *atomPos);
+		void RenderStickSolvent( /*const*/ MolecularDataCall *mol, const float *atomPos);
 
 		/**
          * Write the parameters of the ray to the textures.

@@ -618,7 +618,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 /*
  * Render the molecular data in stick mode. Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
  */
-void protein::SolventVolumeRenderer::RenderStickSolvent( const MolecularDataCall *mol, const float *atomPos) {
+void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularDataCall *mol, const float *atomPos) {
 	// ----- prepare stick raycasting -----
 	this->vertSpheres.SetCount( mol->AtomCount() * 4 );
 	this->vertCylinders.SetCount( mol->ConnectionCount() * 4);
@@ -708,10 +708,14 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( const MolecularDataCall
 	viewportStuff[2] = 2.0f / viewportStuff[2];
 	viewportStuff[3] = 2.0f / viewportStuff[3];
 
-/*	// volume texture to look up densities ...
+	// volume texture to look up densities ...
 	glActiveTexture( GL_TEXTURE0);
 	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
-	CHECK_FOR_OGL_ERROR();*/
+	CHECK_FOR_OGL_ERROR();
+
+	vislib::math::Cuboid<float> bbox;
+	bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+	vislib::math::Vector<float, 3> invBBoxDimension(1/bbox.Width(), 1/bbox.Height(), 1/bbox.Depth());
 
 	// enable sphere shader
 	this->sphereSolventShader.Enable();
@@ -722,6 +726,9 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( const MolecularDataCall
 	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
 	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
 	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	glUniform1iARB(this->sphereSolventShader.ParameterLocation("volumeSampler"), 0);
+	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
+	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
 	// set vertex and color pointers and draw them
 	glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
 	glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements()); 
