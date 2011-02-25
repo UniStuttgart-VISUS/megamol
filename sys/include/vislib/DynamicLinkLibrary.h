@@ -99,6 +99,10 @@ namespace sys {
          *                              dynamic modules should not be resolved
          *                              by loading the other dynamic modules.
          *                              (Ignored on Linux platforms)
+         * @param alternateSearchPath If set to true an alternative search
+         *                            pattern for dependencies is used.
+         *                            Consult the os-dependent documentation
+         *                            for further information.
          *
          * @return true in case of success, false, if the library could not be 
          *         loaded.
@@ -106,7 +110,8 @@ namespace sys {
          * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
          */
-        bool Load(const char *moduleName, bool dontResolveReferences = false);
+        bool Load(const char *moduleName, bool dontResolveReferences = false,
+            bool alternateSearchPath = false);
 
         /**
          * Loads the library designated by the path 'moduleName'.
@@ -118,6 +123,10 @@ namespace sys {
          *                              dynamic modules should not be resolved
          *                              by loading the other dynamic modules.
          *                              (Ignored on Linux platforms)
+         * @param alternateSearchPath If set to true an alternative search
+         *                            pattern for dependencies is used.
+         *                            Consult the os-dependent documentation
+         *                            for further information.
          *
          * @return true in case of success, false, if the library could not be 
          *         loaded.
@@ -125,7 +134,8 @@ namespace sys {
          * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
          */
-        bool Load(const wchar_t *moduleName, bool dontResolveReferences = false);
+        bool Load(const wchar_t *moduleName, bool dontResolveReferences = false,
+            bool alternateSearchPath = false);
 
     private:
 

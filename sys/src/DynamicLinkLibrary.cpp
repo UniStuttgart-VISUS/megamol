@@ -15,6 +15,7 @@
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/Path.h"
 
 
 /*
@@ -75,40 +76,57 @@ void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
 /*
  * vislib::sys::DynamicLinkLibrary::Load
  */
-bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName, bool dontResolveReferences) {
+bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
+        bool dontResolveReferences, bool alternateSearchPath) {
     if (this->IsLoaded()) {
         throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    return ((this->hModule = ::LoadLibraryExA(moduleName, NULL, 
-        (dontResolveReferences) ? DONT_RESOLVE_DLL_REFERENCES : 0)) != NULL);
+    DWORD flags = 0;
+    UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
+    if (dontResolveReferences) flags |= DONT_RESOLVE_DLL_REFERENCES;
+    if (alternateSearchPath && vislib::sys::Path::IsAbsolute(moduleName)) {
+        flags |= LOAD_WITH_ALTERED_SEARCH_PATH;
+    }
+    this->hModule = ::LoadLibraryExA(moduleName, NULL, flags);
+    ::SetErrorMode(oldErrorMode);
 #else /* _WIN32 */
     // TODO: Error handling using dlerror
     // Using an exception is probably not useful because of the error-code
     // incompatibility.
-    return ((this->hModule = ::dlopen(moduleName, RTLD_LAZY)) != NULL);
+    this->hModule = ::dlopen(moduleName, RTLD_LAZY);
 #endif /* _WIN32 */
+    return (this->hModule != NULL);
 }
 
 
 /*
  * vislib::sys::DynamicLinkLibrary::Load
  */
-bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName, bool dontResolveReferences) {
+bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
+        bool dontResolveReferences, bool alternateSearchPath) {
     if (this->IsLoaded()) {
         throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.", __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    return ((this->hModule = ::LoadLibraryExW(moduleName, NULL, 
-        (dontResolveReferences) ? DONT_RESOLVE_DLL_REFERENCES : 0)) != NULL);
+    DWORD flags = 0;
+    UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
+    if (dontResolveReferences) flags |= DONT_RESOLVE_DLL_REFERENCES;
+    if (alternateSearchPath && vislib::sys::Path::IsAbsolute(moduleName)) {
+        flags |= LOAD_WITH_ALTERED_SEARCH_PATH;
+    }
+    this->hModule = ::LoadLibraryExW(moduleName, NULL, flags);
+    ::SetErrorMode(oldErrorMode);
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefmäßige Unicode-API.
-    return this->Load(W2A(moduleName));
+    if (!this->Load(W2A(moduleName))) return false;
 #endif /* _WIN32 */
+    return (this->hModule!= NULL);
+
 }
 
 
