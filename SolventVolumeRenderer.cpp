@@ -227,11 +227,11 @@ bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader
 	ShaderSource fragSrc;
 
 	if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( vert, vertSrc ) ) {
-		Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for shader '%s'", this->ClassName(), vert );
+		Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for shader '%s'", this->ClassName(), vert.PeekBuffer() );
 		return false;
 	}
 	if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( frag, fragSrc ) ) {
-		Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for shader '%s'", this->ClassName(), frag );
+		Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for shader '%s'", this->ClassName(), frag.PeekBuffer() );
 		return false;
 	}
 	try {
@@ -272,7 +272,7 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 	ShaderSource fragSrc;
 
 	// Load sphere shader
-	if( !loadShader( this->sphereShader, "protein::std::sphereVertex", "protein::std::sphereFragment" ) )
+	if( !loadShader( this->sphereSolventShader, "protein::std::sphereSolventVertex", "protein::std::sphereFragment" ) )
 		return false;
 
 	// Load clipped sphere shader
@@ -708,23 +708,29 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( const MolecularDataCall
 	viewportStuff[2] = 2.0f / viewportStuff[2];
 	viewportStuff[3] = 2.0f / viewportStuff[3];
 
+/*	// volume texture to look up densities ...
+	glActiveTexture( GL_TEXTURE0);
+	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+	CHECK_FOR_OGL_ERROR();*/
+
 	// enable sphere shader
-	this->sphereShader.Enable();
+	this->sphereSolventShader.Enable();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	// set shader variables
-	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	glUniform4fvARB(this->sphereSolventShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 	// set vertex and color pointers and draw them
 	glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
 	glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements()); 
 	glDrawArrays( GL_POINTS, 0, mol->AtomCount());
 	// disable sphere shader
-	this->sphereShader.Disable();
+	this->sphereSolventShader.Disable();
 
-
+	// TEST: no cylinders for now ...
+#if 0
 	// enable cylinder shader
 	this->cylinderShader.Enable();
 	// set shader variables
@@ -758,6 +764,7 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( const MolecularDataCall
 	glDisableClientState(GL_VERTEX_ARRAY);
 	// disable cylinder shader
 	this->cylinderShader.Disable();
+#endif
 }
 
 
