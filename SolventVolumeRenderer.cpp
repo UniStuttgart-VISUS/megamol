@@ -499,34 +499,34 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 				mol->SetFrameID(static_cast<int>( callTime) + 1);
 			else
 				mol->SetFrameID(static_cast<int>( callTime));
-			if (!(*mol)(MolecularDataCall::CallForGetData)) {
-				//delete[] pos0;
+			if( !(*mol)(MolecularDataCall::CallForGetData) )
 				return false;
-			}
 			pos1 = getTemporaryAtomArray(mol->AtomCount()*3, POS_1);// new float[mol->AtomCount() * 3];
 			memcpy( pos1, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
 			// interpolate atom positions between frames
 			posInter = getTemporaryAtomArray(mol->AtomCount()*3, POS_INTER); // new float[mol->AtomCount() * 3];
 			float inter = callTime - static_cast<float>(static_cast<int>( callTime));
-			float threshold = vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
-				vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
-				mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
+
+			const vislib::math::Cuboid<float>& bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+			// wg zyklischer Randbedingung ...
+			float threshold = vislib::math::Min( bbox.Width(), vislib::math::Min( bbox.Height(), bbox.Depth())) * 0.4f; // 0.75f;
+
 #pragma omp parallel for
-			for( cnt = 0; cnt < int(mol->AtomCount()); ++cnt ) {
-				if( std::sqrt( std::pow( pos0[3*cnt+0] - pos1[3*cnt+0], 2) +
-						std::pow( pos0[3*cnt+1] - pos1[3*cnt+1], 2) +
-						std::pow( pos0[3*cnt+2] - pos1[3*cnt+2], 2) ) < threshold ) {
-					posInter[3*cnt+0] = (1.0f - inter) * pos0[3*cnt+0] + inter * pos1[3*cnt+0];
-					posInter[3*cnt+1] = (1.0f - inter) * pos0[3*cnt+1] + inter * pos1[3*cnt+1];
-					posInter[3*cnt+2] = (1.0f - inter) * pos0[3*cnt+2] + inter * pos1[3*cnt+2];
+			for( cnt = 0; cnt < mol->AtomCount()*3; cnt += 3 ) {
+				if( std::sqrt( std::pow( pos0[cnt+0] - pos1[cnt+0], 2) +
+						std::pow( pos0[cnt+1] - pos1[cnt+1], 2) +
+						std::pow( pos0[cnt+2] - pos1[cnt+2], 2) ) < threshold ) {
+					posInter[cnt+0] = (1.0f - inter) * pos0[cnt+0] + inter * pos1[cnt+0];
+					posInter[cnt+1] = (1.0f - inter) * pos0[cnt+1] + inter * pos1[cnt+1];
+					posInter[cnt+2] = (1.0f - inter) * pos0[cnt+2] + inter * pos1[cnt+2];
 				} else if( inter < 0.5f ) {
-					posInter[3*cnt+0] = pos0[3*cnt+0];
-					posInter[3*cnt+1] = pos0[3*cnt+1];
-					posInter[3*cnt+2] = pos0[3*cnt+2];
+					posInter[cnt+0] = pos0[cnt+0];
+					posInter[cnt+1] = pos0[cnt+1];
+					posInter[cnt+2] = pos0[cnt+2];
 				} else {
-					posInter[3*cnt+0] = pos1[3*cnt+0];
-					posInter[3*cnt+1] = pos1[3*cnt+1];
-					posInter[3*cnt+2] = pos1[3*cnt+2];
+					posInter[cnt+0] = pos1[cnt+0];
+					posInter[cnt+1] = pos1[cnt+1];
+					posInter[cnt+2] = pos1[cnt+2];
 				}
 			}
 		} else {
@@ -635,13 +635,13 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	int cnt;
 
 	// copy atom pos and radius to vertex array
+	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value();
 #pragma omp parallel for
 	for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
 		this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
 		this->vertSpheres[4*cnt+1] = atomPos[3*cnt+1];
 		this->vertSpheres[4*cnt+2] = atomPos[3*cnt+2];
-		this->vertSpheres[4*cnt+3] =
-			this->stickRadiusParam.Param<param::FloatParam>()->Value();
+		this->vertSpheres[4*cnt+3] = stickRadius;
 	}
 
 	unsigned int idx0, idx1;
@@ -673,11 +673,12 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 		// compute the absolute position 'position' of the cylinder (center point)
 		position = firstAtomPos + (dir/2.0f);
 
-		this->inParaCylinders[2*cnt] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+		this->inParaCylinders[2*cnt] = stickRadius;
 		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
 
 		// thomasbm: hotfix for jumping molecules near bounding box
-		if(this->inParaCylinders[2*cnt+1] > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+		if(this->inParaCylinders[2*cnt+1] >
+				mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
 			this->inParaCylinders[2*cnt+1] = 0;
 		}
 
@@ -718,8 +719,7 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
 	CHECK_FOR_OGL_ERROR();
 
-	vislib::math::Cuboid<float> bbox;
-	bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+	vislib::math::Cuboid<float> bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
 	vislib::math::Vector<float, 3> invBBoxDimension(1/bbox.Width(), 1/bbox.Height(), 1/bbox.Depth());
 
 	// enable sphere shader
@@ -742,8 +742,7 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	// disable sphere shader
 	this->sphereSolventShader.Disable();
 
-	// TEST: no cylinders for now ...
-#if 1
+
 	// enable cylinder shader
 	this->cylinderSolventShader.Enable();
 	// set shader variables
@@ -781,9 +780,8 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	glDisableClientState(GL_VERTEX_ARRAY);
 	// disable cylinder shader
 	this->cylinderSolventShader.Disable();
-#endif
 
-	glBindTexture( GL_TEXTURE_3D, 0 ); // state aufräumen
+	glBindTexture( GL_TEXTURE_3D, 0 ); // state aufrï¿½umen
 }
 
 
@@ -1156,7 +1154,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	}*/
 
 	MolecularDataCall::Residue **residues = mol->Residues();
-	/* sortierung nach atomen die das lösungsmittel bilden und der rest ... atomIdxSol  läuft rückwärts .. */
+	/* sortierung nach atomen die das lï¿½sungsmittel bilden und der rest ... atomIdxSol  lï¿½uft rï¿½ckwï¿½rts .. */
 	int atomCntMol = 0, atomCntSol = 0;
 
 	for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
