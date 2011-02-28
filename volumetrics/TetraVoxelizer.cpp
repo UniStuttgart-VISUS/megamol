@@ -187,15 +187,16 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
     SIZE_T cells = 0;
     vislib::math::Point<int, 3> p;
     vislib::Array<vislib::math::Point<int, 3> > queue;
-    queue.SetCapacityIncrement(32);
+    queue.SetCapacityIncrement(128);
     queue.Add(vislib::math::Point<int, 3>(x, y, z));
     while (queue.Count() > 0) {
         p = queue.Last();
         queue.RemoveLast();
         FatVoxel &f = theVolume[(p.Z() * sjd->resY + p.Y()) * sjd->resX + p.X()];
-        if (f.mcCase == 255 && f.consumedTriangles == 0) {
+		ASSERT(f.mcCase == 255 && f.consumedTriangles < 2);
+        if (f.mcCase == 255 && f.consumedTriangles < 2) {
             cells++;
-            f.consumedTriangles = 1;
+            f.consumedTriangles = 2;
             if (p.X() == 0) {
                 fullFaces |= 1;
             }
@@ -225,8 +226,13 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
                 if ((((moreNeighbors[ni].X() < 0) && (p.X() > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (p.X() < sjd->resX - 2))) &&
                     (((moreNeighbors[ni].Y() < 0) && (p.Y() > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (p.Y() < sjd->resY - 2))) &&
                     (((moreNeighbors[ni].Z() < 0) && (p.Z() > 0)) || (moreNeighbors[ni].Z() == 0) || ((moreNeighbors[ni].Z() > 0) && (p.Z() < sjd->resZ - 2)))) {
-                        queue.Add(vislib::math::Point<int, 3>(p.X() + moreNeighbors[ni].X(),
-                            p.Y() + moreNeighbors[ni].Y(), p.Z() + moreNeighbors[ni].Z()));
+						FatVoxel &f2 = theVolume[((p.Z() + moreNeighbors[ni].Z()) * sjd->resY
+							+ p.Y() + moreNeighbors[ni].Y()) * sjd->resX + p.X() + moreNeighbors[ni].X()];
+						if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
+							f2.consumedTriangles = 1;
+							queue.Add(vislib::math::Point<int, 3>(p.X() + moreNeighbors[ni].X(),
+								p.Y() + moreNeighbors[ni].Y(), p.Z() + moreNeighbors[ni].Z()));
+						}
                 }
             }
         }
@@ -257,9 +263,13 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                         || (cornerNeighbors[a][b].Y() == 0) || ((cornerNeighbors[a][b].Y() > 0) && (y < sjd->resY - 2))) &&
                     (((cornerNeighbors[a][b].Z() < 0) && (z > 0))
                         || (cornerNeighbors[a][b].Z() == 0) || ((cornerNeighbors[a][b].Z() > 0) && (z < sjd->resZ - 2)))) {
-                            surf.volume +=
-                                growVolume(theVolume, surf.fullFaces, x + cornerNeighbors[a][b].X(),
-                                y + cornerNeighbors[a][b].Y(), z + cornerNeighbors[a][b].Z());
+							FatVoxel &f2 = theVolume[((z + cornerNeighbors[a][b].Z()) * sjd->resY 
+								+ (y + cornerNeighbors[a][b].Y())) * sjd->resX + x + cornerNeighbors[a][b].X()];
+							if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
+								surf.volume +=
+									growVolume(theVolume, surf.fullFaces, x + cornerNeighbors[a][b].X(),
+									y + cornerNeighbors[a][b].Y(), z + cornerNeighbors[a][b].Z());
+							}
                 }
             }
         }
