@@ -82,6 +82,11 @@ namespace volumetrics {
                 || (z == 0) || (z == sjd->resZ - 2);
         }
 
+        void ProcessTriangle(vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> &sstI,
+            FatVoxel &f, unsigned char triIdx, Surface &surf,
+            unsigned int x, unsigned int y, unsigned int z);
+
+
 		bool terminate;
 
 		SubJobData *sjd;

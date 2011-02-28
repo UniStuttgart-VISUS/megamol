@@ -301,39 +301,8 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
         // is this part of the in-cell surface?
         if (inCellSurf & (1 << c)) {
             sstI.SetPointer(f.triangles + 3 * 3 * c);
-            //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-            //    "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
-            if ((f.consumedTriangles & (1 << c)) == 0) {
-                //surf.Add(sstI.GetPointer());
-                if (sjd->storeMesh) {
-                    surf.mesh.SetCount(surf.mesh.Count() + 9);
-                    sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() + surf.mesh.Count() - 9));
-                    sstTemp = sstI;
-                }
-                surf.surface += sstI.Area<VoxelizerFloat>();
-                surf.volume += f.volumes[c];
-                if (isBorder(x, y, z)) {
-                    if (f.borderVoxel == NULL) {
-                        f.borderVoxel = new BorderVoxel();
-                        f.borderVoxel->x = x + sjd->offsetX;
-                        f.borderVoxel->y = y + sjd->offsetY;
-                        f.borderVoxel->z = z + sjd->offsetZ;
-                        f.borderVoxel->triangles.AssertCapacity(f.numTriangles * 9);
-                        surf.border->Add(f.borderVoxel);
-                    }
-                    f.borderVoxel->triangles.SetCount(f.borderVoxel->triangles.Count() + 9);
-                    sstTemp.SetPointer(const_cast<VoxelizerFloat *>(f.borderVoxel->triangles.PeekElements()
-                        + f.borderVoxel->triangles.Count() - 9));
-                    sstTemp = sstI;
-                }
-                f.consumedTriangles |= (1 << c);
-#ifdef ULTRADEBUG
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-                    "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]",
-                    vislib::sys::Thread::CurrentID(), x, y, z, c, f.numTriangles);
-                debugPrintTriangle(sstI);
-#endif /* ULTRADEBUG */
-            }
+            ProcessTriangle(sstI, f, c, surf, x, y, z);
+
             for (int ni = 0; ni < 6; ni++) {
                 if ((((moreNeighbors[ni].X() < 0) && (x > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (x < sjd->resX - 2))) &&
                     (((moreNeighbors[ni].Y() < 0) && (y > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (y < sjd->resY - 2))) &&
@@ -351,58 +320,20 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                 debugPrintTriangle(sst2);
                                 debugPrintTriangle(sstI);
 #endif /* ULTRADEBUG */
-                                //if (sst2.HasCommonEdge(sstI)) {
                                 if (Dowel::HaveCommonEdge(sst2, sstI)) {
-                                    n.consumedTriangles |= (1 << m);
 #ifdef ULTRADEBUG
                                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                                         "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
-                                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-                                        "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]",
-                                        vislib::sys::Thread::CurrentID(), x + moreNeighbors[ni].X(),
-                                        y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z(), m, n.numTriangles);
 #endif /* ULTRADEBUG */
-                                    //surf.Add(sst2.GetPointer());
-                                    if (sjd->storeMesh) {
-                                        surf.mesh.SetCount(surf.mesh.Count() + 9);
-                                        sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() 
-                                            + surf.mesh.Count() - 9));
-                                        sstTemp = sst2;
-                                    }
-                                    surf.surface += sst2.Area<VoxelizerFloat>();
-                                    surf.volume += n.volumes[m];
-                                    if (isBorder(x + moreNeighbors[ni].X(), y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z())) {
-                                        if (n.borderVoxel == NULL) {
-                                            n.borderVoxel = new BorderVoxel();
-                                            n.borderVoxel->x = x + moreNeighbors[ni].X() + sjd->offsetX;
-                                            n.borderVoxel->y = y + moreNeighbors[ni].Y() + sjd->offsetY;
-                                            n.borderVoxel->z = z + moreNeighbors[ni].Z() + sjd->offsetZ;
-                                            n.borderVoxel->triangles.AssertCapacity(n.numTriangles * 9);
-                                            surf.border->Add(n.borderVoxel);
-                                        }
-                                        n.borderVoxel->triangles.SetCount(n.borderVoxel->triangles.Count() + 9);
-                                        sstTemp.SetPointer(const_cast<VoxelizerFloat *>(n.borderVoxel->triangles.PeekElements()
-                                            + n.borderVoxel->triangles.Count() - 9));
-                                        sstTemp = sst2;
-                                    }
-
-                                    //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-                                    //    "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
-                                    //    " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
-                                    //    vislib::sys::Thread::CurrentID(),
-                                    //    x + neighbors[ni].X(), y + neighbors[ni].Y(),
-                                    //    z + neighbors[ni].Z(), m,
-                                    //    MarchingCubeTables::a2ucTriangleConnectionCount[n->mcCase],
-                                    //    sst2.PeekCoordinates()[0][0], sst2.PeekCoordinates()[0][1], sst2.PeekCoordinates()[0][2],
-                                    //    sst2.PeekCoordinates()[1][0], sst2.PeekCoordinates()[1][1], sst2.PeekCoordinates()[1][2],
-                                    //    sst2.PeekCoordinates()[2][0], sst2.PeekCoordinates()[2][1], sst2.PeekCoordinates()[2][2]);
+                                    ProcessTriangle(sst2, n, m, surf, x + moreNeighbors[ni].X(),
+                                        y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z());
                                     cellFIFO.Append(vislib::math::Point<unsigned int, 4>(
                                         x + moreNeighbors[ni].X(),
                                         y + moreNeighbors[ni].Y(),
                                         z + moreNeighbors[ni].Z(), m));
                                 }
                             }
-                        }       
+                        }
                 }
             }
         }
@@ -817,6 +748,50 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
         }
     }
 }
+
+
+VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> &sstI,
+                                                        FatVoxel &f, unsigned char triIdx, Surface &surf,
+                                                        unsigned int x, unsigned int y, unsigned int z) {
+    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sstTemp(f.triangles + 3 * 3 * triIdx);
+    
+    if ((f.consumedTriangles & (1 << triIdx)) == 0) {
+        if (sjd->storeMesh) {
+            surf.mesh.SetCount(surf.mesh.Count() + 9);
+            sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() + surf.mesh.Count() - 9));
+            sstTemp = sstI;
+        }
+        surf.surface += sstI.Area<VoxelizerFloat>();
+        surf.volume += f.volumes[triIdx];
+        if (isBorder(x, y, z)) {
+            if (f.borderVoxel == NULL) {
+                f.borderVoxel = new BorderVoxel();
+                f.borderVoxel->x = x + sjd->offsetX;
+                f.borderVoxel->y = y + sjd->offsetY;
+                f.borderVoxel->z = z + sjd->offsetZ;
+                f.borderVoxel->triangles.AssertCapacity(f.numTriangles * 9);
+                surf.border->Add(f.borderVoxel);
+            }
+            f.borderVoxel->triangles.SetCount(f.borderVoxel->triangles.Count() + 9);
+            sstTemp.SetPointer(const_cast<VoxelizerFloat *>(f.borderVoxel->triangles.PeekElements()
+                + f.borderVoxel->triangles.Count() - 9));
+            sstTemp = sstI;
+        }
+        f.consumedTriangles |= (1 << triIdx);
+#ifdef ULTRADEBUG
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
+        " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
+        vislib::sys::Thread::CurrentID(),
+        x, y, z, triIdx,
+        MarchingCubeTables::a2ucTriangleConnectionCount[n->mcCase],
+        sstI.PeekCoordinates()[0][0], sstI.PeekCoordinates()[0][1], sstI.PeekCoordinates()[0][2],
+        sstI.PeekCoordinates()[1][0], sstI.PeekCoordinates()[1][1], sstI.PeekCoordinates()[1][2],
+        sstI.PeekCoordinates()[2][0], sstI.PeekCoordinates()[2][1], sstI.PeekCoordinates()[2][2]);
+#endif /* ULTRADEBUG */
+    }
+}
+
 
 DWORD TetraVoxelizer::Run(void *userData) {
     using vislib::sys::Log;
