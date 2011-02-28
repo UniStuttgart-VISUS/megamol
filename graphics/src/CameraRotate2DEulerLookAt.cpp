@@ -13,6 +13,7 @@
 #include "vislib/Quaternion.h"
 #include "vislib/Trace.h"
 #include <cmath>
+#include <climits>
 
 
 /*
