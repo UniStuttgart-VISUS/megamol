@@ -480,11 +480,13 @@ bool VoluMetricJob::doBordersTouch(BorderVoxelArray &border1, BorderVoxelArray &
 
 VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<SubJobData*> &subJobDataList,
                                                     int i, int j, int k, int l) {
+#ifdef ULTRADEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("joining global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
         subJobDataList[i]->gridX, subJobDataList[i]->gridY, subJobDataList[i]->gridZ,
         i, j, subJobDataList[i]->Result.surfaces[j].globalID,
         subJobDataList[k]->gridX, subJobDataList[k]->gridY, subJobDataList[k]->gridZ,
         k, l, subJobDataList[k]->Result.surfaces[l].globalID);
+#endif ULTRADEBUG
 
     unsigned int src, dst;
 
@@ -508,12 +510,13 @@ VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<SubJobData*> &
         }
     }
 
-
+#ifdef ULTRADEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("joined global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
         subJobDataList[i]->gridX, subJobDataList[i]->gridY, subJobDataList[i]->gridZ,
         i, j, subJobDataList[i]->Result.surfaces[j].globalID,
         subJobDataList[k]->gridX, subJobDataList[k]->gridY, subJobDataList[k]->gridZ,
         k, l, subJobDataList[k]->Result.surfaces[l].globalID);
+#endif
 }
 
 VISLIB_FORCEINLINE bool VoluMetricJob::isSurfaceJoinableWithSubvolume(SubJobData *surfJob, int surfIdx, SubJobData *volume) {
@@ -657,9 +660,11 @@ restart:
                 }
                 if (numProcessed == 6) {
                     subJobDataList[todos[i]]->Result.surfaces[j].border = NULL;//->Clear();
+#ifdef ULTRADEBUG
                     vislib::sys::Log::DefaultLog.WriteInfo("deleted border of (%u,%u,%u)[%u,%u][%u]",
                         subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
                         todos[i], j, subJobDataList[todos[i]]->Result.surfaces[j].globalID);
+#endif /* ULTRADEBUG */
                 }
                 //for (int x = subJobDataList[todos[i]]->gridX - 1; x <= subJobDataList[todos[i]]->gridX + 1; x++) {
                 //    for (int y = subJobDataList[todos[i]]->gridY - 1; y <= subJobDataList[todos[i]]->gridY + 1; y++) {
