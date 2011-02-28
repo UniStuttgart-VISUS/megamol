@@ -417,6 +417,7 @@
     <ClCompile Include="src\DiscoveryListener.cpp" />
     <ClCompile Include="src\DiscoveryService.cpp" />
     <ClCompile Include="src\messagereceiver.cpp" />
+    <ClCompile Include="src\NodeIdentifier.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AbstractClientNode.h" />
@@ -427,6 +428,7 @@
     <ClInclude Include="include\vislib\clustermessages.h" />
     <ClInclude Include="include\vislib\DiscoveryListener.h" />
     <ClInclude Include="include\vislib\DiscoveryService.h" />
+    <ClInclude Include="include\vislib\NodeIdentifier.h" />
     <ClInclude Include="src\messagereceiver.h" />
   </ItemGroup>
   <ItemGroup>

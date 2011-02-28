@@ -40,7 +40,7 @@ namespace vislib {
      * ArrayAllocator for A and allocate the array using new[].
      */
     template<class T, class L = NullLockable, class A = SingleAllocator<T> >
-            class PtrArray : public Array<T *, L, ArrayElementPtrCtor<T, A> > {
+    class PtrArray : public Array<T *, L, ArrayElementPtrCtor<T, A> > {
 
     protected:
 
