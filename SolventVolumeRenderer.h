@@ -278,10 +278,13 @@ namespace protein {
         megamol::core::param::ParamSlot solventResidues;
 		vislib::Array<int> solventResidueTypeIds;
 
+		/** threshold of visible solvent-molecules ... */
+		megamol::core::param::ParamSlot solventMolThreshold;
+
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereSolventShader;
 		// shader for the cylinders (raycasting view)
-		vislib::graphics::gl::GLSLShader cylinderShader;
+		vislib::graphics::gl::GLSLShader cylinderSolventShader;
 		// shader for the clipped spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader clippedSphereShader;
         // shader for volume texture generation

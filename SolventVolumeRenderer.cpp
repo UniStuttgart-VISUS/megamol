@@ -74,6 +74,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
 		solventResidues("solventResidues", ";-list of residue names which compose the solvent"),
 		stickRadiusParam( "stickRadius", "The radius for stick rendering"),
+		solventMolThreshold( "solventMolThreshold", "threshold of visible solvent-molecules" ),
 		currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
 		volFilterRadius( 1.75f), volDensityScale( 1.0f),
 		width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
@@ -176,6 +177,10 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	this->stickRadiusParam.SetParameter(new param::FloatParam( 0.3f, 0.0f));
 	this->MakeSlotAvailable( &this->stickRadiusParam);
 
+	// 
+	this->solventMolThreshold.SetParameter(new param::FloatParam( 0.1f, 0.0f));
+	this->MakeSlotAvailable( &this->solventMolThreshold);
+
 	// make all slots available
 	this->MakeSlotAvailable( &this->volIsoValue1Param );
 	this->MakeSlotAvailable( &this->volIsoValue2Param );
@@ -275,12 +280,12 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 	if( !loadShader( this->sphereSolventShader, "protein::std::sphereSolventVertex", "protein::std::sphereFragment" ) )
 		return false;
 
-	// Load clipped sphere shader
+	// Load clipped sphere shader -> TODO: solvent version?
 	if( !loadShader( this->clippedSphereShader, "protein::std::sphereClipPlaneVertex", "protein::std::sphereClipPlaneFragment" ) )
 		return false;
 
 	// Load cylinder shader
-	if( !loadShader( this->cylinderShader, "protein::std::cylinderVertex", "protein::std::cylinderFragment" ) )
+	if( !loadShader( this->cylinderSolventShader, "protein::std::cylinderSolventVertex", "protein::std::cylinderFragment" ) )
 		return false;
 
 	// Load volume texture generation shader
@@ -729,6 +734,7 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	glUniform1iARB(this->sphereSolventShader.ParameterLocation("volumeSampler"), 0);
 	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
 	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
+	glUniform1fARB(this->sphereSolventShader.ParameterLocation("solventMolThreshold"), solventMolThreshold.Param<param::FloatParam>()->Value() );
 	// set vertex and color pointers and draw them
 	glVertexPointer( 4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
 	glColorPointer( 3, GL_FLOAT, 0, this->atomColorTable.PeekElements()); 
@@ -737,19 +743,23 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	this->sphereSolventShader.Disable();
 
 	// TEST: no cylinders for now ...
-#if 0
+#if 1
 	// enable cylinder shader
-	this->cylinderShader.Enable();
+	this->cylinderSolventShader.Enable();
 	// set shader variables
-	glUniform4fvARB( this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB( this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB( this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB( this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	glUniform4fvARB( this->cylinderSolventShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	glUniform1iARB(this->cylinderSolventShader.ParameterLocation("volumeSampler"), 0);
+	glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
+	glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
+	glUniform1fARB(this->cylinderSolventShader.ParameterLocation("solventMolThreshold"), solventMolThreshold.Param<param::FloatParam>()->Value() );
 	// get the attribute locations
-	attribLocInParams = glGetAttribLocationARB( this->cylinderShader, "inParams");
-	attribLocQuatC = glGetAttribLocationARB( this->cylinderShader, "quatC");
-	attribLocColor1 = glGetAttribLocationARB( this->cylinderShader, "color1");
-	attribLocColor2 = glGetAttribLocationARB( this->cylinderShader, "color2");
+	attribLocInParams = glGetAttribLocationARB( this->cylinderSolventShader, "inParams");
+	attribLocQuatC = glGetAttribLocationARB( this->cylinderSolventShader, "quatC");
+	attribLocColor1 = glGetAttribLocationARB( this->cylinderSolventShader, "color1");
+	attribLocColor2 = glGetAttribLocationARB( this->cylinderSolventShader, "color2");
 	// enable vertex attribute arrays for the attribute locations
 	glDisableClientState( GL_COLOR_ARRAY);
 	glEnableVertexAttribArrayARB( this->attribLocInParams);
@@ -770,8 +780,10 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	glDisableVertexAttribArrayARB( this->attribLocColor2);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	// disable cylinder shader
-	this->cylinderShader.Disable();
+	this->cylinderSolventShader.Disable();
 #endif
+
+	glBindTexture( GL_TEXTURE_3D, 0 ); // state aufräumen
 }
 
 
