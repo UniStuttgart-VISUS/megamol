@@ -7,13 +7,15 @@
 
 #include "vislib/NodeIdentifier.h"
 
+#include "vislib/assert.h"
+
 
 /*
  * vislib::net::cluster::NodeIdentifier::NodeIdentifier
  */
 vislib::net::cluster::NodeIdentifier::NodeIdentifier(void) {
-    // TODO: Implement
-
+    VLSTACKTRACE("NodeIdentifier::NodeIdentifier", __FILE__, __LINE__);
+    ASSERT(this->IsNull());
 }
 
 

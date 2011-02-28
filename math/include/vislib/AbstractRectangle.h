@@ -350,7 +350,8 @@ namespace math {
          * @param right  The x-coordinate of the right/top point.
          * @param top    The y-coordinate of the right/top point.
          */
-        void Set(const T& left, const T& bottom, const T& right, const T& top) {
+        inline void Set(const T& left, const T& bottom, const T& right, 
+                const T& top) {
             this->bounds[IDX_BOTTOM] = bottom;
             this->bounds[IDX_LEFT] = left;
             this->bounds[IDX_RIGHT] = right;
@@ -364,6 +365,35 @@ namespace math {
          */
         inline void SetBottom(const T& bottom) {
             this->bounds[IDX_BOTTOM] = bottom;
+        }
+
+        /**
+         * Set new rectangle bounds.
+         *
+         * @param left   The x-coordinate of the left/bottom point.
+         * @param bottom The y-coordinate of the left/bottom point.
+         * @param right  The x-coordinate of the right/top point.
+         * @param top    The y-coordinate of the right/top point.
+         */
+        inline void SetFromBounds(const T& left, const T& bottom, 
+                const T& right, const T& top) {
+            this->Set(left, bottom, right, top);
+        }
+
+        /**
+         * Set new rectangle bounds.
+         *
+         * @param left   The x-coordinate of the left/bottom point.
+         * @param bottom The y-coordinate of the left/bottom point.
+         * @param width  The width of the rectangle.
+         * @param height The height of the rectangle.
+         */
+        inline void SetFromSize(const T& left, const T& bottom, 
+                const T& width, const T& height) {
+            this->bounds[IDX_BOTTOM] = bottom;
+            this->bounds[IDX_LEFT] = left;
+            this->bounds[IDX_RIGHT] = left + width;
+            this->bounds[IDX_TOP] = bottom +height;
         }
 
         /**

@@ -30,7 +30,7 @@ namespace cluster {
     public:
 
         /**
-         * Create a new, generic identifier.
+         * Create a new, undeterminate identifier.
          */
         NodeIdentifier(void);
 
@@ -48,6 +48,18 @@ namespace cluster {
          * Dtor.
          */
         ~NodeIdentifier(void);
+
+        /**
+         * Answer whether the identifier is undeterminate, i. e. does not 
+         * represent a node.
+         *
+         * @return true if the identifier is undeterminate, false otherwise.
+         */
+        inline bool IsNull(void) const {
+            VLSTACKTRACE("NodeIdentifier::IsNull", __FILE__, __LINE__);
+            return (this->id.GetIPAddress().IsAny() 
+                && (this->id.GetPort() == 0));
+        }
 
         /**
          * Create a string representation of the ID.
