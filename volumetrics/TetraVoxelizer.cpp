@@ -5,6 +5,7 @@
 #include "vislib/ShallowPoint.h"
 #include "MarchingCubeTables.h"
 #include "vislib/Vector.h"
+#include "VoluMetricJob.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -92,20 +93,24 @@ TetraVoxelizer::~TetraVoxelizer(void) {
 }
 
 bool TetraVoxelizer::CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z) {
-    unsigned int i;
-    bool neg = false, pos = false;
-    VoxelizerFloat f;
+ //   unsigned int i;
+ //   bool neg = false, pos = false;
+ //   VoxelizerFloat f;
 
-    for (i = 0; i < 8; i++) {
-        f = theVolume[
-            ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
-                + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
-                + x + MarchingCubeTables::a2fVertexOffset[i][0]
-        ].distField;
-        neg = neg | (f < 0.0);
-        pos = pos | (f >= 0.0);
-    }
-    return !(neg && pos);
+ //   for (i = 0; i < 8; i++) {
+ //       f = theVolume[
+ //           ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
+ //               + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
+ //               + x + MarchingCubeTables::a2fVertexOffset[i][0]
+ //       ].distField;
+ //       neg = neg | (f < 0.0);
+ //       pos = pos | (f >= 0.0);
+ //   }
+    //ASSERT ((theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255 || theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 0)
+    //	== !(neg &&pos));
+ //   return !(neg && pos);
+    return theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255 
+        || theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 0;
 }
 
 bool TetraVoxelizer::CellFull(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z) {
@@ -193,7 +198,7 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
         p = queue.Last();
         queue.RemoveLast();
         FatVoxel &f = theVolume[(p.Z() * sjd->resY + p.Y()) * sjd->resX + p.X()];
-		ASSERT(f.mcCase == 255 && f.consumedTriangles < 2);
+        ASSERT(f.mcCase == 255 && f.consumedTriangles < 2);
         if (f.mcCase == 255 && f.consumedTriangles < 2) {
             cells++;
             f.consumedTriangles = 2;
@@ -226,13 +231,13 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
                 if ((((moreNeighbors[ni].X() < 0) && (p.X() > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (p.X() < sjd->resX - 2))) &&
                     (((moreNeighbors[ni].Y() < 0) && (p.Y() > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (p.Y() < sjd->resY - 2))) &&
                     (((moreNeighbors[ni].Z() < 0) && (p.Z() > 0)) || (moreNeighbors[ni].Z() == 0) || ((moreNeighbors[ni].Z() > 0) && (p.Z() < sjd->resZ - 2)))) {
-						FatVoxel &f2 = theVolume[((p.Z() + moreNeighbors[ni].Z()) * sjd->resY
-							+ p.Y() + moreNeighbors[ni].Y()) * sjd->resX + p.X() + moreNeighbors[ni].X()];
-						if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
-							f2.consumedTriangles = 1;
-							queue.Add(vislib::math::Point<int, 3>(p.X() + moreNeighbors[ni].X(),
-								p.Y() + moreNeighbors[ni].Y(), p.Z() + moreNeighbors[ni].Z()));
-						}
+                        FatVoxel &f2 = theVolume[((p.Z() + moreNeighbors[ni].Z()) * sjd->resY
+                            + p.Y() + moreNeighbors[ni].Y()) * sjd->resX + p.X() + moreNeighbors[ni].X()];
+                        if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
+                            f2.consumedTriangles = 1;
+                            queue.Add(vislib::math::Point<int, 3>(p.X() + moreNeighbors[ni].X(),
+                                p.Y() + moreNeighbors[ni].Y(), p.Z() + moreNeighbors[ni].Z()));
+                        }
                 }
             }
         }
@@ -263,13 +268,13 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                         || (cornerNeighbors[a][b].Y() == 0) || ((cornerNeighbors[a][b].Y() > 0) && (y < sjd->resY - 2))) &&
                     (((cornerNeighbors[a][b].Z() < 0) && (z > 0))
                         || (cornerNeighbors[a][b].Z() == 0) || ((cornerNeighbors[a][b].Z() > 0) && (z < sjd->resZ - 2)))) {
-							FatVoxel &f2 = theVolume[((z + cornerNeighbors[a][b].Z()) * sjd->resY 
-								+ (y + cornerNeighbors[a][b].Y())) * sjd->resX + x + cornerNeighbors[a][b].X()];
-							if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
-								surf.volume +=
-									growVolume(theVolume, surf.fullFaces, x + cornerNeighbors[a][b].X(),
-									y + cornerNeighbors[a][b].Y(), z + cornerNeighbors[a][b].Z());
-							}
+                            FatVoxel &f2 = theVolume[((z + cornerNeighbors[a][b].Z()) * sjd->resY 
+                                + (y + cornerNeighbors[a][b].Y())) * sjd->resX + x + cornerNeighbors[a][b].X()];
+                            if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
+                                surf.volume +=
+                                    growVolume(theVolume, surf.fullFaces, x + cornerNeighbors[a][b].X(),
+                                    y + cornerNeighbors[a][b].Y(), z + cornerNeighbors[a][b].Z());
+                            }
                 }
             }
         }
@@ -1027,6 +1032,44 @@ DWORD TetraVoxelizer::Run(void *userData) {
 #ifdef ULTRADEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("job done: (%u,%u,%u)", sjd->gridX, sjd->gridY, sjd->gridZ);
 #endif /* ULTRADEBUG */
+
+    // TODO: it would really help if this dude already checked for finished neighbors and took the globalID from there
+    // if possible
+    unsigned int MinGID;
+    sjd->parent->AccessGlobalID.Lock();
+    MinGID = sjd->parent->MaxGlobalID;
+    sjd->parent->MaxGlobalID += sjd->Result.surfaces.Count();
+    sjd->parent->AccessGlobalID.Unlock();
+    for (x = 0; x < sjd->Result.surfaces.Count(); x++) {
+        sjd->Result.surfaces[x].globalID = MinGID + x;
+    }
+
+    // first find self to set i
+    int i;
+    for (i = 0; i < sjd->parent->SubJobDataList.Count(); i++) {
+        if (sjd->parent->SubJobDataList[i] == sjd) {
+            break;
+        }
+    }
+    
+    for (int k = 0; k < sjd->parent->SubJobDataList.Count(); k++) {
+        if (sjd->parent->SubJobDataList[k]->Result.done && sjd->parent->SubJobDataList[k]->Result.surfaces.Count() > 0
+                && sjd->parent->SubJobDataList[k]->Result.surfaces[0].globalID != MinGID) {
+            vislib::math::Cuboid<VoxelizerFloat> c = sjd->Bounds;
+            c.Union(sjd->parent->SubJobDataList[k]->Bounds);
+            if (c.Volume() <= sjd->Bounds.Volume() + sjd->parent->SubJobDataList[k]->Bounds.Volume()) {
+                for (int j = 0; j < sjd->Result.surfaces.Count(); j++) {
+                    for (int l = 0; l < sjd->parent->SubJobDataList[k]->Result.surfaces.Count(); l++) {
+                        if (sjd->parent->areSurfacesJoinable(i, j, k, l)) {
+                            sjd->Result.surfaces[j].globalID = sjd->parent->SubJobDataList[k]->Result.surfaces[l].globalID;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // END TODO
 
     sjd->Result.done = true;
 

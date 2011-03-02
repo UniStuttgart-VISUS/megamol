@@ -14,6 +14,7 @@
 #include "vislib/PtrArray.h"
 #include "vislib/Array.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/CriticalSection.h"
 
 namespace megamol {
 namespace trisoup {
@@ -22,7 +23,11 @@ namespace volumetrics {
     /** typdef steering the arithmetic precision of the voxelizer. */
     typedef float VoxelizerFloat;
 
+    /** forward declaration */
     class BorderVoxel;
+
+    /** forward declaration */
+    class VoluMetricJob;
 
     typedef BorderVoxel* BorderVoxelElement;
     typedef vislib::PtrArray<BorderVoxel> BorderVoxelArray;
@@ -67,38 +72,38 @@ namespace volumetrics {
         }
 
     public:
-		/**
+        /**
          * Answer whether this and rhs have at least one edge in common. Uses Dowel::IsEqual.
-		 *
-		 * @param rhs the other triangle
-		 *
-		 * @return true if this and rhs have one edge in common
-		 */
+         *
+         * @param rhs the other triangle
+         *
+         * @return true if this and rhs have one edge in common
+         */
         VISLIB_FORCEINLINE static bool HaveCommonEdge(const vislib::math::ShallowShallowTriangle<double, 3> &a,
             const vislib::math::ShallowShallowTriangle<double, 3> &b) {
                 return ((Dowel::IsEqual(a.PeekCoordinates()[0], b.PeekCoordinates()[0])
                     || Dowel::IsEqual(a.PeekCoordinates()[0], b.PeekCoordinates()[1])
                     || Dowel::IsEqual(a.PeekCoordinates()[0], b.PeekCoordinates()[2])) ? 1U : 0U)
-				+ ((Dowel::IsEqual(a.PeekCoordinates()[1], b.PeekCoordinates()[0])
-				|| Dowel::IsEqual(a.PeekCoordinates()[1], b.PeekCoordinates()[1])
-				|| Dowel::IsEqual(a.PeekCoordinates()[1], b.PeekCoordinates()[2])) ? 1U : 0U)
-				+ ((Dowel::IsEqual(a.PeekCoordinates()[2], b.PeekCoordinates()[0])
-				|| Dowel::IsEqual(a.PeekCoordinates()[2], b.PeekCoordinates()[1])
-				|| Dowel::IsEqual(a.PeekCoordinates()[2], b.PeekCoordinates()[2])) ? 1U : 0U) >= 2U;
-		}
+                + ((Dowel::IsEqual(a.PeekCoordinates()[1], b.PeekCoordinates()[0])
+                || Dowel::IsEqual(a.PeekCoordinates()[1], b.PeekCoordinates()[1])
+                || Dowel::IsEqual(a.PeekCoordinates()[1], b.PeekCoordinates()[2])) ? 1U : 0U)
+                + ((Dowel::IsEqual(a.PeekCoordinates()[2], b.PeekCoordinates()[0])
+                || Dowel::IsEqual(a.PeekCoordinates()[2], b.PeekCoordinates()[1])
+                || Dowel::IsEqual(a.PeekCoordinates()[2], b.PeekCoordinates()[2])) ? 1U : 0U) >= 2U;
+        }
 
-		/**
+        /**
          * Answer whether this and rhs have at least one edge in common. This operation is a pass-through to
          * Triangle's == operator.
          * 
-		 * @param rhs the other triangle
-		 *
-		 * @return true if this and rhs have one edge in common
-		 */
+         * @param rhs the other triangle
+         *
+         * @return true if this and rhs have one edge in common
+         */
         VISLIB_FORCEINLINE static bool HaveCommonEdge(const vislib::math::ShallowShallowTriangle<float, 3> &a,
             const vislib::math::ShallowShallowTriangle<float, 3> &b) {
                 return a.HasCommonEdge(b);
-		}
+        }
     };
 
     /**
@@ -198,10 +203,10 @@ namespace volumetrics {
          * Distance to the nearest glyph surface. Negative distances indicate
          * we are inside the geometry.
          */
-		VoxelizerFloat distField;
+        VoxelizerFloat distField;
 
         /** Pointer to the memory holding numTriangles * 3 * 3 VoxelizerFloats. */
-		VoxelizerFloat *triangles;
+        VoxelizerFloat *triangles;
 
         /**
          * Pointer to the memory holding numTriangles VoxelizerFloats containing the
@@ -210,7 +215,7 @@ namespace volumetrics {
         VoxelizerFloat *volumes;
 
         /** Number of triangles contained in this FatVoxel */
-		unsigned char numTriangles;
+        unsigned char numTriangles;
 
         /**
          * For marching CUBES, just that: the case from the table. For marching tets,
@@ -222,7 +227,7 @@ namespace volumetrics {
          * bit field to remember the triangles already collected whe stitching
          * surfaces.
          */
-		unsigned short consumedTriangles;
+        unsigned short consumedTriangles;
 
         /**
          * BorderVoxel containing a copy of the geometry for those FatVoxels that
@@ -231,7 +236,7 @@ namespace volumetrics {
          * survive the volume itself.
          */
         BorderVoxelElement borderVoxel;
-	};
+    };
 
     /**
      * represents a contiguous surface inside a subvolume and associated
@@ -281,36 +286,36 @@ namespace volumetrics {
     };
     
     /**
-	 * Struct containing the results of a marching (whatever) on an instance of SubJubData.
-	 */
-	struct SubJobResult {
+     * Struct containing the results of a marching (whatever) on an instance of SubJubData.
+     */
+    struct SubJobResult {
         /** Array of the surfaces resulting from the Voxelization */
         vislib::Array<Surface> surfaces;
 
         /** whether this job has completed runnning */
-		bool done;
+        bool done;
 
         /** ctor (yuck). mostly sets done to false just to be sure */
-		SubJobResult(void) : done(false) {
-		}
-	};
+        SubJobResult(void) : done(false) {
+        }
+    };
 
-	/**
-	 * Structure that holds all parameters so a single thread can work
-	 * on his subset of the total volume occupied by a particle list
-	 */
-	struct SubJobData {
-		/** Volume to work on and rasterize the data of */
+    /**
+     * Structure that holds all parameters so a single thread can work
+     * on his subset of the total volume occupied by a particle list
+     */
+    struct SubJobData {
+        /** Volume to work on and rasterize the data of */
         vislib::math::Cuboid<VoxelizerFloat> Bounds;
 
         /** volume resolution, i.e. number of subdivisions with respect to bounds */
-		int resX;
+        int resX;
 
         /** volume resolution, i.e. number of subdivisions with respect to bounds */
-		int resY;
+        int resY;
 
         /** volume resolution, i.e. number of subdivisions with respect to bounds */
-		int resZ;
+        int resZ;
 
         /** global voxel position offset (for absolute voxel positions) */
         int offsetX;
@@ -325,27 +330,29 @@ namespace volumetrics {
         int gridY;
         int gridZ;
 
-		/** Maximum radius in the datasource. */
+        /** Maximum radius in the datasource. */
         VoxelizerFloat MaxRad;
 
         /** radius multiplication factor for calibration */
-		VoxelizerFloat RadMult;
+        VoxelizerFloat RadMult;
 
-		/**
-		 * Edge length of a voxel (set in accordance to the radii of
+        /**
+         * Edge length of a voxel (set in accordance to the radii of
          * the contained particles)
-		 */
+         */
         VoxelizerFloat CellSize;
 
         /** datacall that gives access to the particles */		
-		core::moldyn::MultiParticleDataCall *datacall;
+        core::moldyn::MultiParticleDataCall *datacall;
 
-		/** here the Job should store its results */
-		SubJobResult Result;
+        /** here the Job should store its results */
+        SubJobResult Result;
 
         /** whether to persist the geometry computation takes place on (in result.mesh) */
         bool storeMesh;
-	};
+
+        VoluMetricJob *parent;
+    };
 
 
 } /* end namespace volumetrics */

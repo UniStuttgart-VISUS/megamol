@@ -51,7 +51,7 @@ namespace volumetrics {
          */
         static const char *Description(void) {
             return "Computes volumetric metrics of a multiparticle dataset, i.e. surface and volume"
-				", assuming a spacefilling spheres geometry";
+                ", assuming a spacefilling spheres geometry";
         }
 
         /**
@@ -68,6 +68,14 @@ namespace volumetrics {
 
         /** Dtor. */
         virtual ~VoluMetricJob(void);
+
+        bool areSurfacesJoinable(int i, int j, int k, int l);
+
+        unsigned int MaxGlobalID;
+
+        vislib::sys::CriticalSection AccessGlobalID;
+
+        vislib::Array<SubJobData*> SubJobDataList;
 
     protected:
 
@@ -115,7 +123,7 @@ namespace volumetrics {
          *
          * @return true if successful
          */
-		bool getLineDataCallback(core::Call &caller);
+        bool getLineDataCallback(core::Call &caller);
 
         /**
          * Provide the bounding box of the line geometry.
@@ -124,7 +132,7 @@ namespace volumetrics {
          *
          * @return true if successful
          */
-		bool getLineExtentCallback(core::Call &caller);
+        bool getLineExtentCallback(core::Call &caller);
 
         /**
          * Provide the collected surfaces as mesh/triangle soup with randomized colors
@@ -134,7 +142,7 @@ namespace volumetrics {
          *
          * @return true if successful
          */
-		bool getTriDataCallback(core::Call &caller);
+        bool getTriDataCallback(core::Call &caller);
 
         /**
          * Convenience method for generating the corner vertices of a cuboid and
@@ -145,7 +153,7 @@ namespace volumetrics {
          * @param data the RawStorage where the vertices should be appended
          * @param offset Where appending starts. Is increased by 8 * 3 * sizeof(VoxelizerFloat).
          */
-		void appendBox(vislib::RawStorage &data, vislib::math::Cuboid<VoxelizerFloat> &b, SIZE_T &offset);
+        void appendBox(vislib::RawStorage &data, vislib::math::Cuboid<VoxelizerFloat> &b, SIZE_T &offset);
 
         /**
          * Convenience method for generating the 12 indices for a wireframe of the 
@@ -165,13 +173,9 @@ namespace volumetrics {
          * 
          * @param subJobDataList the submitted jobs
          */
-        void copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
-            //vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
-            vislib::Array<unsigned int> &uniqueIDs);
+        void copyMeshesToBackbuffer(vislib::Array<unsigned int> &uniqueIDs);
 
-        void generateStatistics(vislib::Array<SubJobData*> &subJobDataList,
-            //vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
-            vislib::Array<unsigned int> &uniqueIDs,
+        void generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
             vislib::Array<SIZE_T> &countPerID,
             vislib::Array<VoxelizerFloat> &surfPerID,
             vislib::Array<VoxelizerFloat> &volPerID);
@@ -187,17 +191,17 @@ namespace volumetrics {
         //void joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
         //    int i, int j, int k, int l);
 
-        void joinSurfaces(vislib::Array<SubJobData*> &subJobDataList, int i, int j, int k, int l);
+        void joinSurfaces(int i, int j, int k, int l);
 
         core::CallerSlot getDataSlot;
 
         core::param::ParamSlot cellSizeRatioSlot;
 
-		core::param::ParamSlot continueToNextFrameSlot;
+        core::param::ParamSlot continueToNextFrameSlot;
 
         core::param::ParamSlot metricsFilenameSlot;
-		
-		core::param::ParamSlot showBoundingBoxesSlot;
+        
+        core::param::ParamSlot showBoundingBoxesSlot;
 
         core::param::ParamSlot showBorderGeometrySlot;
 
@@ -205,30 +209,28 @@ namespace volumetrics {
 
         core::param::ParamSlot subVolumeResolutionSlot;
 
-		core::param::ParamSlot radiusMultiplierSlot;
+        core::param::ParamSlot radiusMultiplierSlot;
 
-		core::param::ParamSlot resetContinueSlot;
+        core::param::ParamSlot resetContinueSlot;
 
-		core::CalleeSlot outLineDataSlot;
+        core::CalleeSlot outLineDataSlot;
 
-		core::CalleeSlot outTriDataSlot;
+        core::CalleeSlot outTriDataSlot;
 
-		VoxelizerFloat MaxRad;
+        VoxelizerFloat MaxRad;
 
         VoxelizerFloat MinRad;
 
-		/** the data hash, i.e. the front buffer frame available from the slots */
-		SIZE_T hash;
+        /** the data hash, i.e. the front buffer frame available from the slots */
+        SIZE_T hash;
 
-		/** 
-		 * which one of the two instaces of most data is the backbuffer i.e. the
-		 * one that is currently being modified. the other one goes to the slots.
-		 */
-		char backBufferIndex;
+        /** 
+         * which one of the two instaces of most data is the backbuffer i.e. the
+         * one that is currently being modified. the other one goes to the slots.
+         */
+        char backBufferIndex;
 
-		char meshBackBufferIndex;
-
-        unsigned int maxGlobalID;
+        char meshBackBufferIndex;
 
         int divX;
         int divY;
@@ -236,17 +238,17 @@ namespace volumetrics {
 
         vislib::sys::File statisticsFile;
 
-		/**
-		 * lines data. debugLines[backBufferIndex][*] is writable, the other one readable.
-		 * debugLines[*][0] contains the bounding boxes, [*][1] the boundaries (in future)
-		 */
-		megamol::core::misc::LinesDataCall::Lines debugLines[2][2];
+        /**
+         * lines data. debugLines[backBufferIndex][*] is writable, the other one readable.
+         * debugLines[*][0] contains the bounding boxes, [*][1] the boundaries (in future)
+         */
+        megamol::core::misc::LinesDataCall::Lines debugLines[2][2];
 
-		CallTriMeshData::Mesh debugMeshes[2];
+        CallTriMeshData::Mesh debugMeshes[2];
 
-		vislib::RawStorage bboxVertData[2];
+        vislib::RawStorage bboxVertData[2];
 
-		vislib::RawStorage bboxIdxData[2];
+        vislib::RawStorage bboxIdxData[2];
     };
 
 } /* end namespace volumetrics */

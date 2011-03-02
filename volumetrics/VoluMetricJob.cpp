@@ -18,6 +18,7 @@
 #include "TetraVoxelizer.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/ConsoleProgressBar.h"
+#include "vislib/SystemInformation.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -30,19 +31,19 @@ using namespace megamol::trisoup::volumetrics;
 VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Module(),
         getDataSlot("getData", "Slot that connects to a MultiParticleDataCall to fetch the particles in the scene"),
         metricsFilenameSlot("metricsFilenameSlot", "File that will contain the "
-		"surfaces and volumes of each particle list per frame"),
+        "surfaces and volumes of each particle list per frame"),
         showBorderGeometrySlot("showBorderGeometrySlot", "toggle whether the the surface triangles will be replaced by the border triangles"),
-		showBoundingBoxesSlot("showBoundingBoxesSlot", "toggle whether the job subdivision grid will be shown"),
-		showSurfaceGeometrySlot("showSurfaceGeometrySlot", "toggle whether the the surface triangles will be shown"),
-		radiusMultiplierSlot("radiusMultiplierSlot", "multiplier for the particle radius"),
-		continueToNextFrameSlot("continueToNextFrameSlot", "continue computation immediately after a frame finishes,"
-		"erasing all debug geometry"),
-		resetContinueSlot("resetContinueSlot", "reset the continueToNextFrameSlot to false automatically"),
-		outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
-		outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
+        showBoundingBoxesSlot("showBoundingBoxesSlot", "toggle whether the job subdivision grid will be shown"),
+        showSurfaceGeometrySlot("showSurfaceGeometrySlot", "toggle whether the the surface triangles will be shown"),
+        radiusMultiplierSlot("radiusMultiplierSlot", "multiplier for the particle radius"),
+        continueToNextFrameSlot("continueToNextFrameSlot", "continue computation immediately after a frame finishes,"
+        "erasing all debug geometry"),
+        resetContinueSlot("resetContinueSlot", "reset the continueToNextFrameSlot to false automatically"),
+        outLineDataSlot("outLineData", "Slot that outputs debug line geometry"),
+        outTriDataSlot("outTriData", "Slot that outputs debug triangle geometry"),
         cellSizeRatioSlot("cellSizeRatioSlot", "Fraction of the minimal particle radius that is used as cell size"),
         subVolumeResolutionSlot("subVolumeResolutionSlot", "maximum edge length of a subvolume processed as a separate job"),
-		MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
+        MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -53,20 +54,20 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
     this->showBorderGeometrySlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->showBorderGeometrySlot);
 
-	this->showBoundingBoxesSlot << new core::param::BoolParam(false);
-	this->MakeSlotAvailable(&this->showBoundingBoxesSlot);
+    this->showBoundingBoxesSlot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->showBoundingBoxesSlot);
 
-	this->showSurfaceGeometrySlot << new core::param::BoolParam(true);
-	this->MakeSlotAvailable(&this->showSurfaceGeometrySlot);
+    this->showSurfaceGeometrySlot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->showSurfaceGeometrySlot);
 
-	this->continueToNextFrameSlot << new core::param::BoolParam(true);
-	this->MakeSlotAvailable(&this->continueToNextFrameSlot);
+    this->continueToNextFrameSlot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->continueToNextFrameSlot);
 
-	this->resetContinueSlot << new core::param::BoolParam(false);
-	this->MakeSlotAvailable(&this->resetContinueSlot);
+    this->resetContinueSlot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->resetContinueSlot);
 
-	this->radiusMultiplierSlot << new core::param::FloatParam(1.0f, 0.0001f, 10000.f);
-	this->MakeSlotAvailable(&this->radiusMultiplierSlot);
+    this->radiusMultiplierSlot << new core::param::FloatParam(1.0f, 0.0001f, 10000.f);
+    this->MakeSlotAvailable(&this->radiusMultiplierSlot);
 
     this->cellSizeRatioSlot << new core::param::FloatParam(0.5f, 0.01f, 10.0f);
     this->MakeSlotAvailable(&this->cellSizeRatioSlot);
@@ -74,13 +75,13 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
     this->subVolumeResolutionSlot << new core::param::IntParam(128, 16, 2048);
     this->MakeSlotAvailable(&this->subVolumeResolutionSlot);
 
-	this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
-	this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
-	this->MakeSlotAvailable(&this->outLineDataSlot);
+    this->outLineDataSlot.SetCallback("LinesDataCall", "GetData", &VoluMetricJob::getLineDataCallback);
+    this->outLineDataSlot.SetCallback("LinesDataCall", "GetExtent", &VoluMetricJob::getLineExtentCallback);
+    this->MakeSlotAvailable(&this->outLineDataSlot);
 
-	this->outTriDataSlot.SetCallback("CallTriMeshData", "GetData", &VoluMetricJob::getTriDataCallback);
-	this->outTriDataSlot.SetCallback("CallTriMeshData", "GetExtent", &VoluMetricJob::getLineExtentCallback);
-	this->MakeSlotAvailable(&this->outTriDataSlot);
+    this->outTriDataSlot.SetCallback("CallTriMeshData", "GetData", &VoluMetricJob::getTriDataCallback);
+    this->outTriDataSlot.SetCallback("CallTriMeshData", "GetExtent", &VoluMetricJob::getLineExtentCallback);
+    this->MakeSlotAvailable(&this->outTriDataSlot);
 
 }
 
@@ -125,10 +126,10 @@ DWORD VoluMetricJob::Run(void *userData) {
         Log::DefaultLog.WriteError("No data source connected to VoluMetricJob");
         return -1;
     }
-	if (!(*datacall)(1)) {
-		Log::DefaultLog.WriteError("Data source does not answer to extent request");
-		return -2;
-	}
+    if (!(*datacall)(1)) {
+        Log::DefaultLog.WriteError("Data source does not answer to extent request");
+        return -2;
+    }
 
     unsigned int frameCnt = datacall->FrameCount();
     Log::DefaultLog.WriteInfo("Data source with %u frame(s)", frameCnt);
@@ -142,113 +143,114 @@ DWORD VoluMetricJob::Run(void *userData) {
         }
     }
 
-	vislib::sys::ThreadPool pool;
-	vislib::Array<TetraVoxelizer*> voxelizerList;
-	vislib::Array<SubJobData*> subJobDataList;
+    vislib::Array<TetraVoxelizer*> voxelizerList;
 
-	voxelizerList.SetCapacityIncrement(10);
-	subJobDataList.SetCapacityIncrement(10);
+    voxelizerList.SetCapacityIncrement(16);
+    SubJobDataList.SetCapacityIncrement(16);
 
     for (unsigned int frameI = 0; frameI < frameCnt; frameI++) {
 
+        vislib::sys::ThreadPool pool;
+        pool.SetThreadCount(static_cast<SIZE_T>(vislib::sys::SystemInformation::ProcessorCount() * 1.5));
+
         datacall->SetFrameID(frameI, true);
-		do {
-			if (!(*datacall)(0)) {
-				Log::DefaultLog.WriteError("ARGH! No frame here");
-				return -3;
-			}
-		} while (datacall->FrameID() != frameI && (vislib::sys::Thread::Sleep(100), true));
+        do {
+            if (!(*datacall)(0)) {
+                Log::DefaultLog.WriteError("ARGH! No frame here");
+                return -3;
+            }
+        } while (datacall->FrameID() != frameI && (vislib::sys::Thread::Sleep(100), true));
 
-        this->maxGlobalID = 0;
+        this->MaxGlobalID = 0;
 
-		// clear submitted stuff, dealloc.
-		while (voxelizerList.Count() > 0) {
-			delete voxelizerList[0];
-			voxelizerList.RemoveAt(0);
-		}
-		while (subJobDataList.Count() > 0) {
-			delete subJobDataList[0];
-			subJobDataList.RemoveAt(0);
-		}
+        // clear submitted stuff, dealloc.
+        while (voxelizerList.Count() > 0) {
+            delete voxelizerList[0];
+            voxelizerList.RemoveAt(0);
+        }
+        while (SubJobDataList.Count() > 0) {
+            delete SubJobDataList[0];
+            SubJobDataList.RemoveAt(0);
+        }
 
         unsigned int partListCnt = datacall->GetParticleListCount();
-		MaxRad = -FLT_MAX;
+        MaxRad = -FLT_MAX;
         MinRad = FLT_MAX;
         for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
-			//UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
+            //UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
             //printf("%u particles in list %u\n", numParticles, partListI);
-			VoxelizerFloat r = datacall->AccessParticles(partListI).GetGlobalRadius();
-			if (r > MaxRad) {
-				MaxRad = r;
-			}
+            VoxelizerFloat r = datacall->AccessParticles(partListI).GetGlobalRadius();
+            if (r > MaxRad) {
+                MaxRad = r;
+            }
             if (r < MinRad) {
                 MinRad = r;
             }
-			if (datacall->AccessParticles(partListI).GetVertexDataType() ==
-				core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-				UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
-				unsigned int stride = datacall->AccessParticles(partListI).GetVertexDataStride();
-				unsigned char *vertexData = (unsigned char*)datacall->AccessParticles(partListI).GetVertexData();
-				for (UINT64 l = 0; l < numParticles; l++) {
-					vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(4 * sizeof(float) + stride) * l]);
-					float currRad = (float)vertexData[(4 * sizeof(float) + stride) * l + 3];
-					if (currRad > MaxRad) {
-						MaxRad = currRad;
-					}
+            if (datacall->AccessParticles(partListI).GetVertexDataType() ==
+                core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+                UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
+                unsigned int stride = datacall->AccessParticles(partListI).GetVertexDataStride();
+                unsigned char *vertexData = (unsigned char*)datacall->AccessParticles(partListI).GetVertexData();
+                for (UINT64 l = 0; l < numParticles; l++) {
+                    vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(4 * sizeof(float) + stride) * l]);
+                    float currRad = (float)vertexData[(4 * sizeof(float) + stride) * l + 3];
+                    if (currRad > MaxRad) {
+                        MaxRad = currRad;
+                    }
                     if (currRad < MinRad) {
                         MinRad = currRad;
                     }
-				}
-			}
+                }
+            }
         }
 
-		VoxelizerFloat RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
-		MaxRad *= RadMult;
+        VoxelizerFloat RadMult = this->radiusMultiplierSlot.Param<megamol::core::param::FloatParam>()->Value();
+        MaxRad *= RadMult;
         MinRad *= RadMult;
         VoxelizerFloat cellSize = MinRad * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
-		int bboxBytes = 8 * 3 * sizeof(VoxelizerFloat);
-		int bboxIdxes = 12 * 2 * sizeof(unsigned int);
-		int vertSize = bboxBytes * partListCnt;
-		int idxSize = bboxIdxes * partListCnt;
-		bboxVertData[backBufferIndex].AssertSize(vertSize);
-		bboxIdxData[backBufferIndex].AssertSize(idxSize);
-		SIZE_T bboxOffset = 0;
-		unsigned int vertFloatSize = 0;
-		unsigned int idxNumOffset = 0;
+        int bboxBytes = 8 * 3 * sizeof(VoxelizerFloat);
+        int bboxIdxes = 12 * 2 * sizeof(unsigned int);
+        int vertSize = bboxBytes * partListCnt;
+        int idxSize = bboxIdxes * partListCnt;
+        bboxVertData[backBufferIndex].AssertSize(vertSize);
+        bboxIdxData[backBufferIndex].AssertSize(idxSize);
+        SIZE_T bboxOffset = 0;
+        unsigned int vertFloatSize = 0;
+        unsigned int idxNumOffset = 0;
 
-		vislib::math::Cuboid<VoxelizerFloat> b;
-		if (datacall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
-			b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
-		} else {
-			b = datacall->AccessBoundingBoxes().ObjectSpaceBBox();
-		}
+        vislib::math::Cuboid<VoxelizerFloat> b;
+        if (datacall->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
+            b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
+        } else {
+            b = datacall->AccessBoundingBoxes().ObjectSpaceBBox();
+        }
 
-		int resX = (int) ((VoxelizerFloat)b.Width() / cellSize) + 2;
-		int resY = (int) ((VoxelizerFloat)b.Height() / cellSize) + 2;
-		int resZ = (int) ((VoxelizerFloat)b.Depth() / cellSize) + 2;
-		b.SetWidth(resX * cellSize);
-		b.SetHeight(resY * cellSize);
-		b.SetDepth(resZ * cellSize);
+        int resX = (int) ((VoxelizerFloat)b.Width() / cellSize) + 2;
+        int resY = (int) ((VoxelizerFloat)b.Height() / cellSize) + 2;
+        int resZ = (int) ((VoxelizerFloat)b.Depth() / cellSize) + 2;
+        b.SetWidth(resX * cellSize);
+        b.SetHeight(resY * cellSize);
+        b.SetDepth(resZ * cellSize);
 
-		appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
-		appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
+        appendBox(bboxVertData[backBufferIndex], b, bboxOffset);
+        appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-		divX = 1;
-		divY = 1;
-		divZ = 1;
+        divX = 1;
+        divY = 1;
+        divZ = 1;
         int subVolCells = this->subVolumeResolutionSlot.Param<megamol::core::param::IntParam>()->Value();
 
-		while (divX == 1 && divY == 1 && divZ ==1) {
-			subVolCells /= 2;
-			divX = (int) ceil((VoxelizerFloat)resX / subVolCells);
-			divY = (int) ceil((VoxelizerFloat)resY / subVolCells);
-			divZ = (int) ceil((VoxelizerFloat)resZ / subVolCells);
-		}
+        while (divX == 1 && divY == 1 && divZ ==1) {
+            subVolCells /= 2;
+            divX = (int) ceil((VoxelizerFloat)resX / subVolCells);
+            divY = (int) ceil((VoxelizerFloat)resY / subVolCells);
+            divZ = (int) ceil((VoxelizerFloat)resZ / subVolCells);
+        }
 
-		vertSize += bboxBytes * divX * divY * divZ;
-		idxSize += bboxIdxes * divX * divY * divZ;
-		bboxVertData[backBufferIndex].AssertSize(vertSize, true);
-		bboxIdxData[backBufferIndex].AssertSize(idxSize, true);
+        vertSize += bboxBytes * divX * divY * divZ;
+        idxSize += bboxIdxes * divX * divY * divZ;
+        bboxVertData[backBufferIndex].AssertSize(vertSize, true);
+        bboxIdxData[backBufferIndex].AssertSize(idxSize, true);
 
         bool storeMesh = 
             (this->outTriDataSlot.GetStatus() == megamol::core::AbstractSlot::STATUS_CONNECTED);
@@ -257,63 +259,64 @@ DWORD VoluMetricJob::Run(void *userData) {
         pb.Start("Computing Frame", divX * divY * divZ);
 
         vislib::sys::Log::DefaultLog.WriteInfo("Grid: %ux%ux%u", divX, divY, divZ);
-		for (int x = 0; x < divX; x++) {
-			for (int y = 0; y < divY; y++) {
+        for (int x = 0; x < divX; x++) {
+            for (int y = 0; y < divY; y++) {
             //for (int y = 0; y < 1; y++) {
-				for (int z = 0; z < divZ; z++) {
+                for (int z = 0; z < divZ; z++) {
                 //for (int z = 0; z < 1; z++) {
-					VoxelizerFloat left = b.Left() + x * subVolCells * cellSize;
-					int restX = resX - x * subVolCells;
-					restX = (restX > subVolCells) ? subVolCells + 1: restX;
-					VoxelizerFloat right = left + restX * cellSize;
-					VoxelizerFloat bottom = b.Bottom() + y * subVolCells * cellSize;
-					int restY = resY - y * subVolCells;
-					restY = (restY > subVolCells) ? subVolCells + 1: restY;
-					VoxelizerFloat top = bottom + restY * cellSize;
-					VoxelizerFloat back = b.Back() + z * subVolCells * cellSize;
-					int restZ = resZ - z * subVolCells;
-					restZ = (restZ > subVolCells) ? subVolCells + 1 : restZ;
-					VoxelizerFloat front = back + restZ * cellSize;
-					vislib::math::Cuboid<VoxelizerFloat> bx = vislib::math::Cuboid<VoxelizerFloat>(left, bottom, back,
-						right, top, front);
-					appendBox(bboxVertData[backBufferIndex], bx, bboxOffset);
-					appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
+                    VoxelizerFloat left = b.Left() + x * subVolCells * cellSize;
+                    int restX = resX - x * subVolCells;
+                    restX = (restX > subVolCells) ? subVolCells + 1: restX;
+                    VoxelizerFloat right = left + restX * cellSize;
+                    VoxelizerFloat bottom = b.Bottom() + y * subVolCells * cellSize;
+                    int restY = resY - y * subVolCells;
+                    restY = (restY > subVolCells) ? subVolCells + 1: restY;
+                    VoxelizerFloat top = bottom + restY * cellSize;
+                    VoxelizerFloat back = b.Back() + z * subVolCells * cellSize;
+                    int restZ = resZ - z * subVolCells;
+                    restZ = (restZ > subVolCells) ? subVolCells + 1 : restZ;
+                    VoxelizerFloat front = back + restZ * cellSize;
+                    vislib::math::Cuboid<VoxelizerFloat> bx = vislib::math::Cuboid<VoxelizerFloat>(left, bottom, back,
+                        right, top, front);
+                    appendBox(bboxVertData[backBufferIndex], bx, bboxOffset);
+                    appendBoxIndices(bboxIdxData[backBufferIndex], idxNumOffset);
 
-					SubJobData *sjd = new SubJobData();
-					sjd->datacall = datacall;
-					sjd->Bounds = bx;
+                    SubJobData *sjd = new SubJobData();
+                    sjd->parent = this;
+                    sjd->datacall = datacall;
+                    sjd->Bounds = bx;
                     sjd->CellSize = (VoxelizerFloat)MinRad 
                         * this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
-					sjd->resX = restX;
-					sjd->resY = restY;
-					sjd->resZ = restZ;
+                    sjd->resX = restX;
+                    sjd->resY = restY;
+                    sjd->resZ = restZ;
                     sjd->offsetX = x * subVolCells;
                     sjd->offsetY = y * subVolCells;
                     sjd->offsetZ = z * subVolCells;
                     sjd->gridX = x;
                     sjd->gridY = y;
                     sjd->gridZ = z;
-					sjd->RadMult = RadMult;
-					sjd->MaxRad = MaxRad / RadMult;
+                    sjd->RadMult = RadMult;
+                    sjd->MaxRad = MaxRad / RadMult;
                     sjd->storeMesh = storeMesh;
-					subJobDataList.Add(sjd);
-					TetraVoxelizer *v = new TetraVoxelizer();
-					voxelizerList.Add(v);
+                    SubJobDataList.Add(sjd);
+                    TetraVoxelizer *v = new TetraVoxelizer();
+                    voxelizerList.Add(v);
 
                     //if (z == 0 && y == 0) {
-					    pool.QueueUserWorkItem(v, sjd);
+                        pool.QueueUserWorkItem(v, sjd);
                     //}
-				}
-			}
-		}
-		//}
-		this->debugLines[backBufferIndex][0].Set(
-				static_cast<unsigned int>(idxNumOffset * 2),
+                }
+            }
+        }
+        //}
+        this->debugLines[backBufferIndex][0].Set(
+                static_cast<unsigned int>(idxNumOffset * 2),
                 this->bboxIdxData[backBufferIndex].As<unsigned int>(), this->bboxVertData[backBufferIndex].As<VoxelizerFloat>(),
-				vislib::graphics::NamedColours::BlanchedAlmond);
-		
-		backBufferIndex = 1 - backBufferIndex;
-		this->hash++;
+                vislib::graphics::NamedColours::BlanchedAlmond);
+        
+        backBufferIndex = 1 - backBufferIndex;
+        this->hash++;
 
         vislib::Array<vislib::Array<unsigned int> > globalSurfaceIDs;
         vislib::Array<unsigned int> uniqueIDs;
@@ -322,36 +325,35 @@ DWORD VoluMetricJob::Run(void *userData) {
         vislib::Array<VoxelizerFloat> volPerID;
 
         SIZE_T lastCount = pool.CountUserWorkItems();
-		while(1) {
-			if (pool.Wait(500) && pool.CountUserWorkItems() == 0) {
-						// we are done
-						break;
-			}
+        while(1) {
+            if (pool.Wait(500) && pool.CountUserWorkItems() == 0) {
+                        // we are done
+                        break;
+            }
             if (lastCount != pool.CountUserWorkItems()) {
                 pb.Set(divX * divY * divZ - pool.CountUserWorkItems());
-                generateStatistics(subJobDataList, uniqueIDs,
-                    countPerID, surfPerID, volPerID);
+                generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID);
                 if (storeMesh) {
-			        copyMeshesToBackbuffer(subJobDataList, uniqueIDs);
+                    copyMeshesToBackbuffer(uniqueIDs);
                 }
                 lastCount = pool.CountUserWorkItems();
             }
-		}
-        generateStatistics(subJobDataList, uniqueIDs,
-            countPerID, surfPerID, volPerID);
+        }
+        generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID);
         outputStatistics(frameI, uniqueIDs, countPerID, surfPerID, volPerID);
         if (storeMesh) {
-            copyMeshesToBackbuffer(subJobDataList, uniqueIDs);
+            copyMeshesToBackbuffer(uniqueIDs);
         }
         pb.Stop();
         Log::DefaultLog.WriteInfo("Done marching.");
+        pool.Terminate(true);
 
-		while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
-			Sleep(500);
-		}
-		if (this->resetContinueSlot.Param<megamol::core::param::BoolParam>()->Value()) {
-			this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->SetValue(false);
-		}
+        while(! this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+            Sleep(500);
+        }
+        if (this->resetContinueSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+            this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->SetValue(false);
+        }
     }
 
     if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
@@ -361,100 +363,136 @@ DWORD VoluMetricJob::Run(void *userData) {
 }
 
 bool VoluMetricJob::getLineDataCallback(core::Call &caller) {
-	core::misc::LinesDataCall *ldc = dynamic_cast<core::misc::LinesDataCall*>(&caller);
+    core::misc::LinesDataCall *ldc = dynamic_cast<core::misc::LinesDataCall*>(&caller);
     if (ldc == NULL) return false;
 
-	if (this->hash == 0) {
-		ldc->SetData(0, NULL);
-		ldc->SetDataHash(0);
-	} else {
-		// TODO: only passing the bounding boxes for now
-		if (this->showBoundingBoxesSlot.Param<megamol::core::param::BoolParam>()->Value()) {
-			ldc->SetData(1, this->debugLines[1 - this->backBufferIndex]);
-		} else {
-			ldc->SetData(0, NULL);
-		}
-		ldc->SetDataHash(this->hash);
-	}
+    if (this->hash == 0) {
+        ldc->SetData(0, NULL);
+        ldc->SetDataHash(0);
+    } else {
+        // TODO: only passing the bounding boxes for now
+        if (this->showBoundingBoxesSlot.Param<megamol::core::param::BoolParam>()->Value()) {
+            ldc->SetData(1, this->debugLines[1 - this->backBufferIndex]);
+        } else {
+            ldc->SetData(0, NULL);
+        }
+        ldc->SetDataHash(this->hash);
+    }
 
-	return true;
+    return true;
 }
 
 bool VoluMetricJob::getTriDataCallback(core::Call &caller) {
-	CallTriMeshData *mdc = dynamic_cast<CallTriMeshData*>(&caller);
-	if (mdc == NULL) return false;
+    CallTriMeshData *mdc = dynamic_cast<CallTriMeshData*>(&caller);
+    if (mdc == NULL) return false;
 
-	if (this->hash == 0) {
-		mdc->SetObjects(0, NULL);
-		mdc->SetDataHash(0);
-	} else {
-		if (this->showSurfaceGeometrySlot.Param<megamol::core::param::BoolParam>()->Value()) {
-			mdc->SetObjects(1, &(this->debugMeshes[1 - this->meshBackBufferIndex]));
-		} else {
-			mdc->SetObjects(0, NULL);
-		}
-		mdc->SetDataHash(this->hash);
-	}
+    if (this->hash == 0) {
+        mdc->SetObjects(0, NULL);
+        mdc->SetDataHash(0);
+    } else {
+        if (this->showSurfaceGeometrySlot.Param<megamol::core::param::BoolParam>()->Value()) {
+            mdc->SetObjects(1, &(this->debugMeshes[1 - this->meshBackBufferIndex]));
+        } else {
+            mdc->SetObjects(0, NULL);
+        }
+        mdc->SetDataHash(this->hash);
+    }
 
-	return true;
+    return true;
 }
 
 bool VoluMetricJob::getLineExtentCallback(core::Call &caller) {
-	core::AbstractGetData3DCall *ldc = dynamic_cast<core::AbstractGetData3DCall*>(&caller);
+    core::AbstractGetData3DCall *ldc = dynamic_cast<core::AbstractGetData3DCall*>(&caller);
     if (ldc == NULL) return false;
 
-	core::moldyn::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-	if ((datacall == NULL) || (!(*datacall)(1))) {
+    core::moldyn::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    if ((datacall == NULL) || (!(*datacall)(1))) {
         ldc->AccessBoundingBoxes().Clear();
         ldc->SetFrameCount(1);
         ldc->SetDataHash(0);
-	} else {
-		if (MaxRad == 0) {
-			ldc->AccessBoundingBoxes() = datacall->AccessBoundingBoxes();
-		} else {
-			ldc->AccessBoundingBoxes().SetObjectSpaceBBox(datacall->AccessBoundingBoxes().ObjectSpaceBBox());
-			vislib::math::Cuboid<float> b = datacall->AccessBoundingBoxes().ObjectSpaceClipBox();
-			// TODO: maybe senseless paranoia?
-			//b.Grow(MaxRad);
-			ldc->AccessBoundingBoxes().SetObjectSpaceClipBox(b);
-		}
+    } else {
+        ldc->AccessBoundingBoxes() = datacall->AccessBoundingBoxes();
         ldc->SetFrameCount(1);
-		ldc->SetDataHash(this->hash);
-	}
-	return true;
+        ldc->SetDataHash(this->hash);
+    }
+    return true;
 }
 
+
+VISLIB_FORCEINLINE bool VoluMetricJob::areSurfacesJoinable(int i, int j, int k, int l) {
+
+    if (SubJobDataList[i]->Result.surfaces[j].globalID
+            != SubJobDataList[k]->Result.surfaces[l].globalID) {
+        if (SubJobDataList[i]->Result.surfaces[j].surface == 0.0
+            && SubJobDataList[k]->Result.surfaces[l].surface == 0.0) {
+                // both are full, can be joined trivially
+                return true;
+        } else if (SubJobDataList[i]->Result.surfaces[j].surface == 0.0) {
+            if (isSurfaceJoinableWithSubvolume(SubJobDataList[k], l, 
+                SubJobDataList[i])) {
+                    return true;
+            }
+        } else if (SubJobDataList[k]->Result.surfaces[l].surface == 0.0) {
+            if (isSurfaceJoinableWithSubvolume(SubJobDataList[i], j, 
+                SubJobDataList[k])) {
+                    return true;
+            }
+        } else {
+            if (SubJobDataList[i]->Result.surfaces[j].border != NULL &&
+                SubJobDataList[k]->Result.surfaces[l].border != NULL) {
+                    if (doBordersTouch(*SubJobDataList[i]->Result.surfaces[j].border,
+                        *SubJobDataList[k]->Result.surfaces[l].border)) {
+                            return true;
+                    }
+            } else {
+                //ASSERT(false);
+#ifdef ULTRADEBUG
+                vislib::sys::Log::DefaultLog.WriteInfo("tried to compare (%u,%u,%u)[%u,%u][%u]%s with (%u,%u,%u)[%u,%u][%u]%s",
+                    SubJobDataList[i]->gridX, SubJobDataList[i]->gridY, SubJobDataList[i]->gridZ,
+                    i, j, SubJobDataList[i]->Result.surfaces[j].globalID,
+                    (SubJobDataList[i]->Result.surfaces[j].border == NULL ? " (NULL)" : ""),
+                    SubJobDataList[k]->gridX, SubJobDataList[k]->gridY, SubJobDataList[k]->gridZ,
+                    k, l, SubJobDataList[k]->Result.surfaces[l].globalID,
+                    (SubJobDataList[k]->Result.surfaces[l].border == NULL ? " (NULL)" : ""));
+#endif /* ULTRADEBUG */
+            }
+        }
+    }
+    return false;
+}
+
+
 void VoluMetricJob::appendBox(vislib::RawStorage &data, vislib::math::Cuboid<VoxelizerFloat> &b, SIZE_T &offset) {
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         + 0 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftBottomFront();
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         + 1 * 3 * sizeof(VoxelizerFloat))) = b.GetRightBottomFront();
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         +	2 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopFront();
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         +	3 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopFront();
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         +	4 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftBottomBack();
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         +	5 * 3 * sizeof(VoxelizerFloat))) = b.GetRightBottomBack();
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         +	6 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopBack();
-	vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         +	7 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopBack();
-	//return 8 * 3 * sizeof(float) + offset;
-	offset += 8 * 3 * sizeof(VoxelizerFloat);
+    //return 8 * 3 * sizeof(float) + offset;
+    offset += 8 * 3 * sizeof(VoxelizerFloat);
 }
 
 void VoluMetricJob::appendBoxIndices(vislib::RawStorage &data, unsigned int &numOffset) {
-	for (int i = 0; i < 12; i++) {
-		*data.AsAt<unsigned int>((2 * (numOffset + i) + 0) * sizeof(unsigned int)) =
-			MarchingCubeTables::a2iEdgeConnection[i][0] + numOffset * 8 / 12;
-		*data.AsAt<unsigned int>((2 * (numOffset + i) + 1) * sizeof(unsigned int)) =
-			MarchingCubeTables::a2iEdgeConnection[i][1] + numOffset * 8 / 12;
-	}
-	//return 12 * 2 * sizeof(unsigned int) + offset;
-	//rawOffset += 12 * 2 * sizeof(unsigned int);
-	numOffset += 12;
+    for (int i = 0; i < 12; i++) {
+        *data.AsAt<unsigned int>((2 * (numOffset + i) + 0) * sizeof(unsigned int)) =
+            MarchingCubeTables::a2iEdgeConnection[i][0] + numOffset * 8 / 12;
+        *data.AsAt<unsigned int>((2 * (numOffset + i) + 1) * sizeof(unsigned int)) =
+            MarchingCubeTables::a2iEdgeConnection[i][1] + numOffset * 8 / 12;
+    }
+    //return 12 * 2 * sizeof(unsigned int) + offset;
+    //rawOffset += 12 * 2 * sizeof(unsigned int);
+    numOffset += 12;
 }
 
 bool VoluMetricJob::doBordersTouch(BorderVoxelArray &border1, BorderVoxelArray &border2) {
@@ -478,33 +516,32 @@ bool VoluMetricJob::doBordersTouch(BorderVoxelArray &border1, BorderVoxelArray &
 //    }
 //}
 
-VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<SubJobData*> &subJobDataList,
-                                                    int i, int j, int k, int l) {
+VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(int i, int j, int k, int l) {
 #ifdef ULTRADEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("joining global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
-        subJobDataList[i]->gridX, subJobDataList[i]->gridY, subJobDataList[i]->gridZ,
-        i, j, subJobDataList[i]->Result.surfaces[j].globalID,
-        subJobDataList[k]->gridX, subJobDataList[k]->gridY, subJobDataList[k]->gridZ,
-        k, l, subJobDataList[k]->Result.surfaces[l].globalID);
+        SubJobDataList[i]->gridX, SubJobDataList[i]->gridY, SubJobDataList[i]->gridZ,
+        i, j, SubJobDataList[i]->Result.surfaces[j].globalID,
+        SubJobDataList[k]->gridX, SubJobDataList[k]->gridY, SubJobDataList[k]->gridZ,
+        k, l, SubJobDataList[k]->Result.surfaces[l].globalID);
 #endif ULTRADEBUG
 
     unsigned int src, dst;
 
-    if (subJobDataList[k]->Result.surfaces[l].globalID < subJobDataList[i]->Result.surfaces[j].globalID) {
-        //subJobDataList[i]->Result.surfaces[j].globalID = subJobDataList[k]->Result.surfaces[l].globalID;
-        src = subJobDataList[k]->Result.surfaces[l].globalID;
-        dst = subJobDataList[i]->Result.surfaces[j].globalID;
+    if (SubJobDataList[k]->Result.surfaces[l].globalID < SubJobDataList[i]->Result.surfaces[j].globalID) {
+        //SubJobDataList[i]->Result.surfaces[j].globalID = SubJobDataList[k]->Result.surfaces[l].globalID;
+        src = SubJobDataList[k]->Result.surfaces[l].globalID;
+        dst = SubJobDataList[i]->Result.surfaces[j].globalID;
     } else {
         //subJobDataList[k]->Result.surfaces[l].globalID = subJobDataList[i]->Result.surfaces[j].globalID;
-        src = subJobDataList[i]->Result.surfaces[j].globalID;
-        dst = subJobDataList[k]->Result.surfaces[l].globalID;
+        src = SubJobDataList[i]->Result.surfaces[j].globalID;
+        dst = SubJobDataList[k]->Result.surfaces[l].globalID;
     }
 
-    for (int x = 0; x < subJobDataList.Count(); x++) {
-        if (subJobDataList[x]->Result.done) {
-            for (int y = 0; y < subJobDataList[x]->Result.surfaces.Count(); y++) {
-                if (subJobDataList[x]->Result.surfaces[y].globalID == dst) {
-                    subJobDataList[x]->Result.surfaces[y].globalID = src;
+    for (int x = 0; x < SubJobDataList.Count(); x++) {
+        if (SubJobDataList[x]->Result.done) {
+            for (int y = 0; y < SubJobDataList[x]->Result.surfaces.Count(); y++) {
+                if (SubJobDataList[x]->Result.surfaces[y].globalID == dst) {
+                    SubJobDataList[x]->Result.surfaces[y].globalID = src;
                 }
             }
         }
@@ -512,10 +549,10 @@ VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<SubJobData*> &
 
 #ifdef ULTRADEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("joined global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
-        subJobDataList[i]->gridX, subJobDataList[i]->gridY, subJobDataList[i]->gridZ,
-        i, j, subJobDataList[i]->Result.surfaces[j].globalID,
-        subJobDataList[k]->gridX, subJobDataList[k]->gridY, subJobDataList[k]->gridZ,
-        k, l, subJobDataList[k]->Result.surfaces[l].globalID);
+        SubJobDataList[i]->gridX, SubJobDataList[i]->gridY, SubJobDataList[i]->gridZ,
+        i, j, SubJobDataList[i]->Result.surfaces[j].globalID,
+        SubJobDataList[k]->gridX, SubJobDataList[k]->gridY, SubJobDataList[k]->gridZ,
+        k, l, SubJobDataList[k]->Result.surfaces[l].globalID);
 #endif
 }
 
@@ -534,9 +571,7 @@ VISLIB_FORCEINLINE bool VoluMetricJob::isSurfaceJoinableWithSubvolume(SubJobData
     return false;
 }
 
-void VoluMetricJob::generateStatistics(vislib::Array<SubJobData*> &subJobDataList,
-                                       //vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
-                                       vislib::Array<unsigned int> &uniqueIDs,
+void VoluMetricJob::generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
                                        vislib::Array<SIZE_T> &countPerID,
                                        vislib::Array<VoxelizerFloat> &surfPerID,
                                        vislib::Array<VoxelizerFloat> &volPerID) {
@@ -547,13 +582,13 @@ void VoluMetricJob::generateStatistics(vislib::Array<SubJobData*> &subJobDataLis
     surfPerID.Clear();
     volPerID.Clear();
 
-	vislib::Array<unsigned int> todos;
-	todos.SetCapacityIncrement(10);
-	for (int i = 0; i < subJobDataList.Count(); i++) {
-        if (subJobDataList[i]->Result.done) {
-			todos.Add(i);
-		}
-	}
+    vislib::Array<unsigned int> todos;
+    todos.SetCapacityIncrement(10);
+    for (int i = 0; i < SubJobDataList.Count(); i++) {
+        if (SubJobDataList[i]->Result.done) {
+            todos.Add(i);
+        }
+    }
 
     if (todos.Count() == 0) {
         return;
@@ -562,96 +597,104 @@ void VoluMetricJob::generateStatistics(vislib::Array<SubJobData*> &subJobDataLis
     //globalSurfaceIDs.SetCount(todos.Count());
     //unsigned int gsi = 0;
     for (int i = 0; i < todos.Count(); i++) {
-        SIZE_T sc = subJobDataList[todos[i]]->Result.surfaces.Count();
+        SIZE_T sc = SubJobDataList[todos[i]]->Result.surfaces.Count();
         //globalSurfaceIDs[i].SetCount(sc);
         for (int j = 0; j < sc; j++) {
             //globalSurfaceIDs[i][j] = gsi++;
-            if (subJobDataList[todos[i]]->Result.surfaces[j].globalID == UINT_MAX) {
-                subJobDataList[todos[i]]->Result.surfaces[j].globalID = this->maxGlobalID++;
+            if (SubJobDataList[todos[i]]->Result.surfaces[j].globalID == UINT_MAX) {
+                SubJobDataList[todos[i]]->Result.surfaces[j].globalID = this->MaxGlobalID++;
             }
         }
     }
 
+    AccessGlobalID.Lock();
 restart:
     for (int i = 0; i < todos.Count(); i++) {
-        for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
+        for (int j = 0; j < SubJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
             for (int k = i; k < todos.Count(); k++) {
-                vislib::math::Cuboid<VoxelizerFloat> c = subJobDataList[todos[i]]->Bounds;
-                c.Union(subJobDataList[todos[k]]->Bounds);
+                vislib::math::Cuboid<VoxelizerFloat> c = SubJobDataList[todos[i]]->Bounds;
+                c.Union(SubJobDataList[todos[k]]->Bounds);
                 // are these neighbors or in the same subvolume?
                 //if ((i == k) || (c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
-                if ((todos[i] != todos[k]) &&(c.Volume() <= subJobDataList[todos[i]]->Bounds.Volume() 
-                                                + subJobDataList[todos[k]]->Bounds.Volume())) {
-                    for (int l = 0; l < subJobDataList[todos[k]]->Result.surfaces.Count(); l++) {
-                        //if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
-                        if (subJobDataList[todos[i]]->Result.surfaces[j].globalID
-                                != subJobDataList[todos[k]]->Result.surfaces[l].globalID) {
-                            if (subJobDataList[todos[i]]->Result.surfaces[j].surface == 0.0
-                                    && subJobDataList[todos[k]]->Result.surfaces[l].surface == 0.0) {
-                                // both are full, can be joined trivially
-                                joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
-                                // restart
-                                goto restart;
-                            } else if (subJobDataList[todos[i]]->Result.surfaces[j].surface == 0.0) {
-                                if (isSurfaceJoinableWithSubvolume(subJobDataList[todos[k]], l, 
-                                        subJobDataList[todos[i]])) {
-                                    joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
-                                    // restart
-                                    goto restart;
-                                }
-                            } else if (subJobDataList[todos[k]]->Result.surfaces[l].surface == 0.0) {
-                                if (isSurfaceJoinableWithSubvolume(subJobDataList[todos[i]], j, 
-                                        subJobDataList[todos[k]])) {
-                                    joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
-                                    // restart
-                                    goto restart;
-                                }
-                            } else {
-                                if (subJobDataList[todos[i]]->Result.surfaces[j].border != NULL &&
-                                    subJobDataList[todos[k]]->Result.surfaces[l].border != NULL) {
-                                    if (doBordersTouch(*subJobDataList[todos[i]]->Result.surfaces[j].border,
-                                            *subJobDataList[todos[k]]->Result.surfaces[l].border)) {
-                                        joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
-                                        // restart
-                                        goto restart;
-                                    }
-                                } else {
-                                    //ASSERT(false);
-                                    vislib::sys::Log::DefaultLog.WriteInfo("tried to compare (%u,%u,%u)[%u,%u][%u]%s with (%u,%u,%u)[%u,%u][%u]%s",
-                                        subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
-                                        todos[i], j, subJobDataList[todos[i]]->Result.surfaces[j].globalID,
-                                        (subJobDataList[todos[i]]->Result.surfaces[j].border == NULL ? " (NULL)" : ""),
-                                        subJobDataList[todos[k]]->gridX, subJobDataList[todos[k]]->gridY, subJobDataList[todos[k]]->gridZ,
-                                        todos[k], l, subJobDataList[todos[k]]->Result.surfaces[l].globalID,
-                                        (subJobDataList[todos[k]]->Result.surfaces[l].border == NULL ? " (NULL)" : ""));
-                                }
-                            }
+                if ((todos[i] != todos[k]) &&(c.Volume() <= SubJobDataList[todos[i]]->Bounds.Volume() 
+                                                + SubJobDataList[todos[k]]->Bounds.Volume())) {
+                    for (int l = 0; l < SubJobDataList[todos[k]]->Result.surfaces.Count(); l++) {
+                        if (areSurfacesJoinable(todos[i], j, todos[k], l)) {
+                            joinSurfaces(todos[i], j, todos[k], l);
+                            goto restart;
                         }
+//                        //if (globalSurfaceIDs[k][l] != globalSurfaceIDs[i][j]) {
+//                        if (subJobDataList[todos[i]]->Result.surfaces[j].globalID
+//                                != subJobDataList[todos[k]]->Result.surfaces[l].globalID) {
+//                            if (subJobDataList[todos[i]]->Result.surfaces[j].surface == 0.0
+//                                    && subJobDataList[todos[k]]->Result.surfaces[l].surface == 0.0) {
+//                                // both are full, can be joined trivially
+//                                joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
+//                                // restart
+//                                goto restart;
+//                            } else if (subJobDataList[todos[i]]->Result.surfaces[j].surface == 0.0) {
+//                                if (isSurfaceJoinableWithSubvolume(subJobDataList[todos[k]], l, 
+//                                        subJobDataList[todos[i]])) {
+//                                    joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
+//                                    // restart
+//                                    goto restart;
+//                                }
+//                            } else if (subJobDataList[todos[k]]->Result.surfaces[l].surface == 0.0) {
+//                                if (isSurfaceJoinableWithSubvolume(subJobDataList[todos[i]], j, 
+//                                        subJobDataList[todos[k]])) {
+//                                    joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
+//                                    // restart
+//                                    goto restart;
+//                                }
+//                            } else {
+//                                if (subJobDataList[todos[i]]->Result.surfaces[j].border != NULL &&
+//                                    subJobDataList[todos[k]]->Result.surfaces[l].border != NULL) {
+//                                    if (doBordersTouch(*subJobDataList[todos[i]]->Result.surfaces[j].border,
+//                                            *subJobDataList[todos[k]]->Result.surfaces[l].border)) {
+//                                        joinSurfaces(subJobDataList, todos[i], j, todos[k], l);
+//                                        // restart
+//                                        goto restart;
+//                                    }
+//                                } else {
+//                                    //ASSERT(false);
+//#ifdef ULTRADEBUG
+//                                    vislib::sys::Log::DefaultLog.WriteInfo("tried to compare (%u,%u,%u)[%u,%u][%u]%s with (%u,%u,%u)[%u,%u][%u]%s",
+//                                        subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
+//                                        todos[i], j, subJobDataList[todos[i]]->Result.surfaces[j].globalID,
+//                                        (subJobDataList[todos[i]]->Result.surfaces[j].border == NULL ? " (NULL)" : ""),
+//                                        subJobDataList[todos[k]]->gridX, subJobDataList[todos[k]]->gridY, subJobDataList[todos[k]]->gridZ,
+//                                        todos[k], l, subJobDataList[todos[k]]->Result.surfaces[l].globalID,
+//                                        (subJobDataList[todos[k]]->Result.surfaces[l].border == NULL ? " (NULL)" : ""));
+//#endif /* ULTRADEBUG */
+//                                }
+//                            }
+//                        }
                     }
                 }
             }
         }
     }
+    AccessGlobalID.Unlock();
 
     for (int i = 0; i < todos.Count(); i++) {
-        for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
-            if (subJobDataList[todos[i]]->Result.surfaces[j].border != NULL
-                && subJobDataList[todos[i]]->Result.surfaces[j].border->Count() > 0) {
+        for (int j = 0; j < SubJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
+            if (SubJobDataList[todos[i]]->Result.surfaces[j].border != NULL
+                && SubJobDataList[todos[i]]->Result.surfaces[j].border->Count() > 0) {
                 // TODO: destroy border geometry in cells ALL of whose neighbors are already processed.
                 int numProcessed = 0;
 
                 for (int k = 0; k < 6; k++) {
-                    int x = subJobDataList[todos[i]]->gridX + TetraVoxelizer::moreNeighbors[k].X();
-                    int y = subJobDataList[todos[i]]->gridY + TetraVoxelizer::moreNeighbors[k].Y();
-                    int z = subJobDataList[todos[i]]->gridZ + TetraVoxelizer::moreNeighbors[k].Z();
+                    int x = SubJobDataList[todos[i]]->gridX + TetraVoxelizer::moreNeighbors[k].X();
+                    int y = SubJobDataList[todos[i]]->gridY + TetraVoxelizer::moreNeighbors[k].Y();
+                    int z = SubJobDataList[todos[i]]->gridZ + TetraVoxelizer::moreNeighbors[k].Z();
                     if (x == -1 || y == -1 || z == -1 || x >= divX || y >= divY || z >= divZ) {
                         numProcessed++;
                     } else {
                         for (int l = 0; l < todos.Count(); l++) {
-                            if (subJobDataList[todos[l]]->gridX == x
-                                    && subJobDataList[todos[l]]->gridY == y
-                                    && subJobDataList[todos[l]]->gridZ == z) {
-                                ASSERT(subJobDataList[todos[l]]->Result.done);
+                            if (SubJobDataList[todos[l]]->gridX == x
+                                    && SubJobDataList[todos[l]]->gridY == y
+                                    && SubJobDataList[todos[l]]->gridZ == z) {
+                                ASSERT(SubJobDataList[todos[l]]->Result.done);
                                 numProcessed++;
                                 break;
                             }
@@ -659,54 +702,29 @@ restart:
                     }
                 }
                 if (numProcessed == 6) {
-                    subJobDataList[todos[i]]->Result.surfaces[j].border = NULL;//->Clear();
+                    SubJobDataList[todos[i]]->Result.surfaces[j].border = NULL;//->Clear();
 #ifdef ULTRADEBUG
                     vislib::sys::Log::DefaultLog.WriteInfo("deleted border of (%u,%u,%u)[%u,%u][%u]",
-                        subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
-                        todos[i], j, subJobDataList[todos[i]]->Result.surfaces[j].globalID);
+                        SubJobDataList[todos[i]]->gridX, SubJobDataList[todos[i]]->gridY, SubJobDataList[todos[i]]->gridZ,
+                        todos[i], j, SubJobDataList[todos[i]]->Result.surfaces[j].globalID);
 #endif /* ULTRADEBUG */
                 }
-                //for (int x = subJobDataList[todos[i]]->gridX - 1; x <= subJobDataList[todos[i]]->gridX + 1; x++) {
-                //    for (int y = subJobDataList[todos[i]]->gridY - 1; y <= subJobDataList[todos[i]]->gridY + 1; y++) {
-                //        for (int z = subJobDataList[todos[i]]->gridZ - 1; z <= subJobDataList[todos[i]]->gridZ + 1; z++) {
-                //            if (x == -1 || y == -1 || z == -1 || x >= divX || y >= divY || z >= divZ) {
-                //                numProcessed++;
-                //            } else {
-                //                for (int l = 0; l < todos.Count(); l++) {
-                //                    if (subJobDataList[todos[l]]->gridX == x
-                //                            && subJobDataList[todos[l]]->gridY == y
-                //                            && subJobDataList[todos[l]]->gridZ == z) {
-                //                        ASSERT(subJobDataList[todos[l]]->Result.done);
-                //                        numProcessed++;
-                //                        break;
-                //                    }
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-                //if (numProcessed == 26) {
-                //    vislib::sys::Log::DefaultLog.WriteInfo("deleted border of (%u,%u,%u)[%u,%u][%u]",
-                //        subJobDataList[todos[i]]->gridX, subJobDataList[todos[i]]->gridY, subJobDataList[todos[i]]->gridZ,
-                //        i, j, subJobDataList[todos[i]]->Result.surfaces[j].globalID);
-                //    subJobDataList[todos[i]]->Result.surfaces[j].border = NULL;
-                //}
             }
         }
     }
 
     for (int i = 0; i < todos.Count(); i++) {
-        for (int j = 0; j < subJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
-            SIZE_T pos = uniqueIDs.IndexOf(subJobDataList[todos[i]]->Result.surfaces[j].globalID);
+        for (int j = 0; j < SubJobDataList[todos[i]]->Result.surfaces.Count(); j++) {
+            SIZE_T pos = uniqueIDs.IndexOf(SubJobDataList[todos[i]]->Result.surfaces[j].globalID);
             if (pos == vislib::Array<unsigned int>::INVALID_POS) {
-                uniqueIDs.Add(subJobDataList[todos[i]]->Result.surfaces[j].globalID);
-                countPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].mesh.Count() / 9);
-                surfPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].surface);
-                volPerID.Add(subJobDataList[todos[i]]->Result.surfaces[j].volume);
+                uniqueIDs.Add(SubJobDataList[todos[i]]->Result.surfaces[j].globalID);
+                countPerID.Add(SubJobDataList[todos[i]]->Result.surfaces[j].mesh.Count() / 9);
+                surfPerID.Add(SubJobDataList[todos[i]]->Result.surfaces[j].surface);
+                volPerID.Add(SubJobDataList[todos[i]]->Result.surfaces[j].volume);
             } else {
-                countPerID[pos] = countPerID[pos] + (subJobDataList[todos[i]]->Result.surfaces[j].mesh.Count() / 9);
-                surfPerID[pos] = surfPerID[pos] + subJobDataList[todos[i]]->Result.surfaces[j].surface;
-                volPerID[pos] = volPerID[pos] + subJobDataList[todos[i]]->Result.surfaces[j].volume;
+                countPerID[pos] = countPerID[pos] + (SubJobDataList[todos[i]]->Result.surfaces[j].mesh.Count() / 9);
+                surfPerID[pos] = surfPerID[pos] + SubJobDataList[todos[i]]->Result.surfaces[j].surface;
+                volPerID[pos] = volPerID[pos] + SubJobDataList[todos[i]]->Result.surfaces[j].volume;
             }
         }
     }
@@ -730,26 +748,24 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
 }
 
 
-void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDataList,
-                                           //vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
-                                           vislib::Array<unsigned int> &uniqueIDs) {
-	// copy finished meshes to output
+void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<unsigned int> &uniqueIDs) {
+    // copy finished meshes to output
     SIZE_T numTriangles = 0;
-	vislib::Array<SIZE_T> todos;
-	todos.SetCapacityIncrement(10);
-	for (SIZE_T i = 0; i < subJobDataList.Count(); i++) {
-        if (subJobDataList[i]->storeMesh && subJobDataList[i]->Result.done) {
-			todos.Add(i);
-            for (SIZE_T j = 0; j < subJobDataList[i]->Result.surfaces.Count(); j++) {
-                numTriangles += subJobDataList[i]->Result.surfaces[j].mesh.Count() / 9;
+    vislib::Array<SIZE_T> todos;
+    todos.SetCapacityIncrement(10);
+    for (SIZE_T i = 0; i < SubJobDataList.Count(); i++) {
+        if (SubJobDataList[i]->storeMesh && SubJobDataList[i]->Result.done) {
+            todos.Add(i);
+            for (SIZE_T j = 0; j < SubJobDataList[i]->Result.surfaces.Count(); j++) {
+                numTriangles += SubJobDataList[i]->Result.surfaces[j].mesh.Count() / 9;
             }
-		}
-	}
+        }
+    }
     if (todos.Count() == 0) {
         return;
     }
 
-	VoxelizerFloat *vert, *norm;
+    VoxelizerFloat *vert, *norm;
     unsigned char *col;
 
     vert = new VoxelizerFloat[numTriangles * 9];
@@ -767,11 +783,11 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
             //vislib::math::ShallowShallowTriangle<double, 3> sst(vert);
 
             for (int j = 0; j < todos.Count(); j++) {
-                for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
-                    if (subJobDataList[todos[j]]->Result.surfaces[k].globalID == uniqueIDs[i]) {
-                        for (SIZE_T l = 0; l < subJobDataList[todos[j]]->Result.surfaces[k].border->Count(); l++) {
-                            SIZE_T vertCount = (*subJobDataList[todos[j]]->Result.surfaces[k].border)[l]->triangles.Count() / 3;
-                            memcpy(&(vert[vertOffset]), (*subJobDataList[todos[j]]->Result.surfaces[k].border)[l]->triangles.PeekElements(),
+                for (int k = 0; k < SubJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
+                    if (SubJobDataList[todos[j]]->Result.surfaces[k].globalID == uniqueIDs[i]) {
+                        for (SIZE_T l = 0; l < SubJobDataList[todos[j]]->Result.surfaces[k].border->Count(); l++) {
+                            SIZE_T vertCount = (*SubJobDataList[todos[j]]->Result.surfaces[k].border)[l]->triangles.Count() / 3;
+                            memcpy(&(vert[vertOffset]), (*SubJobDataList[todos[j]]->Result.surfaces[k].border)[l]->triangles.PeekElements(),
                                 vertCount * 3 * sizeof(VoxelizerFloat));
                             for (SIZE_T m = 0; m < vertCount; m++) {
                                 col[vertOffset + m * 3] = c.R();
@@ -790,10 +806,10 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
             //vislib::math::ShallowShallowTriangle<double, 3> sst(vert);
 
             for (int j = 0; j < todos.Count(); j++) {
-                for (int k = 0; k < subJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
-                    if (subJobDataList[todos[j]]->Result.surfaces[k].globalID == uniqueIDs[i]) {
-                        SIZE_T vertCount = subJobDataList[todos[j]]->Result.surfaces[k].mesh.Count() / 3;
-                        memcpy(&(vert[vertOffset]), subJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements(),
+                for (int k = 0; k < SubJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
+                    if (SubJobDataList[todos[j]]->Result.surfaces[k].globalID == uniqueIDs[i]) {
+                        SIZE_T vertCount = SubJobDataList[todos[j]]->Result.surfaces[k].mesh.Count() / 3;
+                        memcpy(&(vert[vertOffset]), SubJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements(),
                              vertCount * 3 * sizeof(VoxelizerFloat));
                         for (SIZE_T l = 0; l < vertCount; l++) {
                             col[vertOffset + l * 3] = c.R();
@@ -820,9 +836,9 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<SubJobData*> &subJobDat
     }
 
     debugMeshes[meshBackBufferIndex].SetVertexData(vertOffset / 3, vert, norm, col, NULL, true);
-	//debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, tri, true);
+    //debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, tri, true);
     debugMeshes[meshBackBufferIndex].SetTriangleData(0, NULL, false);
 
-	meshBackBufferIndex = 1 - meshBackBufferIndex;
-	this->hash++;
+    meshBackBufferIndex = 1 - meshBackBufferIndex;
+    this->hash++;
 }
