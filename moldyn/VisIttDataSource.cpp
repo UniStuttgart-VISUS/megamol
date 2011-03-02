@@ -135,8 +135,8 @@ bool moldyn::VisIttDataSource::create(void) {
 void moldyn::VisIttDataSource::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) {
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == NULL) return;
+    f->SetSize(0);
     if (this->file == NULL) {
-        f->SetSize(0);
         return;
     }
     ASSERT(idx < this->FrameCount());
@@ -395,7 +395,6 @@ bool moldyn::VisIttDataSource::filenameChanged(param::ParamSlot& slot) {
         msg.Format("Frame cache size set to %i.\n", cacheSize);
         this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
     }
-
     if (this->frameTable.Count() > 0) {
         // refine bounding box using more frames
         this->loadFrame(&tmpFrame, static_cast<unsigned int>(this->frameTable.Count() - 1));
@@ -411,7 +410,6 @@ bool moldyn::VisIttDataSource::filenameChanged(param::ParamSlot& slot) {
             this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
         }
     }
-
     this->initFrameCache(cacheSize);
 
     return true; // to reset the dirty flag of the param slot
