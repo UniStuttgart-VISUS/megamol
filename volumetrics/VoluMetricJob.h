@@ -73,7 +73,9 @@ namespace volumetrics {
 
         unsigned int MaxGlobalID;
 
-        vislib::sys::CriticalSection AccessGlobalID;
+        vislib::sys::CriticalSection AccessMaxGlobalID;
+
+        vislib::sys::CriticalSection RewriteGlobalID;
 
         vislib::Array<SubJobData*> SubJobDataList;
 

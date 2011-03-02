@@ -1036,10 +1036,10 @@ DWORD TetraVoxelizer::Run(void *userData) {
     // TODO: it would really help if this dude already checked for finished neighbors and took the globalID from there
     // if possible
     unsigned int MinGID;
-    sjd->parent->AccessGlobalID.Lock();
+    sjd->parent->AccessMaxGlobalID.Lock();
     MinGID = sjd->parent->MaxGlobalID;
     sjd->parent->MaxGlobalID += sjd->Result.surfaces.Count();
-    sjd->parent->AccessGlobalID.Unlock();
+    sjd->parent->AccessMaxGlobalID.Unlock();
     for (x = 0; x < sjd->Result.surfaces.Count(); x++) {
         sjd->Result.surfaces[x].globalID = MinGID + x;
     }
@@ -1054,14 +1054,16 @@ DWORD TetraVoxelizer::Run(void *userData) {
     
     for (int k = 0; k < sjd->parent->SubJobDataList.Count(); k++) {
         if (sjd->parent->SubJobDataList[k]->Result.done && sjd->parent->SubJobDataList[k]->Result.surfaces.Count() > 0
-                && sjd->parent->SubJobDataList[k]->Result.surfaces[0].globalID != MinGID) {
+                && k != i) {
             vislib::math::Cuboid<VoxelizerFloat> c = sjd->Bounds;
             c.Union(sjd->parent->SubJobDataList[k]->Bounds);
             if (c.Volume() <= sjd->Bounds.Volume() + sjd->parent->SubJobDataList[k]->Bounds.Volume()) {
                 for (int j = 0; j < sjd->Result.surfaces.Count(); j++) {
                     for (int l = 0; l < sjd->parent->SubJobDataList[k]->Result.surfaces.Count(); l++) {
                         if (sjd->parent->areSurfacesJoinable(i, j, k, l)) {
+                            sjd->parent->RewriteGlobalID.Lock();
                             sjd->Result.surfaces[j].globalID = sjd->parent->SubJobDataList[k]->Result.surfaces[l].globalID;
+                            sjd->parent->RewriteGlobalID.Unlock();
                         }
                     }
                 }
