@@ -20,7 +20,7 @@ VISlibs := net gl graphics sys math base
 
 
 # Additional compiler flags
-CompilerFlags := $(CompilerFlags) -fPIC
+CompilerFlags := $(CompilerFlags) -fPIC -fopenmp
 ExcludeFromBuild += ./dllmain.cpp
 
 
