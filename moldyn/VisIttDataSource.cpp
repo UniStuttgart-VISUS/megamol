@@ -353,6 +353,8 @@ bool moldyn::VisIttDataSource::filenameChanged(param::ParamSlot& slot) {
         return true;
     }
 
+    this->findFilterColumn();
+
     this->frameTable.Add(this->file->Tell());
     this->buildFrameTable();
     this->setFrameCount(static_cast<unsigned int>(this->frameTable.Count()));
@@ -425,27 +427,7 @@ bool moldyn::VisIttDataSource::filterChanged(param::ParamSlot& slot) {
     unsigned int fc = this->FrameCount();
     this->resetFrameCache();
     this->setFrameCount(fc);
-
-    this->filterIndex = UINT_MAX;
-    vislib::StringA filtCol(this->filterColumn.Param<param::StringParam>()->Value());
-    filtCol.TrimSpaces();
-    for (SIZE_T i = 0; i < this->header.Count(); i++) {
-        vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
-        if (hi.First().Equals(filtCol)) {
-            this->filterIndex = static_cast<unsigned int>(i);
-            break;
-        }
-    }
-    if (this->filterIndex == UINT_MAX) {
-        try {
-            int idx = vislib::CharTraitsA::ParseInt(filtCol);
-            if ((idx >= 0) && (idx < this->header.Count())) {
-                this->filterIndex = idx;
-            }
-        } catch(...) {
-        }
-    }
-
+    this->findFilterColumn();
     this->initFrameCache(cs);
     return true;
 }
@@ -546,4 +528,31 @@ bool moldyn::VisIttDataSource::getExtentCallback(Call& caller) {
     }
 
     return false;
+}
+
+
+/*
+ * moldyn::VisIttDataSource::findFilterColumn
+ */
+void moldyn::VisIttDataSource::findFilterColumn(void) {
+
+    this->filterIndex = UINT_MAX;
+    vislib::StringA filtCol(this->filterColumn.Param<param::StringParam>()->Value());
+    filtCol.TrimSpaces();
+    for (SIZE_T i = 0; i < this->header.Count(); i++) {
+        vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
+        if (hi.First().Equals(filtCol)) {
+            this->filterIndex = static_cast<unsigned int>(i);
+            break;
+        }
+    }
+    if (this->filterIndex == UINT_MAX) {
+        try {
+            int idx = vislib::CharTraitsA::ParseInt(filtCol);
+            if ((idx >= 0) && (idx < this->header.Count())) {
+                this->filterIndex = idx;
+            }
+        } catch(...) {
+        }
+    }
 }

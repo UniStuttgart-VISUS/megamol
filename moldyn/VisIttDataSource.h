@@ -262,6 +262,9 @@ namespace moldyn {
          */
         bool getExtentCallback(Call& caller);
 
+        /** Finds the data column used for filtering */
+        void findFilterColumn(void);
+
         /** The file name */
         param::ParamSlot filename;
 
