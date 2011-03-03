@@ -28,7 +28,7 @@ ExcludeFromBuild += ./dllmain.cpp
 LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU
 
 # Additional linker flags
-LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic 
+LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic -lgomp
 
 # C
 CC               := gcc
