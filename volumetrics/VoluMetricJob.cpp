@@ -151,7 +151,7 @@ DWORD VoluMetricJob::Run(void *userData) {
     for (unsigned int frameI = 0; frameI < frameCnt; frameI++) {
 
         vislib::sys::ThreadPool pool;
-        pool.SetThreadCount(static_cast<SIZE_T>(vislib::sys::SystemInformation::ProcessorCount() * 1.5));
+        //pool.SetThreadCount(static_cast<SIZE_T>(vislib::sys::SystemInformation::ProcessorCount() * 1.5));
 
         datacall->SetFrameID(frameI, true);
         do {

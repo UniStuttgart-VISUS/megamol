@@ -1052,6 +1052,8 @@ DWORD TetraVoxelizer::Run(void *userData) {
         }
     }
     
+    vislib::Array<int> joinableSurfs;
+    joinableSurfs.SetCapacityIncrement(10);
     for (int k = 0; k < sjd->parent->SubJobDataList.Count(); k++) {
         if (sjd->parent->SubJobDataList[k]->Result.done && sjd->parent->SubJobDataList[k]->Result.surfaces.Count() > 0
                 && k != i) {
@@ -1059,13 +1061,27 @@ DWORD TetraVoxelizer::Run(void *userData) {
             c.Union(sjd->parent->SubJobDataList[k]->Bounds);
             if (c.Volume() <= sjd->Bounds.Volume() + sjd->parent->SubJobDataList[k]->Bounds.Volume()) {
                 for (int j = 0; j < sjd->Result.surfaces.Count(); j++) {
+                    joinableSurfs.Clear();
                     for (int l = 0; l < sjd->parent->SubJobDataList[k]->Result.surfaces.Count(); l++) {
                         if (sjd->parent->areSurfacesJoinable(i, j, k, l)) {
-                            sjd->parent->RewriteGlobalID.Lock();
-                            sjd->Result.surfaces[j].globalID = sjd->parent->SubJobDataList[k]->Result.surfaces[l].globalID;
-                            sjd->parent->RewriteGlobalID.Unlock();
+                            joinableSurfs.Add(l);
                         }
                     }
+                    if (joinableSurfs.Count() > 0) {
+                        sjd->parent->RewriteGlobalID.Lock();
+                        unsigned int smallest = INT_MAX;
+                        for (int a = 0; a < joinableSurfs.Count(); a++) {
+                            if (sjd->parent->SubJobDataList[k]->Result.surfaces[joinableSurfs[a]].globalID < smallest) {
+                                smallest = sjd->parent->SubJobDataList[k]->Result.surfaces[joinableSurfs[a]].globalID;
+                            }
+                        }
+                        for (int a = 0; a < joinableSurfs.Count(); a++) {
+                            sjd->parent->SubJobDataList[k]->Result.surfaces[joinableSurfs[a]].globalID = smallest;
+                        }
+                        sjd->Result.surfaces[j].globalID = smallest;
+                    }
+                    //sjd->Result.surfaces[j].globalID = sjd->parent->SubJobDataList[k]->Result.surfaces[l].globalID;
+                    sjd->parent->RewriteGlobalID.Unlock();
                 }
             }
         }
