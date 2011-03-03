@@ -184,6 +184,7 @@ namespace protein {
              * @return The filter value.
              */
             int Filter(void) const { return this->filter; };
+        
 
         protected:
 
@@ -1281,6 +1282,25 @@ namespace protein {
          * @return The maximum occupancy value.
          */
         float MaximumOccupancy() const { return this->maxOccupancy; }
+        
+        /**
+        * Answer the callTime
+        *
+        * @return the calltime
+        */
+        inline float CallTime(void) const {
+            return this->callTime;
+        }
+        
+         /**
+         * Sets the calltime to request data for.
+         *
+         * @param callTime The calltime to request data for.
+         *
+         */
+        inline void SetCallTime(float callTime) {
+            this->callTime = callTime;
+        }
 
     private:
         // -------------------- variables --------------------
@@ -1345,10 +1365,15 @@ namespace protein {
         float minOccupancy;
         /** The maximum occupancies */
         float maxOccupancy;
+        
+        /** The exact requested/stored calltime. */
+        float callTime;
+
     };
 
     /** Description class typedef */
     typedef megamol::core::CallAutoDescription<MolecularDataCall> MolecularDataCallDescription;
+    
 
 
 } /* end namespace protein */
