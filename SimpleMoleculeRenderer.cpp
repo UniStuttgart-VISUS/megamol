@@ -262,6 +262,7 @@ bool SimpleMoleculeRenderer::GetExtents(Call& call) {
  * protein::SimpleMoleculeRenderer::Render
  */
 bool SimpleMoleculeRenderer::Render(Call& call) {
+    
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
@@ -277,6 +278,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
 
     int cnt;
 
+    // set call time
+    mol->SetCallTime(callTime);
     // set frame ID and call data
     mol->SetFrameID(static_cast<int>( callTime));
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
