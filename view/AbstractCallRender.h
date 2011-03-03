@@ -79,6 +79,18 @@ namespace view {
         void ResetOutputBuffer(void);
 
         /**
+         * Copies the output buffer settings of 'call'
+         *
+         * @param call The source object to copy from
+         */
+        inline void SetOutputBuffer(AbstractCallRender& call) {
+            this->outputBuffer = call.outputBuffer;
+            this->outputFBO = call.outputFBO;
+            this->outputFBOTargets = call.outputFBOTargets;
+            this->outputViewport = call.outputViewport;
+        }
+
+        /**
          * Sets the opengl built-in output buffer to use. This also sets the
          * framebuffer object to NULL. The viewport to be sued will be set to
          * the current opengl viewport.

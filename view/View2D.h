@@ -21,6 +21,11 @@ namespace megamol {
 namespace core {
 namespace view {
 
+    /*
+     * Forward declaration of incoming render calls
+     */
+    class CallRenderView;
+
 
     /**
      * Base class of rendering graph calls
@@ -238,6 +243,9 @@ namespace view {
 
         /** the viewport width */
         float width;
+
+        /** the incoming rendering call */
+        class CallRenderView *incomingCall;
 
     };
 

@@ -30,7 +30,8 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"),
-        viewX(0.0f), viewY(0.0f), viewZoom(1.0f), width(1.0f) {
+        viewX(0.0f), viewY(0.0f), viewZoom(1.0f), width(1.0f),
+        incomingCall(NULL) {
 
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
@@ -109,11 +110,13 @@ void view::View2D::Render(void) {
             static_cast<GLsizei>(this->height));
     }
 
-    //if (this->setViewport) {
-    //    ::glViewport(0, 0,
-    //        static_cast<GLsizei>(this->camParams->TileRect().Width()),
-    //        static_cast<GLsizei>(this->camParams->TileRect().Height()));
-    //}
+    if (this->incomingCall != NULL) {
+        if (this->incomingCall->IsViewportSet()) {
+            ::glViewport(0, 0,
+                this->incomingCall->ViewportWidth(),
+                this->incomingCall->ViewportHeight());
+        }
+    }
 
     const float *bkgndCol = (this->overrideBkgndCol != NULL)
         ? this->overrideBkgndCol : this->bkgndColour();
@@ -162,8 +165,12 @@ void view::View2D::Render(void) {
         (1.0f / this->viewZoom - this->viewY));
     cr2d->SetBoundingBox(vr);
 
-    cr2d->SetOutputBuffer(GL_BACK,
-        vpx, vpy, static_cast<int>(w), static_cast<int>(h));
+    if (this->incomingCall == NULL) {
+        cr2d->SetOutputBuffer(GL_BACK,
+            vpx, vpy, static_cast<int>(w), static_cast<int>(h));
+    } else {
+        cr2d->SetOutputBuffer(*this->incomingCall);
+    }
 
     if (this->showBBoxSlot.Param<param::BoolParam>()->Value()) {
         ::glEnable(GL_BLEND);
@@ -367,6 +374,8 @@ bool view::View2D::OnRenderView(Call& call) {
     view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
     if (crv == NULL) return false;
 
+    this->incomingCall = crv;
+
     this->overrideViewport = overVP;
     //if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
     //    this->cam.SetParameters(this->camOverrides);
@@ -397,6 +406,7 @@ bool view::View2D::OnRenderView(Call& call) {
     //}
     this->overrideBkgndCol = NULL;
     this->overrideViewport = NULL;
+    this->incomingCall = NULL;
 
     return true;
 }
