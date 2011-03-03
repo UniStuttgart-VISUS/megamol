@@ -293,10 +293,6 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
 
     /* Bind the FBO and disable interpolation on target textures. */
     GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->idFb));
-    GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-        GL_NEAREST));
-    GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
-        GL_NEAREST));
 
     /* Set the appropriate colour attachment as render target. */
     if (this->cntColourAttachments < 1) {
@@ -355,10 +351,6 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
 
     /* Bind the FBO and disable interpolation on target textures. */
     GL_VERIFY_RETURN(::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->idFb));
-    GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-        GL_NEAREST));
-    GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
-        GL_NEAREST));
 
     GL_VERIFY_RETURN(::glDrawBuffersARB(cntColourAttachments, colourAttachments));
     // There is no ::glReadBuffersARB
