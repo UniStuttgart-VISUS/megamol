@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include <climits>
 #include "stdafx.h"
+#include <climits>
 #include "VisIttDataSource.h"
 #include "vislib/MemmappedFile.h"
 #include "param/EnumParam.h"
