@@ -30,12 +30,8 @@ void TestPathManipulations(void);
 
 void TestFileNameSequence(void);
 
-void TestBitmapCodecSimple(void);
-
 void TestAsciiFile(void);
 
 void TestNamedColours(void);
-
-void TestBitmapImage(void);
 
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

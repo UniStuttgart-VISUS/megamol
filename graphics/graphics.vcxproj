@@ -430,6 +430,7 @@
     <ClCompile Include="src\AbstractVISLogo.cpp" />
     <ClCompile Include="src\BitmapCodecCollection.cpp" />
     <ClCompile Include="src\BitmapImage.cpp" />
+    <ClCompile Include="src\BitmapPainter.cpp" />
     <ClCompile Include="src\BmpBitmapCodec.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\CameraLookAtDist.cpp" />
@@ -483,6 +484,7 @@
     <ClInclude Include="include\vislib\AbstractVISLogo.h" />
     <ClInclude Include="include\vislib\BitmapCodecCollection.h" />
     <ClInclude Include="include\vislib\BitmapImage.h" />
+    <ClInclude Include="include\vislib\BitmapPainter.h" />
     <ClInclude Include="include\vislib\BmpBitmapCodec.h" />
     <ClInclude Include="include\vislib\Camera.h" />
     <ClInclude Include="include\vislib\CameraLookAtDist.h" />

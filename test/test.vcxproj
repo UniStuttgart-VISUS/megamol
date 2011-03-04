@@ -217,6 +217,7 @@
     <ClCompile Include="test.cpp" />
     <ClCompile Include="testasyncsocket.cpp" />
     <ClCompile Include="testbezier.cpp" />
+    <ClCompile Include="testBitmapImage.cpp" />
     <ClCompile Include="testcmdlineparser.cpp" />
     <ClCompile Include="testcollection.cpp" />
     <ClCompile Include="testcomm.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="testasyncsocket.h" />
     <ClInclude Include="testbezier.h" />
+    <ClInclude Include="testBitmapImage.h" />
     <ClInclude Include="testcmdlineparser.h" />
     <ClInclude Include="testcollection.h" />
     <ClInclude Include="testcomm.h" />

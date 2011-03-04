@@ -58,6 +58,8 @@
 #include "testmsgdisp.h"
 #include "testpolynom.h"
 #include "testquaternion.h"
+//#include "testtriangle.h"
+#include "testBitmapImage.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -97,6 +99,7 @@ VislibTest tests[] = {
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},
     {_T("BitmapImage"), ::TestBitmapImage, "Tests BitmapImage"},
+    {_T("BitmapPainter"), ::TestBitmapPainter, "Test BitmapPainter"},
     // math
     {_T("Dimension"), ::TestDimension, "Tests vislib::math::Dimension"},
     {_T("FastMap"), ::TestFastMap, "Tests vislib::math::FastMap"},
