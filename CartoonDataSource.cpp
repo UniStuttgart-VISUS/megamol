@@ -243,10 +243,10 @@ void CartoonDataSource::ComputeBezierPoints( const MolecularDataCall *mol) {
     unsigned int numRectCurves = 0;
     this->rectCurves.SetCount( mol->ResidueCount());
 
-    MolecularDataCall::AminoAcid *aa0;
-    MolecularDataCall::AminoAcid *aa1;
-    MolecularDataCall::AminoAcid *aa2;
-    MolecularDataCall::AminoAcid *aa3;
+    const MolecularDataCall::AminoAcid *aa0;
+    const MolecularDataCall::AminoAcid *aa1;
+    const MolecularDataCall::AminoAcid *aa2;
+    const MolecularDataCall::AminoAcid *aa3;
     vislib::math::Vector<float, 3> pos0, pos1, pos2, pos3, cp1, cp2, dir0, dir1, dir2, dir3;
     bool flip = false;
 
@@ -272,10 +272,10 @@ void CartoonDataSource::ComputeBezierPoints( const MolecularDataCall *mol) {
             }
 
             aa0 = aa1 = aa2 = aa3 = 0;
-            aa0 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx-1]);
-            aa1 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx]);
-            aa2 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+1]);
-            aa3 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+2]);
+            aa0 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx-1]);
+            aa1 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx]);
+            aa2 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+1]);
+            aa3 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+2]);
             if( !aa0 || !aa1 || !aa2 || !aa3 ) continue;
 
             pos0.Set( mol->AtomPositions()[3*aa0->CAlphaIndex()],
@@ -395,10 +395,10 @@ void CartoonDataSource::ComputeBezierPointsTubes( const MolecularDataCall *mol) 
     unsigned int numTubeCurves = 0;
     this->tubeCurves.SetCount( mol->ResidueCount());
 
-    MolecularDataCall::AminoAcid *aa0;
-    MolecularDataCall::AminoAcid *aa1;
-    MolecularDataCall::AminoAcid *aa2;
-    MolecularDataCall::AminoAcid *aa3;
+    const MolecularDataCall::AminoAcid *aa0;
+    const MolecularDataCall::AminoAcid *aa1;
+    const MolecularDataCall::AminoAcid *aa2;
+    const MolecularDataCall::AminoAcid *aa3;
     vislib::math::Vector<float, 3> pos0, pos1, pos2, pos3, cp1, cp2;
     bool flip = false;
 
@@ -424,10 +424,10 @@ void CartoonDataSource::ComputeBezierPointsTubes( const MolecularDataCall *mol) 
             }
 
             aa0 = aa1 = aa2 = aa3 = 0;
-            aa0 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx-1]);
-            aa1 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx]);
-            aa2 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+1]);
-            aa3 = dynamic_cast<MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+2]);
+            aa0 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx-1]);
+            aa1 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx]);
+            aa2 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+1]);
+            aa3 = dynamic_cast<const MolecularDataCall::AminoAcid*>( mol->Residues()[resIdx+2]);
             if( !aa0 || !aa1 || !aa2 || !aa3 ) continue;
 
             pos0.Set( mol->AtomPositions()[3*aa0->CAlphaIndex()],

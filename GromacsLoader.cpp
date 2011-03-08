@@ -848,15 +848,15 @@ bool GromacsLoader::getData( core::Call& call) {
     }
 
     dc->SetConnections( this->connectivity.Count() / 2,
-        (unsigned int*)this->connectivity.PeekElements());
+        (const unsigned int*)this->connectivity.PeekElements());
     dc->SetResidues( this->residue.Count(),
-        (MolecularDataCall::Residue**)this->residue.PeekElements());
+        (const MolecularDataCall::Residue**)this->residue.PeekElements());
     dc->SetResidueTypeNames( this->residueTypeName.Count(),
-        (vislib::StringA*)this->residueTypeName.PeekElements());
+        (const vislib::StringA*)this->residueTypeName.PeekElements());
     dc->SetMolecules( this->molecule.Count(),
-        (MolecularDataCall::Molecule*)this->molecule.PeekElements());
+        (const MolecularDataCall::Molecule*)this->molecule.PeekElements());
     dc->SetChains( this->chain.Count(),
-        (MolecularDataCall::Chain*)this->chain.PeekElements());
+        (const MolecularDataCall::Chain*)this->chain.PeekElements());
 
     if( !this->secStructAvailable &&
             this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {

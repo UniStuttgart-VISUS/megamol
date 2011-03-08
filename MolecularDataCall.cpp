@@ -508,8 +508,8 @@ protein::MolecularDataCall::~MolecularDataCall(void) {
  * Set the atom types and positions.
  */
 void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
-        unsigned int* typeIdx, float* pos, AtomType* types,
-        float* bfactor, float* charge, float* occupancy) {
+        const unsigned int* typeIdx, const float* pos, const AtomType* types,
+        const float* bfactor, const float* charge, const float* occupancy) {
     // set all values
     this->atomCount = atomCnt;
     this->atomTypeCount = atomTypeCnt;
@@ -524,7 +524,7 @@ void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt
 /*
  * Set the residues.
  */
-void MolecularDataCall::SetResidues( unsigned int resCnt, Residue** res) {
+void MolecularDataCall::SetResidues( unsigned int resCnt, const Residue** res) {
     // set all values
     this->resCount = resCnt;
     this->residues = res;
@@ -533,7 +533,7 @@ void MolecularDataCall::SetResidues( unsigned int resCnt, Residue** res) {
 /*
  * Set the residue type names.
  */
-void MolecularDataCall::SetResidueTypeNames( unsigned int namesCnt, vislib::StringA* names) {
+void MolecularDataCall::SetResidueTypeNames( unsigned int namesCnt, const vislib::StringA* names) {
     // set all values
     this->resTypeNameCnt = namesCnt;
     this->resTypeNames = names;
@@ -542,7 +542,7 @@ void MolecularDataCall::SetResidueTypeNames( unsigned int namesCnt, vislib::Stri
 /*
  * Set the connections (bonds).
  */
-void MolecularDataCall::SetConnections( unsigned int conCnt, unsigned int* con) {
+void MolecularDataCall::SetConnections( unsigned int conCnt, const unsigned int* con) {
     // set all values
     this->connectionCount = conCnt;
     this->connections = con;
@@ -551,7 +551,7 @@ void MolecularDataCall::SetConnections( unsigned int conCnt, unsigned int* con) 
 /*
  * Set the molecules.
  */
-void MolecularDataCall::SetMolecules( unsigned int molCnt, Molecule* mol) {
+void MolecularDataCall::SetMolecules( unsigned int molCnt, const Molecule* mol) {
     // set all values
     this->molCount = molCnt;
     this->molecules = mol;
@@ -560,7 +560,7 @@ void MolecularDataCall::SetMolecules( unsigned int molCnt, Molecule* mol) {
 /*
  * Set the chains.
  */
-void MolecularDataCall::SetChains( unsigned int chainCnt, Chain* chain) {
+void MolecularDataCall::SetChains( unsigned int chainCnt, const Chain* chain) {
     // set all values
     this->chainCount = chainCnt;
     this->chains = chain;
@@ -591,8 +591,10 @@ bool MolecularDataCall::SetSecondaryStructure( unsigned int idx, SecStructure se
  */
 void MolecularDataCall::SetMoleculeSecondaryStructure( unsigned int molIdx, 
     unsigned int firstSecS, unsigned int secSCnt) {
+	// TODO: this is very ugly!
+	MolecularDataCall::Molecule *_molecules = const_cast<MolecularDataCall::Molecule*>(this->molecules);
     if( molIdx < this->molCount ) {
-        this->molecules[molIdx].SetSecondaryStructure( firstSecS, secSCnt);
+        _molecules[molIdx].SetSecondaryStructure( firstSecS, secSCnt);
     }
 }
 

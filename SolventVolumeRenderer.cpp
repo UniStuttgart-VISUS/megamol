@@ -997,7 +997,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call)
 		// get the data call
 		MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 		if (mol && (*mol)(MolecularDataCall::CallForGetData)) {
-			vislib::StringA* residueTypes = mol->ResidueTypeNames();
+			const vislib::StringA* residueTypes = mol->ResidueTypeNames();
 
 			for(int i = 0; i < residueTokens.Count(); i++) {
 				vislib::TString token = residueTokens[i];
@@ -1153,12 +1153,12 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		updatVolumeTextureAtoms[atomCnt*4+3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomCnt]].Radius() * this->scale;
 	}*/
 
-	MolecularDataCall::Residue **residues = mol->Residues();
-	/* sortierung nach atomen die das l�sungsmittel bilden und der rest ... atomIdxSol  l�uft r�ckw�rts .. */
+	const MolecularDataCall::Residue **residues = mol->Residues();
+	/* sortierung nach atomen die das loesungsmittel bilden und der rest ... atomIdxSol  laeuuft rueckwaerts .. */
 	int atomCntMol = 0, atomCntSol = 0;
 
 	for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
-		MolecularDataCall::Residue *residue = residues[residueIdx];
+		const MolecularDataCall::Residue *residue = residues[residueIdx];
 		int firstAtomIndex = residue->FirstAtomIndex();
 		int lastAtomIndx = residue->FirstAtomIndex() + residue->AtomCount();
 

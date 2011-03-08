@@ -862,6 +862,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Filter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\FrodockLoader.cpp"
 				>
 			</File>
@@ -1067,6 +1071,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SolventDataGenerator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SolventRenderer.cpp"
 				>
 			</File>
@@ -1241,6 +1249,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Filter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\FrodockLoader.h"
 				>
 			</File>
@@ -1386,6 +1398,10 @@
 			</File>
 			<File
 				RelativePath=".\SolPathRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SolventDataGenerator.h"
 				>
 			</File>
 			<File
