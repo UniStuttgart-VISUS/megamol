@@ -617,6 +617,14 @@ bool ProteinVolumeRenderer::getSegmentationData( core::Call& call) {
     c->SetMarkerFlag( this->drawMarker);
     this->drawMarker = false;
 
+    // set the last call time
+    if( protein ) 
+        c->SetCallTime( this->callTime);
+    else if( mol )
+        c->SetCallTime( this->callTime);
+    else
+        return false;
+
     return true;
 }
 
@@ -688,7 +696,7 @@ bool protein::ProteinVolumeRenderer::Render( Call& call ) {
     this->ParameterRefresh( cr3d);
     
     // get the call time
-    float callTime = cr3d->Time();
+    this->callTime = cr3d->Time();
 
     // DEBUG
 #ifdef STOP_SEGMENTATION

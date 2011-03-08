@@ -468,6 +468,8 @@ namespace protein {
         bool drawMarker;
 
         bool forceUpdateVolumeTexture;
+
+        float callTime;
 	};
 
 

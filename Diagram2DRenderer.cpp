@@ -50,6 +50,9 @@ Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModule (),
     // set up the clear diagram param
     this->clearDiagramParam.SetParameter( new param::ButtonParam( vislib::sys::KeyCode::KEY_DELETE));
     this->MakeSlotAvailable( &this->clearDiagramParam);
+
+    // set the label space
+    this->labelSpace.Set( -1.0f, 1.0f,-1.0);
 }
 
 /*
@@ -151,6 +154,8 @@ bool Diagram2DRenderer::Render( view::CallRender2D &call) {
     ::glPushMatrix();
     ::glLoadIdentity();
 
+    float s =  float( resolutionParam.Param<param::IntParam>()->Value()) / 10000.0f;
+
     // draw marker, if requested
     glEnable( GL_LINE_STIPPLE);
     glLineStipple( 2, 0x00FF);
@@ -159,15 +164,30 @@ bool Diagram2DRenderer::Render( view::CallRender2D &call) {
         vislib::StringA tmpStr;
         if( f.Initialise() ) {
             tmpStr.Format( " %.2f", diagram->GetX());
-            glColor3f( 1.0f, 1.0f, 1.0f);
-            glBegin( GL_QUADS);
-            glVertex2f( dataPoint.X(), 1.0f);
-            glVertex2f( dataPoint.X(), 1.0f - f.LineHeight( float( resolutionParam.Param<param::IntParam>()->Value()) / 10000.0f));
-            glVertex2f( dataPoint.X() + f.LineWidth( float( resolutionParam.Param<param::IntParam>()->Value()) / 10000.0f, tmpStr.PeekBuffer()), 1.0f - f.LineHeight( float( resolutionParam.Param<param::IntParam>()->Value()) / 10000.0f));
-            glVertex2f( dataPoint.X() + f.LineWidth( float( resolutionParam.Param<param::IntParam>()->Value()) / 10000.0f, tmpStr.PeekBuffer()), 1.0f);
-            glEnd();
-            glColor3f( 0.5f, 0.5f, 0.5f);
-            f.DrawString( dataPoint.X(), 1.0f, float( resolutionParam.Param<param::IntParam>()->Value()) / 10000.0f, true, tmpStr.PeekBuffer());
+            s = float( resolutionParam.Param<param::IntParam>()->Value()) / 10000.0f;
+            if( this->labelSpace.X() < dataPoint.X() || labelSpace.Z() > dataPoint.X() ) {
+                glColor3f( 1.0f, 1.0f, 1.0f);
+                glBegin( GL_QUADS);
+                glVertex2f( dataPoint.X(), 1.0f);
+                glVertex2f( dataPoint.X(), 1.0f - f.LineHeight( s));
+                glVertex2f( dataPoint.X() + f.LineWidth( s, tmpStr.PeekBuffer()), 1.0f - f.LineHeight( s));
+                glVertex2f( dataPoint.X() + f.LineWidth( s, tmpStr.PeekBuffer()), 1.0f);
+                glEnd();
+                glColor3f( 0.5f, 0.5f, 0.5f);
+                f.DrawString( dataPoint.X(), 1.0f, s, true, tmpStr.PeekBuffer());
+                this->labelSpace.Set( dataPoint.X() + f.LineWidth( s, tmpStr.PeekBuffer()), 1.0f - f.LineHeight( s), dataPoint.X());
+            } else {
+                glColor3f( 1.0f, 1.0f, 1.0f);
+                glBegin( GL_QUADS);
+                glVertex2f( dataPoint.X(), labelSpace.Y());
+                glVertex2f( dataPoint.X(), labelSpace.Y() - f.LineHeight( s));
+                glVertex2f( dataPoint.X() + f.LineWidth( s, tmpStr.PeekBuffer()), labelSpace.Y() - f.LineHeight( s));
+                glVertex2f( dataPoint.X() + f.LineWidth( s, tmpStr.PeekBuffer()), labelSpace.Y());
+                glEnd();
+                glColor3f( 0.5f, 0.5f, 0.5f);
+                f.DrawString( dataPoint.X(), this->labelSpace.Y(), s, true, tmpStr.PeekBuffer());
+                this->labelSpace.Set( dataPoint.X() + f.LineWidth( s, tmpStr.PeekBuffer()), this->labelSpace.Y() - f.LineHeight( s), dataPoint.X());
+            }
         }
         glColor3f( 0.5f, 0.5f, 0.5f);
         glBegin( GL_LINES);
@@ -180,8 +200,8 @@ bool Diagram2DRenderer::Render( view::CallRender2D &call) {
     // draw the new data point
     glColor3fv( this->plotColor.PeekComponents());
     // draw line, if the difference is small (but positive
-    if( ( dataPoint.X() - this->oldDataPoint.X()) < ( 0.5f / diagram->GetRangeX()) &&
-        ( dataPoint.X() - this->oldDataPoint.X()) > 0.0f) {
+    if( ( dataPoint.X() - this->oldDataPoint.X()) < ( 2.0f / diagram->GetRangeX()) &&
+        ( dataPoint.X() - this->oldDataPoint.X()) >= 0.0f) {
         glBegin( GL_LINES);
         glVertex2fv( this->oldDataPoint.PeekComponents());
         glVertex2fv( dataPoint.PeekComponents());
@@ -203,14 +223,6 @@ bool Diagram2DRenderer::Render( view::CallRender2D &call) {
     // disable render to texture
     this->fbo[this->currentFbo].Disable();
     
-    // reset OGL point parameters
-    glPointSize( 1.0f);
-    glDisable( GL_POINT_SMOOTH);
-    glDisable( GL_POINT_SIZE);
-    glLineWidth( 1.0f);
-    glDisable( GL_LINE_SMOOTH);
-    glDisable( GL_LINE_WIDTH);
-
     // draw the result
     //this->fbo[this->currentFbo].DrawColourTexture();
     glEnable( GL_TEXTURE_2D);
@@ -228,6 +240,33 @@ bool Diagram2DRenderer::Render( view::CallRender2D &call) {
     glEnd(); // GL_QUADS
     glBindTexture( GL_TEXTURE_2D, 0);
     glDisable( GL_TEXTURE_2D);
+
+    // draw the marker for the time
+    glColor3f( 1.0f, 0.75f, 0.0f);
+    float ct = diagram->CallTime();
+    ct /= diagram->GetRangeX();
+    glEnable( GL_LINE_STIPPLE);
+    glLineStipple( 2, 0x0303);
+    glBegin( GL_LINES);
+    glVertex2f( ct, 0.0f);
+    glVertex2f( ct, 1.0f);
+    glEnd(); // GL_LINES
+    glDisable( GL_LINE_STIPPLE);
+    vislib::StringA ctStr;
+    vislib::graphics::gl::SimpleFont ctFont;
+    if( ctFont.Initialise() ) {
+        ctStr.Format( " %.2f", diagram->CallTime());
+        s /= 2.0f;
+        ctFont.DrawString( ct, 1.0f - ctFont.LineHeight( s), s, true, ctStr.PeekBuffer());
+    }
+
+    // reset OGL point parameters
+    glPointSize( 1.0f);
+    glDisable( GL_POINT_SMOOTH);
+    glDisable( GL_POINT_SIZE);
+    glLineWidth( 1.0f);
+    glDisable( GL_LINE_SMOOTH);
+    glDisable( GL_LINE_WIDTH);
 
     // store the new data point
     this->oldDataPoint = dataPoint;
@@ -303,4 +342,7 @@ void Diagram2DRenderer::clearDiagram() {
         this->fbo[1].Disable();
     }
     glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
+    
+    // set the label space
+    this->labelSpace.Set( -1.0f, 1.0f,-1.0);
 }
