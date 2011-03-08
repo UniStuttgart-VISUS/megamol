@@ -79,7 +79,7 @@ namespace protein {
             /**
              * Get the type of the residue
              */
-            virtual ResidueType Identifier() { return UNSPECIFIC; }
+            virtual ResidueType Identifier() const { return UNSPECIFIC; }
 
             /**
              * Returns the number of atoms.
@@ -1043,14 +1043,14 @@ namespace protein {
          *
          * @return The residue array.
          */
-        Residue** Residues(void) const { return residues; }
+        const Residue** Residues(void) const { return residues; }
 
         /**
          * Get the residue type names.
          *
          * @return The residue type name array.
          */
-        vislib::StringA* ResidueTypeNames(void) const { return resTypeNames; }
+        const vislib::StringA* ResidueTypeNames(void) const { return resTypeNames; }
 
         /**
          * Get the residue type name count.
@@ -1128,8 +1128,8 @@ namespace protein {
          * @param occupancies   The atom occupancies.
          */
         void SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
-            unsigned int* typeIdx, float* pos, AtomType* types,
-            float* bfactor, float* charge, float* occupancy);
+            const unsigned int* typeIdx, const float* pos, const AtomType* types,
+            const float* bfactor, const float* charge, const float* occupancy);
 
         /**
          * Set the residues.
@@ -1137,7 +1137,7 @@ namespace protein {
          * @param resCnt    The residue count.
          * @param res       The residues.
          */
-        void SetResidues( unsigned int resCnt, Residue** res);
+        void SetResidues( unsigned int resCnt, const Residue** res);
 
         /**
          * Set the residue type names.
@@ -1145,7 +1145,7 @@ namespace protein {
          * @param namesCnt  The residue type name count.
          * @param names     The residue type names.
          */
-        void SetResidueTypeNames( unsigned int namesCnt, vislib::StringA* names);
+        void SetResidueTypeNames( unsigned int namesCnt, const vislib::StringA* names);
 
         /**
          * Set the connections (bonds).
@@ -1153,7 +1153,7 @@ namespace protein {
          * @param conCnt    The connection count.
          * @param con       The connections.
          */
-        void SetConnections( unsigned int conCnt, unsigned int* con);
+        void SetConnections( unsigned int conCnt, const unsigned int* con);
 
         /**
          * Set the molecules.
@@ -1161,7 +1161,7 @@ namespace protein {
          * @param molCnt    The molecule count.
          * @param mol       The molecules.
          */
-        void SetMolecules( unsigned int molCnt, Molecule* mol);
+        void SetMolecules( unsigned int molCnt, const Molecule* mol);
 
         /**
          * Set the number of secondary structure elements.
@@ -1212,7 +1212,7 @@ namespace protein {
          * @param chainCnt  The chain count.
          * @param chain     The chains.
          */
-        void SetChains( unsigned int chainCnt, Chain* chain);
+        void SetChains( unsigned int chainCnt, const Chain* chain);
 
         /**
          * Set the bfactor range.
@@ -1302,28 +1302,76 @@ namespace protein {
             this->callTime = callTime;
         }
 
+		inline MolecularDataCall& operator=(const MolecularDataCall& s) {
+			this->SetFrameID( s.FrameID() );
+			this->SetDataHash( s.DataHash() );
+			this->atomCount = s.atomCount;
+			this->atomPos = s.atomPos;
+			this->atomTypeCount = s.atomTypeCount;
+			this->atomTypeIdx = s.atomTypeIdx;
+			this->atomType = s.atomType;
+			this->atomBFactors = s.atomBFactors;
+			this->atomCharges = s.atomCharges;
+			this->atomOccupancies = s.atomOccupancies;
+			this->minBFactor = s.minBFactor;
+			this->maxBFactor = s.maxBFactor;
+			this->minCharge = s.minCharge;
+			this->maxCharge = s.maxCharge;
+			this->minOccupancy = s.minOccupancy;
+			this->maxOccupancy = s.maxOccupancy;
+			this->connectionCount = s.connectionCount;
+			this->connections = s.connections;
+			this->resCount = s.resCount;
+			this->residues = s.residues;
+			this->resTypeNameCnt = s.resTypeNameCnt;
+			this->resTypeNames = s.resTypeNames;
+			this->molCount = s.molCount;
+			this->molecules = s.molecules;
+			this->chainCount = s.chainCount;
+			this->chains = s.chains;
+			this->secStruct = s.secStruct; // todo: besser zeiger und anzahl ?!
+
+
+			
+			/*molDest->SetFrameID(molSource->FrameID()); // copy back the actual loaded frame id
+
+	molDest->SetDataHash( molSource->DataHash());
+
+	molDest->SetAtoms(molSource->AtomCount(), molSource->AtomTypeCount(), molSource->AtomTypeIndices(), molSource->AtomPositions(),
+		molSource->AtomTypes(), molSource->AtomBFactors(), molSource->AtomCharges(), molSource->AtomOccupancies());
+	molDest->SetBFactorRange( molSource->MinimumBFactor(), molSource->MaximumBFactor());
+	molDest->SetChargeRange( molSource->MinimumCharge(), molSource->MaximumCharge());
+	molDest->SetOccupancyRange( molSource->MinimumOccupancy(), molSource->MaximumOccupancy());
+	molDest->SetConnections(molSource->ConnectionCount(), molSource->Connection());
+	molDest->SetResidues( molSource->ResidueCount(), molSource->Residues());
+	molDest->SetResidueTypeNames( molSource->ResidueTypeNameCount(), molSource->ResidueTypeNames());
+	molDest->SetMolecules( molSource->MoleculeCount(), molSource->Molecules());
+	molDest->SetChains( molSource->ChainCount(), molSource->Chains());*/
+			return *this;
+		}
+
     private:
         // -------------------- variables --------------------
 
         /** The number of atoms. */
         unsigned int atomCount;
         /** The array of atom positions. */
-        float* atomPos;
+        const float* atomPos;
         /** The array of atom type indices. */
-        unsigned int* atomTypeIdx;
+        const unsigned int* atomTypeIdx;
 
         /** The array of residues. */
-        Residue** residues;
+        const Residue** residues;
         /** The number of residues. */
         unsigned int resCount;
 
         /** The array pf residue type names */
-        vislib::StringA* resTypeNames;
+        const vislib::StringA* resTypeNames;
         /** The number of residue type names */
         unsigned int resTypeNameCnt;
 
         /** The array of molecules. */
-        Molecule* molecules;
+        const Molecule* molecules;
         /** The number of molecules. */
         unsigned int molCount;
 
@@ -1331,36 +1379,36 @@ namespace protein {
         vislib::Array<SecStructure> secStruct;
 
         /** The array of chains. */
-        Chain* chains;
+        const Chain* chains;
         /** The number of chains. */
         unsigned int chainCount;
 
         /** The number of atom types. */
         unsigned int atomTypeCount;
         /** The array of atom types. */
-        AtomType* atomType;
+        const AtomType* atomType;
 
         /** The total number of connections (bonds) */
         unsigned int connectionCount;
         /** The array of connections (bonds) of the atoms */
-        unsigned int* connections;
+        const unsigned int* connections;
 
         /** The array of b-factors */
-        float* atomBFactors;
+        const float* atomBFactors;
         /** The minimum bfactor */
         float minBFactor;
         /** The maximum bfactor */
         float maxBFactor;
         
         /** The array of charges */
-        float* atomCharges;
+        const float* atomCharges;
         /** The minimum charges */
         float minCharge;
         /** The maximum charges */
         float maxCharge;
         
         /** The array of occupancies */
-        float* atomOccupancies;
+        const float* atomOccupancies;
         /** The minimum occupancies */
         float minOccupancy;
         /** The maximum occupancies */

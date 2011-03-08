@@ -863,7 +863,7 @@ bool PDBLoader::getData( core::Call& call) {
     dc->SetConnections( this->connectivity.Count() / 2,
                         (unsigned int*)this->connectivity.PeekElements());
     dc->SetResidues( this->residue.Count(),
-      (MolecularDataCall::Residue**)this->residue.PeekElements());
+      (const MolecularDataCall::Residue**)this->residue.PeekElements());
     dc->SetResidueTypeNames( this->residueTypeName.Count(),
     (vislib::StringA*)this->residueTypeName.PeekElements());
     dc->SetMolecules( this->molecule.Count(),

@@ -61,7 +61,7 @@ bool MoleculeSequenceRenderer::Render(CallRender2D& call)
 	unsigned int moleculeCount;// = data->MoleculeCount();
 	const MolecularDataCall::Molecule *molecules = data->Molecules();
 	unsigned int residueCount;// = data->ResidueCount();
-	MolecularDataCall::Residue **residues = data->Residues();
+	const MolecularDataCall::Residue **residues = data->Residues();
 
 	const float buttonWidth = 20;
 	const float buttonHeight = 10;
