@@ -151,6 +151,8 @@ namespace protein {
         /** the plot color */
         vislib::math::Vector<float, 3> plotColor;
 
+        /** the last label area */
+        vislib::math::Vector<float, 3> labelSpace;
     };
 
 }

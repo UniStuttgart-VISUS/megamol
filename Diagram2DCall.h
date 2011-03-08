@@ -164,6 +164,20 @@ namespace protein {
          */
          bool Marker() { return markerFlag; };
 
+        /**
+         * Set the call time.
+         *
+         * @param ct The call time
+         */
+        void SetCallTime( float ct) { callTime = ct; };
+
+        /**
+         * Returns the call time.
+         *
+         * @return The call time
+         */
+         float CallTime() { return callTime; };
+
     private:
         /** the range of x values */
         float xRange;
@@ -174,6 +188,9 @@ namespace protein {
         float xValue;
         /** the current value on the y axis */
         float yValue;
+
+        /** the call time */
+        float callTime;
 
         /** clear the diagram */
         bool clearDiagram;
