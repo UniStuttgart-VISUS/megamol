@@ -248,7 +248,7 @@ namespace protein {
             /**
              * Get the type of the residue
              */
-            virtual ResidueType Identifier() { return AMINOACID; }
+            virtual ResidueType Identifier() const { return AMINOACID; }
 
             /**
              * Returns the index of the C alpha atom.
