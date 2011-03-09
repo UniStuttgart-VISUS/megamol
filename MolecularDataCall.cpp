@@ -20,7 +20,7 @@ using namespace megamol::protein;
  * protein::MolecularDataCall::Residue::Residue
  */
 protein::MolecularDataCall::Residue::Residue(void) : atomCnt(0), 
-        firstAtomIdx(0), boundingBox( 0, 0, 0, 0, 0, 0), type( 0) {
+        firstAtomIdx(0), boundingBox( 0, 0, 0, 0, 0, 0), type( 0), moleculeIndex(-1) {
     // intentionally empty
 }
 
@@ -31,7 +31,7 @@ protein::MolecularDataCall::Residue::Residue(void) : atomCnt(0),
 protein::MolecularDataCall::Residue::Residue(
         const protein::MolecularDataCall::Residue& src) : atomCnt( src.atomCnt),
         firstAtomIdx( src.firstAtomIdx), boundingBox( src.boundingBox),
-        type( src.type) {
+        type( src.type), moleculeIndex(src.moleculeIndex) {
     // intentionally empty
 }
 
@@ -41,8 +41,8 @@ protein::MolecularDataCall::Residue::Residue(
  */
 protein::MolecularDataCall::Residue::Residue( unsigned int firstAtomIdx,
         unsigned int atomCnt, vislib::math::Cuboid<float> bbox, 
-        unsigned int typeIdx) : atomCnt(atomCnt), firstAtomIdx(firstAtomIdx), 
-        boundingBox( bbox), type( typeIdx) {
+        unsigned int typeIdx, int moleculeIdx) : atomCnt(atomCnt), firstAtomIdx(firstAtomIdx), 
+        boundingBox( bbox), type( typeIdx), moleculeIndex(moleculeIdx) {
     // intentionally empty
 }
 
@@ -75,6 +75,7 @@ protein::MolecularDataCall::Residue::operator=(
     this->firstAtomIdx = rhs.firstAtomIdx;
     this->boundingBox = rhs.boundingBox;
     this->type = rhs.type;
+	this->moleculeIndex = rhs.moleculeIndex;
     return *this;
 }
 
@@ -87,7 +88,8 @@ bool protein::MolecularDataCall::Residue::operator==(
     return ((this->atomCnt == rhs.atomCnt)
         && (this->firstAtomIdx == rhs.firstAtomIdx)
         && (this->boundingBox == rhs.boundingBox)
-        && (this->type == rhs.type));
+        && (this->type == rhs.type)
+		&& (this->moleculeIndex == rhs.moleculeIndex));
 }
 
 // ======================================================================
@@ -106,7 +108,7 @@ protein::MolecularDataCall::AminoAcid::AminoAcid(void) : Residue(),
  */
 protein::MolecularDataCall::AminoAcid::AminoAcid(
         const protein::MolecularDataCall::AminoAcid& src) : Residue(
-        src.firstAtomIdx, src.atomCnt, src.boundingBox, src.type), 
+		src.firstAtomIdx, src.atomCnt, src.boundingBox, src.type, src.moleculeIndex), 
         cAlphaIdx(src.cAlphaIdx), cCarbIdx(src.cCarbIdx), 
         nIdx(src.nIdx), oIdx(src.oIdx) {
     // intentionally empty
@@ -119,8 +121,8 @@ protein::MolecularDataCall::AminoAcid::AminoAcid(
 protein::MolecularDataCall::AminoAcid::AminoAcid(unsigned int firstAtomIdx,
         unsigned int atomCnt, unsigned int cAlphaIdx, unsigned int cCarbIdx,
         unsigned int nIdx, unsigned int oIdx, 
-        vislib::math::Cuboid<float> bbox, unsigned int typeIdx) : 
-        Residue( firstAtomIdx, atomCnt, bbox, typeIdx),
+        vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx) : 
+        Residue( firstAtomIdx, atomCnt, bbox, typeIdx, moleculeIdx),
         cAlphaIdx(cAlphaIdx), cCarbIdx(cCarbIdx), nIdx(nIdx), oIdx(oIdx) {
     // intentionally empty
 }
@@ -340,7 +342,7 @@ bool protein::MolecularDataCall::AtomType::operator==(
  */
 protein::MolecularDataCall::Molecule::Molecule(void) : firstResidueIndex(0), 
         residueCount(0), firstSecStructIdx( 0), secStructCount( 0),
-        firstConIdx( 0), conCount( 0){
+        firstConIdx( 0), conCount( 0), chainIndex(-1) {
     // intentionally empty
 }
 
@@ -354,7 +356,7 @@ protein::MolecularDataCall::Molecule::Molecule(
     residueCount( src.residueCount), 
     firstSecStructIdx( src.firstSecStructIdx),
     secStructCount( src.secStructCount),
-    firstConIdx( src.firstConIdx), conCount( src.conCount) {
+    firstConIdx( src.firstConIdx), conCount( src.conCount), chainIndex(src.chainIndex) {
     // intentionally empty
 }
 
@@ -363,9 +365,9 @@ protein::MolecularDataCall::Molecule::Molecule(
  * protein::MolecularDataCall::Molecule::Molecule
  */
 protein::MolecularDataCall::Molecule::Molecule( unsigned int firstResIdx,
-    unsigned int resCnt) : firstResidueIndex( firstResIdx),
+    unsigned int resCnt, int chainIdx) : firstResidueIndex( firstResIdx),
     residueCount(resCnt), firstSecStructIdx( 0), secStructCount( 0),
-    firstConIdx( 0), conCount( 0) {
+    firstConIdx( 0), conCount( 0), chainIndex(chainIdx) {
     // intentionally empty
 }
 
@@ -386,6 +388,7 @@ protein::MolecularDataCall::Molecule::operator=(
         const protein::MolecularDataCall::Molecule& rhs) {
     this->firstResidueIndex = rhs.firstResidueIndex;
     this->residueCount = rhs.residueCount;
+    this->chainIndex = rhs.chainIndex;
     this->firstSecStructIdx = rhs.firstSecStructIdx;
     this->secStructCount = rhs.secStructCount;
     this->firstConIdx = rhs.firstConIdx;
@@ -401,6 +404,7 @@ bool protein::MolecularDataCall::Molecule::operator==(
     const protein::MolecularDataCall::Molecule& rhs) const {
     return ((this->firstResidueIndex == rhs.firstResidueIndex)
     && (this->residueCount == rhs.residueCount)
+    && (this->chainIndex == rhs.chainIndex)
     && (this->firstSecStructIdx == rhs.firstSecStructIdx)
     && (this->secStructCount == rhs.secStructCount) 
     && (this->firstConIdx == rhs.firstConIdx)
@@ -488,7 +492,7 @@ const unsigned int protein::MolecularDataCall::CallForGetExtent = 1;
  * protein::MolecularDataCall::MolecularDataCall
  */
 protein::MolecularDataCall::MolecularDataCall(void) : AbstractGetData3DCall(),
-        atomCount( 0), atomPos( 0), atomTypeIdx( 0), 
+        atomCount( 0), atomPos( 0), atomTypeIdx( 0), atomResidueIdx( 0),
         residues( 0), resCount( 0),
         molecules( 0), molCount( 0),
         chains( 0), chainCount( 0),
@@ -508,14 +512,16 @@ protein::MolecularDataCall::~MolecularDataCall(void) {
  * Set the atom types and positions.
  */
 void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
-        const unsigned int* typeIdx, const float* pos, const AtomType* types,
+        const unsigned int* typeIdx, const float* pos, const AtomType* types, const int *residueIdx,
         const float* bfactor, const float* charge, const float* occupancy) {
     // set all values
     this->atomCount = atomCnt;
     this->atomTypeCount = atomTypeCnt;
     this->atomTypeIdx = typeIdx;
+	this->atomResidueIdx = residueIdx; // -> SetAtomResidueIndices()
     this->atomPos = pos;
     this->atomType = types;
+	this->atomResidueIdx = residueIdx;
     this->atomBFactors = bfactor;
     this->atomCharges = charge;
     this->atomOccupancies = occupancy;

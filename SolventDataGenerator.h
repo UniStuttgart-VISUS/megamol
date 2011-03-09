@@ -28,6 +28,14 @@
 namespace megamol {
 namespace protein {
 
+/*	template<typename PointType, int Dim>
+	class GridNeighbourFinder {
+	public:
+		GridNeighbourFinder(PointType *pointData, int pointCount, const BBox& boundingBox, vislib::gridResolution/ *[Dim]* /) {
+		}
+
+	};*/
+
     /**
      * generator for hydrogent bounds etc ...
 	 * this class can be put in place between PDBLoader and a molecule renderer (SolventVolumeRenderer for example)...
@@ -91,6 +99,8 @@ namespace protein {
 
         bool getExtent( core::Call& call);
 
+		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
+
 		/**
          * Implementation of 'Release'.
          */
@@ -107,6 +117,11 @@ namespace protein {
 
         /** The data callee slot */
         megamol::core::CalleeSlot dataOutSlot;
+
+		/** Distance for hydrogen bonds */
+		megamol::core::param::ParamSlot hBondDistance;
+
+		vislib::Array<float> middleAtomPos;
     };
 
 

@@ -806,12 +806,13 @@ bool GromacsLoader::getData( core::Call& call) {
 
         dc->SetAtoms(this->data[dc->FrameID()]->AtomCount(),
              this->atomType.Count(),
-             (unsigned int*)this->atomTypeIdx.PeekElements(),
-             (float*)this->data[dc->FrameID()]->AtomPositions(),
-             (MolecularDataCall::AtomType*)this->atomType.PeekElements(),
-             (float*)this->data[dc->FrameID()]->AtomBFactor(),
-             (float*)this->data[dc->FrameID()]->AtomCharge(),
-             (float*)this->data[dc->FrameID()]->AtomOccupancy());
+             this->atomTypeIdx.PeekElements(),
+             this->data[dc->FrameID()]->AtomPositions(),
+			 this->atomType.PeekElements(),
+             this->atomResidueIdx.PeekElements(),
+             this->data[dc->FrameID()]->AtomBFactor(),
+             this->data[dc->FrameID()]->AtomCharge(),
+             this->data[dc->FrameID()]->AtomOccupancy());
 
         dc->SetBFactorRange( this->data[dc->FrameID()]->MinBFactor(),
             this->data[dc->FrameID()]->MaxBFactor());
@@ -832,12 +833,13 @@ bool GromacsLoader::getData( core::Call& call) {
 
         dc->SetAtoms( this->data[0]->AtomCount(),
                       this->atomType.Count(),
-                      (unsigned int*)this->atomTypeIdx.PeekElements(),
-                      (float*)fr->AtomPositions(),
-                      (MolecularDataCall::AtomType*)this->atomType.PeekElements(),
-                      (float*)this->data[0]->AtomBFactor(),
-                      (float*)this->data[0]->AtomCharge(),
-                      (float*)this->data[0]->AtomOccupancy());
+                      this->atomTypeIdx.PeekElements(),
+                      fr->AtomPositions(),
+                      this->atomType.PeekElements(),
+                      this->atomResidueIdx.PeekElements(),
+                      this->data[0]->AtomBFactor(),
+                      this->data[0]->AtomCharge(),
+                      this->data[0]->AtomOccupancy());
 
         dc->SetBFactorRange( this->data[0]->MinBFactor(),
                              this->data[0]->MaxBFactor());
@@ -847,16 +849,11 @@ bool GromacsLoader::getData( core::Call& call) {
                                this->data[0]->MaxOccupancy());
     }
 
-    dc->SetConnections( this->connectivity.Count() / 2,
-        (const unsigned int*)this->connectivity.PeekElements());
-    dc->SetResidues( this->residue.Count(),
-        (const MolecularDataCall::Residue**)this->residue.PeekElements());
-    dc->SetResidueTypeNames( this->residueTypeName.Count(),
-        (const vislib::StringA*)this->residueTypeName.PeekElements());
-    dc->SetMolecules( this->molecule.Count(),
-        (const MolecularDataCall::Molecule*)this->molecule.PeekElements());
-    dc->SetChains( this->chain.Count(),
-        (const MolecularDataCall::Chain*)this->chain.PeekElements());
+    dc->SetConnections( this->connectivity.Count() / 2, this->connectivity.PeekElements());
+	dc->SetResidues( this->residue.Count(), (const MolecularDataCall::Residue**)this->residue.PeekElements());
+    dc->SetResidueTypeNames( this->residueTypeName.Count(), this->residueTypeName.PeekElements());
+    dc->SetMolecules( this->molecule.Count(), this->molecule.PeekElements());
+    dc->SetChains( this->chain.Count(), this->chain.PeekElements());
 
     if( !this->secStructAvailable &&
             this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
@@ -1741,6 +1738,7 @@ void GromacsLoader::resetAllData() {
     //this->data.Clear();
     this->atomTypeIdx.Clear();
     this->atomType.Clear();
+	this->atomResidueIdx.Clear();
     for( cnt = 0; cnt < this->residue.Count(); ++cnt ) {
         delete this->residue[cnt];
     }

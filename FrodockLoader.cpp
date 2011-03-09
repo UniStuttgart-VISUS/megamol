@@ -277,22 +277,24 @@ bool FrodockLoader::getData( core::Call& call) {
         dc->SetAtoms(
             ligand->AtomCount(),
             ligand->AtomTypeCount(),
-            (unsigned int*)ligand->AtomTypeIndices(),
-            (float*)this->atomPos.PeekElements(),
-            (MolecularDataCall::AtomType*)ligand->AtomTypes(),
-            (float*)ligand->AtomBFactors(),
-            (float*)ligand->AtomCharges(),
-            (float*)ligand->AtomOccupancies());
+            ligand->AtomTypeIndices(),
+            this->atomPos.PeekElements(),
+            ligand->AtomTypes(),
+            ligand->AtomResidueIndices(),
+            ligand->AtomBFactors(),
+            ligand->AtomCharges(),
+            ligand->AtomOccupancies());
     } else {
         dc->SetAtoms(
             ligand->AtomCount(),
             ligand->AtomTypeCount(),
-            (unsigned int*)ligand->AtomTypeIndices(),
-            (float*)ligand->AtomPositions(),
-            (MolecularDataCall::AtomType*)ligand->AtomTypes(),
-            (float*)ligand->AtomBFactors(),
-            (float*)ligand->AtomCharges(),
-            (float*)ligand->AtomOccupancies());
+            ligand->AtomTypeIndices(),
+            ligand->AtomPositions(),
+            ligand->AtomTypes(),
+            ligand->AtomResidueIndices(),
+            ligand->AtomBFactors(),
+            ligand->AtomCharges(),
+            ligand->AtomOccupancies());
     }
     dc->SetBFactorRange( 
         ligand->MaximumBFactor(),

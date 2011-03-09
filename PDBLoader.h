@@ -610,6 +610,9 @@ namespace protein {
         /** Stores for each atom the index of its type */
         vislib::Array<unsigned int> atomTypeIdx;
 
+		/* Residue index per atom - may be undefined (-1) */
+		vislib::Array<int> atomResidueIdx;
+
         /** The array of atom types */
         vislib::Array<MolecularDataCall::AtomType> atomType;
 

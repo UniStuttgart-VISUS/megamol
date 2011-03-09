@@ -1187,14 +1187,13 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		} else {
 			/* not solvent (creates volume) */
 		//	#pragma omp parallel for
-			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
+			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++, atomCntMol++) {
 				float *atomPos = &updatVolumeTextureAtoms[atomCntMol*4];
 				float *interPos = &this->posInter[atomIdx*3];
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
 				atomPos[3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() * this->scale;
-				atomCntMol++;
 			}
 		}
 	}

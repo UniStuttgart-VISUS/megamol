@@ -89,10 +89,9 @@ Stride::~Stride(void)
 		FreeChain( ProteinChain[i] );
 	free(ProteinChain);
 
-    /*
 	for( i = 0; i < HydroBondCnt; ++i )
 		FreeHBond(HydroBond[i]);
-    */
+
 	free( HydroBond );
 
 	free( StrideCmd );
@@ -135,8 +134,8 @@ void Stride::FreeResidue(RESIDUE *r) {
 }
 
 void Stride::FreeHBond(HBOND *h) {
-	free( h->Dnr); // TODO: free FreeChain(Dnr->Chain)?
-	free( h->Acc); // TODO: free FreeChain(Dnr->Chain)?
+//	free( h->Dnr); // TODO: free FreeChain(Dnr->Chain)?
+//	free( h->Acc); // TODO: free FreeChain(Dnr->Chain)?
 	free( h );
 }
 

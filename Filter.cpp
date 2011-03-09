@@ -142,19 +142,21 @@ bool Filter::getData(megamol::core::Call& call) {
     // ...
 
 
+    molIn->SetUnlocker(new Filter::Unlocker(*molOut));
+
+    // Transfer data from outgoing to incoming data call.
+    // *molIn = *molOut; -> kopiert alles von a nach b (kein deep copy sondern die const-pointer)
     molIn->SetDataHash(this->datahash);
 
-    molIn->SetUnlocker(new Filter::Unlocker(*molOut));
-    
-    // Transfer data from outgoing to incoming data call.
     molIn->SetAtoms(molOut->AtomCount(),
                     molOut->AtomTypeCount(),
-                    const_cast<unsigned int*> (molOut->AtomTypeIndices()),
-                    const_cast<float*> (this->atomPosInter.PeekElements()),
-                    const_cast<MolecularDataCall::AtomType*> (molOut->AtomTypes()),
-                    const_cast<float*> (molOut->AtomBFactors()),
-                    const_cast<float*> (molOut->AtomCharges()),
-                    const_cast<float*> (molOut->AtomOccupancies()));
+                    molOut->AtomTypeIndices(),
+                    this->atomPosInter.PeekElements(),
+                    molOut->AtomTypes(),
+                    molOut->AtomResidueIndices(),
+                    molOut->AtomBFactors(),
+                    molOut->AtomCharges(),
+                    molOut->AtomOccupancies());
 
     molIn->SetBFactorRange(molOut->MinimumBFactor(),
                            molOut->MaximumBFactor());
@@ -165,8 +167,7 @@ bool Filter::getData(megamol::core::Call& call) {
     molIn->SetOccupancyRange(molOut->MinimumOccupancy(),
                              molOut->MaximumOccupancy());
 
-    molIn->SetConnections(molOut->ConnectionCount(),
-                          const_cast<unsigned int*> (molOut->Connection()));
+    molIn->SetConnections(molOut->ConnectionCount(), molOut->Connection());
                 
     molIn->SetResidues(molOut->ResidueCount(),
                        molOut->Residues());
@@ -174,12 +175,11 @@ bool Filter::getData(megamol::core::Call& call) {
     molIn->SetResidueTypeNames(molOut->ResidueTypeNameCount(),
                                molOut->ResidueTypeNames());
     
-    molIn->SetMolecules(molOut->MoleculeCount(),
-                        const_cast<MolecularDataCall::Molecule*> (molOut->Molecules()));
+    molIn->SetMolecules(molOut->MoleculeCount(), molOut->Molecules());
     
-    molIn->SetChains(molOut->ChainCount(),
-                     const_cast<MolecularDataCall::Chain*> (molOut->Chains()));
-    
+    molIn->SetChains(molOut->ChainCount(), molOut->Chains());
+
+
     delete[] pos0;
     delete[] pos1;
 
