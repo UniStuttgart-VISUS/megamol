@@ -883,7 +883,7 @@ namespace sys {
                 bool needQuots = (*this->arguments[i] == 0);
                 Char *cs = data;
 
-                for (Char *ci = this->arguments[i]; *ci != 0; *ci++) {
+                for (Char *ci = this->arguments[i]; *ci != 0; ci++) {
                     *(data++) = *ci;
 
                     if ((T::IsSpace(*ci)) || (*ci == static_cast<Char>('"'))) {
@@ -896,7 +896,7 @@ namespace sys {
                 if (needQuots) {
                     data = cs;
                     *(data++) = static_cast<Char>('"'); // starting quot
-                    for (Char *ci = this->arguments[i]; *ci != 0; *ci++) {
+                    for (Char *ci = this->arguments[i]; *ci != 0; ci++) {
                         if (*ci == static_cast<Char>('"')) { // escape quot
                             *(data++) = static_cast<Char>('"');
                         }

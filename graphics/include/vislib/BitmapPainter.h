@@ -391,7 +391,10 @@ namespace graphics {
         /**
          * Performs pre draw checks and throws exceptions on failures
          */
-        inline void preDraw(void);
+#ifdef _WIN32
+        inline
+#endif /* _WIN32 */
+        void preDraw(void);
 
         /**
          * Tries to set one value of the colour cache
@@ -518,7 +521,10 @@ namespace graphics {
          *
          * @param dst Pointer to the pixel
          */
-        FORCEINLINE void setPixel(unsigned char *dst);
+#ifdef _WIN32
+        VISLIB_FORCEINLINE
+#endif /*_WIN32 */
+        void setPixel(unsigned char *dst);
 
         /** The bitmap image used by the codec */
         BitmapImage *img;

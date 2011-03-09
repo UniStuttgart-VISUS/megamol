@@ -333,7 +333,10 @@ bool vislib::sys::ReadTextFile(vislib::StringA& outStr,
         return true;
     } break;
     case TEXTFF_UNICODE:
-CASE_TEXTFF_UNICODE: {
+#ifdef _WIN32
+CASE_TEXTFF_UNICODE: 
+#endif /* _WIN32 */
+    {
         vislib::StringW tmp;
         wchar_t *src = tmp.AllocateBuffer(static_cast<unsigned int>(
             (len / sizeof(wchar_t)) + sizeof(wchar_t)));
@@ -416,7 +419,10 @@ bool vislib::sys::ReadTextFile(vislib::StringW& outStr,
         return true;
     } break;
     case TEXTFF_UNICODE:
-CASE_TEXTFF_UNICODE: {
+#ifdef _WIN32
+CASE_TEXTFF_UNICODE:
+#endif /* WIN32 */
+    {
         wchar_t *src = outStr.AllocateBuffer(static_cast<unsigned int>(
             (len / sizeof(wchar_t)) + sizeof(wchar_t)));
         len = file.Read(src, len - len % sizeof(wchar_t));
@@ -639,10 +645,13 @@ bool vislib::sys::WriteTextFile(vislib::sys::File& file,
 CASE_TEXTFF_ASCII: {
         // no BOM possible
         StringA::Size len = text.Length();
-        return (file.Write(text.PeekBuffer(), len) == len);
+        return (static_cast<StringA::Size>(file.Write(text.PeekBuffer(), len))
+            == len);
     } break;
     case TEXTFF_UNICODE:
+#ifdef _WIN32
 CASE_TEXTFF_UNICODE:
+#endif /* _WIN32 */
         // write BOM as sfx
         return WriteTextFile(file, vislib::StringW(text), format, bom);
         break;
@@ -654,7 +663,7 @@ CASE_TEXTFF_UNICODE:
             file.Write(BOM, 3);
         }
         StringA::Size len = bytes.Length();
-        return (file.Write(bytes, len) == len);
+        return (static_cast<StringA::Size>(file.Write(bytes, len)) == len);
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32
@@ -716,7 +725,10 @@ bool vislib::sys::WriteTextFile(vislib::sys::File& file,
         return WriteTextFile(file, vislib::StringA(text), format, bom);
         break;
     case TEXTFF_UNICODE:
-CASE_TEXTFF_UNICODE: {
+#ifdef _WIN32
+CASE_TEXTFF_UNICODE:
+#endif /* _WIN32 */
+    {
 #ifdef _WIN32
         if (bom != TEXTFF_BOM_NO) {
             unsigned char BOM[] = { 0xFF, 0xFE };
@@ -724,7 +736,8 @@ CASE_TEXTFF_UNICODE: {
         }
 #endif /* _WIN32 */
         StringW::Size len = text.Length() * sizeof(wchar_t);
-        return (file.Write(text.PeekBuffer(), len) == len);
+        return (static_cast<StringW::Size>(file.Write(text.PeekBuffer(), len))
+            == len);
     } break;
     case TEXTFF_UTF8:
 CASE_TEXTFF_UTF8: {
@@ -735,7 +748,7 @@ CASE_TEXTFF_UTF8: {
             file.Write(BOM, 3);
         }
         StringA::Size len = bytes.Length();
-        return (file.Write(bytes, len) == len);
+        return (static_cast<StringA::Size>(file.Write(bytes, len)) == len);
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32

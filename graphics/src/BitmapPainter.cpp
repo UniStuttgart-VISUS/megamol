@@ -88,7 +88,10 @@ void vislib::graphics::BitmapPainter::DrawLine(
 /*
  * vislib::graphics::BitmapPainter::preDraw
  */
-inline void vislib::graphics::BitmapPainter::preDraw(void) {
+#ifdef _WIN32
+inline
+#endif /* _WIN32 */
+void vislib::graphics::BitmapPainter::preDraw(void) {
     if (this->img == NULL) {
         throw vislib::IllegalStateException(
             "You must set an image to draw to", __FILE__, __LINE__);
@@ -170,7 +173,10 @@ inline bool vislib::graphics::BitmapPainter::setColourCacheValue(Tp* dst,
 /*
  * vislib::graphics::BitmapPainter::setPixel
  */
-FORCEINLINE void vislib::graphics::BitmapPainter::setPixel(
+#ifdef _WIN32
+VISLIB_FORCEINLINE
+#endif /* _WIN32 */
+void vislib::graphics::BitmapPainter::setPixel(
         unsigned char *dst) {
     for (unsigned int i = 0; i < this->colSize; i++) {
         dst[i] = (this->colBits[i] & this->colMask[i])
