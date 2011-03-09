@@ -71,7 +71,7 @@ namespace protein {
              * @param bbox The bounding box of this residue.
              */
             Residue( unsigned int firstAtomIdx, unsigned int atomCnt,
-                vislib::math::Cuboid<float> bbox, unsigned int typeIdx);
+                vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx);
 
             /** Dtor. */
             ~Residue(void);
@@ -130,6 +130,13 @@ namespace protein {
              * @param name The type index of the residue.
              */
             inline void SetType( unsigned int typeIdx) { this->type = typeIdx; };
+
+            /**
+             * Sets the molecule index of the residue.
+             *
+             * @param name The molecule index of the residue.
+             */
+            inline void SetMoleculeIndex(int moleculeIndex) { this->moleculeIndex = moleculeIndex;}
 
             /**
              * Set the bounding box of the residue.
@@ -200,6 +207,9 @@ namespace protein {
             /** The index of the type of the residue */
             unsigned int type;
 
+            /** molecule index of the residue (may be undefined -> -1) */
+            int moleculeIndex;
+
             /** The filter value */
             int filter;
 
@@ -240,7 +250,7 @@ namespace protein {
             AminoAcid( unsigned int firstAtomIdx, unsigned int atomCnt,
                 unsigned int cAlphaIdx, unsigned int cCarbIdx,
                 unsigned int nIdx, unsigned int oIdx, 
-                vislib::math::Cuboid<float> bbox, unsigned int typeIdx);
+                vislib::math::Cuboid<float> bbox, unsigned int typeIdx, int moleculeIdx);
 
             /** Dtor. */
             ~AminoAcid(void);
@@ -383,7 +393,7 @@ namespace protein {
              * @param firstResIdx The index of the first residue of this molecule.
              * @param resCnt The size of the molecule in number of residues.
              */
-            Molecule( unsigned int firstResIdx, unsigned int resCnt);
+            Molecule( unsigned int firstResIdx, unsigned int resCnt, int chainIdx);
 
             /** dtor */
             ~Molecule();
@@ -529,6 +539,9 @@ namespace protein {
             unsigned int firstResidueIndex;
             /** the number of residues in the molecule */
             unsigned int residueCount;
+
+            /** chain index of this molecule (may be undefined -> -1) */
+            int chainIndex;
 
             /** the index of the first secondary structure element in the molecule */
             unsigned int firstSecStructIdx;
@@ -1032,6 +1045,14 @@ namespace protein {
         const unsigned int* AtomTypeIndices(void) const { return atomTypeIdx; }
 
         /**
+         * Get the indices of atom residue.
+         *
+         * @return The atom residue index array.
+         */
+        const int* AtomResidueIndices(void) const { return atomResidueIdx; }
+        //void SetAtomResidueIndices(const int*indices) { atomResidueIdx = indices; }
+
+        /**
          * Get the residue count.
          *
          * @return The residue count.
@@ -1128,7 +1149,7 @@ namespace protein {
          * @param occupancies   The atom occupancies.
          */
         void SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt, 
-            const unsigned int* typeIdx, const float* pos, const AtomType* types,
+            const unsigned int* typeIdx, const float* pos, const AtomType* types, const int *residueIdx,
             const float* bfactor, const float* charge, const float* occupancy);
 
         /**
@@ -1309,6 +1330,7 @@ namespace protein {
 			this->atomPos = s.atomPos;
 			this->atomTypeCount = s.atomTypeCount;
 			this->atomTypeIdx = s.atomTypeIdx;
+			this->atomResidueIdx = s.atomResidueIdx;
 			this->atomType = s.atomType;
 			this->atomBFactors = s.atomBFactors;
 			this->atomCharges = s.atomCharges;
@@ -1329,24 +1351,7 @@ namespace protein {
 			this->molecules = s.molecules;
 			this->chainCount = s.chainCount;
 			this->chains = s.chains;
-			this->secStruct = s.secStruct; // todo: besser zeiger und anzahl ?!
-
-
-			
-			/*molDest->SetFrameID(molSource->FrameID()); // copy back the actual loaded frame id
-
-	molDest->SetDataHash( molSource->DataHash());
-
-	molDest->SetAtoms(molSource->AtomCount(), molSource->AtomTypeCount(), molSource->AtomTypeIndices(), molSource->AtomPositions(),
-		molSource->AtomTypes(), molSource->AtomBFactors(), molSource->AtomCharges(), molSource->AtomOccupancies());
-	molDest->SetBFactorRange( molSource->MinimumBFactor(), molSource->MaximumBFactor());
-	molDest->SetChargeRange( molSource->MinimumCharge(), molSource->MaximumCharge());
-	molDest->SetOccupancyRange( molSource->MinimumOccupancy(), molSource->MaximumOccupancy());
-	molDest->SetConnections(molSource->ConnectionCount(), molSource->Connection());
-	molDest->SetResidues( molSource->ResidueCount(), molSource->Residues());
-	molDest->SetResidueTypeNames( molSource->ResidueTypeNameCount(), molSource->ResidueTypeNames());
-	molDest->SetMolecules( molSource->MoleculeCount(), molSource->Molecules());
-	molDest->SetChains( molSource->ChainCount(), molSource->Chains());*/
+			this->secStruct = s.secStruct; // TODO: besser zeiger und anzahl ?!
 			return *this;
 		}
 
@@ -1359,6 +1364,8 @@ namespace protein {
         const float* atomPos;
         /** The array of atom type indices. */
         const unsigned int* atomTypeIdx;
+        /** array of atom residue indices (may be undefined -> -1)*/
+        const int *atomResidueIdx;
 
         /** The array of residues. */
         const Residue** residues;
