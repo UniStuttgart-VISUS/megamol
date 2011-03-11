@@ -1305,22 +1305,22 @@ namespace protein {
         float MaximumOccupancy() const { return this->maxOccupancy; }
         
         /**
-        * Answer the callTime
+        * Answer the calltime
         *
         * @return the calltime
         */
-        inline float CallTime(void) const {
-            return this->callTime;
+        float Calltime(void) const {
+            return this->calltime;
         }
         
          /**
          * Sets the calltime to request data for.
          *
-         * @param callTime The calltime to request data for.
+         * @param calltime The calltime to request data for.
          *
          */
-        inline void SetCallTime(float callTime) {
-            this->callTime = callTime;
+        void SetCalltime(float calltime) {
+            this->calltime = calltime;
         }
 
 		inline MolecularDataCall& operator=(const MolecularDataCall& s) {
@@ -1352,6 +1352,7 @@ namespace protein {
 			this->chainCount = s.chainCount;
 			this->chains = s.chains;
 			this->secStruct = s.secStruct; // TODO: besser zeiger und anzahl ?!
+            this->calltime = s.calltime;
 			return *this;
 		}
 
@@ -1422,7 +1423,7 @@ namespace protein {
         float maxOccupancy;
         
         /** The exact requested/stored calltime. */
-        float callTime;
+        float calltime;
 
     };
 
