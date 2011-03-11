@@ -279,7 +279,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
     int cnt;
 
     // set call time
-    mol->SetCallTime(callTime);
+    mol->SetCalltime(callTime);
     // set frame ID and call data
     mol->SetFrameID(static_cast<int>( callTime));
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
