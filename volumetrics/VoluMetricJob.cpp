@@ -354,6 +354,8 @@ DWORD VoluMetricJob::Run(void *userData) {
         if (this->resetContinueSlot.Param<megamol::core::param::BoolParam>()->Value()) {
             this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->SetValue(false);
         }
+
+		// new code to eliminate enclosed surfaces
     }
 
     if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {

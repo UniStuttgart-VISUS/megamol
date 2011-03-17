@@ -258,6 +258,9 @@ namespace volumetrics {
         /** array of Bordervoxels */
         vislib::SmartPtr<BorderVoxelArray> border;
 
+		/** bounding box of the triangle mesh */
+		//vislib::math::Cuboid<VoxelizerFloat> boundingBox;
+
         /** surface area */
         VoxelizerFloat surface;
 

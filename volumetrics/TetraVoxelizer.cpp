@@ -228,15 +228,16 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
 #endif /* ULTRADEBUG */
 
             for (unsigned int ni = 0; ni < 6; ni++) {
-                if ((((moreNeighbors[ni].X() < 0) && (p.X() > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (p.X() < sjd->resX - 2))) &&
-                    (((moreNeighbors[ni].Y() < 0) && (p.Y() > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (p.Y() < sjd->resY - 2))) &&
-                    (((moreNeighbors[ni].Z() < 0) && (p.Z() > 0)) || (moreNeighbors[ni].Z() == 0) || ((moreNeighbors[ni].Z() > 0) && (p.Z() < sjd->resZ - 2)))) {
-                        FatVoxel &f2 = theVolume[((p.Z() + moreNeighbors[ni].Z()) * sjd->resY
-                            + p.Y() + moreNeighbors[ni].Y()) * sjd->resX + p.X() + moreNeighbors[ni].X()];
+				const vislib::math::Point<signed char, 3>& mN = moreNeighbors[ni];
+                if ((((mN.X() < 0) && (p.X() > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (p.X() < sjd->resX - 2))) &&
+                    (((mN.Y() < 0) && (p.Y() > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (p.Y() < sjd->resY - 2))) &&
+                    (((mN.Z() < 0) && (p.Z() > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (p.Z() < sjd->resZ - 2)))) {
+                        FatVoxel &f2 = theVolume[((p.Z() + mN.Z()) * sjd->resY
+                            + p.Y() + mN.Y()) * sjd->resX + p.X() + mN.X()];
                         if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
                             f2.consumedTriangles = 1;
-                            queue.Add(vislib::math::Point<int, 3>(p.X() + moreNeighbors[ni].X(),
-                                p.Y() + moreNeighbors[ni].Y(), p.Z() + moreNeighbors[ni].Z()));
+                            queue.Add(vislib::math::Point<int, 3>(p.X() + mN.X(),
+                                p.Y() + mN.Y(), p.Z() + mN.Z()));
                         }
                 }
             }
@@ -262,19 +263,18 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
     for (unsigned int a = 0; a < 8; a++) {
         if (f.mcCase & (1 << a)) {
             for (unsigned int b = 0; b < 7; b++) {
-                if ((((cornerNeighbors[a][b].X() < 0) && (x > 0)) 
-                        || (cornerNeighbors[a][b].X() == 0) || ((cornerNeighbors[a][b].X() > 0) && (x < sjd->resX - 2))) &&
-                    (((cornerNeighbors[a][b].Y() < 0) && (y > 0))
-                        || (cornerNeighbors[a][b].Y() == 0) || ((cornerNeighbors[a][b].Y() > 0) && (y < sjd->resY - 2))) &&
-                    (((cornerNeighbors[a][b].Z() < 0) && (z > 0))
-                        || (cornerNeighbors[a][b].Z() == 0) || ((cornerNeighbors[a][b].Z() > 0) && (z < sjd->resZ - 2)))) {
-                            FatVoxel &f2 = theVolume[((z + cornerNeighbors[a][b].Z()) * sjd->resY 
-                                + (y + cornerNeighbors[a][b].Y())) * sjd->resX + x + cornerNeighbors[a][b].X()];
-                            if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
-                                surf.volume +=
-                                    growVolume(theVolume, surf.fullFaces, x + cornerNeighbors[a][b].X(),
-                                    y + cornerNeighbors[a][b].Y(), z + cornerNeighbors[a][b].Z());
-                            }
+				vislib::math::Point<signed char, 3>& cN = cornerNeighbors[a][b];
+                if ((((cN.X() < 0) && (x > 0)) || (cN.X() == 0) || ((cN.X() > 0) && (x < sjd->resX - 2))) &&
+                    (((cN.Y() < 0) && (y > 0)) || (cN.Y() == 0) || ((cN.Y() > 0) && (y < sjd->resY - 2))) &&
+                    (((cN.Z() < 0) && (z > 0)) || (cN.Z() == 0) || ((cN.Z() > 0) && (z < sjd->resZ - 2))))
+				{
+					// der aktuelle Nachbar
+                    FatVoxel &f2 = theVolume[((z + cN.Z()) * sjd->resY + (y + cN.Y())) * sjd->resX + x + cN.X()];
+
+					// liegt er komplett innen oder auﬂen?
+					if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
+                        surf.volume += growVolume(theVolume, surf.fullFaces, x + cN.X(), y + cN.Y(), z + cN.Z());
+                    }
                 }
             }
         }
@@ -319,19 +319,19 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
             ProcessTriangle(sstI, f, c, surf, x, y, z);
 
             for (int ni = 0; ni < 6; ni++) {
-                if ((((moreNeighbors[ni].X() < 0) && (x > 0)) || (moreNeighbors[ni].X() == 0) || ((moreNeighbors[ni].X() > 0) && (x < sjd->resX - 2))) &&
-                    (((moreNeighbors[ni].Y() < 0) && (y > 0)) || (moreNeighbors[ni].Y() == 0) || ((moreNeighbors[ni].Y() > 0) && (y < sjd->resY - 2))) &&
-                    (((moreNeighbors[ni].Z() < 0) && (z > 0)) || (moreNeighbors[ni].Z() == 0) || ((moreNeighbors[ni].Z() > 0) && (z < sjd->resZ - 2)))) {
-                        FatVoxel &n = theVolume[((z + moreNeighbors[ni].Z()) * sjd->resY
-                            + y + moreNeighbors[ni].Y()) * sjd->resX + x + moreNeighbors[ni].X()];
+				const vislib::math::Point<signed char, 3>& mN = moreNeighbors[ni];
+                if ((((mN.X() < 0) && (x > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (x < sjd->resX - 2))) &&
+                    (((mN.Y() < 0) && (y > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (y < sjd->resY - 2))) &&
+                    (((mN.Z() < 0) && (z > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (z < sjd->resZ - 2)))) {
+                        FatVoxel &n = theVolume[((z + mN.Z()) * sjd->resY + y + mN.Y()) * sjd->resX + x + mN.X()];
                         for (unsigned int m = 0; m < n.numTriangles; m++) {
                             if ((n.consumedTriangles & (1 << m)) == 0) {
                                 sst2.SetPointer(n.triangles + 3 * 3 * m);
 #ifdef ULTRADEBUG
                                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                                     "[%08u] comparing with (%04u, %04u, %04u)[%u/%u]", vislib::sys::Thread::CurrentID(),
-                                    x + moreNeighbors[ni].X(),
-                                    y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z(), m, n.numTriangles);
+                                    x + mN.X(),
+                                    y + mN.Y(), z + mN.Z(), m, n.numTriangles);
                                 debugPrintTriangle(sst2);
                                 debugPrintTriangle(sstI);
 #endif /* ULTRADEBUG */
@@ -340,12 +340,12 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                                         "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
 #endif /* ULTRADEBUG */
-                                    ProcessTriangle(sst2, n, m, surf, x + moreNeighbors[ni].X(),
-                                        y + moreNeighbors[ni].Y(), z + moreNeighbors[ni].Z());
+                                    ProcessTriangle(sst2, n, m, surf, x + mN.X(),
+                                        y + mN.Y(), z + mN.Z());
                                     cellFIFO.Append(vislib::math::Point<unsigned int, 4>(
-                                        x + moreNeighbors[ni].X(),
-                                        y + moreNeighbors[ni].Y(),
-                                        z + moreNeighbors[ni].Z(), m));
+                                        x + mN.X(),
+                                        y + mN.Y(),
+                                        z + mN.Z(), m));
                                 }
                             }
                         }
@@ -991,7 +991,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
         // totally empty
         Surface s;
         s.surface = 0.0;
-        s.volume = 0.0;
+        s.volume = 0.0; // TODO: negative volume maybe?
         sjd->Result.surfaces.Append(s);
     } else {
         // march it
@@ -1086,7 +1086,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
             }
         }
     }
-    
+
     // END TODO
 
     sjd->Result.done = true;
