@@ -192,6 +192,11 @@ namespace moldyn {
             const HeaderData& header, vislib::RawStorageWriter& pos,
             vislib::RawStorageWriter& col);
 
+        /**
+         * Updates the posX filter data (decrese only!)
+         */
+        bool posXFilterUpdate(param::ParamSlot& slot);
+
         /** The file name */
         param::ParamSlot filenameSlot;
 
@@ -218,6 +223,11 @@ namespace moldyn {
 
         /** The maximum value for the colour mapping of the column */
         param::ParamSlot maxColumnValSlot;
+
+        param::ParamSlot posXFilterNow;
+        param::ParamSlot posXFilter;
+        param::ParamSlot posXMinFilter;
+        param::ParamSlot posXMaxFilter;
 
         /** The xyz position data */
         vislib::RawStorage posData;

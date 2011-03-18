@@ -10,6 +10,7 @@
 #include <climits>
 #include "MultiParticleDataCall.h"
 #include "param/BoolParam.h"
+#include "param/ButtonParam.h"
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "param/FilePathParam.h"
@@ -775,6 +776,10 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
         autoColumnRangeSlot("autoColumnRange", "Whether or not to automatically calculate the column value range"),
         minColumnValSlot("minColumnValue", "The minimum value for the colour mapping of the column"),
         maxColumnValSlot("maxColumnValue", "The maximum value for the colour mapping of the column"),
+        posXFilterNow("filter::posXFilter", ""),
+        posXFilter("filter::posX", ""),
+        posXMinFilter("filter::posXMin", ""),
+        posXMaxFilter("filter::posXMax", ""),
         posData(), colData(), headerMinX(0.0f), headerMinY(0.0f),
         headerMinZ(0.0f), headerMaxX(1.0f), headerMaxY(1.0f),
         headerMaxZ(1.0f), minX(0.0f), minY(0.0f), minZ(0.0f), maxX(1.0f),
@@ -813,6 +818,19 @@ moldyn::IMDAtomDataSource::IMDAtomDataSource(void) : Module(),
 
     this->maxColumnValSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->maxColumnValSlot);
+
+    this->posXFilterNow << new param::ButtonParam('f');
+    this->posXFilterNow.SetUpdateCallback(&IMDAtomDataSource::posXFilterUpdate);
+    this->MakeSlotAvailable(&this->posXFilterNow);
+    this->posXFilter << new param::BoolParam(false);
+    this->posXFilter.SetUpdateCallback(&IMDAtomDataSource::posXFilterUpdate);
+    this->MakeSlotAvailable(&this->posXFilter);
+    this->posXMinFilter << new param::FloatParam(0.0f);
+    this->posXMinFilter.SetUpdateCallback(&IMDAtomDataSource::posXFilterUpdate);
+    this->MakeSlotAvailable(&this->posXMinFilter);
+    this->posXMaxFilter << new param::FloatParam(1.0f);
+    this->posXMaxFilter.SetUpdateCallback(&IMDAtomDataSource::posXFilterUpdate);
+    this->MakeSlotAvailable(&this->posXMaxFilter);
 
 }
 
@@ -1399,4 +1417,42 @@ bool moldyn::IMDAtomDataSource::readData(vislib::sys::File& file,
     }
 
     return !first;
+}
+
+
+/*
+ * moldyn::IMDAtomDataSource::posXFilterUpdate
+ */
+bool moldyn::IMDAtomDataSource::posXFilterUpdate(param::ParamSlot& slot) {
+    using vislib::sys::Log;
+    if (!this->posXFilter.Param<param::BoolParam>()->Value()) {
+        Log::DefaultLog.WriteInfo("PosX-Filter not enabled");
+        return true;
+    }
+
+    float minX = this->posXMinFilter.Param<param::FloatParam>()->Value();
+    float maxX = this->posXMaxFilter.Param<param::FloatParam>()->Value();
+
+    // number of input particles
+    SIZE_T inCnt = this->posData.GetSize() / (3 * sizeof(float));
+    SIZE_T outCnt = 0;
+    float *outPos = this->posData.As<float>();
+    for (SIZE_T i = 0; i < inCnt; i++) {
+        float *inPos = this->posData.AsAt<float>(i * 3 * sizeof(float));
+        if ((inPos[0] >= minX) && (inPos[0] <= maxX)) {
+            if (inPos != outPos) {
+                ::memcpy(outPos, inPos, 3 * sizeof(float));
+            }
+            outCnt++;
+            outPos += 3;
+        }
+    }
+
+    this->posData.EnforceSize(outCnt * 3 * sizeof(float), true);
+
+    Log::DefaultLog.WriteInfo("PosX-Filtered from %u to %u particles\n",
+        static_cast<unsigned int>(inCnt),
+        static_cast<unsigned int>(outCnt));
+
+    return true;
 }
