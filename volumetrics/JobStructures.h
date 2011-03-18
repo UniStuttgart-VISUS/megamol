@@ -355,6 +355,10 @@ namespace volumetrics {
         bool storeMesh;
 
         VoluMetricJob *parent;
+
+		inline unsigned cellIndex(unsigned x, unsigned y, unsigned z) {
+			return (z * this->resY + y) * this->resX + x;
+		}
     };
 
 

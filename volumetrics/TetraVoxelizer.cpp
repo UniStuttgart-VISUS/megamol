@@ -98,19 +98,22 @@ bool TetraVoxelizer::CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned
  //   VoxelizerFloat f;
 
  //   for (i = 0; i < 8; i++) {
- //       f = theVolume[
- //           ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
- //               + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
- //               + x + MarchingCubeTables::a2fVertexOffset[i][0]
+ //       f = theVolume[sjd->cellIndx(
+ //               x + MarchingCubeTables::a2fVertexOffset[i][0],
+ //               y + MarchingCubeTables::a2fVertexOffset[i][1],
+ //               z + MarchingCubeTables::a2fVertexOffset[i][2])
  //       ].distField;
  //       neg = neg | (f < 0.0);
  //       pos = pos | (f >= 0.0);
  //   }
-    //ASSERT ((theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255 || theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 0)
+
+	unsigned index = sjd->cellIndex(x, y, z);
+
+    //ASSERT ((theVolume[index].mcCase == 255 || theVolume[index].mcCase == 0)
     //    == !(neg &&pos));
  //   return !(neg && pos);
-    return theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255 
-        || theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 0;
+
+    return theVolume[index].mcCase == 255 || theVolume[index].mcCase == 0;
 }
 
 bool TetraVoxelizer::CellFull(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z) {
@@ -119,34 +122,34 @@ bool TetraVoxelizer::CellFull(FatVoxel *theVolume, unsigned x, unsigned y, unsig
     //float f;
 
     //for (i = 0; i < 8; i++) {
-    //    f = theVolume[
-    //        ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
-    //            + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
-    //            + x + MarchingCubeTables::a2fVertexOffset[i][0]
-    //    ].distField;
+    //       f = theVolume[sjd->cellIndx(
+    //               x + MarchingCubeTables::a2fVertexOffset[i][0],
+    //               y + MarchingCubeTables::a2fVertexOffset[i][1],
+    //               z + MarchingCubeTables::a2fVertexOffset[i][2])
+    //       ].distField;
     //    neg = neg && (f < 0.0f);
     //}
-    //ASSERT (neg == (theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255));
+    //ASSERT (neg == (theVolume[sjd->cellIndex(x, y, z)].mcCase == 255));
     //return neg;
-    return theVolume[(z * sjd->resY + y) * sjd->resX + x].mcCase == 255;
+    return theVolume[sjd->cellIndex(x, y, z)].mcCase == 255;
 }
 
 void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
     if (CellHasNoGeometry(theVolume, x, y, z))
         return;
 
-    FatVoxel &f = theVolume[(z * sjd->resY + y) * sjd->resX + x];
+    FatVoxel &cell = theVolume[sjd->cellIndex(x, y, z)];
 
-    if (f.numTriangles > 0)
-        vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sst(f.triangles);
+    if (cell.numTriangles > 0)
+        vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sst(cell.triangles);
 
-    //vislib::math::ShallowShallowTriangle<float, 3> sst2(f.triangles);
+    //vislib::math::ShallowShallowTriangle<float, 3> sst2(cell.triangles);
 #ifdef ULTRADEBUG
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
         "[%08u] collecting (%04u, %04u, %04u)\n", vislib::sys::Thread::CurrentID(), x, y, z);
 #endif /* ULTRADEBUG */
-    for (unsigned int l = 0; l < f.numTriangles; l++) {
-        if (f.consumedTriangles & (1 << l))
+    for (unsigned int triIdx = 0; triIdx < cell.numTriangles; triIdx++) {
+        if (cell.consumedTriangles & (1 << triIdx))
             continue;
 
         // this is a new surface
@@ -157,10 +160,11 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
         surf.volume = static_cast<VoxelizerFloat>(0.0);
         surf.fullFaces = 0;
         surf.globalID = UINT_MAX;
-        for (SIZE_T idx = 0; idx < sjd->resX * sjd->resY * sjd->resZ; idx++)
-            theVolume[idx].borderVoxel = NULL;
 
-        cellFIFO.Append(vislib::math::Point<unsigned int, 4>(x, y, z, l));
+        for (SIZE_T cellIdx = 0; cellIdx < sjd->resX * sjd->resY * sjd->resZ; cellIdx++)
+            theVolume[cellIdx].borderVoxel = NULL;
+
+        cellFIFO.Append(vislib::math::Point<unsigned int, 4>(x, y, z, triIdx));
 #ifdef ULTRADEBUG
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
             "[%08u] appending  (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(), x, y, z, l);
@@ -200,12 +204,12 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
     while (queue.Count() > 0) {
         p = queue.Last();
         queue.RemoveLast();
-        FatVoxel &f = theVolume[(p.Z() * sjd->resY + p.Y()) * sjd->resX + p.X()];
+		FatVoxel &cell = theVolume[sjd->cellIndex(p.X(), p.Y(), p.Z())];
 
-        ASSERT(f.mcCase == 255 && f.consumedTriangles < 2);
-        if (f.mcCase == 255 && f.consumedTriangles < 2) { // nach dem assert kann man sich das if sparen ...
+        ASSERT(cell.mcCase == 255 && cell.consumedTriangles < 2);
+        /*if (cell.mcCase == 255 && cell.consumedTriangles < 2)*/ { // nach dem assert kann man sich das if sparen ...
             cells++;
-            f.consumedTriangles = 2;
+            cell.consumedTriangles = 2;
             if (p.X() == 0)
                 fullFaces |= 1;
             if (p.Y() == 0)
@@ -225,18 +229,20 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
                 vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z());
 #endif /* ULTRADEBUG */
 
-            for (unsigned int ni = 0; ni < 6; ni++) {
-                const vislib::math::Point<signed char, 3>& mN = moreNeighbors[ni];
+            for (unsigned int neighbIdx = 0; neighbIdx < 6; neighbIdx++) {
+                const vislib::math::Point<signed char, 3>& mN = moreNeighbors[neighbIdx];
                 if ((((mN.X() < 0) && (p.X() > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (p.X() < sjd->resX - 2))) &&
                     (((mN.Y() < 0) && (p.Y() > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (p.Y() < sjd->resY - 2))) &&
                     (((mN.Z() < 0) && (p.Z() > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (p.Z() < sjd->resZ - 2))))
                 {
-                    vislib::math::Point<int, 3> neighb(p.X() + mN.X(), p.Y() + mN.Y(), p.Z() + mN.Z());
+                    vislib::math::Point<int, 3> neighbP(p.X() + mN.X(), p.Y() + mN.Y(), p.Z() + mN.Z());
 
-                    FatVoxel &f2 = theVolume[(neighb.Z()*sjd->resY + neighb.Y())*sjd->resX + neighb.X()];
-                    if (f2.mcCase == 255 && f2.consumedTriangles == 0) {
-                        f2.consumedTriangles = 1;
-                        queue.Add(neighb);
+                    FatVoxel &neighbCell = theVolume[sjd->cellIndex(neighbP.X(), neighbP.Y(), neighbP.Z())];
+                    if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0) {
+                        neighbCell.consumedTriangles = 1;
+                        queue.Add(neighbP);
+                    } else {
+//#error TODO case when we hit another surface with our volume growing??
                     }
                 }
             }
@@ -254,57 +260,57 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
 }
 
 void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
-                             unsigned char triIndex, Surface &surf) {
+                             unsigned char seedTriIndex, Surface &surf) {
 
-    FatVoxel &f = theVolume[(z * sjd->resY + y) * sjd->resX + x];
-    //int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[f->mcCase][triIndex];
+    FatVoxel &cell = theVolume[sjd->cellIndex(x, y, z)];
+    //int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[cell.mcCase][seedTriIndex];
 
     // first, grow the full neighbors
-    for (unsigned int a = 0; a < 8; a++) {
-        if (!(f.mcCase & (1 << a)))
-			continue;
+    for (unsigned int cornerIdx = 0; cornerIdx < 8; cornerIdx++) {
+        if (!(cell.mcCase & (1 << cornerIdx)))
+            continue;
 
-        for (unsigned int b = 0; b < 7; b++) {
-            vislib::math::Point<signed char, 3>& cN = cornerNeighbors[a][b];
+        for (unsigned int cornerNeighbIdx = 0; cornerNeighbIdx < 7; cornerNeighbIdx++) {
+            vislib::math::Point<signed char, 3>& cN = cornerNeighbors[cornerIdx][cornerNeighbIdx];
             if ((((cN.X() < 0) && (x > 0)) || (cN.X() == 0) || ((cN.X() > 0) && (x < sjd->resX - 2))) &&
                 (((cN.Y() < 0) && (y > 0)) || (cN.Y() == 0) || ((cN.Y() > 0) && (y < sjd->resY - 2))) &&
                 (((cN.Z() < 0) && (z > 0)) || (cN.Z() == 0) || ((cN.Z() > 0) && (z < sjd->resZ - 2))))
             {
                 // der aktuelle Nachbar
-                FatVoxel &f2 = theVolume[((z + cN.Z()) * sjd->resY + (y + cN.Y())) * sjd->resX + x + cN.X()];
+				FatVoxel &neighbCell = theVolume[sjd->cellIndex(x + cN.X(),  y + cN.Y(),  z + cN.Z())];
 
                 // liegt er komplett innen oder auﬂen?
-                if (f2.mcCase == 255 && f2.consumedTriangles == 0)
+                if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0)
                     surf.volume += growVolume(theVolume, surf.fullFaces, x + cN.X(), y + cN.Y(), z + cN.Z());
             }
         }
     }
 
-    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sst(f.triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sst2(f.triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sstTemp(f.triangles + 3 * 3 * triIndex);
-    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sstI(f.triangles + 3 * 3 * triIndex);
+    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sst(cell.triangles + 3 * 3 * seedTriIndex);
+    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sst2(cell.triangles + 3 * 3 * seedTriIndex);
+    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sstTemp(cell.triangles + 3 * 3 * seedTriIndex);
+    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sstI(cell.triangles + 3 * 3 * seedTriIndex);
 
     // seed triangle
-    unsigned short inCellSurf = 1 << triIndex;
+    unsigned short inCellSurf = 1 << seedTriIndex;
     bool foundNew;
 
     // find all in-cell triangles connected with the seed triangle
     // TODO this is slow and very expensive
     do {
         foundNew = false;
-        for (unsigned char c = 0; c < f.numTriangles; c++) {
-            if ((inCellSurf & (1 << c)))
-				continue;
+        for (unsigned char triIdx = 0; triIdx < cell.numTriangles; triIdx++) {
+            if ((inCellSurf & (1 << triIdx)))
+                continue;
             // we haven't been here before, or it did not fit.
-            sstI.SetPointer(f.triangles + 3 * 3 * c);
+            sstI.SetPointer(cell.triangles + 3 * 3 * triIdx);
             // does it fit to any of the collected triangles?
-            for (unsigned char d = 0; d < f.numTriangles; d++) {
-                if (inCellSurf & (1 << d)) {
-                    sst2.SetPointer(f.triangles + 3 * 3 * d);
+            for (unsigned char triIdx2 = 0; triIdx2 < cell.numTriangles; triIdx2++) {
+                if (inCellSurf & (1 << triIdx2)) {
+                    sst2.SetPointer(cell.triangles + 3 * 3 * triIdx2);
                     //if (sstI.HasCommonEdge(sst2)) {
                     if (Dowel::HaveCommonEdge(sstI, sst2)) {
-                        inCellSurf |= (1 << c);
+                        inCellSurf |= (1 << triIdx);
                         foundNew = true;
                     }
                 }
@@ -312,26 +318,29 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
         }
     } while (foundNew);
 
-    for (unsigned char c = 0; c < f.numTriangles; c++) {
+    for (unsigned char triIdx = 0; triIdx < cell.numTriangles; triIdx++) {
         // is this part of the in-cell surface?
-        if (!(inCellSurf & (1 << c)))
+        if (!(inCellSurf & (1 << triIdx)))
             continue;
 
-        sstI.SetPointer(f.triangles + 3 * 3 * c);
-        ProcessTriangle(sstI, f, c, surf, x, y, z);
+        sstI.SetPointer(cell.triangles + 3 * 3 * triIdx);
+        if (!(cell.consumedTriangles & (1 << triIdx))) {
+            ProcessTriangle(sstI, cell, triIdx, surf, x, y, z);
+            cell.consumedTriangles |= (1 << triIdx);
+        }
 
-        for (int ni = 0; ni < 6; ni++) {
-            const vislib::math::Point<signed char, 3>& mN = moreNeighbors[ni];
+        for (int neighbIdx = 0; neighbIdx < 6; neighbIdx++) {
+            const vislib::math::Point<signed char, 3>& mN = moreNeighbors[neighbIdx];
             if ((((mN.X() < 0) && (x > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (x < sjd->resX - 2))) &&
                 (((mN.Y() < 0) && (y > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (y < sjd->resY - 2))) &&
                 (((mN.Z() < 0) && (z > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (z < sjd->resZ - 2))))
             {
-                FatVoxel &n = theVolume[((z + mN.Z()) * sjd->resY + y + mN.Y()) * sjd->resX + x + mN.X()];
-                for (unsigned int m = 0; m < n.numTriangles; m++) {
-                    if (n.consumedTriangles & (1 << m))
-						continue;
+				FatVoxel &neighbCell = theVolume[sjd->cellIndex(x + mN.X(), y + mN.Y(), z + mN.Z())];
+                for (unsigned int niTriIdx = 0; niTriIdx < neighbCell.numTriangles; niTriIdx++) {
+                    if (neighbCell.consumedTriangles & (1 << niTriIdx))
+                        continue;
 
-                    sst2.SetPointer(n.triangles + 3 * 3 * m);
+                    sst2.SetPointer(neighbCell.triangles + 3 * 3 * niTriIdx);
 #ifdef ULTRADEBUG
                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                         "[%08u] comparing with (%04u, %04u, %04u)[%u/%u]", vislib::sys::Thread::CurrentID(),
@@ -344,9 +353,13 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                             "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
 #endif /* ULTRADEBUG */
-                        ProcessTriangle(sst2, n, m, surf, x + mN.X(), y + mN.Y(), z + mN.Z());
+                        if (!(neighbCell.consumedTriangles & (1 << niTriIdx))) {
+                            ProcessTriangle(sst2, neighbCell, niTriIdx, surf, x + mN.X(), y + mN.Y(), z + mN.Z());
+                            neighbCell.consumedTriangles |= (1 << niTriIdx);
+                        }
+                        /* this causes a recursive mechanism using a qeue */
                         cellFIFO.Append(vislib::math::Point<unsigned int, 4>(
-                            x + mN.X(), y + mN.Y(), z + mN.Z(), m));
+                            x + mN.X(), y + mN.Y(), z + mN.Z(), niTriIdx));
                     }
                 }
             }
@@ -354,9 +367,49 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
     }
 }
 
+VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> &sstI,
+         FatVoxel &cell, unsigned char triIdx, Surface &surf, unsigned int x, unsigned int y, unsigned int z) {
+
+    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sstTemp(cell.triangles + 3 * 3 * triIdx);
+
+    if (sjd->storeMesh) {
+        surf.mesh.SetCount(surf.mesh.Count() + 9);
+        sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() + surf.mesh.Count() - 9));
+        sstTemp = sstI;
+    }
+
+    surf.surface += sstI.Area<VoxelizerFloat>();
+    surf.volume += cell.volumes[triIdx];
+    if (isBorder(x, y, z)) {
+        if (cell.borderVoxel == NULL) {
+            cell.borderVoxel = new BorderVoxel();
+            cell.borderVoxel->x = x + sjd->offsetX;
+            cell.borderVoxel->y = y + sjd->offsetY;
+            cell.borderVoxel->z = z + sjd->offsetZ;
+            cell.borderVoxel->triangles.AssertCapacity(cell.numTriangles * 9);
+            surf.border->Add(cell.borderVoxel);
+        }
+        cell.borderVoxel->triangles.SetCount(cell.borderVoxel->triangles.Count() + 9);
+        sstTemp.SetPointer(const_cast<VoxelizerFloat *>(cell.borderVoxel->triangles.PeekElements()
+            + cell.borderVoxel->triangles.Count() - 9));
+        sstTemp = sstI;
+    }
+#ifdef ULTRADEBUG
+vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
+    " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
+    vislib::sys::Thread::CurrentID(),
+    x, y, z, triIdx,
+    MarchingCubeTables::a2ucTriangleConnectionCount[n->mcCase],
+    sstI.PeekCoordinates()[0][0], sstI.PeekCoordinates()[0][1], sstI.PeekCoordinates()[0][2],
+    sstI.PeekCoordinates()[1][0], sstI.PeekCoordinates()[1][1], sstI.PeekCoordinates()[1][2],
+    sstI.PeekCoordinates()[2][0], sstI.PeekCoordinates()[2][1], sstI.PeekCoordinates()[2][2]);
+#endif /* ULTRADEBUG */
+}
+
 void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z) {
 
-    FatVoxel &currVoxel = theVolume[(z * sjd->resY + y) * sjd->resX + x];
+    FatVoxel &currVoxel = theVolume[sjd->cellIndex(x, y, z)];
     currVoxel.consumedTriangles = 0;
     currVoxel.numTriangles = 0;
 
@@ -367,10 +420,10 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
     currVoxel.mcCase = 0;
     //Make a local copy of the values at the cube's corners
     for (i = 0; i < 8; i++) {
-        CubeValues[i] = theVolume[
-            ((z + MarchingCubeTables::a2fVertexOffset[i][2]) * sjd->resY
-                + y + MarchingCubeTables::a2fVertexOffset[i][1]) * sjd->resX
-                + x + MarchingCubeTables::a2fVertexOffset[i][0]
+		CubeValues[i] = theVolume[sjd->cellIndex(
+			x + MarchingCubeTables::a2fVertexOffset[i][0],
+			y + MarchingCubeTables::a2fVertexOffset[i][1],
+			z + MarchingCubeTables::a2fVertexOffset[i][2])
         ].distField;
         if (CubeValues[i] < 0.0f)
             currVoxel.mcCase |= 1 << i;
@@ -763,48 +816,6 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
 }
 
 
-VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> &sstI,
-         FatVoxel &f, unsigned char triIdx, Surface &surf, unsigned int x, unsigned int y, unsigned int z) {
-    if (f.consumedTriangles & (1 << triIdx))
-        return;
-
-    vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> sstTemp(f.triangles + 3 * 3 * triIdx);
-    if (sjd->storeMesh) {
-        surf.mesh.SetCount(surf.mesh.Count() + 9);
-        sstTemp.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() + surf.mesh.Count() - 9));
-        sstTemp = sstI;
-    }
-    surf.surface += sstI.Area<VoxelizerFloat>();
-    surf.volume += f.volumes[triIdx];
-    if (isBorder(x, y, z)) {
-        if (f.borderVoxel == NULL) {
-            f.borderVoxel = new BorderVoxel();
-            f.borderVoxel->x = x + sjd->offsetX;
-            f.borderVoxel->y = y + sjd->offsetY;
-            f.borderVoxel->z = z + sjd->offsetZ;
-            f.borderVoxel->triangles.AssertCapacity(f.numTriangles * 9);
-            surf.border->Add(f.borderVoxel);
-        }
-        f.borderVoxel->triangles.SetCount(f.borderVoxel->triangles.Count() + 9);
-        sstTemp.SetPointer(const_cast<VoxelizerFloat *>(f.borderVoxel->triangles.PeekElements()
-            + f.borderVoxel->triangles.Count() - 9));
-        sstTemp = sstI;
-    }
-    f.consumedTriangles |= (1 << triIdx);
-#ifdef ULTRADEBUG
-vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-    "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
-    " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
-    vislib::sys::Thread::CurrentID(),
-    x, y, z, triIdx,
-    MarchingCubeTables::a2ucTriangleConnectionCount[n->mcCase],
-    sstI.PeekCoordinates()[0][0], sstI.PeekCoordinates()[0][1], sstI.PeekCoordinates()[0][2],
-    sstI.PeekCoordinates()[1][0], sstI.PeekCoordinates()[1][1], sstI.PeekCoordinates()[1][2],
-    sstI.PeekCoordinates()[2][0], sstI.PeekCoordinates()[2][1], sstI.PeekCoordinates()[2][2]);
-#endif /* ULTRADEBUG */
-}
-
-
 DWORD TetraVoxelizer::Run(void *userData) {
     using vislib::sys::Log;
 
@@ -921,7 +932,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
                         //    sjd->Bounds.Bottom() + y * sjd->CellSize + sjd->CellSize * 0.5f,
                         //    sjd->Bounds.Back() + z * sjd->CellSize + sjd->CellSize * 0.5f);
                         currDist = sp.Distance<VoxelizerFloat>(p) - currRad;
-                        SIZE_T i = (z * sjd->resY + y) * sjd->resX + x;
+                        SIZE_T i = sjd->cellIndex(x, y, z);
                         //if (x > 5 && x < 8 && z > 4 && z < 8 && y > 6 && y < 9) {
                             volume[i].distField = vislib::math::Min(volume[i].distField, currDist);
                         //} else {
@@ -1015,11 +1026,11 @@ DWORD TetraVoxelizer::Run(void *userData) {
     for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
         for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
             for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
-                if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[(z * sjd->resY + y) * sjd->resX + x].mcCase] > 0) {
-                    ARY_SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].triangles);
-                    ARY_SAFE_DELETE(volume[(z * sjd->resY + y) * sjd->resX + x].volumes);
+                if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[sjd->cellIndex(x, y, z)].mcCase] > 0) {
+                    ARY_SAFE_DELETE(volume[sjd->cellIndex(x, y, z)].triangles);
+                    ARY_SAFE_DELETE(volume[sjd->cellIndex(x, y, z)].volumes);
                     // do NOT delete!
-                    volume[(z * sjd->resY + y) * sjd->resX + x].borderVoxel = NULL;
+                    volume[sjd->cellIndex(x, y, z)].borderVoxel = NULL;
                 }
             }
         }
