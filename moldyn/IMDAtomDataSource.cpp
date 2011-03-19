@@ -1075,6 +1075,10 @@ void moldyn::IMDAtomDataSource::assertData(void) {
     }
 
     file.Close();
+
+    // apply filter (if activated)
+    this->posXFilterUpdate(this->posXFilterNow);
+
 }
 
 
@@ -1448,11 +1452,16 @@ bool moldyn::IMDAtomDataSource::posXFilterUpdate(param::ParamSlot& slot) {
         }
     }
 
-    this->posData.EnforceSize(outCnt * 3 * sizeof(float), true);
+    if (outCnt != inCnt) {
+        this->datahash++;
+        this->posData.EnforceSize(outCnt * 3 * sizeof(float), true);
 
-    Log::DefaultLog.WriteInfo("PosX-Filtered from %u to %u particles\n",
-        static_cast<unsigned int>(inCnt),
-        static_cast<unsigned int>(outCnt));
+        Log::DefaultLog.WriteInfo("PosX-Filtered from %u to %u particles\n",
+            static_cast<unsigned int>(inCnt),
+            static_cast<unsigned int>(outCnt));
+    } else {
+        Log::DefaultLog.WriteInfo("PosX-Filter did not apply");
+    }
 
     return true;
 }
