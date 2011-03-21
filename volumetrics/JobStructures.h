@@ -224,7 +224,7 @@ namespace volumetrics {
         unsigned char mcCase;
 
         /**
-         * bit field to remember the triangles already collected whe stitching
+         * bit field to remember the triangles already collected when stitching
          * surfaces.
          */
         unsigned short consumedTriangles;
@@ -356,18 +356,25 @@ namespace volumetrics {
 
         VoluMetricJob *parent;
 
-		inline unsigned cellIndex(const vislib::math::Point<unsigned,3>& p) {return cellIndex(p.X(), p.Y(), p.Z()); }
-        inline unsigned cellIndex(unsigned x, unsigned y, unsigned z) { return (z * this->resY + y) * this->resX + x; }
+        VISLIB_FORCEINLINE unsigned cellIndex(const vislib::math::Point<unsigned,3>& p) {return cellIndex(p.X(), p.Y(), p.Z()); }
+        VISLIB_FORCEINLINE unsigned cellIndex(unsigned x, unsigned y, unsigned z) { return (z * this->resY + y) * this->resX + x; }
 
        /*   if ((((mN.X() < 0) && (x > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (x < sjd->resX - 2))) &&
                 (((mN.Y() < 0) && (y > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (y < sjd->resY - 2))) &&
                 (((mN.Z() < 0) && (z > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (z < sjd->resZ - 2))))
-			-> same as coordsInside(mN.X()+x, mN.Y()+y, mN.Z()+z) ?! */
-        inline bool coordsInside(const vislib::math::Point<unsigned,3>& p) { return coordsInside(p.X(), p.Y(), p.Z()); }
-        inline bool coordsInside(unsigned x, unsigned y, unsigned z) {
+            -> same as coordsInside(mN.X()+x, mN.Y()+y, mN.Z()+z) ?! */
+
+        VISLIB_FORCEINLINE bool coordsInside(const vislib::math::Point<int,3>& p) { return coordsInside(p.X(), p.Y(), p.Z()); }
+        VISLIB_FORCEINLINE bool coordsInside(int x, int y, int z) {
             return (x >= 0 && x < this->resX - 1) &&
                    (y >= 0 && y < this->resY - 1) &&
                    (z >= 0 && z < this->resZ - 1);
+        }
+
+        VISLIB_FORCEINLINE bool isBorder(unsigned x, unsigned y, unsigned z) {
+            return (x == 0) || (x == this->resX - 2)
+                || (y == 0) || (y == this->resY - 2)
+                || (z == 0) || (z == this->resZ - 2);
         }
     };
 

@@ -22,7 +22,7 @@ namespace volumetrics {
         VoxelizerFloat GetOffset(VoxelizerFloat fValue1, VoxelizerFloat fValue2, VoxelizerFloat fValueDesired);
 
         void growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z,
-                             unsigned char triIndex, Surface &surf);
+                             unsigned seedTriIndex, Surface &surf);
 
         /**
          * also does compute fullFaces
@@ -38,8 +38,9 @@ namespace volumetrics {
 
         void CollectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
 
-        static vislib::math::Point<signed char, 3> cornerNeighbors[8][7];
-        static vislib::math::Point<signed char, 3> moreNeighbors[6];
+        static int tets[6][4];
+        static vislib::math::Point<int, 3> cornerNeighbors[8][7];
+        static vislib::math::Point<int, 3> moreNeighbors[6];
 
         /**
          * Thread entry point.
@@ -76,14 +77,8 @@ namespace volumetrics {
         void debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3> &tri);
         void debugPrintTriangle(vislib::math::ShallowShallowTriangle<double, 3> &tri);
 
-        inline bool isBorder(unsigned int x, unsigned int y, unsigned int z) {
-            return (x == 0) || (x == sjd->resX - 2)
-                || (y == 0) || (y == sjd->resY - 2)
-                || (z == 0) || (z == sjd->resZ - 2);
-        }
-
         void ProcessTriangle(vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> &sstI,
-            FatVoxel &f, unsigned char triIdx, Surface &surf,
+            FatVoxel &f, unsigned triIdx, Surface &surf,
             unsigned int x, unsigned int y, unsigned int z);
 
 

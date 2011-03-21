@@ -355,7 +355,7 @@ DWORD VoluMetricJob::Run(void *userData) {
             this->continueToNextFrameSlot.Param<megamol::core::param::BoolParam>()->SetValue(false);
         }
 
-		// new code to eliminate enclosed surfaces
+        // new code to eliminate enclosed surfaces
     }
 
     if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
@@ -470,17 +470,17 @@ void VoluMetricJob::appendBox(vislib::RawStorage &data, vislib::math::Cuboid<Vox
     vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
         + 1 * 3 * sizeof(VoxelizerFloat))) = b.GetRightBottomFront();
     vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
-        +	2 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopFront();
+        +    2 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopFront();
     vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
-        +	3 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopFront();
+        +    3 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopFront();
     vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
-        +	4 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftBottomBack();
+        +    4 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftBottomBack();
     vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
-        +	5 * 3 * sizeof(VoxelizerFloat))) = b.GetRightBottomBack();
+        +    5 * 3 * sizeof(VoxelizerFloat))) = b.GetRightBottomBack();
     vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
-        +	6 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopBack();
+        +    6 * 3 * sizeof(VoxelizerFloat))) = b.GetRightTopBack();
     vislib::math::ShallowPoint<VoxelizerFloat, 3> (data.AsAt<VoxelizerFloat>(offset 
-        +	7 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopBack();
+        +    7 * 3 * sizeof(VoxelizerFloat))) = b.GetLeftTopBack();
     //return 8 * 3 * sizeof(float) + offset;
     offset += 8 * 3 * sizeof(VoxelizerFloat);
 }
