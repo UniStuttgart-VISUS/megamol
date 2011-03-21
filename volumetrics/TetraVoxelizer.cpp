@@ -231,16 +231,14 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
 
             for (unsigned int neighbIdx = 0; neighbIdx < 6; neighbIdx++) {
                 const vislib::math::Point<signed char, 3>& mN = moreNeighbors[neighbIdx];
-                if ((((mN.X() < 0) && (p.X() > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (p.X() < sjd->resX - 2))) &&
-                    (((mN.Y() < 0) && (p.Y() > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (p.Y() < sjd->resY - 2))) &&
-                    (((mN.Z() < 0) && (p.Z() > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (p.Z() < sjd->resZ - 2))))
-                {
-                    vislib::math::Point<int, 3> neighbP(p.X() + mN.X(), p.Y() + mN.Y(), p.Z() + mN.Z());
+                vislib::math::Point<unsigned, 3> neighbCrd(p.X() + mN.X(), p.Y() + mN.Y(), p.Z() + mN.Z());
 
-                    FatVoxel &neighbCell = theVolume[sjd->cellIndex(neighbP.X(), neighbP.Y(), neighbP.Z())];
-                    if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0) {
+				if (sjd->coordsInside(neighbCrd)) {
+                    FatVoxel &neighbCell = theVolume[sjd->cellIndex(neighbCrd)];
+
+					if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0) {
                         neighbCell.consumedTriangles = 1;
-                        queue.Add(neighbP);
+                        queue.Add(neighbCrd);
                     } else {
 //#error TODO case when we hit another surface with our volume growing??
                     }
@@ -272,16 +270,14 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 
         for (unsigned int cornerNeighbIdx = 0; cornerNeighbIdx < 7; cornerNeighbIdx++) {
             vislib::math::Point<signed char, 3>& cN = cornerNeighbors[cornerIdx][cornerNeighbIdx];
-            if ((((cN.X() < 0) && (x > 0)) || (cN.X() == 0) || ((cN.X() > 0) && (x < sjd->resX - 2))) &&
-                (((cN.Y() < 0) && (y > 0)) || (cN.Y() == 0) || ((cN.Y() > 0) && (y < sjd->resY - 2))) &&
-                (((cN.Z() < 0) && (z > 0)) || (cN.Z() == 0) || ((cN.Z() > 0) && (z < sjd->resZ - 2))))
-            {
+			vislib::math::Point<unsigned, 3> crnCrd(x + cN.X(),  y + cN.Y(),  z + cN.Z());
+			if (sjd->coordsInside(crnCrd)) {
                 // der aktuelle Nachbar
-				FatVoxel &neighbCell = theVolume[sjd->cellIndex(x + cN.X(),  y + cN.Y(),  z + cN.Z())];
+				FatVoxel &neighbCell = theVolume[sjd->cellIndex(crnCrd)];
 
                 // liegt er komplett innen oder auﬂen?
                 if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0)
-                    surf.volume += growVolume(theVolume, surf.fullFaces, x + cN.X(), y + cN.Y(), z + cN.Z());
+                    surf.volume += growVolume(theVolume, surf.fullFaces, crnCrd.X(), crnCrd.Y(), crnCrd.Z());
             }
         }
     }
@@ -331,12 +327,12 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 
         for (int neighbIdx = 0; neighbIdx < 6; neighbIdx++) {
             const vislib::math::Point<signed char, 3>& mN = moreNeighbors[neighbIdx];
-            if ((((mN.X() < 0) && (x > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (x < sjd->resX - 2))) &&
-                (((mN.Y() < 0) && (y > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (y < sjd->resY - 2))) &&
-                (((mN.Z() < 0) && (z > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (z < sjd->resZ - 2))))
-            {
-				FatVoxel &neighbCell = theVolume[sjd->cellIndex(x + mN.X(), y + mN.Y(), z + mN.Z())];
-                for (unsigned int niTriIdx = 0; niTriIdx < neighbCell.numTriangles; niTriIdx++) {
+			const vislib::math::Point<unsigned, 3> neighbCrd(x + mN.X(), y + mN.Y(), z + mN.Z());
+
+			if (sjd->coordsInside(neighbCrd)) {
+				FatVoxel &neighbCell = theVolume[sjd->cellIndex(neighbCrd)];
+
+				for (unsigned int niTriIdx = 0; niTriIdx < neighbCell.numTriangles; niTriIdx++) {
                     if (neighbCell.consumedTriangles & (1 << niTriIdx))
                         continue;
 
@@ -344,7 +340,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 #ifdef ULTRADEBUG
                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                         "[%08u] comparing with (%04u, %04u, %04u)[%u/%u]", vislib::sys::Thread::CurrentID(),
-                        x + mN.X(), y + mN.Y(), z + mN.Z(), m, n.numTriangles);
+                        neighbCrd.X(), neighbCrd.Y(), neighbCrd.Z(), m, n.numTriangles);
                     debugPrintTriangle(sst2);
                     debugPrintTriangle(sstI);
 #endif /* ULTRADEBUG */
@@ -354,12 +350,11 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                             "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
 #endif /* ULTRADEBUG */
                         if (!(neighbCell.consumedTriangles & (1 << niTriIdx))) {
-                            ProcessTriangle(sst2, neighbCell, niTriIdx, surf, x + mN.X(), y + mN.Y(), z + mN.Z());
+                            ProcessTriangle(sst2, neighbCell, niTriIdx, surf, neighbCrd.X(), neighbCrd.Y(), neighbCrd.Z());
                             neighbCell.consumedTriangles |= (1 << niTriIdx);
                         }
                         /* this causes a recursive mechanism using a qeue */
-                        cellFIFO.Append(vislib::math::Point<unsigned int, 4>(
-                            x + mN.X(), y + mN.Y(), z + mN.Z(), niTriIdx));
+                        cellFIFO.Append(vislib::math::Point<unsigned, 4>(neighbCrd.X(), neighbCrd.Y(), neighbCrd.Z(), niTriIdx));
                     }
                 }
             }

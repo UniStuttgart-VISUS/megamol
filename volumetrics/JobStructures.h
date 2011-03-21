@@ -258,8 +258,8 @@ namespace volumetrics {
         /** array of Bordervoxels */
         vislib::SmartPtr<BorderVoxelArray> border;
 
-		/** bounding box of the triangle mesh */
-		//vislib::math::Cuboid<VoxelizerFloat> boundingBox;
+        /** bounding box of the triangle mesh */
+        //vislib::math::Cuboid<VoxelizerFloat> boundingBox;
 
         /** surface area */
         VoxelizerFloat surface;
@@ -345,7 +345,7 @@ namespace volumetrics {
          */
         VoxelizerFloat CellSize;
 
-        /** datacall that gives access to the particles */		
+        /** datacall that gives access to the particles */        
         core::moldyn::MultiParticleDataCall *datacall;
 
         /** here the Job should store its results */
@@ -356,9 +356,19 @@ namespace volumetrics {
 
         VoluMetricJob *parent;
 
-		inline unsigned cellIndex(unsigned x, unsigned y, unsigned z) {
-			return (z * this->resY + y) * this->resX + x;
-		}
+		inline unsigned cellIndex(const vislib::math::Point<unsigned,3>& p) {return cellIndex(p.X(), p.Y(), p.Z()); }
+        inline unsigned cellIndex(unsigned x, unsigned y, unsigned z) { return (z * this->resY + y) * this->resX + x; }
+
+       /*   if ((((mN.X() < 0) && (x > 0)) || (mN.X() == 0) || ((mN.X() > 0) && (x < sjd->resX - 2))) &&
+                (((mN.Y() < 0) && (y > 0)) || (mN.Y() == 0) || ((mN.Y() > 0) && (y < sjd->resY - 2))) &&
+                (((mN.Z() < 0) && (z > 0)) || (mN.Z() == 0) || ((mN.Z() > 0) && (z < sjd->resZ - 2))))
+			-> same as coordsInside(mN.X()+x, mN.Y()+y, mN.Z()+z) ?! */
+        inline bool coordsInside(const vislib::math::Point<unsigned,3>& p) { return coordsInside(p.X(), p.Y(), p.Z()); }
+        inline bool coordsInside(unsigned x, unsigned y, unsigned z) {
+            return (x >= 0 && x < this->resX - 1) &&
+                   (y >= 0 && y < this->resY - 1) &&
+                   (z >= 0 && z < this->resZ - 1);
+        }
     };
 
 
