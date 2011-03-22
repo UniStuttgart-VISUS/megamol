@@ -63,11 +63,15 @@ namespace sys {
             this->pattern.Clear();
 
         }
-
-        if ((this->dirStream = opendir(this->basePath)) == NULL) {
-            throw SystemException(__FILE__, __LINE__);
+        if (vislib::sys::File::Exists(this->basePath)) {
+            if ((this->dirStream = opendir(this->basePath)) == NULL) {
+                throw SystemException(__FILE__, __LINE__);
+            }
+            this->fetchNextItem();
+        } else {
+            this->dirStream = NULL;
+            this->nextItem.Path.Clear();
         }
-        this->fetchNextItem();
 #endif /* _WIN32 */
     }
 
@@ -120,11 +124,15 @@ namespace sys {
             this->pattern.Clear();
 
         }
-
-        if ((this->dirStream = opendir(this->basePath)) == NULL) {
-            throw SystemException(__FILE__, __LINE__);
+        if (vislib::sys::File::Exists(this->basePath)) {
+            if ((this->dirStream = opendir(this->basePath)) == NULL) {
+                throw SystemException(__FILE__, __LINE__);
+            }
+            this->fetchNextItem();
+        } else {
+            this->dirStream = NULL;
+            this->nextItem.Path.Clear();
         }
-        this->fetchNextItem();
 #endif /* _WIN32 */
     }
     
@@ -162,26 +170,28 @@ namespace sys {
             }
         } while (!found);
 #else /* _WIN32 */
-        struct dirent *de;
-        do {
-            // BUG: Linux documentation is all lies. the errno stunt does not work at all.
-            //errno = 0;
-            if ((de = readdir(this->dirStream)) != NULL) {
-                if (!this->pattern.IsEmpty()) {
-                    if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.PeekBuffer())) {
-                        continue; // one more time
+        struct dirent *de = NULL;
+        if (this->dirStream != NULL) {
+            do {
+                // BUG: Linux documentation is all lies. the errno stunt does not work at all.
+                //errno = 0;
+                if ((de = readdir(this->dirStream)) != NULL) {
+                    if (!this->pattern.IsEmpty()) {
+                        if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.PeekBuffer())) {
+                            continue; // one more time
+                        }
+                    }
+                    if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
+                        this->nextItem.Type = Entry::DIRECTORY;
+                        if (this->omitFolders) continue; // one more time
+                        if ((strcmp(de->d_name, "..") != 0) && (strcmp(de->d_name, ".") != 0)) break;
+                    } else {
+                        this->nextItem.Type = Entry::FILE;
+                        break;
                     }
                 }
-                if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
-                    this->nextItem.Type = Entry::DIRECTORY;
-                    if (this->omitFolders) continue; // one more time
-                    if ((strcmp(de->d_name, "..") != 0) && (strcmp(de->d_name, ".") != 0)) break;
-                } else {
-                    this->nextItem.Type = Entry::FILE;
-                    break;
-                }
-            }
-        } while (de != NULL);
+            } while (de != NULL);
+        }
         if (de == NULL) {
             this->nextItem.Path.Clear();
         }
@@ -225,26 +235,28 @@ namespace sys {
             }
         } while (!found);
 #else /* _WIN32 */
-        struct dirent *de;
-        do {
-            // BUG: Linux documentation is all lies. the errno stunt does not work at all.
-            //errno = 0;
-            if ((de = readdir(this->dirStream)) != NULL) {
-                if (!this->pattern.IsEmpty()) {
-                    if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.PeekBuffer())) {
-                        continue; // one more time
+        struct dirent *de = NULL;
+        if (this->dirStream != NULL) {
+            do {
+                // BUG: Linux documentation is all lies. the errno stunt does not work at all.
+                //errno = 0;
+                if ((de = readdir(this->dirStream)) != NULL) {
+                    if (!this->pattern.IsEmpty()) {
+                        if (!vislib::sys::FilenameGlobMatch(de->d_name, this->pattern.PeekBuffer())) {
+                            continue; // one more time
+                        }
+                    }
+                    if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
+                        this->nextItem.Type = Entry::DIRECTORY;
+                        if (this->omitFolders) continue; // one more time
+                        if ((strcmp(de->d_name, "..") != 0) && (strcmp(de->d_name, ".") != 0)) break;
+                    } else {
+                        this->nextItem.Type = Entry::FILE;
+                        break;
                     }
                 }
-                if (vislib::sys::File::IsDirectory(this->basePath + Path::SEPARATOR_A + de->d_name)) {
-                    this->nextItem.Type = Entry::DIRECTORY;
-                    if (this->omitFolders) continue; // one more time
-                    if ((strcmp(de->d_name, "..") != 0) && (strcmp(de->d_name, ".") != 0)) break;
-                } else {
-                    this->nextItem.Type = Entry::FILE;
-                    break;
-                }
-            }
-        } while (de != NULL);
+            } while (de != NULL);
+        }
         if (de == NULL) {
             this->nextItem.Path.Clear();
         } else {
