@@ -236,6 +236,44 @@ namespace volumetrics {
          * survive the volume itself.
          */
         BorderVoxelElement borderVoxel;
+
+        /**
+         * thomasbm: surface that might enclose all surfaces withing this voxel.
+         * This is used to detect and remove entirely enclosed surfaces.
+         */
+        //class Surface *enclosingCandidate;
+    };
+
+    /**
+     * thomasbm: we need that to avoid carrying an initialized-flag for
+     * each boudning box with us...
+     */
+    template<class T>
+    class BoundingBox {
+        vislib::math::Cuboid<T> box;
+        bool initialized;
+    public:
+        BoundingBox() : initialized(false) {}
+        void AddPoint(vislib::math::Point<T,3> p) {
+            if (!initialized) {
+                initialized = true;
+                box.Set(p.X(), p.Y(), p.Z(), p.X(), p.Y(), p.Z());
+            } else
+                box.GrowToPoint(p);
+        }
+        void Union(const BoundingBox<T>& other) {
+            //ASSERT(other.initialized);
+            if (!other.initialized)
+                return;
+            if (!initialized) {
+                initialized = true;
+                box = other.box;
+            } else
+                box.Union(other.box);
+        }
+        inline bool operator==(const BoundingBox<T>& o) {
+            return (initialized == o.initialized) && (box==o.box);
+        }
     };
 
     /**
@@ -258,8 +296,8 @@ namespace volumetrics {
         /** array of Bordervoxels */
         vislib::SmartPtr<BorderVoxelArray> border;
 
-        /** bounding box of the triangle mesh */
-        //vislib::math::Cuboid<VoxelizerFloat> boundingBox;
+        /** thomasbm: bounding box of the triangle mesh */
+        BoundingBox<unsigned> boundingBox;
 
         /** surface area */
         VoxelizerFloat surface;
@@ -274,6 +312,11 @@ namespace volumetrics {
          * full subvolume is indicated.
          */
         unsigned char fullFaces;
+
+        /**
+         * thomasbm: a list of surfaces that might be enclosed by this surface.
+         */
+        //vislib::Array<Surface*> enclSurfaces;
 
         /**
          * Answer the equality of this and rhs. Equality actually means

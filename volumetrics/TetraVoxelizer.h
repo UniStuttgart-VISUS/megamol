@@ -27,7 +27,7 @@ namespace volumetrics {
         /**
          * also does compute fullFaces
          */
-        VoxelizerFloat growVolume(FatVoxel *theVolume, unsigned char &fullFaces,
+        VoxelizerFloat growVolume(FatVoxel *theVolume, Surface& surf,
             unsigned int x, unsigned int y, unsigned int z);
 
         bool CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
@@ -37,6 +37,8 @@ namespace volumetrics {
         void MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
 
         void CollectCell(FatVoxel *theVolume, unsigned int x, unsigned int y, unsigned int z);
+
+        void DetectEncapsulatedSurfs();
 
         static int tets[6][4];
         static vislib::math::Point<int, 3> cornerNeighbors[8][7];

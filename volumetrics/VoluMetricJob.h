@@ -69,13 +69,16 @@ namespace volumetrics {
         /** Dtor. */
         virtual ~VoluMetricJob(void);
 
-        bool areSurfacesJoinable(int i, int j, int k, int l);
+        bool areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2);
 
         unsigned int MaxGlobalID;
 
         vislib::sys::CriticalSection AccessMaxGlobalID;
 
         vislib::sys::CriticalSection RewriteGlobalID;
+
+        // thomasbm: TODO: use hash table here!!
+        vislib::Array<BoundingBox<unsigned>> globalIdBoxes;
 
         vislib::Array<SubJobData*> SubJobDataList;
 
@@ -193,7 +196,7 @@ namespace volumetrics {
         //void joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
         //    int i, int j, int k, int l);
 
-        void joinSurfaces(int i, int j, int k, int l);
+        void joinSurfaces(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2);
 
         core::CallerSlot getDataSlot;
 

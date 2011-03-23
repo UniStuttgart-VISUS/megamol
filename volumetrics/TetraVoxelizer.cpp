@@ -182,6 +182,11 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
         }
         sjd->Result.surfaces.Append(surf);
 
+        // thomasbm:
+        //#error das kann so nicht gehen ... weil immer  cell.enclosingCandidate == &surf gilt!?
+        //if (cell.enclosingCandidate && cell.enclosingCandidate != &surf) {
+        //    cell.enclosingCandidate->enclSurfaces.Append(&surf);
+        //}
     } /* end for */
 }
 
@@ -193,7 +198,7 @@ VoxelizerFloat TetraVoxelizer::GetOffset(VoxelizerFloat fValue1, VoxelizerFloat 
     return res;
 }
 
-VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fullFaces,
+VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
                                           unsigned int x, unsigned int y, unsigned int z) {
     SIZE_T cells = 0;
     vislib::math::Point<int, 3> p;
@@ -212,17 +217,17 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
             cells++;
             cell.consumedTriangles = 2;
             if (p.X() == 0)
-                fullFaces |= 1;
+                surf.fullFaces |= 1;
             if (p.Y() == 0)
-                fullFaces |= 4;
+                surf.fullFaces |= 4;
             if (p.Z() == 0)
-                fullFaces |= 16;
+                surf.fullFaces |= 16;
             if (p.X() == sjd->resX - 2)
-                fullFaces |= 2;
+                surf.fullFaces |= 2;
             if (p.Y() == sjd->resY - 2)
-                fullFaces |= 8;
+                surf.fullFaces |= 8;
             if (p.Z() == sjd->resZ - 2)
-                fullFaces |= 32;
+                surf.fullFaces |= 32;
 
 #ifdef ULTRADEBUG
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -238,11 +243,15 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, unsigned char &fu
                 if (sjd->coordsInside(neighbCrd)) {
                     FatVoxel &neighbCell = theVolume[sjd->cellIndex(neighbCrd)];
 
-                    if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0) {
-                        neighbCell.consumedTriangles = 1;
-                        queue.Add(neighbCrd);
+                    if (neighbCell.mcCase == 255) {
+                        if(neighbCell.consumedTriangles == 0) {
+                            neighbCell.consumedTriangles = 1;
+                            queue.Add(neighbCrd); // recursion ...
+                        }
                     } else {
-//#error TODO case when we hit another surface with our volume growing??
+                        // thomasbm: surfaces inside this cell might be enclosed by 'surf'
+                    //    if (!CellHasNoGeometry(theVolume, x, y, z)
+                    //        neighbCell.enclosingCandidate = &surf;
                     }
                 }
             }
@@ -285,15 +294,10 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
 
                 // liegt er komplett innen oder auﬂen?
                 if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0)
-                    surf.volume += growVolume(theVolume, surf.fullFaces, crnCrd.X(), crnCrd.Y(), crnCrd.Z());
+                    surf.volume += growVolume(theVolume, surf, crnCrd.X(), crnCrd.Y(), crnCrd.Z());
             }
         }
     }
-
-    //Triangle sst(cell.triangles + 3 * 3 * seedTriIndex);
-    //Triangle sstTemp(cell.triangles + 3 * 3 * seedTriIndex);
-    //Triangle triangle(cell.triangles + 3 * 3 * seedTriIndex);
-    //Triangle neighbTriangle(cell.triangles + 3 * 3 * seedTriIndex);
 
     // seed triangle
     unsigned short inCellSurf = 1 << seedTriIndex;
@@ -381,6 +385,7 @@ VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowSha
 
     vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> tmpTriangle(cell.triangles + 3 * 3 * triIdx);
 
+    /* copy 'triangle' to 'surf.mesh' if we want to store the geometry */
     if (sjd->storeMesh) {
         surf.mesh.SetCount(surf.mesh.Count() + 9);
         tmpTriangle.SetPointer(const_cast<VoxelizerFloat *>(surf.mesh.PeekElements() + surf.mesh.Count() - 9));
@@ -389,6 +394,10 @@ VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowSha
 
     surf.surface += triangle.Area<VoxelizerFloat>();
     surf.volume += cell.volumes[triIdx];
+
+    // thomasbm: grow bounding volume based on intersecting voxels ...
+    vislib::math::Point<unsigned,3> voxelCoords(x + sjd->offsetX, y + sjd->offsetY, z + sjd->offsetZ);
+    surf.boundingBox.AddPoint(voxelCoords);
 
     if (sjd->isBorder(x, y, z)) {
         if (cell.borderVoxel == NULL) {
@@ -840,10 +849,12 @@ DWORD TetraVoxelizer::Run(void *userData) {
 
     unsigned int fifoEnd = 0, fifoCur = 0;
     FatVoxel *volume = new FatVoxel[sjd->resX * sjd->resY * sjd->resZ];
+    // we can do that when using structs ... memset(volume, 0, sizeof(FatVoxel)*sjd->resX * sjd->resY * sjd->resZ]);
     for (SIZE_T i = 0; i < sjd->resX * sjd->resY * sjd->resZ; i++) {
         volume[i].distField = FLT_MAX;
         volume[i].borderVoxel = NULL;
         volume[i].mcCase = 0;
+        //volume[i].enclosingCandidate = 0; // thomasbm
     }
 
     unsigned int partListCnt = sjd->datacall->GetParticleListCount();
@@ -1029,6 +1040,8 @@ DWORD TetraVoxelizer::Run(void *userData) {
             }
         }
 
+        // thomasbm: collect enclosed surfaces ...
+        //DetectEncapsulatedSurfs();
     }
     // dealloc stuff in volume
     // dealloc volume as a whole etc.
@@ -1061,46 +1074,57 @@ DWORD TetraVoxelizer::Run(void *userData) {
     for (x = 0; x < sjd->Result.surfaces.Count(); x++)
         sjd->Result.surfaces[x].globalID = MinGID + x;
 
-    // first find self to set i
-    int i;
-    for (i = 0; i < sjd->parent->SubJobDataList.Count(); i++) {
-        if (sjd->parent->SubJobDataList[i] == sjd)
+    // first find self to set thisIndex
+    int thisIndex;
+    for (thisIndex = 0; thisIndex < sjd->parent->SubJobDataList.Count(); thisIndex++) {
+        if (sjd->parent->SubJobDataList[thisIndex] == sjd)
             break;
     }
 
     vislib::Array<int> joinableSurfs;
     joinableSurfs.SetCapacityIncrement(10);
-    for (int k = 0; k < sjd->parent->SubJobDataList.Count(); k++) {
-        SubJobData *parentSubJob = sjd->parent->SubJobDataList[k];
+    for (int sjdIdx = 0; sjdIdx < sjd->parent->SubJobDataList.Count(); sjdIdx++) {
+        SubJobData *parentSubJob = sjd->parent->SubJobDataList[sjdIdx];
 
-        if (!parentSubJob->Result.done || parentSubJob->Result.surfaces.Count()==0 || k == i)
+        if (!parentSubJob->Result.done || parentSubJob->Result.surfaces.Count()==0 || sjdIdx == thisIndex)
             continue;
 
-        vislib::math::Cuboid<VoxelizerFloat> c = sjd->Bounds;
-        c.Union(parentSubJob->Bounds);
+        vislib::math::Cuboid<VoxelizerFloat> box = sjd->Bounds;
+        box.Union(parentSubJob->Bounds);
 
-        if (c.Volume() > sjd->Bounds.Volume() + parentSubJob->Bounds.Volume())
+        if (box.Volume() > sjd->Bounds.Volume() + parentSubJob->Bounds.Volume())
             continue;
 
-        for (int j = 0; j < sjd->Result.surfaces.Count(); j++) {
+        for (int surfIdx = 0; surfIdx < sjd->Result.surfaces.Count(); surfIdx++) {
             joinableSurfs.Clear();
-            for (int l = 0; l < parentSubJob->Result.surfaces.Count(); l++) {
-                if (sjd->parent->areSurfacesJoinable(i, j, k, l))
-                    joinableSurfs.Add(l);
+            for (int otherSurfIdx = 0; otherSurfIdx < parentSubJob->Result.surfaces.Count(); otherSurfIdx++) {
+                if (sjd->parent->areSurfacesJoinable(thisIndex, surfIdx, sjdIdx, otherSurfIdx))
+                    joinableSurfs.Add(otherSurfIdx);
             }
             if (joinableSurfs.Count() > 0) {
                 sjd->parent->RewriteGlobalID.Lock();
                 unsigned int smallest = INT_MAX;
-                for (int a = 0; a < joinableSurfs.Count(); a++) {
-                    if (parentSubJob->Result.surfaces[joinableSurfs[a]].globalID < smallest)
-                        smallest = parentSubJob->Result.surfaces[joinableSurfs[a]].globalID;
+                for (int jsurfIdx = 0; jsurfIdx < joinableSurfs.Count(); jsurfIdx++) {
+                    int gid = parentSubJob->Result.surfaces[joinableSurfs[jsurfIdx]].globalID;
+                    if (gid < smallest)
+                        smallest = gid;
                 }
-                for (int a = 0; a < joinableSurfs.Count(); a++)
-                    parentSubJob->Result.surfaces[joinableSurfs[a]].globalID = smallest;
 
-                sjd->Result.surfaces[j].globalID = smallest;
+                if (sjd->parent->globalIdBoxes.Count() <= smallest)
+                    sjd->parent->globalIdBoxes.SetCount(smallest+1);
+
+                for (int jsurfIdx = 0; jsurfIdx < joinableSurfs.Count(); jsurfIdx++) {
+                    Surface& surf = parentSubJob->Result.surfaces[joinableSurfs[jsurfIdx]];
+                    // thomasbm: gather global surface-bounding boxes
+                    //if (surf.globalID)
+                    //    sjd->parent->globalIdBoxes[smallest].Union(sjd->parent->globalIdBoxes[surf.globalID]);
+                    sjd->parent->globalIdBoxes[smallest].Union(surf.boundingBox);
+                    surf.globalID = smallest;
+                }
+
+                sjd->Result.surfaces[surfIdx].globalID = smallest;
             }
-            //sjd->Result.surfaces[j].globalID = parentSubJob->Result.surfaces[l].globalID;
+            //sjd->Result.surfaces[surfIdx].globalID = parentSubJob->Result.surfaces[otherSurfIdx].globalID;
             sjd->parent->RewriteGlobalID.Unlock();
         }
     }
