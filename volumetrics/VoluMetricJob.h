@@ -77,7 +77,7 @@ namespace volumetrics {
 
         vislib::sys::CriticalSection RewriteGlobalID;
 
-        // thomasbm: TODO: use hash table here!!
+        // thomasbm: TODO: use hash table here!? STL-version?
         vislib::Array<BoundingBox<unsigned>> globalIdBoxes;
 
         vislib::Array<SubJobData*> SubJobDataList;

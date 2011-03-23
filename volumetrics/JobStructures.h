@@ -248,20 +248,21 @@ namespace volumetrics {
      * thomasbm: we need that to avoid carrying an initialized-flag for
      * each boudning box with us...
      */
+//#define PARALLEL_BBOX_COLLECT
     template<class T>
     class BoundingBox {
         vislib::math::Cuboid<T> box;
         bool initialized;
     public:
-        BoundingBox() : initialized(false) {}
-        void AddPoint(vislib::math::Point<T,3> p) {
+        inline BoundingBox() : initialized(false) {}
+        inline void AddPoint(vislib::math::Point<T,3> p) {
             if (!initialized) {
                 initialized = true;
                 box.Set(p.X(), p.Y(), p.Z(), p.X(), p.Y(), p.Z());
             } else
                 box.GrowToPoint(p);
         }
-        void Union(const BoundingBox<T>& other) {
+        inline void Union(const BoundingBox<T>& other) {
             //ASSERT(other.initialized);
             if (!other.initialized)
                 return;
@@ -274,6 +275,25 @@ namespace volumetrics {
         inline bool operator==(const BoundingBox<T>& o) {
             return (initialized == o.initialized) && (box==o.box);
         }
+
+        enum CLASSIFY_STATUS {
+            CONTAINS_OTHER,
+            IS_CONTAINED_BY_OTHER,
+            UNSPECIFIED // contains partial intersection for now ...
+        };
+
+        inline CLASSIFY_STATUS Classify(const BoundingBox<T>& o) const {
+            vislib::math::Cuboid<T> _union(box);
+            ASSERT(this->initialized && o.initialized);
+            _union.Union(o.box);
+            T volume = _union.Volume();
+            if (volume <= this->box.Volume())
+                return CONTAINS_OTHER;
+            if (volume <= o.box.Volume())
+                return IS_CONTAINED_BY_OTHER;
+            return UNSPECIFIED;
+        }
+
     };
 
     /**

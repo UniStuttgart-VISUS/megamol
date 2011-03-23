@@ -542,17 +542,21 @@ VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(int sjdIdx1, int surfIdx1, i
         dstSurf = &SubJobDataList[sjdIdx2]->Result.surfaces[surfIdx2];
     }
 
+#ifdef PARALLEL_BBOX_COLLECT // cs: RewriteGlobalID
     if (this->globalIdBoxes.Count() <= srcSurf->globalID)
         this->globalIdBoxes.SetCount(srcSurf->globalID+1);
+#endif
 
     for (int x = 0; x < SubJobDataList.Count(); x++) {
         //if (SubJobDataList[x]->Result.done) {
             for (int y = 0; y < SubJobDataList[x]->Result.surfaces.Count(); y++) {
                 Surface& surf = SubJobDataList[x]->Result.surfaces[y];
                 if (surf.globalID == dstSurf->globalID) {
+#ifdef PARALLEL_BBOX_COLLECT
                     // thomasbm: gather global surface-bounding boxes
                     this->globalIdBoxes[srcSurf->globalID].Union(srcSurf->boundingBox);
                     this->globalIdBoxes[srcSurf->globalID].Union(surf.boundingBox);
+#endif
                     surf.globalID = srcSurf->globalID;
                 }
             }
@@ -700,10 +704,16 @@ restart:
                 countPerID.Add(surf.mesh.Count() / 9);
                 surfPerID.Add(surf.surface);
                 volPerID.Add(surf.volume);
+#ifndef PARALLEL_BBOX_COLLECT
+                globalIdBoxes.Add(surf.boundingBox);
+#endif
             } else {
                 countPerID[pos] = countPerID[pos] + (surf.mesh.Count() / 9);
                 surfPerID[pos] = surfPerID[pos] + surf.surface;
                 volPerID[pos] = volPerID[pos] + surf.volume;
+#ifndef PARALLEL_BBOX_COLLECT
+                globalIdBoxes[pos].Union(surf.boundingBox);
+#endif
             }
         }
     }
@@ -714,6 +724,41 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
                                      vislib::Array<SIZE_T> &countPerID,
                                      vislib::Array<VoxelizerFloat> &surfPerID,
                                      vislib::Array<VoxelizerFloat> &volPerID) {
+
+
+    // thomasbm: final step: find volumes of unique surface id's that contain each other
+    for (int uidIdx = 0; uidIdx < uniqueIDs.Count(); uidIdx++) {
+        unsigned gid = uniqueIDs[uidIdx];
+        for (int uidIdx2 = 0; uidIdx2 < uniqueIDs.Count(); uidIdx2++) {
+            unsigned gid2 = uniqueIDs[uidIdx2];
+            if (/*uidIdx2==uidIdx*/gid==gid2)
+                continue;
+#ifdef PARALLEL_BBOX_COLLECT
+            BoundingBox<unsigned>& box = globalIdBoxes[gid];
+            BoundingBox<unsigned>& box2 = globalIdBoxes[gid2];
+#else
+            BoundingBox<unsigned>& box = globalIdBoxes[uidIdx];
+            BoundingBox<unsigned>& box2 = globalIdBoxes[uidIdx2];
+#endif
+            BoundingBox<unsigned>::CLASSIFY_STATUS cls = box.Classify(box2);
+            int enclosedIdx, enclosingIdx;
+            if (cls==BoundingBox<unsigned>::CONTAINS_OTHER) {
+                enclosedIdx = uidIdx2;
+                enclosingIdx = uidIdx;
+            } else if (cls == BoundingBox<unsigned>::IS_CONTAINED_BY_OTHER) {
+                enclosedIdx = uidIdx;
+                enclosingIdx = uidIdx2;
+            }
+
+            countPerID[enclosingIdx] += countPerID[enclosedIdx];
+            surfPerID[enclosingIdx] += countPerID[enclosedIdx];
+            volPerID[enclosingIdx] += countPerID[enclosedIdx];
+            countPerID[enclosedIdx] = 0;
+            surfPerID[enclosedIdx] = 0;
+            volPerID[enclosedIdx] = 0;
+        }
+    }
+
     //SIZE_T numTriangles = 0;
     for (int i = 0; i < uniqueIDs.Count(); i++) {
         //numTriangles += countPerID[i];

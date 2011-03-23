@@ -837,7 +837,6 @@ void TetraVoxelizer::MarchCell(FatVoxel *theVolume, unsigned int x, unsigned int
 DWORD TetraVoxelizer::Run(void *userData) {
     using vislib::sys::Log;
 
-    int x, y, z;
     unsigned int vertFloatSize = 0;
     VoxelizerFloat currRad = 0.f;
     //, maxRad = -FLT_MAX;
@@ -921,6 +920,7 @@ DWORD TetraVoxelizer::Run(void *userData) {
             if (Centroid.Distance(sp) > currRad + distOffset)
                 continue;
 
+            int x, y, z;
             x = static_cast<int>((sp.X() - currRad - sjd->Bounds.Left()) / sjd->CellSize) - 1;
             if (x < 0) x = 0;
             y = static_cast<int>((sp.Y() - currRad - sjd->Bounds.Bottom()) / sjd->CellSize) - 1;
@@ -937,9 +937,9 @@ DWORD TetraVoxelizer::Run(void *userData) {
             if (z >= static_cast<int>(sjd->resZ)) z = sjd->resZ - 1;
             pEnd.Set(x, y, z);
 
-            for (z = pStart.Z(); z <= static_cast<int>(pEnd.Z()); z++) {
-                for (y = pStart.Y(); y <= static_cast<int>(pEnd.Y()); y++) {
-                    for (x = pStart.X(); x <= static_cast<int>(pEnd.X()); x++) {
+            for (int z = pStart.Z(); z <= static_cast<int>(pEnd.Z()); z++) {
+                for (int y = pStart.Y(); y <= static_cast<int>(pEnd.Y()); y++) {
+                    for (int x = pStart.X(); x <= static_cast<int>(pEnd.X()); x++) {
                         // TODO think about this. here the voxel content is determined by a corner
                         p.Set(
                         sjd->Bounds.Left() + x * sjd->CellSize,
@@ -1023,18 +1023,18 @@ DWORD TetraVoxelizer::Run(void *userData) {
         sjd->Result.surfaces.Append(s);
     } else {
         // march it
-        for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
-            for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
-                for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+        for (int x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+            for (int y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+                for (int z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
                     MarchCell(volume, x, y, z);
                 }
             }
         }
 
         // collect the surfaces
-        for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
-            for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
-                for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+        for (int x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+            for (int y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+                for (int z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
                     CollectCell(volume, x, y, z);
                 }
             }
@@ -1045,9 +1045,9 @@ DWORD TetraVoxelizer::Run(void *userData) {
     }
     // dealloc stuff in volume
     // dealloc volume as a whole etc.
-    for (x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
-        for (y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
-            for (z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
+    for (int x = 0; x < static_cast<int>(sjd->resX) - 1; x++) {
+        for (int y = 0; y < static_cast<int>(sjd->resY) - 1; y++) {
+            for (int z = 0; z < static_cast<int>(sjd->resZ) - 1; z++) {
                 if (MarchingCubeTables::a2ucTriangleConnectionCount[volume[sjd->cellIndex(x, y, z)].mcCase] > 0) {
                     ARY_SAFE_DELETE(volume[sjd->cellIndex(x, y, z)].triangles);
                     ARY_SAFE_DELETE(volume[sjd->cellIndex(x, y, z)].volumes);
@@ -1071,8 +1071,8 @@ DWORD TetraVoxelizer::Run(void *userData) {
     sjd->parent->MaxGlobalID += sjd->Result.surfaces.Count();
     sjd->parent->AccessMaxGlobalID.Unlock();
 
-    for (x = 0; x < sjd->Result.surfaces.Count(); x++)
-        sjd->Result.surfaces[x].globalID = MinGID + x;
+    for (int surfIdx = 0; surfIdx < sjd->Result.surfaces.Count(); surfIdx++)
+        sjd->Result.surfaces[surfIdx].globalID = MinGID + surfIdx;
 
     // first find self to set thisIndex
     int thisIndex;
@@ -1097,12 +1097,25 @@ DWORD TetraVoxelizer::Run(void *userData) {
 
         for (int surfIdx = 0; surfIdx < sjd->Result.surfaces.Count(); surfIdx++) {
             joinableSurfs.Clear();
+            sjd->parent->RewriteGlobalID.Lock();
+
             for (int otherSurfIdx = 0; otherSurfIdx < parentSubJob->Result.surfaces.Count(); otherSurfIdx++) {
                 if (sjd->parent->areSurfacesJoinable(thisIndex, surfIdx, sjdIdx, otherSurfIdx))
                     joinableSurfs.Add(otherSurfIdx);
+                else {
+#ifdef PARALLEL_BBOX_COLLECT  // cs: RewriteGlobalID
+                    // thomasbm: a surface may be entirely located within a subjob
+                    Surface& surf = sjd->Result.surfaces[surfIdx];
+                    if (sjd->parent->globalIdBoxes.Count() <= surf.globalID)
+                        sjd->parent->globalIdBoxes.SetCount(surf.globalID+1);
+                    sjd->parent->globalIdBoxes[surf.globalID].Union(surf.boundingBox);
+#endif
+                }
             }
+
             if (joinableSurfs.Count() > 0) {
-                sjd->parent->RewriteGlobalID.Lock();
+                // Lock() and Unlock() should be called symmetrically
+                //sjd->parent->RewriteGlobalID.Lock();
                 unsigned int smallest = INT_MAX;
                 for (int jsurfIdx = 0; jsurfIdx < joinableSurfs.Count(); jsurfIdx++) {
                     int gid = parentSubJob->Result.surfaces[joinableSurfs[jsurfIdx]].globalID;
@@ -1110,19 +1123,24 @@ DWORD TetraVoxelizer::Run(void *userData) {
                         smallest = gid;
                 }
 
+#ifdef PARALLEL_BBOX_COLLECT
+                //thomasbm:
                 if (sjd->parent->globalIdBoxes.Count() <= smallest)
                     sjd->parent->globalIdBoxes.SetCount(smallest+1);
-
+#endif
                 for (int jsurfIdx = 0; jsurfIdx < joinableSurfs.Count(); jsurfIdx++) {
                     Surface& surf = parentSubJob->Result.surfaces[joinableSurfs[jsurfIdx]];
+#ifdef PARALLEL_BBOX_COLLECT
                     // thomasbm: gather global surface-bounding boxes
-                    //if (surf.globalID)
+                    //if (surf.globalID ??)
                     //    sjd->parent->globalIdBoxes[smallest].Union(sjd->parent->globalIdBoxes[surf.globalID]);
                     sjd->parent->globalIdBoxes[smallest].Union(surf.boundingBox);
+#endif
                     surf.globalID = smallest;
                 }
 
                 sjd->Result.surfaces[surfIdx].globalID = smallest;
+                //sjd->parent->RewriteGlobalID.Unlock();
             }
             //sjd->Result.surfaces[surfIdx].globalID = parentSubJob->Result.surfaces[otherSurfIdx].globalID;
             sjd->parent->RewriteGlobalID.Unlock();
