@@ -245,6 +245,7 @@ namespace volumetrics {
     };
 
     /**
+     * we introduced this class to detect enclosed surfaces
      * thomasbm: we need that to avoid carrying an initialized-flag for
      * each boudning box with us...
      */

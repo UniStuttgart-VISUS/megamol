@@ -704,16 +704,16 @@ restart:
                 countPerID.Add(surf.mesh.Count() / 9);
                 surfPerID.Add(surf.surface);
                 volPerID.Add(surf.volume);
-#ifndef PARALLEL_BBOX_COLLECT
-                globalIdBoxes.Add(surf.boundingBox);
-#endif
+//#ifndef PARALLEL_BBOX_COLLECT
+//                globalIdBoxes.Add(surf.boundingBox);
+//#endif
             } else {
                 countPerID[pos] = countPerID[pos] + (surf.mesh.Count() / 9);
                 surfPerID[pos] = surfPerID[pos] + surf.surface;
                 volPerID[pos] = volPerID[pos] + surf.volume;
-#ifndef PARALLEL_BBOX_COLLECT
-                globalIdBoxes[pos].Union(surf.boundingBox);
-#endif
+//#ifndef PARALLEL_BBOX_COLLECT
+//                globalIdBoxes[pos].Union(surf.boundingBox);
+//#endif
             }
         }
     }
@@ -723,8 +723,22 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
                                      vislib::Array<unsigned int> &uniqueIDs,
                                      vislib::Array<SIZE_T> &countPerID,
                                      vislib::Array<VoxelizerFloat> &surfPerID,
-                                     vislib::Array<VoxelizerFloat> &volPerID) {
+                                     vislib::Array<VoxelizerFloat> &volPerID)
+{
 
+    // thomasbm: testing ...
+#ifndef PARALLEL_BBOX_COLLECT
+    globalIdBoxes.SetCount(uniqueIDs.Count());
+    for(int sjdIdx = 0; sjdIdx < SubJobDataList.Count(); sjdIdx++) {
+        SubJobData *subJob = SubJobDataList[sjdIdx];
+        for (int surfIdx = 0; surfIdx < subJob->Result.surfaces.Count(); surfIdx++) {
+            Surface& surface = subJob->Result.surfaces[surfIdx];
+            int globalId = surface.globalID;
+            int uniqueIdPos = uniqueIDs.IndexOf(globalId);
+            globalIdBoxes[uniqueIdPos].Union(surface.boundingBox);
+        }
+    }
+#endif
 
     // thomasbm: final step: find volumes of unique surface id's that contain each other
     for (int uidIdx = 0; uidIdx < uniqueIDs.Count(); uidIdx++) {
@@ -748,7 +762,8 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
             } else if (cls == BoundingBox<unsigned>::IS_CONTAINED_BY_OTHER) {
                 enclosedIdx = uidIdx;
                 enclosingIdx = uidIdx2;
-            }
+            } else
+                continue;
 
             countPerID[enclosingIdx] += countPerID[enclosedIdx];
             surfPerID[enclosingIdx] += countPerID[enclosedIdx];
