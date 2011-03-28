@@ -398,6 +398,9 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
             }
         }
     }
+
+    // add void-volume if the volume of this cell has been calculated
+    surf.voidVolume += (sjd->CellSize*sjd->CellSize*sjd->CellSize - surf.volume);
 }
 
 /**
@@ -417,7 +420,6 @@ VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowSha
 
     surf.surface += triangle.Area<VoxelizerFloat>();
     surf.volume += cell.volumes[triIdx];
-    surf.voidVolume += (sjd->CellSize*sjd->CellSize*sjd->CellSize - cell.volumes[triIdx]);
 
     // thomasbm: grow bounding volume based on intersecting voxels ...
     vislib::math::Point<unsigned,3> voxelCoords(x + sjd->offsetX, y + sjd->offsetY, z + sjd->offsetZ);
