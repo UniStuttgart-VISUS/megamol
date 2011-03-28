@@ -28,7 +28,7 @@ namespace volumetrics {
          * also does compute fullFaces
          */
         VoxelizerFloat growVolume(FatVoxel *theVolume, Surface& surf,
-            unsigned int x, unsigned int y, unsigned int z);
+            const vislib::math::Point<int, 3>& seed, bool emptyVolume);
 
         bool CellHasNoGeometry(FatVoxel *theVolume, unsigned x, unsigned y, unsigned z);
 

@@ -326,6 +326,7 @@ DWORD VoluMetricJob::Run(void *userData) {
         vislib::Array<SIZE_T> countPerID;
         vislib::Array<VoxelizerFloat> surfPerID;
         vislib::Array<VoxelizerFloat> volPerID;
+        vislib::Array<VoxelizerFloat> voidVolPerID;
 
         SIZE_T lastCount = pool.CountUserWorkItems();
         while(1) {
@@ -335,15 +336,15 @@ DWORD VoluMetricJob::Run(void *userData) {
             }
             if (lastCount != pool.CountUserWorkItems()) {
                 pb.Set(divX * divY * divZ - pool.CountUserWorkItems());
-                generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID);
+                generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID, voidVolPerID);
                 if (storeMesh) {
                     copyMeshesToBackbuffer(uniqueIDs);
                 }
                 lastCount = pool.CountUserWorkItems();
             }
         }
-        generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID);
-        outputStatistics(frameI, uniqueIDs, countPerID, surfPerID, volPerID);
+        generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID, voidVolPerID);
+        outputStatistics(frameI, uniqueIDs, countPerID, surfPerID, volPerID, voidVolPerID);
         if (storeMesh) {
             copyMeshesToBackbuffer(uniqueIDs);
         }
@@ -592,13 +593,15 @@ VISLIB_FORCEINLINE bool VoluMetricJob::isSurfaceJoinableWithSubvolume(SubJobData
 void VoluMetricJob::generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
                                        vislib::Array<SIZE_T> &countPerID,
                                        vislib::Array<VoxelizerFloat> &surfPerID,
-                                       vislib::Array<VoxelizerFloat> &volPerID) {
+                                       vislib::Array<VoxelizerFloat> &volPerID,
+                                       vislib::Array<VoxelizerFloat> &voidVolPerID) {
 
     //globalSurfaceIDs.Clear();
     uniqueIDs.Clear();
     countPerID.Clear();
     surfPerID.Clear();
     volPerID.Clear();
+    voidVolPerID.Clear();
 
     vislib::Array<unsigned int> todos;
     todos.SetCapacityIncrement(10);
@@ -706,6 +709,7 @@ restart:
                 countPerID.Add(surf.mesh.Count() / 9);
                 surfPerID.Add(surf.surface);
                 volPerID.Add(surf.volume);
+                voidVolPerID.Add(surf.voidVolume);
 //#ifndef PARALLEL_BBOX_COLLECT
 //                globalIdBoxes.Add(surf.boundingBox);
 //#endif
@@ -713,6 +717,7 @@ restart:
                 countPerID[pos] = countPerID[pos] + (surf.mesh.Count() / 9);
                 surfPerID[pos] = surfPerID[pos] + surf.surface;
                 volPerID[pos] = volPerID[pos] + surf.volume;
+                voidVolPerID[pos] = voidVolPerID[pos] + surf.voidVolume;
 //#ifndef PARALLEL_BBOX_COLLECT
 //                globalIdBoxes[pos].Union(surf.boundingBox);
 //#endif
@@ -860,7 +865,8 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
                                      vislib::Array<unsigned int> &uniqueIDs,
                                      vislib::Array<SIZE_T> &countPerID,
                                      vislib::Array<VoxelizerFloat> &surfPerID,
-                                     vislib::Array<VoxelizerFloat> &volPerID)
+                                     vislib::Array<VoxelizerFloat> &volPerID,
+                                     vislib::Array<VoxelizerFloat> &voidVolPerID)
 {
 
 #if 0
@@ -925,8 +931,8 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
                 continue;
 
             //countPerID[enclosingIdx] += countPerID[enclosedIdx];
-            //surfPerID[enclosingIdx] += countPerID[enclosedIdx];
-            volPerID[enclosingIdx] += countPerID[enclosedIdx];
+            //surfPerID[enclosingIdx] += surfPerID[enclosedIdx];
+            volPerID[enclosingIdx] += volPerID[enclosedIdx] + voidVolPerID[enclosedIdx];
             //countPerID[enclosedIdx] = 0;
             //surfPerID[enclosedIdx] = 0;
             volPerID[enclosedIdx] = 0;

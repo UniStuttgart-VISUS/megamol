@@ -326,6 +326,9 @@ namespace volumetrics {
         /** volume encompassed by this surface */
         VoxelizerFloat volume;
 
+        /** thomasbm: volume of the "void" space so we can add up enclosed space later ... */
+        VoxelizerFloat voidVolume;
+
         unsigned int globalID;
 
         /**

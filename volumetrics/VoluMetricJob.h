@@ -186,13 +186,15 @@ namespace volumetrics {
         void generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
             vislib::Array<SIZE_T> &countPerID,
             vislib::Array<VoxelizerFloat> &surfPerID,
-            vislib::Array<VoxelizerFloat> &volPerID);
+            vislib::Array<VoxelizerFloat> &volPerID,
+            vislib::Array<VoxelizerFloat> &voidVolPerID);
 
         void outputStatistics(unsigned int frameNumber,
             vislib::Array<unsigned int> &uniqueIDs,
             vislib::Array<SIZE_T> &countPerID,
             vislib::Array<VoxelizerFloat> &surfPerID,
-            vislib::Array<VoxelizerFloat> &volPerID);
+            vislib::Array<VoxelizerFloat> &volPerID,
+            vislib::Array<VoxelizerFloat> &voidVolPerID);
 
         bool isSurfaceJoinableWithSubvolume(SubJobData *surfJob, int surfIdx, SubJobData *volume);
 

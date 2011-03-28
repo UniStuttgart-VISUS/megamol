@@ -159,6 +159,7 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
         surf.mesh.SetCapacityIncrement(90);
         surf.surface = static_cast<VoxelizerFloat>(0.0);
         surf.volume = static_cast<VoxelizerFloat>(0.0);
+        surf.voidVolume = 0; // this is empty as well ...
         surf.fullFaces = 0;
         surf.globalID = UINT_MAX;
 
@@ -199,35 +200,46 @@ VoxelizerFloat TetraVoxelizer::GetOffset(VoxelizerFloat fValue1, VoxelizerFloat 
 }
 
 VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
-                                          unsigned int x, unsigned int y, unsigned int z) {
+    const vislib::math::Point<int, 3>& seed, bool emptyVolume) {
     SIZE_T cells = 0;
     vislib::math::Point<int, 3> p;
     vislib::Array<vislib::math::Point<int, 3> > queue;
     queue.SetCapacityIncrement(128);
-    queue.Add(vislib::math::Point<int, 3>(x, y, z));
+    queue.Add(seed);
 
     /* avoid recursion using a queue */
     while (queue.Count() > 0) {
         p = queue.Last();
         queue.RemoveLast();
-        FatVoxel &cell = theVolume[sjd->cellIndex(p.X(), p.Y(), p.Z())];
+        FatVoxel &cell = theVolume[sjd->cellIndex(p)];
 
-        ASSERT(cell.mcCase == 255 && cell.consumedTriangles < 2);
-        /*if (cell.mcCase == 255 && cell.consumedTriangles < 2)*/ { // nach dem assert kann man sich das if sparen ...
+        if (!emptyVolume) {
+            ASSERT(cell.mcCase == 255 && cell.consumedTriangles < 2);
+            // nach dem assert kann man sich das if sparen ...
+            /*if (cell.mcCase != 255 || cell.consumedTriangles >= 2) continue; */
+        } else {
+            ASSERT(cell.mcCase == 0 && cell.consumedTriangles < 2);
+            /*if (cell.mcCase != 0 || cell.consumedTriangles >= 2) continue; */
+        }
+
+        {
             cells++;
-            cell.consumedTriangles = 2;
-            if (p.X() == 0)
-                surf.fullFaces |= 1;
-            if (p.Y() == 0)
-                surf.fullFaces |= 4;
-            if (p.Z() == 0)
-                surf.fullFaces |= 16;
-            if (p.X() == sjd->resX - 2)
-                surf.fullFaces |= 2;
-            if (p.Y() == sjd->resY - 2)
-                surf.fullFaces |= 8;
-            if (p.Z() == sjd->resZ - 2)
-                surf.fullFaces |= 32;
+            if (!emptyVolume) {
+                /* this is some sort of 'already processed' flag ...?! */
+                cell.consumedTriangles = 2;
+                if (p.X() == 0)
+                    surf.fullFaces |= 1;
+                if (p.Y() == 0)
+                    surf.fullFaces |= 4;
+                if (p.Z() == 0)
+                    surf.fullFaces |= 16;
+                if (p.X() == sjd->resX - 2)
+                    surf.fullFaces |= 2;
+                if (p.Y() == sjd->resY - 2)
+                    surf.fullFaces |= 8;
+                if (p.Z() == sjd->resZ - 2)
+                    surf.fullFaces |= 32;
+            }
 
 #ifdef ULTRADEBUG
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
@@ -243,8 +255,8 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
                 if (sjd->coordsInside(neighbCrd)) {
                     FatVoxel &neighbCell = theVolume[sjd->cellIndex(neighbCrd)];
 
-                    if (neighbCell.mcCase == 255) {
-                        if(neighbCell.consumedTriangles == 0) {
+                    if (!emptyVolume) {
+                        if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0) {
                             neighbCell.consumedTriangles = 1;
                             queue.Add(neighbCrd); // recursion ...
                         }
@@ -252,6 +264,10 @@ VoxelizerFloat TetraVoxelizer::growVolume(FatVoxel *theVolume, Surface &surf,
                         // thomasbm: surfaces inside this cell might be enclosed by 'surf'
                     //    if (!CellHasNoGeometry(theVolume, x, y, z)
                     //        neighbCell.enclosingCandidate = &surf;
+                        if (neighbCell.mcCase == 0 && neighbCell.consumedTriangles == 0) {
+                            neighbCell.consumedTriangles = 1;
+                            queue.Add(neighbCrd); // recursion ...
+                        }
                     }
                 }
             }
@@ -279,9 +295,10 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
     //int currSurfID = MarchingCubeTables::a2ucTriangleSurfaceID[cell.mcCase][seedTriIndex];
 
     // first, grow the full neighbors
+    // thomasbm: now we grow full and empty neighbours (volume and voidVolume) ...
     for (unsigned int cornerIdx = 0; cornerIdx < 8; cornerIdx++) {
-        if (!(cell.mcCase & (1 << cornerIdx)))
-            continue;
+        //if (!(cell.mcCase & (1 << cornerIdx))) continue;
+        int fullNeighb = cell.mcCase & (1 << cornerIdx);
 
         for (unsigned int cornerNeighbIdx = 0; cornerNeighbIdx < 7; cornerNeighbIdx++) {
             vislib::math::Point<int, 3>& cN = cornerNeighbors[cornerIdx][cornerNeighbIdx];
@@ -292,9 +309,15 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                 // der aktuelle Nachbar
                 FatVoxel &neighbCell = theVolume[sjd->cellIndex(crnCrd)];
 
-                // liegt er komplett innen oder auﬂen?
-                if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0)
-                    surf.volume += growVolume(theVolume, surf, crnCrd.X(), crnCrd.Y(), crnCrd.Z());
+                if (fullNeighb) {
+                    // 'neighbCell' located completely inside?
+                    if (neighbCell.mcCase == 255 && neighbCell.consumedTriangles == 0)
+                        surf.volume += growVolume(theVolume, surf, crnCrd, false);
+                } else {
+                    // 'neighbCell' located completely outside?
+                    if (neighbCell.mcCase == 0 && neighbCell.consumedTriangles == 0)
+                        surf.voidVolume += growVolume(theVolume, surf, crnCrd, true);
+                }
             }
         }
     }
@@ -394,6 +417,7 @@ VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowSha
 
     surf.surface += triangle.Area<VoxelizerFloat>();
     surf.volume += cell.volumes[triIdx];
+    surf.voidVolume += (sjd->CellSize*sjd->CellSize*sjd->CellSize - cell.volumes[triIdx]);
 
     // thomasbm: grow bounding volume based on intersecting voxels ...
     vislib::math::Point<unsigned,3> voxelCoords(x + sjd->offsetX, y + sjd->offsetY, z + sjd->offsetZ);
@@ -1014,12 +1038,15 @@ DWORD TetraVoxelizer::Run(void *userData) {
         s.surface = 0.0;
         s.volume = (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1)
                 * sjd->CellSize * sjd->CellSize * sjd->CellSize;
+        s.voidVolume = 0;
         sjd->Result.surfaces.Append(s);
     } else if (numPos == (sjd->resX) * (sjd->resY) * (sjd->resZ)) {
         // totally empty
         Surface s;
         s.surface = 0.0;
         s.volume = 0.0; // TODO: negative volume maybe?
+        s.voidVolume = (sjd->resX - 1) * (sjd->resY - 1) * (sjd->resZ - 1)
+                * sjd->CellSize * sjd->CellSize * sjd->CellSize;
         sjd->Result.surfaces.Append(s);
     } else {
         // march it
