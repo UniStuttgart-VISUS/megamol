@@ -12,6 +12,8 @@
 #include "param/IntParam.h"
 #include "vislib/Log.h"
 #include "vislib/ShallowPoint.h"
+#include "vislib/ShallowShallowTriangle.h"
+#include "vislib/Vector.h"
 #include "vislib/NamedColours.h"
 #include "vislib/threadpool.h"
 #include "MarchingCubeTables.h"
@@ -719,6 +721,141 @@ restart:
     }
 }
 
+/*
+bool rayTriangleIntersect(ShallowShallowTriangle<VoxelizerFloat,3>& triangle, ) {
+
+
+    return true;
+}
+*/
+bool hitTriangleMesh(const vislib::Array<VoxelizerFloat>& mesh, const vislib::math::ShallowPoint<VoxelizerFloat, 3>& seedPoint,
+    const vislib::math::Vector<VoxelizerFloat, 3>& direction, VoxelizerFloat *hitFactor) {
+
+    int triCount = mesh.Count()/(3*3);
+    const VoxelizerFloat *triPoints = mesh.PeekElements();
+    for(int triIdx = 0; triIdx < triCount; triIdx++) {
+        vislib::math::ShallowShallowTriangle<VoxelizerFloat,3> triangle(const_cast<VoxelizerFloat*>(triPoints+triIdx*3*3));
+
+        vislib::math::Vector<VoxelizerFloat,3> normal;
+        vislib::math::Vector<VoxelizerFloat,3> w0(triangle[0]-seedPoint);
+
+        triangle.Normal(normal);
+
+        VoxelizerFloat normDirDot = normal.Dot(direction);
+
+        if (normDirDot < 0.9) // invalid/deformed triangle?
+            continue;
+
+        VoxelizerFloat normW0Dot = normal.Dot(w0);
+
+        VoxelizerFloat intersectFactor = normW0Dot / normDirDot; // <triangle[0]-seedPoint,normal> / <direction,normal>
+        if (intersectFactor < 0) // triangle-plane lies behind the ray starting point (seedPoint)
+            continue;
+
+        // intersect point of ray with triangle plane
+        vislib::math::Point<VoxelizerFloat,3> projectPoint = seedPoint + direction*intersectFactor;
+
+
+        // test if the projected point on the triangle plane lies inside the triangle
+        vislib::math::Vector<VoxelizerFloat,3> u(triangle[1]-triangle[0]);
+        vislib::math::Vector<VoxelizerFloat,3> v(triangle[2]-triangle[0]);
+        vislib::math::Vector<VoxelizerFloat,3> w (projectPoint - triangle[0]);
+        //pointInsideTriangle(projectPoint, triangle, normal);
+
+        // is I inside T?
+        VoxelizerFloat uu, uv, vv, wu, wv, D;
+        uu = u.Dot(u);
+        uv = u.Dot(v);
+        vv = v.Dot(v);
+        wu = w.Dot(u);
+        wv = w.Dot(v);
+        D = uv * uv - uu * vv;
+
+        // get and test parametric coords
+        VoxelizerFloat s, t;
+        s = (uv * wv - vv * wu) / D;
+        if (s < 0 || s > 1)        // I is outside T
+            continue;
+        t = (uv * wu - uu * wv) / D;
+        if (t < 0 || (s + t) > 1)  // I is outside T
+            continue;
+
+        // ray is inside triangle
+        *hitFactor = intersectFactor;
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * TODO: sinnvolle erklaerung
+ */
+bool VoluMetricJob::testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib::Array<vislib::Array<Surface*>>& globaIdSurfaces) {
+    // find a random enlosed surface and ise its first triangle as starting point
+    Surface *enclosedSeed = 0;
+/*  for(int sjdIdx = 0; sjdIdx < SubJobDataList.Count(); sjdIdx++) {
+        SubJobData *subJob = SubJobDataList[sjdIdx];
+        for (int surfIdx = 0; surfIdx < subJob->Result.surfaces.Count(); surfIdx++)
+            if (subJob->Result.surfaces[surfIdx].globalID==enclosedIdx)
+                enclosedSeed = &subJob->Result.surfaces[surfIdx];
+    }*/
+    vislib::Array<Surface*> enclosedSurfaces = globaIdSurfaces[enclosedIdx];
+    vislib::Array<Surface*> enclosingSurfaces = globaIdSurfaces[enclosingIdx];
+
+    if (enclosedSurfaces.Count() > 0)
+        enclosedSeed = enclosedSurfaces[0];
+
+    if (!enclosedSeed)
+        return false;
+
+    ASSERT(enclosedSeed->mesh.Count() >= 3);
+
+    vislib::math::ShallowPoint<VoxelizerFloat, 3> seedPoint(/*enclosedSeed->mesh.PeekElements()*/&enclosedSeed->mesh[0]);
+    // some random direction ...
+    vislib::math::Vector<VoxelizerFloat, 3> direction(1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0));
+
+    int hitCount = 0;
+
+    for(int enclosingSIdx = 0; enclosingSIdx < enclosingSurfaces.Count(); enclosingSIdx++) {
+        Surface *surf = enclosingSurfaces[enclosingSIdx];
+        VoxelizerFloat hitFactor;
+        // TODO use surface bounding boxes to speed this up ...
+     // if (surf->boundingBox.Intersect(seedPoint, direction, &hitFactor) && hitFactor > 0){
+            if(hitTriangleMesh(surf->mesh, seedPoint, direction, &hitFactor) && hitFactor > 0) {
+                hitCount++;
+            //    seedPoint = trangleCenter(hitTriangle); // dazu müsste man ein "walkthrough" programmieren ?!
+                // seedPoint += direction*hitFactor; // alternative
+            }
+      //}
+    }
+
+
+/*    while(true) {
+        SubJobData *sjd = getSubJobForPos(seedPoint);
+        for(int surfIdx = 0; surfIdx < sjd->Result.surfaces.Count(); surfIdx++) {
+            Surface& surf = sjd->Result.surfaces[surfIdx];
+            if (surf.globalID != enclosingIdx)
+                continue;
+
+            VoxelizerFloat hitFactor;
+            // try bounding box hit first
+            if (surf.boundingBox.Intersect(seedPoint, direction, &hitFactor) && hitFactor > 0) {
+                if(hitTriangleMesh(seedPoint, direction)) {
+                    hitCount++;
+                    seedPoint = trangleCenter(hitTriangle);
+                }
+            }
+        }
+        if(hitCount==oldHitCount)
+            gotoNextSubJob();
+        if(borderReached())
+            break
+    }*/
+
+    return (hitCount%2) != 0;
+}
+
 void VoluMetricJob::outputStatistics(unsigned int frameNumber,
                                      vislib::Array<unsigned int> &uniqueIDs,
                                      vislib::Array<SIZE_T> &countPerID,
@@ -726,9 +863,26 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
                                      vislib::Array<VoxelizerFloat> &volPerID)
 {
 
+#if 0
+    VoxelizerFloat mesh[] = {
+        1, 0, 0, 
+        0, 1, 1,
+        0, -1, 1
+    };
+    vislib::Array<VoxelizerFloat> meshArray(9);
+    for(int i = 0; i < 9; i++)
+        meshArray.Add(mesh[i]);
+    VoxelizerFloat seed[] = {0, 0, 0};
+    vislib::math::ShallowPoint<VoxelizerFloat,3> seedPoint(seed);
+    vislib::math::Vector<VoxelizerFloat,3> direction(-1/sqrt(2.0), 0, -1/sqrt(2.0));
+    VoxelizerFloat hitFactor;
+    hitTriangleMesh(meshArray, seedPoint, direction, &hitFactor);
+#endif
     // thomasbm: testing ...
 #ifndef PARALLEL_BBOX_COLLECT
     globalIdBoxes.SetCount(uniqueIDs.Count());
+    vislib::Array<vislib::Array<Surface*>> globaIdSurfaces/*(uniqueIDs.Count(), vislib::Array<Surface*>(10)?)*/;
+    globaIdSurfaces.SetCount(uniqueIDs.Count());
     for(int sjdIdx = 0; sjdIdx < SubJobDataList.Count(); sjdIdx++) {
         SubJobData *subJob = SubJobDataList[sjdIdx];
         for (int surfIdx = 0; surfIdx < subJob->Result.surfaces.Count(); surfIdx++) {
@@ -736,6 +890,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
             int globalId = surface.globalID;
             int uniqueIdPos = uniqueIDs.IndexOf(globalId);
             globalIdBoxes[uniqueIdPos].Union(surface.boundingBox);
+            globaIdSurfaces[uniqueIdPos].Add(&surface);
         }
     }
 #endif
@@ -743,7 +898,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     // thomasbm: final step: find volumes of unique surface id's that contain each other
     for (int uidIdx = 0; uidIdx < uniqueIDs.Count(); uidIdx++) {
         unsigned gid = uniqueIDs[uidIdx];
-        for (int uidIdx2 = 0; uidIdx2 < uniqueIDs.Count(); uidIdx2++) {
+        for (int uidIdx2 = uidIdx+1; uidIdx2 < uniqueIDs.Count(); uidIdx2++) {
             unsigned gid2 = uniqueIDs[uidIdx2];
             if (/*uidIdx2==uidIdx*/gid==gid2)
                 continue;
@@ -765,11 +920,15 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
             } else
                 continue;
 
-            countPerID[enclosingIdx] += countPerID[enclosedIdx];
-            surfPerID[enclosingIdx] += countPerID[enclosedIdx];
+            // full, triangle based test here ... (meshes need to be stored to do so)
+            if(SubJobDataList[0]->storeMesh && !testFullEnclosing(enclosingIdx, enclosedIdx, globaIdSurfaces))
+                continue;
+
+            //countPerID[enclosingIdx] += countPerID[enclosedIdx];
+            //surfPerID[enclosingIdx] += countPerID[enclosedIdx];
             volPerID[enclosingIdx] += countPerID[enclosedIdx];
-            countPerID[enclosedIdx] = 0;
-            surfPerID[enclosedIdx] = 0;
+            //countPerID[enclosedIdx] = 0;
+            //surfPerID[enclosedIdx] = 0;
             volPerID[enclosedIdx] = 0;
         }
     }
