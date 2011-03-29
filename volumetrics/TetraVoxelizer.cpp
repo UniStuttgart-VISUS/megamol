@@ -159,7 +159,7 @@ void TetraVoxelizer::CollectCell(FatVoxel *theVolume, unsigned int x, unsigned i
         surf.mesh.SetCapacityIncrement(90);
         surf.surface = static_cast<VoxelizerFloat>(0.0);
         surf.volume = static_cast<VoxelizerFloat>(0.0);
-        surf.voidVolume = 0; // this is empty as well ...
+        surf.voidVolume = static_cast<VoxelizerFloat>(0.0); // this is empty as well ...
         surf.fullFaces = 0;
         surf.globalID = UINT_MAX;
 
@@ -350,6 +350,8 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
         }
     } while (foundNew);
 
+    VoxelizerFloat cellVolume = 0;
+    bool collected = false;
     for (int triIdx = 0; triIdx < cell.numTriangles; triIdx++) {
         // is this part of the in-cell surface?
         if (!(inCellSurf & (1 << triIdx)))
@@ -359,8 +361,11 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
         if (!(cell.consumedTriangles & (1 << triIdx))) {
             ProcessTriangle(triangle, cell, triIdx, surf, x, y, z);
             cell.consumedTriangles |= (1 << triIdx);
+            cellVolume += cell.volumes[triIdx];
+            collected = true;
         }
 
+        // loop over all 6 neighbour cells ...
         for (int neighbIdx = 0; neighbIdx < 6; neighbIdx++) {
             const vislib::math::Point<int, 3>& mN = moreNeighbors[neighbIdx];
             /* coordinates may become negative here -> signed integer */
@@ -370,6 +375,8 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                 continue;
 
             FatVoxel &neighbCell = theVolume[sjd->cellIndex(neighbCrd)];
+            VoxelizerFloat niCellVolume = 0;
+            bool niCollected = false;
 
             for (int niTriIdx = 0; niTriIdx < neighbCell.numTriangles; niTriIdx++) {
                 if (neighbCell.consumedTriangles & (1 << niTriIdx))
@@ -388,19 +395,32 @@ void TetraVoxelizer::growSurfaceFromTriangle(FatVoxel *theVolume, unsigned int x
                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                         "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
 #endif /* ULTRADEBUG */
-                    if (!(neighbCell.consumedTriangles & (1 << niTriIdx))) {
+                    /*if (!(neighbCell.consumedTriangles & (1 << niTriIdx)))*/
+                    {
                         ProcessTriangle(neighbTriangle, neighbCell, niTriIdx, surf, neighbCrd.X(), neighbCrd.Y(), neighbCrd.Z());
                         neighbCell.consumedTriangles |= (1 << niTriIdx);
+                        niCellVolume += neighbCell.volumes[niTriIdx];
+                        niCollected = true;
                     }
                     /* this causes a recursive mechanism using a qeue */
                     cellFIFO.Append(vislib::math::Point<unsigned, 4>(neighbCrd.X(), neighbCrd.Y(), neighbCrd.Z(), niTriIdx));
                 }
             }
+
+            // collect volume for the neighbour cell
+            if (niCollected) // (niCellVolume > 0)
+            {
+                surf.volume += niCellVolume;
+                surf.voidVolume += (sjd->CellSize*sjd->CellSize*sjd->CellSize - niCellVolume);
+            }
         }
     }
 
-    // add void-volume if the volume of this cell has been calculated
-    surf.voidVolume += (sjd->CellSize*sjd->CellSize*sjd->CellSize - surf.volume);
+    // only add volume of cells that contain triangles ...
+    if (collected) {
+        surf.volume += cellVolume;
+        surf.voidVolume += (sjd->CellSize*sjd->CellSize*sjd->CellSize - cellVolume);
+    }
 }
 
 /**
@@ -419,7 +439,7 @@ VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(vislib::math::ShallowSha
     }
 
     surf.surface += triangle.Area<VoxelizerFloat>();
-    surf.volume += cell.volumes[triIdx];
+//    surf.volume += cell.triangles[triIdx];
 
     // thomasbm: grow bounding volume based on intersecting voxels ...
     vislib::math::Point<unsigned,3> voxelCoords(x + sjd->offsetX, y + sjd->offsetY, z + sjd->offsetZ);
