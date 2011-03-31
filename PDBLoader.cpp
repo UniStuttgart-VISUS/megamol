@@ -1489,7 +1489,6 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
     while( vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }
-
     if( name[cnt] == 'H' ) // white or light grey
         return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
     if( name[cnt] == 'C' ) // (dark) grey or green
@@ -1506,6 +1505,20 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
         return vislib::math::Vector<unsigned char, 3>( 255, 215, 0);
     if( name[cnt] == 'P' ) // orange
         return vislib::math::Vector<unsigned char, 3>( 255, 128, 64);
+	/*
+    if( name[cnt] == 'H' ) // white or light grey
+        return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
+    if( name[cnt] == 'C' ) // (dark) grey
+		return vislib::math::Vector<unsigned char, 3>( 175, 175, 175);
+    if( name[cnt] == 'N' ) // blue
+        return vislib::math::Vector<unsigned char, 3>( 40, 160, 220);
+    if( name[cnt] == 'O' ) // red
+		return vislib::math::Vector<unsigned char, 3>( 230, 50, 50);
+    if( name[cnt] == 'S' ) // yellow
+        return vislib::math::Vector<unsigned char, 3>( 255, 215, 0);
+    if( name[cnt] == 'P' ) // orange
+        return vislib::math::Vector<unsigned char, 3>( 255, 128, 64);
+	*/
 
     return vislib::math::Vector<unsigned char, 3>( 191, 191, 191);
 }
