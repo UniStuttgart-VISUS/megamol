@@ -1053,6 +1053,15 @@ namespace protein {
         //void SetAtomResidueIndices(const int*indices) { atomResidueIdx = indices; }
 
         /**
+         * Get the indices of atom hydrogen bounds.
+         *
+         * @return The atom hydrogen bounds index array.
+         */
+        const int* AtomHydrogenBoundIndices(void) const { return atomHydrogenBoundIdx; }
+        void SetAtomHydrogenBoundIndices(const int*indices) { atomHydrogenBoundIdx = indices; }
+
+
+        /**
          * Get the residue count.
          *
          * @return The residue count.
@@ -1331,6 +1340,7 @@ namespace protein {
 			this->atomTypeCount = s.atomTypeCount;
 			this->atomTypeIdx = s.atomTypeIdx;
 			this->atomResidueIdx = s.atomResidueIdx;
+			this->atomHydrogenBoundIdx = s.atomHydrogenBoundIdx;
 			this->atomType = s.atomType;
 			this->atomBFactors = s.atomBFactors;
 			this->atomCharges = s.atomCharges;
@@ -1367,6 +1377,8 @@ namespace protein {
         const unsigned int* atomTypeIdx;
         /** array of atom residue indices (may be undefined -> -1)*/
         const int *atomResidueIdx;
+		/** marks wether an atom has a hydrogen bound to another H-atom (-1 marks "no connection") */
+		const int *atomHydrogenBoundIdx;
 
         /** The array of residues. */
         const Residue** residues;
