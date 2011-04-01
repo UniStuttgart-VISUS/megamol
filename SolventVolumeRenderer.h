@@ -190,6 +190,11 @@ namespace protein {
 		 */
 		void RenderStickSolvent( /*const*/ MolecularDataCall *mol, const float *atomPos);
 
+		/*
+		 * Render hydrogen bounds
+		 */
+		void RenderHydrogenBounds(const MolecularDataCall *mol, const float *atomPos);
+
 		/**
          * Write the parameters of the ray to the textures.
 		 *

@@ -23,6 +23,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/ASCIIFileBuffer.h"
+#include "vislib/ShallowPoint.h"
 #include <ctime>
 #include <iostream>
 #include <fstream>
@@ -32,9 +33,152 @@ using namespace megamol::core;
 using namespace megamol::protein;
 
 
+/**
+ * Simple nearest-neighbour-search implementation which uses a regular grid to speed up search queries.
+ */
+template<class T/*, unigned int Dim> als template parameter?!*/>
+class GridNeighbourFinder {
+	typedef vislib::math::Point<T,3> Point;
+
+public:
+	GridNeighbourFinder(const T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox,
+		vislib::math::Dimension<unsigned int,3> gridRes) :
+		elementPositions(pointData), elementCount(pointCount), elementBBox(boundingBox)
+	{
+		Dimension<T, 3> bBoxDimension = elementBBox.GetSize();
+		elementOrigin = elementBBox.Origin();
+		for(int i = 0; i < 3; i++)
+			gridResolution[i] = gridRes[i];
+
+		initElementGrid();
+	}
+
+	GridNeighbourFinder(const T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox, T searchDistance) :
+		elementPositions(pointData), elementCount(pointCount), elementBBox(boundingBox)
+	{
+		vislib::math::Dimension<T, 3> bBoxDimension = elementBBox.GetSize();
+		elementOrigin = elementBBox.GetOrigin();
+		for(int i = 0; i < 3; i++)
+			gridResolution[i] =  floor(bBoxDimension[i] / (2/*4*/*searchDistance) + 1.0);
+
+		initElementGrid();
+	}
+
+	~GridNeighbourFinder() {
+		delete [] elementGrid;
+	}
+
+	//template<typename T>
+	void FindNeighboursInRange(const T *point, T distance, vislib::Array<unsigned int>& resIdx) const {
+		//Point relPos = sub(point, elementOrigin);
+		T relPos[3] = {point[0] - elementOrigin[0],
+			point[1] - elementOrigin[1],
+			point[2] - elementOrigin[2]};
+
+		// calculate range in the grid ...
+		int min[3], max[3];
+		for(int i = 0; i < 3; i++) {
+			min[i] = floor((relPos[i]-distance)*gridResolutionFactors[i]);
+			if (min[i] < 0)
+				min[i] = 0;
+			max[i] = ceil((relPos[i]+distance)*gridResolutionFactors[i]);
+			if (max[i] >= gridResolution[i])
+				max[i] = gridResolution[i]-1;
+		}
+
+		// loop over all cells inside the sphere (point, distance)
+/*		for(float x = relPos[0]-distance; x <= relPos[0]+distance+cellSize[0]; x += cellSize[0]) {
+			for(float y = relPos[1]-distance; y <= relPos[1]+distance+cellSize[1]; y += cellSize[1]) {
+				for(float z = relPos[2]-distance; z <= relPos[2]+distance+cellSize[2]; z += cellSize[2]) {
+					unsigned int indexX = x * gridResolutionFactors[0]; // floor()
+					unsigned int indexY = y * gridResolutionFactors[1];
+					unsigned int indexZ = z * gridResolutionFactors[2];
+					if (indexX > 0 && indexX < ... && ... && ... )
+				*/
+		for(int indexX = min[0]; indexX <= max[0]; indexX++) {
+			for(int indexY = min[1]; indexY <= max[1]; indexY++) {
+				for(int indexZ = min[2]; indexZ <= max[2]; indexZ++) {
+					//if ( (Point(x,y,z)-relPos).Length() < distance ) continue;
+						findNeighboursInCell(elementGrid[cellIndex(indexX, indexY, indexZ)], point, distance, resIdx);
+				}
+			}
+		}
+	}
+
+
+private:
+	/** fill the internal grid structure */
+	void initElementGrid() {
+		vislib::math::Dimension<T, 3> bBoxDimension = elementBBox.GetSize();
+		for(int i = 0 ; i < 3; i++) {
+			gridResolutionFactors[i] = (T)gridResolution[i] / bBoxDimension[i];
+			cellSize[i] = (T)bBoxDimension[i] / gridResolution[i]; //(T)1.0) / gridResolutionFactors[i];
+		}
+		gridSize = gridResolution[0]*gridResolution[1]*gridResolution[2];
+
+		// initialize element grid
+		elementGrid = new vislib::Array<const T *>[gridSize];
+
+		// sort the element positions into the grid ...
+		for(int i = 0; i < elementCount; i+=3) {
+			ASSERT( elementBBox.Contains(vislib::math::ShallowPoint<T,3>(const_cast<T*>(&elementPositions[i]))) );
+			insertPointIntoGrid(&elementPositions[i]);
+		}
+	}
+
+	VISLIB_FORCEINLINE void insertPointIntoGrid(const T *point) {
+		//Point relPos = sub(point, elementOrigin);
+		unsigned int indexX = /*relPos.X()*/(point[0] - elementOrigin[0]) * gridResolutionFactors[0]; // floor()?
+		unsigned int indexY = /*relPos.Y()*/(point[1] - elementOrigin[1]) * gridResolutionFactors[1];
+		unsigned int indexZ = /*relPos.Z()*/(point[2] - elementOrigin[2]) * gridResolutionFactors[2];
+		ASSERT(indexX < gridResolution[0] && indexY < gridResolution[1] && indexZ < gridResolution[2]);
+		vislib::Array<const T *>& cell = elementGrid[cellIndex(indexX, indexY, indexZ)];
+		cell.Add(point);
+	}
+
+	VISLIB_FORCEINLINE void findNeighboursInCell(const vislib::Array<const T *>& cell, const T* point, T distance, vislib::Array<unsigned int>& resIdx) const {
+		for(int i = 0; i < cell.Count(); i++)
+			if ( dist(cell[i],point) <= distance )
+				resIdx.Add((cell[i]-elementPositions)/3); // store atom index
+	}
+
+	inline unsigned int cellIndex(unsigned int x, unsigned int y, unsigned int z) const {
+		return x + (y + z*gridResolution[1]) * gridResolution[0];
+	}
+
+	inline static Point sub(const T* a, const Point& b) { return Point(a[0]-b[0],a[1]-b[1],a[2]-b[2]); };
+
+	inline static T dist(const T *a, const T *b) {
+		T x = a[0]-b[0]; T y = a[1]-b[1]; T z = a[2]-b[2];
+		return sqrt(x*x + y*y + z*z);
+	}
+
+private:
+	/** pointer to points/positions stored in triples (xyzxyz...) */
+	const T *elementPositions;
+	/** number of points of 'elementPositions' */
+	unsigned int elementCount;
+	/** array of position-pointers for each cell of the regular element grid */
+	vislib::Array<const T *> *elementGrid;
+	/** bounding box of all positions/points */
+	vislib::math::Cuboid<T> elementBBox;
+	/** origin of 'elementBBox' */
+	Point elementOrigin;
+	/** number of cells in each dimension */
+	unsigned int gridResolution[3];
+	/** factors to calculate cell index from a given point (inverse of 'cellSize') */
+	T gridResolutionFactors[3];
+	/** extends of each a grid cell */
+	T cellSize[3];
+	/** short for gridResolution[0]*gridResolution[1]*gridResolution[2] */
+	unsigned int gridSize;
+};
+
+
 megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 		dataOutSlot( "dataout", "The slot providing the generated solvent data"),
 		molDataInputCallerSlot( "getInputData", "molecular data source (usually the PDB loader)"),
+		hBondDataFile( "hBondDataFile", "file to store hydrogen bond data"),
 		hBondDistance("hBondDistance", "distance for hydrogen bonds (angstroem?)")
 {
 	this->molDataInputCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -45,8 +189,14 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->MakeSlotAvailable( &this->dataOutSlot);
 
 	// distance for hydrogen bonds
-	this->hBondDistance.SetParameter(new param::FloatParam( 1.9f, 0.0f));
+	this->hBondDistance.SetParameter(new param::FloatParam(1.9f, 0.0f));
 	this->MakeSlotAvailable( &this->hBondDistance);
+
+	this->hBondDataFile.SetParameter(new param::StringParam(""));
+	this->MakeSlotAvailable( &this->hBondDataFile);
+
+	for(int i = 0; i < HYDROGEN_BOUND_IN_CORE; i++)
+		curHBondFrame[i] = -1;
 }
 
 megamol::protein::SolventDataGenerator::~SolventDataGenerator() {
@@ -65,10 +215,11 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
 	int nFrames = src->FrameCount();
 	int nAtoms = src->AtomCount();
 
-	middleAtomPos.AssertCapacity(nAtoms*3);
+	//middleAtomPos.AssertCapacity(nAtoms*3);
 	middleAtomPos.SetCount(nAtoms*3);
 
-	float *middlePosPtr = &middleAtomPos.First(); // TODO: hier gibts ne exception!
+	float *middlePosPtr = &middleAtomPos.First();
+	const float *atomPositions = src->AtomPositions();
 	memset(middlePosPtr, 0, sizeof(float)*3*nAtoms);
 
 //#pragma omp parallel for private( ??? )
@@ -79,9 +230,9 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
 
 		#pragma omp parallel for
 		for(int aIdx = 0; aIdx < nAtoms; aIdx+=3) {
-			middlePosPtr[aIdx] += src->AtomPositions()[aIdx];
-			middlePosPtr[aIdx+1] += src->AtomPositions()[aIdx+1];
-			middlePosPtr[aIdx+2] += src->AtomPositions()[aIdx+2];
+			middlePosPtr[aIdx] += atomPositions[aIdx];
+			middlePosPtr[aIdx+1] += atomPositions[aIdx+1];
+			middlePosPtr[aIdx+2] += atomPositions[aIdx+2];
 		}
 	}
 
@@ -107,32 +258,154 @@ void megamol::protein::SolventDataGenerator::findDonors(MolecularDataCall *data)
 }
 */
 
+
+class HbondIO {
+private:
+	vislib::sys::File *readHandle, *writeHandle;
+
+	/*vislib::sys::File::FileSize*/
+	unsigned int dataStartOffset, atomCount, frameCount, frameSizeInBytes;
+
+public:
+	HbondIO(unsigned int atomCount, unsigned int frameCount, const vislib::StringA& fname, bool read) : dataStartOffset(0) {
+		atomCount = atomCount;
+
+		if (read) {
+			readHandle = new vislib::sys::MemmappedFile();
+			if (!readHandle->Open(fname, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+				delete readHandle;
+				readHandle = 0;
+			}
+			writeHandle = 0;
+		} else {
+			writeHandle = new vislib::sys::MemmappedFile();
+			if (!writeHandle->Open(fname, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::CREATE_OVERWRITE)) {
+				delete writeHandle;
+				writeHandle = 0;
+			}
+			readHandle = 0;
+		}
+	}
+	~HbondIO() {
+		delete readHandle;
+		delete writeHandle;
+	}
+
+	bool writeFrame(unsigned int *frame, unsigned int frameId) {
+		if (!writeHandle)
+			return false;
+
+		// write header at first
+		if ( dataStartOffset == 0) {
+			dataStartOffset = 4*sizeof(dataStartOffset); // store 4 ineteger entries as header for now ...
+			frameSizeInBytes = atomCount * sizeof(int); // 1 signed integer per atom specifying the hbond connection to another atom
+			writeHandle->Write(&dataStartOffset, sizeof(dataStartOffset));
+			writeHandle->Write(&atomCount, sizeof(atomCount));
+			writeHandle->Write(&frameCount, sizeof(frameCount));
+			writeHandle->Write(&frameSizeInBytes, sizeof(frameSizeInBytes));
+			ASSERT(writeHandle->Tell()==dataStartOffset);
+		}
+
+		ASSERT(frameId < frameCount);
+		writeHandle->Seek(dataStartOffset + frameId*frameSizeInBytes);
+		if (writeHandle->Write(frame, frameSizeInBytes) != frameSizeInBytes)
+			return false;
+		return true;
+	}
+
+	bool readFrame(unsigned int *frame, unsigned int frameId) {
+		if (!readHandle)
+			return false;
+
+		// read header at first
+		if ( dataStartOffset == 0) {
+			readHandle->Read(&dataStartOffset, sizeof(dataStartOffset));
+			readHandle->Read(&atomCount, sizeof(atomCount));
+			readHandle->Read(&frameCount, sizeof(frameCount));
+			readHandle->Read(&frameSizeInBytes, sizeof(frameSizeInBytes));
+			ASSERT(frameSizeInBytes==atomCount * sizeof(int)); // this is some sort of file type/integrity check ...
+		}
+
+		ASSERT(frameId < frameCount);
+		readHandle->Seek(dataStartOffset + frameId*frameSizeInBytes);
+		if (readHandle->Read(frame, frameSizeInBytes) != frameSizeInBytes)
+			return false;
+		return true;
+	}
+};
+
+
 /*
 JW: ich fürchte für eine allgemeine Deffinition der Wasserstoffbrücken muß man über die Bindungsenergien gehen und diese berechnen.
 Für meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
 Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Brücke zum Akzeptor.
-* /
+*/
 void megamol::protein::SolventDataGenerator::calcHBonds(MolecularDataCall *data) {
 //	findDonors();
 //	findAcceptors();
 	int nResidues = data->ResidueCount();
+	//float hbondDist = 3; // distance between donor/acceptor
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
+	const float *atomPositions = data->AtomPositions();
+	const MolecularDataCall::AtomType *atomTypes = data->AtomTypes();
+	const unsigned int *atomTypeIndices = data->AtomTypeIndices();
+	const int *atomResidueIndices = data->AtomResidueIndices();
+
+	int reqFrame = data->FrameID();
+	int cacheIndex = reqFrame % HYDROGEN_BOUND_IN_CORE;
+
+	if (curHBondFrame[cacheIndex] == reqFrame) {
+		// recalc hbonds if 'hBondDistance' has changed?!
+		//if( this->hBondDistance.IsDirty() )
+		data->SetAtomHydrogenBoundIndices(atomHydroBoundsIndices[cacheIndex].PeekElements());
+		return;
+	}
+	
+	curHBondFrame[cacheIndex] = reqFrame;
+
+	GridNeighbourFinder<float> NNS(data->AtomPositions(), data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
+
+	vislib::Array<int>& atomHydroBounds = this->atomHydroBoundsIndices[cacheIndex];
+	if (atomHydroBounds.Count() < data->AtomCount())
+		atomHydroBounds.SetCount(data->AtomCount());
+
+	int *atomHydroBoundsIndicesPtr = &atomHydroBounds[0];
+
+	// set all entries to "not connected"
+	memset(atomHydroBoundsIndicesPtr, -1, sizeof(int)*data->AtomCount());
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
-	for( int i = 0; i < nResidues; i++ ) {
-		MolecularDataCall::Residue *residue = data->Residues()[i];
+	for( int rIdx = 0; rIdx < nResidues; rIdx++ ) {
+		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
 		// find possible acceptor atoms in the current residuum (for now just O, N, C(?)
-		Atom O, N, C;
-		O = residue->FindAtom('O');
-		N = residue->FindAtom('N');
-		C = residue->FindAtom('C');
 
-		if (O || N || C) {
-			find_neighbours_in_range(0, 'H', hbondDist);
+		// vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
+		int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
+		for(int aIdx = residue->FirstAtomIndex(); aIdx < lastAtomIdx; aIdx++) {
+			const MolecularDataCall::AtomType& t = atomTypes[atomTypeIndices[aIdx]];
+			const vislib::StringA& name = t.Name();
+			char element = name[0];
+
+			if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
+				neighbourIndices.Clear(); // clear, keep capacity ...
+				NNS.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices);
+				for(int nIdx = 0; nIdx<neighbourIndices.Count(); nIdx++) {
+					int neighbIndex = neighbourIndices[nIdx];
+					// atom from the current residue?
+					if (atomResidueIndices[neighbIndex]==rIdx)
+						continue;
+					// check if a H-atom is in range and add a h-bond...
+					if (atomTypes[atomTypeIndices[neighbIndex]].Name()[0]=='H') {
+						atomHydroBoundsIndicesPtr[aIdx] = neighbIndex;
+					}
+				}
+			}
 		}
 	}
-}*/
+
+	data->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
+}
 
 bool megamol::protein::SolventDataGenerator::getExtent(core::Call& call) {
 	MolecularDataCall *molDest = dynamic_cast<MolecularDataCall*>( &call); // dataOutSlot ??
@@ -163,10 +436,16 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 	molSource->SetFrameID( molDest->FrameID() ); // forward frame request
 	if( !(*molSource)(MolecularDataCall::CallForGetData))
 		return false;
-	
+
 	*molDest = *molSource;
 
-	calcSpatialProbabilities(molSource, molDest);
+//	if (!middleAtomPos.Count())
+//		calcSpatialProbabilities(molSource, molDest);
+
+	// test: only compute hydrogen bounds once at startup ... (this is not suficcient for trajectories)
+	const vislib::TString fileName = hBondDataFile.Param<param::StringParam>()->Value();
+//	if (!fileName.IsEmpty()) ...
+		calcHBonds(molDest);
 
 	return true;
 }

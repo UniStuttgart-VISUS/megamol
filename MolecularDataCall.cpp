@@ -492,7 +492,7 @@ const unsigned int protein::MolecularDataCall::CallForGetExtent = 1;
  * protein::MolecularDataCall::MolecularDataCall
  */
 protein::MolecularDataCall::MolecularDataCall(void) : AbstractGetData3DCall(),
-        atomCount( 0), atomPos( 0), atomTypeIdx( 0), atomResidueIdx( 0),
+        atomCount( 0), atomPos( 0), atomTypeIdx( 0), atomResidueIdx( 0), atomHydrogenBoundIdx( 0),
         residues( 0), resCount( 0),
         molecules( 0), molCount( 0),
         chains( 0), chainCount( 0),
@@ -521,7 +521,6 @@ void MolecularDataCall::SetAtoms( unsigned int atomCnt, unsigned int atomTypeCnt
 	this->atomResidueIdx = residueIdx; // -> SetAtomResidueIndices()
     this->atomPos = pos;
     this->atomType = types;
-	this->atomResidueIdx = residueIdx;
     this->atomBFactors = bfactor;
     this->atomCharges = charge;
     this->atomOccupancies = occupancy;

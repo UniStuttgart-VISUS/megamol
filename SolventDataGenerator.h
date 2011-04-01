@@ -28,13 +28,6 @@
 namespace megamol {
 namespace protein {
 
-/*	template<typename PointType, int Dim>
-	class GridNeighbourFinder {
-	public:
-		GridNeighbourFinder(PointType *pointData, int pointCount, const BBox& boundingBox, vislib::gridResolution/ *[Dim]* /) {
-		}
-
-	};*/
 
     /**
      * generator for hydrogent bounds etc ...
@@ -101,6 +94,8 @@ namespace protein {
 
 		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
 
+		void calcHBonds(MolecularDataCall *data);
+
 		/**
          * Implementation of 'Release'.
          */
@@ -120,9 +115,21 @@ namespace protein {
 
 		/** Distance for hydrogen bonds */
 		megamol::core::param::ParamSlot hBondDistance;
+		megamol::core::param::ParamSlot hBondDataFile;
 
+		/** temporary variable to store a set of atom positions */
 		vislib::Array<float> middleAtomPos;
-    };
+
+		/** temporary variable to store the neighbour indices for the hydrogen-bound search ...*/
+		vislib::Array<unsigned int> neighbourIndices;
+
+		/* store 2 hydrogen bounds in core so interpolating between two frames can be done without file-access */
+		enum { HYDROGEN_BOUND_IN_CORE = 20/*2*/ };
+
+		/** store hydrogen bounds ...*/
+		vislib::Array<int> atomHydroBoundsIndices[HYDROGEN_BOUND_IN_CORE];
+		int curHBondFrame[HYDROGEN_BOUND_IN_CORE];
+	};
 
 
 } /* end namespace protein */

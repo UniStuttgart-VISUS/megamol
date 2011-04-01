@@ -604,6 +604,8 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 			glScalef( scale, scale, scale);
 			//cr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
 			RenderStickSolvent(mol, this->posInter);
+
+			RenderHydrogenBounds(mol, this->posInter); // TEST
 		glPopMatrix();
 		// stop rendering to the FBO for protein rendering
 		this->proteinFBO.Disable();
@@ -620,10 +622,49 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 	return retval;
 }
 
+
+/*
+ * boese dreckig hingerotzt ...
+ */
+void protein::SolventVolumeRenderer::RenderHydrogenBounds(const MolecularDataCall *mol, const float *atomPos) {
+	const int *hydrogenConnections = mol->AtomHydrogenBoundIndices();
+
+	if (!hydrogenConnections)
+		return;
+
+	//glActiveTexture( GL_TEXTURE0 );
+	//glBindTexture( GL_TEXTURE_3D, 0);
+	// TODO: in ein array und dann draw-arrays?!
+#if 1
+	//glLineStipple(1, 0x3333); // 0011=3 (hex-ziffer) - tut das richtig?!
+	glLineWidth(1);
+	glBegin(GL_LINES);
+	for( int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx ) {
+		int connection = hydrogenConnections[aIdx];
+		if (connection != -1) {
+			glColor4f(1, 0, 0, 1);
+			glVertex3fv(atomPos+aIdx*3);
+			glVertex3fv(atomPos+connection*3);
+		}
+	}
+	glEnd();
+#else
+	glBegin(GL_POINTS);
+	for( int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx ) {
+		int connection = hydrogenConnections[aIdx];
+		if (connection != -1) {
+			glColor4f(1, 0, 0, 1);
+			glVertex3fv(atomPos+aIdx*3);
+		}
+	}
+	glEnd();
+#endif
+}
+
 /*
  * Render the molecular data in stick mode. Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
  */
-void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularDataCall *mol, const float *atomPos) {
+void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataCall *mol, const float *atomPos) {
 	// ----- prepare stick raycasting -----
 	this->vertSpheres.SetCount( mol->AtomCount() * 4 );
 	this->vertCylinders.SetCount( mol->ConnectionCount() * 4);
@@ -781,7 +822,7 @@ void protein::SolventVolumeRenderer::RenderStickSolvent( /*const*/ MolecularData
 	// disable cylinder shader
 	this->cylinderSolventShader.Disable();
 
-	glBindTexture( GL_TEXTURE_3D, 0 ); // state aufr�umen
+	glBindTexture( GL_TEXTURE_3D, 0 ); // state aufraeumen
 }
 
 
