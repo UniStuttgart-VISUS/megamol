@@ -199,9 +199,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
 	this->renderRMSData = false;
 	this->frameLabel = NULL;
-
-	for(int i = 0; i < TEMPORARY_ATOM_ARRAYS_CNT; i++)
-		temporaryAtomArray[i] = 0;
 }
 
 
@@ -211,9 +208,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 protein::SolventVolumeRenderer::~SolventVolumeRenderer ( void ) {
 	delete this->frameLabel;
 	this->Release ();
-
-	for(int i = 0; i < TEMPORARY_ATOM_ARRAYS_CNT; i++)
-		delete temporaryAtomArray[i];
 }
 
 
@@ -287,6 +281,10 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 	// Load cylinder shader
 	if( !loadShader( this->cylinderSolventShader, "protein::std::cylinderSolventVertex", "protein::std::cylinderFragment" ) )
 		return false;
+
+	// Load shader for hydrogen bonds
+//	if( !loadShader( this->hbondLineSolventShader, "protein::std::hbondLineSolventVertex", "protein::std::hbondLineSolventFragment" ) )
+//		return false;
 
 	// Load volume texture generation shader
 	if( !loadShader( this->updateVolumeShaderMoleculeVolume, "volume::std::updateVolumeVertex", "volume::std::updateSolventVolumeFragmentDensity" ) )
@@ -488,11 +486,12 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 		// get positions of the first frame
 		int cnt;
 		// do not use new-operator in render routines!
-		float *pos0 = getTemporaryAtomArray(mol->AtomCount()*3, POS_0); //new float[mol->AtomCount() * 3];
+		if (pos_0.Count() < mol->AtomCount()*3) pos_0.SetCount(mol->AtomCount()*3);
+		float *pos0 = &pos_0[0];
 		memcpy( pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
 		// check if the atom positions have to be interpolated
 		bool interpolate = this->interpolParam.Param<param::BoolParam>()->Value();
-		float *pos1;
+
 		if( interpolate ) {
 			// set next frame ID and get positions of the second frame
 			if( ( static_cast<int>( callTime) + 1) < int(mol->FrameCount()) ) 
@@ -501,10 +500,14 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 				mol->SetFrameID(static_cast<int>( callTime));
 			if( !(*mol)(MolecularDataCall::CallForGetData) )
 				return false;
-			pos1 = getTemporaryAtomArray(mol->AtomCount()*3, POS_1);// new float[mol->AtomCount() * 3];
+
+			if (pos_1.Count() < mol->AtomCount()*3) pos_1.SetCount(mol->AtomCount()*3);
+			float *pos1 = &pos_1[0];
 			memcpy( pos1, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
+
 			// interpolate atom positions between frames
-			posInter = getTemporaryAtomArray(mol->AtomCount()*3, POS_INTER); // new float[mol->AtomCount() * 3];
+			if (pos_inter.Count() < mol->AtomCount()*3) pos_inter.SetCount(mol->AtomCount()*3);
+			posInter = &pos_inter[0];
 			float inter = callTime - static_cast<float>(static_cast<int>( callTime));
 
 			const vislib::math::Cuboid<float>& bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
@@ -626,18 +629,32 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 /*
  * boese dreckig hingerotzt ...
  */
-void protein::SolventVolumeRenderer::RenderHydrogenBounds(const MolecularDataCall *mol, const float *atomPos) {
+void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos) {
 	const int *hydrogenConnections = mol->AtomHydrogenBoundIndices();
 
 	if (!hydrogenConnections)
 		return;
 
-	//glActiveTexture( GL_TEXTURE0 );
-	//glBindTexture( GL_TEXTURE_3D, 0);
-	// TODO: in ein array und dann draw-arrays?!
+#if 0
+	// volume texture to look up densities ...
+	glActiveTexture( GL_TEXTURE0);
+	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+	CHECK_FOR_OGL_ERROR();
+
+	const vislib::math::Cuboid<float>& bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+	vislib::math::Vector<float, 3> invBBoxDimension(1/bbox.Width(), 1/bbox.Height(), 1/bbox.Depth());
+
+/*	this->hbondLineSolventShader.Enable();
+	CHECK_FOR_OGL_ERROR();
+	glUniform1iARB(this->hbondLineSolventShader.ParameterLocation("volumeSampler"), 0); // 'volumeTex' in TU #0
+	glUniform3fvARB(this->hbondLineSolventShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
+	glUniform3fvARB(this->hbondLineSolventShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
+	glUniform1fARB(this->hbondLineSolventShader.ParameterLocation("solventMolThreshold"), solventMolThreshold.Param<param::FloatParam>()->Value() );
+*/
 #if 1
-	//glLineStipple(1, 0x3333); // 0011=3 (hex-ziffer) - tut das richtig?!
 	glLineWidth(1);
+	//glEnable(GL_LINE_STIPPLE);
+	//glLineStipple(1, 0x3333); // 0011=3 (hex-ziffer) - tut das richtig?!
 	glBegin(GL_LINES);
 	for( int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx ) {
 		int connection = hydrogenConnections[aIdx];
@@ -659,6 +676,145 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(const MolecularDataCal
 	}
 	glEnd();
 #endif
+
+//	this->hbondLineSolventShader.Disable();
+#else
+
+	/* render hydrogen bounds using sticks ... */
+
+	// stick radius of hbounds is significant smaller than regular atom bindings ...
+	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value() * 0.2;
+
+	vislib::math::Quaternion<float> quatC( 0, 0, 0, 1);
+	vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
+	float angle;
+	// loop over all connections and compute cylinder parameters
+//#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
+	int cnt = 0;
+	for (int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx) {
+		int connection = hydrogenConnections[aIdx];
+		if (connection == -1)
+			continue;
+
+		if (this->vertCylinders.Count() <= cnt*4) {
+			this->vertCylinders.SetCount( (cnt + 100)*4 );
+			this->quatCylinders.SetCount( (cnt + 100)*4 );
+			this->inParaCylinders.SetCount( (cnt + 100)*2 );
+			this->color1Cylinders.SetCount( (cnt + 100)*3 );
+			this->color2Cylinders.SetCount( (cnt + 100)*3 );
+		}
+
+		int idx0 = aIdx;
+		int idx1 = connection;
+
+		vislib::math::Vector<float, 3> firstAtomPos(atomPos+3*idx0), secondAtomPos(atomPos+3*idx1);
+
+		// compute the quaternion for the rotation of the cylinder
+		dir = secondAtomPos - firstAtomPos;
+		tmpVec.Set( 1.0f, 0.0f, 0.0f);
+		angle = - tmpVec.Angle( dir);
+		ortho = tmpVec.Cross( dir);
+		ortho.Normalise();
+		quatC.Set( angle, ortho);
+		// compute the absolute position 'position' of the cylinder (center point)
+		position = firstAtomPos + (dir/2.0f);
+
+		this->inParaCylinders[2*cnt] = stickRadius;
+		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
+
+		// thomasbm: hotfix for jumping molecules near bounding box
+	/*	if(this->inParaCylinders[2*cnt+1] >
+				mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+			this->inParaCylinders[2*cnt+1] = 0;
+		}*/
+
+		this->quatCylinders[4*cnt+0] = quatC.GetX();
+		this->quatCylinders[4*cnt+1] = quatC.GetY();
+		this->quatCylinders[4*cnt+2] = quatC.GetZ();
+		this->quatCylinders[4*cnt+3] = quatC.GetW();
+
+		// red at the oxygen/acceptor-part end of the hydrogen bound
+		this->color1Cylinders[3*cnt+0] = 1; // this->atomColorTable[3*idx0+0];
+		this->color1Cylinders[3*cnt+1] = 0; // this->atomColorTable[3*idx0+1];
+		this->color1Cylinders[3*cnt+2] = 0; // this->atomColorTable[3*idx0+2];
+
+		this->color2Cylinders[3*cnt+0] = 0; // this->atomColorTable[3*idx1+0];
+		this->color2Cylinders[3*cnt+1] = 1; // this->atomColorTable[3*idx1+1];
+		this->color2Cylinders[3*cnt+2] = 0; // this->atomColorTable[3*idx1+2];
+
+		this->vertCylinders[4*cnt+0] = position.X();
+		this->vertCylinders[4*cnt+1] = position.Y();
+		this->vertCylinders[4*cnt+2] = position.Z();
+		this->vertCylinders[4*cnt+3] = 0.0f;
+
+		cnt++;
+	}
+
+	// ---------- actual rendering ----------
+
+	// get viewpoint parameters for raycasting
+	float viewportStuff[4] = {
+		cameraInfo->TileRect().Left(),
+		cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(),
+		cameraInfo->TileRect().Height()};
+	if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+	if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+	viewportStuff[2] = 2.0f / viewportStuff[2];
+	viewportStuff[3] = 2.0f / viewportStuff[3];
+
+	// volume texture to look up densities ...
+	glActiveTexture( GL_TEXTURE0);
+	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+	CHECK_FOR_OGL_ERROR();
+
+	vislib::math::Cuboid<float> bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+	vislib::math::Vector<float, 3> invBBoxDimension(1/bbox.Width(), 1/bbox.Height(), 1/bbox.Depth());
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+
+	// enable cylinder shader
+	this->cylinderSolventShader.Enable();
+	// set shader variables
+	glUniform4fvARB( this->cylinderSolventShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB( this->cylinderSolventShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	glUniform1iARB(this->cylinderSolventShader.ParameterLocation("volumeSampler"), 0);
+	glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
+	glUniform3fvARB(this->cylinderSolventShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
+	glUniform1fARB(this->cylinderSolventShader.ParameterLocation("solventMolThreshold"), solventMolThreshold.Param<param::FloatParam>()->Value() );
+	// get the attribute locations
+	attribLocInParams = glGetAttribLocationARB( this->cylinderSolventShader, "inParams");
+	attribLocQuatC = glGetAttribLocationARB( this->cylinderSolventShader, "quatC");
+	attribLocColor1 = glGetAttribLocationARB( this->cylinderSolventShader, "color1");
+	attribLocColor2 = glGetAttribLocationARB( this->cylinderSolventShader, "color2");
+	// enable vertex attribute arrays for the attribute locations
+	glDisableClientState( GL_COLOR_ARRAY);
+	glEnableVertexAttribArrayARB( this->attribLocInParams);
+	glEnableVertexAttribArrayARB( this->attribLocQuatC);
+	glEnableVertexAttribArrayARB( this->attribLocColor1);
+	glEnableVertexAttribArrayARB( this->attribLocColor2);
+	// set vertex and attribute pointers and draw them
+	glVertexPointer( 4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
+	glVertexAttribPointerARB( this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
+	glVertexAttribPointerARB( this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
+	glVertexAttribPointerARB( this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
+	glVertexAttribPointerARB( this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+	glDrawArrays( GL_POINTS, 0, cnt);
+	// disable vertex attribute arrays for the attribute locations
+	glDisableVertexAttribArrayARB( this->attribLocInParams);
+	glDisableVertexAttribArrayARB( this->attribLocQuatC);
+	glDisableVertexAttribArrayARB( this->attribLocColor1);
+	glDisableVertexAttribArrayARB( this->attribLocColor2);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	// disable cylinder shader
+	this->cylinderSolventShader.Disable();
+
+	glBindTexture( GL_TEXTURE_3D, 0 ); // state aufraeumen
+
+#endif
 }
 
 /*
@@ -666,17 +822,20 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(const MolecularDataCal
  */
 void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataCall *mol, const float *atomPos) {
 	// ----- prepare stick raycasting -----
-	this->vertSpheres.SetCount( mol->AtomCount() * 4 );
-	this->vertCylinders.SetCount( mol->ConnectionCount() * 4);
-	this->quatCylinders.SetCount( mol->ConnectionCount() * 4);
-	this->inParaCylinders.SetCount( mol->ConnectionCount() * 2);
-	this->color1Cylinders.SetCount( mol->ConnectionCount() * 3);
-	this->color2Cylinders.SetCount( mol->ConnectionCount() * 3);
+	if (this->vertSpheres.Count() <= mol->AtomCount() * 4) {
+		this->vertSpheres.SetCount( mol->AtomCount() * 4 );
+		this->vertCylinders.SetCount( mol->ConnectionCount() * 4);
+		this->quatCylinders.SetCount( mol->ConnectionCount() * 4);
+		this->inParaCylinders.SetCount( mol->ConnectionCount() * 2);
+		this->color1Cylinders.SetCount( mol->ConnectionCount() * 3);
+		this->color2Cylinders.SetCount( mol->ConnectionCount() * 3);
+	}
 
 	int cnt;
 
-	// copy atom pos and radius to vertex array
 	float stickRadius = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+
+	// copy atom pos and radius to vertex array
 #pragma omp parallel for
 	for( cnt = 0; cnt < int( mol->AtomCount()); ++cnt ) {
 		this->vertSpheres[4*cnt+0] = atomPos[3*cnt+0];
@@ -686,23 +845,17 @@ void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataC
 	}
 
 	unsigned int idx0, idx1;
-	vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
+	//vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
 	vislib::math::Quaternion<float> quatC( 0, 0, 0, 1);
 	vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
 	float angle;
 	// loop over all connections and compute cylinder parameters
-#pragma omp parallel for private( idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
+#pragma omp parallel for private( idx0, idx1, /*firstAtomPos, secondAtomPos,*/ quatC, tmpVec, ortho, dir, position, angle)
 	for( cnt = 0; cnt < int( mol->ConnectionCount()); ++cnt ) {
 		idx0 = mol->Connection()[2*cnt];
 		idx1 = mol->Connection()[2*cnt+1];
 
-		firstAtomPos.SetX( atomPos[3*idx0+0]);
-		firstAtomPos.SetY( atomPos[3*idx0+1]);
-		firstAtomPos.SetZ( atomPos[3*idx0+2]);
-
-		secondAtomPos.SetX( atomPos[3*idx1+0]);
-		secondAtomPos.SetY( atomPos[3*idx1+1]);
-		secondAtomPos.SetZ( atomPos[3*idx1+2]);
+		vislib::math::Vector<float, 3> firstAtomPos(atomPos+3*idx0), secondAtomPos(atomPos+3*idx1);
 
 		// compute the quaternion for the rotation of the cylinder
 		dir = secondAtomPos - firstAtomPos;
@@ -763,10 +916,11 @@ void protein::SolventVolumeRenderer::RenderStickSolvent(/*const*/ MolecularDataC
 	vislib::math::Cuboid<float> bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
 	vislib::math::Vector<float, 3> invBBoxDimension(1/bbox.Width(), 1/bbox.Height(), 1/bbox.Depth());
 
-	// enable sphere shader
-	this->sphereSolventShader.Enable();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
+
+	// enable sphere shader
+	this->sphereSolventShader.Enable();
 	// set shader variables
 	glUniform4fvARB(this->sphereSolventShader.ParameterLocation("viewAttr"), 1, viewportStuff);
 	glUniform3fvARB(this->sphereSolventShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
@@ -1056,12 +1210,13 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call)
 }
 
 /**
+ * TODO: this is not used so far ... keep it anyway?
  * protein::SolventVolumeRenderer::DrawLabel
  */
 void protein::SolventVolumeRenderer::DrawLabel( unsigned int frameID )
 {
 	using namespace vislib::graphics;
-	char frameChar[10];
+	char frameChar[15];
 
 	glPushAttrib( GL_ENABLE_BIT);
 	glDisable( GL_CULL_FACE);
@@ -1079,15 +1234,13 @@ void protein::SolventVolumeRenderer::DrawLabel( unsigned int frameID )
 			vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "SolventVolumeRenderer: Problems to initalise the Font" );
 		}
 	}
-#ifdef _WIN32
-		_itoa_s(frameID, frameChar, 10, 10);
-#else  /* _WIN32 */
-		vislib::StringA tmp; /* worst idea ever, but linux does not deserve anything better! */
-		tmp.Format("%i", frameID);
-		memcpy(frameChar, tmp.PeekBuffer(), 10);
-#endif /* _WIN32 */
 
-	this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, ( vislib::StringA( "Frame: ") + frameChar ).PeekBuffer() , AbstractFont::ALIGN_LEFT_TOP );
+#if _WIN32
+#define snprintf _snprintf
+#endif
+	snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+
+	this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, frameChar, AbstractFont::ALIGN_LEFT_TOP );
 
 	glPopMatrix();
 
@@ -1180,9 +1333,12 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	this->volScaleInv[2] = 1.0f / this->volScale[2];
 	
 
+	if (update_vol.Count() < mol->AtomCount()*4) update_vol.SetCount(mol->AtomCount()*4);
+	float *updatVolumeTextureAtoms = &update_vol[0];
 
-	float *updatVolumeTextureAtoms = getTemporaryAtomArray(mol->AtomCount()*4, UPDATE_VOLUME);
-	float *updatVolumeTextureColors = getTemporaryAtomArray(mol->AtomCount()*3, UPDATE_COLUME_CLR);
+	if (update_clr.Count() < mol->AtomCount()*3) update_clr.SetCount(mol->AtomCount()*3);
+	float *updatVolumeTextureColors = &update_clr[0];
+
 	const float *atomColorTablePtr = this->atomColorTable.PeekElements();
 
 /*	int atomCnt;

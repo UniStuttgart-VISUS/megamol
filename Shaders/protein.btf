@@ -1517,6 +1517,63 @@ void main(void) {
             </snippet>
         </shader>
 
+        <shader name="hbondLineSolventVertex">
+          <snippet type="version">110</snippet>
+          <snippet name="commondefines"/>
+          <snippet type="string">
+            <!--
+// density volume lookup for a simple neighbour test ...
+uniform sampler3D volumeSampler;
+uniform vec3 minBBox;
+uniform vec3 invBBoxExtend;
+uniform float solventMolThreshold;
+
+void main(void) {
+
+    // remove the sphere radius from the w coordinates to the rad varyings
+    vec4 inPos = gl_Vertex;
+
+	// translate position to 3d-texture coordinates: (p-min) / ||max-min||
+	vec3 volPos = (inPos.xyz - minBBox) * invBBoxExtend;
+	inPos.w = texture3D(volumeSampler, volPos).w < solventMolThreshold ? 0.0 : 1.0;	
+/*	if (texture3D(volumeSampler, volPos).w < solventMolThreshold)
+		inPos.w = 0.0;  // return; ?
+	else
+	    inPos.w = 1.0;*/
+	// tut sowas?
+//	float test = texture3D(volumeSampler, inPos.xyz).w < solventMolThreshold;
+//	inPos.w = 1.0 - test;
+
+    // send color to fragment shader
+    gl_FrontColor = gl_Color;
+
+#if 0
+	gl_Position = ftransform();
+	gl_Position.w = inPos.w;
+#else
+	gl_Position = gl_ModelViewProjectionMatrix * inPos;
+#endif
+}
+-->
+          </snippet>
+        </shader>
+        <shader name="hbondLineSolventFragment">
+            <snippet type="version">110</snippet>
+            <!--snippet name="commondefines"/-->
+            <!--snippet name="::common::lighting::simple"/-->
+            <snippet type="string">
+                <!--
+//uniform vec4 ...
+//varying vec4 ...
+
+void main(void) {
+	gl_FragColor = gl_Color;
+}
+-->
+            </snippet>
+        </shader>
+
+
         <shader name="perpixellightVertex">
             <snippet type="version">120</snippet>
             <snippet type="string">

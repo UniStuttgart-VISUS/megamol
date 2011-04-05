@@ -193,7 +193,7 @@ namespace protein {
 		/*
 		 * Render hydrogen bounds
 		 */
-		void RenderHydrogenBounds(const MolecularDataCall *mol, const float *atomPos);
+		void RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos);
 
 		/**
          * Write the parameters of the ray to the textures.
@@ -290,6 +290,8 @@ namespace protein {
 		vislib::graphics::gl::GLSLShader sphereSolventShader;
 		// shader for the cylinders (raycasting view)
 		vislib::graphics::gl::GLSLShader cylinderSolventShader;
+		// shader for hygrogen bonds
+		vislib::graphics::gl::GLSLShader hbondLineSolventShader;
 		// shader for the clipped spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader clippedSphereShader;
         // shader for volume texture generation
@@ -375,17 +377,8 @@ namespace protein {
         float *posInter;
 		
 		// temporary atom array as member - do not use new-operator inside render()-routines!
-		enum TEMPORARY_ATOM_ARRAYS {
-			POS_0, POS_1, POS_INTER, UPDATE_VOLUME, UPDATE_COLUME_CLR,
-			TEMPORARY_ATOM_ARRAYS_CNT
-		};
-		float *temporaryAtomArray[TEMPORARY_ATOM_ARRAYS_CNT];
-		inline float *getTemporaryAtomArray(int atomCount, TEMPORARY_ATOM_ARRAYS arr ) {
-			if (!temporaryAtomArray[arr])
-				temporaryAtomArray[arr] = new float[atomCount];
-			return temporaryAtomArray[arr];
-		}
-		// TODO: this is the nicer way ...
+		// temporary arrays for rendering operations ...
+		vislib::Array<float> pos_0, pos_1, pos_inter, update_vol, update_clr;
 		vislib::Array<float> vertSpheres, vertCylinders, quatCylinders, inParaCylinders, color1Cylinders, color2Cylinders;
 
         bool forceUpdateVolumeTexture;

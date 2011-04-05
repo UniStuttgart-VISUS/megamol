@@ -94,7 +94,8 @@ namespace protein {
 
 		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
 
-		void calcHBonds(MolecularDataCall *data);
+		bool getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource);
+		void calcHydroBoundsForCurFrame(MolecularDataCall *data, int *atomHydroBoundsIndicesPtr);
 
 		/**
          * Implementation of 'Release'.
