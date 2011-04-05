@@ -1381,7 +1381,7 @@ bool protein::ProteinVolumeRenderer::ProcessFrameRequest ( Call& call )
 void protein::ProteinVolumeRenderer::DrawLabel( unsigned int frameID )
 {
     using namespace vislib::graphics;
-    char frameChar[10];
+    char frameChar[15];
 
     glPushAttrib( GL_ENABLE_BIT);
     glDisable( GL_CULL_FACE);
@@ -1399,15 +1399,13 @@ void protein::ProteinVolumeRenderer::DrawLabel( unsigned int frameID )
             vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_WARN, "ProteinVolumeRenderer: Problems to initalise the Font" );
         }
     }
-#ifdef _WIN32
-        _itoa_s(frameID, frameChar, 10, 10);
-#else  /* _WIN32 */
-        vislib::StringA tmp; /* worst idea ever, but linux does not deserve anything better! */
-        tmp.Format("%i", frameID);
-        memcpy(frameChar, tmp.PeekBuffer(), 10);
-#endif /* _WIN32 */
 
-    this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, ( vislib::StringA( "Frame: ") + frameChar ).PeekBuffer() , AbstractFont::ALIGN_LEFT_TOP );
+#if _WIN32
+#define snprintf _snprintf
+#endif
+    snprintf(frameChar, sizeof(frameChar)-1, "Frame: %d", frameID);
+
+    this->frameLabel->DrawString( 0.0f, 0.0f, 0.1f, true, frameChar, AbstractFont::ALIGN_LEFT_TOP );
 
     glPopMatrix();
 

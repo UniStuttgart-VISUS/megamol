@@ -192,7 +192,7 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->hBondDistance.SetParameter(new param::FloatParam(1.9f, 0.0f));
 	this->MakeSlotAvailable( &this->hBondDistance);
 
-	this->hBondDataFile.SetParameter(new param::StringParam(""));
+	this->hBondDataFile.SetParameter(new param::StringParam("hbond.dat"));
 	this->MakeSlotAvailable( &this->hBondDataFile);
 
 	for(int i = 0; i < HYDROGEN_BOUND_IN_CORE; i++)
@@ -210,6 +210,7 @@ bool megamol::protein::SolventDataGenerator::create(void) {
  * -> preprocessing step
  *
  *- Aufenthaltswahrscheinlichkeit/-dauer (einzelne Moleküle oder Molekültypen über komplette Trajektorie berechnen & als Farbe auf statische Moleküloberfläche mappen) *
+ * -> das geht so net! das läuft auf ne volumen-akkumulation hinaus ...
  */
 void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst) {
 	int nFrames = src->FrameCount();
@@ -267,9 +268,8 @@ private:
 	unsigned int dataStartOffset, atomCount, frameCount, frameSizeInBytes;
 
 public:
-	HbondIO(unsigned int atomCount, unsigned int frameCount, const vislib::StringA& fname, bool read) : dataStartOffset(0) {
-		atomCount = atomCount;
-
+	HbondIO(unsigned int atomCount, unsigned int frameCount, const vislib::StringA& fname, bool read)
+		: dataStartOffset(0), atomCount(atomCount), frameCount(frameCount) {
 		if (read) {
 			readHandle = new vislib::sys::MemmappedFile();
 			if (!readHandle->Open(fname, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
@@ -291,7 +291,7 @@ public:
 		delete writeHandle;
 	}
 
-	bool writeFrame(unsigned int *frame, unsigned int frameId) {
+	bool writeFrame(int *frame, unsigned int frameId) {
 		if (!writeHandle)
 			return false;
 
@@ -304,6 +304,8 @@ public:
 			writeHandle->Write(&frameCount, sizeof(frameCount));
 			writeHandle->Write(&frameSizeInBytes, sizeof(frameSizeInBytes));
 			ASSERT(writeHandle->Tell()==dataStartOffset);
+			if (writeHandle->Tell()!=dataStartOffset)
+				return false;
 		}
 
 		ASSERT(frameId < frameCount);
@@ -313,7 +315,7 @@ public:
 		return true;
 	}
 
-	bool readFrame(unsigned int *frame, unsigned int frameId) {
+	bool readFrame(int *frame, unsigned int frameId) {
 		if (!readHandle)
 			return false;
 
@@ -324,6 +326,8 @@ public:
 			readHandle->Read(&frameCount, sizeof(frameCount));
 			readHandle->Read(&frameSizeInBytes, sizeof(frameSizeInBytes));
 			ASSERT(frameSizeInBytes==atomCount * sizeof(int)); // this is some sort of file type/integrity check ...
+			if (frameSizeInBytes!=atomCount * sizeof(int))
+				return false;
 		}
 
 		ASSERT(frameId < frameCount);
@@ -335,43 +339,18 @@ public:
 };
 
 
-/*
-JW: ich fürchte für eine allgemeine Deffinition der Wasserstoffbrücken muß man über die Bindungsenergien gehen und diese berechnen.
-Für meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
-Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Brücke zum Akzeptor.
-*/
-void megamol::protein::SolventDataGenerator::calcHBonds(MolecularDataCall *data) {
-//	findDonors();
-//	findAcceptors();
-	int nResidues = data->ResidueCount();
-	//float hbondDist = 3; // distance between donor/acceptor
+void megamol::protein::SolventDataGenerator::calcHydroBoundsForCurFrame(MolecularDataCall *data, int *atomHydroBoundsIndicesPtr) {
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
+
+	GridNeighbourFinder<float> NNS(data->AtomPositions(), data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
+
 	const float *atomPositions = data->AtomPositions();
 	const MolecularDataCall::AtomType *atomTypes = data->AtomTypes();
 	const unsigned int *atomTypeIndices = data->AtomTypeIndices();
 	const int *atomResidueIndices = data->AtomResidueIndices();
+	int nResidues = data->ResidueCount();
 
-	int reqFrame = data->FrameID();
-	int cacheIndex = reqFrame % HYDROGEN_BOUND_IN_CORE;
-
-	if (curHBondFrame[cacheIndex] == reqFrame) {
-		// recalc hbonds if 'hBondDistance' has changed?!
-		//if( this->hBondDistance.IsDirty() )
-		data->SetAtomHydrogenBoundIndices(atomHydroBoundsIndices[cacheIndex].PeekElements());
-		return;
-	}
-	
-	curHBondFrame[cacheIndex] = reqFrame;
-
-	GridNeighbourFinder<float> NNS(data->AtomPositions(), data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
-
-	vislib::Array<int>& atomHydroBounds = this->atomHydroBoundsIndices[cacheIndex];
-	if (atomHydroBounds.Count() < data->AtomCount())
-		atomHydroBounds.SetCount(data->AtomCount());
-
-	int *atomHydroBoundsIndicesPtr = &atomHydroBounds[0];
-
-	// set all entries to "not connected"
+    // set all entries to "not connected"
 	memset(atomHydroBoundsIndicesPtr, -1, sizeof(int)*data->AtomCount());
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
@@ -387,6 +366,11 @@ void megamol::protein::SolventDataGenerator::calcHBonds(MolecularDataCall *data)
 			const vislib::StringA& name = t.Name();
 			char element = name[0];
 
+/*
+JW: ich fürchte für eine allgemeine Deffinition der Wasserstoffbrücken muß man über die Bindungsenergien gehen und diese berechnen.
+Für meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
+Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Brücke zum Akzeptor.
+*/
 			if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
 				neighbourIndices.Clear(); // clear, keep capacity ...
 				NNS.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices);
@@ -403,8 +387,82 @@ void megamol::protein::SolventDataGenerator::calcHBonds(MolecularDataCall *data)
 			}
 		}
 	}
+}
 
-	data->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
+
+bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
+	int reqFrame = dataTarget->FrameID();
+	int cacheIndex = reqFrame % HYDROGEN_BOUND_IN_CORE;
+
+	if (curHBondFrame[cacheIndex] == reqFrame) {
+		// recalc hbonds if 'hBondDistance' has changed?!
+		//if( this->hBondDistance.IsDirty() )
+		dataTarget->SetAtomHydrogenBoundIndices(atomHydroBoundsIndices[cacheIndex].PeekElements());
+		return true;
+	}
+
+	vislib::Array<int>& atomHydroBounds = this->atomHydroBoundsIndices[cacheIndex];
+	if (atomHydroBounds.Count() < dataSource->AtomCount())
+		atomHydroBounds.SetCount(dataSource->AtomCount());
+
+#if 0
+	const vislib::TString fileName = hBondDataFile.Param<param::StringParam>()->Value();
+	if (fileName.IsEmpty())
+		return false;
+
+	if (vislib::sys::File::Exists(fileName)) {
+		HbondIO input(data->AtomCount(), data->FrameCount(), fileName, true);
+		if (input.readFrame(&atomHydroBounds[0], reqFrame)) {
+			curHBondFrame[cacheIndex] = reqFrame;
+			data->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
+			return true;
+		}
+		return false;
+	}
+
+	HbondIO *output = new HbondIO(data->AtomCount(), data->FrameCount(), fileName, false);
+
+	int *tmpArray = new int[data->AtomCount()];
+
+	// calculate hydrogen bounds for all frames and store them in a file ...
+	for(int frameId = 0; frameId < data->FrameCount(); frameId++) {
+		int *atomHydroBoundsIndicesPtr = (frameId == reqFrame ? &atomHydroBounds[0] : tmpArray);
+
+#if 0
+		// workaround to avoid recursion ...
+		{
+			int tmp = curHBondFrame[frameId % HYDROGEN_BOUND_IN_CORE];
+			curHBondFrame[frameId % HYDROGEN_BOUND_IN_CORE] = frameId;
+			data->SetFrameID(frameId);
+			if( !(*dataTarget)(MolecularDataCall::CallForGetData))
+				return false;
+			curHBondFrame[frameId % HYDROGEN_BOUND_IN_CORE] = tmp;
+			calcHydroBoundsForCurFrame(dataTarget, atomHydroBoundsIndicesPtr);
+		}
+#else
+		dataSource->SetFrameId(frameId);
+		if( !(*dataSource)(MolecularDataCall::CallForGetData))
+			return false;
+		calcHydroBoundsForCurFrame(dataSource, atomHydroBoundsIndicesPtr);
+#endif
+
+		output->writeFrame(atomHydroBoundsIndicesPtr, frameId);
+	}
+	delete output;
+	delete tmpArray;
+
+#else
+	dataSource->SetFrameID(reqFrame);
+	if( !(*dataSource)(MolecularDataCall::CallForGetData))
+		return false;
+	calcHydroBoundsForCurFrame(dataSource, &atomHydroBounds[0]);
+#endif
+
+	curHBondFrame[cacheIndex] = reqFrame;
+	dataTarget->SetFrameID(reqFrame);
+	dataTarget->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
+
+	return true;
 }
 
 bool megamol::protein::SolventDataGenerator::getExtent(core::Call& call) {
@@ -443,9 +501,7 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 //		calcSpatialProbabilities(molSource, molDest);
 
 	// test: only compute hydrogen bounds once at startup ... (this is not suficcient for trajectories)
-	const vislib::TString fileName = hBondDataFile.Param<param::StringParam>()->Value();
-//	if (!fileName.IsEmpty()) ...
-		calcHBonds(molDest);
+	getHBonds(molDest, molSource);
 
 	return true;
 }
