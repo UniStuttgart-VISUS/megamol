@@ -689,8 +689,10 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 	vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
 	float angle;
 	// loop over all connections and compute cylinder parameters
-//#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
 	int cnt = 0;
+	// parallelisierung geht hier nicht?! weil es von den dynamischen daten abhängt an welchem index ein zylinder sitzt?!
+	// (variable 'cnt' hängt von 'hydrogenConnections' ab ...)
+//#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
 	for (int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx) {
 		int connection = hydrogenConnections[aIdx];
 		if (connection == -1)
@@ -723,10 +725,10 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
 
 		// thomasbm: hotfix for jumping molecules near bounding box
-	/*	if(this->inParaCylinders[2*cnt+1] >
-				mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius() ) {
+		if(this->inParaCylinders[2*cnt+1] > mol->AtomHydrogenBoundDistance()
+				/*mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()*/ ) {
 			this->inParaCylinders[2*cnt+1] = 0;
-		}*/
+		}
 
 		this->quatCylinders[4*cnt+0] = quatC.GetX();
 		this->quatCylinders[4*cnt+1] = quatC.GetY();

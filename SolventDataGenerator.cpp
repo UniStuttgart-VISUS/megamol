@@ -179,7 +179,8 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 		dataOutSlot( "dataout", "The slot providing the generated solvent data"),
 		molDataInputCallerSlot( "getInputData", "molecular data source (usually the PDB loader)"),
 		hBondDataFile( "hBondDataFile", "file to store hydrogen bond data"),
-		hBondDistance("hBondDistance", "distance for hydrogen bonds (angstroem?)")
+		hBondDistance("hBondDistance", "distance for hydrogen bonds (angstroem?)"),
+		showMiddlePositions("showMiddlePositions", "show the middle of all atom positions over time")
 {
 	this->molDataInputCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable( &this->molDataInputCallerSlot);
@@ -194,6 +195,9 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 
 	this->hBondDataFile.SetParameter(new param::StringParam("hbond.dat"));
 	this->MakeSlotAvailable( &this->hBondDataFile);
+
+	this->showMiddlePositions.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable( &this->showMiddlePositions);
 
 	for(int i = 0; i < HYDROGEN_BOUND_IN_CORE; i++)
 		curHBondFrame[i] = -1;
@@ -243,8 +247,7 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
 	for(int aIdx = 0; aIdx < nAtoms*3; aIdx++)
 		middlePosPtr[aIdx] *= normalize;
 
-	dst->SetAtoms(src->AtomCount(), src->AtomTypeCount(), src->AtomTypeIndices(), /*src->AtomPositions()*/middlePosPtr,
-		src->AtomTypes(), src->AtomResidueIndices(), src->AtomBFactors(), src->AtomCharges(), src->AtomOccupancies());
+	//molDest->SetAtomPositions(middleAtomPos.PeekElements());
 }
 
 /*
@@ -393,11 +396,13 @@ Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei 
 bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
 	int reqFrame = dataTarget->FrameID();
 	int cacheIndex = reqFrame % HYDROGEN_BOUND_IN_CORE;
+	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
 
 	if (curHBondFrame[cacheIndex] == reqFrame) {
 		// recalc hbonds if 'hBondDistance' has changed?!
 		//if( this->hBondDistance.IsDirty() )
 		dataTarget->SetAtomHydrogenBoundIndices(atomHydroBoundsIndices[cacheIndex].PeekElements());
+		dataTarget->SetAtomHydrogenBoundDistance(hbondDist);
 		return true;
 	}
 
@@ -415,6 +420,7 @@ bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTa
 		if (input.readFrame(&atomHydroBounds[0], reqFrame)) {
 			curHBondFrame[cacheIndex] = reqFrame;
 			data->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
+			dataTarget->SetAtomHydrogenBoundDistance(hbondDist);
 			return true;
 		}
 		return false;
@@ -460,6 +466,7 @@ bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTa
 
 	curHBondFrame[cacheIndex] = reqFrame;
 	dataTarget->SetFrameID(reqFrame);
+	dataTarget->SetAtomHydrogenBoundDistance(hbondDist);
 	dataTarget->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
 
 	return true;
@@ -497,8 +504,11 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 
 	*molDest = *molSource;
 
-//	if (!middleAtomPos.Count())
-//		calcSpatialProbabilities(molSource, molDest);
+	if (showMiddlePositions.Param<param::BoolParam>()->Value()) {
+		if (!middleAtomPos.Count())
+			calcSpatialProbabilities(molSource, molDest);
+		molDest->SetAtomPositions(middleAtomPos.PeekElements());
+	}
 
 	// test: only compute hydrogen bounds once at startup ... (this is not suficcient for trajectories)
 	getHBonds(molDest, molSource);
