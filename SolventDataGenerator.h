@@ -117,6 +117,7 @@ namespace protein {
 		/** Distance for hydrogen bonds */
 		megamol::core::param::ParamSlot hBondDistance;
 		megamol::core::param::ParamSlot hBondDataFile;
+		megamol::core::param::ParamSlot showMiddlePositions;
 
 		/** temporary variable to store a set of atom positions */
 		vislib::Array<float> middleAtomPos;
@@ -125,7 +126,7 @@ namespace protein {
 		vislib::Array<unsigned int> neighbourIndices;
 
 		/* store 2 hydrogen bounds in core so interpolating between two frames can be done without file-access */
-		enum { HYDROGEN_BOUND_IN_CORE = 20/*2*/ };
+		enum { HYDROGEN_BOUND_IN_CORE = 3/*20*//*2*/ };
 
 		/** store hydrogen bounds ...*/
 		vislib::Array<int> atomHydroBoundsIndices[HYDROGEN_BOUND_IN_CORE];
