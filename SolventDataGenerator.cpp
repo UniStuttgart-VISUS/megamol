@@ -13,7 +13,6 @@
 #include "param/BoolParam.h"
 #include "param/StringParam.h"
 #include "param/FloatParam.h"
-#include "GridNeighbourFinder.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/Log.h"
 #include "vislib/mathfunctions.h"
@@ -204,7 +203,7 @@ public:
 void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr) {
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
 
-	GridNeighbourFinder<float> NNS(data->AtomPositions(), data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
+	neighbourFinder.SetPointData(data->AtomPositions(), data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
 
 	const float *atomPositions = data->AtomPositions();
 	const MolecularDataCall::AtomType *atomTypes = data->AtomTypes();
@@ -244,7 +243,7 @@ Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei 
 */
 			if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
 				neighbourIndices.Clear(); // clear, keep capacity ...
-				NNS.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices);
+				neighbourFinder.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices);
 				for(int nIdx = 0; nIdx<neighbourIndices.Count(); nIdx++) {
 					int neighbIndex = neighbourIndices[nIdx];
 					// atom from the current residue?

@@ -14,6 +14,7 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
+#include "GridNeighbourFinder.h"
 #include "vislib/Array.h"
 #include "vislib/Vector.h"
 #include "vislib/Cuboid.h"
@@ -121,6 +122,9 @@ namespace protein {
 
 		/** temporary variable to store a set of atom positions */
 		vislib::Array<float> middleAtomPos;
+
+		/** our grid based neighbour finder ... */
+		GridNeighbourFinder<float> neighbourFinder;
 
 		/** temporary variable to store the neighbour indices for the hydrogen-bound search ...*/
 		vislib::Array<unsigned int> neighbourIndices;
