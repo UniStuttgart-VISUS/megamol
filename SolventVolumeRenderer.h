@@ -161,7 +161,7 @@ namespace protein {
         /**
          * Refresh all parameters.
 		*/
-        void ParameterRefresh( megamol::core::view::CallRender3D *call);
+        void ParameterRefresh( megamol::core::view::CallRender3D *call, MolecularDataCall *mol);
 		
 		/**
 		* Draw label for current loaded RMS frame.
@@ -176,7 +176,8 @@ namespace protein {
 		 * @param mol The data interface.
 		*/
 		void UpdateVolumeTexture( MolecularDataCall *mol);
-		
+		void CreateSpatialProbabilitiesTexture( MolecularDataCall *mol);
+
 		/**
          * Draw the volume.
 		 *

@@ -102,10 +102,12 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	MolecularDataCall *mol = new MolecularDataCall();
 	unsigned int cCnt;
 	Color::ColoringMode cMode;
-	for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol); ++cCnt) {
+	int numClrModes = Color::GetNumOfColoringModes( mol);
+	for( cCnt = 0; cCnt < numClrModes; ++cCnt) {
 		cMode = Color::GetModeByIndex( mol, cCnt);
 		cm->SetTypePair( cMode, Color::GetName( cMode).c_str());
 	}
+	cm->SetTypePair( numClrModes, "Hydrogen Bonds" );
 	delete mol;
 	/*
 	cm->SetTypePair( Color::ELEMENT, "Element" );
@@ -470,7 +472,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 
 
 	// =============== Refresh all parameters ===============
-	this->ParameterRefresh( cr3d);
+	this->ParameterRefresh( cr3d, mol);
 	
 	// get the call time
 	float callTime = cr3d->Time();
@@ -630,7 +632,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
  * boese dreckig hingerotzt ...
  */
 void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos) {
-	const int *hydrogenConnections = mol->AtomHydrogenBoundIndices();
+	const int *hydrogenConnections = mol->AtomHydrogenBondIndices();
 
 	if (!hydrogenConnections)
 		return;
@@ -725,7 +727,7 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
 
 		// thomasbm: hotfix for jumping molecules near bounding box
-		if(this->inParaCylinders[2*cnt+1] > mol->AtomHydrogenBoundDistance()
+		if(this->inParaCylinders[2*cnt+1] > mol->AtomHydrogenBondDistance()
 				/*mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()*/ ) {
 			this->inParaCylinders[2*cnt+1] = 0;
 		}
@@ -1066,12 +1068,18 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
 /*
  * refresh parameters
  */
-void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
+void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call, MolecularDataCall *mol) {
 	
 	// parameter refresh
 	if( this->coloringModeParam.IsDirty() ) {
-		this->SetColoringMode ( static_cast<Color::ColoringMode> ( int ( this->coloringModeParam.Param<param::EnumParam>()->Value() ) ) );
 		this->coloringModeParam.ResetDirty();
+		int cMode = this->coloringModeParam.Param<param::EnumParam>()->Value();
+		if (cMode < Color::GetNumOfColoringModes(mol)) {
+			this->SetColoringMode( static_cast<Color::ColoringMode> ( int ( cMode ) ) );
+		} else {
+			// hydrogen bonds coloring mode?
+			this->SetColoringMode( Color::ColoringMode::RESIDUE );
+		}
 		this->forceUpdateVolumeTexture = true;
 	}
 	// volume parameters
@@ -1188,11 +1196,10 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call)
 
 	// update lsit of residues that compose the solvent ...
 	if (this->solventResidues.IsDirty()) {
+		this->solventResidues.ResetDirty();
 		const vislib::TString& str = solventResidues.Param<param::StringParam>()->Value();
 		vislib::Array<vislib::TString> residueTokens = vislib::StringTokeniser<vislib::TCharTraits>::Split(str, ';', true);
 
-		// get the data call
-		MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 		if (mol && (*mol)(MolecularDataCall::CallForGetData)) {
 			const vislib::StringA* residueTypes = mol->ResidueTypeNames();
 
@@ -1208,6 +1215,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call)
 				}
 			}
 		}
+		this->forceUpdateVolumeTexture = true;
 	}
 }
 
@@ -1249,16 +1257,13 @@ void protein::SolventVolumeRenderer::DrawLabel( unsigned int frameID )
 	glPopAttrib();
 }
 
-
-/*
- * Create a volume containing all molecule atoms
- */
-void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
+#if 0
+void protein::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( MolecularDataCall *mol) {
 	// generate volume, if necessary
-	if( !glIsTexture( this->volumeTex) ) {
+	if( !glIsTexture( this->spatialProbVolumeTex) ) {
 		// from CellVis: cellVis.cpp, initGL
-		glGenTextures( 1, &this->volumeTex);
-		glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+		glGenTextures( 1, &this->spatialProbVolumeTex);
+		glBindTexture( GL_TEXTURE_3D, this->spatialProbVolumeTex);
 		glTexImage3D( GL_TEXTURE_3D, 0, //GL_LUMINANCE32F_ARB,
 					  GL_RGBA16F, 
 					  this->volumeSize, this->volumeSize, this->volumeSize, 0,
@@ -1281,8 +1286,202 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		CHECK_FOR_OGL_ERROR();
 	}
 
-	// counter variable
-	unsigned int z;
+	// store current frame buffer object ID
+	GLint prevFBO;
+	glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &prevFBO);
+
+	glMatrixMode( GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glMatrixMode( GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	// store old viewport
+	GLint viewport[4];
+	glGetIntegerv( GL_VIEWPORT, viewport);
+	// set viewport
+	glViewport( 0, 0, this->volumeSize, this->volumeSize);
+
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, this->volFBO);
+	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+
+	glColor4f( 0.0, 0.0, 0.0, 1.0);
+
+	float bgColor[4];
+	glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
+	glClearColor( 0.1, 0.1, 0.1, 0.0);
+	// clear 3d texture
+	for(int z = 0; z < this->volumeSize; ++z) {
+		// attach texture slice to FBO
+		glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->spatialProbVolumeTex, 0, z);
+		glClear( GL_COLOR_BUFFER_BIT);
+		//glRecti(-1, -1, 1, 1);
+	}
+	glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
+
+	// scale[i] = 1/extent[i] --- extent = size of the bbox
+	this->volScale[0] = 1.0f / ( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width() * this->scale);
+	this->volScale[1] = 1.0f / ( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height() * this->scale);
+	this->volScale[2] = 1.0f / ( mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth() * this->scale);
+	// scaleInv = 1 / scale = extend
+	this->volScaleInv[0] = 1.0f / this->volScale[0];
+	this->volScaleInv[1] = 1.0f / this->volScale[1];
+	this->volScaleInv[2] = 1.0f / this->volScale[2];
+	
+
+	if (update_vol.Count() < mol->AtomCount()*4) update_vol.SetCount(mol->AtomCount()*4);
+	float *updatVolumeTextureAtoms = &update_vol[0];
+
+	if (update_clr.Count() < mol->AtomCount()*3) update_clr.SetCount(mol->AtomCount()*3);
+	float *updatVolumeTextureColors = &update_clr[0];
+
+	/* make local variables to avoid function alls in for-loops (compiler won't inline in debug mode...) */
+	int atomCount = mol->AtomCount();
+	const float *atomColorTablePtr = this->atomColorTable.PeekElements();
+	const unsigned int *atomTypeIndices = mol->AtomTypeIndices();
+	const MolecularDataCall::AtomType *atomTypes = mol->AtomTypes();
+
+	memset(updatVolumeTextureAtoms, 0, sizeof(float)*atomCount*4);
+	memset(updatVolumeTextureColors, 0, sizeof(float)*atomCount*3);
+
+	vislib::math::Vector<float, 3> orig( mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().PeekCoordinates());
+	orig = ( orig + this->translation) * this->scale;
+	vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
+
+	this->createSpatialProbabilityVolume.Enable();
+		// set shader params
+		glUniform1f( this->createSpatialProbabilityVolume.ParameterLocation( "filterRadius"), this->volFilterRadius);
+		glUniform1f( this->createSpatialProbabilityVolume.ParameterLocation( "densityScale"), this->volDensityScale);
+		glUniform3fv( this->createSpatialProbabilityVolume.ParameterLocation( "scaleVol"), 1, this->volScale);
+		glUniform3fv( this->createSpatialProbabilityVolume.ParameterLocation( "scaleVolInv"), 1, this->volScaleInv);
+		glUniform3f( this->createSpatialProbabilityVolume.ParameterLocation( "invVolRes"), 
+			1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
+		glUniform3fv( this->createSpatialProbabilityVolume.ParameterLocation( "translate"), 1, orig.PeekComponents() );
+		glUniform1f( this->createSpatialProbabilityVolume.ParameterLocation( "volSize"), float( this->volumeSize));
+		CHECK_FOR_OGL_ERROR();
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+
+		/* sortierung nach atomen die das loesungsmittel bilden und der rest ... atomIdxSol  laeuuft rueckwaerts .. */
+		int numFrames = mol->FrameCount();
+		float normalizeFactor = 1.0f / numFrames;
+		for(int frameId = 0; frameId < numFrames; frameId++) {
+			//int atomCntMol = 0, atomCntSol = 0;
+			const MolecularDataCall::Residue **residues = mol->Residues();
+
+#if 1
+			#pragma omp parallel for
+			for(int atomCnt = 0; atomCnt < atomCount; ++atomCnt ) {
+				updatVolumeTextureAtoms[atomCnt*4+0] += ( this->posInter[3*atomCnt+0] + this->translation.X()) * this->scale * normalizeFactor;
+				updatVolumeTextureAtoms[atomCnt*4+1] += ( this->posInter[3*atomCnt+1] + this->translation.Y()) * this->scale * normalizeFactor;
+				updatVolumeTextureAtoms[atomCnt*4+2] += ( this->posInter[3*atomCnt+2] + this->translation.Z()) * this->scale * normalizeFactor;
+				updatVolumeTextureAtoms[atomCnt*4+3] += atomTypes[atomTypeIndices[atomCnt]].Radius() * this->scale * normalizeFactor;
+				updatVolumeTextureColors[atomCnt*3+0] += atomColorTablePtr[atomCnt*3+0] * normalizeFactor;
+				updatVolumeTextureColors[atomCnt*3+1] += atomColorTablePtr[atomCnt*3+1] * normalizeFactor;
+				updatVolumeTextureColors[atomCnt*3+2] += atomColorTablePtr[atomCnt*3+2] * normalizeFactor;
+			}
+#else
+			for( int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++ ) {
+				const MolecularDataCall::Residue *residue = residues[residueIdx];
+				int firstAtomIndex = residue->FirstAtomIndex();
+				int lastAtomIndx = residue->FirstAtomIndex() + residue->AtomCount();
+
+				int i;
+				for( i = 0 ; i < this->solventResidueTypeIds.Count(); i++ ) {
+					if (solventResidueTypeIds[i] == residue->Type())
+						break;
+				}
+				if (i < this->solventResidueTypeIds.Count()) {
+					/* solvent (creates volume coloring ...) */
+				//	#pragma omp parallel for
+					for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
+						updatVolumeTextureAtoms[]...
+						updatVolumeTextureColors[]+= atomColorTablePtr...
+					}
+					//atomCntSol += ?
+				} else {
+					/* not solvent (creates volume) */
+				}
+			}
+#endif
+
+			glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms+??);
+			glColorPointer( 3, GL_FLOAT, 0, /*updatVolumeTextureColors*/ atomColorTablePtr);
+			for(int z = 0; z < this->volumeSize; ++z ) {
+				// TODO: spacial grid to speedup FBO rendering here?
+				// attach texture slice to FBO
+				glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->spatialProbVolumeTex, 0, z);
+				glUniform1f( this->createSpatialProbabilityVolume.ParameterLocation( "sliceDepth"), (float( z) + 0.5f) / float(this->volumeSize));
+				// draw all atoms as points, using w for radius
+				glDrawArrays( GL_POINTS, 0, ??);
+			}
+		}
+
+		glDisableClientState(GL_COLOR_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	this->createSpatialProbabilityVolume.Disable();
+
+	// restore viewport
+	glViewport( viewport[0], viewport[1], viewport[2], viewport[3]);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, prevFBO);
+
+	glDisable( GL_BLEND);
+	glEnable( GL_DEPTH_TEST);
+	glDepthMask( GL_TRUE);
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+#endif
+
+/*
+ * Create a volume containing all molecule atoms
+ */
+void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
+	bool clearVolume = true; // false; // set this to false to accumulate stuff ...
+	// generate volume, if necessary
+	if( !glIsTexture( this->volumeTex) ) {
+		// from CellVis: cellVis.cpp, initGL
+		glGenTextures( 1, &this->volumeTex);
+		glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+		glTexImage3D( GL_TEXTURE_3D, 0, //GL_LUMINANCE32F_ARB,
+					  GL_RGBA16F, 
+					  this->volumeSize, this->volumeSize, this->volumeSize, 0,
+					  //GL_LUMINANCE, GL_FLOAT, 0);
+					  GL_RGBA, GL_FLOAT, 0);
+		GLint param = GL_LINEAR;
+		glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
+		glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
+		GLint mode = GL_CLAMP_TO_EDGE;
+		//GLint mode = GL_REPEAT;
+		glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
+		glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
+		glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
+		glBindTexture( GL_TEXTURE_3D, 0);
+		CHECK_FOR_OGL_ERROR();
+		clearVolume = true;
+	}
+	// generate FBO, if necessary
+	if( !glIsFramebufferEXT( this->volFBO ) ) {
+		glGenFramebuffersEXT( 1, &this->volFBO);
+		CHECK_FOR_OGL_ERROR();
+	}
+
+	// coloring mode
+	bool coloringByHydroBonds = this->coloringModeParam.Param<param::EnumParam>()->Value() >= Color::GetNumOfColoringModes(mol) &&
+		mol->AtomHydrogenBondIndices();
 
 	// store current frame buffer object ID
 	GLint prevFBO;
@@ -1309,17 +1508,20 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
 	glColor4f( 0.0, 0.0, 0.0, 1.0);
 	
-	float bgColor[4];
-	glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
-	glClearColor( 0.1, 0.1, 0.1, 0.0);
-	// clear 3d texture
-	for( z = 0; z < this->volumeSize; ++z) {
-		// attach texture slice to FBO
-		glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->volumeTex, 0, z);
-		glClear( GL_COLOR_BUFFER_BIT);
-		//glRecti(-1, -1, 1, 1);
+	if (clearVolume) {
+		float bgColor[4];
+		glGetFloatv( GL_COLOR_CLEAR_VALUE, bgColor);
+		glClearColor( 0.1, 0.1, 0.1, 0.0);
+		//glClearColor( 0.5, 0.5, 0.5, 0.0);
+		// clear 3d texture
+		for(int z = 0; z < this->volumeSize; ++z) {
+			// attach texture slice to FBO
+			glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->volumeTex, 0, z);
+			glClear( GL_COLOR_BUFFER_BIT);
+			//glRecti(-1, -1, 1, 1);
+		}
+		glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
 	}
-	glClearColor( bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
@@ -1341,7 +1543,11 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	if (update_clr.Count() < mol->AtomCount()*3) update_clr.SetCount(mol->AtomCount()*3);
 	float *updatVolumeTextureColors = &update_clr[0];
 
+	/* make local variables to avoid function alls in for-loops (compiler won't inline in debug mode...) */
+	int atomCount = mol->AtomCount();
 	const float *atomColorTablePtr = this->atomColorTable.PeekElements();
+	const unsigned int *atomTypeIndices = mol->AtomTypeIndices();
+	const MolecularDataCall::AtomType *atomTypes = mol->AtomTypes();
 
 /*	int atomCnt;
 #pragma omp parallel for
@@ -1361,39 +1567,69 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		int firstAtomIndex = residue->FirstAtomIndex();
 		int lastAtomIndx = residue->FirstAtomIndex() + residue->AtomCount();
 
-		int i;
-		for( i = 0 ; i < this->solventResidueTypeIds.Count(); i++ ) {
-			if (solventResidueTypeIds[i] == residue->Type())
+		bool isSolvent = false;
+		for(int i = 0 ; i < this->solventResidueTypeIds.Count(); i++ ) {
+			if (solventResidueTypeIds[i] == residue->Type()) {
+				isSolvent = true;
 				break;
+			}
 		}
-		if (i < this->solventResidueTypeIds.Count()) {
+		if (isSolvent) {
+			if (coloringByHydroBonds)
+				continue;
 			/* solvent (creates volume coloring ...) */
 		//	#pragma omp parallel for
 			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
-				atomCntSol++;
-				float *atomPos = &updatVolumeTextureAtoms[(mol->AtomCount()-atomCntSol)*4];
-				float *solventAtomColor = &updatVolumeTextureColors[(mol->AtomCount()-atomCntSol)*3];
+				// fill the solvent atoms in reverse into the array ...
+				int sortedVolumeIdx = atomCount - (atomCntSol+(atomIdx-firstAtomIndex)+1);
+				float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
+				float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
 				float *interPos = &this->posInter[atomIdx*3];
 				const float *clr = &atomColorTablePtr[atomIdx*3];
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
-				atomPos[3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() * this->scale;
+				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
 				solventAtomColor[0] = clr[0];
 				solventAtomColor[1] = clr[1];
 				solventAtomColor[2] = clr[2];
 			}
+			atomCntSol += (lastAtomIndx - firstAtomIndex);
 		} else {
 			/* not solvent (creates volume) */
 		//	#pragma omp parallel for
-			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++, atomCntMol++) {
-				float *atomPos = &updatVolumeTextureAtoms[atomCntMol*4];
+			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++ ) {
+				int sortedVolumeIdx = atomCntMol + (atomIdx-firstAtomIndex);
+				float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
 				float *interPos = &this->posInter[atomIdx*3];
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
-				atomPos[3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() * this->scale;
+				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
+
+				// test to visualize hydrogen bounds from the polymer to the solvent and map color to the volume surface
+				if (coloringByHydroBonds && mol->AtomHydrogenBondIndices()[atomIdx] != -1) {
+					int sortedVolumeIdx = atomCount - (atomCntSol+1);
+					int connection = mol->AtomHydrogenBondIndices()[atomIdx];
+					float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
+					float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
+					float *interPos = &this->posInter[atomIdx*3];
+					float *interPos2 = &this->posInter[connection*3];
+					// hydrogen bonds in the middle between the two connected atoms ...
+					atomPos[0] = ((interPos[0]+interPos[0])*0.5f + this->translation.X()) * this->scale;
+					atomPos[1] = ((interPos[1]+interPos[1])*0.5f + this->translation.Y()) * this->scale;
+					atomPos[2] = ((interPos[2]+interPos[2])*0.5f + this->translation.Z()) * this->scale;
+					// hydrogenbonds-length * 2 ?!
+					//atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale * 2;
+					atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
+								+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale;
+					solventAtomColor[0] = 1;
+					solventAtomColor[1] = 0;
+					solventAtomColor[2] = 0;
+					atomCntSol++;
+				}
 			}
+			atomCntMol += (lastAtomIndx - firstAtomIndex);
 		}
 	}
 
@@ -1415,7 +1651,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms);
-		for( z = 0; z < this->volumeSize; ++z ) {
+		for(int z = 0; z < this->volumeSize; ++z ) {
 			// TODO: spacial grid to speedup FBO rendering here?
 			// attach texture slice to FBO
 			glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
@@ -1425,6 +1661,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		}
 		glDisableClientState(GL_VERTEX_ARRAY);
 	this->updateVolumeShaderMoleculeVolume.Disable();
+
 
 	this->updateVolumeShaderSolventColor.Enable();
 		// set shader params
@@ -1441,9 +1678,8 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
 		glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms+(mol->AtomCount()-atomCntSol)*4 );
-		//glVertexPointer( 4, GL_FLOAT, 0, updatVolumeTextureAtoms );
 		glColorPointer( 3, GL_FLOAT, 0, updatVolumeTextureColors+(mol->AtomCount()-atomCntSol)*3 );
-		for( z = 0; z < this->volumeSize; ++z ) {
+		for(int z = 0; z < this->volumeSize; ++z ) {
 			// TODO: spacial grid to speedup FBO rendering here?
 			// attach texture slice to FBO
 			glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);

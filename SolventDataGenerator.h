@@ -95,7 +95,7 @@ namespace protein {
 		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
 
 		bool getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource);
-		void calcHydroBoundsForCurFrame(MolecularDataCall *data, int *atomHydroBoundsIndicesPtr);
+		void calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr);
 
 		/**
          * Implementation of 'Release'.
@@ -125,12 +125,15 @@ namespace protein {
 		/** temporary variable to store the neighbour indices for the hydrogen-bound search ...*/
 		vislib::Array<unsigned int> neighbourIndices;
 
+		/** array to check atoms already connected ... */
+		vislib::Array<int> reverseConnection;
+
 		/* store 2 hydrogen bounds in core so interpolating between two frames can be done without file-access */
-		enum { HYDROGEN_BOUND_IN_CORE = 3/*20*//*2*/ };
+		enum { HYDROGEN_BOND_IN_CORE = 3/*20*//*2*/ };
 
 		/** store hydrogen bounds ...*/
-		vislib::Array<int> atomHydroBoundsIndices[HYDROGEN_BOUND_IN_CORE];
-		int curHBondFrame[HYDROGEN_BOUND_IN_CORE];
+		vislib::Array<int> atomHydroBondsIndices[HYDROGEN_BOND_IN_CORE];
+		int curHBondFrame[HYDROGEN_BOND_IN_CORE];
 	};
 
 
