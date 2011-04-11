@@ -1053,14 +1053,14 @@ namespace protein {
         //void SetAtomResidueIndices(const int*indices) { atomResidueIdx = indices; }
 
         /**
-         * Get the indices of atom hydrogen bounds.
+         * Get the indices of atom hydrogen bonds.
          *
-         * @return The atom hydrogen bounds index array.
+         * @return The atom hydrogen bonds index array.
          */
-        const int* AtomHydrogenBoundIndices(void) const { return atomHydrogenBoundIdx; }
-        void SetAtomHydrogenBoundIndices(const int*indices) { atomHydrogenBoundIdx = indices; }
-		float AtomHydrogenBoundDistance(void) const { return atomHydrogenBoundDistance; }
-		void SetAtomHydrogenBoundDistance(float dist) { atomHydrogenBoundDistance = dist; }
+        const int* AtomHydrogenBondIndices(void) const { return atomHydrogenBondIdx; }
+        void SetAtomHydrogenBondIndices(const int*indices) { atomHydrogenBondIdx = indices; }
+		float AtomHydrogenBondDistance(void) const { return atomHydrogenBondDistance; }
+		void SetAtomHydrogenBondDistance(float dist) { atomHydrogenBondDistance = dist; }
 
 
         /**
@@ -1344,7 +1344,7 @@ namespace protein {
 			this->atomTypeCount = s.atomTypeCount;
 			this->atomTypeIdx = s.atomTypeIdx;
 			this->atomResidueIdx = s.atomResidueIdx;
-			this->atomHydrogenBoundIdx = s.atomHydrogenBoundIdx;
+			this->atomHydrogenBondIdx = s.atomHydrogenBondIdx;
 			this->atomType = s.atomType;
 			this->atomBFactors = s.atomBFactors;
 			this->atomCharges = s.atomCharges;
@@ -1381,9 +1381,9 @@ namespace protein {
         const unsigned int* atomTypeIdx;
         /** array of atom residue indices (may be undefined -> -1)*/
         const int *atomResidueIdx;
-		/** marks wether an atom has a hydrogen bound to another H-atom (-1 marks "no connection") */
-		const int *atomHydrogenBoundIdx;
-		float atomHydrogenBoundDistance;
+		/** marks wether an atom has a hydrogen bond to another H-atom (-1 marks "no connection") */
+		const int *atomHydrogenBondIdx;
+		float atomHydrogenBondDistance;
 
         /** The array of residues. */
         const Residue** residues;

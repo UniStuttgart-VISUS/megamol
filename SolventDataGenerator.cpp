@@ -199,7 +199,7 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	this->showMiddlePositions.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable( &this->showMiddlePositions);
 
-	for(int i = 0; i < HYDROGEN_BOUND_IN_CORE; i++)
+	for(int i = 0; i < HYDROGEN_BOND_IN_CORE; i++)
 		curHBondFrame[i] = -1;
 }
 
@@ -342,7 +342,7 @@ public:
 };
 
 
-void megamol::protein::SolventDataGenerator::calcHydroBoundsForCurFrame(MolecularDataCall *data, int *atomHydroBoundsIndicesPtr) {
+void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr) {
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
 
 	GridNeighbourFinder<float> NNS(data->AtomPositions(), data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
@@ -354,7 +354,12 @@ void megamol::protein::SolventDataGenerator::calcHydroBoundsForCurFrame(Molecula
 	int nResidues = data->ResidueCount();
 
     // set all entries to "not connected"
-	memset(atomHydroBoundsIndicesPtr, -1, sizeof(int)*data->AtomCount());
+	memset(atomHydroBondsIndicesPtr, -1, sizeof(int)*data->AtomCount());
+
+	if (reverseConnection.Count() < data->AtomCount())
+		reverseConnection.SetCount(data->AtomCount());
+	int *reverseConnectionPtr = &reverseConnection[0];
+	memset(reverseConnectionPtr, -1, sizeof(int)*data->AtomCount());
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
 	for( int rIdx = 0; rIdx < nResidues; rIdx++ ) {
@@ -365,6 +370,10 @@ void megamol::protein::SolventDataGenerator::calcHydroBoundsForCurFrame(Molecula
 		// vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
 		int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
 		for(int aIdx = residue->FirstAtomIndex(); aIdx < lastAtomIdx; aIdx++) {
+			// is this atom already connected?
+			if (reverseConnectionPtr[aIdx] != -1)
+				continue;
+
 			const MolecularDataCall::AtomType& t = atomTypes[atomTypeIndices[aIdx]];
 			const vislib::StringA& name = t.Name();
 			char element = name[0];
@@ -384,7 +393,9 @@ Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei 
 						continue;
 					// check if a H-atom is in range and add a h-bond...
 					if (atomTypes[atomTypeIndices[neighbIndex]].Name()[0]=='H') {
-						atomHydroBoundsIndicesPtr[aIdx] = neighbIndex;
+						atomHydroBondsIndicesPtr[aIdx] = neighbIndex;
+						// avoid double checks - only one hydrogen bond per atom?!
+						reverseConnectionPtr[neighbIndex] = aIdx;
 					}
 				}
 			}
@@ -395,20 +406,20 @@ Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei 
 
 bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
 	int reqFrame = dataTarget->FrameID();
-	int cacheIndex = reqFrame % HYDROGEN_BOUND_IN_CORE;
+	int cacheIndex = reqFrame % HYDROGEN_BOND_IN_CORE;
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
 
 	if (curHBondFrame[cacheIndex] == reqFrame) {
 		// recalc hbonds if 'hBondDistance' has changed?!
 		//if( this->hBondDistance.IsDirty() )
-		dataTarget->SetAtomHydrogenBoundIndices(atomHydroBoundsIndices[cacheIndex].PeekElements());
-		dataTarget->SetAtomHydrogenBoundDistance(hbondDist);
+		dataTarget->SetAtomHydrogenBondIndices(atomHydroBondsIndices[cacheIndex].PeekElements());
+		dataTarget->SetAtomHydrogenBondDistance(hbondDist);
 		return true;
 	}
 
-	vislib::Array<int>& atomHydroBounds = this->atomHydroBoundsIndices[cacheIndex];
-	if (atomHydroBounds.Count() < dataSource->AtomCount())
-		atomHydroBounds.SetCount(dataSource->AtomCount());
+	vislib::Array<int>& atomHydroBonds = this->atomHydroBondsIndices[cacheIndex];
+	if (atomHydroBonds.Count() < dataSource->AtomCount())
+		atomHydroBonds.SetCount(dataSource->AtomCount());
 
 #if 0
 	const vislib::TString fileName = hBondDataFile.Param<param::StringParam>()->Value();
@@ -417,10 +428,10 @@ bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTa
 
 	if (vislib::sys::File::Exists(fileName)) {
 		HbondIO input(data->AtomCount(), data->FrameCount(), fileName, true);
-		if (input.readFrame(&atomHydroBounds[0], reqFrame)) {
+		if (input.readFrame(&atomHydroBonds[0], reqFrame)) {
 			curHBondFrame[cacheIndex] = reqFrame;
-			data->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
-			dataTarget->SetAtomHydrogenBoundDistance(hbondDist);
+			data->SetAtomHydrogenBondIndices(atomHydroBonds.PeekElements());
+			dataTarget->SetAtomHydrogenBondDistance(hbondDist);
 			return true;
 		}
 		return false;
@@ -432,27 +443,27 @@ bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTa
 
 	// calculate hydrogen bounds for all frames and store them in a file ...
 	for(int frameId = 0; frameId < data->FrameCount(); frameId++) {
-		int *atomHydroBoundsIndicesPtr = (frameId == reqFrame ? &atomHydroBounds[0] : tmpArray);
+		int *atomHydroBondsIndicesPtr = (frameId == reqFrame ? &atomHydroBonds[0] : tmpArray);
 
 #if 0
 		// workaround to avoid recursion ...
 		{
-			int tmp = curHBondFrame[frameId % HYDROGEN_BOUND_IN_CORE];
-			curHBondFrame[frameId % HYDROGEN_BOUND_IN_CORE] = frameId;
+			int tmp = curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE];
+			curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE] = frameId;
 			data->SetFrameID(frameId);
 			if( !(*dataTarget)(MolecularDataCall::CallForGetData))
 				return false;
-			curHBondFrame[frameId % HYDROGEN_BOUND_IN_CORE] = tmp;
-			calcHydroBoundsForCurFrame(dataTarget, atomHydroBoundsIndicesPtr);
+			curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE] = tmp;
+			calcHydroBondsForCurFrame(dataTarget, atomHydroBondsIndicesPtr);
 		}
 #else
 		dataSource->SetFrameId(frameId);
 		if( !(*dataSource)(MolecularDataCall::CallForGetData))
 			return false;
-		calcHydroBoundsForCurFrame(dataSource, atomHydroBoundsIndicesPtr);
+		calcHydroBondsForCurFrame(dataSource, atomHydroBondsIndicesPtr);
 #endif
 
-		output->writeFrame(atomHydroBoundsIndicesPtr, frameId);
+		output->writeFrame(atomHydroBondsIndicesPtr, frameId);
 	}
 	delete output;
 	delete tmpArray;
@@ -461,13 +472,13 @@ bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTa
 	dataSource->SetFrameID(reqFrame);
 	if( !(*dataSource)(MolecularDataCall::CallForGetData))
 		return false;
-	calcHydroBoundsForCurFrame(dataSource, &atomHydroBounds[0]);
+	calcHydroBondsForCurFrame(dataSource, &atomHydroBonds[0]);
 #endif
 
 	curHBondFrame[cacheIndex] = reqFrame;
 	dataTarget->SetFrameID(reqFrame);
-	dataTarget->SetAtomHydrogenBoundDistance(hbondDist);
-	dataTarget->SetAtomHydrogenBoundIndices(atomHydroBounds.PeekElements());
+	dataTarget->SetAtomHydrogenBondDistance(hbondDist);
+	dataTarget->SetAtomHydrogenBondIndices(atomHydroBonds.PeekElements());
 
 	return true;
 }
