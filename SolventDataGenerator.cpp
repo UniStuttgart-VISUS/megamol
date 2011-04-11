@@ -27,6 +27,7 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
+#include <omp.h>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -59,9 +60,12 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 
 	for(int i = 0; i < HYDROGEN_BOND_IN_CORE; i++)
 		curHBondFrame[i] = -1;
+
+	this->neighbourIndices = new vislib::Array<unsigned int>[omp_get_max_threads()];
 }
 
 megamol::protein::SolventDataGenerator::~SolventDataGenerator() {
+	delete[] this->neighbourIndices;
 }
 
 bool megamol::protein::SolventDataGenerator::create(void) {
@@ -219,7 +223,10 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	int *reverseConnectionPtr = &reverseConnection[0];
 	memset(reverseConnectionPtr, -1, sizeof(int)*data->AtomCount());
 
+	//time_t t = clock();
+
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
+#pragma omp parallel for
 	for( int rIdx = 0; rIdx < nResidues; rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
@@ -242,10 +249,11 @@ Für meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerst
 Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Brücke zum Akzeptor.
 */
 			if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
-				neighbourIndices.Clear(); // clear, keep capacity ...
-				neighbourFinder.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices);
-				for(int nIdx = 0; nIdx<neighbourIndices.Count(); nIdx++) {
-					int neighbIndex = neighbourIndices[nIdx];
+				neighbourIndices[omp_get_thread_num()].Clear(); // clear, keep capacity ...
+				neighbourIndices[omp_get_thread_num()].SetCapacityIncrement( 100); // set capacity increment
+				neighbourFinder.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices[omp_get_thread_num()]);
+				for(int nIdx = 0; nIdx<neighbourIndices[omp_get_thread_num()].Count(); nIdx++) {
+					int neighbIndex = neighbourIndices[omp_get_thread_num()][nIdx];
 					// atom from the current residue?
 					if (atomResidueIndices[neighbIndex]==rIdx)
 						continue;
@@ -259,6 +267,9 @@ Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei 
 			}
 		}
 	}
+
+    //std::cout << "Hydrogen bonds computed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
+
 }
 
 
