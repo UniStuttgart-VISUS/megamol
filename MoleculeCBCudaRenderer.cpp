@@ -245,24 +245,6 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
             this->atomNeighborCount,
 			this->numGridCells);
 
-        //copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
-        //unsigned int maxNeighbors = 0;
-        //unsigned int maxNeighborsCount = 0;
-        //for( unsigned int i = 0; i < this->numAtoms; ++i ) {
-        //    printf( "Atom %i, Number of Neighbors: %i\n", i, m_hNeighborCount[i]);
-        //    maxNeighbors = maxNeighbors < m_hNeighborCount[i]? m_hNeighborCount[i] : maxNeighbors;
-        //    maxNeighborsCount = m_hNeighborCount[i] >= 64 ? maxNeighborsCount + 1 : maxNeighborsCount;
-        //}
-
-        // compute the arcs
-        computeArcsCUDA( m_dArcs, 
-                         m_dNeighborCount, 
-                         m_dNeighbors, 
-                         m_dSmallCircles, 
-                         m_dSortedPos, 
-                         m_dGridParticleIndex, 
-                         this->numAtoms,
-                         this->atomNeighborCount);
 	}
 	
 	// ==================== Scale & Translate ====================
@@ -292,289 +274,86 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	viewportStuff[2] = 2.0f / viewportStuff[2];
 	viewportStuff[3] = 2.0f / viewportStuff[3];
 
-#define ATOM_ID 0
 	// get CUDA stuff
     copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
-    //copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
-    //copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
-    copyArrayFromDevice( m_hArcs, m_dArcs, 0, sizeof(float)*4*4*this->numAtoms*this->atomNeighborCount);
+    copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
+    copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
     //copyArrayFromDevice( m_hPos, m_dSortedPos, 0, sizeof(float)*4*this->numAtoms);
-    //copyArrayFromDevice( m_hSmallCircles, m_dSmallCircles, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount);
+    copyArrayFromDevice( m_hSmallCircles, m_dSmallCircles, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount);
 
-    // DEBUG computation ...
-    /*
-    std::vector<vislib::math::Vector<float, 3>> points;
-    vislib::math::Vector<float, 3> ai, aj, ak, rj, rk, rm, tmp, p1, p2;
-    unsigned int akIdx, ajIdx, atmpIdx;
-    float Ri = protein->AtomTypes()[protein->ProteinAtomData()[ATOM_ID].TypeIndex()].Radius() + this->probeRadius;
-    float Ri2 = Ri * Ri;
-    float Rj, Rk, Rtmp;
-    bool add1, add2;
-
-    ai.Set(
-        protein->ProteinAtomPositions()[ATOM_ID * 3 + 0],
-        protein->ProteinAtomPositions()[ATOM_ID * 3 + 1],
-        protein->ProteinAtomPositions()[ATOM_ID * 3 + 2]);
-
-    // loop over all neighbors
-    for( unsigned int k = 0; k < m_hNeighborCount[ATOM_ID]; ++k ) {
-        akIdx = m_hParticleIndex[m_hNeighbors[this->atomNeighborCount*ATOM_ID + k]];
-        Rk = protein->AtomTypes()[protein->ProteinAtomData()[akIdx].TypeIndex()].Radius() + this->probeRadius;
-        rk.Set(
-            m_hSmallCircles[this->atomNeighborCount * ATOM_ID * 4 + k * 4 + 0],
-            m_hSmallCircles[this->atomNeighborCount * ATOM_ID * 4 + k * 4 + 1],
-            m_hSmallCircles[this->atomNeighborCount * ATOM_ID * 4 + k * 4 + 2]);
-
-        // intersect each small circle with all other small circles 
-        for( unsigned int j = k + 1; j < m_hNeighborCount[ATOM_ID]; ++j ) {
-            ajIdx = m_hParticleIndex[m_hNeighbors[this->atomNeighborCount*ATOM_ID + j]];
-            Rj = protein->AtomTypes()[protein->ProteinAtomData()[ajIdx].TypeIndex()].Radius() + this->probeRadius;
-            rj.Set(
-                m_hSmallCircles[this->atomNeighborCount * ATOM_ID * 4 + j * 4 + 0],
-                m_hSmallCircles[this->atomNeighborCount * ATOM_ID * 4 + j * 4 + 1],
-                m_hSmallCircles[this->atomNeighborCount * ATOM_ID * 4 + j * 4 + 2]);
-            
-            rm = rj *
-                ( ( rj.Dot( rj) - rj.Dot( rk) ) * rk.Dot( rk)) /
-                ( rj.Dot( rj) * rk.Dot( rk) - rj.Dot( rk) * rj.Dot( rk)) +
-                rk *
-                ( ( rk.Dot( rk) - rj.Dot( rk) ) * rj.Dot( rj)) /
-                ( rj.Dot( rj) * rk.Dot( rk) - rj.Dot( rk) * rj.Dot( rk));
-
-            if( rm.Dot( rm) <= Ri2 ) {
-                tmp = rj.Cross( rk);
-                p1 = rm + tmp * sqrt( ( Ri2 - rm.Dot( rm)) / ( tmp.Dot( tmp) ) );
-                p2 = rm - tmp * sqrt( ( Ri2 - rm.Dot( rm)) / ( tmp.Dot( tmp) ) );
-            } else {
-                continue;
-            }
-            
-            // test each result with all other neighbor spheres
-            add1 = add2 = true;
-            for( unsigned int i = 0; i < m_hNeighborCount[ATOM_ID]; ++i ) {
-                if( i == j || i == k ) continue;
-                atmpIdx = m_hParticleIndex[m_hNeighbors[this->atomNeighborCount*ATOM_ID + i]];
-                tmp.Set(
-                    protein->ProteinAtomPositions()[atmpIdx * 3 + 0],
-                    protein->ProteinAtomPositions()[atmpIdx * 3 + 1],
-                    protein->ProteinAtomPositions()[atmpIdx * 3 + 2]);
-                Rtmp = protein->AtomTypes()[protein->ProteinAtomData()[atmpIdx].TypeIndex()].Radius() + this->probeRadius;
-                // test p1
-                if( ( ( p1 + ai) - tmp).Length() < Rtmp ) add1 = false;
-                // test p2
-                if( ( ( p2 + ai) - tmp).Length() < Rtmp ) add2 = false;
-            }
-
-            // add p1, if it is not within any neighbor atom
-            if( add1 ) points.push_back( p1);
-            // add p2, if it is not within any neighbor atom
-            if( add2 ) points.push_back( p2);
-        }
-    }
-
-    glDisable( GL_BLEND);
-    // enable sphere shader
-	this->sphereShader.Enable();
-	// set shader variables
-	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-	// set vertex and color pointers and draw them
-	glBegin( GL_POINTS);
-    // draw all arc start- and endpoints as small blue spheres
-    for( unsigned int c = 0; c < points.size(); ++c ) {
-        glColor3f( 0.0, 0.0, 1.0);
-        tmp = ai + points[c];
-        glVertex4f( tmp.GetX(), tmp.GetY(), tmp.GetZ(), 0.2f);
-    }
-    glEnd();
-    this->sphereShader.Disable();
-    */
-    // ... DEBUG computation
-
-	// DEBUG ...
-    //glEnable( GL_BLEND);
-    //glDisable( GL_CULL_FACE);
-	// enable sphere shader
-	this->sphereShader.Enable();
-	// set shader variables
-	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    
-    glDisable( GL_BLEND);
-    // draw all arc start- and endpoints as small blue spheres ...
-    vislib::math::Vector<float, 3> tmpArc, tmpAtom;
-    glBegin( GL_POINTS);
-    glColor3f( 0.0, 0.0, 1.0);
-    for( unsigned int cnt = 0; cnt < mol->AtomCount(); ++cnt ) {	
-        tmpAtom.Set( 
-            mol->AtomPositions()[cnt*3+0],
-            mol->AtomPositions()[cnt*3+1],
-            mol->AtomPositions()[cnt*3+2]);
-        for( unsigned int k = 0; k < m_hNeighborCount[cnt]; ++k ) {
-            tmpArc.Set(
-                m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 0],
-                m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 1],
-                m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 2]);
-            if( tmpArc.Length() > 0.0f )
-                glVertex4f( tmpAtom.X() + tmpArc.X(), tmpAtom.Y() + tmpArc.Y(), tmpAtom.Z() + tmpArc.Z(), 0.2f);
-            tmpArc.Set(
-                m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 4],
-                m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 5],
-                m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 6]);
-            if( tmpArc.Length() > 0.0f )
-                glVertex4f( tmpAtom.X() + tmpArc.X(), tmpAtom.Y() + tmpArc.Y(), tmpAtom.Z() + tmpArc.Z(), 0.2f);
-        }
+	// ========= RENDERING =========
+	unsigned int cnt1, cnt2, cnt3; 
+	vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ex( 1, 0, 0);
+	vislib::math::Quaternion<float> tmpQuat;
+	
+	// draw neighbor connections
+	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+		for( cnt2 = 0; cnt2 < m_hNeighborCount[cnt1]; ++cnt2 ) {
+			cnt3 = m_hParticleIndex[m_hNeighbors[cnt1 * atomNeighborCount + cnt2]];
+			glColor3f( 0.0f, 1.0f, 1.0f);
+			glBegin( GL_LINES);
+			glVertex3fv( &mol->AtomPositions()[cnt1 * 3]);
+			glVertex3fv( &mol->AtomPositions()[cnt3 * 3]);
+			glEnd();
+		}
 	}
-	glEnd(); // GL_POINTS
-    // ... draw all arc start- and endpoints as small blue spheres
 
-    glEnable( GL_BLEND);
-	// set vertex and color pointers and draw them
+	this->sphereShader.Enable();
+	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	// draw small circles
 	glBegin( GL_POINTS);
-	for( unsigned int cnt = 0; cnt < mol->AtomCount(); ++cnt ) {	
-        // draw all arc start- and endpoints as small blue spheres
-        //for( unsigned int k = 0; k < m_hNeighborCount[cnt]; ++k ) {
-        //    glColor3f( 0.0, 0.0, 1.0);
-        //    glVertex4f(
-        //        protein->ProteinAtomPositions()[cnt*3+0] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 0],
-        //        protein->ProteinAtomPositions()[cnt*3+1] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 1],
-        //        protein->ProteinAtomPositions()[cnt*3+2] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 2],
-        //        //this->probeRadius);
-        //        0.2f);
-        //    glVertex4f(
-        //        protein->ProteinAtomPositions()[cnt*3+0] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 4],
-        //        protein->ProteinAtomPositions()[cnt*3+1] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 5],
-        //        protein->ProteinAtomPositions()[cnt*3+2] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 6],
-        //        //this->probeRadius);
-        //        0.2f);
-        //    glVertex4f(
-        //        protein->ProteinAtomPositions()[cnt*3+0] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 8],
-        //        protein->ProteinAtomPositions()[cnt*3+1] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 9],
-        //        protein->ProteinAtomPositions()[cnt*3+2] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 10],
-        //        //this->probeRadius);
-        //        0.2f);
-        //    glVertex4f(
-        //        protein->ProteinAtomPositions()[cnt*3+0] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 12],
-        //        protein->ProteinAtomPositions()[cnt*3+1] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 13],
-        //        protein->ProteinAtomPositions()[cnt*3+2] + m_hArcs[this->atomNeighborCount*cnt*4*4 + k*4*4 + 14],
-        //        //this->probeRadius);
-        //        0.2f);
-        //}
-		glColor3f( 1.0, 0.0, 0.0);
-        // draw atom #ATOM_ID big and green
-        //if( cnt == ATOM_ID ) {
-        //    glColor3f( 0.0, 1.0, 0.0);
-        ////    glVertex4f(
-        ////        protein->ProteinAtomPositions()[cnt*3+0],
-        ////        protein->ProteinAtomPositions()[cnt*3+1],
-        ////        protein->ProteinAtomPositions()[cnt*3+2],
-        ////        protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius() + this->probeRadius);
-        //}
-        // draw neighboring atoms to atom #ATOM_ID in yellow
-        //for( unsigned int j = 0; j < m_hNeighborCount[ATOM_ID]; ++j ) {
-        //    if( m_hParticleIndex[m_hNeighbors[j + this->atomNeighborCount*ATOM_ID]] == cnt ) {
-        //        glColor3f( 1.0, 1.0, 0.0);
-        //    }
-        //}
-        // draw atom
+	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+		tmpVec1.Set( mol->AtomPositions()[cnt1 * 3 + 0], 
+			mol->AtomPositions()[cnt1 * 3 + 1], 
+			mol->AtomPositions()[cnt1 * 3 + 2]);
+		for( cnt2 = 0; cnt2 < m_hNeighborCount[cnt1]; ++cnt2 ) {	
+			tmpVec2.Set( m_hSmallCircles[cnt1 * 4 * atomNeighborCount + cnt2 * 4 + 0],
+				m_hSmallCircles[cnt1 * 4 * atomNeighborCount + cnt2 * 4 + 1],
+				m_hSmallCircles[cnt1 * 4 * atomNeighborCount + cnt2 * 4 + 2]);
+			glColor3f( 0.0f, 0.0f, 1.0f);
+			glVertex4f(
+				tmpVec1.X() + tmpVec2.X(),
+				tmpVec1.Y() + tmpVec2.Y(),
+				tmpVec1.Z() + tmpVec2.Z(),
+				0.1f);
+			// point on small circle
+			glColor3f( 1.0f, 1.0f, 0.0f);
+			tmpVec3 = tmpVec2.Cross( ex);
+			tmpVec3.Normalise();
+			tmpVec3 *= sqrt(
+					(mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() + this->probeRadius) *
+					(mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() + this->probeRadius) -
+					tmpVec2.Length() * tmpVec2.Length());
+			tmpQuat.Set( float( vislib::math::PI_DOUBLE / 50.0), tmpVec2 / tmpVec2.Length());
+			for( cnt3 = 0; cnt3 < 100; ++cnt3 ) {
+				tmpVec3 = tmpQuat * tmpVec3;
+				glVertex4f(
+					tmpVec1.X() + tmpVec2.X() + tmpVec3.X(),
+					tmpVec1.Y() + tmpVec2.Y() + tmpVec3.Y(),
+					tmpVec1.Z() + tmpVec2.Z() + tmpVec3.Z(),
+					0.1f);
+			}
+		}
+	}
+	glEnd();
+	// draw atoms
+	//glEnable( GL_BLEND);
+	glBegin( GL_POINTS);
+	glColor3f( 1.0f, 0.0f, 0.0f);
+	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
 		glVertex4f(
-			mol->AtomPositions()[cnt*3+0],
-			mol->AtomPositions()[cnt*3+1],
-			mol->AtomPositions()[cnt*3+2],
-			mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius() + this->probeRadius);
-            //protein->AtomTypes()[protein->ProteinAtomData()[cnt].TypeIndex()].Radius());
-            //0.3f);
+			mol->AtomPositions()[cnt1*3+0],
+			mol->AtomPositions()[cnt1*3+1],
+			mol->AtomPositions()[cnt1*3+2],
+			//mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius());
+			mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() + this->probeRadius);
 	}
-	glEnd(); // GL_POINTS
+	glEnd();
+	glDisable( GL_BLEND);
 	this->sphereShader.Disable();
-	// ... DEBUG
-
-    /*
-    unsigned int idx;
-    vislib::math::Vector<float, 3> a1, a2, a3, rj, rk, ri, s1, ex, d1, d2, rm, rjat, rkat, n1, n2, n3;
-    float Ri2, Rj2, Rk2, b1, b2, b3;
-
-    glBegin( GL_LINES);
-    a1.Set(
-        protein->ProteinAtomPositions()[0],
-        protein->ProteinAtomPositions()[1],
-        protein->ProteinAtomPositions()[2]);
-    a2.Set(
-        protein->ProteinAtomPositions()[3],
-        protein->ProteinAtomPositions()[4],
-        protein->ProteinAtomPositions()[5]);
-    a3.Set(
-        protein->ProteinAtomPositions()[6],
-        protein->ProteinAtomPositions()[7],
-        protein->ProteinAtomPositions()[8]);
-    
-    Ri2 = ( protein->AtomTypes()[protein->ProteinAtomData()[0].TypeIndex()].Radius() + this->probeRadius) * 
-        (protein->AtomTypes()[protein->ProteinAtomData()[0].TypeIndex()].Radius() + this->probeRadius );
-    
-    //rjat = a2 - a1;
-    //rkat = a3 - a1;
-
-    rj.Set(
-        m_hSmallCircles[0],
-        m_hSmallCircles[1],
-        m_hSmallCircles[2]);
-    rk.Set(
-        m_hSmallCircles[4],
-        m_hSmallCircles[5],
-        m_hSmallCircles[6]);
-
-    rm = rj *
-        ( ( rj.Dot( rj) - rj.Dot( rk) ) * rk.Dot( rk)) /
-        ( rj.Dot( rj) * rk.Dot( rk) - rj.Dot( rk) * rj.Dot( rk)) +
-        rk *
-        ( ( rk.Dot( rk) - rj.Dot( rk) ) * rj.Dot( rj)) /
-        ( rj.Dot( rj) * rk.Dot( rk) - rj.Dot( rk) * rj.Dot( rk));
-
-	glColor3f( 0.0, 0.0, 1.0);
-    glVertex3fv( ( a1).PeekComponents() );
-    glVertex3fv( ( a1 + rm).PeekComponents() );
-
-    //if( rm.Dot( rm) <= Ri2 )
-    //{
-    //    ex = rj.Cross( rk);
-    //    d1 = rm + 1.1f * ex * sqrt( ( Ri2 - rm.Dot( rm)) / ( ex.Dot( ex) ) );
-    //    d2 = rm - 1.1f * ex * sqrt( ( Ri2 - rm.Dot( rm)) / ( ex.Dot( ex) ) );
-    //    glColor3f( 1.0, 0.0, 1.0);
-    //    glVertex3fv( ( a1 + d1).PeekComponents() );
-    //    glVertex3fv( ( a1 + d2).PeekComponents() );
-    //}
-    
-	glColor3f( 0.0, 1.0, 1.0);
-    glVertex3f(
-        protein->ProteinAtomPositions()[0] + m_hArcs[0],
-        protein->ProteinAtomPositions()[1] + m_hArcs[1],
-        protein->ProteinAtomPositions()[2] + m_hArcs[2]);
-    glVertex3f(
-        protein->ProteinAtomPositions()[0] + m_hArcs[4],
-        protein->ProteinAtomPositions()[1] + m_hArcs[5],
-        protein->ProteinAtomPositions()[2] + m_hArcs[6]);
-
-    glEnd(); // GL_LINES
-    */
-
-    /*
-    glBegin( GL_QUADS);
-    ex.Set( 1.0f, 0.0f, 0.0f);
-    d1 = ex.Cross( rj);
-    d1.Normalise();
-    d2 = rj.Cross( d1);
-    d2.Normalise();
-    glColor3f( 1.0, 1.0, 1.0);
-    glVertex3fv( ( a1 + rj + 4.0f * d1 + 4.0f * d2 ).PeekComponents() );
-    glVertex3fv( ( a1 + rj + 4.0f * d1 - 4.0f * d2 ).PeekComponents() );
-    glVertex3fv( ( a1 + rj - 4.0f * d1 - 4.0f * d2 ).PeekComponents() );
-    glVertex3fv( ( a1 + rj - 4.0f * d1 + 4.0f * d2 ).PeekComponents() );
-    glEnd();
-    */
 
 
 	glPopMatrix();

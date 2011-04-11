@@ -304,6 +304,8 @@ namespace protein {
         vislib::graphics::gl::GLSLShader volRayStartShader;
         vislib::graphics::gl::GLSLShader volRayStartEyeShader;
         vislib::graphics::gl::GLSLShader volRayLengthShader;
+		// DEBUG
+        vislib::graphics::gl::GLSLShader sphereShader;
 		
 		// current coloring mode
 		Color::ColoringMode currentColoringMode;
