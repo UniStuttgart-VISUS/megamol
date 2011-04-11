@@ -13,6 +13,7 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 #include "vislib/ShallowPoint.h"
+#include "vislib/Cuboid.h"
 #include <ctime>
 
 using namespace megamol;
@@ -27,28 +28,7 @@ namespace protein {
 		typedef vislib::math::Point<T,3> Point;
 
 	public:
-		GridNeighbourFinder(const T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox,
-			vislib::math::Dimension<unsigned int,3> gridRes) :
-			elementPositions(pointData), elementCount(pointCount), elementBBox(boundingBox)
-		{
-			Dimension<T, 3> bBoxDimension = elementBBox.GetSize();
-			elementOrigin = elementBBox.GetOrigin();
-			for(int i = 0; i < 3; i++)
-				gridResolution[i] = gridRes[i];
-
-			initElementGrid();
-		}
-
-		GridNeighbourFinder(const T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox, T searchDistance) :
-			elementPositions(pointData), elementCount(pointCount), elementBBox(boundingBox)
-		{
-			vislib::math::Dimension<T, 3> bBoxDimension = elementBBox.GetSize();
-			elementOrigin = elementBBox.GetOrigin();
-			for(int i = 0; i < 3; i++)
-				gridResolution[i] =  floor((bBoxDimension[i] / searchDistance) + 1.0);
-
-			initElementGrid();
-		}
+		GridNeighbourFinder() : elementGrid(0), elementCount(0), elementPositions(0) {}
 
 		~GridNeighbourFinder() {
 			delete [] elementGrid;
@@ -58,16 +38,52 @@ namespace protein {
 		 * Set new point data to the neighbourhood search grid.
 		 * @params TODO
 		 */
-		void SetNewPointData( cont T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox ) :
-				elementPositions(pointData), elementCount(pointCount) {
-			// if the bounding 
-			if( elementBBox.Contains( boundingBox) ) {
-				for( int cnt = 0; cnt < gridSize; ++cnt ) {
-					elementGrid[cnt].Clear();
+		void SetPointData( const T *pointData, unsigned int pointCount, vislib::math::Cuboid<T> boundingBox, T searchDistance ) {
+			this->elementPositions = pointData;
+			this->elementCount = pointCount;
+
+			// does the new BBox fit into the old one?
+			if( !elementGrid || !(this->elementBBox.Contains(boundingBox.GetLeftBottomBack(),-1) && this->elementBBox.Contains(boundingBox.GetRightTopFront(),-1)) ) {
+				vislib::math::Dimension<T, 3> dim = boundingBox.GetSize();
+				for(int i = 0; i < 3; i++)
+					this->gridResolution[i] =  floor(dim[i] / (2*searchDistance) + 1.0);
+				this->gridSize = this->gridResolution[0] * this->gridResolution[1] * this->gridResolution[2];
+				this->elementBBox = boundingBox;
+
+				// initialize element grid
+				if (elementGrid)
+					delete [] elementGrid;
+				this->elementGrid = new vislib::Array<const T *>[gridSize];
+				for (int i = 0; i < gridSize; i++) {
+					elementGrid[i].Resize( 100);
+					elementGrid[i].SetCapacityIncrement( 100);
 				}
+			} else {
+				for (int i = 0; i < gridSize; i++ )
+					elementGrid[i].Clear();
+			}
+
+			this->elementOrigin = this->elementBBox.GetOrigin();
+			initElementGrid();
+		}
+
+	private:
+		/** fill the internal grid structure */
+		void initElementGrid() {
+			vislib::math::Dimension<T, 3> bBoxDimension = this->elementBBox.GetSize();
+			for(int i = 0 ; i < 3; i++) {
+				this->gridResolutionFactors[i] = (T)this->gridResolution[i] / bBoxDimension[i];
+				this->cellSize[i] = (T)bBoxDimension[i] / this->gridResolution[i]; //(T)1.0) / gridResolutionFactors[i];
+			}
+			// sort the element positions into the grid ...
+			for(int i = 0; i < this->elementCount; i++) {
+				// we can skip this assert becaus another ASSERT in 'insertPointIntoGrid'
+				//ASSERT( elementBBox.Contains(vislib::math::ShallowPoint<T,3>(const_cast<T*>(&elementPositions[i*3]))) );
+				insertPointIntoGrid(&this->elementPositions[i*3]);
 			}
 		}
 
+	public:
 		//template<typename T>
 		void FindNeighboursInRange(const T *point, T distance, vislib::Array<unsigned int>& resIdx) const {
 			//Point relPos = sub(point, elementOrigin);
@@ -105,32 +121,7 @@ namespace protein {
 			}
 		}
 
-
 	private:
-		/** fill the internal grid structure */
-		void initElementGrid() {
-			vislib::math::Dimension<T, 3> bBoxDimension = elementBBox.GetSize();
-			for(int i = 0 ; i < 3; i++) {
-				gridResolutionFactors[i] = (T)gridResolution[i] / bBoxDimension[i];
-				cellSize[i] = (T)bBoxDimension[i] / gridResolution[i]; //(T)1.0) / gridResolutionFactors[i];
-			}
-			gridSize = gridResolution[0]*gridResolution[1]*gridResolution[2];
-
-			// initialize element grid
-			elementGrid = new vislib::Array<const T *>[gridSize];
-			int cnt;
-			for( cnt = 0; cnt < gridSize; ++cnt) {
-				elementGrid[cnt].Resize( 100);
-				elementGrid[cnt].SetCapacityIncrement( 100);
-			}
-
-			// sort the element positions into the grid ...
-			for(int i = 0; i < elementCount; i++) {
-				ASSERT( elementBBox.Contains(vislib::math::ShallowPoint<T,3>(const_cast<T*>(&elementPositions[i*3]))) );
-				insertPointIntoGrid(&elementPositions[i*3]);
-			}
-		}
-
 		VISLIB_FORCEINLINE void insertPointIntoGrid(const T *point) {
 			//Point relPos = sub(point, elementOrigin);
 			unsigned int indexX = /*relPos.X()*/(point[0] - elementOrigin[0]) * gridResolutionFactors[0]; // floor()?
