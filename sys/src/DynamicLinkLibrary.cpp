@@ -14,14 +14,19 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
-#include "vislib/UnsupportedOperationException.h"
+#ifdef _WIN32
+#include "vislib/SystemMessage.h"
+#endif /* _WIN32 */
 #include "vislib/Path.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
  * vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary
  */
-vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(void) : hModule(NULL) {
+vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(void) : hModule(NULL),
+        loadErrorMsg() {
+    // intentionally empty
 }
 
 
@@ -78,9 +83,11 @@ void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
  */
 bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
         bool dontResolveReferences, bool alternateSearchPath) {
+    this->loadErrorMsg.Clear();
     if (this->IsLoaded()) {
-        throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
-            "a library was already loaded.", __FILE__, __LINE__);
+        this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
+            "a library was already loaded.";
+        throw IllegalStateException(this->loadErrorMsg, __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -92,11 +99,17 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
     }
     this->hModule = ::LoadLibraryExA(moduleName, NULL, flags);
     ::SetErrorMode(oldErrorMode);
+    if (this->hModule == NULL) {
+        this->loadErrorMsg = vislib::sys::SystemMessage(::GetLastError());
+    }
 #else /* _WIN32 */
     // TODO: Error handling using dlerror
     // Using an exception is probably not useful because of the error-code
     // incompatibility.
     this->hModule = ::dlopen(moduleName, RTLD_LAZY);
+    if (this->hModule == NULL) {
+        this->loadErrorMsg = ::dlerror();
+    }
 #endif /* _WIN32 */
     return (this->hModule != NULL);
 }
@@ -107,9 +120,11 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
  */
 bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
         bool dontResolveReferences, bool alternateSearchPath) {
+    this->loadErrorMsg.Clear();
     if (this->IsLoaded()) {
-        throw IllegalStateException("Call to DynamicLinLibrary::Load() when"
-            "a library was already loaded.", __FILE__, __LINE__);
+        this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
+            "a library was already loaded.";
+        throw IllegalStateException(this->loadErrorMsg, __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
@@ -121,6 +136,9 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
     }
     this->hModule = ::LoadLibraryExW(moduleName, NULL, flags);
     ::SetErrorMode(oldErrorMode);
+    if (this->hModule == NULL) {
+        this->loadErrorMsg = vislib::sys::SystemMessage(::GetLastError());
+    }
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefmäßige Unicode-API.
     if (!this->Load(W2A(moduleName))) return false;

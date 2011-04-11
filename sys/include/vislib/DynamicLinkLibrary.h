@@ -18,6 +18,7 @@
 #include "vislib/memutils.h"
 #endif /* _WIN32 */
 
+#include "vislib/String.h"
 #include "vislib/SystemException.h"
 #include "vislib/types.h"
 
@@ -90,6 +91,16 @@ namespace sys {
         }
 
         /**
+         * Answer the error message from the last call of 'Load'. If the last
+         * call to 'Load' was sucessful, the returned string will be empty.
+         *
+         * @return A human-readable error message from the last call of 'Load'
+         */
+        inline const vislib::StringA& LastLoadErrorMessage(void) const {
+            return this->loadErrorMsg;
+        }
+
+        /**
          * Loads the library designated by the path 'moduleName'.
          *
          * @param moduleName The name of the module to load. If the name is not
@@ -105,7 +116,8 @@ namespace sys {
          *                            for further information.
          *
          * @return true in case of success, false, if the library could not be 
-         *         loaded.
+         *         loaded. If 'false' is returned, use 'LastLoadErrorMessage'
+         *         to get a human-readable error message.
          *
          * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
@@ -129,7 +141,8 @@ namespace sys {
          *                            for further information.
          *
          * @return true in case of success, false, if the library could not be 
-         *         loaded.
+         *         loaded. If 'false' is returned, use 'LastLoadErrorMessage'
+         *         to get a human-readable error message.
          *
          * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
@@ -165,6 +178,10 @@ namespace sys {
 #else /* _WIN32 */
         void *hModule;
 #endif /* _WIN32 */
+
+        /** The error message describing the error during the last 'Load' */
+        vislib::StringA loadErrorMsg;
+
     };
 
 } /* end namespace sys */
