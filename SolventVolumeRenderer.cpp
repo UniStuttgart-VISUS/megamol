@@ -1,5 +1,3 @@
-
-
 /*
  * SolventVolumeRenderer.cpp
  *
@@ -43,6 +41,7 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include "GridNeighbourFinder.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -271,6 +270,10 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 
 	ShaderSource vertSrc;
 	ShaderSource fragSrc;
+
+	// Load sphere shader
+	if( !loadShader( this->sphereShader, "protein::std::sphereVertex", "protein::std::sphereFragment" ) )
+		return false;
 
 	// Load sphere shader
 	if( !loadShader( this->sphereSolventShader, "protein::std::sphereSolventVertex", "protein::std::sphereFragment" ) )
@@ -617,9 +620,111 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 		// re-enable the output buffer
 		cr3d->EnableOutputBuffer();
 #endif
+		
+// DEBUG
+#if 0
+	float dist = 50.f;
+	unsigned int ai = 1000;
+	megamol::protein::GridNeighbourFinder<float> gnf( mol->AtomPositions(), mol->AtomCount(), mol->AccessBoundingBoxes().ObjectSpaceBBox(), dist);
+	vislib::Array<unsigned int> na;
+	gnf.FindNeighboursInRange( &mol->AtomPositions()[ai*3], dist, na);
+	
+	// ==================== Scale & Translate ====================
+    glPushMatrix();
+    // compute scale factor and scale world
+    scale;
+    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
+    glScalef( scale, scale, scale);	
+	vislib::math::Vector<float, 3> trans( 
+		mol->AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension() );
+	//trans *= -this->scale*0.5f;
+	trans *= -0.5f;
+	glTranslatef( trans.GetX(), trans.GetY(), trans.GetZ());
 
+	// ==================== Start actual rendering ====================
+	glDisable( GL_BLEND);
+	glEnable( GL_DEPTH_TEST);
+	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
+	
+	float viewportStuff[4] = {
+		cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
+		cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+	if( viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+	if( viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+	viewportStuff[2] = 2.0f / viewportStuff[2];
+	viewportStuff[3] = 2.0f / viewportStuff[3];
+
+	int cnt1, cnt2;
+	
+	vislib::Array<float> colTab( mol->AtomCount() * 3);
+	colTab.SetCount( mol->AtomCount() * 3);
+#pragma omp parallel for
+	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+		colTab[cnt1*3+0] = 1.0f;
+		colTab[cnt1*3+1] = 0.0f;
+		colTab[cnt1*3+2] = 0.0f;
+	}
+
+	cnt1 = ai;
+	vislib::math::Vector<float, 3> vec1( &mol->AtomPositions()[cnt1*3]);
+	for( cnt2 = 0; cnt2 < mol->AtomCount(); ++cnt2 ) {
+		if( cnt2 == cnt1 ) continue;
+		vislib::math::Vector<float, 3> vec2( &mol->AtomPositions()[cnt2*3]);
+		if( ( vec2 - vec1).Length() < dist ) {
+			colTab[cnt2*3+0] = 0.0f;
+			colTab[cnt2*3+1] = 0.0f;
+			colTab[cnt2*3+2] = 1.0f;
+		}
+	}
+
+#pragma omp parallel for
+	for( cnt1 = 0; cnt1 < na.Count(); ++cnt1 ) {
+		colTab[na[cnt1]*3+0] = 1.0f;
+		colTab[na[cnt1]*3+1] = 1.0f;
+		colTab[na[cnt1]*3+2] = 0.0f;
+	}
+	colTab[ai*3+0] = 0.0f;
+	colTab[ai*3+1] = 1.0f;
+	colTab[ai*3+2] = 0.0f;
+
+	this->sphereShader.Enable();
+	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	// draw atoms
+	glBegin( GL_POINTS);
+	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+		if( cnt1 == ai ) {
+			glColor3fv( &colTab[cnt1*3]);
+			glVertex4f(
+				mol->AtomPositions()[cnt1*3+0],
+				mol->AtomPositions()[cnt1*3+1],
+				mol->AtomPositions()[cnt1*3+2],
+				mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius());
+		} else {	
+			glColor3fv( &colTab[cnt1*3]);
+			glVertex4f(
+				mol->AtomPositions()[cnt1*3+0],
+				mol->AtomPositions()[cnt1*3+1],
+				mol->AtomPositions()[cnt1*3+2],
+				mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() / 5.0f);
+		}
+	}
+	glEnd();
+	this->sphereShader.Disable();
+
+	glPopMatrix();
+#else	
 		// =============== Volume Rendering ===============
 		retval = this->RenderMolecularData( cr3d, mol);
+#endif
+
 		// unlock the current frame
 		mol->Unlock();
 	}

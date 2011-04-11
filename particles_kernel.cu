@@ -207,17 +207,16 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
 					//neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = gridParticleIndex[j];
                     neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = j;
 					// compute small circle / intersection plane
-                    /*
 					r = (pos.w + params.probeRadius)*(pos.w + params.probeRadius) 
 						+ dot( relPos, relPos) 
 						- (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius);
 					r = r / (2.0 * dot( relPos, relPos));
-                    */
+					/*
 					r = (pos.w + params.probeRadius)*(pos.w + params.probeRadius)
 						- (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius);
-					//r = r / (2.0 * dot( relPos, relPos));
                     r = r / (2.0 * dot( relPos, relPos));
 					r = r + 0.5f;
+					*/
 					vec = relPos * r;
 					smallCircle.x = vec.x;
 					smallCircle.y = vec.y;
@@ -561,15 +560,20 @@ void computeArcs( float4* arcs,                 // output: arcs
         if( dot( rm, rm) > Ri2 ) continue;
 
         // compute the start- and endpoint of the newly found arc
-		if( dot( rj, aj - ai) < 0.0 )
-			cross_rj_rk = cross( rj, rk);
-		else 
-			cross_rj_rk = cross( rk, rj);
+		cross_rj_rk = cross( rj, rk);
         tmpFloat3 = cross_rj_rk * sqrt( ( Ri2 - dot( rm, rm)) / dot( cross_rj_rk, cross_rj_rk));
-		// x1
-        p1 = rm + tmpFloat3;
-		// x2
-        p2 = rm - tmpFloat3;
+		
+		if( dot( rj, aj - ai) < 0.0 ) {
+			// x1
+			p1 = rm + tmpFloat3;
+			// x2
+			p2 = rm - tmpFloat3;
+		} else {
+			// x2
+			p2 = rm + tmpFloat3;
+			// x1
+			p1 = rm - tmpFloat3;
+		}
 
         if( dot( cross( p1 - rk, p2 - rk), rk) < 0.0 ) {
             tmpFloat3 = p1;
@@ -580,21 +584,17 @@ void computeArcs( float4* arcs,                 // output: arcs
         // if the current arc ist the first:
         if( numArcs == 0 ) {
             // write the first arc
-            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0);
-            arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
+            //arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( p1, 1.0);
+            //arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
             numArcs++;
 
-            e1 = normalize( p1 - rk);
-            e2 = cross( e1, normalize( rk));
-            angle1 = 0.0f;
-            angle2 = acos( dot( normalize( p2 - rk), e1));
-            tmpAngle = dot( normalize( p2 - rk), e2);
-            if( tmpAngle < 0.0 )
-                angle2 = 6.2831853 - angle2;
+            e1 = p1;
+            e2 = p2;
             continue;
         }
 
         // compute angles
+		/*
         tmpAngle1 = acos( dot( normalize( p1 - rk), e1));
         tmpAngle = dot( normalize( p1 - rk), e2);
         if( tmpAngle < 0.0 )
@@ -618,7 +618,45 @@ void computeArcs( float4* arcs,                 // output: arcs
             arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( p2, 1.0);
             // TODO: second arc segment
         }
+		*/
+		float d1 = dot( aj - ai, e1 - rj);
+		float d2 = dot( aj - ai, e2 - rj);
+		float d3 = dot( rk, aj - ai) * dot( cross( e1, p1), e2);
+
+		if( d1 > 0.0 ) {
+			if( d2 > 0.0 ) {
+				if( d3 > 0.0 ) {
+					e1 = make_float3( 0.0, 0.0, 0.0);
+					e2 = make_float3( 0.0, 0.0, 0.0);
+				} else { // d3 < 0
+					e1 = p1;
+					e2 = p2;
+				}
+			} else { // d2 < 0
+				if( d3 > 0.0 ) {
+					e1 = p1;
+				} else { // d3 < 0
+					e1 = p2;
+				}
+			}
+		} else { // d1 < 0
+			if( d2 > 0.0 ) {
+				if( d3 > 0.0 ) {
+					e2 = p1;
+				} else { // d3 < 0
+					e2 = p2;
+				}
+			} else { // d2 < 0
+				if( d3 > 0.0 ) {
+					// Teilung in zwei Bögen
+				} else { // d3 < 0
+					// keine Auswirkung
+				}
+			}
+		}
     }
+    arcs[origAtomIdx * params.maxNumNeighbors * 4 + 0] = make_float4( e1, 1.0);
+    arcs[origAtomIdx * params.maxNumNeighbors * 4 + 1] = make_float4( e2, 1.0);
 
     /*
     for( uint cnt = 0; cnt < numNeighbors; ++cnt ) {
