@@ -796,8 +796,8 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 	float angle;
 	// loop over all connections and compute cylinder parameters
 	int cnt = 0;
-	// parallelisierung geht hier nicht?! weil es von den dynamischen daten abhängt an welchem index ein zylinder sitzt?!
-	// (variable 'cnt' hängt von 'hydrogenConnections' ab ...)
+	// parallelisierung geht hier nicht?! weil es von den dynamischen daten abhï¿½ngt an welchem index ein zylinder sitzt?!
+	// (variable 'cnt' hï¿½ngt von 'hydrogenConnections' ab ...)
 //#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
 	for (int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx) {
 		int connection = hydrogenConnections[aIdx];
@@ -1182,7 +1182,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
 			this->SetColoringMode( static_cast<Color::ColoringMode> ( int ( cMode ) ) );
 		} else {
 			// hydrogen bonds coloring mode?
-			this->SetColoringMode( Color::ColoringMode::RESIDUE );
+			this->SetColoringMode( Color::RESIDUE );
 		}
 		this->forceUpdateVolumeTexture = true;
 	}
