@@ -41,7 +41,6 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
-#include "GridNeighbourFinder.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -624,8 +623,8 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 // DEBUG
 #if 0
 	float dist = 50.f;
-	unsigned int ai = 1000;
-	megamol::protein::GridNeighbourFinder<float> gnf( mol->AtomPositions(), mol->AtomCount(), mol->AccessBoundingBoxes().ObjectSpaceBBox(), dist);
+	unsigned int ai = 0;
+	gnf.SetPointData( mol->AtomPositions(), mol->AtomCount(), mol->AccessBoundingBoxes().ObjectSpaceBBox(), dist);
 	vislib::Array<unsigned int> na;
 	gnf.FindNeighboursInRange( &mol->AtomPositions()[ai*3], dist, na);
 	
@@ -832,7 +831,7 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 		this->inParaCylinders[2*cnt+1] = ( firstAtomPos-secondAtomPos).Length();
 
 		// thomasbm: hotfix for jumping molecules near bounding box
-		if(this->inParaCylinders[2*cnt+1] > mol->AtomHydrogenBondDistance()
+		if(this->inParaCylinders[2*cnt+1] > mol->AtomHydrogenBondDistance() * 1.5f
 				/*mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()*/ ) {
 			this->inParaCylinders[2*cnt+1] = 0;
 		}
