@@ -24,8 +24,6 @@
 #include "view/AnimDataModule.h"
 #include <fstream>
 
-
-
 namespace megamol {
 namespace protein {
 
@@ -127,7 +125,7 @@ namespace protein {
 		GridNeighbourFinder<float> neighbourFinder;
 
 		/** temporary variable to store the neighbour indices for the hydrogen-bound search ...*/
-		vislib::Array<unsigned int> neighbourIndices;
+		vislib::Array<unsigned int> *neighbourIndices;
 
 		/** array to check atoms already connected ... */
 		vislib::Array<int> reverseConnection;
