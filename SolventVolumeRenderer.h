@@ -378,11 +378,18 @@ namespace protein {
 		float volClipPlaneOpacity;
 
         // interpolated atom positions
-        float *posInter;
-		
+        float *atomPosInterPtr;
+		int *hBondInterPtr;
+
 		// temporary atom array as member - do not use new-operator inside render()-routines!
 		// temporary arrays for rendering operations ...
-		vislib::Array<float> pos_0, pos_1, pos_inter, update_vol, update_clr;
+		bool getFrameData(MolecularDataCall *mol, int frameID, float *&interPosFramePtr, int *&interHBondFramePtr);
+
+		vislib::Array<float> interpAtomPosFrames[2], interpolatedAtomPos;
+		vislib::Array<int> interpHBondFrames[2], interpolatedHBonds;
+		int interpFrameIDs[2];
+
+		vislib::Array<float> update_vol, update_clr;
 		vislib::Array<float> vertSpheres, vertCylinders, quatCylinders, inParaCylinders, color1Cylinders, color2Cylinders;
 
         bool forceUpdateVolumeTexture;

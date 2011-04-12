@@ -199,6 +199,8 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
 	this->renderRMSData = false;
 	this->frameLabel = NULL;
+
+	interpFrameIDs[0] = interpFrameIDs[1] = -1;
 }
 
 
@@ -440,6 +442,39 @@ bool SolventVolumeRenderer::getVolumeData( core::Call& call) {
 	return true;
 }
 
+bool protein::SolventVolumeRenderer::getFrameData(MolecularDataCall *mol, int frameID, float *&interPosFramePtr, int *&interHBondFramePtr) {
+	int id = frameID % 2;	
+
+	// get positions of the first frame
+	if (this->interpFrameIDs[id] != frameID) {
+		vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "loading frame: %d", frameID );
+
+		// set frame ID and call data
+		mol->SetFrameID(frameID);
+		if( !(*mol)(MolecularDataCall::CallForGetData) )
+			return false;
+
+		if (this->interpAtomPosFrames[id].Count() < mol->AtomCount()*3)
+			this->interpAtomPosFrames[id].SetCount( mol->AtomCount()*3 );
+		memcpy( &this->interpAtomPosFrames[id][0], mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
+
+		if (mol->AtomHydrogenBondIndices()) {
+			if (this->interpHBondFrames[id].Count() < mol->AtomCount())
+				this->interpHBondFrames[id].SetCount(mol->AtomCount());
+			memcpy( &this->interpHBondFrames[id][0], mol->AtomHydrogenBondIndices(), mol->AtomCount() * sizeof(int));
+		} else
+			this->interpHBondFrames[id].Clear();
+
+		this->interpFrameIDs[id] = frameID;
+	}
+
+	interPosFramePtr = &interpAtomPosFrames[id][0];
+
+	if (this->interpHBondFrames[id].Count())
+		interHBondFramePtr = &this->interpHBondFrames[id][0];
+	else
+		interHBondFramePtr = 0;
+}
 
 /*
  * protein::SolventVolumeRenderer::Render
@@ -452,6 +487,9 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 	//view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
 	// get pointer to MolecularDataCall
 	MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
+
+	if (!mol)
+		return false;
 
 	// get camera information
 	this->cameraInfo = cr3d->GetCameraParameters();
@@ -479,145 +517,161 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 	// get the call time
 	float callTime = cr3d->Time();
 
-	// make the atom color table if necessary
-	if( mol ) {
-		// set frame ID and call data
-		mol->SetFrameID(static_cast<int>( callTime));
-		if( !(*mol)(MolecularDataCall::CallForGetData) )
+	// use floor/ceil here?!
+	int frameID0 = static_cast<int>(callTime);
+	int frameID1 = (frameID0+1) < mol->FrameCount() ? frameID0+1 : frameID0;
+	float frameInterp = callTime - static_cast<float>(static_cast<int>( callTime));
+
+	float *interAtomPosFrame0Ptr;
+	int *interHBondFrame0Ptr;
+
+	if (!getFrameData(mol, frameID0, interAtomPosFrame0Ptr, interHBondFrame0Ptr))
+		return false;
+
+	// check if the atom positions have to be interpolated
+	if (frameID0 != frameID1 && this->interpolParam.Param<param::BoolParam>()->Value()) {
+		float *interAtomPosFrame1Ptr;
+		int *interHBondFrame1Ptr;
+		if (!getFrameData(mol, frameID1, interAtomPosFrame1Ptr, interHBondFrame1Ptr))
 			return false;
-		// check if atom count is zero
-		if( mol->AtomCount() == 0 ) return true;
-		// get positions of the first frame
-		int cnt;
-		// do not use new-operator in render routines!
-		if (pos_0.Count() < mol->AtomCount()*3) pos_0.SetCount(mol->AtomCount()*3);
-		float *pos0 = &pos_0[0];
-		memcpy( pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
-		// check if the atom positions have to be interpolated
-		bool interpolate = this->interpolParam.Param<param::BoolParam>()->Value();
+		// TODO: force volume texture update here?!
 
-		if( interpolate ) {
-			// set next frame ID and get positions of the second frame
-			if( ( static_cast<int>( callTime) + 1) < int(mol->FrameCount()) ) 
-				mol->SetFrameID(static_cast<int>( callTime) + 1);
-			else
-				mol->SetFrameID(static_cast<int>( callTime));
-			if( !(*mol)(MolecularDataCall::CallForGetData) )
-				return false;
-
-			if (pos_1.Count() < mol->AtomCount()*3) pos_1.SetCount(mol->AtomCount()*3);
-			float *pos1 = &pos_1[0];
-			memcpy( pos1, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
-
-			// interpolate atom positions between frames
-			if (pos_inter.Count() < mol->AtomCount()*3) pos_inter.SetCount(mol->AtomCount()*3);
-			posInter = &pos_inter[0];
-			float inter = callTime - static_cast<float>(static_cast<int>( callTime));
-
-			const vislib::math::Cuboid<float>& bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
-			// wg zyklischer Randbedingung ...
-			float threshold = vislib::math::Min( bbox.Width(), vislib::math::Min( bbox.Height(), bbox.Depth())) * 0.4f; // 0.75f;
-
-#pragma omp parallel for
-			for( cnt = 0; cnt < mol->AtomCount()*3; cnt += 3 ) {
-				if( std::sqrt( std::pow( pos0[cnt+0] - pos1[cnt+0], 2) +
-						std::pow( pos0[cnt+1] - pos1[cnt+1], 2) +
-						std::pow( pos0[cnt+2] - pos1[cnt+2], 2) ) < threshold ) {
-					posInter[cnt+0] = (1.0f - inter) * pos0[cnt+0] + inter * pos1[cnt+0];
-					posInter[cnt+1] = (1.0f - inter) * pos0[cnt+1] + inter * pos1[cnt+1];
-					posInter[cnt+2] = (1.0f - inter) * pos0[cnt+2] + inter * pos1[cnt+2];
-				} else if( inter < 0.5f ) {
-					posInter[cnt+0] = pos0[cnt+0];
-					posInter[cnt+1] = pos0[cnt+1];
-					posInter[cnt+2] = pos0[cnt+2];
-				} else {
-					posInter[cnt+0] = pos1[cnt+0];
-					posInter[cnt+1] = pos1[cnt+1];
-					posInter[cnt+2] = pos1[cnt+2];
-				}
-			}
-		} else {
-			posInter = pos0;
+		if (this->interpolatedAtomPos.Count() < mol->AtomCount()*3) {
+			this->interpolatedAtomPos.SetCount( mol->AtomCount()*3 );
+			this->interpolatedHBonds.SetCount( mol->AtomCount() );
 		}
 
-		Color::MakeColorTable( mol, 
-			this->currentColoringMode,
-			this->atomColorTable,
-			this->colorLookupTable,
-			this->rainbowColors,
-			this->minGradColorParam.Param<param::StringParam>()->Value(),
-			this->midGradColorParam.Param<param::StringParam>()->Value(),
-			this->maxGradColorParam.Param<param::StringParam>()->Value(),
-			true);
+		float *interAtomPosResult = &this->interpolatedAtomPos[0];
+		int *interHBondResult = &this->interpolatedHBonds[0];
+
+		const vislib::math::Cuboid<float>& bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+
+		// wg zyklischer Randbedingung ...
+		float threshold = vislib::math::Min( bbox.Width(), vislib::math::Min( bbox.Height(), bbox.Depth())) * 0.4f; // 0.75f;
+
+		// interpolate atom positions between frames
+		int cnt;
+#pragma omp parallel for
+		for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+			float localInter = frameInterp;
+#if 0
+			vislib::math::ShallowPoint<float,3> atomPosFrame0( interAtomPosFrame0Ptr + cnt*3 );
+			vislib::math::ShallowPoint<float,3> atomPosFrame1( interAtomPosFrame1Ptr + cnt*3 );
+			vislib::math::ShallowPoint<float,3> atomPosResult( interAtomPosResult + cnt*3 );
+
+			if( atomPosFrame0.Distance(atomPosFrame1) >= threshold ) {
+				if( localInter < 0.5f )
+					localInter = 0;
+				else
+					localInter = 1;
+			}
+
+			atomPosResult = atomPosFrame0.Interpolate(atomPosFrame1, localInter);
+#else
+			int tmp = cnt * 3;
+			float *p0 = interAtomPosFrame0Ptr + tmp;
+			float *p1 = interAtomPosFrame1Ptr + tmp;
+			float *p = interAtomPosResult + tmp;
+			float dx = p0[0]-p1[0];
+			float dy = p0[1]-p1[1];
+			float dz = p0[2]-p1[2];
+			if (sqrtf(dx*dx+dy*dy+dz*dz) >= threshold) {
+				if( localInter < 0.5f )
+					localInter = 0;
+				else
+					localInter = 1;
+			}
+			p[0] = (1.0f-localInter)*p0[0] + localInter*p1[0];
+			p[1] = (1.0f-localInter)*p0[1] + localInter*p1[1];
+			p[2] = (1.0f-localInter)*p0[2] + localInter*p1[2];
+#endif
+
+			// maybe test here the distance between atom[cnt] and atom[interHBonds0/1[cnt]] ?!
+			if (interHBondFrame0Ptr)
+				interHBondResult[cnt] = /*inter*/localInter < 0.5 ? interHBondFrame0Ptr[cnt] : interHBondFrame1Ptr[cnt];
+		}
+
+		this->atomPosInterPtr = interAtomPosResult;
+		this->hBondInterPtr = interHBondResult;
+	} else {
+		this->atomPosInterPtr = interAtomPosFrame0Ptr;
+		this->hBondInterPtr = interHBondFrame0Ptr;
 	}
 
+	Color::MakeColorTable( mol, 
+		this->currentColoringMode,
+		this->atomColorTable,
+		this->colorLookupTable,
+		this->rainbowColors,
+		this->minGradColorParam.Param<param::StringParam>()->Value(),
+		this->midGradColorParam.Param<param::StringParam>()->Value(),
+		this->maxGradColorParam.Param<param::StringParam>()->Value(),
+		true);
 
 	unsigned int cpCnt;
-	for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt ) {
+	for( cpCnt = 0; cpCnt < this->volClipPlane.Count(); ++cpCnt )
 		glClipPlane( GL_CLIP_PLANE0+cpCnt, this->volClipPlane[cpCnt].PeekComponents());
-	}
+	
 
 	// =============== Volume Rendering ===============
 	bool retval = false;
 
 	// try to start volume rendering using protein data
-	if( mol ) {
-
 #if 0
-		// =============== Protein Rendering ===============
-		// disable the output buffer
-		cr3d->DisableOutputBuffer();
-		// start rendering to the FBO for protein rendering
-		this->proteinFBO.Enable();
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		if( protrencr3d ) {
-			// setup and call protein renderer
-			glPushMatrix();
-			glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
-			//glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
-			*protrencr3d = *cr3d;
-			protrencr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
-			(*protrencr3d)();
-			glPopMatrix();
-		}
-		// stop rendering to the FBO for protein rendering
-		this->proteinFBO.Disable();
-		// re-enable the output buffer
-		cr3d->EnableOutputBuffer();
-#else
-		// =============== Protein Rendering ===============
-		// disable the output buffer
-		cr3d->DisableOutputBuffer();
-		// start rendering to the FBO for protein rendering
-		this->proteinFBO.Enable();
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		// render molecules based on volume density (TODO!)
+	// =============== Protein Rendering ===============
+	// disable the output buffer
+	cr3d->DisableOutputBuffer();
+	// start rendering to the FBO for protein rendering
+	this->proteinFBO.Enable();
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	if( protrencr3d ) {
+		// setup and call protein renderer
 		glPushMatrix();
-			glDisable( GL_BLEND);
-			glEnable( GL_DEPTH_TEST);
-			glDepthFunc(GL_LEQUAL);
-			glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-			glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-			glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-
-			glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
-			//glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
-			// compute scale factor and scale world
-			float scale;
-			if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) 
-				scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-			else
-				scale = 1.0f;
-			glScalef( scale, scale, scale);
-			//cr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
-			RenderStickSolvent(mol, this->posInter);
-
-			RenderHydrogenBounds(mol, this->posInter); // TEST
+		glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
+		//glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
+		*protrencr3d = *cr3d;
+		protrencr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
+		(*protrencr3d)();
 		glPopMatrix();
-		// stop rendering to the FBO for protein rendering
-		this->proteinFBO.Disable();
-		// re-enable the output buffer
-		cr3d->EnableOutputBuffer();
+	}
+	// stop rendering to the FBO for protein rendering
+	this->proteinFBO.Disable();
+	// re-enable the output buffer
+	cr3d->EnableOutputBuffer();
+#else
+	// =============== Protein Rendering ===============
+	// disable the output buffer
+	cr3d->DisableOutputBuffer();
+	// start rendering to the FBO for protein rendering
+	this->proteinFBO.Enable();
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	// render molecules based on volume density (TODO!)
+	glPushMatrix();
+		glDisable( GL_BLEND);
+		glEnable( GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+		glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
+		glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+
+		glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
+		//glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
+		// compute scale factor and scale world
+		float scale;
+		if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) 
+			scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+		else
+			scale = 1.0f;
+		glScalef( scale, scale, scale);
+		//cr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
+		RenderStickSolvent(mol, this->atomPosInterPtr);
+
+		RenderHydrogenBounds(mol, this->atomPosInterPtr); // TEST
+	glPopMatrix();
+	// stop rendering to the FBO for protein rendering
+	this->proteinFBO.Disable();
+	// re-enable the output buffer
+	cr3d->EnableOutputBuffer();
 #endif
 		
 // DEBUG
@@ -720,13 +774,12 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 
 	glPopMatrix();
 #else	
-		// =============== Volume Rendering ===============
-		retval = this->RenderMolecularData( cr3d, mol);
+	// =============== Volume Rendering ===============
+	retval = this->RenderMolecularData( cr3d, mol);
 #endif
 
-		// unlock the current frame
-		mol->Unlock();
-	}
+	// unlock the current frame
+	mol->Unlock();
 
 	return retval;
 }
@@ -736,7 +789,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
  * boese dreckig hingerotzt ...
  */
 void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos) {
-	const int *hydrogenConnections = mol->AtomHydrogenBondIndices();
+	const int *hydrogenConnections = this->hBondInterPtr;// mol->AtomHydrogenBondIndices();
 
 	if (!hydrogenConnections)
 		return;
@@ -1484,9 +1537,9 @@ void protein::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( Molecula
 #if 1
 			#pragma omp parallel for
 			for(int atomCnt = 0; atomCnt < atomCount; ++atomCnt ) {
-				updatVolumeTextureAtoms[atomCnt*4+0] += ( this->posInter[3*atomCnt+0] + this->translation.X()) * this->scale * normalizeFactor;
-				updatVolumeTextureAtoms[atomCnt*4+1] += ( this->posInter[3*atomCnt+1] + this->translation.Y()) * this->scale * normalizeFactor;
-				updatVolumeTextureAtoms[atomCnt*4+2] += ( this->posInter[3*atomCnt+2] + this->translation.Z()) * this->scale * normalizeFactor;
+				updatVolumeTextureAtoms[atomCnt*4+0] += ( this->atomPosInter[3*atomCnt+0] + this->translation.X()) * this->scale * normalizeFactor;
+				updatVolumeTextureAtoms[atomCnt*4+1] += ( this->atomPosInter[3*atomCnt+1] + this->translation.Y()) * this->scale * normalizeFactor;
+				updatVolumeTextureAtoms[atomCnt*4+2] += ( this->atomPosInter[3*atomCnt+2] + this->translation.Z()) * this->scale * normalizeFactor;
 				updatVolumeTextureAtoms[atomCnt*4+3] += atomTypes[atomTypeIndices[atomCnt]].Radius() * this->scale * normalizeFactor;
 				updatVolumeTextureColors[atomCnt*3+0] += atomColorTablePtr[atomCnt*3+0] * normalizeFactor;
 				updatVolumeTextureColors[atomCnt*3+1] += atomColorTablePtr[atomCnt*3+1] * normalizeFactor;
@@ -1585,7 +1638,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 
 	// coloring mode
 	bool coloringByHydroBonds = this->coloringModeParam.Param<param::EnumParam>()->Value() >= Color::GetNumOfColoringModes(mol) &&
-		mol->AtomHydrogenBondIndices();
+		/*mol->AtomHydrogenBondIndices()*/hBondInterPtr;
 
 	// store current frame buffer object ID
 	GLint prevFBO;
@@ -1656,9 +1709,9 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 /*	int atomCnt;
 #pragma omp parallel for
 	for( atomCnt = 0; atomCnt < mol->AtomCount(); ++atomCnt ) {
-		updatVolumeTextureAtoms[atomCnt*4+0] = ( this->posInter[3*atomCnt+0] + this->translation.X()) * this->scale;
-		updatVolumeTextureAtoms[atomCnt*4+1] = ( this->posInter[3*atomCnt+1] + this->translation.Y()) * this->scale;
-		updatVolumeTextureAtoms[atomCnt*4+2] = ( this->posInter[3*atomCnt+2] + this->translation.Z()) * this->scale;
+		updatVolumeTextureAtoms[atomCnt*4+0] = ( this->atomPosInter[3*atomCnt+0] + this->translation.X()) * this->scale;
+		updatVolumeTextureAtoms[atomCnt*4+1] = ( this->atomPosInter[3*atomCnt+1] + this->translation.Y()) * this->scale;
+		updatVolumeTextureAtoms[atomCnt*4+2] = ( this->atomPosInter[3*atomCnt+2] + this->translation.Z()) * this->scale;
 		updatVolumeTextureAtoms[atomCnt*4+3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomCnt]].Radius() * this->scale;
 	}*/
 
@@ -1682,13 +1735,14 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 			if (coloringByHydroBonds)
 				continue;
 			/* solvent (creates volume coloring ...) */
+			int atomIdx;
 		//	#pragma omp parallel for
-			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
+			for(atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
 				// fill the solvent atoms in reverse into the array ...
 				int sortedVolumeIdx = atomCount - (atomCntSol+(atomIdx-firstAtomIndex)+1);
 				float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
 				float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
-				float *interPos = &this->posInter[atomIdx*3];
+				float *interPos = &this->atomPosInterPtr[atomIdx*3];
 				const float *clr = &atomColorTablePtr[atomIdx*3];
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
@@ -1701,34 +1755,36 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 			atomCntSol += (lastAtomIndx - firstAtomIndex);
 		} else {
 			/* not solvent (creates volume) */
+			int atomIdx;
 		//	#pragma omp parallel for
-			for(int atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++ ) {
+			for(atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++ ) {
 				int sortedVolumeIdx = atomCntMol + (atomIdx-firstAtomIndex);
 				float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
-				float *interPos = &this->posInter[atomIdx*3];
+				float *interPos = &this->atomPosInterPtr[atomIdx*3];
 				atomPos[0] = (interPos[0] + this->translation.X()) * this->scale;
 				atomPos[1] = (interPos[1] + this->translation.Y()) * this->scale;
 				atomPos[2] = (interPos[2] + this->translation.Z()) * this->scale;
 				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
 
 				// test to visualize hydrogen bounds from the polymer to the solvent and map color to the volume surface
-				if (coloringByHydroBonds && mol->AtomHydrogenBondIndices()[atomIdx] != -1) {
+				if (coloringByHydroBonds && /*mol->AtomHydrogenBondIndices()[atomIdx]*/hBondInterPtr[atomIdx] != -1
+					/*&& atomCntSol <= 3*/) {
 					int sortedVolumeIdx = atomCount - (atomCntSol+1);
-					int connection = mol->AtomHydrogenBondIndices()[atomIdx];
+					int connection = /*mol->AtomHydrogenBondIndices()*/hBondInterPtr[atomIdx];
 					float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
 					float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
-					float *interPos = &this->posInter[atomIdx*3];
-					float *interPos2 = &this->posInter[connection*3];
+					float *interPos = &this->atomPosInterPtr[atomIdx*3];
+					float *interPos2 = &this->atomPosInterPtr[connection*3];
 					// hydrogen bonds in the middle between the two connected atoms ...
 					atomPos[0] = ((interPos[0]+interPos[0])*0.5f + this->translation.X()) * this->scale;
 					atomPos[1] = ((interPos[1]+interPos[1])*0.5f + this->translation.Y()) * this->scale;
 					atomPos[2] = ((interPos[2]+interPos[2])*0.5f + this->translation.Z()) * this->scale;
-					// hydrogenbonds-length * 2 ?!
-					//atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale * 2;
-					atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
-								+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale;
+					atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale * 1.2f;
+					//atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
+					//atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
+					//				+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale /** 0.5*/;
 					solventAtomColor[0] = 1;
-					solventAtomColor[1] = 0;
+					solventAtomColor[1] = 1;
 					solventAtomColor[2] = 0;
 					atomCntSol++;
 				}
