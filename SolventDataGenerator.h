@@ -94,7 +94,10 @@ namespace protein {
 		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
 
 		bool getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource);
-		void calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr);
+		void calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr);
+		inline void calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr) {
+			calcHydroBondsForCurFrame(data, data->AtomPositions(), atomHydroBondsIndicesPtr);
+		}
 
 		/**
          * Implementation of 'Release'.
@@ -120,6 +123,7 @@ namespace protein {
 
 		/** temporary variable to store a set of atom positions */
 		vislib::Array<float> middleAtomPos;
+		vislib::Array<int> middleAtomPosHBonds;
 
 		/** our grid based neighbour finder ... */
 		GridNeighbourFinder<float> neighbourFinder;

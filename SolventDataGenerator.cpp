@@ -96,7 +96,7 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
 			continue; // return false;
 
 		#pragma omp parallel for
-		for(int aIdx = 0; aIdx < nAtoms; aIdx+=3) {
+		for(int aIdx = 0; aIdx < nAtoms*3; aIdx+=3) {
 			middlePosPtr[aIdx] += atomPositions[aIdx];
 			middlePosPtr[aIdx+1] += atomPositions[aIdx+1];
 			middlePosPtr[aIdx+2] += atomPositions[aIdx+2];
@@ -204,16 +204,15 @@ public:
 };
 
 
-void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr) {
+void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr) {
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
-
-	neighbourFinder.SetPointData(data->AtomPositions(), data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
-
-	const float *atomPositions = data->AtomPositions();
+	//const float *atomPositions = data->AtomPositions();
 	const MolecularDataCall::AtomType *atomTypes = data->AtomTypes();
 	const unsigned int *atomTypeIndices = data->AtomTypeIndices();
 	const int *atomResidueIndices = data->AtomResidueIndices();
 	int nResidues = data->ResidueCount();
+
+	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
 
     // set all entries to "not connected"
 	memset(atomHydroBondsIndicesPtr, -1, sizeof(int)*data->AtomCount());
@@ -385,13 +384,22 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 	*molDest = *molSource;
 
 	if (showMiddlePositions.Param<param::BoolParam>()->Value()) {
-		if (!middleAtomPos.Count())
+		if (!middleAtomPos.Count()) {
 			calcSpatialProbabilities(molSource, molDest);
-		molDest->SetAtomPositions(middleAtomPos.PeekElements());
-	}
 
-	// test: only compute hydrogen bounds once at startup ... (this is not suficcient for trajectories)
-	getHBonds(molDest, molSource);
+			// calc hydrogen bonds for middle positions
+			if (middleAtomPosHBonds.Count() < molSource->AtomCount())
+				middleAtomPosHBonds.SetCount(molSource->AtomCount());
+			calcHydroBondsForCurFrame(molSource, middleAtomPos.PeekElements(), &middleAtomPosHBonds[0]);
+		}
+		molDest->SetAtomPositions(middleAtomPos.PeekElements());
+		molDest->SetAtomHydrogenBondDistance(hBondDistance.Param<param::FloatParam>()->Value());
+		molDest->SetAtomHydrogenBondIndices(middleAtomPosHBonds.PeekElements());
+
+	} else {
+		// test: only compute hydrogen bounds once at startup ... (this is not suficcient for trajectories)
+		getHBonds(molDest, molSource);
+	}
 
 	return true;
 }
