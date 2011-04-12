@@ -36,7 +36,7 @@ namespace sys {
         this->findHandle = FindFirstFileA(p, &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
             DWORD le = ::GetLastError();
-            if (le == ERROR_FILE_NOT_FOUND) {
+            if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
                 this->nextItem.Path.Clear();
             } else {
                 throw SystemException(le, __FILE__, __LINE__);
@@ -97,7 +97,7 @@ namespace sys {
         this->findHandle = FindFirstFileW(p, &fd);
         if (this->findHandle == INVALID_HANDLE_VALUE) {
             DWORD le = ::GetLastError();
-            if (le == ERROR_FILE_NOT_FOUND) {
+            if ((le == ERROR_FILE_NOT_FOUND) || (le == ERROR_PATH_NOT_FOUND)) {
                 this->nextItem.Path.Clear();
             } else {
                 throw SystemException(le, __FILE__, __LINE__);
