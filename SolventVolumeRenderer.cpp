@@ -70,9 +70,10 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		minGradColorParam( "minGradColor", "The color for the minimum value for gradient coloring" ),
 		midGradColorParam( "midGradColor", "The color for the middle value for gradient coloring" ),
 		maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
-		solventResidues("solventResidues", ";-list of residue names which compose the solvent"),
+		//solventResidues("solventResidues", ";-list of residue names which compose the solvent"),
 		stickRadiusParam( "stickRadius", "The radius for stick rendering"),
 		solventMolThreshold( "solventMolThreshold", "threshold of visible solvent-molecules" ),
+		clearVolume( "clearVolume", "clear volume buffer or accumulate stuff over time" ),
 		currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 128), volFBO( 0),
 		volFilterRadius( 1.75f), volDensityScale( 1.0f),
 		width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
@@ -170,8 +171,8 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	this->MakeSlotAvailable( &this->maxGradColorParam);
 
 	// ;-list of residue names which compose the solvent
-	this->solventResidues.SetParameter(new param::StringParam(""));
-	this->MakeSlotAvailable( &this->solventResidues);
+//	this->solventResidues.SetParameter(new param::StringParam(""));
+//	this->MakeSlotAvailable( &this->solventResidues);
 
 	// fill color table with default values and set the filename param
 	this->stickRadiusParam.SetParameter(new param::FloatParam( 0.3f, 0.0f));
@@ -180,6 +181,9 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 	// 
 	this->solventMolThreshold.SetParameter(new param::FloatParam( 0.1f, 0.0f));
 	this->MakeSlotAvailable( &this->solventMolThreshold);
+
+	this->clearVolume.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable( &this->clearVolume);
 
 	// make all slots available
 	this->MakeSlotAvailable( &this->volIsoValue1Param );
@@ -199,8 +203,6 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
 	this->renderRMSData = false;
 	this->frameLabel = NULL;
-
-	interpFrameIDs[0] = interpFrameIDs[1] = -1;
 }
 
 
@@ -442,8 +444,9 @@ bool SolventVolumeRenderer::getVolumeData( core::Call& call) {
 	return true;
 }
 
+/*
 bool protein::SolventVolumeRenderer::getFrameData(MolecularDataCall *mol, int frameID, float *&interPosFramePtr, int *&interHBondFramePtr) {
-	int id = frameID % 2;	
+	int id = frameID % ATOM_FRAMES_IN_CORE;	
 
 	// get positions of the first frame
 	if (this->interpFrameIDs[id] != frameID) {
@@ -474,7 +477,7 @@ bool protein::SolventVolumeRenderer::getFrameData(MolecularDataCall *mol, int fr
 		interHBondFramePtr = &this->interpHBondFrames[id][0];
 	else
 		interHBondFramePtr = 0;
-}
+}*/
 
 /*
  * protein::SolventVolumeRenderer::Render
@@ -521,28 +524,51 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 	int frameID0 = static_cast<int>(callTime);
 	int frameID1 = (frameID0+1) < mol->FrameCount() ? frameID0+1 : frameID0;
 	float frameInterp = callTime - static_cast<float>(static_cast<int>( callTime));
+	float *interAtomPosFrame0Ptr = 0;
+	int *interHBondFrame0Ptr = 0;
 
-	float *interAtomPosFrame0Ptr;
-	int *interHBondFrame0Ptr;
-
-	if (!getFrameData(mol, frameID0, interAtomPosFrame0Ptr, interHBondFrame0Ptr))
+	/* get first frame and copy it to the temporary array for now.
+	  we could force the datacall 'mol' to keep the locked frame data to avoid that copy.
+	 (setting mol->SetUnlocker(0, false) will prevent unlocking of the current frame after loading another)*/
+	mol->SetFrameID(frameID0);
+	if( !(*mol)(MolecularDataCall::CallForGetData) || mol->AtomCount() == 0 )
 		return false;
+	if (this->interpAtomPosTmpArray.Count() < mol->AtomCount()*3)
+		this->interpAtomPosTmpArray.SetCount(mol->AtomCount()*3);
+	interAtomPosFrame0Ptr = &this->interpAtomPosTmpArray[0];
+	memcpy(interAtomPosFrame0Ptr, mol->AtomPositions(), sizeof(float)*mol->AtomCount()*3);
+
+	if (mol->AtomHydrogenBondIndices()) {
+		if (this->interpHBondTmpArray.Count() < mol->AtomCount())
+			this->interpHBondTmpArray.SetCount(mol->AtomCount());
+		interHBondFrame0Ptr = &this->interpHBondTmpArray[0];
+		memcpy(interHBondFrame0Ptr, mol->AtomHydrogenBondIndices(), sizeof(int)*mol->AtomCount());
+	}
+
+	// force volume texture update if data has changed
+	if (frameID0 != this->interpFrame0 || mol->DataHash() != this->interpDataHash0)
+		this->forceUpdateVolumeTexture = true;
+	this->interpFrame0 = frameID0;
+	this->interpDataHash0 = mol->DataHash();
+
 
 	// check if the atom positions have to be interpolated
 	if (frameID0 != frameID1 && this->interpolParam.Param<param::BoolParam>()->Value()) {
-		float *interAtomPosFrame1Ptr;
-		int *interHBondFrame1Ptr;
-		if (!getFrameData(mol, frameID1, interAtomPosFrame1Ptr, interHBondFrame1Ptr))
+		const float *interAtomPosFrame1Ptr;
+		const int *interHBondFrame1Ptr;
+
+		mol->Unlock(); // very important because we're goning to load a new frame ...
+		mol->SetFrameID(frameID1);
+		if( !(*mol)(MolecularDataCall::CallForGetData) )
 			return false;
-		// TODO: force volume texture update here?!
+		interAtomPosFrame1Ptr = mol->AtomPositions();
+		interHBondFrame1Ptr = mol->AtomHydrogenBondIndices();
 
-		if (this->interpolatedAtomPos.Count() < mol->AtomCount()*3) {
-			this->interpolatedAtomPos.SetCount( mol->AtomCount()*3 );
-			this->interpolatedHBonds.SetCount( mol->AtomCount() );
-		}
-
-		float *interAtomPosResult = &this->interpolatedAtomPos[0];
-		int *interHBondResult = &this->interpolatedHBonds[0];
+	/*	// force volume texture update if data has changed -> will be done anyway in animation mode?!
+		if (frameID1 != this->interpFrame1 || mol->DataHash() != this->interpDataHash1)
+			this->forceUpdateVolumeTexture = true;
+		this->interpFrame1 = frameID1;
+		this->interpDataHash1 = mol->DataHash();*/
 
 		const vislib::math::Cuboid<float>& bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
 
@@ -556,8 +582,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 			float localInter = frameInterp;
 #if 0
 			vislib::math::ShallowPoint<float,3> atomPosFrame0( interAtomPosFrame0Ptr + cnt*3 );
-			vislib::math::ShallowPoint<float,3> atomPosFrame1( interAtomPosFrame1Ptr + cnt*3 );
-			vislib::math::ShallowPoint<float,3> atomPosResult( interAtomPosResult + cnt*3 );
+			vislib::math::ShallowPoint<float,3> atomPosFrame1( const_cast<float*>(interAtomPosFrame1Ptr) + cnt*3 );
 
 			if( atomPosFrame0.Distance(atomPosFrame1) >= threshold ) {
 				if( localInter < 0.5f )
@@ -566,12 +591,11 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 					localInter = 1;
 			}
 
-			atomPosResult = atomPosFrame0.Interpolate(atomPosFrame1, localInter);
+			atomPosFrame0 = atomPosFrame0.Interpolate(atomPosFrame1, localInter);
 #else
 			int tmp = cnt * 3;
 			float *p0 = interAtomPosFrame0Ptr + tmp;
-			float *p1 = interAtomPosFrame1Ptr + tmp;
-			float *p = interAtomPosResult + tmp;
+			const float *p1 = interAtomPosFrame1Ptr + tmp;
 			float dx = p0[0]-p1[0];
 			float dy = p0[1]-p1[1];
 			float dz = p0[2]-p1[2];
@@ -581,22 +605,19 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 				else
 					localInter = 1;
 			}
-			p[0] = (1.0f-localInter)*p0[0] + localInter*p1[0];
-			p[1] = (1.0f-localInter)*p0[1] + localInter*p1[1];
-			p[2] = (1.0f-localInter)*p0[2] + localInter*p1[2];
+			p0[0] = (1.0f-localInter)*p0[0] + localInter*p1[0];
+			p0[1] = (1.0f-localInter)*p0[1] + localInter*p1[1];
+			p0[2] = (1.0f-localInter)*p0[2] + localInter*p1[2];
 #endif
 
 			// maybe test here the distance between atom[cnt] and atom[interHBonds0/1[cnt]] ?!
 			if (interHBondFrame0Ptr)
-				interHBondResult[cnt] = /*inter*/localInter < 0.5 ? interHBondFrame0Ptr[cnt] : interHBondFrame1Ptr[cnt];
+				interHBondFrame0Ptr[cnt] = /*inter*/localInter < 0.5 ? interHBondFrame0Ptr[cnt] : interHBondFrame1Ptr[cnt];
 		}
-
-		this->atomPosInterPtr = interAtomPosResult;
-		this->hBondInterPtr = interHBondResult;
-	} else {
-		this->atomPosInterPtr = interAtomPosFrame0Ptr;
-		this->hBondInterPtr = interHBondFrame0Ptr;
 	}
+
+	this->atomPosInterPtr = interAtomPosFrame0Ptr;
+	this->hBondInterPtr = interHBondFrame0Ptr;
 
 	Color::MakeColorTable( mol, 
 		this->currentColoringMode,
@@ -849,8 +870,8 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 	float angle;
 	// loop over all connections and compute cylinder parameters
 	int cnt = 0;
-	// parallelisierung geht hier nicht?! weil es von den dynamischen daten abh�ngt an welchem index ein zylinder sitzt?!
-	// (variable 'cnt' h�ngt von 'hydrogenConnections' ab ...)
+	// parallelisierung geht hier nicht?! weil es von den dynamischen daten abhaengt an welchem index ein zylinder sitzt?!
+	// (variable 'cnt' haengt von 'hydrogenConnections' ab ...)
 //#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
 	for (int aIdx = 0; aIdx < mol->AtomCount(); ++aIdx) {
 		int connection = hydrogenConnections[aIdx];
@@ -1351,7 +1372,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
 		this->forceUpdateVolumeTexture = true;
 	}
 
-	// update lsit of residues that compose the solvent ...
+/*	// update lsit of residues that compose the solvent ...
 	if (this->solventResidues.IsDirty()) {
 		this->solventResidues.ResetDirty();
 		const vislib::TString& str = solventResidues.Param<param::StringParam>()->Value();
@@ -1373,7 +1394,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
 			}
 		}
 		this->forceUpdateVolumeTexture = true;
-	}
+	}*/
 }
 
 /**
@@ -1607,7 +1628,10 @@ void protein::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( Molecula
  * Create a volume containing all molecule atoms
  */
 void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
-	bool clearVolume = true; // false; // set this to false to accumulate stuff ...
+	bool clearVolume; // false; // set this to false to accumulate stuff ...
+
+	clearVolume = this->clearVolume.Param<param::BoolParam>()->Value();
+
 	// generate volume, if necessary
 	if( !glIsTexture( this->volumeTex) ) {
 		// from CellVis: cellVis.cpp, initGL
@@ -1628,7 +1652,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
 		glBindTexture( GL_TEXTURE_3D, 0);
 		CHECK_FOR_OGL_ERROR();
-		clearVolume = true;
+		clearVolume = true; // clear volume on first update in any case
 	}
 	// generate FBO, if necessary
 	if( !glIsFramebufferEXT( this->volFBO ) ) {
@@ -1725,12 +1749,20 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		int lastAtomIndx = residue->FirstAtomIndex() + residue->AtomCount();
 
 		bool isSolvent = false;
+#if 1
+		int idx = residue->MoleculeIndex();
+		const MolecularDataCall::Molecule& molecule = mol->Molecules()[idx];
+		idx = molecule.ChainIndex();
+		const MolecularDataCall::Chain& chain = mol->Chains()[idx];
+		isSolvent = (chain.Type() == MolecularDataCall::Chain::SOLVENT);
+#else
 		for(int i = 0 ; i < this->solventResidueTypeIds.Count(); i++ ) {
-			if (solventResidueTypeIds[i] == residue->Type()) {
+			if (this->solventResidueTypeIds[i] == residue->Type()) {
 				isSolvent = true;
 				break;
 			}
 		}
+#endif
 		if (isSolvent) {
 			if (coloringByHydroBonds)
 				continue;
@@ -1767,8 +1799,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 				atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
 
 				// test to visualize hydrogen bounds from the polymer to the solvent and map color to the volume surface
-				if (coloringByHydroBonds && /*mol->AtomHydrogenBondIndices()[atomIdx]*/hBondInterPtr[atomIdx] != -1
-					/*&& atomCntSol <= 3*/) {
+				if (coloringByHydroBonds && hBondInterPtr[atomIdx] != -1) {
 					int sortedVolumeIdx = atomCount - (atomCntSol+1);
 					int connection = /*mol->AtomHydrogenBondIndices()*/hBondInterPtr[atomIdx];
 					float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
@@ -1779,7 +1810,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 					atomPos[0] = ((interPos[0]+interPos[0])*0.5f + this->translation.X()) * this->scale;
 					atomPos[1] = ((interPos[1]+interPos[1])*0.5f + this->translation.Y()) * this->scale;
 					atomPos[2] = ((interPos[2]+interPos[2])*0.5f + this->translation.Z()) * this->scale;
-					atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale * 1.2f;
+					atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale;
 					//atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
 					//atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
 					//				+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale /** 0.5*/;

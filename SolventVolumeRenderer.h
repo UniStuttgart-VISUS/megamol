@@ -282,11 +282,14 @@ namespace protein {
         megamol::core::param::ParamSlot maxGradColorParam;
 
 	    /** ;-list of residue names which compose the solvent */
-        megamol::core::param::ParamSlot solventResidues;
-		vislib::Array<int> solventResidueTypeIds;
+        //megamol::core::param::ParamSlot solventResidues;
+		//vislib::Array<int> solventResidueTypeIds;
 
 		/** threshold of visible solvent-molecules ... */
 		megamol::core::param::ParamSlot solventMolThreshold;
+
+		/** clear volume or accumulate stuff over time? ... */
+		megamol::core::param::ParamSlot clearVolume;
 
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereSolventShader;
@@ -385,9 +388,10 @@ namespace protein {
 		// temporary arrays for rendering operations ...
 		bool getFrameData(MolecularDataCall *mol, int frameID, float *&interPosFramePtr, int *&interHBondFramePtr);
 
-		vislib::Array<float> interpAtomPosFrames[2], interpolatedAtomPos;
-		vislib::Array<int> interpHBondFrames[2], interpolatedHBonds;
-		int interpFrameIDs[2];
+		vislib::Array<float> interpAtomPosTmpArray;
+		vislib::Array<int> interpHBondTmpArray;
+		int interpFrame0, interpFrame1;
+		int interpDataHash0, interpDataHash1;
 
 		vislib::Array<float> update_vol, update_clr;
 		vislib::Array<float> vertSpheres, vertCylinders, quatCylinders, inParaCylinders, color1Cylinders, color2Cylinders;

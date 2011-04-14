@@ -87,9 +87,11 @@ namespace protein {
          *
          * @return True on success
          */
-        bool getData( core::Call& call);
+        bool getData(core::Call& call);
 
-        bool getExtent( core::Call& call);
+        bool getExtent(core::Call& call);
+
+		bool dataChanged(core::Call& call);
 
 		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
 

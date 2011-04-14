@@ -116,9 +116,7 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
  *
  *
 void megamol::protein::SolventDataGenerator::findDonors(MolecularDataCall *data) {
-	int nResidues = data->ResidueCount();
-
-	for( int i = 0; i < nResidues; i++ ) {
+	for( int i = 0; i < data->ResidueCount(; i++ ) {
 		MolecularDataCall::Residue *residue = data->Residues()[i];
 	}
 }
@@ -210,7 +208,6 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	const MolecularDataCall::AtomType *atomTypes = data->AtomTypes();
 	const unsigned int *atomTypeIndices = data->AtomTypeIndices();
 	const int *atomResidueIndices = data->AtomResidueIndices();
-	int nResidues = data->ResidueCount();
 
 	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
 
@@ -222,12 +219,20 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	int *reverseConnectionPtr = &reverseConnection[0];
 	memset(reverseConnectionPtr, -1, sizeof(int)*data->AtomCount());
 
-	//time_t t = clock();
+	time_t t = clock();
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
 #pragma omp parallel for
-	for( int rIdx = 0; rIdx < nResidues; rIdx++ ) {
+	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
+
+		// we're only interested in hydrogen bonds between polymer/protein molecule and surounding solvent
+		int idx = residue->MoleculeIndex();
+		const MolecularDataCall::Molecule& molecule = data->Molecules()[idx];
+		idx = molecule.ChainIndex();
+		const MolecularDataCall::Chain& chain = data->Chains()[idx];
+		if (chain.Type() == MolecularDataCall::Chain::SOLVENT)
+			continue;
 
 		// find possible acceptor atoms in the current residuum (for now just O, N, C(?)
 
@@ -261,13 +266,14 @@ Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei 
 						atomHydroBondsIndicesPtr[aIdx] = neighbIndex;
 						// avoid double checks - only one hydrogen bond per atom?!
 						reverseConnectionPtr[neighbIndex] = aIdx;
+						// TODO: maybe mark double time? or double with negative index?
 					}
 				}
 			}
 		}
 	}
 
-    //std::cout << "Hydrogen bonds computed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
+    std::cout << "Hydrogen bonds computed in " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << " seconds." << std::endl;
 
 }
 
@@ -383,7 +389,7 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 
 	*molDest = *molSource;
 
-	if (showMiddlePositions.Param<param::BoolParam>()->Value()) {
+	if (this->showMiddlePositions.Param<param::BoolParam>()->Value()) {
 		if (!middleAtomPos.Count()) {
 			calcSpatialProbabilities(molSource, molDest);
 
@@ -395,8 +401,17 @@ bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
 		molDest->SetAtomPositions(middleAtomPos.PeekElements());
 		molDest->SetAtomHydrogenBondDistance(hBondDistance.Param<param::FloatParam>()->Value());
 		molDest->SetAtomHydrogenBondIndices(middleAtomPosHBonds.PeekElements());
-
+		molDest->SetDataHash(molSource->DataHash()*666);
 	} else {
+
+		// reset all hbond data if this parameter changes ...
+		if (hBondDistance.IsDirty()) {
+			hBondDistance.ResetDirty();
+			for(int i = 0; i < HYDROGEN_BOND_IN_CORE; i++)
+				this->curHBondFrame[i] = -1;
+			molDest->SetDataHash(molSource->DataHash()*666); // hacky ?
+		}
+
 		// test: only compute hydrogen bounds once at startup ... (this is not suficcient for trajectories)
 		getHBonds(molDest, molSource);
 	}
