@@ -488,6 +488,7 @@ const unsigned int protein::MolecularDataCall::CallForGetData = 0;
  */
 const unsigned int protein::MolecularDataCall::CallForGetExtent = 1;
 
+
 /*
  * protein::MolecularDataCall::MolecularDataCall
  */

@@ -137,6 +137,7 @@ namespace protein {
              * @param name The molecule index of the residue.
              */
             inline void SetMoleculeIndex(int moleculeIndex) { this->moleculeIndex = moleculeIndex;}
+			inline int MoleculeIndex(void) const { return moleculeIndex; }
 
             /**
              * Set the bounding box of the residue.
@@ -532,7 +533,14 @@ namespace protein {
              *
              * @return The filter value.
              */
-            int Filter(void) const { return this->filter; };
+            inline int Filter(void) const { return this->filter; };
+
+            /**
+             * Get the chain index of the residue.
+             *
+             * @return The filter value.
+             */
+			inline int ChainIndex(void) const { return this->chainIndex; }
 
         private:
             /** the index of the first residue in the molecule */

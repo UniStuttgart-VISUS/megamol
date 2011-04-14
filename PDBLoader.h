@@ -97,6 +97,15 @@ namespace protein {
         bool getExtent( core::Call& call);
 
         /**
+         * Call callback to check whether data has been changed/needs update
+         *
+         * @param c The calling call
+         *
+         * @return whether data gas changed
+         */
+		bool dataChanged(core::Call& call) {return false;/*return residuesToChain.IsDirty();*/}
+
+        /**
          * Implementation of 'Release'.
          */
         virtual void release(void);
