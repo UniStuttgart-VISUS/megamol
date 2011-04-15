@@ -1154,6 +1154,13 @@ namespace protein {
          * @return The chains.
          */
         const Chain* Chains(void) const { return chains; }
+        
+        /**
+         * Get the filter information
+         * 
+         * @return The filter information
+         */
+        const int* Filter(void) const {return atomFilter;}
 
         /**
          * Set the atom types and positions.
@@ -1343,6 +1350,13 @@ namespace protein {
         void SetCalltime(float calltime) {
             this->calltime = calltime;
         }
+        
+        /**
+         * Set the filter information
+         * 
+         * @param atomFilter The filter information
+         */
+        void SetFilter(const int* atomFilter);
 
 		inline MolecularDataCall& operator=(const MolecularDataCall& s) {
 			this->SetFrameID( s.FrameID() );
@@ -1449,6 +1463,9 @@ namespace protein {
         
         /** The exact requested/stored calltime. */
         float calltime;
+        
+        /** Filter information for all atoms */
+        const int* atomFilter;
 
     };
 
