@@ -16,6 +16,13 @@
 #include "CallerSlot.h"
 #include "MolecularDataCall.h"
 
+//#if (defined(WITH_CUDA) && (WITH_CUDA))
+
+//#include "FilterCuda.cuh"
+#include <cudpp/cudpp.h>
+
+//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
+
 
 namespace megamol {
 namespace protein {
@@ -97,19 +104,84 @@ namespace protein {
         bool getExtent(core::Call& call);
         
         /**
-         * Update all parameter slots.
+         * Update all parameters.
          *
          * @param mol   Pointer to the data call.
          */
         void updateParams(const MolecularDataCall *mol);
 
     private:
+        
+        /**
+         * Helper class to unlock frame data.
+         */
+        class Unlocker : public MolecularDataCall::Unlocker {
+        public:
+
+            /**
+             * Ctor.
+             *
+             * @param mol The molecular data call whos 'Unlock'-method is to be 
+             *            called.
+             */
+            Unlocker(MolecularDataCall& mol) : MolecularDataCall::Unlocker(),
+                mol(&mol){
+                // intentionally empty
+            }
+
+            /** Dtor. */
+            virtual ~Unlocker(void) {
+                this->Unlock();
+            }
+
+            /** Unlocks the data */
+            virtual void Unlock(void) {
+                this->mol->Unlock();            
+            }
+            
+        private:
+        
+            MolecularDataCall *mol;
+
+        };
+        
+        /**
+         * Initialize visibility information for all atoms.
+         * 
+         * @param visibility The visibility flag
+         */
+        void initVisibility(bool visibility);
+        
+        /**
+         * Flag all solvent atoms of a given data source.
+         * 
+         * @param mol The molecular data call
+         */
+        void flagSolventAtoms(const MolecularDataCall *mol);
+        
+        /**
+         * Filters solvent atoms according to the number of non-solvent atoms
+         * within their neighbourhood defined by a given range.
+         * 
+         * @param mol     The molecular data call
+         * @param atomPos The current atom positions
+         * @param rad     The range
+         */
+        void filterSolventAtoms(MolecularDataCall *mol, float *atomPos, float rad);
+        
+//#if (defined(WITH_CUDA) && (WITH_CUDA))
+        
+        /** CUDA **/ 
+
+        void initCuda();
+    
+//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
         /**********************************************************************
          * variables
          **********************************************************************/
 
-        /** caller slot */
+        /** Caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
         
         /** The data callee slot */
@@ -117,6 +189,29 @@ namespace protein {
         
         /** The calltime of the last call */
         float calltimeOld;
+        
+        /** Number of atoms */
+        unsigned int atmCnt;
+        
+        /** Array with atom visibility information */
+        vislib::Array<int> atomVisibility; // note: 1 = visible, 0 = invisible
+        
+        /** Flags all solvent atoms */
+        vislib::Array<bool> isSolventAtom;
+        
+//#if (defined(WITH_CUDA) && (WITH_CUDA))
+        
+        /** CUDA **/ 
+        
+        FilterParams params;
+        
+        CUDPPHandle sortHandle;
+        CUDPPConfiguration sortConfig;
+        
+        vislib::Array<unsigned int> gridSize;
+        vislib::Array<unsigned int> worldSize;
+
+//#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
     };
 

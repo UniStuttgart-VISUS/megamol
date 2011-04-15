@@ -605,6 +605,13 @@ void MolecularDataCall::SetMoleculeSecondaryStructure( unsigned int molIdx,
 }
 
 /*
+ * Set filter information
+ */
+void MolecularDataCall::SetFilter(const int* atomFilter) {
+    this->atomFilter = atomFilter;
+}
+
+/*
  * Get the secondary structure.
  */
 const MolecularDataCall::SecStructure* MolecularDataCall::SecondaryStructures() const {
