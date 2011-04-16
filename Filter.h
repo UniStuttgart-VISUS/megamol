@@ -19,7 +19,7 @@
 //#if (defined(WITH_CUDA) && (WITH_CUDA))
 
 //#include "FilterCuda.cuh"
-#include <cudpp/cudpp.h>
+//#include <cudpp/cudpp.h>
 
 //#endif // (defined(WITH_CUDA) && (WITH_CUDA))
 
@@ -203,10 +203,10 @@ namespace protein {
         
         /** CUDA **/ 
         
-        FilterParams params;
+        //FilterParams params;
         
-        CUDPPHandle sortHandle;
-        CUDPPConfiguration sortConfig;
+        //CUDPPHandle sortHandle;
+        //CUDPPConfiguration sortConfig;
         
         vislib::Array<unsigned int> gridSize;
         vislib::Array<unsigned int> worldSize;
