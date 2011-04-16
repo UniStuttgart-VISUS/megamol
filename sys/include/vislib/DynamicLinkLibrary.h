@@ -16,7 +16,6 @@
 
 #ifndef _WIN32
 #include "vislib/memutils.h"
-#include "vislib/SingleLinkedList.h"
 #endif /* _WIN32 */
 #include "vislib/String.h"
 #include "vislib/SystemException.h"
@@ -171,41 +170,6 @@ namespace sys {
          * @throws IllegalParamException If (this != &rhs).
          */
         DynamicLinkLibrary& operator =(const DynamicLinkLibrary& rhs);
-
-//#ifndef _WIN32
-//
-//        /**
-//         * Manually searches for the module 'modName' and dependent modules to
-//         * implemente an alternative search pattern, based on the posix std.
-//         *
-//         * @param modName The name of the module to load
-//         * @param searchPath An additional search path (usually the path of
-//         *                   original so to load)
-//         * @param secMods The handles of the secondary modules loaded
-//         *
-//         * @return The module handle successfully loaded
-//         *         or NULL in case of any error
-//         */
-//        void * loadCrowbar(const char *modName, const char *searchPath,
-//            vislib::SingleLinkedList<void *>& secMods);
-//
-//        /**
-//         * Manually searches for the module 'modName' and dependent modules to
-//         * implemente an alternative search pattern, based on the posix std.
-//         *
-//         * @param modName The name of the module to load
-//         * @param searchPath An additional search path (usually the path of
-//         *                   original so to load)
-//         * @param secMods The handles of the secondary modules loaded
-//         *
-//         * @return The module handle successfully loaded
-//         *         or NULL in case of any error
-//         */
-//        void * searchAndLoadCrowbar(const char *modName,
-//            const char *searchPath,
-//            vislib::SingleLinkedList<void *>& secMods);
-//
-//#endif /* !_WIN32 */
 
         /** The module handle. */
 #ifdef _WIN32
