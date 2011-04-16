@@ -75,7 +75,7 @@ bool Filter::create(void) {
  * Filter::release
  */
 void Filter::release(void) {
-    cudppDestroyPlan(this->sortHandle);
+    //cudppDestroyPlan(this->sortHandle);
     //cudppDestroyPlan(this->sortConfig);
 }
 
