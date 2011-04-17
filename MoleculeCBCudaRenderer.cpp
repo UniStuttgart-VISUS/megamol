@@ -28,13 +28,14 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "glh/glh_genext.h"
 #include "glh/glh_extensions.h"
+#include "vislib/Matrix.h"
+#include "vislib/ShallowVector.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <iostream>
 #include <ctime>
 #include <fstream>
 #include <math.h>
-#include "vislib/Matrix.h"
 
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
@@ -56,10 +57,16 @@ using namespace megamol::protein;
  */
 MoleculeCBCudaRenderer::MoleculeCBCudaRenderer( void ) : Renderer3DModule (),
 	molDataCallerSlot ( "getData", "Connects the protein SES rendering with PDB data source" ),
+    probeRadiusParam( "probeRadius", "Probe Radius"),
 	probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false)
 {
 	this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable ( &this->molDataCallerSlot );
+
+    // setup probe radius parameter
+    this->probeRadiusParam.SetParameter(new param::FloatParam( this->probeRadius, 0.0f, 2.0f));
+    this->MakeSlotAvailable( &this->probeRadiusParam);
+
 }
 
 
@@ -195,7 +202,10 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	// execute the call
 	if ( !(*mol)(MolecularDataCall::CallForGetData) )
 		return false;
-	
+
+    // update parameters
+    this->UpdateParameters( mol);
+
 	// try to initialize CUDA
 	if( !this->cudaInitalized ) {
 		cudaInitalized = this->initCuda( mol, 16);
@@ -339,27 +349,183 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 		}
 	}
 	glEnd();
-	// draw atoms
-	//glEnable( GL_BLEND);
+
+    // ========== contour buildup ==========
+
+    glBegin( GL_POINTS);
+    vislib::Array<vislib::Pair<vislib::math::Vector<float, 3>, vislib::math::Vector<float, 3>>> arcs;
+    arcs.SetCapacityIncrement( 100);
+    // go over all atoms
+    for( unsigned int iCnt = 0; iCnt < mol->AtomCount(); ++iCnt ) {
+        // pi = center of atom i
+        vislib::math::Vector<float, 3> pi( &mol->AtomPositions()[3*iCnt]);
+        float r = mol->AtomTypes()[mol->AtomTypeIndices()[iCnt]].Radius();
+        float R = r + this->probeRadius;
+        // go over all neighbors j
+        for( unsigned int jCnt = 0; jCnt < m_hNeighborCount[iCnt]; ++jCnt ) {
+            // the atom index of j
+            unsigned int j = m_hParticleIndex[m_hNeighbors[iCnt * atomNeighborCount + jCnt]];
+            // vj = the small circle center
+            vislib::math::Vector<float, 3> vj( &m_hSmallCircles[iCnt * 4 * atomNeighborCount + jCnt * 4]);
+            // pj = center of atom j
+            vislib::math::Vector<float, 3> pj( &mol->AtomPositions()[j * 3]);
+            // clear the arc array
+            arcs.Clear();
+            // check each neighbor j with all other neighbors k
+            //for( unsigned int kCnt = jCnt + 1; kCnt < m_hNeighborCount[iCnt]; ++kCnt ) {
+            for( unsigned int kCnt = 0; kCnt < m_hNeighborCount[iCnt]; ++kCnt ) {
+                // don't compare with self
+                if( jCnt == kCnt ) continue;    
+                // the atom index of k
+                unsigned int k = m_hParticleIndex[m_hNeighbors[iCnt * atomNeighborCount + kCnt]];
+                // vk = the small circle center
+                vislib::math::Vector<float, 3> vk( &m_hSmallCircles[iCnt * 4 * atomNeighborCount + kCnt * 4]);
+                // pk = center of atom k
+                vislib::math::Vector<float, 3> pk( &mol->AtomPositions()[k * 3]);
+                // vj * vk
+                float vjvk = vj.Dot( vk);
+                // denominator
+                float denom = vj.Dot( vj) * vk.Dot( vk) - vjvk * vjvk;
+                vislib::math::Vector<float, 3> h = vj * ( vj.Dot( vj - vk) * vk.Dot( vk) ) / denom +
+                    vk * ( ( vk - vj).Dot( vk) * vj.Dot( vj) ) / denom;
+                // do nothing if h is outside of the extended sphere of atom i
+                if( h.Length() > R ) 
+                    continue;
+                // DEBUG: draw purple sphere for h
+                glColor3f( 1, 0, 1);
+                glVertex4f( h.X() + pi.X(), 
+                    h.Y() + pi.Y(), 
+                    h.Z() + pi.Z(), 0.1f);
+                // compute the root
+                float root = sqrtf( ( R*R - h.Dot( h)) / ( ( vj.Cross( vk)).Dot( vj.Cross( vk))));
+                // compute the two intersection points
+                vislib::math::Vector<float, 3> x1 = h + vj.Cross( vk) * root;
+                vislib::math::Vector<float, 3> x2 = h - vj.Cross( vk) * root;
+                // swap x1 & x2 if vj points in the opposit direction of pj-pi
+                if( vj.Dot( pj - pi) < 0.0f ) {
+                    vislib::math::Vector<float, 3> tmpVec = x1;
+                    x1 = x2;
+                    x2 = tmpVec;
+                }
+                if( arcs.Count() == 0 ) {
+                    arcs.SetCount( 1);
+                    arcs[0].SetFirst( x1);
+                    arcs[0].SetSecond( x2);
+                } else {
+                    for( int aCnt = 0; aCnt < arcs.Count(); aCnt++ ) {
+                        float d1 = ( pk - pi).Dot( arcs[aCnt].First() - vk);
+                        float d2 = ( pk - pi).Dot( arcs[aCnt].Second() - vk);
+                        float d3 = ( vj.Dot( pj - pi)) * ( arcs[aCnt].First().Cross( x1)).Dot( arcs[aCnt].Second());
+                        if( d1 > 0 ) {
+                            if( d2 > 0 ) {
+                                if( d3 > 0 ) {
+                                    // der kreisbogen wird geloescht
+                                    arcs.RemoveAt( aCnt);
+                                    aCnt--;
+                                } else {
+                                    // start- & endvektor werden geändert: s = x1, e = x2
+                                    arcs[aCnt].SetFirst( x1);
+                                    arcs[aCnt].SetSecond( x2);
+                                }
+                            } else {
+                                if( d3 > 0 ) {
+                                    // startvektor wird geändert: s = x1
+                                    arcs[aCnt].SetFirst( x1);
+                                } else {
+                                    // startvektor wird geändert: s = x2
+                                    arcs[aCnt].SetFirst( x2);
+                                }
+                            }
+                        } else {
+                            if( d2 > 0 ) {
+                                if( d3 > 0 ) {
+                                    // endvektor wird geändert: e = x1
+                                    arcs[aCnt].SetSecond( x1);
+                                } else {
+                                    // endvektor wird geändert: e = x2
+                                    arcs[aCnt].SetSecond( x2);
+                                }
+                            } else {
+                                if( d3 > 0 ) {
+                                    // kreisbogen wird aufgeteilt
+                                    arcs.SetCount( arcs.Count() + 1);
+                                    arcs.Last().SetFirst( x1);
+                                    arcs.Last().SetSecond( x2);
+                                } else {
+                                    // keine auswirkung
+                                }
+                            }
+                        }
+                    }
+                }
+                /*
+                // DEBUG: draw x1 and x2 as orange and green spheres
+                glColor3f( 0, 1, 0);
+                glVertex4f( x1.X() + pi.X(), 
+                    x1.Y() + pi.Y(), 
+                    x1.Z() + pi.Z(), 0.2f);
+                glColor3f( 1, 0.5f, 0);
+                glVertex4f( x2.X() + pi.X(), 
+                    x2.Y() + pi.Y(), 
+                    x2.Z() + pi.Z(), 0.2f);
+                */
+            }
+            // draw all arc start & end points
+            for( unsigned int aCnt = 0; aCnt < arcs.Count(); aCnt++ ) {
+                glColor3f( 0, 1, 0);
+                glVertex4f( arcs[aCnt].First().X() + pi.X(), 
+                    arcs[aCnt].First().Y() + pi.Y(), 
+                    arcs[aCnt].First().Z() + pi.Z(), 0.2f);
+                glColor3f( 1, 0.5f, 0);
+                glVertex4f( arcs[aCnt].Second().X() + pi.X(), 
+                    arcs[aCnt].Second().Y() + pi.Y(), 
+                    arcs[aCnt].Second().Z() + pi.Z(), 0.2f);
+            }
+        }
+    }
+    glEnd(); // GL_POINTS
+    
+	// START draw atoms ...
+    //glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   // standard transparency
+    //glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_DST_ALPHA);   // pretty cool & useful...
+    glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
+	glEnable( GL_BLEND);
+    glDisable( GL_CULL_FACE);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
 	glBegin( GL_POINTS);
-	glColor3f( 1.0f, 0.0f, 0.0f);
 	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+        glColor4f( 1.0, 0.0, 0.0, 0.5);
 		glVertex4f(
 			mol->AtomPositions()[cnt1*3+0],
 			mol->AtomPositions()[cnt1*3+1],
 			mol->AtomPositions()[cnt1*3+2],
 			//mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius());
+            //mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() * 0.1f);
 			mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() + this->probeRadius);
 	}
 	glEnd();
-	glDisable( GL_BLEND);
+    // ... END draw atoms
+
 	this->sphereShader.Disable();
+	glDisable( GL_BLEND);
 
-
-	glPopMatrix();
 
 	return true;
 }
+
+
+/*
+ * update parameters
+ */
+void MoleculeCBCudaRenderer::UpdateParameters( const MolecularDataCall *mol) {
+    // color table param
+    if( this->probeRadiusParam.IsDirty() ) {
+        this->probeRadius = this->probeRadiusParam.Param<param::FloatParam>()->Value();
+        this->probeRadiusParam.ResetDirty();
+    }
+}
+
+
 
 
 /*

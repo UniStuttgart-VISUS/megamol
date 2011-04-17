@@ -475,7 +475,7 @@ void main(void) {
 
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 0.2);
+    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);
     
     // calculate depth
 #ifdef DEPTH

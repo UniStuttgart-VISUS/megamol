@@ -149,6 +149,13 @@ namespace protein {
 		 */
 		virtual bool Render( megamol::core::Call& call);
 
+        /**
+         * Update all parameter slots.
+         *
+         * @param mol   Pointer to the data call.
+         */
+        void UpdateParameters( const MolecularDataCall *mol);
+
 		/**
 		 * Deinitialises this renderer. This is only called if there was a 
 		 * successful call to "initialise" before.
@@ -162,6 +169,9 @@ namespace protein {
 		// caller slot
 		megamol::core::CallerSlot molDataCallerSlot;
 		
+        // parameter slots
+        megamol::core::param::ParamSlot probeRadiusParam;
+
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 
