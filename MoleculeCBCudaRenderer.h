@@ -171,6 +171,7 @@ namespace protein {
 		
         // parameter slots
         megamol::core::param::ParamSlot probeRadiusParam;
+        megamol::core::param::ParamSlot opacityParam;
 
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -225,6 +226,10 @@ namespace protein {
 		uint   m_colorVBO;          // vertex buffer object for colors
 		float *m_cudaPosVBO;        // these are the CUDA deviceMem Pos
 		float *m_cudaColorVBO;      // these are the CUDA deviceMem Color
+
+        
+        vislib::Array<vislib::Array<vislib::math::Vector<float, 3>>> smallCircles;
+        vislib::Array<vislib::Array<unsigned int>> neighbors;
 
 	};
 
