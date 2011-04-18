@@ -47,6 +47,8 @@ using namespace megamol::core;
 using namespace megamol::protein;
 
 
+#define USE_VERTEX_SKIP_SHADER
+
 /*
  * protein::SolventVolumeRenderer::SolventVolumeRenderer (CTOR)
  */
@@ -57,7 +59,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
 		coloringModeParam ( "coloringMode", "Coloring Mode" ),
 		volIsoValue1Param( "volIsoValue1", "First isovalue for isosurface rendering"),
-		volIsoValue2Param( "volIsoValue2", "Second isovalue for isosurface rendering"),
+		//volIsoValue2Param( "volIsoValue2", "Second isovalue for isosurface rendering"),
 		volFilterRadiusParam( "volFilterRadius", "Filter Radius for volume generation"),
 		volDensityScaleParam( "volDensityScale", "Density scale factor for volume generation"),
 		volIsoOpacityParam( "volIsoOpacity", "Opacity of isosurface"),
@@ -78,7 +80,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 		volFilterRadius( 1.75f), volDensityScale( 1.0f),
 		width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
 		volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
-		renderIsometric( true), meanDensityValue( 0.0f), isoValue1( 0.5f), isoValue2(-0.5f),
+		renderIsometric( true), meanDensityValue( 0.0f), isoValue1( 0.5f), /*isoValue2(-0.5f),*/
 		volIsoOpacity( 0.4f), volClipPlaneFlag( false), volClipPlaneOpacity( 0.4f),
 		forceUpdateVolumeTexture( true)
 {
@@ -122,7 +124,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
 	// --- set up parameters for isovalues ---
 	this->volIsoValue1Param.SetParameter( new param::FloatParam( this->isoValue1) );
-	this->volIsoValue2Param.SetParameter( new param::FloatParam( this->isoValue2) );
+	//this->volIsoValue2Param.SetParameter( new param::FloatParam( this->isoValue2) );
 	// --- set up parameter for volume filter radius ---
 	this->volFilterRadiusParam.SetParameter( new param::FloatParam( this->volFilterRadius, 0.0f ) );
 	// --- set up parameter for volume density scale ---
@@ -187,7 +189,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
 	// make all slots available
 	this->MakeSlotAvailable( &this->volIsoValue1Param );
-	this->MakeSlotAvailable( &this->volIsoValue2Param );
+	//this->MakeSlotAvailable( &this->volIsoValue2Param );
 	this->MakeSlotAvailable( &this->volFilterRadiusParam );
 	this->MakeSlotAvailable( &this->volDensityScaleParam );
 	this->MakeSlotAvailable( &this->volIsoOpacityParam );
@@ -297,7 +299,14 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 	// Load volume texture generation shader
 	if( !loadShader( this->updateVolumeShaderMoleculeVolume, "volume::std::updateVolumeVertex", "volume::std::updateSolventVolumeFragmentDensity" ) )
 		return false;
-	if( !loadShader( this->updateVolumeShaderSolventColor, "volume::std::updateVolumeVertex", "volume::std::updateSolventVolumeFragmentColor" ) )
+	if( !loadShader( this->updateVolumeShaderSolventColor,
+#ifdef USE_VERTEX_SKIP_SHADER
+		// this version of the volume vertex shader saves a lot of fragment processing power in UpdateVolumeTexture()
+		"volume::std::updateVolumeSkipDensityVertex",
+#else
+		"volume::std::updateVolumeVertex",
+#endif
+		"volume::std::updateSolventVolumeFragmentColor" ) )
 		return false;
 
 	// Load ray start shader
@@ -1265,10 +1274,10 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
 		this->isoValue1 = this->volIsoValue1Param.Param<param::FloatParam>()->Value();
 		this->volIsoValue1Param.ResetDirty();
 	}
-	if( this->volIsoValue2Param.IsDirty() ) {
+/*	if( this->volIsoValue2Param.IsDirty() ) {
 		this->isoValue2 = this->volIsoValue2Param.Param<param::FloatParam>()->Value();
 		this->volIsoValue2Param.ResetDirty();
-	}
+	}*/
 	if( this->volFilterRadiusParam.IsDirty() ) {
 		this->volFilterRadius = this->volFilterRadiusParam.Param<param::FloatParam>()->Value();
 		this->volFilterRadiusParam.ResetDirty();
@@ -1801,20 +1810,20 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 				// test to visualize hydrogen bounds from the polymer to the solvent and map color to the volume surface
 				if (coloringByHydroBonds && hBondInterPtr[atomIdx] != -1) {
 					int sortedVolumeIdx = atomCount - (atomCntSol+1);
-					int connection = /*mol->AtomHydrogenBondIndices()*/hBondInterPtr[atomIdx];
+					int connection = /*mol->AtomHydrogenBondIndices()*/this->hBondInterPtr[atomIdx];
 					float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
 					float *solventAtomColor = &updatVolumeTextureColors[sortedVolumeIdx*3];
 					float *interPos = &this->atomPosInterPtr[atomIdx*3];
 					float *interPos2 = &this->atomPosInterPtr[connection*3];
 					// hydrogen bonds in the middle between the two connected atoms ...
-					atomPos[0] = ((interPos[0]+interPos[0])*0.5f + this->translation.X()) * this->scale;
-					atomPos[1] = ((interPos[1]+interPos[1])*0.5f + this->translation.Y()) * this->scale;
-					atomPos[2] = ((interPos[2]+interPos[2])*0.5f + this->translation.Z()) * this->scale;
-					atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale;
+					atomPos[0] = ((interPos[0]+interPos2[0])*0.5f + this->translation.X()) * this->scale;
+					atomPos[1] = ((interPos[1]+interPos2[1])*0.5f + this->translation.Y()) * this->scale;
+					atomPos[2] = ((interPos[2]+interPos2[2])*0.5f + this->translation.Z()) * this->scale;
 					//atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
-					//atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
-					//				+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale /** 0.5*/;
-					solventAtomColor[0] = 1;
+					//atomPos[3] = mol->AtomHydrogenBondDistance() * this->scale;
+					atomPos[3] = (atomTypes[atomTypeIndices[atomIdx]].Radius()
+									+atomTypes[atomTypeIndices[connection]].Radius()) * this->scale * 0.5;
+					solventAtomColor[0] = 0;
 					solventAtomColor[1] = 1;
 					solventAtomColor[2] = 0;
 					atomCntSol++;
@@ -1854,6 +1863,10 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		glDisableClientState(GL_VERTEX_ARRAY);
 	this->updateVolumeShaderMoleculeVolume.Disable();
 
+#ifdef USE_VERTEX_SKIP_SHADER
+	glActiveTexture( GL_TEXTURE0);
+	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
+#endif
 
 	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntSol );
 	this->updateVolumeShaderSolventColor.Enable();
@@ -1866,6 +1879,13 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 			1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize), 1.0f/ float(this->volumeSize));
 		glUniform3fv( this->updateVolumeShaderSolventColor.ParameterLocation( "translate"), 1, orig.PeekComponents() );
 		glUniform1f( this->updateVolumeShaderSolventColor.ParameterLocation( "volSize"), float( this->volumeSize));
+#ifdef USE_VERTEX_SKIP_SHADER
+		//vislib::math::Cuboid<float> bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+		//vislib::math::Vector<float, 3> invBBoxDimension(1/bbox.Width(), 1/bbox.Height(), 1/bbox.Depth());
+		//glUniform3fvARB(this->updateVolumeShaderSolventColor.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
+		//glUniform3fvARB(this->updateVolumeShaderSolventColor.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
+		glUniform1i( this->updateVolumeShaderSolventColor.ParameterLocation( "volumeSampler"), 0);
+#endif
 		CHECK_FOR_OGL_ERROR();
 
 		glEnableClientState(GL_VERTEX_ARRAY);

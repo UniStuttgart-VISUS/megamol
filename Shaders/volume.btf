@@ -49,7 +49,59 @@ void main(void) {
 -->
             </snippet>
         </shader>
-        
+
+        <shader name="updateVolumeSkipDensityVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// this version of 'updateVolumeVertex' make a lookup into an existing density-volume-texture
+// and skips all vertices where the density is zero ... hopefully this will speedup polymer/solvent rendering
+
+uniform float filterRadius;
+uniform vec3 scaleVol;
+uniform vec3 scaleVolInv;
+uniform float sliceDepth;
+uniform vec3 translate;
+uniform float volSize = 128.0;
+
+varying float scale;
+varying vec3 splatCenter;
+varying vec3 color;
+
+// density volume lookup for a simple neighbour test ...
+uniform sampler3D volumeSampler;
+//uniform vec3 minBBox;
+//uniform vec3 invBBoxExtend;
+
+void main(void) {
+    color = gl_Color.rgb;
+
+    splatCenter = gl_Vertex.xyz - translate;
+    vec2 devCoord = 2.0 * splatCenter.xy * scaleVol.xy - 1.0;
+    //vec2 devCoord = splatCenter.xy * scaleVol.xy;
+
+    //scale = gl_Vertex.w*30.0;
+    scale = gl_Vertex.w;
+
+    float d = length( vec3( splatCenter.xy, sliceDepth*scaleVolInv.z) - splatCenter);
+    if( d > filterRadius*scale) {
+        gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+    } else {
+	//	vec3 volPos = (gl_Vertex.xyz-minBBox) * invBBoxExtend;
+		vec3 volPos = (gl_Vertex.xyz - translate) * scaleVol;
+		if (texture3D(volumeSampler, volPos).w /*< 0.000001*/ == 0)
+			//gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+			gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
+		else
+			gl_Position = vec4( devCoord.xy, 0.0, 1.0);
+    }
+
+    gl_PointSize = 2.0 * filterRadius * max( scaleVol.x, scaleVol.y) * volSize * scale;
+}
+-->
+            </snippet>
+        </shader>
+
         <shader name="updateVolumeFragment">
             <snippet type="version">120</snippet>
             <snippet type="string">

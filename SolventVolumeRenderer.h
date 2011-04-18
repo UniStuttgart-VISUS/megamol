@@ -259,7 +259,7 @@ namespace protein {
 		megamol::core::param::ParamSlot coloringModeParam;
 		// parameters for the volume rendering
 		megamol::core::param::ParamSlot volIsoValue1Param;
-		megamol::core::param::ParamSlot volIsoValue2Param;
+		//megamol::core::param::ParamSlot volIsoValue2Param;
 		megamol::core::param::ParamSlot volFilterRadiusParam;
 		megamol::core::param::ParamSlot volDensityScaleParam;
 		megamol::core::param::ParamSlot volIsoOpacityParam;
@@ -364,7 +364,7 @@ namespace protein {
         // the first iso value
         float isoValue1;
         // the second iso value
-        float isoValue2;
+        //float isoValue2;
 		// the opacity of the isosurface
 		float volIsoOpacity;
 
