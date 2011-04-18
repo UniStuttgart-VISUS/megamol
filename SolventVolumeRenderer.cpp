@@ -1828,6 +1828,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	orig = ( orig + this->translation) * this->scale;
 	vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
 
+	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d polymer atoms", atomCntMol );
 	this->updateVolumeShaderMoleculeVolume.Enable();
 		// set shader params
 		glUniform1f( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "filterRadius"), this->volFilterRadius);
@@ -1854,6 +1855,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	this->updateVolumeShaderMoleculeVolume.Disable();
 
 
+	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntSol );
 	this->updateVolumeShaderSolventColor.Enable();
 		// set shader params
 		glUniform1f( this->updateVolumeShaderSolventColor.ParameterLocation( "filterRadius"), this->volFilterRadius /*1.7*/);
