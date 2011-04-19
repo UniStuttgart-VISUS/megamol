@@ -198,7 +198,7 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
 				// get position of potential neighbor
 	            pos2 = FETCH( atomPos, j);
                 // check distance
-				relPos = make_float3( pos2) - make_float3( pos);
+				relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
 				dist = length( relPos);
 				neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
 				if( dist < neighborDist ) {
@@ -207,10 +207,10 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
 					//neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = gridParticleIndex[j];
                     neighbors[atomIndex*params.maxNumNeighbors+neighborIndex+count] = j;
 					// compute small circle / intersection plane
-					r = (pos.w + params.probeRadius)*(pos.w + params.probeRadius) 
-						+ dot( relPos, relPos) 
-						- (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius);
-					r = r / (2.0 * dot( relPos, relPos));
+					r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
+						+ ( dist * dist) //dot( relPos, relPos) 
+						- ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
+					r = r / (2.0 * dist * dist); // dot( relPos, relPos));
 					/*
 					r = (pos.w + params.probeRadius)*(pos.w + params.probeRadius)
 						- (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius);
