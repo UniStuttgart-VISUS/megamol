@@ -67,7 +67,7 @@ ReleaseDir := Release
 
 
 # Common compiler flags
-CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic
+CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic -fopenmp
 
 CPPVersionInfo := $(shell $(CPP) --version | tr "[:upper:]" "[:lower:]")
 ifneq (,$(findstring gcc,$(CPPVersionInfo)))
@@ -88,7 +88,7 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -L/usr/X11R6/lib
+LinkerFlags := -L/usr/X11R6/lib -lgomp
 
 
 # Additional linker flags for special configurations
