@@ -172,6 +172,7 @@ namespace protein {
         // parameter slots
         megamol::core::param::ParamSlot probeRadiusParam;
         megamol::core::param::ParamSlot opacityParam;
+        megamol::core::param::ParamSlot stepsParam;
 
 		// camera information
 		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -229,6 +230,7 @@ namespace protein {
 
         
         vislib::Array<vislib::Array<vislib::math::Vector<float, 3>>> smallCircles;
+        vislib::Array<vislib::Array<float>> smallCircleRadii;
         vislib::Array<vislib::Array<unsigned int>> neighbors;
 
 	};
