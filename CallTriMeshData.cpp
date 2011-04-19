@@ -50,6 +50,17 @@ CallTriMeshData::Material::~Material(void) {
 
 
 /*
+ * CallTriMeshData::Material::Dye
+ */
+void CallTriMeshData::Material::Dye(float r, float g, float b) {
+    this->Ka[0] *= r; this->Ka[1] *= g; this->Ka[2] *= b;
+    this->Kd[0] *= r; this->Kd[1] *= g; this->Kd[2] *= b;
+    this->Ks[0] *= r; this->Ks[1] *= g; this->Ks[2] *= b;
+    this->Ke[0] *= r; this->Ke[1] *= b; this->Ke[2] *= b;
+}
+
+
+/*
  * CallTriMeshData::Material::GetMapID
  */
 unsigned int CallTriMeshData::Material::GetMapID(void) const {
@@ -68,6 +79,33 @@ unsigned int CallTriMeshData::Material::GetBumpMapID(void) const {
         this->bumpMapID = this->loadTexture(this->bumpMapFileName);
     }
     return this->bumpMapID;
+}
+
+
+/*
+ * CallTriMeshData::Material::MakeDefault
+ */
+void CallTriMeshData::Material::MakeDefault(void) {
+    this->Ns = 0.0f;
+    this->Ni = 0.0f;
+    this->d = 0.0f;
+    this->Tr = 0.0f;
+    this->illum = ILLUM_DIFF_SPEC;
+    this->mapFileName.Clear();
+    this->bumpMapFileName.Clear();
+    if (this->mapID != 0) {
+        ::glDeleteTextures(1, &this->mapID);
+        this->mapID = 0;
+    }
+    if (this->bumpMapID != 0) {
+        ::glDeleteTextures(1, &this->bumpMapID);
+        this->bumpMapID = 0;
+    }
+    this->Tf[0] = this->Tf[1] = this->Tf[2] = 0.0f;
+    this->Ka[0] = this->Ka[1] = this->Ka[2] = 0.2f;
+    this->Kd[0] = this->Kd[1] = this->Kd[2] = 0.8f;
+    this->Ks[0] = this->Ks[1] = this->Ks[2] = 0.0f;
+    this->Ke[0] = this->Ke[1] = this->Ke[2] = 0.0f;
 }
 
 

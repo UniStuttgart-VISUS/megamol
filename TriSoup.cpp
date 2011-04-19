@@ -21,6 +21,7 @@
 #include "CallBinaryVolumeData.h"
 #include "volumetrics/VoluMetricJob.h"
 #include "OSCBFix.h"
+#include "CoordSysMarker.h"
 
 
 /*
@@ -64,7 +65,7 @@ TRISOUP_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 TRISOUP_API int mmplgModuleCount(void) {
-    return 6;
+    return 7;
 }
 
 
@@ -79,6 +80,7 @@ TRISOUP_API void* mmplgModuleDescription(int idx) {
         case 3: return new megamol::core::ModuleAutoDescription<megamol::trisoup::BlockVolumeMesh>();
         case 4: return new megamol::core::ModuleAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
         case 5: return new megamol::core::ModuleAutoDescription<megamol::quartz::OSCBFix>();
+        case 6: return new megamol::core::ModuleAutoDescription<megamol::trisoup::CoordSysMarker>();
     }
     return NULL;
 }

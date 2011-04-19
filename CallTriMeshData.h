@@ -48,6 +48,16 @@ namespace trisoup {
             ~Material(void);
 
             /**
+             * Dyes the current color by multiplying 'r', 'g', and 'b' to all
+             * colour values
+             *
+             * @param r The red colour component
+             * @param g The green colour component
+             * @param b The blue colour component
+             */
+            void Dye(float r, float g, float b);
+
+            /**
              * Gets specular component of the Phong shading model ranges between 0 and 128
              *
              * @return specular component
@@ -160,14 +170,19 @@ namespace trisoup {
              *
              * @return OpenGL texture object ID for colour texture
              */
-            unsigned int  GetMapID(void) const;
+            unsigned int GetMapID(void) const;
 
             /**
              * Gets OpenGL texture object ID for bump/normal texture
              *
              * @return OpenGL texture object ID for bump/normal texture
              */
-            unsigned int  GetBumpMapID(void) const;
+            unsigned int GetBumpMapID(void) const;
+
+            /**
+             * Resets this colour material to default
+             */
+            void MakeDefault(void);
 
             /**
              * Sets specular component of the Phong shading model ranges between 0 and 128
@@ -219,16 +234,16 @@ namespace trisoup {
             }
 
             /**
-             * Sets 
+             * Sets illumination model
              *
-             * @param illum 
+             * @param illum illumination model
              */
             inline void SetIllum(IlluminationModel illum) {
                 this->illum = illum;
             }
 
             /**
-             * Sets 
+             * Sets ambient colour
              *
              * @param Ka0 First component of 
              * @param Ka1 Second component of 
@@ -241,7 +256,7 @@ namespace trisoup {
             }
 
             /**
-             * Sets 
+             * Sets diffuse colour
              *
              * @param Kd0 First component of 
              * @param Kd1 Second component of 
@@ -254,7 +269,7 @@ namespace trisoup {
             }
 
             /**
-             * Sets 
+             * Sets specular colour
              *
              * @param Ks0 First component of 
              * @param Ks1 Second component of 
@@ -267,7 +282,7 @@ namespace trisoup {
             }
 
             /**
-             * Sets 
+             * Sets emissive colour
              *
              * @param Ke0 First component of 
              * @param Ke1 Second component of 

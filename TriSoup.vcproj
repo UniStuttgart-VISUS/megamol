@@ -369,6 +369,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CoordSysMarker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dllmain.cpp"
 				>
 				<FileConfiguration
@@ -488,6 +492,10 @@
 			</File>
 			<File
 				RelativePath=".\CallTriMeshData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CoordSysMarker.h"
 				>
 			</File>
 			<File
