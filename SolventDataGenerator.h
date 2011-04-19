@@ -132,6 +132,7 @@ namespace protein {
 
 		/** temporary variable to store the neighbour indices for the hydrogen-bound search ...*/
 		vislib::Array<unsigned int> *neighbourIndices;
+		int maxOMPThreads;
 
 		/** array to check atoms already connected ... */
 		vislib::Array<int> reverseConnection;

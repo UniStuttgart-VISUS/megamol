@@ -61,7 +61,8 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	for(int i = 0; i < HYDROGEN_BOND_IN_CORE; i++)
 		curHBondFrame[i] = -1;
 
-	this->neighbourIndices = new vislib::Array<unsigned int>[omp_get_max_threads()];
+	this->maxOMPThreads = omp_get_max_threads();
+	this->neighbourIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
 }
 
 megamol::protein::SolventDataGenerator::~SolventDataGenerator() {
@@ -75,8 +76,8 @@ bool megamol::protein::SolventDataGenerator::create(void) {
 /**
  * -> preprocessing step
  *
- *- Aufenthaltswahrscheinlichkeit/-dauer (einzelne Moleküle oder Molekültypen über komplette Trajektorie berechnen & als Farbe auf statische Moleküloberfläche mappen) *
- * -> das geht so net! das läuft auf ne volumen-akkumulation hinaus ...
+ *- Aufenthaltswahrscheinlichkeit/-dauer (einzelne Molekï¿½le oder Molekï¿½ltypen ï¿½ber komplette Trajektorie berechnen & als Farbe auf statische Molekï¿½loberflï¿½che mappen) *
+ * -> das geht so net! das lï¿½uft auf ne volumen-akkumulation hinaus ...
  */
 void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst) {
 	int nFrames = src->FrameCount();
@@ -222,7 +223,7 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 	time_t t = clock();
 
 	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
-#pragma omp parallel for
+#pragma omp parallel for num_threads(maxOMPThreads)
 	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
 		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
@@ -248,16 +249,17 @@ void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(Molecular
 			char element = name[0];
 
 /*
-JW: ich fürchte für eine allgemeine Deffinition der Wasserstoffbrücken muß man über die Bindungsenergien gehen und diese berechnen.
-Für meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
-Wasserstoffbrücken bilden und dabei als Donor und Aktzeptor dienen könne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Brücke zum Akzeptor.
+JW: ich fï¿½rchte fï¿½r eine allgemeine Deffinition der Wasserstoffbrï¿½cken muï¿½ man ï¿½ber die Bindungsenergien gehen und diese berechnen.
+Fï¿½r meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
+Wasserstoffbrï¿½cken bilden und dabei als Donor und Aktzeptor dienen kï¿½nne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Brï¿½cke zum Akzeptor.
 */
 			if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
-				neighbourIndices[omp_get_thread_num()].Clear(); // clear, keep capacity ...
-				neighbourIndices[omp_get_thread_num()].SetCapacityIncrement( 100); // set capacity increment
-				neighbourFinder.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices[omp_get_thread_num()]);
-				for(int nIdx = 0; nIdx<neighbourIndices[omp_get_thread_num()].Count(); nIdx++) {
-					int neighbIndex = neighbourIndices[omp_get_thread_num()][nIdx];
+				int ompThreadID = omp_get_thread_num();
+				neighbourIndices[ompThreadID].Clear(); // clear, keep capacity ...
+				neighbourIndices[ompThreadID].SetCapacityIncrement( 100); // set capacity increment
+				neighbourFinder.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices[ompThreadID]);
+				for(int nIdx = 0; nIdx<neighbourIndices[ompThreadID].Count(); nIdx++) {
+					int neighbIndex = neighbourIndices[ompThreadID][nIdx];
 					// atom from the current residue?
 					if (atomResidueIndices[neighbIndex]==rIdx)
 						continue;
