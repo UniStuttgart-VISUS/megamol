@@ -166,8 +166,8 @@ namespace volumetrics {
                     sst1(const_cast<VoxelizerFloat *>(this->triangles.PeekElements()));
                 vislib::math::ShallowShallowTriangle<VoxelizerFloat, 3> 
                     sst2(const_cast<VoxelizerFloat *>(rhs.triangles.PeekElements()));
-                for (int i = 0; i < this->triangles.Count() / 9; i++) {
-                    for (int j = 0; j < rhs.triangles.Count() / 9; j++) {
+                for (unsigned int i = 0; i < this->triangles.Count() / 9; i++) {
+                    for (unsigned int j = 0; j < rhs.triangles.Count() / 9; j++) {
                         sst1.SetPointer(const_cast<VoxelizerFloat *>(this->triangles.PeekElements() + i * 9));
                         sst2.SetPointer(const_cast<VoxelizerFloat *>(rhs.triangles.PeekElements() + j * 9));
                         if (Dowel::HaveCommonEdge(sst1, sst2)) {

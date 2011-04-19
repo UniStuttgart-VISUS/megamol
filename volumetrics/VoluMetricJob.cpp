@@ -335,7 +335,8 @@ DWORD VoluMetricJob::Run(void *userData) {
                         break;
             }
             if (lastCount != pool.CountUserWorkItems()) {
-                pb.Set(divX * divY * divZ - pool.CountUserWorkItems());
+                pb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(
+                    divX * divY * divZ - pool.CountUserWorkItems()));
                 generateStatistics(uniqueIDs, countPerID, surfPerID, volPerID, voidVolPerID);
                 if (storeMesh) {
                     copyMeshesToBackbuffer(uniqueIDs);
@@ -550,9 +551,9 @@ VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(int sjdIdx1, int surfIdx1, i
         this->globalIdBoxes.SetCount(srcSurf->globalID+1);
 #endif
 
-    for (int x = 0; x < SubJobDataList.Count(); x++) {
+    for (unsigned int x = 0; x < SubJobDataList.Count(); x++) {
         //if (SubJobDataList[x]->Result.done) {
-            for (int y = 0; y < SubJobDataList[x]->Result.surfaces.Count(); y++) {
+            for (unsigned int y = 0; y < SubJobDataList[x]->Result.surfaces.Count(); y++) {
                 Surface& surf = SubJobDataList[x]->Result.surfaces[y];
                 if (surf.globalID == dstSurf->globalID) {
 #ifdef PARALLEL_BBOX_COLLECT
@@ -576,7 +577,7 @@ VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(int sjdIdx1, int surfIdx1, i
 }
 
 VISLIB_FORCEINLINE bool VoluMetricJob::isSurfaceJoinableWithSubvolume(SubJobData *surfJob, int surfIdx, SubJobData *volume) {
-    for (int i = 0; i < 6; i++) {
+    for (unsigned int i = 0; i < 6; i++) {
         if (surfJob->Result.surfaces[surfIdx].fullFaces & (1 << i)) {
             // are they located accordingly to each other?
             int x = surfJob->offsetX + TetraVoxelizer::moreNeighbors[i].X() * (surfJob->resX - 1);
@@ -605,7 +606,7 @@ void VoluMetricJob::generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
 
     vislib::Array<unsigned int> todos;
     todos.SetCapacityIncrement(10);
-    for (int i = 0; i < SubJobDataList.Count(); i++) {
+    for (unsigned int i = 0; i < SubJobDataList.Count(); i++) {
         if (SubJobDataList[i]->Result.done) {
             todos.Add(i);
         }
@@ -617,12 +618,12 @@ void VoluMetricJob::generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
 
     //globalSurfaceIDs.SetCount(todos.Count());
     //unsigned int gsi = 0;
-    for (int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
+    for (unsigned int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
         unsigned int todo = todos[todoIdx];
         SubJobData *sjdTodo = this->SubJobDataList[todo];
         SIZE_T surfaceCount = sjdTodo->Result.surfaces.Count();
         //globalSurfaceIDs[todo].SetCount(surfaceCount);
-        for (int surfIdx = 0; surfIdx < surfaceCount; surfIdx++) {
+        for (unsigned int surfIdx = 0; surfIdx < surfaceCount; surfIdx++) {
             Surface& surf = sjdTodo->Result.surfaces[surfIdx];
             //globalSurfaceIDs[todo][surfIdx] = gsi++;
             if (surf.globalID == UINT_MAX) {
@@ -637,11 +638,11 @@ void VoluMetricJob::generateStatistics(vislib::Array<unsigned int> &uniqueIDs,
     }
 
 restart:
-    for (int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
+    for (unsigned int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
         unsigned int todo = todos[todoIdx];
         SubJobData *sjdTodo = this->SubJobDataList[todo];
-        for (int surfIdx = 0; surfIdx < sjdTodo->Result.surfaces.Count(); surfIdx++) {
-            for (int todoIdx2 = todoIdx; todoIdx2 < todos.Count(); todoIdx2++) {
+        for (unsigned int surfIdx = 0; surfIdx < sjdTodo->Result.surfaces.Count(); surfIdx++) {
+            for (unsigned int todoIdx2 = todoIdx; todoIdx2 < todos.Count(); todoIdx2++) {
                 unsigned int todo2 = todos[todoIdx2];
                 SubJobData *sjdTodo2 = this->SubJobDataList[todo2];
                 vislib::math::Cuboid<VoxelizerFloat> box = sjdTodo->Bounds;
@@ -649,7 +650,7 @@ restart:
                 // are these neighbors or in the same subvolume?
                 //if ((todoIdx == todoIdx2) || (c.Volume() <= sjdTodo->Bounds.Volume() 
                 if (todo != todo2 && (box.Volume() <= sjdTodo->Bounds.Volume() + sjdTodo2->Bounds.Volume())) {
-                    for (int surfIdx2 = 0; surfIdx2 < sjdTodo2->Result.surfaces.Count(); surfIdx2++) {
+                    for (unsigned int surfIdx2 = 0; surfIdx2 < sjdTodo2->Result.surfaces.Count(); surfIdx2++) {
                         if (areSurfacesJoinable(todo, surfIdx, todo2, surfIdx2)) {
                             joinSurfaces(todo, surfIdx, todo2, surfIdx2);
                             goto restart;
@@ -660,23 +661,23 @@ restart:
         }
     }
 
-    for (int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
+    for (unsigned int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
         unsigned int todo = todos[todoIdx];
         SubJobData *sjdTodo = this->SubJobDataList[todo];
-        for (int surfIdx = 0; surfIdx < sjdTodo->Result.surfaces.Count(); surfIdx++) {
+        for (unsigned int surfIdx = 0; surfIdx < sjdTodo->Result.surfaces.Count(); surfIdx++) {
             Surface& surf = sjdTodo->Result.surfaces[surfIdx];
             if (surf.border != NULL && surf.border->Count() > 0) {
                 // TODO: destroy border geometry in cells ALL of whose neighbors are already processed.
                 int numProcessed = 0;
 
-                for (int neighbIdx = 0; neighbIdx < 6; neighbIdx++) {
+                for (unsigned int neighbIdx = 0; neighbIdx < 6; neighbIdx++) {
                     int x = sjdTodo->gridX + TetraVoxelizer::moreNeighbors[neighbIdx].X();
                     int y = sjdTodo->gridY + TetraVoxelizer::moreNeighbors[neighbIdx].Y();
                     int z = sjdTodo->gridZ + TetraVoxelizer::moreNeighbors[neighbIdx].Z();
                     if (x == -1 || y == -1 || z == -1 || x >= divX || y >= divY || z >= divZ) {
                         numProcessed++;
                     } else {
-                        for (int todoIdx2 = 0; todoIdx2 < todos.Count(); todoIdx2++) {
+                        for (unsigned int todoIdx2 = 0; todoIdx2 < todos.Count(); todoIdx2++) {
                             SubJobData *sjdTodo2 = this->SubJobDataList[todos[todoIdx2]];
                             if (sjdTodo2->gridX == x  && sjdTodo2->gridY == y && sjdTodo2->gridZ == z) {
                                 ASSERT(sjdTodo2->Result.done);
@@ -698,10 +699,10 @@ restart:
         }
     }
 
-    for (int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
+    for (unsigned int todoIdx = 0; todoIdx < todos.Count(); todoIdx++) {
         unsigned int todo = todos[todoIdx];
         SubJobData *sjdTodo = this->SubJobDataList[todo];
-        for (int surfIdx = 0; surfIdx < sjdTodo->Result.surfaces.Count(); surfIdx++) {
+        for (unsigned int surfIdx = 0; surfIdx < sjdTodo->Result.surfaces.Count(); surfIdx++) {
             Surface& surf = sjdTodo->Result.surfaces[surfIdx];
             SIZE_T pos = uniqueIDs.IndexOf(surf.globalID);
             if (pos == vislib::Array<unsigned int>::INVALID_POS) {
@@ -736,9 +737,9 @@ bool rayTriangleIntersect(ShallowShallowTriangle<VoxelizerFloat,3>& triangle, ) 
 bool hitTriangleMesh(const vislib::Array<VoxelizerFloat>& mesh, const vislib::math::ShallowPoint<VoxelizerFloat, 3>& seedPoint,
     const vislib::math::Vector<VoxelizerFloat, 3>& direction, VoxelizerFloat *hitFactor) {
 
-    int triCount = mesh.Count()/(3*3);
+    unsigned int triCount = static_cast<unsigned int>(mesh.Count() / (3 * 3));
     const VoxelizerFloat *triPoints = mesh.PeekElements();
-    for(int triIdx = 0; triIdx < triCount; triIdx++) {
+    for(unsigned int triIdx = 0; triIdx < triCount; triIdx++) {
         vislib::math::ShallowShallowTriangle<VoxelizerFloat,3> triangle(const_cast<VoxelizerFloat*>(triPoints+triIdx*3*3));
 
         vislib::math::Vector<VoxelizerFloat,3> normal;
@@ -818,11 +819,12 @@ bool VoluMetricJob::testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib:
 
     vislib::math::ShallowPoint<VoxelizerFloat, 3> seedPoint(/*enclosedSeed->mesh.PeekElements()*/&enclosedSeed->mesh[0]);
     // some random direction ...
-    vislib::math::Vector<VoxelizerFloat, 3> direction(1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0));
+    VoxelizerFloat tmpVal(static_cast<VoxelizerFloat>(1.0 / sqrt(3.0)));
+    vislib::math::Vector<VoxelizerFloat, 3> direction(tmpVal, tmpVal, tmpVal);
 
     int hitCount = 0;
 
-    for(int enclosingSIdx = 0; enclosingSIdx < enclosingSurfaces.Count(); enclosingSIdx++) {
+    for(unsigned int enclosingSIdx = 0; enclosingSIdx < enclosingSurfaces.Count(); enclosingSIdx++) {
         Surface *surf = enclosingSurfaces[enclosingSIdx];
         VoxelizerFloat hitFactor;
         // TODO use surface bounding boxes to speed this up ...
@@ -889,12 +891,12 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     globalIdBoxes.SetCount(uniqueIDs.Count());
     vislib::Array<vislib::Array<Surface*>> globaIdSurfaces/*(uniqueIDs.Count(), vislib::Array<Surface*>(10)?)*/;
     globaIdSurfaces.SetCount(uniqueIDs.Count());
-    for(int sjdIdx = 0; sjdIdx < SubJobDataList.Count(); sjdIdx++) {
+    for(unsigned int sjdIdx = 0; sjdIdx < SubJobDataList.Count(); sjdIdx++) {
         SubJobData *subJob = SubJobDataList[sjdIdx];
-        for (int surfIdx = 0; surfIdx < subJob->Result.surfaces.Count(); surfIdx++) {
+        for (unsigned int surfIdx = 0; surfIdx < subJob->Result.surfaces.Count(); surfIdx++) {
             Surface& surface = subJob->Result.surfaces[surfIdx];
             int globalId = surface.globalID;
-            int uniqueIdPos = uniqueIDs.IndexOf(globalId);
+            int uniqueIdPos = static_cast<int>(uniqueIDs.IndexOf(globalId));
             globalIdBoxes[uniqueIdPos].Union(surface.boundingBox);
             globaIdSurfaces[uniqueIdPos].Add(&surface);
         }
@@ -902,33 +904,34 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
 #endif
 
     // thomasbm: final step: find volumes of unique surface id's that contain each other
-    for (int uidIdx = 0; uidIdx < uniqueIDs.Count(); uidIdx++) {
-        unsigned gid = uniqueIDs[uidIdx];
-        for (int uidIdx2 = uidIdx+1; uidIdx2 < uniqueIDs.Count(); uidIdx2++) {
-            unsigned gid2 = uniqueIDs[uidIdx2];
+    for (unsigned int uidIdx = 0; uidIdx < uniqueIDs.Count(); uidIdx++) {
+        unsigned int gid = uniqueIDs[uidIdx];
+        for (unsigned int uidIdx2 = uidIdx+1; uidIdx2 < uniqueIDs.Count(); uidIdx2++) {
+            unsigned int gid2 = uniqueIDs[uidIdx2];
             if (/*uidIdx2==uidIdx*/gid==gid2)
                 continue;
 #ifdef PARALLEL_BBOX_COLLECT
-            BoundingBox<unsigned>& box = globalIdBoxes[gid];
-            BoundingBox<unsigned>& box2 = globalIdBoxes[gid2];
+            BoundingBox<unsigned int>& box = globalIdBoxes[gid];
+            BoundingBox<unsigned int>& box2 = globalIdBoxes[gid2];
 #else
-            BoundingBox<unsigned>& box = globalIdBoxes[uidIdx];
-            BoundingBox<unsigned>& box2 = globalIdBoxes[uidIdx2];
+            BoundingBox<unsigned int>& box = globalIdBoxes[uidIdx];
+            BoundingBox<unsigned int>& box2 = globalIdBoxes[uidIdx2];
 #endif
-            BoundingBox<unsigned>::CLASSIFY_STATUS cls = box.Classify(box2);
+            BoundingBox<unsigned int>::CLASSIFY_STATUS cls = box.Classify(box2);
             int enclosedIdx, enclosingIdx;
-            if (cls==BoundingBox<unsigned>::CONTAINS_OTHER) {
+            if (cls==BoundingBox<unsigned int>::CONTAINS_OTHER) {
                 enclosedIdx = uidIdx2;
                 enclosingIdx = uidIdx;
-            } else if (cls == BoundingBox<unsigned>::IS_CONTAINED_BY_OTHER) {
+            } else if (cls == BoundingBox<unsigned int>::IS_CONTAINED_BY_OTHER) {
                 enclosedIdx = uidIdx;
                 enclosingIdx = uidIdx2;
             } else
                 continue;
 
             // full, triangle based test here ... (meshes need to be stored to do so)
-            if(SubJobDataList[0]->storeMesh && !testFullEnclosing(enclosingIdx, enclosedIdx, globaIdSurfaces))
+            if(SubJobDataList[0]->storeMesh && !testFullEnclosing(enclosingIdx, enclosedIdx, globaIdSurfaces)) {
                 continue;
+            }
 
             //countPerID[enclosingIdx] += countPerID[enclosedIdx];
             //surfPerID[enclosingIdx] += surfPerID[enclosedIdx];
@@ -940,7 +943,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     }
 
     //SIZE_T numTriangles = 0;
-    for (int i = 0; i < uniqueIDs.Count(); i++) {
+    for (unsigned int i = 0; i < uniqueIDs.Count(); i++) {
         //numTriangles += countPerID[i];
         vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f", uniqueIDs[i],
             countPerID[i], surfPerID[i], volPerID[i]);
@@ -982,12 +985,12 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<unsigned int> &uniqueID
 
     if (this->showBorderGeometrySlot.Param<megamol::core::param::BoolParam>()->Value()) {
 
-        for (int i = 0; i < uniqueIDs.Count(); i++) {
+        for (unsigned int i = 0; i < uniqueIDs.Count(); i++) {
             vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
             //vislib::math::ShallowShallowTriangle<double, 3> sst(vert);
 
-            for (int j = 0; j < todos.Count(); j++) {
-                for (int k = 0; k < SubJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
+            for (unsigned int j = 0; j < todos.Count(); j++) {
+                for (unsigned int k = 0; k < SubJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
                     if (SubJobDataList[todos[j]]->Result.surfaces[k].globalID == uniqueIDs[i]) {
                         for (SIZE_T l = 0; l < SubJobDataList[todos[j]]->Result.surfaces[k].border->Count(); l++) {
                             SIZE_T vertCount = (*SubJobDataList[todos[j]]->Result.surfaces[k].border)[l]->triangles.Count() / 3;
@@ -1005,12 +1008,12 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<unsigned int> &uniqueID
             }
         }
     } else {
-        for (int i = 0; i < uniqueIDs.Count(); i++) {
+        for (unsigned int i = 0; i < uniqueIDs.Count(); i++) {
             vislib::graphics::ColourRGBAu8 c(rand() * 255, rand() * 255, rand() * 255, 255);
             //vislib::math::ShallowShallowTriangle<double, 3> sst(vert);
 
-            for (int j = 0; j < todos.Count(); j++) {
-                for (int k = 0; k < SubJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
+            for (unsigned int j = 0; j < todos.Count(); j++) {
+                for (unsigned int k = 0; k < SubJobDataList[todos[j]]->Result.surfaces.Count(); k++) {
                     if (SubJobDataList[todos[j]]->Result.surfaces[k].globalID == uniqueIDs[i]) {
                         SIZE_T vertCount = SubJobDataList[todos[j]]->Result.surfaces[k].mesh.Count() / 3;
                         memcpy(&(vert[vertOffset]), SubJobDataList[todos[j]]->Result.surfaces[k].mesh.PeekElements(),
@@ -1039,7 +1042,9 @@ void VoluMetricJob::copyMeshesToBackbuffer(vislib::Array<unsigned int> &uniqueID
         memcpy(&(norm[i * 9 + 6]), n.PeekComponents(), sizeof(VoxelizerFloat) * 3);
     }
 
-    debugMeshes[meshBackBufferIndex].SetVertexData(vertOffset / 3, vert, norm, col, NULL, true);
+    debugMeshes[meshBackBufferIndex].SetVertexData(
+        static_cast<unsigned int>(vertOffset / 3),
+        vert, norm, col, NULL, true);
     //debugMeshes[meshBackBufferIndex].SetTriangleData(vertOffset / 3, tri, true);
     debugMeshes[meshBackBufferIndex].SetTriangleData(0, NULL, false);
 
