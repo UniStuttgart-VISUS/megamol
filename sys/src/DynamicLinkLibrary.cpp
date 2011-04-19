@@ -104,7 +104,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
     }
 #else /* _WIN32 */
 
-    this->hModule = ::dlopen(moduleName, RTLD_LAZY/* | RTLD_GLOBAL*/);
+    this->hModule = ::dlopen(moduleName, RTLD_LAZY | RTLD_GLOBAL);
     if (this->hModule == NULL) {
         this->loadErrorMsg = ::dlerror();
     }
