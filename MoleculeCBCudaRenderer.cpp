@@ -419,6 +419,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
 	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+#if DRAW_SMALL_ALL_CIRCLES
 	// draw small circles
 	glBegin( GL_POINTS);
 	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
@@ -456,6 +457,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 		}
 	}
 	glEnd();
+#endif
 
     // ========== contour buildup ==========
 
@@ -468,20 +470,15 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	float pi2 = float( vislib::math::PI_DOUBLE * 2.0);
     // go over all atoms
     for( int iCnt = 0; iCnt < mol->AtomCount(); ++iCnt ) {
-	//for( int iCnt = 0; iCnt < 1; ++iCnt ) {
         // pi = center of atom i
         vislib::math::Vector<float, 3> pi( &mol->AtomPositions()[3*iCnt]);
         float r = mol->AtomTypes()[mol->AtomTypeIndices()[iCnt]].Radius();
         float R = r + this->probeRadius;
         // go over all neighbors j
-        //for( unsigned int jCnt = 0; jCnt < m_hNeighborCount[iCnt]; ++jCnt ) {
         for( int jCnt = 0; jCnt < this->neighbors[iCnt].Count(); ++jCnt ) {
-		//for( int jCnt = 0; jCnt < 1; ++jCnt ) {
             // the atom index of j
-            //unsigned int j = m_hParticleIndex[m_hNeighbors[iCnt * atomNeighborCount + jCnt]];
             unsigned int j = this->neighbors[iCnt][jCnt];
             // vj = the small circle center
-            //vislib::math::Vector<float, 3> vj( &m_hSmallCircles[iCnt * 4 * atomNeighborCount + jCnt * 4]);
             vislib::math::Vector<float, 3> vj( this->smallCircles[iCnt][jCnt]);
             // pj = center of atom j
             vislib::math::Vector<float, 3> pj( &mol->AtomPositions()[j * 3]);
@@ -500,16 +497,13 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 			// add full circle 0 --> 2*PI
 			arcAngles.Add( vislib::Pair<float, float>( 0.0f, pi2));
             // check each neighbor j with all other neighbors k
-            //for( unsigned int kCnt = 0; kCnt < m_hNeighborCount[iCnt]; ++kCnt ) {
             for( int kCnt = 0; kCnt < this->neighbors[iCnt].Count(); ++kCnt ) {
                 // don't compare the circle with itself
                 if( jCnt == kCnt ) 
                     continue;
                 // the atom index of k
-                //unsigned int k = m_hParticleIndex[m_hNeighbors[iCnt * atomNeighborCount + kCnt]];
                 unsigned int k = this->neighbors[iCnt][kCnt];
                 // vk = the small circle center
-                //vislib::math::Vector<float, 3> vk( &m_hSmallCircles[iCnt * 4 * atomNeighborCount + kCnt * 4]);
                 vislib::math::Vector<float, 3> vk( this->smallCircles[iCnt][kCnt]);
                 // pk = center of atom k
                 vislib::math::Vector<float, 3> pk( &mol->AtomPositions()[k * 3]);
@@ -711,8 +705,6 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 					for( int aCnt = 0; aCnt < arcAngles.Count(); aCnt++ ) {
 						float s = arcAngles[aCnt].First();
 						float e = arcAngles[aCnt].Second();
-						float arcAngle = e - s;
-						float newAngle = angleX2 - angleX1;
 						if( angleX1 < s ) {
 							// case (1) & (10)
 							if( ( s - angleX1) > ( angleX2 - angleX1)) {
@@ -721,9 +713,17 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 										// case (10)
 										arcAngles[aCnt].SetFirst( angleX1);
 										arcAngles[aCnt].SetSecond( fmodf( e, pi2));
+										// second angle check
+										arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+										if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+											arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 									} else {
 										arcAngles[aCnt].SetFirst( angleX1);
 										arcAngles[aCnt].SetSecond( angleX2);
+										// second angle check
+										arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+										if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+											arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 									}
 								} else {
 									// case (1)
@@ -734,9 +734,17 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 								if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
 									// case (5)
 									arcAngles[aCnt].SetSecond( angleX2);
+									// second angle check
+									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 									if( ( ( s - angleX1) + ( e - s)) > pi2 ) {
 										// case (6)
 										tmpArcAngles.Add( vislib::Pair<float, float>( angleX1, fmodf( e, pi2)));
+										// second angle check
+										tmpArcAngles.Last().SetSecond( fmodf( tmpArcAngles.Last().Second(), pi2));
+										if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
+											tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + pi2);
 									}
 								}
 							} // case (4): Do nothing!
@@ -747,6 +755,10 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 									if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( pi2 + e - s)) {
 										// case (9)
 										arcAngles[aCnt].SetSecond( fmodf( angleX2, pi2));
+										// second angle check
+										arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+										if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+											arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 									}
 								} else {
 									// case (2)
@@ -757,14 +769,26 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 								if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
 									// case (7)
 									arcAngles[aCnt].SetFirst( angleX1);
+									// second angle check
+									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 									if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > pi2 ) {
 										// case (8)
 										tmpArcAngles.Add( vislib::Pair<float, float>( s, fmodf( angleX2, pi2)));
+										// second angle check
+										tmpArcAngles.Last().SetSecond( fmodf( tmpArcAngles.Last().Second(), pi2));
+										if( tmpArcAngles.Last().Second() < tmpArcAngles.Last().First() )
+											tmpArcAngles.Last().SetSecond( tmpArcAngles.Last().Second() + pi2);
 									}
 								} else {
 									// case (3)
 									arcAngles[aCnt].SetFirst( angleX1);
 									arcAngles[aCnt].SetSecond( angleX2);
+									// second angle check
+									arcAngles[aCnt].SetSecond( fmodf( arcAngles[aCnt].Second(), pi2));
+									if( arcAngles[aCnt].Second() < arcAngles[aCnt].First() )
+										arcAngles[aCnt].SetSecond( arcAngles[aCnt].Second() + pi2);
 								}
 							}
 						}
@@ -808,6 +832,25 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
                     arcs[aCnt].Second().Z() + pi.Z(), 0.2f);
             }
 #else
+			// merge arcs if arc with angle 0 and arc with angle 2*PI exist
+			int idx0 = -1;
+			int idx2pi = -1;
+			for( int aCnt = 0; aCnt < arcAngles.Count(); aCnt++ ) {
+				if( vislib::math::IsEqual<float>( arcAngles[aCnt].First(), 0.0f) ) {
+					idx0 = aCnt;
+				} else if( vislib::math::IsEqual<float>( arcAngles[aCnt].Second(), pi2 ) ) {
+					idx2pi = aCnt;
+				}
+			}
+			if( idx0 >= 0 && idx2pi >= 0 ) {
+				arcAngles[idx0].SetFirst( arcAngles[idx2pi].First());
+				// second angle check
+				arcAngles[idx0].SetSecond( fmodf( arcAngles[idx0].Second(), pi2));
+				if( arcAngles[idx0].Second() < arcAngles[idx0].First() )
+					arcAngles[idx0].SetSecond( arcAngles[idx0].Second() + pi2);
+				arcAngles.RemoveAt( idx2pi);
+			}
+			// debug rendering
 			tmpVec1.Set( mol->AtomPositions()[iCnt*3], mol->AtomPositions()[iCnt*3+1], mol->AtomPositions()[iCnt*3+2]);
             // draw all arc start & end points from angles
 			vislib::math::Quaternion<float> rotQuat;
