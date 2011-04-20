@@ -305,10 +305,11 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 
 	// ========= RENDERING =========
 	unsigned int cnt1, cnt2, cnt3; 
-	vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ey( 0, 1, 0);
+	vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ex( 1, 0, 0), ey( 0, 1, 0);
 	vislib::math::Quaternion<float> tmpQuat;
 	
 	// draw neighbor connections
+	/*
 	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
 		for( cnt2 = 0; cnt2 < m_hNeighborCount[cnt1]; ++cnt2 ) {
 			cnt3 = m_hParticleIndex[m_hNeighbors[cnt1 * atomNeighborCount + cnt2]];
@@ -319,6 +320,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 			glEnd();
 		}
 	}
+	*/
 
     // START ... remove all unnecessary small circles
     if( smallCircles.Count() < mol->AtomCount() )
@@ -389,7 +391,17 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
                             addJ = false;
                             break;
                         }
-                    }
+					} else {
+						if( mj.Dot( mk) > 0 && nj.Dot( q) < 0 ) {
+                            // atom i has no contour
+                            addJ = false;
+							this->smallCircles[iCnt].Clear();
+							this->smallCircleRadii[iCnt].Clear();
+							this->neighbors[iCnt].Clear();
+							j = m_hNeighborCount[iCnt];
+							break;
+                        }
+					}
                 }
             }
             // all k were tested, see if j is cut of or sould be added
@@ -416,12 +428,14 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
         for( cnt2 = 0; cnt2 < this->neighbors[cnt1].Count(); ++cnt2 ) {
             tmpVec2 = this->smallCircles[cnt1][cnt2];
             // center of small circle
+			/*
 			glColor3f( 0.0f, 0.0f, 1.0f);
 			glVertex4f(
 				tmpVec1.X() + tmpVec2.X(),
 				tmpVec1.Y() + tmpVec2.Y(),
 				tmpVec1.Z() + tmpVec2.Z(),
 				0.1f);
+			*/
 			// point on small circle
 			glColor3f( 1.0f, 1.0f, 0.0f);
 			tmpVec3 = tmpVec2.Cross( ey);
@@ -450,18 +464,19 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
     arcs.SetCapacityIncrement( 100);
     vislib::Array<vislib::Pair<float, float>> arcAngles;
 	arcAngles.SetCapacityIncrement( 100);
+	// store 2 * PI
+	float pi2 = float( vislib::math::PI_DOUBLE * 2.0);
     // go over all atoms
-    //for( unsigned int iCnt = 0; iCnt < mol->AtomCount(); ++iCnt ) {
-	for( unsigned int iCnt = 0; iCnt < 1; ++iCnt ) {
+    for( int iCnt = 0; iCnt < mol->AtomCount(); ++iCnt ) {
+	//for( int iCnt = 0; iCnt < 1; ++iCnt ) {
         // pi = center of atom i
         vislib::math::Vector<float, 3> pi( &mol->AtomPositions()[3*iCnt]);
         float r = mol->AtomTypes()[mol->AtomTypeIndices()[iCnt]].Radius();
         float R = r + this->probeRadius;
         // go over all neighbors j
         //for( unsigned int jCnt = 0; jCnt < m_hNeighborCount[iCnt]; ++jCnt ) {
-        //for( unsigned int jCnt = 0; jCnt < this->neighbors[iCnt].Count(); ++jCnt ) {
-		//for( unsigned int jCnt = 0; jCnt < 1; ++jCnt ) {
-		for( unsigned int jCnt = 1; jCnt < this->neighbors[iCnt].Count(); ++jCnt ) {
+        for( int jCnt = 0; jCnt < this->neighbors[iCnt].Count(); ++jCnt ) {
+		//for( int jCnt = 0; jCnt < 1; ++jCnt ) {
             // the atom index of j
             //unsigned int j = m_hParticleIndex[m_hNeighbors[iCnt * atomNeighborCount + jCnt]];
             unsigned int j = this->neighbors[iCnt][jCnt];
@@ -474,15 +489,19 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
             arcs.Clear();
 			// compute axes of local coordinate system
 			vislib::math::Vector<float, 3> xAxis = vj.Cross( ey);
+			if( vislib::math::IsEqual<float>( xAxis.Dot( xAxis), 0.0f) ) {
+				xAxis = vj.Cross( ex);
+			}
 			xAxis.Normalise();
 			vislib::math::Vector<float, 3> yAxis = xAxis.Cross( vj);
 			yAxis.Normalise();
             // clear the arc angles array
             arcAngles.Clear();
+			// add full circle 0 --> 2*PI
+			arcAngles.Add( vislib::Pair<float, float>( 0.0f, pi2));
             // check each neighbor j with all other neighbors k
             //for( unsigned int kCnt = 0; kCnt < m_hNeighborCount[iCnt]; ++kCnt ) {
-            //for( unsigned int kCnt = 0; kCnt < this->neighbors[iCnt].Count(); ++kCnt ) {
-			for( unsigned int kCnt = 0; kCnt < this->neighbors[iCnt].Count(); ++kCnt ) {
+            for( int kCnt = 0; kCnt < this->neighbors[iCnt].Count(); ++kCnt ) {
                 // don't compare the circle with itself
                 if( jCnt == kCnt ) 
                     continue;
@@ -587,11 +606,6 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
                 // do nothing if h is outside of the extended sphere of atom i
                 if( h.Length() > R ) 
                     continue;
-                // DEBUG: draw purple sphere for h
-                glColor3f( 1, 0, 1);
-                glVertex4f( h.X() + pi.X(), 
-                    h.Y() + pi.Y(), 
-                    h.Z() + pi.Z(), 0.1f);
                 // compute the root
                 float root = sqrtf( ( R*R - h.Dot( h)) / ( ( vk.Cross( vj)).Dot( vk.Cross( vj))));
                 // compute the two intersection points
@@ -673,12 +687,93 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 				float yX2 = ( x2 - vj).Dot( yAxis);
 				float angleX1 = atan2( yX1, xX1);
 				float angleX2 = atan2( yX2, xX2);
+				// limit angles to 0..2*PI
+				if( angleX1 > pi2 ) {
+					angleX1 = fmodf( angleX1, pi2);
+					angleX2 = fmodf( angleX2, pi2);
+				}
+				// angle of x2 has to be larger than angle of x1 (add 2 PI)
 				if( angleX2 < angleX1 ) {
 					angleX2 += float( vislib::math::PI_DOUBLE) * 2.0f;
 				}
-				if( arcAngles.Count() == 0 ) {
-					arcAngles.Add( vislib::Pair<float, float>( angleX1, angleX2));
+				// make all angles positive (add 2 PI)
+				if( angleX1 < 0.0f ) {
+					angleX1 += float( vislib::math::PI_DOUBLE) * 2.0f;
+					angleX2 += float( vislib::math::PI_DOUBLE) * 2.0f;
 				}
+				//if( arcAngles.Count() == 0 ) {
+				//	arcAngles.Add( vislib::Pair<float, float>( angleX1, angleX2));
+ 				//} else {
+					// temporary arc array for newly created arcs
+					vislib::Array<vislib::Pair<float, float>> tmpArcAngles;
+					tmpArcAngles.SetCapacityIncrement( 10);
+					// check all existing arcs with new arc k
+					for( int aCnt = 0; aCnt < arcAngles.Count(); aCnt++ ) {
+						float s = arcAngles[aCnt].First();
+						float e = arcAngles[aCnt].Second();
+						float arcAngle = e - s;
+						float newAngle = angleX2 - angleX1;
+						if( angleX1 < s ) {
+							// case (1) & (10)
+							if( ( s - angleX1) > ( angleX2 - angleX1)) {
+								if( ( ( s - angleX1) + ( e - s)) > pi2 ) {
+									if( ( ( s - angleX1) + ( e - s)) < ( pi2 + angleX2 - angleX1) ) {
+										// case (10)
+										arcAngles[aCnt].SetFirst( angleX1);
+										arcAngles[aCnt].SetSecond( fmodf( e, pi2));
+									} else {
+										arcAngles[aCnt].SetFirst( angleX1);
+										arcAngles[aCnt].SetSecond( angleX2);
+									}
+								} else {
+									// case (1)
+									arcAngles.RemoveAt( aCnt);
+									aCnt--;
+								}
+							} else {
+								if( ( ( s - angleX1) + ( e - s)) > ( angleX2 - angleX1) ) {
+									// case (5)
+									arcAngles[aCnt].SetSecond( angleX2);
+									if( ( ( s - angleX1) + ( e - s)) > pi2 ) {
+										// case (6)
+										tmpArcAngles.Add( vislib::Pair<float, float>( angleX1, fmodf( e, pi2)));
+									}
+								}
+							} // case (4): Do nothing!
+						} else { // angleX1 > s
+							// case (2) & (9)
+							if( ( angleX1 - s) > ( e - s)) {
+								if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > pi2 ) {
+									if( ( ( angleX1 - s) + ( angleX2 - angleX1)) < ( pi2 + e - s)) {
+										// case (9)
+										arcAngles[aCnt].SetSecond( fmodf( angleX2, pi2));
+									}
+								} else {
+									// case (2)
+									arcAngles.RemoveAt( aCnt);
+									aCnt--;
+								}
+							} else {
+								if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > ( e - s) ) {
+									// case (7)
+									arcAngles[aCnt].SetFirst( angleX1);
+									if( ( ( angleX1 - s) + ( angleX2 - angleX1)) > pi2 ) {
+										// case (8)
+										tmpArcAngles.Add( vislib::Pair<float, float>( s, fmodf( angleX2, pi2)));
+									}
+								} else {
+									// case (3)
+									arcAngles[aCnt].SetFirst( angleX1);
+									arcAngles[aCnt].SetSecond( angleX2);
+								}
+							}
+						}
+					}
+					// add new angles from temporary array to angle array
+					for( unsigned int aCnt = 0; aCnt < tmpArcAngles.Count(); aCnt++ ) {
+						arcAngles.Add( tmpArcAngles[aCnt]);
+					}
+				//}
 #endif
 #endif
 			}
@@ -732,7 +827,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 				rotQuat.Set( -arcAngles[aCnt].First(), vj / vj.Length());
 				tmpVec2 = ( rotQuat * xAxis) * this->smallCircleRadii[iCnt][jCnt];
 				rotQuat.Set( -( arcAngles[aCnt].Second() - arcAngles[aCnt].First()) / this->stepsParam.Param<param::IntParam>()->Value(), vj / vj.Length());
-				for( cnt3 = 0; cnt3 < this->stepsParam.Param<param::IntParam>()->Value() / 2; ++cnt3 ) {
+				for( cnt3 = 0; cnt3 < this->stepsParam.Param<param::IntParam>()->Value(); ++cnt3 ) {
 					tmpVec2 = rotQuat * tmpVec2;
 					glVertex4f(
 						tmpVec1.X() + tmpVec2.X() + vj.X(),
@@ -757,8 +852,6 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
 		if( cnt1 == 0 )
 			glColor4f( 1.0, 0.0, 1.0, this->opacityParam.Param<param::FloatParam>()->Value());
-		else if( cnt1 == this->neighbors[0][0] )
-			glColor4f( 1.0, 0.0, 0.5, this->opacityParam.Param<param::FloatParam>()->Value());
 		else
 			glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
 		glVertex4f(
