@@ -76,8 +76,9 @@ bool megamol::protein::SolventDataGenerator::create(void) {
 /**
  * -> preprocessing step
  *
- *- Aufenthaltswahrscheinlichkeit/-dauer (einzelne Molek�le oder Molek�ltypen �ber komplette Trajektorie berechnen & als Farbe auf statische Molek�loberfl�che mappen) *
- * -> das geht so net! das l�uft auf ne volumen-akkumulation hinaus ...
+ *- Aufenthaltswahrscheinlichkeit/-dauer (einzelne Molekuele oder Molekueltypen ueber komplette Trajektorie
+ * berechnen & als Farbe auf statische Molekueloberflueche mappen) *
+ * -> das geht so net! das laeuft auf ne volumen-akkumulation hinaus ...
  */
 void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst) {
 	int nFrames = src->FrameCount();
