@@ -128,7 +128,7 @@ bool protein::CCP4VolumeData::tryLoadFile(void) {
 
     // get length of file:
     fin.seekg( 0, std::ios::end);
-    unsigned int fileLength = fin.tellg();
+    unsigned int fileLength = static_cast<unsigned int>(fin.tellg());
     fin.seekg( 0, std::ios::beg);
 
 #define WORD 4

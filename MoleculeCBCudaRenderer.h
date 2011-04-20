@@ -116,7 +116,12 @@ namespace protein {
 		/**
 		 * Write atom positions and radii to an array for processing in CUDA
 		 */
-		void writeAtomPositions( const MolecularDataCall *mol );
+		void writeAtomPositions( const MolecularDataCall *mol);
+
+		/**
+		 * Write atom positions and radii to a VBO for processing in CUDA
+		 */
+		void writeAtomPositionsVBO( const MolecularDataCall *mol);
 
     private:
 
@@ -148,6 +153,22 @@ namespace protein {
 		 * @return The return value of the function.
 		 */
 		virtual bool Render( megamol::core::Call& call);
+
+        /**
+         * CUDA version of contour buildup algorithm
+         *
+         * TODO
+         *
+         */
+        void ContourBuildupCuda( MolecularDataCall *mol);
+
+        /**
+         * CPU version of contour buildup algorithm
+         *
+         * TODO
+         *
+         */
+        void ContourBuildupCPU( MolecularDataCall *mol);
 
         /**
          * Update all parameter slots.
@@ -232,6 +253,9 @@ namespace protein {
         vislib::Array<vislib::Array<vislib::math::Vector<float, 3>>> smallCircles;
         vislib::Array<vislib::Array<float>> smallCircleRadii;
         vislib::Array<vislib::Array<unsigned int>> neighbors;
+
+		// VBO for all atoms
+		GLuint atomPosVBO;
 
 	};
 

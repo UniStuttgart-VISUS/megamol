@@ -29,7 +29,7 @@
 #include "glh/glh_genext.h"
 #include "glh/glh_extensions.h"
 #include "vislib/Matrix.h"
-#include "vislib/ShallowVector.h"
+#include "vislib/ColourRGBAu8.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <iostream>
@@ -60,7 +60,8 @@ MoleculeCBCudaRenderer::MoleculeCBCudaRenderer( void ) : Renderer3DModule (),
     probeRadiusParam( "probeRadius", "Probe Radius"),
     opacityParam( "opacity", "Atom opacity"),
     stepsParam( "steps", "Drawing steps"),
-	probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false)
+	probeRadius( 1.4f), atomNeighborCount( 64), cudaInitalized( false), 
+    atomPosVBO( 0)
 {
 	this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable ( &this->molDataCallerSlot );
@@ -106,7 +107,10 @@ bool MoleculeCBCudaRenderer::create( void ) {
 	// try to initialize the necessary extensions for GLSL shader support
 	if ( !GLSLShader::InitialiseExtensions() )
 		return false;
-	
+    if (::glh_init_extensions("GL_VERSION_2_0 GL_ARB_multitexture GL_EXT_framebuffer_object") != GL_TRUE) {
+        return false;
+    }
+
 	glEnable( GL_DEPTH_TEST);
 	glDepthFunc( GL_LEQUAL);
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -222,7 +226,95 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
 			"%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
 	}
-	// execute CUDA kernels, if initialization succeeded
+
+	// ==================== Scale & Translate ====================
+    glPushMatrix();
+    // compute scale factor and scale world
+    float scale;
+    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
+        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
+    glScalef( scale, scale, scale);
+
+	// ==================== Start actual rendering ====================
+	glDisable( GL_BLEND);
+	glEnable( GL_DEPTH_TEST);
+	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
+
+    this->ContourBuildupCuda( mol);
+
+    glPopMatrix();
+    return true;
+}
+
+/*
+ * CUDA version of contour buildup algorithm
+ */
+void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
+    // do nothing if cuda was not initialized first
+    if( !this->cudaInitalized )
+        return;
+
+	// write atom positions to VBO
+	this->writeAtomPositionsVBO( mol);
+
+	// update constants
+	this->params.probeRadius = this->probeRadius;
+	setParameters( &this->params);
+
+    // map OpenGL buffer object for writing from CUDA
+    float *atomPosPtr;
+    cudaGLMapBufferObject((void**)&atomPosPtr, this->atomPosVBO);
+
+	// calculate grid hash
+	calcHash(
+		m_dGridParticleHash,
+		m_dGridParticleIndex,
+		//m_dPos,
+        atomPosPtr,
+		this->numAtoms);
+
+	// sort particles based on hash
+    cudppSort( this->sortHandle, m_dGridParticleHash, m_dGridParticleIndex, this->gridSortBits, this->numAtoms);
+
+	// reorder particle arrays into sorted order and
+	// find start and end of each cell
+	reorderDataAndFindCellStart(
+		m_dCellStart,
+		m_dCellEnd,
+		m_dSortedPos,
+		m_dGridParticleHash,
+		m_dGridParticleIndex,
+		//m_dPos,
+        atomPosPtr,
+		this->numAtoms,
+		this->numGridCells);
+
+    // unmap buffer object
+    cudaGLUnmapBufferObject( this->atomPosVBO);
+
+	// find neighbors of all atoms and compute small circles
+    findNeighborsCB(
+		m_dNeighborCount,
+		m_dNeighbors,
+		m_dSmallCircles,
+		m_dSortedPos,
+		m_dCellStart,
+		m_dCellEnd,
+		this->numAtoms,
+        this->atomNeighborCount,
+		this->numGridCells);
+
+}
+
+/*
+ * CPU version of contour buildup algorithm
+ */
+void MoleculeCBCudaRenderer::ContourBuildupCPU( MolecularDataCall *mol) {
+    // execute CUDA kernels, if initialization succeeded
 	if( this->cudaInitalized ) {
 		// write atom positions to array
 		this->writeAtomPositions( mol);
@@ -269,25 +361,14 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 
 	}
 	
-	// ==================== Scale & Translate ====================
-    glPushMatrix();
-    // compute scale factor and scale world
-    float scale;
-    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef( scale, scale, scale);
+	// get CUDA stuff
+    copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
+    copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
+    copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
+    //copyArrayFromDevice( m_hPos, m_dSortedPos, 0, sizeof(float)*4*this->numAtoms);
+    copyArrayFromDevice( m_hSmallCircles, m_dSmallCircles, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount);
 
-	// ==================== Start actual rendering ====================
-	glDisable( GL_BLEND);
-	glEnable( GL_DEPTH_TEST);
-	glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-	glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
-	
-	// TODO: do actual rendering
-	
+	// do actual rendering
 	float viewportStuff[4] = {
 		cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
 		cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
@@ -296,15 +377,9 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	viewportStuff[2] = 2.0f / viewportStuff[2];
 	viewportStuff[3] = 2.0f / viewportStuff[3];
 
-	// get CUDA stuff
-    copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
-    copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
-    copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
-    //copyArrayFromDevice( m_hPos, m_dSortedPos, 0, sizeof(float)*4*this->numAtoms);
-    copyArrayFromDevice( m_hSmallCircles, m_dSmallCircles, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount);
-
 	// ========= RENDERING =========
-	unsigned int cnt1, cnt2, cnt3; 
+    unsigned int cnt1;
+    int cnt3; 
 	vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ex( 1, 0, 0), ey( 0, 1, 0);
 	vislib::math::Quaternion<float> tmpQuat;
 	
@@ -429,14 +504,12 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
         for( cnt2 = 0; cnt2 < this->neighbors[cnt1].Count(); ++cnt2 ) {
             tmpVec2 = this->smallCircles[cnt1][cnt2];
             // center of small circle
-			/*
-			glColor3f( 0.0f, 0.0f, 1.0f);
-			glVertex4f(
-				tmpVec1.X() + tmpVec2.X(),
-				tmpVec1.Y() + tmpVec2.Y(),
-				tmpVec1.Z() + tmpVec2.Z(),
-				0.1f);
-			*/
+			//glColor3f( 0.0f, 0.0f, 1.0f);
+			//glVertex4f(
+			//	tmpVec1.X() + tmpVec2.X(),
+			//	tmpVec1.Y() + tmpVec2.Y(),
+			//	tmpVec1.Z() + tmpVec2.Z(),
+			//	0.1f);
 			// point on small circle
 			glColor3f( 1.0f, 1.0f, 0.0f);
 			tmpVec3 = tmpVec2.Cross( ey);
@@ -460,7 +533,6 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 #endif
 
     // ========== contour buildup ==========
-
     glBegin( GL_POINTS);
     vislib::Array<vislib::Pair<vislib::math::Vector<float, 3>, vislib::math::Vector<float, 3>>> arcs;
     arcs.SetCapacityIncrement( 100);
@@ -469,7 +541,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	// store 2 * PI
 	float pi2 = float( vislib::math::PI_DOUBLE * 2.0);
     // go over all atoms
-    for( int iCnt = 0; iCnt < mol->AtomCount(); ++iCnt ) {
+    for( int iCnt = 0; iCnt < static_cast<int>(mol->AtomCount()); ++iCnt ) {
         // pi = center of atom i
         vislib::math::Vector<float, 3> pi( &mol->AtomPositions()[3*iCnt]);
         float r = mol->AtomTypes()[mol->AtomTypeIndices()[iCnt]].Radius();
@@ -865,12 +937,15 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 				glVertex4f( tmpVec2.X(), tmpVec2.Y(), tmpVec2.Z(), 0.2f);
             }
 			// draw small circles
+			vislib::graphics::ColourRGBAu8 colCyan( 0, 255, 255, 255);
+			vislib::graphics::ColourRGBAu8 colYellow( 255, 255, 0, 255);
 			for( unsigned int aCnt = 0; aCnt < arcAngles.Count(); ++aCnt ) {
 				glColor3f( 0.0f, 1.0f, 1.0f);
 				rotQuat.Set( -arcAngles[aCnt].First(), vj / vj.Length());
 				tmpVec2 = ( rotQuat * xAxis) * this->smallCircleRadii[iCnt][jCnt];
 				rotQuat.Set( -( arcAngles[aCnt].Second() - arcAngles[aCnt].First()) / this->stepsParam.Param<param::IntParam>()->Value(), vj / vj.Length());
 				for( cnt3 = 0; cnt3 < this->stepsParam.Param<param::IntParam>()->Value(); ++cnt3 ) {
+					//glColor3ubv( colCyan.Interpolate( colYellow, float( cnt3)/float(this->stepsParam.Param<param::IntParam>()->Value())).PeekComponents());
 					tmpVec2 = rotQuat * tmpVec2;
 					glVertex4f(
 						tmpVec1.X() + tmpVec2.X() + vj.X(),
@@ -911,10 +986,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	this->sphereShader.Disable();
 	glDisable( GL_BLEND);
 
-
-	return true;
 }
-
 
 /*
  * update parameters
@@ -1073,6 +1145,40 @@ void MoleculeCBCudaRenderer::writeAtomPositions( const MolecularDataCall *mol ) 
 
 	// setArray( POSITION, m_hPos, 0, this->numAtoms);
 	copyArrayToDevice( this->m_dPos, this->m_hPos, 0, this->numAtoms*4*sizeof(float));
+}
+
+/*
+ * Write atom positions and radii to a VBO for processing in CUDA
+ */
+void MoleculeCBCudaRenderer::writeAtomPositionsVBO( const MolecularDataCall *mol) {
+	// write atoms to array
+	for( int cnt = 0; cnt < mol->AtomCount(); cnt++ ) {
+		// write pos and rad to array
+		m_hPos[cnt*4] = mol->AtomPositions()[cnt*3];
+		m_hPos[cnt*4+1] = mol->AtomPositions()[cnt*3+1];
+		m_hPos[cnt*4+2] = mol->AtomPositions()[cnt*3+2];
+		m_hPos[cnt*4+3] = mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
+	}
+
+    bool newlyGenerated = false;
+    // generate buffer, if not already available
+    if( !glIsBuffer( this->atomPosVBO) ) {
+        glGenBuffers( 1, &this->atomPosVBO);
+        newlyGenerated = true;
+    }
+    // bind buffer, enable the vertex array client state and resize the vbo accordingly
+    glBindBuffer( GL_ARRAY_BUFFER, this->atomPosVBO);
+    if( newlyGenerated )
+        glBufferData( GL_ARRAY_BUFFER, mol->AtomCount()*4*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    float *atomPosVBOPtr = static_cast<float*>(glMapBuffer( GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+	// copy atom radius and position array to VBO
+    memcpy( atomPosVBOPtr, m_hPos, mol->AtomCount()*4*sizeof(float));
+    // unmap the buffer, disable the vertex array client state and unbind the vbo
+    glUnmapBuffer( GL_ARRAY_BUFFER);
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
+    // register this buffer object with CUDA
+    if( newlyGenerated )
+        cudaGLRegisterBufferObject( this->atomPosVBO);
 }
 
 #endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

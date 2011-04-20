@@ -562,4 +562,40 @@ void findAdjacentTrianglesCuda(
 	cutilSafeCall( cudaUnbindTexture( inVisibilityTex));
 }
 
+void findNeighborsCB(
+        uint*   neighborCount,
+        uint*   neighbors,
+        float*  smallCircles,
+        float*  sortedPos,
+        uint*   cellStart,
+        uint*   cellEnd,
+        uint    numAtoms,
+        uint    numNeighbors,
+        uint    numCells) {
+    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+	cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+	cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+	cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
+    cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+
+    // thread per particle
+    uint numThreads, numBlocks;
+    computeGridSize( numAtoms, 64, numBlocks, numThreads);
+
+    // execute the kernel
+    findNeighborsCBCuda<<< numBlocks, numThreads >>>( neighborCount, neighbors, 
+        (float4*)smallCircles, (float4*)sortedPos, cellStart, cellEnd, numAtoms);
+
+    // check if kernel invocation generated an error
+    cutilCheckMsg("Kernel execution failed");
+
+    cutilSafeCall( cudaUnbindTexture( atomPosTex));
+	cutilSafeCall( cudaUnbindTexture( neighborCountTex));
+	cutilSafeCall( cudaUnbindTexture( neighborsTex));
+	cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    cutilSafeCall( cudaUnbindTexture( cellStartTex));
+    cutilSafeCall( cudaUnbindTexture( cellEndTex));
+}
+
 }   // extern "C"

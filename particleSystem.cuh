@@ -166,4 +166,15 @@ void findAdjacentTrianglesCuda(
     uint numVisibleAtoms, 
     uint numNeighbors);
 
+void findNeighborsCB(
+    uint*  neighborCount,
+    uint*  neighbors,
+    float* smallCircles,
+    float* sortedPos,
+    uint*  cellStart,
+    uint*  cellEnd,
+    uint   numAtoms,
+    uint   numNeighbors,
+    uint   numCells);
+
 }

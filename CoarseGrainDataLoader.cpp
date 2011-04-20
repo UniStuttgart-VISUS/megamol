@@ -159,7 +159,7 @@ void CoarseGrainDataLoader::loadFile( const vislib::TString& filename) {
             return;
         }
         // resize array according to number of spheres per frame
-        this->frameCount = ( file.Count() - 1) / this->sphereCount;
+        this->frameCount = static_cast<unsigned int>( file.Count() - 1) / this->sphereCount;
         this->data.SetCount( this->frameCount);
         this->sphereCharge.SetCount( this->frameCount);
         this->sphereColor.SetCount( this->sphereCount * 3);

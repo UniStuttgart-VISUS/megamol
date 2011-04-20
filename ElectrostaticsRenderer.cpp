@@ -317,9 +317,9 @@ void ElectrostaticsRenderer::ComputeElectrostaticField( ParticleDataCall *partic
     float h = particles->AccessBoundingBoxes().ObjectSpaceClipBox().Height();
     float d = particles->AccessBoundingBoxes().ObjectSpaceClipBox().Depth();
 
-    unsigned int rx = ceilf( w / stepWidth);
-    unsigned int ry = ceilf( h / stepWidth);
-    unsigned int rz = ceilf( d / stepWidth);
+    unsigned int rx = static_cast<unsigned int>(ceilf( w / stepWidth));
+    unsigned int ry = static_cast<unsigned int>(ceilf( h / stepWidth));
+    unsigned int rz = static_cast<unsigned int>(ceilf( d / stepWidth));
     unsigned int size = rx * ry * rz;
     this->fieldDim[0] = rx;
     this->fieldDim[1] = ry;
@@ -368,13 +368,13 @@ void ElectrostaticsRenderer::ComputeElectrostaticField( ParticleDataCall *partic
     */
     int cnt, cntX, cntY, cntZ, cntP;
 #pragma omp parallel for private( cntX, cntY, cntZ, cntP, gridPos, pos)
-    for( cnt = 0; cnt < this->fieldSize; cnt++ ) {
+    for( cnt = 0; cnt < static_cast<int>(this->fieldSize); cnt++ ) {
         cntZ = cnt / ( rx * ry);
         cntY = ( cnt % ( rx * ry)) / rx;
         cntX = cnt % rx;
         gridPos.Set( float( cntX) + 0.5f, float( cntY) + 0.5f, float( cntZ) + 0.5f);
         pos = orig + offset * gridPos;
-        for( cntP = 0; cntP < particles->ParticleCount(); cntP++ ) {
+        for( cntP = 0; cntP < static_cast<int>(particles->ParticleCount()); cntP++ ) {
             vislib::math::Vector<float, 3> pPos( 
                 particles->Particles()[cntP*4+0],
                 particles->Particles()[cntP*4+1],

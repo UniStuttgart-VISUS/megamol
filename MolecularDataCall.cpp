@@ -622,5 +622,5 @@ const MolecularDataCall::SecStructure* MolecularDataCall::SecondaryStructures() 
  * Get the number of secondary structure elements.
  */
 unsigned int MolecularDataCall::SecondaryStructureCount() const {
-    return this->secStruct.Count();
+    return static_cast<unsigned int>(this->secStruct.Count());
 }
