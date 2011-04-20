@@ -85,7 +85,8 @@ void main(void) {
 
     float d = length( vec3( splatCenter.xy, sliceDepth*scaleVolInv.z) - splatCenter);
     if( d > filterRadius*scale) {
-        gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+        //gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+        gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
     } else {
 	//	vec3 volPos = (gl_Vertex.xyz-minBBox) * invBBoxExtend;
 		vec3 volPos = (gl_Vertex.xyz - translate) * scaleVol;
@@ -204,8 +205,7 @@ varying vec3 color;
 
 float computeColorDensity( vec3 pos) {
     float d = distance( pos, splatCenter.xyz);
-    float density = ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
-    return density;
+    return ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
 }
 
 float computeDensity( vec3 pos) {
@@ -217,12 +217,54 @@ float computeDensity( vec3 pos) {
 
 void main(void) {
     vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
-    float density = computeDensity( pos);
-    gl_FragColor.rgb = color * density * scale;
+    //float density = computeDensity( pos);
+    //gl_FragColor.rgb = color * density * scale;
+	//gl_FragColor.rgb = color * density; // * scale;
+
+    gl_FragColor.rgb = color * computeColorDensity(pos) * scale;
 }
 -->
         </snippet>
       </shader>
+
+
+<shader name="updateSolventVolumeFragmentHBondClr">
+  <snippet type="version">120</snippet>
+  <snippet type="string">
+    <!--
+// color shader for use in combination with 'updateSolventVolumeFragmentDensity' in a second pass ...
+uniform float filterRadius;
+uniform float sliceDepth;
+uniform vec3 invVolRes;
+uniform vec3 scaleVolInv;
+
+uniform float densityScale;
+
+varying vec3 splatCenter;
+varying float scale;
+varying vec3 color;
+
+/*float computeColorDensity( vec3 pos) {
+	float d = distance( pos, splatCenter.xyz);
+	return ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+}*/
+
+float computeDensity( vec3 pos) {
+	float d = distance(pos, splatCenter.xyz);
+    //return ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
+	//return ( d < scale ) ? 1.0 : 0.0;
+	return max(0, scale-d) / scale;
+}
+
+void main(void) {
+	vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
+	float density = computeDensity( pos);
+	//gl_FragColor.rgb = color * density * scale;
+	gl_FragColor.rgb = color * density; // * scale;
+}
+-->
+  </snippet>
+</shader>
 
         <shader name="volumeVertex">
             <snippet type="version">120</snippet>
