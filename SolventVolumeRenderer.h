@@ -289,7 +289,8 @@ namespace protein {
 		megamol::core::param::ParamSlot solventMolThreshold;
 
 		/** clear volume or accumulate stuff over time? ... */
-		megamol::core::param::ParamSlot clearVolume;
+		megamol::core::param::ParamSlot accumulateColors;
+		megamol::core::param::ParamSlot accumulateVolume;
 
 		// shader for the spheres (raycasting view)
 		vislib::graphics::gl::GLSLShader sphereSolventShader;
@@ -302,6 +303,7 @@ namespace protein {
         // shader for volume texture generation
         vislib::graphics::gl::GLSLShader updateVolumeShaderMoleculeVolume;
         vislib::graphics::gl::GLSLShader updateVolumeShaderSolventColor;
+        vislib::graphics::gl::GLSLShader updateVolumeShaderHBondColor;
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;
         vislib::graphics::gl::GLSLShader dualIsosurfaceShader;
