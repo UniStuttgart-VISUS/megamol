@@ -4,19 +4,29 @@
   Version="8.00"
   Name="ExtLibs"
   >
-  <UserMacro
-  Name="OutputBin"
-  Value="%outbin%"
-  PerformEnvironmentSet="true"
+  <Tool
+    Name="VCCLCompilerTool"
+    AdditionalIncludeDirectories="%withVrpn%!%vrpnpath%\include!!"
+    PreprocessorDefinitions="%withVrpn%!WITH_VRPN!!"
+  />
+  <Tool
+    Name="VCLinkerTool"
+    AdditionalDependencies="%withVrpn%!vrpn$(Bits)$(DebugD).lib!!"
+    AdditionalLibraryDirectories="%withVrpn%!%vrpnpath%\lib!!"
   />
   <UserMacro
-  Name="MegaMolCorePath"
-  Value="%mmcorePath%"
-  PerformEnvironmentSet="true"
+    Name="OutputBin"
+    Value="%outbin%"
+    PerformEnvironmentSet="true"
   />
   <UserMacro
-  Name="VISlibPath"
-  Value="%vislib%"
-  PerformEnvironmentSet="true"
+    Name="MegaMolCorePath"
+    Value="%mmcorePath%"
+    PerformEnvironmentSet="true"
+  />
+  <UserMacro
+    Name="VISlibPath"
+    Value="%vislib%"
+    PerformEnvironmentSet="true"
   />
 </VisualStudioPropertySheet>

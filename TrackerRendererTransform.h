@@ -15,6 +15,10 @@
 #include "Call.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
+#ifdef WITH_VRPN
+#include "vrpn_Connection.h"
+#include "vrpn_Tracker.h"
+#endif /* WITH_VRPN */
 
 
 namespace megamol {
@@ -106,6 +110,19 @@ namespace trisoup {
 
     private:
 
+#ifdef WITH_VRPN
+
+        /**
+         * Callback method call from vrpn on tracked position update
+         *
+         * @param ctxt Pointer to this module
+         * @param track The tracked data
+         */
+        static void VRPN_CALLBACK vrpnTrackerCallback(void *ctxt,
+            const vrpn_TRACKERCB track);
+
+#endif /* WITH_VRPN */
+
         /** The slot to call the real renderer */
         core::CallerSlot outRenderSlot;
 
@@ -123,6 +140,31 @@ namespace trisoup {
 
         /** The maximum vector of the bounding box */
         core::param::ParamSlot bboxMaxSlot;
+
+#ifdef WITH_VRPN
+
+        /** The vrpn connection */
+        vrpn_Connection *vrpnConn;
+
+        /** The vrpn tracker object */
+        vrpn_Tracker_Remote *vrpnTracker;
+
+        /** Flag whether or not the vrpn connection has been established */
+        bool vrpnIsConnected;
+
+        /** Flag whether or not the vrpn connection is healthy */
+        bool vrpnIsHealthy;
+
+        /** Only connect to vrpn if the client name matches the local computer name */
+        core::param::ParamSlot vrpnClientSlot;
+
+        /** The address of the vrpn server to connect to */
+        core::param::ParamSlot vrpnServerSlot;
+
+        /** The name of the tracker object to track */
+        core::param::ParamSlot vrpnTrackerSlot;
+
+#endif /* WITH_VRPN */
 
     };
 

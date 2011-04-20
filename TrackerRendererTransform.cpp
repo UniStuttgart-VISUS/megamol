@@ -7,13 +7,24 @@
 #include "stdafx.h"
 #include "TrackerRendererTransform.h"
 #include "param/FloatParam.h"
+#ifdef WITH_VRPN
+#include "param/StringParam.h"
+#endif /* WITH_VRPN */
 #include "param/Vector3fParam.h"
 #include "param/Vector4fParam.h"
 #include "view/CallRender3D.h"
+#include "vislib/assert.h"
+#include "vislib/Log.h"
 #include "vislib/Matrix.h"
+#include "vislib/memutils.h"
 #include "vislib/Quaternion.h"
 #include "vislib/ShallowQuaternion.h"
 #include "vislib/ShallowVector.h"
+#include "vislib/String.h"
+#ifdef WITH_VRPN
+#include "vislib/StringConverter.h"
+#include "vislib/SystemInformation.h"
+#endif /* WITH_VRPN */
 #include "vislib/Vector.h"
 #include <GL/gl.h>
 
@@ -30,8 +41,17 @@ TrackerRendererTransform::TrackerRendererTransform(void) : Renderer3DModule(),
         rotateSlot("rotate", "The rotation applied"),
         scaleSlot("scale", "The scale applied"),
         bboxMinSlot("bbox::min", "The minimum vector of the bounding box"),
-        bboxMaxSlot("bbox::max", "The maximum vector of the bounding box") {
-
+        bboxMaxSlot("bbox::max", "The maximum vector of the bounding box")
+#ifdef WITH_VRPN
+        , vrpnConn(NULL),
+        vrpnTracker(NULL),
+        vrpnIsConnected(false),
+        vrpnIsHealthy(true),
+        vrpnClientSlot("vrpn::client", "Only connect to vrpn if the client name matches the local computer name"),
+        vrpnServerSlot("vrpn::server", "The address of the vrpn server to connect to"),
+        vrpnTrackerSlot("vrpn::tracker", "The name of the tracker object to track")
+#endif /* WITH_VRPN */
+        {
     this->outRenderSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->outRenderSlot);
 
@@ -52,6 +72,19 @@ TrackerRendererTransform::TrackerRendererTransform(void) : Renderer3DModule(),
     this->bboxMaxSlot << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(3.0f, 3.0f, 3.0f));
     this->MakeSlotAvailable(&this->bboxMaxSlot);
 
+#ifdef WITH_VRPN
+    this->vrpnClientSlot << new core::param::StringParam("");
+    this->MakeSlotAvailable(&this->vrpnClientSlot);
+
+    this->vrpnServerSlot << new core::param::StringParam("localhost:3883");
+    this->MakeSlotAvailable(&this->vrpnServerSlot);
+    this->vrpnServerSlot.ForceSetDirty();
+
+    this->vrpnTrackerSlot << new core::param::StringParam("Tracker");
+    this->MakeSlotAvailable(&this->vrpnTrackerSlot);
+    this->vrpnTrackerSlot.ForceSetDirty();
+#endif /* WITH_VRPN */
+
 }
 
 
@@ -60,6 +93,9 @@ TrackerRendererTransform::TrackerRendererTransform(void) : Renderer3DModule(),
  */
 TrackerRendererTransform::~TrackerRendererTransform(void) {
     this->Release();
+#ifdef WITH_VRPN
+    ASSERT(this->vrpnConn == NULL);
+#endif /* WITH_VRPN */
 }
 
 
@@ -120,7 +156,13 @@ bool TrackerRendererTransform::GetExtents(core::Call& call) {
  * TrackerRendererTransform::release
  */
 void TrackerRendererTransform::release(void) {
-    // intentionally empty
+#ifdef WITH_VRPN
+    SAFE_DELETE(this->vrpnTracker);
+    if (this->vrpnConn != NULL) {
+        this->vrpnConn->removeReference();
+        this->vrpnConn = NULL;
+    }
+#endif /* WITH_VRPN */
 }
 
 
@@ -133,6 +175,77 @@ bool TrackerRendererTransform::Render(core::Call& call) {
     core::view::CallRender3D *outCr3d = this->outRenderSlot.CallAs<core::view::CallRender3D>();
     if (outCr3d == NULL) return false;
 
+#ifdef WITH_VRPN
+
+    static vislib::TString computerName;
+    if (computerName.IsEmpty()) {
+        vislib::sys::SystemInformation::ComputerName(computerName);
+    }
+    if (this->vrpnClientSlot.Param<core::param::StringParam>()->Value().Equals(computerName, false)) {
+        if (this->vrpnServerSlot.IsDirty()) {
+            this->vrpnServerSlot.ResetDirty();
+            SAFE_DELETE(this->vrpnTracker);
+            if (this->vrpnConn != NULL) {
+                this->vrpnConn->removeReference();
+                this->vrpnConn = NULL;
+                this->vrpnIsConnected = false;
+                this->vrpnIsHealthy = false;
+            }
+            this->vrpnConn = vrpn_get_connection_by_name(
+                T2A(this->vrpnServerSlot.Param<core::param::StringParam>()->Value()));
+            if (this->vrpnConn == NULL) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    _T("Unable to open VRPN connection to \"%s\""),
+                    this->vrpnServerSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
+            }
+        }
+        if ((this->vrpnConn != NULL) && this->vrpnTrackerSlot.IsDirty()) {
+            this->vrpnTrackerSlot.ResetDirty();
+            if (this->vrpnTracker != NULL) {
+                SAFE_DELETE(this->vrpnTracker);
+            }
+            this->vrpnTracker = new vrpn_Tracker_Remote(
+                T2A(this->vrpnTrackerSlot.Param<core::param::StringParam>()->Value()),
+                this->vrpnConn);
+            if (this->vrpnTracker != NULL) {
+                this->vrpnTracker->shutup = true;
+                this->vrpnTracker->register_change_handler(
+                    static_cast<void *>(this), &TrackerRendererTransform::vrpnTrackerCallback);
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    _T("Unable to connect to tracker service of \"%s\""),
+                    this->vrpnTrackerSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
+            }
+        }
+    }
+
+    if (this->vrpnConn != NULL) {
+        this->vrpnConn->mainloop();
+        bool isConn = (this->vrpnConn->connected() != 0);
+        bool isOk = (this->vrpnConn->doing_okay() != 0);
+        if (this->vrpnIsConnected != isConn) {
+            this->vrpnIsConnected = isConn;
+            if (isConn) {
+                vislib::sys::Log::DefaultLog.WriteInfo("VRPN connected");
+            } else {
+                vislib::sys::Log::DefaultLog.WriteInfo("VRPN disconnected");
+            }
+        }
+        if (this->vrpnIsHealthy != isOk) {
+            this->vrpnIsHealthy = isOk;
+            if (isOk) {
+                vislib::sys::Log::DefaultLog.WriteInfo("VRPN connection healthy");
+            } else {
+                vislib::sys::Log::DefaultLog.WriteInfo("VRPN connection broken");
+            }
+        }
+    }
+    if (this->vrpnTracker != NULL) {
+        this->vrpnTracker->mainloop();
+    }
+
+#endif /* WITH_VRPN */
+
     ::glMatrixMode(GL_MODELVIEW);
     ::glPushMatrix();
 
@@ -140,7 +253,7 @@ bool TrackerRendererTransform::Render(core::Call& call) {
     const vislib::math::Vector<float, 4>& rot = this->rotateSlot.Param<core::param::Vector4fParam>()->Value();
     const float& scale = this->scaleSlot.Param<core::param::FloatParam>()->Value();
     vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> rotMat;
-    rotMat = vislib::math::ShallowQuaternion<float>(const_cast<float*>(rot.PeekComponents()));
+    rotMat = vislib::math::ShallowQuaternion<const float>(rot.PeekComponents());
     float rotMatBig[16];
     rotMatBig[0] = rotMat(0, 0);
     rotMatBig[1] = rotMat(1, 0);
@@ -163,6 +276,11 @@ bool TrackerRendererTransform::Render(core::Call& call) {
     ::glMultMatrixf(rotMatBig);
     ::glScalef(scale, scale, scale);
 
+    if ((*outCr3d)(1)) {
+        vislib::math::Point<float, 3> oc = outCr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
+        ::glTranslatef(-oc.X(), -oc.Y(), -oc.Z());
+    }
+
     *outCr3d = *inCr3d;
     bool retVal = (*outCr3d)(0);
 
@@ -171,3 +289,17 @@ bool TrackerRendererTransform::Render(core::Call& call) {
 
     return retVal;
 }
+
+
+#ifdef WITH_VRPN
+/*
+ * TrackerRendererTransform::vrpnTrackerCallback
+ */
+void VRPN_CALLBACK TrackerRendererTransform::vrpnTrackerCallback(void *ctxt, const vrpn_TRACKERCB track) {
+    TrackerRendererTransform *that = static_cast<TrackerRendererTransform *>(ctxt);
+    that->translateSlot.Param<core::param::Vector3fParam>()->SetValue(
+        vislib::math::ShallowVector<const vrpn_float64, 3>(track.pos), true);
+    that->rotateSlot.Param<core::param::Vector4fParam>()->SetValue(
+        vislib::math::ShallowVector<const vrpn_float64, 4>(track.quat), true);
+}
+#endif /* WITH_VRPN */
