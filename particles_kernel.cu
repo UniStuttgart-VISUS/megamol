@@ -74,7 +74,7 @@ __device__ uint calcGridHash(int3 gridPos)
 {
     gridPos.x = gridPos.x & (params.gridSize.x-1);  // wrap grid, assumes size is power of 2
     gridPos.y = gridPos.y & (params.gridSize.y-1);
-    gridPos.z = gridPos.z & (params.gridSize.z-1);        
+    gridPos.z = gridPos.z & (params.gridSize.z-1);
     return __umul24(__umul24(gridPos.z, params.gridSize.y), params.gridSize.x) + __umul24(gridPos.y, params.gridSize.x) + gridPos.x;
 }
 
@@ -540,7 +540,6 @@ void computeArcs( float4* arcs,                 // output: arcs
     rk2 = dot( rk, rk);
 
     float3 e1, e2;
-    float angle1, angle2, tmpAngle, tmpAngle1, tmpAngle2;
     
     for( uint cnt = 0; cnt < numNeighbors; ++cnt ) {
         if( cnt == neighborIdx ) continue;
@@ -1346,6 +1345,124 @@ void findAdjacentTriangles(
     
     if( smallest >= 0 )
         outPbo[params.maxNumNeighbors * params.maxNumNeighbors * visibleAtomIdx + xcoord + uint(smallest)] = 1.0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// CONTOUR BUILDUP KERNELS
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// find all neighbor atoms in a given cell
+__device__ uint findNeighborsInCellCBCuda(
+        uint*   neighbors,      // out: neighbor indices
+        float4* smallCircles,   // out: small circles
+        uint    neighborIndex,  // in: first index for writing in neighbor list
+        int3    gridPos,        // in: the current grid cell
+        uint    index,          // in: the index of the atom
+        float4  pos,            // in: the position of the atom
+        float4* atomPos,        // in: the (sorted) atom position array
+        uint*   cellStart,
+        uint*   cellEnd) {
+    uint gridHash = calcGridHash(gridPos);
+
+    // get start of bucket for this cell
+    uint startIndex = FETCH( cellStart, gridHash);
+
+    uint count = 0;
+	float4 pos2;
+	float3 relPos;
+	float dist;
+	float neighborDist;
+	float r;
+	float3 vec;
+	float4 smallCircle;
+    if( startIndex != 0xffffffff ) {	// cell is not empty
+        // iterate over atoms in this cell
+        uint endIndex = FETCH( cellEnd, gridHash);
+        for( uint j = startIndex; j < endIndex; j++) {
+			// do not count self
+            if( j != index) {
+				// get position of potential neighbor
+	            pos2 = FETCH( atomPos, j);
+                // check distance
+				relPos = make_float3( pos2.x, pos2.y, pos2.z) - make_float3( pos.x, pos.y, pos.z);
+				dist = length( relPos);
+				neighborDist = pos.w + pos2.w + 2.0f * params.probeRadius;
+				if( dist < neighborDist ) {
+                    // check number of neighbors
+                    if( ( neighborIndex + count) >= params.maxNumNeighbors ) return count;
+					// write the (sorted) neighbor index
+                    neighbors[index*params.maxNumNeighbors+neighborIndex+count] = j;
+					// compute small circle / intersection plane
+					r = ( (pos.w + params.probeRadius)*(pos.w + params.probeRadius))
+						+ ( dist * dist)
+						- ( (pos2.w + params.probeRadius)*(pos2.w + params.probeRadius));
+					r = r / (2.0 * dist * dist);
+					vec = relPos * r;
+                    // set small circle
+					smallCircle.x = vec.x;
+					smallCircle.y = vec.y;
+					smallCircle.z = vec.z;
+					smallCircle.w = 1.0;
+                    //smallCircle.w = sqrt(((pos.w + params.probeRadius) * (pos.w + params.probeRadius)) - dot( vec, vec));
+					smallCircles[index*params.maxNumNeighbors+neighborIndex+count] = smallCircle;
+					// increment the neighbor counter
+					count++;
+				}
+            }
+        }
+    }
+    return count;
+}
+
+// Find and count neighbors and write them to the neighbor array.
+// Also computes small circles for each neighbor and stores them, too.
+__global__ void findNeighborsCBCuda(
+        uint*   neighborCount,     // out: number of neighbors
+        uint*   neighbors,         // out: neighbor indices
+        float4* smallCircles,      // out: small circles
+        float4* atomPos,           // in: sorted atom positions
+        uint*   cellStart,
+        uint*   cellEnd,
+        uint    numAtoms) {
+    uint index = __mul24( blockIdx.x, blockDim.x) + threadIdx.x;
+    if( index >= numAtoms ) return;
+
+    // read atom data from sorted arrays
+	float4 pos = FETCH( atomPos, index);
+
+    // get address in grid
+    int3 gridPos = calcGridPos( make_float3( pos));
+
+	int3 gridSize;
+	gridSize.x = int( params.gridSize.x);
+	gridSize.y = int( params.gridSize.y);
+	gridSize.z = int( params.gridSize.z);
+	// search range for neighbor atoms: max atom diameter + probe diameter
+	float range = ( pos.w + 3.0 + 2.0 * params.probeRadius);
+	// compute number of grid cells
+	int3 cellsInRange;
+	cellsInRange.x = ceil( range / params.cellSize.x);
+	cellsInRange.y = ceil( range / params.cellSize.y);
+	cellsInRange.z = ceil( range / params.cellSize.z);
+	int3 start = gridPos - cellsInRange;
+	int3 end = gridPos + cellsInRange;
+
+    // examine neighbouring cells
+    uint count = 0;
+	int3 neighborPos;
+	for( int z = ( start.z > 0 ? start.z : 0); z < ( end.z > gridSize.z ? gridSize.z : end.z) ; z++ ) {
+        for( int y = ( start.y > 0 ? start.y : 0); y < ( end.y > gridSize.y ? gridSize.y : end.y) ; y++ ) {
+            for( int x = ( start.x > 0 ? start.x : 0); x < ( end.x > gridSize.x ? gridSize.x : end.x) ; x++ ) {
+                neighborPos = make_int3( x, y, z);
+				count += findNeighborsInCellCBCuda( neighbors, smallCircles, count, neighborPos, index, pos, atomPos, cellStart, cellEnd);
+            }
+        }
+    }
+
+    // write new neighbor atom count back to (sorted) index location
+    neighborCount[index] = count;
 }
 
 #endif

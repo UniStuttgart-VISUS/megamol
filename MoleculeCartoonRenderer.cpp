@@ -651,7 +651,7 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
     float *pos0 = new float[mol->AtomCount() * 3];
     memcpy( pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof( float));
 
-    if( ( static_cast<int>( callTime) + 1) < mol->FrameCount() )
+    if( ( static_cast<unsigned int>( callTime) + 1) < mol->FrameCount() )
         mol->SetFrameID(static_cast<int>( callTime) + 1);
     else
         mol->SetFrameID(static_cast<int>( callTime));
@@ -669,7 +669,7 @@ bool protein::MoleculeCartoonRenderer::Render(Call& call) {
         vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
         mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
 #pragma omp parallel for
-    for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
+    for( cnt = 0; cnt < static_cast<unsigned int>(mol->AtomCount()); ++cnt ) {
         if( std::sqrt( std::pow( pos0[3*cnt+0] - pos1[3*cnt+0], 2) +
                 std::pow( pos0[3*cnt+1] - pos1[3*cnt+1], 2) +
                 std::pow( pos0[3*cnt+2] - pos1[3*cnt+2], 2) ) < threshold ) {
@@ -899,7 +899,7 @@ void protein::MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataC
         // temporary vectors
         vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld;
         // temporary color
-        const float *color;
+        //const float *color;
         // temporary color vector
         vislib::math::Vector<float, 3> colorVec;
 
