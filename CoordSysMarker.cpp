@@ -8,9 +8,8 @@
 #include "CoordSysMarker.h"
 #include "vislib/assert.h"
 #include "vislib/Log.h"
-//#include "vislib/MemmappedFile.h"
-//#include "vislib/ShallowPoint.h"
-//#include "vislib/Vector.h"
+#include "vislib/Point.h"
+#include "vislib/Vector.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -137,7 +136,7 @@ void CoordSysMarker::assertData(void) {
           { 0.0f, 0.0f, 1.0f } },
         { { 0.0f, 0.0f, -1.0f },
           { 0.0f, 1.0f, 0.0f },
-          { 1.0f, 0.0f, 0.0f } },
+          { 1.0f, 0.0f, 0.0f } }
     };
 
     ASSERT(v.Count() == n.Count());

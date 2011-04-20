@@ -453,6 +453,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\TrackerRendererTransform.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TriSoup.cpp"
 				>
 			</File>
@@ -508,6 +512,10 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TrackerRendererTransform.h"
 				>
 			</File>
 			<File
