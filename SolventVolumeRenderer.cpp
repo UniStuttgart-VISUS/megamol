@@ -1749,7 +1749,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 				continue;
 			/* solvent (creates volume coloring ...) */
 			int atomIdx;
-			#pragma omp parallel for
+			//#pragma omp parallel for // das verlangsamt alles enorm unter windows! (komisch ...)
 			for(atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++) {
 				// fill the solvent atoms in reverse into the array ...
 				int sortedVolumeIdx = atomCount - (atomCntSol+(atomIdx-firstAtomIndex)+1);
@@ -1769,7 +1769,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		} else {
 			/* not solvent (creates volume) */
 			int atomIdx;
-		//	#pragma omp parallel for
+		//	#pragma omp parallel for // geht hier nicht, bringt wohl auch nix
 			for(atomIdx = firstAtomIndex; atomIdx < lastAtomIndx; atomIdx++ ) {
 				int sortedVolumeIdx = atomCntMol + (atomIdx-firstAtomIndex);
 				float *atomPos = &updatVolumeTextureAtoms[sortedVolumeIdx*4];
@@ -1809,7 +1809,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	orig = ( orig + this->translation) * this->scale;
 	vislib::math::Vector<float, 3> nullVec( 0.0f, 0.0f, 0.0f);
 
-	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d polymer atoms", atomCntMol );
+//	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d polymer atoms", atomCntMol );
 	this->updateVolumeShaderMoleculeVolume.Enable();
 		// set shader params
 		glUniform1f( this->updateVolumeShaderMoleculeVolume.ParameterLocation( "filterRadius"), this->volFilterRadius);
@@ -1840,7 +1840,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 	glBindTexture( GL_TEXTURE_3D, this->volumeTex);
 #endif
 
-	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntSol );
+//	vislib::sys::Log::DefaultLog.WriteMsg ( vislib::sys::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntSol );
 	vislib::graphics::gl::GLSLShader& volumeColorShader =  coloringByHydroBonds ? this->updateVolumeShaderHBondColor : this->updateVolumeShaderSolventColor;
 	volumeColorShader.Enable();
 		// set shader params
@@ -1853,10 +1853,6 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 		glUniform3fv( volumeColorShader.ParameterLocation( "translate"), 1, orig.PeekComponents() );
 		glUniform1f( volumeColorShader.ParameterLocation( "volSize"), float( this->volumeSize));
 #ifdef USE_VERTEX_SKIP_SHADER
-		//vislib::math::Cuboid<float> bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
-		//vislib::math::Vector<float, 3> invBBoxDimension(1/bbox.Width(), 1/bbox.Height(), 1/bbox.Depth());
-		//glUniform3fvARB(volumeColorShader.ParameterLocation("minBBox"), 1, bbox.GetOrigin().PeekCoordinates());
-		//glUniform3fvARB(volumeColorShader.ParameterLocation("invBBoxExtend"), 1, invBBoxDimension.PeekComponents() );
 		glUniform1i( volumeColorShader.ParameterLocation( "volumeSampler"), 0);
 #endif
 		CHECK_FOR_OGL_ERROR();
