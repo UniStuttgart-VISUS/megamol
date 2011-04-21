@@ -362,9 +362,9 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
                     vislib::StringA rcn(datagram.payload.Strings.str1, datagram.payload.Strings.len1);
                     if (rcn.IsEmpty() || rcn.Equals(mcn)) {
                         vislib::StringA srv(datagram.payload.Strings.str2, datagram.payload.Strings.len2);
-                        if (srv.Equals(that->conServerAddr)) {
+                        /*if (srv.Equals(that->conServerAddr)) {
                             vislib::sys::Log::DefaultLog.WriteInfo("Already connected to server \"%s\"", srv.PeekBuffer());
-                        } else {
+                        } else*/ {
                             that->conServerAddr = srv;
                             vislib::sys::Log::DefaultLog.WriteInfo("Trying connect to new server \"%s\"", srv.PeekBuffer());
                             if (that->tcpChan != NULL) {
@@ -379,6 +379,12 @@ DWORD cluster::SimpleClusterClient::udpReceiverLoop(void *ctxt) {
 
                             that->tcpChan = new vislib::net::TcpCommChannel(vislib::net::TcpCommChannel::FLAG_NODELAY);
                             try {
+
+                                vislib::sys::Thread::Sleep(
+                                    100 + static_cast<DWORD>(5000.0f
+                                        * static_cast<float>(::rand())
+                                        / static_cast<float>(RAND_MAX)));
+
                                 that->tcpChan->Connect(srv);
                                 vislib::net::AbstractInboundCommChannel *cc
                                     = dynamic_cast<vislib::net::AbstractInboundCommChannel *>(that->tcpChan);
